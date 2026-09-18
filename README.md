@@ -1,12 +1,17 @@
 # deslag
 
-TODO: what this is, in a paragraph.
+Deslag is a linter for LLM-authored prose. Its purpose is to provide feedback to LLMs when they grow
+their Markdown files needlessly or otherwise violate your wishes.
 
 ## Install
 
 ```sh
 cargo install deslag
 ```
+
+## Usage
+
+`deslag check`
 
 ## Build
 

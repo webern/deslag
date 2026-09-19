@@ -1,0 +1,17 @@
+{
+  "fixture": "rt-pr-template.md",
+  "source_repo": "webern/rust-template",
+  "source_path": ".github/pull_request_template.md",
+  "source_url": "https://github.com/webern/rust-template/blob/ca247d10e5a1690090ed06326034fe9266082826/.github/pull_request_template.md",
+  "source_commit": "ca247d10e5a1690090ed06326034fe9266082826",
+  "source_last_commit_author": "Matthew James Briggs",
+  "source_last_commit_date": "2026-09-18T14:51:51Z",
+  "license": "MIT",
+  "language": "Rust",
+  "captured": "2026-09-19",
+  "size_bytes": 190,
+  "source_frontmatter_max_size_bytes": null,
+  "layout_path": ".github/pull_request_template.md",
+  "authorship": "unknown",
+  "authorship_basis": "not recorded by the source; authorship is TBD per the desired design doc"
+}

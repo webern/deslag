@@ -1,0 +1,17 @@
+{
+  "fixture": "den-implementation-notes.md",
+  "source_repo": "openmusx/denigma",
+  "source_path": "src/formats/musicxml/implementation_notes.md",
+  "source_url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/src/formats/musicxml/implementation_notes.md",
+  "source_commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+  "source_last_commit_author": "rpatters1",
+  "source_last_commit_date": "2026-08-26T09:25:21Z",
+  "license": "MIT",
+  "language": "C++",
+  "captured": "2026-09-19",
+  "size_bytes": 5728,
+  "source_frontmatter_max_size_bytes": null,
+  "layout_path": "src/formats/musicxml/implementation-notes.md",
+  "authorship": "unknown",
+  "authorship_basis": "not recorded by the source; authorship is TBD per the desired design doc"
+}

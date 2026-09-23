@@ -40,6 +40,7 @@ the Makefile, `scripts/`, CI and dependencies; read it before changing any of th
 - `/deslag-build-doctrine`: the build system, Makefile, scripts, CI, dependencies.
 - `/deslag-design-docs`: the docs in `docs/design/` and who owns which.
 - `/deslag-open-pr`: opening a pull request.
+- `/deslag-commit`: rules for git commits.
 
 ## Rules
 
@@ -53,3 +54,4 @@ the Makefile, `scripts/`, CI and dependencies; read it before changing any of th
 - A fixture is quoted, never edited. If a rule disagrees with a fixture, that is a finding about
   the rule. Every fixture carries its source, commit, licence and capture date in a JSON sidecar
   beside it, and a fixture without one does not belong in the corpus.
+- The human is the author of the git commit and the PR. See `/deslag-commit`.

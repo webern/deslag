@@ -156,6 +156,7 @@ its own errors, calls the library, and prints the library's `Error` in `anyhow`'
 ```
 Cargo.toml  Makefile  AGENTS.md  README.md
 _typos.toml           keeps the spell checker out of the quoted corpus
+.agents/deslag.toml   deslag's config for this repo: AGENTS.md and the skills
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   unit.rs             small trees written for the test
@@ -185,6 +186,6 @@ that wants a file to declare a budget writes a frontmatter block into its copy.
 
 ## Build
 
-`make ci` is the gate: preflight, then `check` (fmt, clippy, doc, typos), build and test, all
+`make ci` is the gate: preflight, then `check` (fmt, clippy, deslag, doc, typos), build and test, all
 `--locked`. `make test` runs the tests alone. `scripts/preflight.sh` is what complains when a tool
-is missing.
+is missing. `make check-deslag` runs the debug build of deslag on this repo.

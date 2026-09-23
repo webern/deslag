@@ -13,7 +13,7 @@ CARGO_FLAGS ?=
 .PHONY: help \
         build build-release \
         test \
-        check check-clippy check-doc check-fmt check-publish check-typos \
+        check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean \
         ci \
         fix fix-clippy fix-fmt \
@@ -23,8 +23,9 @@ help:
 	@echo "build          build the library and binary with the debug profile"
 	@echo "build-release  build with the release profile"
 	@echo "test           run every test, doctests included"
-	@echo "check          run every check that gates CI: fmt, clippy, doc, typos"
+	@echo "check          run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy   clippy with warnings denied, tests included"
+	@echo "check-deslag   run deslag on this repository's own Markdown"
 	@echo "check-doc      build the docs with warnings denied"
 	@echo "check-fmt      rustfmt in check mode"
 	@echo "check-publish  cargo publish --dry-run; slow, so not part of check"
@@ -54,10 +55,14 @@ test: preflight
 # ---------------------------------------------------------------------------
 # check
 
-check: check-fmt check-clippy check-doc check-typos
+check: check-fmt check-clippy check-deslag check-doc check-typos
 
 check-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --all-features --all-targets -- -D warnings
+
+# The debug build of deslag, run against .agents/deslag.toml.
+check-deslag: preflight
+	cargo run $(CARGO_FLAGS) --quiet -- check
 
 # rustdoc has warnings of its own, broken links say, that clippy never sees.
 check-doc: preflight

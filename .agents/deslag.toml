@@ -1,0 +1,15 @@
+# deslag's config for its own repository. `make check-deslag` runs it, and `make check` gates CI on
+# it. For now it covers the files an agent reads on every session: AGENTS.md and the skills.
+
+schema_version = 1
+
+[md]
+globs = ["/AGENTS.md", "/.agents/skills/**/*.md"]
+
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.max_size_bytes.value = 4000
+
+[[md.overrides]]
+globs = ["/.agents/skills/**/*.md"]
+lints.max_size_bytes.value = 5000

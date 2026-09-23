@@ -49,7 +49,7 @@ const HOSTS: &[&str] = &["github.com", "gitlab.com", "codeberg.org", "huggingfac
 /// How many fixtures each collected category must hold at least.
 const MIN_PER_CATEGORY: usize = 350;
 
-/// What a fixture's sidecar records about it. `scripts/corpus/collect.py` writes them and
+/// What a fixture's sidecar records about it. `scripts/llm-detection/collect.py` writes them and
 /// `docs/design/deslag.asbuilt.md` describes them.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]

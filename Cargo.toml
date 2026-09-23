@@ -10,18 +10,9 @@ license = "MIT"
 readme = "README.md"
 keywords = ["markdown", "lint", "linter", "prose", "cli"]
 categories = ["development-tools", "command-line-utilities"]
-# Keep the published crate to what a consumer of it needs.
-exclude = [
-    ".agents/",
-    ".claude/",
-    ".github/",
-    "docs/",
-    "scripts/",
-    "tests/",
-    "AGENTS.md",
-    "Makefile",
-    "rust-toolchain.toml",
-]
+# The published crate holds what a consumer needs to build it and nothing else. A list of what to
+# keep, rather than what to drop, so a new file (the test corpus above all) cannot slip in.
+include = ["/src/**/*.rs", "/Cargo.toml", "/Cargo.lock", "/LICENSE", "/README.md"]
 
 [dependencies]
 anyhow = "1.0.104"

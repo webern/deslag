@@ -178,7 +178,7 @@ tests/
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
 docs/design/          design docs
-scripts/              preflight; corpus/collect.py, which rebuilds the corpus
+scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus
 ```
 
 ## Tests
@@ -195,13 +195,13 @@ test rather than repeated, so the list cannot drift.
 against the bytes on disk, and runs the corpus through the binary.
 
 The corpus has four directories. `core/` is the hand-picked set from Matt's repositories. The
-other three are collected by `scripts/corpus/collect.py` and named for who wrote the file, as far
-as the history of the file can tell:
+other three are collected by `scripts/llm-detection/collect.py` and named for who wrote the file,
+as far as the history of the file can tell:
 
-- `human/`: quoted at the last commit before 2022-11-30, when ChatGPT was released.
+- `human/`: not edited since 2021; every commit that touched it predates 2022-01-01.
 - `llm/`: every commit that touched the file is marked as an AI agent's, by a co-author trailer,
   an agent's bot account, or the text an agent writes into its commit messages.
-- `mixed/`: at least one unmarked commit from before 2022-11-30 and at least one marked one.
+- `mixed/`: begun by a person, unmarked, before 2022-01-01, and later edited by an agent.
 
 Each holds about 400 fixtures, at most three from one repository, in a directory per repository.
 Sources are GitHub, GitLab, Codeberg and Hugging Face, found through Sourcegraph, the forges' own
@@ -230,3 +230,6 @@ library's `max_emphasis::check` flags.
 `make ci` is the gate: preflight, then `check` (fmt, clippy, deslag, doc, typos), build and test, all
 `--locked`. `make test` runs the tests alone. `scripts/preflight.sh` is what complains when a tool
 is missing. `make check-deslag` runs the debug build of deslag on this repo.
+
+The published crate is what `include` in `Cargo.toml` lists: `src/`, the manifest, the lockfile,
+`LICENSE` and `README.md`. `make check-publish` builds from that package.

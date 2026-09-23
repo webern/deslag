@@ -24,7 +24,7 @@ deslag/
   tests/               <- the unit tests, and the corpus tests over quoted fixtures
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,
                           human/, llm/ and mixed/ are collected, one directory per source repo
-  scripts/             <- build, lint and utility scripts; corpus/collect.py rebuilds the corpus
+  scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
   .agents/skills/      <- agent skills, the source of truth; every name starts with deslag-
   .claude/skills       <- symlink to .agents/skills

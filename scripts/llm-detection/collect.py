@@ -15,8 +15,8 @@ Every stage is resumable: `discover` and `harvest` keep what they have already d
 
 How a file is classified, from the history of the file up to the commit it is quoted at:
 
-- human: quoted at the last commit before CUTOFF, the day ChatGPT was released, so every change
-  to it was made before a large language model was a common writing tool.
+- human: not edited since 2021: every commit that touched it is from before CUTOFF, before a
+  large language model was a common writing tool.
 - llm: every commit that touched it carries the mark of an AI coding agent: a co-author trailer,
   an agent's bot account, or the text an agent writes into its commits.
 - mixed: at least one commit before CUTOFF by a person and at least one later commit marked as an
@@ -45,7 +45,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CUTOFF = "2022-11-30T00:00:00Z"
+# Issue #5: a file not edited since 2021 or earlier is taken as a person's.
+CUTOFF = "2022-01-01T00:00:00Z"
 CUTOFF_DATE = CUTOFF[:10]
 USER_AGENT = "deslag-corpus-collector (https://github.com/webern/deslag)"
 MIN_BYTES = 200
@@ -780,9 +781,8 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                             "license_files": license_files,
                             "history": history_record(hist),
                             "basis": (
-                                f"quoted at the last commit before {CUTOFF_DATE}, when ChatGPT was "
-                                f"released; all {len(hist)} commits that touched it predate that "
-                                "and none carries an AI agent's mark"
+                                f"quoted as it stood at the end of 2021: all {len(hist)} commits that "
+                                f"touched it predate {CUTOFF_DATE} and none carries an AI agent's mark"
                             ),
                         }
                     )
@@ -963,6 +963,28 @@ def content_facts(data: bytes) -> dict:
     }
 
 
+def restate(f: dict) -> bool:
+    """Checks a harvested file against the current CUTOFF, which may be earlier than the one it
+    was harvested under, and words its basis from its history. False when it no longer fits."""
+    h = f["history"]
+    tools = ", ".join(h["ai_tools"])
+    if f["label"] == "human":
+        if h["last_commit_date"][:10] >= CUTOFF_DATE:
+            return False
+        f["basis"] = (f"not edited since {h['last_commit_date'][:10]}: all {h['commits']} commits "
+                      f"that touched it predate {CUTOFF_DATE} and none carries an AI agent's mark")
+    elif f["label"] == "mixed":
+        if h["first_commit_date"][:10] >= CUTOFF_DATE:
+            return False
+        f["basis"] = (f"begun by a person, unmarked, on {h['first_commit_date'][:10]}, before "
+                      f"{CUTOFF_DATE}; {h['ai_commits']} of its {h['commits']} commits are marked "
+                      f"as an AI agent's ({tools})")
+    else:
+        f["basis"] = (f"every one of the {h['commits']} commits that touched it is marked as an AI "
+                      f"agent's ({tools})")
+    return True
+
+
 def select(args: argparse.Namespace) -> None:
     work = Path(args.work)
     out = Path(args.out)
@@ -976,7 +998,8 @@ def select(args: argparse.Namespace) -> None:
         for f in result["files"]:
             f = dict(f, host=c["host"], repo=c["repo"], stars=c.get("stars"), found_by=c["found_by"],
                      repo_first_commit=result.get("repo_first_commit"))
-            pools[f["label"]].append(f)
+            if restate(f):
+                pools[f["label"]].append(f)
 
     rng = random.Random(args.seed)
     used_sha: set[str] = set()
@@ -1143,8 +1166,8 @@ def label_history(hist: list[Commit]) -> tuple[str, str]:
     tools = ", ".join(sorted({t for h in ai for t in h.tools}))
     early = [h for h in hist if not h.tools and h.date < CUTOFF_DATE]
     if hist and not ai and len(early) == len(hist):
-        return "human", (f"all {len(hist)} commits that touched it predate {CUTOFF_DATE}, when "
-                         "ChatGPT was released, and none carries an AI agent's mark")
+        return "human", (f"all {len(hist)} commits that touched it predate {CUTOFF_DATE} and none "
+                         "carries an AI agent's mark")
     if hist and len(ai) == len(hist):
         return "llm", (f"every one of the {len(hist)} commits that touched it is marked as an AI "
                        f"agent's ({tools})")

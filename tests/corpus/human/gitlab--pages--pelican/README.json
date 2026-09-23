@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "pages/pelican",
+    "path": "README.md",
+    "commit": "8044646e7e4fd63d7588dcfe974a4b454b23a435",
+    "commit_date": "2021-09-30T12:35:39+00:00",
+    "url": "https://gitlab.com/pages/pelican/-/blob/8044646e7e4fd63d7588dcfe974a4b454b23a435/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 64,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2019-05-27T16:00:19+00:00",
+    "last_commit_date": "2021-09-30T07:42:52+00:00",
+    "last_commit_author": "Achilleas Pipinellis",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-30: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2232,
+    "sha256": "06cdda2d04cb1ef7fd431e105b1d9a31d9475b63e4f543611b752e3adefaac6c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 271,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--pages--pelican/README.md"
+}

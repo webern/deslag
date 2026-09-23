@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__skills__orchardcore-nswag-regenerate__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OrchardCMS/OrchardCore",
+    "path": ".agents/skills/orchardcore-nswag-regenerate/SKILL.md",
+    "commit": "f854c114cf237c9872dc113e06949a4af7e566c5",
+    "commit_date": "2026-09-23T13:37:16-04:00",
+    "url": "https://github.com/OrchardCMS/OrchardCore/blob/f854c114cf237c9872dc113e06949a4af7e566c5/.agents/skills/orchardcore-nswag-regenerate/SKILL.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8186,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-03T15:26:11-04:00",
+    "last_commit_date": "2026-08-03T15:26:11-04:00",
+    "last_commit_author": "Jasmin Savard",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 8052,
+    "sha256": "a75dd53343e72e81cdc8c7b6f4e2c517422e1c5dc0971838b17c79597e2be4b8",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 982,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/OrchardCMS--OrchardCore/.agents/skills/orchardcore-nswag-regenerate/SKILL.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__markdown__Fs-module.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mesonbuild/meson",
+    "path": "docs/markdown/Fs-module.md",
+    "commit": "e6c4e8d040e2bf56638b697e9941574af05d97ac",
+    "commit_date": "2026-07-09T03:28:27+03:00",
+    "url": "https://github.com/mesonbuild/meson/blob/e6c4e8d040e2bf56638b697e9941574af05d97ac/docs/markdown/Fs-module.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6633,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 32,
+    "first_commit_date": "2019-11-05T20:07:21+02:00",
+    "last_commit_date": "2026-04-23T20:42:20-04:00",
+    "last_commit_author": "Eli Schwartz",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-11-05, before 2022-01-01; 1 of its 32 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7214,
+    "sha256": "01b8c7206e6bda2aa8b9bc7160192261c691eda83b594496daad721d77414b14",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 282,
+    "words": 1069,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mesonbuild--meson/docs/markdown/Fs-module.md"
+}

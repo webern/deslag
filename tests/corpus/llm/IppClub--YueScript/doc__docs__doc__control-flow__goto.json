@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__docs__doc__control-flow__goto.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "IppClub/YueScript",
+    "path": "doc/docs/doc/control-flow/goto.md",
+    "commit": "ae8a90014964c933c65a3960696257509a67fd6d",
+    "commit_date": "2026-08-06T17:32:35+08:00",
+    "url": "https://github.com/IppClub/YueScript/blob/ae8a90014964c933c65a3960696257509a67fd6d/doc/docs/doc/control-flow/goto.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 612,
+    "found_by": "sg-topic:lua"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-15T05:49:13+00:00",
+    "last_commit_date": "2026-02-15T05:49:13+00:00",
+    "last_commit_author": "Li Jin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1903,
+    "sha256": "3406bccc1898cde47bd34557912b37c5472a4bd37d7cb98eff6fe66a63355bb1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 344,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/IppClub--YueScript/doc/docs/doc/control-flow/goto.md"
+}

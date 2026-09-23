@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "RELEASE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "apache/grails-core",
+    "path": "RELEASE.md",
+    "commit": "ad97cc0f952fd9061468e84e91ac7dd5c48542cf",
+    "commit_date": "2026-09-23T11:52:54-04:00",
+    "url": "https://github.com/apache/grails-core/blob/ad97cc0f952fd9061468e84e91ac7dd5c48542cf/RELEASE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2931,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 72,
+    "first_commit_date": "2019-10-14T16:26:22-04:00",
+    "last_commit_date": "2026-09-06T00:13:58-04:00",
+    "last_commit_author": "James Fredley",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-10-14, before 2022-01-01; 1 of its 72 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 36951,
+    "sha256": "0f791648e741fe24b01f8dd16e473313d101e53e2cafc53843b9c763cc98e939",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 619,
+    "words": 5191,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/apache--grails-core/RELEASE.md"
+}

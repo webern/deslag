@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__skills__docs-review__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "getsentry/sentry-rust",
+    "path": ".agents/skills/docs-review/SKILL.md",
+    "commit": "4b66d3c2c123bd6c6f1be694fce39e1d9c9d8d32",
+    "commit_date": "2026-09-21T10:52:07+00:00",
+    "url": "https://github.com/getsentry/sentry-rust/blob/4b66d3c2c123bd6c6f1be694fce39e1d9c9d8d32/.agents/skills/docs-review/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-03T14:21:02+02:00",
+    "last_commit_date": "2026-08-03T14:21:02+02:00",
+    "last_commit_author": "Daniel Szoke",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 5042,
+    "sha256": "430e54042ac7471b932d9479f0954eed4226e30a68a39b1d4d8fe030bfd286d4",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 96,
+    "words": 793,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/getsentry--sentry-rust/.agents/skills/docs-review/SKILL.md"
+}

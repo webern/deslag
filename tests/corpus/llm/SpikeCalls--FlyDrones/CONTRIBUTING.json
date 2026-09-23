@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SpikeCalls/FlyDrones",
+    "path": "CONTRIBUTING.md",
+    "commit": "3e269346b3882c291d2a977bc2c2c6a9c9213c21",
+    "commit_date": "2026-09-16T06:18:23+00:00",
+    "url": "https://github.com/SpikeCalls/FlyDrones/blob/3e269346b3882c291d2a977bc2c2c6a9c9213c21/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-09-15T21:23:07+00:00",
+    "stars": 218,
+    "found_by": "sg-topic:neuroscience"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-15T21:23:12+00:00",
+    "last_commit_date": "2026-09-15T21:23:12+00:00",
+    "last_commit_author": "SpikeCalls",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 947,
+    "sha256": "4c7a57b198c814e7c1468f5757082a71bab56ef626e3b9d792bf1f9ba4a0d31f",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 159,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/SpikeCalls--FlyDrones/CONTRIBUTING.md"
+}

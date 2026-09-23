@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "ROADMAP.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sirixdb/sirix",
+    "path": "ROADMAP.md",
+    "commit": "eb81deba17601385ec7bc242c2c52699f8069471",
+    "commit_date": "2026-09-23T20:39:57+02:00",
+    "url": "https://github.com/sirixdb/sirix/blob/eb81deba17601385ec7bc242c2c52699f8069471/ROADMAP.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1218,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2019-10-19T14:28:02+02:00",
+    "last_commit_date": "2026-07-19T15:33:09+02:00",
+    "last_commit_author": "Johannes Lichtenberger",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-10-19, before 2022-01-01; 1 of its 13 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2026,
+    "sha256": "b480324d26ab38bb6a39547874bbe59dd55e032bc6af1b74f9597631c00c647b",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 280,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/sirixdb--sirix/ROADMAP.md"
+}

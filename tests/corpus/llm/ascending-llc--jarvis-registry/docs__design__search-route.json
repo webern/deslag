@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__design__search-route.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ascending-llc/jarvis-registry",
+    "path": "docs/design/search-route.md",
+    "commit": "a6da6876a86f763dd2a335058550aeaf6f8379ce",
+    "commit_date": "2026-09-23T08:48:22-04:00",
+    "url": "https://github.com/ascending-llc/jarvis-registry/blob/a6da6876a86f763dd2a335058550aeaf6f8379ce/docs/design/search-route.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-05-29T11:23:39-07:00",
+    "stars": 3063,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-26T06:24:16+08:00",
+    "last_commit_date": "2026-05-26T06:24:16+08:00",
+    "last_commit_author": "yulin.deng",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5888,
+    "sha256": "aba96af33adeb4aef237f0f2dfc4342b62f837e622d03948466eccec19a5db23",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 142,
+    "words": 730,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ascending-llc--jarvis-registry/docs/design/search-route.md"
+}

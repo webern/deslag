@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "bl00mber/react-phone-input-2",
+    "path": "CHANGELOG.md",
+    "commit": "9deb73afdde6d631ab6e7af9544a31a9ff176b3b",
+    "commit_date": "2021-03-31T18:26:35+05:00",
+    "url": "https://github.com/bl00mber/react-phone-input-2/blob/9deb73afdde6d631ab6e7af9544a31a9ff176b3b/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1018,
+    "found_by": "sg-topic:i18n"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2019-02-20T02:25:20+05:00",
+    "last_commit_date": "2020-08-25T02:07:03+05:00",
+    "last_commit_author": "Nick Reiley",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-25: all 11 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 5077,
+    "sha256": "4196fead3a6714d0b36c6f237d2e9cbabe1ceb482ffa7c68adec8b60cb41b103",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 140,
+    "words": 684,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/bl00mber--react-phone-input-2/CHANGELOG.md"
+}

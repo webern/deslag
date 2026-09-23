@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "imbhargav5/rooks",
+    "path": "CONTRIBUTING.md",
+    "commit": "b14419d1507882a683a273901d987033e6d9b4b3",
+    "commit_date": "2026-09-06T14:39:09+05:30",
+    "url": "https://github.com/imbhargav5/rooks/blob/b14419d1507882a683a273901d987033e6d9b4b3/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-07T10:39:46+05:30",
+    "stars": 3451,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2019-01-27T18:24:22+05:30",
+    "last_commit_date": "2026-08-17T02:14:58+05:30",
+    "last_commit_author": "Bhargav Ponnapalli",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-27, before 2022-01-01; 1 of its 12 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7248,
+    "sha256": "05f2edbb8353c0659745a49e6c55a4ad176f17747cafeaad427ac0039e929c40",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 104,
+    "words": 853,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/imbhargav5--rooks/CONTRIBUTING.md"
+}

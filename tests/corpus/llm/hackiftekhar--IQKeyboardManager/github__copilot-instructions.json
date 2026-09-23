@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hackiftekhar/IQKeyboardManager",
+    "path": ".github/copilot-instructions.md",
+    "commit": "0972dd6eded87c930fb6ad36b3c5ecd620f06894",
+    "commit_date": "2026-05-25T19:23:40+05:30",
+    "url": "https://github.com/hackiftekhar/IQKeyboardManager/blob/0972dd6eded87c930fb6ad36b3c5ecd620f06894/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 16629,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2025-09-19T09:22:51+00:00",
+    "last_commit_date": "2025-09-19T09:24:48+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 12208,
+    "sha256": "fda4104dc597c91bc24e4e347d7c434338341029465c58e82978f76e086fcd1e",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 326,
+    "words": 1576,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/hackiftekhar--IQKeyboardManager/.github/copilot-instructions.md"
+}

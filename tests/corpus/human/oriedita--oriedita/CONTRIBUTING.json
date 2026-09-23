@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "oriedita/oriedita",
+    "path": "CONTRIBUTING.md",
+    "commit": "6fc055224487d81da750f4cc26b1eaac237c8862",
+    "commit_date": "2021-12-11T12:42:24+01:00",
+    "url": "https://github.com/oriedita/oriedita/blob/6fc055224487d81da750f4cc26b1eaac237c8862/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2021-08-08T15:10:16+02:00",
+    "stars": null,
+    "found_by": "github-topic:origami"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-10-22T13:58:55+02:00",
+    "last_commit_date": "2021-11-30T12:02:39+01:00",
+    "last_commit_author": "Gerben Oolbekkink",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-30: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3111,
+    "sha256": "58d515b6432bce47e3a24da5204ab29b9af0d1e8f355b1eb9d0d1f28dd0fd8d9",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 74,
+    "words": 496,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/oriedita--oriedita/CONTRIBUTING.md"
+}

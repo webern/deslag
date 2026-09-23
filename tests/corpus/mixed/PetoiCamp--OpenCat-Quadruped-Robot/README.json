@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "PetoiCamp/OpenCat-Quadruped-Robot",
+    "path": "README.md",
+    "commit": "24563ca2e0218150f6299d013cd3a20c45433467",
+    "commit_date": "2026-09-07T21:50:11-07:00",
+    "url": "https://github.com/PetoiCamp/OpenCat-Quadruped-Robot/blob/24563ca2e0218150f6299d013cd3a20c45433467/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-01-03T23:42:01+08:00",
+    "stars": 5363,
+    "found_by": "sg-topic:raspberry-pi"
+  },
+  "history": {
+    "commits": 49,
+    "first_commit_date": "2021-01-03T23:42:01+08:00",
+    "last_commit_date": "2026-09-07T21:32:28-07:00",
+    "last_commit_author": "Kai Mai",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-01-03, before 2022-01-01; 1 of its 49 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14881,
+    "sha256": "fafeebb7583224caab093e3482ab30c9297e162bdadba77ae7c106192d3515e5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 234,
+    "words": 1213,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md"
+}

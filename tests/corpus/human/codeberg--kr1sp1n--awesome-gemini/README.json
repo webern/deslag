@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "kr1sp1n/awesome-gemini",
+    "path": "README.md",
+    "commit": "40a9b155b832594372c888e28e6248b9e2443c89",
+    "commit_date": "2021-11-02T08:21:43+02:00",
+    "url": "https://codeberg.org/kr1sp1n/awesome-gemini/src/commit/40a9b155b832594372c888e28e6248b9e2443c89/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-21T08:06:30-04:00",
+    "stars": 44,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 138,
+    "first_commit_date": "2020-08-21T09:23:01+02:00",
+    "last_commit_date": "2021-11-02T08:21:43+02:00",
+    "last_commit_author": "Paul Buetow",
+    "authors": 66,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-02: all 138 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 21469,
+    "sha256": "ed4c927971561499a1b2d3063545a33415ce4f02cd6a4a7e1fdde77b7234980c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 240,
+    "words": 2203,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--kr1sp1n--awesome-gemini/README.md"
+}

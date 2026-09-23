@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nix-community/rnix-parser",
+    "path": "CHANGELOG.md",
+    "commit": "2e948656f3f5a3981729c21a5ff7cceaff3f8d9a",
+    "commit_date": "2021-12-19T17:53:44+01:00",
+    "url": "https://github.com/nix-community/rnix-parser/blob/2e948656f3f5a3981729c21a5ff7cceaff3f8d9a/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-11T14:24:44+02:00",
+    "stars": 489,
+    "found_by": "sg-topic:rust"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-10-17T12:40:46+02:00",
+    "last_commit_date": "2021-12-06T13:18:11+01:00",
+    "last_commit_author": "Maximilian Bosch",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-06: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2729,
+    "sha256": "b3420fdbeed95e3d0e13f7050308c28ed33fea897bdbd32e03b4ebe2f69fdfaa",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 90,
+    "words": 292,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/nix-community--rnix-parser/CHANGELOG.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "delightful-contributors.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "delightful-commons/delightful-humane-design",
+    "path": "delightful-contributors.md",
+    "commit": "9804fdb068de2ba1d21576b2fdd8e3ecfb18873f",
+    "commit_date": "2020-08-17T16:38:35+02:00",
+    "url": "https://codeberg.org/delightful-commons/delightful-humane-design/src/commit/9804fdb068de2ba1d21576b2fdd8e3ecfb18873f/delightful-contributors.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-13T08:42:14+02:00",
+    "stars": 232,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-08-13T10:51:37+02:00",
+    "last_commit_date": "2020-08-13T10:51:37+02:00",
+    "last_commit_author": "Arnold Schrijver",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-13: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 681,
+    "sha256": "238dd210290dc6485fcdd069278c6b9a18bb4e3c7323235df62e74bfab6bcea1",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 68,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--delightful-commons--delightful-humane-design/delightful-contributors.md"
+}

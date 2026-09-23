@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "openatx/uiautomator2",
+    "path": ".github/copilot-instructions.md",
+    "commit": "657c5d791075945cc21e78e125b220461c8ae99c",
+    "commit_date": "2026-09-11T12:08:57+08:00",
+    "url": "https://github.com/openatx/uiautomator2/blob/657c5d791075945cc21e78e125b220461c8ae99c/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8379,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-09-22T12:40:24+00:00",
+    "last_commit_date": "2025-09-22T12:40:24+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6891,
+    "sha256": "c3cd522f289199f51e498174b5f9ca819e237860b71ed4b01436b3938049be64",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 155,
+    "words": 1017,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/openatx--uiautomator2/.github/copilot-instructions.md"
+}

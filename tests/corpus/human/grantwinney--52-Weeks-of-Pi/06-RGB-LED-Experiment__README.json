@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "06-RGB-LED-Experiment__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "grantwinney/52-Weeks-of-Pi",
+    "path": "06-RGB-LED-Experiment/README.md",
+    "commit": "4f44028189e4e4733466448d50a80ba0c0c2b3a4",
+    "commit_date": "2018-05-19T12:50:38-04:00",
+    "url": "https://github.com/grantwinney/52-Weeks-of-Pi/blob/4f44028189e4e4733466448d50a80ba0c0c2b3a4/06-RGB-LED-Experiment/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:morse-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-03-09T11:09:38-05:00",
+    "last_commit_date": "2018-03-09T11:09:38-05:00",
+    "last_commit_author": "Grant Winney",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-03-09: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 765,
+    "sha256": "f6b29a65f38d9818e13ef10b88e5e852029eb815fa3f426c027a4e043b68d72d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 104,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/grantwinney--52-Weeks-of-Pi/06-RGB-LED-Experiment/README.md"
+}

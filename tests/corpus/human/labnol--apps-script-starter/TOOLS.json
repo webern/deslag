@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "TOOLS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "labnol/apps-script-starter",
+    "path": "TOOLS.md",
+    "commit": "1f81f2f60425e75f51a82ce2ea1a72dc77a6c312",
+    "commit_date": "2021-12-14T15:18:03+05:30",
+    "url": "https://github.com/labnol/apps-script-starter/blob/1f81f2f60425e75f51a82ce2ea1a72dc77a6c312/TOOLS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-06-13T17:00:19+05:30",
+    "stars": 1254,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-01-16T20:11:59+05:30",
+    "last_commit_date": "2021-11-26T11:08:46+05:30",
+    "last_commit_author": "Amit Agarwal",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-26: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1845,
+    "sha256": "eddb83cba99d565a33a6a234682003d9c0d8410da09860d30cf19ae28c8356f8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 249,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/labnol--apps-script-starter/TOOLS.md"
+}

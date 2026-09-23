@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "charts__fleet__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "fleetdm/fleet",
+    "path": "charts/fleet/README.md",
+    "commit": "6cd91793a3c01d72224aa9a811630307e977c5b0",
+    "commit_date": "2026-09-23T14:17:45-05:00",
+    "url": "https://github.com/fleetdm/fleet/blob/6cd91793a3c01d72224aa9a811630307e977c5b0/charts/fleet/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6903,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-03-17T11:09:01-07:00",
+    "last_commit_date": "2026-05-04T15:39:56-05:00",
+    "last_commit_author": "George Karr",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-03-17, before 2022-01-01; 1 of its 4 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2174,
+    "sha256": "52543506cd909ef458e61f764a9c015deececb78f4c952ab61c86aa5a015e6c5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 58,
+    "words": 318,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/fleetdm--fleet/charts/fleet/README.md"
+}

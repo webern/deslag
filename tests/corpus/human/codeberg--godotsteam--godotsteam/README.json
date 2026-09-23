@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "godotsteam/godotsteam",
+    "path": "README.md",
+    "commit": "a824f10898a9035ce2a89e30cb93fe82a33e9872",
+    "commit_date": "2021-10-06T16:33:31-05:00",
+    "url": "https://codeberg.org/godotsteam/godotsteam/src/commit/a824f10898a9035ce2a89e30cb93fe82a33e9872/README.md",
+    "license": "MIT",
+    "license_files": [
+      "license.txt"
+    ],
+    "repo_first_commit_date": "2021-10-06T16:33:31-05:00",
+    "stars": 162,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-10-06T16:33:31-05:00",
+    "last_commit_date": "2021-10-06T16:33:31-05:00",
+    "last_commit_author": "Gramps",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-06: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 5822,
+    "sha256": "7a1b590b30d0711a5dd3d334cade68775faf89ad5b05b78b6abb22d9d8f2fe5c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 112,
+    "words": 702,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--godotsteam--godotsteam/README.md"
+}

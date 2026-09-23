@@ -1,0 +1,200 @@
+# DatabaseConsistency
+
+[![](https://badge.fury.io/rb/database_consistency.svg)](https://badge.fury.io/rb/database_consistency)
+[![](https://github.com/djezzzl/database_consistency/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/djezzzl/database_consistency/actions/workflows/tests.yml?query=event%3Aschedule)
+[![](https://github.com/djezzzl/database_consistency/actions/workflows/rubocop.yml/badge.svg?branch=master)](https://github.com/djezzzl/database_consistency/actions/workflows/rubocop.yml?query=event%3Aschedule)
+[![](https://opencollective.com/database_consistency/tiers/badge.svg)](https://opencollective.com/database_consistency#support)
+
+The main goal of the project is to help you avoid various issues due to inconsistencies and inefficiencies between a database schema and application models.
+
+> If the project helps you or your organization, I would be very grateful if you [contribute](https://github.com/djezzzl/database_consistency#contributing) or [donate](https://opencollective.com/database_consistency#support).  
+> Your support is an incredible motivation and the biggest reward for my hard work.
+
+_The project is greatly supported by [Pennylane](https://www.pennylane.com)! Huge appreciation to the organization, and please join them if you find the gem valuable for you!_ 
+
+<div style="text-align: center">
+    <img src="logos/pennylane.png" width="200px"/>
+</div>
+
+For detailed information, please read the [wiki](docs/wiki/home.md).
+
+Currently, the tool can:
+- [find missing null constraints](docs/wiki/ColumnPresenceChecker.md)
+- [find missing check constraints for numericality validations](docs/wiki/NumericalityConstraintChecker.md)
+- [find missing length validations](docs/wiki/LengthConstraintChecker.md)
+- [find missing presence validations](docs/wiki/NullConstraintChecker.md)
+- [find missing uniqueness validations](docs/wiki/UniqueIndexChecker.md)
+- [find missing foreign keys for `BelongsTo` associations](docs/wiki/ForeignKeyChecker.md)
+- [find missing unique indexes for uniqueness validation](docs/wiki/MissingUniqueIndexChecker.md)
+- [find missing indexes for `HasOne` and `HasMany` associations](docs/wiki/MissingIndexChecker.md)
+- [find primary keys with integer/serial type](docs/wiki/PrimaryKeyTypeChecker.md)
+- [find mismatching primary key types with their foreign keys](docs/wiki/ForeignKeyTypeChecker.md)
+- [find redundant non-unique indexes](docs/wiki/RedundantIndexChecker.md)
+- [find redundant uniqueness constraints](docs/wiki/RedundantUniqueIndexChecker.md)
+- [find mismatching enum types with their values](docs/wiki/EnumTypeChecker.md)
+- [find mismatching foreign key cascades](docs/wiki/ForeignKeyCascadeChecker.md)
+- [find inconsistent values between enums in the database and ActiveRecord's enums/inclusion validations](docs/wiki/EnumValueChecker.md)
+- [find redundant `case_sensitive: false` option for unique validations for case-insensitive types](docs/wiki/CaseSensitiveUniqueValidationChecker.md)
+- [find missing null constraints on boolean fields](docs/wiki/ThreeStateBooleanChecker.md)
+- [find broken associations that refer to non-existent models](docs/wiki/MissingAssociationClassChecker.md)
+- [find models that have missing tables](docs/wiki/MissingTableChecker.md)
+- [find models with UUID primary keys without specified ordering column](docs/wiki/ImplicitOrderingChecker.md)
+- [find belongs_to associations with foreign keys without dependent/on_delete options](docs/wiki/MissingDependentDestroyChecker.md)
+- [find polymorphic associations with mismatched foreign key and type null constraints](docs/wiki/PolymorphicAssociationNullabilityChecker.md)
+- [find columns used in `find_by` calls that are missing a database index](docs/wiki/MissingIndexFindByChecker.md)
+- [find models pointing to views without a primary_key set](docs/wiki/ViewPrimaryKeyChecker.md)
+
+Besides that, the tool provides:
+- [auto-correction](docs/wiki/auto-correction.md)
+- [flexible configuration](docs/wiki/configuration.md)
+- [slow start with TODO files](docs/wiki/generate-todo.md)
+- [support of custom checker](docs/wiki/custom-checker.md)
+
+We support the following databases: `SQLite3`, `PostgreSQL` and `MySQL`.  
+We support [ActiveRecord](https://github.com/rails/rails/tree/master/activerecord) only at the moment.
+Please upvote the request for other frameworks if you're interested.
+
+Follow me and stay tuned for the updates:
+- [LinkedIn](https://www.linkedin.com/in/evgeniydemin/)
+- [Medium](https://evgeniydemin.medium.com/)
+- [Twitter](https://twitter.com/EvgeniyDemin/)
+- [GitHub](https://github.com/djezzzl)
+
+## Usage
+
+Add this line to your application's Gemfile:
+
+```ruby
+gem 'database_consistency', group: :development, require: false
+```
+
+And then execute:
+
+```bash
+$ bundle install
+```
+
+### Example
+
+```bash
+$ bundle exec database_consistency
+NullConstraintChecker fail User code column is NOT NULL but does not have a validator disallowing nil values
+NullConstraintChecker fail User company_id column is NOT NULL but does not have a presence validator for association company
+LengthConstraintChecker fail Company note column has a character length limit but does not have a length validator
+MissingUniqueIndexChecker fail User name+email model should have a unique index in the database
+ForeignKeyChecker fail User company should have a foreign key in the database
+ForeignKeyTypeChecker fail User company foreign key (company_id) with type (integer(8)) does not match primary key (id) with type (integer)
+MissingIndexChecker fail Company user associated model should have an index in the database
+ForeignKeyTypeChecker fail Company user foreign key (company_id) with type (integer(8)) does not match primary key (id) with type (integer)
+MissingIndexChecker fail Country users associated model should have an index in the database
+ColumnPresenceChecker fail User phone column should be NOT NULL
+ColumnPresenceChecker fail User name column is NOT NULL but may receive a NULL value
+UniqueIndexChecker fail User index_users_on_name_and_slug index is unique in the database but does not have a uniqueness validator
+RedundantUniqueIndexChecker fail User index_users_on_name_and_slug index uniqueness is redundant because (index_users_on_slug) covers it
+RedundantIndexChecker fail User index_users_on_phone index is redundant because (index_users_on_phone_and_slug) covers it
+ColumnPresenceChecker fail User tmp column (tmp) is missing in table (users) but used for presence validation
+ForeignKeyTypeChecker fail User something association (something) of class (User) relies on field (something_id) of table (users) but it is missing
+ThreeStateBooleanChecker fail Company active boolean column should have NOT NULL constraint
+MissingAssociationClassChecker fail Company anything refers to a non-existent model "Anything"
+MissingTableChecker fail LegacyModel should have a corresponding table in the database
+ImplicitOrderingChecker fail Secondary::User id setting implicit_order_column is recommended when using UUID as the primary key type
+MissingDependentDestroyChecker fail Organization company should have a corresponding has_one/has_many association with dependent option (destroy, delete, delete_all, nullify) or a foreign key with on_delete (cascade, nullify)
+MissingIndexFindByChecker fail User email column is used in find_by but is missing an index (found at app/models/user.rb:42)
+ViewPrimaryKeyChecker fail ReportView self model pointing to a view should have primary_key set
+```
+
+## Funding
+
+### Open Collective Backers
+
+You're an individual who wants to support the project with a monthly donation. Your logo will be available on the Github page. [[Become a backer](https://opencollective.com/database_consistency#backer)]
+
+<a href="https://opencollective.com/database_consistency/backer/0/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/0/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/1/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/1/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/2/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/2/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/3/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/3/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/4/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/4/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/5/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/5/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/6/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/6/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/7/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/7/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/8/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/8/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/9/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/9/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/10/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/10/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/11/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/11/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/12/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/12/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/13/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/13/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/14/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/14/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/15/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/15/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/16/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/16/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/17/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/17/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/18/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/18/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/19/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/19/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/20/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/20/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/21/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/21/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/22/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/22/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/23/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/23/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/24/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/24/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/25/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/25/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/26/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/26/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/27/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/27/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/28/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/28/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/backer/29/website" target="_blank"><img src="https://opencollective.com/database_consistency/backer/29/avatar.svg"></a>
+
+### Open Collective Sponsors
+
+You're an organization that wants to support the project with a monthly donation. Your logo will be available on the Github page. [[Become a sponsor](https://opencollective.com/database_consistency#sponsor)]
+
+<a href="https://opencollective.com/database_consistency/sponsor/0/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/1/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/2/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/3/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/4/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/5/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/6/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/7/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/8/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/9/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/9/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/10/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/10/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/11/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/11/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/12/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/12/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/13/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/13/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/14/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/14/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/15/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/15/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/16/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/16/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/17/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/17/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/18/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/18/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/19/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/19/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/20/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/20/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/21/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/21/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/22/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/22/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/23/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/23/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/24/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/24/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/25/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/25/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/26/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/26/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/27/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/27/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/28/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/28/avatar.svg"></a>
+<a href="https://opencollective.com/database_consistency/sponsor/29/website" target="_blank"><img src="https://opencollective.com/database_consistency/sponsor/29/avatar.svg"></a>
+
+## Contributing
+
+[Bug reports](https://github.com/djezzzl/database_consistency/issues) and [pull requests](https://github.com/djezzzl/database_consistency/pulls) are welcome on GitHub.
+This project is intended to be a safe, welcoming space for collaboration, and contributors are expected
+to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+
+### Contributors
+
+<img src="https://opencollective.com/database_consistency/contributors.svg?width=890&button=false" />
+
+## Code of Conduct
+
+Everyone interacting in the *DatabaseConsistency* project’s codebases, issue trackers, chat rooms
+and mailing lists is expected to
+follow the [code of conduct](CODE_OF_CONDUCT.md).
+
+## Changelog
+
+*DatabaseConsistency*'s changelog is available [here](CHANGELOG.md).
+
+## Copyright
+
+Copyright (c) Evgeniy Demin. See [LICENSE.txt](LICENSE.txt) for further details.

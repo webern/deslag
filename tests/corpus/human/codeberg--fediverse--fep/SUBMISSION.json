@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "SUBMISSION.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "fediverse/fep",
+    "path": "SUBMISSION.md",
+    "commit": "ad5916fc4b88943a41a120b7435b3f655e785fa5",
+    "commit_date": "2021-10-26T21:19:52+00:00",
+    "url": "https://codeberg.org/fediverse/fep/src/commit/ad5916fc4b88943a41a120b7435b3f655e785fa5/SUBMISSION.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-05T19:37:20+02:00",
+    "stars": 277,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-12-07T11:57:50+01:00",
+    "last_commit_date": "2021-10-25T09:42:53+02:00",
+    "last_commit_author": "pukkamustard",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-25: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 231,
+    "sha256": "5c5b18e8ed941dba31f9a6cf1d784cd3c01de0b1acafc676e4d7ef552bf361de",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 7,
+    "words": 33,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--fediverse--fep/SUBMISSION.md"
+}

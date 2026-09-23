@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "appleboy/gorush",
+    "path": "README.md",
+    "commit": "891b4530db8f5db2beeb44b42665999ab802799f",
+    "commit_date": "2026-07-25T13:23:50+08:00",
+    "url": "https://github.com/appleboy/gorush/blob/891b4530db8f5db2beeb44b42665999ab802799f/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8776,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 127,
+    "first_commit_date": "2018-01-02T15:53:15+08:00",
+    "last_commit_date": "2026-07-25T04:56:31+01:00",
+    "last_commit_author": "John Sharp",
+    "authors": 25,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 2 of its 127 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 45854,
+    "sha256": "1895e0d7eaac11e8d10dfb87beb0657cf85d173cf2d2269af93a5dbe9264d8e4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1398,
+    "words": 4839,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/appleboy--gorush/README.md"
+}

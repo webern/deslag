@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__en__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Strayker-Software/StrayexOS",
+    "path": "docs/en/README.md",
+    "commit": "96b8876b8ff05af8eee45f407f6cfaf4501f40cf",
+    "commit_date": "2020-09-14T22:14:22+02:00",
+    "url": "https://github.com/Strayker-Software/StrayexOS/blob/96b8876b8ff05af8eee45f407f6cfaf4501f40cf/docs/en/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-02-27T22:12:21+01:00",
+    "stars": null,
+    "found_by": "github-topic:hobby"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2019-03-31T23:27:44+02:00",
+    "last_commit_date": "2019-03-31T23:27:44+02:00",
+    "last_commit_author": "StraykerPL",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-03-31: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1092,
+    "sha256": "6dac1e84bd42167e7ec92f601e544c096cdf25c55b61a9ddede5ed39b56d2f40",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 120,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Strayker-Software--StrayexOS/docs/en/README.md"
+}

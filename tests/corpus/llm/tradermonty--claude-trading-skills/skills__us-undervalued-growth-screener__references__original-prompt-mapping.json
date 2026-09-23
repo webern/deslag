@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__us-undervalued-growth-screener__references__original-prompt-mapping.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tradermonty/claude-trading-skills",
+    "path": "skills/us-undervalued-growth-screener/references/original-prompt-mapping.md",
+    "commit": "bc5515644c70abc90fbc20d15c838c47808ca893",
+    "commit_date": "2026-09-22T22:08:36-07:00",
+    "url": "https://github.com/tradermonty/claude-trading-skills/blob/bc5515644c70abc90fbc20d15c838c47808ca893/skills/us-undervalued-growth-screener/references/original-prompt-mapping.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-19T09:52:40-07:00",
+    "stars": 2876,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-30T06:19:59-07:00",
+    "last_commit_date": "2026-08-30T06:19:59-07:00",
+    "last_commit_author": "takusaotome",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8484,
+    "sha256": "400d67802a3093dbbcc14c2745e16f7808e979ceb2ba7402333ee5a17f9ff9f6",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 99,
+    "words": 1174,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tradermonty--claude-trading-skills/skills/us-undervalued-growth-screener/references/original-prompt-mapping.md"
+}

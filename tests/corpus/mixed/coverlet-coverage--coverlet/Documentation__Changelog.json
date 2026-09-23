@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Documentation__Changelog.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "coverlet-coverage/coverlet",
+    "path": "Documentation/Changelog.md",
+    "commit": "c6d3894d2e8546e2fded76eed709a415edcc220a",
+    "commit_date": "2026-09-22T11:36:43+03:00",
+    "url": "https://github.com/coverlet-coverage/coverlet/blob/c6d3894d2e8546e2fded76eed709a415edcc220a/Documentation/Changelog.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-31T18:07:50+01:00",
+    "stars": 3173,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 130,
+    "first_commit_date": "2019-10-11T10:53:48+02:00",
+    "last_commit_date": "2026-09-09T12:12:28+02:00",
+    "last_commit_author": "Bert",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-10-11, before 2022-01-01; 1 of its 130 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 26352,
+    "sha256": "e2555b1a34a7ec9df0d93983a48062c454f71c19ea7fd0b2957f673ea31947af",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 416,
+    "words": 2197,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/coverlet-coverage--coverlet/Documentation/Changelog.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__IMPROVE_DASH.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "agno-agi/dash",
+    "path": "docs/IMPROVE_DASH.md",
+    "commit": "6d86fca8e85b17349238389f5fad92d15e8f633f",
+    "commit_date": "2026-07-10T10:50:33+01:00",
+    "url": "https://github.com/agno-agi/dash/blob/6d86fca8e85b17349238389f5fad92d15e8f633f/docs/IMPROVE_DASH.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-30T10:46:16+00:00",
+    "stars": 2268,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-07T16:07:23+01:00",
+    "last_commit_date": "2026-04-07T16:07:23+01:00",
+    "last_commit_author": "Ashpreet",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3127,
+    "sha256": "25fc38e4f6826ea54cfc12740de0f16d24c7115e1b0113eb8d2c8aaf1f4fc4e4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 70,
+    "words": 479,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/agno-agi--dash/docs/IMPROVE_DASH.md"
+}

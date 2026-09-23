@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12",
+    "path": "README.md",
+    "commit": "a0ce2a0e0feb8f4caf0346b139266f5320b90322",
+    "commit_date": "2021-09-24T07:45:33+00:00",
+    "url": "https://huggingface.co/bionlp/bluebert_pubmed_uncased_L-12_H-768_A-12/blob/a0ce2a0e0feb8f4caf0346b139266f5320b90322/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2020-11-01T17:19:19+00:00",
+    "stars": 5,
+    "found_by": "hf-models-cc0-1.0"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-12-11T22:34:48+01:00",
+    "last_commit_date": "2021-09-24T07:45:33+00:00",
+    "last_commit_author": "Elias Showk",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-24: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1620,
+    "sha256": "549a3eebbe5fb9444944f51015fd1a55df8e9cd98a3f3713b0f8a831490571a8",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 187,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--bionlp--bluebert_pubmed_uncased_L-12_H-768_A-12/README.md"
+}

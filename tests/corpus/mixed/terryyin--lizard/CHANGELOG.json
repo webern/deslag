@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "terryyin/lizard",
+    "path": "CHANGELOG.md",
+    "commit": "ae818b58f8cb097930af479e7b3728bae139f4bd",
+    "commit_date": "2026-09-16T13:31:06+08:00",
+    "url": "https://github.com/terryyin/lizard/blob/ae818b58f8cb097930af479e7b3728bae139f4bd/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2520,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 69,
+    "first_commit_date": "2018-02-13T21:17:47+08:00",
+    "last_commit_date": "2026-08-19T08:03:18+08:00",
+    "last_commit_author": "Terry Yin",
+    "authors": 4,
+    "ai_commits": 4,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-13, before 2022-01-01; 4 of its 69 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 12284,
+    "sha256": "08169208bb69a8d93a66dc8935da56e69633cc367d526dc85ad709afbacd48fa",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 375,
+    "words": 1861,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/terryyin--lizard/CHANGELOG.md"
+}

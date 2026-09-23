@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "unpoller/unpoller",
+    "path": "CONTRIBUTING.md",
+    "commit": "d46146bdd08164d6e42792b091f2e92b795e2a7d",
+    "commit_date": "2026-09-18T18:09:00-04:00",
+    "url": "https://github.com/unpoller/unpoller/blob/d46146bdd08164d6e42792b091f2e92b795e2a7d/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2714,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2019-06-20T22:59:24-07:00",
+    "last_commit_date": "2026-05-09T11:55:18-05:00",
+    "last_commit_author": "Cody Lee",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-06-20, before 2022-01-01; 1 of its 9 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2317,
+    "sha256": "95c26272dbdcc2b908d910adefa3bf043360b7f5df9639821779dfa5292d75ba",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 60,
+    "words": 355,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/unpoller--unpoller/CONTRIBUTING.md"
+}

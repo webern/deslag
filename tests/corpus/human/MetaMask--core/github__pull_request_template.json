@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "MetaMask/core",
+    "path": ".github/pull_request_template.md",
+    "commit": "28c843408e5ff3a1f031dfd9feaaa0affae94fb3",
+    "commit_date": "2021-12-27T13:15:10-06:00",
+    "url": "https://github.com/MetaMask/core/blob/28c843408e5ff3a1f031dfd9feaaa0affae94fb3/.github/pull_request_template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-08-26T14:47:31-06:00",
+    "last_commit_date": "2021-08-26T14:47:31-06:00",
+    "last_commit_author": "sethkfman",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-26: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1087,
+    "sha256": "5da1f4e92b200ee31f6282c838d9cd63ab107f2926d8ec75cdb7df93af9b1649",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 172,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/MetaMask--core/.github/pull_request_template.md"
+}

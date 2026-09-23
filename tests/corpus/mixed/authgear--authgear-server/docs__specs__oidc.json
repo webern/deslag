@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__specs__oidc.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "authgear/authgear-server",
+    "path": "docs/specs/oidc.md",
+    "commit": "3b4debbe3c1cd56de93c978ebeeebac24448f1ac",
+    "commit_date": "2026-09-23T17:13:04+08:00",
+    "url": "https://github.com/authgear/authgear-server/blob/3b4debbe3c1cd56de93c978ebeeebac24448f1ac/docs/specs/oidc.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2063,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 43,
+    "first_commit_date": "2020-07-07T14:00:24+08:00",
+    "last_commit_date": "2026-09-09T12:12:50+00:00",
+    "last_commit_author": "tung oursky",
+    "authors": 7,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-07-07, before 2022-01-01; 2 of its 43 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 44869,
+    "sha256": "a7a1179a13355b8390eb450586124c715f5f1af1f520f6f73f8e2f4ac68670a6",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 757,
+    "words": 4185,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/authgear--authgear-server/docs/specs/oidc.md"
+}

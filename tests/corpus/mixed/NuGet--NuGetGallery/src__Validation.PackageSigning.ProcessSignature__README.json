@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "src__Validation.PackageSigning.ProcessSignature__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "NuGet/NuGetGallery",
+    "path": "src/Validation.PackageSigning.ProcessSignature/README.md",
+    "commit": "1aed741f3ba5b72405dd3f21feee6a2d509dc106",
+    "commit_date": "2026-09-23T10:24:52+05:30",
+    "url": "https://github.com/NuGet/NuGetGallery/blob/1aed741f3ba5b72405dd3f21feee6a2d509dc106/src/Validation.PackageSigning.ProcessSignature/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1646,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2020-04-28T13:35:57-07:00",
+    "last_commit_date": "2026-09-19T13:00:46-07:00",
+    "last_commit_author": "Damon Tivel",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-28, before 2022-01-01; 1 of its 4 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 9868,
+    "sha256": "e108a74c0c7de0b203927d663d21f56d85b293868d7583de4db408b71f7815c7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": true,
+    "line_endings": "lf",
+    "lines": 158,
+    "words": 1321,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NuGet--NuGetGallery/src/Validation.PackageSigning.ProcessSignature/README.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__ref__bootstrapping.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "FStarLang/FStar",
+    "path": "doc/ref/bootstrapping.md",
+    "commit": "0d5f14346769e2d77278d426d240476b3c8f3bd6",
+    "commit_date": "2026-09-23T17:28:47+00:00",
+    "url": "https://github.com/FStarLang/FStar/blob/0d5f14346769e2d77278d426d240476b3c8f3bd6/doc/ref/bootstrapping.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-fsharp.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3109,
+    "found_by": "sg-topic:ocaml"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-14T23:47:08+00:00",
+    "last_commit_date": "2026-07-17T22:31:48+00:00",
+    "last_commit_author": "Gabriel Ebner",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3059,
+    "sha256": "012d4cc73985b84a279d5abfb92d5b1e8fbe8d391ff8a6e96974a049b18ed196",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 477,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/FStarLang--FStar/doc/ref/bootstrapping.md"
+}

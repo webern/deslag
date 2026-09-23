@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__api__create-list.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "keystonejs/keystone-5",
+    "path": "docs/api/create-list.md",
+    "commit": "3dfe5941861ff9da0e79a66d6a2900240cdd370d",
+    "commit_date": "2021-11-01T12:34:49+11:00",
+    "url": "https://github.com/keystonejs/keystone-5/blob/3dfe5941861ff9da0e79a66d6a2900240cdd370d/docs/api/create-list.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-04-05T20:48:38+10:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 30,
+    "first_commit_date": "2019-05-13T17:09:16+10:00",
+    "last_commit_date": "2020-07-22T15:38:48+10:00",
+    "last_commit_author": "Jordan Overbye",
+    "authors": 11,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-07-22: all 30 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 9902,
+    "sha256": "12df72ad12bf01b166c37f8fad8d0722d249a3ac346fa54c2a64eaa6b8c74b68",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 310,
+    "words": 1240,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/keystonejs--keystone-5/docs/api/create-list.md"
+}

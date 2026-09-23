@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "gitlab__issue_templates__Bug.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/cli",
+    "path": ".gitlab/issue_templates/Bug.md",
+    "commit": "8a98e38ce9bf26813e0af573e41212b702d326be",
+    "commit_date": "2021-12-20T19:44:32+02:00",
+    "url": "https://gitlab.com/gitlab-org/cli/-/blob/8a98e38ce9bf26813e0af573e41212b702d326be/.gitlab/issue_templates/Bug.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-07-24T20:36:58+00:00",
+    "stars": 1098,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-11-29T18:04:15+00:00",
+    "last_commit_date": "2021-01-06T19:38:48+00:00",
+    "last_commit_author": "Clement Sam",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-06: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 839,
+    "sha256": "1fb727d548ca761ee2f55fec569be7866b91ca2d3b7b9e85c59a4d03a2075733",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 140,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gitlab-org--cli/.gitlab/issue_templates/Bug.md"
+}

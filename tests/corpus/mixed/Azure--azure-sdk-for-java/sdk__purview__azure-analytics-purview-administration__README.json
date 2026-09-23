@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "sdk__purview__azure-analytics-purview-administration__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-sdk-for-java",
+    "path": "sdk/purview/azure-analytics-purview-administration/README.md",
+    "commit": "a45fe88e71ead6e8e7cf5d8e03f817ad5715032b",
+    "commit_date": "2026-09-23T12:32:56-07:00",
+    "url": "https://github.com/Azure/azure-sdk-for-java/blob/a45fe88e71ead6e8e7cf5d8e03f817ad5715032b/sdk/purview/azure-analytics-purview-administration/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2563,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 30,
+    "first_commit_date": "2021-10-21T14:12:58+08:00",
+    "last_commit_date": "2026-05-04T14:14:20-07:00",
+    "last_commit_author": "Vinay Gera",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-10-21, before 2022-01-01; 1 of its 30 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5838,
+    "sha256": "e0044b042ce76b1cd49dc02eee4ac1feb37ed65d8cb58948ccb5609109f46213",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 117,
+    "words": 504,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Azure--azure-sdk-for-java/sdk/purview/azure-analytics-purview-administration/README.md"
+}

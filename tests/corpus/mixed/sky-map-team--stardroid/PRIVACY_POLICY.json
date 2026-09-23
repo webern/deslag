@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "PRIVACY_POLICY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sky-map-team/stardroid",
+    "path": "PRIVACY_POLICY.md",
+    "commit": "d77613749edeb78430916d442cbf36033ded0329",
+    "commit_date": "2026-09-21T22:19:55-04:00",
+    "url": "https://github.com/sky-map-team/stardroid/blob/d77613749edeb78430916d442cbf36033ded0329/PRIVACY_POLICY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1851,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-07-04T10:35:27-04:00",
+    "last_commit_date": "2026-08-29T15:42:37-04:00",
+    "last_commit_author": "John David Taylor",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-07-04, before 2022-01-01; 2 of its 3 commits are marked as an AI agent's (claude-code, gemini)"
+  },
+  "content": {
+    "size_bytes": 4045,
+    "sha256": "4fbcef6cbc3370eaa03fcedf77d6dc93ac644403dbe74794860f70fcd7596c1f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 625,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/sky-map-team--stardroid/PRIVACY_POLICY.md"
+}

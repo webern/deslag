@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "NbAiLab/nb-bert-base",
+    "path": "README.md",
+    "commit": "82b194c0b3ea1fcad65f1eceee04adb26f9f71ac",
+    "commit_date": "2021-11-26T12:02:27+00:00",
+    "url": "https://huggingface.co/NbAiLab/nb-bert-base/blob/82b194c0b3ea1fcad65f1eceee04adb26f9f71ac/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-01-13T21:18:46+00:00",
+    "stars": 32,
+    "found_by": "hf-models-cc-by-4.0"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2021-01-13T22:30:30+01:00",
+    "last_commit_date": "2021-11-26T12:02:27+00:00",
+    "last_commit_author": "Per",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-26: all 10 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1301,
+    "sha256": "3e1f531d89d4316975168460643edf736ab0fca83bafa854517c07a9f029758a",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 41,
+    "words": 195,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--NbAiLab--nb-bert-base/README.md"
+}

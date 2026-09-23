@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "PRIVACY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dreamiurg/claude-mountaineering-skills",
+    "path": "PRIVACY.md",
+    "commit": "4dd512b7ffd901a7cd4df3724eba36b06dea32dc",
+    "commit_date": "2026-07-09T11:27:53-07:00",
+    "url": "https://github.com/dreamiurg/claude-mountaineering-skills/blob/4dd512b7ffd901a7cd4df3724eba36b06dea32dc/PRIVACY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-20T21:45:27-07:00",
+    "stars": null,
+    "found_by": "github-topic:hiking"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-05T16:47:08-10:00",
+    "last_commit_date": "2026-07-05T16:47:08-10:00",
+    "last_commit_author": "Dmytro Gaivoronsky",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3377,
+    "sha256": "4565af537c8977a3165919ab6530f1c65ef51c783bcebe25d73394e67823791b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 493,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dreamiurg--claude-mountaineering-skills/PRIVACY.md"
+}

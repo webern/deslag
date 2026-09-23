@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "templates__skills__en__init-project__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "UfoMiao/zcf",
+    "path": "templates/skills/en/init-project/SKILL.md",
+    "commit": "63cb2d07a0fad3a9def37118ba056bafae780d44",
+    "commit_date": "2026-08-31T10:58:52+08:00",
+    "url": "https://github.com/UfoMiao/zcf/blob/63cb2d07a0fad3a9def37118ba056bafae780d44/templates/skills/en/init-project/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-08-01T20:04:37+08:00",
+    "stars": 6080,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-11T18:03:12+08:00",
+    "last_commit_date": "2026-07-11T18:03:12+08:00",
+    "last_commit_author": "伊冯",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2895,
+    "sha256": "75664c525f6c40b3be83a7710c9aa5a64d029895555d3562f7e46147661f8365",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 54,
+    "words": 358,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/UfoMiao--zcf/templates/skills/en/init-project/SKILL.md"
+}

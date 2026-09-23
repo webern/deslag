@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__review-delta__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tirth8205/code-review-graph",
+    "path": "skills/review-delta/SKILL.md",
+    "commit": "6b12d11625cbec3b6773e076cb3d136464fa90e5",
+    "commit_date": "2026-09-18T19:37:08+01:00",
+    "url": "https://github.com/tirth8205/code-review-graph/blob/6b12d11625cbec3b6773e076cb3d136464fa90e5/skills/review-delta/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-26T17:31:42+00:00",
+    "stars": 31711,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-02-26T17:31:42+00:00",
+    "last_commit_date": "2026-09-14T00:59:16+01:00",
+    "last_commit_author": "Tirth Kanani",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 5 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1300,
+    "sha256": "141c520fa4e778c32718748b11ad3ace5c114c2c014deb07506421f5213aec04",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 168,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tirth8205--code-review-graph/skills/review-delta/SKILL.md"
+}

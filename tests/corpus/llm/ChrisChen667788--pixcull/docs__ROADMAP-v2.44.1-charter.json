@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__ROADMAP-v2.44.1-charter.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ChrisChen667788/pixcull",
+    "path": "docs/ROADMAP-v2.44.1-charter.md",
+    "commit": "5b8482a07c07d7da9f03a68d88e6a2fcdc4ce923",
+    "commit_date": "2026-09-13T06:34:53+08:00",
+    "url": "https://github.com/ChrisChen667788/pixcull/blob/5b8482a07c07d7da9f03a68d88e6a2fcdc4ce923/docs/ROADMAP-v2.44.1-charter.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-25T10:13:10+08:00",
+    "stars": 115,
+    "found_by": "sg-topic:photography"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-01T20:43:28+08:00",
+    "last_commit_date": "2026-08-01T20:43:28+08:00",
+    "last_commit_author": "Chris Chen",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4853,
+    "sha256": "7f186fab1d9c50c712b212a68dea5bc16cdba39c551a105eee6edf9594e0cf76",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 101,
+    "words": 334,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ChrisChen667788--pixcull/docs/ROADMAP-v2.44.1-charter.md"
+}

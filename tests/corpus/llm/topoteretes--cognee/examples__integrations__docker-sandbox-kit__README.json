@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "examples__integrations__docker-sandbox-kit__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "topoteretes/cognee",
+    "path": "examples/integrations/docker-sandbox-kit/README.md",
+    "commit": "663a2dc15d04bc0d7ec2733a2dd604b7ed1b8c8e",
+    "commit_date": "2026-09-19T12:54:07+02:00",
+    "url": "https://github.com/topoteretes/cognee/blob/663a2dc15d04bc0d7ec2733a2dd604b7ed1b8c8e/examples/integrations/docker-sandbox-kit/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-08-16T18:16:33+02:00",
+    "stars": 30908,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-21T17:15:34+02:00",
+    "last_commit_date": "2026-09-14T12:01:32+02:00",
+    "last_commit_author": "Igor Ilic",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 7444,
+    "sha256": "dca790ba6d7ac3cc06e62f37f2a04da5900b07d1713f528cd2925b9204596ff4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 152,
+    "words": 967,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/topoteretes--cognee/examples/integrations/docker-sandbox-kit/README.md"
+}

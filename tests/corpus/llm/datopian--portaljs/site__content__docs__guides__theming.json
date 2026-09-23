@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "site__content__docs__guides__theming.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "datopian/portaljs",
+    "path": "site/content/docs/guides/theming.md",
+    "commit": "d5c096aa6a4c24c19f28d112400d0489b18aeaf8",
+    "commit_date": "2026-09-07T17:11:55+05:00",
+    "url": "https://github.com/datopian/portaljs/blob/d5c096aa6a4c24c19f28d112400d0489b18aeaf8/site/content/docs/guides/theming.md",
+    "license": "MIT",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2356,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-05T13:30:42+05:00",
+    "last_commit_date": "2026-06-05T13:30:42+05:00",
+    "last_commit_author": "mayor",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3104,
+    "sha256": "dde02af6b561e4fa76d3a73c5307b5e87efe6504a5a6d9db28d276a85083e92c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 465,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/datopian--portaljs/site/content/docs/guides/theming.md"
+}

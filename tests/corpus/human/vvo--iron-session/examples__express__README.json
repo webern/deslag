@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "examples__express__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "vvo/iron-session",
+    "path": "examples/express/README.md",
+    "commit": "dab76011ee9951b358db5e7d80dad45cb5453043",
+    "commit_date": "2021-12-01T09:10:59+00:00",
+    "url": "https://github.com/vvo/iron-session/blob/dab76011ee9951b358db5e7d80dad45cb5453043/examples/express/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-05T20:27:43+00:00",
+    "stars": 4145,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-05-01T21:36:05+02:00",
+    "last_commit_date": "2021-11-29T00:07:59+01:00",
+    "last_commit_author": "Vincent Voyer",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-29: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 819,
+    "sha256": "23d8ae42dea0f6577ea40e0cd52623553675aaad7597a04763ecd54eafcb9f29",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 30,
+    "words": 86,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/vvo--iron-session/examples/express/README.md"
+}

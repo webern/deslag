@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "avelino/awesome-go",
+    "path": "CONTRIBUTING.md",
+    "commit": "2faada79ca389927f14c42f2ed912f2e05adbf52",
+    "commit_date": "2026-09-23T13:44:26-04:00",
+    "url": "https://github.com/avelino/awesome-go/blob/2faada79ca389927f14c42f2ed912f2e05adbf52/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 185290,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 24,
+    "first_commit_date": "2018-01-02T09:13:02-02:00",
+    "last_commit_date": "2026-02-27T07:05:00-03:00",
+    "last_commit_author": "Avelino",
+    "authors": 10,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 1 of its 24 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 15206,
+    "sha256": "923e106d10db338f235b853753b863055e0b5b7f39dbf79ca09b3c35d5811926",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 270,
+    "words": 2295,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/avelino--awesome-go/CONTRIBUTING.md"
+}

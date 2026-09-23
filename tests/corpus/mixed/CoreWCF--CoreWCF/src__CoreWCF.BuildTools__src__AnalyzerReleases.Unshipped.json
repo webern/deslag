@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "src__CoreWCF.BuildTools__src__AnalyzerReleases.Unshipped.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "CoreWCF/CoreWCF",
+    "path": "src/CoreWCF.BuildTools/src/AnalyzerReleases.Unshipped.md",
+    "commit": "6e2cce88349fe41056fe8afda0dbbdf98d54bb00",
+    "commit_date": "2026-07-21T06:16:43+02:00",
+    "url": "https://github.com/CoreWCF/CoreWCF/blob/6e2cce88349fe41056fe8afda0dbbdf98d54bb00/src/CoreWCF.BuildTools/src/AnalyzerReleases.Unshipped.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-05-09T10:14:51-07:00",
+    "stars": 1776,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2021-12-09T19:12:32+01:00",
+    "last_commit_date": "2026-01-10T00:03:24+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-12-09, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 385,
+    "sha256": "bf44e9424d4666556f39ea22ed51a8fa4069f871ffab824884e1f17f12b36421",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 8,
+    "words": 37,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/CoreWCF--CoreWCF/src/CoreWCF.BuildTools/src/AnalyzerReleases.Unshipped.md"
+}

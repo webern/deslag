@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__react-core__src__demos__TextInputGroupDemo.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "patternfly/patternfly-react",
+    "path": "packages/react-core/src/demos/TextInputGroupDemo.md",
+    "commit": "d922b9c2b3e42d12dbc3a4aa04a675a897565907",
+    "commit_date": "2026-09-16T15:03:05+00:00",
+    "url": "https://github.com/patternfly/patternfly-react/blob/d922b9c2b3e42d12dbc3a4aa04a675a897565907/packages/react-core/src/demos/TextInputGroupDemo.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-11-12T09:07:23-05:00",
+    "last_commit_date": "2026-07-07T15:31:51-04:00",
+    "last_commit_author": "Rebecca Alpert",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-11-12, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2418,
+    "sha256": "c341706dc28650759cb1ef93b867516ceefe1257d76a7ccb71bf77127fabcd23",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 373,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/patternfly--patternfly-react/packages/react-core/src/demos/TextInputGroupDemo.md"
+}

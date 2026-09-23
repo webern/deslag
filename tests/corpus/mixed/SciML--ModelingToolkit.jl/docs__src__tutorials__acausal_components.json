@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__src__tutorials__acausal_components.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SciML/ModelingToolkit.jl",
+    "path": "docs/src/tutorials/acausal_components.md",
+    "commit": "e167d971e019bf6bc1264fea3084709906994f8b",
+    "commit_date": "2026-09-23T08:43:01+00:00",
+    "url": "https://github.com/SciML/ModelingToolkit.jl/blob/e167d971e019bf6bc1264fea3084709906994f8b/docs/src/tutorials/acausal_components.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-02-26T17:07:45-08:00",
+    "stars": 1684,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 52,
+    "first_commit_date": "2021-02-28T06:09:49-05:00",
+    "last_commit_date": "2026-01-26T04:23:38-05:00",
+    "last_commit_author": "ChrisRackauckas-Claude",
+    "authors": 13,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-02-28, before 2022-01-01; 6 of its 52 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10733,
+    "sha256": "5556bee03907468d9440bfa44e97c39d1a8c61f19cf1cb97a3d5b666518d56eb",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 327,
+    "words": 1590,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/SciML--ModelingToolkit.jl/docs/src/tutorials/acausal_components.md"
+}

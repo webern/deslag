@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "misc__benchmark__src__baseline__CI.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ggui-ai/ggui",
+    "path": "misc/benchmark/src/baseline/CI.md",
+    "commit": "d92fbf55be24c964e411424f2bbb1668251f800c",
+    "commit_date": "2026-09-24T04:53:12+09:00",
+    "url": "https://github.com/ggui-ai/ggui/blob/d92fbf55be24c964e411424f2bbb1668251f800c/misc/benchmark/src/baseline/CI.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-21T15:52:52+00:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-05-21T15:52:52+00:00",
+    "last_commit_date": "2026-05-30T11:39:15+00:00",
+    "last_commit_author": "Wanseob Lim",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 4 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9068,
+    "sha256": "fc5f965dbdc064d54402be823935b60c4493cabc9fc48776c80a22d4b65b407d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 233,
+    "words": 1294,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ggui-ai--ggui/misc/benchmark/src/baseline/CI.md"
+}

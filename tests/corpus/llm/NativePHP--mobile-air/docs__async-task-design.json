@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__async-task-design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "NativePHP/mobile-air",
+    "path": "docs/async-task-design.md",
+    "commit": "eff719f29b1667a3ce6a759a83fef6602943358c",
+    "commit_date": "2026-09-23T18:33:52+02:00",
+    "url": "https://github.com/NativePHP/mobile-air/blob/eff719f29b1667a3ce6a759a83fef6602943358c/docs/async-task-design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2026-01-24T14:16:56+00:00",
+    "stars": 1182,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-18T11:01:22+01:00",
+    "last_commit_date": "2026-09-18T11:01:22+01:00",
+    "last_commit_author": "Simon Hamp",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 15504,
+    "sha256": "8f64d7a7f715d837a8ccb4b754dbfae9b7e56f00dfb59d6f27f13cb5d2ff4eff",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 283,
+    "words": 2153,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/NativePHP--mobile-air/docs/async-task-design.md"
+}

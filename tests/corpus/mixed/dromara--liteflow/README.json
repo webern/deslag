@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dromara/liteflow",
+    "path": "README.md",
+    "commit": "54c084446c17ebd8536b0172de44b946f85562de",
+    "commit_date": "2026-09-21T14:40:44+08:00",
+    "url": "https://github.com/dromara/liteflow/blob/54c084446c17ebd8536b0172de44b946f85562de/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3869,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 102,
+    "first_commit_date": "2018-02-05T19:22:30+08:00",
+    "last_commit_date": "2026-09-06T00:58:54+08:00",
+    "last_commit_author": "everywhere.z",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-05, before 2022-01-01; 1 of its 102 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8055,
+    "sha256": "5bcdc1c469bf2af42fa87894a1f0c166dab25f8f218a8ee1cc76fbcf88264e2c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 104,
+    "words": 1173,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dromara--liteflow/README.md"
+}

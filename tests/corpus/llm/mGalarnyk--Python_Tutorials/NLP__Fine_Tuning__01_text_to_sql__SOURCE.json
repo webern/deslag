@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "NLP__Fine_Tuning__01_text_to_sql__SOURCE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mGalarnyk/Python_Tutorials",
+    "path": "NLP/Fine_Tuning/01_text_to_sql/SOURCE.md",
+    "commit": "d364918e9d406b7d8cf6c0c5ac2cb62f43e5a92c",
+    "commit_date": "2026-08-25T03:24:38-04:00",
+    "url": "https://github.com/mGalarnyk/Python_Tutorials/blob/d364918e9d406b7d8cf6c0c5ac2cb62f43e5a92c/NLP/Fine_Tuning/01_text_to_sql/SOURCE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1269,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-23T18:11:10-07:00",
+    "last_commit_date": "2026-08-23T18:11:10-07:00",
+    "last_commit_author": "mGalarnyk",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 363,
+    "sha256": "a73c05967e3afe7e254ed7550b9de0d6f59f0c37a5a3a84566265f8203cf0f95",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 5,
+    "words": 47,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mGalarnyk--Python_Tutorials/NLP/Fine_Tuning/01_text_to_sql/SOURCE.md"
+}

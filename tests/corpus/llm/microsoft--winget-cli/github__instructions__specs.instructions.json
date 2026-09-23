@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__instructions__specs.instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/winget-cli",
+    "path": ".github/instructions/specs.instructions.md",
+    "commit": "5e96f4fa76840778c756162326fb65ce70623a24",
+    "commit_date": "2026-09-23T09:53:35-07:00",
+    "url": "https://github.com/microsoft/winget-cli/blob/5e96f4fa76840778c756162326fb65ce70623a24/.github/instructions/specs.instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-16T15:16:50-07:00",
+    "stars": 26448,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-04T13:07:51-07:00",
+    "last_commit_date": "2026-05-04T13:07:51-07:00",
+    "last_commit_author": "Demitrius Nelon",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 7426,
+    "sha256": "0369f796c8f3188abfd844a34a595961e91713b2f88f4c05d6dd6301ebecb206",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 144,
+    "words": 1031,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--winget-cli/.github/instructions/specs.instructions.md"
+}

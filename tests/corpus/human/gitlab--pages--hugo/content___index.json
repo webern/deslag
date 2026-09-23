@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "content___index.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "pages/hugo",
+    "path": "content/_index.md",
+    "commit": "905d2c88b6ff52b5b3860c25ffe9a24c6b937cf8",
+    "commit_date": "2021-09-15T07:31:49+00:00",
+    "url": "https://gitlab.com/pages/hugo/-/blob/905d2c88b6ff52b5b3860c25ffe9a24c6b937cf8/content/_index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 421,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-04-09T09:20:33+00:00",
+    "last_commit_date": "2018-04-09T09:20:33+00:00",
+    "last_commit_author": "Achilleas Pipinellis",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-04-09: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 460,
+    "sha256": "2e6a4e2d8a4baee91ede66b09edc8a43e2648c818f0ccaab130afc498d9ffab2",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 59,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--pages--hugo/content/_index.md"
+}

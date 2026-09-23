@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "protocol__day1-checklist.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SpyderMYK/fieldy-field-study",
+    "path": "protocol/day1-checklist.md",
+    "commit": "61883b7f425a24642be66fa135f553d22ee80088",
+    "commit_date": "2026-08-17T10:58:16-06:00",
+    "url": "https://github.com/SpyderMYK/fieldy-field-study/blob/61883b7f425a24642be66fa135f553d22ee80088/protocol/day1-checklist.md",
+    "license": "CC-BY-4.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-docs.md"
+    ],
+    "repo_first_commit_date": "2026-07-08T13:54:39-06:00",
+    "stars": null,
+    "found_by": "github-topic:lab-notebook"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-08T13:54:39-06:00",
+    "last_commit_date": "2026-07-09T08:32:39-06:00",
+    "last_commit_author": "Mike Spille",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2398,
+    "sha256": "6d1b382f3e867a82648b0a253c7231a70033327ae13db5e1ae8fb7e82e018735",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 396,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/SpyderMYK--fieldy-field-study/protocol/day1-checklist.md"
+}

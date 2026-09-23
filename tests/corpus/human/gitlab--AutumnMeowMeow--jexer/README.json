@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "AutumnMeowMeow/jexer",
+    "path": "README.md",
+    "commit": "5ef0cde8cff07d4491ee6019f5e73ccf40694e03",
+    "commit_date": "2021-12-31T12:44:28-06:00",
+    "url": "https://gitlab.com/AutumnMeowMeow/jexer/-/blob/5ef0cde8cff07d4491ee6019f5e73ccf40694e03/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 142,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 57,
+    "first_commit_date": "2018-03-25T14:30:22-04:00",
+    "last_commit_date": "2021-12-31T10:02:07-06:00",
+    "last_commit_author": "Autumn Lamonte",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-31: all 57 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 9864,
+    "sha256": "c3f47e6d483ba4fbd535503ea1792b95a19ba80f9946a44cdf197a53e233ba73",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 250,
+    "words": 1285,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--AutumnMeowMeow--jexer/README.md"
+}

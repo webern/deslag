@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tony19/logback-android",
+    "path": ".github/copilot-instructions.md",
+    "commit": "2a93ccf91a1e2766f1af1763bf0dfe478a379cdc",
+    "commit_date": "2026-08-06T22:08:34-07:00",
+    "url": "https://github.com/tony19/logback-android/blob/2a93ccf91a1e2766f1af1763bf0dfe478a379cdc/.github/copilot-instructions.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1265,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-09T00:07:34-05:00",
+    "last_commit_date": "2026-07-09T00:07:34-05:00",
+    "last_commit_author": "Tony Trinh",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2820,
+    "sha256": "623a5bc0acf0d2ffbc606336c261f868d09cbb342d33d1a5cf2252ed94027adc",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 56,
+    "words": 400,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tony19--logback-android/.github/copilot-instructions.md"
+}

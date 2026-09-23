@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "dnkl/fcft",
+    "path": "CHANGELOG.md",
+    "commit": "df8b645b1a9c315ead0df45eb7ff749452856872",
+    "commit_date": "2021-12-23T14:26:45+01:00",
+    "url": "https://codeberg.org/dnkl/fcft/src/commit/df8b645b1a9c315ead0df45eb7ff749452856872/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-12-01T12:04:36+01:00",
+    "stars": 67,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 153,
+    "first_commit_date": "2020-04-11T16:28:17+02:00",
+    "last_commit_date": "2021-12-23T14:26:45+01:00",
+    "last_commit_author": "Daniel Eklöf",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-23: all 153 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 11052,
+    "sha256": "2f1032b01f3d973f51cfc0c41bbd092eb077f8bf4ddbc6cf3301f137dda6557e",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 474,
+    "words": 1488,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--dnkl--fcft/CHANGELOG.md"
+}

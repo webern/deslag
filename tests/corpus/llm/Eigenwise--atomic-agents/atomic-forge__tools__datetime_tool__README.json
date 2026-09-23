@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "atomic-forge__tools__datetime_tool__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Eigenwise/atomic-agents",
+    "path": "atomic-forge/tools/datetime_tool/README.md",
+    "commit": "33d2ec94f42d4a65393a336e35edf21ee5700303",
+    "commit_date": "2026-08-24T14:20:06+02:00",
+    "url": "https://github.com/Eigenwise/atomic-agents/blob/33d2ec94f42d4a65393a336e35edf21ee5700303/atomic-forge/tools/datetime_tool/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-06-03T10:24:07+02:00",
+    "stars": 6254,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-29T12:54:48+02:00",
+    "last_commit_date": "2026-04-29T12:54:48+02:00",
+    "last_commit_author": "KennyVaneetvelde",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2274,
+    "sha256": "d76ab6363240b3d5ac413b1f36eca5402df4a9d0d5e9c4970bf15e3002ddd577",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 63,
+    "words": 298,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Eigenwise--atomic-agents/atomic-forge/tools/datetime_tool/README.md"
+}

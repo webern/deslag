@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__development__intellij-setup.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "baserow/baserow",
+    "path": "docs/development/intellij-setup.md",
+    "commit": "7abd82ff4fc5aa78bf3309e030bef86560556e4b",
+    "commit_date": "2026-09-23T21:12:39+02:00",
+    "url": "https://gitlab.com/baserow/baserow/-/blob/7abd82ff4fc5aa78bf3309e030bef86560556e4b/docs/development/intellij-setup.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-02-15T11:43:35+01:00",
+    "stars": 2264,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2021-10-06T11:56:38+00:00",
+    "last_commit_date": "2026-02-11T15:15:24+01:00",
+    "last_commit_author": "Davide Silvestri",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-10-06, before 2022-01-01; 1 of its 9 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4445,
+    "sha256": "4003182722f6df558579f9842d91fd3df43c0fd0e4b0f50c268482552923fd7a",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 556,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--baserow--baserow/docs/development/intellij-setup.md"
+}

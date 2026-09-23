@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__documentation__api__Server.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "boardgameio/boardgame.io",
+    "path": "docs/documentation/api/Server.md",
+    "commit": "5e9a2c94bde803fae8b081958c406c4d0a7be8ae",
+    "commit_date": "2026-08-10T14:46:39+02:00",
+    "url": "https://github.com/boardgameio/boardgame.io/blob/5e9a2c94bde803fae8b081958c406c4d0a7be8ae/docs/documentation/api/Server.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 12439,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2019-07-06T22:37:31+08:00",
+    "last_commit_date": "2026-07-20T11:38:55+00:00",
+    "last_commit_author": "Ivett Ördög",
+    "authors": 6,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-07-06, before 2022-01-01; 2 of its 14 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7528,
+    "sha256": "575f79c4b6b42ab281db4562ea35026d503f6830cea955ec148ec6fc9425dfd9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 226,
+    "words": 1028,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/boardgameio--boardgame.io/docs/documentation/api/Server.md"
+}

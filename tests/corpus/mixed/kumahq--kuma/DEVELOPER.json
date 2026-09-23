@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "DEVELOPER.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kumahq/kuma",
+    "path": "DEVELOPER.md",
+    "commit": "38507b6767f4ec27d9d23bc1f05ce2d812811bdd",
+    "commit_date": "2026-09-23T09:31:32-05:00",
+    "url": "https://github.com/kumahq/kuma/blob/38507b6767f4ec27d9d23bc1f05ce2d812811bdd/DEVELOPER.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-13T14:16:19+01:00",
+    "stars": 4008,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 33,
+    "first_commit_date": "2019-09-09T01:12:45+02:00",
+    "last_commit_date": "2026-09-11T10:12:25+02:00",
+    "last_commit_author": "Marcin Skalski",
+    "authors": 17,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-09-09, before 2022-01-01; 1 of its 33 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 8039,
+    "sha256": "8c772ce2cd496deeef9a04a85a65467ffb9d66135c3a936f7815f22f3b4e7de8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 194,
+    "words": 1107,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kumahq--kuma/DEVELOPER.md"
+}

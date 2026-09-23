@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kampersanda/sucds",
+    "path": "README.md",
+    "commit": "e9e6ffc2a36b49b26edca620ddc05cae6562ba44",
+    "commit_date": "2026-08-31T15:52:45+09:00",
+    "url": "https://github.com/kampersanda/sucds/blob/e9e6ffc2a36b49b26edca620ddc05cae6562ba44/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2021-11-26T22:02:53+09:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 35,
+    "first_commit_date": "2021-11-26T22:02:53+09:00",
+    "last_commit_date": "2026-08-31T15:52:45+09:00",
+    "last_commit_author": "Shunsuke Kanda",
+    "authors": 3,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-11-26, before 2022-01-01; 3 of its 35 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3285,
+    "sha256": "06d1e57f9e211e0f4d151b939be3467cb980a1b1c1f9177d8fe16ab3701e3df9",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 349,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kampersanda--sucds/README.md"
+}

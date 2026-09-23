@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "transloadit/uppy",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "c011da4d596384ec829a820741739f49858ec6ae",
+    "commit_date": "2026-09-21T18:30:45+05:30",
+    "url": "https://github.com/transloadit/uppy/blob/c011da4d596384ec829a820741739f49858ec6ae/.github/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 30994,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 51,
+    "first_commit_date": "2019-03-20T17:38:15+01:00",
+    "last_commit_date": "2026-08-26T09:20:37+00:00",
+    "last_commit_author": "Claude",
+    "authors": 16,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-03-20, before 2022-01-01; 2 of its 51 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 4278,
+    "sha256": "121945f1f8b809ec51171ef7c2f69367a3a5712252774b25661381036159b426",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 119,
+    "words": 632,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/transloadit--uppy/.github/CONTRIBUTING.md"
+}

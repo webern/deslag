@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "thoughts.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kjnilsson/fez",
+    "path": "thoughts.md",
+    "commit": "0073033768766f3ff593a556f6016210945d2fdc",
+    "commit_date": "2018-09-11T17:09:11+01:00",
+    "url": "https://github.com/kjnilsson/fez/blob/0073033768766f3ff593a556f6016210945d2fdc/thoughts.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 286,
+    "found_by": "sg-topic:erlang"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-28T15:36:13+00:00",
+    "last_commit_date": "2018-02-28T15:36:13+00:00",
+    "last_commit_author": "kjnilsson",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-28: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3786,
+    "sha256": "fe4ac8e8507e064f63110867ac4602ed385d75df37bf5ae330fa222073e22672",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 123,
+    "words": 632,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kjnilsson--fez/thoughts.md"
+}

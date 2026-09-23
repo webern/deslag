@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__visibility-on-elasticsearch.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "cadence-workflow/cadence",
+    "path": "docs/visibility-on-elasticsearch.md",
+    "commit": "cf8d0474004db515b55b7c29e44054232ed2d022",
+    "commit_date": "2026-09-23T09:27:58-07:00",
+    "url": "https://github.com/cadence-workflow/cadence/blob/cf8d0474004db515b55b7c29e44054232ed2d022/docs/visibility-on-elasticsearch.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 9447,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2019-08-12T10:56:45-07:00",
+    "last_commit_date": "2025-07-03T17:09:45-07:00",
+    "last_commit_author": "taylanisikdemir",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-08-12, before 2022-01-01; 1 of its 7 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4899,
+    "sha256": "5df1bb62b15501dcafd92b4eb7e9d81f55460c54cfcf955f010921e7d8eca21a",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 112,
+    "words": 644,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cadence-workflow--cadence/docs/visibility-on-elasticsearch.md"
+}

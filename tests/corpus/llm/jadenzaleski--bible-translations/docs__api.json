@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__api.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jadenzaleski/bible-translations",
+    "path": "docs/api.md",
+    "commit": "ab00e4a8b8663a27116b3c9f641d873c9ca7e87e",
+    "commit_date": "2026-09-21T21:17:44-04:00",
+    "url": "https://github.com/jadenzaleski/bible-translations/blob/ab00e4a8b8663a27116b3c9f641d873c9ca7e87e/docs/api.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-04-22T15:27:17-04:00",
+    "stars": null,
+    "found_by": "github-topic:bible"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-18T16:55:04-04:00",
+    "last_commit_date": "2026-09-18T16:55:04-04:00",
+    "last_commit_author": "Jaden Zaleski",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 735,
+    "sha256": "d76a1d6f20e08beca5414b88cc845a8602ce030316d4f141e27fcec9d54a1dfc",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 39,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jadenzaleski--bible-translations/docs/api.md"
+}

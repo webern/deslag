@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "IMPLEMENTATION_SUMMARY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mabel-dev/opteryx",
+    "path": "IMPLEMENTATION_SUMMARY.md",
+    "commit": "f6aa6e1d33a5e6cd2670e12300b5b2f7f4f9c3b0",
+    "commit_date": "2026-03-12T12:53:47+00:00",
+    "url": "https://github.com/mabel-dev/opteryx/blob/f6aa6e1d33a5e6cd2670e12300b5b2f7f4f9c3b0/IMPLEMENTATION_SUMMARY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-12-28T11:27:23+00:00",
+    "stars": 113,
+    "found_by": "sg-topic:database"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-11-21T20:02:38+00:00",
+    "last_commit_date": "2025-11-21T20:02:38+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4182,
+    "sha256": "df69c6893313deb67cc6589a7cc0ba78d14a390022a73d257c63f78d3cb30648",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 111,
+    "words": 565,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md"
+}

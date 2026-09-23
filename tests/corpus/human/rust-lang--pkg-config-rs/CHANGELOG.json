@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rust-lang/pkg-config-rs",
+    "path": "CHANGELOG.md",
+    "commit": "49a4ac189aafa365167c72e8e503565a7c2697c2",
+    "commit_date": "2021-12-11T10:56:46+02:00",
+    "url": "https://github.com/rust-lang/pkg-config-rs/blob/49a4ac189aafa365167c72e8e503565a7c2697c2/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2018-04-24T17:36:32+02:00",
+    "last_commit_date": "2021-12-11T10:56:46+02:00",
+    "last_commit_author": "Sebastian Dröge",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-11: all 12 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3535,
+    "sha256": "2e631b60f6a27dd02bc16b0c2990d1cd3d66864361d5d41fe6e292b166b3552f",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 144,
+    "words": 537,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/rust-lang--pkg-config-rs/CHANGELOG.md"
+}

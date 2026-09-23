@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dusty-nv/jetson-containers",
+    "path": "README.md",
+    "commit": "70c149aea6126594153ef7690ec4890f8f396518",
+    "commit_date": "2026-06-25T06:25:13-07:00",
+    "url": "https://github.com/dusty-nv/jetson-containers/blob/70c149aea6126594153ef7690ec4890f8f396518/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-03-05T09:43:48-08:00",
+    "stars": 4868,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 319,
+    "first_commit_date": "2020-03-05T09:43:48-08:00",
+    "last_commit_date": "2026-05-30T13:27:17+02:00",
+    "last_commit_author": "Karsten Jeppesen",
+    "authors": 17,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-03-05, before 2022-01-01; 1 of its 319 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 22233,
+    "sha256": "96e9febff9e9906c311deda090973fcbf15339036fadd943334bedc8e0b43bbb",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 169,
+    "words": 1037,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dusty-nv--jetson-containers/README.md"
+}

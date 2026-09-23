@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "core__scripts__cre__environment__docs__cresettings-override-README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "smartcontractkit/chainlink",
+    "path": "core/scripts/cre/environment/docs/cresettings-override-README.md",
+    "commit": "28bb79005391e33f4783c6f5a879f5e21f00b45e",
+    "commit_date": "2026-09-23T18:12:32+00:00",
+    "url": "https://github.com/smartcontractkit/chainlink/blob/28bb79005391e33f4783c6f5a879f5e21f00b45e/core/scripts/cre/environment/docs/cresettings-override-README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8247,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-11T20:51:38-07:00",
+    "last_commit_date": "2026-08-11T20:51:38-07:00",
+    "last_commit_author": "Prashant Yadav",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 15977,
+    "sha256": "df8498c1401896342c65358c59d96bc4816324007417ace136d08616fb89c7e5",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 300,
+    "words": 2229,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/smartcontractkit--chainlink/core/scripts/cre/environment/docs/cresettings-override-README.md"
+}

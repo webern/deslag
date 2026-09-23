@@ -1041,10 +1041,21 @@ def select(args: argparse.Namespace) -> None:
         by_repo: dict[str, list[dict]] = {}
         for f in pool:
             by_repo.setdefault(f"{f['host']}/{f['repo']}", []).append(f)
-        repos = list(by_repo)
-        rng.shuffle(repos)
-        # Off-GitHub repositories go first in every round, so they are not crowded out.
-        repos.sort(key=lambda r: 0 if not r.startswith("github.com/") else 1)
+        # Repositories are taken in turn from each source, a forge or a way of finding them, so
+        # that no one source crowds out the others.
+        groups: dict[str, list[str]] = {}
+        for r, files_ in by_repo.items():
+            f0 = files_[0]
+            group = f0["host"] if f0["host"] != "github.com" else re.split(r"[-:]", f0["found_by"])[0] + (
+                "-agent" if f0["found_by"].startswith("sg-agent") else "")
+            groups.setdefault(group, []).append(r)
+        for members in groups.values():
+            rng.shuffle(members)
+        repos = []
+        for i in range(max(len(m) for m in groups.values())):
+            for name in sorted(groups):
+                if i < len(groups[name]):
+                    repos.append(groups[name][i])
         picked: list[dict] = []
         kinds: dict[str, int] = {}
         non_english = 0

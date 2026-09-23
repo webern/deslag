@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docfx__docs__breaking-changes-2.5.0.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tui-cs/Terminal.Gui",
+    "path": "docfx/docs/breaking-changes-2.5.0.md",
+    "commit": "40215daab644b793b9818adaacef0a790560079c",
+    "commit_date": "2026-09-21T09:27:34-06:00",
+    "url": "https://github.com/tui-cs/Terminal.Gui/blob/40215daab644b793b9818adaacef0a790560079c/docfx/docs/breaking-changes-2.5.0.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 11219,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-03T11:00:46-06:00",
+    "last_commit_date": "2026-09-03T11:00:46-06:00",
+    "last_commit_author": "Tig",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1904,
+    "sha256": "c5f37a754df39fd8df6aa013cac042a6523082e941431c8b2ff32ed4e8eee20b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 199,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tui-cs--Terminal.Gui/docfx/docs/breaking-changes-2.5.0.md"
+}

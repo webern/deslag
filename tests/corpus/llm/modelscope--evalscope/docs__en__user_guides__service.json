@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__en__user_guides__service.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "modelscope/evalscope",
+    "path": "docs/en/user_guides/service.md",
+    "commit": "06b4c67bc37d5482bdcca8b7a3dee335b9e6b5a7",
+    "commit_date": "2026-09-21T16:42:21+08:00",
+    "url": "https://github.com/modelscope/evalscope/blob/06b4c67bc37d5482bdcca8b7a3dee335b9e6b5a7/docs/en/user_guides/service.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-12-07T14:10:50+08:00",
+    "stars": 3458,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2025-12-04T18:30:21+08:00",
+    "last_commit_date": "2025-12-15T16:56:44+08:00",
+    "last_commit_author": "Yunlin Mao",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot",
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (copilot, gemini)"
+  },
+  "content": {
+    "size_bytes": 8342,
+    "sha256": "d8e01ead9341050f2a14d3abe2e2e2e1ce3cf605c61b384aa596b1dce64fbfb0",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 314,
+    "words": 899,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/modelscope--evalscope/docs/en/user_guides/service.md"
+}

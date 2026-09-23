@@ -1,0 +1,54 @@
+{
+  "sidecar_version": 2,
+  "fixture": "NEWS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "BYVoid/OpenCC",
+    "path": "NEWS.md",
+    "commit": "b087c2612ce808f464b0925fc1c497d24971d179",
+    "commit_date": "2026-09-21T23:01:03-07:00",
+    "url": "https://github.com/BYVoid/OpenCC/blob/b087c2612ce808f464b0925fc1c497d24971d179/NEWS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 10007,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 38,
+    "first_commit_date": "2019-04-18T22:51:33+08:00",
+    "last_commit_date": "2026-09-21T22:50:55-07:00",
+    "last_commit_author": "Frank Lin",
+    "authors": 9,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-04-18, before 2022-01-01; 2 of its 38 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 55230,
+    "sha256": "36349b99fc404cbf037ad5de19cd2a6f2da36fd36b4b5488d444ffe1d64a8db2",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 488,
+    "words": 2186,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/BYVoid--OpenCC/NEWS.md"
+}

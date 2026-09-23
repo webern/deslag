@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "super-productivity/super-productivity",
+    "path": "README.md",
+    "commit": "f42d8aac3abab1c70882d3d9002c263f71da4774",
+    "commit_date": "2026-09-23T09:58:22+02:00",
+    "url": "https://github.com/super-productivity/super-productivity/blob/f42d8aac3abab1c70882d3d9002c263f71da4774/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 22209,
+    "found_by": "sg-topic:privacy"
+  },
+  "history": {
+    "commits": 145,
+    "first_commit_date": "2020-06-05T23:22:55+02:00",
+    "last_commit_date": "2026-09-20T12:38:23+02:00",
+    "last_commit_author": "Johannes Millan",
+    "authors": 48,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-06-05, before 2022-01-01; 1 of its 145 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 17607,
+    "sha256": "a76b62fc6db0f62edd85767515634a5a2d4c4496b39f1a3a1245f9f0cfb63d6b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 262,
+    "words": 1370,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/super-productivity--super-productivity/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "cursor__skills__check-push__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pockethost/pockethost",
+    "path": ".cursor/skills/check-push/SKILL.md",
+    "commit": "1f9fecfb268a24f6478444effdacdf64d3514fe9",
+    "commit_date": "2026-09-08T18:32:58+00:00",
+    "url": "https://github.com/pockethost/pockethost/blob/1f9fecfb268a24f6478444effdacdf64d3514fe9/.cursor/skills/check-push/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2022-09-18T20:15:57-07:00",
+    "stars": 1442,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-16T23:18:09+00:00",
+    "last_commit_date": "2026-06-24T06:09:58-07:00",
+    "last_commit_author": "Ben Allfree",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2666,
+    "sha256": "22e74b3c8a904cbfb1c583acc6ab2feb69ef0bd782c866c9e926a0fbedc32c07",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 110,
+    "words": 378,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pockethost--pockethost/.cursor/skills/check-push/SKILL.md"
+}

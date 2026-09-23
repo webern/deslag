@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "console-rs/console",
+    "path": "CHANGELOG.md",
+    "commit": "d150a69fa371624395134aa8c54fde7dbf759c41",
+    "commit_date": "2021-12-23T16:51:50+00:00",
+    "url": "https://github.com/console-rs/console/blob/d150a69fa371624395134aa8c54fde7dbf759c41/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-10-18T13:47:08+02:00",
+    "last_commit_date": "2021-10-14T23:10:54+01:00",
+    "last_commit_author": "Pavan Kumar Sunkara",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-14: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1113,
+    "sha256": "2ef889ab1ed43c7b7fee3bcf968f2e194127e8bb777a97ca1f1486e4657dc719",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 150,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/console-rs--console/CHANGELOG.md"
+}

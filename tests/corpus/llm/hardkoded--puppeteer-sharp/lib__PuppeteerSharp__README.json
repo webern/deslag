@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "lib__PuppeteerSharp__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hardkoded/puppeteer-sharp",
+    "path": "lib/PuppeteerSharp/README.md",
+    "commit": "add8d1c4ad450fdf9788534a14ad4f62fbd36429",
+    "commit_date": "2026-09-17T11:09:09-04:00",
+    "url": "https://github.com/hardkoded/puppeteer-sharp/blob/add8d1c4ad450fdf9788534a14ad4f62fbd36429/lib/PuppeteerSharp/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3921,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-12T14:20:52-03:00",
+    "last_commit_date": "2026-01-12T14:20:52-03:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3031,
+    "sha256": "81ce756aea9ae14aee34a1d3005da4b4cbaa66a8a47e2be7b42dadac061c4a8d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 77,
+    "words": 343,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/hardkoded--puppeteer-sharp/lib/PuppeteerSharp/README.md"
+}

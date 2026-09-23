@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mshibanami/turnish",
+    "path": "SECURITY.md",
+    "commit": "4499b5c313d30a3189a58fdd74fc4ed4b2428afd",
+    "commit_date": "2021-11-22T09:08:15+01:00",
+    "url": "https://github.com/mshibanami/turnish/blob/4499b5c313d30a3189a58fdd74fc4ed4b2428afd/SECURITY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-06-14T19:36:02+02:00",
+    "last_commit_date": "2021-06-15T11:04:16+02:00",
+    "last_commit_author": "Martin Čížek",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-15: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1608,
+    "sha256": "45ce828042c3cc6b2205aa7370147d5323acf3b19f4922835f0f6a92683abefa",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 36,
+    "words": 236,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mshibanami--turnish/SECURITY.md"
+}

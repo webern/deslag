@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ad-si/awesome-sheet-music",
+    "path": "README.md",
+    "commit": "27278ba36f2e72a876e65a8f37fa953207b901e5",
+    "commit_date": "2026-07-01T11:49:05+00:00",
+    "url": "https://github.com/ad-si/awesome-sheet-music/blob/27278ba36f2e72a876e65a8f37fa953207b901e5/README.md",
+    "license": "ISC",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:sheet-music"
+  },
+  "history": {
+    "commits": 62,
+    "first_commit_date": "2019-03-13T09:45:41+01:00",
+    "last_commit_date": "2026-07-01T11:49:05+00:00",
+    "last_commit_author": "Adrian Sieber",
+    "authors": 21,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-03-13, before 2022-01-01; 4 of its 62 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 15929,
+    "sha256": "2ca13c60ec0e7f65096f93764e90d901358597749477902b139db20fdf0040c4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 353,
+    "words": 1753,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ad-si--awesome-sheet-music/README.md"
+}

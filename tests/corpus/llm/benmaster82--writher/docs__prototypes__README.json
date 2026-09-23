@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__prototypes__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "benmaster82/writher",
+    "path": "docs/prototypes/README.md",
+    "commit": "97972bc9e795dfad53e6b0a4b8802428862d6581",
+    "commit_date": "2026-09-05T21:51:53+02:00",
+    "url": "https://github.com/benmaster82/writher/blob/97972bc9e795dfad53e6b0a4b8802428862d6581/docs/prototypes/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-24T14:50:27+01:00",
+    "stars": 82,
+    "found_by": "sg-topic:notes"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-05T21:45:31+02:00",
+    "last_commit_date": "2026-09-05T21:45:31+02:00",
+    "last_commit_author": "benmaster82",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1156,
+    "sha256": "20f18d55c5d62fb35f35fd84597ec95c0e1e62a07315049efd166ef22cb42954",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 165,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/benmaster82--writher/docs/prototypes/README.md"
+}

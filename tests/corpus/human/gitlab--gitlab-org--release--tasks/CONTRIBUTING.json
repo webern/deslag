@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/release/tasks",
+    "path": "CONTRIBUTING.md",
+    "commit": "b3094be80ffffb7d700c03c99130e4f1b0704352",
+    "commit_date": "2021-12-07T20:06:01+00:00",
+    "url": "https://gitlab.com/gitlab-org/release/tasks/-/blob/b3094be80ffffb7d700c03c99130e4f1b0704352/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-05T11:59:13+00:00",
+    "stars": 67,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-11-17T20:29:49+00:00",
+    "last_commit_date": "2021-11-17T20:29:49+00:00",
+    "last_commit_author": "Bronwyn Barnett",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-17: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2209,
+    "sha256": "4c8aaade3d0b795afaf2e115375874ce30ff525fcbdfbe393cd1720f57e13032",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 288,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gitlab-org--release--tasks/CONTRIBUTING.md"
+}

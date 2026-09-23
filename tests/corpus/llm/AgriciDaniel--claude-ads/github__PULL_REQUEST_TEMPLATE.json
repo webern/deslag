@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "AgriciDaniel/claude-ads",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "ac21644933910419529bcf81efb95a9ca71edf81",
+    "commit_date": "2026-09-11T00:11:05+03:00",
+    "url": "https://github.com/AgriciDaniel/claude-ads/blob/ac21644933910419529bcf81efb95a9ca71edf81/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-11T16:02:29+02:00",
+    "stars": 9482,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-13T21:35:01+02:00",
+    "last_commit_date": "2026-03-13T21:35:01+02:00",
+    "last_commit_author": "AgriciDaniel",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 539,
+    "sha256": "25d4485aa9a63fce78dd5db3ce3359eb734a54e3a47276fbd1e5b4795bf84c75",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 109,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AgriciDaniel--claude-ads/.github/PULL_REQUEST_TEMPLATE.md"
+}

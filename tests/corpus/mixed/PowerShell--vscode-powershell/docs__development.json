@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__development.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "PowerShell/vscode-powershell",
+    "path": "docs/development.md",
+    "commit": "9c5933866b74051f0312d4239584522893736c87",
+    "commit_date": "2026-08-21T22:50:14+01:00",
+    "url": "https://github.com/PowerShell/vscode-powershell/blob/9c5933866b74051f0312d4239584522893736c87/docs/development.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1910,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 38,
+    "first_commit_date": "2018-01-02T15:31:10-08:00",
+    "last_commit_date": "2026-04-15T16:26:36-07:00",
+    "last_commit_author": "Andy Jordan",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 1 of its 38 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5817,
+    "sha256": "f8143fe5c518d476b7ec868da38806cb019582eb659b0b7bac89a6d526f87537",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 131,
+    "words": 741,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/PowerShell--vscode-powershell/docs/development.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__skills__benchmark-and-docs-refresh__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-edge-platform/anomalib",
+    "path": ".agents/skills/benchmark-and-docs-refresh/SKILL.md",
+    "commit": "d716bb94f86505eb28a2e473f4ce00f9e98dedf7",
+    "commit_date": "2026-09-23T15:29:04+08:00",
+    "url": "https://github.com/open-edge-platform/anomalib/blob/d716bb94f86505eb28a2e473f4ce00f9e98dedf7/.agents/skills/benchmark-and-docs-refresh/SKILL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-11-25T23:00:32-07:00",
+    "stars": 6187,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-10T13:50:44+02:00",
+    "last_commit_date": "2026-04-10T13:50:44+02:00",
+    "last_commit_author": "Ashwin Vaidya",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3229,
+    "sha256": "5aba143ff78904d50e2eafe5aa6908e857848f719d12e651854a5f5f0d650ba1",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 102,
+    "words": 466,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/open-edge-platform--anomalib/.agents/skills/benchmark-and-docs-refresh/SKILL.md"
+}

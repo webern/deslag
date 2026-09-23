@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "THIRDPARTY-DATA.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ssmichael1/satkit",
+    "path": "THIRDPARTY-DATA.md",
+    "commit": "1f17abd63ca12c4e2d5c9035d19a70247d582af1",
+    "commit_date": "2026-09-20T18:20:40-04:00",
+    "url": "https://github.com/ssmichael1/satkit/blob/1f17abd63ca12c4e2d5c9035d19a70247d582af1/THIRDPARTY-DATA.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2024-03-03T13:39:06-05:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-12T15:35:35-04:00",
+    "last_commit_date": "2026-09-12T15:35:35-04:00",
+    "last_commit_author": "Steven Michael",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3243,
+    "sha256": "d9487987304dd0dec8d210c653e3fcd65aeb2a2a0227b75be11327b3877a1d77",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 446,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ssmichael1--satkit/THIRDPARTY-DATA.md"
+}

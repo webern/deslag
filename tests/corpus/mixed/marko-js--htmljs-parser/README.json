@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marko-js/htmljs-parser",
+    "path": "README.md",
+    "commit": "72231637425f6f98b639c90a743b46b6159b9be4",
+    "commit_date": "2026-09-23T19:27:26+00:00",
+    "url": "https://github.com/marko-js/htmljs-parser/blob/72231637425f6f98b639c90a743b46b6159b9be4/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2018-02-19T16:15:23-08:00",
+    "last_commit_date": "2026-09-23T11:27:18-07:00",
+    "last_commit_author": "Dylan Piercey",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-19, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 15709,
+    "sha256": "3f6747cd31b5399d8315862d7d835243606cb5e101f9f68cbdde5da78c1abc7f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 466,
+    "words": 2047,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/marko-js--htmljs-parser/README.md"
+}

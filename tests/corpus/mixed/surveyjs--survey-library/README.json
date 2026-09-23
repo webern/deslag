@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "surveyjs/survey-library",
+    "path": "README.md",
+    "commit": "4cd8b7017ff71a5451a4380474bc1515ef2b64be",
+    "commit_date": "2026-09-23T08:57:40+00:00",
+    "url": "https://github.com/surveyjs/survey-library/blob/4cd8b7017ff71a5451a4380474bc1515ef2b64be/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4877,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 61,
+    "first_commit_date": "2018-01-02T13:37:45+03:00",
+    "last_commit_date": "2026-08-20T16:28:37+04:00",
+    "last_commit_author": "Elena Gorbatkova",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 1 of its 61 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 9612,
+    "sha256": "91f0720f6b4227f165a457889596b4722fec26bf65f96ec1e53b0f4bad2eb847",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 181,
+    "words": 841,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/surveyjs--survey-library/README.md"
+}

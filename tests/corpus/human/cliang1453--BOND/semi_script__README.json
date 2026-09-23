@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "semi_script__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "cliang1453/BOND",
+    "path": "semi_script/README.md",
+    "commit": "32f26988a58ee44eb4f50772c6d6c6eb116c83cf",
+    "commit_date": "2021-06-01T20:31:18-07:00",
+    "url": "https://github.com/cliang1453/BOND/blob/32f26988a58ee44eb4f50772c6d6c6eb116c83cf/semi_script/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-06-05T18:51:43-04:00",
+    "stars": 290,
+    "found_by": "sg-topic:nlp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-05-23T21:37:13-04:00",
+    "last_commit_date": "2021-05-23T21:37:13-04:00",
+    "last_commit_author": "Jiang",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-05-23: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3004,
+    "sha256": "b2c4de492a6bca492688c9f706ef06cee1e0e84afb0d7e6320dc0286446e0108",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 65,
+    "words": 325,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/cliang1453--BOND/semi_script/README.md"
+}

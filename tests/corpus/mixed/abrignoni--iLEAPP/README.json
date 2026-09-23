@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "abrignoni/iLEAPP",
+    "path": "README.md",
+    "commit": "03734bf9dd1d83fe082c60eac46fe719113d911d",
+    "commit_date": "2026-09-23T15:35:56-04:00",
+    "url": "https://github.com/abrignoni/iLEAPP/blob/03734bf9dd1d83fe082c60eac46fe719113d911d/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-12-23T19:28:44-05:00",
+    "stars": 1297,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 63,
+    "first_commit_date": "2019-12-23T19:28:44-05:00",
+    "last_commit_date": "2026-09-21T15:42:47-04:00",
+    "last_commit_author": "Brigs",
+    "authors": 15,
+    "ai_commits": 7,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-12-23, before 2022-01-01; 7 of its 63 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9673,
+    "sha256": "cc83acbc7a3f7a7db5a9051953a95ebc913388abb27fe8040477405c8f6dd38e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 238,
+    "words": 1397,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/abrignoni--iLEAPP/README.md"
+}

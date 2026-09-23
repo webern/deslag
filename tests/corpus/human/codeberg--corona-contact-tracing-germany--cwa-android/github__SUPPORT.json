@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__SUPPORT.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "corona-contact-tracing-germany/cwa-android",
+    "path": ".github/SUPPORT.md",
+    "commit": "6700bf8aa8115b4138afa602c014af76f93bd0a3",
+    "commit_date": "2021-12-30T14:10:00+01:00",
+    "url": "https://codeberg.org/corona-contact-tracing-germany/cwa-android/src/commit/6700bf8aa8115b4138afa602c014af76f93bd0a3/.github/SUPPORT.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-30T09:04:57+02:00",
+    "stars": 137,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-05-30T09:04:57+02:00",
+    "last_commit_date": "2020-05-30T09:04:57+02:00",
+    "last_commit_author": "Sebastian Wolf",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-05-30: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1814,
+    "sha256": "7deb9dc1f7de2e0370a05de1eb1464cc1dc38e12b79528754849e21a27e7f3d6",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 110,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--corona-contact-tracing-germany--cwa-android/.github/SUPPORT.md"
+}

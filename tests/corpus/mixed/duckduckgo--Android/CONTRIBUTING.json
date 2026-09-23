@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "duckduckgo/Android",
+    "path": "CONTRIBUTING.md",
+    "commit": "9c7c74d11ed60e719e4d2e5aa20117ff56255137",
+    "commit_date": "2026-09-23T13:54:02+00:00",
+    "url": "https://github.com/duckduckgo/Android/blob/9c7c74d11ed60e719e4d2e5aa20117ff56255137/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4831,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2018-04-09T12:48:38+01:00",
+    "last_commit_date": "2026-08-05T17:42:44+03:00",
+    "last_commit_author": "Catalin Radoiu",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-04-09, before 2022-01-01; 1 of its 13 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3295,
+    "sha256": "61afb01c47c3c45f3f468dfd0bf08446dfb25e74b3dc560a8185d9aa657b6920",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 57,
+    "words": 486,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/duckduckgo--Android/CONTRIBUTING.md"
+}

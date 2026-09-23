@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "project-chip/connectedhomeip",
+    "path": "CONTRIBUTING.md",
+    "commit": "222833242c7a54b3223463b8cf58f134695ab125",
+    "commit_date": "2026-09-23T15:05:01-04:00",
+    "url": "https://github.com/project-chip/connectedhomeip/blob/222833242c7a54b3223463b8cf58f134695ab125/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-24T09:34:54-08:00",
+    "stars": 8950,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2020-03-03T10:03:58-08:00",
+    "last_commit_date": "2025-07-18T11:14:07-04:00",
+    "last_commit_author": "Andrei Litvin",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-03-03, before 2022-01-01; 1 of its 23 commits are marked as an AI agent's (gemini)"
+  },
+  "content": {
+    "size_bytes": 10160,
+    "sha256": "e81d5b7ebbcd88a428ed4739ea39f48e7b11175f734546b405f866b0700e1fcd",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 278,
+    "words": 1421,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/project-chip--connectedhomeip/CONTRIBUTING.md"
+}

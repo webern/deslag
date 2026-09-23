@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "srv__extend.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "9001/copyparty",
+    "path": "srv/extend.md",
+    "commit": "9e6d5dd2b93ff2a6012b0a3f757dbf7da92c5aa9",
+    "commit_date": "2021-12-28T20:57:11+01:00",
+    "url": "https://codeberg.org/9001/copyparty/src/commit/9e6d5dd2b93ff2a6012b0a3f757dbf7da92c5aa9/srv/extend.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-05-26T15:28:34+00:00",
+    "stars": 50,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-11-27T03:22:41+01:00",
+    "last_commit_date": "2020-11-29T19:34:08+01:00",
+    "last_commit_author": "ed",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-11-29: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3990,
+    "sha256": "99184e4e68037a80fc44d4419de20f486e54cdb3733873cbb12f67776a55eace",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 141,
+    "words": 546,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--9001--copyparty/srv/extend.md"
+}

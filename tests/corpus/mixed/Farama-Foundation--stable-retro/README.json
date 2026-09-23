@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Farama-Foundation/stable-retro",
+    "path": "README.md",
+    "commit": "fd956c7680c3b8a10b772b55a4b43ac66f9d5e4e",
+    "commit_date": "2026-09-17T22:16:56+08:00",
+    "url": "https://github.com/Farama-Foundation/stable-retro/blob/fd956c7680c3b8a10b772b55a4b43ac66f9d5e4e/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-10T11:52:14-08:00",
+    "stars": 1082,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 116,
+    "first_commit_date": "2018-02-05T14:11:11-08:00",
+    "last_commit_date": "2026-08-31T21:17:45+08:00",
+    "last_commit_author": "Mathieu Poliquin",
+    "authors": 17,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-05, before 2022-01-01; 2 of its 116 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 7911,
+    "sha256": "96e1604b33e6bb166e604111d996a5923e024644dd4dbf276c7cfa828028f4a6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 177,
+    "words": 1021,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Farama-Foundation--stable-retro/README.md"
+}

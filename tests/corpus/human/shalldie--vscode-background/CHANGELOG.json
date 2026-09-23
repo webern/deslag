@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "shalldie/vscode-background",
+    "path": "CHANGELOG.md",
+    "commit": "83c2efbe8919a7d48e46f368befaacaa1146f321",
+    "commit_date": "2021-12-17T17:02:46+08:00",
+    "url": "https://github.com/shalldie/vscode-background/blob/83c2efbe8919a7d48e46f368befaacaa1146f321/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1899,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2018-04-30T21:53:02+08:00",
+    "last_commit_date": "2021-12-17T16:58:53+08:00",
+    "last_commit_author": "shalldie",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-17: all 10 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3787,
+    "sha256": "1fa3cb26850229f0713e9997f14901434cc8530e612213924574c30239b7c72a",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 124,
+    "words": 289,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/shalldie--vscode-background/CHANGELOG.md"
+}

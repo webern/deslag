@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__cookbook__nemotron_voicechat.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sgl-project/sglang-omni",
+    "path": "docs/cookbook/nemotron_voicechat.md",
+    "commit": "3a9855f2403301e3bafc3b0d36048fa8e2346500",
+    "commit_date": "2026-09-23T15:23:23-04:00",
+    "url": "https://github.com/sgl-project/sglang-omni/blob/3a9855f2403301e3bafc3b0d36048fa8e2346500/docs/cookbook/nemotron_voicechat.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-06T16:40:24+00:00",
+    "stars": 1258,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-10T23:33:01-07:00",
+    "last_commit_date": "2026-09-10T23:33:01-07:00",
+    "last_commit_author": "Huapeng Zhou",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5283,
+    "sha256": "c11ee36561a1ea36c9f52bf5ae79b3f591edc9d6e0a69391181276fa39db476e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 63,
+    "words": 760,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sgl-project--sglang-omni/docs/cookbook/nemotron_voicechat.md"
+}

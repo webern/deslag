@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hovancik/stretchly",
+    "path": "CHANGELOG.md",
+    "commit": "d33ea65526f7b43c8af7148cc7d254b8c34dcda6",
+    "commit_date": "2026-08-14T10:51:53+02:00",
+    "url": "https://github.com/hovancik/stretchly/blob/d33ea65526f7b43c8af7148cc7d254b8c34dcda6/CHANGELOG.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6551,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 364,
+    "first_commit_date": "2018-01-03T12:41:13+01:00",
+    "last_commit_date": "2026-08-14T08:18:48+02:00",
+    "last_commit_author": "Jan Hovancik",
+    "authors": 67,
+    "ai_commits": 7,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-03, before 2022-01-01; 7 of its 364 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 31252,
+    "sha256": "f08d77be5e526faf50299be394fb23dca24634c1597cf8feb0c9f4149ee92d80",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 962,
+    "words": 4473,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/hovancik--stretchly/CHANGELOG.md"
+}

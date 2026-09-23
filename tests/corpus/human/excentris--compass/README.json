@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "excentris/compass",
+    "path": "README.md",
+    "commit": "7c0d80036b8ea7a2b7aa5c3265cfbbd71fc7d60c",
+    "commit_date": "2020-01-21T11:09:55+01:00",
+    "url": "https://github.com/excentris/compass/blob/7c0d80036b8ea7a2b7aa5c3265cfbbd71fc7d60c/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 197,
+    "found_by": "sg-topic:jekyll"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-01T20:48:43+01:00",
+    "last_commit_date": "2018-02-01T20:48:43+01:00",
+    "last_commit_author": "Eduardo Rubio",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-01: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1490,
+    "sha256": "b02dd6acfb91cdd4538f627f90840fcc007f8fc1094bd7b1f17be6e889b28a86",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "crlf",
+    "lines": 21,
+    "words": 183,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/excentris--compass/README.md"
+}

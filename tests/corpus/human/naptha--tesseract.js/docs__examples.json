@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__examples.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "naptha/tesseract.js",
+    "path": "docs/examples.md",
+    "commit": "01e833576807e3b7ab1337634db805c26498b6bd",
+    "commit_date": "2021-11-25T18:42:21+02:00",
+    "url": "https://github.com/naptha/tesseract.js/blob/01e833576807e3b7ab1337634db805c26498b6bd/docs/examples.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 38730,
+    "found_by": "sg-topic:webassembly"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2019-05-09T01:24:35+08:00",
+    "last_commit_date": "2019-12-23T20:43:46+08:00",
+    "last_commit_author": "Jerome Wu",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-12-23: all 18 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 5646,
+    "sha256": "7c8304aa3d3ec065c6b471299711991003f7834d0b8bfccf2913d21552ade616",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 226,
+    "words": 567,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/naptha--tesseract.js/docs/examples.md"
+}

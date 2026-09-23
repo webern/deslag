@@ -1,0 +1,347 @@
+# MAAS
+
+OS Provisioning with MAAS
+
+- [MAAS](#maas)
+  - [Introduction](#introduction)
+  - [DeepOps and MAAS operating model](#deepops-and-maas-operating-model)
+  - [Pre-requisites](#pre-requisites)
+  - [Installing MAAS with DeepOps](#installing-maas-with-deepops)
+  - [Configuring MAAS](#configuring-maas)
+    - [SSH keys](#ssh-keys)
+    - [OS repositories](#os-repositories)
+    - [Configuring DHCP](#configuring-dhcp)
+  - [Booting the test VM from MAAS](#booting-the-test-vm-from-maas)
+    - [Adding the test VM to the MAAS database](#adding-the-test-vm-to-the-maas-database)
+    - [Configuring the test VM for power control (or manual)](#configuring-the-test-vm-for-power-control-or-manual)
+    - [Commission the test VM](#commission-the-test-vm)
+    - [Deploying the test VM](#deploying-the-test-vm)
+    - [Releasing and reinstalling the machine](#releasing-and-reinstalling-the-machine)
+  - [Scaling up](#scaling-up)
+  - [Creating a DGX OS image installable by MAAS](#creating-a-dgx-os-image-installable-by-maas)
+  - [Dynamic Inventory](#dynamic-inventory)
+
+## Introduction
+
+DeepOps includes an Ansible [playbook for setting up MAAS](../../playbooks/provisioning/maas.yml),
+Canonical's [Metal as a Service](https://maas.io/) tool for provisioning the operating system on bare-metal servers.
+By default, this playbook will set up a single-node MAAS install which can then be used to provision other servers on your network.
+
+In most cases, you will use MAAS to provision the OS on multiple bare-metal servers.
+However, MAAS can also be used to provision VMs, and this guide will walk through an example using two virtual machines for ease of demonstration.
+This guide was originally written using MAAS 2.8; current MAAS releases are 3.x.
+
+MAAS has a lot of different configuration options which are outside the scope of this guide.
+For the best reference on how to use MAAS in general, see the [documentation on maas.io](https://maas.io/docs).
+
+## DeepOps and MAAS operating model
+
+DeepOps should stay modular and simple: MAAS is the source of truth for bare-metal provisioning state, while DeepOps consumes that state through small, understandable scripts and Ansible inventory.
+MAAS owns machine lifecycle, power control, PXE/DHCP behavior, OS images, commissioning, deployment, release, pools, zones, and machine tags.
+DeepOps should not run a second reconciliation loop for those responsibilities or become a replacement for BCM.
+
+The DeepOps-owned state should stay deliberately small:
+
+- MAAS tags that map deployed machines into DeepOps inventory groups, such as `kube_control_plane`, `kube_node`, `slurm-master`, and `slurm-node`.
+- A dynamic inventory view from `scripts/maas_inventory.py`, derived from deployed MAAS machines and tags.
+- Explicit deploy, tag, status, and release operations through `scripts/maas_deploy.sh`.
+- Ansible run artifacts and validation results that record what DeepOps last applied and observed.
+
+This keeps DeepOps useful for lightweight cluster setup without competing with larger cluster managers.
+It also keeps the contribution surface accessible: tags, inventory output, and playbook artifacts are easy for new contributors to inspect, reproduce, and improve.
+If a site already uses BCM or another fleet manager, keep that system authoritative and use DeepOps only for the roles and playbooks the site intentionally delegates.
+
+## Pre-requisites
+
+In order to set up and use MAAS, you should at minimum have the following components:
+
+- An Ubuntu 22.04 or 24.04 server which you can use to run MAAS.
+  MAAS 3.7 is the current Ubuntu 24.04 line; use MAAS 3.5 if the controller itself remains on Ubuntu 22.04.
+- One or more servers which you will manage using MAAS
+- A network connection between all the servers on which you can safely run DHCP. This is needed so that MAAS can provision IP addresses to the nodes it manages.
+- A network connection which you can use to log into the MAAS server. This may be the same network as the inter-node network, or it may be a separate network.
+
+![maas-topology](./maas-example-vms.png "Example network topology")
+
+In this example, we will use:
+
+- An internal (VM-only) network on which we'll use the subnet `192.168.1.0/24`
+- An external network connection on which we'll use the subnet `192.168.122.0/24`
+- `maas-vm`, a pre-installed Ubuntu 22.04 (or 24.04) virtual machine
+  - `maas-vm` has IP `192.168.1.1` on the internal network, and `192.168.122.90` on the external network
+- `test-vm`, a "blank" virtual machine with no OS, on the same VM host
+  - `test-vm` has a connection only to the internal network, which is not configured yet
+  - `test-vm` should be configured to PXE boot on its network interface, rather than boot from its local disk
+
+This guide assumes that you have already set up the virtual networks, created the two VMs, installed Ubuntu on `maas-vm`, and configured the IPs on `maas-vm`.
+(You may also have done this using physical machines, but VMs are easier!)
+The process for doing this varies, depending on what kind of hypervisor you are using to host your VMs.
+Please consult your hypervisor documentation for instructions on doing this.
+
+## Installing MAAS with DeepOps
+
+1. If you haven't already done so, clone the DeepOps repository to your local machine and run `scripts/setup.sh`.
+1. Configure DeepOps with basic information about your installation, including the DNS domain, controller IP, and user login information.
+   The configuration can be found in `config/group_vars/all.yml`.
+   Note that the IP address used for MAAS should be on the internal network; in this example, we're using `192.168.1.1`.
+   ```yaml
+   maas_adminusers:
+     - username: 'admin'
+       email: 'admin@{{ maas_dns_domain }}'
+       password: 'admin'
+   maas_dns_domain: 'deepops.local'
+   maas_region_controller: '192.168.1.1'
+   maas_region_controller_url: 'http://{{ maas_region_controller }}:5240/MAAS'
+   maas_repo: "{{ 'ppa:maas/3.7' if ansible_distribution_version is version('24.04', '>=') else 'ppa:maas/3.5' }}"
+   ```
+   If you know every MAAS controller host is running Ubuntu 24.04, you can set this directly to `ppa:maas/3.7`.
+   If the controller is still Ubuntu 22.04, keep `ppa:maas/3.5`.
+1. Run the Ansible playbook to install:
+   ```bash
+   ansible-playbook -l <name-of-maas-node> playbooks/provisioning/maas.yml
+   ```
+
+## Configuring MAAS
+
+Once MAAS is installed, the most straightforward way to configure it is via the web interface.
+
+To reach the web interface, navigate to `http://192.168.122.90:5240/MAAS` in your web browser, and log in using the username and password you set in your configuration.
+
+### SSH keys
+
+After you've logged in, the first thing MAAS will ask for is that you provide one or more SSH public keys.
+These keys will be used to automatically set up passwordless SSH on all the nodes which you provision using MAAS.
+Make sure this is a key you can easily use to reach your servers, because this is the only way you will be able to log into servers provisioned by MAAS!
+
+If you have public keys posted on GitHub or Launchpad, MAAS will offer to import these.
+Otherwise you should select "Upload" as the source and copy-paste your public keys into the text box provided.
+Then click the button to go to the MAAS dashboard.
+
+### OS repositories
+
+After entering SSH keys, you will be redirected to an intro configuration page on which you can configure:
+
+- The name of the MAAS region you are creating
+- Connectivity information to the Internet
+- The source and versions of Ubuntu which will be downloaded by MAAS to install
+
+In this example, I'm leaving all these parameters at their default values.
+This will enable us to install Ubuntu on the VM we are provisioning.
+
+MAAS will sync the necessary package repositories for the installation to your provisioning server (`maas-vm`), which may take some time.
+If the repositories are still syncing, the "Continue" button at the bottom will be grayed out.
+Once it's clickable, click "Continue".
+
+### Configuring DHCP
+
+At this point you will be redirected to the "Machines" tab on the main MAAS user interface.
+However, there should be a warning message on this page, reading:
+
+> DHCP is not enabled on any VLAN. This will prevent machines from being able to PXE boot, unless an external DHCP server is being used.
+
+To configure DHCP on the internal network VLAN, do the following:
+
+1. In the header of the page, click the "Subnets" link
+1. On the Subnets page, you should see one or more "fabrics" listed. These are the available networks which can be used to run DHCP and provision servers with MAAS.
+1. Look for the fabric whose subnet matches your internal network (`192.168.1.0/24` in our two-VM example). Then, in this row, click the "untagged" link in the "VLAN" column.
+1. This should take you to the page for the Default VLAN on your internal network. The second panel in this page will be for DCHP, and there should be a button all the way to the right labeled "Enable DHCP".
+   Click it.
+1. On the DHCP configuration page, you will be asked for the configuration of the "Reserved dynamic range". On a real network, you should ensure that the gateway IP is correct, and that the IPs in this range don't overlap with any IPs your site is using. For our example, we will accept the defaults and click "Configure DHCP".
+
+## Booting the test VM from MAAS
+
+### Adding the test VM to the MAAS database
+
+Once MAAS is set up to run DHCP on the internal network, any other machine which is configured to PXE boot should automatically boot from MAAS.
+If it isn't a machine which MAAS already knows about, it will boot into the [MAAS enlistment image](https://maas.io/docs/add-machines#heading--enlistment),
+which will detect some basic information about the machine and load it into the MAAS database.
+
+To demonstrate this, ensure the second server (`test-vm`) is configured to PXE boot, then boot it up and take a look at its console.
+You should see the server PXE boot, and then the console will start scrolling with messages as it loads the MAAS enlistment image.
+After a little while, it will show a login prompt that shows its name as `maas-enlisting-node`, and then continue scrolling through several other messages.
+After another few minutes, the node will switch off!
+
+### Configuring the test VM for power control (or manual)
+
+In the MAAS web interface, click the "Machines" link in the navigation bar.
+The list of machines should now include one entry.
+The name of the new machine will be auto-generated from an adjective and an animal, for example "alert-pigeon".
+
+Click the name of the new machine, and this will navigate to a page for this machine.
+It should show several auto-detected details about the machine, such as the number of CPUs, the memory, and the storage available on the machine.
+If you want to, you can also rename the machine by clicking the name at the top of the page.
+
+Before we can deploy this machine, we have to configure it so that MAAS can turn it on or off (or tell MAAS that we will do this manually).
+
+1. On the page for the machine, look for the navigation bar _under_ the machine's name.
+1. Click Configuration.
+1. Scroll down until you see the Power configuration setting.
+   If this has already been selected to a pre-configured value, you're good to go, because MAAS has autodetected how to control the power on this node!
+1. If it's not yet selected, click the drop-down menu and it will show several different types of power control available.
+   For a physical machine, the most common choice will be "IPMI", and will require you to fill in the username and password for the server BMC.
+   MAAS also supports power control via several different types of hypervisors, such as VMware; these may also require credentials to access.
+   If none of these are available for your hypervisor, click "Manual". This will allow you to proceed with deploying your node, but you will have to manually boot it up when needed.
+1. Click "Save changes"
+
+### Commission the test VM
+
+Once the machine is configured for power control, you will need to _commission_ the machine.
+This process is similar to enlistment, but prepares the machine to have an OS deployed.
+
+Navigate to the machine page for your new machine, then click the green "Take action" button in the upper-right hand corner.
+Click "Commission", and then click the green "Commission" button to confirm.
+If you selected manual power control, you should now turn the machine on.
+If using IPMI or VM power control, MAAS will send signals to turn the machine on itself.
+
+At this point, the machine will once again PXE boot from the MAAS server and run commissioning scripts.
+Once these are finished it will once again turn itself off.
+
+### Deploying the test VM
+
+Once the machine has completed commissioning, navigate to the machine page for your new machine, then click the green "Take action" button.
+Click "Deploy", then confirm by clicking "Deploy machine".
+If you selected manual power control, you should now turn the machine on.
+If using IPMI or VM power control, MAAS will send signals to turn the machine on itself.
+
+At this point, the machine will PXE boot from the MAAS server and begin installing the OS to the local disk.
+After the installation completes, the machine should show as "Deployed" in the MAAS web interface.
+And at this point your should be able to log in using the SSH key you configured in MAAS!
+
+### Releasing and reinstalling the machine
+
+1. Navigate to the machine page for the machine you want to reinstall
+1. Click the "Take action" button and select Release. This will shut the machine down, and MAAS should show it in a "Ready" state.
+1. To reinstall the machine, click the "Take action" button and select "Deploy". There is no need to commission the machine again.
+
+## Scaling up
+
+This is a lot of work for a single machine, but most operations in MAAS can be done in batches.
+It's generally straightforward to auto-discover a large number of hosts at a time,
+then commission them and provision them by selecting them as a group in the Machines interface.
+
+## Creating a DGX OS image installable by MAAS
+
+The official NVIDIA DGX OS version 5.0 and higher is installable by MAAS by creating a custom OS image.
+The code is located in the `submodules/packer-maas` directory. For more information, see: https://github.com/DeepOps/packer-maas/tree/master/dgxos5
+
+## Dynamic Inventory
+
+DeepOps includes a dynamic inventory script that queries your MAAS server's
+API to automatically discover deployed machines and map them to Ansible groups
+using MAAS tags. This eliminates the need to manually edit `config/inventory`
+when machines are provisioned, released, or reassigned.
+
+### Prerequisites
+
+- A MAAS server with the REST API enabled (default port 5240)
+- A MAAS API key (generate one from the MAAS web UI under your profile,
+  or run `sudo maas apikey --username=<your-user>` on the MAAS server)
+- Python 3 on the Ansible control machine (no additional packages required)
+
+### Setup
+
+1. Run `scripts/setup.sh` (or manually copy `config.example/` to `config/`).
+
+2. Edit `config/maas-inventory.yml` with your MAAS server details:
+
+   ```yaml
+   api_url: "http://maas-server:5240/MAAS/api/2.0"
+   api_key: "consumer_key:token_key:token_secret"
+   ssh_user: "ubuntu"
+   ```
+
+3. Optionally set `network` to prefer a specific subnet when machines have
+   multiple IPs, and `ssh_bastion` if your machines are behind a jumpbox:
+
+   ```yaml
+   network: "10.0.0"
+   ssh_bastion: "user@bastion-host"
+   ```
+
+4. Test the inventory:
+
+   ```bash
+   ./scripts/maas_inventory.py --list
+   ansible -i scripts/maas_inventory.py all -m ping
+   ```
+
+### Tag-Based Group Assignment
+
+The script maps MAAS tags directly to Ansible groups. To assign a machine to
+the `[slurm-master]` group, tag it `slurm-master` in MAAS. A machine can
+have multiple tags and will appear in all corresponding groups.
+
+DeepOps parent groups (`slurm-cluster`, `k8s-cluster`, etc.) are
+automatically created with the correct `children` relationships, so you
+only need to tag leaf groups.
+
+**Recommended tags** (matching DeepOps inventory groups):
+
+| Tag | Ansible Group | Used By |
+|-----|--------------|---------|
+| `kube_control_plane` | `[kube_control_plane]` | K8s control plane |
+| `kube_node` | `[kube_node]` | K8s worker nodes |
+| `slurm-master` | `[slurm-master]` | Slurm head node |
+| `slurm-node` | `[slurm-node]` | Slurm compute nodes |
+| `slurm-nfs` | `[slurm-nfs]` | Slurm NFS server |
+
+**Example: switching between Slurm and K8s testing:**
+
+```bash
+# Tag machines for Slurm
+maas admin tag update-nodes slurm-master add=<vm01_system_id>
+maas admin tag update-nodes slurm-node add=<vm02_system_id> add=<vm03_system_id>
+
+# Run Slurm deployment
+ansible-playbook -i scripts/maas_inventory.py playbooks/slurm-cluster.yml
+
+# Later, retag for K8s
+maas admin tag update-nodes slurm-master remove=<vm01_system_id>
+maas admin tag update-nodes kube_control_plane add=<vm01_system_id>
+maas admin tag update-nodes kube_node add=<vm02_system_id> add=<vm03_system_id>
+
+# Run K8s deployment
+ansible-playbook -i scripts/maas_inventory.py playbooks/k8s-cluster.yml
+```
+
+### Configuration Reference
+
+Configuration is loaded from environment variables or `config/maas-inventory.yml`.
+Environment variables take precedence.
+
+| Config Key | Env Variable | Required | Description |
+|-----------|-------------|----------|-------------|
+| `api_url` | `MAAS_API_URL` | Yes | MAAS API endpoint |
+| `api_key` | `MAAS_API_KEY` | Yes | OAuth1 API key (`consumer:token:secret`) |
+| `ssh_user` | `MAAS_SSH_USER` | No | SSH user (default: `ubuntu`) |
+| `network` | `MAAS_NETWORK` | No | Preferred IP network prefix |
+| `ssh_bastion` | `MAAS_SSH_BASTION` | No | SSH bastion for ProxyJump |
+
+### Host Variables
+
+The script exposes MAAS metadata as Ansible host variables:
+
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `maas_system_id` | `4fcb8q` | MAAS machine ID |
+| `maas_fqdn` | `node01.maas` | Fully qualified domain name |
+| `maas_os` | `ubuntu` | Operating system |
+| `maas_distro` | `noble` | Distribution series |
+| `maas_tags` | `["slurm-master", "virtual"]` | All tags on the machine |
+| `maas_cpus` | `4` | CPU count |
+| `maas_memory_mb` | `8192` | Memory in MB |
+| `maas_arch` | `amd64/generic` | Architecture |
+| `maas_zone` | `default` | MAAS availability zone |
+| `maas_pool` | `default` | MAAS resource pool |
+
+### Static vs Dynamic Inventory
+
+You can use either approach:
+
+- **Static** (`config/inventory`): Manually list hosts and groups. Simpler
+  for fixed environments. This is the default set up by `scripts/setup.sh`.
+- **Dynamic** (`scripts/maas_inventory.py`): Auto-discovers machines from
+  MAAS. Better for environments where machines are frequently provisioned
+  or reassigned.
+
+Both can be combined by passing multiple `-i` flags to `ansible-playbook`.

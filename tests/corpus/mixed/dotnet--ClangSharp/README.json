@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dotnet/ClangSharp",
+    "path": "README.md",
+    "commit": "0c1c4098a7aab7cb392a2367b75d447bbac05d58",
+    "commit_date": "2026-09-02T06:18:06-07:00",
+    "url": "https://github.com/dotnet/ClangSharp/blob/0c1c4098a7aab7cb392a2367b75d447bbac05d58/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1253,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 75,
+    "first_commit_date": "2018-07-07T09:18:10-07:00",
+    "last_commit_date": "2026-07-16T14:35:50-07:00",
+    "last_commit_author": "Tanner Gooding",
+    "authors": 16,
+    "ai_commits": 21,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-07-07, before 2022-01-01; 21 of its 75 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 38079,
+    "sha256": "b2fc52932351777f74781ead3591d17e34c9bbe35234e48d0f99472ad4f02553",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 386,
+    "words": 4356,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dotnet--ClangSharp/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "petergoldstein/dalli",
+    "path": "README.md",
+    "commit": "fc1b590e462a9eca2709fabec440d264053242eb",
+    "commit_date": "2026-08-16T13:25:12-04:00",
+    "url": "https://github.com/petergoldstein/dalli/blob/fc1b590e462a9eca2709fabec440d264053242eb/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3114,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 26,
+    "first_commit_date": "2018-02-24T10:55:12-08:00",
+    "last_commit_date": "2026-08-02T15:49:32-04:00",
+    "last_commit_author": "petergoldstein",
+    "authors": 11,
+    "ai_commits": 8,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-24, before 2022-01-01; 8 of its 26 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6291,
+    "sha256": "555c640f107242a6e5e07ff22d39e733394ba138bfb784e47128030ee1441545",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 155,
+    "words": 776,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/petergoldstein--dalli/README.md"
+}

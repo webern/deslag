@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "assets__atom-feed-action-design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dckc/awesome-ocap",
+    "path": "assets/atom-feed-action-design.md",
+    "commit": "bbba86af7c7646dcff573f175b56b0b6fa62f639",
+    "commit_date": "2026-08-12T14:38:02-05:00",
+    "url": "https://github.com/dckc/awesome-ocap/blob/bbba86af7c7646dcff573f175b56b0b6fa62f639/assets/atom-feed-action-design.md",
+    "license": "Unlicense",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 414,
+    "found_by": "sg-topic:security"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-05-16T22:02:27-05:00",
+    "last_commit_date": "2025-05-16T22:02:27-05:00",
+    "last_commit_author": "Dan Connolly (aider)",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "aider"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (aider)"
+  },
+  "content": {
+    "size_bytes": 2864,
+    "sha256": "514e272bbc1d29fc5d9b2b9171c34453ce3ae2342b93bf5440e966d4b9b4fa10",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 100,
+    "words": 385,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dckc--awesome-ocap/assets/atom-feed-action-design.md"
+}

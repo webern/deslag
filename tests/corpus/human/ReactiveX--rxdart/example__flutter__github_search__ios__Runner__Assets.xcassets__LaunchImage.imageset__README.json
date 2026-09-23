@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "example__flutter__github_search__ios__Runner__Assets.xcassets__LaunchImage.imageset__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ReactiveX/rxdart",
+    "path": "example/flutter/github_search/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+    "commit": "480b6de82dfdf938cc2ff6c5bd752acee3a6ac21",
+    "commit_date": "2021-11-21T23:47:53+07:00",
+    "url": "https://github.com/ReactiveX/rxdart/blob/480b6de82dfdf938cc2ff6c5bd752acee3a6ac21/example/flutter/github_search/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3433,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-06-27T13:29:43+02:00",
+    "last_commit_date": "2018-06-27T13:29:43+02:00",
+    "last_commit_author": "Brian Egan",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-06-27: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 336,
+    "sha256": "a985b626c4f7546a8ba392d135e9226c3547c8e2b46895f5f2bdf40d7b14ef9f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 5,
+    "words": 50,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/ReactiveX--rxdart/example/flutter/github_search/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md"
+}

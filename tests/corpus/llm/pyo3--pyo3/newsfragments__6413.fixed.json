@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "newsfragments__6413.fixed.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pyo3/pyo3",
+    "path": "newsfragments/6413.fixed.md",
+    "commit": "1655cdfcbca94d59470e6c0edd4776c3ce421a5a",
+    "commit_date": "2026-09-22T08:37:40+00:00",
+    "url": "https://github.com/pyo3/pyo3/blob/1655cdfcbca94d59470e6c0edd4776c3ce421a5a/newsfragments/6413.fixed.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-17T09:36:58+00:00",
+    "last_commit_date": "2026-09-17T09:36:58+00:00",
+    "last_commit_author": "Joren Hammudoglu",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 242,
+    "sha256": "6508b335b0d1ef8cb94d85278d370fc69a34f3a0e4390aae286065b80d7800c5",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 3,
+    "words": 24,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pyo3--pyo3/newsfragments/6413.fixed.md"
+}

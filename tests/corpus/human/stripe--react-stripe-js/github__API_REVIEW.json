@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__API_REVIEW.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "stripe/react-stripe-js",
+    "path": ".github/API_REVIEW.md",
+    "commit": "3a1dcae3d2d5aa5ac653b2406fd2b8ea67ef39a3",
+    "commit_date": "2021-12-14T14:41:10-08:00",
+    "url": "https://github.com/stripe/react-stripe-js/blob/3a1dcae3d2d5aa5ac653b2406fd2b8ea67ef39a3/.github/API_REVIEW.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-12T15:03:57-06:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2019-11-12T15:03:57-06:00",
+    "last_commit_date": "2019-11-12T15:03:57-06:00",
+    "last_commit_author": "David Weedon",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-11-12: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2024,
+    "sha256": "69d0a78304dda6000e0f466b84ab5d16cc20e995677dc692e2c93c233c0b1deb",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 69,
+    "words": 355,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/stripe--react-stripe-js/.github/API_REVIEW.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__ISSUE_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "home-assistant/core",
+    "path": ".github/ISSUE_TEMPLATE.md",
+    "commit": "4f6b2e6e1cdd46af29589be2aceb05176c199560",
+    "commit_date": "2021-12-31T23:33:50+01:00",
+    "url": "https://github.com/home-assistant/core/blob/4f6b2e6e1cdd46af29589be2aceb05176c199560/.github/ISSUE_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 91119,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2018-01-01T14:30:09-08:00",
+    "last_commit_date": "2020-08-21T14:47:29-04:00",
+    "last_commit_author": "Sean Mooney",
+    "authors": 9,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-21: all 13 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1639,
+    "sha256": "e108f397534bb0db4985f4c2dbbf1f4f51285f6b81eb02d1c4fb96991e7a1ff8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 240,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/home-assistant--core/.github/ISSUE_TEMPLATE.md"
+}

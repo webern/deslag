@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "online-ml/river",
+    "path": "CONTRIBUTING.md",
+    "commit": "d7085cde5bf90898b338d1ad522c71b9b9aa26f8",
+    "commit_date": "2026-09-21T21:26:45+03:00",
+    "url": "https://github.com/online-ml/river/blob/d7085cde5bf90898b338d1ad522c71b9b9aa26f8/CONTRIBUTING.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6109,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 88,
+    "first_commit_date": "2019-01-24T16:19:06+01:00",
+    "last_commit_date": "2026-07-31T00:05:41+02:00",
+    "last_commit_author": "Max Halford",
+    "authors": 10,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-24, before 2022-01-01; 3 of its 88 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11997,
+    "sha256": "6f534b01d098b5dfb752ee28b19f4e6ab77cb08a4d3533d46c0bc9884020438d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 249,
+    "words": 1852,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/online-ml--river/CONTRIBUTING.md"
+}

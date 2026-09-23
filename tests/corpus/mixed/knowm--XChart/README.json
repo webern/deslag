@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "knowm/XChart",
+    "path": "README.md",
+    "commit": "072f3ea5adc740ad2cda7efce3931bc52b7f68e0",
+    "commit_date": "2026-07-31T13:02:38+02:00",
+    "url": "https://github.com/knowm/XChart/blob/072f3ea5adc740ad2cda7efce3931bc52b7f68e0/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1594,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 77,
+    "first_commit_date": "2018-02-16T11:18:52+01:00",
+    "last_commit_date": "2026-07-31T12:03:32+02:00",
+    "last_commit_author": "Tim Molter",
+    "authors": 8,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-16, before 2022-01-01; 5 of its 77 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 34212,
+    "sha256": "0c9611b98ffbaceacf9ff104bacfd8347a138765c9ad79bab69cce12fdc2e7ee",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 796,
+    "words": 3735,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/knowm--XChart/README.md"
+}

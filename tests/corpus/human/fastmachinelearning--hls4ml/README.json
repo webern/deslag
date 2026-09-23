@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "fastmachinelearning/hls4ml",
+    "path": "README.md",
+    "commit": "6a7d853b551e41735c6e5a781dc6905a41c13db1",
+    "commit_date": "2021-12-27T19:09:49-08:00",
+    "url": "https://github.com/fastmachinelearning/hls4ml/blob/6a7d853b551e41735c6e5a781dc6905a41c13db1/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2161,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2018-01-02T11:15:56-05:00",
+    "last_commit_date": "2021-03-04T15:56:56+01:00",
+    "last_commit_author": "Sioni Summers",
+    "authors": 6,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-04: all 17 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2192,
+    "sha256": "3c35853e87f06cb53c43700f2ebd2ab1b7662f219a0907d09152a91921f68ea8",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 58,
+    "words": 223,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/fastmachinelearning--hls4ml/README.md"
+}

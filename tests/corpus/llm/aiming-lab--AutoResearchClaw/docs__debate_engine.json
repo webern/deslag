@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__debate_engine.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "aiming-lab/AutoResearchClaw",
+    "path": "docs/debate_engine.md",
+    "commit": "be4ba4755bf1b52220f25e13b2293b5956590070",
+    "commit_date": "2026-08-19T11:24:41+08:00",
+    "url": "https://github.com/aiming-lab/AutoResearchClaw/blob/be4ba4755bf1b52220f25e13b2293b5956590070/docs/debate_engine.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-14T21:28:28-07:00",
+    "stars": 14502,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-18T10:11:46+08:00",
+    "last_commit_date": "2026-08-18T10:11:46+08:00",
+    "last_commit_author": "Jacky628",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9388,
+    "sha256": "0ddd7555a7d7b463bdff0f77e9268d9c19da111a24027eb89b9d53886b339360",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 204,
+    "words": 742,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aiming-lab--AutoResearchClaw/docs/debate_engine.md"
+}

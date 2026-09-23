@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "charpter-3__hpg-exit-goroutine.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "geektutu/high-performance-go",
+    "path": "charpter-3/hpg-exit-goroutine.md",
+    "commit": "498b8fcf958db5d662ca56a5752c39b7cf66e85b",
+    "commit_date": "2021-06-05T14:01:12+08:00",
+    "url": "https://github.com/geektutu/high-performance-go/blob/498b8fcf958db5d662ca56a5752c39b7cf66e85b/charpter-3/hpg-exit-goroutine.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-11-19T00:41:46+08:00",
+    "stars": 3887,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-12-16T01:32:37+08:00",
+    "last_commit_date": "2020-12-31T22:42:01+08:00",
+    "last_commit_author": "Dai Jie",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-12-31: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 7344,
+    "sha256": "f45183270dfd2a3cee2f5533d146e5719632b7fc41e637619adccf5976dd28a9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 244,
+    "words": 521,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/geektutu--high-performance-go/charpter-3/hpg-exit-goroutine.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CLAUDE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "joeynyc/hermes-hudui",
+    "path": "CLAUDE.md",
+    "commit": "3604013b434cc2f65f9add1ac6990d6c700ebe6d",
+    "commit_date": "2026-08-25T23:35:39-04:00",
+    "url": "https://github.com/joeynyc/hermes-hudui/blob/3604013b434cc2f65f9add1ac6990d6c700ebe6d/CLAUDE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-08T20:22:32-04:00",
+    "stars": 1846,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2026-04-12T13:13:48-04:00",
+    "last_commit_date": "2026-07-25T03:59:19-04:00",
+    "last_commit_author": "joeynyc",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 6 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7372,
+    "sha256": "3c55c7d8ccf96f23c226f0cbe66ebbe04beee8dd8ecfd1837f6fd325045738d2",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 912,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/joeynyc--hermes-hudui/CLAUDE.md"
+}

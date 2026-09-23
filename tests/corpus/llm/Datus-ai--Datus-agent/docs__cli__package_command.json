@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__cli__package_command.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Datus-ai/Datus-agent",
+    "path": "docs/cli/package_command.md",
+    "commit": "3f13d9e5c620f2539e7ddc10f8c3897cb6882833",
+    "commit_date": "2026-09-23T19:55:15+08:00",
+    "url": "https://github.com/Datus-ai/Datus-agent/blob/3f13d9e5c620f2539e7ddc10f8c3897cb6882833/docs/cli/package_command.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-04T23:41:48+08:00",
+    "stars": 1826,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-14T02:09:28+00:00",
+    "last_commit_date": "2026-08-18T04:12:35+00:00",
+    "last_commit_author": "Ethan Liu",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11545,
+    "sha256": "303414960ce24f4db510138afeaee709d44e8c09178b3f73d9e90f53500300aa",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 213,
+    "words": 1599,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Datus-ai--Datus-agent/docs/cli/package_command.md"
+}

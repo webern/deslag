@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "getkin/kin-openapi",
+    "path": "README.md",
+    "commit": "e7ecca9a44a420e0687072d30916fcd6a6bfba07",
+    "commit_date": "2026-09-20T21:45:45+08:00",
+    "url": "https://github.com/getkin/kin-openapi/blob/e7ecca9a44a420e0687072d30916fcd6a6bfba07/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3294,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 89,
+    "first_commit_date": "2018-01-19T10:50:23+08:00",
+    "last_commit_date": "2026-08-20T04:19:47+02:00",
+    "last_commit_author": "Vitalii Stepanenko",
+    "authors": 30,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-19, before 2022-01-01; 5 of its 89 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 23146,
+    "sha256": "b275221ff8c8f8a989ac5f9b739077528a8401869cb91503dff974213e5bdcd3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 444,
+    "words": 2436,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/getkin--kin-openapi/README.md"
+}

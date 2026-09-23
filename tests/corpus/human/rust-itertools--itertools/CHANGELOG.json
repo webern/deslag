@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rust-itertools/itertools",
+    "path": "CHANGELOG.md",
+    "commit": "6c4fc2f8e745fe4780578dfa4feb44ccccffb521",
+    "commit_date": "2021-12-29T20:41:51+00:00",
+    "url": "https://github.com/rust-itertools/itertools/blob/6c4fc2f8e745fe4780578dfa4feb44ccccffb521/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-01-19T12:34:08-05:00",
+    "last_commit_date": "2021-12-05T21:29:11+01:00",
+    "last_commit_author": "philipp",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-05: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 20299,
+    "sha256": "7f54a6e7b78dae273c5352ca3472c8e7d4996d42879ffbb8430df37c020c8a6a",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 373,
+    "words": 2531,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/rust-itertools--itertools/CHANGELOG.md"
+}

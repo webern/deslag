@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__adr__0003-use-operator-sdk.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/cloud-native/gitlab-operator",
+    "path": "doc/adr/0003-use-operator-sdk.md",
+    "commit": "c3cd6221e2445ae337e0f150ca994a229a16fba2",
+    "commit_date": "2021-12-22T18:58:41+00:00",
+    "url": "https://gitlab.com/gitlab-org/cloud-native/gitlab-operator/-/blob/c3cd6221e2445ae337e0f150ca994a229a16fba2/doc/adr/0003-use-operator-sdk.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-21T15:42:08-06:00",
+    "stars": 83,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2021-07-09T10:06:43-06:00",
+    "last_commit_date": "2021-11-24T15:34:55+00:00",
+    "last_commit_author": "Marcel Amirault",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-24: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 545,
+    "sha256": "fb879416f5b5be20c3dfefae42ffe1793e455f13625e7ab54897da261b3d6a32",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 22,
+    "words": 84,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gitlab-org--cloud-native--gitlab-operator/doc/adr/0003-use-operator-sdk.md"
+}

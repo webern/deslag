@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__babel-plugin-transform-property-mutators__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "babel/babel",
+    "path": "packages/babel-plugin-transform-property-mutators/README.md",
+    "commit": "ddd93b9c61a197711c2e3eae8a8b175783ea6976",
+    "commit_date": "2021-12-31T00:23:48+00:00",
+    "url": "https://github.com/babel/babel/blob/ddd93b9c61a197711c2e3eae8a8b175783ea6976/packages/babel-plugin-transform-property-mutators/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-03-30T08:34:43-05:00",
+    "last_commit_date": "2020-10-30T21:19:21+01:00",
+    "last_commit_author": "Álvaro Mondéjar",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-30: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 454,
+    "sha256": "978f6495cbbdeeaa8c9b852fcc6991544b2eed503bad5967191932633c6bc345",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 37,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/babel--babel/packages/babel-plugin-transform-property-mutators/README.md"
+}

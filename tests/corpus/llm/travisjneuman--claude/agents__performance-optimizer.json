@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__performance-optimizer.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "travisjneuman/.claude",
+    "path": "agents/performance-optimizer.md",
+    "commit": "050878886e3924e11a7d5d0a7df709c3512b7e17",
+    "commit_date": "2026-09-20T21:04:51-04:00",
+    "url": "https://github.com/travisjneuman/.claude/blob/050878886e3924e11a7d5d0a7df709c3512b7e17/agents/performance-optimizer.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-17T01:23:36-05:00",
+    "stars": 99,
+    "found_by": "sg-topic:dotfiles"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2025-12-17T22:07:47-05:00",
+    "last_commit_date": "2026-03-04T21:02:42-05:00",
+    "last_commit_author": "Travis J. Neuman",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 4 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 2041,
+    "sha256": "901c99dba572ea70c5f814fef83f28bed16f70fd9236523d038f49a653aaf06a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 97,
+    "words": 311,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/travisjneuman--claude/agents/performance-optimizer.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "skyjake/lagrange",
+    "path": "README.md",
+    "commit": "baf2b40642da7510525da204a8950485665d9729",
+    "commit_date": "2022-01-01T01:02:06+02:00",
+    "url": "https://codeberg.org/skyjake/lagrange/src/commit/baf2b40642da7510525da204a8950485665d9729/README.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-07-21T15:06:52+03:00",
+    "stars": 172,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 39,
+    "first_commit_date": "2020-09-13T14:34:21+03:00",
+    "last_commit_date": "2021-12-25T07:49:16+02:00",
+    "last_commit_author": "Jaakko Keränen",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-25: all 39 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 15213,
+    "sha256": "5f203a9a99e21fe79a1fb24fcf6f71fe82f4a6c45992cd40c48322eface2b0a3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 166,
+    "words": 2179,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--skyjake--lagrange/README.md"
+}

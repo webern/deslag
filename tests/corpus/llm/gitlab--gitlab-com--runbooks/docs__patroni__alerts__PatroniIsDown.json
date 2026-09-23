@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__patroni__alerts__PatroniIsDown.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-com/runbooks",
+    "path": "docs/patroni/alerts/PatroniIsDown.md",
+    "commit": "690ca79f5aa403f1d92b80664e1dcfd32ff4881b",
+    "commit_date": "2026-09-23T19:32:15+00:00",
+    "url": "https://gitlab.com/gitlab-com/runbooks/-/blob/690ca79f5aa403f1d92b80664e1dcfd32ff4881b/docs/patroni/alerts/PatroniIsDown.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 620,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-10T13:38:37+05:30",
+    "last_commit_date": "2026-09-10T13:38:37+05:30",
+    "last_commit_author": "Vamshidhar Poralla",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10572,
+    "sha256": "889ba572c183161c65b0ef4e188229e5e8fc09e19b8fc684c31f9b15fc4ba3ea",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 142,
+    "words": 1354,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-com--runbooks/docs/patroni/alerts/PatroniIsDown.md"
+}

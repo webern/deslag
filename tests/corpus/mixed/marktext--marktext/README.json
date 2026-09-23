@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marktext/marktext",
+    "path": "README.md",
+    "commit": "978d71df281c7b52b4383fa17bfe14e5f7b9c5f8",
+    "commit_date": "2026-09-23T23:33:41+08:00",
+    "url": "https://github.com/marktext/marktext/blob/978d71df281c7b52b4383fa17bfe14e5f7b9c5f8/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 61750,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 144,
+    "first_commit_date": "2018-01-02T11:48:28+08:00",
+    "last_commit_date": "2026-09-18T15:03:20+08:00",
+    "last_commit_author": "Ran Luo",
+    "authors": 48,
+    "ai_commits": 10,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 10 of its 144 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 9302,
+    "sha256": "728ab6523a3f1c7b3bf89c700a32d76920729d3d15c639e73de04ba8698e883a",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 203,
+    "words": 725,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/marktext--marktext/README.md"
+}

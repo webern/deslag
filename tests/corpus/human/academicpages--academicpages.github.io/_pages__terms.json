@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "_pages__terms.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "academicpages/academicpages.github.io",
+    "path": "_pages/terms.md",
+    "commit": "7389b16b4fcbb3d482c5cf5a5ed2521b2dd5bf51",
+    "commit_date": "2021-10-26T00:52:18+05:30",
+    "url": "https://github.com/academicpages/academicpages.github.io/blob/7389b16b4fcbb3d482c5cf5a5ed2521b2dd5bf51/_pages/terms.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:personal-website"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-19T09:52:40-08:00",
+    "last_commit_date": "2018-02-19T09:52:40-08:00",
+    "last_commit_author": "Stuart Geiger",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-19: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1912,
+    "sha256": "492f8c63b8faf5463342b7329cfcf33b2af23c36672ad9a8a051fc32831be04a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 39,
+    "words": 303,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/academicpages--academicpages.github.io/_pages/terms.md"
+}

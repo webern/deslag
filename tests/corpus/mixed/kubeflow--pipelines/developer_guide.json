@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "developer_guide.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kubeflow/pipelines",
+    "path": "developer_guide.md",
+    "commit": "8cdc86bdd4c417fe5dc1f2eb6e93f1655570391e",
+    "commit_date": "2026-09-23T21:06:49+02:00",
+    "url": "https://github.com/kubeflow/pipelines/blob/8cdc86bdd4c417fe5dc1f2eb6e93f1655570391e/developer_guide.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-11T17:31:48-07:00",
+    "stars": 4226,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 22,
+    "first_commit_date": "2018-11-02T14:02:31-07:00",
+    "last_commit_date": "2026-08-26T23:01:16+05:30",
+    "last_commit_author": "Rohita",
+    "authors": 19,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-11-02, before 2022-01-01; 1 of its 22 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5568,
+    "sha256": "669d46404f7ea747a3c4ed92c44bdd81750c98c3e241bf206781a9df659f1a48",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 177,
+    "words": 699,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kubeflow--pipelines/developer_guide.md"
+}

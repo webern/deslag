@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "ifreund/waylock",
+    "path": "README.md",
+    "commit": "d4f43086ab5174b3a80a084783649c63b806eef0",
+    "commit_date": "2021-02-18T10:55:45+01:00",
+    "url": "https://codeberg.org/ifreund/waylock/src/commit/d4f43086ab5174b3a80a084783649c63b806eef0/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-26T13:10:55+01:00",
+    "stars": 117,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2019-12-12T02:00:55+01:00",
+    "last_commit_date": "2021-02-18T10:55:45+01:00",
+    "last_commit_author": "Isaac Freund",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-02-18: all 12 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2179,
+    "sha256": "fbba8fa95f0bb97978b877d81c79418b26c0292c2fc4a80498dc8ee3cfc15b79",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 62,
+    "words": 250,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--ifreund--waylock/README.md"
+}

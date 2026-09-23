@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "systemd__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Axentro/Axentro",
+    "path": "systemd/README.md",
+    "commit": "ed4adac7ce368efc0a2bfcdbfbf54a5b1f0daa3b",
+    "commit_date": "2021-06-03T16:00:36+01:00",
+    "url": "https://github.com/Axentro/Axentro/blob/ed4adac7ce368efc0a2bfcdbfbf54a5b1f0daa3b/systemd/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-08T12:05:11+09:00",
+    "stars": 192,
+    "found_by": "sg-topic:crystal"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-11-23T19:53:42+00:00",
+    "last_commit_date": "2020-11-28T12:39:20+00:00",
+    "last_commit_author": "Kingsley",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-11-28: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 376,
+    "sha256": "46ee15aade1fab47f0d74ec5b36a6fc27c2538c99409b6f479a7486d4b805d75",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 13,
+    "words": 44,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Axentro--Axentro/systemd/README.md"
+}

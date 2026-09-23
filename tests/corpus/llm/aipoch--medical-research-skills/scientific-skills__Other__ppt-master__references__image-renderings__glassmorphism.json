@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "scientific-skills__Other__ppt-master__references__image-renderings__glassmorphism.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "aipoch/medical-research-skills",
+    "path": "scientific-skills/Other/ppt-master/references/image-renderings/glassmorphism.md",
+    "commit": "686e09dfdb45d9fa1a08664f06bb93769b3c9d91",
+    "commit_date": "2026-09-17T13:39:52+08:00",
+    "url": "https://github.com/aipoch/medical-research-skills/blob/686e09dfdb45d9fa1a08664f06bb93769b3c9d91/scientific-skills/Other/ppt-master/references/image-renderings/glassmorphism.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-04T15:50:06+08:00",
+    "stars": 1908,
+    "found_by": "sg-topic:genomics"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-23T18:28:23+08:00",
+    "last_commit_date": "2026-06-23T18:28:23+08:00",
+    "last_commit_author": "lisiyang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3181,
+    "sha256": "a321e171e1cf0f86d3575a6d7a9f2dd8ada46a59582af290190019d83cb44bc6",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 38,
+    "words": 475,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aipoch--medical-research-skills/scientific-skills/Other/ppt-master/references/image-renderings/glassmorphism.md"
+}

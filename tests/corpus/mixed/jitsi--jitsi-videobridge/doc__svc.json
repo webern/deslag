@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__svc.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jitsi/jitsi-videobridge",
+    "path": "doc/svc.md",
+    "commit": "52108aa6bd8b8c23e002fa0373c25390f82a768d",
+    "commit_date": "2026-09-22T11:40:43-04:00",
+    "url": "https://github.com/jitsi/jitsi-videobridge/blob/52108aa6bd8b8c23e002fa0373c25390f82a768d/doc/svc.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3105,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2019-01-16T17:49:35+00:00",
+    "last_commit_date": "2026-07-30T11:27:38-04:00",
+    "last_commit_author": "Jonathan Lennox",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-16, before 2022-01-01; 1 of its 3 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6124,
+    "sha256": "5a2a75fba683b5d9544f9f24426d7b2d20e0c4f3b51c3eda0c2ee2341d92c221",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 124,
+    "words": 1046,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/jitsi--jitsi-videobridge/doc/svc.md"
+}

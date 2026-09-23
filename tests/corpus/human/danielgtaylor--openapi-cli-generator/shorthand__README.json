@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "shorthand__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "danielgtaylor/openapi-cli-generator",
+    "path": "shorthand/README.md",
+    "commit": "47cad525a9e064a5757f4aa24de88892f3a7aeb3",
+    "commit_date": "2020-09-03T20:52:10-07:00",
+    "url": "https://github.com/danielgtaylor/openapi-cli-generator/blob/47cad525a9e064a5757f4aa24de88892f3a7aeb3/shorthand/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-09-29T20:23:54-07:00",
+    "stars": 218,
+    "found_by": "sg-topic:cli"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-09-29T20:23:54-07:00",
+    "last_commit_date": "2018-10-02T21:04:25-07:00",
+    "last_commit_author": "Daniel G. Taylor",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-10-02: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6701,
+    "sha256": "cbcb953029c58a66f7c2752f11c5cebf8066bdda46a5e9e202356bd26e057314",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 304,
+    "words": 1077,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/danielgtaylor--openapi-cli-generator/shorthand/README.md"
+}

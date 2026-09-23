@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "stefanzweifel/laravel-stats",
+    "path": "CONTRIBUTING.md",
+    "commit": "a6f0b58a711e671d15b3a6fe40f6d006bbbc3233",
+    "commit_date": "2021-11-26T19:24:17+00:00",
+    "url": "https://github.com/stefanzweifel/laravel-stats/blob/a6f0b58a711e671d15b3a6fe40f6d006bbbc3233/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1746,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-25T21:26:01+01:00",
+    "last_commit_date": "2018-01-25T21:26:01+01:00",
+    "last_commit_author": "Stefan Zweifel",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-25: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2969,
+    "sha256": "d8e64fd3e79ddb6020ec923deb44998b63c8d2918a877730bb6975c03f89491d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 445,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/stefanzweifel--laravel-stats/CONTRIBUTING.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "GitLiveApp/firebase-kotlin-sdk",
+    "path": "README.md",
+    "commit": "e48927c0c5292de6c701b5183fdec2fe2063549b",
+    "commit_date": "2021-12-29T17:16:42+01:00",
+    "url": "https://github.com/GitLiveApp/firebase-kotlin-sdk/blob/e48927c0c5292de6c701b5183fdec2fe2063549b/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-10-09T13:44:02+01:00",
+    "stars": 1733,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 48,
+    "first_commit_date": "2019-10-13T00:06:28+01:00",
+    "last_commit_date": "2021-10-05T14:20:37+01:00",
+    "last_commit_author": "Andrew Reed",
+    "authors": 7,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-05: all 48 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 12590,
+    "sha256": "ea7eab863b1d9dd8aa9559acaf807a2b90e48d5a47f9b11535db3e90cb090ac6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 179,
+    "words": 969,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/GitLiveApp--firebase-kotlin-sdk/README.md"
+}

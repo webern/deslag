@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__mcp.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "babybuddy/babybuddy",
+    "path": "docs/mcp.md",
+    "commit": "573f008950ff02614c40fdf0c6c822ef50d90207",
+    "commit_date": "2026-09-21T17:01:06-07:00",
+    "url": "https://github.com/babybuddy/babybuddy/blob/573f008950ff02614c40fdf0c6c822ef50d90207/docs/mcp.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2893,
+    "found_by": "sg-topic:self-hosted"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-05-25T17:06:38-04:00",
+    "last_commit_date": "2026-05-25T17:18:01-04:00",
+    "last_commit_author": "Robbie Plankenhorn",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1436,
+    "sha256": "97c09d67099367cacfd693db08f4f63fad46c342837cf8d8276d1056721ddf4c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 193,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/babybuddy--babybuddy/docs/mcp.md"
+}

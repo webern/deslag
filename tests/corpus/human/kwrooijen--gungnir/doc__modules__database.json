@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__modules__database.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kwrooijen/gungnir",
+    "path": "doc/modules/database.md",
+    "commit": "d27dd81b68067cb52bf1b5ebcd91f006b8c87398",
+    "commit_date": "2021-02-14T10:36:13+01:00",
+    "url": "https://github.com/kwrooijen/gungnir/blob/d27dd81b68067cb52bf1b5ebcd91f006b8c87398/doc/modules/database.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-07-19T20:55:02+02:00",
+    "stars": 170,
+    "found_by": "sg-topic:database"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2020-07-23T22:04:46+02:00",
+    "last_commit_date": "2021-01-14T17:39:24+01:00",
+    "last_commit_author": "Kevin W. van Rooijen",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-14: all 11 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4881,
+    "sha256": "9665ef4d687b5dc2fd0ca654c511a85297f1ecd33a6e5822dbd1fee7bbd5c833",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 132,
+    "words": 556,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kwrooijen--gungnir/doc/modules/database.md"
+}

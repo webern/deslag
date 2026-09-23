@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "firebase/FirebaseUI-iOS",
+    "path": "CONTRIBUTING.md",
+    "commit": "dc04d2a6d980b4f70943be6f2d28b9e25be45a45",
+    "commit_date": "2021-11-08T10:01:11-08:00",
+    "url": "https://github.com/firebase/FirebaseUI-iOS/blob/dc04d2a6d980b4f70943be6f2d28b9e25be45a45/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1593,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-03T16:07:39-08:00",
+    "last_commit_date": "2018-01-03T16:07:39-08:00",
+    "last_commit_author": "Morgan Chen",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-03: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2056,
+    "sha256": "afb35376e005139c5421943fd9cd4dad786f5f776f251d058852afa204c1e42d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 310,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/firebase--FirebaseUI-iOS/CONTRIBUTING.md"
+}

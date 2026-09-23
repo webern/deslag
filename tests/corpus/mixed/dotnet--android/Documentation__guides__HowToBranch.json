@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Documentation__guides__HowToBranch.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dotnet/android",
+    "path": "Documentation/guides/HowToBranch.md",
+    "commit": "234e185b87f744535c47f666153afe16c2cd7042",
+    "commit_date": "2026-09-23T12:27:41-05:00",
+    "url": "https://github.com/dotnet/android/blob/234e185b87f744535c47f666153afe16c2cd7042/Documentation/guides/HowToBranch.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.TXT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2139,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2021-06-28T12:21:40-05:00",
+    "last_commit_date": "2026-06-11T03:31:42-05:00",
+    "last_commit_author": "Jonathan Peppers",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-06-28, before 2022-01-01; 1 of its 7 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2292,
+    "sha256": "b96fdec51ab55b9243bbf4f3ba596b4c4b94144eb67df5613dd37efa339579f1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 262,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dotnet--android/Documentation/guides/HowToBranch.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "platform__docs__docs__platform__extensions__pluginConfig.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OHIF/Viewers",
+    "path": "platform/docs/docs/platform/extensions/pluginConfig.md",
+    "commit": "97538795fcf5682434cfb11a1e73023720a0df33",
+    "commit_date": "2026-09-23T13:23:34+00:00",
+    "url": "https://github.com/OHIF/Viewers/blob/97538795fcf5682434cfb11a1e73023720a0df33/platform/docs/docs/platform/extensions/pluginConfig.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4345,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-12T16:04:56-04:00",
+    "last_commit_date": "2026-06-12T16:04:56-04:00",
+    "last_commit_author": "Bill Wallace",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6127,
+    "sha256": "e58f5578c15f3ef7c58301d12b79f98a85038d4139288d4bb30ed069a74b0cac",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 132,
+    "words": 835,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/OHIF--Viewers/platform/docs/docs/platform/extensions/pluginConfig.md"
+}

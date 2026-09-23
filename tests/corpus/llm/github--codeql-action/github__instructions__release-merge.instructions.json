@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__instructions__release-merge.instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "github/codeql-action",
+    "path": ".github/instructions/release-merge.instructions.md",
+    "commit": "f035ce3a985a1223a9f59fb719542598640160b2",
+    "commit_date": "2026-09-23T18:11:21+00:00",
+    "url": "https://github.com/github/codeql-action/blob/f035ce3a985a1223a9f59fb719542598640160b2/.github/instructions/release-merge.instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-24T17:15:22+01:00",
+    "stars": 1646,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-26T17:13:12+02:00",
+    "last_commit_date": "2026-08-26T17:13:12+02:00",
+    "last_commit_author": "Paolo Tranquilli",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 707,
+    "sha256": "963505f1ff31ce0bd1eea2aab0dfc6fc81fcaf518159e0f0cf4aa2377d13721f",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 86,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/github--codeql-action/.github/instructions/release-merge.instructions.md"
+}

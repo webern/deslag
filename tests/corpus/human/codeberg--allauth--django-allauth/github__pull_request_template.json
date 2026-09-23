@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "allauth/django-allauth",
+    "path": ".github/pull_request_template.md",
+    "commit": "ced1ddc730c36eca3551406c60e1577e30e01cbd",
+    "commit_date": "2021-12-18T21:02:26+01:00",
+    "url": "https://codeberg.org/allauth/django-allauth/src/commit/ced1ddc730c36eca3551406c60e1577e30e01cbd/.github/pull_request_template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 125,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2019-04-26T17:43:05+02:00",
+    "last_commit_date": "2020-10-05T12:50:21+02:00",
+    "last_commit_author": "Raymond Penners",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-05: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 913,
+    "sha256": "4f0024c0b18e7a008f681f2bf449092f6b93b0f70e7e3639f2486d4486643960",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 131,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--allauth--django-allauth/.github/pull_request_template.md"
+}

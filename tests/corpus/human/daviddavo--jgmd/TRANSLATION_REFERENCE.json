@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "TRANSLATION_REFERENCE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "daviddavo/jgmd",
+    "path": "TRANSLATION_REFERENCE.md",
+    "commit": "e69791d1efbad994f8beff48c6d339ce97ee0d67",
+    "commit_date": "2021-12-24T10:49:44+01:00",
+    "url": "https://github.com/daviddavo/jgmd/blob/e69791d1efbad994f8beff48c6d339ce97ee0d67/TRANSLATION_REFERENCE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 168,
+    "found_by": "sg-topic:jekyll"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-06-13T16:18:38-03:00",
+    "last_commit_date": "2020-06-17T05:37:38+03:00",
+    "last_commit_author": "jtagcat",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-17: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2600,
+    "sha256": "ef5ea202cfdfba97b578528f4ab77b2e09841d274c7b961502c004b6374b7f33",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 383,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/daviddavo--jgmd/TRANSLATION_REFERENCE.md"
+}

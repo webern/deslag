@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "catamphetamine/read-excel-file",
+    "path": "README.md",
+    "commit": "93b94c71993376fee6ce35b7e8e959636eada601",
+    "commit_date": "2026-08-10T00:45:49+03:00",
+    "url": "https://gitlab.com/catamphetamine/read-excel-file/-/blob/93b94c71993376fee6ce35b7e8e959636eada601/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-13T22:32:48+03:00",
+    "stars": 80,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 76,
+    "first_commit_date": "2020-03-13T22:32:48+03:00",
+    "last_commit_date": "2026-08-10T00:39:45+03:00",
+    "last_commit_author": "catamphetamine",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-03-13, before 2022-01-01; 2 of its 76 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 43585,
+    "sha256": "abfd4682be8bd7d6dab3abcb7964f0a8205fb859e9501758e5556e5702dd7395",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 898,
+    "words": 5968,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--catamphetamine--read-excel-file/README.md"
+}

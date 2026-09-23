@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__ts-v6__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "lucemia/typed-ffmpeg",
+    "path": "packages/ts-v6/README.md",
+    "commit": "ef9b82cbe3c99b4b443004ae37d2ff27d5c7c527",
+    "commit_date": "2026-09-17T02:50:56+00:00",
+    "url": "https://github.com/lucemia/typed-ffmpeg/blob/ef9b82cbe3c99b4b443004ae37d2ff27d5c7c527/packages/ts-v6/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-28T08:03:09+08:00",
+    "stars": 1163,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-08T09:40:20+08:00",
+    "last_commit_date": "2026-04-22T16:02:06+08:00",
+    "last_commit_author": "David Chen",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 566,
+    "sha256": "ed3d2c09f3abb3b32c8aa2d0ea7b554cdcc381b1d47306c32eb6ff1e276d3184",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 58,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lucemia--typed-ffmpeg/packages/ts-v6/README.md"
+}

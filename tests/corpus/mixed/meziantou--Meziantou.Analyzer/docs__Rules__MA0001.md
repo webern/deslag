@@ -1,0 +1,27 @@
+# MA0001 - StringComparison is missing
+<!-- sources -->
+Sources: [UseStringComparisonAnalyzer.cs](https://github.com/meziantou/Meziantou.Analyzer/blob/main/src/Meziantou.Analyzer/Rules/UseStringComparisonAnalyzer.cs), [UseStringComparisonFixer.cs](https://github.com/meziantou/Meziantou.Analyzer/blob/main/src/Meziantou.Analyzer.CodeFixers/Rules/UseStringComparisonFixer.cs)
+<!-- sources -->
+
+String manipulation methods in .NET do not all use the same default rules for string comparison by culture and case. For instance, `string.Equals(string, string)` uses `StringComparison.Ordinal` whereas `IndexOf(String)` uses `StringComparison.CurrentCulture`. So, you should use an overload that does not rely on default behavior.
+
+MA0001 only reports a diagnostic when the default comparison for the method is `Ordinal` or `OrdinalIgnoreCase`. [`MA0074`](./MA0074.md) reports all other cases.
+
+````csharp
+string.Equals("a", "b"); // non-compliant as the default comparison of string.Equals is Ordinal
+
+// Should be
+string.Equals("a", "b", StringComparison.Ordinal);
+````
+
+## Configuration
+
+````
+# Include the overloads that are extension methods declared in a namespace that is not imported. The code fix adds the using directive. default: false
+MA0001.include_extension_methods_from_not_imported_namespaces = false
+````
+
+## Additional resources
+
+- [Best practices for comparing strings in .NET](https://learn.microsoft.com/en-us/dotnet/standard/base-types/best-practices-strings?WT.mc_id=DT-MVP-5003978#specifying-string-comparisons-explicitly)
+- [String comparisons are harder than it seems](https://www.meziantou.net/string-comparisons-are-harder-than-it-seems.htm)

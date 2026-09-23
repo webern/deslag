@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "icyleaf/totem",
+    "path": "CHANGELOG.md",
+    "commit": "d8c12f01885cb1f474d90af349c60740aa201939",
+    "commit_date": "2021-04-22T18:14:11+08:00",
+    "url": "https://github.com/icyleaf/totem/blob/d8c12f01885cb1f474d90af349c60740aa201939/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-07-12T18:16:12+08:00",
+    "stars": 71,
+    "found_by": "sg-topic:crystal"
+  },
+  "history": {
+    "commits": 21,
+    "first_commit_date": "2018-07-19T11:24:08+08:00",
+    "last_commit_date": "2021-03-25T10:58:50+08:00",
+    "last_commit_author": "icyleaf",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-25: all 21 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3953,
+    "sha256": "c59f08ab6da7c456c8a1053f393a592764ff731a7c7f46ebecf67b1fc8c1e80d",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 132,
+    "words": 399,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/icyleaf--totem/CHANGELOG.md"
+}

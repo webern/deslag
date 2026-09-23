@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SciML/ModelingToolkit.jl",
+    "path": "AGENTS.md",
+    "commit": "e167d971e019bf6bc1264fea3084709906994f8b",
+    "commit_date": "2026-09-23T08:43:01+00:00",
+    "url": "https://github.com/SciML/ModelingToolkit.jl/blob/e167d971e019bf6bc1264fea3084709906994f8b/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-02-26T17:07:45-08:00",
+    "stars": 1684,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-10T15:54:02+00:00",
+    "last_commit_date": "2026-09-10T15:54:02+00:00",
+    "last_commit_author": "Chris Rackauckas - Beep Boop Edition",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2013,
+    "sha256": "063809ae7209ba5092b91e6c7958d3b2e2f1fa57224d3fc7afd4fa1aaccff0dc",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 46,
+    "words": 287,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/SciML--ModelingToolkit.jl/AGENTS.md"
+}

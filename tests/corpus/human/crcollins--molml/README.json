@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "crcollins/molml",
+    "path": "README.md",
+    "commit": "081f06eca5d66279853c24bf2de698edee689261",
+    "commit_date": "2019-07-31T12:57:39-04:00",
+    "url": "https://github.com/crcollins/molml/blob/081f06eca5d66279853c24bf2de698edee689261/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 62,
+    "found_by": "sg-topic:chemistry"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2018-01-01T17:26:52-05:00",
+    "last_commit_date": "2019-05-24T23:57:49-04:00",
+    "last_commit_author": "Christopher Collins",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-05-24: all 9 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8601,
+    "sha256": "6ea919081a9c27f5dcb8824e1dce0ea716916d75928fdc256b9ada3c9628aa91",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 203,
+    "words": 913,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/crcollins--molml/README.md"
+}

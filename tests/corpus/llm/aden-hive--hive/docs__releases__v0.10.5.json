@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__releases__v0.10.5.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "aden-hive/hive",
+    "path": "docs/releases/v0.10.5.md",
+    "commit": "6193aea7eb064f7536dfedcbe9ff08ad954ac53b",
+    "commit_date": "2026-09-13T17:10:04-07:00",
+    "url": "https://github.com/aden-hive/hive/blob/6193aea7eb064f7536dfedcbe9ff08ad954ac53b/docs/releases/v0.10.5.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-13T20:13:05-08:00",
+    "stars": 11063,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-24T20:21:03-07:00",
+    "last_commit_date": "2026-04-24T20:21:03-07:00",
+    "last_commit_author": "Richard Tang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6625,
+    "sha256": "7a6ba12218ac482daabf31786a44b089041ebc17c8f358ff6dab62a59dd62ca4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 862,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aden-hive--hive/docs/releases/v0.10.5.md"
+}

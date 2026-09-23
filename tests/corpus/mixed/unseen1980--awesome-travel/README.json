@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "unseen1980/awesome-travel",
+    "path": "README.md",
+    "commit": "e79d91a541d28fc1d6acc08c8ab199311beec76b",
+    "commit_date": "2026-08-14T22:09:52+01:00",
+    "url": "https://github.com/unseen1980/awesome-travel/blob/e79d91a541d28fc1d6acc08c8ab199311beec76b/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENCE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:travel"
+  },
+  "history": {
+    "commits": 73,
+    "first_commit_date": "2018-06-11T12:54:07+01:00",
+    "last_commit_date": "2026-08-12T07:46:37+00:00",
+    "last_commit_author": "PingouinFerreux",
+    "authors": 50,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-06-11, before 2022-01-01; 1 of its 73 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 17657,
+    "sha256": "2d43a898c1a0ecb5b221ae415f515544779a3e223e52b411862d5e5d6462990e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 204,
+    "words": 1386,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/unseen1980--awesome-travel/README.md"
+}

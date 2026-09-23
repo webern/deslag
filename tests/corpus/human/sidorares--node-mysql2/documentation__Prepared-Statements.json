@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "documentation__Prepared-Statements.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sidorares/node-mysql2",
+    "path": "documentation/Prepared-Statements.md",
+    "commit": "bf9cc4c41e72f4a9014659a22b131739524bda1c",
+    "commit_date": "2021-12-29T10:09:22+09:00",
+    "url": "https://github.com/sidorares/node-mysql2/blob/bf9cc4c41e72f4a9014659a22b131739524bda1c/documentation/Prepared-Statements.md",
+    "license": "MIT",
+    "license_files": [
+      "License"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4386,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-02-01T09:59:04+11:00",
+    "last_commit_date": "2018-11-05T15:46:57+01:00",
+    "last_commit_author": "Simon Schick",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-11-05: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1916,
+    "sha256": "631047838a599e7113c8979ae336e5dc7770df3ce9b4b24821ad94ce40332106",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 311,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/sidorares--node-mysql2/documentation/Prepared-Statements.md"
+}

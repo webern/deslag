@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__agent-browser__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hayes/pothos",
+    "path": ".claude/skills/agent-browser/SKILL.md",
+    "commit": "4c8bc28d0402c4054821c9419d51cf691ba6414d",
+    "commit_date": "2026-09-14T16:33:05-07:00",
+    "url": "https://github.com/hayes/pothos/blob/4c8bc28d0402c4054821c9419d51cf691ba6414d/.claude/skills/agent-browser/SKILL.md",
+    "license": "ISC",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-10-10T23:51:18-07:00",
+    "stars": 2617,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-09T15:14:22-07:00",
+    "last_commit_date": "2026-09-09T15:14:22-07:00",
+    "last_commit_author": "Michael Hayes",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2904,
+    "sha256": "b2e54fa784581734c689611860de39916364d4e4b9cf17472b8e2afdaaa9d320",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 406,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/hayes--pothos/.claude/skills/agent-browser/SKILL.md"
+}

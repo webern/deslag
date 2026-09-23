@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__backends.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "gopasspw/gopass",
+    "path": "docs/backends.md",
+    "commit": "6bb658584647c16d3cd0fdbf8e3acd5bb020224d",
+    "commit_date": "2026-09-23T08:30:59+02:00",
+    "url": "https://github.com/gopasspw/gopass/blob/6bb658584647c16d3cd0fdbf8e3acd5bb020224d/docs/backends.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 7211,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 24,
+    "first_commit_date": "2018-02-23T11:37:44+01:00",
+    "last_commit_date": "2026-09-12T09:49:05+02:00",
+    "last_commit_author": "Dominik Schulz",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "jules"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-23, before 2022-01-01; 1 of its 24 commits are marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 1803,
+    "sha256": "0f7420023bafa781da04dfb7ba3072e92c966d4caa420b5e5acf6df7437854e8",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 26,
+    "words": 261,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gopasspw--gopass/docs/backends.md"
+}

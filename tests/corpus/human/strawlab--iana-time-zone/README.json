@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "strawlab/iana-time-zone",
+    "path": "README.md",
+    "commit": "3cb9db4d8557c6693797103c22a19568a7d16ae6",
+    "commit_date": "2021-12-23T08:19:24+01:00",
+    "url": "https://github.com/strawlab/iana-time-zone/blob/3cb9db4d8557c6693797103c22a19568a7d16ae6/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-06-27T12:19:55+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-06-27T12:19:55+02:00",
+    "last_commit_date": "2020-06-27T12:21:41+02:00",
+    "last_commit_author": "Andrew Straw",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-27: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 965,
+    "sha256": "df5191fd147ed6df2439bdf29b43f4d74845f832eeb274a10981cb939cb4e7fa",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 71,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/strawlab--iana-time-zone/README.md"
+}

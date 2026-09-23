@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__getting-started__installation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "remix-run/react-router",
+    "path": "docs/getting-started/installation.md",
+    "commit": "48b7c60a2133a617d64533b54eb299dbd2d1be0e",
+    "commit_date": "2021-12-31T02:21:16+01:00",
+    "url": "https://github.com/remix-run/react-router/blob/48b7c60a2133a617d64533b54eb299dbd2d1be0e/docs/getting-started/installation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-10-14T13:44:15-06:00",
+    "last_commit_date": "2021-12-10T10:13:03+08:00",
+    "last_commit_author": "laohan",
+    "authors": 6,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-10: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 9606,
+    "sha256": "1b21faa70034927aed0dcba30d7115b088043486ef5ca979171adbf1a247bb52",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 322,
+    "words": 1235,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/remix-run--react-router/docs/getting-started/installation.md"
+}

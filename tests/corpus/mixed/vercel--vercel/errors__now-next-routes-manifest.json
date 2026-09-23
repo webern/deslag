@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "errors__now-next-routes-manifest.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "vercel/vercel",
+    "path": "errors/now-next-routes-manifest.md",
+    "commit": "c628be7835e03a965b93e9cf9e2bd5ac2acbf5eb",
+    "commit_date": "2026-09-08T11:09:19-07:00",
+    "url": "https://github.com/vercel/vercel/blob/c628be7835e03a965b93e9cf9e2bd5ac2acbf5eb/errors/now-next-routes-manifest.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 16287,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2020-04-27T13:05:03-05:00",
+    "last_commit_date": "2026-01-07T05:46:37-05:00",
+    "last_commit_author": "Luke PS",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-27, before 2022-01-01; 1 of its 4 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2218,
+    "sha256": "ed20c56f1d5eb17c094716770f60e8c2368291e5ee5118f4700ea9af67f96ed2",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 46,
+    "words": 331,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/vercel--vercel/errors/now-next-routes-manifest.md"
+}

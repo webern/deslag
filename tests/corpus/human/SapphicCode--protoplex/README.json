@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SapphicCode/protoplex",
+    "path": "README.md",
+    "commit": "ca5bb620f5041084dcd08ed50bb517ef85f9edbd",
+    "commit_date": "2020-07-18T23:43:36+02:00",
+    "url": "https://github.com/SapphicCode/protoplex/blob/ca5bb620f5041084dcd08ed50bb517ef85f9edbd/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-12-05T21:38:05+01:00",
+    "stars": 139,
+    "found_by": "sg-topic:go"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-12-06T18:38:03+01:00",
+    "last_commit_date": "2020-07-18T23:43:36+02:00",
+    "last_commit_author": "Cassandra",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-07-18: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1911,
+    "sha256": "101b6f72d588d0a0b24a04e0d5ea0e371ce1beb4bad723ddbba1784075baf423",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 70,
+    "words": 263,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/SapphicCode--protoplex/README.md"
+}

@@ -1,0 +1,54 @@
+{
+  "sidecar_version": 2,
+  "fixture": "apps__backend__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "LibrePhotos/librephotos",
+    "path": "apps/backend/README.md",
+    "commit": "886de200f30e2a3df41f5233609dff4459463023",
+    "commit_date": "2026-09-21T15:10:12+02:00",
+    "url": "https://github.com/LibrePhotos/librephotos/blob/886de200f30e2a3df41f5233609dff4459463023/apps/backend/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8081,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 74,
+    "first_commit_date": "2018-04-12T19:30:23+09:00",
+    "last_commit_date": "2026-09-16T18:22:36+02:00",
+    "last_commit_author": "Niaz Faridani-Rad",
+    "authors": 18,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "copilot",
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-04-12, before 2022-01-01; 3 of its 74 commits are marked as an AI agent's (claude-code, copilot, cursor)"
+  },
+  "content": {
+    "size_bytes": 5587,
+    "sha256": "1cc308aa9bff4a350c846a3fe8a321472dc8341092bc3b4e11ce3dc6de505e10",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 103,
+    "words": 488,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/LibrePhotos--librephotos/apps/backend/README.md"
+}

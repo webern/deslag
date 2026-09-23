@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "burhanrashid52/PhotoEditor",
+    "path": "CHANGELOG.md",
+    "commit": "053cd6f8d80778a0002da245eef612f6edf71175",
+    "commit_date": "2026-09-17T11:35:26+00:00",
+    "url": "https://github.com/burhanrashid52/PhotoEditor/blob/053cd6f8d80778a0002da245eef612f6edf71175/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-12T14:53:17+05:30",
+    "stars": 4514,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 30,
+    "first_commit_date": "2018-05-25T17:34:10+05:30",
+    "last_commit_date": "2026-09-17T11:35:26+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 4,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-05-25, before 2022-01-01; 2 of its 30 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 4456,
+    "sha256": "4e2038be0165c61bdd15f787e02c897eb1e890269ba352f6de1d31c89d1e82af",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 116,
+    "words": 636,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/burhanrashid52--PhotoEditor/CHANGELOG.md"
+}

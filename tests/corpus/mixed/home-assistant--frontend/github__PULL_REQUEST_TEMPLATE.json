@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "home-assistant/frontend",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "e5f1cb0b1fd8459202b2ed53de48f4afe05f0bb4",
+    "commit_date": "2026-09-23T15:44:07+01:00",
+    "url": "https://github.com/home-assistant/frontend/blob/e5f1cb0b1fd8459202b2ed53de48f4afe05f0bb4/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5670,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2020-01-22T18:33:18+01:00",
+    "last_commit_date": "2026-04-20T00:50:33-04:00",
+    "last_commit_author": "Logan Rosen",
+    "authors": 6,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-01-22, before 2022-01-01; 2 of its 7 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 4068,
+    "sha256": "842d29124247bb62da444d5e196b3189f6120c4dfca268289600835b600fb16b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 648,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/home-assistant--frontend/.github/PULL_REQUEST_TEMPLATE.md"
+}

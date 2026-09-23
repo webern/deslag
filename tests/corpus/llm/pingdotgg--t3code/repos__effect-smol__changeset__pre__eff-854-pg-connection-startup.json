@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "repos__effect-smol__changeset__pre__eff-854-pg-connection-startup.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pingdotgg/t3code",
+    "path": ".repos/effect-smol/.changeset/pre/eff-854-pg-connection-startup.md",
+    "commit": "f5ef0ddb90a8c36584e181b1913e7b8a5df30ffc",
+    "commit_date": "2026-09-23T06:49:39+00:00",
+    "url": "https://github.com/pingdotgg/t3code/blob/f5ef0ddb90a8c36584e181b1913e7b8a5df30ffc/.repos/effect-smol/.changeset/pre/eff-854-pg-connection-startup.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-07T17:28:14-08:00",
+    "stars": 23301,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-17T23:21:25-07:00",
+    "last_commit_date": "2026-09-17T23:21:25-07:00",
+    "last_commit_author": "Julius Marminge",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2035,
+    "sha256": "8a7e0761d1d81e528c195f9858a27646dd6f46649e7f6f4a2c4cc8fcb3f5ebdd",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 261,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pingdotgg--t3code/.repos/effect-smol/.changeset/pre/eff-854-pg-connection-startup.md"
+}

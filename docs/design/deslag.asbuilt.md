@@ -156,7 +156,8 @@ prose; an unset field counts as 0, and a table setting neither checks nothing. I
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
-settings are substituted. The emphasis report ends with its spans. Every finding is printed to
+settings are substituted. The emphasis report rounds its percentage up, so a file just over its share never reads as at
+it, and ends with its spans. Every finding is printed to
 standard error, followed by `Report::summary`, one tally line per lint that failed a file, and the
 process exits 1; a clean run prints nothing and exits 0.
 
@@ -204,8 +205,9 @@ as far as the history of the file can tell:
 - `mixed/`: begun by a person, unmarked, before 2022-01-01, and later edited by an agent.
 
 Each holds about 400 fixtures, at most three from one repository, in a directory per repository.
-Sources are GitHub, GitLab, Codeberg and Hugging Face, found through Sourcegraph, the forges' own
-search and the package registries, under permissive licences only. Most are English; a few are
+Sources are GitHub, GitLab, Codeberg and Hugging Face, found through Sourcegraph, GitHub topic
+pages, the forges' own search and the crates.io and npm registries, taken in turn from each so no
+one source crowds out the rest, and under permissive licences only. Most are English; a few are
 not, so the lints meet other scripts.
 
 A sidecar records the source (host, repository, path, commit, permalink, licence and the files

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "v4__lib__setjmp-recover-handoff.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "cznic/ccgo",
+    "path": "v4/lib/setjmp-recover-handoff.md",
+    "commit": "58dde4a1a164b757db6535e462121225a2205646",
+    "commit_date": "2026-09-21T16:40:51+02:00",
+    "url": "https://gitlab.com/cznic/ccgo/-/blob/58dde4a1a164b757db6535e462121225a2205646/v4/lib/setjmp-recover-handoff.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 71,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2026-08-06T11:09:40+02:00",
+    "last_commit_date": "2026-08-09T19:13:22+02:00",
+    "last_commit_author": "Jan Mercl",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 6 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 20981,
+    "sha256": "ba9a33d1bf58f14089d058b18b6b9bfa2a80c9034e2905e235597a80516e8fdc",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 429,
+    "words": 3296,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--cznic--ccgo/v4/lib/setjmp-recover-handoff.md"
+}

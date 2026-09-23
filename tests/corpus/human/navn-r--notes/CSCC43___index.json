@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CSCC43___index.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "navn-r/notes",
+    "path": "CSCC43/_index.md",
+    "commit": "417d32439fbbf69e92df3c3e06aa36dd3df6803d",
+    "commit_date": "2021-12-31T15:55:56-05:00",
+    "url": "https://github.com/navn-r/notes/blob/417d32439fbbf69e92df3c3e06aa36dd3df6803d/CSCC43/_index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-30T17:23:55-04:00",
+    "stars": null,
+    "found_by": "github-topic:course-notes"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2021-09-09T21:13:48-04:00",
+    "last_commit_date": "2021-12-31T15:34:48-05:00",
+    "last_commit_author": "Navinn Ravindaran",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-31: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 606,
+    "sha256": "1ecce6d1425cca89093e492f46508b00ba91e877dae3c2e1e856c1d38574c67d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 26,
+    "words": 79,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/navn-r--notes/CSCC43/_index.md"
+}

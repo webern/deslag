@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "LICENSE-ZLIB.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Lokathor/rusty-xinput",
+    "path": "LICENSE-ZLIB.md",
+    "commit": "222e2aca98a0eb69881aa7f17e7267180ff16d7f",
+    "commit_date": "2020-08-06T16:41:55-06:00",
+    "url": "https://github.com/Lokathor/rusty-xinput/blob/222e2aca98a0eb69881aa7f17e7267180ff16d7f/LICENSE-ZLIB.md",
+    "license": "Zlib",
+    "license_files": [
+      "LICENSE-ZLIB.md"
+    ],
+    "repo_first_commit_date": "2018-01-25T12:13:46-07:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2019-12-01T00:45:52-07:00",
+    "last_commit_date": "2019-12-01T00:45:52-07:00",
+    "last_commit_author": "Lokathor",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-12-01: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 851,
+    "sha256": "84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 11,
+    "words": 138,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Lokathor--rusty-xinput/LICENSE-ZLIB.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "buefy/buefy",
+    "path": "README.md",
+    "commit": "469dadd7913387d72410824428be3a720318f8b3",
+    "commit_date": "2026-09-08T14:47:21-04:00",
+    "url": "https://github.com/buefy/buefy/blob/469dadd7913387d72410824428be3a720318f8b3/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 9513,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 66,
+    "first_commit_date": "2018-01-02T20:31:13+01:00",
+    "last_commit_date": "2026-08-26T16:59:39-04:00",
+    "last_commit_author": "Wesley Ford",
+    "authors": 16,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 1 of its 66 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10666,
+    "sha256": "113c9e17b87cab8b6711588a495423447b26971208cc96291be9dc6c85f10731",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 242,
+    "words": 949,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/buefy--buefy/README.md"
+}

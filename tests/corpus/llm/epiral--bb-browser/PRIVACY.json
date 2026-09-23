@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "PRIVACY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "epiral/bb-browser",
+    "path": "PRIVACY.md",
+    "commit": "7975dc74b3f637d54906228e52f2ba9454874105",
+    "commit_date": "2026-05-29T16:14:47+08:00",
+    "url": "https://github.com/epiral/bb-browser/blob/7975dc74b3f637d54906228e52f2ba9454874105/PRIVACY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-29T17:54:21+08:00",
+    "stars": 6226,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-14T22:51:15+08:00",
+    "last_commit_date": "2026-03-14T22:51:15+08:00",
+    "last_commit_author": "yan5xu",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2210,
+    "sha256": "1f806c6cff4d58c54a7fe83a81a26b7277e35fc178f5c51067c87178d1c3dc97",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 347,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/epiral--bb-browser/PRIVACY.md"
+}

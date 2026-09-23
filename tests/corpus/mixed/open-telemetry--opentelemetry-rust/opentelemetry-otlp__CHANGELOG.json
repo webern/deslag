@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "opentelemetry-otlp__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-telemetry/opentelemetry-rust",
+    "path": "opentelemetry-otlp/CHANGELOG.md",
+    "commit": "fbce184444f78a44e125d1c906f99e4d2497e38b",
+    "commit_date": "2026-09-22T18:24:02+00:00",
+    "url": "https://github.com/open-telemetry/opentelemetry-rust/blob/fbce184444f78a44e125d1c906f99e4d2497e38b/opentelemetry-otlp/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-08T12:33:39-08:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 138,
+    "first_commit_date": "2020-08-13T18:25:49-07:00",
+    "last_commit_date": "2026-09-18T16:50:49+00:00",
+    "last_commit_author": "Cijo Thomas",
+    "authors": 36,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-08-13, before 2022-01-01; 2 of its 138 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 35097,
+    "sha256": "8656cb2a270766049c7b9edf0f2cfc417a67a02910af981accb1e13601da35ef",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 687,
+    "words": 3619,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp/CHANGELOG.md"
+}

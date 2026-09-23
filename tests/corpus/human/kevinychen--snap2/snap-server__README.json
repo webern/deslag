@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "snap-server__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kevinychen/snap2",
+    "path": "snap-server/README.md",
+    "commit": "f1a7f33361f55274b432b2f5197d88621585e3ea",
+    "commit_date": "2021-12-11T17:01:42-05:00",
+    "url": "https://github.com/kevinychen/snap2/blob/f1a7f33361f55274b432b2f5197d88621585e3ea/snap-server/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-09-08T10:04:07-07:00",
+    "stars": null,
+    "found_by": "github-topic:crossword"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-01-09T22:02:05-08:00",
+    "last_commit_date": "2020-01-10T16:46:27-08:00",
+    "last_commit_author": "Kevin Chen",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-01-10: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3047,
+    "sha256": "47cdf34946ddcfd81f75fb3edaea0951de13d705934ec2b1d9e2df24ed3473b2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 423,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kevinychen--snap2/snap-server/README.md"
+}

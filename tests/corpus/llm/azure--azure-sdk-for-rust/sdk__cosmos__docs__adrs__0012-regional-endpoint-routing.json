@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "sdk__cosmos__docs__adrs__0012-regional-endpoint-routing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "azure/azure-sdk-for-rust",
+    "path": "sdk/cosmos/docs/adrs/0012-regional-endpoint-routing.md",
+    "commit": "829ee182fc60431ee9ad59d8ed496ef0f5d268a2",
+    "commit_date": "2026-09-23T12:50:14-07:00",
+    "url": "https://github.com/azure/azure-sdk-for-rust/blob/829ee182fc60431ee9ad59d8ed496ef0f5d268a2/sdk/cosmos/docs/adrs/0012-regional-endpoint-routing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-08T13:57:01-07:00",
+    "last_commit_date": "2026-09-08T13:57:01-07:00",
+    "last_commit_author": "Ashley Stanton-Nurse",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2454,
+    "sha256": "98ba4c101630a01cfc8f73bdbef71168183c7a19ebdc7afd1afb259b39fd67a7",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 274,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/azure--azure-sdk-for-rust/sdk/cosmos/docs/adrs/0012-regional-endpoint-routing.md"
+}

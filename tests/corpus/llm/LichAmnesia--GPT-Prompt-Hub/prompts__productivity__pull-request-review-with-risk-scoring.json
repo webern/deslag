@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "prompts__productivity__pull-request-review-with-risk-scoring.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "LichAmnesia/GPT-Prompt-Hub",
+    "path": "prompts/productivity/pull-request-review-with-risk-scoring.md",
+    "commit": "b69228ae328779b0e2d8e01e603463c9263caccc",
+    "commit_date": "2026-04-18T17:19:09-07:00",
+    "url": "https://github.com/LichAmnesia/GPT-Prompt-Hub/blob/b69228ae328779b0e2d8e01e603463c9263caccc/prompts/productivity/pull-request-review-with-risk-scoring.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-01-14T17:03:33-08:00",
+    "stars": 2397,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-18T17:19:09-07:00",
+    "last_commit_date": "2026-04-18T17:19:09-07:00",
+    "last_commit_author": "Shen Huang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2245,
+    "sha256": "88a28f63c63ff6593faabf3d890e4e4f171c6ef189523750711250b645db114a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 44,
+    "words": 343,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/LichAmnesia--GPT-Prompt-Hub/prompts/productivity/pull-request-review-with-risk-scoring.md"
+}

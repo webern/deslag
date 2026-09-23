@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "gitlab__issue_templates__bug.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "ternaris/rosbags",
+    "path": ".gitlab/issue_templates/bug.md",
+    "commit": "c9bd6ebbc02d14dff16883481aa101e9116bf898",
+    "commit_date": "2021-11-25T14:41:31+01:00",
+    "url": "https://gitlab.com/ternaris/rosbags/-/blob/c9bd6ebbc02d14dff16883481aa101e9116bf898/.gitlab/issue_templates/bug.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2021-05-02T14:43:01+02:00",
+    "stars": 86,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-08-06T10:33:01+02:00",
+    "last_commit_date": "2021-08-06T10:33:01+02:00",
+    "last_commit_author": "Marko Durkovic",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-06: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 830,
+    "sha256": "7e65e094bfc2440c0066b7a8435e05d23931f0cdcb4f73fb9b73de29253c8007",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 137,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--ternaris--rosbags/.gitlab/issue_templates/bug.md"
+}

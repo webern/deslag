@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "guide_popups.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nalexn/ViewInspector",
+    "path": "guide_popups.md",
+    "commit": "c8671332c41bfa784da5c932fce9d5af285c60b3",
+    "commit_date": "2026-09-20T14:46:18+06:00",
+    "url": "https://github.com/nalexn/ViewInspector/blob/c8671332c41bfa784da5c932fce9d5af285c60b3/guide_popups.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-15T21:09:56+03:00",
+    "stars": 2632,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-09-18T23:53:50+03:00",
+    "last_commit_date": "2026-08-21T17:10:17-07:00",
+    "last_commit_author": "Naoki Hiroshima",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-09-18, before 2022-01-01; 1 of its 3 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 12565,
+    "sha256": "3fe56147b346dc3a26d96d007bc02148a86d29663b67d3961cd27edfd6fcfb02",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 383,
+    "words": 1384,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/nalexn--ViewInspector/guide_popups.md"
+}

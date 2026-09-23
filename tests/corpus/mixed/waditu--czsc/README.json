@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "waditu/czsc",
+    "path": "README.md",
+    "commit": "701e480a545004f945bb1721e510ae610ad90c4c",
+    "commit_date": "2026-08-16T08:45:49+08:00",
+    "url": "https://github.com/waditu/czsc/blob/701e480a545004f945bb1721e510ae610ad90c4c/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-11T15:38:58+08:00",
+    "stars": 6259,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 126,
+    "first_commit_date": "2019-06-11T15:38:58+08:00",
+    "last_commit_date": "2026-08-16T08:45:49+08:00",
+    "last_commit_author": "zengbin93",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-06-11, before 2022-01-01; 2 of its 126 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 16700,
+    "sha256": "437ca8db4b2f2e775b634c2e277c0dfae7521a6e6db96d45d97d2607bad6a3dc",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 340,
+    "words": 1086,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/waditu--czsc/README.md"
+}

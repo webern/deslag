@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__third_party_packages.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "httpxyz/httpxyz",
+    "path": "docs/third_party_packages.md",
+    "commit": "83c81aa9b8ef0f7825df413a673e6d9300065f3a",
+    "commit_date": "2021-12-21T20:45:34+03:30",
+    "url": "https://codeberg.org/httpxyz/httpxyz/src/commit/83c81aa9b8ef0f7825df413a673e6d9300065f3a/docs/third_party_packages.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-04-04T13:27:55+01:00",
+    "stars": 109,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-03-24T16:48:57+00:00",
+    "last_commit_date": "2021-06-17T18:00:33+05:30",
+    "last_commit_author": "Sidharth Vinod",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-17: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2320,
+    "sha256": "a105a0a12496322b11607ec7c03ad9111b91fbe3d19357e7953f01f0837f6c6c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 65,
+    "words": 203,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--httpxyz--httpxyz/docs/third_party_packages.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "cloudposse/atmos",
+    "path": "CHANGELOG.md",
+    "commit": "2369939bd011af43e0428974b1fcff6c359d9947",
+    "commit_date": "2021-12-22T14:09:11-05:00",
+    "url": "https://github.com/cloudposse/atmos/blob/2369939bd011af43e0428974b1fcff6c359d9947/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-09-02T17:46:16-07:00",
+    "stars": 1381,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-09-28T17:19:32-04:00",
+    "last_commit_date": "2021-09-28T17:19:32-04:00",
+    "last_commit_author": "Andriy Knysh",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-28: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3844,
+    "sha256": "aac894ab31cb559e51bdf3a4db068568530dc23432d5cc685b433312f8908247",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 577,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/cloudposse--atmos/CHANGELOG.md"
+}

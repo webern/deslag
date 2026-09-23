@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "destos/Patterner",
+    "path": "CONTRIBUTING.md",
+    "commit": "3e32468e843ec817b94da9df543c891ca69927fc",
+    "commit_date": "2019-02-26T23:50:01-06:00",
+    "url": "https://github.com/destos/Patterner/blob/3e32468e843ec817b94da9df543c891ca69927fc/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-02-26T23:50:01-06:00",
+    "stars": null,
+    "found_by": "github-topic:sewing"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2019-02-26T23:50:01-06:00",
+    "last_commit_date": "2019-02-26T23:50:01-06:00",
+    "last_commit_author": "Patrick Forringer",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-02-26: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1276,
+    "sha256": "1d9250250d9740f0efbd19021613fde6d0917042e85254dac219e088f78a89fd",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 76,
+    "words": 149,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/destos--Patterner/CONTRIBUTING.md"
+}

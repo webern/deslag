@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__superpowers__specs__2026-06-03-cross-canon-parallel-reading-v1-design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "xr843/fojin",
+    "path": "docs/superpowers/specs/2026-06-03-cross-canon-parallel-reading-v1-design.md",
+    "commit": "b38d9cc3c87e6f82a31a50e0337d131421266f02",
+    "commit_date": "2026-09-23T20:18:21+08:00",
+    "url": "https://github.com/xr843/fojin/blob/b38d9cc3c87e6f82a31a50e0337d131421266f02/docs/superpowers/specs/2026-06-03-cross-canon-parallel-reading-v1-design.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-01T09:14:30+08:00",
+    "stars": null,
+    "found_by": "github-topic:digital-humanities"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-03T13:13:39+08:00",
+    "last_commit_date": "2026-06-03T13:13:39+08:00",
+    "last_commit_author": "xr843",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10215,
+    "sha256": "8dc48230a8f9ce15dfa6c803c6bb36087bd672602dedea2e3556df10782b84de",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 211,
+    "words": 1413,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/xr843--fojin/docs/superpowers/specs/2026-06-03-cross-canon-parallel-reading-v1-design.md"
+}

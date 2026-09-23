@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__src__pages__docs__overview.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "react-tools/react-charts",
+    "path": "docs/src/pages/docs/overview.md",
+    "commit": "9c21df7b70344e8987ef558ad199de7bda7eae1e",
+    "commit_date": "2021-12-20T23:34:49-07:00",
+    "url": "https://github.com/react-tools/react-charts/blob/9c21df7b70344e8987ef558ad199de7bda7eae1e/docs/src/pages/docs/overview.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-07-24T15:51:31-06:00",
+    "last_commit_date": "2021-07-16T16:48:28-06:00",
+    "last_commit_author": "Tanner Linsley",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-16: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1465,
+    "sha256": "f8fc3514371b07b4baa548bd648ceb3cf43632b1780b594c4d9d4299e2826953",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 237,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/react-tools--react-charts/docs/src/pages/docs/overview.md"
+}

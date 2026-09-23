@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "src__SqlQueryStressCLI__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ErikEJ/SqlQueryStress",
+    "path": "src/SqlQueryStressCLI/README.md",
+    "commit": "66497b0ce647b732449e4c737a5daa14b72bda06",
+    "commit_date": "2026-08-20T10:18:08+02:00",
+    "url": "https://github.com/ErikEJ/SqlQueryStress/blob/66497b0ce647b732449e4c737a5daa14b72bda06/src/SqlQueryStressCLI/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1110,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2021-12-06T13:25:54+01:00",
+    "last_commit_date": "2026-08-12T07:25:39+02:00",
+    "last_commit_author": "Copilot",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-12-06, before 2022-01-01; 1 of its 9 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1120,
+    "sha256": "7751efbaf6eeac6a0f40ae04b488eba2c9112647d9a306ec39c21e6887cb3f4d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 45,
+    "words": 136,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ErikEJ--SqlQueryStress/src/SqlQueryStressCLI/README.md"
+}

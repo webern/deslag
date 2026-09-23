@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "y20k/escapepod",
+    "path": "CONTRIBUTE.md",
+    "commit": "b83a0941f6c09cb8955841c229d761c3b90153be",
+    "commit_date": "2021-12-30T15:19:54+00:00",
+    "url": "https://codeberg.org/y20k/escapepod/src/commit/b83a0941f6c09cb8955841c229d761c3b90153be/CONTRIBUTE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-06-14T09:29:27+02:00",
+    "stars": 39,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2018-11-06T17:43:06+01:00",
+    "last_commit_date": "2020-05-20T17:06:05+02:00",
+    "last_commit_author": "y20k",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-05-20: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1301,
+    "sha256": "e49db24e1674b2b903ba97ae12244b9fb8b99a9a5371858047d2a64bfb642dc5",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 168,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--y20k--escapepod/CONTRIBUTE.md"
+}

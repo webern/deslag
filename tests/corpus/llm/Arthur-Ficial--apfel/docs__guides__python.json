@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__guides__python.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Arthur-Ficial/apfel",
+    "path": "docs/guides/python.md",
+    "commit": "9f8633b07df2efcf40a4a2637beb2d4e6cd0a509",
+    "commit_date": "2026-09-19T14:33:20+02:00",
+    "url": "https://github.com/Arthur-Ficial/apfel/blob/9f8633b07df2efcf40a4a2637beb2d4e6cd0a509/docs/guides/python.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-24T20:07:14+01:00",
+    "stars": 6433,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-04-16T00:19:30+02:00",
+    "last_commit_date": "2026-07-05T11:32:47+02:00",
+    "last_commit_author": "Arthur Ficial",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8527,
+    "sha256": "f92f6e601a7791d83d587f276d4dd4fac9d21f6810f234292820504c1c436967",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 260,
+    "words": 915,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Arthur-Ficial--apfel/docs/guides/python.md"
+}

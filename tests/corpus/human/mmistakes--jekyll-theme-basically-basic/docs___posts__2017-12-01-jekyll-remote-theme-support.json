@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs___posts__2017-12-01-jekyll-remote-theme-support.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mmistakes/jekyll-theme-basically-basic",
+    "path": "docs/_posts/2017-12-01-jekyll-remote-theme-support.md",
+    "commit": "c5a8aaf5795aaa9a5fe8322094dd9fe0b3c333ca",
+    "commit_date": "2021-09-21T22:47:20-04:00",
+    "url": "https://github.com/mmistakes/jekyll-theme-basically-basic/blob/c5a8aaf5795aaa9a5fe8322094dd9fe0b3c333ca/docs/_posts/2017-12-01-jekyll-remote-theme-support.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 900,
+    "found_by": "sg-topic:jekyll"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-02T13:22:17-08:00",
+    "last_commit_date": "2018-01-02T13:22:17-08:00",
+    "last_commit_author": "Mark A. Matienzo",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-02: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1200,
+    "sha256": "09efddbe83ecb70b116d23175e989f616d11dab39eaa9c77f2bcdcbdc90cd1c4",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 31,
+    "words": 145,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mmistakes--jekyll-theme-basically-basic/docs/_posts/2017-12-01-jekyll-remote-theme-support.md"
+}

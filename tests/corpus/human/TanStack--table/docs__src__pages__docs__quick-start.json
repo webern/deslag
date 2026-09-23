@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__src__pages__docs__quick-start.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "TanStack/table",
+    "path": "docs/src/pages/docs/quick-start.md",
+    "commit": "7c47a99010c348a4f612f2263c10546c7199d86d",
+    "commit_date": "2021-11-28T11:20:53-05:00",
+    "url": "https://github.com/TanStack/table/blob/7c47a99010c348a4f612f2263c10546c7199d86d/docs/src/pages/docs/quick-start.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-07-09T14:44:17-06:00",
+    "last_commit_date": "2020-10-26T19:13:29+02:00",
+    "last_commit_author": "Amnon Sadeh",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-26: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6665,
+    "sha256": "287964e15ec6aec10aed8fb110c6120726d1f21da397116b57e666a74cfc7dd8",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 260,
+    "words": 821,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/TanStack--table/docs/src/pages/docs/quick-start.md"
+}

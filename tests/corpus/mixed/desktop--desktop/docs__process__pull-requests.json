@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__process__pull-requests.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "desktop/desktop",
+    "path": "docs/process/pull-requests.md",
+    "commit": "24e06842b8b4ead3602672b420b45ef12c860f74",
+    "commit_date": "2026-09-23T14:24:55-04:00",
+    "url": "https://github.com/desktop/desktop/blob/24e06842b8b4ead3602672b420b45ef12c860f74/docs/process/pull-requests.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 21893,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2019-09-06T08:46:37-07:00",
+    "last_commit_date": "2026-03-25T06:48:50-07:00",
+    "last_commit_author": "tidy-dev",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-09-06, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2585,
+    "sha256": "6da79b690aca1c24c37f74766515c2f3e42f3c47a5a8f96322189144b4675a23",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 41,
+    "words": 356,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/desktop--desktop/docs/process/pull-requests.md"
+}

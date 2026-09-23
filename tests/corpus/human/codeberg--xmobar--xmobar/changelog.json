@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "changelog.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "xmobar/xmobar",
+    "path": "changelog.md",
+    "commit": "a7789b75ff9fe43df210c3b15a12197cd8c69247",
+    "commit_date": "2021-12-22T16:19:52+01:00",
+    "url": "https://codeberg.org/xmobar/xmobar/src/commit/a7789b75ff9fe43df210c3b15a12197cd8c69247/changelog.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 98,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 93,
+    "first_commit_date": "2018-02-01T04:59:43+01:00",
+    "last_commit_date": "2021-12-17T15:54:02+00:00",
+    "last_commit_author": "jao",
+    "authors": 8,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-17: all 93 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 32753,
+    "sha256": "18a1d90ffcf6e953df2bea6855ca41893ebc7c45ee075fe47cbc99f5571702da",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 872,
+    "words": 4356,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--xmobar--xmobar/changelog.md"
+}

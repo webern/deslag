@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "drummyfish/anarch",
+    "path": "README.md",
+    "commit": "2e0359129d4510d27da3ec67cfb96a1a2275fb98",
+    "commit_date": "2021-10-13T19:27:21-05:00",
+    "url": "https://gitlab.com/drummyfish/anarch/-/blob/2e0359129d4510d27da3ec67cfb96a1a2275fb98/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-25T15:51:19+02:00",
+    "stars": 88,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 102,
+    "first_commit_date": "2019-10-04T00:04:14+02:00",
+    "last_commit_date": "2021-07-25T18:09:40+02:00",
+    "last_commit_author": "Miloslav Číž",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-25: all 102 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 40336,
+    "sha256": "31222bec7a9bdefd6ff16de2cc3868843a2be389d523a91ae2255c4d659a2ec0",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 360,
+    "words": 6280,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--drummyfish--anarch/README.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Correia-jpv/fucking-magictools",
+    "path": "README.md",
+    "commit": "415827f267e81c9c75335b7d67cf3429295919c4",
+    "commit_date": "2026-09-22T06:43:19+00:00",
+    "url": "https://github.com/Correia-jpv/fucking-magictools/blob/415827f267e81c9c75335b7d67cf3429295919c4/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:board-games"
+  },
+  "history": {
+    "commits": 203,
+    "first_commit_date": "2018-01-23T12:39:48-05:00",
+    "last_commit_date": "2026-09-22T06:43:17+00:00",
+    "last_commit_author": "correia-jpv",
+    "authors": 140,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-23, before 2022-01-01; 3 of its 203 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 62065,
+    "sha256": "b6ec7988b9bb65d2aa1e736594759918c4fb1861129cb2cc5857401ba4255355",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "mixed",
+    "lines": 586,
+    "words": 6359,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Correia-jpv--fucking-magictools/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__skills__engineering-principles__references__gpt-rag-architecture.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/GPT-RAG",
+    "path": ".github/skills/engineering-principles/references/gpt-rag-architecture.md",
+    "commit": "6937b6175ca70484c5bc0cd320036b961fbdc31b",
+    "commit_date": "2026-09-21T22:59:47-03:00",
+    "url": "https://github.com/Azure/GPT-RAG/blob/6937b6175ca70484c5bc0cd320036b961fbdc31b/.github/skills/engineering-principles/references/gpt-rag-architecture.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-06-27T06:30:15-07:00",
+    "stars": 1177,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-25T16:12:38-03:00",
+    "last_commit_date": "2026-07-25T16:12:38-03:00",
+    "last_commit_author": "Paulo Lacerda",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1721,
+    "sha256": "8be842468b965aa02e151721b443fdca4b499760c9598faad62f356877eff332",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 43,
+    "words": 229,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Azure--GPT-RAG/.github/skills/engineering-principles/references/gpt-rag-architecture.md"
+}

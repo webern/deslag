@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Docs__EditorTypesExplanation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "NotYetGames/DlgSystem",
+    "path": "Docs/EditorTypesExplanation.md",
+    "commit": "a9dd3e89fe4f74fc2119639a79cc40d32b84f11e",
+    "commit_date": "2021-12-30T16:32:46+01:00",
+    "url": "https://gitlab.com/NotYetGames/DlgSystem/-/blob/a9dd3e89fe4f74fc2119639a79cc40d32b84f11e/Docs/EditorTypesExplanation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2018-01-17T11:13:56+00:00",
+    "stars": 72,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-02-09T13:48:33+02:00",
+    "last_commit_date": "2020-07-02T17:08:53+03:00",
+    "last_commit_author": "Daniel Butum",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-07-02: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1077,
+    "sha256": "f9a75973737be66b55e02cc9c9947fe40d6f63d636789fbcaac014f47e733390",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 177,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--NotYetGames--DlgSystem/Docs/EditorTypesExplanation.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "EndBug/add-and-commit",
+    "path": "CHANGELOG.md",
+    "commit": "b7e58855c4b83f021c9822f7b66d28a88813f37c",
+    "commit_date": "2021-12-20T18:12:25+01:00",
+    "url": "https://github.com/EndBug/add-and-commit/blob/b7e58855c4b83f021c9822f7b66d28a88813f37c/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-17T18:50:21+02:00",
+    "stars": 1291,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2020-08-11T23:20:37+02:00",
+    "last_commit_date": "2021-12-03T19:51:35+01:00",
+    "last_commit_author": "Federico Grandi",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-03: all 23 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 10485,
+    "sha256": "47fc04991a2fea380e30acf7a6db34fa0b5bdfe4a21245db549bcbd1e8c497b5",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 312,
+    "words": 1310,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/EndBug--add-and-commit/CHANGELOG.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "inducer/relate",
+    "path": "AGENTS.md",
+    "commit": "8f93520022801dc08df602aa20175eb9c61394eb",
+    "commit_date": "2026-09-19T13:00:33-05:00",
+    "url": "https://github.com/inducer/relate/blob/8f93520022801dc08df602aa20175eb9c61394eb/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:homework"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-02-26T22:27:01+00:00",
+    "last_commit_date": "2026-03-17T09:26:06-05:00",
+    "last_commit_author": "Andreas Kloeckner",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1568,
+    "sha256": "ac358f9e740742c4cf38c389e3f2563de81cd15ba48c916d2d78b805f4fe5d70",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 47,
+    "words": 233,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/inducer--relate/AGENTS.md"
+}

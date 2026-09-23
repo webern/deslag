@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "internal__design__spf__features__ll-hls-support.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "videojs/v10",
+    "path": "internal/design/spf/features/ll-hls-support.md",
+    "commit": "e68affb9a6de75e44cf4f2edf0202f15532dacf1",
+    "commit_date": "2026-09-23T13:05:55-07:00",
+    "url": "https://github.com/videojs/v10/blob/e68affb9a6de75e44cf4f2edf0202f15532dacf1/internal/design/spf/features/ll-hls-support.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-29T10:41:46-07:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-05-21T12:07:33-07:00",
+    "last_commit_date": "2026-08-05T13:00:06-07:00",
+    "last_commit_author": "Christian Pillsbury",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 16614,
+    "sha256": "82306f224a94ff6f4b96c687a1c8a825db1cf66e6f721e23cb9bf3518d88846c",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 260,
+    "words": 2031,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/videojs--v10/internal/design/spf/features/ll-hls-support.md"
+}

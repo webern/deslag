@@ -1,0 +1,240 @@
+# DsHidMini tagged driver release
+
+This is the maintainer and agent runbook for producing a production MSI. Tagged CI EV-signs the combined CAB, submits it to Partner Center, waits for attestation, and stages the Microsoft-signed drivers. Dispatch **Build setup** to embed those artifacts, sign the MSI, and create the `setup-v*` tag. GitHub Release creation remains manual.
+
+Do not use Visual Studio to emit the MSI, and do not mix artifacts from different GitHub Actions runs.
+
+## Version invariants
+
+| Item | Rule | Example |
+|------|------|---------|
+| Driver tag | Exactly `vMAJOR.MINOR.PATCH` | `v3.6.0` |
+| Setup tag | First MSI is `setup-vMAJOR.MINOR.PATCH`; re-spins use `-r1`, `-r2`, … | `setup-v3.6.0` |
+| Driver file version | `MAJOR.MINOR.PATCH.(2000 + github.run_number)` | `3.6.0.2145` |
+| MSI product version | Same three-part value as the driver tag | `3.6.0` |
+
+`2000` is `BUILD_VERSION_OFFSET` in [`.github/workflows/build.yml`](../.github/workflows/build.yml). The revision must stay in `0..65535`.
+
+Rejected tags (the `version` job fails): `v3.6.0.1`, `v3.6.0-pre1`, `setup-v3.6.0`, `sdk-v1.0.0-pre001`.
+
+Non-tag CI (master / pull request) stamps binaries `0.0.0.(2000 + run_number)` and does **not** sign ControlApp, create a partner CAB, or write release metadata.
+
+## Prerequisites
+
+Local machine (optional ingest / verification only):
+
+- Windows, `gh` authenticated (`gh auth login`, `repo` scope)
+- Visual Studio 2026 / MSBuild 18 and Windows SDK/WDK 10.0.28000 (same pair CI installs)
+- SignTool on PATH via WDK, or pass `--sign-tool-path`
+
+`igfilter` / `nssmkig` lives in `setup/igfilter` as Git LFS content. Do not stage it locally.
+
+GitHub Actions secrets/variables used by tagged runs and the setup workflow:
+
+- `SIGN_RELAY_SERVER` (variable)
+- `SIGN_RELAY_CI_TOKEN` (secret)
+- `WEBHOOK_URL` (secret; artifact mirror)
+- `SDCM_PROFILES__DEFAULT__TENANTID` (secret; Partner Center Entra tenant)
+- `SDCM_PROFILES__DEFAULT__CLIENTID` (secret; Partner Center app)
+- `SDCM_PROFILES__DEFAULT__KEY` (secret; Partner Center API key)
+
+## CI jobs and artifacts
+
+Pushing `vMAJOR.MINOR.PATCH` to `nefarius/DsHidMini` runs [`.github/workflows/build.yml`](../.github/workflows/build.yml):
+
+```text
+version
+  -> build (x64, ARM64, x86)          unsigned driver DLLs + per-arch CABs
+  -> control-app                      EV-signs ControlApp.exe and XInput1_3.dll
+  -> partner-cab                      EV-signs driver DLLs, packs dual-arch CAB, EV-signs CAB
+  -> partner-signing                  Partner Center attestation via [partner-signing.yml](../.github/workflows/partner-signing.yml)
+       create -> upload -> wait -> ingest
+```
+
+`partner-cab` does not depend on `control-app`. The compile job must leave `dshidmini.dll` unsigned. Immediately before `makecab` of [`DsHidMini_combined.ddf`](../DsHidMini_combined.ddf), both architecture DLLs are EV-signed. Microsoft attestation **adds** its signature; it does not replace the publisher signature.
+
+| Artifact | When | Contents |
+|----------|------|----------|
+| `dshidmini-{x64,ARM64,x86}` | every build | unsigned driver/XInput binaries, per-arch CABs, PDBs |
+| `control-app` | release tags only | EV-signed `bin/ControlApp.exe` and XInput DLLs |
+| `dshidmini-partner-submission` | release tags only | `dshidmini_{DriverVersion}.cab` (EV-signed) |
+| `release-metadata` | release tags only | `release-metadata.json` (tag, versions, run ID, CAB SHA-256) |
+| `partner-signing-checkpoint` | release tags only | Partner product/submission IDs (non-secret) |
+| `dshidmini-partner-signed` | release tags only | `Signed_<id>.zip` and `Initial_<id>.cab` from the portal, mirrored to buildbot |
+| `partner-signing-result` | release tags only | Portal URL, IDs, and signed file names |
+| `dshidmini-microsoft-drivers` | release tags only | Validated dual-arch `dshidmini.inf` / `.cat` / `x64` / `ARM64` tree |
+| `dshidmini-setup` | **Build setup** dispatch | Signed MSI plus `setup-metadata.json` |
+
+Per-architecture CABs (`dshidmini_x64.cab` / `dshidmini_ARM64.cab`) are CI archives only. Never submit them to Partner Center.
+
+## Signing identities
+
+| File | After CI `partner-cab` | After Microsoft returns the package | After **Build setup** |
+|------|------------------------|-------------------------------------|-----------------------|
+| `dshidmini.dll` (x64, ARM64) | publisher EV | publisher EV **plus** Microsoft attestation | unchanged |
+| Partner CAB | publisher EV | n/a (not shipped) | n/a |
+| `ControlApp.exe` | publisher EV | n/a | packaged as signed |
+| MSI | n/a | n/a | publisher EV |
+
+Do not run the retired `SignProductionBinaries` target. Appending another publisher signature after attestation is incorrect.
+
+## Directory contract
+
+After a successful local staging sequence:
+
+```text
+artifacts/
+  release-metadata.json
+  ci/                             raw gh downloads (do not edit)
+  submission/dshidmini_*.cab      EV-signed CAB to upload
+  bin/ControlApp.exe              EV-signed
+  drivers/
+    dshidmini.inf                 dual-arch INF from Microsoft
+    dshidmini.cat                 Microsoft-issued catalog
+    x64/dshidmini.dll
+    ARM64/dshidmini.dll
+```
+
+The catalog is bound to the dual-arch INF. Do not split the package back into per-architecture INFs. `igfilter` is no longer staged here; the setup workflow packages `setup/igfilter` from the repo.
+
+## Procedure
+
+### 1. Tag the driver build
+
+```powershell
+git checkout master
+git pull
+git tag v3.6.0
+git push origin v3.6.0
+```
+
+Wait for the Build workflow, including Partner Center signing, to finish. Signing can take up to about an hour after the CAB is packed. Copy the numeric run ID from the run URL (`https://github.com/nefarius/DsHidMini/actions/runs/<run-id>`).
+
+Restart point: if the workflow failed, delete the tag only if you will recreate the same three-part version; otherwise use the next patch.
+
+### 2. Download CI outputs
+
+```powershell
+.\build.cmd DownloadCiArtifacts --run-id 123456789
+```
+
+This target does **not** sign files. It requires `release-metadata`, `control-app`, and `dshidmini-partner-submission`. After Partner Center signing finishes it also pulls `dshidmini-microsoft-drivers` into `artifacts/drivers`. It checks the CAB SHA-256 against the metadata.
+
+If you re-ran [`.github/workflows/partner-signing.yml`](../.github/workflows/partner-signing.yml) by hand, pass that signing run ID instead. ControlApp and the partner CAB are then fetched from the source Build run recorded in `release-metadata.json`.
+
+Restart point: rerun the same command; it replaces `artifacts/ci` and restages ControlApp, metadata, the CAB, and attested drivers when present.
+
+### 3. Partner Center signing (CI)
+
+The `partner-signing` jobs create a new versioned Attestation product named `DsHidMini <setupVersion> <driverVersion>`, or resume one named by the `product-id` / `submission-id` inputs, and request exactly:
+
+- `WINDOWS_v100_X64_RS5_FULL` (Windows 10 Client version 1809 Client x64 (RS5))
+- `WINDOWS_v100_ARM64_RS5_FULL` (Windows 10 Client version 1809 Client ARM64 (RS5))
+
+They upload the EV-signed combined CAB, wait up to 60 minutes, download `Signed_<id>.zip` plus `Initial_<id>.cab`, mirror that pair to buildbot, then ingest and signature-check the signed zip.
+
+Retry without rebuilding. Every fresh run opens another Partner Center product, so prefer the resume path:
+
+- **Re-run failed jobs** on the same workflow run resumes after the last successful job (`create` / `upload` / `wait` / `ingest`). Upload/commit is status-aware and will not blindly re-upload a submission that already advanced. A re-run replays the commit the run started from, so a fix to `build/PartnerSigning.ps1` or to the workflow is **not** picked up; dispatch instead.
+- **workflow_dispatch** with the original Build run ID plus `product-id` and `submission-id` resumes that existing submission using the current branch's scripts. This is how a script fix reaches a submission Hardware Dev Center is already processing, without opening another product.
+- **workflow_dispatch** with the original Build run ID and no `product-id` / `submission-id` creates a fresh product and submission from the already-built CAB. Use this only once Hardware Dev Center has rejected or failed a submission.
+
+Before changing that automation, run `.\build.cmd TestReleasePipeline`. It runs the workflow's own `create` / `upload` / `wait` scripts against a mock `sdcm` 1.0.0-pre004 (`submission get` / `status` / `--overwrite`) and asserts which verbs each stage calls, so submission-state bugs surface locally instead of consuming a product.
+
+This project's verified behavior: Microsoft **adds** its signature to the already EV-signed DLLs and replaces the catalog. If a returned DLL has only a Microsoft signer, stop and investigate; do not continue to MSI.
+
+The Build workflow does **not** build the MSI or create a GitHub Release. Dispatch **Build setup** after Partner Center signing finishes.
+
+### 4. Ingest the signed package (only if CI did not)
+
+Skip this when `DownloadCiArtifacts` already staged `artifacts/drivers`. Use it for a portal zip downloaded by hand:
+
+```powershell
+.\build.cmd IngestMicrosoftPackage --microsoft-package-path "D:\inbox\Signed_1152921505701840714.zip"
+```
+
+Accepts a `.zip`, `.cab`, or an already extracted directory. It locates the unique `dshidmini` folder (the folder that contains `dshidmini.inf`, not the parent), copies its contents into `artifacts/drivers`, and requires:
+
+- layout `dshidmini.inf`, `dshidmini.cat`, `x64/dshidmini.dll`, `ARM64/dshidmini.dll`
+- file versions equal to `release-metadata.json` `driverVersion`
+- both publisher and Microsoft signers on each DLL
+
+Restart point: rerun with the same or a corrected package; `artifacts/drivers` is replaced.
+
+### 5. Build and sign the MSI
+
+Dispatch **Build setup** (`setup.yml`) with `driver-tag` set to the same `vMAJOR.MINOR.PATCH` used in step 1. The workflow resolves the matching Build and Partner Center runs, stages attested drivers and ControlApp, packages the in-repo LFS payload (`nefcon`, updater, `igfilter`), pins WiX 4.0.6, builds the MSI, SignRelay-signs it, uploads `dshidmini-setup`, creates `setup-vMAJOR.MINOR.PATCH` (or `-rN` on a re-spin), then mirrors the artifact.
+
+A dispatch whose three-part version is lower than any already-published `setup-v*` tag fails the regression guard. Windows Installer would otherwise treat the MSI as a downgrade.
+
+Clean-VM smoke checks before publishing:
+
+- Windows x64 (and ARM64 if available) with the .NET 10 Desktop Runtime (x64) already installed: MSI installs the driver, `ControlApp.exe` is under Program Files, the Start Menu shortcut launches ControlApp.
+- The same machine family **without** that runtime: setup aborts with Error 9001 and does not leave a partial driver install.
+
+### 6. Publish
+
+Download the signed MSI from the `dshidmini-setup` Actions artifact (or the buildbot mirror) and create the GitHub Release on the tag the workflow created:
+
+```powershell
+gh release create setup-v3.6.0 `
+  --title "DsHidMini Driver v3.6.0" `
+  --notes-file path\to\notes.md `
+  .\Nefarius_DsHidMini_Drivers_x64_arm64_v3.6.0.msi
+```
+
+`setup-v*` does not trigger the Build workflow. That is intentional. The setup workflow does not create the GitHub Release.
+
+## Do not
+
+- Submit per-architecture CABs or unsigned DLLs to Partner Center.
+- Download a master/PR run and expect a partner CAB or `release-metadata.json`.
+- Mix a CAB from run A with a Microsoft package from run B.
+- Split the returned dual-arch INF/CAT into x64-only and ARM64-only packages.
+- EV-sign driver DLLs again after Microsoft returns them.
+- Use a four-part `v*` tag to start a release. `workflow_dispatch` on Partner Center signing is only for retrying attestation from an existing Build run.
+- Dispatch Partner Center signing to debug the automation. Each fresh run opens a Partner Center product; resume the existing submission or run `.\build.cmd TestReleasePipeline` instead.
+- Treat `artifacts/` as source-controlled input; it is gitignored staging.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|----------------|
+| `version` job: tag must be `vMAJOR.MINOR.PATCH` | Four-part or prerelease tag |
+| `DownloadCiArtifacts` missing `release-metadata` | Run was not a three-part release tag |
+| Partner CAB hash mismatch | Incomplete download or wrong run ID |
+| `create` job auth exit 2 | `SDCM_PROFILES__DEFAULT__*` secrets missing or invalid |
+| `wait` job exit 7 | Hardware Dev Center rejected the submission; dispatch a new signing run |
+| `wait` job exit 9 | `--wait-timeout` 3600 elapsed; re-run failed jobs to resume the wait |
+| `wait` job: submission is still commitPending | The commit never landed; re-run the `upload` job before the wait |
+| `create` job: product-id and submission-id must be supplied together | Resume needs both ids, or neither |
+| Missing `Signed_<id>.zip` / `Initial_<id>.cab` pair | Expanded `signedPackage` (driver files) instead of keeping it as `Signed_<id>.zip` and downloading `initialPackage` separately |
+| Multiple `dshidmini` packages | Point `MicrosoftPackagePath` at the zip or the single package folder |
+| DLL missing Microsoft signer | Downloaded the submission CAB instead of the dashboard's signed package |
+| DLL missing publisher signer | Microsoft package is not from this pipeline's EV-signed CAB |
+| Setup workflow: Git LFS pointer stubs | Checkout without `lfs: true`, or `git lfs pull` was skipped |
+| Setup workflow: custom-action package missing assemblies | MakeSfxCA closure missed a dependency; see `setup/obj/ca-support-assemblies.txt` |
+| Setup workflow: version regression | Dispatched a driver tag whose MAJOR.MINOR.PATCH is below the highest published `setup-v*` |
+| Setup workflow ControlApp packaging contract failed | Generated MSI omitted `ControlApp.exe`, the Start Menu shortcut, `CheckDotNetRuntime`, or `OpenArticle` |
+
+## Related code
+
+| Path | Role |
+|------|------|
+| [`build/ReleaseVersion.ps1`](../build/ReleaseVersion.ps1) | Tag parse and four-part version |
+| [`build/ReleasePipeline.cs`](../build/ReleasePipeline.cs) | Staging and Microsoft-package ingest |
+| [`build/ReleaseTargets.cs`](../build/ReleaseTargets.cs) | NUKE entry points |
+| [`build/SetupRelease.ps1`](../build/SetupRelease.ps1) | Setup tags, payload staging, MSI/CA guards, provenance |
+| [`build/PartnerSigning.ps1`](../build/PartnerSigning.ps1) | SDCM payloads, `submission status` wrappers, Signed_/Initial_ pair checks |
+| [`build/PartnerSigning.DryRun.ps1`](../build/PartnerSigning.DryRun.ps1) | Offline dry run of the signing workflow against a mock sdcm |
+| [`.github/workflows/partner-signing.yml`](../.github/workflows/partner-signing.yml) | Retryable Partner Center submit / wait / ingest |
+| [`.github/workflows/setup.yml`](../.github/workflows/setup.yml) | Dispatched signed-MSI build, tag, and mirror |
+| [`build/New-PartnerSubmissionInf.ps1`](../build/New-PartnerSubmissionInf.ps1) | Dual-arch INF for the submission CAB |
+| [`DsHidMini_combined.ddf`](../DsHidMini_combined.ddf) | Partner CAB layout (`dshidmini/` not at CAB root; includes PDBs) |
+| [`setup/InstallScript.cs`](../setup/InstallScript.cs) | WixSharp MSI contents |
+
+Local verification without publishing:
+
+```powershell
+.\build.cmd TestReleasePipeline
+```

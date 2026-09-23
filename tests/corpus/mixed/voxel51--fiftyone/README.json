@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "voxel51/fiftyone",
+    "path": "README.md",
+    "commit": "55409d621fbf6758b0fc25d0d14d2aed2211af37",
+    "commit_date": "2026-09-23T13:04:46-04:00",
+    "url": "https://github.com/voxel51/fiftyone/blob/55409d621fbf6758b0fc25d0d14d2aed2211af37/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-22T09:43:29-04:00",
+    "stars": 11112,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 127,
+    "first_commit_date": "2020-04-22T09:43:29-04:00",
+    "last_commit_date": "2026-09-10T12:31:44-04:00",
+    "last_commit_author": "Benjamin Kane",
+    "authors": 20,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-22, before 2022-01-01; 1 of its 127 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 19828,
+    "sha256": "8a167ef76e986c08be07b9ed7703fd0862cfbcd89dcec0c4e7bf976dad782389",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 551,
+    "words": 1755,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/voxel51--fiftyone/README.md"
+}

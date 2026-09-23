@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "wojtekmaj/enzyme-adapter-react-17",
+    "path": "README.md",
+    "commit": "8b369d530e1d5d95733c33b1ade6f5b5b8fb62b1",
+    "commit_date": "2021-12-09T16:31:53+01:00",
+    "url": "https://github.com/wojtekmaj/enzyme-adapter-react-17/blob/8b369d530e1d5d95733c33b1ade6f5b5b8fb62b1/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-24T19:26:51+02:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-08-24T19:43:26+02:00",
+    "last_commit_date": "2021-11-02T21:44:33+01:00",
+    "last_commit_author": "Wojciech Maj",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-02: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 966,
+    "sha256": "1fb328cb9d9ca7015b25c6c3eef825f534c79063ce7ef7e54370b708f38ce8c3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 74,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/wojtekmaj--enzyme-adapter-react-17/README.md"
+}

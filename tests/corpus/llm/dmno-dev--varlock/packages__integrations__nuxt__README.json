@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__integrations__nuxt__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dmno-dev/varlock",
+    "path": "packages/integrations/nuxt/README.md",
+    "commit": "295ec3b6910d4b572fa82d5b2f0b374d7dfb8eb9",
+    "commit_date": "2026-09-23T12:21:02-07:00",
+    "url": "https://github.com/dmno-dev/varlock/blob/295ec3b6910d4b572fa82d5b2f0b374d7dfb8eb9/packages/integrations/nuxt/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-04-11T14:25:45-07:00",
+    "stars": 4587,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-21T15:34:26-04:00",
+    "last_commit_date": "2026-08-21T15:34:26-04:00",
+    "last_commit_author": "Phil Miller",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1693,
+    "sha256": "9a3e42ea80f11da960a818e4906e36f10476d23b969ed1fe498059ec1cd546e5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 167,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dmno-dev--varlock/packages/integrations/nuxt/README.md"
+}

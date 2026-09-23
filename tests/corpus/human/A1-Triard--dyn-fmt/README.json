@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "A1-Triard/dyn-fmt",
+    "path": "README.md",
+    "commit": "11b4ebb934eceadf95c5c16287604d2bc8d1b320",
+    "commit_date": "2020-09-20T04:17:35+03:00",
+    "url": "https://github.com/A1-Triard/dyn-fmt/blob/11b4ebb934eceadf95c5c16287604d2bc8d1b320/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-06-07T17:56:02+03:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-06-07T17:56:02+03:00",
+    "last_commit_date": "2020-06-22T20:42:46+03:00",
+    "last_commit_author": "Warlock",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-22: all 10 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1308,
+    "sha256": "1fd5fd01a1334c282677cfc19d01ec0e6f2a20e2f864e213316e948b5e172e1d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 74,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/A1-Triard--dyn-fmt/README.md"
+}

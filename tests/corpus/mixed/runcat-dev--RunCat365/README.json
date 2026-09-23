@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "runcat-dev/RunCat365",
+    "path": "README.md",
+    "commit": "03b6e2b288c2df5df2433398f5547857bb4d0e2f",
+    "commit_date": "2026-07-15T21:19:22+09:00",
+    "url": "https://github.com/runcat-dev/RunCat365/blob/03b6e2b288c2df5df2433398f5547857bb4d0e2f/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-07T01:27:10+09:00",
+    "stars": 10312,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 46,
+    "first_commit_date": "2020-08-07T01:27:10+09:00",
+    "last_commit_date": "2026-07-15T21:19:22+09:00",
+    "last_commit_author": "Takuto NAKAMURA (Kyome)",
+    "authors": 7,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-08-07, before 2022-01-01; 4 of its 46 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 2371,
+    "sha256": "51c20892545d356075ddd345106c581c60c346172926aef722b5d30c3baae87d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 211,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/runcat-dev--RunCat365/README.md"
+}

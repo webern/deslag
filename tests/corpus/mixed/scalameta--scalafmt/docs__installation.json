@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__installation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "scalameta/scalafmt",
+    "path": "docs/installation.md",
+    "commit": "272534a7f25b536f00c31e860d2d51b654fd9673",
+    "commit_date": "2026-09-21T19:15:47+09:00",
+    "url": "https://github.com/scalameta/scalafmt/blob/272534a7f25b536f00c31e860d2d51b654fd9673/docs/installation.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENCE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1489,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 78,
+    "first_commit_date": "2018-07-24T20:05:08+02:00",
+    "last_commit_date": "2026-07-13T16:55:07-07:00",
+    "last_commit_author": "Albert Meltzer",
+    "authors": 27,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-07-24, before 2022-01-01; 2 of its 78 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 23591,
+    "sha256": "e938d7f2133300f35aa28964ac9f1026e4a12b881882b55d82e254652ab536ba",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 661,
+    "words": 2885,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/scalameta--scalafmt/docs/installation.md"
+}

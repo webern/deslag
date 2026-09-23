@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "clients__mobile__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "traycerai/traycer",
+    "path": "clients/mobile/README.md",
+    "commit": "789eadf332ff81fcc216880821898868f77ac79c",
+    "commit_date": "2026-09-23T12:40:04-07:00",
+    "url": "https://github.com/traycerai/traycer/blob/789eadf332ff81fcc216880821898868f77ac79c/clients/mobile/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-22T21:58:20+05:30",
+    "stars": 1508,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-24T19:44:26+05:30",
+    "last_commit_date": "2026-08-24T19:44:26+05:30",
+    "last_commit_author": "devansh",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 3658,
+    "sha256": "377a3343e5a5f593e4d53235ca5f3fb479f482c7005138c51641224b41b9ec1c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 94,
+    "words": 549,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/traycerai--traycer/clients/mobile/README.md"
+}

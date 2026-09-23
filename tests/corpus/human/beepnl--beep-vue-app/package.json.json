@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "package.json.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "beepnl/beep-vue-app",
+    "path": "package.json.md",
+    "commit": "2705615960261899d27fa3814dc2c35dac273a98",
+    "commit_date": "2021-12-27T13:49:47+01:00",
+    "url": "https://github.com/beepnl/beep-vue-app/blob/2705615960261899d27fa3814dc2c35dac273a98/package.json.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-11T16:48:32+02:00",
+    "stars": null,
+    "found_by": "github-topic:beekeeping"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-03-10T17:37:07+01:00",
+    "last_commit_date": "2020-03-10T17:37:07+01:00",
+    "last_commit_author": "Marcel van den Elst",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-03-10: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6057,
+    "sha256": "c7120df8ac842a5d001ebbd8b9195d5e263f3680abbaa48a57f7e313091611ab",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 129,
+    "words": 792,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/beepnl--beep-vue-app/package.json.md"
+}

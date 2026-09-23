@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pyvista/pyvista",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "737786e1c4aebd79330cf9f9db63aeebb94db46d",
+    "commit_date": "2026-09-23T15:29:45+00:00",
+    "url": "https://github.com/pyvista/pyvista/blob/737786e1c4aebd79330cf9f9db63aeebb94db46d/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3820,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-02-11T02:22:14+09:00",
+    "last_commit_date": "2026-08-19T08:01:29+00:00",
+    "last_commit_author": "Eric Larson",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-02-11, before 2022-01-01; 1 of its 6 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 477,
+    "sha256": "40d5a5002acfe2a31e0625eb1a110266d22499ed35337639847489ec025ab996",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 88,
+    "frontmatter": false,
+    "natural_language": "none",
+    "scripts": [],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pyvista--pyvista/.github/PULL_REQUEST_TEMPLATE.md"
+}

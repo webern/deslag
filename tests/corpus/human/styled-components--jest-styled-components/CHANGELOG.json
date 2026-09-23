@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "styled-components/jest-styled-components",
+    "path": "CHANGELOG.md",
+    "commit": "4b07fde2607516db407a6215d17dfb461b90b491",
+    "commit_date": "2021-11-21T22:43:46-05:00",
+    "url": "https://github.com/styled-components/jest-styled-components/blob/4b07fde2607516db407a6215d17dfb461b90b491/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1580,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2018-01-14T08:21:49+00:00",
+    "last_commit_date": "2021-11-21T10:07:45-05:00",
+    "last_commit_author": "Evan Jacobs",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-21: all 23 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 11017,
+    "sha256": "92960c1dbbb9a5d68022aa297003564d0318fa5455b11075dc6447751c8bcdfc",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 287,
+    "words": 951,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/styled-components--jest-styled-components/CHANGELOG.md"
+}

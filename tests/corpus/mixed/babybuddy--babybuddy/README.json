@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "babybuddy/babybuddy",
+    "path": "README.md",
+    "commit": "573f008950ff02614c40fdf0c6c822ef50d90207",
+    "commit_date": "2026-09-21T17:01:06-07:00",
+    "url": "https://github.com/babybuddy/babybuddy/blob/573f008950ff02614c40fdf0c6c822ef50d90207/README.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2893,
+    "found_by": "sg-topic:self-hosted"
+  },
+  "history": {
+    "commits": 127,
+    "first_commit_date": "2018-01-13T08:17:21-05:00",
+    "last_commit_date": "2026-09-01T10:52:25-05:00",
+    "last_commit_author": "kguy18",
+    "authors": 20,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-13, before 2022-01-01; 1 of its 127 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7050,
+    "sha256": "20cd36099e5f09e3298de995e2676a2cb1108016566d67a9f49e83ad156f706b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 120,
+    "words": 578,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/babybuddy--babybuddy/README.md"
+}

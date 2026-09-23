@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "homebridge/homebridge",
+    "path": "CHANGELOG.md",
+    "commit": "edf54930340d67cade23d01abd41b03cd9621e8b",
+    "commit_date": "2026-08-30T18:41:22+10:00",
+    "url": "https://github.com/homebridge/homebridge/blob/edf54930340d67cade23d01abd41b03cd9621e8b/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 25499,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 211,
+    "first_commit_date": "2020-04-10T14:19:00+10:00",
+    "last_commit_date": "2026-08-16T12:13:36+01:00",
+    "last_commit_author": "Ben",
+    "authors": 10,
+    "ai_commits": 71,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-10, before 2022-01-01; 71 of its 211 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 41863,
+    "sha256": "a735d3a0779dfc04d9a62a723a897e530b24117224d96572bce9c74adf34ab0f",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 885,
+    "words": 5260,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/homebridge--homebridge/CHANGELOG.md"
+}

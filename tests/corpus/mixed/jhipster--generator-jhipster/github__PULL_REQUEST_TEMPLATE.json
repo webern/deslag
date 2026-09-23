@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jhipster/generator-jhipster",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "5839c9228684d2081a1e668a86cdf6358c9cec29",
+    "commit_date": "2026-09-23T15:53:57-03:00",
+    "url": "https://github.com/jhipster/generator-jhipster/blob/5839c9228684d2081a1e668a86cdf6358c9cec29/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 22458,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2018-01-13T14:04:35+01:00",
+    "last_commit_date": "2026-04-17T15:49:26+02:00",
+    "last_commit_author": "Julien Dubois",
+    "authors": 10,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-13, before 2022-01-01; 1 of its 15 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1408,
+    "sha256": "873d627e0e46c966f19657eeaaf68d4b14885f3c9a01d69a5ea50bcea9d8fc31",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 198,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/jhipster--generator-jhipster/.github/PULL_REQUEST_TEMPLATE.md"
+}

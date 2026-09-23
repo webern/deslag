@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__development__ci-variables.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/omnibus-gitlab",
+    "path": "doc/development/ci-variables.md",
+    "commit": "8ea3be4f36238a2aaf47895d9cc1a9510176eb74",
+    "commit_date": "2026-09-23T18:40:34+00:00",
+    "url": "https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/8ea3be4f36238a2aaf47895d9cc1a9510176eb74/doc/development/ci-variables.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 695,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 48,
+    "first_commit_date": "2021-03-18T04:58:03+00:00",
+    "last_commit_date": "2026-07-15T13:38:01-04:00",
+    "last_commit_author": "Jason Plum",
+    "authors": 29,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-03-18, before 2022-01-01; 1 of its 48 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10976,
+    "sha256": "eb8f08e69b12ab7fe9a731cff61b8a0a7ccf01c3d40ade14afa4f62c2576bdf9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 145,
+    "words": 1349,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--gitlab-org--omnibus-gitlab/doc/development/ci-variables.md"
+}

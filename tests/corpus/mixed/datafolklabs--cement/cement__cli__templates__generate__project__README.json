@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "cement__cli__templates__generate__project__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "datafolklabs/cement",
+    "path": "cement/cli/templates/generate/project/README.md",
+    "commit": "d76e40bb32d2c52920ac9d048891099f44ce8508",
+    "commit_date": "2026-09-12T13:47:55-05:00",
+    "url": "https://github.com/datafolklabs/cement/blob/d76e40bb32d2c52920ac9d048891099f44ce8508/cement/cli/templates/generate/project/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1350,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-07-19T13:57:49-05:00",
+    "last_commit_date": "2026-05-01T21:28:53-05:00",
+    "last_commit_author": "BJ Dierkes",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-07-19, before 2022-01-01; 2 of its 5 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1323,
+    "sha256": "7294c6442fb44ea561181ef5690539da1418665dde693f0d002a934add416459",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 204,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/datafolklabs--cement/cement/cli/templates/generate/project/README.md"
+}

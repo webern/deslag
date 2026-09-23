@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "utils__linting__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "trailofbits/dylint",
+    "path": "utils/linting/README.md",
+    "commit": "8aeea4b0c27722d46fcc8288330401418328e8fa",
+    "commit_date": "2026-09-22T10:52:01-04:00",
+    "url": "https://github.com/trailofbits/dylint/blob/8aeea4b0c27722d46fcc8288330401418328e8fa/utils/linting/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2021-03-19T18:28:48-04:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2021-03-24T19:57:24-04:00",
+    "last_commit_date": "2026-09-11T13:24:10-04:00",
+    "last_commit_author": "Samuel Moelius",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-03-24, before 2022-01-01; 1 of its 20 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7766,
+    "sha256": "8762879cd7356a4f193f3fb81f6cea9c57451de7fba37965355e8db9c4c95b2c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 201,
+    "words": 691,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/trailofbits--dylint/utils/linting/README.md"
+}

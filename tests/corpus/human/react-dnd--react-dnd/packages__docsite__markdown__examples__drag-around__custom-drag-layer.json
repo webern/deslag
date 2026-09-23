@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__docsite__markdown__examples__drag-around__custom-drag-layer.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "react-dnd/react-dnd",
+    "path": "packages/docsite/markdown/examples/drag-around/custom-drag-layer.md",
+    "commit": "acd1a80f66a0ec399ddbbd527b7a77b572de0140",
+    "commit_date": "2021-12-22T02:13:40-05:00",
+    "url": "https://github.com/react-dnd/react-dnd/blob/acd1a80f66a0ec399ddbbd527b7a77b572de0140/packages/docsite/markdown/examples/drag-around/custom-drag-layer.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-10-17T00:44:12-07:00",
+    "last_commit_date": "2020-10-17T00:44:12-07:00",
+    "last_commit_author": "Chris Trevino",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-17: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1049,
+    "sha256": "59e8c678d4d0086429bfab540dfff9ee1d960a74a234a4d04d2322aac7e53b18",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 159,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/react-dnd--react-dnd/packages/docsite/markdown/examples/drag-around/custom-drag-layer.md"
+}

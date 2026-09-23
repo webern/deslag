@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "oxc-project/oxc-sourcemap",
+    "path": "AGENTS.md",
+    "commit": "313168564a4f484f0501f372b498341528963a25",
+    "commit_date": "2026-09-23T20:02:30+08:00",
+    "url": "https://github.com/oxc-project/oxc-sourcemap/blob/313168564a4f484f0501f372b498341528963a25/AGENTS.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-03-28T19:36:38+08:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-08-02T20:46:15+08:00",
+    "last_commit_date": "2025-08-02T20:46:15+08:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1900,
+    "sha256": "6594071d097b8a65316ee229582e56287a9853998793e6aeef9fc582c2f2df47",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 57,
+    "words": 251,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/oxc-project--oxc-sourcemap/AGENTS.md"
+}

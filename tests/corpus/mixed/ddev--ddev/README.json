@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ddev/ddev",
+    "path": "README.md",
+    "commit": "60e251fbe07095d7e0cae33fff1d7782ed5d734d",
+    "commit_date": "2026-09-23T11:53:43-06:00",
+    "url": "https://github.com/ddev/ddev/blob/60e251fbe07095d7e0cae33fff1d7782ed5d734d/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3895,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 79,
+    "first_commit_date": "2018-01-03T09:54:46-07:00",
+    "last_commit_date": "2026-08-14T16:40:47+03:00",
+    "last_commit_author": "Stanislav Zhuk",
+    "authors": 20,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-03, before 2022-01-01; 2 of its 79 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7502,
+    "sha256": "7f53c2155227477be4e68e192aad9d261f84f8129e3580e71cf2132c3db033e4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 104,
+    "words": 749,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ddev--ddev/README.md"
+}

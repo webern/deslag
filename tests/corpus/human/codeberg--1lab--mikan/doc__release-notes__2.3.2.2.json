@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__release-notes__2.3.2.2.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "1lab/mikan",
+    "path": "doc/release-notes/2.3.2.2.md",
+    "commit": "9428b1db46b28a4a01706a9347091b09b7136388",
+    "commit_date": "2021-12-26T20:07:49+01:00",
+    "url": "https://codeberg.org/1lab/mikan/src/commit/9428b1db46b28a4a01706a9347091b09b7136388/doc/release-notes/2.3.2.2.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 69,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2019-12-18T07:41:59-05:00",
+    "last_commit_date": "2019-12-18T07:41:59-05:00",
+    "last_commit_author": "Andrés Sicard-Ramírez",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-12-18: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 394,
+    "sha256": "e800a2355a03b67d047b98cb2e70317b09daf3a4f502dd36cf63f4926ba2238c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 10,
+    "words": 48,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--1lab--mikan/doc/release-notes/2.3.2.2.md"
+}

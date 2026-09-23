@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__git-worktree-config.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kbwo/ccmanager",
+    "path": "docs/git-worktree-config.md",
+    "commit": "2e50f4cad1d578e24580da61ff324db4befc8ba1",
+    "commit_date": "2026-09-13T11:00:05+00:00",
+    "url": "https://github.com/kbwo/ccmanager/blob/2e50f4cad1d578e24580da61ff324db4befc8ba1/docs/git-worktree-config.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-05T21:46:16+09:00",
+    "stars": 1248,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-07-01T00:06:56+09:00",
+    "last_commit_date": "2025-07-01T00:06:56+09:00",
+    "last_commit_author": "kbwo",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 5264,
+    "sha256": "255b87568d0d8bce6c911da7874b8224c381e35d9bf9cfc69c2a874d62e284ae",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 178,
+    "words": 731,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kbwo--ccmanager/docs/git-worktree-config.md"
+}

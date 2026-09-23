@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__notes__compilation-overview.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "rosie-pattern-language/rosie",
+    "path": "doc/notes/compilation-overview.md",
+    "commit": "436cf6bdfc730020aefb47e29433c6cfb8b4ef70",
+    "commit_date": "2021-10-29T14:24:55-04:00",
+    "url": "https://gitlab.com/rosie-pattern-language/rosie/-/blob/436cf6bdfc730020aefb47e29433c6cfb8b4ef70/doc/notes/compilation-overview.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 114,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-10T15:04:11-05:00",
+    "last_commit_date": "2018-02-10T15:04:11-05:00",
+    "last_commit_author": "Jamie Jennings",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-10: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2616,
+    "sha256": "01a5cdabfb2d4ba8d45071440eb131aed4362e715d1c4bd59173e29caccdc3e4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 394,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--rosie-pattern-language--rosie/doc/notes/compilation-overview.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-telemetry/opentelemetry-go",
+    "path": "CONTRIBUTING.md",
+    "commit": "9a39658ecc0ff8dc2ab6cd148c71b7de6d40a3bb",
+    "commit_date": "2026-09-23T11:24:00+02:00",
+    "url": "https://github.com/open-telemetry/opentelemetry-go/blob/9a39658ecc0ff8dc2ab6cd148c71b7de6d40a3bb/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-05-16T12:05:27-07:00",
+    "stars": 6558,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 102,
+    "first_commit_date": "2019-10-01T18:16:45+02:00",
+    "last_commit_date": "2026-09-15T09:42:22+02:00",
+    "last_commit_author": "Damien Mathieu",
+    "authors": 28,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-10-01, before 2022-01-01; 1 of its 102 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 41800,
+    "sha256": "18a9f3d3bf1e7d75c335d3e7addf1f91a132378b0483b945522e86a4ba26cf87",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1235,
+    "words": 5445,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/open-telemetry--opentelemetry-go/CONTRIBUTING.md"
+}

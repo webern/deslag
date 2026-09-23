@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "app-store__macos__metadata__DESCRIPTION_en.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zhitongblog/solomd",
+    "path": "app-store/macos/metadata/DESCRIPTION_en.md",
+    "commit": "595209ac63b2a0e2d26f87cb47ad355a78ef6d3c",
+    "commit_date": "2026-09-23T22:20:51+08:00",
+    "url": "https://github.com/zhitongblog/solomd/blob/595209ac63b2a0e2d26f87cb47ad355a78ef6d3c/app-store/macos/metadata/DESCRIPTION_en.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-07T22:51:15+08:00",
+    "stars": 1097,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-13T00:38:19+08:00",
+    "last_commit_date": "2026-06-13T00:38:19+08:00",
+    "last_commit_author": "Alex",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1948,
+    "sha256": "3fa67cb7ebc8d9f59528288173939e3350d20dda012591faf0d32344f48878a2",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 319,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/zhitongblog--solomd/app-store/macos/metadata/DESCRIPTION_en.md"
+}

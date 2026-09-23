@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/gitaly",
+    "path": "CONTRIBUTING.md",
+    "commit": "29f6efc8a01d9856141b6141a2d1acf7b8dacceb",
+    "commit_date": "2026-09-23T19:48:19+00:00",
+    "url": "https://gitlab.com/gitlab-org/gitaly/-/blob/29f6efc8a01d9856141b6141a2d1acf7b8dacceb/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 438,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 35,
+    "first_commit_date": "2018-01-03T22:24:47+00:00",
+    "last_commit_date": "2026-08-04T15:16:42+02:00",
+    "last_commit_author": "Mustafa Bayar",
+    "authors": 15,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-03, before 2022-01-01; 1 of its 35 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11945,
+    "sha256": "1ca7ce01cf0a71368bc213cc0f6f730be700a53c6811cccfe90a4cef97c125ac",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 292,
+    "words": 1728,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--gitlab-org--gitaly/CONTRIBUTING.md"
+}

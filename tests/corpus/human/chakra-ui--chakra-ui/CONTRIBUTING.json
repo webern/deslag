@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "chakra-ui/chakra-ui",
+    "path": "CONTRIBUTING.md",
+    "commit": "703cb5783ee6e0ede26cf366c1f063111c9adcaa",
+    "commit_date": "2021-12-29T10:05:44+01:00",
+    "url": "https://github.com/chakra-ui/chakra-ui/blob/703cb5783ee6e0ede26cf366c1f063111c9adcaa/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-06T23:08:47+01:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 42,
+    "first_commit_date": "2019-08-21T17:32:05+01:00",
+    "last_commit_date": "2021-12-16T03:17:13+01:00",
+    "last_commit_author": "Paul Büchner",
+    "authors": 23,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-16: all 42 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6301,
+    "sha256": "3e24ab2a1e1eb98e849cd86b23ddb652212c53317d3383c885d48bcb258a46d0",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 162,
+    "words": 895,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/chakra-ui--chakra-ui/CONTRIBUTING.md"
+}

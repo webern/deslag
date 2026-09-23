@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__website__docs__product__workflow__goals.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ttoss/ttoss",
+    "path": "docs/website/docs/product/workflow/goals.md",
+    "commit": "f6908fa658a63d34bd530856fed43cfa11f6abe6",
+    "commit_date": "2026-09-23T13:58:48+00:00",
+    "url": "https://github.com/ttoss/ttoss/blob/f6908fa658a63d34bd530856fed43cfa11f6abe6/docs/website/docs/product/workflow/goals.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2022-06-13T15:06:29-03:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-14T12:04:29-03:00",
+    "last_commit_date": "2026-06-14T12:04:29-03:00",
+    "last_commit_author": "Pedro Arantes",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2294,
+    "sha256": "c7de91a3aecc887c8236b5c8da7d6e510010a239519a8c1ac0b57c9d8e26e747",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 322,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ttoss--ttoss/docs/website/docs/product/workflow/goals.md"
+}

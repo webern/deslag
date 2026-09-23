@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "activeadmin/activeadmin",
+    "path": "CONTRIBUTING.md",
+    "commit": "b0a8d6b8da2e49779ca5ef966077de52d25cde3d",
+    "commit_date": "2026-09-23T09:59:51+02:00",
+    "url": "https://github.com/activeadmin/activeadmin/blob/b0a8d6b8da2e49779ca5ef966077de52d25cde3d/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 9710,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 53,
+    "first_commit_date": "2018-02-14T19:51:40-03:00",
+    "last_commit_date": "2026-05-16T13:37:37+02:00",
+    "last_commit_author": "Geremia Taglialatela",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-14, before 2022-01-01; 1 of its 53 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4085,
+    "sha256": "47522c4719a455a6340197c0f636c32f65d5c1bd7bdf90166133f1eba8d31f7d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 635,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/activeadmin--activeadmin/CONTRIBUTING.md"
+}

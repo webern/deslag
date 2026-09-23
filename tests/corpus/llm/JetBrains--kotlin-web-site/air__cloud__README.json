@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "air__cloud__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "JetBrains/kotlin-web-site",
+    "path": ".air/cloud/README.md",
+    "commit": "51930e49df5d29c30befd23f9e6d25fba333b8c5",
+    "commit_date": "2026-09-23T16:22:07+02:00",
+    "url": "https://github.com/JetBrains/kotlin-web-site/blob/51930e49df5d29c30befd23f9e6d25fba333b8c5/.air/cloud/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1624,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-28T18:34:21+00:00",
+    "last_commit_date": "2026-08-31T11:03:02+00:00",
+    "last_commit_author": "Nikolai Pachkov",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3890,
+    "sha256": "320465c6562655f9575528600b7f91f42523843938b41fa783620d08d6c54876",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 542,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/JetBrains--kotlin-web-site/.air/cloud/README.md"
+}

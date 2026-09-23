@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "crates__sema-core__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sema-lisp/sema",
+    "path": "crates/sema-core/README.md",
+    "commit": "3b1e81bebb146a9d24c93c2c6e38fa065b1185aa",
+    "commit_date": "2026-09-09T17:13:09+02:00",
+    "url": "https://github.com/sema-lisp/sema/blob/3b1e81bebb146a9d24c93c2c6e38fa065b1185aa/crates/sema-core/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-11T19:34:13+01:00",
+    "stars": 51,
+    "found_by": "sg-topic:lisp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-18T11:42:50+01:00",
+    "last_commit_date": "2026-02-18T11:42:50+01:00",
+    "last_commit_author": "Helge Sverre",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 965,
+    "sha256": "0056be09e0123c6ed9eef44487885f90dbe573c0f9bc272c4dd5abca238a4138",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 22,
+    "words": 111,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sema-lisp--sema/crates/sema-core/README.md"
+}

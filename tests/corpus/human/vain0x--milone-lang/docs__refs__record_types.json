@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__refs__record_types.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "vain0x/milone-lang",
+    "path": "docs/refs/record_types.md",
+    "commit": "89aae79d10ff10041dd4971b39e57e63fa2929be",
+    "commit_date": "2022-01-01T02:03:37+09:00",
+    "url": "https://github.com/vain0x/milone-lang/blob/89aae79d10ff10041dd4971b39e57e63fa2929be/docs/refs/record_types.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-31T23:52:00+09:00",
+    "stars": null,
+    "found_by": "github-topic:hobby"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-12-23T23:29:35+09:00",
+    "last_commit_date": "2021-01-03T21:04:53+09:00",
+    "last_commit_author": "vain0x",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-03: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4059,
+    "sha256": "8c8cbaa722404b6e66e6d1c7025e20611d9d083844a2daed4bc4dae996e98b11",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 149,
+    "words": 650,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/vain0x--milone-lang/docs/refs/record_types.md"
+}

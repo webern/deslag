@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sqldef/sqldef",
+    "path": "README.md",
+    "commit": "8bb8c6e1591c35635695e363cfc24dfad65a3b31",
+    "commit_date": "2026-09-23T13:00:56+00:00",
+    "url": "https://github.com/sqldef/sqldef/blob/8bb8c6e1591c35635695e363cfc24dfad65a3b31/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-19T14:24:32+09:00",
+    "stars": 3168,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 119,
+    "first_commit_date": "2018-08-19T14:24:32+09:00",
+    "last_commit_date": "2026-01-04T20:32:13+09:00",
+    "last_commit_author": "FUJI Goro",
+    "authors": 24,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-08-19, before 2022-01-01; 1 of its 119 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 9144,
+    "sha256": "73bcd39cf18d956bd12a367dbb07443bca7421feff397d5d5ddd2ccd6be360d2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 303,
+    "words": 1182,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/sqldef--sqldef/README.md"
+}

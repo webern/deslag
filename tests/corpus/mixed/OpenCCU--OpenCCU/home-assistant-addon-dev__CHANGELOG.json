@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "home-assistant-addon-dev__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OpenCCU/OpenCCU",
+    "path": "home-assistant-addon-dev/CHANGELOG.md",
+    "commit": "9de6d4022354985a1fc9ed5b68e48e7f78369f52",
+    "commit_date": "2026-09-23T21:42:22+02:00",
+    "url": "https://github.com/OpenCCU/OpenCCU/blob/9de6d4022354985a1fc9ed5b68e48e7f78369f52/home-assistant-addon-dev/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1834,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2021-06-14T09:29:27+02:00",
+    "last_commit_date": "2026-04-16T16:39:12+02:00",
+    "last_commit_author": "Copilot",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-06-14, before 2022-01-01; 1 of its 5 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1399,
+    "sha256": "0c634ac24f58011219767662093caf663534e2bb7fe243622b93a39d279b6943",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 156,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/OpenCCU--OpenCCU/home-assistant-addon-dev/CHANGELOG.md"
+}

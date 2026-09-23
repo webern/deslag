@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__pxe__maas.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "NVIDIA/deepops",
+    "path": "docs/pxe/maas.md",
+    "commit": "266e2086a7b8d2f8424d4517c2fbb00b53d324e2",
+    "commit_date": "2026-09-23T08:42:00-07:00",
+    "url": "https://github.com/NVIDIA/deepops/blob/266e2086a7b8d2f8424d4517c2fbb00b53d324e2/docs/pxe/maas.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-06-26T12:38:08-06:00",
+    "stars": 1475,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-10-19T21:01:30+00:00",
+    "last_commit_date": "2026-05-28T11:05:59-06:00",
+    "last_commit_author": "Doug Holt",
+    "authors": 5,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-10-19, before 2022-01-01; 2 of its 10 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 18857,
+    "sha256": "531a22f6cd9f8c19ab091f5c5b8bc43dd69840f576a5cac240e95cbd69a4a8ba",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 347,
+    "words": 2846,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NVIDIA--deepops/docs/pxe/maas.md"
+}

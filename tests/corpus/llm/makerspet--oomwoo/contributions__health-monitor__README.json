@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "contributions__health-monitor__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "makerspet/oomwoo",
+    "path": "contributions/health-monitor/README.md",
+    "commit": "fc744bed0f972666092fd0114cab5d57a0aa0890",
+    "commit_date": "2026-09-21T06:57:31+00:00",
+    "url": "https://github.com/makerspet/oomwoo/blob/fc744bed0f972666092fd0114cab5d57a0aa0890/contributions/health-monitor/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-09T23:31:56-07:00",
+    "stars": 11103,
+    "found_by": "sg-topic:3d-printing"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-21T22:34:04-07:00",
+    "last_commit_date": "2026-07-21T22:34:04-07:00",
+    "last_commit_author": "Ilia O.",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7388,
+    "sha256": "1c2ff87ec5fa1126ef422e6bf39a3ed5ad6a20f19fddb7ffc9f5a05671b219e6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 93,
+    "words": 1060,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/makerspet--oomwoo/contributions/health-monitor/README.md"
+}

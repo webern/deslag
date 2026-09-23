@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "iNPUTmice/lttrs-android",
+    "path": "README.md",
+    "commit": "28ea42b6be795091604e25a74ec850723118a028",
+    "commit_date": "2021-12-30T09:11:13+01:00",
+    "url": "https://codeberg.org/iNPUTmice/lttrs-android/src/commit/28ea42b6be795091604e25a74ec850723118a028/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-18T23:39:04+01:00",
+    "stars": 97,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2019-03-22T18:14:52+01:00",
+    "last_commit_date": "2020-11-26T10:32:41+00:00",
+    "last_commit_author": "Daniel Gultsch",
+    "authors": 6,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-11-26: all 20 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2656,
+    "sha256": "55b811254f91d4bd1bb8f51d754b7c710f5e0ddebb57bc66ef63c531cf1d6195",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 326,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--iNPUTmice--lttrs-android/README.md"
+}

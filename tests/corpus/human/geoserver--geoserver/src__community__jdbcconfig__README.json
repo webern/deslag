@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "src__community__jdbcconfig__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "geoserver/geoserver",
+    "path": "src/community/jdbcconfig/README.md",
+    "commit": "a44938a38bee10cb6affc4c5b83616b6702e6cf1",
+    "commit_date": "2021-12-24T09:20:47+01:00",
+    "url": "https://github.com/geoserver/geoserver/blob/a44938a38bee10cb6affc4c5b83616b6702e6cf1/src/community/jdbcconfig/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:maps"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-11T15:59:02+01:00",
+    "last_commit_date": "2018-02-11T15:59:02+01:00",
+    "last_commit_author": "NielsCharlier",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-11: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 547,
+    "sha256": "ab2a5b68f870f94bbef066053ff810b1b92842b0c20e7c7c8fb91a82bb1c83eb",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 21,
+    "words": 60,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/geoserver--geoserver/src/community/jdbcconfig/README.md"
+}

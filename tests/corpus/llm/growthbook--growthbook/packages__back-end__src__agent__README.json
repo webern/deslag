@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__back-end__src__agent__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "growthbook/growthbook",
+    "path": "packages/back-end/src/agent/README.md",
+    "commit": "0b3e0cb5a0b87c61bcc9667de9554beaee39a36b",
+    "commit_date": "2026-09-23T14:00:59-05:00",
+    "url": "https://github.com/growthbook/growthbook/blob/0b3e0cb5a0b87c61bcc9667de9554beaee39a36b/packages/back-end/src/agent/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-07T18:13:37-05:00",
+    "stars": 8416,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-25T11:34:52-04:00",
+    "last_commit_date": "2026-08-25T11:34:52-04:00",
+    "last_commit_author": "oelshaikh",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1172,
+    "sha256": "1ae7a6200cc866722ba4d342b80a1b4039e304d3be6367fb2d31cca49b43cbab",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 30,
+    "words": 150,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/growthbook--growthbook/packages/back-end/src/agent/README.md"
+}

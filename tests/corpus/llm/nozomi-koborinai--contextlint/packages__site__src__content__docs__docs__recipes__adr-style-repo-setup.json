@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__site__src__content__docs__docs__recipes__adr-style-repo-setup.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nozomi-koborinai/contextlint",
+    "path": "packages/site/src/content/docs/docs/recipes/adr-style-repo-setup.md",
+    "commit": "130e23358567f280784759f0da6c892c2f3a44ca",
+    "commit_date": "2026-07-19T04:19:25+00:00",
+    "url": "https://github.com/nozomi-koborinai/contextlint/blob/130e23358567f280784759f0da6c892c2f3a44ca/packages/site/src/content/docs/docs/recipes/adr-style-repo-setup.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-04T22:11:25+09:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-05T17:32:48+09:00",
+    "last_commit_date": "2026-05-05T17:32:48+09:00",
+    "last_commit_author": "nozomi-koborinai",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7856,
+    "sha256": "3d04c1e4172cd5d7fd38b001811b6d11e1a7bfe1a8bb02daba79906431ab234f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 137,
+    "words": 1122,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/nozomi-koborinai--contextlint/packages/site/src/content/docs/docs/recipes/adr-style-repo-setup.md"
+}

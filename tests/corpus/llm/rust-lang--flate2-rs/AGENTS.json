@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rust-lang/flate2-rs",
+    "path": "AGENTS.md",
+    "commit": "fcc804306677bf8cfde2250bf0472d61b75d1c45",
+    "commit_date": "2026-09-06T09:27:59+02:00",
+    "url": "https://github.com/rust-lang/flate2-rs/blob/fcc804306677bf8cfde2250bf0472d61b75d1c45/AGENTS.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-06T08:57:06+02:00",
+    "last_commit_date": "2026-09-06T08:57:06+02:00",
+    "last_commit_author": "Byron",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 718,
+    "sha256": "3da9c121c48a507a6a0c9be0638b60abf72c8dc1fe6d586157816e9e19cbed5a",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 114,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/rust-lang--flate2-rs/AGENTS.md"
+}

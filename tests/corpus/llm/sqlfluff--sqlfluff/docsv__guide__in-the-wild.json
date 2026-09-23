@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docsv__guide__in-the-wild.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sqlfluff/sqlfluff",
+    "path": "docsv/guide/in-the-wild.md",
+    "commit": "23ed3ddc05474f6f92b461821f9b9227db9cff38",
+    "commit_date": "2026-09-23T04:32:32+00:00",
+    "url": "https://github.com/sqlfluff/sqlfluff/blob/23ed3ddc05474f6f92b461821f9b9227db9cff38/docsv/guide/in-the-wild.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-10-29T18:17:14+00:00",
+    "stars": 9888,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-14T09:12:32+01:00",
+    "last_commit_date": "2026-08-14T09:12:32+01:00",
+    "last_commit_author": "Alan Cruickshank",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4238,
+    "sha256": "34d89c2745d610c73e13615b82a376443faf401129e2b9bf46f6db31527f0d62",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 549,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sqlfluff--sqlfluff/docsv/guide/in-the-wild.md"
+}

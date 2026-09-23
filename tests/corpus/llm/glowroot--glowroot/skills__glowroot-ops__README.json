@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__glowroot-ops__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "glowroot/glowroot",
+    "path": "skills/glowroot-ops/README.md",
+    "commit": "ca624b73dac42cc06448998a0906634790db32a5",
+    "commit_date": "2026-09-04T18:46:59+02:00",
+    "url": "https://github.com/glowroot/glowroot/blob/ca624b73dac42cc06448998a0906634790db32a5/skills/glowroot-ops/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1356,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-01T22:25:30+02:00",
+    "last_commit_date": "2026-09-01T22:25:30+02:00",
+    "last_commit_author": "JustKaneki",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1194,
+    "sha256": "8105b1a897a1e8fda1b13bc0ee3cb18f25340e50e03d0ecfc9a2442e842f0ff7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 157,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/glowroot--glowroot/skills/glowroot-ops/README.md"
+}

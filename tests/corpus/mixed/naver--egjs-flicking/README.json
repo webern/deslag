@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "naver/egjs-flicking",
+    "path": "README.md",
+    "commit": "3beec696c329654484333097afe64b0c76ec3ca2",
+    "commit_date": "2026-09-01T16:33:13+09:00",
+    "url": "https://github.com/naver/egjs-flicking/blob/3beec696c329654484333097afe64b0c76ec3ca2/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2923,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 33,
+    "first_commit_date": "2018-01-05T13:57:29+09:00",
+    "last_commit_date": "2026-07-14T17:56:23+09:00",
+    "last_commit_author": "cjw783",
+    "authors": 11,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-05, before 2022-01-01; 2 of its 33 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11103,
+    "sha256": "846469220c7121cf48c286195399ebb16c00cdf94c60db5598ce467159472560",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 155,
+    "words": 736,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/naver--egjs-flicking/README.md"
+}

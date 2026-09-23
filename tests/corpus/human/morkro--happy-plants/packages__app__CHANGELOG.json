@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__app__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "morkro/happy-plants",
+    "path": "packages/app/CHANGELOG.md",
+    "commit": "49df7eae01096f74986805a0cbf1a3742546062a",
+    "commit_date": "2021-04-26T12:48:53+02:00",
+    "url": "https://github.com/morkro/happy-plants/blob/49df7eae01096f74986805a0cbf1a3742546062a/packages/app/CHANGELOG.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:gardening"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-03-02T19:18:32+01:00",
+    "last_commit_date": "2020-03-02T19:18:32+01:00",
+    "last_commit_author": "Moritz Kröger",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-03-02: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4079,
+    "sha256": "2697f8298b4ea397c607985715f4d3a8641d09dea7c2e4b7757f9e2c267b95da",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 161,
+    "words": 673,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/morkro--happy-plants/packages/app/CHANGELOG.md"
+}

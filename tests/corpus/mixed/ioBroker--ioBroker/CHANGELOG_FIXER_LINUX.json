@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG_FIXER_LINUX.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ioBroker/ioBroker",
+    "path": "CHANGELOG_FIXER_LINUX.md",
+    "commit": "5d1716324415a5bd7ba689cc995a877099b90691",
+    "commit_date": "2026-09-23T22:04:47+03:00",
+    "url": "https://github.com/ioBroker/ioBroker/blob/5d1716324415a5bd7ba689cc995a877099b90691/CHANGELOG_FIXER_LINUX.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1377,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 82,
+    "first_commit_date": "2019-02-23T22:06:30+01:00",
+    "last_commit_date": "2026-03-02T13:10:42+01:00",
+    "last_commit_author": "Copilot",
+    "authors": 10,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-02-23, before 2022-01-01; 3 of its 82 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6918,
+    "sha256": "f31932e31a3bc450be3927e7e84c6ea2372584847aa6ddf8d6bdbfc666e8860c",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 218,
+    "words": 1067,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ioBroker--ioBroker/CHANGELOG_FIXER_LINUX.md"
+}

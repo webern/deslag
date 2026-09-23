@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "eshaham/israeli-bank-scrapers",
+    "path": "README.md",
+    "commit": "f052f61365f282ab8e0fe6b2f88670d9c68a07de",
+    "commit_date": "2026-09-15T17:28:30+03:00",
+    "url": "https://github.com/eshaham/israeli-bank-scrapers/blob/f052f61365f282ab8e0fe6b2f88670d9c68a07de/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1119,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 77,
+    "first_commit_date": "2018-01-09T11:36:21+02:00",
+    "last_commit_date": "2026-09-07T16:18:56+03:00",
+    "last_commit_author": "Baruch Odem (Rothkoff)",
+    "authors": 26,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-09, before 2022-01-01; 3 of its 77 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 17027,
+    "sha256": "6670a7a7763f9f055de10e953dcf582b02959f24238ed9c1e7929d01a6d33c3b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 424,
+    "words": 2067,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/eshaham--israeli-bank-scrapers/README.md"
+}

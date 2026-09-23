@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "gogs/gogs",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "dc07fbe753181215560be84c0b39b7be6638b9cf",
+    "commit_date": "2021-12-28T12:00:44+08:00",
+    "url": "https://github.com/gogs/gogs/blob/dc07fbe753181215560be84c0b39b7be6638b9cf/.github/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 47823,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-03-02T02:17:04-05:00",
+    "last_commit_date": "2021-12-23T15:51:57+08:00",
+    "last_commit_author": "Joe Chen",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-23: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 5081,
+    "sha256": "385dee8515e668881bdbcf08c2d8b91ea7555599a3fc621d5af0dee04c995756",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 601,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gogs--gogs/.github/CONTRIBUTING.md"
+}

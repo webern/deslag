@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "spree/spree",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "741345da3694a761b842f08ba4913abc9e23910a",
+    "commit_date": "2026-09-23T19:41:02+02:00",
+    "url": "https://github.com/spree/spree/blob/741345da3694a761b842f08ba4913abc9e23910a/.github/CONTRIBUTING.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 15717,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 32,
+    "first_commit_date": "2018-02-14T13:04:41+01:00",
+    "last_commit_date": "2026-08-27T14:29:22+02:00",
+    "last_commit_author": "Damian Legawiec",
+    "authors": 4,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-14, before 2022-01-01; 3 of its 32 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 25451,
+    "sha256": "db4403849306b54cc9d9eed48a62433f76acb0087a7c2d09e1c0128a8eb50046",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 536,
+    "words": 3455,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/spree--spree/.github/CONTRIBUTING.md"
+}

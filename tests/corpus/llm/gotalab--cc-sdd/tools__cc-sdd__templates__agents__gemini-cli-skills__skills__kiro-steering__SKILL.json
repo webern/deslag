@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "tools__cc-sdd__templates__agents__gemini-cli-skills__skills__kiro-steering__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "gotalab/cc-sdd",
+    "path": "tools/cc-sdd/templates/agents/gemini-cli-skills/skills/kiro-steering/SKILL.md",
+    "commit": "e2a0c671aef37a482404905b409ab5c27092b25b",
+    "commit_date": "2026-09-23T16:26:39+09:00",
+    "url": "https://github.com/gotalab/cc-sdd/blob/e2a0c671aef37a482404905b409ab5c27092b25b/tools/cc-sdd/templates/agents/gemini-cli-skills/skills/kiro-steering/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-17T13:42:43+09:00",
+    "stars": 3672,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-06T09:11:48+09:00",
+    "last_commit_date": "2026-04-06T09:11:48+09:00",
+    "last_commit_author": "Gota",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4628,
+    "sha256": "957192744e3b83b0a4f8c84d5de1a08f839beabdb4f71edb04c05d64397f7c2a",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 156,
+    "words": 580,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gotalab--cc-sdd/tools/cc-sdd/templates/agents/gemini-cli-skills/skills/kiro-steering/SKILL.md"
+}

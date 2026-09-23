@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__agents__commentary-generator.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kennethreitz/kjvstudy.org",
+    "path": ".claude/agents/commentary-generator.md",
+    "commit": "087e5a59d8d44c85ecff56743be57b604d3bb896",
+    "commit_date": "2026-07-08T09:49:51-04:00",
+    "url": "https://github.com/kennethreitz/kjvstudy.org/blob/087e5a59d8d44c85ecff56743be57b604d3bb896/.claude/agents/commentary-generator.md",
+    "license": "ISC",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-04-24T14:34:12-04:00",
+    "stars": null,
+    "found_by": "github-topic:theology"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2025-11-29T13:37:04-05:00",
+    "last_commit_date": "2025-12-03T12:22:51-05:00",
+    "last_commit_author": "Kenneth Reitz",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 5708,
+    "sha256": "5dc7a0cea52fb534cd75be8d69a254cf693a45334378ad258ee74a55feb5051a",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 148,
+    "words": 762,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kennethreitz--kjvstudy.org/.claude/agents/commentary-generator.md"
+}

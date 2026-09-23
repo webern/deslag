@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "apache/arrow",
+    "path": "CONTRIBUTING.md",
+    "commit": "5448aa7a916e73116ccc009454e3c19572dd5aad",
+    "commit_date": "2026-09-23T17:31:55+02:00",
+    "url": "https://github.com/apache/arrow/blob/5448aa7a916e73116ccc009454e3c19572dd5aad/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 17150,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2019-07-31T06:47:20+09:00",
+    "last_commit_date": "2026-09-17T15:22:31-05:00",
+    "last_commit_author": "Nic Crane",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-07-31, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3359,
+    "sha256": "ac458e4903846aef4cbbc13c7289186f3a0bbe0f47dd76afc27fc44a88d9e917",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 76,
+    "words": 488,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/apache--arrow/CONTRIBUTING.md"
+}

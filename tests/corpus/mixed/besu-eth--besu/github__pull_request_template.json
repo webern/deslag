@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "besu-eth/besu",
+    "path": ".github/pull_request_template.md",
+    "commit": "a7867768741ffe7239bab07c38926d065ab16229",
+    "commit_date": "2026-09-23T18:54:00+01:00",
+    "url": "https://github.com/besu-eth/besu/blob/a7867768741ffe7239bab07c38926d065ab16229/.github/pull_request_template.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-10-09T15:17:20+00:00",
+    "stars": 1839,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2018-10-11T16:44:42-04:00",
+    "last_commit_date": "2026-06-30T21:11:17+10:00",
+    "last_commit_author": "Byron Gravenorst",
+    "authors": 12,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-10-11, before 2022-01-01; 1 of its 20 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1223,
+    "sha256": "091971adfcb6feb43ae72ac5c09d3e1af7457a9087454caffc302e83cebac748",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 149,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/besu-eth--besu/.github/pull_request_template.md"
+}

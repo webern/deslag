@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__verify-website.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "vava-nessa/free-coding-models",
+    "path": ".claude/skills/verify-website.md",
+    "commit": "e73c4c1ea9144f0ce20de8ad77ad3641aee22e2f",
+    "commit_date": "2026-09-22T23:33:19+02:00",
+    "url": "https://github.com/vava-nessa/free-coding-models/blob/e73c4c1ea9144f0ce20de8ad77ad3641aee22e2f/.claude/skills/verify-website.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-21T00:13:02+01:00",
+    "stars": 2753,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-26T14:55:46+02:00",
+    "last_commit_date": "2026-05-26T14:55:46+02:00",
+    "last_commit_author": "Vanessa Depraute",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3301,
+    "sha256": "0db0d27b01c671d9f974e0ac8bd7611211417279cd0218563e641b3dfd34ad0b",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 102,
+    "words": 490,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/vava-nessa--free-coding-models/.claude/skills/verify-website.md"
+}

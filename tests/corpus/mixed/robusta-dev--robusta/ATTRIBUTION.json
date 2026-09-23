@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "ATTRIBUTION.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "robusta-dev/robusta",
+    "path": "ATTRIBUTION.md",
+    "commit": "1db170c49d5acd13c408b6a5cb900366a83669cb",
+    "commit_date": "2026-09-21T18:16:45+03:00",
+    "url": "https://github.com/robusta-dev/robusta/blob/1db170c49d5acd13c408b6a5cb900366a83669cb/ATTRIBUTION.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-06-20T11:47:50+03:00",
+    "stars": 3100,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2021-10-21T11:42:54+03:00",
+    "last_commit_date": "2026-08-11T15:10:58+03:00",
+    "last_commit_author": "moshemorad",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-10-21, before 2022-01-01; 1 of its 2 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 740,
+    "sha256": "933020fe97f0e0a7c5cd9a3e962a85053f9219408dc49e5641c00a09a3d43e90",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 65,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/robusta-dev--robusta/ATTRIBUTION.md"
+}

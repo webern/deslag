@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "PR_REBASE_PLAN.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kyverno/kyverno",
+    "path": "PR_REBASE_PLAN.md",
+    "commit": "7001257179f976ac3d5cdb24009c23fae72645a1",
+    "commit_date": "2026-09-23T00:31:29+05:30",
+    "url": "https://github.com/kyverno/kyverno/blob/7001257179f976ac3d5cdb24009c23fae72645a1/PR_REBASE_PLAN.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-02-04T08:25:49-08:00",
+    "stars": 8175,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-17T13:33:22-07:00",
+    "last_commit_date": "2026-09-17T13:33:22-07:00",
+    "last_commit_author": "Jim Bugwadia",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 31007,
+    "sha256": "8d7a8f2fa4ca8b5306317158c14582085546b6c885a1d6db789eeb4d52e86813",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 377,
+    "words": 3988,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kyverno--kyverno/PR_REBASE_PLAN.md"
+}

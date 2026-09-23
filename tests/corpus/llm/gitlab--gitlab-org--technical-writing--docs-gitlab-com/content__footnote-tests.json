@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "content__footnote-tests.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/technical-writing/docs-gitlab-com",
+    "path": "content/footnote-tests.md",
+    "commit": "ad099320f09ede33f130cf7f3c79e82566ea28e0",
+    "commit_date": "2026-09-23T15:57:35-04:00",
+    "url": "https://gitlab.com/gitlab-org/technical-writing/docs-gitlab-com/-/blob/ad099320f09ede33f130cf7f3c79e82566ea28e0/content/footnote-tests.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-11-07T17:17:21-06:00",
+    "stars": 56,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-04T15:19:07+02:00",
+    "last_commit_date": "2026-09-04T15:19:07+02:00",
+    "last_commit_author": "Brendan Lynch",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6148,
+    "sha256": "d83fa33a23849108763e463643aaa058b291a02c107974bee76058c71359c226",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 162,
+    "words": 885,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-org--technical-writing--docs-gitlab-com/content/footnote-tests.md"
+}

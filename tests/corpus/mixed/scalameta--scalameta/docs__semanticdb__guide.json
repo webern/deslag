@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__semanticdb__guide.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "scalameta/scalameta",
+    "path": "docs/semanticdb/guide.md",
+    "commit": "70f1655be3e742fab9726773ef9ad12d65b82ece",
+    "commit_date": "2026-09-23T11:37:07-07:00",
+    "url": "https://github.com/scalameta/scalameta/blob/70f1655be3e742fab9726773ef9ad12d65b82ece/docs/semanticdb/guide.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1156,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2020-02-05T10:00:11+00:00",
+    "last_commit_date": "2026-07-17T00:50:39-07:00",
+    "last_commit_author": "Albert Meltzer",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-02-05, before 2022-01-01; 1 of its 12 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 20727,
+    "sha256": "2957bb941d693d09cdbb405bbf53c7077213c9c62cce578b69cb94b8db02064a",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 592,
+    "words": 2341,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/scalameta--scalameta/docs/semanticdb/guide.md"
+}

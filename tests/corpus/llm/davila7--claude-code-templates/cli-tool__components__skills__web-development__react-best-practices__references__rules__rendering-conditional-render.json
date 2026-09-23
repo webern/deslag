@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "cli-tool__components__skills__web-development__react-best-practices__references__rules__rendering-conditional-render.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "davila7/claude-code-templates",
+    "path": "cli-tool/components/skills/web-development/react-best-practices/references/rules/rendering-conditional-render.md",
+    "commit": "3c28e460e1c1b58203f93cf30fe4ec5a0530a068",
+    "commit_date": "2026-09-23T14:01:09+00:00",
+    "url": "https://github.com/davila7/claude-code-templates/blob/3c28e460e1c1b58203f93cf30fe4ec5a0530a068/cli-tool/components/skills/web-development/react-best-practices/references/rules/rendering-conditional-render.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-03T21:35:24-04:00",
+    "stars": 30992,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-14T20:58:56-05:00",
+    "last_commit_date": "2026-01-14T20:58:56-05:00",
+    "last_commit_author": "Daniel Avila",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 983,
+    "sha256": "d072261110d36ae29f289a1e7dc6bd3fc23280ae59e06f28b610da8c00bb2469",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 140,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/davila7--claude-code-templates/cli-tool/components/skills/web-development/react-best-practices/references/rules/rendering-conditional-render.md"
+}

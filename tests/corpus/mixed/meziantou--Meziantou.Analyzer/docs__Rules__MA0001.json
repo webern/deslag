@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__Rules__MA0001.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "meziantou/Meziantou.Analyzer",
+    "path": "docs/Rules/MA0001.md",
+    "commit": "267a966854b885c1fecf29dbda43a6787166d7af",
+    "commit_date": "2026-09-23T14:30:19-04:00",
+    "url": "https://github.com/meziantou/Meziantou.Analyzer/blob/267a966854b885c1fecf29dbda43a6787166d7af/docs/Rules/MA0001.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2018-12-12T15:39:03-05:00",
+    "stars": 1202,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2018-12-31T14:59:55-05:00",
+    "last_commit_date": "2026-09-12T17:43:17-04:00",
+    "last_commit_author": "Gérald Barré",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-12-31, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1664,
+    "sha256": "b6b0d927caf0617025ba9e5bc04a5dcf635ceac6e89c9308f56f67c3be98cbec",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 150,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/meziantou--Meziantou.Analyzer/docs/Rules/MA0001.md"
+}

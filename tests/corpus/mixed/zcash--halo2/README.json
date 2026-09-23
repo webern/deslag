@@ -1,0 +1,54 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zcash/halo2",
+    "path": "README.md",
+    "commit": "79213cbe922e8868500e5944c407c69d893ec3a8",
+    "commit_date": "2026-09-09T10:16:58-06:00",
+    "url": "https://github.com/zcash/halo2/blob/79213cbe922e8868500e5944c407c69d893ec3a8/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "COPYING.md",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-08-22T14:15:39-06:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 25,
+    "first_commit_date": "2020-10-20T15:12:51-06:00",
+    "last_commit_date": "2026-09-02T14:36:30-03:00",
+    "last_commit_author": "Danny Willems",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-10-20, before 2022-01-01; 1 of its 25 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1341,
+    "sha256": "43691186f933c6226480cc10946cb5c3159db52c7bd8ebd651467a27894034c6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 39,
+    "words": 156,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/zcash--halo2/README.md"
+}

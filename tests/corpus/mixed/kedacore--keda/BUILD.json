@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "BUILD.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kedacore/keda",
+    "path": "BUILD.md",
+    "commit": "626ded5d783108bedf647e20bbc83f8e458e02e4",
+    "commit_date": "2026-09-23T17:57:52+02:00",
+    "url": "https://github.com/kedacore/keda/blob/626ded5d783108bedf647e20bbc83f8e458e02e4/BUILD.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-02-12T16:12:34-08:00",
+    "stars": 10547,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2020-09-10T10:20:13+02:00",
+    "last_commit_date": "2025-09-02T09:52:26+01:00",
+    "last_commit_author": "Dao Thanh Tung",
+    "authors": 12,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-09-10, before 2022-01-01; 1 of its 23 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 14934,
+    "sha256": "f9d193f8b0b48005aec65ea30b77298aecc9ef72d7dfc7007a10ef0bccb571fa",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 351,
+    "words": 1764,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kedacore--keda/BUILD.md"
+}

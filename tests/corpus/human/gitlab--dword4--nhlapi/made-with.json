@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "made-with.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "dword4/nhlapi",
+    "path": "made-with.md",
+    "commit": "753ed9fc4431c591aa6f1383987ece1ce03e5176",
+    "commit_date": "2021-08-31T17:31:32+00:00",
+    "url": "https://gitlab.com/dword4/nhlapi/-/blob/753ed9fc4431c591aa6f1383987ece1ce03e5176/made-with.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-05T15:02:06-05:00",
+    "stars": 184,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-03-15T19:09:36+00:00",
+    "last_commit_date": "2021-08-31T17:31:32+00:00",
+    "last_commit_author": "Drew Hynes",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-31: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 862,
+    "sha256": "1c0f400dfd9e17ff30b5f92694bbc70c9c52bc1baccf09290bf8f47af21c22f0",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 96,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--dword4--nhlapi/made-with.md"
+}

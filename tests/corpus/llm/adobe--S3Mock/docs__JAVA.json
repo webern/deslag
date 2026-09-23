@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__JAVA.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "adobe/S3Mock",
+    "path": "docs/JAVA.md",
+    "commit": "909ce2561a36487bd45f1a2b90844fb1fb4f046c",
+    "commit_date": "2026-09-19T12:05:00+00:00",
+    "url": "https://github.com/adobe/S3Mock/blob/909ce2561a36487bd45f1a2b90844fb1fb4f046c/docs/JAVA.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1152,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-25T20:13:59+00:00",
+    "last_commit_date": "2026-02-25T20:13:59+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2916,
+    "sha256": "2b1f7b5b405a15c11a1ce0170a2d5771e767cf00d6028e348d7e103ef53def54",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 74,
+    "words": 367,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/adobe--S3Mock/docs/JAVA.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "DEVELOPMENT.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tektoncd/pipeline",
+    "path": "DEVELOPMENT.md",
+    "commit": "32fed04bb1f7dce83e7256ca5ddc0a857435bdd2",
+    "commit_date": "2026-09-22T18:23:30+00:00",
+    "url": "https://github.com/tektoncd/pipeline/blob/32fed04bb1f7dce83e7256ca5ddc0a857435bdd2/DEVELOPMENT.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-29T11:21:56-07:00",
+    "stars": 9067,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 108,
+    "first_commit_date": "2018-09-06T11:20:27-07:00",
+    "last_commit_date": "2026-08-10T17:30:37+05:30",
+    "last_commit_author": "Anwesha Palit",
+    "authors": 49,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-09-06, before 2022-01-01; 1 of its 108 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 26869,
+    "sha256": "c70cdcfa8949eed0e7a1bbacd2f278227a48b0a63371fc7a8884863d0960079a",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 664,
+    "words": 3126,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tektoncd--pipeline/DEVELOPMENT.md"
+}

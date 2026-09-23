@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "current__doc__api__dns.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pmq20/node-packer",
+    "path": "current/doc/api/dns.md",
+    "commit": "12c46c6e44fbc14d9ee645ebd17d5296b324f7e0",
+    "commit_date": "2021-01-03T11:17:09+09:00",
+    "url": "https://github.com/pmq20/node-packer/blob/12c46c6e44fbc14d9ee645ebd17d5296b324f7e0/current/doc/api/dns.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3064,
+    "found_by": "sg-topic:linux"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-08-29T18:29:23-07:00",
+    "last_commit_date": "2020-08-29T18:29:23-07:00",
+    "last_commit_author": "Minqi Pan",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-29: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 40797,
+    "sha256": "1326b4366f7a71ee360e10a2604587b0e457adb45b3a300cbdbffa56becf3f14",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1203,
+    "words": 5160,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/pmq20--node-packer/current/doc/api/dns.md"
+}

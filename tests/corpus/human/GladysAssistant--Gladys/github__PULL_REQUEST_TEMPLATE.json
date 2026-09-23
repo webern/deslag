@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "GladysAssistant/Gladys",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "afe4a2473333ef7f8984adf8a778f96f65becb76",
+    "commit_date": "2021-12-06T09:37:41+01:00",
+    "url": "https://github.com/GladysAssistant/Gladys/blob/afe4a2473333ef7f8984adf8a778f96f65becb76/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3201,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-10-12T09:49:24+08:00",
+    "last_commit_date": "2021-10-25T11:08:52+08:00",
+    "last_commit_author": "Pierre-Gilles Leymarie",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-25: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1626,
+    "sha256": "4308c622af00e8d372f95d94f16a5b6f4e4418e82b55af7d7eb51e06ac3a521d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 260,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/GladysAssistant--Gladys/.github/PULL_REQUEST_TEMPLATE.md"
+}

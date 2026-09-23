@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-com/support/toolbox/strace-parser",
+    "path": "README.md",
+    "commit": "41b346f18998e08f3aae1cf4474f9bae7c3f1aeb",
+    "commit_date": "2021-08-13T14:22:32+00:00",
+    "url": "https://gitlab.com/gitlab-com/support/toolbox/strace-parser/-/blob/41b346f18998e08f3aae1cf4474f9bae7c3f1aeb/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-10-02T09:38:45-04:00",
+    "stars": 64,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 26,
+    "first_commit_date": "2018-10-02T14:54:55+00:00",
+    "last_commit_date": "2021-08-13T12:38:42+00:00",
+    "last_commit_author": "Nourdin el Bacha",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-13: all 26 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 27347,
+    "sha256": "9770690f7f29b2aa98638929404bb333a98e9f7eb19adc15823b8aa22b6ba36f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 567,
+    "words": 2950,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gitlab-com--support--toolbox--strace-parser/README.md"
+}

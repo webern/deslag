@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "admin__tools__openapi-codegen__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ether/etherpad",
+    "path": "admin/tools/openapi-codegen/README.md",
+    "commit": "73bcda7efbd1c5e60c544891a8641a8df1723b54",
+    "commit_date": "2026-09-23T15:29:47+00:00",
+    "url": "https://github.com/ether/etherpad/blob/73bcda7efbd1c5e60c544891a8641a8df1723b54/admin/tools/openapi-codegen/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 18556,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-15T13:59:01+01:00",
+    "last_commit_date": "2026-08-15T13:59:01+01:00",
+    "last_commit_author": "John McLear",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1471,
+    "sha256": "4eb21ccacb0b1029cc4568e633be795f4fb95de79a44482a837b73721da63535",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 31,
+    "words": 205,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ether--etherpad/admin/tools/openapi-codegen/README.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__src__pages__docs__api__useGlobalFilter.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tannerlinsley/react-table",
+    "path": "docs/src/pages/docs/api/useGlobalFilter.md",
+    "commit": "7c47a99010c348a4f612f2263c10546c7199d86d",
+    "commit_date": "2021-11-28T11:20:53-05:00",
+    "url": "https://github.com/tannerlinsley/react-table/blob/7c47a99010c348a4f612f2263c10546c7199d86d/docs/src/pages/docs/api/useGlobalFilter.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2020-07-09T14:44:17-06:00",
+    "last_commit_date": "2020-10-30T08:53:45+10:00",
+    "last_commit_author": "David Beitey",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-30: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3951,
+    "sha256": "b73f73e6870a33438b4f377158970fb6519b930ba1bd2983880071e4666c099b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 64,
+    "words": 563,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/tannerlinsley--react-table/docs/src/pages/docs/api/useGlobalFilter.md"
+}

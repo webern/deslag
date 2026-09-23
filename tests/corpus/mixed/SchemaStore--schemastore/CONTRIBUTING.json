@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SchemaStore/schemastore",
+    "path": "CONTRIBUTING.md",
+    "commit": "05b037b7a2b68ead6893c857db2594bcad9951d4",
+    "commit_date": "2026-09-23T08:55:19+02:00",
+    "url": "https://github.com/SchemaStore/schemastore/blob/05b037b7a2b68ead6893c857db2594bcad9951d4/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3844,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 91,
+    "first_commit_date": "2020-04-30T18:27:20+03:00",
+    "last_commit_date": "2026-07-06T18:27:55+09:00",
+    "last_commit_author": "ya7010",
+    "authors": 22,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-30, before 2022-01-01; 2 of its 91 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 32916,
+    "sha256": "cda50de3d1d884ef9ca2ca8cb22d09710494278c520cbed755e80f868e3f23af",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 749,
+    "words": 3714,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/SchemaStore--schemastore/CONTRIBUTING.md"
+}

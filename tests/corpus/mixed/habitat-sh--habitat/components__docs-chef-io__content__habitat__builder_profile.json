@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "components__docs-chef-io__content__habitat__builder_profile.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "habitat-sh/habitat",
+    "path": "components/docs-chef-io/content/habitat/builder_profile.md",
+    "commit": "2b35330a5c21d18d93fdf30a474183aa211180d7",
+    "commit_date": "2026-09-22T14:42:12+00:00",
+    "url": "https://github.com/habitat-sh/habitat/blob/2b35330a5c21d18d93fdf30a474183aa211180d7/components/docs-chef-io/content/habitat/builder_profile.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2754,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-10-27T15:51:26-07:00",
+    "last_commit_date": "2026-08-20T11:19:08+01:00",
+    "last_commit_author": "LisaBarry316",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-10-27, before 2022-01-01; 1 of its 3 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6178,
+    "sha256": "dcd432dabf81356ff785c6ab13c0905320c1c5aa0a6df101b41f07a7cf95e84c",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 122,
+    "words": 884,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/habitat-sh--habitat/components/docs-chef-io/content/habitat/builder_profile.md"
+}

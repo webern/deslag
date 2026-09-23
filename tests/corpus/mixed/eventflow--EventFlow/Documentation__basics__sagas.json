@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Documentation__basics__sagas.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "eventflow/EventFlow",
+    "path": "Documentation/basics/sagas.md",
+    "commit": "90bd8d642949e07b5d015609e3ae9b14dffd0ac3",
+    "commit_date": "2026-07-31T12:17:19+02:00",
+    "url": "https://github.com/eventflow/EventFlow/blob/90bd8d642949e07b5d015609e3ae9b14dffd0ac3/Documentation/basics/sagas.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2568,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-11-13T12:29:16+01:00",
+    "last_commit_date": "2025-05-29T10:29:41+02:00",
+    "last_commit_author": "Rasmus Mikkelsen",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-11-13, before 2022-01-01; 1 of its 6 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4754,
+    "sha256": "37ed6abdd35afea6b82debee933bb968331d7cda9baf80654b80bc2b1ef07d43",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 149,
+    "words": 594,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/eventflow--EventFlow/Documentation/basics/sagas.md"
+}

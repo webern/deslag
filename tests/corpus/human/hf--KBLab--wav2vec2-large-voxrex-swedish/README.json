@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "KBLab/wav2vec2-large-voxrex-swedish",
+    "path": "README.md",
+    "commit": "c7bf489412c806d9883626f57c5e46d501b57a0d",
+    "commit_date": "2021-10-02T11:44:26+00:00",
+    "url": "https://huggingface.co/KBLab/wav2vec2-large-voxrex-swedish/blob/c7bf489412c806d9883626f57c5e46d501b57a0d/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2021-08-12T10:49:16+00:00",
+    "stars": 14,
+    "found_by": "hf-models-cc0-1.0"
+  },
+  "history": {
+    "commits": 22,
+    "first_commit_date": "2021-08-12T11:33:16+00:00",
+    "last_commit_date": "2021-10-02T11:44:26+00:00",
+    "last_commit_author": "Martin Malmsten",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-02: all 22 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2873,
+    "sha256": "42997da4a4cbb528eeeae0d1c58e1439d8fad2b5be2b4164c7a9a88cb7697da0",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 313,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--KBLab--wav2vec2-large-voxrex-swedish/README.md"
+}

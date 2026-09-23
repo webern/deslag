@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__invoking_grpc_endpoints_locally.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/gitaly",
+    "path": "doc/invoking_grpc_endpoints_locally.md",
+    "commit": "29f6efc8a01d9856141b6141a2d1acf7b8dacceb",
+    "commit_date": "2026-09-23T19:48:19+00:00",
+    "url": "https://gitlab.com/gitlab-org/gitaly/-/blob/29f6efc8a01d9856141b6141a2d1acf7b8dacceb/doc/invoking_grpc_endpoints_locally.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 438,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-31T18:33:14+02:00",
+    "last_commit_date": "2026-07-31T18:33:14+02:00",
+    "last_commit_author": "Mustafa Bayar",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4280,
+    "sha256": "8c2bfe39eca2b0a38da08393645c1b539bd786c5420f8f1fd35ce757b60bf99e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 95,
+    "words": 560,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-org--gitaly/doc/invoking_grpc_endpoints_locally.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__about__contributing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "johnpapa/vscode-peacock",
+    "path": "docs/about/contributing.md",
+    "commit": "2fd5210ef98dce87625dddea9a8e90738b6215f2",
+    "commit_date": "2026-09-16T23:00:48-04:00",
+    "url": "https://github.com/johnpapa/vscode-peacock/blob/2fd5210ef98dce87625dddea9a8e90738b6215f2/docs/about/contributing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-02-21T23:25:11-05:00",
+    "stars": 1179,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-05-19T22:52:40-04:00",
+    "last_commit_date": "2026-07-18T22:14:16-04:00",
+    "last_commit_author": "John Papa",
+    "authors": 2,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-05-19, before 2022-01-01; 4 of its 5 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3182,
+    "sha256": "23bd8a4c7bf822ad59a27273d4a83d54e10865cee128ec347f77fe91d171204a",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 74,
+    "words": 499,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/johnpapa--vscode-peacock/docs/about/contributing.md"
+}

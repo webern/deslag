@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__migrate_from_active_model_serializers.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "okuramasafumi/alba",
+    "path": "docs/migrate_from_active_model_serializers.md",
+    "commit": "b71632e21327524ea8b6f00018c8177f7ff4c09d",
+    "commit_date": "2021-12-31T12:01:32+09:00",
+    "url": "https://github.com/okuramasafumi/alba/blob/b71632e21327524ea8b6f00018c8177f7ff4c09d/docs/migrate_from_active_model_serializers.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2020-01-21T19:46:40+09:00",
+    "stars": 1204,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-07-13T21:06:11+09:00",
+    "last_commit_date": "2021-07-13T21:06:11+09:00",
+    "last_commit_author": "Tashiro",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-13: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 7977,
+    "sha256": "1981eeb1a54d83e368b3c03da29f0370a5c11c85da07ace89a0ab73f228efb5c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 359,
+    "words": 850,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/okuramasafumi--alba/docs/migrate_from_active_model_serializers.md"
+}

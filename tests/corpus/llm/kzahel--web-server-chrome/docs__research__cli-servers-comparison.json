@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__research__cli-servers-comparison.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kzahel/web-server-chrome",
+    "path": "docs/research/cli-servers-comparison.md",
+    "commit": "4d7462fae40b166dc53a09560fd205ef0b3ad813",
+    "commit_date": "2026-08-07T12:27:38+02:00",
+    "url": "https://github.com/kzahel/web-server-chrome/blob/4d7462fae40b166dc53a09560fd205ef0b3ad813/docs/research/cli-servers-comparison.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-08T21:26:10+01:00",
+    "stars": 1288,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-25T16:33:02+01:00",
+    "last_commit_date": "2026-02-25T16:33:02+01:00",
+    "last_commit_author": "Kyle Graehl",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9148,
+    "sha256": "8787f8c601f5ae9a9174abf27f81d205e1988b4c0b1c2edcfff4e16904997c86",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 233,
+    "words": 1228,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kzahel--web-server-chrome/docs/research/cli-servers-comparison.md"
+}

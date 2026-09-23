@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__docs__docs__migration__mapping-governance.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "medplum/medplum",
+    "path": "packages/docs/docs/migration/mapping-governance.md",
+    "commit": "1f1413f90e9af763ca8246eadcfd404c07147835",
+    "commit_date": "2026-09-23T19:15:27+00:00",
+    "url": "https://github.com/medplum/medplum/blob/1f1413f90e9af763ca8246eadcfd404c07147835/packages/docs/docs/migration/mapping-governance.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2021-03-14T13:59:58-07:00",
+    "stars": 2697,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-14T23:31:57+00:00",
+    "last_commit_date": "2026-09-14T23:31:57+00:00",
+    "last_commit_author": "everett-williams",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 17111,
+    "sha256": "b8aed4a3627e3f5559706d729195958cd6639c1878e3795230f83538a4e4092c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 291,
+    "words": 2136,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/medplum--medplum/packages/docs/docs/migration/mapping-governance.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__ISSUE_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "polyfillpolyfill/polyfill-service",
+    "path": ".github/ISSUE_TEMPLATE.md",
+    "commit": "de604f7c8d1f02fd86b2507dae89844cd7b89876",
+    "commit_date": "2021-12-22T14:20:06+00:00",
+    "url": "https://github.com/polyfillpolyfill/polyfill-service/blob/de604f7c8d1f02fd86b2507dae89844cd7b89876/.github/ISSUE_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:origami"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-01-03T17:25:19+00:00",
+    "last_commit_date": "2020-01-27T15:06:28+00:00",
+    "last_commit_author": "chee",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-01-27: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1390,
+    "sha256": "e5a23e0f6b0701191666b1b379175eacd730084d13e9aa73d7b4b15e89a5baa8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 244,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/polyfillpolyfill--polyfill-service/.github/ISSUE_TEMPLATE.md"
+}

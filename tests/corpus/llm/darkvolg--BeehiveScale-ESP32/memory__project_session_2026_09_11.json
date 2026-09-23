@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "memory__project_session_2026_09_11.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "darkvolg/BeehiveScale-ESP32",
+    "path": "memory/project_session_2026_09_11.md",
+    "commit": "f4fab7b891ff113fddf024daa64ce961b1516807",
+    "commit_date": "2026-09-12T06:35:30+03:00",
+    "url": "https://github.com/darkvolg/BeehiveScale-ESP32/blob/f4fab7b891ff113fddf024daa64ce961b1516807/memory/project_session_2026_09_11.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-05T11:21:42+03:00",
+    "stars": null,
+    "found_by": "github-topic:beekeeping"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-09-11T23:01:23+03:00",
+    "last_commit_date": "2026-09-12T06:35:30+03:00",
+    "last_commit_author": "darkvolg",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10729,
+    "sha256": "a4ec6424e5752396c2bf0e1797b93b2e1e3f459fdbb369fd4ddf4360049cc403",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 94,
+    "words": 959,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Cyrillic",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/darkvolg--BeehiveScale-ESP32/memory/project_session_2026_09_11.md"
+}

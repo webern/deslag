@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "intel/neural-compressor",
+    "path": ".github/copilot-instructions.md",
+    "commit": "edf82cc5f353b04c3a6b001faad8ce1dc838abbc",
+    "commit_date": "2026-09-23T14:58:28+02:00",
+    "url": "https://github.com/intel/neural-compressor/blob/edf82cc5f353b04c3a6b001faad8ce1dc838abbc/.github/copilot-instructions.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-06-16T19:55:39+08:00",
+    "stars": 2710,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-29T03:52:23+02:00",
+    "last_commit_date": "2026-04-29T03:52:23+02:00",
+    "last_commit_author": "Andrzej Kotłowski",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5386,
+    "sha256": "1f675cc904ce2ed8d4520970865750ec5d3aa398179eb0610591db35721fdb2f",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 133,
+    "words": 755,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/intel--neural-compressor/.github/copilot-instructions.md"
+}

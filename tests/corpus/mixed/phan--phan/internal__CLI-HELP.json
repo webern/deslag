@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "internal__CLI-HELP.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "phan/phan",
+    "path": "internal/CLI-HELP.md",
+    "commit": "7b493cdae12f4664cba3e9a34cc2e72c321fac87",
+    "commit_date": "2026-09-15T15:39:52-04:00",
+    "url": "https://github.com/phan/phan/blob/7b493cdae12f4664cba3e9a34cc2e72c321fac87/internal/CLI-HELP.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5625,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 48,
+    "first_commit_date": "2019-01-20T14:02:42-05:00",
+    "last_commit_date": "2026-03-18T10:34:39-04:00",
+    "last_commit_author": "Rasmus Lerdorf",
+    "authors": 5,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-20, before 2022-01-01; 5 of its 48 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 19269,
+    "sha256": "5a1cea3dacc3b7fbedeb3032eed27b1e8c8adcb80986c48832359ff712c5388d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 456,
+    "words": 2459,
+    "frontmatter": false,
+    "natural_language": "none",
+    "scripts": [],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/phan--phan/internal/CLI-HELP.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__source__a2po_trainer.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "huggingface/trl",
+    "path": "docs/source/a2po_trainer.md",
+    "commit": "42757b56eea0ac61716305afe4c5f398e96d402a",
+    "commit_date": "2026-09-23T18:38:35+01:00",
+    "url": "https://github.com/huggingface/trl/blob/42757b56eea0ac61716305afe4c5f398e96d402a/docs/source/a2po_trainer.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-27T11:54:56+01:00",
+    "stars": 19367,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-05T16:34:10+05:30",
+    "last_commit_date": "2026-06-05T16:34:10+05:30",
+    "last_commit_author": "Raghul chandramouli",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3519,
+    "sha256": "a0c508eb0d64ca873adf848d758abc912932607add5654823e139c5d051e57ff",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 440,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/huggingface--trl/docs/source/a2po_trainer.md"
+}

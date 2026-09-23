@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "webonyx/graphql-php",
+    "path": "SECURITY.md",
+    "commit": "e8875f24396c966bd0d007d248c6df690bef0872",
+    "commit_date": "2026-09-22T12:03:45+00:00",
+    "url": "https://github.com/webonyx/graphql-php/blob/e8875f24396c966bd0d007d248c6df690bef0872/SECURITY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4715,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-11T20:09:46+02:00",
+    "last_commit_date": "2026-04-24T10:15:11+02:00",
+    "last_commit_author": "Benedikt Franke",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 2433,
+    "sha256": "40d91f42ff20fe18a6d47f158706ee0844db9d762f990154dbf7aaf88bcda5e4",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 39,
+    "words": 309,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/webonyx--graphql-php/SECURITY.md"
+}

@@ -1,0 +1,408 @@
+# Changelog
+
+## [2.1.1] - 2026-07-22
+
+### Fixed
+
+- Selecting a namespace after filtering now jumps to the highlighted namespace instead of the first one in the unfiltered list. [#551](https://github.com/kdash-rs/kdash/issues/551)
+- Updated the Kubernetes client to kube 4.2.0, so relative paths in a kubeconfig `exec` credential command now resolve against the kubeconfig location. [#541](https://github.com/kdash-rs/kdash/issues/541)
+
+### Changed
+
+- Updated dependencies: anyhow, async-trait, clap, regex, and serde-saphyr to their latest patch versions.
+
+## [2.1.0] - 2026-07-11
+
+### Added
+
+- `--namespace`/`-n` and `--context`/`-c` flags to pre-scope the TUI to a namespace and kubeconfig context at startup, matching the equivalent k9s flags. [#545](https://github.com/kdash-rs/kdash/issues/545)
+
+### Changed
+
+- Replaced the deprecated `serde_yaml` with `serde_saphyr` for config parsing and updated the Kubernetes client and other dependencies. Thanks to [@tstenner](https://github.com/tstenner) for the contribution! [#543](https://github.com/kdash-rs/kdash/pull/543)
+
+## [2.0.2] - 2026-06-29
+
+### Changed
+
+- CLI version info is now gathered concurrently with `tokio::process`, so a config with several slow custom probes no longer blocks startup. Regular expressions in `cli_info.custom` are also compiled when the configuration loads, so a broken regex is reported at startup instead of being silently ignored when parsing version output. [#538](https://github.com/kdash-rs/kdash/pull/538)
+
+### Fixed
+
+- `kubectl describe` failures now surface the underlying kubectl error, and the "make sure you have kubectl installed" hint only shows when kubectl is actually missing.
+
+### Security
+
+- Updated vulnerable transitive dependencies to their patched versions: `rustls-webpki`, `ring`, `idna`, `eyre`, `rand`, and `tracing-subscriber`.
+
+## [2.0.1] - 2026-06-18
+
+### Added
+
+- Official `install.sh` script for Linux and macOS with SHA-256 checksum verification and `--version` pinning, plus an AUR package for Arch Linux.
+
+### Fixed
+
+- Context switching now applies to kubectl-backed actions. After switching context with `Shift+C`, describe, shell exec, edit, and port-forward target the selected context instead of the kubeconfig's current context. [#533](https://github.com/kdash-rs/kdash/pull/533)
+
+## [2.0.0] - 2026-06-15
+
+KDash 2.0 turns the dashboard from read-only into a tool you can act with. You can now manage resources, port-forward, and edit manifests without leaving the TUI, alongside a refreshed UI and faster rendering.
+
+### Added
+
+- **NEW:** Resource management actions. KDash can now act on resources, not just observe them:
+  - Delete any resource (`Ctrl-d`)
+  - Edit any resource in your `$EDITOR` (`e`); KDash suspends the UI while the editor is open and applies the result on save
+  - Scale Deployments/StatefulSets/ReplicaSets/ReplicationControllers to a replica count via an inline input
+  - Rollout restart Deployments/StatefulSets/DaemonSets (`r`)
+  - View previous (restarted) container logs (`p`)
+  - Cordon/uncordon nodes and suspend/resume/trigger CronJobs
+- **NEW:** Port-forward a Pod or Service with `f`, then list and stop active forwards with `Shift+F`. Forwards run as tracked background processes and are stopped when you quit KDash.
+- **NEW:** Action menu (`m`) lists every available action for the selected resource; the most-used actions also have dedicated hotkeys surfaced as hints.
+- **NEW:** More built-in themes and runtime theme cycling. Switch themes on the fly with `t` (next) and `Alt+t` (previous) across Macchiato, Latte, Gruvbox Dark, Solarized Dark, and Mono, plus an optional custom theme.
+- Log view options to toggle timestamps (`t`) and line wrap (`w`) while viewing container logs.
+- Cycle the main views in reverse with `Shift+Tab`, reset the view-switch history with `Ctrl+H`, and jump to the start/end of tables and text views with `Home`/`End`.
+- Impactful actions are guarded by a confirmation prompt before any change is applied.
+
+### Changed
+
+- Refreshed the UI across hints, headers, help, notifications, and gauges for a cleaner, more consistent look.
+- Help page now lays out keybindings in two balanced columns.
+- Utilization view adds a cluster summary pane.
+- Context info panel shows more detail, and the view-switch history is collapsed by default to reduce noise.
+- Scrolling is unified across views with smoother behavior. Thanks to [@tstenner](https://github.com/tstenner) for the contribution! [#530](https://github.com/kdash-rs/kdash/pull/530)
+- Enabled the ratatui layout cache for faster redraws. Thanks to [@tstenner](https://github.com/tstenner) for the contribution! [#531](https://github.com/kdash-rs/kdash/pull/531)
+- Updated kubectl-view-allocations to 3.0.1 and ratatui to 0.30.1, plus chrono, serde_json, log, clap, strum, and human-panic bumps.
+
+## [1.1.2] - 2026-05-16
+
+### Added
+
+- New `hide_logo` and `hide_info_on_start` config options to hide the logo block and start with the info bar collapsed. Fix [#521](https://github.com/kdash-rs/kdash/issues/521)
+
+## [1.1.1] - 2026-04-24
+
+### Changed
+
+- Add overflow indicators to the resource tabs
+
+## [1.1.0] - 2026-04-24
+
+### Added
+
+- **NEW:** Configurable CLI Info entries, including disabling built-in probes, custom commands, optional regex-based version extraction, and control over whether missing binaries are hidden or shown as `Not found`. Fix #452
+- **NEW:** More columns are shown if viewport is wide enough for most resources including a new 'w' keybind to show all.
+- Dynamic resource menu counts now use cached results and show `?` while a resource kind has not been loaded yet
+
+### Changed
+
+- Resource tabs now auto-scroll to keep the selected tab visible, prefer showing neighboring tabs where possible, and hide zero-count badges for cleaner headers
+- CLI Info defaults now include `podman` and `containerd`, while `istioctl` is provided as a sample custom probe instead of a built-in entry
+- The More menu is now ordered by more commonly used resources first
+- The filter UI is more consistent across different views
+- Troubleshoot module is improved. Thanks to [@sed-i](https://github.com/sed-i) for the contribution! [#513](https://github.com/kdash-rs/kdash/pull/513)
+- UI draw efficiency improvements. Thanks to [@sed-i](https://github.com/sed-i) for the contribution! [#515](https://github.com/kdash-rs/kdash/pull/515)
+
+### Fixed
+
+- Batched redraw/event handling now coalesces queued ticks and clamps rendering windows to avoid empty tables and YAML slice panics on small or offset views
+- Troubleshoot findings now sort deterministically, and follow-up cleanups improved readability in Pod, PVC, and ReplicaSet checks
+
+## [1.0.0] - 2026-04-09
+
+### Added
+
+- **NEW:** Shell into container directly from the UI with `s` keybinding
+  - Restore the KDash UI cleanly after leaving an interactive container shell
+  - Fall back from `/bin/bash` to `/bin/sh` automatically when opening a pod shell
+- **NEW:** Troubleshoot tab with diagnostics and recommendations for common Kubernetes issues across Pods, PVCs, and ReplicaSets, plus direct drill-down into containers, logs, describe, and YAML views. Thanks to [@sed-i](https://github.com/sed-i) for the contribution! [#505](https://github.com/kdash-rs/kdash/pull/505)
+- **NEW:** Inline filter/search across resource tables and views, including Contexts, Help, Utilization, Troubleshoot, More, and Dynamic resource menus
+- **NEW:** Aggregate logs for workload resources, so you can view logs from all owned pods in one stream
+- **NEW:** Deeper navigation from resource tables into child views such as Pods, Containers, Logs, Describe, and YAML
+- **NEW:** Custom config support for keybinding overrides, theme overrides, and configurable initial log history via `log_tail_lines`
+- **NEW:** In-app action to dump recent errors to a file for debugging
+- Resource counts in resource tabs and menus
+- Events tab with namespaced Kubernetes events, counts, ages, and describe/YAML views. Thanks to [@sed-i](https://github.com/sed-i) for the contribution! [#504](https://github.com/kdash-rs/kdash/pull/504)
+
+### Changed
+
+- Default dark/light themes now use Catppuccin Macchiato and Catppuccin Latte
+- Enter-based navigation now drills into child resources where available and opens Describe on leaf resources
+- Dynamic resource discovery now tolerates non-`v1` preferred API group versions and reuses cached results
+- Kubeconfig changes are watched live so context and namespace state stay in sync without restarting
+
+### Fixed
+
+- Log streaming, scrolling, and history handling improvements, including bounded buffers and faster follow behavior. Fix #6
+- Reduced startup and UI lag with runtime, describe rendering, and resource-loading improvements
+- Better error handling and friendlier messages, including fixes for #484
+- Fixes for long-standing issues around namespace fallback and kubeconfig/context refresh (#89, #90, #315)
+- HTTPS proxy support, pending pod ready counts, dynamic resource navigation, and other reliability improvements
+- Dependency updates and test/CI stability fixes
+
+## [0.6.2] - 2025-03-05
+
+- Dependency updates
+- Minor fixes
+
+## [0.6.1] - 2024-08-27
+
+- Dependency updates
+
+## [0.6.0] - 2024-01-25
+
+- Describe syntax highlighting
+- Library updates
+- Add debug mode
+- Sock5 proxy support
+
+## [0.5.0] - 2024-01-22
+
+- Linux musl builds as default
+- Aarch64 build for windows
+- ARM v7 builds for Linux
+
+## [0.4.9] - 2024-01-22
+
+- bug fixes
+- library updates
+
+## [0.4.8] - 2024-01-18
+
+- macOS ARM64 release
+
+## [0.4.7] - 2024-01-15
+
+- UI improvements
+
+## [0.4.6] - 2024-01-08
+
+- Fix keypress issues on windows (https://github.com/kdash-rs/kdash/issues/390)
+- Upgrade libraries
+
+## [0.4.5] - 2024-01-05
+
+- YAML syntax highlighting
+- Upgrade libraries
+
+## [0.4.4] - 2023-10-02
+
+- Patch release for missing MUSL builds
+
+## [0.4.3] - 2023-09-19
+
+- Global Filtering support (https://github.com/kdash-rs/kdash/pull/383)
+
+## [0.4.2] - 2023-08-24
+
+- Allow HTTPS connection (https://github.com/kdash-rs/kdash/pull/372)
+- Upgrade libraries
+
+## [0.4.0] - 2023-07-04
+
+- Add basic support for Custom Resource Definitions (https://github.com/kdash-rs/kdash/commit/fb4b4c4451fca5e5ad62dd93e658dd8009e8c659)
+- Add support for NetworkPolicy
+- Upgrade libraries
+
+## [0.3.7] - 2023-06-30
+
+- Add support for Ingress (https://github.com/kdash-rs/kdash/pull/316)
+- Add support for PersistentVolumeClaims
+- Add support for PersistentVolumes
+- Add support for ServiceAccounts
+- Upgrade libraries
+
+## [0.3.6] - 2022-12-21
+
+- Hide managedFields in YAML view by default (https://github.com/kdash-rs/kdash/pull/296)
+- Fail gracefully when context not found (https://github.com/kdash-rs/kdash/issues/280)
+- Improve cache (https://github.com/kdash-rs/kdash/issues/271)
+- Upgrade libraries
+
+## [0.3.5] - 2022-08-31
+
+- Add support for RoleBindings (https://github.com/kdash-rs/kdash/pull/245)
+- Add support for ClusterRoleBindings (https://github.com/kdash-rs/kdash/pull/249)
+- Upgrade libraries
+
+## [0.3.4] - 2022-08-18
+
+- Add support for Cluster Roles (https://github.com/kdash-rs/kdash/pull/236)
+- Add support for decoding secrets (https://github.com/kdash-rs/kdash/pull/242)
+- Upgrade libraries
+
+## [0.3.3] - 2022-08-01
+
+- Upgrade libraries
+- Add sponsors
+- Add support for Roles (https://github.com/kdash-rs/kdash/pull/224)
+- Add support for Storage classes (https://github.com/kdash-rs/kdash/pull/222)
+- Add support for ARM and aarch64 binaries
+
+## [0.3.1] - 2022-04-06
+
+- Upgrade libraries trying to fix cargo install issue
+
+## [0.3.0] - 2022-02-05
+
+- UI updates (https://github.com/kdash-rs/kdash/pull/157)
+- Fix stack overflow error (https://github.com/kdash-rs/kdash/issues/160)
+- Color contrast improvements (fix https://github.com/kdash-rs/kdash/issues/162)
+
+## [0.2.7] - 2022-01-20
+
+- Fix crashes when memory and/or cpu usages are higher than 100%
+- Improve cache
+
+## [0.2.6] - 2022-01-19
+
+- Fix status color of pods not ready
+
+## [0.2.5] - 2021-12-21
+
+- Fix help screen which was not rendered
+- Fix status color of pods not ready
+- Update dependencies
+
+## [0.2.4] - 2021-09-27
+
+- Update dependencies
+- Fix crash on cargo install
+
+## [0.2.3] - 2021-08-02
+
+- Add support for ReplicationControllers
+- Fix issue with table overflow crash
+
+## [0.2.2] - 2021-07-20
+
+- Add support for page up and page down on tables and text views
+- Fix crash on escape
+
+## [0.2.0] - 2021-07-12
+
+- Add support for Job resource - [#42](https://github.com/kdash-rs/kdash/pull/42), Thanks to [somayaj](https://github.com/somayaj)
+- Add support for CronJob resource - [#69](https://github.com/kdash-rs/kdash/pull/69), Thanks to [somayaj](https://github.com/somayaj)
+- Add support for DaemonSets
+- Add support for Secrets
+- Add more resources tab and menu
+- Show init containers in container view
+- Internal optimizations
+
+## [0.1.2] - 2021-06-12
+
+- Add human friendly crash messages
+- Add Tab keybinding to cycle through views
+- Migrate to kubectl-view-allocations library
+
+## [0.1.1] - 2021-06-04
+
+- Fix a small bug that crashes the app in certain terminal size
+
+## [0.1.0] - 2021-05-17
+
+- Stable release
+- Minor bug fixes
+- Add vim key bindings for arrow keys
+- Chocolatey deployment for Windows 10
+
+## [0.0.9] - 2021-05-10
+
+- Improved error handling and error display
+- Minor bug fixes and improvements
+
+## [0.0.8] - 2021-05-04
+
+### Added
+
+- Get YAML for all resources (pod, svc, node, statefulset, replicaset, configmap, deployment)
+- Describe for all remaining resources (svc, statefulset, replicaset, configmap, deployment)
+
+### Changed
+
+- Table scrolling doesn't circle back now. This seems to be better UX when having long lists
+
+### Fixed
+
+- Describe view spacing
+
+## [0.0.7] - 2021-05-03
+
+### Added
+
+- Container ports and probes
+
+### Fixed
+
+- Library updates
+- Scroll improvements
+- More tests
+- Show containers for failing pods
+
+## [0.0.6] - 2021-04-27
+
+### Added
+
+- Switch k8s contexts from the all contexts view
+
+## [0.0.5] - 2021-04-27
+
+### Fixed
+
+- Scrolling issues
+- Log streaming discrepancy
+- CLI versions UI glitch
+
+## [0.0.4] - 2021-04-26
+
+### Added
+
+- Homebrew installation
+- Docker installation
+
+## [0.0.3] - 2021-04-25
+
+### Fixed
+
+- Minor bug fixes
+- Refactor and polish
+
+### Added
+
+- Resource utilization view with grouping
+- Select/copy text in logs and describe view
+- Config map tab
+- Statefulsets tab
+- Replicasets tab
+- Deployments tab
+
+## [0.0.2] - 2021-04-22
+
+### Fixed
+
+- Pod status fix
+- Switch to API for metrics
+- Various bug fixes
+- Update key bindings
+- Update theme consistency
+
+### Added
+
+- Containers view
+- Container logs
+- Pod describe
+- Node describe
+
+## [0.0.1] - 2021-04-18
+
+- Initial beta release
+
+---
+
+# What is this?
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).

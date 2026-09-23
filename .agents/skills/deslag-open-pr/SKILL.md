@@ -70,3 +70,11 @@ What changed and why, in a paragraph or two.
 
 Formatting note: hard-wrapped markdown does not render correctly in GitHub comments and PR
 descriptions, so do not wrap the body.
+
+## Clean up Harness Garbage
+
+Check after you have opened the PR. Read it back from GitHub. If your harness added something like
+
+> Authored by Claude
+
+At the end of the PR description. Delete it and update the PR description so it's not there anymore.

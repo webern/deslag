@@ -646,10 +646,11 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
     changes: list[tuple[str, str, str, str]] = []
 
     def flush() -> None:
+        # Only a file's adding commit needs the deletions beside it, to spot a move; they are
+        # shared, not copied per path, since one commit can touch thousands of files.
+        deleted = [(s, p, n, o) for s, p, n, o in changes if s == "D"]
         for status, path, new, old in changes:
-            histories.setdefault(path, []).append(
-                (sha, status, new, [(s, p, n, o) for s, p, n, o in changes if p != path])
-            )
+            histories.setdefault(path, []).append((sha, status, new, deleted if status == "A" else []))
 
     for line in out:
         if line.startswith("@@"):

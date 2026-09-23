@@ -233,8 +233,14 @@ pub fn render(path: &str, over: &Over) -> String {
             1 => "1 emphasized span".to_string(),
             count => format!("{count} emphasized spans"),
         },
-        percent = measure.percent(),
+        percent = shown_percent(measure.percent()),
     )
+}
+
+/// `percent` to two decimal places, rounded up: a file just over its limit must not read as at
+/// it, as 1.004% would if it were shown as 1.00%.
+fn shown_percent(percent: f64) -> f64 {
+    (percent * 100.0).ceil() / 100.0
 }
 
 /// The advice for an over-emphasized file.

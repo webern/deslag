@@ -128,8 +128,11 @@ thematic break still works. A `max_size_bytes` that is not a byte count is an er
 ## Walking the repo
 
 `glob/walk.rs` walks down from the repo root and returns every regular file as a `RepoFile`: its
-absolute path and its `/`-separated path relative to the root. It skips anything inside a
-directory named `.git`, and symlinks, which are never followed. `.gitignore` is not read.
+absolute path and its `/`-separated path relative to the root. The walk is the `ignore` crate's
+`WalkBuilder`. It skips anything inside a directory named `.git`, symlinks, which are never
+followed, and whatever git would ignore: `.gitignore` at any depth, `.git/info/exclude`, the global
+excludes file, and `.ignore`. The rules apply without a `.git` directory too. Ignore files above
+the root are not read. Hidden files are walked.
 
 ## Checking and reporting
 

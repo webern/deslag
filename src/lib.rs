@@ -59,6 +59,16 @@ pub enum Error {
         source: io::Error,
     },
 
+    /// The repo could not be walked: a directory could not be read, or an ignore file is broken.
+    #[error("cannot walk {root}: {source}")]
+    Walk {
+        /// The repo root being walked.
+        root: String,
+        /// The underlying error, which names the path when it has one.
+        #[source]
+        source: ignore::Error,
+    },
+
     /// The config file is not valid TOML, or does not have the shape deslag expects.
     #[error("cannot parse {path}: {source}")]
     Parse {

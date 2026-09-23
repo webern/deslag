@@ -408,6 +408,66 @@ fn a_markdown_file_inside_git_is_not_scanned() {
 }
 
 #[test]
+fn a_gitignored_markdown_file_is_not_scanned() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", &global_config(5));
+    repo.write(".gitignore", "target/\n");
+    repo.write("target/doc/note.md", "a long note, far past five bytes\n");
+
+    let output = repo.check();
+
+    assert_eq!(code(&output), 0, "stderr: {}", stderr(&output));
+}
+
+#[test]
+fn a_nested_gitignore_applies_below_its_directory() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", &global_config(5));
+    repo.write("docs/.gitignore", "draft.md\n");
+    repo.write("docs/draft.md", "a long note, far past five bytes\n");
+    repo.write("draft.md", "a long note, far past five bytes\n");
+
+    let output = repo.check();
+
+    assert_eq!(code(&output), 1, "stderr: {}", stderr(&output));
+    let stderr = stderr(&output);
+    assert!(stderr.contains("draft.md"), "stderr: {stderr}");
+    assert!(!stderr.contains("docs/draft.md"), "stderr: {stderr}");
+}
+
+#[test]
+fn a_gitignore_negation_brings_a_file_back() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", &global_config(5));
+    repo.write(".gitignore", "*.md\n!keep.md\n");
+    repo.write("gone.md", "a long note, far past five bytes\n");
+    repo.write("keep.md", "a long note, far past five bytes\n");
+
+    let output = repo.check();
+
+    assert_eq!(code(&output), 1, "stderr: {}", stderr(&output));
+    let stderr = stderr(&output);
+    assert!(stderr.contains("keep.md"), "stderr: {stderr}");
+    assert!(!stderr.contains("gone.md"), "stderr: {stderr}");
+}
+
+#[test]
+fn a_markdown_file_in_a_hidden_directory_is_scanned() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", &global_config(5));
+    repo.write(".github/note.md", "a long note, far past five bytes\n");
+
+    let output = repo.check();
+
+    assert_eq!(code(&output), 1, "stderr: {}", stderr(&output));
+    assert!(
+        stderr(&output).contains(".github/note.md"),
+        "stderr: {}",
+        stderr(&output)
+    );
+}
+
+#[test]
 fn the_report_is_the_whole_message_or_none_of_it() {
     let repo = Repo::new();
     repo.write(".deslag/config.toml", &global_config(10));

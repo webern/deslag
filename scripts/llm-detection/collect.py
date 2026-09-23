@@ -57,6 +57,8 @@ HARVEST_PER_REPO = 6
 MAX_PER_REPO = 3
 CLONE_TIMEOUT = 600
 SHALLOW_SINCE = "2018-01-01"
+# A history longer than this takes more memory and time than one repository is worth.
+MAX_COMMITS = 40000
 
 # ---------------------------------------------------------------------------------------------
 # licences
@@ -347,6 +349,28 @@ def git(repo: Path, *args: str, timeout: int = 600, check: bool = True) -> str:
     return result.stdout.decode("utf-8", errors="replace")
 
 
+def git_lines(repo: Path, *args: str, sep: str = "\n"):
+    """Streams git's output in records ending with `sep`, so a long history is never held whole."""
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
+    proc = subprocess.Popen(
+        ["git", "-C", str(repo), "-c", "core.quotepath=off", *args],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env,
+    )
+    assert proc.stdout is not None
+    buffer = ""
+    try:
+        while chunk := proc.stdout.read(1 << 16):
+            buffer += chunk.decode("utf-8", errors="replace")
+            *records, buffer = buffer.split(sep)
+            yield from records
+        if buffer:
+            yield buffer
+    finally:
+        proc.stdout.close()
+        proc.kill()
+        proc.wait()
+
+
 def git_bytes(repo: Path, *args: str, timeout: int = 300) -> bytes:
     env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
     result = subprocess.run(
@@ -586,9 +610,8 @@ class Commit:
 
 def read_commits(repo: Path, rev: str) -> dict[str, Commit]:
     fmt = "%H%x1f%aI%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e"
-    out = git(repo, "log", "--no-merges", f"--format={fmt}", rev, timeout=900)
     commits = {}
-    for record in out.split("\x1e"):
+    for record in git_lines(repo, "log", "--no-merges", f"--format={fmt}", rev, sep="\x1e"):
         record = record.strip("\n")
         if not record:
             continue
@@ -596,6 +619,7 @@ def read_commits(repo: Path, rev: str) -> dict[str, Commit]:
         if len(parts) < 7:
             continue
         sha, date, an, ae, cn, ce, body = parts[:7]
+        body = body[:4000]
         tools = ai_tools(an, ae, cn, ce, body)
         # An agent's own bot account is an agent, not a bot.
         commits[sha] = Commit(sha, date, an, ae, tools, is_bot(an, ae) and not tools)
@@ -606,7 +630,7 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
     """For every Markdown path, the commits that touched it, newest first, from a pass over the
     raw diffs with rename detection off: (sha, status, new blob, [(status, path) of every other
     Markdown change in the same commit])."""
-    out = git(
+    out = git_lines(
         repo,
         "log",
         "--no-merges",
@@ -616,7 +640,6 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
         rev,
         "--",
         ":(glob)**/*.md",
-        timeout=900,
     )
     histories: dict[str, list] = {}
     sha = None
@@ -628,7 +651,7 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
                 (sha, status, new, [(s, p, n, o) for s, p, n, o in changes if p != path])
             )
 
-    for line in out.splitlines():
+    for line in out:
         if line.startswith("@@"):
             if sha:
                 flush()
@@ -721,6 +744,10 @@ def harvest_one(c: Candidate, work: Path) -> dict:
             env=env,
         )
         head = git(clone, "rev-parse", "HEAD").strip()
+        count = int(git(clone, "rev-list", "--count", "--no-merges", head).strip() or 0)
+        if count > MAX_COMMITS:
+            result["note"] = f"{count} commits, more than {MAX_COMMITS}"
+            return result
         commits = read_commits(clone, head)
         if not commits:
             result["note"] = "no commits"

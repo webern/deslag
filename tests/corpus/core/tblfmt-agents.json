@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "tblfmt-agents.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/tblfmt",
+    "path": "AGENTS.md",
+    "commit": "8fd7e212540f80452d4b0ebd6f24ddd1c32b4952",
+    "commit_date": "2026-04-21T14:54:33+02:00",
+    "url": "https://github.com/webern/tblfmt/blob/8fd7e212540f80452d4b0ebd6f24ddd1c32b4952/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-07T12:27:16+02:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-07T12:27:16+02:00",
+    "last_commit_date": "2026-04-07T12:27:16+02:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 1 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 1553,
+    "sha256": "01a822da7ba883d928b2be76bbbe933e42fa68dce107b04df6b5322bfca732af",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 221,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "tblfmt/AGENTS.md"
+}

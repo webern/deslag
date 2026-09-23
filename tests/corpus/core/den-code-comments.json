@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-code-comments.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": ".agents/skills/code-comments/SKILL.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/.agents/skills/code-comments/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-26T17:39:02-05:00",
+    "last_commit_date": "2026-09-17T16:23:28-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2144,
+    "sha256": "b9d01a4ed8fb5451f9403aeca5a1c4d2828d32e3cd085c3c63e87d88a43e1aea",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 348,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": ".agents/skills/code-comments/SKILL.md"
+}

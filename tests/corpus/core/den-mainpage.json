@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-mainpage.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": "docs/mainpage.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/docs/mainpage.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-06-12T20:55:22-05:00",
+    "last_commit_date": "2026-06-13T10:13:01-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "2 of its 2 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 3316,
+    "sha256": "4d50f0fca602892e40d407cae4d4852a0360f6dbc0b3c9a9b3f0c80edd92ad15",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 404,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "docs/mainpage.md"
+}

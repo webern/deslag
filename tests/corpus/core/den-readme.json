@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-readme.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": "README.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2024-11-23T09:27:15-06:00",
+    "last_commit_date": "2026-09-18T06:59:34-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 3,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "12 of its 17 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's; 5 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10355,
+    "sha256": "1caf60b30e04260bb81bd28f357f86fcf7417042b485d16ca90b8d3a23eb48f3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 218,
+    "words": 1313,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "denigma/README.md"
+}

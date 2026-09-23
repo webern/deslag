@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "rt-readme.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/rust-template",
+    "path": "README.md",
+    "commit": "ca247d10e5a1690090ed06326034fe9266082826",
+    "commit_date": "2026-09-18T17:12:41+02:00",
+    "url": "https://github.com/webern/rust-template/blob/ca247d10e5a1690090ed06326034fe9266082826/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T21:07:47-08:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-12-23T21:07:47-08:00",
+    "last_commit_date": "2026-09-18T16:51:51+02:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 2 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 202,
+    "sha256": "6549aa9797dbeb441dd3d373962b52b30744ece9977094a12e2b5db1f7e60616",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 38,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "README.md"
+}

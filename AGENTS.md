@@ -22,8 +22,9 @@ deslag/
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
   src/main.rs          <- the binary; a thin wrapper over the library
   tests/               <- the unit tests, and the corpus tests over quoted fixtures
-  tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar
-  scripts/             <- build, lint and utility scripts
+  tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,
+                          human/, llm/ and mixed/ are collected, one directory per source repo
+  scripts/             <- build, lint and utility scripts; corpus/collect.py rebuilds the corpus
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
   .agents/skills/      <- agent skills, the source of truth; every name starts with deslag-
   .claude/skills       <- symlink to .agents/skills

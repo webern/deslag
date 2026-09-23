@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "midi-agents.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/midi_file",
+    "path": "AGENTS.md",
+    "commit": "6523bad15fdeea9e76649eb4b669220a704dcf2b",
+    "commit_date": "2026-07-19T21:46:04+02:00",
+    "url": "https://github.com/webern/midi_file/blob/6523bad15fdeea9e76649eb4b669220a704dcf2b/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T22:16:24-08:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-07-19T16:49:19+02:00",
+    "last_commit_date": "2026-07-19T19:47:59+02:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "3 of its 3 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 520,
+    "sha256": "7008e0535d54cc85fd16b1656c2dcd2696aaca15c75b73afa76f6ef670284a56",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 13,
+    "words": 79,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "midi_file/AGENTS.md"
+}

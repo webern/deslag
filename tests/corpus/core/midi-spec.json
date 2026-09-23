@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "midi-spec.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/midi_file",
+    "path": "docs/spec-midimusic.md",
+    "commit": "6523bad15fdeea9e76649eb4b669220a704dcf2b",
+    "commit_date": "2026-07-19T21:46:04+02:00",
+    "url": "https://github.com/webern/midi_file/blob/6523bad15fdeea9e76649eb4b669220a704dcf2b/docs/spec-midimusic.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T22:16:24-08:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-19T17:34:25+02:00",
+    "last_commit_date": "2026-07-19T17:48:44+02:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "2 of its 2 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 52574,
+    "sha256": "1a891cbbae0bda9b6db35450adf28b68cd8ec88d5f105a419b5adc9a13aa5115",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1007,
+    "words": 10362,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "docs/spec-midimusic.md"
+}

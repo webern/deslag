@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "mnx-readme.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/mnx-rs",
+    "path": "README.md",
+    "commit": "d07693632f1832c04465dcfdb6629bacc8255dbc",
+    "commit_date": "2026-01-17T06:49:54-08:00",
+    "url": "https://github.com/webern/mnx-rs/blob/d07693632f1832c04465dcfdb6629bacc8255dbc/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-04-15T17:39:25-07:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-04-15T17:39:25-07:00",
+    "last_commit_date": "2025-04-15T17:39:25-07:00",
+    "last_commit_author": "Matt Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 1 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 376,
+    "sha256": "8a3abe2cc3d1c3a2a04af958fc124dc85cb27473d5b02fe7dfc453df6bfd6466",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 10,
+    "words": 53,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mnx-rs/README.md"
+}

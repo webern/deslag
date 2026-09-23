@@ -13,6 +13,10 @@
 //! [md.lints.max_size_bytes]
 //! value = 20000
 //!
+//! [md.lints.max_emphasis]
+//! free_spans = 2
+//! max_percent = 1.0
+//!
 //! [[md.overrides]]
 //! globs = ["AGENTS.md"]
 //! lints.max_size_bytes.value = 8000
@@ -32,7 +36,7 @@ use serde::Deserialize;
 
 use crate::Error;
 
-pub use lints::{MaxSizeBytes, MdLints, Merge};
+pub use lints::{MaxEmphasis, MaxSizeBytes, MdLints, Merge};
 pub use md::MdConfig;
 pub use search::{CANONICAL_CONFIG_PATHS, ConfigSource};
 

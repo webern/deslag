@@ -1,7 +1,8 @@
 //! deslag: a linter that stops Markdown files from growing without bound.
 //!
 //! An LLM editing a Markdown file tends to make it longer and never takes anything out. Deslag
-//! gives every Markdown file a byte budget and fails when a file is over it.
+//! gives every Markdown file a byte budget and fails when a file is over it. It also fails a file
+//! with more bold, italics and ALL CAPS than the config allows; see [`lint::max_emphasis`].
 //!
 //! The budget for a file comes from, most specific first:
 //!
@@ -103,6 +104,15 @@ pub enum Error {
         /// The underlying error.
         #[source]
         source: globset::Error,
+    },
+
+    /// A lint setting in the config has a value the lint cannot use.
+    #[error("invalid setting in {path}: {message}")]
+    Setting {
+        /// The config file.
+        path: String,
+        /// What is wrong with it.
+        message: String,
     },
 
     /// A file's frontmatter has a `max_size_bytes` that is not a byte count.

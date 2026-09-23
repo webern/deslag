@@ -70,10 +70,20 @@ impl MdConfig {
                     .collect::<Vec<_>>(),
             )?,
         };
+        let check = |lints: &MdLints| match lints.invalid() {
+            Some(message) => Err(Error::Setting {
+                path: config_path.to_string(),
+                message,
+            }),
+            None => Ok(()),
+        };
+
+        check(&file.lints)?;
         let overrides = file
             .overrides
             .into_iter()
             .map(|entry| {
+                check(&entry.lints)?;
                 Ok(Override {
                     patterns: compile(&entry.globs)?,
                     lints: entry.lints,

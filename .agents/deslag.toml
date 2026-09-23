@@ -6,6 +6,10 @@ schema_version = 1
 [md]
 globs = ["/AGENTS.md", "/.agents/skills/**/*.md"]
 
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000

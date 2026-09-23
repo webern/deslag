@@ -13,6 +13,8 @@ mod common;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, config_text, stderr, stdout};
+use deslag::config::MaxEmphasis;
+use deslag::lint::max_emphasis;
 use deslag::lint::max_size_bytes::HEADING;
 use serde::Deserialize;
 
@@ -668,4 +670,85 @@ fn the_corpus_matrix_holds() {
     for case in cases() {
         run_case(&case, &fixtures);
     }
+}
+
+/// The `path has N emphasized spans covering P% of its prose.` lines of a run, sorted, as
+/// (path, spans, percent) triples.
+fn reported_emphasis(stderr: &str) -> Vec<(String, u64, f64)> {
+    let mut found: Vec<(String, u64, f64)> = stderr
+        .lines()
+        .filter_map(|line| {
+            let (path, rest) = line.split_once(" has ")?;
+            let (spans, rest) = rest.split_once(" emphasized span")?;
+            let (_, rest) = rest.split_once(" covering ")?;
+            let (percent, _) = rest.split_once("% of its prose.")?;
+            Some((path.to_string(), spans.parse().ok()?, percent.parse().ok()?))
+        })
+        .collect();
+    found.sort_by(|left, right| left.0.cmp(&right.0));
+    found
+}
+
+#[test]
+fn the_corpus_emphasis_reports_agree_with_the_library() {
+    const FREE_SPANS: u64 = 2;
+    const MAX_PERCENT: f64 = 1.0;
+
+    let fixtures = load_corpus();
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = 1\n\n[md.lints.max_emphasis]\n\
+             free_spans = {FREE_SPANS}\nmax_percent = {MAX_PERCENT}\n"
+        ),
+    );
+    let settings = MaxEmphasis {
+        free_spans: Some(FREE_SPANS),
+        max_percent: Some(MAX_PERCENT),
+        message: None,
+    };
+
+    let mut expected = Vec::new();
+    for (index, fixture) in fixtures.iter().enumerate() {
+        let path = Layout::Flat.dest(index, fixture);
+        repo.write_bytes(&path, &fixture.bytes);
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        if max_emphasis::check(&text, Some(&settings)).is_some() {
+            expected.push(path);
+        }
+    }
+    expected.sort();
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+    let reported = reported_emphasis(&stderr);
+
+    assert!(
+        !expected.is_empty() && expected.len() < fixtures.len(),
+        "the corpus should hold both calm and over-emphasized files at these limits"
+    );
+    assert_eq!(
+        reported
+            .iter()
+            .map(|(path, ..)| path.clone())
+            .collect::<Vec<_>>(),
+        expected,
+        "stderr:\n{stderr}"
+    );
+    for (path, spans, percent) in &reported {
+        assert!(
+            *spans > FREE_SPANS && *percent > MAX_PERCENT,
+            "{path} was reported within its limits\nstderr:\n{stderr}"
+        );
+    }
+    assert_eq!(code(&output), 1, "stderr:\n{stderr}");
+    assert!(
+        stderr.contains(&format!(
+            "deslag: {} of {} Markdown files over-emphasized.",
+            expected.len(),
+            fixtures.len()
+        )),
+        "stderr:\n{stderr}"
+    );
 }

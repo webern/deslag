@@ -11,7 +11,7 @@ max_size_bytes: 16384
 # deslag: as built
 
 Deslag is a linter that fails when a Markdown file has grown past the number of bytes it is
-allowed. It is one Cargo package with two targets: the library in `src/lib.rs` decides everything,
+allowed, or leans on more bold, italics and capitals than it is allowed. It is one Cargo package with two targets: the library in `src/lib.rs` decides everything,
 and the binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the
 library, prints what it returns and exits nonzero when a file is over.
 
@@ -21,8 +21,8 @@ library, prints what it returns and exits nonzero when a file is over.
 
 1. Finds and loads the config.
 2. Walks the tree for Markdown files.
-3. Works out the byte budget of each of them.
-4. Prints a report for each one that is over its budget, then exits.
+3. Works out the settings of each lint for each of them.
+4. Runs the lints and prints a report for each failure, then exits.
 
 The **repo root** is the process working directory. Deslag never walks upward looking for a
 repository or a config; if the config is not where it expects, the run fails and says so. A
@@ -52,6 +52,7 @@ src/
   lint/
     mod.rs            Finding, Violation, Report, check_repo
     max_size_bytes.rs the size lint and its message
+    max_emphasis.rs   the emphasis lint and its message
 ```
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
@@ -100,6 +101,10 @@ message = "..."                  # optional; replaces the advice in the report
 [[md.overrides]]
 globs = ["AGENTS.md", "/docs/**/*.md"]
 lints.max_size_bytes.value = 8000
+
+[md.lints.max_emphasis]
+free_spans = 2                   # spans that pass whatever their share
+max_percent = 1.0                # the share of the prose the spans may cover
 ```
 
 `schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
@@ -107,9 +112,9 @@ migrated. A version above `SCHEMA_VERSION`, now 1, is an error.
 
 The top level holds one section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with one sub-table per lint, and `overrides`. Every field of
-a lint's settings is optional. `MdConfig::lints_for` starts from the section's `lints` and merges
-in each matching override, least specific first, with `Merge`: an override sets only the fields
-it names.
+a lint's settings is optional; a `max_percent` outside 0 to 100 is an `Error::Setting`.
+`MdConfig::lints_for` starts from the section's `lints` and merges in each matching override,
+least specific first, with `Merge`: an override sets only the fields it names.
 
 A pattern is compiled by `glob::Pattern` into a `globset` matcher with `literal_separator`, so a
 `*` never crosses a `/` and a `**` does. A pattern holding a `/` is **anchored**: it matches the
@@ -141,10 +146,19 @@ and runs each lint. `lint/max_size_bytes.rs` returns an `Over` holding the size,
 any configured message when the file is larger than its budget; `check_repo` wraps it in a
 `Finding` with a `Violation::MaxSizeBytes`. A new lint is a new module and a new `Violation`.
 
+`lint/max_emphasis.rs` parses the file with `pulldown-cmark` and counts **spans**: each
+outermost emphasis or strong, and each run of two or more words in capitals, split only by
+whitespace, that holds one of `SHOUTED_WORDS`. **Prose** is the text events outside code blocks
+and frontmatter; inline code and HTML are not text events. Both are counted in characters. A file
+fails when it has more than `free_spans` spans and they cover more than `max_percent` of its
+prose; an unset field counts as 0, and a table setting neither checks nothing. Its `Over` holds the
+`Measure`, whose spans carry a line and a quote for the report.
+
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
-the desired design's wording unless the config gives a `message`, in which `{path}` and
-`{max_size_bytes}` are substituted. Every finding is printed to standard error, followed by
-`Report::summary`, and the process exits 1; a clean run prints nothing and exits 0.
+the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
+settings are substituted. The emphasis report ends with its spans. Every finding is printed to
+standard error, followed by `Report::summary`, one tally line per lint that failed a file, and the
+process exits 1; a clean run prints nothing and exits 0.
 
 ## The command line
 
@@ -160,6 +174,7 @@ _typos.toml           keeps the spell checker out of the quoted corpus
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   unit.rs             small trees written for the test
+  emphasis.rs         what counts as a span, and the emphasis report
   corpus.rs           the corpus matrix
   corpus/             quoted fixtures, each with a JSON sidecar
 docs/design/          design docs
@@ -174,10 +189,15 @@ canonical config location and their order, `--config-path`, the error cases, and
 wording of the report. `deslag::config::CANONICAL_CONFIG_PATHS` is read by the
 test rather than repeated, so the list cannot drift.
 
+`tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
+
 `tests/corpus.rs` is end-to-end. It loads every fixture in `tests/corpus/`, checks its sidecar
 against the bytes on disk, and then runs a matrix of cases through the binary. A case is a config,
 the canonical location to put it in, one of three layouts (flat, nested, and the real directory
 structure each fixture came from), and the budgets in effect.
+
+A second test puts every fixture under one emphasis limit and checks that the binary reports the
+files the library's `max_emphasis::check` flags, and only those.
 
 The sidecars carry where each fixture was quoted from, at which commit, who last touched it, under
 what licence, and what the fixture declared for itself. The harness derives what it expects from

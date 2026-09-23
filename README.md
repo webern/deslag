@@ -4,7 +4,9 @@ Deslag is a linter for LLM-authored prose. Its purpose is to provide feedback to
 their Markdown files needlessly or otherwise violate your wishes.
 
 The first rule is about size. An agent editing a Markdown file makes it longer and rarely takes
-anything out, so every file gets a byte budget and a file that goes over it fails the run.
+anything out, so every file gets a byte budget and a file that goes over it fails the run. The
+second is about emphasis: a file with more bold, italics and ALL CAPS than the config allows fails
+too.
 
 ## Install
 
@@ -20,8 +22,8 @@ Run it from the root of a repository, where a [config](#configuration) sits:
 deslag check
 ```
 
-Every Markdown file that is over its budget gets a message on standard error, and the exit code is
-1. A run with nothing over budget prints nothing and exits 0, so a CI job can gate on it:
+Every Markdown file that fails a lint gets a message on standard error, and the exit code is
+1. A clean run prints nothing and exits 0, so a CI job can gate on it:
 
 ```yaml
 - name: Lint Markdown size
@@ -84,6 +86,24 @@ anchored beats basename, then longer beats shorter, then the later override. A f
 frontmatter `max_size_bytes` beats the config.
 
 `message` replaces the advice in the report; the heading and the `is larger than` line stay.
+
+### Emphasis
+
+`max_emphasis` counts emphasized spans: each outermost `*italic*`, `_italic_`, `**bold**` or
+`__bold__`, and each run of two or more words in capitals that holds an everyday word such as `DO
+NOT` or `DELETE THIS SECTION`. A single word in capitals, or a run of acronyms such as `JSON API`,
+is not counted. Code, frontmatter and HTML are not prose and are never counted.
+
+```toml
+[md.lints.max_emphasis]
+free_spans = 2     # this many spans pass whatever their share of the prose
+max_percent = 1    # beyond that, the spans may cover at most 1% of the prose's characters
+```
+
+A file fails when it has more than `free_spans` spans and they cover more than `max_percent` of
+its prose. Set only `free_spans` to cap the count; set only `max_percent` to cap the share. The
+report lists every span with its line number. `message` works as it does for `max_size_bytes`, with
+`{path}`, `{free_spans}` and `{max_percent}`.
 
 ## Build
 

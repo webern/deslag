@@ -15,12 +15,11 @@ deslag/
   Makefile             <- every build, test and check; `make help` lists the targets
   _typos.toml          <- keeps the spell checker out of the quoted corpus
   src/lib.rs           <- the library: the error type and the module list
-  src/config.rs        <- canonical config locations, the TOML shape, glob specificity
-  src/frontmatter.rs   <- the max_size_bytes reader
-  src/scan.rs          <- the Markdown file walk
-  src/check.rs         <- the check itself
-  src/report.rs        <- the message
-  src/cli.rs           <- the clap types
+  src/cli/             <- the clap types
+  src/config/          <- the TOML schema; search.rs finds the file, md.rs, lints.rs
+  src/glob/            <- the repo walk and glob patterns, not tied to any file type
+  src/parse/           <- reading files; frontmatter.rs
+  src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
   src/main.rs          <- the binary; a thin wrapper over the library
   tests/               <- the unit tests, and the corpus tests over quoted fixtures
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar

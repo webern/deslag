@@ -28,13 +28,13 @@ fn run() -> anyhow::Result<ExitCode> {
 
             let report = deslag::check_repo(&root, &config)?;
             for finding in &report.findings {
-                eprintln!("{}\n", deslag::report::render(finding));
+                eprintln!("{}\n", finding.render());
             }
 
             if report.is_clean() {
                 return Ok(ExitCode::SUCCESS);
             }
-            eprintln!("{}", deslag::report::summary(&report));
+            eprintln!("{}", report.summary());
             Ok(ExitCode::FAILURE)
         }
     }

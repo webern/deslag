@@ -6,12 +6,12 @@
 
 mod common;
 
-use common::{Repo, code, stderr};
-use deslag::report::HEADING;
+use common::{Repo, code, config_text, stderr};
+use deslag::lint::max_size_bytes::HEADING;
 
 /// A config that gives every Markdown file the same budget.
 fn global_config(global: u64) -> String {
-    format!("max_size_bytes = {global}\n")
+    config_text(Some(global), &[])
 }
 
 #[test]
@@ -62,10 +62,10 @@ fn exactly_at_budget_is_clean() {
 #[test]
 fn a_file_no_rule_claims_has_no_budget() {
     let repo = Repo::new();
-    // No global budget at all: only the one glob rule gives anything a budget.
+    // No global budget at all: only the one override gives anything a budget.
     repo.write(
         ".deslag/config.toml",
-        "[[globs]]\npattern = \"AGENTS.md\"\nmax_size_bytes = 1000\n",
+        &config_text(None, &[("AGENTS.md", 1000)]),
     );
     repo.write("AGENTS.md", "# A\nwell under a thousand bytes\n");
     repo.write("unbudgeted.md", &"x".repeat(10_000));
@@ -85,7 +85,7 @@ fn a_glob_rule_beats_the_global_budget() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "max_size_bytes = 10\n\n[[globs]]\npattern = \"SKILL.md\"\nmax_size_bytes = 1000\n",
+        &config_text(Some(10), &[("SKILL.md", 1000)]),
     );
     repo.write(
         "notes.md",
@@ -103,7 +103,7 @@ fn a_glob_rule_beats_the_global_budget() {
     );
     assert!(
         !stderr.contains("SKILL.md is larger than"),
-        "the glob rule should have saved SKILL.md, stderr: {stderr}"
+        "the override should have saved SKILL.md, stderr: {stderr}"
     );
 }
 
@@ -112,7 +112,7 @@ fn an_anchored_globs_only_matches_the_root() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "max_size_bytes = 1000\n\n[[globs]]\npattern = \"/README.md\"\nmax_size_bytes = 5\n",
+        &config_text(Some(1000), &[("/README.md", 5)]),
     );
     repo.write("README.md", "# root readme\n");
     repo.write("vendor/README.md", "# vendored readme\n");
@@ -136,8 +136,7 @@ fn an_anchored_glob_beats_a_basename_glob() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "[[globs]]\npattern = \"AGENTS.md\"\nmax_size_bytes = 1000\n\
-         \n[[globs]]\npattern = \"/AGENTS.md\"\nmax_size_bytes = 5\n",
+        &config_text(None, &[("AGENTS.md", 1000), ("/AGENTS.md", 5)]),
     );
     repo.write("AGENTS.md", "# root agents\n");
     repo.write("vendor/AGENTS.md", "# vendored agents\n");
@@ -161,8 +160,7 @@ fn the_longer_of_two_basename_globs_wins() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "[[globs]]\npattern = \"*.md\"\nmax_size_bytes = 5\n\
-         \n[[globs]]\npattern = \"NOTES.md\"\nmax_size_bytes = 1000\n",
+        &config_text(None, &[("*.md", 5), ("NOTES.md", 1000)]),
     );
     repo.write("NOTES.md", "under a thousand bytes, over five\n");
     repo.write("other.md", "under a thousand bytes, over five\n");
@@ -186,7 +184,7 @@ fn frontmatter_beats_every_config_rule() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "max_size_bytes = 5\n\n[[globs]]\npattern = \"AGENTS.md\"\nmax_size_bytes = 5\n",
+        &config_text(Some(5), &[("AGENTS.md", 5)]),
     );
     repo.write(
         "AGENTS.md",
@@ -202,7 +200,7 @@ fn frontmatter_beats_every_config_rule() {
 #[test]
 fn frontmatter_can_be_the_thing_that_fails() {
     let repo = Repo::new();
-    repo.write(".deslag/config.toml", "max_size_bytes = 100000\n");
+    repo.write(".deslag/config.toml", &global_config(100000));
     repo.write(
         "AGENTS.md",
         "---\nmax_size_bytes: 5\n---\n# A\nway over five bytes\n",
@@ -356,7 +354,10 @@ fn a_config_path_that_is_not_there_is_an_error() {
 #[test]
 fn a_config_key_that_is_not_a_byte_count_is_an_error() {
     let repo = Repo::new();
-    repo.write(".deslag/config.toml", "max_size_bytes = \"lots\"\n");
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n[md.lints.max_size_bytes]\nvalue = \"lots\"\n",
+    );
     repo.write("AGENTS.md", "# A\n");
 
     let output = repo.check();
@@ -369,10 +370,7 @@ fn a_config_key_that_is_not_a_byte_count_is_an_error() {
 #[test]
 fn a_glob_that_is_not_a_pattern_is_an_error() {
     let repo = Repo::new();
-    repo.write(
-        ".deslag/config.toml",
-        "[[globs]]\npattern = \"a[\"\nmax_size_bytes = 5\n",
-    );
+    repo.write(".deslag/config.toml", &config_text(None, &[("a[", 5)]));
     repo.write("AGENTS.md", "# A\n");
 
     let output = repo.check();
@@ -435,4 +433,139 @@ human.";
         "stderr: {}",
         stderr(&output)
     );
+}
+
+#[test]
+fn a_config_message_replaces_the_advice() {
+    let repo = Repo::new();
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n\
+         \n[md.lints.max_size_bytes]\nvalue = 10\n\
+         message = \"Cut {path} to {max_size_bytes} bytes.\"\n",
+    );
+    repo.write("AGENTS.md", "# A\nthis is longer than ten bytes\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(
+        stderr.contains(&format!(
+            "{HEADING}\n\nAGENTS.md is larger than 10 bytes.\n\nCut AGENTS.md to 10 bytes.\n"
+        )),
+        "stderr: {stderr}"
+    );
+    assert!(
+        !stderr.contains("Do not increase max_size_bytes!"),
+        "the default advice should be gone, stderr: {stderr}"
+    );
+}
+
+#[test]
+fn an_override_sets_only_the_fields_it_names() {
+    let repo = Repo::new();
+    // The override changes the message for one file and inherits the section's budget.
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n\
+         \n[md.lints.max_size_bytes]\nvalue = 10\n\
+         \n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\
+         lints.max_size_bytes.message = \"Only a human may edit AGENTS.md.\"\n",
+    );
+    repo.write("AGENTS.md", "# A\nthis is longer than ten bytes\n");
+    repo.write("other.md", "# B\nthis is longer than ten bytes\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(
+        stderr.contains("AGENTS.md is larger than 10 bytes.\n\nOnly a human may edit AGENTS.md.\n"),
+        "stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("other.md is larger than 10 bytes.\n\nThe file must be made"),
+        "other.md keeps the default advice, stderr: {stderr}"
+    );
+}
+
+#[test]
+fn md_globs_choose_which_files_are_markdown() {
+    let repo = Repo::new();
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n\
+         \n[md]\nglobs = [\"/docs/**/*.md\", \"*.markdown\"]\n\
+         \n[md.lints.max_size_bytes]\nvalue = 5\n",
+    );
+    repo.write("AGENTS.md", "not selected, far past five bytes\n");
+    repo.write("docs/a/notes.md", "selected, far past five bytes\n");
+    repo.write("guide.markdown", "selected, far past five bytes\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(
+        stderr.contains("docs/a/notes.md is larger than 5 bytes."),
+        "stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("guide.markdown is larger than 5 bytes."),
+        "stderr: {stderr}"
+    );
+    assert!(!stderr.contains("AGENTS.md"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("deslag: 2 of 2 Markdown files over budget."),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn a_config_without_a_schema_version_is_an_error() {
+    let repo = Repo::new();
+    repo.write(
+        ".deslag/config.toml",
+        "[md.lints.max_size_bytes]\nvalue = 5\n",
+    );
+    repo.write("AGENTS.md", "# A\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(stderr.contains("schema_version"), "stderr: {stderr}");
+}
+
+#[test]
+fn a_config_from_a_later_schema_is_an_error() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", "schema_version = 2\n");
+    repo.write("AGENTS.md", "# A\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(
+        stderr.contains("declares schema_version 2, but this deslag reads schema_version 1"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn an_unknown_lint_is_an_error() {
+    let repo = Repo::new();
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n[md.lints.max_size_lines]\nvalue = 5\n",
+    );
+    repo.write("AGENTS.md", "# A\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(stderr.contains("max_size_lines"), "stderr: {stderr}");
 }

@@ -56,27 +56,34 @@ config/deslag.toml
 `--config-path <PATH>` replaces all of them with one file.
 
 ```toml
-# what applies to a file no rule below claims
-max_size_bytes = 20000
+# incremented only when a change to the format needs existing configs migrated
+schema_version = 1
+
+# which files are Markdown; this is the default
+[md]
+globs = ["*.md"]
+
+# every lint has its own table; this one applies to every file [md] selects
+[md.lints.max_size_bytes]
+value = 20000
 
 # a pattern with no slash matches that name anywhere in the repo
-[[globs]]
-pattern = "AGENTS.md"
-max_size_bytes = 8000
+[[md.overrides]]
+globs = ["AGENTS.md"]
+lints.max_size_bytes.value = 8000
 
 # a pattern with a slash is anchored at the root of the repo
-[[globs]]
-pattern = "/README.md"
-max_size_bytes = 4000
-
-[[globs]]
-pattern = "/docs/**/*.md"
-max_size_bytes = 1000
+[[md.overrides]]
+globs = ["/README.md", "/docs/**/*.md"]
+lints.max_size_bytes = { value = 4000, message = "Trim {path} to {max_size_bytes} bytes." }
 ```
 
-A `*` stays inside one path component; a `**` crosses them. The budget that applies to a file is
-the most specific thing that claims it: its own frontmatter first, then the most specific matching
-glob rule, then `max_size_bytes`.
+A `*` stays inside one path component; a `**` crosses them. An override sets only the fields it
+names and inherits the rest. When several overrides match a file, the most specific pattern wins:
+anchored beats basename, then longer beats shorter, then the later override. A file's own
+frontmatter `max_size_bytes` beats the config.
+
+`message` replaces the advice in the report; the heading and the `is larger than` line stay.
 
 ## Build
 

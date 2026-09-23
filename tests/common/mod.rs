@@ -53,6 +53,21 @@ impl Repo {
     }
 }
 
+/// A config with an optional section-wide `max_size_bytes` and one override per
+/// `(pattern, budget)`, in the order given.
+pub fn config_text(global: Option<u64>, overrides: &[(&str, u64)]) -> String {
+    let mut text = String::from("schema_version = 1\n");
+    if let Some(global) = global {
+        text.push_str(&format!("\n[md.lints.max_size_bytes]\nvalue = {global}\n"));
+    }
+    for (pattern, budget) in overrides {
+        text.push_str(&format!(
+            "\n[[md.overrides]]\nglobs = [\"{pattern}\"]\nlints.max_size_bytes.value = {budget}\n"
+        ));
+    }
+    text
+}
+
 /// Standard output as a string.
 pub fn stdout(output: &Output) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned()

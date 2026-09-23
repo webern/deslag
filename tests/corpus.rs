@@ -12,8 +12,8 @@ mod common;
 
 use std::path::{Path, PathBuf};
 
-use common::{Repo, code, stderr, stdout};
-use deslag::report::HEADING;
+use common::{Repo, code, config_text, stderr, stdout};
+use deslag::lint::max_size_bytes::HEADING;
 use serde::Deserialize;
 
 /// What a fixture's sidecar records about it. Every field but `note` is required reading for
@@ -335,20 +335,6 @@ fn cases() -> Vec<Case> {
     ]
 }
 
-/// The text of a config, from the pieces a case declares.
-fn config_text(global: Option<u64>, globs: &[(&str, u64)]) -> String {
-    let mut text = String::new();
-    if let Some(global) = global {
-        text.push_str(&format!("max_size_bytes = {global}\n"));
-    }
-    for (pattern, budget) in globs {
-        text.push_str(&format!(
-            "\n[[globs]]\npattern = \"{pattern}\"\nmax_size_bytes = {budget}\n"
-        ));
-    }
-    text
-}
-
 /// The budget the harness writes into `fixture`'s frontmatter, if it writes one at all.
 fn written_frontmatter(case: &Case, fixture: &Fixture) -> Option<u64> {
     case.frontmatter
@@ -533,7 +519,7 @@ fn load_corpus() -> Vec<Fixture> {
 
         // And the budget it declares for itself must be what the reader actually reads.
         let text = String::from_utf8_lossy(&bytes);
-        let declared = deslag::frontmatter::max_size_bytes(&text, &sidecar.fixture)
+        let declared = deslag::parse::frontmatter::max_size_bytes(&text, &sidecar.fixture)
             .unwrap_or_else(|error| panic!("{stem}: {error}"));
         assert_eq!(
             declared, sidecar.source_frontmatter_max_size_bytes,

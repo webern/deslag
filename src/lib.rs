@@ -6,23 +6,23 @@
 //! The budget for a file comes from, most specific first:
 //!
 //! 1. the `max_size_bytes` key in the file's own YAML frontmatter;
-//! 2. the most specific matching glob rule in the [`config::Config`];
-//! 3. the config's global `max_size_bytes`.
+//! 2. the most specific `[[md.overrides]]` entry in the [`config::Config`] that sets one;
+//! 3. the `[md.lints.max_size_bytes]` table of the config.
 //!
 //! A file with none of the three has no budget and is left alone. See the crate README and
 //! `docs/design/` for the design.
 
 use std::io;
+use std::num::NonZeroU32;
 
-pub mod check;
 pub mod cli;
 pub mod config;
-pub mod frontmatter;
-pub mod report;
-pub mod scan;
+pub mod glob;
+pub mod lint;
+pub mod parse;
 
-pub use check::{Finding, Report, check_repo};
 pub use config::{Config, ConfigSource};
+pub use lint::{Finding, Report, Violation, check_repo};
 
 /// Everything that can go wrong inside the library.
 ///
@@ -69,7 +69,21 @@ pub enum Error {
         source: toml::de::Error,
     },
 
-    /// A glob rule in the config is not a valid pattern.
+    /// The config is written for a schema this build does not read.
+    #[error(
+        "{path} declares schema_version {found}, but this deslag reads schema_version {supported}; \
+         upgrade deslag"
+    )]
+    SchemaVersion {
+        /// The config file.
+        path: String,
+        /// The version the file declares.
+        found: NonZeroU32,
+        /// The newest version this build reads.
+        supported: NonZeroU32,
+    },
+
+    /// A glob pattern in the config is not a valid pattern.
     #[error("invalid glob pattern {pattern:?} in {path}: {source}")]
     Glob {
         /// The config file holding the pattern.
@@ -82,10 +96,12 @@ pub enum Error {
     },
 
     /// A file's frontmatter has a `max_size_bytes` that is not a byte count.
-    #[error("invalid max_size_bytes in the frontmatter of {path}: {value:?} is not a byte count")]
+    #[error("invalid {key} in the frontmatter of {path}: {value:?} is not a byte count")]
     Frontmatter {
         /// The Markdown file.
         path: String,
+        /// The frontmatter key.
+        key: &'static str,
         /// The value as written in the frontmatter.
         value: String,
     },

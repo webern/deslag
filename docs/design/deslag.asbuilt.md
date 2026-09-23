@@ -1,12 +1,11 @@
 ---
-updated: 2026-09-19
+updated: 2026-09-23
 subsystems:
-  - config
-  - frontmatter
-  - scan
-  - check
-  - report
   - cli
+  - config
+  - glob
+  - parse
+  - lint
 max_size_bytes: 16384
 ---
 # deslag: as built
@@ -30,19 +29,49 @@ repository or a config; if the config is not where it expects, the run fails and
 **budget** is a byte count, and a file's **size** is the length of the file on disk, frontmatter
 and all.
 
+## Modules
+
+The library is split into directories, one per concern, each with a `mod.rs`:
+
+```
+src/
+  lib.rs              the Error type and the module list
+  main.rs             the binary
+  cli/mod.rs          the clap types
+  config/
+    mod.rs            Config, ConfigFile, SCHEMA_VERSION, loading
+    search.rs         CANONICAL_CONFIG_PATHS and finding the file
+    md.rs             the [md] section: its globs, lints and overrides
+    lints.rs          one settings struct per lint, and the Merge trait
+  glob/
+    mod.rs            Pattern and its specificity
+    walk.rs           the repo walk
+  parse/
+    mod.rs
+    frontmatter.rs    reading a top-level key out of YAML frontmatter
+  lint/
+    mod.rs            Finding, Violation, Report, check_repo
+    max_size_bytes.rs the size lint and its message
+```
+
+`glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
+which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`
+and `parse`; nothing calls `lint` but the binary.
+
 ## Where a file's budget comes from
 
 Three sources, most specific first:
 
 1. The `max_size_bytes` key in the file's own YAML frontmatter.
-2. The most specific glob rule in the config that matches the file.
-3. The config's global `max_size_bytes`.
+2. The most specific `[[md.overrides]]` entry matching the file that sets
+   `lints.max_size_bytes.value`.
+3. `[md.lints.max_size_bytes]`'s `value`.
 
 A file that none of the three claims has no budget and is counted but otherwise ignored.
 
 ## The config
 
-`src/config.rs` holds `CANONICAL_CONFIG_PATHS`, tried in this order relative to the repo root:
+`config/search.rs` holds `CANONICAL_CONFIG_PATHS`, tried in this order relative to the repo root:
 
 ```
 .deslag/config.toml
@@ -56,103 +85,89 @@ config/deslag.toml
 The first that exists is the config. `--config-path <PATH>` replaces all six with one file, which
 is resolved against the working directory. A missing config is an error, not an empty config.
 
-The file is parsed into `ConfigFile` by `serde` and `toml`, which rejects unknown keys:
+The file is parsed by `serde` and `toml`, which rejects unknown keys at every level:
 
 ```toml
-# every Markdown file that no rule below claims
-max_size_bytes = 20000
+schema_version = 1               # required
 
-[[globs]]
-pattern = "AGENTS.md"          # any file with this name, anywhere
-max_size_bytes = 8000
+[md]
+globs = ["*.md"]                 # the files this section lints; the default
 
-[[globs]]
-pattern = "/README.md"         # the one at the repo root
-max_size_bytes = 4000
+[md.lints.max_size_bytes]        # applies to every selected file
+value = 20000
+message = "..."                  # optional; replaces the advice in the report
 
-[[globs]]
-pattern = "/docs/**/*.md"      # anchored at the root, `**` crossing directories
-max_size_bytes = 1000
+[[md.overrides]]
+globs = ["AGENTS.md", "/docs/**/*.md"]
+lints.max_size_bytes.value = 8000
 ```
 
-A `[[globs]]` pattern is compiled into a `globset` matcher with `literal_separator`, so a `*`
-never crosses a `/` and a `**` does. A pattern holding a `/` is **anchored**: it is matched
-against the file's path relative to the repo root, with a leading `/` allowed and ignored. A
-pattern without a `/` is matched against the file's basename alone. A match is not case
-insensitive.
+`schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
+migrated. A version above `SCHEMA_VERSION`, now 1, is an error.
 
-When more than one rule matches, `GlobRule::specificity` decides: an anchored rule beats a
-basename rule, and within one of those the longer pattern beats the shorter, with the last
-declared winning a tie.
+The top level holds one section per kind of file; `[md]` is the only one. A section has `globs`
+selecting its files, a `lints` table with one sub-table per lint, and `overrides`. Every field of
+a lint's settings is optional. `MdConfig::lints_for` starts from the section's `lints` and merges
+in each matching override, least specific first, with `Merge`: an override sets only the fields
+it names.
+
+A pattern is compiled by `glob::Pattern` into a `globset` matcher with `literal_separator`, so a
+`*` never crosses a `/` and a `**` does. A pattern holding a `/` is **anchored**: it matches the
+path relative to the repo root, and a leading `/` is ignored. A pattern without a `/` matches the
+basename alone. Matching is case sensitive. An override's specificity is that of its most specific
+matching pattern: anchored beats basename, then longer beats shorter, then the later override.
 
 ## Frontmatter
 
-`src/frontmatter.rs` reads exactly one key out of the frontmatter block, which is the leading
-`---` fence and everything up to the next `---` or `...` line. It looks for a top-level
-`max_size_bytes:` line and parses the rest of that line as a byte count, quotes either side
-allowed.
-
-Nothing else in the block is parsed. Nested maps and lists, and keys other than this one, pass
-through unread: there is no YAML parser in the dependency tree. A block that is never closed is
-not frontmatter and is ignored, so a document that opens with a thematic break still works. A
-`max_size_bytes` that is not a byte count is an error.
+`parse/frontmatter.rs` reads a top-level key out of the frontmatter block, which is the leading
+`---` fence and everything up to the next `---` or `...` line. The value is the rest of the key's
+line, quotes either side allowed. Nothing else is parsed; there is no YAML parser in the
+dependency tree. A block that is never closed is not frontmatter, so a document that opens with a
+thematic break still works. A `max_size_bytes` that is not a byte count is an error.
 
 ## Walking the repo
 
-`src/scan.rs` walks down from the repo root, collecting every file whose extension is `md`, in any
-case, as a `MarkdownFile` holding its absolute path and its `/`-separated path relative to the
-root. Two things are skipped: anything inside a directory named `.git`, and symlinks, which are
-never followed in either direction. Nothing else is skipped, `.gitignore` included: a build
-directory that holds Markdown is scanned.
+`glob/walk.rs` walks down from the repo root and returns every regular file as a `RepoFile`: its
+absolute path and its `/`-separated path relative to the root. It skips anything inside a
+directory named `.git`, and symlinks, which are never followed. `.gitignore` is not read.
 
 ## Checking and reporting
 
-`src/check.rs` reads each file, takes its size in bytes, resolves its budget, and pushes a
-`Finding` holding the relative path, the size and the budget when the size is the larger. The
-`Report` also counts how many files were scanned and how many had a budget at all.
+`lint::check_repo` walks once, keeps the files `[md]` selects, reads each, resolves its settings,
+and runs each lint. `lint/max_size_bytes.rs` returns an `Over` holding the size, the budget and
+any configured message when the file is larger than its budget; `check_repo` wraps it in a
+`Finding` with a `Violation::MaxSizeBytes`. A new lint is a new module and a new `Violation`.
 
-`src/report.rs` renders the message. Every over-budget file gets the whole message, on standard
-error, and the process then exits 1; a run with nothing over budget prints nothing and exits 0.
-The wording is fixed by the desired design and is asserted verbatim by the tests.
+`Finding::render` produces the message. The first two lines are fixed; the advice after them is
+the desired design's wording unless the config gives a `message`, in which `{path}` and
+`{max_size_bytes}` are substituted. Every finding is printed to standard error, followed by
+`Report::summary`, and the process exits 1; a clean run prints nothing and exits 0.
 
 ## The command line
 
-`src/cli.rs` defines the clap types: a `check` subcommand taking `--config-path`. `src/main.rs`
-parses them with `anyhow` for its own errors, calls the library, and prints the library's
-`Error` with `anyhow`'s alternate form.
+`cli/mod.rs` defines a `check` subcommand taking `--config-path`. `src/main.rs` uses `anyhow` for
+its own errors, calls the library, and prints the library's `Error` in `anyhow`'s alternate form.
 
-## Layout
+## Other files
 
 ```
-.
-  Cargo.toml          the package
-  Makefile            every build, test and check
-  _typos.toml         keeps the spell checker out of the quoted corpus
-  AGENTS.md           note for agents working here
-  README.md
-  src/
-    lib.rs            the Error type and the module list
-    config.rs         canonical locations, TOML shape, glob specificity
-    frontmatter.rs    the max_size_bytes reader
-    scan.rs           the Markdown file walk
-    check.rs          the check itself
-    report.rs         the message
-    cli.rs            the clap types
-    main.rs           the binary
-  tests/
-    common/mod.rs     the temp-repo and run helpers
-    unit.rs           small trees written for the test
-    corpus.rs         the corpus matrix
-    corpus/           quoted fixtures, each with a JSON sidecar
-  docs/design/        design docs
-  scripts/            preflight
+Cargo.toml  Makefile  AGENTS.md  README.md
+_typos.toml           keeps the spell checker out of the quoted corpus
+tests/
+  common/mod.rs       the temp-repo and run helpers, and a config writer
+  unit.rs             small trees written for the test
+  corpus.rs           the corpus matrix
+  corpus/             quoted fixtures, each with a JSON sidecar
+docs/design/          design docs
+scripts/              preflight
 ```
 
 ## Tests
 
 `tests/unit.rs` builds small trees in a temp directory and pins one rule each: the budget sources
-and their precedence, every canonical config location and their order, `--config-path`, the error
-cases, and the exact wording of the report. `deslag::config::CANONICAL_CONFIG_PATHS` is read by the
+and their precedence, override merging, `[md] globs`, custom messages, `schema_version`, every
+canonical config location and their order, `--config-path`, the error cases, and the exact
+wording of the report. `deslag::config::CANONICAL_CONFIG_PATHS` is read by the
 test rather than repeated, so the list cannot drift.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture in `tests/corpus/`, checks its sidecar

@@ -1,0 +1,17 @@
+{
+  "fixture": "mnx-readme.md",
+  "source_repo": "webern/mnx-rs",
+  "source_path": "README.md",
+  "source_url": "https://github.com/webern/mnx-rs/blob/d07693632f1832c04465dcfdb6629bacc8255dbc/README.md",
+  "source_commit": "d07693632f1832c04465dcfdb6629bacc8255dbc",
+  "source_last_commit_author": "Matt Briggs",
+  "source_last_commit_date": "2025-04-16T00:39:25Z",
+  "license": "MIT",
+  "language": "Rust",
+  "captured": "2026-09-19",
+  "size_bytes": 376,
+  "source_frontmatter_max_size_bytes": null,
+  "layout_path": "mnx-rs/README.md",
+  "authorship": "unknown",
+  "authorship_basis": "not recorded by the source; authorship is TBD per the desired design doc"
+}

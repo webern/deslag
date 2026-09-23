@@ -1,0 +1,5 @@
+# The slop corpus is Markdown quoted from other people's repositories. Its typos are the subject
+# matter, not mistakes to fix, and no fixture may be edited to suit a tool.
+
+[files]
+extend-exclude = ["tests/corpus"]

@@ -1,0 +1,17 @@
+{
+  "fixture": "den-code-comments.md",
+  "source_repo": "openmusx/denigma",
+  "source_path": ".agents/skills/code-comments/SKILL.md",
+  "source_url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/.agents/skills/code-comments/SKILL.md",
+  "source_commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+  "source_last_commit_author": "rpatters1",
+  "source_last_commit_date": "2026-09-17T21:23:28Z",
+  "license": "MIT",
+  "language": "C++",
+  "captured": "2026-09-19",
+  "size_bytes": 2144,
+  "source_frontmatter_max_size_bytes": null,
+  "layout_path": ".agents/skills/code-comments/SKILL.md",
+  "authorship": "unknown",
+  "authorship_basis": "not recorded by the source; authorship is TBD per the desired design doc"
+}

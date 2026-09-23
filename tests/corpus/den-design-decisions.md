@@ -1,0 +1,268 @@
+# MusicXML Design Decisions
+
+Deliberate choices the MusicXML exporter makes, and why. These are settled positions, not open work: an entry here exists so that a later reader who compares Denigma's output against Finale's own MusicXML export can tell a decision from a defect.
+
+Deferred features belong in the [MusicXML feature roadmap](roadmap.md), and concrete `mx::api` limitations belong in [mx-api-gaps.md](mx-api-gaps.md). If a decision recorded here is ever reversed, delete the entry rather than leaving it to contradict the code.
+
+## First principle: Denigma has no layout engine
+
+Denigma reads a stored Finale document and converts it. It does not engrave music, and it will not acquire a layout engine in order to fill in MusicXML fields that describe an engraved result.
+
+This matters most when comparing against Finale's own MusicXML export, which is the obvious reference and a misleading one. Finale exports from a score it has already laid out, so it emits a large body of information that is engraver output rather than anything the author entered: where each note sits horizontally, how wide each measure is, how far apart the systems are, which accidentals its heuristics chose to draw. Denigma has the document, not the rendering. Reproducing those values would mean reimplementing Finale's spacing, collision avoidance, accidental logic, and system breaking, and the result would be a body of brittle heuristics that is wrong in exactly the cases that matter.
+
+The operating rule is therefore: **export what the document stores; do not synthesize what an engraver computes.** The dividing line is stored authorial content against computed layout result, not positional data against non-positional data. Finale stores absolute page coordinates for page text blocks, so those are exported; it computes a note's horizontal position during layout, so that is not.
+
+Two corollaries are worth stating outright, because both have been mistaken for defects:
+
+Attributes that encode notation rather than layout are still exported, when the source determines them. `placement`, above and below on a direction, and stem direction are notational facts a reader would name aloud, and they come from Finale data. Dropping one that a classifier did resolve is a defect, not an application of this principle.
+
+The converse holds just as firmly, and is easy to get backwards. When a classifier cannot resolve such a value, the value is not emitted. A hairpin drawn between two staves is the standard case: `calcVerticalPlacementForBeatAttached` returns no placement, and the right output is a `<direction>` with no `placement` attribute. Supplying the conventional guess instead, on the reasoning that hairpins are usually below, would be synthesizing a fact the document does not contain, which is the same error as inventing geometry. An importer that has to decide for itself is better served by silence than by a plausible fabrication it cannot distinguish from real data.
+
+The omissions below are not gaps to be closed. They should not be filed as roadmap items, and an importer's inability to re-derive one of them is not by itself a reason to revisit the principle. Every importer Denigma targets re-engraves the music on import, and approximate values are worse than absent ones, because an importer that trusts a bad number produces a worse result than one left to its own engraver.
+
+## Consequences of having no layout engine
+
+### No engraving geometry
+
+A note's `default-x`, a `<measure>`'s `width`, a slur's `bezier-x` and `bezier-y`, a wedge's `spread`, and the per-system `<system-distance>`, `<top-system-distance>`, and `<staff-distance>` inside `<print>` are all layout results. None of them is exported.
+
+Denigma does export position for anchors Finale stores directly. Page text blocks carry absolute page coordinates in the document, so `<credit-words>` receives real `default-x` and `default-y` values derived from the page margins and the text block's assignment. That is stored authorial placement, and it is the clearest illustration of where the line falls.
+
+### System and page breaks come from authored sources only
+
+`createSystemBreaks` derives `<print new-system="yes">` from the per-measure "Begin a New Staff System" flag and from `others::SystemLock`. `createPageBreaks` derives `<print new-page="yes">` from the per-measure page-break flag. Neither reads the resolved `others::StaffSystem` or `others::Page` lists. When both break types occur on one measure, the page break takes precedence because it inherently starts a new system.
+
+A system boundary that exists only because Finale's engraver happened to fill a line there is layout, and re-emitting it freezes one particular rendering into a file the importer is about to re-flow. A lock or an explicit break flag is something the author asked for, and it survives the round trip.
+
+The two sources also differ in trustworthiness. A part whose page layout Finale never calculated leaves zero-valued placeholders in `others::StaffSystem` and `others::Page`, so the resolved layout may describe systems the part does not have. The per-measure flag resolves nothing and stays valid; locks are dropped for such a part rather than exported against a layout that was never computed.
+
+### Accidentals and stems are encoded as overrides only
+
+`<encoding>` declares `<supports element="accidental" type="no"/>` and `<supports element="stem" type="no"/>`, and the exporter then writes only the cases an importer's own heuristics cannot derive: an accidental that Finale froze or parenthesized, and a stem direction that overrides the default.
+
+Whether an accidental would be displayed by ordinary engraving heuristics is not something Denigma can determine, but whether the user forced one on is recorded in the document and is worth preserving. Declaring `type="no"` and writing only the overrides encodes exactly what Denigma knows and nothing it does not.
+
+This is the correct use of `<supports>`, not a workaround. `type="no"` declares that the encoding does not include *all instances* of the element, so the absence of one is uninformative and the importer should apply its own heuristics. It does not forbid the element or instruct importers to ignore it: an `<accidental>` that is present is still honored. That reading was confirmed by Michael Good in [MusicXML issue #664](https://github.com/w3c-cg/musicxml/issues/664), which was opened against this exporter's behavior and resolved into a request to make the specification's wording explicit rather than a request for new vocabulary.
+
+One limitation is accepted rather than solved. MusicXML can force an accidental to display but cannot force one to be absent, since absence is itself how "no accidental" is spelled. A Finale accidental hidden by the user is therefore lost, and `print-object` on `<accidental>` is not a usable substitute, because software predating the attribute would read the element as meaning the opposite. Importer behavior also varies and is outside Denigma's control: Finale honors this encoding as intended, MuseScore reaches the same result while ignoring `<supports>` entirely, and Dorico ignores both the declaration and the element and applies its own courtesy-accidental logic.
+
+## Other encoding choices
+
+These do not follow from the first principle. Most are cases where Finale's own export takes a lossy or malformed shortcut and Denigma does not follow it; the rest are encoding choices MusicXML leaves open.
+
+### Hidden entries keep their rests
+
+An entry hidden in the requested context exports as `<rest print-object="no">` with its real `<type>`, not as `<forward>`.
+
+Finale's own export collapses hidden rests into `<forward>`, which advances the musical position and discards the fact that a rest is there at all. A `print-object="no"` rest keeps the entry addressable, so directions, lyrics, and spanner endpoints attached to it still have something to attach to, and an importer that later chooses to reveal hidden material has the rest's duration type rather than a bare duration.
+
+### Synthetic measure rests use a real staff voice
+
+After the exporter has created every source entry in a part, a staff with no notes in a measure receives a synthetic complete-measure rest. The rest uses the lowest-numbered voice that contains real notes anywhere on that staff. Only a staff with no real notes at all falls back to its Layer 1/V1 voice.
+
+A synthetic rest must not invent a source voice. If a staff contains only Finale Layer 4, assigning its empty measures to Layer 1 makes MusicXML describe two voices even though the source has one. Importers may then apply multi-voice engraving rules to the Layer 4 passage. Deferring the rests until the real voices are known keeps empty measures in an existing voice without renumbering any source entry.
+
+### Voice numbers run through the part, not through each staff
+
+A voice's MusicXML number is `staffIndex * 8 + layer * 2 + v1v2` (`musicXmlVoiceNumber` in [musicxml.h](musicxml.h)), so the second staff of a part numbers its voices from 9 rather than starting over at 1. Eight numbers per staff cover Finale's four layers, each of which can carry a V1 and a V2 stream. The hidden anchor rests that host floating spanner endpoints take a reserved number far above that range, which also marks them as synthetic in the output.
+
+MusicXML scopes `<voice>` to the part, so two staves that both number from 1 describe one voice appearing on both staves rather than two independent ones. Numbering straight through the part keeps each stream its own voice, and a cross-staff layer keeps its number as it moves.
+
+`mx::api` keys `StaffData::voices` by index and writes each voice's index plus one, so the map key is the number Denigma wants and the gaps left by unused layers cost nothing. `VoiceData::label`, which MX added for sources whose voice names are not their numbers, is therefore not needed here.
+
+### An octave shift wider than MusicXML's widest ottava loses its line, not its pitch
+
+MusicXML's `<octave-shift>` names one of six lines, 8va through 22mb, so the widest displacement it can draw is three octaves. Finale imposes no such limit, since a custom line's transposition is an arbitrary interval. A carrier ottava displacing more than three octaves is therefore written as no direction at all, with a warning, while the notes under it keep the full displacement in their sounding pitch.
+
+Narrowing the line to 22ma instead would draw a shift the music does not have. MusicXML's `<pitch>` is the sounding pitch, so a reader that recovers written pitch by undoing the line would place the passage an octave or more from where Finale had it. Losing the line loses appearance only, and the warning names the shape so the loss is visible.
+
+MX takes the opposite choice on the reading side, narrowing an incoming size above 22 to the widest line it has (MX PR [#423](https://github.com/webern/mx/pull/423)). That is right for a reader, which has to make something of a file it did not write and has no other record of the displacement. An exporter holding the pitch does not face that trade.
+
+### A floating rest keeps floating
+
+`<display-step>` and `<display-octave>` are written for a rest that Finale positions explicitly, and omitted for one Finale floats.
+
+Floating is itself the authorial choice, and preserving it matters more than reproducing any particular vertical position. Finale, Dorico, MuseScore, and almost certainly Sibelius each offer a rich set of preferences governing where rests sit when voices share a staff: whether to displace them at all, by how much, how to treat paired voices, how whole rests differ from the rest. A rest the author left floating is a rest whose placement those settings are meant to govern. Writing a display pitch overrides every one of them and pins the rest where one application would have put it, permanently, in every program that later opens the file.
+
+This reasoning does not depend on Denigma having no layout engine, and the entry is filed here rather than above for that reason. Whether a floated rest's position could be derived is beside the point, because it should not be written even if it could.
+
+An explicitly positioned rest is the opposite case. There the author overrode the application's placement, and the override is exactly what should survive.
+
+Finale's own export writes a resolved position for every rest, floating or not, which discards the distinction entirely.
+
+The exporter defaults to the SMuFL glyph-origin convention for non-floating whole rests, which shifts the display pitch upward by one staff space. The `--finale-rest-position` option preserves Finale's nominal position for compatibility.
+
+### A lyric line is identified by its name and its number together
+
+`<lyric number>` carries the Finale lyric block's own number and `<lyric name>` carries the block's type, so Verse 1 is `number="1" name="verse"` and Chorus 1 is `number="1" name="chorus"`. Finale keeps three independent lyric blocks, each numbered from 1, and a note can carry a syllable from more than one at once, so the number alone does not identify a line. The pair does.
+
+This is what MusicXML intends. The reference describes `number` as specifying "the lyric line when multiple lines are present" and `name` as indicating "the name of the lyric type", giving verse and chorus as its examples, and both `<lyric-font>` and `<lyric-language>` are keyed by "a particular name and number of lyric". Neither attribute is required to be unique on its own. It is also what Finale writes: in `verse_chorus_section.musx` it emits `number` 1 and 2 within each of `verse`, `chorus`, and `section`, placing both numbers at the same `default-y` regardless of type.
+
+Denigma previously encoded the pair in `number` alone, as `v1`, `c1`, `s1`. That is valid, since `number` is an NMTOKEN and nothing requires it to be numeric, but it fails in practice. Dorico stacks two verses on one line because it reads `number` as the line position and cannot parse the value; MuseScore assigns a new line per distinct value. Every importer tested misread it, which is a poor trade for information the format has a dedicated attribute for.
+
+`name` is emitted always, including for a verse-only document, where Finale omits it. Emitting it costs a few bytes, avoids pre-scanning a document to decide whether the type is needed, and makes a file easier to analyze when one arrives for diagnosis. The consequence is that a verse-only export does not match Finale's byte for byte.
+
+### A smart word extension needs a span, not just a flag; a legacy one is a bare `<extend/>`
+
+`details::LyricAssign::wext` marks a syllable as having a word extension, but it does not say how far the extension reaches. With smart word extensions on, Finale stores most of these shapes with both termination segments on the syllable's own entry and resolves the length at layout time, so the end `classify::classifyLyricWordExtension` reports is frequently the entry it started from. Denigma emits a start/stop `<extend>` pair only when that end is a different entry.
+
+With smart word extensions off, `wext` is a drawn length in EVPU and there is no end to find. Finale exports each such syllable with a bare `<extend/>`, the same element it writes for a syllable that types its extension as underscores, and Denigma does the same (`lyric_legacy_wext.musx` and its reference). The underscores themselves stay in the syllable text in that mode, as they do in Finale's export.
+
+Both halves of the rule are visible in the fixtures. `zwei_gesange.musx` has two assignments carrying `wext` and exactly two `wordExt` shapes that reach another entry, and Finale exports two extension pairs. `for_health_and_strength.musx` has one assignment carrying `wext` and not one of its 27 shapes spans, and Finale exports none: the syllable at the end of the first ending continues into the second, so no extension is wanted.
+
+Trusting the flag alone produced an `<extend type="start">` and its `<extend type="stop">` on the same note, which says nothing. MuseScore and Dorico both drew an extension there; Finale, reading its own file, did not. Other importer behavior around lyrics is recorded in [implementation_notes.md](implementation_notes.md).
+
+### The Finale title becomes work-title, not movement-title
+
+`setFileInfoText` maps Finale's Title to `mx::api::ScoreData::workTitle`, so the document's title appears as `<work><work-title>`. Finale's own export writes `<movement-title>` instead.
+
+The Finale field is called Title and holds the name of the work, and `<work-title>` is the element for the name of a work, so the mapping is the direct one. MusicXML's split between a containing work and a movement within it is the awkward part: it serves a multi-movement collection well and has no good answer for the ordinary single-piece file, where either element can be argued for and importers disagree about which they read. Given a defective choice, matching the field's own meaning is the defensible reading, and the title is in any case also carried visibly by its `<credit>`.
+
+This is held provisionally, subject to real-world importer behavior rather than to further argument from the specification. If it turns out that the importers Denigma targets consistently do the wrong thing with `<work-title>`, delete this entry and change the mapping.
+
+### The subtitle becomes a miscellaneous field, not a creator
+
+Finale's Subtitle file-info field is written as `<identification><miscellaneous><miscellaneous-field name="subtitle">`. It is also emitted as a `<credit>` with credit-type `subtitle` wherever a page text block inserts it, but that is the page text path's doing and depends on the subtitle actually being placed on a page.
+
+MusicXML has no subtitle element and no way to add one. `<work>` offers only `<work-title>` and `<work-number>`, and the `identification` complexType is a closed `xs:sequence` with no `xs:any`, so a `<subtitle>` child would make the document schema-invalid rather than merely unread.
+
+What is available is a non-standard `type` value. `creator`, `rights`, and `relation` are all `typed-text`, whose `type` is an unconstrained `xs:token`, and the specification says other type values may be used. `<creator type="subtitle">` therefore validates. It is rejected anyway, because `<creator>` is Dublin Core creator and the attribute is open for creative roles: writing the subtitle there asserts that the subtitle is a person who made the score. An importer that handles unknown creator types generically, and several list them, would print the subtitle in the composer block. Wrong metadata is a worse outcome than absent metadata, since a reader cannot tell it is wrong.
+
+`<miscellaneous-field>` makes no such claim. Its own documentation describes it as the place for metadata not yet supported in the MusicXML format, which is this case exactly, and `mx::api` routes `EncodingData::miscellaneousFields` into `<identification><miscellaneous>` despite the field hanging off the encoding model.
+
+`<movement-title>` is genuinely free, since Finale's Title goes to `<work-title>` per the entry above, and it is a standard element importers do read. It is not used for the subtitle because MuseScore and Dorico both surface `movement-title` as the piece's main title, so the subtitle would compete with the real one.
+
+### Unresolved ties become let-ring ties
+
+A tie whose start has no reachable end, either because Finale recorded no tie end or because the target entry is hidden, exports as `<tied type="let-ring">` rather than an unterminated `<tie type="start">`.
+
+`<tied type="let-ring">` is MusicXML's element for exactly this: a tie that is drawn and sounds but has no destination note. An unterminated `<tie type="start">` is malformed, and importers that honor it leave the note sounding indefinitely. Finale's export writes the malformed form; Denigma does not follow it there.
+
+### Music-font characters become symbols, splitting the run around them
+
+A character that resolves to a canonical SMuFL name is exported as `<symbol>` rather than as text in its source font, and a chunk mixing mappable and unmappable characters is split so the glyph converts and the rest stays words. `utils::SmuflSymbolPolicy` models the alternatives, and `SplitSmufl` is the default. The `--all-fonts-available` assertion selects `PreserveText` instead, keeping every character in its source font.
+
+Splitting and not splitting differ only for a mixed run, which is what a legacy metronome font produces when a note glyph and its number are typed together. Compare how each degrades on a system without that font. Splitting yields a portable glyph followed by digits and punctuation that any fallback font renders correctly. Not splitting keeps the whole run as text in a font the reader does not have, so the glyph renders as whatever character occupies that codepoint elsewhere. Denigma's own corpus shows the failure: `tempo_varied_staves.musx` carries "Tempo (♩=120)" in the legacy font Patmm, which Denigma used to export as a raw character that reads as "Tempo (∞=120)" anywhere Patmm is missing. It now exports `metNoteQuarterUp`.
+
+The cost is real, and it is not recovered elsewhere. A reader who does have the font receives an unsplit run completely intact, kerning and all, because the font travels on the `<words>` element and the importer applies it. Some legacy metronome fonts kern a note against its number deliberately, and splitting discards that. So this policy knowingly degrades output for readers who would otherwise have had none.
+
+It is chosen anyway because the two failures are not comparable. A reader with the font loses spacing: visible, minor, and obviously a layout matter. A reader without it sees the glyph replaced by whatever character occupies that codepoint, which reads as data corruption, gives no hint of the original, and cannot be repaired from the file. Preferring a small certain loss over an occasional unrecoverable one is the trade being made, and it is a judgement about which readers to favor rather than a case where one policy dominates.
+
+What a `<symbol>` carries about its font follows from whether that font can draw the glyph. A SMuFL source keeps its whole font data, family included: the face really does contain the glyph under this name, so naming it gives a reader who has it the source's own design, while the family list degrades to its generic for a reader who does not, which is exactly what such a list is for. The generic is swapped for an engraving one, since the fallback appended for running prose would send a reader to a text font that cannot draw a glyph at all. A legacy source keeps neither its family nor its bold or italic, because the name means nothing in that face and there is nothing to point a reader at, and because a synthesized slant on a glyph that has none is not wanted.
+
+Size is carried across only from an engraving font. A SMuFL engraving font sets one em to four staff spaces, which makes a point size portable from one such font to another and keeps a glyph deliberately smaller than staff size. Legacy engraving fonts promise nothing of the kind, so `smufl_mapping` records per font how many staff spaces one em actually spans, and the exporter multiplies by the resulting ratio rather than assuming it.
+
+A text music font uses its point size to describe how a glyph sits alongside running text, not how large freestanding notation should be. Carrying that size onto `<symbol>` can therefore make a metronome note much too small after the legacy family has been dropped; a Windows-created file using Engraver Text T at 18 points produced a 7.38-point quarter note this way. Symbols converted from text fonts leave size unspecified and let the reader choose its music-symbol size. Unknown fonts do the same because their intended use cannot be established. An engraving font whose em is not staff-relative also states no size because no conversion can be derived.
+
+Style and weight are always stated, since `mx::api::FontData` leaves them unspecified by default and an unspecified style inherits from whatever ran before; a legacy source gets an explicit normal rather than nothing, exactly as ordinary words do.
+
+The scope of the trade is narrower than it looks. The policies diverge only for a run mixing mappable and unmappable characters in one font. A SMuFL font run is ordinarily a single glyph, which both policies convert identically, so the divergence is confined to legacy symbol fonts.
+
+The default assumes the worst about the reader's fonts because Denigma has no way to know better. The user does, and `--all-fonts-available` is how they say so. Once the fonts are known to be present the faithful setting is `PreserveText`, which substitutes nothing at all: converting even a wholly-mappable run would replace the source glyph design with the reader's music font, which is the substitution such a user is declining.
+
+This is also why MusicXML does not need to parse metronome markings out of expression text. Finale splits its own chunks at font changes, so "Adagio espressivo ♩ = 84" arrives as three chunks and exports as words, symbol, words: faithful text plus a portable glyph, with `<sound tempo>` carrying the playback.
+
+### A displayed metronome number keeps its fractional digits
+
+A metronome equation whose number is written with a decimal point, such as "♩ = 132.5", is classified as a metronome mark and exported with those digits intact. `<per-minute>` is a string in MusicXML, so it carries the printed number as printed. Rounding it would misreport what the page says while gaining nothing.
+
+The digits are assembled from integer conversions rather than from a floating-point conversion. Denigma calls `setlocale(LC_ALL, "")` at startup, so the stream and printf conversions for floating point emit the user's decimal separator, and a European locale would write `132,5` into a file every reader parses as a number. `std::to_chars` for floating point would answer this, but it is unavailable at the minimum macOS deployment target the project builds against.
+
+Only the printed number is fractional. Finale's playback tempo, which is what reaches `<sound tempo>`, is an integer in the document, and the Tempo tool's own values are rounded to an integer inside musxdom before Denigma sees them.
+
+### Tuplet ratios are reduced, and the printed spelling travels separately
+
+`<time-modification>` is written from the entry's cumulative ratio, so a Finale tuplet of six sixteenths in the space of four is exported as `3:2`. Finale's own export writes the unreduced `6:4`. The printed numbers are unaffected: `<tuplet-actual>` and `<tuplet-normal>` carry Finale's display number and reference number with their durations, so the tuplet still reads as "6 in the space of 4" on the page.
+
+The two elements answer different questions, and MusicXML intends the split. `<time-modification>` states how long the note actually sounds, while the `<tuplet>` notation states what the engraver drew. Denigma takes the sounding ratio from `EntryInfo::cumulativeRatio`, which is the product of every tuplet in force at that entry, and lowest terms simply falls out of the fraction being normalized. Reduction is therefore a consequence of computing the right quantity, not a separate tidying step.
+
+Copying Finale's display numbers into `<time-modification>` instead would be wrong as soon as tuplets nest, because the display numbers describe one tuplet while the timing effect is cumulative. Finale's own export shows the hazard. In `zwei_gesange.musx` it writes `36:16` for a tuplet whose notation reads 6:4, with durations that leave the piano's first voice holding 240 of the measure's 288 divisions, so the measure does not add up. Denigma's `3:2` for the same tuplet sums exactly.
+
+Nothing is lost by reducing, and that holds unconditionally. `createTupletStart` always populates the display and reference numbers, including for a hidden tuplet, where `TupletDef::hidden` suppresses the show flags but leaves the values intact.
+
+`<normal-type>` follows from the same reasoning. It names the reference duration of the tuplet whose ratio is being stated, so Denigma writes it only where one tuplet is in force and its reference duration differs from the note's own type. MusicXML reads an absent `<normal-type>` as the note's own type, which is what the common case wants and what Finale's own export also relies on.
+
+Nested tuplets get none. There the ratio is cumulative and belongs to no single tuplet, so no reference duration describes it: pairing the innermost tuplet's reference with a cumulative count would state a span neither tuplet has. The default is the honest answer, and `<duration>` carries the timing regardless. This is why `tuplet-nested-singleton.musx` writes `12:1` with no `<normal-type>` on its last note while the first note of the same tuplet, under the outer tuplet alone, writes `6:1` with `<normal-type>quarter`.
+
+### The tool a glissando was drawn with, not its line, chooses `<glissando>` or `<slide>`
+
+`<glissando>` and `<slide>` are notated identically and differ only in the pitch motion they imply: a glissando sounds the discrete pitches in between, a slide is a continuous portamento. Denigma picks between them from the shape type, so the glissando tool yields `<glissando>` and the tab slide tool yields `<slide>`, whatever line either was drawn with. Finale's own export does the same.
+
+The distinction is one of intent, and the tool the user reached for is where intent lives. The line's appearance travels separately in `line-type`, so nothing is lost by not consulting it, and consulting it would only restate what `line-type` already says. Deciding from appearance instead would discard the tool distinction entirely and preserve strictly less: in `glissando.musx` it disagrees with Finale on five of seventeen shapes, calling a wavy tab slide a glissando and a straight glissando a slide.
+
+The roadmap once argued the opposite, that the referenced `others::SmartShapeCustomLine` should choose the element because a shape's type says nothing about its appearance. The premise is true and the conclusion does not follow. That a shape keeps whichever line style was in effect when it was created makes the style partly accidental, which is a reason to distrust it as a statement of intent, not a reason to promote it over the deliberate act of choosing a tool.
+
+A tab slide on an ordinary staff still exports as a slide. The tool is meant for tablature but is routinely used elsewhere, and its meaning does not change with the staff it lands on.
+
+There is no third case to fall back on. Finale attaches a line to noteheads only for the glissando, tab slide, and bend tools; a plain custom line is always beat-attached, so a note-attached pitch slide always carries a tool, and appearance is never consulted for this choice. Data outside what the Finale UI can author is not classified at all, for the reasons given under scope in the `classifier-design` skill.
+
+Classification stays neutral about all of this. `classify::smartshape::Glissando` reports the two notes and the line, and `SmartShapeClassification::shapeType` reports the source tool; each exporter decides what to call it, because the vocabulary is MusicXML's, not the source's.
+
+### An ornament attaches to the note sounding under it
+
+A wavy line's endpoint may fall where no entry begins, since these shapes are beat-attached. Denigma resolves such an endpoint to the note whose duration spans that tick, rather than synthesizing the hidden anchor rest that hosts a floating curve endpoint.
+
+An ornament belongs to a note in a way a curve does not. A slur may legitimately begin in empty space, and its anchor rest carries a real position that the curve is drawn from. A trill beginning halfway through a whole note is still that whole note's trill, and MusicXML has no way to express an ornament floating between notes: `<wavy-line>` lives inside a note's `<ornaments>` or nowhere. Anchoring it to a hidden rest in a reserved voice would technically place it while leaving readers to render an ornament on a rest, or ignore it.
+
+The anchor rest remains the last resort, for an endpoint with no sounding note under it at all.
+
+### A glissando's printed label comes from the line's center text
+
+`<glissando>` and `<slide>` carry one unformatted string, which is the only place MusicXML has for the "gliss." label Finale keeps on a custom line. Denigma takes it from the center full text, falling back to the center abbreviated, start, and end texts in that order.
+
+The label's own font, size, and styling are dropped, because the element has no attributes for them. That is the trade this element forces, and it is worth taking: the alternative is the label vanishing entirely, which is what `appendGeneralLine` still logs for center text on a bracket or dashes line, where MusicXML offers no home at all.
+
+### A wavy line keeps its SMuFL glyph only when MusicXML can name it
+
+`<wavy-line smufl="...">` accepts only the multi-segment `wiggle*` glyphs and the guitar vibrato strokes. Denigma sets the attribute for a line character in that vocabulary, meaning the `wiggleVibrato*`, `wiggleSawtooth*`, `guitarVibratoStroke`, and `guitarWideVibratoStroke` families a vibrato line uses, and omits it otherwise, notably for the `ornamentZigZagLine*` characters a trill line may use.
+
+Omitting is not merely conservative. `mx::core::SmuflWavyLineGlyphName` repairs an unparseable value rather than rejecting it, rewriting an out-of-vocabulary name to a `wiggle` placeholder, so passing one through would silently substitute a different glyph. Losing the override leaves the reader to draw its default trill or vibrato line, which is closer to the source than a wrong glyph.
+### A font-based fretboard is recognized from the chord assignment alone
+
+Finale can draw a chord's fretboard from a font character instead of a diagram. Denigma counts those
+so it can report them, and decides from `details::ChordAssign::useFretboardFont` together with that
+assignment's own `showFretboard`.
+
+`options::ChordOptions` is not consulted, even though it carries `useFretboardFont`, `fretStyleId`,
+and `fretInstId`. Those are the values Finale copies into a chord when the chord is created; they do
+not override it afterwards. A document whose option is off can hold chords whose own flag is on, so
+reading the option would misreport every chord changed after creation.
+
+Staff-level hiding is a genuine suppression rather than a creation default, but it stays with
+`musx::util::calcFretboardDisplayData`, which owns the visibility decision. The count can therefore
+include a chord whose fretboard the staff hides. That is accepted so the rules are not forked: the
+report says these chords ask for a font fretboard, which those two flags establish on their own.
+
+### A first-fret label is always printed to the right of the frame
+
+MusicXML's `<first-fret>` takes a `location` of `left` or `right`. Denigma always writes `right`.
+
+Finale offers no choice of side. Its fretboard style has a Show Fret Number option and a label
+string, and that is all; `others::FretboardStyle` matches, carrying `fretNumText` and offsets for
+nudging the label but no field for which side it sits on. Finale's own exports write
+`location="right"` throughout. Emitting anything else would invent a distinction Finale does not
+make.
+
+The label itself is the fret number followed by `fretNumText`, giving `4fr.` for a diagram starting
+on the fourth fret. Both attributes are omitted when the chord assignment has no fretboard style.
+
+### An arpeggio marks every note it rolls through, and stops at the part boundary
+
+`<arpeggiate>` is a per-note element, not a span: MusicXML draws the roll from the notes that carry
+one, so Denigma marks every exported note of the entries the arpeggio covers. `<non-arpeggiate>` is
+the opposite and marks only the two ends, which is why the two share a candidate list but not an
+attachment rule.
+
+An arpeggio reaching a second entry of the same part, whether a second voice or a second staff of a
+piano, is one roll drawn across both. Those notes take a shared `number` and `unbroken="yes"`. The
+number only has to tell apart rolls that sound at the same time, so it cycles through the range
+`number-level` allows rather than counting up without bound.
+
+An arpeggio between two Finale staves that became two MusicXML parts is not representable: the
+element has no cross-part form, and the notes at the far end are in a document region this part
+cannot address. Denigma marks the notes it can reach and writes neither attribute, so the surviving
+end reads as an ordinary arpeggio on one chord rather than as half of a broken pair.
+
+The `direction` attribute is the arrowhead, not the roll direction, so only an arpeggio Finale drew
+with an arrow becomes `arpeggiateUp` or `arpeggiateDown`. A plain rolled chord is written bare, which
+is already an upward roll to a reader.

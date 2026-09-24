@@ -10,6 +10,10 @@ globs = ["/AGENTS.md", "/.agents/skills/**/*.md"]
 free_spans = 2
 max_percent = 1
 
+# Every group, including the two that are off by default.
+[md.lints.banned_chars]
+groups = { quotes = true, emoji = true }
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000

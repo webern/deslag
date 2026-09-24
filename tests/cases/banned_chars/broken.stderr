@@ -1,0 +1,26 @@
+ERROR: deslag detected banned characters!
+
+README.md has 20 banned characters.
+
+This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+
+Code blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.
+
+Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The characters, and what to write instead:
+  lines 2, 6, 9: U+2014 em dash "—"; write `-`
+  line 4: U+2192 rightwards arrow "→"; write `->`
+  line 6: U+2026 horizontal ellipsis "…"; write `...`
+  line 6: U+00D7 multiplication sign "×"; write `x`
+  line 6: U+2264 less-than or equal to "≤"; write `<=`
+  line 8: U+2705 white heavy check mark "✅"; write `yes`
+  line 8: U+274C cross mark "❌"; write `no`
+  line 9: U+00A7 section sign "§"; write `section`
+  line 9: U+2022 bullet "•"; write `-`
+  line 9: U+200B zero width space; delete it
+  line 13: U+2248 almost equal to "≈"; write `~`
+  line 15: U+2500 box-drawing character "─"; write `-`
+  line 17: U+00A0 no-break space; write a plain space
+
+deslag: 1 of 1 Markdown files with banned characters.

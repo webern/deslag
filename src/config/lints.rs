@@ -4,6 +4,8 @@
 //! lint is optional, so that an override can set one field and inherit the rest: settings are
 //! resolved by [`Merge`], from the least specific source to the most.
 
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 
 /// Laying a more specific set of settings over a less specific one.
@@ -36,6 +38,9 @@ pub struct MdLints {
     /// The index of the repo that the file must hold.
     #[serde(default)]
     pub repo_layout: Option<RepoLayout>,
+    /// The characters the file must not hold, such as the em dash.
+    #[serde(default)]
+    pub banned_chars: Option<BannedChars>,
 }
 
 impl MdLints {
@@ -45,6 +50,7 @@ impl MdLints {
             .as_ref()
             .and_then(MaxEmphasis::invalid)
             .or_else(|| self.repo_layout.as_ref().and_then(RepoLayout::invalid))
+            .or_else(|| self.banned_chars.as_ref().and_then(BannedChars::invalid))
     }
 
     /// Why these settings, resolved for one file, contradict each other, or `None` when they do
@@ -61,6 +67,7 @@ impl Merge for MdLints {
         self.max_size_bytes.merge(&over.max_size_bytes);
         self.max_emphasis.merge(&over.max_emphasis);
         self.repo_layout.merge(&over.repo_layout);
+        self.banned_chars.merge(&over.banned_chars);
     }
 }
 
@@ -225,6 +232,149 @@ impl Merge for RepoLayout {
         }
         if over.message.is_some() {
             self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.banned_chars`: a file fails when its text outside code holds a banned character, such
+/// as an em dash, each of which has something plain to write instead.
+///
+/// Like `repo_layout`, the table itself turns the check on: an empty one bans the groups that are
+/// on by default. A character in `allow` is never banned; one in `ban` is banned whatever the
+/// groups say.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BannedChars {
+    /// Turns groups of characters on or off.
+    #[serde(default)]
+    pub groups: Groups,
+    /// Characters that are never banned, each written as a one-character string.
+    #[serde(default)]
+    pub allow: Option<Vec<String>>,
+    /// Characters banned beyond the groups, each mapped to what to write instead. An empty
+    /// string means delete it.
+    #[serde(default)]
+    pub ban: Option<BTreeMap<String, String>>,
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl BannedChars {
+    /// Why these settings are unusable, or `None` when they are fine.
+    pub fn invalid(&self) -> Option<String> {
+        let allowed = self.allow.iter().flatten().map(|ch| ("allow", ch));
+        let banned = self.ban.iter().flatten().map(|(ch, _)| ("ban", ch));
+        allowed.chain(banned).find_map(|(field, text)| {
+            let mut chars = text.chars();
+            match (chars.next(), chars.next()) {
+                (Some(ch), None) if ch.is_ascii() => Some(format!(
+                    "banned_chars.{field} holds {text:?}, which is ASCII; only other characters \
+                     are checked"
+                )),
+                (Some(_), None) => None,
+                _ => Some(format!(
+                    "banned_chars.{field} holds {text:?}, which is not one character"
+                )),
+            }
+        })
+    }
+}
+
+impl Merge for BannedChars {
+    fn merge(&mut self, over: &Self) {
+        self.groups.merge(&over.groups);
+        if over.allow.is_some() {
+            self.allow.clone_from(&over.allow);
+        }
+        if over.ban.is_some() {
+            self.ban.clone_from(&over.ban);
+        }
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.banned_chars.groups`: each group of characters switched on or off. A group left unset
+/// is on or off as its default says. `lint::banned_chars::GROUPS` lists the characters.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Groups {
+    /// The em dash, en dash, minus sign and other dashes, for `-`. On by default.
+    #[serde(default)]
+    pub dashes: Option<bool>,
+    /// Arrows, for `->`, `<-` and the like. On by default.
+    #[serde(default)]
+    pub arrows: Option<bool>,
+    /// The ellipsis, for `...`. On by default.
+    #[serde(default)]
+    pub ellipsis: Option<bool>,
+    /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`. On by default.
+    #[serde(default)]
+    pub bullets: Option<bool>,
+    /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`. On by
+    /// default.
+    #[serde(default)]
+    pub math: Option<bool>,
+    /// Check marks and crosses, for yes and no. On by default.
+    #[serde(default)]
+    pub checks: Option<bool>,
+    /// The section sign, for the word section. On by default.
+    #[serde(default)]
+    pub section: Option<bool>,
+    /// Box-drawing characters and block elements, for `-`, `|` and `+`. On by default.
+    #[serde(default)]
+    pub box_drawing: Option<bool>,
+    /// The no-break space and other unusual spaces, for a plain space. On by default.
+    #[serde(default)]
+    pub spaces: Option<bool>,
+    /// Characters that take no space, such as the zero-width space, to be deleted. On by default.
+    #[serde(default)]
+    pub invisible: Option<bool>,
+    /// Curly quotes and apostrophes, for `"` and `'`. Off by default.
+    #[serde(default)]
+    pub quotes: Option<bool>,
+    /// Emoji, to be deleted. Off by default.
+    #[serde(default)]
+    pub emoji: Option<bool>,
+}
+
+impl Merge for Groups {
+    fn merge(&mut self, over: &Self) {
+        // Naming every field makes a new group a compile error until it is merged here too.
+        let Groups {
+            dashes,
+            arrows,
+            ellipsis,
+            bullets,
+            math,
+            checks,
+            section,
+            box_drawing,
+            spaces,
+            invisible,
+            quotes,
+            emoji,
+        } = over;
+        let pairs = [
+            (&mut self.dashes, dashes),
+            (&mut self.arrows, arrows),
+            (&mut self.ellipsis, ellipsis),
+            (&mut self.bullets, bullets),
+            (&mut self.math, math),
+            (&mut self.checks, checks),
+            (&mut self.section, section),
+            (&mut self.box_drawing, box_drawing),
+            (&mut self.spaces, spaces),
+            (&mut self.invisible, invisible),
+            (&mut self.quotes, quotes),
+            (&mut self.emoji, emoji),
+        ];
+        for (under, over) in pairs {
+            if over.is_some() {
+                *under = *over;
+            }
         }
     }
 }

@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+allow = ["\u2192"]
+ban = { "\u00ae" = "(R)", "\u2122" = "", "\u2014" = ", " }

@@ -1,0 +1,8 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+groups = { quotes = true }
+
+[[md.overrides]]
+globs = ["/docs/diagram.md"]
+lints.banned_chars.groups = { arrows = false, box_drawing = false }

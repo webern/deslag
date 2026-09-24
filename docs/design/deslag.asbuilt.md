@@ -10,11 +10,11 @@ max_size_bytes: 16384
 ---
 # deslag: as built
 
-Deslag is a linter that fails when a Markdown file has grown past the number of bytes it is
-allowed, leans on more bold, italics and capitals than it is allowed, or lacks a true index of the
-repo that the config asks of it. It is one Cargo package with two targets: the library in `src/lib.rs` decides everything,
-and the binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the
-library, prints what it returns and exits nonzero when a file is over.
+Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets:
+a byte budget, a limit on emphasis, a true index of the repo, or banned characters. It is one Cargo
+package with two targets: the library in `src/lib.rs` decides everything, and the binary in
+`src/main.rs` is a thin command line that reads arguments with clap, calls the library, prints what
+it returns and exits nonzero when a file fails.
 
 ## A run, start to finish
 
@@ -56,6 +56,7 @@ src/
     max_size_bytes.rs the size lint and its message
     max_emphasis.rs   the emphasis lint and its message
     repo_layout.rs    the layout lint and its message
+    banned_chars.rs   the character lint, its groups and its message
 ```
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
@@ -116,6 +117,9 @@ max_percent = 1.0                # the share of the prose the spans may cover
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.repo_layout = { min_entries = 5, max_entries = 12 }   # also heading, max_width
+
+[md.lints.banned_chars]          # the table alone turns it on
+groups = { quotes = true }       # also allow and ban
 ```
 
 `schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
@@ -123,10 +127,11 @@ migrated. A version above `SCHEMA_VERSION`, now 1, is an error.
 
 The top level holds one section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with one sub-table per lint, and `overrides`. Every field of
-a lint's settings is optional; a `max_percent` outside 0 to 100, or an empty `repo_layout`
-`heading`, is an `Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and
-merges in each matching override, least specific first, with `Merge`: an override sets only the
-fields it names. Whether `min_entries` exceeds `max_entries` depends on that merge and on the
+a lint's settings is optional; a `max_percent` outside 0 to 100, an empty `repo_layout`
+`heading`, or an `allow` or `ban` entry that is not one non-ASCII character is an
+`Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and merges in each
+matching override, least specific first, with `Merge`: an override sets only the fields it names.
+Whether `min_entries` exceeds `max_entries` depends on that merge and on the
 defaults, so `check_repo` asks it of each file's merged settings and fails the run with an
 `Error::Setting` naming the file.
 
@@ -171,7 +176,7 @@ whitespace, that holds one of `SHOUTED_WORDS`. **Prose** is the text events outs
 and frontmatter; inline code and HTML are not text events. Both are counted in characters. A file
 fails when it has more than `free_spans` spans and they cover more than `max_percent` of its
 prose; an unset field counts as 0, and a table setting neither checks nothing. Its `Over` holds the
-`Measure`, whose spans carry a line and a quote for the report. Both Markdown lints parse with
+`Measure`, whose spans carry a line and a quote for the report. The lints that parse Markdown use
 `parse/markdown.rs`'s options, which read frontmatter as a metadata block.
 
 `lint/repo_layout.rs` is on for any file whose settings hold a `repo_layout` table, even an empty
@@ -193,6 +198,14 @@ must exist on disk, and one ending in `/` must be a directory. The file fails wi
 list: no section, or no block, alone; otherwise the count, when it is outside `min_entries` to
 `max_entries` (default 5 to 15), then each line's problems in order. The default advice shows an
 example layout to copy.
+
+`lint/banned_chars.rs` is on for any file whose settings hold a `banned_chars` table. `scan` finds
+each non-ASCII character in the source of the text, HTML and frontmatter, skipping code blocks,
+code spans and a byte order mark that opens the file; an entity such as `&mdash;` is ASCII there.
+`check` passes a character in `allow`, bans one in `ban` with its replacement, and otherwise asks
+the first rule of the first group in `GROUPS` that is on. Each group has a switch in `Groups` and
+a default; `quotes` and `emoji` are off. The report lists each character once, with its lines and
+what to write instead.
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
@@ -219,6 +232,7 @@ tests/
   formats.rs          the config in TOML, YAML and JSON
   emphasis.rs         what counts as a span, and the emphasis report
   layout.rs           finding and reading the layout, and its paths
+  chars.rs            what banned_chars reads and bans, and its tables
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
@@ -262,18 +276,12 @@ as far as the history of the file can tell:
   an agent's bot account, or the text an agent writes into its commit messages.
 - `mixed/`: begun by a person, unmarked, before 2022-01-01, and later edited by an agent.
 
-Each holds about 400 fixtures, at most three from one repository, in a directory per repository.
-Sources are GitHub, GitLab, Codeberg and Hugging Face, found through Sourcegraph, GitHub topic
-pages, the forges' own search and the crates.io and npm registries, taken in turn from each so no
-one source crowds out the rest, and under permissive licences only. Most are English; a few are
-not, so the lints meet other scripts.
+Each holds about 400 fixtures, at most three from one repository, from four forges and under
+permissive licences only. Most are English; a few are not, so the lints meet other scripts.
 
-A sidecar records the source (host, repository, path, commit, permalink, licence and the files
-it was read from), the history behind the label (commit count, dates, the number of authors, the
-AI commits and which agents), the label and the reason for it, and facts about the bytes: size,
-sha256, kind of document, encoding, line endings, frontmatter and a rough natural language. The
-loader checks all of it that can be checked against the bytes, and that no fixture is quoted
-twice.
+A sidecar records the source and its licence, the history behind the label, the label and why,
+and facts about the bytes such as size and sha256. The loader checks what it can against the
+bytes, and that no fixture is quoted twice.
 
 The matrix runs on `core/`. A case is a config, the canonical location to put it in, one of three
 layouts (flat, nested, and the real directory structure each fixture came from), and the budgets
@@ -281,12 +289,13 @@ in effect. The harness derives what it expects from the bytes it actually placed
 expectation is hard-coded and no fixture is edited: a case that wants a file to declare a budget
 writes a frontmatter block into its copy.
 
-The whole corpus then runs twice in its real layout: under one budget with an override for
-`README.md`, and under one emphasis limit, where the binary must report exactly the files the
-library's `max_emphasis::check` flags. The fixtures' repos are not in the corpus, so `repo_layout`
-runs only its `read`, on every fixture under a few headings real repos use. The lines it reports
-must fall in the section, and an entry's line must hold its path. `core/rt-agents.md`, the one
-fixture in deslag's format, must read with no malformed line.
+The whole corpus then runs in its real layout under one budget with an override for `README.md`,
+under one emphasis limit, and under the default character groups. For the last two the binary must
+report exactly the files the library's `check` flags, and the groups must flag at least five times
+as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in the corpus, so
+`repo_layout` runs only its `read`, on every fixture under a few headings real repos use. The lines
+it reports must fall in the section, and an entry's line must hold its path. `core/rt-agents.md`,
+the one fixture in deslag's format, must read with no malformed line.
 
 ## Build
 

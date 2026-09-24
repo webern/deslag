@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+message = "Keep {path} to ASCII punctuation."

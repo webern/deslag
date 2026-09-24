@@ -11,23 +11,19 @@ has to say what is wrong in a way an agent reading the output can act on.
 
 ```
 deslag/
-  AGENTS.md            <- you are here
   Makefile             <- every build, test and check; `make help` lists the targets
-  _typos.toml          <- keeps the spell checker out of the quoted corpus
-  src/lib.rs           <- the library: the error type and the module list
+  src/lib.rs           <- the library: the error type and the module list; src/main.rs wraps it
   src/cli/             <- the clap types
   src/config/          <- the config schema, and finding the config file
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
-  src/parse/           <- reading files; frontmatter.rs
+  src/parse/           <- reading what the lints need out of a file
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
-  src/main.rs          <- the binary; a thin wrapper over the library
   tests/               <- the unit tests, and the corpus tests over quoted fixtures
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,
                           human/, llm/ and mixed/ are collected, one directory per source repo
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
-  .agents/skills/      <- agent skills, the source of truth; every name starts with deslag-
-  .claude/skills       <- symlink to .agents/skills
+  .agents/skills/      <- agent skills, each named deslag-*; .claude/skills is a symlink to it
 ```
 
 ## Build

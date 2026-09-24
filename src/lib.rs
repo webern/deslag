@@ -2,7 +2,9 @@
 //!
 //! An LLM editing a Markdown file tends to make it longer and never takes anything out. Deslag
 //! gives every Markdown file a byte budget and fails when a file is over it. It also fails a file
-//! with more bold, italics and ALL CAPS than the config allows; see [`lint::max_emphasis`].
+//! with more bold, italics and ALL CAPS than the config allows; see [`lint::max_emphasis`]. And it
+//! fails a file the config asks for an index of the repo when the index is missing, the wrong
+//! length, out of format or stale; see [`lint::repo_layout`].
 //!
 //! The budget for a file comes from, most specific first:
 //!

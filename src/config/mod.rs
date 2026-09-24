@@ -38,7 +38,7 @@ use serde::Deserialize;
 
 use crate::Error;
 
-pub use lints::{MaxEmphasis, MaxSizeBytes, MdLints, Merge};
+pub use lints::{MaxEmphasis, MaxSizeBytes, MdLints, Merge, RepoLayout};
 pub use md::MdConfig;
 pub use search::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,

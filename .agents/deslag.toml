@@ -1,6 +1,5 @@
 # deslag's config for its own repository. `make check-deslag` runs it, and `make check` gates CI on
-# it. It covers the files an agent reads: AGENTS.md, the skills, and the guide `deslag instructions`
-# prints.
+# it.
 
 schema_version = 1
 

@@ -93,9 +93,4 @@ job, so a failure blocks a merge. A CI job can install it with `cargo install de
 
 ## 7. Tell the next agent
 
-Add this to AGENTS.md, or whichever file agents in this repository read first:
-
-```markdown
-Run `deslag check` after editing Markdown, and fix what it reports. Do not change the deslag config
-or a `max_size_bytes` in frontmatter unless a human asks you to.
-```
+If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.

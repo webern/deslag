@@ -14,6 +14,9 @@ max_percent = 1
 [md.lints.banned_chars]
 groups = { emoji = true }
 
+[md.lints.density]
+max_paragraph_chars = 500
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000

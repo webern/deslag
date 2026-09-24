@@ -1,0 +1,14 @@
+ERROR: deslag detected dense text!
+
+AGENTS.md has 2 paragraphs longer than 600 characters and 1 list item longer than 300 characters.
+
+A long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.
+
+A line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The dense text:
+  line 5: a paragraph of 749 characters
+  line 18: a list item of 318 characters
+  line 20: a paragraph of 749 characters
+
+deslag: 1 of 1 Markdown files with dense text.

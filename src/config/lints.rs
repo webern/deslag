@@ -41,6 +41,9 @@ pub struct MdLints {
     /// The characters the file must not hold, such as the em dash.
     #[serde(default)]
     pub banned_chars: Option<BannedChars>,
+    /// The longest a paragraph or list item may be.
+    #[serde(default)]
+    pub density: Option<Density>,
 }
 
 impl MdLints {
@@ -51,6 +54,7 @@ impl MdLints {
             .and_then(MaxEmphasis::invalid)
             .or_else(|| self.repo_layout.as_ref().and_then(RepoLayout::invalid))
             .or_else(|| self.banned_chars.as_ref().and_then(BannedChars::invalid))
+            .or_else(|| self.density.as_ref().and_then(Density::invalid))
     }
 
     /// Why these settings, resolved for one file, contradict each other, or `None` when they do
@@ -68,6 +72,7 @@ impl Merge for MdLints {
         self.max_emphasis.merge(&over.max_emphasis);
         self.repo_layout.merge(&over.repo_layout);
         self.banned_chars.merge(&over.banned_chars);
+        self.density.merge(&over.density);
     }
 }
 
@@ -375,6 +380,68 @@ impl Merge for Groups {
             if over.is_some() {
                 *under = *over;
             }
+        }
+    }
+}
+
+/// `lints.density`: a file fails when a paragraph is longer than `max_paragraph_chars`, or a list
+/// item longer than `max_item_chars`.
+///
+/// Like `repo_layout`, the table itself turns the check on, with the defaults.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Density {
+    /// The most characters a paragraph may hold.
+    #[serde(default)]
+    pub max_paragraph_chars: Option<u64>,
+    /// The most characters a list item may hold.
+    #[serde(default)]
+    pub max_item_chars: Option<u64>,
+    /// Replaces the advice in the report. `{path}`, `{max_paragraph_chars}` and
+    /// `{max_item_chars}` in it are replaced with the file's path and its limits.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl Density {
+    /// The longest paragraph when none is set.
+    pub const DEFAULT_MAX_PARAGRAPH_CHARS: u64 = 600;
+    /// The longest list item when none is set.
+    pub const DEFAULT_MAX_ITEM_CHARS: u64 = 300;
+
+    /// The longest paragraph, or the default.
+    pub fn max_paragraph_chars(&self) -> u64 {
+        self.max_paragraph_chars
+            .unwrap_or(Self::DEFAULT_MAX_PARAGRAPH_CHARS)
+    }
+
+    /// The longest list item, or the default.
+    pub fn max_item_chars(&self) -> u64 {
+        self.max_item_chars.unwrap_or(Self::DEFAULT_MAX_ITEM_CHARS)
+    }
+
+    /// Why these settings are unusable, or `None` when they are fine.
+    pub fn invalid(&self) -> Option<String> {
+        [
+            ("max_paragraph_chars", self.max_paragraph_chars),
+            ("max_item_chars", self.max_item_chars),
+        ]
+        .into_iter()
+        .find(|(_, limit)| *limit == Some(0))
+        .map(|(field, _)| format!("density.{field} is 0, which no text can meet"))
+    }
+}
+
+impl Merge for Density {
+    fn merge(&mut self, over: &Self) {
+        if over.max_paragraph_chars.is_some() {
+            self.max_paragraph_chars = over.max_paragraph_chars;
+        }
+        if over.max_item_chars.is_some() {
+            self.max_item_chars = over.max_item_chars;
+        }
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
         }
     }
 }

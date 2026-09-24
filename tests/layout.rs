@@ -1,11 +1,11 @@
 //! Tests for the `repo_layout` lint: finding the section, reading the layout, checking the paths,
-//! and the report.
+//! and the example in the advice. The cases in `tests/cases/repo_layout/` pin the report.
 
 mod common;
 
-use common::{Repo, code, stderr};
+use common::Repo;
 use deslag::config::RepoLayout;
-use deslag::lint::repo_layout::{Entry, HEADING, Layout, Malformed, Problem, check, read, render};
+use deslag::lint::repo_layout::{Entry, Layout, Malformed, Problem, check, read, render};
 
 fn settings(min_entries: Option<u64>, max_entries: Option<u64>) -> RepoLayout {
     RepoLayout {
@@ -327,103 +327,6 @@ fn listed_paths_must_exist() {
 }
 
 #[test]
-fn paths_are_relative_to_the_markdown_file() {
-    let repo = tree();
-    repo.write(
-        ".deslag/config.toml",
-        "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"AGENTS.md\"]\nlints.repo_layout = { min_entries = 1 }\n",
-    );
-    repo.write(
-        "src/AGENTS.md",
-        "## Repository layout\n\n```\n  lib.rs  <- a\n```\n",
-    );
-    let output = repo.check();
-    assert_eq!(code(&output), 0, "stderr: {}", stderr(&output));
-
-    repo.write(
-        "src/AGENTS.md",
-        "## Repository layout\n\n```\n  Makefile  <- a\n```\n",
-    );
-    let output = repo.check();
-    let stderr = stderr(&output);
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("line 4: Makefile does not exist"),
-        "stderr: {stderr}"
-    );
-}
-
-#[test]
-fn a_broken_layout_gets_the_whole_report() {
-    let repo = tree();
-    repo.write(
-        ".deslag/config.toml",
-        "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\
-         lints.repo_layout = { min_entries = 1, max_entries = 2 }\n",
-    );
-    repo.write(
-        "AGENTS.md",
-        "# A\n\n## Repository layout\n\n```\n  Makefile  <- a\n  gone.rs  <- b\n  docs/     <- c\n```\n",
-    );
-
-    let output = repo.check();
-    let stderr = stderr(&output);
-
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.starts_with(&format!(
-            "{HEADING}\n\n\
-             AGENTS.md has 3 problems in its \"Repository layout\" section.\n\n\
-             The \"Repository layout\" section is where an agent new to this repo"
-        )),
-        "stderr: {stderr}"
-    );
-    assert!(
-        stderr.contains("listing between 1 and 2 of the files"),
-        "stderr: {stderr}"
-    );
-    assert!(
-        stderr.contains(
-            "The problems:\n\
-             \x20 the layout lists 3 entries; it must list between 1 and 2\n\
-             \x20 line 7: `<-` is in column 12; the first entry's is in column 13\n\
-             \x20 line 7: gone.rs does not exist\n\n"
-        ),
-        "stderr: {stderr}"
-    );
-    assert!(
-        stderr.ends_with("deslag: 1 of 2 Markdown files with a broken repository layout.\n"),
-        "stderr: {stderr}"
-    );
-}
-
-#[test]
-fn a_missing_section_gets_a_short_report() {
-    let repo = tree();
-    repo.write(
-        ".deslag/config.toml",
-        "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"AGENTS.md\"]\nlints.repo_layout = {}\n",
-    );
-    repo.write("AGENTS.md", "# A\n");
-
-    let output = repo.check();
-    let stderr = stderr(&output);
-
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.starts_with(&format!(
-            "{HEADING}\n\nAGENTS.md has no \"Repository layout\" section.\n\n"
-        )),
-        "stderr: {stderr}"
-    );
-    assert!(
-        stderr.contains("listing between 5 and 15 of"),
-        "stderr: {stderr}"
-    );
-    assert!(!stderr.contains("The problems:"), "stderr: {stderr}");
-}
-
-#[test]
 fn the_example_in_the_advice_passes() {
     let repo = tree();
     let settings = RepoLayout {
@@ -440,56 +343,4 @@ fn the_example_in_the_advice_passes() {
         None,
         "report: {report}"
     );
-}
-
-#[test]
-fn a_config_message_replaces_the_advice() {
-    let repo = tree();
-    repo.write(
-        ".deslag/config.toml",
-        "schema_version = 1\n\n[md.lints.repo_layout]\nmax_entries = 9\nmax_width = 80\n\
-         message = \"Give {path} a {heading} of {min_entries} to {max_entries}, {max_width} wide.\"\n",
-    );
-    repo.write("AGENTS.md", "# A\n");
-
-    let stderr = stderr(&repo.check());
-
-    assert!(
-        stderr.contains("section.\n\nGive AGENTS.md a Repository layout of 5 to 9, 80 wide.\n"),
-        "stderr: {stderr}"
-    );
-}
-
-#[test]
-fn a_minimum_above_the_maximum_is_an_error() {
-    let cases = [
-        (
-            "min_entries = 5, max_entries = 4",
-            "min_entries is 5, which is more than max_entries, 4",
-        ),
-        (
-            "min_entries = 20",
-            "min_entries is 20, which is more than max_entries, 15",
-        ),
-    ];
-    for (limits, error) in cases {
-        let repo = tree();
-        repo.write(
-            ".deslag/config.toml",
-            &format!(
-                "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"AGENTS.md\"]\n\
-                 lints.repo_layout = {{ {limits} }}\n"
-            ),
-        );
-        repo.write("AGENTS.md", "# A\n");
-
-        let output = repo.check();
-        let stderr = stderr(&output);
-
-        assert_eq!(code(&output), 1, "stderr: {stderr}");
-        assert!(
-            stderr.contains(&format!("for AGENTS.md, repo_layout.{error}")),
-            "stderr: {stderr}"
-        );
-    }
 }

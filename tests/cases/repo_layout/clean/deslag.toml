@@ -1,0 +1,5 @@
+schema_version = 1
+
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.repo_layout = {}

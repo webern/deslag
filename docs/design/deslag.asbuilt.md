@@ -162,8 +162,8 @@ any configured message when the file is larger than its budget; `check_repo` wra
 
 A lint keeps what it decides from the text alone in a function of the text, which the corpus can
 run on every fixture: `max_emphasis::measure` and `repo_layout::read`. What needs the settings, or
-anything outside the file such as the disk, is a thin layer over it, tested on trees the tests
-write.
+anything outside the file such as the disk, is a thin layer over it, tested on small repos: trees
+the tests write, and the cases.
 
 `lint/max_emphasis.rs` parses the file with `pulldown-cmark` and counts **spans**: each
 outermost emphasis or strong, and each run of two or more words in capitals, split only by
@@ -218,7 +218,9 @@ tests/
   unit.rs             small trees written for the test
   formats.rs          the config in TOML, YAML and JSON
   emphasis.rs         what counts as a span, and the emphasis report
-  layout.rs           finding and reading the layout, its paths, and its report
+  layout.rs           finding and reading the layout, and its paths
+  cases.rs            runs each case and compares what it prints
+  cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
 docs/design/          design docs
@@ -239,8 +241,14 @@ cannot drift.
 `tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
 
 `tests/layout.rs` pins where the section starts and ends, each line format and problem, the
-default and contradictory limits, paths relative to a nested file, and the report, whose example
-must itself pass.
+limits, and that the example in the advice passes.
+
+`tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
+config included, written to show one behavior. The `.stderr` file beside it is exactly what
+`deslag check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run
+must pass. The layout reports, contradictory limits and paths relative to a nested file are pinned
+there. `make fix-test-output` rewrites the `.stderr` files. Unlike a fixture, a case is written for
+deslag and changes with it.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
 against the bytes on disk, and runs the corpus through the binary.

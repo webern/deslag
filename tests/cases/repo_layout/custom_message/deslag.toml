@@ -1,0 +1,6 @@
+schema_version = 1
+
+[md.lints.repo_layout]
+max_entries = 9
+max_width = 80
+message = "Give {path} a {heading} of {min_entries} to {max_entries} entries, {max_width} wide."

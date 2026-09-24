@@ -5,6 +5,7 @@
 //! config resolves for the file.
 
 pub mod banned_chars;
+pub mod density;
 pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod repo_layout;
@@ -35,6 +36,8 @@ pub enum Violation {
     RepoLayout(repo_layout::Over),
     /// The file holds characters the config bans.
     BannedChars(banned_chars::Over),
+    /// The file has a paragraph or list item longer than it is allowed.
+    Density(density::Over),
 }
 
 impl Finding {
@@ -45,6 +48,7 @@ impl Finding {
             Violation::MaxEmphasis(over) => max_emphasis::render(&self.path, over),
             Violation::RepoLayout(over) => repo_layout::render(&self.path, over),
             Violation::BannedChars(over) => banned_chars::render(&self.path, over),
+            Violation::Density(over) => density::render(&self.path, over),
         }
     }
 }
@@ -88,6 +92,10 @@ impl Report {
             (
                 count(|violation| matches!(violation, Violation::BannedChars(_))),
                 "with banned characters",
+            ),
+            (
+                count(|violation| matches!(violation, Violation::Density(_))),
+                "with dense text",
             ),
         ];
         tallies
@@ -140,6 +148,7 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
             max_emphasis::check(&text, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
             repo_layout::check(&text, dir, lints.repo_layout.as_ref()).map(Violation::RepoLayout),
             banned_chars::check(&text, lints.banned_chars.as_ref()).map(Violation::BannedChars),
+            density::check(&text, lints.density.as_ref()).map(Violation::Density),
         ];
         report
             .findings

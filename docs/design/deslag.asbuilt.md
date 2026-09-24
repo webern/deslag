@@ -11,10 +11,10 @@ max_size_bytes: 16384
 # deslag: as built
 
 Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets:
-a byte budget, a limit on emphasis, a true index of the repo, or banned characters. It is one Cargo
-package with two targets: the library in `src/lib.rs` decides everything, and the binary in
-`src/main.rs` is a thin command line that reads arguments with clap, calls the library, prints what
-it returns and exits nonzero when a file fails.
+a byte budget, a limit on emphasis, a true index of the repo, banned characters, or dense text. It
+is one Cargo package with two targets: the library in `src/lib.rs` decides everything, and the
+binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the library,
+prints what it returns and exits nonzero when a file fails.
 
 ## A run, start to finish
 
@@ -57,6 +57,7 @@ src/
     max_emphasis.rs   the emphasis lint and its message
     repo_layout.rs    the layout lint and its message
     banned_chars.rs   the character lint, its groups and its message
+    density.rs        the density lint and its message
 ```
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
@@ -65,14 +66,9 @@ and `parse`; nothing calls `lint` but the binary.
 
 ## Where a file's budget comes from
 
-Three sources, most specific first:
-
-1. The `max_size_bytes` key in the file's own YAML frontmatter.
-2. The most specific `[[md.overrides]]` entry matching the file that sets
-   `lints.max_size_bytes.value`.
-3. `[md.lints.max_size_bytes]`'s `value`.
-
-A file that none of the three claims has no budget and is counted but otherwise ignored.
+Most specific first: the `max_size_bytes` key in the file's own YAML frontmatter, then the most
+specific matching `[[md.overrides]]` entry that sets `lints.max_size_bytes.value`, then
+`[md.lints.max_size_bytes]`. A file with none is counted but not checked.
 
 ## The config
 
@@ -128,8 +124,8 @@ migrated. A version above `SCHEMA_VERSION`, now 1, is an error.
 The top level holds one section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with one sub-table per lint, and `overrides`. Every field of
 a lint's settings is optional; a `max_percent` outside 0 to 100, an empty `repo_layout`
-`heading`, or an `allow` or `ban` entry that is not one non-ASCII character is an
-`Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and merges in each
+`heading`, an `allow` or `ban` entry that is not one non-ASCII character, or a `density` limit of
+0 is an `Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and merges in each
 matching override, least specific first, with `Merge`: an override sets only the fields it names.
 Whether `min_entries` exceeds `max_entries` depends on that merge and on the
 defaults, so `check_repo` asks it of each file's merged settings and fails the run with an
@@ -143,20 +139,18 @@ matching pattern: anchored beats basename, then longer beats shorter, then the l
 
 ## Frontmatter
 
-`parse/frontmatter.rs` reads a top-level key out of the frontmatter block, which is the leading
-`---` fence and everything up to the next `---` or `...` line. The value is the rest of the key's
-line, quotes either side allowed. Nothing else is parsed; the YAML parser the config uses is not
-used here. A block that is never closed is not frontmatter, so a document that opens with a
-thematic break still works. A `max_size_bytes` that is not a byte count is an error.
+`parse/frontmatter.rs` reads a top-level key out of the frontmatter block: the leading `---` fence
+up to the next `---` or `...` line. The value is the rest of the key's line, quotes either side
+allowed; no YAML parser is used. A block never closed is not frontmatter, so a document opening
+with a thematic break still works. A `max_size_bytes` that is not a byte count is an error.
 
 ## Walking the repo
 
-`glob/walk.rs` walks down from the repo root and returns every regular file as a `RepoFile`: its
-absolute path and its `/`-separated path relative to the root. The walk is the `ignore` crate's
-`WalkBuilder`. It skips anything inside a directory named `.git`, symlinks, which are never
-followed, and whatever git would ignore: `.gitignore` at any depth, `.git/info/exclude`, the global
-excludes file, and `.ignore`. The rules apply without a `.git` directory too. Ignore files above
-the root are not read. Hidden files are walked.
+`glob/walk.rs` walks down from the repo root with the `ignore` crate's `WalkBuilder` and returns
+every regular file as a `RepoFile`: its absolute path and its `/`-separated path relative to the
+root. It skips `.git`, symlinks, and whatever git would ignore (`.gitignore` at any depth,
+`.git/info/exclude`, the global excludes file, `.ignore`), even without a `.git` directory. Ignore
+files above the root are not read. Hidden files are walked.
 
 ## Checking and reporting
 
@@ -207,6 +201,13 @@ the first rule of the first group in `GROUPS` that is on. Each group has a switc
 a default; `emoji` is off. The report lists each character once, with its lines and
 what to write instead.
 
+`lint/density.rs` is on for any file whose settings hold a `density` table. `measure` returns each
+**block**: a paragraph, or a tight list item's text, with its line and its visible characters:
+text, code spans, and one per line break. Headings, tables, code, frontmatter, HTML and images are
+not measured, and a block of only whitespace is dropped. A paragraph inside a list item counts as
+an item. A block fails when it is longer than `max_paragraph_chars` (default 600) or, for an item,
+`max_item_chars` (default 300).
+
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
 settings are substituted. The emphasis report rounds its percentage up, so a file just over its share never reads as at
@@ -233,6 +234,7 @@ tests/
   emphasis.rs         what counts as a span, and the emphasis report
   layout.rs           finding and reading the layout, and its paths
   chars.rs            what banned_chars reads and bans, and its tables
+  density.rs          what a block is, its length, and the limits
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
@@ -252,17 +254,11 @@ in TOML, YAML and JSON giving the same report, ambiguity, unknown extensions, an
 `deslag::config::canonical_config_paths` is read by the tests rather than repeated, so the list
 cannot drift.
 
-`tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
-
-`tests/layout.rs` pins where the section starts and ends, each line format and problem, the
-limits, and that the example in the advice passes.
-
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
 `deslag check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run
-must pass. The layout reports, contradictory limits and paths relative to a nested file are pinned
-there. `make fix-test-output` rewrites the `.stderr` files. Unlike a fixture, a case is written for
-deslag and changes with it.
+must pass. Every lint's reports are pinned there. `make fix-test-output` rewrites the `.stderr`
+files. Unlike a fixture, a case is written for deslag and changes with it.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
 against the bytes on disk, and runs the corpus through the binary.
@@ -283,19 +279,18 @@ A sidecar records the source and its licence, the history behind the label, the 
 and facts about the bytes such as size and sha256. The loader checks what it can against the
 bytes, and that no fixture is quoted twice.
 
-The matrix runs on `core/`. A case is a config, the canonical location to put it in, one of three
-layouts (flat, nested, and the real directory structure each fixture came from), and the budgets
-in effect. The harness derives what it expects from the bytes it actually placed, so no
-expectation is hard-coded and no fixture is edited: a case that wants a file to declare a budget
-writes a frontmatter block into its copy.
+The matrix runs on `core/`: each case is a config, a canonical location, a layout (flat, nested,
+or each fixture's real directory structure) and budgets. The harness derives what it expects from
+the bytes it placed, so nothing is hard-coded and no fixture is edited; a case that wants a file to
+declare a budget writes frontmatter into its copy.
 
 The whole corpus then runs in its real layout under one budget with an override for `README.md`,
-under one emphasis limit, and under the default character groups. For the last two the binary must
-report exactly the files the library's `check` flags, and the groups must flag at least four times
-as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in the corpus, so
-`repo_layout` runs only its `read`, on every fixture under a few headings real repos use. The lines
-it reports must fall in the section, and an entry's line must hold its path. `core/rt-agents.md`,
-the one fixture in deslag's format, must read with no malformed line.
+under one emphasis limit, under the default character groups, and under the default density. For
+the last three the binary must report exactly what the library's `check` finds, and the groups must
+flag at least four times as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in
+the corpus, so `repo_layout` runs only its `read`, on every fixture under a few headings real repos
+use. The lines it reports must fall in the section, and an entry's line must hold its path.
+`core/rt-agents.md`, the one fixture in deslag's format, must read with no malformed line.
 
 ## Build
 

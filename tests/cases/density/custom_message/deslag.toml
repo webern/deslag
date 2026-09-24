@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.density]
+max_paragraph_chars = 40
+message = "Split {path}: {max_paragraph_chars} per paragraph, {max_item_chars} per item."

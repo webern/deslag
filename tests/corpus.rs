@@ -13,10 +13,10 @@ mod common;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::config::{BannedChars, MaxEmphasis, RepoLayout};
+use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{banned_chars, max_emphasis};
+use deslag::lint::{banned_chars, density, max_emphasis};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
@@ -1179,4 +1179,87 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by the default groups: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm >= 4 * human, "human {human}, llm {llm}");
+}
+
+#[test]
+fn the_corpus_blocks_start_on_lines_of_text() {
+    let fixtures = load_corpus();
+    let mut measured = 0;
+    for fixture in &fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let lines: Vec<&str> = text.lines().collect();
+        for block in density::measure(&text) {
+            measured += 1;
+            assert!(block.chars > 0, "{}: {block:?}", fixture.slug());
+            let line = lines.get(block.line - 1).unwrap_or_else(|| {
+                panic!("{}: {block:?} is past the end of the file", fixture.slug())
+            });
+            assert!(!line.trim().is_empty(), "{}: {block:?}", fixture.slug());
+        }
+    }
+    assert!(measured > 0, "the corpus should hold paragraphs");
+}
+
+/// The `line N: a paragraph of C characters` lines of a run, as (path, line, chars) triples.
+fn reported_dense(stderr: &str) -> Vec<(String, usize, usize)> {
+    let mut found = Vec::new();
+    let mut path = String::new();
+    for line in stderr.lines() {
+        if let Some((file, _)) = line.split_once(" has ") {
+            path = file.to_string();
+        }
+        let Some(rest) = line.strip_prefix("  line ") else {
+            continue;
+        };
+        let (number, rest) = rest.split_once(": a ").expect("a dense block");
+        let (_, chars) = rest.split_once(" of ").expect("a length");
+        let chars = chars.trim_end_matches(" characters");
+        found.push((
+            path.clone(),
+            number.parse().expect("a line"),
+            chars.parse().expect("a length"),
+        ));
+    }
+    found.sort();
+    found
+}
+
+#[test]
+fn the_corpus_density_reports_agree_with_the_library() {
+    let fixtures = load_corpus();
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = 1\n\n[md.lints.density]\n");
+    let settings = Density::default();
+
+    let paths = place_real(&repo, &fixtures);
+    let mut files = 0;
+    let mut expected: Vec<(String, usize, usize)> = Vec::new();
+    for (fixture, path) in fixtures.iter().zip(paths) {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        if let Some(over) = density::check(&text, Some(&settings)) {
+            files += 1;
+            expected.extend(
+                over.blocks
+                    .iter()
+                    .map(|block| (path.clone(), block.line, block.chars)),
+            );
+        }
+    }
+    expected.sort();
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+    assert!(
+        files > 0 && files < fixtures.len(),
+        "the corpus should hold both dense and airy files at the defaults"
+    );
+    assert_eq!(reported_dense(&stderr), expected, "stderr:\n{stderr}");
+    assert_eq!(code(&output), 1, "stderr:\n{stderr}");
+    assert!(
+        stderr.contains(&format!(
+            "deslag: {files} of {} Markdown files with dense text.",
+            fixtures.len()
+        )),
+        "stderr:\n{stderr}"
+    );
 }

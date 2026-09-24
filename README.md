@@ -7,7 +7,8 @@ The first rule is about size. An agent editing a Markdown file makes it longer a
 anything out, so every file gets a byte budget and a file that goes over it fails the run. The
 second is about emphasis: a file with more bold, italics and ALL CAPS than the config allows fails
 too. The third asks a file such as AGENTS.md for a short index of the repo whose paths all exist.
-The fourth bans characters that agents write and people rarely do, such as the em dash.
+The fourth bans characters that agents write and people rarely do, such as the em dash. The fifth
+fails walls of text: a paragraph or list item longer than the config allows.
 
 ## Install
 
@@ -191,6 +192,23 @@ its `allow` or `ban` replaces the section's. Write a character as itself or as a
 `"\u2014"`, which TOML, YAML and JSON all read. The file is read as written, so an HTML entity such
 as `&mdash;` is not a banned character. `message` works as it does for the other lints, with
 `{path}`.
+
+### Density
+
+`density` fails a file with a paragraph or a list item longer than its limit. Length is the
+characters a reader sees, so markup, link targets and HTML tags are not counted. Headings, tables,
+code blocks and frontmatter are not checked.
+
+```toml
+[md.lints.density]          # the table alone turns it on
+max_paragraph_chars = 600   # the default
+max_item_chars = 300        # the default; also holds a paragraph inside a list item
+```
+
+A blank line ends a paragraph; a line break does not. The defaults are loose: in the test corpus
+they fail 53 of 400 files written by people before 2022, and 84 of 400 written by agents. Tighten
+them to keep agents terse. `message` works as it does for the other lints, with `{path}`,
+`{max_paragraph_chars}` and `{max_item_chars}`.
 
 ## Build
 

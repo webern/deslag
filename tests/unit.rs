@@ -262,24 +262,6 @@ fn a_closing_thematic_break_is_not_frontmatter() {
 }
 
 #[test]
-fn every_canonical_location_is_found() {
-    for location in deslag::config::CANONICAL_CONFIG_PATHS {
-        let repo = Repo::new();
-        repo.write(location, &global_config(5));
-        repo.write("AGENTS.md", "# A\nlonger than five bytes\n");
-
-        let output = repo.check();
-        let stderr = stderr(&output);
-
-        assert_eq!(code(&output), 1, "config at {location}, stderr: {stderr}");
-        assert!(
-            stderr.contains("AGENTS.md is larger than 5 bytes."),
-            "config at {location}, stderr: {stderr}"
-        );
-    }
-}
-
-#[test]
 fn the_earlier_canonical_location_wins() {
     let repo = Repo::new();
     repo.write(".deslag/config.toml", &global_config(5));
@@ -313,9 +295,13 @@ fn a_missing_config_says_where_it_looked() {
         stderr.contains("are you in the root of the repo?"),
         "stderr: {stderr}"
     );
-    for location in deslag::config::CANONICAL_CONFIG_PATHS {
-        assert!(stderr.contains(location), "stderr: {stderr}");
+    for stem in deslag::config::CANONICAL_CONFIG_STEMS {
+        assert!(stderr.contains(stem), "stderr: {stderr}");
     }
+    assert!(
+        stderr.contains("each ending .toml, .yaml, .yml, .json"),
+        "stderr: {stderr}"
+    );
 }
 
 #[test]

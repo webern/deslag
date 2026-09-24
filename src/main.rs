@@ -1,11 +1,12 @@
 //! The command-line entry point. The logic lives in the library.
 
+use std::io::{self, Write};
 use std::process::ExitCode;
 
 use anyhow::Context;
 use clap::Parser;
 
-use deslag::cli::{Cli, Command};
+use deslag::cli::{Cli, Command, Topic};
 
 fn main() -> ExitCode {
     match run() {
@@ -36,6 +37,19 @@ fn run() -> anyhow::Result<ExitCode> {
             }
             eprintln!("{}", report.summary());
             Ok(ExitCode::FAILURE)
+        }
+        Command::Instructions(args) => {
+            let text = match args.topic {
+                None => deslag::instructions::guide(),
+                Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
+            };
+            // A reader that stops early, such as `head`, is not an error.
+            match io::stdout().write_all(text.as_bytes()) {
+                Err(error) if error.kind() != io::ErrorKind::BrokenPipe => {
+                    Err(error).context("cannot write to standard output")
+                }
+                _ => Ok(ExitCode::SUCCESS),
+            }
         }
     }
 }

@@ -12,6 +12,9 @@
 //!
 //! A file with none of the three has no budget and is left alone. See the crate README and
 //! `docs/design/` for the design.
+//!
+//! [`instructions`] holds what an agent setting deslag up needs to read, and [`config::schema`]
+//! the JSON schema of the config.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -19,6 +22,7 @@ use std::num::NonZeroU32;
 pub mod cli;
 pub mod config;
 pub mod glob;
+pub mod instructions;
 pub mod lint;
 pub mod parse;
 

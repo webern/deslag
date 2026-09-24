@@ -1,10 +1,11 @@
 # deslag's config for its own repository. `make check-deslag` runs it, and `make check` gates CI on
-# it. For now it covers the files an agent reads on every session: AGENTS.md and the skills.
+# it. It covers the files an agent reads: AGENTS.md, the skills, and the guide `deslag instructions`
+# prints.
 
 schema_version = 1
 
 [md]
-globs = ["/AGENTS.md", "/.agents/skills/**/*.md"]
+globs = ["/AGENTS.md", "/.agents/skills/**/*.md", "/src/instructions/guide.md"]
 
 [md.lints.max_emphasis]
 free_spans = 2
@@ -24,4 +25,8 @@ lints.repo_layout = { min_entries = 5, max_entries = 12 }
 
 [[md.overrides]]
 globs = ["/.agents/skills/**/*.md"]
+lints.max_size_bytes.value = 5000
+
+[[md.overrides]]
+globs = ["/src/instructions/guide.md"]
 lints.max_size_bytes.value = 5000

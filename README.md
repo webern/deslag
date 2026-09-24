@@ -16,6 +16,9 @@ fails walls of text: a paragraph or list item longer than the config allows.
 cargo install deslag
 ```
 
+Then, to set deslag up in a repository, tell your agent to run `deslag instructions` and follow
+them. `deslag instructions config-schema` prints the JSON schema of the config.
+
 ## Usage
 
 Run it from the root of a repository, where a [config](#configuration) sits:

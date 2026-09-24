@@ -6,6 +6,7 @@
 
 use std::collections::BTreeMap;
 
+use schemars::JsonSchema;
 use serde::Deserialize;
 
 /// Laying a more specific set of settings over a less specific one.
@@ -26,7 +27,7 @@ impl<T: Merge + Clone> Merge for Option<T> {
 
 /// The lints that apply to Markdown files: the `lints` table of the `[md]` section and of each
 /// `[[md.overrides]]` entry.
-#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MdLints {
     /// The byte budget.
@@ -77,7 +78,7 @@ impl Merge for MdLints {
 }
 
 /// `lints.max_size_bytes`: a file larger than `value` bytes fails.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxSizeBytes {
     /// The budget in bytes. A file with no budget from any source is not checked.
@@ -105,7 +106,7 @@ impl Merge for MaxSizeBytes {
 ///
 /// Setting only `free_spans` caps the number of spans; setting only `max_percent` caps their
 /// share of the prose. A table that sets neither checks nothing.
-#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxEmphasis {
     /// How many spans a file may have whatever share of its prose they cover.
@@ -113,6 +114,7 @@ pub struct MaxEmphasis {
     pub free_spans: Option<u64>,
     /// The share of the prose, in percent, that the spans may cover.
     #[serde(default)]
+    #[schemars(range(min = 0, max = 100))]
     pub max_percent: Option<f64>,
     /// Replaces the advice in the report. `{path}`, `{free_spans}` and `{max_percent}` in it are
     /// replaced with the file's path and its limits.
@@ -156,20 +158,24 @@ impl Merge for MaxEmphasis {
 ///
 /// Unlike the other lints, the table itself turns the check on: a file it applies to must have
 /// the section even when the table sets no field.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RepoLayout {
     /// The section's heading, matched at any level and in any case.
     #[serde(default)]
+    #[schemars(extend("default" = RepoLayout::DEFAULT_HEADING))]
     pub heading: Option<String>,
     /// The fewest entries the layout may list.
     #[serde(default)]
+    #[schemars(extend("default" = RepoLayout::DEFAULT_MIN_ENTRIES))]
     pub min_entries: Option<u64>,
     /// The most entries the layout may list.
     #[serde(default)]
+    #[schemars(extend("default" = RepoLayout::DEFAULT_MAX_ENTRIES))]
     pub max_entries: Option<u64>,
     /// The widest a line of the layout may be, in characters.
     #[serde(default)]
+    #[schemars(extend("default" = RepoLayout::DEFAULT_MAX_WIDTH))]
     pub max_width: Option<u64>,
     /// Replaces the advice in the report. `{path}`, `{heading}`, `{min_entries}`,
     /// `{max_entries}` and `{max_width}` in it are replaced with the file's path and its settings.
@@ -247,7 +253,7 @@ impl Merge for RepoLayout {
 /// Like `repo_layout`, the table itself turns the check on: an empty one bans the groups that are
 /// on by default. A character in `allow` is never banned; one in `ban` is banned whatever the
 /// groups say.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedChars {
     /// Turns groups of characters on or off.
@@ -302,46 +308,57 @@ impl Merge for BannedChars {
 }
 
 /// `lints.banned_chars.groups`: each group of characters switched on or off. A group left unset
-/// is on or off as its default says. `lint::banned_chars::GROUPS` lists the characters.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+/// is on or off as its default says.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Groups {
-    /// The em dash, en dash, minus sign and other dashes, for `-`. On by default.
+    /// The em dash, en dash, minus sign and other dashes, for `-`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub dashes: Option<bool>,
-    /// Arrows, for `->`, `<-` and the like. On by default.
+    /// Arrows, for `->`, `<-` and the like.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub arrows: Option<bool>,
-    /// The ellipsis, for `...`. On by default.
+    /// The ellipsis, for `...`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub ellipsis: Option<bool>,
-    /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`. On by default.
+    /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub bullets: Option<bool>,
-    /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`. On by
-    /// default.
+    /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub math: Option<bool>,
-    /// Check marks and crosses, for yes and no. On by default.
+    /// Check marks and crosses, for yes and no.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub checks: Option<bool>,
-    /// The section sign, for the word section. On by default.
+    /// The section sign, for the word section.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub section: Option<bool>,
-    /// Box-drawing characters and block elements, for `-`, `|` and `+`. On by default.
+    /// Box-drawing characters and block elements, for `-`, `|` and `+`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub box_drawing: Option<bool>,
-    /// The no-break space and other unusual spaces, for a plain space. On by default.
+    /// The no-break space and other unusual spaces, for a plain space.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub spaces: Option<bool>,
-    /// Characters that take no space, such as the zero-width space, to be deleted. On by default.
+    /// Characters that take no space, such as the zero-width space, to be deleted.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub invisible: Option<bool>,
-    /// Curly quotes and apostrophes, for `"` and `'`. On by default.
+    /// Curly quotes and apostrophes, for `"` and `'`.
     #[serde(default)]
+    #[schemars(extend("default" = true))]
     pub quotes: Option<bool>,
-    /// Emoji, to be deleted. Off by default.
+    /// Emoji, to be deleted.
     #[serde(default)]
+    #[schemars(extend("default" = false))]
     pub emoji: Option<bool>,
 }
 
@@ -388,14 +405,16 @@ impl Merge for Groups {
 /// item longer than `max_item_chars`.
 ///
 /// Like `repo_layout`, the table itself turns the check on, with the defaults.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Density {
     /// The most characters a paragraph may hold.
     #[serde(default)]
+    #[schemars(range(min = 1), extend("default" = Density::DEFAULT_MAX_PARAGRAPH_CHARS))]
     pub max_paragraph_chars: Option<u64>,
     /// The most characters a list item may hold.
     #[serde(default)]
+    #[schemars(range(min = 1), extend("default" = Density::DEFAULT_MAX_ITEM_CHARS))]
     pub max_item_chars: Option<u64>,
     /// Replaces the advice in the report. `{path}`, `{max_paragraph_chars}` and
     /// `{max_item_chars}` in it are replaced with the file's path and its limits.

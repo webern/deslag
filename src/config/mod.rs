@@ -34,6 +34,8 @@ pub mod search;
 use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
 
+use schemars::JsonSchema;
+use schemars::generate::SchemaSettings;
 use serde::Deserialize;
 
 use crate::Error;
@@ -54,14 +56,27 @@ pub use search::{
 pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::MIN;
 
 /// The config file as it is written on disk.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
+#[schemars(title = "deslag config")]
 struct ConfigFile {
-    /// The schema the file is written against; see [`SCHEMA_VERSION`].
+    /// The schema the file is written against, which may not be later than the one this build
+    /// reads.
+    #[schemars(range(max = SCHEMA_VERSION.get()))]
     schema_version: NonZeroU32,
     /// The Markdown section.
     #[serde(default)]
     md: md::MdFile,
+}
+
+/// The JSON schema of the config file, which describes every key it may hold. It serves TOML and
+/// YAML configs as well as JSON ones.
+pub fn schema() -> serde_json::Value {
+    // Draft 7 is the one the most editors read.
+    SchemaSettings::draft07()
+        .into_generator()
+        .into_root_schema_for::<ConfigFile>()
+        .to_value()
 }
 
 /// `text` read as a [`ConfigFile`] written in `format`.

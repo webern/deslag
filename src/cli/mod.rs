@@ -23,6 +23,8 @@ pub struct Cli {
 pub enum Command {
     /// Check every Markdown file in the repo against its byte budget
     Check(CheckArgs),
+    /// Print how to set deslag up in a repo, written for an agent to follow
+    Instructions(InstructionsArgs),
 }
 
 /// Arguments to `deslag check`.
@@ -31,4 +33,19 @@ pub struct CheckArgs {
     /// Read the config from this file instead of the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
+}
+
+/// Arguments to `deslag instructions`.
+#[derive(Debug, Args)]
+pub struct InstructionsArgs {
+    /// What to print instead of the setup guide.
+    #[command(subcommand)]
+    pub topic: Option<Topic>,
+}
+
+/// What `deslag instructions` can print besides the setup guide.
+#[derive(Debug, Subcommand)]
+pub enum Topic {
+    /// Print the JSON schema of the config file
+    ConfigSchema,
 }

@@ -6,6 +6,7 @@
 
 pub mod max_emphasis;
 pub mod max_size_bytes;
+pub mod repo_layout;
 
 use std::path::Path;
 
@@ -29,6 +30,8 @@ pub enum Violation {
     MaxSizeBytes(max_size_bytes::Over),
     /// The file has more bold, italics and capitals than it is allowed.
     MaxEmphasis(max_emphasis::Over),
+    /// The file's index of the repo is missing, too long or too short, out of format, or stale.
+    RepoLayout(repo_layout::Over),
 }
 
 impl Finding {
@@ -37,6 +40,7 @@ impl Finding {
         match &self.violation {
             Violation::MaxSizeBytes(over) => max_size_bytes::render(&self.path, over),
             Violation::MaxEmphasis(over) => max_emphasis::render(&self.path, over),
+            Violation::RepoLayout(over) => repo_layout::render(&self.path, over),
         }
     }
 }
@@ -73,6 +77,10 @@ impl Report {
                 count(|violation| matches!(violation, Violation::MaxEmphasis(_))),
                 "over-emphasized",
             ),
+            (
+                count(|violation| matches!(violation, Violation::RepoLayout(_))),
+                "with a broken repository layout",
+            ),
         ];
         tallies
             .iter()
@@ -105,24 +113,31 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
         })?;
         let text = String::from_utf8_lossy(&contents);
         let lints = md.lints_for(&file.relative);
+        if let Some(message) = lints.contradiction() {
+            return Err(Error::Setting {
+                path: config.path().display().to_string(),
+                message: format!("for {}, {message}", file.relative),
+            });
+        }
+        let dir = file.absolute.parent().unwrap_or(root);
 
-        if let Some(over) = max_size_bytes::check(
-            &file.relative,
-            &contents,
-            &text,
-            lints.max_size_bytes.as_ref(),
-        )? {
-            report.findings.push(Finding {
+        let violations = [
+            max_size_bytes::check(
+                &file.relative,
+                &contents,
+                &text,
+                lints.max_size_bytes.as_ref(),
+            )?
+            .map(Violation::MaxSizeBytes),
+            max_emphasis::check(&text, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
+            repo_layout::check(&text, dir, lints.repo_layout.as_ref()).map(Violation::RepoLayout),
+        ];
+        report
+            .findings
+            .extend(violations.into_iter().flatten().map(|violation| Finding {
                 path: file.relative.clone(),
-                violation: Violation::MaxSizeBytes(over),
-            });
-        }
-        if let Some(over) = max_emphasis::check(&text, lints.max_emphasis.as_ref()) {
-            report.findings.push(Finding {
-                path: file.relative,
-                violation: Violation::MaxEmphasis(over),
-            });
-        }
+                violation,
+            }));
     }
 
     Ok(report)

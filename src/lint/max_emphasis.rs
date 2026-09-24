@@ -16,9 +16,10 @@
 //! A file fails when it has more than `free_spans` spans and they cover more than `max_percent`
 //! of its prose. The report lists every span with its line, so the author can find them.
 
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 
 use crate::config::MaxEmphasis;
+use crate::parse::markdown::{self, Lines};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected over-emphasis!";
@@ -117,11 +118,6 @@ pub fn check(text: &str, settings: Option<&MaxEmphasis>) -> Option<Over> {
 
 /// Measures the emphasis in `text`, a whole Markdown file.
 pub fn measure(text: &str) -> Measure {
-    let options = Options::ENABLE_TABLES
-        | Options::ENABLE_FOOTNOTES
-        | Options::ENABLE_STRIKETHROUGH
-        | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS;
     let lines = Lines::new(text);
 
     let mut measure = Measure::default();
@@ -132,7 +128,7 @@ pub fn measure(text: &str) -> Measure {
     let mut open: Option<(usize, Kind, usize)> = None;
     let mut plain = Plain::default();
 
-    for (event, range) in Parser::new_ext(text, options).into_offset_iter() {
+    for (event, range) in Parser::new_ext(text, markdown::options()).into_offset_iter() {
         match event {
             Event::Start(Tag::CodeBlock(_) | Tag::MetadataBlock(_)) => {
                 plain.flush(&lines, &mut measure);
@@ -372,21 +368,4 @@ fn quote(source: &str) -> String {
     }
     let cut: String = one_line.chars().take(QUOTE_CHARS - 3).collect();
     format!("{}...", cut.trim_end())
-}
-
-/// Where each line of a file starts, to turn a byte offset into a line number.
-struct Lines(Vec<usize>);
-
-impl Lines {
-    fn new(text: &str) -> Lines {
-        let starts = std::iter::once(0)
-            .chain(text.match_indices('\n').map(|(at, _)| at + 1))
-            .collect();
-        Lines(starts)
-    }
-
-    /// The 1-based line holding byte `offset`.
-    fn line(&self, offset: usize) -> usize {
-        self.0.partition_point(|start| *start <= offset)
-    }
 }

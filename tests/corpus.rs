@@ -13,9 +13,10 @@ mod common;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::config::MaxEmphasis;
+use deslag::config::{MaxEmphasis, RepoLayout};
 use deslag::lint::max_emphasis;
 use deslag::lint::max_size_bytes::HEADING;
+use deslag::lint::repo_layout::{self, Problem};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
@@ -1011,4 +1012,76 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
         )),
         "stderr:\n{stderr}"
     );
+}
+
+/// Headings that real repos put a layout under. None of them but deslag's own is written in the
+/// `repo_layout` format, but reading them all puts the reader through lists, `tree` drawings and
+/// prose.
+const LAYOUT_HEADINGS: &[&str] = &[
+    RepoLayout::DEFAULT_HEADING,
+    "Repository structure",
+    "Project structure",
+    "Directory structure",
+    "File structure",
+    "File layout",
+    "Package layout",
+    "Layout",
+];
+
+#[test]
+fn the_corpus_layouts_read_from_the_text_alone() {
+    let fixtures = load_corpus();
+    let mut layouts = 0;
+
+    for fixture in &fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let lines: Vec<&str> = text.lines().collect();
+        let slug = fixture.slug();
+        for heading in LAYOUT_HEADINGS {
+            let layout = match repo_layout::read(&text, heading) {
+                Ok(layout) => layout,
+                Err(Problem::NoSection) => continue,
+                Err(Problem::NoBlock { line }) => {
+                    assert!((1..=lines.len()).contains(&line), "{slug}: line {line}");
+                    continue;
+                }
+                Err(other) => panic!("{slug}: read returned {other:?}"),
+            };
+            layouts += 1;
+
+            let in_section = |line: usize| line > layout.heading_line && line <= lines.len();
+            for entry in &layout.entries {
+                assert!(in_section(entry.line), "{slug}: {entry:?}");
+                if let Some(path) = &entry.path {
+                    assert!(
+                        lines[entry.line - 1].contains(path.as_str()),
+                        "{slug}: line {} does not hold {path}",
+                        entry.line
+                    );
+                }
+            }
+            for (line, malformed) in &layout.malformed {
+                assert!(in_section(*line), "{slug}: line {line}: {malformed:?}");
+            }
+            for (line, width) in &layout.widths {
+                assert!(in_section(*line), "{slug}: line {line} is {width} wide");
+            }
+        }
+    }
+    assert!(
+        layouts >= 10,
+        "the corpus should hold real layouts to read, and has {layouts}"
+    );
+
+    let own = fixtures
+        .iter()
+        .find(|fixture| fixture.category == "core" && fixture.slug() == "rt-agents")
+        .expect("core/rt-agents.md, written in deslag's format");
+    let layout = repo_layout::read(
+        &String::from_utf8_lossy(&own.bytes),
+        RepoLayout::DEFAULT_HEADING,
+    )
+    .expect("a layout");
+    assert!(!layout.entries.is_empty(), "{layout:?}");
+    assert_eq!(layout.malformed, vec![], "{layout:?}");
 }

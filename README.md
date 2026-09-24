@@ -6,7 +6,7 @@ their Markdown files needlessly or otherwise violate your wishes.
 The first rule is about size. An agent editing a Markdown file makes it longer and rarely takes
 anything out, so every file gets a byte budget and a file that goes over it fails the run. The
 second is about emphasis: a file with more bold, italics and ALL CAPS than the config allows fails
-too.
+too. The third asks a file such as AGENTS.md for a short index of the repo whose paths all exist.
 
 ## Install
 
@@ -121,6 +121,39 @@ A file fails when it has more than `free_spans` spans and they cover more than `
 its prose. Set only `free_spans` to cap the count; set only `max_percent` to cap the share. The
 report lists every span with its line number. `message` works as it does for `max_size_bytes`, with
 `{path}`, `{free_spans}` and `{max_percent}`.
+
+### Repository layout
+
+`repo_layout` requires a section, `## Repository layout` by default, whose first code block lists
+the files and directories a newcomer should know about, one per line:
+
+````markdown
+## Repository layout
+
+```
+deslag/
+  Makefile       <- every build, test and check
+  src/lint/      <- one module per lint; a description too long for
+                    its line continues on the next, aligned under it
+  docs/design/   <- design docs
+```
+````
+
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in
+one column, every entry has a description, and no line is wider than `max_width` characters. Paths
+are relative to the Markdown file's directory and must exist; one ending in `/` must be a
+directory.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.repo_layout = { min_entries = 5, max_entries = 12 }   # the defaults are 5 and 15
+```
+
+Unlike the other lints, the table alone turns it on, so apply it through an override to the files
+that need a layout. `heading` names another section, matched at any level and in any case.
+`max_width` defaults to 100. `message` works as it does for the other lints, with `{path}`,
+`{heading}`, `{min_entries}`, `{max_entries}` and `{max_width}`.
 
 ## Build
 

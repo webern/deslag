@@ -1,5 +1,6 @@
 //! The `[md]` section: which files are Markdown, and which lint settings apply to each of them.
 
+use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::Error;
@@ -10,11 +11,12 @@ use crate::glob::{self, Pattern};
 pub const DEFAULT_GLOBS: &[&str] = &["*.md"];
 
 /// The `[md]` section as it is written on disk.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub(super) struct MdFile {
-    /// The files this section lints. Defaults to [`DEFAULT_GLOBS`].
+    /// The files this section lints.
     #[serde(default)]
+    #[schemars(extend("default" = DEFAULT_GLOBS))]
     globs: Option<Vec<String>>,
     /// The settings for every selected file that no override changes.
     #[serde(default)]
@@ -25,7 +27,7 @@ pub(super) struct MdFile {
 }
 
 /// One `[[md.overrides]]` entry as it is written on disk.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 struct OverrideFile {
     /// The files this override applies to.

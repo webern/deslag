@@ -6,6 +6,7 @@ subsystems:
   - glob
   - parse
   - lint
+  - instructions
 max_size_bytes: 16384
 ---
 # deslag: as built
@@ -14,16 +15,14 @@ Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule
 a byte budget, a limit on emphasis, a true index of the repo, banned characters, or dense text. It
 is one Cargo package with two targets: the library in `src/lib.rs` decides everything, and the
 binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the library,
-prints what it returns and exits nonzero when a file fails.
+prints what it returns and exits nonzero when a file fails. `deslag instructions` prints a guide
+for an agent setting deslag up.
 
 ## A run, start to finish
 
-`deslag check`, run from the root of a repository, does four things in order:
-
-1. Finds and loads the config.
-2. Walks the tree for Markdown files.
-3. Works out the settings of each lint for each of them.
-4. Runs the lints and prints a report for each failure, then exits.
+`deslag check`, run from the root of a repository, loads the config, walks the tree for Markdown
+files, works out each lint's settings for each file, runs the lints and prints a report for each
+failure.
 
 The **repo root** is the process working directory. Deslag never walks upward looking for a
 repository or a config; if the config is not where it expects, the run fails and says so. A
@@ -47,6 +46,9 @@ src/
   glob/
     mod.rs            Pattern and its specificity
     walk.rs           the repo walk
+  instructions/
+    mod.rs            fills in and returns the guide
+    guide.md          the guide, with placeholders
   parse/
     mod.rs
     frontmatter.rs    reading a top-level key out of YAML frontmatter
@@ -155,9 +157,8 @@ files above the root are not read. Hidden files are walked.
 ## Checking and reporting
 
 `lint::check_repo` walks once, keeps the files `[md]` selects, reads each, resolves its settings,
-and runs each lint. `lint/max_size_bytes.rs` returns an `Over` holding the size, the budget and
-any configured message when the file is larger than its budget; `check_repo` wraps it in a
-`Finding` with a `Violation::MaxSizeBytes`. A new lint is a new module and a new `Violation`.
+and runs each lint. A lint returns an `Over` for a failing file, and `check_repo` wraps it in a
+`Finding` with the lint's `Violation`. A new lint is a new module and a new `Violation`.
 
 A lint keeps what it decides from the text alone in a function of the text, which the corpus can
 run on every fixture: `max_emphasis::measure` and `repo_layout::read`. What needs the settings, or
@@ -217,9 +218,12 @@ process exits 1; a clean run prints nothing and exits 0.
 
 ## The command line
 
-`cli/mod.rs` defines a `check` subcommand taking `--config-path`. `src/main.rs` uses `anyhow` for
-its own errors, calls the library, and prints the library's `Error` in `anyhow`'s alternate form,
-which appends each underlying error once; an `Error`'s own message never repeats its source.
+`cli/mod.rs` defines a `check` subcommand taking `--config-path`, and `instructions`, which prints
+`instructions::guide` or, given `config-schema`, `config::schema`: the JSON schema `schemars`
+derives from the config's types. The guide takes its config paths from the code. `src/main.rs`
+uses `anyhow` for its own errors, calls the library, and prints the library's `Error` in
+`anyhow`'s alternate form, which appends each underlying error once; an `Error`'s own message never
+repeats its source.
 
 ## Other files
 
@@ -235,6 +239,7 @@ tests/
   layout.rs           finding and reading the layout, and its paths
   chars.rs            what banned_chars reads and bans, and its tables
   density.rs          what a block is, its length, and the limits
+  instructions.rs     the guide, and the schema against configs deslag reads
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
@@ -245,14 +250,10 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
 
 ## Tests
 
-`tests/unit.rs` builds small trees in a temp directory and pins one rule each: the budget sources
-and their precedence, override merging, `[md] globs`, custom messages, `schema_version`, every
-canonical config order, `--config-path`, the error cases, and the exact wording of the report.
-
-`tests/formats.rs` pins the config languages: every canonical path in every language, one config
-in TOML, YAML and JSON giving the same report, ambiguity, unknown extensions, and parse errors.
-`deslag::config::canonical_config_paths` is read by the tests rather than repeated, so the list
-cannot drift.
+`tests/unit.rs` and `tests/formats.rs` build small trees in a temp directory and pin one rule
+each: budget precedence, override merging, `[md] globs`, `schema_version`, every canonical config
+path in every language, `--config-path`, and the error cases. They read `canonical_config_paths`
+rather than repeat it.
 
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
@@ -275,9 +276,8 @@ as far as the history of the file can tell:
 Each holds about 400 fixtures, at most three from one repository, from four forges and under
 permissive licences only. Most are English; a few are not, so the lints meet other scripts.
 
-A sidecar records the source and its licence, the history behind the label, the label and why,
-and facts about the bytes such as size and sha256. The loader checks what it can against the
-bytes, and that no fixture is quoted twice.
+A sidecar records the source, its licence, the label and the history behind it, and facts about
+the bytes such as sha256, which the loader checks. No fixture is quoted twice.
 
 The matrix runs on `core/`: each case is a config, a canonical location, a layout (flat, nested,
 or each fixture's real directory structure) and budgets. The harness derives what it expects from

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "website__versioned_docs__version-0.6__upgrading__upgrading_to_v0x.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "apify/crawlee-python",
+    "path": "website/versioned_docs/version-0.6/upgrading/upgrading_to_v0x.md",
+    "commit": "a237d16bbe9b9a1873745927b25d9d8814754edd",
+    "commit_date": "2026-09-22T14:10:38+02:00",
+    "url": "https://github.com/apify/crawlee-python/blob/a237d16bbe9b9a1873745927b25d9d8814754edd/website/versioned_docs/version-0.6/upgrading/upgrading_to_v0x.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-01-10T10:15:46+01:00",
+    "stars": 9542,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-30T10:21:05+02:00",
+    "last_commit_date": "2026-03-30T10:21:05+02:00",
+    "last_commit_author": "Vlada Dusek",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8654,
+    "sha256": "fe3689d7bbb57e3b4e6d4078e57c90b7e88cc2371ed5580ac2f3b068420b2a24",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 170,
+    "words": 1076,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/apify--crawlee-python/website/versioned_docs/version-0.6/upgrading/upgrading_to_v0x.md"
+}

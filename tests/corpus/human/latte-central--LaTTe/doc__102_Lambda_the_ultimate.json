@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__102_Lambda_the_ultimate.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "latte-central/LaTTe",
+    "path": "doc/102_Lambda_the_ultimate.md",
+    "commit": "521d7f5e02bdec133a251d9dfbdbac6c42481eb7",
+    "commit_date": "2021-01-15T18:18:08+01:00",
+    "url": "https://github.com/latte-central/LaTTe/blob/521d7f5e02bdec133a251d9dfbdbac6c42481eb7/doc/102_Lambda_the_ultimate.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 270,
+    "found_by": "sg-topic:clojure"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-02-17T18:23:09+01:00",
+    "last_commit_date": "2018-02-17T18:23:09+01:00",
+    "last_commit_author": "Frederic Peschanski",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-02-17: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 27401,
+    "sha256": "cd4881dddb3c933c2c9cfa18baef6d1a071714a8cc274507ce010e6266a033a7",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 812,
+    "words": 4581,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/latte-central--LaTTe/doc/102_Lambda_the_ultimate.md"
+}

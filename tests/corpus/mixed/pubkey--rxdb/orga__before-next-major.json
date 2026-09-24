@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "orga__before-next-major.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pubkey/rxdb",
+    "path": "orga/before-next-major.md",
+    "commit": "9742054f3b24985f9b5ca990a6bca0ed81d902f0",
+    "commit_date": "2026-09-18T06:49:12+00:00",
+    "url": "https://github.com/pubkey/rxdb/blob/9742054f3b24985f9b5ca990a6bca0ed81d902f0/orga/before-next-major.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 23391,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 154,
+    "first_commit_date": "2018-01-03T00:35:31+01:00",
+    "last_commit_date": "2026-09-10T16:12:34+02:00",
+    "last_commit_author": "Daniel Meyer",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-03, before 2022-01-01; 1 of its 154 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5970,
+    "sha256": "d35550997bd7e54e464e21c2bf6f2af67a6ab019754c1ad5f51afdc47fe74967",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 846,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pubkey--rxdb/orga/before-next-major.md"
+}

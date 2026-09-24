@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "JanDeDobbeleer/oh-my-posh",
+    "path": "CONTRIBUTING.md",
+    "commit": "def198e06052dbb5414cdcaf09febb10a710111f",
+    "commit_date": "2026-09-16T12:27:34+02:00",
+    "url": "https://github.com/JanDeDobbeleer/oh-my-posh/blob/def198e06052dbb5414cdcaf09febb10a710111f/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": "2019-03-13T12:14:30+01:00",
+    "stars": 23493,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2020-10-06T19:21:00+02:00",
+    "last_commit_date": "2026-07-15T08:11:38+02:00",
+    "last_commit_author": "Jan De Dobbeleer",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-10-06, before 2022-01-01; 1 of its 20 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4790,
+    "sha256": "989f513cf11d813a8b5a9463635f2fad2cfa5bf315c9f6e19d9530e4d3b3a06c",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 120,
+    "words": 561,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JanDeDobbeleer--oh-my-posh/CONTRIBUTING.md"
+}

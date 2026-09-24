@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "testng-team/testng",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "be542fcf3ce6bf298fcf8842f6368f09eb047646",
+    "commit_date": "2026-09-23T19:11:10+02:00",
+    "url": "https://github.com/testng-team/testng/blob/be542fcf3ce6bf298fcf8842f6368f09eb047646/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2059,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-01-09T22:43:38-08:00",
+    "last_commit_date": "2026-09-06T21:07:43+05:30",
+    "last_commit_author": "Krishnan Mahadevan",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-09, before 2022-01-01; 1 of its 3 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 782,
+    "sha256": "6e6a5774bbc78e59f7988263f633153a29d7023ea3045912b7418534467bca8b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 111,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/testng-team--testng/.github/PULL_REQUEST_TEMPLATE.md"
+}

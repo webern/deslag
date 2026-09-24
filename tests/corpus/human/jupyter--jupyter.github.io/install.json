@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "install.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jupyter/jupyter.github.io",
+    "path": "install.md",
+    "commit": "59e20657bc6517b825cd4aff2b56eeaaf67340cd",
+    "commit_date": "2021-12-31T23:44:50+00:00",
+    "url": "https://github.com/jupyter/jupyter.github.io/blob/59e20657bc6517b825cd4aff2b56eeaaf67340cd/install.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 209,
+    "found_by": "sg-topic:static-site-generator"
+  },
+  "history": {
+    "commits": 16,
+    "first_commit_date": "2018-08-08T16:28:30-07:00",
+    "last_commit_date": "2021-12-28T05:08:36-08:00",
+    "last_commit_author": "Ben Welsh",
+    "authors": 7,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-28: all 16 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2315,
+    "sha256": "b6ffb45a889d18d34145c6c6c6230eaf046fdd9f33ce0da7b3dd57cded620267",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 102,
+    "words": 309,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/jupyter--jupyter.github.io/install.md"
+}

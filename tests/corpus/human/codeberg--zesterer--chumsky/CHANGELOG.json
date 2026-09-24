@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "zesterer/chumsky",
+    "path": "CHANGELOG.md",
+    "commit": "82d7014a574bc14d30645d23ca03a0e692eece9b",
+    "commit_date": "2021-12-26T18:52:24+01:00",
+    "url": "https://codeberg.org/zesterer/chumsky/src/commit/82d7014a574bc14d30645d23ca03a0e692eece9b/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-07-10T21:57:35+01:00",
+    "stars": 106,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-10-28T23:11:55+01:00",
+    "last_commit_date": "2021-12-16T19:43:47+00:00",
+    "last_commit_author": "Joshua Barretto",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-16: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3476,
+    "sha256": "cbce678996ccd32ffc20953d648e298ca5339f943de027579fcf64b390abede0",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 97,
+    "words": 519,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--zesterer--chumsky/CHANGELOG.md"
+}

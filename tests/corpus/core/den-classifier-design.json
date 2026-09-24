@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-classifier-design.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": ".agents/skills/classifier-design/SKILL.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/.agents/skills/classifier-design/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-07-13T08:20:50-05:00",
+    "last_commit_date": "2026-09-19T00:01:58-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 4 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's; 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3738,
+    "sha256": "e115399d4e737fa6043d7c16319841f32f86b9ffa403e607a97ca94d6859107b",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 31,
+    "words": 579,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": ".agents/skills/classifier-design/SKILL.md"
+}

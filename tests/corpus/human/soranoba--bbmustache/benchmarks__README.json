@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "benchmarks__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "soranoba/bbmustache",
+    "path": "benchmarks/README.md",
+    "commit": "0a096f386db9694356533c33134cd1368aeff423",
+    "commit_date": "2021-12-22T00:36:52+09:00",
+    "url": "https://github.com/soranoba/bbmustache/blob/0a096f386db9694356533c33134cd1368aeff423/benchmarks/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 187,
+    "found_by": "sg-topic:erlang"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2018-06-19T19:13:31-07:00",
+    "last_commit_date": "2021-12-22T00:36:52+09:00",
+    "last_commit_author": "Hinagiku Soranoba",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-22: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8696,
+    "sha256": "44481e28e5c160b305840864f3f3b4e4f553c1659ab6990b3d56e183a99a444c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 226,
+    "words": 528,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/soranoba--bbmustache/benchmarks/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__commands__spreadsheet__ConfT1mean.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "JordiRigau/hp-prime-kit",
+    "path": "docs/commands/spreadsheet/ConfT1mean.md",
+    "commit": "97040740e4894bb6bc91c9f35050e7b9ea9e132b",
+    "commit_date": "2026-09-22T23:27:45+02:00",
+    "url": "https://github.com/JordiRigau/hp-prime-kit/blob/97040740e4894bb6bc91c9f35050e7b9ea9e132b/docs/commands/spreadsheet/ConfT1mean.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-09-16T00:34:26+02:00",
+    "stars": null,
+    "found_by": "github-topic:hp-calculator"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-16T00:34:26+02:00",
+    "last_commit_date": "2026-09-16T00:34:26+02:00",
+    "last_commit_author": "Jordi Rigau",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1199,
+    "sha256": "3df5cd2dc62ec112c1f888da60a33c9ae3ad2a997f7e00e95e1cf6a150141d8c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 187,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/JordiRigau--hp-prime-kit/docs/commands/spreadsheet/ConfT1mean.md"
+}

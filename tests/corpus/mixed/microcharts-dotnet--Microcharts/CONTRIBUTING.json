@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microcharts-dotnet/Microcharts",
+    "path": "CONTRIBUTING.md",
+    "commit": "4753e668fc56c58420d3712790b62f56e5cf9c4f",
+    "commit_date": "2026-07-27T15:58:03+02:00",
+    "url": "https://github.com/microcharts-dotnet/Microcharts/blob/4753e668fc56c58420d3712790b62f56e5cf9c4f/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2074,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2020-07-17T12:25:39-04:00",
+    "last_commit_date": "2026-07-20T13:33:08+02:00",
+    "last_commit_author": "Jonas Follesø",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-07-17, before 2022-01-01; 1 of its 4 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 469,
+    "sha256": "8b6b32af063b754ecc38b2b3ddfeef74f19cacb6195029d61749c2a49022f34d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 8,
+    "words": 83,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/microcharts-dotnet--Microcharts/CONTRIBUTING.md"
+}

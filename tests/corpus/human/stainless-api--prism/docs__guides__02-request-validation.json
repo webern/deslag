@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__guides__02-request-validation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "stainless-api/prism",
+    "path": "docs/guides/02-request-validation.md",
+    "commit": "d310b191c6fa27d50a74cfcd77572e7e6d9d9c8e",
+    "commit_date": "2021-12-15T09:04:59-06:00",
+    "url": "https://github.com/stainless-api/prism/blob/d310b191c6fa27d50a74cfcd77572e7e6d9d9c8e/docs/guides/02-request-validation.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-10-08T10:41:03+02:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-01-29T19:54:24+00:00",
+    "last_commit_date": "2021-10-22T12:00:07-06:00",
+    "last_commit_author": "Pam Goodrich",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-22: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3836,
+    "sha256": "78a23c1f132b3dc658beedf6498a9d311ee666ce13885a119f358aaec43336f5",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 525,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/stainless-api--prism/docs/guides/02-request-validation.md"
+}

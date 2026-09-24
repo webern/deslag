@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "toml-rs/toml",
+    "path": "CHANGELOG.md",
+    "commit": "a06c6f5a294155d39cdd06a586c6969027bdaea1",
+    "commit_date": "2021-12-31T09:50:21-06:00",
+    "url": "https://github.com/toml-rs/toml/blob/a06c6f5a294155d39cdd06a586c6969027bdaea1/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 37,
+    "first_commit_date": "2020-06-18T20:50:34+02:00",
+    "last_commit_date": "2021-12-31T09:50:21-06:00",
+    "last_commit_author": "Ed Page",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-31: all 37 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8501,
+    "sha256": "deadc6053e854576923404e0b335931ba7300a4acc19c29bb72a52082e4b7aa1",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 265,
+    "words": 980,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/toml-rs--toml/CHANGELOG.md"
+}

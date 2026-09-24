@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "sdk__loganalytics__azure-mgmt-loganalytics__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-sdk-for-python",
+    "path": "sdk/loganalytics/azure-mgmt-loganalytics/CHANGELOG.md",
+    "commit": "bc7f5d65e72b217e002014e70da40e7ef1a7c711",
+    "commit_date": "2026-09-23T11:46:44-07:00",
+    "url": "https://github.com/Azure/azure-sdk-for-python/blob/bc7f5d65e72b217e002014e70da40e7ef1a7c711/sdk/loganalytics/azure-mgmt-loganalytics/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5607,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 24,
+    "first_commit_date": "2020-02-04T17:29:05-08:00",
+    "last_commit_date": "2026-06-24T04:56:11-04:00",
+    "last_commit_author": "Azure SDK Bot",
+    "authors": 9,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-02-04, before 2022-01-01; 2 of its 24 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 27952,
+    "sha256": "5913cabb70b2e6907ca27fe7d67b0513d9de39465ef1384659d6fe0af2a585fb",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 538,
+    "words": 2944,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Azure--azure-sdk-for-python/sdk/loganalytics/azure-mgmt-loganalytics/CHANGELOG.md"
+}

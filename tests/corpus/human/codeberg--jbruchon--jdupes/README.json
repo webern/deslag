@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "jbruchon/jdupes",
+    "path": "README.md",
+    "commit": "8bbf7d09394dbd9bf13e80476e52c6c76b92758d",
+    "commit_date": "2021-12-30T22:20:59-05:00",
+    "url": "https://codeberg.org/jbruchon/jdupes/src/commit/8bbf7d09394dbd9bf13e80476e52c6c76b92758d/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 104,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 34,
+    "first_commit_date": "2019-05-06T20:25:38-06:00",
+    "last_commit_date": "2021-11-10T09:41:36-07:00",
+    "last_commit_author": "Ryan Pendleton",
+    "authors": 7,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-10: all 34 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 30642,
+    "sha256": "0c2fd7787b6eb389c99041b6c5549a2ee0c55f0494f8c4428961c4cd12da73f9",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 560,
+    "words": 4573,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--jbruchon--jdupes/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "spanner__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "googleapis/google-cloud-go",
+    "path": "spanner/README.md",
+    "commit": "cc91d66d3435de4bed07ffec7abc226cdcdbf29c",
+    "commit_date": "2026-09-23T10:44:26-07:00",
+    "url": "https://github.com/googleapis/google-cloud-go/blob/cc91d66d3435de4bed07ffec7abc226cdcdbf29c/spanner/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4505,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2019-06-03T08:35:45-06:00",
+    "last_commit_date": "2026-08-24T20:37:59+05:30",
+    "last_commit_author": "rahul2393",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-06-03, before 2022-01-01; 1 of its 6 commits are marked as an AI agent's (gemini)"
+  },
+  "content": {
+    "size_bytes": 8329,
+    "sha256": "6797b0f1949a8df72060279a41adbe746f43fa5e7f7b2f9a7a35f361beb3e568",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 187,
+    "words": 1025,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/googleapis--google-cloud-go/spanner/README.md"
+}

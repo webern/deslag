@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "RELEASE-Github.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nltk/nltk",
+    "path": "RELEASE-Github.md",
+    "commit": "07e32366cdc216671f6408916902b18743b584eb",
+    "commit_date": "2026-09-23T10:02:52-04:00",
+    "url": "https://github.com/nltk/nltk/blob/07e32366cdc216671f6408916902b18743b584eb/RELEASE-Github.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 14724,
+    "found_by": "sg-topic:nlp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-25T10:05:12+02:00",
+    "last_commit_date": "2026-06-25T10:05:12+02:00",
+    "last_commit_author": "Eric Ka",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3210,
+    "sha256": "fbdac04404e27c3a4a009a914665552dde2ade4d841927050902888cbd144389",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 46,
+    "words": 455,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/nltk--nltk/RELEASE-Github.md"
+}

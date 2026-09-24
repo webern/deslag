@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hipstersmoothie/react-docgen-typescript-plugin",
+    "path": "CHANGELOG.md",
+    "commit": "543e9056e51a3b27dcdf9f22c1cbf332bb7928eb",
+    "commit_date": "2021-07-29T10:32:36+03:00",
+    "url": "https://github.com/hipstersmoothie/react-docgen-typescript-plugin/blob/543e9056e51a3b27dcdf9f22c1cbf332bb7928eb/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": "2020-06-09T12:21:24-07:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2020-06-09T20:57:29+00:00",
+    "last_commit_date": "2021-06-05T21:16:20+00:00",
+    "last_commit_author": "Andrew Lisowski",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-05: all 17 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6898,
+    "sha256": "31aacb4b962517566dbd9d4d545de0bf7459423963454950e6d3af9b7a9553dd",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 237,
+    "words": 562,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hipstersmoothie--react-docgen-typescript-plugin/CHANGELOG.md"
+}

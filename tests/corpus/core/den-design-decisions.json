@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-design-decisions.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": "src/formats/musicxml/design-decisions.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/src/formats/musicxml/design-decisions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2026-08-06T21:39:35-05:00",
+    "last_commit_date": "2026-09-18T10:08:15-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 8,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "3 of its 11 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's; 8 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 37033,
+    "sha256": "2cf82bc495bbbf2b55414a9a8b32dd96b07c0f65e28c54f1ee35748b1ae09043",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 268,
+    "words": 5857,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "src/formats/musicxml/design-decisions.md"
+}

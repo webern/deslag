@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__audit-entries__references__removal-criteria.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mxschmitt/awesome-playwright",
+    "path": ".claude/skills/audit-entries/references/removal-criteria.md",
+    "commit": "093853ba64dab6a5432c1e5534493c35de58eb30",
+    "commit_date": "2026-09-20T06:24:31+04:00",
+    "url": "https://github.com/mxschmitt/awesome-playwright/blob/093853ba64dab6a5432c1e5534493c35de58eb30/.claude/skills/audit-entries/references/removal-criteria.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-09T22:56:15+01:00",
+    "stars": 1581,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-22T10:01:12-07:00",
+    "last_commit_date": "2026-03-22T10:01:12-07:00",
+    "last_commit_author": "Max Schmitt",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2466,
+    "sha256": "578629a5ee819c19b95a6a9651fb4fde78571e777183454fc80461cce3a017ec",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 54,
+    "words": 413,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mxschmitt--awesome-playwright/.claude/skills/audit-entries/references/removal-criteria.md"
+}

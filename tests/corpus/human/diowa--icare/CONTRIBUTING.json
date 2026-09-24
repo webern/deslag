@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "diowa/icare",
+    "path": "CONTRIBUTING.md",
+    "commit": "530f13e761b1f688a53e2688e3e9e8b34ea18106",
+    "commit_date": "2021-12-26T20:25:23+01:00",
+    "url": "https://github.com/diowa/icare/blob/530f13e761b1f688a53e2688e3e9e8b34ea18106/CONTRIBUTING.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:travel"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-01-08T15:11:28+01:00",
+    "last_commit_date": "2021-01-17T19:13:28+01:00",
+    "last_commit_author": "Geremia Taglialatela",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-17: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1534,
+    "sha256": "a383bdf7698c5c4bef1c73d80c4e6fcf0af3f2c5ac3ae967d7341f65c7cf50ab",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 45,
+    "words": 221,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/diowa--icare/CONTRIBUTING.md"
+}

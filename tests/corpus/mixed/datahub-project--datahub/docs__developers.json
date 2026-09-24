@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__developers.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "datahub-project/datahub",
+    "path": "docs/developers.md",
+    "commit": "673f8a904c50219b6c663a200ba6c6c1783c8d5b",
+    "commit_date": "2026-09-23T17:10:54+02:00",
+    "url": "https://github.com/datahub-project/datahub/blob/673f8a904c50219b6c663a200ba6c6c1783c8d5b/docs/developers.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 12750,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 58,
+    "first_commit_date": "2020-03-21T15:56:46-07:00",
+    "last_commit_date": "2026-09-18T14:20:36-05:00",
+    "last_commit_author": "david-leifker",
+    "authors": 32,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-03-21, before 2022-01-01; 5 of its 58 commits are marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 32951,
+    "sha256": "d88bca965773413d6e6accc7e91a9d99dd38dce1969f8abc9ad88471d3d347e2",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 794,
+    "words": 3721,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/datahub-project--datahub/docs/developers.md"
+}

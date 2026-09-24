@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "english__109_jumla_bina.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "barumau/pandunia",
+    "path": "english/109_jumla_bina.md",
+    "commit": "e215b957f15abef3a4a2dfd8a8358efe9fc66491",
+    "commit_date": "2021-12-29T07:13:08-10:00",
+    "url": "https://github.com/barumau/pandunia/blob/e215b957f15abef3a4a2dfd8a8358efe9fc66491/english/109_jumla_bina.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:conlang"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2021-09-28T12:23:56+03:00",
+    "last_commit_date": "2021-12-07T08:45:46-05:00",
+    "last_commit_author": "Justin Kunimune",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-07: all 13 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 15405,
+    "sha256": "04e2e354c430e3491289709593fe9ff4fc4c6f25c0669dbd78ca3932b7ff083a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 583,
+    "words": 2788,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/barumau--pandunia/english/109_jumla_bina.md"
+}

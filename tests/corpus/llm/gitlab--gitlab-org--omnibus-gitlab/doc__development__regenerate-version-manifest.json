@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__development__regenerate-version-manifest.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/omnibus-gitlab",
+    "path": "doc/development/regenerate-version-manifest.md",
+    "commit": "8ea3be4f36238a2aaf47895d9cc1a9510176eb74",
+    "commit_date": "2026-09-23T18:40:34+00:00",
+    "url": "https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/8ea3be4f36238a2aaf47895d9cc1a9510176eb74/doc/development/regenerate-version-manifest.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 695,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-15T16:22:54-07:00",
+    "last_commit_date": "2026-08-15T16:22:54-07:00",
+    "last_commit_author": "Stan Hu",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4524,
+    "sha256": "982a8e15f09ebd8908088e410a19612fe7813a23876e0bdce0476dac2e6a12e0",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 107,
+    "words": 568,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-org--omnibus-gitlab/doc/development/regenerate-version-manifest.md"
+}

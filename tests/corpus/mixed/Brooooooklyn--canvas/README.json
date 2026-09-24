@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Brooooooklyn/canvas",
+    "path": "README.md",
+    "commit": "841107190d9097a69613716ae7af85d952de815f",
+    "commit_date": "2026-09-21T11:53:57+08:00",
+    "url": "https://github.com/Brooooooklyn/canvas/blob/841107190d9097a69613716ae7af85d952de815f/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-30T11:08:43+08:00",
+    "stars": 2323,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 84,
+    "first_commit_date": "2020-08-30T11:08:43+08:00",
+    "last_commit_date": "2026-09-09T18:24:01+08:00",
+    "last_commit_author": "LongYinan",
+    "authors": 11,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-08-30, before 2022-01-01; 2 of its 84 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 20727,
+    "sha256": "a831eb5344d2a1d5857a359ee640256255b301688ec54b3dca737a0b315a23ce",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 445,
+    "words": 1836,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Brooooooklyn--canvas/README.md"
+}

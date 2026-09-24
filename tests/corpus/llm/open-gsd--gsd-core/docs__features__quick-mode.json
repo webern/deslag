@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__features__quick-mode.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-gsd/gsd-core",
+    "path": "docs/features/quick-mode.md",
+    "commit": "af822a8024f732c167b163f163a0487bdbcfebdf",
+    "commit_date": "2026-09-23T12:13:34-03:00",
+    "url": "https://github.com/open-gsd/gsd-core/blob/af822a8024f732c167b163f163a0487bdbcfebdf/docs/features/quick-mode.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-14T08:16:28-06:00",
+    "stars": 9748,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-24T22:49:00-04:00",
+    "last_commit_date": "2026-08-24T22:49:00-04:00",
+    "last_commit_author": "Tom Boucher",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 937,
+    "sha256": "1b087b28dc39e4995f683e1095babb980a39f2de0c81c0459520e553be5211e2",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 123,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/open-gsd--gsd-core/docs/features/quick-mode.md"
+}

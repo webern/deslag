@@ -1,0 +1,54 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__skills__cws-btfhub-sync__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "DataDog/datadog-agent",
+    "path": ".agents/skills/cws-btfhub-sync/SKILL.md",
+    "commit": "6ef9ef70ee523fc571a0dafd619ecf103a461150",
+    "commit_date": "2026-09-23T15:27:29-04:00",
+    "url": "https://github.com/DataDog/datadog-agent/blob/6ef9ef70ee523fc571a0dafd619ecf103a461150/.agents/skills/cws-btfhub-sync/SKILL.md",
+    "license": "Apache-2.0 OR CC0-1.0",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-3rdparty.csv"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3738,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-26T19:39:32+02:00",
+    "last_commit_date": "2026-08-26T19:39:32+02:00",
+    "last_commit_author": "Daniel Mercier",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 2403,
+    "sha256": "cd37f38cd6238f9e64c99b39135cdd07d5f0b95923eb3a58fe364ee7865c29fe",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 60,
+    "words": 364,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/DataDog--datadog-agent/.agents/skills/cws-btfhub-sync/SKILL.md"
+}

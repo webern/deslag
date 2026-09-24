@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__development__DOCUMENTATION.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "smartcontractkit/chainlink",
+    "path": "docs/development/DOCUMENTATION.md",
+    "commit": "57434211c414c766b221bcaeb4943366f129a8cf",
+    "commit_date": "2021-12-28T17:05:03-05:00",
+    "url": "https://github.com/smartcontractkit/chainlink/blob/57434211c414c766b221bcaeb4943366f129a8cf/docs/development/DOCUMENTATION.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8247,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-08-11T19:14:51-05:00",
+    "last_commit_date": "2020-10-14T12:28:22+01:00",
+    "last_commit_author": "DeividasK (YubiKey 5 Nano)",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-14: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 229,
+    "sha256": "4a1494e1e0e16d84950c4aa45a0104f2c126c10b72ba7f1e59dd0ff3bb4934b5",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 10,
+    "words": 32,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/smartcontractkit--chainlink/docs/development/DOCUMENTATION.md"
+}

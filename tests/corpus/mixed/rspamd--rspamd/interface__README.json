@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "interface__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rspamd/rspamd",
+    "path": "interface/README.md",
+    "commit": "e7f0e48e2e47741e8de90d8ea4fb4042cac88033",
+    "commit_date": "2026-09-23T17:51:30+01:00",
+    "url": "https://github.com/rspamd/rspamd/blob/e7f0e48e2e47741e8de90d8ea4fb4042cac88033/interface/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2531,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-01-01T20:28:59+00:00",
+    "last_commit_date": "2026-01-03T13:33:57+03:00",
+    "last_commit_author": "Copilot",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-01, before 2022-01-01; 1 of its 7 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1938,
+    "sha256": "1e40b63c33a8531114a34a045cb61b3d479a36c32669a63bbdab2d57bb39d512",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 57,
+    "words": 228,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/rspamd--rspamd/interface/README.md"
+}

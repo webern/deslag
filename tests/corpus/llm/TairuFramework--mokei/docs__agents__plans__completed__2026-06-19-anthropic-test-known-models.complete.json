@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__agents__plans__completed__2026-06-19-anthropic-test-known-models.complete.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "TairuFramework/mokei",
+    "path": "docs/agents/plans/completed/2026-06-19-anthropic-test-known-models.complete.md",
+    "commit": "bf3d6a191a3728a07404cbe8759d413e6acc67ae",
+    "commit_date": "2026-09-23T15:48:44+01:00",
+    "url": "https://github.com/TairuFramework/mokei/blob/bf3d6a191a3728a07404cbe8759d413e6acc67ae/docs/agents/plans/completed/2026-06-19-anthropic-test-known-models.complete.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-12-15T17:19:14+00:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-19T23:39:14+01:00",
+    "last_commit_date": "2026-06-19T23:39:14+01:00",
+    "last_commit_author": "Paul Le Cam",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1155,
+    "sha256": "97a9ae53d56b4b6f4e891080bb7a7ba01e93b665d5b05ba3d70a47b6b9bf761a",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 163,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/TairuFramework--mokei/docs/agents/plans/completed/2026-06-19-anthropic-test-known-models.complete.md"
+}

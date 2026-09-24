@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "manual__src__tricky_cases.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Wilfred/difftastic",
+    "path": "manual/src/tricky_cases.md",
+    "commit": "e2e1e3b7f5be18290135cc16ec521c16284eb21b",
+    "commit_date": "2026-07-22T20:16:56+01:00",
+    "url": "https://github.com/Wilfred/difftastic/blob/e2e1e3b7f5be18290135cc16ec521c16284eb21b/manual/src/tricky_cases.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 25924,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 26,
+    "first_commit_date": "2021-09-24T23:32:34-07:00",
+    "last_commit_date": "2026-07-30T08:48:17+00:00",
+    "last_commit_author": "Claude",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-09-24, before 2022-01-01; 1 of its 26 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 12714,
+    "sha256": "3f127ac2610048a519daad2e213eeed2d2b0cc2988aba31cb33970898cb80116",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 512,
+    "words": 1795,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Wilfred--difftastic/manual/src/tricky_cases.md"
+}

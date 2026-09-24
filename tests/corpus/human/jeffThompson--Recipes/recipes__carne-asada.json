@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "recipes__carne-asada.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jeffThompson/Recipes",
+    "path": "recipes/carne-asada.md",
+    "commit": "fd1aad4ed7a846dc155693f804e0bf318f9c4c3c",
+    "commit_date": "2021-11-29T13:18:41-05:00",
+    "url": "https://github.com/jeffThompson/Recipes/blob/fd1aad4ed7a846dc155693f804e0bf318f9c4c3c/recipes/carne-asada.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2019-01-03T17:15:38-05:00",
+    "stars": null,
+    "found_by": "github-topic:cooking"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-05-10T18:10:49-04:00",
+    "last_commit_date": "2020-05-10T18:10:49-04:00",
+    "last_commit_author": "Jeff Thompson",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-05-10: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1069,
+    "sha256": "77b05a9adda2cc920af00a270ff4ace8f2104e7718ead7687900431700d3d470",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 164,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/jeffThompson--Recipes/recipes/carne-asada.md"
+}

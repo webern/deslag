@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "exile-changelog.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/exile",
+    "path": "CHANGELOG.md",
+    "commit": "8135be923712db3d8307f3fce3cc99a34b9e063d",
+    "commit_date": "2025-08-22T08:35:02-07:00",
+    "url": "https://github.com/webern/exile/blob/8135be923712db3d8307f3fce3cc99a34b9e063d/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-APACHE"
+    ],
+    "repo_first_commit_date": "2020-05-22T17:09:39-07:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2020-05-27T18:20:57-07:00",
+    "last_commit_date": "2021-05-29T18:14:43-07:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "all 17 commits that touched it predate 2022-11-30, when ChatGPT was released, and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4397,
+    "sha256": "9733138c02858d3541fba7ba3ad1ab94788461a1123234337f8d3b9395a74595",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 127,
+    "words": 447,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "CHANGELOG.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__graphql-testing__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "constructive-io/constructive",
+    "path": "packages/graphql-testing/CHANGELOG.md",
+    "commit": "b9a32c290af85bf4d05e38ca7a6536defd72f7cc",
+    "commit_date": "2021-12-15T15:35:07-08:00",
+    "url": "https://github.com/constructive-io/constructive/blob/b9a32c290af85bf4d05e38ca7a6536defd72f7cc/packages/graphql-testing/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 190,
+    "first_commit_date": "2020-07-01T23:33:54-07:00",
+    "last_commit_date": "2021-12-15T15:35:07-08:00",
+    "last_commit_author": "Dan Lynch",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-15: all 190 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 39682,
+    "sha256": "4630dd7aade083276ef38589427aaf80f0ff4344ecb6a720ea353b0da641aeb4",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1515,
+    "words": 1910,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/constructive-io--constructive/packages/graphql-testing/CHANGELOG.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "NVIDIA-NeMo/Speech",
+    "path": "CONTRIBUTING.md",
+    "commit": "cf724ac337d1ebc7d0dda1e23fb80916f52927a5",
+    "commit_date": "2026-09-23T19:51:49+02:00",
+    "url": "https://github.com/NVIDIA-NeMo/Speech/blob/cf724ac337d1ebc7d0dda1e23fb80916f52927a5/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-08-06T16:45:03-07:00",
+    "stars": 18490,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2020-08-03T17:18:44-07:00",
+    "last_commit_date": "2026-09-03T12:16:09-04:00",
+    "last_commit_author": "Piotr Żelasko",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-08-03, before 2022-01-01; 1 of its 9 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7861,
+    "sha256": "98b88a3b839db038c2800d295324d562d57e13ca0ad9a4b98daf7cc347aa0ab9",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 146,
+    "words": 1278,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NVIDIA-NeMo--Speech/CONTRIBUTING.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "frontend__scripts__dev-update-test__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Stirling-Tools/Stirling-PDF",
+    "path": "frontend/scripts/dev-update-test/README.md",
+    "commit": "3c052965fd8fa4aa55222c770609a9d90dac25cb",
+    "commit_date": "2026-09-23T19:44:03+01:00",
+    "url": "https://github.com/Stirling-Tools/Stirling-PDF/blob/3c052965fd8fa4aa55222c770609a9d90dac25cb/frontend/scripts/dev-update-test/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-01-27T18:22:43+00:00",
+    "stars": 92786,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-02T23:11:37+01:00",
+    "last_commit_date": "2026-06-02T23:11:37+01:00",
+    "last_commit_author": "Anthony Stirling",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 851,
+    "sha256": "2f9d94ebcaaeac5e78c85b47bc78acf639e63f9f3114d8980b8903a3c48e9bc4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 126,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Stirling-Tools--Stirling-PDF/frontend/scripts/dev-update-test/README.md"
+}

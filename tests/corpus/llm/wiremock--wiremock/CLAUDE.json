@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CLAUDE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "wiremock/wiremock",
+    "path": "CLAUDE.md",
+    "commit": "ed1323cef36a7539b17b3bd8ae6150eb5f7246fe",
+    "commit_date": "2026-09-22T09:56:11+01:00",
+    "url": "https://github.com/wiremock/wiremock/blob/ed1323cef36a7539b17b3bd8ae6150eb5f7246fe/CLAUDE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 7378,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-05T10:36:55+01:00",
+    "last_commit_date": "2026-06-05T10:36:55+01:00",
+    "last_commit_author": "Tom Akehurst",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1282,
+    "sha256": "8f421cee34cee58f11b349e9dc07c43c554bfb87e00fbb2cd9a8968080d37dc8",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 159,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/wiremock--wiremock/CLAUDE.md"
+}

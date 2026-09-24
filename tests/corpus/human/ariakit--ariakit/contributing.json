@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "contributing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ariakit/ariakit",
+    "path": "contributing.md",
+    "commit": "77e9274b3ba675b7173f810438aa62315462e176",
+    "commit_date": "2021-12-29T14:38:55+01:00",
+    "url": "https://github.com/ariakit/ariakit/blob/77e9274b3ba675b7173f810438aa62315462e176/contributing.md",
+    "license": "MIT",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": "2018-01-22T20:27:46-02:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2021-12-02T23:12:24+01:00",
+    "last_commit_date": "2021-12-13T05:32:26+01:00",
+    "last_commit_author": "Haz",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-13: all 9 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 10397,
+    "sha256": "f15bc36d0c167c24c0724d4b56ad28d12e0957f3271ff1664fd6603d845bf158",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 309,
+    "words": 1329,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/ariakit--ariakit/contributing.md"
+}

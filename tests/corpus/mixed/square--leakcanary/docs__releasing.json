@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__releasing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "square/leakcanary",
+    "path": "docs/releasing.md",
+    "commit": "66aab8d2ab695c4e1c013ed1bd5c3884939c1e2f",
+    "commit_date": "2026-08-31T16:51:15+02:00",
+    "url": "https://github.com/square/leakcanary/blob/66aab8d2ab695c4e1c013ed1bd5c3884939c1e2f/docs/releasing.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 29996,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 32,
+    "first_commit_date": "2019-08-22T15:54:16-07:00",
+    "last_commit_date": "2026-08-28T15:37:42+02:00",
+    "last_commit_author": "Pierre-Yves Ricau",
+    "authors": 5,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-08-22, before 2022-01-01; 6 of its 32 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7855,
+    "sha256": "ec6d7fea9a8a75a734090804e788538f3dfed7ad7713e375a38e8f5444802d9c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 179,
+    "words": 964,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/square--leakcanary/docs/releasing.md"
+}

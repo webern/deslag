@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mcgoo/vcpkg-rs",
+    "path": "CHANGELOG.md",
+    "commit": "f900d3a8b5870a7344f843188825ada2a1a2b15f",
+    "commit_date": "2021-08-26T09:43:13+02:00",
+    "url": "https://github.com/mcgoo/vcpkg-rs/blob/f900d3a8b5870a7344f843188825ada2a1a2b15f/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2018-04-12T15:43:58-05:00",
+    "last_commit_date": "2021-06-19T09:18:21-07:00",
+    "last_commit_author": "Mike Waychison",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-19: all 19 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3021,
+    "sha256": "dd34e4f6c0114081aef4b32071aef5854b650e6cc80cb7f134503677982b76fb",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 112,
+    "words": 439,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mcgoo--vcpkg-rs/CHANGELOG.md"
+}

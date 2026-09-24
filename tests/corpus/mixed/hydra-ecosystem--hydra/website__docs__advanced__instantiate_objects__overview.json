@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "website__docs__advanced__instantiate_objects__overview.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hydra-ecosystem/hydra",
+    "path": "website/docs/advanced/instantiate_objects/overview.md",
+    "commit": "244d5a597be90a787059a39409da1887821d05e6",
+    "commit_date": "2026-09-17T21:28:26+02:00",
+    "url": "https://github.com/hydra-ecosystem/hydra/blob/244d5a597be90a787059a39409da1887821d05e6/website/docs/advanced/instantiate_objects/overview.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-12T12:36:35-07:00",
+    "stars": 10670,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 25,
+    "first_commit_date": "2021-03-10T17:23:10-08:00",
+    "last_commit_date": "2026-09-14T19:06:03+02:00",
+    "last_commit_author": "Omry Yadan",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-03-10, before 2022-01-01; 1 of its 25 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 23854,
+    "sha256": "eb1544cb8fd329731a4bd900973ab381f9a2968c4371e717ef7e4bbef92f6fd0",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 661,
+    "words": 2728,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/hydra-ecosystem--hydra/website/docs/advanced/instantiate_objects/overview.md"
+}

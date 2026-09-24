@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "agitter/single-cell-pseudotime",
+    "path": "README.md",
+    "commit": "0a364de62f793dfa0a9a45e2684236087e9ddddc",
+    "commit_date": "2021-12-24T09:29:38-06:00",
+    "url": "https://github.com/agitter/single-cell-pseudotime/blob/0a364de62f793dfa0a9a45e2684236087e9ddddc/README.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 444,
+    "found_by": "sg-topic:bioinformatics"
+  },
+  "history": {
+    "commits": 127,
+    "first_commit_date": "2018-01-03T15:16:39-06:00",
+    "last_commit_date": "2021-12-24T09:29:38-06:00",
+    "last_commit_author": "Anthony Gitter",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-24: all 127 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 36138,
+    "sha256": "d11d62d784ac48443be03ca3c7533e2232739ca3e7c8677e65d6747a175fc77c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 840,
+    "words": 3057,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/agitter--single-cell-pseudotime/README.md"
+}

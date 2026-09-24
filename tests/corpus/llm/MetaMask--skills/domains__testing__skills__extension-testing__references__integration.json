@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "domains__testing__skills__extension-testing__references__integration.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "MetaMask/skills",
+    "path": "domains/testing/skills/extension-testing/references/integration.md",
+    "commit": "bc63ad62a6e5f18fd3e7f9fd60b9d1b9bd467e72",
+    "commit_date": "2026-09-23T11:57:50-04:00",
+    "url": "https://github.com/MetaMask/skills/blob/bc63ad62a6e5f18fd3e7f9fd60b9d1b9bd467e72/domains/testing/skills/extension-testing/references/integration.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-03T12:38:18-05:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-19T10:54:18+02:00",
+    "last_commit_date": "2026-08-25T10:15:14+02:00",
+    "last_commit_author": "Ramon AC",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4421,
+    "sha256": "0417d505eddaf18e0cd6fd9774808a81ac6c58ba5963b2e80d17a65836321d0b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 575,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/MetaMask--skills/domains/testing/skills/extension-testing/references/integration.md"
+}

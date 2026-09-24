@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__triggers__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "workglow-dev/libs",
+    "path": "packages/triggers/README.md",
+    "commit": "a2fbe99ba4312265300a3454a9f69dd20dbc8766",
+    "commit_date": "2026-09-21T14:38:02-07:00",
+    "url": "https://github.com/workglow-dev/libs/blob/a2fbe99ba4312265300a3454a9f69dd20dbc8766/packages/triggers/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-12-27T15:56:26-08:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-16T17:03:40+00:00",
+    "last_commit_date": "2026-08-16T09:16:01+00:00",
+    "last_commit_author": "Claude",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9776,
+    "sha256": "c90bd15e588bcfccf18e87306ea8495cce96478424c971f3134b0bc0962900ba",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 170,
+    "words": 1439,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/workglow-dev--libs/packages/triggers/README.md"
+}

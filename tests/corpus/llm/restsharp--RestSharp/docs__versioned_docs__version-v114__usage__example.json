@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__versioned_docs__version-v114__usage__example.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "restsharp/RestSharp",
+    "path": "docs/versioned_docs/version-v114/usage/example.md",
+    "commit": "64ee12995b8d7409a5863da7b71cddfa526ffb7a",
+    "commit_date": "2026-09-02T13:31:04+02:00",
+    "url": "https://github.com/restsharp/RestSharp/blob/64ee12995b8d7409a5863da7b71cddfa526ffb7a/docs/versioned_docs/version-v114/usage/example.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 9824,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-05T15:23:13+01:00",
+    "last_commit_date": "2026-03-05T15:23:13+01:00",
+    "last_commit_author": "Alexey Zimarev",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5179,
+    "sha256": "f78c75103ebd8ddaea6d2e76a7a428dea4945b2f8ba8a7d9d3e5621e54be83fe",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 120,
+    "words": 644,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/restsharp--RestSharp/docs/versioned_docs/version-v114/usage/example.md"
+}

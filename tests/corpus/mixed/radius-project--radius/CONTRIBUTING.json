@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "radius-project/radius",
+    "path": "CONTRIBUTING.md",
+    "commit": "002d41dd1ed4982157db64b15e1588481fcedabf",
+    "commit_date": "2026-09-23T18:48:34+00:00",
+    "url": "https://github.com/radius-project/radius/blob/002d41dd1ed4982157db64b15e1588481fcedabf/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-02-19T16:26:05-08:00",
+    "stars": 1670,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2021-02-22T16:07:15-08:00",
+    "last_commit_date": "2026-09-14T15:43:46+00:00",
+    "last_commit_author": "Brooke Hamilton",
+    "authors": 9,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-02-22, before 2022-01-01; 3 of its 18 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4810,
+    "sha256": "859fa6e0291475a7463e5f2703bb5354ceac40d6d4dd0db8eadb85129b111ed4",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 632,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/radius-project--radius/CONTRIBUTING.md"
+}

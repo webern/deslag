@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "travel-plan-viz__references__porting-to-other-agents.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zexuanw958-svg/travel-plan-viz",
+    "path": "travel-plan-viz/references/porting-to-other-agents.md",
+    "commit": "07d0155080f72607a6f0a74e063bd05c850dcf01",
+    "commit_date": "2026-07-15T13:16:15+08:00",
+    "url": "https://github.com/zexuanw958-svg/travel-plan-viz/blob/07d0155080f72607a6f0a74e063bd05c850dcf01/travel-plan-viz/references/porting-to-other-agents.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-13T15:56:50+08:00",
+    "stars": null,
+    "found_by": "github-topic:travel"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-14T01:24:04+08:00",
+    "last_commit_date": "2026-07-02T16:13:54+08:00",
+    "last_commit_author": "zexuanw958-svg",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3706,
+    "sha256": "1a93ddb1c9b916acc64fe806817dcd979cce8bc0ccee2ef9b3c25d141941762d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 207,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/zexuanw958-svg--travel-plan-viz/travel-plan-viz/references/porting-to-other-agents.md"
+}

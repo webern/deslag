@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "snapview/tokio-tungstenite",
+    "path": "CHANGELOG.md",
+    "commit": "8e1e35b7881a2862b08587ce670ae509eee55261",
+    "commit_date": "2021-12-06T18:18:02+01:00",
+    "url": "https://github.com/snapview/tokio-tungstenite/blob/8e1e35b7881a2862b08587ce670ae509eee55261/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-01-09T16:12:32+01:00",
+    "last_commit_date": "2021-12-06T18:18:02+01:00",
+    "last_commit_author": "Daniel Abramov",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-06: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1515,
+    "sha256": "5d1747925b1573c661cf06796413cb25beb63a4f693b3c07518e2da0bed9d2d5",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 32,
+    "words": 213,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/snapview--tokio-tungstenite/CHANGELOG.md"
+}

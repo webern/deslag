@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "changelog__soft-self-dat-epsilon-4b8d6e23.changed.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "newton-physics/newton",
+    "path": "changelog/+soft-self-dat-epsilon-4b8d6e23.changed.md",
+    "commit": "45458023f24629c1feffb1f336594808f537db14",
+    "commit_date": "2026-09-23T17:17:58+00:00",
+    "url": "https://github.com/newton-physics/newton/blob/45458023f24629c1feffb1f336594808f537db14/changelog/+soft-self-dat-epsilon-4b8d6e23.changed.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2025-03-26T09:06:42-07:00",
+    "stars": 5674,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-16T22:11:54+00:00",
+    "last_commit_date": "2026-09-16T22:11:54+00:00",
+    "last_commit_author": "Donglai Xiang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 851,
+    "sha256": "2a67151d4890c6cd0f00c8b9b9e3226cc97c66a5e735e05e6ad6436a26623f8e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1,
+    "words": 121,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/newton-physics--newton/changelog/+soft-self-dat-epsilon-4b8d6e23.changed.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "staging__src__k8s.io__apimachinery__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kubernetes/kubernetes",
+    "path": "staging/src/k8s.io/apimachinery/CONTRIBUTING.md",
+    "commit": "d98e9620e37995597f25f9a5d7e228dcf9dbbb1f",
+    "commit_date": "2022-11-29T13:03:08-08:00",
+    "url": "https://github.com/kubernetes/kubernetes/blob/d98e9620e37995597f25f9a5d7e228dcf9dbbb1f/staging/src/k8s.io/apimachinery/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 127924,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-11-02T21:28:20-07:00",
+    "last_commit_date": "2019-02-22T09:43:51+08:00",
+    "last_commit_author": "Xiang Dai",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-02-22: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 746,
+    "sha256": "df8e944510638445d39788778eeacdb67f6d39a30942d8af0c64a82806a3b9e4",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 7,
+    "words": 59,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kubernetes--kubernetes/staging/src/k8s.io/apimachinery/CONTRIBUTING.md"
+}

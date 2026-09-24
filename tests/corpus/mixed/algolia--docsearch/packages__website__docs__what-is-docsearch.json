@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__website__docs__what-is-docsearch.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "algolia/docsearch",
+    "path": "packages/website/docs/what-is-docsearch.md",
+    "commit": "9eb5db9c93c75487929da8e11e1593684bd8d5a3",
+    "commit_date": "2026-09-18T12:40:26-04:00",
+    "url": "https://github.com/algolia/docsearch/blob/9eb5db9c93c75487929da8e11e1593684bd8d5a3/packages/website/docs/what-is-docsearch.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4381,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2020-11-26T15:01:25+01:00",
+    "last_commit_date": "2026-08-06T15:31:45-04:00",
+    "last_commit_author": "Paul Jankowski",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-11-26, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2083,
+    "sha256": "e7e25ac0a370c9970719dc7c3b1e346c4fca9d295a46914ab65ca0ae83f3d88a",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 36,
+    "words": 249,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/algolia--docsearch/packages/website/docs/what-is-docsearch.md"
+}

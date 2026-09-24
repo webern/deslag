@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marko-js/htmljs-parser",
+    "path": "README.md",
+    "commit": "fe18957f1ea8c7077a79f96adfc595c83e859328",
+    "commit_date": "2021-10-22T10:21:33-07:00",
+    "url": "https://github.com/marko-js/htmljs-parser/blob/fe18957f1ea8c7077a79f96adfc595c83e859328/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-02-19T16:15:23-08:00",
+    "last_commit_date": "2018-12-03T10:43:32-08:00",
+    "last_commit_author": "Michael Rawlings",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-12-03: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 11723,
+    "sha256": "76f542fe36329f5619e67dd6f2239fa183fda1f001316bdb7fa97ce5cb194fd5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 594,
+    "words": 1511,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/marko-js--htmljs-parser/README.md"
+}

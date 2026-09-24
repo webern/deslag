@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__instructions__HRW.instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "apache/trafficserver",
+    "path": ".github/instructions/HRW.instructions.md",
+    "commit": "e32c31f81c547ce9eac481962377dcb85fc951a1",
+    "commit_date": "2026-09-23T10:03:02-06:00",
+    "url": "https://github.com/apache/trafficserver/blob/e32c31f81c547ce9eac481962377dcb85fc951a1/.github/instructions/HRW.instructions.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1988,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-17T10:54:45-07:00",
+    "last_commit_date": "2026-02-17T10:54:45-07:00",
+    "last_commit_author": "Leif Hedstrom",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 7801,
+    "sha256": "9d73dd661d9747f1d270266f838dbc91ae769fc4ce95b5fb397171561fe34dcb",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 223,
+    "words": 971,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/apache--trafficserver/.github/instructions/HRW.instructions.md"
+}

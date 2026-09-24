@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "custom_css.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "daybrush/moveable",
+    "path": "custom_css.md",
+    "commit": "0d3a3cf18120826911662ded4c0267f3c7b926c4",
+    "commit_date": "2021-11-29T22:27:50+09:00",
+    "url": "https://github.com/daybrush/moveable/blob/0d3a3cf18120826911662ded4c0267f3c7b926c4/custom_css.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-07T03:47:51+09:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2019-08-24T15:20:44+09:00",
+    "last_commit_date": "2019-08-24T15:27:11+09:00",
+    "last_commit_author": "Daybrush",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-08-24: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3795,
+    "sha256": "314ac36671e483233de85a79d5081f3dcab02c9b8d5167f8731e20cce6e84370",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 169,
+    "words": 329,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/daybrush--moveable/custom_css.md"
+}

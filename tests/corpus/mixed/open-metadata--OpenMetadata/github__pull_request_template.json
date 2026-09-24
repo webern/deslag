@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-metadata/OpenMetadata",
+    "path": ".github/pull_request_template.md",
+    "commit": "e4e88a41f2685ebed5ab9b2af2406799c5bb785e",
+    "commit_date": "2026-09-24T00:06:54+05:30",
+    "url": "https://github.com/open-metadata/OpenMetadata/blob/e4e88a41f2685ebed5ab9b2af2406799c5bb785e/.github/pull_request_template.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-08-01T14:27:44-07:00",
+    "stars": 15287,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2021-08-02T11:07:13+05:30",
+    "last_commit_date": "2026-05-06T23:05:56-07:00",
+    "last_commit_author": "Sriharsha Chintalapani",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-08-02, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4691,
+    "sha256": "b3f3c18993781383ab6361f4ae74ab39a2626e862c7e492c673f3cd81e63e2e8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 137,
+    "words": 781,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/open-metadata--OpenMetadata/.github/pull_request_template.md"
+}

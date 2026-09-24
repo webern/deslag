@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__utils__src__undo__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "CarlosNZ/json-edit-react",
+    "path": "packages/utils/src/undo/README.md",
+    "commit": "9a85925b54cf57f44157c5441a88af9e997a2352",
+    "commit_date": "2026-09-17T00:31:44+12:00",
+    "url": "https://github.com/CarlosNZ/json-edit-react/blob/9a85925b54cf57f44157c5441a88af9e997a2352/packages/utils/src/undo/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-05-10T11:20:43+12:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-06-07T22:43:17+12:00",
+    "last_commit_date": "2026-06-29T23:26:13+12:00",
+    "last_commit_author": "Carl Smith",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4488,
+    "sha256": "50e6a5cd8a77fc172f4677f468e212ce4771bdbbba1a010ba9f61d885bea705e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 71,
+    "words": 701,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/CarlosNZ--json-edit-react/packages/utils/src/undo/README.md"
+}

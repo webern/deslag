@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "u-root/u-root",
+    "path": "README.md",
+    "commit": "d0a77dc60b776a5b297ce672e1454088db5c92cd",
+    "commit_date": "2026-09-23T17:28:33+03:00",
+    "url": "https://github.com/u-root/u-root/blob/d0a77dc60b776a5b297ce672e1454088db5c92cd/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3076,
+    "found_by": "sg-topic:linux"
+  },
+  "history": {
+    "commits": 92,
+    "first_commit_date": "2018-04-23T23:06:09+01:00",
+    "last_commit_date": "2026-08-06T13:47:09-07:00",
+    "last_commit_author": "Ronald G Minnich",
+    "authors": 31,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-04-23, before 2022-01-01; 1 of its 92 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 20816,
+    "sha256": "00909add52389c6337c9f26a550686b322ee3a01f10d54837f58acc38e39e949",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 616,
+    "words": 2851,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/u-root--u-root/README.md"
+}

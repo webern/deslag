@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-nested-namespaces.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": ".agents/skills/nested-namespaces/SKILL.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/.agents/skills/nested-namespaces/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-14T05:31:56-05:00",
+    "last_commit_date": "2026-07-14T05:31:56-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 1 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 455,
+    "sha256": "13dc2d9e4a48b649d7eb1b9c55a1eb3a9ea660423e6b31497fbe50ec6228e769",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 60,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": ".agents/skills/nested-namespaces/SKILL.md"
+}

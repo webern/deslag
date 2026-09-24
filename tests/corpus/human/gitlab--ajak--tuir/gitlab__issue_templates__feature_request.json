@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "gitlab__issue_templates__feature_request.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "ajak/tuir",
+    "path": ".gitlab/issue_templates/feature_request.md",
+    "commit": "eb7f13bc2c03f380c07382992894323d5b50276e",
+    "commit_date": "2020-04-26T02:12:09-05:00",
+    "url": "https://gitlab.com/ajak/tuir/-/blob/eb7f13bc2c03f380c07382992894323d5b50276e/.gitlab/issue_templates/feature_request.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 180,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2019-06-12T15:25:27-05:00",
+    "last_commit_date": "2019-06-12T18:49:10-05:00",
+    "last_commit_author": "John Helmert",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-06-12: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 534,
+    "sha256": "9b83c7f8d9a5c748dab5dc28635cae7e1b1614af667cfc9c9d0894feeaeb9819",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 77,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--ajak--tuir/.gitlab/issue_templates/feature_request.md"
+}

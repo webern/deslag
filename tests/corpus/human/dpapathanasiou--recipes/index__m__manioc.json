@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "index__m__manioc.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dpapathanasiou/recipes",
+    "path": "index/m/manioc.md",
+    "commit": "48268785a13d598a87de2e75c525056d00202e54",
+    "commit_date": "2020-05-09T21:35:38-04:00",
+    "url": "https://github.com/dpapathanasiou/recipes/blob/48268785a13d598a87de2e75c525056d00202e54/index/m/manioc.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-09T18:43:34-05:00",
+    "stars": null,
+    "found_by": "github-topic:cooking"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2019-03-10T19:27:31-04:00",
+    "last_commit_date": "2019-03-14T21:05:01-04:00",
+    "last_commit_author": "Denis Papathanasiou",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-03-14: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 412,
+    "sha256": "89f70f04c4af266d22289fa3ccf49fd9561f927a96393dc4d45482e75e90f22f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 6,
+    "words": 28,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/dpapathanasiou--recipes/index/m/manioc.md"
+}

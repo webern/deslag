@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "rt-build-doctrine.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/rust-template",
+    "path": ".agents/skills/proj-build-doctrine/SKILL.md",
+    "commit": "ca247d10e5a1690090ed06326034fe9266082826",
+    "commit_date": "2026-09-18T17:12:41+02:00",
+    "url": "https://github.com/webern/rust-template/blob/ca247d10e5a1690090ed06326034fe9266082826/.agents/skills/proj-build-doctrine/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T21:07:47-08:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-18T16:51:51+02:00",
+    "last_commit_date": "2026-09-18T16:51:51+02:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "1 of its 1 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's"
+  },
+  "content": {
+    "size_bytes": 4484,
+    "sha256": "280f1261a0a1ff38f27c7d14d768531ced54a1a2f8539e2b2f5204cd14f89f82",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 83,
+    "words": 718,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": ".agents/skills/build-doctrine/SKILL.md"
+}

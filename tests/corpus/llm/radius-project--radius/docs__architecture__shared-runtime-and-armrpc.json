@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__architecture__shared-runtime-and-armrpc.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "radius-project/radius",
+    "path": "docs/architecture/shared-runtime-and-armrpc.md",
+    "commit": "002d41dd1ed4982157db64b15e1588481fcedabf",
+    "commit_date": "2026-09-23T18:48:34+00:00",
+    "url": "https://github.com/radius-project/radius/blob/002d41dd1ed4982157db64b15e1588481fcedabf/docs/architecture/shared-runtime-and-armrpc.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-02-19T16:26:05-08:00",
+    "stars": 1670,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-12T19:44:34-07:00",
+    "last_commit_date": "2026-03-12T19:44:34-07:00",
+    "last_commit_author": "Will Smith",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10747,
+    "sha256": "6a285dc0ce3dc3e0d5c9bbe4e5761ffaa38d1551a9e670f0ca5e4c0dbe3f267b",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 281,
+    "words": 1258,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/radius-project--radius/docs/architecture/shared-runtime-and-armrpc.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "sentry-android-distribution__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "getsentry/sentry-java",
+    "path": "sentry-android-distribution/README.md",
+    "commit": "ceb45dcd4ed081329502269cbcca43ea43b59f71",
+    "commit_date": "2026-09-23T16:15:58+00:00",
+    "url": "https://github.com/getsentry/sentry-java/blob/ceb45dcd4ed081329502269cbcca43ea43b59f71/sentry-android-distribution/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-03T13:30:09-04:00",
+    "stars": 1352,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-10-13T15:38:10+02:00",
+    "last_commit_date": "2025-10-13T15:38:10+02:00",
+    "last_commit_author": "Nelson Osacky",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 203,
+    "sha256": "3f6931f7cc24cbffac71ba1aaa4d2a574e93cc0e51832172e55cb6ae40545d14",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 3,
+    "words": 26,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/getsentry--sentry-java/sentry-android-distribution/README.md"
+}

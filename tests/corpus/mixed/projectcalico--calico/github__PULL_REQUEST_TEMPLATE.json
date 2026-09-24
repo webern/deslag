@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "projectcalico/calico",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "340d13486b93fa3493c01ee99d8a0d43526cdad6",
+    "commit_date": "2026-09-23T19:38:15+01:00",
+    "url": "https://github.com/projectcalico/calico/blob/340d13486b93fa3493c01ee99d8a0d43526cdad6/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 7366,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-12-15T14:20:29-08:00",
+    "last_commit_date": "2026-08-28T15:29:44-04:00",
+    "last_commit_author": "Casey Davenport",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-12-15, before 2022-01-01; 1 of its 6 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 599,
+    "sha256": "f321f1089a981b12d6d3aa66bceac007bae8ed3e838eb65a9479f696fc6bcada",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 13,
+    "words": 93,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/projectcalico--calico/.github/PULL_REQUEST_TEMPLATE.md"
+}

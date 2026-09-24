@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AUDIT.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "cznic/ql",
+    "path": "AUDIT.md",
+    "commit": "e94913d631617e644bad2580c4d8d6def20cfb51",
+    "commit_date": "2026-08-20T01:32:45+02:00",
+    "url": "https://gitlab.com/cznic/ql/-/blob/e94913d631617e644bad2580c4d8d6def20cfb51/AUDIT.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 76,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2026-07-06T15:44:58+02:00",
+    "last_commit_date": "2026-07-29T17:34:01+02:00",
+    "last_commit_author": "Jan Mercl",
+    "authors": 1,
+    "ai_commits": 10,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 10 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 23810,
+    "sha256": "d824941e7f3b444d88dcf899f7598487d6a5ceda3e92a0c01de3deaa43eb7235",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 435,
+    "words": 3604,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--cznic--ql/AUDIT.md"
+}

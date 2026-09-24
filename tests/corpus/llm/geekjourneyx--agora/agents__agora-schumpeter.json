@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__agora-schumpeter.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "geekjourneyx/agora",
+    "path": "agents/agora-schumpeter.md",
+    "commit": "0850475c718fc3f74ee6faba3a4281d4a8c45a60",
+    "commit_date": "2026-04-10T00:09:41+08:00",
+    "url": "https://github.com/geekjourneyx/agora/blob/0850475c718fc3f74ee6faba3a4281d4a8c45a60/agents/agora-schumpeter.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-09T23:56:24+08:00",
+    "stars": null,
+    "found_by": "github-topic:philosophy"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-09T23:56:24+08:00",
+    "last_commit_date": "2026-04-09T23:56:24+08:00",
+    "last_commit_author": "geekjourneyx",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6084,
+    "sha256": "20c5b7e45ac5e932f8fa9cb4abc22260614467769aa7094edc16fe9fda63b865",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 98,
+    "words": 890,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/geekjourneyx--agora/agents/agora-schumpeter.md"
+}

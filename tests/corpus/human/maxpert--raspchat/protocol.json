@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "protocol.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "maxpert/raspchat",
+    "path": "protocol.md",
+    "commit": "7b3ae4f960e0b72bc0c7037d6c2759350bc310e6",
+    "commit_date": "2021-09-03T09:09:38-07:00",
+    "url": "https://github.com/maxpert/raspchat/blob/7b3ae4f960e0b72bc0c7037d6c2759350bc310e6/protocol.md",
+    "license": "MIT",
+    "license_files": [
+      "license"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 421,
+    "found_by": "sg-topic:raspberry-pi"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-07-29T08:07:47-07:00",
+    "last_commit_date": "2018-07-29T08:07:47-07:00",
+    "last_commit_author": "Zohaib",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-07-29: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1707,
+    "sha256": "2bd571ad3994ce75bf28bb34f366f6fe0e202f1833cfa366bc398b5de15e810b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 154,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/maxpert--raspchat/protocol.md"
+}

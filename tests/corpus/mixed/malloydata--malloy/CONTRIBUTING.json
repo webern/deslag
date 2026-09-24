@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "malloydata/malloy",
+    "path": "CONTRIBUTING.md",
+    "commit": "3e99aefe656ff50b6da2c505d6b31213e53109f9",
+    "commit_date": "2026-09-18T17:30:53+00:00",
+    "url": "https://github.com/malloydata/malloy/blob/3e99aefe656ff50b6da2c505d6b31213e53109f9/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-08-20T16:15:13-07:00",
+    "stars": 2581,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2021-08-20T16:15:13-07:00",
+    "last_commit_date": "2026-07-15T10:33:30-07:00",
+    "last_commit_author": "Ofer Mendelevitch",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-08-20, before 2022-01-01; 1 of its 7 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2756,
+    "sha256": "514f2ef289603ee3561cf5d542feaf711750626fa89822a06da8f2fd3173b181",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 401,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/malloydata--malloy/CONTRIBUTING.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "openai-community/gpt2",
+    "path": "README.md",
+    "commit": "6c0e6080953db56375760c0471a8c5f2929baf11",
+    "commit_date": "2021-05-19T16:25:59+00:00",
+    "url": "https://huggingface.co/openai-community/gpt2/blob/6c0e6080953db56375760c0471a8c5f2929baf11/README.md",
+    "license": "MIT",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2019-02-18T10:36:15+00:00",
+    "stars": 4167,
+    "found_by": "hf-models-mit"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-12-11T22:25:28+01:00",
+    "last_commit_date": "2020-12-11T22:25:28+01:00",
+    "last_commit_author": "Julien Chaumond",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-12-11: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 7862,
+    "sha256": "757b89cd27239bb1fcd53527e5dd6e2ee38addb956b4afc75fb24bfdaf039f1f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 163,
+    "words": 1126,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--openai-community--gpt2/README.md"
+}

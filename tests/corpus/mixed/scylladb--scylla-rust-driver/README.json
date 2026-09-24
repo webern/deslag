@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "scylladb/scylla-rust-driver",
+    "path": "README.md",
+    "commit": "5a8b9bd03ef04f8d8531a4b30557d5ee3f59376d",
+    "commit_date": "2026-09-15T16:32:50+02:00",
+    "url": "https://github.com/scylladb/scylla-rust-driver/blob/5a8b9bd03ef04f8d8531a4b30557d5ee3f59376d/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-10-21T12:31:56+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 50,
+    "first_commit_date": "2020-10-21T12:31:56+02:00",
+    "last_commit_date": "2026-04-09T12:33:49+02:00",
+    "last_commit_author": "Karol Baryła",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-10-21, before 2022-01-01; 1 of its 50 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5320,
+    "sha256": "128ad9637d3562f4db8df3bf818abd270abd95e3c16457f73cc655cb389dfad4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 125,
+    "words": 598,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/scylladb--scylla-rust-driver/README.md"
+}

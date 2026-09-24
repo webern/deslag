@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "changeset__remove-deprecated-targets.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pmndrs/react-spring",
+    "path": ".changeset/remove-deprecated-targets.md",
+    "commit": "f052d6d4d31ec9e37856b570a22847411601a5d9",
+    "commit_date": "2026-09-23T16:01:39+01:00",
+    "url": "https://github.com/pmndrs/react-spring/blob/f052d6d4d31ec9e37856b570a22847411601a5d9/.changeset/remove-deprecated-targets.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-03-07T16:39:32+01:00",
+    "stars": 29160,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-11T18:37:32+01:00",
+    "last_commit_date": "2026-06-11T18:37:32+01:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 539,
+    "sha256": "241d98d160d9ba8c3b867662b4b91cc8f7c264f6c78af36de50b28d86964fa50",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 57,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pmndrs--react-spring/.changeset/remove-deprecated-targets.md"
+}

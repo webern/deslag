@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "html__index.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "ForgeFed/ForgeFed",
+    "path": "html/index.md",
+    "commit": "5e44b2bde356b3ea404330b4bba90fb2bfd33a89",
+    "commit_date": "2021-07-15T07:27:01+00:00",
+    "url": "https://codeberg.org/ForgeFed/ForgeFed/src/commit/5e44b2bde356b3ea404330b4bba90fb2bfd33a89/html/index.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 262,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2019-07-01T02:12:06+03:00",
+    "last_commit_date": "2020-05-14T16:26:08+03:00",
+    "last_commit_author": "fr33domlover",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-05-14: all 17 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3968,
+    "sha256": "aa905998960511993d60c1ffd2f59b064886d40ee8fdfb1d36c2d93290d43bf5",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 97,
+    "words": 443,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--ForgeFed--ForgeFed/html/index.md"
+}

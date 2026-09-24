@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.latest.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "RevenueCat/react-native-purchases",
+    "path": "CHANGELOG.latest.md",
+    "commit": "53af78532e4b7cac0855c5baff10fb14aba106e4",
+    "commit_date": "2026-09-22T11:49:24+02:00",
+    "url": "https://github.com/RevenueCat/react-native-purchases/blob/53af78532e4b7cac0855c5baff10fb14aba106e4/CHANGELOG.latest.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-02-08T18:24:29-08:00",
+    "stars": 1214,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 232,
+    "first_commit_date": "2021-11-11T15:39:57-08:00",
+    "last_commit_date": "2026-09-21T12:23:39+02:00",
+    "last_commit_author": "RevenueCat Git Bot",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-11-11, before 2022-01-01; 1 of its 232 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1143,
+    "sha256": "7002af3f3a817ea4855aefcc760444f5ec7accdebd9a9ee7ef7c15058d4dacce",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 81,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/RevenueCat--react-native-purchases/CHANGELOG.latest.md"
+}

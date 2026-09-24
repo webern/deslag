@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__requests__cookies.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "softwaremill/sttp",
+    "path": "docs/requests/cookies.md",
+    "commit": "7cf8780ead1c6d6e87852e8927b2dad46a16aff0",
+    "commit_date": "2026-09-22T03:10:54+02:00",
+    "url": "https://github.com/softwaremill/sttp/blob/7cf8780ead1c6d6e87852e8927b2dad46a16aff0/docs/requests/cookies.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1506,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2020-01-26T15:54:51+03:00",
+    "last_commit_date": "2026-05-29T19:01:45+02:00",
+    "last_commit_author": "Adam Warski",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-01-26, before 2022-01-01; 1 of its 12 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2767,
+    "sha256": "87e0c9856a0c32a8f0607b039f22d5d119c10e4a3e45705c269ed949e0050d39",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 70,
+    "words": 346,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/softwaremill--sttp/docs/requests/cookies.md"
+}

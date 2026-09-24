@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "SAP/open-ux-tools",
+    "path": "CONTRIBUTING.md",
+    "commit": "894b430be77a589e39ff27889b9c27f1640b70b5",
+    "commit_date": "2021-12-17T13:36:10+00:00",
+    "url": "https://github.com/SAP/open-ux-tools/blob/894b430be77a589e39ff27889b9c27f1640b70b5/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-28T07:40:32+00:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-07-13T22:39:42+02:00",
+    "last_commit_date": "2021-07-13T22:39:42+02:00",
+    "last_commit_author": "Tobias Queck",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-13: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2703,
+    "sha256": "7fad1a03f91108eb2edae1f48c884ef0f272df6e008efa190e2e08ea7dbd1e51",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 424,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/SAP--open-ux-tools/CONTRIBUTING.md"
+}

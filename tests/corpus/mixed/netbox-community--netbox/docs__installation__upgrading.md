@@ -1,0 +1,291 @@
+# Upgrading to a New NetBox Release
+
+Upgrading NetBox to a new version is pretty simple, however users are cautioned to always review the release notes and save a backup of their current deployment prior to beginning an upgrade.
+
+NetBox can generally be upgraded directly to any newer release with no interim steps, with the one exception being incrementing major versions. This can be done only from the most recent _minor_ release of the major version. For example, NetBox v2.11.8 can be upgraded to version 3.3.2 following the steps below. However, a deployment of NetBox v2.10.10 or earlier must first be upgraded to any v2.11 release, and then to any v3.x release. (This is to accommodate the consolidation of database schema migrations effected by a major version change).
+
+```mermaid
+block-beta
+    columns 10
+    v29["v2.9"] v210["v2.10"] v211["v2.11"] v30["v3.0"] v31["v3.1"] dots["..."] v36["v3.6"] v37["v3.7"] v40["v4.0"] v41["v4.1"]
+    v2arrow["<span style='color:#fff'>To any v2.x release ➜</span>"]:3 space:7
+    space:2 v3arrow["<span style='color:#fff'>To any v3.x release ➜</span>"]:6 space:2
+    space:7 v4arrow["<span style='color:#fff'>To any v4.x release ➜</span>"]:3
+    classDef orange fill:#b45309,stroke:#78350f,color:#fff
+    classDef green fill:#0f766e,stroke:#134e4a,color:#fff
+    classDef blue fill:#1d4ed8,stroke:#1e3a8a,color:#fff
+    class v2arrow orange
+    class v3arrow green
+    class v4arrow blue
+```
+
+!!! warning "Perform a Backup"
+    Always be sure to save a backup of your current NetBox deployment prior to starting the upgrade process.
+
+## Review the Release Notes
+
+Prior to upgrading your NetBox instance, be sure to carefully review all [release notes](../release-notes/index.md) that have been published since your current version was released. Although the upgrade process typically does not involve additional work, certain releases may introduce breaking or backward-incompatible changes. These are called out in the release notes under the release in which the change went into effect.
+
+Before proceeding, verify that all installed plugins support the target NetBox release.
+
+## Update Required Dependencies
+
+NetBox requires the following dependencies:
+
+| Dependency | Supported Versions |
+|------------|--------------------|
+| Python     | 3.12, 3.13, 3.14   |
+| PostgreSQL | 15+                |
+| Redis      | 6.0+               |
+
+### Version History
+
+| NetBox Version | Python min | Python max | PostgreSQL min | Redis min |                                       Documentation                                       |
+|:--------------:|:----------:|:----------:|:--------------:|:---------:|:-----------------------------------------------------------------------------------------:|
+|      4.7       |    3.12    |    3.14    |       15       |    6.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.7.0/docs/installation/index.md) |
+|      4.6       |    3.12    |    3.14    |       14       |    5.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.6.0/docs/installation/index.md) |
+|      4.5       |    3.12    |    3.14    |       14       |    5.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.5.0/docs/installation/index.md) |
+|      4.4       |    3.10    |    3.12    |       14       |    5.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.4.0/docs/installation/index.md) |
+|      4.3       |    3.10    |    3.12    |       14       |    5.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.3.0/docs/installation/index.md) |
+|      4.2       |    3.10    |    3.12    |       13       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.2.0/docs/installation/index.md) |
+|      4.1       |    3.10    |    3.12    |       12       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.1.0/docs/installation/index.md) |
+|      4.0       |    3.10    |    3.12    |       12       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v4.0.0/docs/installation/index.md) |
+|      3.7       |    3.8     |    3.11    |       12       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.7.0/docs/installation/index.md) |
+|      3.6       |    3.8     |    3.11    |       12       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.6.0/docs/installation/index.md) |
+|      3.5       |    3.8     |    3.10    |       11       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.5.0/docs/installation/index.md) |
+|      3.4       |    3.8     |    3.10    |       11       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.4.0/docs/installation/index.md) |
+|      3.3       |    3.8     |    3.10    |       10       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.3.0/docs/installation/index.md) |
+|      3.2       |    3.8     |    3.10    |       10       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.2.0/docs/installation/index.md) |
+|      3.1       |    3.7     |    3.9     |       10       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.1.0/docs/installation/index.md) |
+|      3.0       |    3.7     |    3.9     |      9.6       |    4.0    | [Link](https://github.com/netbox-community/netbox/blob/v3.0.0/docs/installation/index.md) |
+
+## Verify Database Permissions
+
+NetBox v4.7 and later require the PostgreSQL [`ltree` extension](https://www.postgresql.org/docs/current/ltree.html). NetBox installs this extension automatically when applying database migrations if it is not already present. Installing it requires that the NetBox database user hold the `CREATE` privilege on the database.
+
+!!! note
+    Installations created using NetBox's PostgreSQL setup instructions already satisfy this requirement because those instructions make the NetBox user the database owner. No additional grant is needed for these installations.
+
+If `ltree` is not already installed and the NetBox database user does not hold the `CREATE` privilege, grant it by invoking the PostgreSQL shell as the system Postgres user:
+
+```no-highlight
+sudo -u postgres psql
+```
+
+Then issue the following command, substituting the name of your database and user (role) where applicable:
+
+```postgresql
+GRANT CREATE ON DATABASE netbox TO netbox;
+```
+
+Alternatively, a database administrator can install the extension before upgrading:
+
+```postgresql
+CREATE EXTENSION IF NOT EXISTS ltree;
+```
+
+## Upgrade a Release Archive or Git Installation
+
+The following procedure applies to NetBox installations created from a release archive or Git checkout. Complete the preparation steps above, then use the same installation method that was used for the existing deployment.
+
+### 1. Install the Latest Release
+
+As with the initial installation, you can upgrade NetBox by either downloading the latest release package or by checking out the latest production release from the git repository.
+
+!!! warning
+    Use the same method as you used to install NetBox originally.
+
+If you are not sure how NetBox was installed originally, check with this command:
+
+```
+ls -ld /opt/netbox /opt/netbox/.git
+```
+
+If NetBox was installed from a release package, then `/opt/netbox` will be a symlink pointing to the current version, and `/opt/netbox/.git` will not exist.  If it was installed from git, then `/opt/netbox` and `/opt/netbox/.git` will both exist as normal directories.
+
+#### Option A: Download a Release
+
+Download the [latest stable release](https://github.com/netbox-community/netbox/releases) from GitHub as a tarball or ZIP archive. Extract it to your desired path. In this example, we'll use `/opt/netbox`.
+
+Download and extract the latest version:
+
+```no-highlight
+# Set $NEWVER to the NetBox version being installed
+NEWVER=4.5.0
+wget https://github.com/netbox-community/netbox/archive/v$NEWVER.tar.gz
+sudo tar -xzf v$NEWVER.tar.gz -C /opt
+sudo ln -sfn /opt/netbox-$NEWVER/ /opt/netbox
+```
+
+Copy `local_requirements.txt`, `configuration.py`, and `ldap_config.py` (if present) from the current installation to the new version:
+
+```no-highlight
+# Set $OLDVER to the NetBox version currently installed
+OLDVER=4.4.10
+sudo cp /opt/netbox-$OLDVER/local_requirements.txt /opt/netbox/
+sudo cp /opt/netbox-$OLDVER/netbox/netbox/configuration.py /opt/netbox/netbox/netbox/
+sudo cp /opt/netbox-$OLDVER/netbox/netbox/ldap_config.py /opt/netbox/netbox/netbox/
+```
+
+Be sure to replicate your uploaded media as well. (The exact action necessary will depend on where you choose to store your media, but in general moving or copying the media directory will suffice.)
+
+```no-highlight
+sudo cp -pr /opt/netbox-$OLDVER/netbox/media/ /opt/netbox/netbox/
+```
+
+Also make sure to copy or link any custom scripts and reports that you've made. Note that if these are stored outside the project root, you will not need to copy them. (Check the `SCRIPTS_ROOT` and `REPORTS_ROOT` parameters in the configuration file above if you're unsure.)
+
+```no-highlight
+sudo cp -r /opt/netbox-$OLDVER/netbox/scripts /opt/netbox/netbox/
+sudo cp -r /opt/netbox-$OLDVER/netbox/reports /opt/netbox/netbox/
+```
+
+If you followed the original installation guide to set up gunicorn, be sure to copy its configuration as well:
+
+```no-highlight
+sudo cp /opt/netbox-$OLDVER/gunicorn.py /opt/netbox/
+```
+
+#### Option B: Check Out a Git Release
+
+This guide assumes that NetBox is installed in `/opt/netbox`. First, determine the latest release either by visiting our [releases page](https://github.com/netbox-community/netbox/releases) or by running the following command:
+
+```
+git ls-remote --tags https://github.com/netbox-community/netbox.git \
+  | grep -o 'refs/tags/v[0-9]*\.[0-9]*\.[0-9]*$' \
+  | tail -n 1 \
+  | sed 's|refs/tags/||'
+```
+
+Check out the desired release by specifying its tag. For example:
+
+```
+cd /opt/netbox && \
+sudo git fetch --tags && \
+sudo git checkout v4.5.0
+```
+
+### 2. Run the Upgrade Script
+
+Once the new code is in place, verify that any optional Python packages required by your deployment (e.g. `django-auth-ldap`) are listed in `local_requirements.txt`. Then, run the upgrade script:
+
+```no-highlight
+sudo ./upgrade.sh
+```
+
+!!! warning
+    If the default version of Python is not **at least 3.12**, you'll need to pass the path to a supported Python version as an environment variable when calling the upgrade script. For example:
+
+    ```no-highlight
+    sudo PYTHON=/usr/bin/python3.12 ./upgrade.sh
+    ```
+
+!!! note
+    To run the script on a node connected to a database in read-only mode, include the `--readonly` parameter. This will skip the application of any database migrations.
+
+This script performs the following actions:
+
+* Destroys and rebuilds the Python virtual environment
+* Installs all required Python packages (listed in `requirements.txt`)
+* Installs any additional packages from `local_requirements.txt`
+* Applies any database migrations that were included in the release
+* Builds the documentation locally (for offline use)
+* Collects all static files to be served by the HTTP service
+* Deletes stale content types from the database
+* Deletes all expired user sessions from the database
+
+!!! note
+    If the upgrade script prompts a warning about unreflected database migrations, this indicates that some change has
+    been made to your local codebase and should be investigated. Never attempt to create new migrations unless you are
+    intentionally modifying the database schema.
+
+### 3. Restart the NetBox Services
+
+!!! warning
+    If you are upgrading from an installation that does not use a Python virtual environment (any release prior to v2.7.9), you'll need to update the systemd service files to reference the new Python and gunicorn executables before restarting the services. These are located in `/opt/netbox/venv/bin/`. See the example service files in `/opt/netbox/contrib/` for reference.
+
+Finally, restart the gunicorn and RQ services:
+
+```no-highlight
+sudo systemctl restart netbox netbox-rq
+```
+
+## Upgrade a Python Package Installation (Experimental)
+
+!!! warning "Experimental installation method"
+    Installing NetBox from the Python package is experimental in NetBox v4.7 and is **not recommended for production use**. Test the upgrade and rollback procedures in a non-production environment before relying on them.
+
+This procedure applies only to a deployment created using the [Python package installation method](3b-python-package.md). A package installation does not use `upgrade.sh`; use the installed `netbox upgrade` command instead. For a release archive or Git installation, follow the [procedure above](#upgrade-a-release-archive-or-git-installation).
+
+Complete the preparation steps at the beginning of this page before proceeding.
+
+### 1. Stop the NetBox Services
+
+Stop the web application and background worker services before changing packages in the virtual environment:
+
+```no-highlight
+sudo systemctl stop netbox netbox-rq
+```
+
+### 2. Upgrade NetBox and Local Requirements
+
+Install the target NetBox version into the existing virtual environment. Replace `X.Y.Z` with the exact version being installed:
+
+```no-highlight
+sudo /opt/netbox/venv/bin/python -m pip install --upgrade "netbox==X.Y.Z"
+```
+
+If the deployment uses a package extra, include it in the upgrade command. For example, specify the `ldap` extra again when upgrading a deployment that uses LDAP authentication:
+
+```no-highlight
+sudo /opt/netbox/venv/bin/python -m pip install --upgrade \
+    "netbox[ldap]==X.Y.Z"
+```
+
+Install all plugins and other local Python requirements into the same virtual environment **before** running the NetBox upgrade tasks:
+
+```no-highlight
+sudo /opt/netbox/venv/bin/python -m pip install \
+    -r /opt/netbox/local_requirements.txt
+```
+
+!!! note "Changing the Python version"
+    A virtual environment cannot be moved to a different Python interpreter in place. If the target NetBox release requires another Python version, create a replacement virtual environment, install the target NetBox package and all local requirements into it, and update the service executable paths before restarting NetBox.
+
+### 3. Run the Upgrade Tasks
+
+Run the packaged upgrade command to apply database migrations, collect static files, and perform the remaining application upgrade tasks:
+
+```no-highlight
+sudo -u netbox /opt/netbox/venv/bin/netbox upgrade --no-input
+```
+
+For a non-default instance root or a virtual environment stored elsewhere, use the applicable paths and set `NETBOX_ROOT` explicitly:
+
+```no-highlight
+sudo -u netbox env NETBOX_ROOT=/srv/netbox \
+    /opt/netbox-venv/bin/netbox upgrade --no-input
+```
+
+Ensure that any environment variables referenced by the NetBox configuration are also available when running this command.
+
+### 4. Review the Deployment Configuration
+
+`netbox setup` is not part of a routine upgrade. It leaves existing configuration and deployment examples untouched. To compare the examples bundled with the new package against the local copies without modifying the instance root, scaffold them into a temporary directory:
+
+```no-highlight
+EXAMPLES_DIR=$(mktemp -d)
+/opt/netbox/venv/bin/netbox setup --target "$EXAMPLES_DIR"
+diff --recursive /opt/netbox/contrib "$EXAMPLES_DIR/contrib"
+rm -rf "$EXAMPLES_DIR"
+```
+
+The comparison will also show the package-layout changes made when the deployment examples were first adapted. Distinguish these local changes from updates introduced by the new release, and merge any relevant updates into the administrator-managed systemd, WSGI, and HTTP server configuration.
+
+### 5. Start the NetBox Services
+
+Start the services and verify that both the web application and background workers are operating normally:
+
+```no-highlight
+sudo systemctl start netbox netbox-rq
+```

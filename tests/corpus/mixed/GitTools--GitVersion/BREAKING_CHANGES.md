@@ -1,0 +1,369 @@
+## Unreleased
+
+### Azure Pipelines variable names use underscores
+
+In v7.0, the CLI's build-server output and `GitVersion.MsBuild` emit
+`GitVersion_<Property>` for both ordinary and output variables. Dotted
+`GitVersion.<Property>` names are no longer emitted, and no aliases are provided.
+
+Update pipeline references such as `$(GitVersion.SemVer)` to
+`$(GitVersion_SemVer)` and named-step references such as
+`$(version.GitVersion.SemVer)` to `$(version.GitVersion_SemVer)`. Update conditions,
+templates, environment mappings, log parsers, and cross-job/stage output keys
+such as `outputs['version.GitVersion.SemVer']` to
+`outputs['version.GitVersion_SemVer']` as well.
+
+The ordinary shell environment name remains `GITVERSION_SEMVER`. Check for
+user-defined underscore variables that the new outputs could overwrite and
+dotted variables that normalize to the same environment key. Build-number
+interpolation continues to accept both dotted and underscore placeholders.
+
+GitTools' Azure `gitversion-execute` task already emits underscore-prefixed and
+camel-case names from JSON; its output names need no separator migration for
+this change. Check the task's supported GitVersion versions separately before
+adopting v7. See the [v6-to-v7 migration guide][azure-variable-migration] for the
+full reference mapping.
+
+### Pre-release output variables renamed
+
+The pre-release output variables now use SemVer label terminology consistently:
+
+| Previous variable | Replacement | Example value |
+| --- | --- | --- |
+| `PreReleaseTag` | `PreReleaseLabel` | `beta.99` |
+| `PreReleaseTagWithDash` | `PreReleaseLabelWithDash` | `-beta.99` |
+| `PreReleaseLabel` | `PreReleaseLabelName` | `beta` |
+| `PreReleaseLabelWithDash` | `PreReleaseLabelNameWithDash` | `-beta` |
+
+The change applies to JSON output, formatting variables, build-agent environment variables, generated version-information files, and `GitVersion.MsBuild` outputs. `PreReleaseNumber` is unchanged.
+
+### .NET 8 and .NET 9 target frameworks removed
+
+GitVersion now targets .NET 10 only. The CLI, global tool, and `GitVersion.MsBuild` require a .NET 10 runtime. The MSBuild integration continues to support projects targeting earlier frameworks through its `dotnet exec --roll-forward Major` launcher, provided .NET 10 is installed.
+
+### RID-specific global-tool packages
+
+GitVersion now packages `GitVersion.Tool` per runtime identifier. Install it with the .NET 10 SDK as before; NuGet automatically selects the dedicated package for Windows x64 and ARM64, Linux x64 and ARM64 (including musl), or Apple Silicon macOS.
+
+### Intel macOS artifacts removed
+
+GitVersion no longer ships native `osx-x64` artifacts. Apple Silicon (`osx-arm64`) is now the only supported macOS target. Intel Mac users should continue using the last GitVersion v6 release that shipped an `osx-x64` artifact.
+
+### `CommitsSinceVersionSource` output variable removed
+
+`CommitsSinceVersionSource` is no longer emitted in JSON output, build-agent environment variables, generated version-information files, or the MSBuild `GetVersion` task. It can no longer be used in custom format strings. Use `VersionSourceDistance` instead; it has the same value.
+
+### Selectable Git backend (libgit2 vs. managed)
+
+GitVersion is migrating away from LibGit2Sharp and its native libgit2 binaries towards a managed implementation combined with the `git` CLI ([#5031][5031]). A single environment variable selects the backend:
+
+| Release | Default backend | Switch |
+| ------- | --------------- | ------ |
+| v7.0    | `managed`       | `GITVERSION_GIT_BACKEND=libgit2` is a temporary fallback |
+| v7.1    | `managed`       | libgit2 is removed; `libgit2` reports an actionable error, explicit `managed` remains accepted |
+| v8      | `managed`       | the selector is removed |
+
+Behavioral notes when using the `managed` backend:
+
+* Mutating and network operations (repository normalization on CI build agents, dynamic repositories via `--url`, checkout, fetch) are performed by invoking the `git` executable, which must be available on the `PATH`. Plain version calculation on an already-prepared checkout does not require it.
+* The default changes to `managed` in v7.0. LibGit2Sharp/native binaries remain available through the explicit fallback until their scheduled v7.1 removal.
+
+### Invalid label formatting is not ignored
+Previously bad label formatting config would be silently accepted. For example `{Branhc}` (when BranchName is misspelled) or even `{BranchName` (missing a closing brace). This is not ignored now and exceptions will be thrown if formatting problems exist in the label config. This brings it into line with how assembly string formatting is treated.
+
+### CLI Arguments — POSIX-style Syntax
+
+The command-line interface has been migrated from Windows-style (`/switch` and single-dash `-switch`) arguments to POSIX-style `--long-name` arguments using [System.CommandLine][system-commandline].
+
+**Old-style arguments are no longer accepted by default.** Update any scripts, CI pipelines, or tooling accordingly.
+
+As a temporary v7.0 migration aid, set `GITVERSION_ARGUMENT_PARSER_VERSION=v6` to restore legacy `/switch` and `-switch` handling. The default is `v7`. Unset `GITVERSION_USE_V6_ARGUMENT_PARSER`: any presence of that retired variable, including `false`, now fails with replacement guidance. The legacy parser is scheduled for removal in v7.1; the selector remains until v8.
+
+The parser, configuration and Git backend selectors are independent. They trim
+values, ignore case, treat blanks as unset and reject unknown values with the
+accepted values. Effective selections are logged at information level; console
+logs use stderr, including when build-server output is selected. Build-server
+integration commands continue to use their existing output channel.
+
+### Configuration structure and migration
+
+v7 configuration now separates calculation from output:
+
+```yaml
+calculation:
+  branches:
+    main:
+      increment: Patch
+output:
+  update-build-number: true
+```
+
+v7.0 defaults to the nested layout. `GITVERSION_CONFIGURATION_VERSION=v6` is a
+temporary flat-layout fallback that logs a migration warning for user files.
+Convert files with `gitversion config migrate`. The command
+writes YAML to stdout by default, supports `--config`, `--output`,
+`--in-place`, and `--force`, and warns that comments cannot be preserved when
+replacing a file.
+
+Flat v6 runtime support is scheduled for removal in v7.1. Explicit `v7` remains
+accepted throughout v7.x, and the configuration selector is removed in v8.
+`gitversion config migrate` remains available after runtime removal.
+
+#### Full argument mapping
+
+| Old argument                  | New argument                     | Short alias                    | Env var alternative          |
+| ----------------------------- | -------------------------------- | ------------------------------ | ---------------------------- |
+| `/targetpath <path>`          | `--target-path <path>`           | _(positional `path` argument)_ |                              |
+| `/output <type>`              | `--output <type>`                | `-o`                           |                              |
+| `/outputfile <path>`          | `--output-file <path>`           |                                |                              |
+| `/showvariable <var>`         | `--show-variable <var>`          | `-v`                           |                              |
+| `/format <format>`            | `--format <format>`              | `-f`                           |                              |
+| `/config <path>`              | `--config <path>`                | `-c`                           |                              |
+| `/showconfig`                 | `--show-config`                  |                                |                              |
+| `/overrideconfig <k=v>`       | `--override-config <k=v>`        |                                |                              |
+| `/nocache`                    | `--no-cache`                     |                                |                              |
+| `/nofetch`                    | `--no-fetch`                     |                                |                              |
+| `/nonormalize`                | `--no-normalize`                 |                                |                              |
+| `/allowshallow`               | `--allow-shallow`                |                                |                              |
+| `/verbosity <level>`          | `--verbosity <level>`            |                                |                              |
+| `/l <path>`                   | `--log-file <path>`              | `-l`                           |                              |
+| `/diag`                       | `--diagnose`                     | `-d`                           |                              |
+| `/updateassemblyinfo [files]` | `--update-assembly-info [files]` |                                |                              |
+| `/updateprojectfiles [files]` | `--update-project-files [files]` |                                |                              |
+| `/ensureassemblyinfo`         | `--ensure-assembly-info`         |                                |                              |
+| `/updatewixversionfile`       | `--update-wix-version-file`      |                                |                              |
+| `/url <url>`                  | `--url <url>`                    |                                |                              |
+| `/b <branch>`                 | `--branch <branch>`              | `-b`                           |                              |
+| `/u <username>`               | `--username <username>`          | `-u`                           | `GITVERSION_REMOTE_USERNAME` |
+| `/p <password>`               | `--password <password>`          | `-p`                           | `GITVERSION_REMOTE_PASSWORD` |
+| `/c <commit>`                 | `--commit <commit>`              | _(no short alias)_             |                              |
+| `/dynamicRepoLocation <path>` | `--dynamic-repo-location <path>` |                                |                              |
+
+> **Critical**: `-c` previously referred to the commit id. It is now aliased to `--config` (config file path). Any usage of `-c <commit-id>` must be changed to `--commit <commit-id>`.
+
+The `GITVERSION_REMOTE_USERNAME` and `GITVERSION_REMOTE_PASSWORD` environment variables can be used as alternatives to `--username` and `--password`. Environment variables take lower precedence than explicit CLI arguments.
+
+### Logging System Replacement
+
+* The custom `ILog` logging abstraction has been replaced with the industry-standard `Microsoft.Extensions.Logging` (M.E.L.) infrastructure using Serilog as the underlying provider.
+
+* **Removed public types** from `GitVersion.Logging` namespace:
+  * `ILog` interface
+  * `ILogAppender` interface
+  * `LogLevel` enum
+  * `LogAction` delegate
+  * `LogActionEntry` delegate
+  * `LogExtensions` class
+
+* **Migration for custom integrations**:
+  * If you were injecting `ILog`, inject `ILogger<T>` instead
+  * If you implemented `ILogAppender`, implement `ILoggerProvider` instead
+  * The `Verbosity` enum is preserved for CLI usage and maps to Serilog log levels internally
+
+* **Preserved types**:
+  * `Verbosity` enum (Quiet/Minimal/Normal/Verbose/Diagnostic) - still used for CLI verbosity control
+  * `IConsole` interface - moved from `GitVersion.Logging` to `GitVersion` namespace
+
+## v6.2.0
+
+* The configuration property `label-number-pattern` was removed. The functionality can be still used by changing the label and the branch name regular expression for pull-request branches.
+
+## v6.0.0
+
+### Platforms
+
+* Drop support for .NET Framework 4.8, .NET Core 3.1 and .NET 5.0. Changed the project targets to .NET 6.0 or later.
+
+### Caching
+
+* Refactor caching system in GitVersion to use json files instead of yaml files. This change is not backwards compatible with the old caching system.
+
+### Configuration changes:
+
+* Configurations upgrading from v5 that use `branches.master` to override the built-in main branch configuration must use `branches.main` in v6. Later v5 releases already used `main` internally but accepted `master` for compatibility; v6 no longer applies that compatibility mapping.
+
+  v5 configuration:
+
+  ```yaml
+  branches:
+    master:
+      increment: Minor
+    feature:
+      source-branches: [master]
+  ```
+
+  Equivalent v6 configuration (flat layout):
+
+  ```yaml
+  branches:
+    main:
+      increment: Minor
+    feature:
+      source-branches: [main]
+  ```
+
+  These are **configuration keys**, not Git branch names. The built-in `main` configuration's default `regex` matches both `main` and `master`, so you do not need to rename your Git branch. In v6, `master` is treated as a separate custom configuration entry; a partial override can fail with `Branch configuration 'master' is missing required configuration 'regex'`.
+
+  Update `source-branches` and any other references to the renamed configuration key, including `is-source-branch-for` where applicable. Preserve other entries in those lists. Do not blindly rename intentionally custom configurations or literal Git branch names and regular expressions. For the v7 nested layout and further guidance, see [configuration migration][configuration-migration].
+
+* The configuration properties `continuous-delivery-fallback-tag`, `tag-number-pattern`, and `tag` were renamed to `continuous-delivery-fallback-label`, `label-number-pattern`, and `label` respectively. `tag-pre-release-weight` and `tag-prefix` remained as they were as they are referring to a Git tag.
+
+* When using a commit message that matches **both** `*-version-bump-message` and `no-bump-message`, there is no increment for that commit. In other words, `no-bump-message` now takes precedence over `*-version-bump-message`.
+
+* The fallback version strategy now returns `0.0.0` and is flagged with `ShouldIncrement` equal to `true`. This yields the version `0.1.0` on the `develop` branch (`IncrementStrategy.Minor` by default) and `0.0.1` on the `main` branch (`IncremetnStrategy.Patch` by default).
+
+* The current branch (child) inherits its configuration from the source (parent) branch if the `increment` strategy is set to `Inherit`. This makes branch configuration recursive, simpler, more intuitive, more flexible, and more robust.
+
+* Instead of having a single effective configuration, we now have one effective configuration per branch where the increment strategy is not set to `inherit`.
+
+* The new implementation of the branch configuration inheritance affects per default only the pull-requests, hotfix and feature branches. In this case the next version will be generated like the child branch is not existing and the commits have been made on the source branch.
+  * The following example illustrates this behavior. On the feature branch the semantic version `1.1.0-just-a-test.1+2` will now be generated instead of version `1.0.0-just-a-test.1+3` previously:
+
+    ```log
+    * 1f1cfb4 52 minutes ago  (HEAD -> feature/just-a-test)
+    * 1f9654d 54 minutes ago  (release/1.1.0)
+    * be72411 56 minutes ago  (develop)
+    * 14800ff 58 minutes ago  (tag: 1.0.0, main)
+    ```
+
+* A new `unknown` branch magic string has been introduced to give the user the possibility to specify the branch configuration for a branch which is not known. A branch is not known if only the regular expression of the branch configuration with the name `unknown` is matching. Please notice that this branch configuration behaves like any other branch configurations.
+
+* Additional `fallback` branch configuration properties have been introduced at the root to define base properties which will be inherit to the branch configurations. That means if no other branch configuration in the inheritance line defines the given property the fallback property applies. Notice that the inheritance tree can be controlled using the increment strategy property in the branch configuration section.
+  * The following example illustrates this behavior. The hotfix branch configuration overrides the main branch configuration and the result overrides the fallback branch configuration.
+
+    ```log
+    * 1f1cfb4 52 minutes ago  (HEAD -> hotfix/just-a-test)
+    * 14800ff 58 minutes ago  (tag: 1.0.0, main)
+    ```
+
+* When overriding the configuration with e.g. GitVersion.yaml the software distinguishes between properties who are not existent and properties who are `null`. This is especially important if the user wants to define branch related configuration which are marked with `increment` strategy `Inherit`.
+
+* Following root configuration properties have been removed:
+  * continuous-delivery-fallback-tag
+
+* A new branch related property with name `track-merge-message` has been introduced. Consider we have a `main` branch and a `release/1.0.0` branch and merge changes from `release/1.0.0` to the main branch. In this scenario the merge message will be interpreted as a next version `1.0.0` when `track-merge-message` is set to `true` otherwise `0.0.1`.
+
+* The pre-release tags are only considered when they are matching with the label name of the branch. This has an effect on the way how the `CommitCountSource` will be determined.
+
+* The process of increasing the version with bump message when `CommitMessageIncrementing` is enabled and increment strategy is `None` has been changed.
+
+* A new configuration property with name `version-in-branch-pattern` has been introduced. This setting only applies on branches where the option `is-release-branch` is set to `true`. Please notice that the branch name needs to be defined after the version number by default (instead of `support/lts-2.0.0` please name the branch like `support/2.0.0-lts`).
+
+* The `is-release-branch` property of the `hotfix` branch setting has been changed from `false` to `true`. If present the hotfix number will be considered now by default.
+
+* In the GitHub and the Git Flow workflows the `label` property is by default set to an empty string on the `main` branch. This yields to a pre-release version on `main` with an empty tag. Instead of for instance `1.0.1+46` GitVersion generates the full semantic version `1.0.1-46` instead. This behavior can be changed to generate only stable versions (no pre-release version) with setting the label to `null` (Please keep in mind that the `label` property on root needs to be set to `null` as well, otherwise the fallback applies). This change is caused by issue #2347.
+
+* The `useBranchName` magic string has been removed. Instead use `{BranchName}` for `label`.
+
+* The `BranchPrefixToTrim` configuration property has been removed. `RegularExpression` is now used to capture named groups instead.
+  * Default `RegularExpression` for feature branches is changed from `^features?[\/-]` to `^features?[\/-](?<BranchName>.+)` to support using `{BranchName}` out-of-the-box
+  * Default `RegularExpression` for unknown branches is changed from `.*` to `(?<BranchName>.+)` to support using `{BranchName}` out-of-the-box
+
+* The `Mainline` mode and the related implementation has been removed completely. The new `Mainline` version strategy should be used instead.
+
+* The `Mainline` version strategy doesn't support downgrading the increment for calculating the next version. This is the case if e.g. a bump messages has been defined which is lower than the branch increment.
+
+* The branch related property `is-mainline` in the configuration system has been renamed to `is-main-branch`
+
+* The versioning mode has been renamed to deployment mode and consists of following values:
+  * ManualDeployment (previously ContinuousDelivery)
+  * ContinuousDelivery (previously ContinuousDeployment)
+  * ContinuousDeployment (new)
+
+* At the configuration root level, a new array called `strategies` has been introduced, which can consist of on or more following values:
+  * ConfiguredNextVersion
+  * MergeMessage
+  * TaggedCommit
+  * TrackReleaseBranches
+  * VersionInBranchName
+  * Mainline
+
+* The initialization wizard has been removed.
+
+* On the `develop`, `release` and `hotfix` branch the introduced branch related property `prevent-increment.when-current-commit-tagged` has been set to `false` to get the incremented instead of the tagged semantic version.
+
+* When setting the "ignore commits before" parameter to a future value, an exception will occur if no commits are found on the current branch. This behavior mimics that of an empty repository.
+
+* On the `GitFlow` workflow the increment property has been changed:
+  * in branch `release` from `None` to `Minor` and
+  * in branch `hotfix` from `None` to `Patch`
+
+* On the `GitHubFlow` workflow the increment property has been changed in branch `release` from `None` to `Patch`.
+
+* When creating a branch with name `hotfix/next` (by using the `GitFlow` workflow) or `release/next` (by the `GitHubFlow` workflow) the resulting version will yield to a patched version per default.
+
+* If you have a tag `1.0.0` on `main` and branch from `main` to `release/1.0.1` then the next version number will be `1.1.0` when using the `GitFlow` workflow. This behavior is expected (but different compared to the `GitHubFlow` workflow) because on the `GitFlow` workflow you have an addition branch configuration with name hotfix where `is-release-branch` is set to `true`. That means if you want `1.0.1` as a next version you need to branch to `hotfix/1.0.1` or `hotfix/next`.  On the other hand if you use the `GitHubFlow` workflow the next version number will be `1.0.1` because the increment on the `release` branch is set to `Patch`.
+
+* There is a new configuration parameter `semantic-version-format` with default of `Strict`. The behavior of `Strict` is, that every possible non-semver version e.g. `1.2.3.4` is ignored when trying to calculate the next version. So, if you have three-part and four-part version numbers mixed, it will compute the next version on basis of the last found three-part version number, ignoring all four-part numbers.
+This is different compared to v5 where per default it was a `Loose` comparison.
+
+### Legacy Output Variables
+
+The following legacy output variables have been removed in this version:
+
+* `BuildMetaDataPadded`
+* `LegacySemVer`
+* `LegacySemVerPadded`
+* `NuGetVersionV2`
+* `NuGetVersion`
+* `NuGetPreReleaseTagV2`
+* `NuGetPreReleaseTag`
+* `CommitsSinceVersionSourcePadded`
+
+## v5.0.0
+
+* Version numbers in branches other than `release` branches are no longer
+  considered as a version source by default. Implemented in [#1541][pr-1541].
+* [#1581][pr-1581] folds `GitTools.Core` back into GitVersion to make
+  maintaining GitVersion easier.
+
+## v4.0.0
+
+### Git Flow Changes
+
+When using GitFlow, a few things have changed. Hopefully the new settings just
+work for you
+
+* `develop` has pre-release tag of `alpha` now, not unstable.
+* `develop` will bump as soon as a `release` branch is created.
+* Look at the [GitFlow examples][gitflow] for details of how it works now.
+
+### Configuration Changes
+
+* `GitVersionConfig.yaml` is deprecated in favor of `GitVersion.yml`.
+* Regular expressions are no longer used as keys in branch config
+  * We have named branches, and introduced a `regex` config which you can
+    override.
+  * The default keys are: `master`, `develop`, `feature`, `release`, `pull-request`,
+    `hotfix` and `support`
+  * Just run `GitVersion.exe` in your project directory and it will tell you
+    what to change your config keys to
+  * For example, `dev(elop)?(ment)?$` is now just `develop`, we suggest not
+    overring regular expressions unless you really want to use a different convention.
+* `source-branches` added as a configuration option for branches, it helps
+  GitVersion pick the correct source branch
+
+## v3.0.0
+
+* NextVersion.txt has been deprecated, only `GitVersionConfig.yaml` is supported
+* `AssemblyFileSemVer` variable removed, `AssemblyVersioningScheme` configuration
+  value makes this variable obsolete
+* Variables `ClassicVersion` and `ClassicVersionWithTag` removed
+* MSBuild task arguments (`AssemblyVersioningScheme`, `DevelopBranchTag`,
+  `ReleaseBranchTag`, `TagPrefix`, `NextVersion`) have been removed, use
+  `GitVersionConfig.yaml` instead
+* GitVersionTask's `ReleaseDateAttribute` no longer exists
+
+[gitflow]: https://gitversion.net/docs/learn/branching-strategies/gitflow-examples_complete
+
+[pr-1541]: https://github.com/GitTools/GitVersion/pull/1541
+
+[pr-1581]: https://github.com/GitTools/GitVersion/pull/1581
+
+[5031]: https://github.com/GitTools/GitVersion/issues/5031
+
+[system-commandline]: https://github.com/dotnet/command-line-api
+
+[configuration-migration]: https://gitversion.net/docs/reference/configuration#migrating-master-overrides-from-v5
+
+[azure-variable-migration]: docs/input/docs/migration/v6-to-v7.md#azure-pipelines-variable-names

@@ -1,0 +1,54 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "LianjiaTech/retrofit-spring-boot-starter",
+    "path": "README.md",
+    "commit": "a93b34c88d9654f340f0a6e065aa8daf60ac5b20",
+    "commit_date": "2026-09-10T20:36:28+08:00",
+    "url": "https://github.com/LianjiaTech/retrofit-spring-boot-starter/blob/a93b34c88d9654f340f0a6e065aa8daf60ac5b20/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-04T10:00:39+08:00",
+    "stars": 1913,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 216,
+    "first_commit_date": "2020-04-04T10:00:39+08:00",
+    "last_commit_date": "2026-07-17T19:53:04+08:00",
+    "last_commit_author": "tm.chen",
+    "authors": 7,
+    "ai_commits": 12,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-04-04, before 2022-01-01; 12 of its 216 commits are marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 5026,
+    "sha256": "12221a7289f6e509770bcd72ada9fa3f90ef83e4bd2156149bbbec88ba190a59",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 117,
+    "words": 318,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/LianjiaTech--retrofit-spring-boot-starter/README.md"
+}

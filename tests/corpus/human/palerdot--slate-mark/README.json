@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "palerdot/slate-mark",
+    "path": "README.md",
+    "commit": "8f009bf02c3aebb50494af487c4f4c54c975b649",
+    "commit_date": "2021-10-31T15:43:22+05:30",
+    "url": "https://github.com/palerdot/slate-mark/blob/8f009bf02c3aebb50494af487c4f4c54c975b649/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-08-14T23:31:42+05:30",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-08-14T23:31:42+05:30",
+    "last_commit_date": "2021-08-17T22:52:11+05:30",
+    "last_commit_author": "palerdot",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-17: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1151,
+    "sha256": "e5fcdbaf10f1f7a9ae215d17261e9bd80c16322819f52f448aaf37e83a56abb1",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 42,
+    "words": 147,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/palerdot--slate-mark/README.md"
+}

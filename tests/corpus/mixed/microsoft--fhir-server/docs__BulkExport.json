@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__BulkExport.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/fhir-server",
+    "path": "docs/BulkExport.md",
+    "commit": "3198cfb39f62d0f5bd7ddd57f60e8281b8cb2c51",
+    "commit_date": "2026-09-23T12:29:24-07:00",
+    "url": "https://github.com/microsoft/fhir-server/blob/3198cfb39f62d0f5bd7ddd57f60e8281b8cb2c51/docs/BulkExport.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-23T14:11:07-07:00",
+    "stars": 1383,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2019-06-18T11:35:24-07:00",
+    "last_commit_date": "2026-07-23T11:04:34-07:00",
+    "last_commit_author": "Mikael Weaver",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-06-18, before 2022-01-01; 1 of its 10 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5235,
+    "sha256": "eb70f92106d4af1c57a8f5faa1d99cbea76154f53d6e5d659d443f8fb327db33",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 64,
+    "words": 641,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/microsoft--fhir-server/docs/BulkExport.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "website__content__environment__worlds.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dosco/graphjin",
+    "path": "website/content/environment/worlds.md",
+    "commit": "a325facea47bfd49ed27b4c5237f1ea7e2e707ab",
+    "commit_date": "2026-09-15T17:29:22+00:00",
+    "url": "https://github.com/dosco/graphjin/blob/a325facea47bfd49ed27b4c5237f1ea7e2e707ab/website/content/environment/worlds.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-24T09:57:29-04:00",
+    "stars": 3173,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-31T18:27:19-07:00",
+    "last_commit_date": "2026-08-31T18:27:19-07:00",
+    "last_commit_author": "Spacy",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3749,
+    "sha256": "8a89d5ab90eeeaa629977f7a31bcf9260db8d6b28b21cb510b7f36c2cf6f0ec5",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 110,
+    "words": 567,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dosco--graphjin/website/content/environment/worlds.md"
+}

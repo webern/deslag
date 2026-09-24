@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CLAUDE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Vincentqyw/image-matching-webui",
+    "path": "CLAUDE.md",
+    "commit": "aa4a6d0c7cdc9533f79dae1060d87b13e3b6e84f",
+    "commit_date": "2026-07-15T01:21:06+08:00",
+    "url": "https://github.com/Vincentqyw/image-matching-webui/blob/aa4a6d0c7cdc9533f79dae1060d87b13e3b6e84f/CLAUDE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-06-18T00:44:45+08:00",
+    "stars": 1306,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-04T22:15:27+08:00",
+    "last_commit_date": "2026-07-05T09:17:53+08:00",
+    "last_commit_author": "vincentqyw",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7676,
+    "sha256": "666f5ca187bb7c507c4edaf1af2b2c4e3e16a000eeb9b909aaee3b9383bc7d51",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 181,
+    "words": 954,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Vincentqyw--image-matching-webui/CLAUDE.md"
+}

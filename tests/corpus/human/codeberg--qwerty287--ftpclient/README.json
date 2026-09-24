@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "qwerty287/ftpclient",
+    "path": "README.md",
+    "commit": "9a5dfaa83c80721a6120a5966289b73e8ba5bea4",
+    "commit_date": "2021-12-26T19:40:02+01:00",
+    "url": "https://codeberg.org/qwerty287/ftpclient/src/commit/9a5dfaa83c80721a6120a5966289b73e8ba5bea4/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-08-15T09:14:05+02:00",
+    "stars": 47,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-08-15T10:12:01+02:00",
+    "last_commit_date": "2021-08-21T14:50:45+02:00",
+    "last_commit_author": "qwerty287",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-21: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 715,
+    "sha256": "8b721cd5c6633d9ba7a696adfc54280e8ca2063e9d62e40c62ddb54a28007ddc",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 61,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--qwerty287--ftpclient/README.md"
+}

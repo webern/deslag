@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__en__integrations__cloudmonitoring__prebuilt-configs__cloud-sql-for-postgresql-observability.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "googleapis/mcp-toolbox",
+    "path": "docs/en/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-postgresql-observability.md",
+    "commit": "4b7a44d6052137c912a15aea44fed4e826173ce9",
+    "commit_date": "2026-09-22T14:35:52-04:00",
+    "url": "https://github.com/googleapis/mcp-toolbox/blob/4b7a44d6052137c912a15aea44fed4e826173ce9/docs/en/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-postgresql-observability.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-06-07T21:29:24+00:00",
+    "stars": 16475,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-26T22:20:14+00:00",
+    "last_commit_date": "2026-03-26T22:20:14+00:00",
+    "last_commit_author": "dishaprakash",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (gemini)"
+  },
+  "content": {
+    "size_bytes": 736,
+    "sha256": "2f7c3d944dfbc6e58570a7ae3e37f15d98240dff1efffbbab2ea3b6d468994b4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 86,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/googleapis--mcp-toolbox/docs/en/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-postgresql-observability.md"
+}

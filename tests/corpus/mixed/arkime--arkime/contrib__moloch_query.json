@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "contrib__moloch_query.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "arkime/arkime",
+    "path": "contrib/moloch_query.md",
+    "commit": "944ea42f4b8025f8430aa4cee5b9405227607a23",
+    "commit_date": "2026-09-23T14:13:14-04:00",
+    "url": "https://github.com/arkime/arkime/blob/944ea42f4b8025f8430aa4cee5b9405227607a23/contrib/moloch_query.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 7474,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-01-01T14:49:19-05:00",
+    "last_commit_date": "2026-07-04T20:19:59+01:00",
+    "last_commit_author": "Andy Wick",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-01, before 2022-01-01; 1 of its 3 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3102,
+    "sha256": "cddbe944779d431f5cf409d3ccbddc98058a6c199337047e3a7d932368b29ffc",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 472,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/arkime--arkime/contrib/moloch_query.md"
+}

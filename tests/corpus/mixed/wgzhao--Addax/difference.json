@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "difference.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "wgzhao/Addax",
+    "path": "difference.md",
+    "commit": "2619e1730594e361050630e87e55f1d2ddff0e03",
+    "commit_date": "2026-09-23T15:42:05+08:00",
+    "url": "https://github.com/wgzhao/Addax/blob/2619e1730594e361050630e87e55f1d2ddff0e03/difference.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-18T18:46:27+08:00",
+    "stars": 1442,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2021-09-01T09:56:56+08:00",
+    "last_commit_date": "2026-09-13T14:30:57+08:00",
+    "last_commit_author": "Steven Zhao",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-09-01, before 2022-01-01; 1 of its 11 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6069,
+    "sha256": "a38b6b4e548ce98eb314c245d2fc61b1ad09acf97fe34428e774d905ddc63f41",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 95,
+    "words": 351,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/wgzhao--Addax/difference.md"
+}

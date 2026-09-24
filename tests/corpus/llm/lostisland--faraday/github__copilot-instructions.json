@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "lostisland/faraday",
+    "path": ".github/copilot-instructions.md",
+    "commit": "d37e1e0edd7761f6d8cb1cd722891490e6001a41",
+    "commit_date": "2026-09-05T01:33:13+07:00",
+    "url": "https://github.com/lostisland/faraday/blob/d37e1e0edd7761f6d8cb1cd722891490e6001a41/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5948,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-10-04T21:21:47+01:00",
+    "last_commit_date": "2025-10-04T21:21:47+01:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2298,
+    "sha256": "27f8c9f671b066cf4e4b8501850a64729b9302a7552bb78b94a8507f60660430",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 302,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lostisland--faraday/.github/copilot-instructions.md"
+}

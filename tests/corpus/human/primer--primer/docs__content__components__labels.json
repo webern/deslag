@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__content__components__labels.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "primer/primer",
+    "path": "docs/content/components/labels.md",
+    "commit": "8f2e7534ecbdb3d0e773d60c725b55dc4bb263e2",
+    "commit_date": "2021-12-22T14:15:41+09:00",
+    "url": "https://github.com/primer/primer/blob/8f2e7534ecbdb3d0e773d60c725b55dc4bb263e2/docs/content/components/labels.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 33,
+    "first_commit_date": "2019-08-12T15:33:06-07:00",
+    "last_commit_date": "2021-11-16T09:34:42-07:00",
+    "last_commit_author": "Allie Thu",
+    "authors": 7,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-16: all 33 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 14974,
+    "sha256": "cb3bf1e499b5e2c2bdc6d604a8a2a3b9e130ce715a7cb911d2c84aab9474ee3b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 211,
+    "words": 1747,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/primer--primer/docs/content/components/labels.md"
+}

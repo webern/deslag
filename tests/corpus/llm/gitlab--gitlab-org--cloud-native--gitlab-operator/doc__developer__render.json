@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__developer__render.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/cloud-native/gitlab-operator",
+    "path": "doc/developer/render.md",
+    "commit": "e2be4b56f9a787542ebd30fe2167a1f303a3beb8",
+    "commit_date": "2026-09-23T18:41:10+00:00",
+    "url": "https://gitlab.com/gitlab-org/cloud-native/gitlab-operator/-/blob/e2be4b56f9a787542ebd30fe2167a1f303a3beb8/doc/developer/render.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-21T15:42:08-06:00",
+    "stars": 83,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-12T17:50:19+09:00",
+    "last_commit_date": "2026-08-07T15:31:58+02:00",
+    "last_commit_author": "Clemens Beck",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14169,
+    "sha256": "725613371d5d0ded48277140595f375581f0a81a4235468a353b487224373a25",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 326,
+    "words": 1968,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-org--cloud-native--gitlab-operator/doc/developer/render.md"
+}

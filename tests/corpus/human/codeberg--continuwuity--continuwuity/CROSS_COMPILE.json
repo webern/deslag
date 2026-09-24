@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CROSS_COMPILE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "continuwuity/continuwuity",
+    "path": "CROSS_COMPILE.md",
+    "commit": "8d51359668199585175e7e0095de66e96bc1a3e1",
+    "commit_date": "2021-12-26T20:49:19+01:00",
+    "url": "https://codeberg.org/continuwuity/continuwuity/src/commit/8d51359668199585175e7e0095de66e96bc1a3e1/CROSS_COMPILE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-15T22:42:21+01:00",
+    "stars": 80,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2020-10-18T08:48:31+02:00",
+    "last_commit_date": "2021-04-15T23:08:13+02:00",
+    "last_commit_author": "Tobias Fella",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-04-15: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 309,
+    "sha256": "aeaba01d943a47397fa7615c8f6cfcc9c81faea29301c34690739c38bb9465a3",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 11,
+    "words": 42,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--continuwuity--continuwuity/CROSS_COMPILE.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-roadmap.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": "src/formats/musicxml/roadmap.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/src/formats/musicxml/roadmap.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2026-07-14T05:31:56-05:00",
+    "last_commit_date": "2026-09-01T09:46:17-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "9 of its 15 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's; 6 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 19902,
+    "sha256": "e594beab5d7c3ce70c008467152aff7d815c3bd91f689a1ec245c6e59ea81642",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 192,
+    "words": 2758,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "src/formats/musicxml/roadmap.md"
+}

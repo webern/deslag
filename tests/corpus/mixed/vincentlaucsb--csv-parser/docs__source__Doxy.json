@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__source__Doxy.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "vincentlaucsb/csv-parser",
+    "path": "docs/source/Doxy.md",
+    "commit": "5976d7a44df00ac55a6feec28a5e0a11d06f1872",
+    "commit_date": "2026-09-20T12:44:30-07:00",
+    "url": "https://github.com/vincentlaucsb/csv-parser/blob/5976d7a44df00ac55a6feec28a5e0a11d06f1872/docs/source/Doxy.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1129,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2019-03-31T16:30:34-07:00",
+    "last_commit_date": "2026-05-12T18:47:04-07:00",
+    "last_commit_author": "Vincent La",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-03-31, before 2022-01-01; 2 of its 19 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5515,
+    "sha256": "8473824e90e8498ac563e6afed9f492e2138bdc3c3b8e0245d8e0e27f21b9182",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 137,
+    "words": 626,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/vincentlaucsb--csv-parser/docs/source/Doxy.md"
+}

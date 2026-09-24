@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "icosa-foundation/open-brush",
+    "path": "README.md",
+    "commit": "655ab8b0528009e5c5d53426c255bcd17fc4421a",
+    "commit_date": "2026-09-22T15:07:36+01:00",
+    "url": "https://github.com/icosa-foundation/open-brush/blob/655ab8b0528009e5c5d53426c255bcd17fc4421a/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-12T09:19:24-07:00",
+    "stars": 1131,
+    "found_by": "sg-topic:art"
+  },
+  "history": {
+    "commits": 41,
+    "first_commit_date": "2020-05-12T09:19:24-07:00",
+    "last_commit_date": "2026-09-07T20:23:13+01:00",
+    "last_commit_author": "Andy Baker",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-05-12, before 2022-01-01; 1 of its 41 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 19745,
+    "sha256": "083069a20037b1a937e4a38cef05844bb587499224f6603695560858ba6f0c1c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 380,
+    "words": 2682,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/icosa-foundation--open-brush/README.md"
+}

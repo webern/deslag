@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "midi-bug-report.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "webern/midi_file",
+    "path": ".github/ISSUE_TEMPLATE/bug_report.md",
+    "commit": "6523bad15fdeea9e76649eb4b669220a704dcf2b",
+    "commit_date": "2026-07-19T21:46:04+02:00",
+    "url": "https://github.com/webern/midi_file/blob/6523bad15fdeea9e76649eb4b669220a704dcf2b/.github/ISSUE_TEMPLATE/bug_report.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T22:16:24-08:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-12-23T22:16:24-08:00",
+    "last_commit_date": "2020-12-23T22:16:24-08:00",
+    "last_commit_author": "Matthew James Briggs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "all 1 commits that touched it predate 2022-11-30, when ChatGPT was released, and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 408,
+    "sha256": "f83336b0a2e22d82903c506024f03fd2c0bce05d8ffad75589302c1de4123f9f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 66,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": ".github/ISSUE_TEMPLATE/bug_report.md"
+}

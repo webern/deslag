@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "documentation__docs__blogs.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kotest/kotest",
+    "path": "documentation/docs/blogs.md",
+    "commit": "8fabcdb687d17d4f6432d4d7b2fb340dc97c34e4",
+    "commit_date": "2026-09-17T19:07:48+00:00",
+    "url": "https://github.com/kotest/kotest/blob/8fabcdb687d17d4f6432d4d7b2fb340dc97c34e4/documentation/docs/blogs.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4789,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 31,
+    "first_commit_date": "2020-12-07T06:51:24-06:00",
+    "last_commit_date": "2026-05-17T22:11:11-05:00",
+    "last_commit_author": "Sam",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-12-07, before 2022-01-01; 1 of its 31 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 6848,
+    "sha256": "a2d3248bb6b82938009d86606d5c38557e60b6c895ba7ed5651fbf7fb27595ca",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 538,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kotest--kotest/documentation/docs/blogs.md"
+}

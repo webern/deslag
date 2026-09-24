@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "exporter__pubsubexporterv2__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "thomaspoignant/go-feature-flag",
+    "path": "exporter/pubsubexporterv2/README.md",
+    "commit": "dbed19635a2fa65d2185994eb80d85153360e147",
+    "commit_date": "2026-09-23T04:11:09+00:00",
+    "url": "https://github.com/thomaspoignant/go-feature-flag/blob/dbed19635a2fa65d2185994eb80d85153360e147/exporter/pubsubexporterv2/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-11T14:19:19+01:00",
+    "stars": 2112,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-08-26T21:38:50+02:00",
+    "last_commit_date": "2025-08-26T21:38:50+02:00",
+    "last_commit_author": "Thomas Poignant",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (gemini)"
+  },
+  "content": {
+    "size_bytes": 7394,
+    "sha256": "f512562429c4e0cfc671847508717483d79c333cf4aff2dfcbc28145159d83d4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 237,
+    "words": 754,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/thomaspoignant--go-feature-flag/exporter/pubsubexporterv2/README.md"
+}

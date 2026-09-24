@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__rate-limiting__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-com/runbooks",
+    "path": "docs/rate-limiting/README.md",
+    "commit": "690ca79f5aa403f1d92b80664e1dcfd32ff4881b",
+    "commit_date": "2026-09-23T19:32:15+00:00",
+    "url": "https://gitlab.com/gitlab-com/runbooks/-/blob/690ca79f5aa403f1d92b80664e1dcfd32ff4881b/docs/rate-limiting/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 620,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 52,
+    "first_commit_date": "2020-12-30T11:53:21-07:00",
+    "last_commit_date": "2026-09-21T22:25:23+05:30",
+    "last_commit_author": "Nidhey Indurkar",
+    "authors": 22,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-12-30, before 2022-01-01; 1 of its 52 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 24192,
+    "sha256": "ae3e1311af34cd54d43b1b35fa6ed2b11165503ee3543d1f5e7fa826f51bbd87",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 339,
+    "words": 3209,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--gitlab-com--runbooks/docs/rate-limiting/README.md"
+}

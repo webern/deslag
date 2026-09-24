@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "bpmn-io/diagram-js",
+    "path": "CHANGELOG.md",
+    "commit": "10b0ccf22990756fe537d1554a3af9c9fdeacf4a",
+    "commit_date": "2026-09-23T13:03:50+02:00",
+    "url": "https://github.com/bpmn-io/diagram-js/blob/10b0ccf22990756fe537d1554a3af9c9fdeacf4a/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1926,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 289,
+    "first_commit_date": "2018-03-28T10:37:01+02:00",
+    "last_commit_date": "2026-09-23T12:59:11+02:00",
+    "last_commit_author": "AlekseyManetov",
+    "authors": 19,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-03-28, before 2022-01-01; 4 of its 289 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 58793,
+    "sha256": "bd3e369f168976345a38f18eddb5cedb691a860413046ee8c90780afad0655ea",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1176,
+    "words": 5247,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/bpmn-io--diagram-js/CHANGELOG.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__en__user__community__backuprestore__migration.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "geoserver/geoserver",
+    "path": "doc/en/user/community/backuprestore/migration.md",
+    "commit": "5c22dcde605d3bbe3b241295c116e3ee4407833b",
+    "commit_date": "2026-09-23T14:36:02+02:00",
+    "url": "https://github.com/geoserver/geoserver/blob/5c22dcde605d3bbe3b241295c116e3ee4407833b/doc/en/user/community/backuprestore/migration.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:maps"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-06-05T11:57:54+02:00",
+    "last_commit_date": "2026-06-06T16:08:46+02:00",
+    "last_commit_author": "Alessio Fabiani",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10781,
+    "sha256": "dc779ecffdc4607615b80b2c210cb7f8333c5972b77b0689bbe258ec8cd5ac8f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 180,
+    "words": 1534,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/geoserver--geoserver/doc/en/user/community/backuprestore/migration.md"
+}

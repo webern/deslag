@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "web__docs__telemetry.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "wasp-lang/wasp",
+    "path": "web/docs/telemetry.md",
+    "commit": "633a42bdae20f6673df2d2341459a3605132e00b",
+    "commit_date": "2026-09-18T15:26:45+02:00",
+    "url": "https://github.com/wasp-lang/wasp/blob/633a42bdae20f6673df2d2341459a3605132e00b/web/docs/telemetry.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-09-25T20:53:40+02:00",
+    "stars": 18744,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-07-23T14:45:27+02:00",
+    "last_commit_date": "2026-09-12T00:10:33+02:00",
+    "last_commit_author": "Martin Šošić",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-07-23, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3201,
+    "sha256": "937fbe4da8b5e2cd5f6028f711db135a13991ed547d222281ae580e8e372b196",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 71,
+    "words": 488,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/wasp-lang--wasp/web/docs/telemetry.md"
+}

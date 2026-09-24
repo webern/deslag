@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "idris-lang/Idris2",
+    "path": "CHANGELOG.md",
+    "commit": "77f4cdeedbe6f81b4212e15877d24f4e8e21a666",
+    "commit_date": "2021-12-29T21:08:25-05:00",
+    "url": "https://github.com/idris-lang/Idris2/blob/77f4cdeedbe6f81b4212e15877d24f4e8e21a666/CHANGELOG.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-09T07:33:54-07:00",
+    "stars": 3073,
+    "found_by": "sg-topic:compiler"
+  },
+  "history": {
+    "commits": 90,
+    "first_commit_date": "2020-05-20T11:31:24+01:00",
+    "last_commit_date": "2021-12-16T20:23:18+02:00",
+    "last_commit_author": "teggot",
+    "authors": 25,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-16: all 90 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 26049,
+    "sha256": "7c2119a8409232fde4e98ab5c6d8539b041481e20197e9a59bb75be6360181f6",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 589,
+    "words": 3720,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/idris-lang--Idris2/CHANGELOG.md"
+}

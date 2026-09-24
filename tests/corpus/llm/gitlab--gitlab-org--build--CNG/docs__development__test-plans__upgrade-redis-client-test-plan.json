@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__development__test-plans__upgrade-redis-client-test-plan.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/build/CNG",
+    "path": "docs/development/test-plans/upgrade-redis-client-test-plan.md",
+    "commit": "ece40cd07b60e2b58adc76bbeb04f663e07e855c",
+    "commit_date": "2026-09-23T15:09:06-04:00",
+    "url": "https://gitlab.com/gitlab-org/build/CNG/-/blob/ece40cd07b60e2b58adc76bbeb04f663e07e855c/docs/development/test-plans/upgrade-redis-client-test-plan.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 68,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-26T08:37:25-03:00",
+    "last_commit_date": "2026-03-26T08:37:25-03:00",
+    "last_commit_author": "João Alexandre Cunha",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1040,
+    "sha256": "a916e2f5f63a404e2fbe8c1d1063d37df28560ba6ac43d103f2d0868fd8817ea",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 43,
+    "words": 151,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--gitlab-org--build--CNG/docs/development/test-plans/upgrade-redis-client-test-plan.md"
+}

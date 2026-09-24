@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "urschrei/pyzotero",
+    "path": "CONTRIBUTING.md",
+    "commit": "c3729128f389bf87d817629da7c2f00566db8b8f",
+    "commit_date": "2021-12-14T14:38:36+00:00",
+    "url": "https://github.com/urschrei/pyzotero/blob/c3729128f389bf87d817629da7c2f00566db8b8f/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "license.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:digital-humanities"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-01-04T15:34:17+00:00",
+    "last_commit_date": "2018-10-26T16:17:02+01:00",
+    "last_commit_author": "Stephan Hügel",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-10-26: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1451,
+    "sha256": "bd2c1195253e16769aaaa68545a92778a2e187800d75ac9a8258a5e2f0981523",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 211,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/urschrei--pyzotero/CONTRIBUTING.md"
+}

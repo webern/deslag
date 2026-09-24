@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "NuGetPackageExplorer/NuGetPackageExplorer",
+    "path": "README.md",
+    "commit": "a46ed5495e90c1167469191a3ef8ad717a62ea8d",
+    "commit_date": "2026-05-17T00:04:55+02:00",
+    "url": "https://github.com/NuGetPackageExplorer/NuGetPackageExplorer/blob/a46ed5495e90c1167469191a3ef8ad717a62ea8d/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2550,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 36,
+    "first_commit_date": "2018-01-02T08:04:47-05:00",
+    "last_commit_date": "2026-05-17T00:04:55+02:00",
+    "last_commit_author": "Copilot",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 1 of its 36 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 8278,
+    "sha256": "041dd33557cf959cdb358eeefd22babf948ea86c42a8acd0872d6ecf311f3860",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 162,
+    "words": 957,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NuGetPackageExplorer--NuGetPackageExplorer/README.md"
+}

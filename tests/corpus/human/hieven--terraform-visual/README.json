@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hieven/terraform-visual",
+    "path": "README.md",
+    "commit": "566497813811aa22459ecfe7f26d424e5b7fc25b",
+    "commit_date": "2020-10-09T11:34:04+08:00",
+    "url": "https://github.com/hieven/terraform-visual/blob/566497813811aa22459ecfe7f26d424e5b7fc25b/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-22T17:33:25+02:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-05-22T17:33:25+02:00",
+    "last_commit_date": "2020-08-07T23:06:07+02:00",
+    "last_commit_author": "hieven",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-07: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2052,
+    "sha256": "d96ed4fdf58c566e54aaef2bcfc6847e1adb57932df467c1ad81a39e515b26d3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 261,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hieven--terraform-visual/README.md"
+}

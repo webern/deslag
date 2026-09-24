@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "axum__src__docs__routing__route.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tokio-rs/axum",
+    "path": "axum/src/docs/routing/route.md",
+    "commit": "7c3c67879dc5689a921620b1fce54c383d304d67",
+    "commit_date": "2026-09-23T22:01:57+02:00",
+    "url": "https://github.com/tokio-rs/axum/blob/7c3c67879dc5689a921620b1fce54c383d304d67/axum/src/docs/routing/route.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-29T21:13:06+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 21,
+    "first_commit_date": "2021-11-03T12:38:48+01:00",
+    "last_commit_date": "2026-05-17T16:51:06+08:00",
+    "last_commit_author": "吴杨帆",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-11-03, before 2022-01-01; 1 of its 21 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 5189,
+    "sha256": "8c1d3827a33444d04f8737dc5fe73e8be4b2affa271f18e991500ff9fce70a40",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 181,
+    "words": 730,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tokio-rs--axum/axum/src/docs/routing/route.md"
+}

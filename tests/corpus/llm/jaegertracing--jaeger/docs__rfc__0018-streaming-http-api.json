@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__rfc__0018-streaming-http-api.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jaegertracing/jaeger",
+    "path": "docs/rfc/0018-streaming-http-api.md",
+    "commit": "2108f8b28a862324b97a56adabe7611d84385b6e",
+    "commit_date": "2026-09-23T15:06:25-04:00",
+    "url": "https://github.com/jaegertracing/jaeger/blob/2108f8b28a862324b97a56adabe7611d84385b6e/docs/rfc/0018-streaming-http-api.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 23232,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-22T23:36:21-04:00",
+    "last_commit_date": "2026-09-22T23:36:21-04:00",
+    "last_commit_author": "yurishkuro's AI bot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 46883,
+    "sha256": "0b5e25da7b8ebf7c8002def41e729d87ab08085f696bfbf93d1d929156f55927",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 300,
+    "words": 7113,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jaegertracing--jaeger/docs/rfc/0018-streaming-http-api.md"
+}

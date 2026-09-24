@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "guide__src__building_and_distribution.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pyo3/pyo3",
+    "path": "guide/src/building_and_distribution.md",
+    "commit": "cf965155f41fe2ca17e6430130051061d8f5ce85",
+    "commit_date": "2021-12-21T07:01:11+00:00",
+    "url": "https://github.com/pyo3/pyo3/blob/cf965155f41fe2ca17e6430130051061d8f5ce85/guide/src/building_and_distribution.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 41,
+    "first_commit_date": "2019-04-14T12:58:12+02:00",
+    "last_commit_date": "2021-11-19T10:45:27+00:00",
+    "last_commit_author": "David Hewitt",
+    "authors": 10,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-19: all 41 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 20969,
+    "sha256": "eda7da4d40464c3b07da65666321fe5c9ce973ecccf2a27d408757a04d072a52",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 267,
+    "words": 2809,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/pyo3--pyo3/guide/src/building_and_distribution.md"
+}

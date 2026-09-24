@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "deepset/xlm-roberta-large-squad2",
+    "path": "README.md",
+    "commit": "8f1f44ba7cbfe49d8452579c90d0fd0b0ac496da",
+    "commit_date": "2021-10-21T12:19:53+00:00",
+    "url": "https://huggingface.co/deepset/xlm-roberta-large-squad2/blob/8f1f44ba7cbfe49d8452579c90d0fd0b0ac496da/README.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2020-07-29T09:10:46+00:00",
+    "stars": 57,
+    "found_by": "hf-models-cc-by-4.0"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-12-11T22:38:25+01:00",
+    "last_commit_date": "2021-10-21T12:19:53+00:00",
+    "last_commit_author": "Julian Risch",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-21: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4413,
+    "sha256": "14b8850440f4e6ae7bcf49cdc240165c788f66247b97d56a9512d90cc3d53c5a",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 134,
+    "words": 410,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--deepset--xlm-roberta-large-squad2/README.md"
+}

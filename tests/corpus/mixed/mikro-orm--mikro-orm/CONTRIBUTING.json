@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mikro-orm/mikro-orm",
+    "path": "CONTRIBUTING.md",
+    "commit": "9404e2b09435b7e27c3d4c26e7e61fa676221ea1",
+    "commit_date": "2026-09-22T20:06:31+00:00",
+    "url": "https://github.com/mikro-orm/mikro-orm/blob/9404e2b09435b7e27c3d4c26e7e61fa676221ea1/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-03-15T10:21:10+01:00",
+    "stars": 9234,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2019-04-03T18:22:52+02:00",
+    "last_commit_date": "2025-09-28T15:53:13+08:00",
+    "last_commit_author": "Vasil Rangelov",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-04-03, before 2022-01-01; 1 of its 19 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6222,
+    "sha256": "fe9e39b7b26576c8cf10367dd45a054a0f8b048cdad992b4c9dd182a1ae37969",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 105,
+    "words": 930,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mikro-orm--mikro-orm/CONTRIBUTING.md"
+}

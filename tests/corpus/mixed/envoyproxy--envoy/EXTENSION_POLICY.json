@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "EXTENSION_POLICY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "envoyproxy/envoy",
+    "path": "EXTENSION_POLICY.md",
+    "commit": "17787906af72a0f20a4d9e885d1346059bf21087",
+    "commit_date": "2026-09-23T14:07:14-04:00",
+    "url": "https://github.com/envoyproxy/envoy/blob/17787906af72a0f20a4d9e885d1346059bf21087/EXTENSION_POLICY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 28974,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2019-04-23T22:28:19-07:00",
+    "last_commit_date": "2026-09-10T11:40:14-04:00",
+    "last_commit_author": "Jonh Wendell",
+    "authors": 7,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-04-23, before 2022-01-01; 2 of its 13 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 11088,
+    "sha256": "034cd177155f62f7326063e2d445311663b4751fd47452bef4f9ae7fbac2d479",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 181,
+    "words": 1542,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/envoyproxy--envoy/EXTENSION_POLICY.md"
+}

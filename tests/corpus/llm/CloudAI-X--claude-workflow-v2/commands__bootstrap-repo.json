@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "commands__bootstrap-repo.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "CloudAI-X/claude-workflow-v2",
+    "path": "commands/bootstrap-repo.md",
+    "commit": "4c242af16f8a96dfddfee3d07073454bebf92704",
+    "commit_date": "2026-06-02T21:07:25+03:00",
+    "url": "https://github.com/CloudAI-X/claude-workflow-v2/blob/4c242af16f8a96dfddfee3d07073454bebf92704/commands/bootstrap-repo.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-01T05:22:51+03:00",
+    "stars": 1415,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-02-14T11:20:55+03:00",
+    "last_commit_date": "2026-06-02T21:02:26+03:00",
+    "last_commit_author": "CloudAI-X",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8649,
+    "sha256": "5d8ddc93abb8f6a96687cc16b6cba07266a84d9e86af5c129ebb78ecfae5c754",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 300,
+    "words": 1196,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/CloudAI-X--claude-workflow-v2/commands/bootstrap-repo.md"
+}

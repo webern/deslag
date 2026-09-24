@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__usage__configuration-templates.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zwave-js/zwave-js-ui",
+    "path": "docs/usage/configuration-templates.md",
+    "commit": "df84037f78900d58ce3e7694dd39d02cad6e5d6e",
+    "commit_date": "2026-09-15T11:01:12+00:00",
+    "url": "https://github.com/zwave-js/zwave-js-ui/blob/df84037f78900d58ce3e7694dd39d02cad6e5d6e/docs/usage/configuration-templates.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-01-15T08:51:02+01:00",
+    "stars": 1239,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-05T17:33:08+01:00",
+    "last_commit_date": "2026-03-05T17:33:08+01:00",
+    "last_commit_author": "Daniel Lando",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 4278,
+    "sha256": "c5d6108a9bf6f3df0e92fdb79fc2bfcacdd4c579c62e4b614e941b88d25457c2",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 82,
+    "words": 705,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/zwave-js--zwave-js-ui/docs/usage/configuration-templates.md"
+}

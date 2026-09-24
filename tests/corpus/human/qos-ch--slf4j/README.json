@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "qos-ch/slf4j",
+    "path": "README.md",
+    "commit": "59100d75e1e24af49e464928856fafb2bed0fccd",
+    "commit_date": "2021-12-24T11:39:21+01:00",
+    "url": "https://github.com/qos-ch/slf4j/blob/59100d75e1e24af49e464928856fafb2bed0fccd/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2525,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2018-01-30T11:11:45+01:00",
+    "last_commit_date": "2021-07-02T14:08:37+02:00",
+    "last_commit_author": "Ceki Gulcu",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-02: all 9 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2010,
+    "sha256": "2a01c0647dc87fae3dab5dec6423d9350cd2b71255e813fdc964624827469949",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 297,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/qos-ch--slf4j/README.md"
+}

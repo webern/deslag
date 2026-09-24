@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "timothee-haudebourg/langtag",
+    "path": "CHANGELOG.md",
+    "commit": "ccca814e551cc84ee3d0f9c7cd04d50058c8165d",
+    "commit_date": "2020-12-19T16:44:01+01:00",
+    "url": "https://github.com/timothee-haudebourg/langtag/blob/ccca814e551cc84ee3d0f9c7cd04d50058c8165d/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-11-14T17:00:55+01:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-12-18T20:20:44+01:00",
+    "last_commit_date": "2020-12-19T16:44:01+01:00",
+    "last_commit_author": "Timothée Haudebourg",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-12-19: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 724,
+    "sha256": "91de413acbfba1e5eef8822e6d1297ce023211e9ffb9b9f33618e49465d2bdec",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 83,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/timothee-haudebourg--langtag/CHANGELOG.md"
+}

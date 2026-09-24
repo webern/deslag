@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "danestves/markdown-to-text",
+    "path": "CONTRIBUTING.md",
+    "commit": "0cd850caca08416227ecaf370e9beea464fc367d",
+    "commit_date": "2021-10-05T11:05:34-04:00",
+    "url": "https://github.com/danestves/markdown-to-text/blob/0cd850caca08416227ecaf370e9beea464fc367d/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-13T16:36:22-04:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-12-13T16:36:22-04:00",
+    "last_commit_date": "2020-12-13T16:36:22-04:00",
+    "last_commit_author": "Daniel Esteves",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-12-13: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6412,
+    "sha256": "808f994a85be643d562778506ddc118e0a3d685d05b5234286a24e0881e530c1",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 99,
+    "words": 974,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/danestves--markdown-to-text/CONTRIBUTING.md"
+}

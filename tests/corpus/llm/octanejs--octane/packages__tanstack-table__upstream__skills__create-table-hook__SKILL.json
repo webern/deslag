@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__tanstack-table__upstream__skills__create-table-hook__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "octanejs/octane",
+    "path": "packages/tanstack-table/upstream/skills/create-table-hook/SKILL.md",
+    "commit": "afc0bee88970120acab48b993c7662648cac103f",
+    "commit_date": "2026-09-23T20:32:52+01:00",
+    "url": "https://github.com/octanejs/octane/blob/afc0bee88970120acab48b993c7662648cac103f/packages/tanstack-table/upstream/skills/create-table-hook/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-22T23:26:49+01:00",
+    "stars": 1420,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-18T15:12:42-04:00",
+    "last_commit_date": "2026-09-18T15:12:42-04:00",
+    "last_commit_author": "Jon Wheeler",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "devin"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 5512,
+    "sha256": "8fb52d731ebd039311c7fc56aef32de4d0d9e006989f6cdd0efb0cb44ea11b31",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 182,
+    "words": 621,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/octanejs--octane/packages/tanstack-table/upstream/skills/create-table-hook/SKILL.md"
+}

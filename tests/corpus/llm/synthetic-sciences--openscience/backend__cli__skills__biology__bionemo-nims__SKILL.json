@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "backend__cli__skills__biology__bionemo-nims__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "synthetic-sciences/openscience",
+    "path": "backend/cli/skills/biology/bionemo-nims/SKILL.md",
+    "commit": "4e060d6c3670e3704f34b5cb6fe49ef8fafb29f5",
+    "commit_date": "2026-09-23T07:46:55+00:00",
+    "url": "https://github.com/synthetic-sciences/openscience/blob/4e060d6c3670e3704f34b5cb6fe49ef8fafb29f5/backend/cli/skills/biology/bionemo-nims/SKILL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-04T11:55:04+05:30",
+    "stars": 3633,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-17T04:48:41+08:00",
+    "last_commit_date": "2026-09-17T04:48:41+08:00",
+    "last_commit_author": "ishaan1124",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4244,
+    "sha256": "c7776e09819804084ef75be7a262de518657feafb451d2a3b1a443a5e20aae59",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 74,
+    "words": 609,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/synthetic-sciences--openscience/backend/cli/skills/biology/bionemo-nims/SKILL.md"
+}

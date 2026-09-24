@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__specs__ui-improvements__design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Pimzino/claude-code-spec-workflow",
+    "path": ".claude/specs/ui-improvements/design.md",
+    "commit": "f3de74d8055120658ac199bfca865a3e1de9fd99",
+    "commit_date": "2025-09-07T15:14:48+01:00",
+    "url": "https://github.com/Pimzino/claude-code-spec-workflow/blob/f3de74d8055120658ac199bfca865a3e1de9fd99/.claude/specs/ui-improvements/design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-18T17:16:32+01:00",
+    "stars": 3857,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2025-08-05T19:39:57-04:00",
+    "last_commit_date": "2025-08-05T19:45:13-04:00",
+    "last_commit_author": "Michael Ventura",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 9968,
+    "sha256": "7dd182ea35af5dabaee3e8f0289af9ff9ab0d707a55f484ee199c2b8e73e6580",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 313,
+    "words": 1199,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Pimzino--claude-code-spec-workflow/.claude/specs/ui-improvements/design.md"
+}

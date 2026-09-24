@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "library__cropperjs__ISSUE_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "streams/streams",
+    "path": "library/cropperjs/ISSUE_TEMPLATE.md",
+    "commit": "ae6c3a6b69a03c848b555109ad6f03c9de48bad5",
+    "commit_date": "2021-12-28T12:39:36-08:00",
+    "url": "https://codeberg.org/streams/streams/src/commit/ae6c3a6b69a03c848b555109ad6f03c9de48bad5/library/cropperjs/ISSUE_TEMPLATE.md",
+    "license": "Unlicense",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 103,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-23T16:42:24-08:00",
+    "last_commit_date": "2018-01-23T16:42:24-08:00",
+    "last_commit_author": "zotlabs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-23: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1038,
+    "sha256": "f850315991aa538cb3339fd6af1ed0d71568bc7c13bf091b206f6ee28815fc41",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 21,
+    "words": 125,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--streams--streams/library/cropperjs/ISSUE_TEMPLATE.md"
+}

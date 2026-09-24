@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__react-core__src__components__Tabs__examples__Tabs.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "patternfly/patternfly-react",
+    "path": "packages/react-core/src/components/Tabs/examples/Tabs.md",
+    "commit": "496b6ded6379af684e78a87f13484aaa9fbb779e",
+    "commit_date": "2021-12-22T13:49:31+00:00",
+    "url": "https://github.com/patternfly/patternfly-react/blob/496b6ded6379af684e78a87f13484aaa9fbb779e/packages/react-core/src/components/Tabs/examples/Tabs.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2020-03-03T10:14:50-05:00",
+    "last_commit_date": "2021-10-25T09:18:44-04:00",
+    "last_commit_author": "Titani Labaj",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-25: all 17 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 37875,
+    "sha256": "5dc2d92ebf2fe998de7bbd2b078cef6d26d1d143d786c66d85c45b00e1e7daf7",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1223,
+    "words": 2919,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/patternfly--patternfly-react/packages/react-core/src/components/Tabs/examples/Tabs.md"
+}

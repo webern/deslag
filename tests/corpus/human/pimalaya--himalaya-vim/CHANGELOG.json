@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pimalaya/himalaya-vim",
+    "path": "CHANGELOG.md",
+    "commit": "9b91f256638e8bb31d4386bf0d7f897b674e9dda",
+    "commit_date": "2021-04-03T12:46:12+02:00",
+    "url": "https://github.com/pimalaya/himalaya-vim/blob/9b91f256638e8bb31d4386bf0d7f897b674e9dda/CHANGELOG.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-01-17T22:59:02+01:00",
+    "stars": 140,
+    "found_by": "sg-topic:vim"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-01-17T22:59:02+01:00",
+    "last_commit_date": "2021-01-17T22:59:02+01:00",
+    "last_commit_author": "Clément DOUIN",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-17: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1334,
+    "sha256": "2d8d997bec2f27c4f3b78db1d65e200daa3204c545c22f139177102d464b9dbe",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 56,
+    "words": 127,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/pimalaya--himalaya-vim/CHANGELOG.md"
+}

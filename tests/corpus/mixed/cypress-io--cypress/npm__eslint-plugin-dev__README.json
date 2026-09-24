@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "npm__eslint-plugin-dev__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "cypress-io/cypress",
+    "path": "npm/eslint-plugin-dev/README.md",
+    "commit": "a6a04edd9621c6c66807ae9740e0c1dccd2ac494",
+    "commit_date": "2026-09-23T10:41:44-04:00",
+    "url": "https://github.com/cypress-io/cypress/blob/a6a04edd9621c6c66807ae9740e0c1dccd2ac494/npm/eslint-plugin-dev/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 51023,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-09-29T20:16:54-04:00",
+    "last_commit_date": "2026-09-09T15:07:58-04:00",
+    "last_commit_author": "Jennifer Shehane",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-09-29, before 2022-01-01; 1 of its 10 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4785,
+    "sha256": "36aebf18ed607f1aff6021f589510093a1c70b37c93be65943b148daac56bfe5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 173,
+    "words": 592,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cypress-io--cypress/npm/eslint-plugin-dev/README.md"
+}

@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "scylladb/scylla-rust-driver",
+    "path": ".github/pull_request_template.md",
+    "commit": "51e088291b174cb2af6e6ed07cbbd48dfa6c5907",
+    "commit_date": "2021-12-13T10:32:20+01:00",
+    "url": "https://github.com/scylladb/scylla-rust-driver/blob/51e088291b174cb2af6e6ed07cbbd48dfa6c5907/.github/pull_request_template.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-10-21T12:31:56+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-02-06T22:14:39+01:00",
+    "last_commit_date": "2021-02-06T22:14:39+01:00",
+    "last_commit_author": "Piotr Dulikowski",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-02-06: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 648,
+    "sha256": "ea9081576497484908b39dab115a5bf18824aff3785e62b30023c12c636e8bb8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 118,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/scylladb--scylla-rust-driver/.github/pull_request_template.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "integration-tests__perf__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pipeshub-ai/pipeshub-ai",
+    "path": "integration-tests/perf/README.md",
+    "commit": "d53f12b735d1feb995d4ed7e05a9b4e29ae93cb2",
+    "commit_date": "2026-09-23T12:28:07-07:00",
+    "url": "https://github.com/pipeshub-ai/pipeshub-ai/blob/d53f12b735d1feb995d4ed7e05a9b4e29ae93cb2/integration-tests/perf/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-03-07T00:21:10+05:30",
+    "stars": 3768,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2026-09-19T04:02:11-07:00",
+    "last_commit_date": "2026-09-19T22:23:24-07:00",
+    "last_commit_author": "Shekhar Kadyan",
+    "authors": 1,
+    "ai_commits": 11,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 11 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 19983,
+    "sha256": "53aee42aee2f4ebf7cecd49b8bad4e49ef3b4e9e30e3a0cf5c0fa0442d06dda7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 319,
+    "words": 3398,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pipeshub-ai--pipeshub-ai/integration-tests/perf/README.md"
+}

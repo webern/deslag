@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tannerlinsley/react-table",
+    "path": "README.md",
+    "commit": "21d713fc4947d2a08cc2136bb055889a61412ded",
+    "commit_date": "2026-09-16T09:42:58-05:00",
+    "url": "https://github.com/tannerlinsley/react-table/blob/21d713fc4947d2a08cc2136bb055889a61412ded/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 286,
+    "first_commit_date": "2018-02-08T09:52:49-07:00",
+    "last_commit_date": "2026-08-04T00:22:59-05:00",
+    "last_commit_author": "Kevin Van Cott",
+    "authors": 41,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-08, before 2022-01-01; 1 of its 286 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7231,
+    "sha256": "913bdc81d1d575246a519cd84ef3c31b12298fa768dcfb98e9bd254085119daa",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 145,
+    "words": 552,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tannerlinsley--react-table/README.md"
+}

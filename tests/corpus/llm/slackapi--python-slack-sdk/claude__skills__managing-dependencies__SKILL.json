@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__managing-dependencies__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "slackapi/python-slack-sdk",
+    "path": ".claude/skills/managing-dependencies/SKILL.md",
+    "commit": "b9f4666acd970473388f4740af58bb6b55e340d0",
+    "commit_date": "2026-09-10T10:42:58-07:00",
+    "url": "https://github.com/slackapi/python-slack-sdk/blob/b9f4666acd970473388f4740af58bb6b55e340d0/.claude/skills/managing-dependencies/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4015,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-16T11:54:13-04:00",
+    "last_commit_date": "2026-09-02T16:12:58+00:00",
+    "last_commit_author": "dependabot[bot]",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10086,
+    "sha256": "e6d2f06e055191ac2fe11aafb4de733b3252f4ead2e7f9a96044513b78ee72be",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 121,
+    "words": 1439,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/slackapi--python-slack-sdk/.claude/skills/managing-dependencies/SKILL.md"
+}

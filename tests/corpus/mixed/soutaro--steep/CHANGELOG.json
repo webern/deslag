@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "soutaro/steep",
+    "path": "CHANGELOG.md",
+    "commit": "28ac185439f448f09b420b26699467e5243093cb",
+    "commit_date": "2026-09-22T09:08:31+09:00",
+    "url": "https://github.com/soutaro/steep/blob/28ac185439f448f09b420b26699467e5243093cb/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1490,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 125,
+    "first_commit_date": "2018-05-30T22:30:32+09:00",
+    "last_commit_date": "2026-08-27T17:46:56+09:00",
+    "last_commit_author": "Soutaro Matsumoto",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-05-30, before 2022-01-01; 1 of its 125 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 62041,
+    "sha256": "51acf26b456e146c84cea51879240d6a93c92190d8c44e69329bd1bba9d32f9c",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1210,
+    "words": 5454,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/soutaro--steep/CHANGELOG.md"
+}

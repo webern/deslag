@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rllm-org/rllm",
+    "path": "docs/AGENTS.md",
+    "commit": "3b40c37cf6a262cf4d28cc987ebe4f4cf797956c",
+    "commit_date": "2026-09-05T04:22:35+00:00",
+    "url": "https://github.com/rllm-org/rllm/blob/3b40c37cf6a262cf4d28cc987ebe4f4cf797956c/docs/AGENTS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-01-10T22:21:10-08:00",
+    "stars": 5832,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-28T19:09:11-03:00",
+    "last_commit_date": "2026-04-28T19:09:11-03:00",
+    "last_commit_author": "listar2000",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1160,
+    "sha256": "db245df29070031e049405a6f4ffeb46306f87a979781cd42fc0530074a299a3",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 33,
+    "words": 173,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/rllm-org--rllm/docs/AGENTS.md"
+}

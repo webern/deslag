@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "tsoding/porth",
+    "path": "CONTRIBUTING.md",
+    "commit": "2e9bdcea03a0accd881da6761bcc57b3d5ae09cc",
+    "commit_date": "2022-01-01T06:14:07+07:00",
+    "url": "https://gitlab.com/tsoding/porth/-/blob/2e9bdcea03a0accd881da6761bcc57b3d5ae09cc/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-09-08T00:36:58+07:00",
+    "stars": 310,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2021-10-03T18:56:15+07:00",
+    "last_commit_date": "2021-10-17T05:06:59+07:00",
+    "last_commit_author": "rexim",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-17: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 464,
+    "sha256": "8fef6da16b7af6a78092cf7f63cc145ab6c18920c1809ef4493666eebcfc564f",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 75,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--tsoding--porth/CONTRIBUTING.md"
+}

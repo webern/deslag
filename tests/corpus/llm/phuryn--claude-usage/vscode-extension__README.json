@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "vscode-extension__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "phuryn/claude-usage",
+    "path": "vscode-extension/README.md",
+    "commit": "3eea154474e93761f774ed38beeaf45baf838a45",
+    "commit_date": "2026-07-10T11:55:52+02:00",
+    "url": "https://github.com/phuryn/claude-usage/blob/3eea154474e93761f774ed38beeaf45baf838a45/vscode-extension/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-07T20:49:27+02:00",
+    "stars": 2234,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-05-29T15:34:03+02:00",
+    "last_commit_date": "2026-06-21T21:08:31+02:00",
+    "last_commit_author": "Pawel Huryn",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 5 commits that touched it is marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 7115,
+    "sha256": "28bf5b3271f8489db031595ca7201b2dce7419759c3e3b33e96932a3a37c826b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 141,
+    "words": 976,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/phuryn--claude-usage/vscode-extension/README.md"
+}

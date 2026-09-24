@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "lib__msal-browser__docs__testing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "AzureAD/microsoft-authentication-library-for-js",
+    "path": "lib/msal-browser/docs/testing.md",
+    "commit": "23eccbae3fcae608e5177ac2908a8bc0531d3fae",
+    "commit_date": "2026-09-22T18:53:39-07:00",
+    "url": "https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/23eccbae3fcae608e5177ac2908a8bc0531d3fae/lib/msal-browser/docs/testing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4121,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2021-07-28T21:28:52-07:00",
+    "last_commit_date": "2026-06-12T10:50:18-07:00",
+    "last_commit_author": "Copilot",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-07-28, before 2022-01-01; 1 of its 14 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 13890,
+    "sha256": "60671de9901b10b28a4463d54a367c3542a4f1c1cc8fd66920cb81fc791a6aa5",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 429,
+    "words": 1490,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/AzureAD--microsoft-authentication-library-for-js/lib/msal-browser/docs/testing.md"
+}

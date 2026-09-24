@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "y20k/transistor",
+    "path": "CONTRIBUTE.md",
+    "commit": "523d41727254d1dea0108231f1f74ee4ed9f0a19",
+    "commit_date": "2021-12-11T14:23:09+00:00",
+    "url": "https://codeberg.org/y20k/transistor/src/commit/523d41727254d1dea0108231f1f74ee4ed9f0a19/CONTRIBUTE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 164,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-04-21T17:59:21+02:00",
+    "last_commit_date": "2020-12-07T16:41:52+01:00",
+    "last_commit_author": "y20k",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-12-07: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1564,
+    "sha256": "a1827b1ee35e596df76c742f9e852bba04e4bc9d1ed2496890aaa7c208a7ec90",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 175,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--y20k--transistor/CONTRIBUTE.md"
+}

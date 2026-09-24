@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "changeset__registration-email-confirmation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "crowi/crowi",
+    "path": ".changeset/registration-email-confirmation.md",
+    "commit": "c96e47fe76ab36a93662a80a76c121d13a93657e",
+    "commit_date": "2026-09-21T22:05:04+09:00",
+    "url": "https://github.com/crowi/crowi/blob/c96e47fe76ab36a93662a80a76c121d13a93657e/.changeset/registration-email-confirmation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1099,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-29T18:20:11+09:00",
+    "last_commit_date": "2026-05-29T18:20:11+09:00",
+    "last_commit_author": "Sotaro KARASAWA",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 964,
+    "sha256": "5b284f6932be5978835afe5f3984d8e7affa656b05207dbc99881ab5d2ecca28",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 135,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/crowi--crowi/.changeset/registration-email-confirmation.md"
+}

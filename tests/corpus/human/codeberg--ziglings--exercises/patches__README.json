@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "patches__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "ziglings/exercises",
+    "path": "patches/README.md",
+    "commit": "39e432748e067cce6f30fc7200685a994c1258ad",
+    "commit_date": "2021-12-26T13:24:01+09:00",
+    "url": "https://codeberg.org/ziglings/exercises/src/commit/39e432748e067cce6f30fc7200685a994c1258ad/patches/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-23T12:02:35-05:00",
+    "stars": 1672,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2021-02-14T10:49:09-05:00",
+    "last_commit_date": "2021-03-12T20:43:21-05:00",
+    "last_commit_author": "Dave Gauer",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-12: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 946,
+    "sha256": "42bdeb0ee4f9106385bd79330034d1c6c9b569603ec637e6892a4ada25ec9363",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 157,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--ziglings--exercises/patches/README.md"
+}

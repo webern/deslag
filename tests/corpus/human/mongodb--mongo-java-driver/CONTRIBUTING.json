@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mongodb/mongo-java-driver",
+    "path": "CONTRIBUTING.md",
+    "commit": "a4a1960776a9f7e7765448ab38a42aef054f327e",
+    "commit_date": "2021-12-23T12:57:18-05:00",
+    "url": "https://github.com/mongodb/mongo-java-driver/blob/a4a1960776a9f7e7765448ab38a42aef054f327e/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2662,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-01-03T15:12:33+01:00",
+    "last_commit_date": "2020-04-24T16:58:13-04:00",
+    "last_commit_author": "Jeff Yemin",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-04-24: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1845,
+    "sha256": "4b9a84fff9ae5d78dbe735dad1af05859258b965748c85c4a4e21a58aa12e659",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 242,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mongodb--mongo-java-driver/CONTRIBUTING.md"
+}

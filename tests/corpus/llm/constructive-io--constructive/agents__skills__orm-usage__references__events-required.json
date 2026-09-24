@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agents__skills__orm-usage__references__events-required.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "constructive-io/constructive",
+    "path": ".agents/skills/orm-usage/references/events-required.md",
+    "commit": "b981569eb76bab0f69ba143d260719c52e7c21d5",
+    "commit_date": "2026-09-23T15:31:08+04:00",
+    "url": "https://github.com/constructive-io/constructive/blob/b981569eb76bab0f69ba143d260719c52e7c21d5/.agents/skills/orm-usage/references/events-required.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-10T02:29:36+00:00",
+    "last_commit_date": "2026-08-10T02:29:36+00:00",
+    "last_commit_author": "Devin AI",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "devin"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 505,
+    "sha256": "07a049650363cc6e7ba3c69abe214aade6d8eb394a582c8bc19ec4f4f5c71566",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 57,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/constructive-io--constructive/.agents/skills/orm-usage/references/events-required.md"
+}

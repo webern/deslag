@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "collections___posts__2019-10-30-choosing-a-vpn.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "privacyguides/privacyguides.org",
+    "path": "collections/_posts/2019-10-30-choosing-a-vpn.md",
+    "commit": "a6a4072f0c22f4e7323bc22706eb953f38870fe0",
+    "commit_date": "2021-12-31T03:18:38+00:00",
+    "url": "https://codeberg.org/privacyguides/privacyguides.org/src/commit/a6a4072f0c22f4e7323bc22706eb953f38870fe0/collections/_posts/2019-10-30-choosing-a-vpn.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 317,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2021-05-03T14:17:13-05:00",
+    "last_commit_date": "2021-09-14T20:41:49-05:00",
+    "last_commit_author": "Jonah Aragon",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-14: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8174,
+    "sha256": "51cd41a0d970b3d558be266ebf76868e578d4e548b89aec2178c39d3fa0d63a0",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 1308,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--privacyguides--privacyguides.org/collections/_posts/2019-10-30-choosing-a-vpn.md"
+}

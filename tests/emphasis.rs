@@ -237,3 +237,29 @@ fn a_percent_out_of_range_is_an_error() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn a_file_just_over_its_share_is_not_reported_at_it() {
+    // Three short spans in enough prose to put them a hair over 1%, which must not print as 1.00%.
+    let text = (100..5000)
+        .map(|length| format!("*b* *c* *dd* {}\n", "a".repeat(length)))
+        .find(|text| {
+            let percent = measure(text).percent();
+            percent > 1.0 && percent < 1.01
+        })
+        .expect("a prose length just over 1%");
+    assert!(check(&text, Some(&settings(Some(2), Some(1.0)))).is_some());
+
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[md.lints.max_emphasis]\nfree_spans = 2\nmax_percent = 1\n",
+    );
+    repo.write("a.md", &text);
+    let output = repo.check();
+    let stderr = stderr(&output);
+    assert!(
+        stderr.contains("a.md has 3 emphasized spans covering 1.01% of its prose."),
+        "stderr:\n{stderr}"
+    );
+}

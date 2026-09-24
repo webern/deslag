@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rahix/port-expander",
+    "path": "README.md",
+    "commit": "ce2091d1d75521cb9b4e6c57854f94ffe72423e8",
+    "commit_date": "2021-04-26T22:07:59+02:00",
+    "url": "https://github.com/rahix/port-expander/blob/ce2091d1d75521cb9b4e6c57854f94ffe72423e8/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2021-04-21T21:45:56+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-04-24T14:56:36+02:00",
+    "last_commit_date": "2021-04-26T22:05:35+02:00",
+    "last_commit_author": "Rahix",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-04-26: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3093,
+    "sha256": "2e82461d747fb021d9d810b6bde9b9a8081978b5728f3ed9dbd552f8eb355dd4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 315,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/rahix--port-expander/README.md"
+}

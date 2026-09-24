@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "RELEASE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jasonacox/tinytuya",
+    "path": "RELEASE.md",
+    "commit": "95bfbd88dfbf121871e50b7b0c96345846fe5d2f",
+    "commit_date": "2026-07-18T17:22:06-07:00",
+    "url": "https://github.com/jasonacox/tinytuya/blob/95bfbd88dfbf121871e50b7b0c96345846fe5d2f/RELEASE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-09-03T19:37:26-07:00",
+    "stars": 1747,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 151,
+    "first_commit_date": "2020-11-27T12:30:15-08:00",
+    "last_commit_date": "2026-07-02T22:04:17-07:00",
+    "last_commit_author": "Jason Cox",
+    "authors": 4,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-11-27, before 2022-01-01; 3 of its 151 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 53134,
+    "sha256": "b5e9fc4479b3d9545f59a2710bb68ac1d1b0a5c66748f7628fcd7664a2c5f526",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 982,
+    "words": 6414,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/jasonacox--tinytuya/RELEASE.md"
+}

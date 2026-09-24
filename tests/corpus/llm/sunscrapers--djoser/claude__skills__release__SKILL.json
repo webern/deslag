@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__release__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sunscrapers/djoser",
+    "path": ".claude/skills/release/SKILL.md",
+    "commit": "ca106b1383c40e90b87c454c949fece3e535e77b",
+    "commit_date": "2026-08-01T22:17:04+02:00",
+    "url": "https://github.com/sunscrapers/djoser/blob/ca106b1383c40e90b87c454c949fece3e535e77b/.claude/skills/release/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2678,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-31T22:04:53+02:00",
+    "last_commit_date": "2026-08-01T17:31:05+02:00",
+    "last_commit_author": "Tomasz Wójcik",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4500,
+    "sha256": "0ec8fe598976894a94d84ae9bb56820d0dd4d36139aefa1844d4401705cab25d",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 93,
+    "words": 712,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sunscrapers--djoser/.claude/skills/release/SKILL.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__INSTALL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "curl/curl-mirror",
+    "path": "docs/INSTALL.md",
+    "commit": "d8f6e5dc8ebce2b2c258227651c5f193de5e58f8",
+    "commit_date": "2021-12-30T14:17:47+01:00",
+    "url": "https://codeberg.org/curl/curl-mirror/src/commit/d8f6e5dc8ebce2b2c258227651c5f193de5e58f8/docs/INSTALL.md",
+    "license": "ISC",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 91,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 34,
+    "first_commit_date": "2018-01-02T15:44:08-05:00",
+    "last_commit_date": "2021-11-30T18:33:49-08:00",
+    "last_commit_author": "Dan Fandrich",
+    "authors": 17,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-30: all 34 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 22742,
+    "sha256": "e0c5ed0512e38e49b39a4e1f906ffe733bf8ba463ef7aa68eb5cdc0ccfb4d846",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 558,
+    "words": 3093,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--curl--curl-mirror/docs/INSTALL.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "danielpclark/rutie",
+    "path": "README.md",
+    "commit": "cba311cbb5873ef42ad627081f2dec04feab9a51",
+    "commit_date": "2021-11-07T17:04:16+09:00",
+    "url": "https://github.com/danielpclark/rutie/blob/cba311cbb5873ef42ad627081f2dec04feab9a51/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-06-19T17:20:10-04:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 84,
+    "first_commit_date": "2018-06-19T17:20:10-04:00",
+    "last_commit_date": "2021-09-06T20:23:55-04:00",
+    "last_commit_author": "Daniel P. Clark",
+    "authors": 8,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-06: all 84 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 20902,
+    "sha256": "6d888182e2c7a2b78eebea7c878cfdbcdd90d3e1369f577533e9bf810c3ba209",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 495,
+    "words": 2807,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/danielpclark--rutie/README.md"
+}

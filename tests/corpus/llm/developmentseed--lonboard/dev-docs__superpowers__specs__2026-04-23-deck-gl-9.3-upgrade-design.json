@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "dev-docs__superpowers__specs__2026-04-23-deck-gl-9.3-upgrade-design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "developmentseed/lonboard",
+    "path": "dev-docs/superpowers/specs/2026-04-23-deck-gl-9.3-upgrade-design.md",
+    "commit": "25cca1139b2d1ced806bf9231a1610107ca251a1",
+    "commit_date": "2026-09-18T02:53:29+05:30",
+    "url": "https://github.com/developmentseed/lonboard/blob/25cca1139b2d1ced806bf9231a1610107ca251a1/dev-docs/superpowers/specs/2026-04-23-deck-gl-9.3-upgrade-design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-08-31T17:53:31-04:00",
+    "stars": 964,
+    "found_by": "sg-topic:geospatial"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-23T14:29:30-04:00",
+    "last_commit_date": "2026-04-23T14:29:30-04:00",
+    "last_commit_author": "Kyle Barron",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2264,
+    "sha256": "9cbcd084d7483440b9f5d64cf709189e4ec423479c0785915be6ca629b5d9ae6",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 62,
+    "words": 282,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/developmentseed--lonboard/dev-docs/superpowers/specs/2026-04-23-deck-gl-9.3-upgrade-design.md"
+}

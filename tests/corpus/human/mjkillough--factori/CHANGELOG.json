@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mjkillough/factori",
+    "path": "CHANGELOG.md",
+    "commit": "41332570149b049c9391548e8143a005ed15b906",
+    "commit_date": "2020-08-14T22:53:57+01:00",
+    "url": "https://github.com/mjkillough/factori/blob/41332570149b049c9391548e8143a005ed15b906/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-06-13T22:53:47+01:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-01-08T20:46:31+00:00",
+    "last_commit_date": "2020-08-14T00:51:54+01:00",
+    "last_commit_author": "Michael Killough",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-08-14: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 483,
+    "sha256": "6b0f0f1c1c8c629b766385f1bc86f18c2229eca0a628d357c621dfc60787912b",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 68,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mjkillough--factori/CHANGELOG.md"
+}

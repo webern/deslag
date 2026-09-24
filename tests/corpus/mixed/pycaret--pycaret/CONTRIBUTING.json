@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pycaret/pycaret",
+    "path": "CONTRIBUTING.md",
+    "commit": "5ec8f6622bff8a9089f8b2434ac0cd3809f9d65d",
+    "commit_date": "2026-05-16T04:19:48-05:00",
+    "url": "https://github.com/pycaret/pycaret/blob/5ec8f6622bff8a9089f8b2434ac0cd3809f9d65d/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-23T13:40:48-05:00",
+    "stars": 9843,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2020-07-31T01:15:39-04:00",
+    "last_commit_date": "2026-04-27T13:35:15-05:00",
+    "last_commit_author": "moezali1",
+    "authors": 6,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-07-31, before 2022-01-01; 4 of its 15 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7178,
+    "sha256": "89925ff2dde3d8e58c8f12d1bdd7be087e0bb0246ba3dc0d79a9fef3e36b369d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 136,
+    "words": 969,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pycaret--pycaret/CONTRIBUTING.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dh-tech/awesome-digital-humanities",
+    "path": "README.md",
+    "commit": "0ea3f284457407a05146ac94f46c8b0abe37542a",
+    "commit_date": "2026-09-09T14:46:41+02:00",
+    "url": "https://github.com/dh-tech/awesome-digital-humanities/blob/0ea3f284457407a05146ac94f46c8b0abe37542a/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:digital-humanities"
+  },
+  "history": {
+    "commits": 91,
+    "first_commit_date": "2018-03-13T15:43:45+01:00",
+    "last_commit_date": "2026-09-07T10:18:52+02:00",
+    "last_commit_author": "Diego Siqueira",
+    "authors": 21,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-03-13, before 2022-01-01; 3 of its 91 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 24191,
+    "sha256": "5481b6d57f44dd124f7b1c915aaf1af7fcd67ad7b148f3a7fc24be848be0d9bc",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 202,
+    "words": 2747,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dh-tech--awesome-digital-humanities/README.md"
+}

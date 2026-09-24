@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "ineo6/hosts",
+    "path": "template.md",
+    "commit": "3ea9621f15da31b293aadfba8481941452b5856a",
+    "commit_date": "2021-12-31T20:12:28+00:00",
+    "url": "https://gitlab.com/ineo6/hosts/-/blob/3ea9621f15da31b293aadfba8481941452b5856a/template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-03-28T09:54:34+00:00",
+    "stars": 61,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-03-28T16:31:18+08:00",
+    "last_commit_date": "2021-08-02T23:26:07+08:00",
+    "last_commit_author": "neo",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-02: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2748,
+    "sha256": "5343ed5de620a4d5fa1505159675042828d81d29f7fa66bfdde702a90762ff4a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 89,
+    "words": 98,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--ineo6--hosts/template.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__devdocs__modules__launcher__telemetry.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/PowerToys",
+    "path": "doc/devdocs/modules/launcher/telemetry.md",
+    "commit": "c059977c78b7db0e1f10fc2f6877649fed817cf5",
+    "commit_date": "2022-11-29T12:08:53-08:00",
+    "url": "https://github.com/microsoft/PowerToys/blob/c059977c78b7db0e1f10fc2f6877649fed817cf5/doc/devdocs/modules/launcher/telemetry.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 138930,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-10-20T14:28:23-07:00",
+    "last_commit_date": "2020-10-20T14:28:23-07:00",
+    "last_commit_author": "Alekhya",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-20: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2351,
+    "sha256": "2b7b2ffd7ccbe819cfb53dff6faa027930bf89ccf3c59c13dac04da4a694a7f3",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 199,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/microsoft--PowerToys/doc/devdocs/modules/launcher/telemetry.md"
+}

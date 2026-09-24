@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "ziglang/zig",
+    "path": "CONTRIBUTING.md",
+    "commit": "cb06f6f9846a4705a4d8ae1bcaa508e992bafee8",
+    "commit_date": "2021-12-31T22:57:06+00:00",
+    "url": "https://codeberg.org/ziglang/zig/src/commit/cb06f6f9846a4705a4d8ae1bcaa508e992bafee8/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6661,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2019-05-28T14:50:02-04:00",
+    "last_commit_date": "2021-12-03T16:17:40-07:00",
+    "last_commit_author": "Andrew Kelley",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-03: all 12 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 10333,
+    "sha256": "76e5b1b1260273b7eaf6f0c481ae0cbd239aa1eeef0fa0684ff06a6ef87202dd",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 213,
+    "words": 1529,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--ziglang--zig/CONTRIBUTING.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "gitlab__issue_templates__Bug.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitmate/open-source/gitmate-2",
+    "path": ".gitlab/issue_templates/Bug.md",
+    "commit": "2a1c955357d5ae61133ae2b47b6d686f257d98e0",
+    "commit_date": "2018-11-16T16:45:33+05:30",
+    "url": "https://gitlab.com/gitmate/open-source/gitmate-2/-/blob/2a1c955357d5ae61133ae2b47b6d686f257d98e0/.gitlab/issue_templates/Bug.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 76,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-02T09:57:45+01:00",
+    "last_commit_date": "2018-01-02T09:57:45+01:00",
+    "last_commit_author": "Lasse Schuirmann",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-02: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1284,
+    "sha256": "9c5926feeec19aaebdd083ebed35c85467041400197f7aa53cdc1d08edc13c59",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 174,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gitmate--open-source--gitmate-2/.gitlab/issue_templates/Bug.md"
+}

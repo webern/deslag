@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__content__getting-started__train.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rerun-io/rerun",
+    "path": "docs/content/getting-started/train.md",
+    "commit": "b6691dc80b04d30201b00ad8691069b5bb7b6511",
+    "commit_date": "2026-09-23T15:45:20+00:00",
+    "url": "https://github.com/rerun-io/rerun/blob/b6691dc80b04d30201b00ad8691069b5bb7b6511/docs/content/getting-started/train.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2022-04-08T10:35:38+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-28T07:09:25-04:00",
+    "last_commit_date": "2026-05-28T07:09:25-04:00",
+    "last_commit_author": "Nick",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2412,
+    "sha256": "528c1baf43c5a335cdb8cfaaca89ee8b8ad4dfdd9791376ecf8f6916e1dd5d5e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 71,
+    "words": 293,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/rerun-io--rerun/docs/content/getting-started/train.md"
+}

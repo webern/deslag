@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "spec-kitty/spec-kitty",
+    "path": "kitty-specs/read-side-seam-primary-primitive-closure-01KYKMMT/tasks/WP01-suite-states-target-design/review-cycle-3.md",
+    "commit": "c6e8b388ec1034473b9e8cfacbc7ec1b85261275",
+    "commit_date": "2026-09-23T21:11:27+02:00",
+    "url": "https://github.com/spec-kitty/spec-kitty/blob/c6e8b388ec1034473b9e8cfacbc7ec1b85261275/kitty-specs/read-side-seam-primary-primitive-closure-01KYKMMT/tasks/WP01-suite-states-target-design/review-cycle-3.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-08-21T15:54:32-07:00",
+    "stars": 1637,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-28T23:41:49+02:00",
+    "last_commit_date": "2026-07-28T23:41:49+02:00",
+    "last_commit_author": "Stijn Dejongh",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14015,
+    "sha256": "9377d4338de9805b179561aa0d440f7f0d3f5957424e8c1b521468cd5c62665a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 241,
+    "words": 1879,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/spec-kitty--spec-kitty/kitty-specs/read-side-seam-primary-primitive-closure-01KYKMMT/tasks/WP01-suite-states-target-design/review-cycle-3.md"
+}

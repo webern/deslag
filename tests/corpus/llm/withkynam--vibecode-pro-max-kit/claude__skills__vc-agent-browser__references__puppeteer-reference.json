@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__vc-agent-browser__references__puppeteer-reference.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "withkynam/vibecode-pro-max-kit",
+    "path": ".claude/skills/vc-agent-browser/references/puppeteer-reference.md",
+    "commit": "3bcb2f9891308fcaa305e2b64027bd0a7dc8251e",
+    "commit_date": "2026-06-21T15:31:41+07:00",
+    "url": "https://github.com/withkynam/vibecode-pro-max-kit/blob/3bcb2f9891308fcaa305e2b64027bd0a7dc8251e/.claude/skills/vc-agent-browser/references/puppeteer-reference.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-27T15:23:48+07:00",
+    "stars": 1139,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-14T23:27:29+07:00",
+    "last_commit_date": "2026-06-14T23:27:29+07:00",
+    "last_commit_author": "kynam",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 19065,
+    "sha256": "dcec4af083b7fe2d405a40aad2b511317c1e9deaa2bec5ca91ec9959aff1a423",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 953,
+    "words": 2151,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/withkynam--vibecode-pro-max-kit/.claude/skills/vc-agent-browser/references/puppeteer-reference.md"
+}

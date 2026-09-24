@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Activiti/Activiti",
+    "path": "CONTRIBUTING.md",
+    "commit": "298d664eae9386c498b03ce0cb8470f39930b6b5",
+    "commit_date": "2021-12-29T14:59:51+01:00",
+    "url": "https://github.com/Activiti/Activiti/blob/298d664eae9386c498b03ce0cb8470f39930b6b5/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 10540,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-01-09T11:44:53+00:00",
+    "last_commit_date": "2021-03-03T01:41:34+01:00",
+    "last_commit_author": "Marcello Teodori",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-03: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1040,
+    "sha256": "fbade6c4ed8d912ef84d4c7f803be2f60ae9e2bc6f8cb6d19dcd25de90bea5bc",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 115,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Activiti--Activiti/CONTRIBUTING.md"
+}

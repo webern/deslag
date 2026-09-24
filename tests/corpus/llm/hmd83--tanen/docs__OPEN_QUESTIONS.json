@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__OPEN_QUESTIONS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "hmd83/tanen",
+    "path": "docs/OPEN_QUESTIONS.md",
+    "commit": "694ce00af67bafba68eedab9f64953d4f430bbab",
+    "commit_date": "2026-09-22T22:34:28+02:00",
+    "url": "https://github.com/hmd83/tanen/blob/694ce00af67bafba68eedab9f64953d4f430bbab/docs/OPEN_QUESTIONS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-27T21:40:29+02:00",
+    "stars": null,
+    "found_by": "github-topic:beekeeping"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-27T21:40:29+02:00",
+    "last_commit_date": "2026-07-27T21:40:29+02:00",
+    "last_commit_author": "Hussein Daj",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4153,
+    "sha256": "18d518a9c32c2cd038725010e56fd5113891d741c76ef8cc2041edf1657e81a1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 642,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/hmd83--tanen/docs/OPEN_QUESTIONS.md"
+}

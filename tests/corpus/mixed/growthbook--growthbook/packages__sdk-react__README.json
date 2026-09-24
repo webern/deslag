@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__sdk-react__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "growthbook/growthbook",
+    "path": "packages/sdk-react/README.md",
+    "commit": "0b3e0cb5a0b87c61bcc9667de9554beaee39a36b",
+    "commit_date": "2026-09-23T14:00:59-05:00",
+    "url": "https://github.com/growthbook/growthbook/blob/0b3e0cb5a0b87c61bcc9667de9554beaee39a36b/packages/sdk-react/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-07T18:13:37-05:00",
+    "stars": 8416,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2021-09-13T08:12:16-05:00",
+    "last_commit_date": "2026-09-10T16:17:16-04:00",
+    "last_commit_author": "EmmS21",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-09-13, before 2022-01-01; 1 of its 18 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 18241,
+    "sha256": "7867a32009b9d9404e565ff35112e8c6e90a33725d01974e46232199c75cd812",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 560,
+    "words": 2409,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/growthbook--growthbook/packages/sdk-react/README.md"
+}

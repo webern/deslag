@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "amir20/dozzle",
+    "path": "README.md",
+    "commit": "27d19e86bdf8b81b10c64d4aaf54ea2b78c200dd",
+    "commit_date": "2026-09-23T07:02:07-07:00",
+    "url": "https://github.com/amir20/dozzle/blob/27d19e86bdf8b81b10c64d4aaf54ea2b78c200dd/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-10-29T17:05:24-07:00",
+    "stars": 14457,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 96,
+    "first_commit_date": "2018-10-31T08:58:57-07:00",
+    "last_commit_date": "2026-09-18T14:30:36-07:00",
+    "last_commit_author": "Amir Raminfar",
+    "authors": 20,
+    "ai_commits": 8,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-10-31, before 2022-01-01; 8 of its 96 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11480,
+    "sha256": "ff998a512925194483deb63a4b1fd079db874bf47d94ddc2920ffb656e3e973e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 226,
+    "words": 1303,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/amir20--dozzle/README.md"
+}

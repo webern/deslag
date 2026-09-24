@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__Emerging-Issues.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/CSS-Exchange",
+    "path": "docs/Emerging-Issues.md",
+    "commit": "e3fd89dba3f30b9756da2e1bb7597ecdff1af0d9",
+    "commit_date": "2026-09-22T10:00:52-05:00",
+    "url": "https://github.com/microsoft/CSS-Exchange/blob/e3fd89dba3f30b9756da2e1bb7597ecdff1af0d9/docs/Emerging-Issues.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1283,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 75,
+    "first_commit_date": "2021-07-28T15:26:52-05:00",
+    "last_commit_date": "2026-06-12T12:50:00-05:00",
+    "last_commit_author": "David Paulson",
+    "authors": 5,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-07-28, before 2022-01-01; 3 of its 75 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 17325,
+    "sha256": "c0281c8d9a00af66a9eb5d82946f2fde7f20628ab785d7d886944f5d54a116b7",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 302,
+    "words": 1592,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/microsoft--CSS-Exchange/docs/Emerging-Issues.md"
+}

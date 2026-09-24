@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__TELEMETRY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "espressif/vscode-esp-idf-extension",
+    "path": "docs/TELEMETRY.md",
+    "commit": "a63f1831e203d14e1e3227e87e84312900f726cb",
+    "commit_date": "2026-09-23T12:36:06+08:00",
+    "url": "https://github.com/espressif/vscode-esp-idf-extension/blob/a63f1831e203d14e1e3227e87e84312900f726cb/docs/TELEMETRY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-01T15:19:24+08:00",
+    "stars": 1470,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-06-12T21:41:15+05:30",
+    "last_commit_date": "2026-09-14T12:40:26+08:00",
+    "last_commit_author": "Brian A. Ignacio",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-06-12, before 2022-01-01; 1 of its 2 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 30586,
+    "sha256": "e828f50e0cbf5a098b68127e1376118571fbd64a282aaf98226593f10b0d22a4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 207,
+    "words": 1829,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/espressif--vscode-esp-idf-extension/docs/TELEMETRY.md"
+}

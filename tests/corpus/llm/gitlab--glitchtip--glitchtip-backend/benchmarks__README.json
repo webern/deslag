@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "benchmarks__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "glitchtip/glitchtip-backend",
+    "path": "benchmarks/README.md",
+    "commit": "854d2fa03ea4a20d0610c7afe58b97bbfc959133",
+    "commit_date": "2026-09-23T15:35:49+00:00",
+    "url": "https://gitlab.com/glitchtip/glitchtip-backend/-/blob/854d2fa03ea4a20d0610c7afe58b97bbfc959133/benchmarks/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-21T08:52:42-05:00",
+    "stars": 359,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-03-23T19:08:48-04:00",
+    "last_commit_date": "2026-08-10T11:50:42-04:00",
+    "last_commit_author": "David Burke",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 4 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3383,
+    "sha256": "d549a6917464a06ce9315e0ac71def74ecc02d5bf1e2602a4f2286977c9473a2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 501,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--glitchtip--glitchtip-backend/benchmarks/README.md"
+}

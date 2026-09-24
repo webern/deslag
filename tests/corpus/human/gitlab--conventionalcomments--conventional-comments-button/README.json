@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "conventionalcomments/conventional-comments-button",
+    "path": "README.md",
+    "commit": "b66847c4746d437cdc3ce4db06eca37401cd71e7",
+    "commit_date": "2021-11-18T09:44:42+00:00",
+    "url": "https://gitlab.com/conventionalcomments/conventional-comments-button/-/blob/b66847c4746d437cdc3ce4db06eca37401cd71e7/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-06T11:52:05+02:00",
+    "stars": 70,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2020-05-22T10:53:47+02:00",
+    "last_commit_date": "2021-06-16T07:59:15+00:00",
+    "last_commit_author": "Jakub Chodorowicz",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-16: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1590,
+    "sha256": "4af59b7d12a55c24b8543f38c32e41b4c4dcc9498d6e33a01d112460b0f0e775",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 236,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--conventionalcomments--conventional-comments-button/README.md"
+}

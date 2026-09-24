@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__gitbook__SUMMARY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "taskforcesh/bullmq",
+    "path": "docs/gitbook/SUMMARY.md",
+    "commit": "4a5970b58846774f2fa9fe7a86333d92d37ca9dd",
+    "commit_date": "2026-09-22T22:25:17-07:00",
+    "url": "https://github.com/taskforcesh/bullmq/blob/4a5970b58846774f2fa9fe7a86333d92d37ca9dd/docs/gitbook/SUMMARY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-12-19T22:46:28+01:00",
+    "stars": 9430,
+    "found_by": "sg-topic:elixir"
+  },
+  "history": {
+    "commits": 128,
+    "first_commit_date": "2019-10-15T20:58:12+02:00",
+    "last_commit_date": "2026-09-09T12:07:05-07:00",
+    "last_commit_author": "Younes bkb 🥷",
+    "authors": 9,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-10-15, before 2022-01-01; 2 of its 128 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 8196,
+    "sha256": "095dd802d7f38c9c5fa2d8e2d055b9e2d5863a4627c00a78d304a5ce54f8319b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 192,
+    "words": 487,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/taskforcesh--bullmq/docs/gitbook/SUMMARY.md"
+}

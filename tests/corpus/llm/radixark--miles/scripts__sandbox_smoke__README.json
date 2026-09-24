@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "scripts__sandbox_smoke__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "radixark/miles",
+    "path": "scripts/sandbox_smoke/README.md",
+    "commit": "9652920fc3ed9a5927aef35fa1c232cae5501e2b",
+    "commit_date": "2026-09-23T11:34:09-07:00",
+    "url": "https://github.com/radixark/miles/blob/9652920fc3ed9a5927aef35fa1c232cae5501e2b/scripts/sandbox_smoke/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-18T07:18:49+00:00",
+    "stars": 2969,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-09-08T20:00:13-04:00",
+    "last_commit_date": "2026-09-14T15:43:39-04:00",
+    "last_commit_author": "Tao Lin",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2543,
+    "sha256": "6dbbdad76f4fe723b272a7d3eb774c92bbfefdd1e9a0281c0494df712142f5fd",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 42,
+    "words": 378,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/radixark--miles/scripts/sandbox_smoke/README.md"
+}

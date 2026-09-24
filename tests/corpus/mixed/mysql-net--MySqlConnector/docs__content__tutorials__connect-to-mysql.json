@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__content__tutorials__connect-to-mysql.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mysql-net/MySqlConnector",
+    "path": "docs/content/tutorials/connect-to-mysql.md",
+    "commit": "fdab41bc1646ce8ae89bde23c960a3239d90194b",
+    "commit_date": "2026-09-15T10:07:05+07:00",
+    "url": "https://github.com/mysql-net/MySqlConnector/blob/fdab41bc1646ce8ae89bde23c960a3239d90194b/docs/content/tutorials/connect-to-mysql.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1504,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2019-11-18T21:06:42-08:00",
+    "last_commit_date": "2026-05-25T16:49:10-07:00",
+    "last_commit_author": "Copilot",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-11-18, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2651,
+    "sha256": "1f309defc1ca62918204ee7c502b7329ac48291fb223e574a0917181aa9ba493",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 89,
+    "words": 311,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mysql-net--MySqlConnector/docs/content/tutorials/connect-to-mysql.md"
+}

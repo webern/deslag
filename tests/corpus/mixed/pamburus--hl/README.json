@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pamburus/hl",
+    "path": "README.md",
+    "commit": "1410f567862192ec73294f8e90dafab56258823d",
+    "commit_date": "2026-09-21T04:56:22+00:00",
+    "url": "https://github.com/pamburus/hl/blob/1410f567862192ec73294f8e90dafab56258823d/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-08-02T21:15:28+03:00",
+    "stars": 3291,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 120,
+    "first_commit_date": "2020-08-04T10:19:47+03:00",
+    "last_commit_date": "2026-02-28T20:13:13+01:00",
+    "last_commit_author": "Pavel Ivanov",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-08-04, before 2022-01-01; 1 of its 120 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 35133,
+    "sha256": "0ae677f7ced287d5621358243fceb7e642cc1d49fd42b1610c2bc6558a241e93",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 880,
+    "words": 4194,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pamburus--hl/README.md"
+}

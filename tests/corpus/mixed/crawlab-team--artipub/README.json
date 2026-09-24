@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "crawlab-team/artipub",
+    "path": "README.md",
+    "commit": "c67d6006dc695b8199e284d262e4c263f6093ab1",
+    "commit_date": "2025-10-07T03:22:35+08:00",
+    "url": "https://github.com/crawlab-team/artipub/blob/c67d6006dc695b8199e284d262e4c263f6093ab1/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-08-24T15:39:16+08:00",
+    "stars": 3206,
+    "found_by": "sg-agent:(^|/)\\.kiro/"
+  },
+  "history": {
+    "commits": 35,
+    "first_commit_date": "2019-08-24T15:39:16+08:00",
+    "last_commit_date": "2025-10-06T14:17:18+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 8,
+    "ai_commits": 5,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-08-24, before 2022-01-01; 5 of its 35 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 11660,
+    "sha256": "b58d3bcd371cd7f373ba888f9c1a8158930ac679ee4a202054c65fb93c7092c7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 327,
+    "words": 1434,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/crawlab-team--artipub/README.md"
+}

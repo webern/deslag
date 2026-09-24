@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "reactive/data-client",
+    "path": "CONTRIBUTING.md",
+    "commit": "a76996a5ed350ce1869a438aab88bf72cdb1ed52",
+    "commit_date": "2026-09-18T11:16:54-04:00",
+    "url": "https://github.com/reactive/data-client/blob/a76996a5ed350ce1869a438aab88bf72cdb1ed52/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-07T16:02:07-08:00",
+    "stars": 2036,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2018-01-07T16:02:07-08:00",
+    "last_commit_date": "2026-08-19T10:11:14-07:00",
+    "last_commit_author": "Nathaniel Tucker",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-07, before 2022-01-01; 1 of its 12 commits are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2382,
+    "sha256": "0f8156867c44d71b2b49e7cb37c3efa81be0b5ddccea8e8c846d681dbaa640c1",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 54,
+    "words": 348,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/reactive--data-client/CONTRIBUTING.md"
+}

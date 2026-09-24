@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "demo_src__2017-06-28-about.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "AlanDecode/Maverick",
+    "path": "demo_src/2017-06-28-about.md",
+    "commit": "773874e3de32c765cef7909ca7cc30e650bbb38a",
+    "commit_date": "2021-07-31T15:25:56+08:00",
+    "url": "https://github.com/AlanDecode/Maverick/blob/773874e3de32c765cef7909ca7cc30e650bbb38a/demo_src/2017-06-28-about.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-12-12T12:08:17+08:00",
+    "stars": 452,
+    "found_by": "sg-topic:blog"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-07-18T15:36:40+08:00",
+    "last_commit_date": "2021-07-18T15:36:40+08:00",
+    "last_commit_author": "AlanDecode",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-18: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 967,
+    "sha256": "b33acd074481a0213a27b8b193b2ffd80141aecf22945d05bfc333be513629c4",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 133,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/AlanDecode--Maverick/demo_src/2017-06-28-about.md"
+}

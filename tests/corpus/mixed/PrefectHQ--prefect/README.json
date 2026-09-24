@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "PrefectHQ/prefect",
+    "path": "README.md",
+    "commit": "148e99781fb05df258d3efddb5ef4fee0b61c9f2",
+    "commit_date": "2026-09-22T15:55:06-05:00",
+    "url": "https://github.com/PrefectHQ/prefect/blob/148e99781fb05df258d3efddb5ef4fee0b61c9f2/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-07-12T15:36:30-04:00",
+    "stars": 23905,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 89,
+    "first_commit_date": "2021-07-12T15:36:30-04:00",
+    "last_commit_date": "2026-01-26T16:14:06-06:00",
+    "last_commit_author": "nate nowack",
+    "authors": 31,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-07-12, before 2022-01-01; 1 of its 89 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8579,
+    "sha256": "755a4de39a3959a2ca1c9c897dedb591217c3c38a11c026abb948333ca9e4077",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 156,
+    "words": 724,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/PrefectHQ--prefect/README.md"
+}

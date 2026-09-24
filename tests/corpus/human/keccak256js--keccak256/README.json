@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "keccak256js/keccak256",
+    "path": "README.md",
+    "commit": "124477f9ec5ea135c318453a442d000c0d7f1be1",
+    "commit_date": "2021-12-10T11:41:10-08:00",
+    "url": "https://github.com/keccak256js/keccak256/blob/124477f9ec5ea135c318453a442d000c0d7f1be1/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-10-22T21:12:33-07:00",
+    "stars": 67,
+    "found_by": "sg-topic:cryptography"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2018-10-22T21:12:33-07:00",
+    "last_commit_date": "2021-12-10T11:17:39-08:00",
+    "last_commit_author": "Miguel Mota",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-10: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1210,
+    "sha256": "f5bc96333f6d7a8424bf6d2877158f56b62dcb04c6d09b5a74371913c8888400",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 81,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/keccak256js--keccak256/README.md"
+}

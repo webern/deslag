@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "OS__alpine__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "DarkElvenAngel/argononed",
+    "path": "OS/alpine/README.md",
+    "commit": "ddb05416e4d582e8b353981899546b251363be2d",
+    "commit_date": "2021-12-20T18:42:42-05:00",
+    "url": "https://gitlab.com/DarkElvenAngel/argononed/-/blob/ddb05416e4d582e8b353981899546b251363be2d/OS/alpine/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-06-23T02:14:23+00:00",
+    "stars": 88,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-07-08T14:43:17-04:00",
+    "last_commit_date": "2021-07-08T14:43:17-04:00",
+    "last_commit_author": "DarkElvenAngel",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-07-08: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1187,
+    "sha256": "28753cfd817af19872806f2dee57d453fb59d1bdf44990d23ee1786d8f5e45d3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 192,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--DarkElvenAngel--argononed/OS/alpine/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__protocol__messages.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OpenNHP/opennhp",
+    "path": "docs/protocol/messages.md",
+    "commit": "a22673df24e1f79287418607aba381cef90e468e",
+    "commit_date": "2026-09-22T07:54:54+09:00",
+    "url": "https://github.com/OpenNHP/opennhp/blob/a22673df24e1f79287418607aba381cef90e468e/docs/protocol/messages.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 13933,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2026-04-20T08:54:00-07:00",
+    "last_commit_date": "2026-04-21T12:04:17-07:00",
+    "last_commit_author": "windcbf",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 6 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14226,
+    "sha256": "6366fe8abba66a6da7a9b4892206c2383bd6de52c4093cb1947e97f61cd3f23f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 230,
+    "words": 2068,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/OpenNHP--opennhp/docs/protocol/messages.md"
+}

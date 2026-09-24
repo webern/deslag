@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__ISSUE_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zenoamaro/react-quill",
+    "path": ".github/ISSUE_TEMPLATE.md",
+    "commit": "2efde23c12d296fd9aefc825d6463448b51efc49",
+    "commit_date": "2021-08-18T10:37:34-07:00",
+    "url": "https://github.com/zenoamaro/react-quill/blob/2efde23c12d296fd9aefc825d6463448b51efc49/.github/ISSUE_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-02-15T14:59:31-07:00",
+    "last_commit_date": "2020-06-17T22:42:20+02:00",
+    "last_commit_author": "zeno",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-17: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1367,
+    "sha256": "307e8b049a37b2661ca288ae61dfaec0ff13f17a940d0a66cc09c36c1cf64b82",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 47,
+    "words": 200,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/zenoamaro--react-quill/.github/ISSUE_TEMPLATE.md"
+}

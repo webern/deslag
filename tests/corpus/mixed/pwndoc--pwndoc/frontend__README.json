@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "frontend__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pwndoc/pwndoc",
+    "path": "frontend/README.md",
+    "commit": "d1f5e39cae0042b263ea5d7f7ea35506034a6c5e",
+    "commit_date": "2026-09-10T14:28:47-04:00",
+    "url": "https://github.com/pwndoc/pwndoc/blob/d1f5e39cae0042b263ea5d7f7ea35506034a6c5e/frontend/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-01-13T18:42:24-05:00",
+    "stars": 2895,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-01-13T19:02:02-05:00",
+    "last_commit_date": "2026-08-13T16:56:56+00:00",
+    "last_commit_author": "Claude",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-01-13, before 2022-01-01; 1 of its 2 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 632,
+    "sha256": "9ad47cd6c9ee1535f13408213ef4d4260c9e860bb828411be0ea20d4fd4f2795",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 84,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pwndoc--pwndoc/frontend/README.md"
+}

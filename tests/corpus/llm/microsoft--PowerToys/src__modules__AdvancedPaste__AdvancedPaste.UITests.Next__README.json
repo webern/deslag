@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "src__modules__AdvancedPaste__AdvancedPaste.UITests.Next__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/PowerToys",
+    "path": "src/modules/AdvancedPaste/AdvancedPaste.UITests.Next/README.md",
+    "commit": "b813e377b9e8a61d5dcac304d052391ddd768d91",
+    "commit_date": "2026-09-23T19:38:03+02:00",
+    "url": "https://github.com/microsoft/PowerToys/blob/b813e377b9e8a61d5dcac304d052391ddd768d91/src/modules/AdvancedPaste/AdvancedPaste.UITests.Next/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 138930,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-12T13:31:33-07:00",
+    "last_commit_date": "2026-09-12T13:31:33-07:00",
+    "last_commit_author": "Gleb Khmyznikov",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 7675,
+    "sha256": "24ae9857e028309b7820ee3dcd93f15b95e3b5e3fc5cf3069dddd9c64cf0f626",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 111,
+    "words": 1049,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--PowerToys/src/modules/AdvancedPaste/AdvancedPaste.UITests.Next/README.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__node__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "subquery/subql",
+    "path": "packages/node/CHANGELOG.md",
+    "commit": "c6c52629098612d7a640b7dda4898246f8bace84",
+    "commit_date": "2021-12-30T16:06:30+13:00",
+    "url": "https://github.com/subquery/subql/blob/c6c52629098612d7a640b7dda4898246f8bace84/packages/node/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-05T12:06:41+13:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 69,
+    "first_commit_date": "2021-02-15T14:59:58+13:00",
+    "last_commit_date": "2021-12-23T16:44:45+13:00",
+    "last_commit_author": "Jay Ji",
+    "authors": 5,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-23: all 69 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 16308,
+    "sha256": "d0317a30859e3a3ce6e1266860ae216b7f6431cc687987771a2f4ecc76ec4606",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 426,
+    "words": 2080,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/subquery--subql/packages/node/CHANGELOG.md"
+}

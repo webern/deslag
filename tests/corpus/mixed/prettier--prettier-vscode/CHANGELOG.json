@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "prettier/prettier-vscode",
+    "path": "CHANGELOG.md",
+    "commit": "b3d5ea136fadf5a4cac835df074dc12fcb398b0c",
+    "commit_date": "2026-06-04T01:47:38+08:00",
+    "url": "https://github.com/prettier/prettier-vscode/blob/b3d5ea136fadf5a4cac835df074dc12fcb398b0c/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5512,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 254,
+    "first_commit_date": "2018-01-11T12:21:57-04:00",
+    "last_commit_date": "2026-03-16T14:10:11-05:00",
+    "last_commit_author": "Nathan Totten",
+    "authors": 46,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-11, before 2022-01-01; 5 of its 254 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 20222,
+    "sha256": "e86ef9bb61718d1000060b35a506490ef8e9a0111e455f5b284723b14e5a4f9f",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 686,
+    "words": 2771,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/prettier--prettier-vscode/CHANGELOG.md"
+}

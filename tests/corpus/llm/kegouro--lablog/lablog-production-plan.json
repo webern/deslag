@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "lablog-production-plan.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kegouro/lablog",
+    "path": "lablog-production-plan.md",
+    "commit": "1f427b50c3f4f9f02bc58333c6dd3849e468b883",
+    "commit_date": "2026-07-10T21:45:54-04:00",
+    "url": "https://github.com/kegouro/lablog/blob/1f427b50c3f4f9f02bc58333c6dd3849e468b883/lablog-production-plan.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-23T14:18:54-04:00",
+    "stars": null,
+    "found_by": "github-topic:lab-notebook"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-05T03:11:22-04:00",
+    "last_commit_date": "2026-07-05T03:11:22-04:00",
+    "last_commit_author": "Kegouro",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5482,
+    "sha256": "2c682aeab132f49a93e155147728b8a22777969df4e6843d1b3f208fb2cbda8e",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 785,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kegouro--lablog/lablog-production-plan.md"
+}

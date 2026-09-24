@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "pages__common__multipass-transfer.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tldr-pages/tldr",
+    "path": "pages/common/multipass-transfer.md",
+    "commit": "59f09394d48f5ac3d354ec0d7e9aebafb6856155",
+    "commit_date": "2026-09-23T23:50:48+05:30",
+    "url": "https://github.com/tldr-pages/tldr/blob/59f09394d48f5ac3d354ec0d7e9aebafb6856155/pages/common/multipass-transfer.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 63722,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-23T15:10:56+02:00",
+    "last_commit_date": "2026-08-23T15:10:56+02:00",
+    "last_commit_author": "Mark Cunningham",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 721,
+    "sha256": "a93fce949f9d9eed4646cc4fba0f6e67e35a2b69eb946afc9cf3b1f3126c654c",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 17,
+    "words": 73,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tldr-pages--tldr/pages/common/multipass-transfer.md"
+}

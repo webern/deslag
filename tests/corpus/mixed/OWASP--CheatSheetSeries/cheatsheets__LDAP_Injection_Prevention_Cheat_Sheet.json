@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "cheatsheets__LDAP_Injection_Prevention_Cheat_Sheet.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OWASP/CheatSheetSeries",
+    "path": "cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.md",
+    "commit": "394fe51fe08c5c53e99eee5781f28b886056fa25",
+    "commit_date": "2026-09-23T00:03:07+03:00",
+    "url": "https://github.com/OWASP/CheatSheetSeries/blob/394fe51fe08c5c53e99eee5781f28b886056fa25/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-12-22T09:41:07+01:00",
+    "stars": 33285,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2019-01-09T10:46:48+01:00",
+    "last_commit_date": "2025-10-17T09:31:01-04:00",
+    "last_commit_author": "Jeymz",
+    "authors": 15,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-09, before 2022-01-01; 1 of its 19 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 9460,
+    "sha256": "603a3f65ca8b86101f9069728273ed62de5ed7513b1377238052b56b3828861d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 167,
+    "words": 1212,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/OWASP--CheatSheetSeries/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.md"
+}

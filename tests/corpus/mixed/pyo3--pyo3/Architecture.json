@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Architecture.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "pyo3/pyo3",
+    "path": "Architecture.md",
+    "commit": "1655cdfcbca94d59470e6c0edd4776c3ce421a5a",
+    "commit_date": "2026-09-22T08:37:40+00:00",
+    "url": "https://github.com/pyo3/pyo3/blob/1655cdfcbca94d59470e6c0edd4776c3ce421a5a/Architecture.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 35,
+    "first_commit_date": "2021-02-20T18:37:57+09:00",
+    "last_commit_date": "2026-07-07T19:44:27+01:00",
+    "last_commit_author": "David Hewitt",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-02-20, before 2022-01-01; 1 of its 35 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10394,
+    "sha256": "d04b721a8311bb8c7d9e525ac9f475854959567cdf8122a31fae9cc4a6d8332e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 200,
+    "words": 1248,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pyo3--pyo3/Architecture.md"
+}

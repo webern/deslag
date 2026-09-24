@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "bootstrap-vue-next/bootstrap-vue-next",
+    "path": "README.md",
+    "commit": "52372d2b976a10919760c281ad1e1b00697e4f69",
+    "commit_date": "2026-09-22T21:52:45-05:00",
+    "url": "https://github.com/bootstrap-vue-next/bootstrap-vue-next/blob/52372d2b976a10919760c281ad1e1b00697e4f69/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-06-29T22:31:29-03:00",
+    "stars": 1293,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 69,
+    "first_commit_date": "2021-06-29T22:31:29-03:00",
+    "last_commit_date": "2026-08-17T12:15:33-05:00",
+    "last_commit_author": "Copilot",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-06-29, before 2022-01-01; 1 of its 69 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2817,
+    "sha256": "d71afd7f7c6692368a0d75e08c648bf81f0b54d2f62458ecad64fc4af725efc2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 178,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/bootstrap-vue-next--bootstrap-vue-next/README.md"
+}

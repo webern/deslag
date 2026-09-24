@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__plugin_server_datastore_sql.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "spiffe/spire",
+    "path": "doc/plugin_server_datastore_sql.md",
+    "commit": "559edc2859ef56a6248c248e0a5ac7e958d9ab71",
+    "commit_date": "2026-09-22T18:59:21+00:00",
+    "url": "https://github.com/spiffe/spire/blob/559edc2859ef56a6248c248e0a5ac7e958d9ab71/doc/plugin_server_datastore_sql.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2546,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 27,
+    "first_commit_date": "2018-05-21T21:20:01+02:00",
+    "last_commit_date": "2026-09-13T08:08:02+00:00",
+    "last_commit_author": "Sujay Babu Sekar",
+    "authors": 17,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-05-21, before 2022-01-01; 1 of its 27 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 29576,
+    "sha256": "ca7c2bec77836db89c689be110ec36c03493160894e66f22eb887dfa8e7a5854",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 447,
+    "words": 2575,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/spiffe--spire/doc/plugin_server_datastore_sql.md"
+}

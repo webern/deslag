@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Chef5/PopRun",
+    "path": "README.md",
+    "commit": "3c91ae8aae84c760b0e93f93fd880d455729d3fd",
+    "commit_date": "2021-08-12T11:25:56+08:00",
+    "url": "https://github.com/Chef5/PopRun/blob/3c91ae8aae84c760b0e93f93fd880d455729d3fd/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-12-08T03:37:00+08:00",
+    "stars": null,
+    "found_by": "github-topic:running"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2019-12-08T03:37:00+08:00",
+    "last_commit_date": "2021-08-12T11:25:56+08:00",
+    "last_commit_author": "Patrick Jun",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-12: all 13 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4608,
+    "sha256": "80ad4f0e2aeab30e5cdfc830c3fba0d4cd8c764e4086e51e43695403ad141ca3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 126,
+    "words": 213,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Chef5--PopRun/README.md"
+}

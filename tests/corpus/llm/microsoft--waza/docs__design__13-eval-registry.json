@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__design__13-eval-registry.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/waza",
+    "path": "docs/design/13-eval-registry.md",
+    "commit": "49a8aeea605447fbe795f723d0ac993a7c8e85a2",
+    "commit_date": "2026-09-22T14:57:45-04:00",
+    "url": "https://github.com/microsoft/waza/blob/49a8aeea605447fbe795f723d0ac993a7c8e85a2/docs/design/13-eval-registry.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-31T17:10:52-05:00",
+    "stars": 1322,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-23T16:24:18+01:00",
+    "last_commit_date": "2026-06-23T16:24:18+01:00",
+    "last_commit_author": "Shayne Boyer",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 32625,
+    "sha256": "e3b2016dbe398b0ee04a2e929653c84e147895a975fe21293c57c6c64e94e5fa",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 631,
+    "words": 4280,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--waza/docs/design/13-eval-registry.md"
+}

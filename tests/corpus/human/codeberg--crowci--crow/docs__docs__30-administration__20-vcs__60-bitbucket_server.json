@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__docs__30-administration__20-vcs__60-bitbucket_server.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "crowci/crow",
+    "path": "docs/docs/30-administration/20-vcs/60-bitbucket_server.md",
+    "commit": "30c3e139d730a1d51cbe199521e8f0d3ecf9d9ed",
+    "commit_date": "2021-12-31T17:43:09+01:00",
+    "url": "https://codeberg.org/crowci/crow/src/commit/30c3e139d730a1d51cbe199521e8f0d3ecf9d9ed/docs/docs/30-administration/20-vcs/60-bitbucket_server.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 121,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-09-11T17:10:32+02:00",
+    "last_commit_date": "2021-10-08T12:35:56-04:00",
+    "last_commit_author": "luzpaz",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-10-08: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3966,
+    "sha256": "6bdadcba9f1ea9446751b51dfd1640177c11790383d5e78fcd6e2ffa39e0eac9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 118,
+    "words": 435,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--crowci--crow/docs/docs/30-administration/20-vcs/60-bitbucket_server.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "migrating.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mohsinulhaq/react-popper-tooltip",
+    "path": "migrating.md",
+    "commit": "9594c37089bb71533440ab04ef5912c7c421242c",
+    "commit_date": "2021-11-20T20:51:18+05:30",
+    "url": "https://github.com/mohsinulhaq/react-popper-tooltip/blob/9594c37089bb71533440ab04ef5912c7c421242c/migrating.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-08T16:15:22+05:30",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-01-26T14:06:39+05:30",
+    "last_commit_date": "2021-01-26T15:49:35-07:00",
+    "last_commit_author": "Denis Borovikov",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-26: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2778,
+    "sha256": "5de68685545df1302e59f4c4c686eb3ea0b0e9226aa1c881f6e42ba69c1dfd67",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 363,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mohsinulhaq--react-popper-tooltip/migrating.md"
+}

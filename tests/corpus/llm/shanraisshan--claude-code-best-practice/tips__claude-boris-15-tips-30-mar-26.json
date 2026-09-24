@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "tips__claude-boris-15-tips-30-mar-26.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "shanraisshan/claude-code-best-practice",
+    "path": "tips/claude-boris-15-tips-30-mar-26.md",
+    "commit": "ddc21739057363f960df4d7de05e983e5d062183",
+    "commit_date": "2026-09-23T06:45:41+00:00",
+    "url": "https://github.com/shanraisshan/claude-code-best-practice/blob/ddc21739057363f960df4d7de05e983e5d062183/tips/claude-boris-15-tips-30-mar-26.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-31T19:15:29+05:00",
+    "stars": 66234,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-30T11:45:25+05:00",
+    "last_commit_date": "2026-04-17T06:28:56+05:00",
+    "last_commit_author": "Shayan Rais",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9544,
+    "sha256": "89c6c8f760ddbb2c0734f431b8d4dc5368c1fbbb7679c95cee765692c19375a9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 220,
+    "words": 1352,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/shanraisshan--claude-code-best-practice/tips/claude-boris-15-tips-30-mar-26.md"
+}

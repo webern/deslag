@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "markshust/docker-magento",
+    "path": "README.md",
+    "commit": "d1241c47767ed8af25ee2f82d3a602556d7e8668",
+    "commit_date": "2026-09-21T17:19:51-04:00",
+    "url": "https://github.com/markshust/docker-magento/blob/d1241c47767ed8af25ee2f82d3a602556d7e8668/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2862,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 294,
+    "first_commit_date": "2018-01-12T17:19:59-05:00",
+    "last_commit_date": "2026-09-21T23:18:59+02:00",
+    "last_commit_author": "Hans Kuijpers",
+    "authors": 40,
+    "ai_commits": 9,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-12, before 2022-01-01; 9 of its 294 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 57719,
+    "sha256": "23bd137ed13456ecbf37ed51c6e6a077dbac9bfa0edbde898dd84d9b803be51b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1010,
+    "words": 6882,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/markshust--docker-magento/README.md"
+}

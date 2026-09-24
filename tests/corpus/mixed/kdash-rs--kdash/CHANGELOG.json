@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kdash-rs/kdash",
+    "path": "CHANGELOG.md",
+    "commit": "c30367346640266485ad4abdc662adb9c754dce2",
+    "commit_date": "2026-08-27T17:16:56+05:30",
+    "url": "https://github.com/kdash-rs/kdash/blob/c30367346640266485ad4abdc662adb9c754dce2/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-04-10T14:04:54+02:00",
+    "stars": 2539,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 116,
+    "first_commit_date": "2021-04-10T14:04:54+02:00",
+    "last_commit_date": "2026-07-22T20:33:32+02:00",
+    "last_commit_author": "Deepu K Sasidharan",
+    "authors": 5,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-04-10, before 2022-01-01; 4 of its 116 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 14880,
+    "sha256": "31ae34bbb63f009131668444dee3a1b44c5f670eefbc8dd153f076650b7c669e",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 408,
+    "words": 2055,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kdash-rs--kdash/CHANGELOG.md"
+}

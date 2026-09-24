@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__concepts.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "PropertyTools/PropertyTools",
+    "path": "docs/concepts.md",
+    "commit": "c01272918d19f1615945fc77e1ba2ab0d4a1dba1",
+    "commit_date": "2026-08-07T14:32:56+02:00",
+    "url": "https://github.com/PropertyTools/PropertyTools/blob/c01272918d19f1615945fc77e1ba2ab0d4a1dba1/docs/concepts.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1327,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-05-26T12:24:40+00:00",
+    "last_commit_date": "2026-05-28T11:26:14+00:00",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 9790,
+    "sha256": "de272ce39ea7ec4804aa395cb96782e0055f25348c6057e8cd85f1d9ec1a5755",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 216,
+    "words": 1104,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/PropertyTools--PropertyTools/docs/concepts.md"
+}

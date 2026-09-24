@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__ml-paper-writing__references__knowledge__rethinking-papers-kaiming-he.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Galaxy-Dawn/claude-scholar",
+    "path": "skills/ml-paper-writing/references/knowledge/rethinking-papers-kaiming-he.md",
+    "commit": "903787345d6aec134086afa2b97715a78fbde519",
+    "commit_date": "2026-09-23T15:23:56+08:00",
+    "url": "https://github.com/Galaxy-Dawn/claude-scholar/blob/903787345d6aec134086afa2b97715a78fbde519/skills/ml-paper-writing/references/knowledge/rethinking-papers-kaiming-he.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-25T18:27:32+08:00",
+    "stars": 5607,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-26T15:57:20+08:00",
+    "last_commit_date": "2026-01-26T15:57:20+08:00",
+    "last_commit_author": "Gaorui Zhang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 33598,
+    "sha256": "ac9bf5dda714e9c28e28e42d1e5779e26a044bbd9681dbd0640538dbd73cc6d9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1023,
+    "words": 4652,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Galaxy-Dawn--claude-scholar/skills/ml-paper-writing/references/knowledge/rethinking-papers-kaiming-he.md"
+}

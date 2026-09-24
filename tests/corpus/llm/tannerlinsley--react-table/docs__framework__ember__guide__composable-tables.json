@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__framework__ember__guide__composable-tables.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "tannerlinsley/react-table",
+    "path": "docs/framework/ember/guide/composable-tables.md",
+    "commit": "21d713fc4947d2a08cc2136bb055889a61412ded",
+    "commit_date": "2026-09-16T09:42:58-05:00",
+    "url": "https://github.com/tannerlinsley/react-table/blob/21d713fc4947d2a08cc2136bb055889a61412ded/docs/framework/ember/guide/composable-tables.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-11T17:06:37-05:00",
+    "last_commit_date": "2026-07-11T17:06:37-05:00",
+    "last_commit_author": "Ryan Tablada",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5216,
+    "sha256": "ae66166be2dcb0ade21dfc2d04c230ffb741d45f1e93084266c8080fba2d6167",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 158,
+    "words": 658,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tannerlinsley--react-table/docs/framework/ember/guide/composable-tables.md"
+}

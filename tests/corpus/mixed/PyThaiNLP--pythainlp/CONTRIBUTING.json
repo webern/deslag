@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "PyThaiNLP/pythainlp",
+    "path": "CONTRIBUTING.md",
+    "commit": "534e9e6ca2dd93c342a0e589c0a13695bc864f6c",
+    "commit_date": "2026-09-20T16:11:49+01:00",
+    "url": "https://github.com/PyThaiNLP/pythainlp/blob/534e9e6ca2dd93c342a0e589c0a13695bc864f6c/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1156,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 65,
+    "first_commit_date": "2018-01-02T13:24:27+07:00",
+    "last_commit_date": "2026-03-23T10:26:10+00:00",
+    "last_commit_author": "Arthit Suriyawongkul",
+    "authors": 7,
+    "ai_commits": 6,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-02, before 2022-01-01; 6 of its 65 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 13017,
+    "sha256": "9c76e27258e157a9911ef4512c1c13c28ac589832539de3f886f630b34ee1013",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 405,
+    "words": 1563,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md"
+}

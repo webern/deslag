@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "examples__middleware__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "serverpod/serverpod",
+    "path": "examples/middleware/README.md",
+    "commit": "e426a3eb6525dcf3545bd4ac791279bcad99a777",
+    "commit_date": "2026-09-23T14:48:12+02:00",
+    "url": "https://github.com/serverpod/serverpod/blob/e426a3eb6525dcf3545bd4ac791279bcad99a777/examples/middleware/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-02T09:38:33+01:00",
+    "stars": 3291,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-11-25T13:33:35+01:00",
+    "last_commit_date": "2025-11-25T13:33:35+01:00",
+    "last_commit_author": "Giovanni Trematerra",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2010,
+    "sha256": "20bf65ae24c0ae59b828d9855eb4430274d0a6222009b5570ffe9aefd0018b09",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 269,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/serverpod--serverpod/examples/middleware/README.md"
+}

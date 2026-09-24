@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "readme.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nazar-pc/event-listener-primitives",
+    "path": "readme.md",
+    "commit": "106337aa85fadc09cc97d55a32410229a699e9a7",
+    "commit_date": "2021-09-03T02:45:29+03:00",
+    "url": "https://github.com/nazar-pc/event-listener-primitives/blob/106337aa85fadc09cc97d55a32410229a699e9a7/readme.md",
+    "license": "0BSD",
+    "license_files": [
+      "copying.md"
+    ],
+    "repo_first_commit_date": "2020-10-24T20:26:17+03:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-10-24T20:26:17+03:00",
+    "last_commit_date": "2021-08-30T23:41:50+03:00",
+    "last_commit_author": "Nazar Mokrynskyi",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-08-30: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3201,
+    "sha256": "5bb2321ecfa16bb6582931adfac43a26808783d767a04668bc5215e59608fa1e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 117,
+    "words": 305,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/nazar-pc--event-listener-primitives/readme.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__labels-view-feature-plan.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Dicklesworthstone/beads_viewer",
+    "path": "docs/labels-view-feature-plan.md",
+    "commit": "18afafaefbcfd7fbb2ed4f55b49e7141da6513d2",
+    "commit_date": "2026-09-22T13:20:29-04:00",
+    "url": "https://github.com/Dicklesworthstone/beads_viewer/blob/18afafaefbcfd7fbb2ed4f55b49e7141da6513d2/docs/labels-view-feature-plan.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-26T18:10:42+00:00",
+    "stars": 1691,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2025-12-15T15:56:23-05:00",
+    "last_commit_date": "2026-09-02T16:32:51-04:00",
+    "last_commit_author": "Dicklesworthstone",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 25911,
+    "sha256": "0f691fb66ec89169dd49e94bf12041e20f22b94f6eeb370370cff3bb2512830a",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 535,
+    "words": 2270,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Dicklesworthstone--beads_viewer/docs/labels-view-feature-plan.md"
+}

@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Docs__Appendix-Adaptive-Prediction-Structure.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "AOMediaCodec/SVT-AV1",
+    "path": "Docs/Appendix-Adaptive-Prediction-Structure.md",
+    "commit": "010c1881dd47ef5ec644246be07b775ab11c2c87",
+    "commit_date": "2021-12-31T15:13:16-06:00",
+    "url": "https://gitlab.com/AOMediaCodec/SVT-AV1/-/blob/010c1881dd47ef5ec644246be07b775ab11c2c87/Docs/Appendix-Adaptive-Prediction-Structure.md",
+    "license": "BSD-2-Clause OR BSD-3-Clause",
+    "license_files": [
+      "LICENSE-BSD2.md",
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-01-31T22:50:46-08:00",
+    "stars": 305,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-12-08T16:08:18-08:00",
+    "last_commit_date": "2021-12-08T16:08:18-08:00",
+    "last_commit_author": "Deng",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-08: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 5781,
+    "sha256": "b94e26d66ec58647365afda3cedc2e9f8d1468226a7d01bd66bc77fbffd6e0d8",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 107,
+    "words": 877,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--AOMediaCodec--SVT-AV1/Docs/Appendix-Adaptive-Prediction-Structure.md"
+}

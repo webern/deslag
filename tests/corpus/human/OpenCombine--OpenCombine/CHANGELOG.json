@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "OpenCombine/OpenCombine",
+    "path": "CHANGELOG.md",
+    "commit": "dfd3cdf890a9c0255c3dce75f70e8a80e7a4c57e",
+    "commit_date": "2021-11-29T16:56:32+01:00",
+    "url": "https://github.com/OpenCombine/OpenCombine/blob/dfd3cdf890a9c0255c3dce75f70e8a80e7a4c57e/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-10T16:21:09+03:00",
+    "stars": 2794,
+    "found_by": "sg-topic:linux"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-01-29T15:05:56+00:00",
+    "last_commit_date": "2021-01-29T15:05:56+00:00",
+    "last_commit_author": "Max Desiatov",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-29: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 10706,
+    "sha256": "eab445d9770e9a9fdb215256354fa7303becf96875ddd84616206c0e61ec12ca",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 299,
+    "words": 1305,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/OpenCombine--OpenCombine/CHANGELOG.md"
+}

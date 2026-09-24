@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "use-cases__ai-coding-wisc-framework__claude__rules-example__testing.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "coleam00/context-engineering-intro",
+    "path": "use-cases/ai-coding-wisc-framework/.claude/rules-example/testing.md",
+    "commit": "a2d84b021cee1e2f4e77ba854bba0be8cb319035",
+    "commit_date": "2026-03-16T07:13:58-05:00",
+    "url": "https://github.com/coleam00/context-engineering-intro/blob/a2d84b021cee1e2f4e77ba854bba0be8cb319035/use-cases/ai-coding-wisc-framework/.claude/rules-example/testing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-01T20:48:50-05:00",
+    "stars": 13871,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-16T07:11:51-05:00",
+    "last_commit_date": "2026-03-16T07:11:51-05:00",
+    "last_commit_author": "Cole Medin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3670,
+    "sha256": "f53b086ad1594fa7ff241cf51e4584ca40d3df97378b869e3642339a400b4f39",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 105,
+    "words": 469,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/coleam00--context-engineering-intro/use-cases/ai-coding-wisc-framework/.claude/rules-example/testing.md"
+}

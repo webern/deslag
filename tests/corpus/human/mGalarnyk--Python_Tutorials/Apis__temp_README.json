@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Apis__temp_README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mGalarnyk/Python_Tutorials",
+    "path": "Apis/temp_README.md",
+    "commit": "f70b6aa993445b179bc12e729e7569239215f568",
+    "commit_date": "2021-12-15T22:55:15-08:00",
+    "url": "https://github.com/mGalarnyk/Python_Tutorials/blob/f70b6aa993445b179bc12e729e7569239215f568/Apis/temp_README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1269,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-02-10T00:32:27-08:00",
+    "last_commit_date": "2020-02-10T00:32:27-08:00",
+    "last_commit_author": "michael",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-02-10: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8708,
+    "sha256": "182178348a6ba74d8a2c0c5f0649ee81ae816cc9125498183a0c39a4cef22391",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 81,
+    "words": 668,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mGalarnyk--Python_Tutorials/Apis/temp_README.md"
+}

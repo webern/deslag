@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__plan-v0.5.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "xyTom/coding-tools-mcp",
+    "path": "docs/plan-v0.5.md",
+    "commit": "bedb632e1afd2e9ec9b268a50fe0b04695c22c64",
+    "commit_date": "2026-09-03T11:18:00-07:00",
+    "url": "https://github.com/xyTom/coding-tools-mcp/blob/bedb632e1afd2e9ec9b268a50fe0b04695c22c64/docs/plan-v0.5.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-16T08:01:10+00:00",
+    "stars": 1138,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-24T04:23:39+00:00",
+    "last_commit_date": "2026-08-24T04:23:39+00:00",
+    "last_commit_author": "Cursor Agent",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 27203,
+    "sha256": "3bfacad3afb7af3b3b22a1d2e388f995ab816fef0211b9400eebeea6e43bf39a",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 427,
+    "words": 3746,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/xyTom--coding-tools-mcp/docs/plan-v0.5.md"
+}

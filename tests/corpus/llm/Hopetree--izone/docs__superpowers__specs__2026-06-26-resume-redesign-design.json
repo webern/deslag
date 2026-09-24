@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__superpowers__specs__2026-06-26-resume-redesign-design.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Hopetree/izone",
+    "path": "docs/superpowers/specs/2026-06-26-resume-redesign-design.md",
+    "commit": "5adcda71a980fe6fd08b12ddec57985ff22107c3",
+    "commit_date": "2026-09-17T09:50:47+08:00",
+    "url": "https://github.com/Hopetree/izone/blob/5adcda71a980fe6fd08b12ddec57985ff22107c3/docs/superpowers/specs/2026-06-26-resume-redesign-design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1232,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-26T18:04:00+08:00",
+    "last_commit_date": "2026-06-26T18:04:00+08:00",
+    "last_commit_author": "User",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3060,
+    "sha256": "923c2dbe66b5e578ef58107bbf530f6f068e8a496115e8516dd6a274a9445c23",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 88,
+    "words": 274,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Hopetree--izone/docs/superpowers/specs/2026-06-26-resume-redesign-design.md"
+}

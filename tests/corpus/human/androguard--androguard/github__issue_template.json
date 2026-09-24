@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__issue_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "androguard/androguard",
+    "path": ".github/issue_template.md",
+    "commit": "4352f8d62f473aa0b535180da303670aaa451384",
+    "commit_date": "2021-10-27T16:56:36+00:00",
+    "url": "https://github.com/androguard/androguard/blob/4352f8d62f473aa0b535180da303670aaa451384/.github/issue_template.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENCE-2.0"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6284,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2018-01-11T13:03:47+01:00",
+    "last_commit_date": "2019-02-23T19:34:48+02:00",
+    "last_commit_author": "Hugo",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-02-23: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 565,
+    "sha256": "b9547dd94a9436c04ec3ea8ed4e53189ded25146e6eac30afccf46d1f81c3b07",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 21,
+    "words": 96,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/androguard--androguard/.github/issue_template.md"
+}

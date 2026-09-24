@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "www__src__pages__docs__tips.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "terrazzoapp/terrazzo",
+    "path": "www/src/pages/docs/tips.md",
+    "commit": "5748e72440369d765b8e23b5ee6a89c3979a3c1c",
+    "commit_date": "2021-12-28T19:19:22-07:00",
+    "url": "https://github.com/terrazzoapp/terrazzo/blob/5748e72440369d765b8e23b5ee6a89c3979a3c1c/www/src/pages/docs/tips.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-11-17T09:27:33-07:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-11-27T21:17:14-07:00",
+    "last_commit_date": "2021-11-27T21:17:14-07:00",
+    "last_commit_author": "Drew Powers",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-27: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1019,
+    "sha256": "c37cfc5f7d2925ad7e94c0854fae17b9cbb2f021157d251da7524a0a31704165",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 154,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/terrazzoapp--terrazzo/www/src/pages/docs/tips.md"
+}

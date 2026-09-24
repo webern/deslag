@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "quackle/quackle",
+    "path": "README.md",
+    "commit": "6a41f7c0b40216c611abada4be08b1920006e62c",
+    "commit_date": "2026-09-16T22:28:14-05:00",
+    "url": "https://github.com/quackle/quackle/blob/6a41f7c0b40216c611abada4be08b1920006e62c/README.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:crossword"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2018-02-13T18:21:34+00:00",
+    "last_commit_date": "2026-07-21T07:09:25-05:00",
+    "last_commit_author": "John Fultz",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-02-13, before 2022-01-01; 2 of its 10 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2197,
+    "sha256": "77c8ce0cdf532c02fb2f659f6383aca516ef9ebe83d03d3490688ad3ab72d021",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 266,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/quackle--quackle/README.md"
+}

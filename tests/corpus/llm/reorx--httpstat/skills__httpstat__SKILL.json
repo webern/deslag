@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__httpstat__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "reorx/httpstat",
+    "path": "skills/httpstat/SKILL.md",
+    "commit": "b37cd4655c0b0595dbf5be4466abd1dcbc202b84",
+    "commit_date": "2026-04-08T17:44:37+08:00",
+    "url": "https://github.com/reorx/httpstat/blob/b37cd4655c0b0595dbf5be4466abd1dcbc202b84/skills/httpstat/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6221,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-25T13:05:18+08:00",
+    "last_commit_date": "2026-03-25T13:05:18+08:00",
+    "last_commit_author": "Reorx",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9143,
+    "sha256": "ae783c77492c7850f8e14356cbc0397796e1f1edba366686f64b5fda982875d4",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 261,
+    "words": 1389,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/reorx--httpstat/skills/httpstat/SKILL.md"
+}

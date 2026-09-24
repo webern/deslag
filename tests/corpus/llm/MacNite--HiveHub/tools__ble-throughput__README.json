@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "tools__ble-throughput__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "MacNite/HiveHub",
+    "path": "tools/ble-throughput/README.md",
+    "commit": "2a9c719ba01f44ffb077f3d010ed7b54d14b958a",
+    "commit_date": "2026-09-15T14:52:32+02:00",
+    "url": "https://github.com/MacNite/HiveHub/blob/2a9c719ba01f44ffb077f3d010ed7b54d14b958a/tools/ble-throughput/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-30T12:34:26+02:00",
+    "stars": null,
+    "found_by": "github-topic:beekeeping"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-07T06:53:29+00:00",
+    "last_commit_date": "2026-09-07T06:53:29+00:00",
+    "last_commit_author": "Maxi Nitschke",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2056,
+    "sha256": "ba7198f1b938800b954fa5a5e15c8773acc817576bd7390d3faf38b89721371c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 328,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/MacNite--HiveHub/tools/ble-throughput/README.md"
+}

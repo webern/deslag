@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "Lonami/grammers",
+    "path": "README.md",
+    "commit": "a0953b22508c97b25ea8c266ba867daf456fef8d",
+    "commit_date": "2021-12-23T11:54:20+01:00",
+    "url": "https://codeberg.org/Lonami/grammers/src/commit/a0953b22508c97b25ea8c266ba867daf456fef8d/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-01-24T12:09:56+01:00",
+    "stars": 66,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2020-01-25T21:29:23+01:00",
+    "last_commit_date": "2021-06-05T13:00:43+02:00",
+    "last_commit_author": "Lonami Exo",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-06-05: all 9 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 4214,
+    "sha256": "db3ed45f1b7a70d6150ea676a627838853dfb8fe5e5e7f5cc684f5f3695a15ae",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 98,
+    "words": 519,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--Lonami--grammers/README.md"
+}

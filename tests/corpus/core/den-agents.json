@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "den-agents.md",
+  "captured": "2026-09-19",
+  "source": {
+    "host": "github.com",
+    "repo": "openmusx/denigma",
+    "path": "AGENTS.md",
+    "commit": "b66062fd31c7e22e17b973fdaaadfd100193c9fa",
+    "commit_date": "2026-09-19T00:01:58-05:00",
+    "url": "https://github.com/openmusx/denigma/blob/b66062fd31c7e22e17b973fdaaadfd100193c9fa/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-11-23T09:27:15-06:00",
+    "stars": null,
+    "found_by": "hand-picked"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2026-07-13T08:20:50-05:00",
+    "last_commit_date": "2026-09-17T16:23:28-05:00",
+    "last_commit_author": "rpatters1",
+    "authors": 2,
+    "ai_commits": 12,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "unknown",
+    "basis": "3 of its 15 commits are from after 2022-11-30 and carry no AI mark, so they could be anyone's; 12 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10618,
+    "sha256": "8106d70493982289034974f80035764e019cd4ab0ca0ec42c1719a88963c28ae",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 112,
+    "words": 1472,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "denigma/AGENTS.md"
+}

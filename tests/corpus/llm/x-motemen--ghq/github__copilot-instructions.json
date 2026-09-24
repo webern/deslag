@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "x-motemen/ghq",
+    "path": ".github/copilot-instructions.md",
+    "commit": "2474201bccd2cd8c206127630d49b8ce2044dddf",
+    "commit_date": "2026-08-22T13:58:52+09:00",
+    "url": "https://github.com/x-motemen/ghq/blob/2474201bccd2cd8c206127630d49b8ce2044dddf/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3777,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-14T16:04:43+09:00",
+    "last_commit_date": "2026-02-14T16:04:43+09:00",
+    "last_commit_author": "Songmu",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 529,
+    "sha256": "5b610a1335b730ea8df2f4f4bc8e28c633de012df32ba90b75001dbacae7e87a",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 94,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/x-motemen--ghq/.github/copilot-instructions.md"
+}

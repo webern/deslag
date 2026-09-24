@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rottaca/LEDTableEngine",
+    "path": "README.md",
+    "commit": "c6d59e812b6a1a00527c40c4839e50128979400c",
+    "commit_date": "2018-04-09T15:30:02+02:00",
+    "url": "https://github.com/rottaca/LEDTableEngine/blob/c6d59e812b6a1a00527c40c4839e50128979400c/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 59,
+    "found_by": "sg-topic:game"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-01-02T10:57:31+01:00",
+    "last_commit_date": "2018-03-16T15:50:53+01:00",
+    "last_commit_author": "Andreas Rottach",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-03-16: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 814,
+    "sha256": "dd9599d83bfab258843b9859e3039ec93dda24489cf62fb89a21627c6ad91be5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 71,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/rottaca--LEDTableEngine/README.md"
+}

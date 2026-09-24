@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__ai-ready__references__report-template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "johnpapa/vscode-peacock",
+    "path": ".claude/skills/ai-ready/references/report-template.md",
+    "commit": "2fd5210ef98dce87625dddea9a8e90738b6215f2",
+    "commit_date": "2026-09-16T23:00:48-04:00",
+    "url": "https://github.com/johnpapa/vscode-peacock/blob/2fd5210ef98dce87625dddea9a8e90738b6215f2/.claude/skills/ai-ready/references/report-template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-02-21T23:25:11-05:00",
+    "stars": 1179,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-05T11:52:13-04:00",
+    "last_commit_date": "2026-09-05T11:52:13-04:00",
+    "last_commit_author": "John Papa",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9778,
+    "sha256": "52761e4bc3aa64fef23367b4eb47ba00d2e5d5f5ac43b25245ebc8c6d628358e",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 196,
+    "words": 1519,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/johnpapa--vscode-peacock/.claude/skills/ai-ready/references/report-template.md"
+}

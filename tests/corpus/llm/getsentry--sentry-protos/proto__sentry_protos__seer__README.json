@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "proto__sentry_protos__seer__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "getsentry/sentry-protos",
+    "path": "proto/sentry_protos/seer/README.md",
+    "commit": "8e6dbbea65c0490a3e4d4b3d503ea2d5b8a45b17",
+    "commit_date": "2026-09-23T18:36:10+00:00",
+    "url": "https://github.com/getsentry/sentry-protos/blob/8e6dbbea65c0490a3e4d4b3d503ea2d5b8a45b17/proto/sentry_protos/seer/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2024-07-02T09:48:17-07:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-13T19:43:09+01:00",
+    "last_commit_date": "2026-07-14T16:26:33+01:00",
+    "last_commit_author": "Hector Dearman",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 367,
+    "sha256": "74e1a614ccb8b7d694bdf567758ef967b43cbf4efd42f4597282082b42b9b5c6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 50,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/getsentry--sentry-protos/proto/sentry_protos/seer/README.md"
+}

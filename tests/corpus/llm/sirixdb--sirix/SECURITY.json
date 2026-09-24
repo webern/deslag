@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "sirixdb/sirix",
+    "path": "SECURITY.md",
+    "commit": "eb81deba17601385ec7bc242c2c52699f8069471",
+    "commit_date": "2026-09-23T20:39:57+02:00",
+    "url": "https://github.com/sirixdb/sirix/blob/eb81deba17601385ec7bc242c2c52699f8069471/SECURITY.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1218,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-21T15:51:28+00:00",
+    "last_commit_date": "2026-06-01T15:16:01+00:00",
+    "last_commit_author": "Claude",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1762,
+    "sha256": "eb7f74b2d17ed8a946e69b0f7eb46610bf02a862ed3705d682cdd8b662338677",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 234,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sirixdb--sirix/SECURITY.md"
+}

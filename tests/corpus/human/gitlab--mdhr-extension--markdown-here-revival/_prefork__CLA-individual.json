@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "_prefork__CLA-individual.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "mdhr-extension/markdown-here-revival",
+    "path": "_prefork/CLA-individual.md",
+    "commit": "850a32ce86eb3328ea4f1b829b0cfc3ad497f3f2",
+    "commit_date": "2021-12-19T17:23:58-05:00",
+    "url": "https://gitlab.com/mdhr-extension/markdown-here-revival/-/blob/850a32ce86eb3328ea4f1b829b0cfc3ad497f3f2/_prefork/CLA-individual.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 55,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-02-01T00:31:41-05:00",
+    "last_commit_date": "2021-02-01T00:31:41-05:00",
+    "last_commit_author": "Rob Lemley",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-02-01: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 8160,
+    "sha256": "29c7423afdfe9fe76bd9790417f0d821927b64e35af40fb31d7147e4b0ff50fa",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 83,
+    "words": 1263,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--mdhr-extension--markdown-here-revival/_prefork/CLA-individual.md"
+}

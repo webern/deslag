@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "novel-admin__src__main__resources__static__wangEditor__docs__usage__01-getstart__03-sperate.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "201206030/novel-plus",
+    "path": "novel-admin/src/main/resources/static/wangEditor/docs/usage/01-getstart/03-sperate.md",
+    "commit": "094ac954280d20540917334a92f8e3182f2c2caf",
+    "commit_date": "2021-12-28T14:40:16+08:00",
+    "url": "https://github.com/201206030/novel-plus/blob/094ac954280d20540917334a92f8e3182f2c2caf/novel-admin/src/main/resources/static/wangEditor/docs/usage/01-getstart/03-sperate.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-02T11:37:23+08:00",
+    "stars": null,
+    "found_by": "github-topic:novel"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-05-06T07:40:43+08:00",
+    "last_commit_date": "2020-05-06T07:40:43+08:00",
+    "last_commit_author": "xxy",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-05-06: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1495,
+    "sha256": "a7d2db26aed1a54add09a081c80c425c59314fb36dfb83b4dc3bf0127573e688",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 85,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/201206030--novel-plus/novel-admin/src/main/resources/static/wangEditor/docs/usage/01-getstart/03-sperate.md"
+}

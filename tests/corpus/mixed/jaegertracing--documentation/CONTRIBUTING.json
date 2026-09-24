@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jaegertracing/documentation",
+    "path": "CONTRIBUTING.md",
+    "commit": "5c641860f18d515225cf50dbe7d93dfe905cde49",
+    "commit_date": "2026-09-23T11:44:51-04:00",
+    "url": "https://github.com/jaegertracing/documentation/blob/5c641860f18d515225cf50dbe7d93dfe905cde49/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 84,
+    "found_by": "sg-topic:hugo"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-03-09T11:18:57+00:00",
+    "last_commit_date": "2025-12-20T21:38:42-04:00",
+    "last_commit_author": "Copilot",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-03-09, before 2022-01-01; 1 of its 5 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5939,
+    "sha256": "42fb2edee797a8fbe5957592a341545095339b70bfae258d1d88eaca428202dc",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 154,
+    "words": 810,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/jaegertracing--documentation/CONTRIBUTING.md"
+}

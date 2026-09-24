@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "library__cropperjs__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "fortified/forte",
+    "path": "library/cropperjs/CONTRIBUTING.md",
+    "commit": "ae6c3a6b69a03c848b555109ad6f03c9de48bad5",
+    "commit_date": "2021-12-28T12:39:36-08:00",
+    "url": "https://codeberg.org/fortified/forte/src/commit/ae6c3a6b69a03c848b555109ad6f03c9de48bad5/library/cropperjs/CONTRIBUTING.md",
+    "license": "Unlicense",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 40,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-01-23T16:42:24-08:00",
+    "last_commit_date": "2018-01-23T16:42:24-08:00",
+    "last_commit_author": "zotlabs",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2018-01-23: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2299,
+    "sha256": "c65e9ebfeb1e14961cd2f214ecfd088cd9ec1c082357b6bc4014bc416d10a10c",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 355,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--fortified--forte/library/cropperjs/CONTRIBUTING.md"
+}

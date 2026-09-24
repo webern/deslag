@@ -39,9 +39,16 @@ first-party source is never an External Asset. If the project needs any, a `fetc
 them, pinned to a known version under source control and checked with a cheap local-state test on
 every build.
 
+The exception is `tests/corpus/`: tests need its bytes offline, and a fixture must outlive its
+source. It is bounded to about 400 fixtures of at most 64KB per collected category. Only a human
+may grow it past that.
+
 Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs real error handling,
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
+
+The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
+library only, run by hand and never by make, tests or CI.
 
 Development is supported on macOS and Linux machines.
 

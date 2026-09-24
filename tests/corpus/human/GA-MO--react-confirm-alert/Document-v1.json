@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Document-v1.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "GA-MO/react-confirm-alert",
+    "path": "Document-v1.md",
+    "commit": "bab6b8e942f28b7b34a3ee31cde088a1943b9d7f",
+    "commit_date": "2021-01-20T01:22:25+07:00",
+    "url": "https://github.com/GA-MO/react-confirm-alert/blob/bab6b8e942f28b7b34a3ee31cde088a1943b9d7f/Document-v1.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-03-08T18:44:36+07:00",
+    "last_commit_date": "2020-11-09T13:32:06+02:00",
+    "last_commit_author": "Puvvl",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-11-09: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2023,
+    "sha256": "a84d28e5aeb435f4e2d71f47404760a7d833fb4ee02ee43ebf0f3a30adca1516",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 69,
+    "words": 199,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/GA-MO--react-confirm-alert/Document-v1.md"
+}

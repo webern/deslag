@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "gookit/validate",
+    "path": "CHANGELOG.md",
+    "commit": "bcb68f7bc26d6eab93ffcab31929830074927d4a",
+    "commit_date": "2026-09-17T05:01:27+03:00",
+    "url": "https://github.com/gookit/validate/blob/bcb68f7bc26d6eab93ffcab31929830074927d4a/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-07-16T15:19:23+08:00",
+    "stars": 1165,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2020-09-25T23:31:13+08:00",
+    "last_commit_date": "2026-06-04T07:12:26-07:00",
+    "last_commit_author": "inhere",
+    "authors": 2,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-09-25, before 2022-01-01; 5 of its 11 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6342,
+    "sha256": "965745cdb208dd74e321b9ca4a4f13c25b895ada8b0dcde266b089a677cb31fd",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 164,
+    "words": 898,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gookit--validate/CHANGELOG.md"
+}

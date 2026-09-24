@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kennethreitz/pytheory",
+    "path": "plugin/plugins/composing-with-pytheory/skills/composing-with-pytheory/SKILL.md",
+    "commit": "f398e1acbd62f74ffe18a580e7f1a43b4b84d124",
+    "commit_date": "2026-07-07T13:30:03-04:00",
+    "url": "https://github.com/kennethreitz/pytheory/blob/f398e1acbd62f74ffe18a580e7f1a43b4b84d124/plugin/plugins/composing-with-pytheory/skills/composing-with-pytheory/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-22T08:37:51-04:00",
+    "stars": null,
+    "found_by": "github-topic:music-theory"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2026-06-14T13:13:38-04:00",
+    "last_commit_date": "2026-06-17T01:23:11+00:00",
+    "last_commit_author": "Claude",
+    "authors": 2,
+    "ai_commits": 7,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 7 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14701,
+    "sha256": "e916e8fa60578ffe60fd5e61a4d3e6cae49ef60a6ba9b7ca2ddeefc6618ce007",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 329,
+    "words": 1854,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kennethreitz--pytheory/plugin/plugins/composing-with-pytheory/skills/composing-with-pytheory/SKILL.md"
+}

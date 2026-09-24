@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__commands__cs-book-to-plugin.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "alirezarezvani/claude-skills",
+    "path": "docs/commands/cs-book-to-plugin.md",
+    "commit": "19392f7a08264ed00486a251f5b2098321771f94",
+    "commit_date": "2026-08-26T15:53:02+02:00",
+    "url": "https://github.com/alirezarezvani/claude-skills/blob/19392f7a08264ed00486a251f5b2098321771f94/docs/commands/cs-book-to-plugin.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-19T06:05:42+02:00",
+    "stars": 26250,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-24T17:26:12+00:00",
+    "last_commit_date": "2026-08-24T17:26:12+00:00",
+    "last_commit_author": "Claude",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3541,
+    "sha256": "6a2d5902451b75af3403da547cc8cb6d22869c24a5a4ed452920ee60df3f7f0e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 432,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/alirezarezvani--claude-skills/docs/commands/cs-book-to-plugin.md"
+}

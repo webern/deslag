@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__agents__knowledge__javaagent-thread-local-state.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-telemetry/opentelemetry-java-instrumentation",
+    "path": ".github/agents/knowledge/javaagent-thread-local-state.md",
+    "commit": "4b150ca789daa73c457366d1e6362ad288ed4c81",
+    "commit_date": "2026-09-23T16:25:53+02:00",
+    "url": "https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/4b150ca789daa73c457366d1e6362ad288ed4c81/.github/agents/knowledge/javaagent-thread-local-state.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2633,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-11T07:13:32-07:00",
+    "last_commit_date": "2026-09-22T08:57:49-07:00",
+    "last_commit_author": "Trask Stalnaker",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6185,
+    "sha256": "191c633ee026d44b5b0f881804fd52d715072c378c44dfafc18b70aee6e7a97f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 124,
+    "words": 792,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/open-telemetry--opentelemetry-java-instrumentation/.github/agents/knowledge/javaagent-thread-local-state.md"
+}

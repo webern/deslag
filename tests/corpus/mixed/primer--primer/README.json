@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "primer/primer",
+    "path": "README.md",
+    "commit": "efb9df68a176e5cd0cdf49b07a57b3a1001b3aaf",
+    "commit_date": "2026-09-23T11:46:52-04:00",
+    "url": "https://github.com/primer/primer/blob/efb9df68a176e5cd0cdf49b07a57b3a1001b3aaf/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 25,
+    "first_commit_date": "2018-01-17T19:34:13-05:00",
+    "last_commit_date": "2025-09-25T15:36:30-05:00",
+    "last_commit_author": "Leslie Cohn-Wein",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-17, before 2022-01-01; 1 of its 25 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2414,
+    "sha256": "1c14fe579bde96a7bcc2ccffba8c77d1a4f907981a8627e6d6fe8ae465345d01",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 198,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/primer--primer/README.md"
+}

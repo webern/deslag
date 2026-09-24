@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs_site__content__docs__community__ai_bot_policy.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "django-components/django-components",
+    "path": "docs_site/content/docs/community/ai_bot_policy.md",
+    "commit": "308b99ac135bc60753cf88f2a9f4369e611a47ae",
+    "commit_date": "2026-09-21T18:00:25+00:00",
+    "url": "https://github.com/django-components/django-components/blob/308b99ac135bc60753cf88f2a9f4369e611a47ae/docs_site/content/docs/community/ai_bot_policy.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1518,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-28T13:44:43+02:00",
+    "last_commit_date": "2026-07-28T13:44:43+02:00",
+    "last_commit_author": "Juro Oravec",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1029,
+    "sha256": "5768ab6c224188a8048eacc2f869b865dce56d188f60b1787d66974818912916",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 26,
+    "words": 153,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/django-components--django-components/docs_site/content/docs/community/ai_bot_policy.md"
+}

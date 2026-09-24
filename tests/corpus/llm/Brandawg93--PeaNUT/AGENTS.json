@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Brandawg93/PeaNUT",
+    "path": "AGENTS.md",
+    "commit": "6ae59be52ec2781200a6633d0cf5da1b0663027b",
+    "commit_date": "2026-09-17T11:39:59-04:00",
+    "url": "https://github.com/Brandawg93/PeaNUT/blob/6ae59be52ec2781200a6633d0cf5da1b0663027b/AGENTS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-08-30T21:38:04-04:00",
+    "stars": 1668,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-11T09:03:29-04:00",
+    "last_commit_date": "2026-09-11T09:03:29-04:00",
+    "last_commit_author": "Brandon Mcfarlin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 678,
+    "sha256": "63f2c50380ed6303237cce215ce27af1d620d094c215e28d1b1538a3c070e3bb",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 95,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Brandawg93--PeaNUT/AGENTS.md"
+}

@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "home-assistant/iOS",
+    "path": "README.md",
+    "commit": "838761204d84db7b7f892db365f37f35b6f7fae7",
+    "commit_date": "2026-09-23T15:44:19+01:00",
+    "url": "https://github.com/home-assistant/iOS/blob/838761204d84db7b7f892db365f37f35b6f7fae7/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2361,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 37,
+    "first_commit_date": "2018-06-10T17:40:45-07:00",
+    "last_commit_date": "2026-09-15T00:59:12+02:00",
+    "last_commit_author": "Bruno Pantaleão Gonçalves",
+    "authors": 9,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-06-10, before 2022-01-01; 2 of its 37 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 6113,
+    "sha256": "71faef114fcd56d37095946797eea025b0684833d8512644459f09cc70e2c5c6",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 137,
+    "words": 755,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/home-assistant--iOS/README.md"
+}

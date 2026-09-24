@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "DEFENSE_IN_DEPTH.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jaredwray/writr",
+    "path": "DEFENSE_IN_DEPTH.md",
+    "commit": "22092eaea3523894af8535106e7ecfc54d3f8486",
+    "commit_date": "2026-09-17T17:11:21-06:00",
+    "url": "https://github.com/jaredwray/writr/blob/22092eaea3523894af8535106e7ecfc54d3f8486/DEFENSE_IN_DEPTH.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-04-30T22:04:51-07:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2026-08-15T13:26:45-07:00",
+    "last_commit_date": "2026-09-17T17:11:21-06:00",
+    "last_commit_author": "Jared Wray",
+    "authors": 1,
+    "ai_commits": 14,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 14 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4686,
+    "sha256": "81cda01aec2ce6827e170e5b00f87aa5148fb7924209b6484da848270306f7b9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 623,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jaredwray--writr/DEFENSE_IN_DEPTH.md"
+}

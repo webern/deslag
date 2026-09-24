@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__click__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "jaredLunde/react-hook",
+    "path": "packages/click/README.md",
+    "commit": "1dd3940a70699836347325dac2cfe9998b81a5a4",
+    "commit_date": "2021-12-01T09:44:16-07:00",
+    "url": "https://github.com/jaredLunde/react-hook/blob/1dd3940a70699836347325dac2cfe9998b81a5a4/packages/click/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-03-23T22:48:19-06:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2019-04-06T18:13:08-06:00",
+    "last_commit_date": "2020-06-07T13:57:16-06:00",
+    "last_commit_author": "Jared Lunde",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-07: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3470,
+    "sha256": "99809bc9aa7ac6c8b4e164952276329fac1d1fd303ba9a3443bbb06aafa590fb",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 109,
+    "words": 388,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/jaredLunde--react-hook/packages/click/README.md"
+}

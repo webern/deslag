@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__examples__8-enum_repr.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "GREsau/schemars",
+    "path": "docs/examples/8-enum_repr.md",
+    "commit": "e9d5f4057e84f37a4519a5413ddded82cb13ea71",
+    "commit_date": "2021-11-25T22:27:16+00:00",
+    "url": "https://github.com/GREsau/schemars/blob/e9d5f4057e84f37a4519a5413ddded82cb13ea71/docs/examples/8-enum_repr.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-08-03T17:45:57+01:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-03-25T22:36:28+00:00",
+    "last_commit_date": "2021-03-26T23:59:35+00:00",
+    "last_commit_author": "Graham Esau",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-26: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 648,
+    "sha256": "a1f2b655b2636f402fce8b6bb6dc3e34d1cd8691bad695c0e01415b4f98085aa",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 94,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/GREsau--schemars/docs/examples/8-enum_repr.md"
+}

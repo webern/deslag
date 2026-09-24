@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "andylokandy/simsearch-rs",
+    "path": "README.md",
+    "commit": "82822bef9340a6e3ffcbae54d787cc036284ddfc",
+    "commit_date": "2021-04-11T21:52:08+08:00",
+    "url": "https://github.com/andylokandy/simsearch-rs/blob/82822bef9340a6e3ffcbae54d787cc036284ddfc/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-04-15T18:00:35+08:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2019-04-15T22:52:15+08:00",
+    "last_commit_date": "2020-06-10T15:14:18-07:00",
+    "last_commit_author": "c0deb0t",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-06-10: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1704,
+    "sha256": "337b2cbf80ad032d50aae025669e789c70d62ed248627873f25e8eaacc33f6f7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 62,
+    "words": 179,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/andylokandy--simsearch-rs/README.md"
+}

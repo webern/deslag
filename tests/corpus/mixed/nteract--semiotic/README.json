@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nteract/semiotic",
+    "path": "README.md",
+    "commit": "8f517a0a32a0b926b2a5f7adef84f4d245a09ef3",
+    "commit_date": "2026-09-22T17:13:47-07:00",
+    "url": "https://github.com/nteract/semiotic/blob/8f517a0a32a0b926b2a5f7adef84f4d245a09ef3/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2706,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 251,
+    "first_commit_date": "2018-09-14T16:10:02-07:00",
+    "last_commit_date": "2026-09-22T15:29:42-07:00",
+    "last_commit_author": "Elijah Meeks",
+    "authors": 9,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-09-14, before 2022-01-01; 6 of its 251 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 43553,
+    "sha256": "036cbce964d4ed5120bf406a55b0dd8dd335b588288adb1d36d9c07b6490874d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 825,
+    "words": 5396,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/nteract--semiotic/README.md"
+}

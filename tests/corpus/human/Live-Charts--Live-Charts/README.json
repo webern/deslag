@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Live-Charts/Live-Charts",
+    "path": "README.md",
+    "commit": "80b687adfad0781703efb7355cfce957d4c22ca2",
+    "commit_date": "2021-02-24T23:56:15-06:00",
+    "url": "https://github.com/Live-Charts/Live-Charts/blob/80b687adfad0781703efb7355cfce957d4c22ca2/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.TXT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "github-topic:maps"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2018-03-01T21:51:35-06:00",
+    "last_commit_date": "2021-02-24T23:56:15-06:00",
+    "last_commit_author": "Alberto Rodríguez",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-02-24: all 6 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 6783,
+    "sha256": "cbbb6289148b71006722c6575721fd664df0df3414d29633bffb97dcdccc3e9b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 127,
+    "words": 714,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Live-Charts--Live-Charts/README.md"
+}

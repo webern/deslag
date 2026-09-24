@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "logog782-cmyk/linkly-quote-cards",
+    "path": "SKILL.md",
+    "commit": "7c7024f83728958a5ea46a315b9d3e20789d663b",
+    "commit_date": "2026-09-01T13:42:05+08:00",
+    "url": "https://github.com/logog782-cmyk/linkly-quote-cards/blob/7c7024f83728958a5ea46a315b9d3e20789d663b/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-05T15:47:28+08:00",
+    "stars": null,
+    "found_by": "github-topic:zine"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2026-08-05T15:47:28+08:00",
+    "last_commit_date": "2026-09-01T13:42:05+08:00",
+    "last_commit_author": "logog782-cmyk",
+    "authors": 1,
+    "ai_commits": 11,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 11 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9460,
+    "sha256": "7f229bf590e46678b6b4399a5183726d69d74c2e99a13a5c6c7a2f530a6600c3",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 115,
+    "words": 382,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/logog782-cmyk--linkly-quote-cards/SKILL.md"
+}

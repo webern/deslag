@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "packages__eslint-plugin__docs__rules__no-conflicting-lifecycle.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "angular-eslint/angular-eslint",
+    "path": "packages/eslint-plugin/docs/rules/no-conflicting-lifecycle.md",
+    "commit": "2000c0c63f7b2c4d67c387cce4be8d039885da40",
+    "commit_date": "2021-11-19T00:18:02+00:00",
+    "url": "https://github.com/angular-eslint/angular-eslint/blob/2000c0c63f7b2c4d67c387cce4be8d039885da40/packages/eslint-plugin/docs/rules/no-conflicting-lifecycle.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-28T21:14:27-04:00",
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-08-02T19:47:23+04:00",
+    "last_commit_date": "2021-11-19T02:09:26+04:00",
+    "last_commit_author": "James Henry",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-19: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3315,
+    "sha256": "2b935bb8ff3d24ed37274ec671cee676f70455934d9fb3c1e6dd05ddcf9270d1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 301,
+    "words": 432,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/angular-eslint--angular-eslint/packages/eslint-plugin/docs/rules/no-conflicting-lifecycle.md"
+}

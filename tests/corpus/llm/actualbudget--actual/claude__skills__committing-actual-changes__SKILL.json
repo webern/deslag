@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__committing-actual-changes__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "actualbudget/actual",
+    "path": ".claude/skills/committing-actual-changes/SKILL.md",
+    "commit": "f95e66b85ed89a2bf3d58d43084a893e30a1990a",
+    "commit_date": "2026-09-23T10:15:19+00:00",
+    "url": "https://github.com/actualbudget/actual/blob/f95e66b85ed89a2bf3d58d43084a893e30a1990a/.claude/skills/committing-actual-changes/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2019-08-01T11:13:52-04:00",
+    "stars": 29074,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-05-28T08:38:21+01:00",
+    "last_commit_date": "2026-06-08T21:54:54+01:00",
+    "last_commit_author": "Matiss Janis Aboltins",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2830,
+    "sha256": "034c3b44d82a15b2c94f2fe5c8dcc817d75243ed8b22f1e21d8e996a5005c5f3",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 455,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/actualbudget--actual/.claude/skills/committing-actual-changes/SKILL.md"
+}

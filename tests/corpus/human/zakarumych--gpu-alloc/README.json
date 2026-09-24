@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zakarumych/gpu-alloc",
+    "path": "README.md",
+    "commit": "cba041a6b73d154a097c360942c0ea037a7436c5",
+    "commit_date": "2021-09-24T22:18:55+03:00",
+    "url": "https://github.com/zakarumych/gpu-alloc/blob/cba041a6b73d154a097c360942c0ea037a7436c5/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": "2020-10-26T14:52:42+03:00",
+    "stars": 92,
+    "found_by": "sg-topic:vulkan"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2020-10-26T14:52:42+03:00",
+    "last_commit_date": "2021-03-29T21:05:39+02:00",
+    "last_commit_author": "Friz64",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-03-29: all 9 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2333,
+    "sha256": "faeff05f7fa55403d2bde428dbbf33dd09120658f9d2d6856b55c15d3574c764",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 217,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/zakarumych--gpu-alloc/README.md"
+}

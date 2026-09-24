@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "ci__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "rust-lang/libc",
+    "path": "ci/README.md",
+    "commit": "ca9b70f76d1179279b8844fe2f1c85f24a5f6683",
+    "commit_date": "2026-09-23T08:31:16+08:00",
+    "url": "https://github.com/rust-lang/libc/blob/ca9b70f76d1179279b8844fe2f1c85f24a5f6683/ci/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2018-01-13T18:01:39+00:00",
+    "last_commit_date": "2026-06-09T13:36:55+02:00",
+    "last_commit_author": "Mads Marquart",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-13, before 2022-01-01; 1 of its 12 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8844,
+    "sha256": "0efec29d7574cc41ea24d559bc7458144acc1d334214db032a74b6ee1ab79c9d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 215,
+    "words": 1311,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/rust-lang--libc/ci/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "website__docs__constrainttemplates.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "open-policy-agent/gatekeeper",
+    "path": "website/docs/constrainttemplates.md",
+    "commit": "df42397b854b2b776e16877a00096d85e90733d1",
+    "commit_date": "2026-09-21T11:35:02-07:00",
+    "url": "https://github.com/open-policy-agent/gatekeeper/blob/df42397b854b2b776e16877a00096d85e90733d1/website/docs/constrainttemplates.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-10-26T14:05:57-07:00",
+    "stars": 4278,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2021-08-23T16:51:12-07:00",
+    "last_commit_date": "2026-08-26T12:46:18-04:00",
+    "last_commit_author": "Mallikarjuna Muchu",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-08-23, before 2022-01-01; 1 of its 9 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 12288,
+    "sha256": "2cacd6b3381ad2db11a503ead3e361d2a13cc733ea588e6b81e6e1446c8b9dad",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 297,
+    "words": 1367,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/open-policy-agent--gatekeeper/website/docs/constrainttemplates.md"
+}

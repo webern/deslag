@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "examples__cytof__DATASETS.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "david-priest/figtracer",
+    "path": "examples/cytof/DATASETS.md",
+    "commit": "c9c93231ceed961c8f3aed3aa2d61eec002fcf15",
+    "commit_date": "2026-09-02T19:22:41+09:00",
+    "url": "https://github.com/david-priest/figtracer/blob/c9c93231ceed961c8f3aed3aa2d61eec002fcf15/examples/cytof/DATASETS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-10T14:07:43+09:00",
+    "stars": null,
+    "found_by": "github-topic:lab-notebook"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-10T14:07:43+09:00",
+    "last_commit_date": "2026-07-10T14:07:43+09:00",
+    "last_commit_author": "David Priest",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1618,
+    "sha256": "87aa4cc2b02c764764ce483562fce1a29c9046b091357655b28563f3d0097e99",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 219,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/david-priest--figtracer/examples/cytof/DATASETS.md"
+}

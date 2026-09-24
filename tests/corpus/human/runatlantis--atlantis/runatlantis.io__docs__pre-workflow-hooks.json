@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "runatlantis.io__docs__pre-workflow-hooks.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "runatlantis/atlantis",
+    "path": "runatlantis.io/docs/pre-workflow-hooks.md",
+    "commit": "767a5e7a01e97d92379076281b9cee9728abfcdd",
+    "commit_date": "2021-12-30T11:01:44-05:00",
+    "url": "https://github.com/runatlantis/atlantis/blob/767a5e7a01e97d92379076281b9cee9728abfcdd/runatlantis.io/docs/pre-workflow-hooks.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 9296,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-12-14T12:19:52-08:00",
+    "last_commit_date": "2021-04-26T07:52:37-07:00",
+    "last_commit_author": "Sharif Nassar",
+    "authors": 4,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-04-26: all 5 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2909,
+    "sha256": "0278cc168716194b233ad7571f73ad8509ab831a0ade2f9cf9fe322e7f5da5df",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 450,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/runatlantis--atlantis/runatlantis.io/docs/pre-workflow-hooks.md"
+}

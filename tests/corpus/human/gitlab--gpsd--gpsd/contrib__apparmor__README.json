@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "contrib__apparmor__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gpsd/gpsd",
+    "path": "contrib/apparmor/README.md",
+    "commit": "62051d0775df378206559396f396044d0b4ab389",
+    "commit_date": "2021-12-30T19:41:33-08:00",
+    "url": "https://gitlab.com/gpsd/gpsd/-/blob/62051d0775df378206559396f396044d0b4ab389/contrib/apparmor/README.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 104,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-06-23T16:23:49-07:00",
+    "last_commit_date": "2021-01-27T17:27:25-08:00",
+    "last_commit_author": "Christian Ehrhardt",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-01-27: all 8 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1858,
+    "sha256": "8ff22dba59550f479e5589548590f86f2fdefcb13a628b44c56e5e0314c4c1a3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 241,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--gpsd--gpsd/contrib/apparmor/README.md"
+}

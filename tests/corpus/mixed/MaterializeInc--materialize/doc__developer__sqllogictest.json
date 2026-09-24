@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__developer__sqllogictest.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "MaterializeInc/materialize",
+    "path": "doc/developer/sqllogictest.md",
+    "commit": "b51c28e1bc1c012bc7f54f35c09e290d3401f50a",
+    "commit_date": "2026-09-23T13:35:57-04:00",
+    "url": "https://github.com/MaterializeInc/materialize/blob/b51c28e1bc1c012bc7f54f35c09e290d3401f50a/doc/developer/sqllogictest.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6370,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2020-02-14T16:29:59-05:00",
+    "last_commit_date": "2026-07-19T21:07:20+02:00",
+    "last_commit_author": "Dennis Felsing",
+    "authors": 9,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-02-14, before 2022-01-01; 2 of its 17 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14216,
+    "sha256": "3b837ae9ca8e9cd18f042877f4d2cdeb04bec1e8a48a99b6c1ee4faa81945c5c",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 460,
+    "words": 2090,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/MaterializeInc--materialize/doc/developer/sqllogictest.md"
+}

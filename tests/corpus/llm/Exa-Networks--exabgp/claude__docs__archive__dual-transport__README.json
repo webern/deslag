@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__docs__archive__dual-transport__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Exa-Networks/exabgp",
+    "path": ".claude/docs/archive/dual-transport/README.md",
+    "commit": "08da24df1cef0010d9ef0fd102a4adfcf9ed84b9",
+    "commit_date": "2026-09-21T16:28:24+01:00",
+    "url": "https://github.com/Exa-Networks/exabgp/blob/08da24df1cef0010d9ef0fd102a4adfcf9ed84b9/.claude/docs/archive/dual-transport/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENCE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2307,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-11-30T14:36:03+00:00",
+    "last_commit_date": "2025-11-30T14:36:03+00:00",
+    "last_commit_author": "Thomas Mangin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 725,
+    "sha256": "c91ecd8f749ff78194a38243a787ffed237ca2ddb18815609053650c9560c253",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 85,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Exa-Networks--exabgp/.claude/docs/archive/dual-transport/README.md"
+}

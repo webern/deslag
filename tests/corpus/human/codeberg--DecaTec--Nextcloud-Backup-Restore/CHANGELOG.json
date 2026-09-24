@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "DecaTec/Nextcloud-Backup-Restore",
+    "path": "CHANGELOG.md",
+    "commit": "30708cbb2fb30d800cee1d32e063e87678f86437",
+    "commit_date": "2021-12-02T06:35:19+01:00",
+    "url": "https://codeberg.org/DecaTec/Nextcloud-Backup-Restore/src/commit/30708cbb2fb30d800cee1d32e063e87678f86437/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 38,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2019-05-10T09:14:24+02:00",
+    "last_commit_date": "2021-12-02T06:35:19+01:00",
+    "last_commit_author": "DecaTec",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-02: all 14 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2596,
+    "sha256": "6fe5117df316ea17c962a32326bbe1e2e8539c8c2767150c091858726558c60e",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 398,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--DecaTec--Nextcloud-Backup-Restore/CHANGELOG.md"
+}

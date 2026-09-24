@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "typed-ember/ember-cli-typescript-blueprints",
+    "path": "CHANGELOG.md",
+    "commit": "071bc970b86989713932acec4c8e91f6f116807e",
+    "commit_date": "2021-09-04T10:05:10-06:00",
+    "url": "https://github.com/typed-ember/ember-cli-typescript-blueprints/blob/071bc970b86989713932acec4c8e91f6f116807e/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-09-10T17:54:39-04:00",
+    "last_commit_date": "2019-08-30T15:06:41-06:00",
+    "last_commit_author": "Chris Krycho",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-08-30: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2136,
+    "sha256": "2f711d8f6d522e6d64d5cad940e5a7b7e0797b04380dbcdcb12754ab9cf32af5",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 209,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/typed-ember--ember-cli-typescript-blueprints/CHANGELOG.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__pict.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/pict",
+    "path": "doc/pict.md",
+    "commit": "ab76c2548f551fcb46314e58653a1bd1172f3a72",
+    "commit_date": "2026-09-08T11:25:45-07:00",
+    "url": "https://github.com/microsoft/pict/blob/ab76c2548f551fcb46314e58653a1bd1172f3a72/doc/pict.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.TXT"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1466,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2018-03-27T12:33:54-07:00",
+    "last_commit_date": "2026-07-24T17:25:40-04:00",
+    "last_commit_author": "David Spruill",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-03-27, before 2022-01-01; 1 of its 14 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 26977,
+    "sha256": "af5e1eff2d56dce87a0fea9fae5e9e70d0286b14487f00d0320022c313b3ea44",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 546,
+    "words": 4073,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/microsoft--pict/doc/pict.md"
+}

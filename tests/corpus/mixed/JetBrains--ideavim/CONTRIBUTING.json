@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "JetBrains/ideavim",
+    "path": "CONTRIBUTING.md",
+    "commit": "7ec829344e0236ebe8d4c9079ea8ea7d9eb62576",
+    "commit_date": "2026-09-23T15:22:55+00:00",
+    "url": "https://github.com/JetBrains/ideavim/blob/7ec829344e0236ebe8d4c9079ea8ea7d9eb62576/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 10270,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 51,
+    "first_commit_date": "2019-02-21T19:32:56+03:00",
+    "last_commit_date": "2026-06-22T01:43:28+02:00",
+    "last_commit_author": "Whitaker Trebella",
+    "authors": 7,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-02-21, before 2022-01-01; 2 of its 51 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 9940,
+    "sha256": "fe1a914f85cd14073a7243c57be16dc8f52b5e054ccd5d36d73b745c36931bc9",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 189,
+    "words": 1207,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JetBrains--ideavim/CONTRIBUTING.md"
+}

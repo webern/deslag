@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "bytedance/sonic",
+    "path": "README.md",
+    "commit": "fcfe1c4317aafc5bd1b822a908f8f13e231a392d",
+    "commit_date": "2021-12-31T17:15:35+08:00",
+    "url": "https://github.com/bytedance/sonic/blob/fcfe1c4317aafc5bd1b822a908f8f13e231a392d/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-25T11:52:52+08:00",
+    "stars": 9601,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 16,
+    "first_commit_date": "2021-05-25T11:52:52+08:00",
+    "last_commit_date": "2021-12-09T13:11:31+08:00",
+    "last_commit_author": "Yi Duan",
+    "authors": 6,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-12-09: all 16 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 12650,
+    "sha256": "b8bcf6b5272fd13a7571db5b1ac31b7ac4e2dba6f64ff0c99a9a42cc06428066",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 252,
+    "words": 1316,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/bytedance--sonic/README.md"
+}

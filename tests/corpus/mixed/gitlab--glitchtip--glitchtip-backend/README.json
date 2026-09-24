@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "glitchtip/glitchtip-backend",
+    "path": "README.md",
+    "commit": "854d2fa03ea4a20d0610c7afe58b97bbfc959133",
+    "commit_date": "2026-09-23T15:35:49+00:00",
+    "url": "https://gitlab.com/glitchtip/glitchtip-backend/-/blob/854d2fa03ea4a20d0610c7afe58b97bbfc959133/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-21T08:52:42-05:00",
+    "stars": 359,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 37,
+    "first_commit_date": "2019-12-04T10:13:43-05:00",
+    "last_commit_date": "2026-08-11T19:00:48-04:00",
+    "last_commit_author": "David Burke",
+    "authors": 8,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-12-04, before 2022-01-01; 5 of its 37 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4945,
+    "sha256": "38a05270992044aed9b724f24405a4976940f5dfcf3ef3ed4a4dfd2fdafe01aa",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 111,
+    "words": 650,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--glitchtip--glitchtip-backend/README.md"
+}

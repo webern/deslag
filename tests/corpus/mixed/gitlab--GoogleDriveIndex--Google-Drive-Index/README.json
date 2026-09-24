@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "GoogleDriveIndex/Google-Drive-Index",
+    "path": "README.md",
+    "commit": "0bfecc4dc9ac85265787b3d0e692029b6ae08e9b",
+    "commit_date": "2026-05-27T19:20:34+05:30",
+    "url": "https://gitlab.com/GoogleDriveIndex/Google-Drive-Index/-/blob/0bfecc4dc9ac85265787b3d0e692029b6ae08e9b/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-10-05T16:11:03+08:00",
+    "stars": 184,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 160,
+    "first_commit_date": "2020-09-18T15:38:33+05:30",
+    "last_commit_date": "2026-05-27T19:20:34+05:30",
+    "last_commit_author": "Parveen Bhadoo",
+    "authors": 6,
+    "ai_commits": 7,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-09-18, before 2022-01-01; 7 of its 160 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 57251,
+    "sha256": "59189fe81020095690c3c97ec3e8850a16edb6ae79645e2f49555dd40a2ee6b3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1306,
+    "words": 7930,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--GoogleDriveIndex--Google-Drive-Index/README.md"
+}

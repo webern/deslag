@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "lib__hipfort__SUPPORTED_API_HIP.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ROCm/hipfort",
+    "path": "lib/hipfort/SUPPORTED_API_HIP.md",
+    "commit": "5588c34e899a43d3c6cccad10949b270c8fb5654",
+    "commit_date": "2021-11-22T05:13:10-05:00",
+    "url": "https://github.com/ROCm/hipfort/blob/5588c34e899a43d3c6cccad10949b270c8fb5654/lib/hipfort/SUPPORTED_API_HIP.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-13T14:00:25-06:00",
+    "stars": 96,
+    "found_by": "sg-topic:fortran"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2021-09-11T03:49:03-04:00",
+    "last_commit_date": "2021-11-22T05:13:10-05:00",
+    "last_commit_author": "Dominic Etienne Charrier",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-22: all 13 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 41822,
+    "sha256": "9bd43e1d0d7538c95c5a6afa08047ef56026c5915c9f174dd549dc2520ff2ae6",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 261,
+    "words": 2079,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/ROCm--hipfort/lib/hipfort/SUPPORTED_API_HIP.md"
+}

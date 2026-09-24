@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "starboard__doc__crash_handlers.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "reisxd/TizenTubeCobalt",
+    "path": "starboard/doc/crash_handlers.md",
+    "commit": "505aa031a9150d9319508c71371801c9670a2763",
+    "commit_date": "2026-05-22T22:56:31+03:00",
+    "url": "https://github.com/reisxd/TizenTubeCobalt/blob/505aa031a9150d9319508c71371801c9670a2763/starboard/doc/crash_handlers.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3117,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-02-02T13:59:14-08:00",
+    "last_commit_date": "2026-03-31T14:10:20-04:00",
+    "last_commit_author": "Holden Warriner",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "gemini"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-02-02, before 2022-01-01; 1 of its 8 commits are marked as an AI agent's (gemini)"
+  },
+  "content": {
+    "size_bytes": 1543,
+    "sha256": "02d96300ca9dd8ed7659beedbda47be67a91d6ef3f02e3bef17339c91aa46ccf",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 58,
+    "words": 148,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/reisxd--TizenTubeCobalt/starboard/doc/crash_handlers.md"
+}

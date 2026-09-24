@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Migration__V2_0_0.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "diamirio/Endpoints",
+    "path": "Migration/V2_0_0.md",
+    "commit": "db268f1f0143f589c6ea63ebe9800a9197346900",
+    "commit_date": "2021-07-15T08:42:09+02:00",
+    "url": "https://github.com/diamirio/Endpoints/blob/db268f1f0143f589c6ea63ebe9800a9197346900/Migration/V2_0_0.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 53,
+    "found_by": "sg-topic:networking"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2019-10-17T12:13:49+02:00",
+    "last_commit_date": "2019-10-21T13:37:25+02:00",
+    "last_commit_author": "Robin Mayerhofer",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2019-10-21: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2831,
+    "sha256": "8a9e2d7a49d3fbb1221a7061a4675fe2b5ffe0957d2aeb371558e148e611baa9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 113,
+    "words": 372,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/diamirio--Endpoints/Migration/V2_0_0.md"
+}

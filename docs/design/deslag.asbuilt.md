@@ -156,7 +156,8 @@ prose; an unset field counts as 0, and a table setting neither checks nothing. I
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
-settings are substituted. The emphasis report ends with its spans. Every finding is printed to
+settings are substituted. The emphasis report rounds its percentage up, so a file just over its share never reads as at
+it, and ends with its spans. Every finding is printed to
 standard error, followed by `Report::summary`, one tally line per lint that failed a file, and the
 process exits 1; a clean run prints nothing and exits 0.
 
@@ -175,10 +176,10 @@ tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   unit.rs             small trees written for the test
   emphasis.rs         what counts as a span, and the emphasis report
-  corpus.rs           the corpus matrix
+  corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
 docs/design/          design docs
-scripts/              preflight
+scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus
 ```
 
 ## Tests
@@ -191,21 +192,46 @@ test rather than repeated, so the list cannot drift.
 
 `tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
 
-`tests/corpus.rs` is end-to-end. It loads every fixture in `tests/corpus/`, checks its sidecar
-against the bytes on disk, and then runs a matrix of cases through the binary. A case is a config,
-the canonical location to put it in, one of three layouts (flat, nested, and the real directory
-structure each fixture came from), and the budgets in effect.
+`tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
+against the bytes on disk, and runs the corpus through the binary.
 
-A second test puts every fixture under one emphasis limit and checks that the binary reports the
-files the library's `max_emphasis::check` flags, and only those.
+The corpus has four directories. `core/` is the hand-picked set from Matt's repositories. The
+other three are collected by `scripts/llm-detection/collect.py` and named for who wrote the file,
+as far as the history of the file can tell:
 
-The sidecars carry where each fixture was quoted from, at which commit, who last touched it, under
-what licence, and what the fixture declared for itself. The harness derives what it expects from
-the bytes it actually placed, so no expectation is hard-coded and no fixture is edited: a case
-that wants a file to declare a budget writes a frontmatter block into its copy.
+- `human/`: not edited since 2021; every commit that touched it predates 2022-01-01.
+- `llm/`: every commit that touched the file is marked as an AI agent's, by a co-author trailer,
+  an agent's bot account, or the text an agent writes into its commit messages.
+- `mixed/`: begun by a person, unmarked, before 2022-01-01, and later edited by an agent.
+
+Each holds about 400 fixtures, at most three from one repository, in a directory per repository.
+Sources are GitHub, GitLab, Codeberg and Hugging Face, found through Sourcegraph, GitHub topic
+pages, the forges' own search and the crates.io and npm registries, taken in turn from each so no
+one source crowds out the rest, and under permissive licences only. Most are English; a few are
+not, so the lints meet other scripts.
+
+A sidecar records the source (host, repository, path, commit, permalink, licence and the files
+it was read from), the history behind the label (commit count, dates, the number of authors, the
+AI commits and which agents), the label and the reason for it, and facts about the bytes: size,
+sha256, kind of document, encoding, line endings, frontmatter and a rough natural language. The
+loader checks all of it that can be checked against the bytes, and that no fixture is quoted
+twice.
+
+The matrix runs on `core/`. A case is a config, the canonical location to put it in, one of three
+layouts (flat, nested, and the real directory structure each fixture came from), and the budgets
+in effect. The harness derives what it expects from the bytes it actually placed, so no
+expectation is hard-coded and no fixture is edited: a case that wants a file to declare a budget
+writes a frontmatter block into its copy.
+
+The whole corpus then runs twice in its real layout: under one budget with an override for
+`README.md`, and under one emphasis limit, where the binary must report exactly the files the
+library's `max_emphasis::check` flags.
 
 ## Build
 
 `make ci` is the gate: preflight, then `check` (fmt, clippy, deslag, doc, typos), build and test, all
 `--locked`. `make test` runs the tests alone. `scripts/preflight.sh` is what complains when a tool
 is missing. `make check-deslag` runs the debug build of deslag on this repo.
+
+The published crate is what `include` in `Cargo.toml` lists: `src/`, the manifest, the lockfile,
+`LICENSE` and `README.md`. `make check-publish` builds from that package.

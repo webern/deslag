@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "kennethreitz/pytheory",
+    "path": "README.md",
+    "commit": "f398e1acbd62f74ffe18a580e7f1a43b4b84d124",
+    "commit_date": "2026-07-07T13:30:03-04:00",
+    "url": "https://github.com/kennethreitz/pytheory/blob/f398e1acbd62f74ffe18a580e7f1a43b4b84d124/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-22T08:37:51-04:00",
+    "stars": null,
+    "found_by": "github-topic:music-theory"
+  },
+  "history": {
+    "commits": 30,
+    "first_commit_date": "2018-08-29T07:04:15-04:00",
+    "last_commit_date": "2026-06-29T00:52:45-04:00",
+    "last_commit_author": "Kenneth Reitz",
+    "authors": 4,
+    "ai_commits": 17,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-08-29, before 2022-01-01; 17 of its 30 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8130,
+    "sha256": "55c52d41948a8a6c1092804cb564fd4f6cb54c19a216c2f299183213ed85577b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 199,
+    "words": 904,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kennethreitz--pytheory/README.md"
+}

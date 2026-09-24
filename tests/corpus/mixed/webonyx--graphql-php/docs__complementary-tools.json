@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__complementary-tools.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "webonyx/graphql-php",
+    "path": "docs/complementary-tools.md",
+    "commit": "e8875f24396c966bd0d007d248c6df690bef0872",
+    "commit_date": "2026-09-22T12:03:45+00:00",
+    "url": "https://github.com/webonyx/graphql-php/blob/e8875f24396c966bd0d007d248c6df690bef0872/docs/complementary-tools.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4715,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 32,
+    "first_commit_date": "2018-01-13T17:20:00+07:00",
+    "last_commit_date": "2026-06-14T16:45:55+02:00",
+    "last_commit_author": "Benedikt Franke",
+    "authors": 19,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-13, before 2022-01-01; 1 of its 32 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 3493,
+    "sha256": "4f3b7ac728427f0d5955b226703ef10ff0186aff4341715e6159d2c3e8661b8f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 33,
+    "words": 311,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/webonyx--graphql-php/docs/complementary-tools.md"
+}

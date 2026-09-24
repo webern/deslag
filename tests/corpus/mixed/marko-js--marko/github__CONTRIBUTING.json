@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marko-js/marko",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "96ef01519610ee3c9dff65ad892fe451570e9c6e",
+    "commit_date": "2026-09-23T11:02:59-07:00",
+    "url": "https://github.com/marko-js/marko/blob/96ef01519610ee3c9dff65ad892fe451570e9c6e/.github/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 14417,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2018-01-08T17:27:51-05:00",
+    "last_commit_date": "2026-09-22T11:30:57-07:00",
+    "last_commit_author": "Dylan Piercey",
+    "authors": 5,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-08, before 2022-01-01; 2 of its 17 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 13950,
+    "sha256": "40787e4bc48680715bf437559dd6a785f0ccf8507c82e889a516b82f5a5078e3",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 232,
+    "words": 1669,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/marko-js--marko/.github/CONTRIBUTING.md"
+}

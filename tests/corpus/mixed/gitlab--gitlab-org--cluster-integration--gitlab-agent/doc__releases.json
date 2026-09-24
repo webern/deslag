@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "doc__releases.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "gitlab-org/cluster-integration/gitlab-agent",
+    "path": "doc/releases.md",
+    "commit": "cce439102b3c5c17199f0aa87d6c0e00456e8d7e",
+    "commit_date": "2026-09-23T18:41:22+00:00",
+    "url": "https://gitlab.com/gitlab-org/cluster-integration/gitlab-agent/-/blob/cce439102b3c5c17199f0aa87d6c0e00456e8d7e/doc/releases.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-08T05:56:00+00:00",
+    "stars": 113,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 28,
+    "first_commit_date": "2021-02-12T15:02:48-05:00",
+    "last_commit_date": "2026-09-16T15:56:13-06:00",
+    "last_commit_author": "Axel von Bertoldi",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-02-12, before 2022-01-01; 1 of its 28 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11148,
+    "sha256": "b613f14d02eadb1d0468e0759d7f0ddd8100b8acd8c0e2d9ca4ea7a710924e4b",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 161,
+    "words": 1375,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/gitlab--gitlab-org--cluster-integration--gitlab-agent/doc/releases.md"
+}

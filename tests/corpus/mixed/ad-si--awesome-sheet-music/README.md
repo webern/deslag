@@ -1,0 +1,353 @@
+# Awesome Sheet Music
+
+A curated list of awesome tools to create, edit and display sheet music.
+
+> [!TIP]
+> <sup>Sponsored by:</sup> \
+> **Airsequel Sheet Music - Open source sheet music management app.** \
+> <sub>🌐 [sheet-music.airsequel.app](https://sheet-music.airsequel.app)</sub> \
+> <sub>🖥️ [github.com/Airsequel/Airsequel-Sheet-Music](https://github.com/Airsequel/Airsequel-Sheet-Music)</sub>
+
+---
+
+**Table Of Contents**
+
+<!-- toc -->
+
+- [Music Notation Software](#music-notation-software)
+- [Archives](#archives)
+- [Software Libraries](#software-libraries)
+  - [AI Powered](#ai-powered)
+- [Websites](#websites)
+- [Apps](#apps)
+- [Notations](#notations)
+- [Hardware](#hardware)
+- [Resources](#resources)
+- [OMR (Optical Music Recognition)](#omr-optical-music-recognition)
+- [Research](#research)
+
+<!-- tocstop -->
+
+## Music Notation Software
+
+- [capella] \(commercial\) - Create complete scores.
+- [dorico] \(commercial\) - Desktop notation software created largely by former
+  developers of the competing product Sibelius.
+- [finale] \(commercial\) - Compose, arrange, notate and print
+  engraver-quality sheet music.
+- [Gsharp] - Interactive extensible score editor.
+- [LilyPond] - Program and file format for music engraving.
+- [MagicScore] \(commercial\) - Music notation software for composing and editing sheet music.
+- [mei-friend] - Browser-based editor for music encodings.
+- [MuseScore] - Create, play and print sheet music.
+- [opusmodus] \(commercial\) - Software for music composition.
+- [sibelius] \(commercial\) - Create and share scores.
+- [Unison] \(commercial\) - Create sheet music by describing it with simple words.
+
+[capella]: https://www.capella-software.com/us/
+[finale]: https://www.finalemusic.com/
+[Gsharp]: https://gsharp.common-lisp.dev/
+[LilyPond]: https://lilypond.org
+[MagicScore]: https://www.musicaleditor.com/
+[mei-friend]: https://mei-friend.mdw.ac.at
+[MuseScore]: https://musescore.org/en
+[opusmodus]: https://opusmodus.com/
+[sibelius]: https://www.avid.com/sibelius
+[dorico]: https://www.steinberg.net/dorico/
+[Unison]: https://unisonofficial.com/html/about.html
+
+
+## Archives
+
+- [Bach digital] - Platform to browse through original sources
+  of J. S. Bach and his sons.
+- [Bayanguru] - Sheet music for Bayan (accordion).
+- [CMME] - Computerized mensural music editing and database of scores.
+- [CPDL] - The Choral Public Domain Library, an archive focused on
+  choral and vocal music.
+- [Digital Mozart Edition] - Wolfgang Amadeus Mozart's works in digital formats.
+- [flutetunes.com] - Free sheet music for the flute.
+- [IMSLP] - The International Music Score Library Project
+  to share the world’s public domain music.
+- [Kern Scores] - Library of musical scores in the Humdrum \*\*kern data format.
+- [Lilypond-Sheet-Music] - Cello music typeset with [LilyPond].
+- [MuseScore] - Share your sheet music and comment on others.
+- [mutopia] - Sheet music editions of classical music for free.
+   Repository available on [GitHub][mutopia-gh].
+- [NinSheetMusic] - Community archive of free video game sheet music.
+- [openbook] - Open [LilyPond] real book for jazz musicians.
+
+[Bach digital]: https://www.bach-digital.de
+[Bayanguru]: https://bayanguru.org/
+[CMME]: https://www.cmme.org
+[Digital Mozart Edition]: https://dme.mozarteum.at/en/
+[CPDL]: https://www.cpdl.org
+[flutetunes.com]: https://www.flutetunes.com/
+[IMSLP]: https://imslp.org
+[Kern Scores]: http://kern.humdrum.org/
+[Lilypond-Sheet-Music]: https://github.com/cellist/Lilypond-Sheet-Music
+[MuseScore]: http://musescore.com
+[mutopia]: https://www.mutopiaproject.org/
+[mutopia-gh]: https://github.com/MutopiaProject/MutopiaProject
+[NinSheetMusic]: https://www.ninsheetmusic.org
+[openbook]: https://github.com/veltzer/openbook
+
+
+## Software Libraries
+
+- [abcjs] - JavaScript library for rendering and playing back
+    ABC music notation in the browser.
+- [alda] - Music programming language for musicians.
+- [alphatab] - Cross platform music notation and
+  guitar tablature rendering library.
+- [ChorData] - Dummy chordbook for mandolin, ukulele and guitar.
+- [chord-mark] - Reference implementation of the [ChordMark] notation.
+- [chordpro] - Reference implementation of the [ChordPro] standard.
+- [ChordSketch] - Rust implementation of the [ChordPro] format with
+  parser, renderers (text, HTML, PDF, SVG), CLI, and iReal Pro support.
+- [conchord] - Typst package to write lyrics with chords,
+  generate chord diagrams and draw tabs.
+- [Digital Music Stand] - A simple browser-based viewer to display and search music sheets.
+- [EMViz] - Visualize melodic patterns in MIDI files with arc diagrams.
+- [hmsl] - Hierarchical Music Specification Language.
+  Forth tools for experimental music from the 1980's
+- [Hum] - Music notation language and synthesizer.
+- [LilyBin] - Self-hostable web-powered LilyPond editor.
+- [lilynode] - Node.js wrapper for [LilyPond].
+- [lilyware] - Node.js middleware for serving rendered [LilyPond] files.
+- [ly2video] - Generating videos from [LilyPond] projects.
+- [Melo] - Music notation language and compiler to MIDI.
+- [mscxyz] - Manipulate [MuseScore]'s XML based mscx files.
+- [Music Sheet Viewer] - Wordpress plugin to embed
+    sheet music with shortcode tags.
+- [music21] - Toolkit for computational musicology.
+- [openLilyLib] - Enhancement library for [LilyPond].
+- [OpenSheetMusicDisplay] - TypeScript library for rendering MusicXML in the browser.
+- [ScoreAnalyzer] - Analyze piano sheet music for technical difficulties.
+- [scoryst] - Typst package to render music notation
+  (ABC, MusicXML, MEI, Humdrum, …) via [verovio].
+- [SheetAble] - Self-hostable server for organizing sheet music.
+- [Smude] - A library dedicated to binarization and dewarping of sheet music images.
+- [verovio] - An library and toolkit for
+  engraving MEI music notation into SVG.
+- [VexFlow] - TypeScript library for rendering music notation & guitar tablature.
+- [zazate.js] - Music theory and notation library
+  for javascript and node.js.
+- [SeePlay] - Webapp to teach sight reading of sheet music.
+
+[abcjs]: https://github.com/paulrosen/abcjs
+[alda]: https://github.com/alda-lang/alda
+[alphatab]: https://alphatab.net
+[ChorData]: https://github.com/starenka/chordata
+[chord-mark]: https://github.com/no-chris/chord-mark/
+[chordpro]: https://github.com/ChordPro/chordpro
+[ChordSketch]: https://github.com/koedame/chordsketch
+[conchord]: https://typst.app/universe/package/conchord
+[Digital Music Stand]: https://github.com/PatWie/digitalmusicstand
+[EMViz]: https://github.com/carterenyi/emviz
+[hmsl]: https://github.com/philburk/hmsl
+[Hum]: https://github.com/crbulakites/hum
+[LilyBin]: https://github.com/LilyBin/LilyBin
+[lilynode]: https://github.com/ad-si/lilynode
+[lilyware]: https://github.com/ad-si/lilyware
+[ly2video]: https://github.com/aspiers/ly2video
+[Melo]: https://github.com/Mistodon/melo
+[mscxyz]: https://github.com/Josef-Friedrich/mscxyz
+[Music Sheet Viewer]: https://wordpress.org/plugins/music-sheet-viewer/
+[music21]: https://github.com/cuthbertLab/music21
+[openLilyLib]: https://openlilylib.org
+[OpenSheetMusicDisplay]: https://github.com/opensheetmusicdisplay/opensheetmusicdisplay
+[ScoreAnalyzer]: https://github.com/Vassantha/ScoreAnalyzer
+[scoryst]: https://typst.app/universe/package/scoryst
+[SeePlay]: https://github.com/LearningNerd/seeplay
+[SheetAble]: https://sheetable.net
+[Smude]: https://github.com/sonovice/smude
+[verovio]: https://github.com/rism-digital/verovio
+[VexFlow]: https://github.com/vexflow/vexflow
+[zazate.js]: https://github.com/btwael/zazate.js
+
+
+### AI Powered
+
+- [AnthemScore] - Automatically create sheet music from audio.
+- [Piano Transcription] - Transcribe piano recordings to MIDI files.
+- [PianoTrans] - GUI for piano transcription with pedals.
+- [Sheet Sage] - Transcribe pop songs to lead sheets (melody + chords).
+
+[AnthemScore]: https://www.lunaverus.com
+[Piano Transcription]: https://github.com/bytedance/piano_transcription
+[PianoTrans]: https://github.com/azuwis/pianotrans
+[Sheet Sage]: https://github.com/chrisdonahue/sheetsage
+
+
+## Websites
+
+- [Airsequel Sheet Music] - Sheet music management app powered by [Airsequel].
+- [ChordMark] - Simple text format for the notation of lyrics, chords and rhythm.
+- [ChordPro] - Simple text format for the notation of lyrics with chords.
+- [Clairnote] - Alternative music notation to ease reading and understanding.
+- [flat.io] \(commercial\) - The online music score editor for your compositions.
+- [flowkey] \(commercial\) - Interactive app to learn how to play the piano.
+- [Fretboard 1] - Chords, scales, and fingerings for string instruments.
+- [Fretboard 2] - Chord diagrams for Guitar.
+- [Fret Monster] - Fingering charts app for Guitar, Ukulele, Bass, and Mandolin.
+- [Guitar Dashboard] - An interactive music theory dashboard for guitarists.
+- [hacklily] - Online [LilyPond] based sheet music editor.
+- [JotChord] - Text-based online editor for making Nashville Number System style song charts as PDFs.
+- [La Partition Numerique] -
+    French speaking site dedicated to the future of musical scores.
+- [MandoScribe] \(commercial\) - Create slash chords + tabs sheet music in browser for Mandolin.
+- [microharmonic] - Microtone keyboard.
+  and chord diagrams without the need for special tools.
+- [Newzik] - Collaborative sheet music management app
+    and reader for web, iPadOS, and macOS.
+- [noteflight] \(commercial\) - Browser based music notation creator and
+  music composition community.
+- [PianoGym] - Piano sight reading exercises and flash cards.
+- [PianoHub] - Create and share music in your browser.
+- [PianoML] - A Machine to Learn Piano.
+- [Pianu] - Learn how to play the piano with interactive lessons.
+- [playgroundsessions] \(commercial\) - Learn how to play the piano with
+  interactive lessons featuring your favorite songs.
+- [react-piano] - Interactive piano keyboard for React.
+- [Soundslice] \(commercial\) -
+    Browse and create sheet music/tab synced with audio/video performances.
+- [synthesiagame] \(commercial\) - Learn how to play the piano
+  using falling notes.
+- [TimeWarp Technologies] - Interactive software for performing musicians,
+  music educators, students, and music hobbyists.
+- [Tunefl] - Freely generate and share mini [LilyPond] scores with ease.
+
+[Airsequel Sheet Music]: https://github.com/Airsequel/Airsequel-Sheet-Music
+[Airsequel]: https://www.airsequel.com
+[ChordMark]: https://chordmark.netlify.app/
+[ChordPro]: https://www.chordpro.org
+[Clairnote]: https://clairnote.org
+[flat.io]: https://flat.io
+[flowkey]: https://www.flowkey.com/en
+[Fretboard 1]: https://github.com/fredericcormier/Fretboard
+[Fretboard 2]: https://davidpots.com/fretboard/
+[Fret Monster]: https://songnotes.net/tools/fret-monster
+[Guitar Dashboard]: https://guitardashboard.com/
+[hacklily]: https://www.hacklily.org
+[JotChord]: https://www.jotchord.com
+[La Partition Numerique]: https://www.partitionnumerique.com
+[MandoScribe]: https://www.mandoscribe.com/
+[microharmonic]: https://www.microharmonic.com
+[MoonPiano]: https://moonpiano.praisethemoon.org/
+[Newzik]: https://newzik.com/en
+[noteflight]: https://www.noteflight.com/
+[PianoGym]: https://pianogym.com
+[PianoHub]: https://www.pianohub.io
+[PianoML]: https://pianoml.org
+[Pianu]: https://opensheetmusicdisplay.org/showcase-pianu-com/
+[playgroundsessions]: https://www.playgroundsessions.com/
+[react-piano]: https://www.kevinqi.com/react-piano/
+[Soundslice]: https://www.soundslice.com
+[synthesiagame]: https://synthesiagame.com
+[TimeWarp Technologies]: https://timewarptech.com
+[Tunefl]: https://github.com/tiredpixel/tunefl
+
+
+## Apps
+
+- [Composer's Sketchpad] - Sequencer that combines musical staff paper
+    with an artist's sketchbook (iOS only).
+- [Enote] - Digital sheet music app with large library (iPadOS, iOS).
+- [Fender Notion] - Cross-platform music composition tool.
+- [Nkoda] - Find, organize, and annotate sheet music.
+- [PianoBooster] - MIDI file player displaying musical notes
+    and teaching how to play the piano.
+- [StaffPad] -  Music composition app, designed for pen and touch.
+
+[Composer's Sketchpad]: http://composerssketchpad.com
+[Enote]: https://enote.com
+[Fender Notion]: https://intl.fender.com/pages/fender-notion
+[Nkoda]: https://www.nkoda.com
+[PianoBooster]: https://github.com/pianobooster/PianoBooster
+[StaffPad]: https://www.staffpad.net
+
+
+## Notations
+
+- [Dodeka Music Notation] - A simple yet powerful alternative music notation.
+- [Integer Pitch Class Notation] - System that names the twelve pitch classes
+    with the integers 0 through 11.
+- [Karya] - Music sequencer and generalized notation.
+- [Numbered Musical Notation] - Cipher notation system that uses the digits
+    1 through 7 to represent the notes of the scale (also known as Jianpu).
+
+[Dodeka Music Notation]: https://web.archive.org/web/20230206201446/https://dodekamusic.com/learn/alternative-music-notation/
+[Integer Pitch Class Notation]: https://en.wikipedia.org/wiki/Pitch_class#Integer_notation
+[Karya]: https://github.com/elaforge/karya
+[Numbered Musical Notation]: https://en.wikipedia.org/wiki/Numbered_musical_notation
+
+
+## Hardware
+
+- [Piano-LED-Visualizer] - Enhanced piano playing
+    with a Raspberry Pi powered LED strip.
+
+[Piano-LED-Visualizer]: https://github.com/onlaj/Piano-LED-Visualizer
+
+
+## Resources
+
+- [freemusiced] - Fingering charts, scale sheets,
+    free sheet music and links to resources on the internet.
+- [List of Online Digital Musical Document Libraries][online libs] -
+    Wikipedia list of online archives.
+- [llllllll.co/…] - Discussion about experimental music notation resources.
+- [MEI] - Music Encoding Initiative.
+    Community-driven, open-source effort
+    to define a system for encoding musical documents.
+- [MNX] - XML based next generation music markup proposal.
+- [Musiconn] - Information platform for research on music and musicology.
+- [Notation Must Die] - Video essay on the battle for how we read music.
+- [SMuFL] - Standard Music Font Layout.
+- [W3C Music Notation Community Group] -
+    Standards group developing MusicXML, [SMuFL] and [MNX]-Common formats.
+
+[freemusiced]: http://www.freemusiced.org/free-sheet-music-links.html
+[llllllll.co/…]: https://llllllll.co/t/experimental-music-notation-resources/149
+[MEI]: https://music-encoding.org
+[MNX]: https://w3c.github.io/mnx/
+[Musiconn]: https://www.musiconn.de
+[Notation Must Die]: https://www.youtube.com/watch?v=Eq3bUFgEcb4
+[online libs]:
+  https://en.wikipedia.org/wiki/List_of_Online_Digital_Musical_Document_Libraries
+[SMuFL]: https://w3c.github.io/smufl/latest/index.html
+[W3C Music Notation Community Group]:
+  https://www.w3.org/community/music-notation/
+
+
+## OMR (Optical Music Recognition)
+
+- [Audiveris] - Optical music recognition app for scanned scores.
+- [Gamera] - Toolkit for building document image recognition systems.
+- [PlayScore] – Sheet Music Scanning App (iOS, Android, Windows).
+- [Rodan] - Web-based document recognition system.
+- [Scan2Notes] \(commercial\) - AI powered web app to scan sheet music
+    and convert it to editable, playable scores (PDF, MIDI, MusicXML).
+
+[Audiveris]: https://github.com/Audiveris/audiveris
+[Gamera]: https://gamera.informatik.hsnr.de/
+[PlayScore]: https://www.playscore.co
+[Rodan]: https://github.com/DDMAL/Rodan
+[Scan2Notes]: https://klang.io/scan2notes/
+
+
+## Research
+
+- [Distributed digital music archives and libraries lab][ddmal] -
+  Development and evaluation of practices, frameworks and tools
+  for the design and construction of worldwide distributed
+  digital music archives and libraries.
+- [MusicScoring] - Automatically generate scores for difficult pieces of music.
+- [Notation and Thought] - Notation design and how it affects thought.
+- [OMR Research] - Research hub for Optical Music Recognition.
+
+[ddmal]: https://github.com/DDMAL
+[MusicScoring]: https://github.com/xwsxethan/MusicScoring
+[Notation and Thought]: https://github.com/kai-qu/notation
+[OMR Research]: https://github.com/OMR-Research

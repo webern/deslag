@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__workflows__pull_request_template.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mazipan/auto-commit",
+    "path": ".github/workflows/pull_request_template.md",
+    "commit": "5cd2811e5f5a0552701d6ffb7b1df9e756efe86a",
+    "commit_date": "2021-12-30T15:57:53+00:00",
+    "url": "https://github.com/mazipan/auto-commit/blob/5cd2811e5f5a0552701d6ffb7b1df9e756efe86a/.github/workflows/pull_request_template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-17T08:14:42+00:00",
+    "stars": null,
+    "found_by": "github-topic:gardening"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-10-20T07:16:03+07:00",
+    "last_commit_date": "2020-10-20T10:43:51+07:00",
+    "last_commit_author": "Irfan Maulana",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-10-20: all 2 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 550,
+    "sha256": "4637162096945f3511e0b82034c305becb5e59eacf2b06a29fb87df25e0f534a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 65,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/mazipan--auto-commit/.github/workflows/pull_request_template.md"
+}

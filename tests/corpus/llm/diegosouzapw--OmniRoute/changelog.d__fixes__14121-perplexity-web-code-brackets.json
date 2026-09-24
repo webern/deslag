@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "changelog.d__fixes__14121-perplexity-web-code-brackets.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "diegosouzapw/OmniRoute",
+    "path": "changelog.d/fixes/14121-perplexity-web-code-brackets.md",
+    "commit": "18bbb101980c639cfabdc5663213836d917c3269",
+    "commit_date": "2026-09-23T06:58:44+02:00",
+    "url": "https://github.com/diegosouzapw/OmniRoute/blob/18bbb101980c639cfabdc5663213836d917c3269/changelog.d/fixes/14121-perplexity-web-code-brackets.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-18T00:02:15-03:00",
+    "stars": 69211,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-22T12:13:21+02:00",
+    "last_commit_date": "2026-09-22T12:13:21+02:00",
+    "last_commit_author": "Zackaria.A",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 326,
+    "sha256": "4dec0ca69399849403e6e9132a1853176c36535f8e8999612c17ff0996933e56",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1,
+    "words": 37,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/diegosouzapw--OmniRoute/changelog.d/fixes/14121-perplexity-web-code-brackets.md"
+}

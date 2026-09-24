@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__ISSUE_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "popperjs/react-popper",
+    "path": ".github/ISSUE_TEMPLATE.md",
+    "commit": "fcd81bca90e91e1fe9a2ce1a10dcac9b05f9aed0",
+    "commit_date": "2021-08-20T00:28:30-04:00",
+    "url": "https://github.com/popperjs/react-popper/blob/fcd81bca90e91e1fe9a2ce1a10dcac9b05f9aed0/.github/ISSUE_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-03-19T15:57:51+01:00",
+    "last_commit_date": "2020-04-21T16:04:28+02:00",
+    "last_commit_author": "Federico Zivolo",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-04-21: all 7 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1204,
+    "sha256": "a1cde979a0e745ab31d529a7e98b457252095ee8a3c7c1458c487aff7db0fc5e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 51,
+    "words": 188,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/popperjs--react-popper/.github/ISSUE_TEMPLATE.md"
+}

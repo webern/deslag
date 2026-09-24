@@ -1,0 +1,93 @@
+# coz-rs
+
+Rust support for the [`coz` Causal Profiler](https://github.com/plasma-umass/coz)
+
+[![Rust crate downloads](https://img.shields.io/crates/d/coz)](https://img.shields.io/crates/d/coz)[![Documentation](https://docs.rs/coz/badge.svg)](https://docs.rs/coz)
+
+## Usage
+
+First, follow the instructions in [`coz`] to install the `coz` command.
+
+[`coz`]: https://github.com/plasma-umass/coz/#installation
+
+Next, `coz` is a profiler that, for the best results, typically requires
+source-level modifications of your code. To do this first add this to your
+`Cargo.toml`
+
+```toml
+[dependencies]
+coz = "0.1"
+```
+
+Then you'll want to either add throughput or latency tracepoints. More
+information on this [can be found
+upstream](https://github.com/plasma-umass/coz/#profiling-modes). If you have
+something you'd wish would execute more often, you can add:
+
+```rust
+fn main() {
+    loop {
+        // ...
+
+        // For example you wish this `loop` executed more iterations
+        coz::progress!(); // equivalent of `COZ_PROGRESS`
+    }
+}
+```
+
+Note that `coz::progress!("name")` is the equivalent of `COZ_PROGRESS_NAMED` as
+well.
+
+If you'd like to profile the latency of an operation you can instead use:
+
+```rust
+// Boy I wish this function executed more quickly...
+fn foo() {
+    coz::scope!("foo");
+}
+```
+
+Instead of `scope!` you may also use `coz::begin!("foo"); ... coz::end!("foo");`.
+
+After you've instrumented your code, you need to also ensure that you're
+compiling with DWARF debug information. To do this you'll want to configure
+`Cargo.toml` again:
+
+```toml
+[profile.release]
+debug = 1
+```
+
+Next up you'll build your application with `cargo build --release`, and then
+finally you can run it with `coz run --- ./target/release/$your_binary`.
+
+## Caveats
+
+Known caveats so far to generate a report that collects information are:
+
+* Debug information looks to be critical to get a report from `coz`. Make sure
+  that your program is compiled with at least line-table information (`debug =
+  1`) to ensure you get the best experience using `coz`.
+
+* `coz` works on Linux and macOS. This crate compiles on all platforms, but
+  only does something when the `libcoz` runtime is injected (which is what
+  `coz run` does).
+
+## Examples
+
+You can find an example toy program at `rust/examples/toy.rs` in this repository, and we can execute it with `coz`:
+
+NOTE: If Rust is not yet installed, first run `sudo apt install curl` and then `curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh`.
+
+```
+$ cargo build --release --examples
+$ coz run --- ./target/release/examples/toy
+...
+[profiler.cpp:75] Starting profiler thread
+$
+```
+
+That should generate `profile.coz` in the current directory, which if you plot with `coz plot` should look something like this:
+
+![plot of `toy.rs`](toy.png)
+

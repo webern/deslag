@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Koenkk/zigbee-herdsman-converters",
+    "path": "README.md",
+    "commit": "719f4f9c03d3d10029293d9f60698b3c0b5c752f",
+    "commit_date": "2021-12-31T15:28:00+01:00",
+    "url": "https://github.com/Koenkk/zigbee-herdsman-converters/blob/719f4f9c03d3d10029293d9f60698b3c0b5c752f/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-23T18:25:01+02:00",
+    "stars": 1221,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2018-05-23T18:25:01+02:00",
+    "last_commit_date": "2021-11-04T20:05:03+01:00",
+    "last_commit_author": "Jorge Schrauwen",
+    "authors": 6,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-04: all 11 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2432,
+    "sha256": "d9a91f0e130b856944bfa55dc7aed0cc241780b1804d19f618e6c3268ecf0d05",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 34,
+    "words": 304,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Koenkk--zigbee-herdsman-converters/README.md"
+}

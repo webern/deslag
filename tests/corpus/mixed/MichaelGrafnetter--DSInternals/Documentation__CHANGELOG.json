@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Documentation__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "MichaelGrafnetter/DSInternals",
+    "path": "Documentation/CHANGELOG.md",
+    "commit": "917bc847f1acb2897ab79650aa74213fb018e636",
+    "commit_date": "2026-09-11T17:12:33-05:00",
+    "url": "https://github.com/MichaelGrafnetter/DSInternals/blob/917bc847f1acb2897ab79650aa74213fb018e636/Documentation/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1970,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 93,
+    "first_commit_date": "2019-01-12T19:58:56+01:00",
+    "last_commit_date": "2026-09-11T17:12:33-05:00",
+    "last_commit_author": "Michael Grafnetter",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-01-12, before 2022-01-01; 1 of its 93 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 52988,
+    "sha256": "bcd3ed23f64c5de9ac254c0a3e6d3b8fc5f2130f95ce32878cca3d4bcdde2167",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 840,
+    "words": 5014,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/MichaelGrafnetter--DSInternals/Documentation/CHANGELOG.md"
+}

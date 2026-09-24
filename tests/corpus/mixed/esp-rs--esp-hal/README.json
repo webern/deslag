@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "esp-rs/esp-hal",
+    "path": "README.md",
+    "commit": "b74bd67b79f5f0eb176336f65246a82d20e3b9c1",
+    "commit_date": "2026-09-23T13:32:45+00:00",
+    "url": "https://github.com/esp-rs/esp-hal/blob/b74bd67b79f5f0eb176336f65246a82d20e3b9c1/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2021-10-19T10:13:30-07:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 66,
+    "first_commit_date": "2021-10-19T10:13:30-07:00",
+    "last_commit_date": "2026-09-17T08:21:56+00:00",
+    "last_commit_author": "Scott Mabin",
+    "authors": 12,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-10-19, before 2022-01-01; 1 of its 66 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5768,
+    "sha256": "1eae4baa909c99cc6e7d6c409baa0f7571ce126a8b4f2f1160b51468973835f5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 101,
+    "words": 618,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/esp-rs--esp-hal/README.md"
+}

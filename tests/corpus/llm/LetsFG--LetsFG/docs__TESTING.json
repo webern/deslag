@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__TESTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "LetsFG/LetsFG",
+    "path": "docs/TESTING.md",
+    "commit": "ade1aa42b8cc81eceba159cbc7b78b41cd3a1975",
+    "commit_date": "2026-09-20T13:56:29+02:00",
+    "url": "https://github.com/LetsFG/LetsFG/blob/ade1aa42b8cc81eceba159cbc7b78b41cd3a1975/docs/TESTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-01T12:19:48+01:00",
+    "stars": null,
+    "found_by": "github-topic:travel"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-05-23T00:49:06+02:00",
+    "last_commit_date": "2026-06-01T20:08:24+02:00",
+    "last_commit_author": "growtomek",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 3 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 12672,
+    "sha256": "d350f3f82ae67c86eaec682c681bd47af45bd32d635fac551d77bb8d37d27a6e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 270,
+    "words": 1716,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/LetsFG--LetsFG/docs/TESTING.md"
+}

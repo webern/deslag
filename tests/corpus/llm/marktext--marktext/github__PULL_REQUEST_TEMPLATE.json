@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marktext/marktext",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "978d71df281c7b52b4383fa17bfe14e5f7b9c5f8",
+    "commit_date": "2026-09-23T23:33:41+08:00",
+    "url": "https://github.com/marktext/marktext/blob/978d71df281c7b52b4383fa17bfe14e5f7b9c5f8/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 61750,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-13T15:51:48+08:00",
+    "last_commit_date": "2026-05-13T15:51:48+08:00",
+    "last_commit_author": "Ran Luo",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 743,
+    "sha256": "1bcc815dfc19a11e5345f4dd23ccea5549d01aa405a231d73234f46c6a359ea1",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 26,
+    "words": 129,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/marktext--marktext/.github/PULL_REQUEST_TEMPLATE.md"
+}

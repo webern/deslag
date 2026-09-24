@@ -1,0 +1,453 @@
+# Mocha Maintainer's Handbook
+
+## Introduction
+
+Hi stranger! We've written this document for:
+
+1. Active maintainers of Mocha
+1. Prospective maintainers of Mocha
+1. Anyone curious about how Mocha's maintainers maintain Mocha
+
+The purpose of this document is to _describe our processes_.
+We want to avoid conflicts and confusion around "unwritten rules".
+In our opinion, the most straightforward way to address this is to _write them down_.
+This _also_ happens to be the most straightforward way to change them!
+
+To assist in eliminating ambiguity, we will define some terms.
+
+## Terminology
+
+Anyone involved with Mocha will fall into one of these buckets: **user**, **contributor**, and **maintainer**.
+
+### User
+
+A "user" for the purpose of this document is any _individual developer_ who consumes Mocha to write and/or execute tests.
+A user interacts with contributors.
+A user interacts with the software, web site, documentation, etc., which these contributors provide.
+
+As a user, you're expected to follow the [code of conduct](https://github.com/mochajs/mocha/blob/main/.github/CODE_OF_CONDUCT.md) when interacting in Mocha's "official" social spaces.
+This includes:
+
+- Any channel under the `mochajs` Discord
+- Any project under the `mochajs` organization on GitHub
+- Any future social, in-person, or online events which Mocha might organize
+
+### Contributor
+
+This is the most important thing:
+
+**You don't have to write code to be a contributor!**
+
+A "contributor" is any individual who has _given back_ in some way to the project and its community.
+Contributions include (but are not limited to):
+
+1. Reporting bugs which follow the reporting guidelines
+1. Suggesting and debating enhancements that have wide applicability
+1. Helping others with Mocha-related questions on [our Discord](https://discord.gg/KeDn2uXhER), [StackOverflow](https://stackoverflow.com), or other sites
+1. Sending pull requests which fix bugs, improve documentation, improve developer experience, improve code quality, and/or implement requested enhancements
+1. Reviewing code on pull requests
+1. Providing design assets
+1. Posting a tutorial on a personal blog or blogging site
+1. Suggesting usages for project funds
+1. Organizing a "Mocha-branded" event or workshop
+1. Recruiting more contributors! Don't spam.
+1. Researching the user base, getting feedback, etc. Don't spam.
+
+A contributor is _usually_ a user as well, but this isn't a hard-and-fast rule.
+A contributor is also expected to adhere to the [code of conduct](https://github.com/mochajs/mocha/blob/main/.github/CODE_OF_CONDUCT.md) as a user would.
+
+As you can see, it's wide open! Think of it another way: if you are _adding value to Mocha_, then you are a contributor.
+
+> Due to the nature of GitHub, it's a challenge to recognize those who've made contributions _elsewhere_ on the web, or even contributions of the "non-code" variety.
+> If you know of any great contributions which have gone unnoticed, please bring them to the maintainers' attention!
+
+#### A Note About Donations
+
+A [donation](https://opencollective.com/mochajs) is also a great way to help Mocha if you want to help sustain OSS, but can't find time to contribute in other ways, or just want to say "thanks!"
+
+We love our backers and sponsors! 💕
+
+### Maintainer
+
+A maintainer has certain "rights" (or "permissions") to the Mocha project and other projects under the `mochajs` organization.
+There's no way to dance around this: with these rights come increased responsibilities.
+
+However, **there is no expectation of a standard of technical ability** to be a maintainer of Mocha.
+This doesn't imply a lack of technical oversight--every pull request will eventually be reviewed.
+
+**If you think you aren't experienced enough to maintain a project like Mocha, you are incorrect.** The only requirements are the above responsibilities and a desire to help the project.
+It bears repeating:
+
+**You don't have to write code to be a maintainer!**
+
+> Maintainer is synonymous with "Collaborator" and/or "Owner" in GitHub parlance.
+
+#### The Responsibilities of a Maintainer
+
+As a maintainer, you are expected to _not just_ "follow" the code of conduct, but embody its values.
+Your public behavior, whether in the physical or virtual world, reflects upon the project and other maintainers.
+
+> If you don't understand the code of conduct, or why it exists, it is _your responsibility_ to educate yourself.
+> This does not imply the CoC is immutable.
+
+Furthermore, a maintainer is a contributor who **contributes regularly**. That can be daily, weekly, or even just a few times a month -- as long as it's regular.
+We are all people with Real Lives, and for many of us, contributing to OSS is just an occasional hobby!
+
+Finally, a maintainer must help define what makes Mocha "Mocha".
+At minimum, a maintainer must _understand_ the current definition (if a maintainer is not interested in decision-making).
+Some of these questions include:
+
+- What's the scope of Mocha?
+- Where should we focus efforts?
+- What's urgent, what can wait?
+- What can we break? What's off-limits?
+- What user feedback is valuable? What isn't?
+
+As maintainers, _we work together_ to learn about the nature of these questions. If we try hard enough, we even come to some answers!
+
+A maintainer _must_ also have 2FA enabled on their GitHub account.
+
+> If you think that you aren't familiar with mocha's internals enough to contribute, please watch [this walkthrough video](https://youtu.be/zLayCLcIno0)!
+
+#### The Rights of a Maintainer
+
+You may choose to do zero or more of these _at their discretion_:
+
+- Merge pull requests
+- Modify issues (closing, adding labels, assigning them other maintainers, etc.)
+- Modify GitHub [Projects](https://github.com/mochajs/mocha/projects)
+- Cancel builds, restart jobs, or otherwise interact with our CI server(s)
+- CRUD operations on GitHub integrations
+- Participate in the decision-making process
+- Add new maintainers to the team
+- Tag releases and publish Mocha to npm
+
+> While maintainers have the ability to commit directly to the `main` branch, _this is to be avoided_ if any other maintainer could reasonably take issue with the change, or the change affects Mocha's API or output.
+> For example, a spelling correction in `CHANGELOG.md` may not require a pull request.
+> A change to a reporter's output most certainly would! Maintainers are trusted to use their best judgement; if unsure, err on the side of caution.
+
+#### Expected Activity Levels
+
+We generally expect maintainers to average at least:
+
+- Multiple contributions of any kind in a week
+- One meaningful, non-trivial contribution per month
+
+These are rough averages, not strict minimums!
+It's totally fine to skip a week or two here and there, as long as you do a little more before or after.
+Meaningful, non-trivial contributions can be a well-thought-out comment, sending a non-straightforward pull request, or anything else that adds real value to the project.
+
+If you have to step away longer than a couple of weeks, that's totally fine too.
+Just let the other maintainers know ahead of time.
+
+- If you need to step away for up to a month or two, don't sweat it.
+- If we don't hear from you for a month without prior notice, we'll check in with you to see if you want to remain a maintainer.
+- After three months of inactivity, or two without prior notice, we'll likely remove you as a maintainer.
+
+Again, don't stress about this if you can't always be available.
+Your boss doesn't work here; contribute as often as you reasonably can.
+Even if you step down or are removed, if you can come back and be regularly active we'll happily reinstate you.
+
+#### About "Owners"
+
+Some maintainers will have full admin rights to the [mochajs GitHub org](https://github.com/mochajs) and/or will have access to publish to npm.
+
+- Those with publish access must use npm's 2FA.
+- This level of access will be granted by the current owners to those maintainers who have earned the project's trust.
+
+## Mocha's Decision-Making Process
+
+Mocha follows a [consensus-seeking decision-making](https://en.wikipedia.org/wiki/Consensus-seeking_decision-making) process.
+In other words, all maintainers attempt to come to agreement.
+If that fails, we decide by a simple vote.
+
+Active maintainers will make an effort to solicit feedback from others before making important or potentially controversial decisions.
+Given the varying geographical distribution and availability of the maintenance team, we resolve to do the best we can to solicit feedback.
+We will wait at least two weeks for consensus votes in most cases, and a month for especially important decisions.
+
+In other words, to have your opinion heard, participate regularly.
+The rest of the team won't wait on feedback that isn't necessarily forthcoming!
+
+## Communication
+
+Maintainers will mainly gather in the [Mocha Discord](https://discord.gg/KeDn2uXhER).
+This is a _public_ Discord, and _anyone_ can join.
+Videoconference (or audio) calls may happen on a regular or irregular basis, as schedules allow.
+This is mainly because we have Real Lives and time zones suck.
+
+## Working with Issues & Pull Requests
+
+All new issues will need to be triaged, and pull requests must be examined.
+Maintainers must understand [Semantic Versioning](http://semver.org) ("SemVer"), as Mocha follows it strictly.
+
+> If you see an issue or PR that could use some labels, please add them!
+
+### Semantic Versioning
+
+The TL;DR of Semantic Versioning is:
+
+- MAJOR version when you make incompatible API changes,
+- MINOR version when you add functionality in a backwards-compatible manner, and
+- PATCH version when you make backwards-compatible bug fixes.
+
+Pull requests _must_ have one of these three (3) labels:
+
+- `semver-patch` for backwards-compatible bug fixes, documentation, or anything which does not affect a "production" (`npm install mocha`) installation of Mocha
+- `semver-minor` for backwards-compatible new features or usability/interface enhancements
+- `semver-major` for backwards-incompatible ("breaking") changes to the API
+
+A PR which introduces a breaking change is considered to be `semver-major`, _regardless_ of whether it's a bug fix, feature, or whatever.
+
+For the purposes of the above definitions, Mocha has some unique considerations, and includes the following in its definition of "API":
+
+1. Mocha's _documented_, programmatic interface which _is not explicitly tagged with `@private`_
+1. Mocha's machine-readable reporter output
+1. Mocha's default settings
+1. Mocha's command-line options
+1. The environments which Mocha supports; this includes:
+   1. Browser versions
+   1. Node.js versions
+   1. Compatibility with popular module loaders (e.g., AMD)
+
+**Err on the side of the user; breaking changes to private APIs will be `semver-major`, if and only if they are known to be consumed by actively developed project(s).**
+
+Examples of a breaking changes might be:
+
+- Throwing an `Error` where one wasn't thrown before
+- Removing a command-line option or alias
+- Removing an environment from the CI configuration
+- Changing the default reporter!
+- Changing defaults in a way which would cause tests which were previously successful to start failing, or a failing test to start passing
+  - The exception is fixing likely false-positives
+  - A good example would be changing the default `timeout` value
+
+## Issue Triage
+
+Issues should be filed according to one of our [GitHub Issue forms](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms).
+If any required information is missing, add the `status: waiting for author` label and politely ask for the missing information.
+
+### Issue Meta
+
+For all issues, apply the following labels based on which area(s) the issue pertains to:
+
+- `area: async`: Issues around Mocha's asynchronous usage
+- `area: browser`: Issues unique to a browser environment
+- `area: parallel`: Issues around Mocha's parallel mode
+- `area: reporter`: Usually concerning Mocha's output
+- `area: repository tooling`: Issues around Mocha's CI, own test suite, or other internal tooling
+- `area: security`: Involving vulnerabilities, actual or potential
+- `area: windows`: Windows-specific issues, particularly around path discrepancies
+
+Additionally:
+
+- `good first issue`: If the implementation is likely doable by someone who's never contributed to Mocha (or potentially any other open source project) before
+- `status: duplicate`: If an equivalent issue was already filed, add this label, close as not planned, and comment with something like `duplicate of #<other-issue-number>`
+- `status: in discussion`: Add this whenever the issue is blocked on community input and/or deeper discussions
+- `status: in triage`: Added on new issues; re-add this whenever the issue is awaiting maintainer attention
+- `status: waiting for author`: Add this whenever the issue is blocked on something from the author
+
+### 🐛 Bugs
+
+Bug reports should include a way to reproduce the issue that someone who is not deeply familiar with Mocha can work with locally.
+
+Depending on that reproduction, remove `status: in triage` and add the following label(s) in addition to the auto-added `type: bug`:
+
+- If the bug is valid and reproduction works: add `status: accepting prs`
+- If the bug might be valid but the reproduction isn't workable:
+  - Add `status: waiting for author`
+  - Politely comment explaining why the reproduction isn't workable
+- If the bug might be valid but it's not clear whether it's worth it:
+  - Add `status: in discussion`
+  - Explain that it _might_ be worth it and that more community input is needed
+- If the bug is clearly not worth it or valid, explain why, close the issue as not planned, and:
+  - If it isn't a bug at all: add the `invalid` label
+  - If it is roughly a bug but isn't something that can or should be fixed: add the `status: wontfix` label
+
+### 📝 Documentation
+
+Documentation reports should clearly indicate a gap or problem that should be addressed in documentation.
+Triage documentation issues similar to bugs and/or feature requests - documentation is its own form of product area.
+Remove `status: in triage` and keep the auto-added `area: documentation` label.
+
+### 🚀 Features
+
+Feature requests should include a compelling reason why we should spend the maintenance time on the feature.
+Given that Mocha is prioritizing stability over growth, this can be a high bar.
+
+Depending on the reasoning, remove `status: in triage` and add the following label(s) in addition to the auto-added `type: feature`:
+
+- If the reasoning is valid and seems worth the maintenance cost: add `status: accepting prs`
+- If the reasoning is unclear:
+  - Add `status: waiting for author`
+  - Politely comment explaining what's missing
+- If the feature might be valid but it's not clear whether it's worth it:
+  - Add `status: in discussion`
+  - Explain that it _might_ be worth it and that more community input is needed
+- If the feature is not valid, explain why, close the issue as not planned, and:
+  - If it isn't a feature request at all: add the `invalid` label
+  - If it is roughly a feature request but isn't something that can or should be implemented: add the `status: wontfix` label
+
+### 🛠 Tooling
+
+Issues filed about improvements to Mocha's internal development processes.
+These can be more informally discussed by maintainers.
+Remove `status: in triage` and keep the auto-added `area: repository tooling`.
+
+### ❓ Questions
+
+Our issue tracker is not the right place to ask questions.
+If an issue is filed that seems like it's more of a question, remove `status: in triage`, add the `type: question` label, politely direct the user to the [❓ Got a Question?](./.github/CONTRIBUTING.md#❓-got-a-question) section, and close the issue as not planned.
+
+If it's _not_ a Mocha problem (people tend not to believe this), you may want to show a counter-example.
+It's often helpful to direct the issue author to the responsible project, if you can determine what that is.
+
+If this issue seems to be _repeatedly_ asked, add the `faq` label.
+This may also apply to questions which receive a lot of 👍 reactions.
+
+### Closing Issues
+
+Write "closes #000" (where 000 is the issue number) or "resolves #000" in a commit or PR to have the original issue closed automatically once the PR is merged.
+
+For any issue which is a duplicate, write "duplicate of #000" in a new comment, and close the issue.
+[Read more about marking issues as duplicates](https://help.github.com/articles/about-duplicate-issues-and-pull-requests/).
+
+If the issue is a support question, and you believe it has been answered, close the issue.
+
+If the issue is not Mocha-related, and/or a bug cannot be confirmed, label it `invalid` and close.
+
+## Commenting on Issues and Reviewing Pull Requests
+
+**All maintainers should be courteous and kind.** Thank the external contributor for the pull request, even if it is not merged.
+If the pull request has been opened (and subsequently closed) without discussion in a corresponding issue, let them know that by creating an issue first, they could have saved wasted effort.
+_Clearly and objectively_ explain the reasoning for rejecting any PR.
+
+If you need more information in an issue, nicely ask the user to provide it.
+Remind them to use the issue/PR templates if they have not.
+
+### Reviewing Code
+
+Use GitHub's code review features.
+Requesting a review from another maintainer _may or may not_ actually result in a review; don't wait on it.
+If the PR cannot move forward without input from a certain maintainer, _assign them to the PR_.
+
+### The Part About Jerks
+
+There will be jerks.
+
+#### Rude or Entitled People
+
+These are users who feel the Mocha project and its maintainers _owe them_ time or support.
+This is incorrect.
+
+However, this behavior is often indicative of someone who is "new" to open source.
+Many just don't know better.
+It is not your _responsibility_ to educate them (again, you owe them nothing).
+
+Here are some suggestions:
+
+1. If u mad, wait 20 minutes before writing a comment.
+1. "Kill them with kindness".
+   Explain how they are presenting themselves; maybe link to a good article or two about it.
+1. Don't make it about "users vs.
+   maintainers".
+   Treat them like a potential future maintainer.
+1. Avoid adding to the drama.
+   You could try to reach out privately; email may be in their GitHub profile.
+   You will likely never hear from that individual again (problem solved)
+1. If an issue is getting out of control, lock it.
+1. If someone is _repeatedly_ rude and does not correct their mistakes, you may ban them from participating in the `mochajs` org.
+   If you do not have permission to do so, contact one which does (an "owner").
+
+#### Code of Conduct Violations
+
+**This section is theoretical, as it's yet to happen**.
+
+1. Inform the individual of the violation; link to the CoC
+1. Follow up with OpenJS Foundation for further guidance
+1. Repeated violators will be banned inasmuch as that is technically possible
+1. No maintainer nor contributor is exempt from the CoC
+
+## Branches
+
+`main` is the only maintained branch in `mochajs/mocha` or any of the other repos.
+**`main` is the only branch to which force-pushing is disallowed.**
+
+Maintainers may push new branches to a repo, as long as they remove them when finished (merging a PR will prompt to do so).
+
+Please _please_ **_please_** delete old or unused branches.
+
+## Merging PRs
+
+We prefer to [squash merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-commits) PRs.
+Requiring users to keep clean histories for rebasing would be a large ask that we don't feel justifies the benefits.
+
+**Upon acceptance of a PR, you must assign it a milestone.**
+
+### Using Milestones
+
+If you know that the PR is breaking, assign it to a new or existing milestone correlating with the next major release.
+For example, if Mocha's current version is v6.5.2, then this milestone would be named `v7.0.0`.
+
+Likewise, if the PR is `semver-minor`, create or use a new milestone correlating to the next _minor_ release, e.g., `v6.6.0`.
+
+If it's unclear what the next milestone will be, use or create a milestone named `next`.
+This milestone will be renamed to the new version at release time.
+
+By using milestones, we can cherry-pick non-breaking changes into minor or patch releases, and keep `main` as the latest version.
+
+**This is subject to change, hopefully.**
+
+## Mocha's Release Process
+
+Releases are managed by [Release Please](https://github.com/googleapis/release-please) and require manual approval after tests pass.
+To create a new release after merging changes, merge the _`chore(main): release...`_ pull request that its automation has created.
+Doing so will:
+
+1. Create a new GitHub release
+2. Cause a CI job to run on `main` that will publish the package to npm
+
+You'll then need to go to the `chore(main): release ...` commit _Publish to npm_ job run logs and click the _Review pending deployments_ link.
+
+### Major releases
+
+For major releases, we follow an even-odd pattern:
+
+- Even versions only update dependencies and avoid breaking functional changes
+- Odd versions can update dependencies and add breaking functional changes
+
+This results in even versions being quite small but easy to migrate to, and odd versions can usually focus on the functional changes.
+
+For large releases, we recommend betas, then release candidates (RCs), then a full release.
+Betas are when most features are available, but more will likely be added before full release.
+RCs are almost ready for release, but would benefit from user testing before a full release.
+
+To start a new major version beta, add `Release-As: 12.0.0-beta.1` to the additional details of your PR commit message.
+This must be part the last line of the commit message, not the PR description.
+Release Please respects this property and will update accordingly.
+You can also set Release Please to prelease mode to increment the beta number.
+
+> **Important:** Always use a dot (`.`) as the separator between the pre-release label and the number (e.g. `beta.1`, not `beta-1`).
+> The `semver` library (used by npm) treats dot-separated numeric identifiers numerically, so `beta.10 > beta.9`.
+> With a dash separator, `beta-10` is a single string identifier and sorts before `beta-9` alphabetically.
+
+To transition to an RC, add `Release-As: 12.0.0-rc.1` at the end of the PR commit message.
+
+To transition from betas or RCs to a full release, just change Release Please back to `prerelease: false`.
+
+## About The OpenJS Foundation
+
+The [OpenJS Foundation](https://openjsf.org/) retains copyright of all projects underneath the [mochajs org](https://github.com/mochajs).
+The Foundation does not influence technical decisions nor the project roadmap.
+It is, however, charged with ensuring the continued vitality and sustainability of projects under its banner.
+
+As a maintainer, you have access to the resources the OpenJS Foundation provides.
+
+## About Open Collective
+
+Mocha collects donations [via Open Collective](https://opencollective.com/mochajs). As a maintainer, you may help decide how the funds are used. These decisions are made via a consensus-seeking process, much like any other decision.
+
+Expense transparency is built in to Open Collective.
+
+---
+
+Questions? Ask in the [Mocha Discord](https://discord.gg/KeDn2uXhER)!

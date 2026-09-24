@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "shakacode/react_on_rails",
+    "path": "CONTRIBUTING.md",
+    "commit": "4947a697b52974bcbe69440aaf98346479af0f7c",
+    "commit_date": "2026-09-22T07:48:01+00:00",
+    "url": "https://github.com/shakacode/react_on_rails/blob/4947a697b52974bcbe69440aaf98346479af0f7c/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5189,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 65,
+    "first_commit_date": "2018-01-05T01:32:49-08:00",
+    "last_commit_date": "2026-09-06T07:33:00+00:00",
+    "last_commit_author": "Justin Gordon",
+    "authors": 9,
+    "ai_commits": 24,
+    "ai_tools": [
+      "claude-code",
+      "generic-agent"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-05, before 2022-01-01; 24 of its 65 commits are marked as an AI agent's (claude-code, generic-agent)"
+  },
+  "content": {
+    "size_bytes": 44492,
+    "sha256": "485991c8ac6639e54215b87babaecd38f2efa83b538169a101208a7497db42d8",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1226,
+    "words": 5929,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/shakacode--react_on_rails/CONTRIBUTING.md"
+}

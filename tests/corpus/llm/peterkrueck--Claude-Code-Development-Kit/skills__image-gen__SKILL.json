@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "skills__image-gen__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "peterkrueck/Claude-Code-Development-Kit",
+    "path": "skills/image-gen/SKILL.md",
+    "commit": "ba85375181c40580e7b51ed6e273d29dd5f26aec",
+    "commit_date": "2026-06-18T01:34:48+03:00",
+    "url": "https://github.com/peterkrueck/Claude-Code-Development-Kit/blob/ba85375181c40580e7b51ed6e273d29dd5f26aec/skills/image-gen/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-02T13:14:40+02:00",
+    "stars": 1383,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-28T15:14:06+02:00",
+    "last_commit_date": "2026-03-28T15:14:06+02:00",
+    "last_commit_author": "peterkrueck",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5523,
+    "sha256": "606239b2406b0b508bc9dd7957b3c3372f620ba9fc444ca20d3891cc2de40726",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 126,
+    "words": 838,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/peterkrueck--Claude-Code-Development-Kit/skills/image-gen/SKILL.md"
+}

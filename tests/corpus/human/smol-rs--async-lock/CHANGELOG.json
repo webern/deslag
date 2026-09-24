@@ -1,0 +1,51 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "smol-rs/async-lock",
+    "path": "CHANGELOG.md",
+    "commit": "bba67e5ee83e5f0c9e3abbe5d112b67bab722dd3",
+    "commit_date": "2021-04-17T00:21:57+09:00",
+    "url": "https://github.com/smol-rs/async-lock/blob/bba67e5ee83e5f0c9e3abbe5d112b67bab722dd3/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-05-17T17:41:54+02:00",
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2020-05-17T17:41:54+02:00",
+    "last_commit_date": "2021-04-17T00:14:03+09:00",
+    "last_commit_author": "Taiki Endo",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-04-17: all 18 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 968,
+    "sha256": "2706ae7f455ee7b50e5e050d8c8390ea9f9caa43eed90649c65c67166ef4d5bb",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 74,
+    "words": 148,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/smol-rs--async-lock/CHANGELOG.md"
+}

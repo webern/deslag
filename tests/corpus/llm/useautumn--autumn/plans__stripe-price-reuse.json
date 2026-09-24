@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "plans__stripe-price-reuse.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "useautumn/autumn",
+    "path": "plans/stripe-price-reuse.md",
+    "commit": "1cf7340f33b1fc637091e9e8d8eb2a1367ea607c",
+    "commit_date": "2026-09-23T20:31:55+01:00",
+    "url": "https://github.com/useautumn/autumn/blob/1cf7340f33b1fc637091e9e8d8eb2a1367ea607c/plans/stripe-price-reuse.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-01-21T11:18:42+00:00",
+    "stars": 2685,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-27T14:56:44+01:00",
+    "last_commit_date": "2026-08-27T14:56:44+01:00",
+    "last_commit_author": "johnyeo",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 8786,
+    "sha256": "0845c749c888877cc695732bf819e593a96b35513ad6f893b857f1795952dd09",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 277,
+    "words": 1175,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/useautumn--autumn/plans/stripe-price-reuse.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dropbox/rust-brotli-decompressor",
+    "path": "README.md",
+    "commit": "731d7d50582a4f89fbbb999e27f74e9acfaedbf9",
+    "commit_date": "2026-09-01T23:30:40-07:00",
+    "url": "https://github.com/dropbox/rust-brotli-decompressor/blob/731d7d50582a4f89fbbb999e27f74e9acfaedbf9/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 21,
+    "first_commit_date": "2018-01-12T18:28:08-08:00",
+    "last_commit_date": "2026-08-30T18:02:02-07:00",
+    "last_commit_author": "Daniel",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-12, before 2022-01-01; 1 of its 21 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9732,
+    "sha256": "fbd8b91cec4536b97b729d29fed350b3a55c9c7394d8c41ce4e48f75b4a8fc28",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 219,
+    "words": 1382,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dropbox--rust-brotli-decompressor/README.md"
+}

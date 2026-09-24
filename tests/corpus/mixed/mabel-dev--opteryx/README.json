@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "mabel-dev/opteryx",
+    "path": "README.md",
+    "commit": "f6aa6e1d33a5e6cd2670e12300b5b2f7f4f9c3b0",
+    "commit_date": "2026-03-12T12:53:47+00:00",
+    "url": "https://github.com/mabel-dev/opteryx/blob/f6aa6e1d33a5e6cd2670e12300b5b2f7f4f9c3b0/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-12-28T11:27:23+00:00",
+    "stars": 113,
+    "found_by": "sg-topic:database"
+  },
+  "history": {
+    "commits": 172,
+    "first_commit_date": "2021-12-28T11:27:23+00:00",
+    "last_commit_date": "2026-03-12T12:08:00+00:00",
+    "last_commit_author": "joocer",
+    "authors": 6,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-12-28, before 2022-01-01; 3 of its 172 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 20377,
+    "sha256": "d8d66a25ce50be9e91f915113a4f68cb50822d7818375abb00a54723a4176f3b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 403,
+    "words": 2582,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mabel-dev--opteryx/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "Documentation.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "LLPhant/LLPhant",
+    "path": "Documentation.md",
+    "commit": "ca01430979d541855bc2775915f4788688d66595",
+    "commit_date": "2026-09-07T17:07:07+02:00",
+    "url": "https://github.com/LLPhant/LLPhant/blob/ca01430979d541855bc2775915f4788688d66595/Documentation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2023-07-28T12:29:14+02:00",
+    "stars": 1709,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-10T17:35:21+02:00",
+    "last_commit_date": "2026-05-10T17:35:21+02:00",
+    "last_commit_author": "Franco Lombardo",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1235,
+    "sha256": "44321f2166bef42bb42a0c21972b7194a313aa6270ed3654c28324aa4aa54fe9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 151,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/LLPhant--LLPhant/Documentation.md"
+}

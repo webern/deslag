@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "Helsinki-NLP/opus-mt-ru-en",
+    "path": "README.md",
+    "commit": "1f663e796e1a2187db2f04065d143dda4c634a44",
+    "commit_date": "2021-09-10T16:02:18+02:00",
+    "url": "https://huggingface.co/Helsinki-NLP/opus-mt-ru-en/blob/1f663e796e1a2187db2f04065d143dda4c634a44/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2020-04-29T13:40:09+00:00",
+    "stars": 102,
+    "found_by": "hf-models-cc-by-4.0"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-05-13T12:39:24+00:00",
+    "last_commit_date": "2021-09-10T16:02:18+02:00",
+    "last_commit_author": "Julien Chaumond",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-09-10: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 1168,
+    "sha256": "60524b40c50df59fe4106d1c83f67524287d26a96742e0359b62ab862a4cd8c2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 33,
+    "words": 120,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--Helsinki-NLP--opus-mt-ru-en/README.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "agent-feedback__items__2026-09-23-bench-compare-installs-with-npm.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "marko-js/htmljs-parser",
+    "path": "agent-feedback/items/2026-09-23-bench-compare-installs-with-npm.md",
+    "commit": "72231637425f6f98b639c90a743b46b6159b9be4",
+    "commit_date": "2026-09-23T19:27:26+00:00",
+    "url": "https://github.com/marko-js/htmljs-parser/blob/72231637425f6f98b639c90a743b46b6159b9be4/agent-feedback/items/2026-09-23-bench-compare-installs-with-npm.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": null,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-23T12:17:38-07:00",
+    "last_commit_date": "2026-09-23T12:17:38-07:00",
+    "last_commit_author": "Dylan Piercey",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 822,
+    "sha256": "395447036ac5ef5580a93de4fdd87436209ed0614949e90055b53d1ba52761d9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 12,
+    "words": 132,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/marko-js--htmljs-parser/agent-feedback/items/2026-09-23-bench-compare-installs-with-npm.md"
+}

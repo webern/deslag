@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "getsentry/sentry-python",
+    "path": "CONTRIBUTING.md",
+    "commit": "a30e62aeb1977543dfa75c935d1c18df655c06da",
+    "commit_date": "2026-09-23T17:07:38+02:00",
+    "url": "https://github.com/getsentry/sentry-python/blob/a30e62aeb1977543dfa75c935d1c18df655c06da/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-06-19T00:48:08+02:00",
+    "stars": 2206,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 35,
+    "first_commit_date": "2019-03-05T20:06:50+01:00",
+    "last_commit_date": "2026-06-18T06:03:11-06:00",
+    "last_commit_author": "Julio César Suástegui",
+    "authors": 17,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2019-03-05, before 2022-01-01; 4 of its 35 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 21522,
+    "sha256": "305d343ba852c6b93acdc95cc778bf439c7eb95d5ac653d1834fbbc2f7ee2f5b",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 371,
+    "words": 3114,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/getsentry--sentry-python/CONTRIBUTING.md"
+}

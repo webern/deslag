@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "crates__napi__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "napi-rs/napi-rs",
+    "path": "crates/napi/README.md",
+    "commit": "210bc2732c07a1e1b391d877a105bc3e896b16d2",
+    "commit_date": "2026-09-22T17:06:33+00:00",
+    "url": "https://github.com/napi-rs/napi-rs/blob/210bc2732c07a1e1b391d877a105bc3e896b16d2/crates/napi/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-04-28T16:26:38+08:00",
+    "stars": 7942,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 22,
+    "first_commit_date": "2021-09-23T01:29:09+08:00",
+    "last_commit_date": "2026-07-11T11:22:25+08:00",
+    "last_commit_author": "LongYinan",
+    "authors": 8,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-09-23, before 2022-01-01; 2 of its 22 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 11341,
+    "sha256": "b6e3fa19eceaa047ed4e85138bd14b2ca86f4f1341405d801eb3918db052fbbf",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 229,
+    "words": 1148,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/napi-rs--napi-rs/crates/napi/README.md"
+}

@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "huggingface.co",
+    "repo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "path": "README.md",
+    "commit": "e04d38a7d68c60a7a95390045400a555127ab033",
+    "commit_date": "2021-11-02T09:42:38+00:00",
+    "url": "https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/blob/e04d38a7d68c60a7a95390045400a555127ab033/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "README.md (license: in the card metadata)"
+    ],
+    "repo_first_commit_date": "2021-06-02T11:20:59+00:00",
+    "stars": 1410,
+    "found_by": "hf-models-apache-2.0"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-06-09T15:06:27+00:00",
+    "last_commit_date": "2021-11-02T09:42:38+00:00",
+    "last_commit_author": "Nils Reimers",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-11-02: all 4 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 3786,
+    "sha256": "fdc25b813b700d2681e95fcc75e18c142c007cf88a0ee34b31926cfe8fbf094b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 362,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/hf--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2/README.md"
+}

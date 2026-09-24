@@ -1,0 +1,53 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ruby-git/ruby-git",
+    "path": "CONTRIBUTING.md",
+    "commit": "ea4c1975e5f3385d6c3f8c8937ceefa19a3ceffd",
+    "commit_date": "2026-09-22T16:15:27-07:00",
+    "url": "https://github.com/ruby-git/ruby-git/blob/ea4c1975e5f3385d6c3f8c8937ceefa19a3ceffd/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1797,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 60,
+    "first_commit_date": "2018-06-20T06:58:17-05:00",
+    "last_commit_date": "2026-09-22T15:07:09-07:00",
+    "last_commit_author": "James Couball",
+    "authors": 4,
+    "ai_commits": 10,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-06-20, before 2022-01-01; 10 of its 60 commits are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 58077,
+    "sha256": "bd7cd00b547589d66b4c7c6dc3ca3bbd3a5eeb676f4af26d9e7ce0ba02a6c622",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1249,
+    "words": 7753,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ruby-git--ruby-git/CONTRIBUTING.md"
+}

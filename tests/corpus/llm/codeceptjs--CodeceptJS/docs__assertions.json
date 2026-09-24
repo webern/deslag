@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__assertions.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "codeceptjs/CodeceptJS",
+    "path": "docs/assertions.md",
+    "commit": "55b7195a32f0e999d6d544a909feb31f3edd36cf",
+    "commit_date": "2026-09-22T17:33:51+00:00",
+    "url": "https://github.com/codeceptjs/CodeceptJS/blob/55b7195a32f0e999d6d544a909feb31f3edd36cf/docs/assertions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4240,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-20T12:53:50+03:00",
+    "last_commit_date": "2026-04-20T12:53:50+03:00",
+    "last_commit_author": "Michael Bodnarchuk",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 15996,
+    "sha256": "03a4531dc0a5d47d51e5f145ff82a8f7a8458b705d5c1a2b17b7652db9716fb7",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 415,
+    "words": 2066,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/codeceptjs--CodeceptJS/docs/assertions.md"
+}

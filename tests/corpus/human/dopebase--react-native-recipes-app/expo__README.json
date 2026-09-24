@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "expo__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "dopebase/react-native-recipes-app",
+    "path": ".expo/README.md",
+    "commit": "3320e892c211dec41327a74eb44d3f43de078af4",
+    "commit_date": "2021-12-22T10:20:20-08:00",
+    "url": "https://github.com/dopebase/react-native-recipes-app/blob/3320e892c211dec41327a74eb44d3f43de078af4/.expo/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-22T20:53:48-07:00",
+    "stars": null,
+    "found_by": "github-topic:recipes"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-02-23T12:12:37+01:00",
+    "last_commit_date": "2021-02-23T12:12:37+01:00",
+    "last_commit_author": "Ezichi Chukwudi",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2021-02-23: all 1 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 795,
+    "sha256": "013b883e814723f70c44273a95fe85eeb1a3ad32229d0ef285e9d9ade8505edf",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 17,
+    "words": 126,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/dopebase--react-native-recipes-app/.expo/README.md"
+}

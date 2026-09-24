@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "charts__kube-prometheus-stack__README.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "prometheus-community/helm-charts",
+    "path": "charts/kube-prometheus-stack/README.md",
+    "commit": "6eced96822b9ad2cb3ba54c19c83372a6aab2289",
+    "commit_date": "2026-09-22T23:35:31+02:00",
+    "url": "https://github.com/prometheus-community/helm-charts/blob/6eced96822b9ad2cb3ba54c19c83372a6aab2289/charts/kube-prometheus-stack/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6195,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 93,
+    "first_commit_date": "2020-09-09T11:51:50-04:00",
+    "last_commit_date": "2026-09-14T02:27:31-04:00",
+    "last_commit_author": "Ilia Lazebnik",
+    "authors": 55,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-09-09, before 2022-01-01; 1 of its 93 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 26588,
+    "sha256": "995c7c3966f24057beb9eccfaf2757aeab54cb80f78a3901a9227b288e52a0a1",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 468,
+    "words": 2911,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/prometheus-community--helm-charts/charts/kube-prometheus-stack/README.md"
+}

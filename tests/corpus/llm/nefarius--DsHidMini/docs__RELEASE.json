@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__RELEASE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nefarius/DsHidMini",
+    "path": "docs/RELEASE.md",
+    "commit": "aa2c8ac251ce5b6cb35ae6e87953c55c473e13ca",
+    "commit_date": "2026-09-23T21:43:12+02:00",
+    "url": "https://github.com/nefarius/DsHidMini/blob/aa2c8ac251ce5b6cb35ae6e87953c55c473e13ca/docs/RELEASE.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-15T18:49:04+01:00",
+    "stars": 1810,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2026-09-09T20:57:59+02:00",
+    "last_commit_date": "2026-09-19T15:23:25+02:00",
+    "last_commit_author": "Benjamin Höglinger-Stelzer",
+    "authors": 1,
+    "ai_commits": 7,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 7 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 15275,
+    "sha256": "a8315fea2fc13b58c81dd5e56445626a3fa8b83e01be80c00300a6da3ed1ed86",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 240,
+    "words": 2015,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/nefarius--DsHidMini/docs/RELEASE.md"
+}

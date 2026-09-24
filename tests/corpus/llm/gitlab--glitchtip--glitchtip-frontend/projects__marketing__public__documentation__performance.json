@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "projects__marketing__public__documentation__performance.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "glitchtip/glitchtip-frontend",
+    "path": "projects/marketing/public/documentation/performance.md",
+    "commit": "c35a13764f3aeb28d32f250660acae183a4ad41c",
+    "commit_date": "2026-09-22T21:08:05+00:00",
+    "url": "https://gitlab.com/glitchtip/glitchtip-frontend/-/blob/c35a13764f3aeb28d32f250660acae183a4ad41c/projects/marketing/public/documentation/performance.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-20T16:52:22-05:00",
+    "stars": 69,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-17T12:31:29-04:00",
+    "last_commit_date": "2026-03-17T12:31:29-04:00",
+    "last_commit_author": "David Burke",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1881,
+    "sha256": "3396ed7735a94f7442b289de3a6370c5600b1446b01750846009573f8620eb18",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 250,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gitlab--glitchtip--glitchtip-frontend/projects/marketing/public/documentation/performance.md"
+}

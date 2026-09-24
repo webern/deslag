@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "BREAKING_CHANGES.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "GitTools/GitVersion",
+    "path": "BREAKING_CHANGES.md",
+    "commit": "9c580a9de7fd127ebab81e3ddc58954290e7d81a",
+    "commit_date": "2026-09-22T06:54:35+02:00",
+    "url": "https://github.com/GitTools/GitVersion/blob/9c580a9de7fd127ebab81e3ddc58954290e7d81a/BREAKING_CHANGES.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3144,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 60,
+    "first_commit_date": "2020-07-09T09:59:07+02:00",
+    "last_commit_date": "2026-09-17T23:26:06+02:00",
+    "last_commit_author": "Artur Stolear",
+    "authors": 10,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-07-09, before 2022-01-01; 1 of its 60 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 24908,
+    "sha256": "d74d24815a782133eaefdb14b3e875fe3a158a5ee81c7c9773e75bbbb01ab1ca",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 369,
+    "words": 3099,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/GitTools--GitVersion/BREAKING_CHANGES.md"
+}

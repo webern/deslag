@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__book__component-guide__step-operators__ssh.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "zenml-io/zenml",
+    "path": "docs/book/component-guide/step-operators/ssh.md",
+    "commit": "cc064f1005e444fade353aa521bbce8988a45874",
+    "commit_date": "2026-09-15T12:30:43+02:00",
+    "url": "https://github.com/zenml-io/zenml/blob/cc064f1005e444fade353aa521bbce8988a45874/docs/book/component-guide/step-operators/ssh.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-11-19T10:25:47+01:00",
+    "stars": 5589,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-02T11:13:01-07:00",
+    "last_commit_date": "2026-07-02T11:13:01-07:00",
+    "last_commit_author": "Hamza Tahir",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9263,
+    "sha256": "bf8446d64af8642fc37faa55ee2ea99b299d1e1b56bfc0952f40856a7f0db0d7",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 213,
+    "words": 1356,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/zenml-io--zenml/docs/book/component-guide/step-operators/ssh.md"
+}

@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "reactiveui/ReactiveUI",
+    "path": "CONTRIBUTING.md",
+    "commit": "a3e8bd51e0f4cc9f5a1402483e3b0daa833d1410",
+    "commit_date": "2026-09-21T12:09:38+10:00",
+    "url": "https://github.com/reactiveui/ReactiveUI/blob/a3e8bd51e0f4cc9f5a1402483e3b0daa833d1410/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8540,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2018-01-06T09:58:37-06:00",
+    "last_commit_date": "2026-04-03T15:33:51+11:00",
+    "last_commit_author": "Glenn",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-06, before 2022-01-01; 1 of its 7 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1231,
+    "sha256": "2bf8a1103abbf9448a1209b7aaf80a8947aa8f0a7df6003c6e468c099c84ec8c",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 128,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/reactiveui--ReactiveUI/CONTRIBUTING.md"
+}

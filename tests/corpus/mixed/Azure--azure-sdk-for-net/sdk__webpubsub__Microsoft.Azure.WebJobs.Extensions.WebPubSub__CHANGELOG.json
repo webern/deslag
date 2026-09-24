@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "sdk__webpubsub__Microsoft.Azure.WebJobs.Extensions.WebPubSub__CHANGELOG.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-sdk-for-net",
+    "path": "sdk/webpubsub/Microsoft.Azure.WebJobs.Extensions.WebPubSub/CHANGELOG.md",
+    "commit": "a4c5a1282f25aa89b49e7f92670288aac0eee9f2",
+    "commit_date": "2026-09-23T10:37:50-07:00",
+    "url": "https://github.com/Azure/azure-sdk-for-net/blob/a4c5a1282f25aa89b49e7f92670288aac0eee9f2/sdk/webpubsub/Microsoft.Azure.WebJobs.Extensions.WebPubSub/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 6058,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 36,
+    "first_commit_date": "2021-04-29T12:18:40+08:00",
+    "last_commit_date": "2026-06-03T15:57:34+10:00",
+    "last_commit_author": "yzt",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2021-04-29, before 2022-01-01; 1 of its 36 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3347,
+    "sha256": "81cadd8f224ba8c127d8d6d0e9744f9217e122810e2ccbed36bdf3805d32a267",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 109,
+    "words": 438,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Azure--azure-sdk-for-net/sdk/webpubsub/Microsoft.Azure.WebJobs.Extensions.WebPubSub/CHANGELOG.md"
+}

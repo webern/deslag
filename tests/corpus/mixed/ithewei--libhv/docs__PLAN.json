@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__PLAN.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ithewei/libhv",
+    "path": "docs/PLAN.md",
+    "commit": "e02e42bf424e29a34ca48b03e376edd7ab58f389",
+    "commit_date": "2026-09-23T21:53:31+08:00",
+    "url": "https://github.com/ithewei/libhv/blob/e02e42bf424e29a34ca48b03e376edd7ab58f389/docs/PLAN.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-08-28T13:56:25+08:00",
+    "stars": 7555,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2020-12-19T01:41:40+08:00",
+    "last_commit_date": "2026-09-01T14:54:26+08:00",
+    "last_commit_author": "ithewei",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2020-12-19, before 2022-01-01; 3 of its 23 commits are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 554,
+    "sha256": "eb2441a28f5c9be987b5269d24f95a083a6c8ff6003bb1cf7a6bb8ef91cf7277",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 80,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ithewei--libhv/docs/PLAN.md"
+}

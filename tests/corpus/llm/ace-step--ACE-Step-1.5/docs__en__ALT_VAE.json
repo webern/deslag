@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__en__ALT_VAE.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "ace-step/ACE-Step-1.5",
+    "path": "docs/en/ALT_VAE.md",
+    "commit": "ca1e85fe9430179831e6bc6be790c332190a3866",
+    "commit_date": "2026-08-29T03:25:18-05:00",
+    "url": "https://github.com/ace-step/ACE-Step-1.5/blob/ca1e85fe9430179831e6bc6be790c332190a3866/docs/en/ALT_VAE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-09-04T10:00:08+08:00",
+    "stars": 12830,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-24T09:32:10+08:00",
+    "last_commit_date": "2026-04-24T09:45:19+08:00",
+    "last_commit_author": "Gong Junmin",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3912,
+    "sha256": "261a01fcdfaf48cf4bc7c2804192a47d3bb25b1d399e6882a8825746ea0686b3",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 499,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ace-step--ACE-Step-1.5/docs/en/ALT_VAE.md"
+}

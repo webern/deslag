@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "claude__skills__update-versions__SKILL.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "akuity/kargo",
+    "path": ".claude/skills/update-versions/SKILL.md",
+    "commit": "97a6dad707d17a672426196bcf8a2f5d5f096452",
+    "commit_date": "2026-09-23T09:07:36+00:00",
+    "url": "https://github.com/akuity/kargo/blob/97a6dad707d17a672426196bcf8a2f5d5f096452/.claude/skills/update-versions/SKILL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2022-07-14T18:14:51-04:00",
+    "stars": 3672,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-22T11:57:52-04:00",
+    "last_commit_date": "2026-06-22T11:57:52-04:00",
+    "last_commit_author": "Kent Rancourt",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 1 commits that touched it is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4422,
+    "sha256": "ccfeee10ae75f7a2fb388acd8e05f1cfe43b5521f649980e99c2103da9b1014e",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 133,
+    "words": 617,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/akuity--kargo/.claude/skills/update-versions/SKILL.md"
+}

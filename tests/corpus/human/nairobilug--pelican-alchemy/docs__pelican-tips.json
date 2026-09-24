@@ -1,0 +1,50 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__pelican-tips.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "nairobilug/pelican-alchemy",
+    "path": "docs/pelican-tips.md",
+    "commit": "fd70e764b4ee100b4c3fa961336af32a3b88f20a",
+    "commit_date": "2019-04-28T16:09:36+02:00",
+    "url": "https://github.com/nairobilug/pelican-alchemy/blob/fd70e764b4ee100b4c3fa961336af32a3b88f20a/docs/pelican-tips.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 141,
+    "found_by": "sg-topic:static-site-generator"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2019-12-03T16:13:05+03:00",
+    "last_commit_date": "2020-01-06T12:50:02+01:00",
+    "last_commit_author": "Michiel Scholten",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "not edited since 2020-01-06: all 3 commits that touched it predate 2022-01-01 and none carries an AI agent's mark"
+  },
+  "content": {
+    "size_bytes": 2412,
+    "sha256": "6ccafc77c7227ae4df9e4514a48f534caa290aaa0cf8b738e2b7852f92cfb4e8",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 77,
+    "words": 264,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/nairobilug--pelican-alchemy/docs/pelican-tips.md"
+}

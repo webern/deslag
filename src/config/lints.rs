@@ -140,7 +140,7 @@ impl Merge for MaxEmphasis {
 }
 
 /// `lints.repo_layout`: a file must have a section, under `heading`, whose first code block lists
-/// between `min_entries` and `max_entries` paths that exist.
+/// between `min_entries` and `max_entries` paths that exist, in lines no wider than `max_width`.
 ///
 /// Unlike the other lints, the table itself turns the check on: a file it applies to must have
 /// the section even when the table sets no field.
@@ -156,8 +156,11 @@ pub struct RepoLayout {
     /// The most entries the layout may list.
     #[serde(default)]
     pub max_entries: Option<u64>,
-    /// Replaces the advice in the report. `{path}`, `{heading}`, `{min_entries}` and
-    /// `{max_entries}` in it are replaced with the file's path and its settings.
+    /// The widest a line of the layout may be, in characters.
+    #[serde(default)]
+    pub max_width: Option<u64>,
+    /// Replaces the advice in the report. `{path}`, `{heading}`, `{min_entries}`,
+    /// `{max_entries}` and `{max_width}` in it are replaced with the file's path and its settings.
     #[serde(default)]
     pub message: Option<String>,
 }
@@ -169,10 +172,17 @@ impl RepoLayout {
     pub const DEFAULT_MIN_ENTRIES: u64 = 5;
     /// The most entries when none is set.
     pub const DEFAULT_MAX_ENTRIES: u64 = 15;
+    /// The widest line when none is set.
+    pub const DEFAULT_MAX_WIDTH: u64 = 100;
 
     /// The heading, or the default.
     pub fn heading(&self) -> &str {
         self.heading.as_deref().unwrap_or(Self::DEFAULT_HEADING)
+    }
+
+    /// The widest line, or the default.
+    pub fn max_width(&self) -> u64 {
+        self.max_width.unwrap_or(Self::DEFAULT_MAX_WIDTH)
     }
 
     /// The fewest and the most entries, defaults filled in, or why the two contradict each other.
@@ -209,6 +219,9 @@ impl Merge for RepoLayout {
         }
         if over.max_entries.is_some() {
             self.max_entries = over.max_entries;
+        }
+        if over.max_width.is_some() {
+            self.max_width = over.max_width;
         }
         if over.message.is_some() {
             self.message.clone_from(&over.message);

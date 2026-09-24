@@ -140,8 +140,9 @@ deslag/
 ````
 
 The first line naming the root is optional. Every path starts in one column, every `<-` sits in
-one column, every entry has a description, and no line is wider than 100 characters. Paths are
-relative to the Markdown file's directory and must exist; one ending in `/` must be a directory.
+one column, every entry has a description, and no line is wider than `max_width` characters. Paths
+are relative to the Markdown file's directory and must exist; one ending in `/` must be a
+directory.
 
 ```toml
 [[md.overrides]]
@@ -151,8 +152,8 @@ lints.repo_layout = { min_entries = 5, max_entries = 12 }   # the defaults are 5
 
 Unlike the other lints, the table alone turns it on, so apply it through an override to the files
 that need a layout. `heading` names another section, matched at any level and in any case.
-`message` works as it does for the other lints, with `{path}`, `{heading}`, `{min_entries}` and
-`{max_entries}`.
+`max_width` defaults to 100. `message` works as it does for the other lints, with `{path}`,
+`{heading}`, `{min_entries}`, `{max_entries}` and `{max_width}`.
 
 ## Build
 

@@ -115,7 +115,7 @@ max_percent = 1.0                # the share of the prose the spans may cover
 
 [[md.overrides]]
 globs = ["/AGENTS.md"]
-lints.repo_layout = { min_entries = 5, max_entries = 12 }   # heading is optional too
+lints.repo_layout = { min_entries = 5, max_entries = 12 }   # also heading, max_width
 ```
 
 `schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
@@ -184,14 +184,15 @@ layout is the first code block in it. Each line of the block is one of:
 - a **continuation**: a line starting in the column of the description above it;
 - blank, which ends a description.
 
-The first entry fixes the column of every path and every `<-`. A line that is none of these or is
-wider than 100 characters, and an entry that is not one relative path, lacks a description, or is
-out of column, is `Malformed`.
-`read` does all of this from the text and returns a `Layout`: the entries and the malformed lines.
-`check` adds the rest: a path is joined to the Markdown file's directory and must exist on disk,
-and one ending in `/` must be a directory. The file fails with a `Problem` list: no section, or no
-block, alone; otherwise the count, when it is outside `min_entries` to `max_entries` (default 5 to
-15), then each line's problems in order. The default advice shows an example layout to copy.
+The first entry fixes the column of every path and every `<-`. A line that is none of these, an
+entry that is not one relative path, lacks a description, or is out of column, is `Malformed`.
+`read` does all of this from the text and returns a `Layout`: the entries, the malformed lines,
+and each line's width. `check` adds the rest: a line may be at most `max_width` (default 100)
+characters wide, trailing whitespace aside; a path is joined to the Markdown file's directory and
+must exist on disk, and one ending in `/` must be a directory. The file fails with a `Problem`
+list: no section, or no block, alone; otherwise the count, when it is outside `min_entries` to
+`max_entries` (default 5 to 15), then each line's problems in order. The default advice shows an
+example layout to copy.
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's

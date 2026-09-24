@@ -78,6 +78,7 @@ fn reading_needs_only_the_text() {
                 ),
                 (9, Malformed::NotOnePath),
             ],
+            widths: vec![(6, 5), (7, 17), (8, 17), (9, 17)],
         })
     );
     assert_eq!(read("# A\n", "Repository layout"), Err(Problem::NoSection));
@@ -228,35 +229,40 @@ fn a_continuation_must_sit_under_the_description() {
 }
 
 #[test]
-fn no_line_is_wider_than_100_characters() {
+fn no_line_is_wider_than_max_width() {
     let repo = tree();
-    let layout = |rows: &str| format!("## Repository layout\n\n```\n{rows}\n```\n");
-    // An entry `width` characters wide.
-    let entry = |width: usize| format!("  Makefile  <- {}", "x".repeat(width - 15));
-
-    let text = layout(&format!("{}   ", entry(100)));
+    let narrow = RepoLayout {
+        max_width: Some(20),
+        ..loose()
+    };
+    // Line 4 is 20 wide before its trailing spaces, and line 7 continues line 6.
+    let text = "## Repository layout\n\n```\n  Makefile  <- abcde   \n  src/      <- abcdef\n  docs/     <- a\n               abcdef\n```\n";
     assert_eq!(
-        problems(&repo, &text, &loose()),
-        vec![],
-        "trailing whitespace is not counted"
+        problems(&repo, text, &narrow),
+        vec![
+            Problem::Wide { line: 5, width: 21 },
+            Problem::Wide { line: 7, width: 21 },
+        ]
     );
+}
 
-    let text = layout(&entry(101));
-    assert_eq!(
-        problems(&repo, &text, &loose()),
-        vec![format(4, Malformed::Wide { width: 101 })]
-    );
+#[test]
+fn the_default_max_width_is_100() {
+    let repo = tree();
+    let layout = |width: usize| {
+        format!(
+            "## Repository layout\n\n```\n  Makefile  <- {}\n```\n",
+            "x".repeat(width - 15)
+        )
+    };
 
-    let text = layout(&format!(
-        "{}\n{}{}",
-        entry(20),
-        " ".repeat(15),
-        "x".repeat(86)
-    ));
+    assert_eq!(problems(&repo, &layout(100), &loose()), vec![]);
     assert_eq!(
-        problems(&repo, &text, &loose()),
-        vec![format(5, Malformed::Wide { width: 101 })],
-        "a continuation is held to the same width"
+        problems(&repo, &layout(101), &loose()),
+        vec![Problem::Wide {
+            line: 4,
+            width: 101
+        }]
     );
 }
 
@@ -441,15 +447,15 @@ fn a_config_message_replaces_the_advice() {
     let repo = tree();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\n[md.lints.repo_layout]\nmax_entries = 9\n\
-         message = \"Give {path} a {heading} of {min_entries} to {max_entries}.\"\n",
+        "schema_version = 1\n\n[md.lints.repo_layout]\nmax_entries = 9\nmax_width = 80\n\
+         message = \"Give {path} a {heading} of {min_entries} to {max_entries}, {max_width} wide.\"\n",
     );
     repo.write("AGENTS.md", "# A\n");
 
     let stderr = stderr(&repo.check());
 
     assert!(
-        stderr.contains("section.\n\nGive AGENTS.md a Repository layout of 5 to 9.\n"),
+        stderr.contains("section.\n\nGive AGENTS.md a Repository layout of 5 to 9, 80 wide.\n"),
         "stderr: {stderr}"
     );
 }

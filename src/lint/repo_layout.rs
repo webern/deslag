@@ -13,18 +13,17 @@
 //!
 //! A first line naming the root, unindented and ending in `/`, is not an entry, and blank lines
 //! are skipped. Every entry's path starts in the first entry's column and every `<-` sits in the
-//! first entry's column. No line is wider than [`MAX_WIDTH`] characters. A path is relative to
-//! the directory of the Markdown file, and one ending in `/` must be a directory. Paths are looked
-//! up on disk, so a path git ignores, such as a build directory, passes only where it has been
-//! built.
+//! first entry's column. A path is relative to the directory of the Markdown file, and one ending
+//! in `/` must be a directory. Paths are looked up on disk, so a path git ignores, such as a build
+//! directory, passes only where it has been built.
 //!
 //! A file fails when it has no such section or block, when it lists too few or too many entries,
-//! when a line is out of format, or when a listed path does not exist. The report lists every
-//! problem with its line.
+//! when a line is too wide or out of format, or when a listed path does not exist. The report
+//! lists every problem with its line.
 //!
 //! [`read`] needs only the text: it finds the section and reads the layout, so it runs on any
-//! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits
-//! and the paths.
+//! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits,
+//! the width and the paths.
 
 use std::path::Path;
 
@@ -39,9 +38,6 @@ pub const HEADING: &str = "ERROR: deslag detected a broken repository layout!";
 /// What separates an entry's path from its description.
 pub const ARROW: &str = "<-";
 
-/// The widest a line of the layout may be, in characters.
-pub const MAX_WIDTH: usize = 100;
-
 /// A file whose layout fails its settings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Over {
@@ -51,6 +47,8 @@ pub struct Over {
     pub min_entries: u64,
     /// The most entries allowed.
     pub max_entries: u64,
+    /// The widest a line may be.
+    pub max_width: u64,
     /// What is wrong, in the order of the file.
     pub problems: Vec<Problem>,
     /// The config's replacement for the default advice, if it has one for this file.
@@ -71,6 +69,13 @@ pub enum Problem {
     Count {
         /// How many it lists.
         entries: u64,
+    },
+    /// A line of the layout is wider than allowed.
+    Wide {
+        /// The line.
+        line: usize,
+        /// Its width.
+        width: usize,
     },
     /// A line of the layout is out of format.
     Format {
@@ -98,11 +103,6 @@ pub enum Problem {
 /// How a line of the layout is out of format. Columns are 1-based and counted in characters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Malformed {
-    /// The line, not counting trailing whitespace, is wider than [`MAX_WIDTH`].
-    Wide {
-        /// Its width.
-        width: usize,
-    },
     /// The line is neither an entry nor a description continued under the one above.
     Stray,
     /// The text before `<-` is not one path.
@@ -142,6 +142,9 @@ pub struct Layout {
     pub entries: Vec<Entry>,
     /// Each line out of format, and how, in order.
     pub malformed: Vec<(usize, Malformed)>,
+    /// Each line that is not blank, and its width in characters without trailing whitespace, in
+    /// order.
+    pub widths: Vec<(usize, usize)>,
 }
 
 /// One entry of a layout.
@@ -166,6 +169,7 @@ pub fn read(text: &str, heading: &str) -> Result<Layout, Problem> {
         heading_line: block.heading_line,
         entries: reader.entries,
         malformed: reader.malformed,
+        widths: reader.widths,
     })
 }
 
@@ -176,21 +180,30 @@ pub fn check(text: &str, dir: &Path, settings: Option<&RepoLayout>) -> Option<Ov
     let settings = settings?;
     let heading = settings.heading();
     let (min_entries, max_entries) = settings.limits().ok()?;
+    let max_width = settings.max_width();
 
     let problems = match read(text, heading) {
         Err(problem) => vec![problem],
         Ok(layout) => {
             let entries = layout.entries.len() as u64;
             let mut problems: Vec<Problem> = layout
-                .malformed
+                .widths
                 .into_iter()
-                .map(|(line, malformed)| Problem::Format { line, malformed })
+                .filter(|&(_, width)| width as u64 > max_width)
+                .map(|(line, width)| Problem::Wide { line, width })
                 .collect();
+            problems.extend(
+                layout
+                    .malformed
+                    .into_iter()
+                    .map(|(line, malformed)| Problem::Format { line, malformed }),
+            );
             problems.extend(layout.entries.iter().filter_map(|entry| entry.find(dir)));
             if !(min_entries..=max_entries).contains(&entries) {
                 problems.push(Problem::Count { entries });
             }
-            // A stable sort: the count comes first, and a line's format problems before its path's.
+            // A stable sort: the count comes first, then each line's width, format and path
+            // problems, in that order.
             problems.sort_by_key(Problem::line);
             problems
         }
@@ -202,6 +215,7 @@ pub fn check(text: &str, dir: &Path, settings: Option<&RepoLayout>) -> Option<Ov
         heading: heading.to_string(),
         min_entries,
         max_entries,
+        max_width,
         problems,
         message: settings.message.clone(),
     })
@@ -216,8 +230,9 @@ pub fn render(path: &str, over: &Over) -> String {
             .replace("{path}", path)
             .replace("{heading}", heading)
             .replace("{min_entries}", &over.min_entries.to_string())
-            .replace("{max_entries}", &over.max_entries.to_string()),
-        None => default_advice(path, heading, &range),
+            .replace("{max_entries}", &over.max_entries.to_string())
+            .replace("{max_width}", &over.max_width.to_string()),
+        None => default_advice(path, heading, &range, over.max_width),
     };
 
     if over.problems == [Problem::NoSection] {
@@ -226,7 +241,7 @@ pub fn render(path: &str, over: &Over) -> String {
     let problems: String = over
         .problems
         .iter()
-        .map(|problem| format!("\n  {}", problem.describe(heading, &range)))
+        .map(|problem| format!("\n  {}", problem.describe(over, &range)))
         .collect();
     format!(
         "{HEADING}\n\
@@ -274,17 +289,17 @@ impl Problem {
         match self {
             Problem::NoSection | Problem::Count { .. } => None,
             Problem::NoBlock { line }
+            | Problem::Wide { line, .. }
             | Problem::Format { line, .. }
             | Problem::Missing { line, .. }
             | Problem::NotDirectory { line, .. } => Some(*line),
         }
     }
 
-    /// This problem as a line of the report, for a section headed `heading` whose entries must
-    /// number `range`.
-    fn describe(&self, heading: &str, range: &str) -> String {
+    /// This problem as a line of the report for `over`, whose entries must number `range`.
+    fn describe(&self, over: &Over, range: &str) -> String {
         match self {
-            Problem::NoSection => format!("there is no \"{heading}\" section"),
+            Problem::NoSection => format!("there is no \"{}\" section", over.heading),
             Problem::NoBlock { line } => {
                 format!("line {line}: the heading has no code block under it")
             }
@@ -294,6 +309,10 @@ impl Problem {
                     1 => "1 entry".to_string(),
                     entries => format!("{entries} entries"),
                 }
+            ),
+            Problem::Wide { line, width } => format!(
+                "line {line}: the line is {width} characters wide; shorten it to {} or fewer",
+                over.max_width
             ),
             Problem::Format { line, malformed } => format!("line {line}: {}", malformed.describe()),
             Problem::Missing { line, path } => format!("line {line}: {path} does not exist"),
@@ -307,9 +326,6 @@ impl Problem {
 impl Malformed {
     fn describe(&self) -> String {
         match self {
-            Malformed::Wide { width } => {
-                format!("the line is {width} characters wide; shorten it to {MAX_WIDTH} or fewer")
-            }
             Malformed::Stray => format!(
                 "this is neither an entry, `path  {ARROW} what it holds`, nor a description \
                  continued from the line above and aligned under it"
@@ -336,8 +352,9 @@ repo/
   src/       <- the source
   docs/      <- the design docs";
 
-/// The advice for a broken layout in the file at `path`, whose entries must number `range`.
-fn default_advice(path: &str, heading: &str, range: &str) -> String {
+/// The advice for a broken layout in the file at `path`, whose entries must number `range` and
+/// whose lines must be at most `max_width` wide.
+fn default_advice(path: &str, heading: &str, range: &str, max_width: u64) -> String {
     format!(
         "The \"{heading}\" section is where an agent new to this repo learns its way around, so \
          it must be short and true. Under the heading, put one code block listing {range} of the \
@@ -352,7 +369,7 @@ fn default_advice(path: &str, heading: &str, range: &str) -> String {
          \n\
          The first line naming the root is optional. Every path starts in one column, every \
          `{ARROW}` sits in one column, every entry has a description, and no line is wider than \
-         {MAX_WIDTH} characters. Paths must exist, and one ending in `/` must be a directory.\n\
+         {max_width} characters. Paths must exist, and one ending in `/` must be a directory.\n\
          \n\
          Do not change the limits or the heading to get past this check. Only a human can tell \
          you to do that, and I am a linter, not a human."
@@ -434,11 +451,13 @@ impl Block {
     }
 }
 
-/// Reads a layout block a line at a time, gathering its entries and the lines out of format.
+/// Reads a layout block a line at a time, gathering its entries, the lines out of format, and the
+/// width of each line.
 #[derive(Default)]
 struct Reader {
     entries: Vec<Entry>,
     malformed: Vec<(usize, Malformed)>,
+    widths: Vec<(usize, usize)>,
     /// Whether a line that is not blank has been read, after which no line is the root.
     started: bool,
     /// The 0-based column the first entry's path starts in.
@@ -456,10 +475,7 @@ impl Reader {
             self.description_column = None;
             return;
         }
-        let width = row.trim_end().chars().count();
-        if width > MAX_WIDTH {
-            self.malformed.push((line, Malformed::Wide { width }));
-        }
+        self.widths.push((line, row.trim_end().chars().count()));
         let indent = row.chars().take_while(|c| c.is_whitespace()).count();
         let is_root = !self.started
             && indent == 0

@@ -1063,6 +1063,9 @@ fn the_corpus_layouts_read_from_the_text_alone() {
             for (line, malformed) in &layout.malformed {
                 assert!(in_section(*line), "{slug}: line {line}: {malformed:?}");
             }
+            for (line, width) in &layout.widths {
+                assert!(in_section(*line), "{slug}: line {line} is {width} wide");
+            }
         }
     }
     assert!(

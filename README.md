@@ -7,6 +7,7 @@ The first rule is about size. An agent editing a Markdown file makes it longer a
 anything out, so every file gets a byte budget and a file that goes over it fails the run. The
 second is about emphasis: a file with more bold, italics and ALL CAPS than the config allows fails
 too. The third asks a file such as AGENTS.md for a short index of the repo whose paths all exist.
+The fourth bans characters that agents write and people rarely do, such as the em dash.
 
 ## Install
 
@@ -154,6 +155,42 @@ Unlike the other lints, the table alone turns it on, so apply it through an over
 that need a layout. `heading` names another section, matched at any level and in any case.
 `max_width` defaults to 100. `message` works as it does for the other lints, with `{path}`,
 `{heading}`, `{min_entries}`, `{max_entries}` and `{max_width}`.
+
+### Banned characters
+
+`banned_chars` fails a file whose text holds a banned character, and says what to write instead.
+Code blocks and code spans are not checked, so a diagram in a fenced block may use any character.
+
+```toml
+[md.lints.banned_chars]                       # the table alone turns it on
+groups = { emoji = true, arrows = false }     # switch groups on or off
+allow = ["\u00d7"]                            # never banned
+ban = { "\u00ae" = "(R)", "\u2122" = "" }     # banned too; "" means delete it
+```
+
+| Group         | Characters                                 | Write instead         | Default |
+|---------------|--------------------------------------------|-----------------------|---------|
+| `dashes`      | em dash, en dash, minus sign, other dashes | `-`                   | on      |
+| `arrows`      | arrows                                     | `->`, `<-`, `=>`      | on      |
+| `ellipsis`    | the ellipsis                               | `...`                 | on      |
+| `bullets`     | bullets, the middle dot, geometric shapes  | `-`                   | on      |
+| `math`        | multiplication and comparison signs        | `x`, `>=`, `<=`, `!=` | on      |
+| `checks`      | check marks and crosses                    | yes, no               | on      |
+| `section`     | the section sign                           | section               | on      |
+| `box_drawing` | box-drawing characters, block elements     | `-`, `\|`, `+`        | on      |
+| `spaces`      | the no-break space, other unusual spaces   | a space               | on      |
+| `invisible`   | zero-width space, soft hyphen, tags        | nothing               | on      |
+| `quotes`      | curly quotes and apostrophes               | `"`, `'`              | on      |
+| `emoji`       | emoji                                      | nothing               | off     |
+
+The defaults flag 241 of the 400 files in the test corpus written by agents, and 57 of 400 written
+by people before 2022. Emoji are more common in the files people wrote, so they are off.
+
+`allow` beats `ban`, and `ban` beats the groups. An override sets only the groups it names, and
+its `allow` or `ban` replaces the section's. Write a character as itself or as an escape such as
+`"\u2014"`, which TOML, YAML and JSON all read. The file is read as written, so an HTML entity such
+as `&mdash;` is not a banned character. `message` works as it does for the other lints, with
+`{path}`.
 
 ## Build
 

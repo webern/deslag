@@ -4,6 +4,7 @@
 //! section of the config that selects it, and runs that section's lints with the settings the
 //! config resolves for the file.
 
+pub mod banned_chars;
 pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod repo_layout;
@@ -32,6 +33,8 @@ pub enum Violation {
     MaxEmphasis(max_emphasis::Over),
     /// The file's index of the repo is missing, too long or too short, out of format, or stale.
     RepoLayout(repo_layout::Over),
+    /// The file holds characters the config bans.
+    BannedChars(banned_chars::Over),
 }
 
 impl Finding {
@@ -41,6 +44,7 @@ impl Finding {
             Violation::MaxSizeBytes(over) => max_size_bytes::render(&self.path, over),
             Violation::MaxEmphasis(over) => max_emphasis::render(&self.path, over),
             Violation::RepoLayout(over) => repo_layout::render(&self.path, over),
+            Violation::BannedChars(over) => banned_chars::render(&self.path, over),
         }
     }
 }
@@ -80,6 +84,10 @@ impl Report {
             (
                 count(|violation| matches!(violation, Violation::RepoLayout(_))),
                 "with a broken repository layout",
+            ),
+            (
+                count(|violation| matches!(violation, Violation::BannedChars(_))),
+                "with banned characters",
             ),
         ];
         tallies
@@ -131,6 +139,7 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
             .map(Violation::MaxSizeBytes),
             max_emphasis::check(&text, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
             repo_layout::check(&text, dir, lints.repo_layout.as_ref()).map(Violation::RepoLayout),
+            banned_chars::check(&text, lints.banned_chars.as_ref()).map(Violation::BannedChars),
         ];
         report
             .findings

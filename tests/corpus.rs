@@ -13,10 +13,10 @@ mod common;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::config::{MaxEmphasis, RepoLayout};
-use deslag::lint::max_emphasis;
+use deslag::config::{BannedChars, MaxEmphasis, RepoLayout};
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
+use deslag::lint::{banned_chars, max_emphasis};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
@@ -1084,4 +1084,99 @@ fn the_corpus_layouts_read_from_the_text_alone() {
     .expect("a layout");
     assert!(!layout.entries.is_empty(), "{layout:?}");
     assert_eq!(layout.malformed, vec![], "{layout:?}");
+}
+
+#[test]
+fn the_corpus_characters_are_found_on_their_lines() {
+    let fixtures = load_corpus();
+    let mut found = 0;
+    for fixture in &fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let lines: Vec<&str> = text.lines().collect();
+        for hit in banned_chars::scan(&text) {
+            found += 1;
+            assert!(!hit.ch.is_ascii(), "{}: {hit:?}", fixture.slug());
+            let line = lines.get(hit.line - 1).unwrap_or_else(|| {
+                panic!("{}: {hit:?} is past the end of the file", fixture.slug())
+            });
+            assert!(line.contains(hit.ch), "{}: {hit:?}", fixture.slug());
+        }
+    }
+    assert!(
+        found > 0,
+        "the corpus should hold characters that are not ASCII"
+    );
+}
+
+/// The `path has N banned characters.` lines of a run, sorted, as (path, count) pairs.
+fn reported_chars(stderr: &str) -> Vec<(String, usize)> {
+    let mut found: Vec<(String, usize)> = stderr
+        .lines()
+        .filter_map(|line| {
+            let (path, rest) = line.split_once(" has ")?;
+            let (count, _) = rest.split_once(" banned character")?;
+            Some((path.to_string(), count.parse().ok()?))
+        })
+        .collect();
+    found.sort();
+    found
+}
+
+#[test]
+fn the_corpus_banned_characters_agree_with_the_library() {
+    let fixtures = load_corpus();
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+    );
+    let settings = BannedChars::default();
+
+    let paths = place_real(&repo, &fixtures);
+    let mut expected: Vec<(String, usize)> = fixtures
+        .iter()
+        .zip(paths)
+        .filter_map(|(fixture, path)| {
+            let text = String::from_utf8_lossy(&fixture.bytes);
+            banned_chars::check(&text, Some(&settings)).map(|over| (path, over.count))
+        })
+        .collect();
+    expected.sort();
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+    assert!(
+        !expected.is_empty() && expected.len() < fixtures.len(),
+        "the corpus should hold files with and without banned characters"
+    );
+    assert_eq!(reported_chars(&stderr), expected, "stderr:\n{stderr}");
+    assert_eq!(code(&output), 1, "stderr:\n{stderr}");
+    assert!(
+        stderr.contains(&format!(
+            "deslag: {} of {} Markdown files with banned characters.",
+            expected.len(),
+            fixtures.len()
+        )),
+        "stderr:\n{stderr}"
+    );
+}
+
+/// The default groups are meant to catch the characters agents write and people do not.
+#[test]
+fn the_default_groups_flag_llm_text_far_more_than_human_text() {
+    let fixtures = load_corpus();
+    let settings = BannedChars::default();
+    let flagged = |category: &str| {
+        fixtures
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                banned_chars::check(&text, Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+    eprintln!("flagged by the default groups: human {human}, llm {llm}, mixed {mixed}");
+    assert!(llm >= 4 * human, "human {human}, llm {llm}");
 }

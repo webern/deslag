@@ -5,7 +5,7 @@ mod common;
 
 use common::{Repo, code, stderr};
 use deslag::config::RepoLayout;
-use deslag::lint::repo_layout::{Entry, HEADING, Layout, Malformed, Problem, check, read};
+use deslag::lint::repo_layout::{Entry, HEADING, Layout, Malformed, Problem, check, read, render};
 
 fn settings(min_entries: Option<u64>, max_entries: Option<u64>) -> RepoLayout {
     RepoLayout {
@@ -382,6 +382,25 @@ fn a_missing_section_gets_a_short_report() {
         "stderr: {stderr}"
     );
     assert!(!stderr.contains("The problems:"), "stderr: {stderr}");
+}
+
+#[test]
+fn the_example_in_the_advice_passes() {
+    let repo = tree();
+    let settings = RepoLayout {
+        heading: Some("Where things are".to_string()),
+        ..loose()
+    };
+    let over = check("# A\n", repo.root(), Some(&settings)).expect("a file with no section");
+
+    // Read as Markdown, the report holds the example under the heading.
+    let report = render("AGENTS.md", &over);
+
+    assert_eq!(
+        check(&report, repo.root(), Some(&settings)),
+        None,
+        "report: {report}"
+    );
 }
 
 #[test]

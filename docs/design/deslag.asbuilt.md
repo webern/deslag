@@ -190,7 +190,7 @@ entry that is not one relative path, lacks a description, or is out of column, i
 `check` adds the rest: a path is joined to the Markdown file's directory and must exist on disk,
 and one ending in `/` must be a directory. The file fails with a `Problem` list: no section, or no
 block, alone; otherwise the count, when it is outside `min_entries` to `max_entries` (default 5 to
-15), then each line's problems in order.
+15), then each line's problems in order. The default advice shows an example layout to copy.
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
@@ -237,7 +237,8 @@ cannot drift.
 `tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
 
 `tests/layout.rs` pins where the section starts and ends, each line format and problem, the
-default and contradictory limits, paths relative to a nested file, and the report.
+default and contradictory limits, paths relative to a nested file, and the report, whose example
+must itself pass.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
 against the bytes on disk, and runs the corpus through the binary.

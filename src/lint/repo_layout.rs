@@ -13,9 +13,10 @@
 //!
 //! A first line naming the root, unindented and ending in `/`, is not an entry, and blank lines
 //! are skipped. Every entry's path starts in the first entry's column and every `<-` sits in the
-//! first entry's column. A path is relative to the directory of the Markdown file, and one ending
-//! in `/` must be a directory. Paths are looked up on disk, so a path git ignores, such as a
-//! build directory, passes only where it has been built.
+//! first entry's column. No line is wider than [`MAX_WIDTH`] characters. A path is relative to
+//! the directory of the Markdown file, and one ending in `/` must be a directory. Paths are looked
+//! up on disk, so a path git ignores, such as a build directory, passes only where it has been
+//! built.
 //!
 //! A file fails when it has no such section or block, when it lists too few or too many entries,
 //! when a line is out of format, or when a listed path does not exist. The report lists every
@@ -37,6 +38,9 @@ pub const HEADING: &str = "ERROR: deslag detected a broken repository layout!";
 
 /// What separates an entry's path from its description.
 pub const ARROW: &str = "<-";
+
+/// The widest a line of the layout may be, in characters.
+pub const MAX_WIDTH: usize = 100;
 
 /// A file whose layout fails its settings.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -94,6 +98,11 @@ pub enum Problem {
 /// How a line of the layout is out of format. Columns are 1-based and counted in characters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Malformed {
+    /// The line, not counting trailing whitespace, is wider than [`MAX_WIDTH`].
+    Wide {
+        /// Its width.
+        width: usize,
+    },
     /// The line is neither an entry nor a description continued under the one above.
     Stray,
     /// The text before `<-` is not one path.
@@ -298,6 +307,9 @@ impl Problem {
 impl Malformed {
     fn describe(&self) -> String {
         match self {
+            Malformed::Wide { width } => {
+                format!("the line is {width} characters wide; shorten it to {MAX_WIDTH} or fewer")
+            }
             Malformed::Stray => format!(
                 "this is neither an entry, `path  {ARROW} what it holds`, nor a description \
                  continued from the line above and aligned under it"
@@ -321,8 +333,7 @@ impl Malformed {
 const EXAMPLE: &str = "\
 repo/
   Makefile   <- every build, test and check
-  src/       <- the source; a description too long for its line
-                continues on the next, aligned under it
+  src/       <- the source
   docs/      <- the design docs";
 
 /// The advice for a broken layout in the file at `path`, whose entries must number `range`.
@@ -340,8 +351,8 @@ fn default_advice(path: &str, heading: &str, range: &str) -> String {
          ```\n\
          \n\
          The first line naming the root is optional. Every path starts in one column, every \
-         `{ARROW}` sits in one column, and every entry has a description. Paths must exist, and \
-         one ending in `/` must be a directory.\n\
+         `{ARROW}` sits in one column, every entry has a description, and no line is wider than \
+         {MAX_WIDTH} characters. Paths must exist, and one ending in `/` must be a directory.\n\
          \n\
          Do not change the limits or the heading to get past this check. Only a human can tell \
          you to do that, and I am a linter, not a human."
@@ -444,6 +455,10 @@ impl Reader {
         if row.trim().is_empty() {
             self.description_column = None;
             return;
+        }
+        let width = row.trim_end().chars().count();
+        if width > MAX_WIDTH {
+            self.malformed.push((line, Malformed::Wide { width }));
         }
         let indent = row.chars().take_while(|c| c.is_whitespace()).count();
         let is_root = !self.started

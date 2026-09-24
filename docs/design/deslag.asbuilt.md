@@ -184,8 +184,9 @@ layout is the first code block in it. Each line of the block is one of:
 - a **continuation**: a line starting in the column of the description above it;
 - blank, which ends a description.
 
-The first entry fixes the column of every path and every `<-`. A line that is none of these, an
-entry that is not one relative path, lacks a description, or is out of column, is `Malformed`.
+The first entry fixes the column of every path and every `<-`. A line that is none of these or is
+wider than 100 characters, and an entry that is not one relative path, lacks a description, or is
+out of column, is `Malformed`.
 `read` does all of this from the text and returns a `Layout`: the entries and the malformed lines.
 `check` adds the rest: a path is joined to the Markdown file's directory and must exist on disk,
 and one ending in `/` must be a directory. The file fails with a `Problem` list: no section, or no

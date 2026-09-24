@@ -140,8 +140,8 @@ deslag/
 ````
 
 The first line naming the root is optional. Every path starts in one column, every `<-` sits in
-one column, and every entry has a description. Paths are relative to the Markdown file's directory
-and must exist; one ending in `/` must be a directory.
+one column, every entry has a description, and no line is wider than 100 characters. Paths are
+relative to the Markdown file's directory and must exist; one ending in `/` must be a directory.
 
 ```toml
 [[md.overrides]]

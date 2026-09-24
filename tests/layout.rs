@@ -228,6 +228,39 @@ fn a_continuation_must_sit_under_the_description() {
 }
 
 #[test]
+fn no_line_is_wider_than_100_characters() {
+    let repo = tree();
+    let layout = |rows: &str| format!("## Repository layout\n\n```\n{rows}\n```\n");
+    // An entry `width` characters wide.
+    let entry = |width: usize| format!("  Makefile  <- {}", "x".repeat(width - 15));
+
+    let text = layout(&format!("{}   ", entry(100)));
+    assert_eq!(
+        problems(&repo, &text, &loose()),
+        vec![],
+        "trailing whitespace is not counted"
+    );
+
+    let text = layout(&entry(101));
+    assert_eq!(
+        problems(&repo, &text, &loose()),
+        vec![format(4, Malformed::Wide { width: 101 })]
+    );
+
+    let text = layout(&format!(
+        "{}\n{}{}",
+        entry(20),
+        " ".repeat(15),
+        "x".repeat(86)
+    ));
+    assert_eq!(
+        problems(&repo, &text, &loose()),
+        vec![format(5, Malformed::Wide { width: 101 })],
+        "a continuation is held to the same width"
+    );
+}
+
+#[test]
 fn every_entry_needs_a_description() {
     let repo = tree();
     let text = "## Repository layout\n\n```\n  Makefile    <-\n  src/lib.rs\n```\n";

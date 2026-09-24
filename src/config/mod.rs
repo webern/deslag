@@ -1,4 +1,4 @@
-//! The TOML config: its shape, and the settings it gives each file.
+//! The config: its shape, and the settings it gives each file.
 //!
 //! The file is versioned, then split into one section per kind of file deslag lints. Today there
 //! is one, `[md]`. A section says which files it covers, the settings of each lint for all of
@@ -22,6 +22,8 @@
 //! lints.max_size_bytes.value = 8000
 //! ```
 //!
+//! The same shape may be written in YAML or JSON instead; the file's extension says which.
+//!
 //! [`search`] finds the file, [`md`] holds the `[md]` section, and [`lints`] the settings of each
 //! lint.
 
@@ -38,7 +40,9 @@ use crate::Error;
 
 pub use lints::{MaxEmphasis, MaxSizeBytes, MdLints, Merge};
 pub use md::MdConfig;
-pub use search::{CANONICAL_CONFIG_PATHS, ConfigSource};
+pub use search::{
+    CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
+};
 
 /// The config schema this build of deslag reads.
 ///
@@ -56,6 +60,18 @@ struct ConfigFile {
     /// The Markdown section.
     #[serde(default)]
     md: md::MdFile,
+}
+
+/// `text` read as a [`ConfigFile`] written in `format`.
+fn deserialize(
+    text: &str,
+    format: ConfigFormat,
+) -> Result<ConfigFile, Box<dyn std::error::Error + Send + Sync>> {
+    Ok(match format {
+        ConfigFormat::Toml => toml::from_str(text)?,
+        ConfigFormat::Yaml => serde_saphyr::from_str(text)?,
+        ConfigFormat::Json => serde_json::from_str(text)?,
+    })
 }
 
 /// A loaded config file.
@@ -82,10 +98,13 @@ impl Config {
         Config::parse(&text, path, source)
     }
 
-    /// Parses `text`, the contents of the config at `path`.
+    /// Parses `text`, the contents of the config at `path`, in the language its extension names.
     pub fn parse(text: &str, path: PathBuf, source: ConfigSource) -> Result<Config, Error> {
         let path_string = path.display().to_string();
-        let file: ConfigFile = toml::from_str(text).map_err(|source| Error::Parse {
+        let format = ConfigFormat::of(&path).ok_or_else(|| Error::ConfigFormat {
+            path: path_string.clone(),
+        })?;
+        let file: ConfigFile = deserialize(text, format).map_err(|source| Error::Parse {
             path: path_string.clone(),
             source,
         })?;

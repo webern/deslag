@@ -16,7 +16,7 @@ deslag/
   _typos.toml          <- keeps the spell checker out of the quoted corpus
   src/lib.rs           <- the library: the error type and the module list
   src/cli/             <- the clap types
-  src/config/          <- the TOML schema; search.rs finds the file, md.rs, lints.rs
+  src/config/          <- the schema in TOML, YAML or JSON; search.rs finds the file
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
   src/parse/           <- reading files; frontmatter.rs
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs

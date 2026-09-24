@@ -43,6 +43,20 @@ pub enum Error {
         looked_for: String,
     },
 
+    /// One canonical location holds configs in more than one language.
+    #[error("found more than one config at one location: {paths}\nkeep one and delete the rest")]
+    ConfigAmbiguous {
+        /// The files found, in the order their extensions are tried.
+        paths: String,
+    },
+
+    /// The config file's extension names no language deslag reads.
+    #[error("cannot tell the language of {path}: name it .toml, .yaml, .yml or .json")]
+    ConfigFormat {
+        /// The config file.
+        path: String,
+    },
+
     /// A `--config-path` was given and does not name a file.
     #[error("cannot find the config file {path}")]
     ConfigPathNotFound {
@@ -51,7 +65,7 @@ pub enum Error {
     },
 
     /// A file could not be read.
-    #[error("cannot read {path}: {source}")]
+    #[error("cannot read {path}")]
     Read {
         /// The file that could not be read.
         path: String,
@@ -61,7 +75,7 @@ pub enum Error {
     },
 
     /// The repo could not be walked: a directory could not be read, or an ignore file is broken.
-    #[error("cannot walk {root}: {source}")]
+    #[error("cannot walk {root}")]
     Walk {
         /// The repo root being walked.
         root: String,
@@ -70,14 +84,14 @@ pub enum Error {
         source: ignore::Error,
     },
 
-    /// The config file is not valid TOML, or does not have the shape deslag expects.
-    #[error("cannot parse {path}: {source}")]
+    /// The config file is not valid TOML, YAML or JSON, or does not have the shape deslag expects.
+    #[error("cannot parse {path}")]
     Parse {
         /// The config file that could not be parsed.
         path: String,
         /// The underlying error.
         #[source]
-        source: toml::de::Error,
+        source: Box<dyn std::error::Error + Send + Sync>,
     },
 
     /// The config is written for a schema this build does not read.
@@ -95,7 +109,7 @@ pub enum Error {
     },
 
     /// A glob pattern in the config is not a valid pattern.
-    #[error("invalid glob pattern {pattern:?} in {path}: {source}")]
+    #[error("invalid glob pattern {pattern:?} in {path}")]
     Glob {
         /// The config file holding the pattern.
         path: String,

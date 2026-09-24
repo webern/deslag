@@ -47,15 +47,32 @@ Deslag looks for the config in these places, relative to the root of the reposit
 first one it finds. It does not search upward, so run it from the root.
 
 ```
-.deslag/config.toml
-deslag.toml
-config/deslag.toml
-.config/deslag.toml
-.agents/deslag.toml
-.claude/deslag.toml
+.deslag/config
+deslag
+config/deslag
+.config/deslag
+.agents/deslag
+.claude/deslag
 ```
 
-`--config-path <PATH>` replaces all of them with one file.
+Each ends in `.toml`, `.yaml`, `.yml` or `.json`, and the extension says which language the file is
+written in. Two files at one location, such as `deslag.toml` and `deslag.yaml`, are an error.
+`--config-path <PATH>` replaces all of them with one file, whose extension works the same way.
+
+The examples here are TOML. In YAML or JSON the keys and nesting are the same:
+
+```yaml
+schema_version: 1
+md:
+  lints:
+    max_size_bytes:
+      value: 20000
+  overrides:
+    - globs: [AGENTS.md]
+      lints:
+        max_size_bytes:
+          value: 8000
+```
 
 ```toml
 # incremented only when a change to the format needs existing configs migrated

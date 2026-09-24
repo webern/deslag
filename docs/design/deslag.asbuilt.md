@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-23
+updated: 2026-09-24
 subsystems:
   - cli
   - config
@@ -40,7 +40,7 @@ src/
   cli/mod.rs          the clap types
   config/
     mod.rs            Config, ConfigFile, SCHEMA_VERSION, loading
-    search.rs         CANONICAL_CONFIG_PATHS and finding the file
+    search.rs         CANONICAL_CONFIG_STEMS, ConfigFormat, finding the file
     md.rs             the [md] section: its globs, lints and overrides
     lints.rs          one settings struct per lint, and the Merge trait
   glob/
@@ -72,21 +72,25 @@ A file that none of the three claims has no budget and is counted but otherwise 
 
 ## The config
 
-`config/search.rs` holds `CANONICAL_CONFIG_PATHS`, tried in this order relative to the repo root:
+`config/search.rs` holds `CANONICAL_CONFIG_STEMS`, tried in this order relative to the repo root,
+each with every one of `CONFIG_EXTENSIONS` (`toml`, `yaml`, `yml`, `json`):
 
 ```
-.deslag/config.toml
-deslag.toml
-config/deslag.toml
-.config/deslag.toml
-.agents/deslag.toml
-.claude/deslag.toml
+.deslag/config
+deslag
+config/deslag
+.config/deslag
+.agents/deslag
+.claude/deslag
 ```
 
-The first that exists is the config. `--config-path <PATH>` replaces all six with one file, which
-is resolved against the working directory. A missing config is an error, not an empty config.
+The first stem with a file is the config; two files at one stem are `Error::ConfigAmbiguous`.
+`--config-path <PATH>` replaces the search with one file, which is resolved against the working
+directory. A missing config is an error, not an empty config.
 
-The file is parsed by `serde` and `toml`, which rejects unknown keys at every level:
+`ConfigFormat::of` reads the language from the extension; any other extension is
+`Error::ConfigFormat`. The file is parsed by `serde` with `toml`, `serde-saphyr` or `serde_json`
+into one `ConfigFile`, which rejects unknown keys at every level. In TOML:
 
 ```toml
 schema_version = 1               # required
@@ -126,8 +130,8 @@ matching pattern: anchored beats basename, then longer beats shorter, then the l
 
 `parse/frontmatter.rs` reads a top-level key out of the frontmatter block, which is the leading
 `---` fence and everything up to the next `---` or `...` line. The value is the rest of the key's
-line, quotes either side allowed. Nothing else is parsed; there is no YAML parser in the
-dependency tree. A block that is never closed is not frontmatter, so a document that opens with a
+line, quotes either side allowed. Nothing else is parsed; the YAML parser the config uses is not
+used here. A block that is never closed is not frontmatter, so a document that opens with a
 thematic break still works. A `max_size_bytes` that is not a byte count is an error.
 
 ## Walking the repo
@@ -164,7 +168,8 @@ process exits 1; a clean run prints nothing and exits 0.
 ## The command line
 
 `cli/mod.rs` defines a `check` subcommand taking `--config-path`. `src/main.rs` uses `anyhow` for
-its own errors, calls the library, and prints the library's `Error` in `anyhow`'s alternate form.
+its own errors, calls the library, and prints the library's `Error` in `anyhow`'s alternate form,
+which appends each underlying error once; an `Error`'s own message never repeats its source.
 
 ## Other files
 
@@ -175,6 +180,7 @@ _typos.toml           keeps the spell checker out of the quoted corpus
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   unit.rs             small trees written for the test
+  formats.rs          the config in TOML, YAML and JSON
   emphasis.rs         what counts as a span, and the emphasis report
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
@@ -186,9 +192,12 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
 
 `tests/unit.rs` builds small trees in a temp directory and pins one rule each: the budget sources
 and their precedence, override merging, `[md] globs`, custom messages, `schema_version`, every
-canonical config location and their order, `--config-path`, the error cases, and the exact
-wording of the report. `deslag::config::CANONICAL_CONFIG_PATHS` is read by the
-test rather than repeated, so the list cannot drift.
+canonical config order, `--config-path`, the error cases, and the exact wording of the report.
+
+`tests/formats.rs` pins the config languages: every canonical path in every language, one config
+in TOML, YAML and JSON giving the same report, ambiguity, unknown extensions, and parse errors.
+`deslag::config::canonical_config_paths` is read by the tests rather than repeated, so the list
+cannot drift.
 
 `tests/emphasis.rs` pins what is and is not a span, the limits, and the report.
 

@@ -108,7 +108,10 @@ fn letters_of_other_languages_are_found_and_not_banned() {
 fn an_empty_table_bans_the_groups_that_are_on_by_default() {
     let text = "a \u{2014} b \u{2192} c \u{201C}d\u{201D} \u{1F680}\n";
     let banned = banned(text, &BannedChars::default());
-    assert_eq!(chars(&banned), vec!['\u{2014}', '\u{2192}']);
+    assert_eq!(
+        chars(&banned),
+        vec!['\u{2014}', '\u{2192}', '\u{201C}', '\u{201D}']
+    );
     for group in GROUPS {
         let on = matches!(
             group.name,
@@ -122,6 +125,7 @@ fn an_empty_table_bans_the_groups_that_are_on_by_default() {
                 | "box_drawing"
                 | "spaces"
                 | "invisible"
+                | "quotes"
         );
         assert_eq!(group.on_by_default, on, "{}", group.name);
     }

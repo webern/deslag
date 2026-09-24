@@ -1,6 +1,6 @@
 ERROR: deslag detected banned characters!
 
-README.md has 7 banned characters.
+README.md has 6 banned characters.
 
 This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
@@ -9,14 +9,13 @@ Code blocks and code spans are not checked, so a diagram may use these character
 Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
 The characters, and what to write instead:
-  line 3: U+201C left double quotation mark "“"; write `"`
-  line 3: U+201D right double quotation mark "”"; write `"`
   line 3: U+2192 rightwards arrow "→"; write `->`
+  line 3: U+1F389 emoji "🎉"; delete it
   line 5: U+2500 box-drawing character "─"; write `-`
 
 ERROR: deslag detected banned characters!
 
-docs/diagram.md has 2 banned characters.
+docs/diagram.md has 1 banned character.
 
 This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
@@ -25,7 +24,6 @@ Code blocks and code spans are not checked, so a diagram may use these character
 Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
 The characters, and what to write instead:
-  line 3: U+2018 left single quotation mark "‘"; write `'`
-  line 3: U+2019 right single quotation mark "’"; write `'`
+  line 3: U+1F389 emoji "🎉"; delete it
 
 deslag: 2 of 2 Markdown files with banned characters.

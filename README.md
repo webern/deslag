@@ -163,7 +163,7 @@ Code blocks and code spans are not checked, so a diagram in a fenced block may u
 
 ```toml
 [md.lints.banned_chars]                       # the table alone turns it on
-groups = { quotes = true, arrows = false }    # switch groups on or off
+groups = { emoji = true, arrows = false }     # switch groups on or off
 allow = ["\u00d7"]                            # never banned
 ban = { "\u00ae" = "(R)", "\u2122" = "" }     # banned too; "" means delete it
 ```
@@ -180,12 +180,11 @@ ban = { "\u00ae" = "(R)", "\u2122" = "" }     # banned too; "" means delete it
 | `box_drawing` | box-drawing characters, block elements     | `-`, `\|`, `+`        | on      |
 | `spaces`      | the no-break space, other unusual spaces   | a space               | on      |
 | `invisible`   | zero-width space, soft hyphen, tags        | nothing               | on      |
-| `quotes`      | curly quotes and apostrophes               | `"`, `'`              | off     |
+| `quotes`      | curly quotes and apostrophes               | `"`, `'`              | on      |
 | `emoji`       | emoji                                      | nothing               | off     |
 
-The defaults come from the test corpus: they flag 235 of 400 files written by agents, and 39 of 400
-written by people before 2022. Curly quotes and emoji are about as common in the files people
-wrote, so they are off.
+The defaults flag 241 of the 400 files in the test corpus written by agents, and 57 of 400 written
+by people before 2022. Emoji are more common in the files people wrote, so they are off.
 
 `allow` beats `ban`, and `ban` beats the groups. An override sets only the groups it names, and
 its `allow` or `ban` replaces the section's. Write a character as itself or as an escape such as

@@ -10,4 +10,4 @@ A diagram belongs in a code block, where anything goes:
 
 Inline code too: `a → b`. Entities are written in ASCII: &mdash; and &rarr;.
 
-Curly “quotes”, emoji 🎉 and other scripts, 中文 and «hola», are not banned by default.
+Emoji 🎉 and other scripts, 中文 and «hola», are not banned by default.

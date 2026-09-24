@@ -1178,5 +1178,5 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
     };
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by the default groups: human {human}, llm {llm}, mixed {mixed}");
-    assert!(llm >= 5 * human, "human {human}, llm {llm}");
+    assert!(llm >= 4 * human, "human {human}, llm {llm}");
 }

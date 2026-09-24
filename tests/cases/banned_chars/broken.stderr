@@ -1,6 +1,6 @@
 ERROR: deslag detected banned characters!
 
-README.md has 20 banned characters.
+README.md has 22 banned characters.
 
 This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
@@ -22,5 +22,7 @@ The characters, and what to write instead:
   line 13: U+2248 almost equal to "≈"; write `~`
   line 15: U+2500 box-drawing character "─"; write `-`
   line 17: U+00A0 no-break space; write a plain space
+  line 17: U+201C left double quotation mark "“"; write `"`
+  line 17: U+201D right double quotation mark "”"; write `"`
 
 deslag: 1 of 1 Markdown files with banned characters.

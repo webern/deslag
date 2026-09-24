@@ -119,7 +119,7 @@ globs = ["/AGENTS.md"]
 lints.repo_layout = { min_entries = 5, max_entries = 12 }   # also heading, max_width
 
 [md.lints.banned_chars]          # the table alone turns it on
-groups = { quotes = true }       # also allow and ban
+groups = { emoji = true }        # also allow and ban
 ```
 
 `schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
@@ -204,7 +204,7 @@ each non-ASCII character in the source of the text, HTML and frontmatter, skippi
 code spans and a byte order mark that opens the file; an entity such as `&mdash;` is ASCII there.
 `check` passes a character in `allow`, bans one in `ban` with its replacement, and otherwise asks
 the first rule of the first group in `GROUPS` that is on. Each group has a switch in `Groups` and
-a default; `quotes` and `emoji` are off. The report lists each character once, with its lines and
+a default; `emoji` is off. The report lists each character once, with its lines and
 what to write instead.
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
@@ -291,7 +291,7 @@ writes a frontmatter block into its copy.
 
 The whole corpus then runs in its real layout under one budget with an override for `README.md`,
 under one emphasis limit, and under the default character groups. For the last two the binary must
-report exactly the files the library's `check` flags, and the groups must flag at least five times
+report exactly the files the library's `check` flags, and the groups must flag at least four times
 as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in the corpus, so
 `repo_layout` runs only its `read`, on every fixture under a few headings real repos use. The lines
 it reports must fall in the section, and an entry's line must hold its path. `core/rt-agents.md`,

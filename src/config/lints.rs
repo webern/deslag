@@ -332,7 +332,7 @@ pub struct Groups {
     /// Characters that take no space, such as the zero-width space, to be deleted. On by default.
     #[serde(default)]
     pub invisible: Option<bool>,
-    /// Curly quotes and apostrophes, for `"` and `'`. Off by default.
+    /// Curly quotes and apostrophes, for `"` and `'`. On by default.
     #[serde(default)]
     pub quotes: Option<bool>,
     /// Emoji, to be deleted. Off by default.

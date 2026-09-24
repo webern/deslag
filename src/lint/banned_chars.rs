@@ -213,7 +213,7 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "quotes",
-        on_by_default: false,
+        on_by_default: true,
         switch: |groups| groups.quotes,
         rules: &[
             one('\u{2018}', "left single quotation mark", "'"),

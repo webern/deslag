@@ -20,6 +20,10 @@
 //! A file fails when it has no such section or block, when it lists too few or too many entries,
 //! when a line is out of format, or when a listed path does not exist. The report lists every
 //! problem with its line.
+//!
+//! [`read`] needs only the text: it finds the section and reads the layout, so it runs on any
+//! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits
+//! and the paths.
 
 use std::path::Path;
 
@@ -120,6 +124,42 @@ pub enum Malformed {
     },
 }
 
+/// A layout section, read from the text alone.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Layout {
+    /// The line of the section's heading.
+    pub heading_line: usize,
+    /// The entries, in order.
+    pub entries: Vec<Entry>,
+    /// Each line out of format, and how, in order.
+    pub malformed: Vec<(usize, Malformed)>,
+}
+
+/// One entry of a layout.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Entry {
+    /// Its line.
+    pub line: usize,
+    /// The path to look up, or `None` when the line holds no one relative path, which is
+    /// already a format problem.
+    pub path: Option<String>,
+}
+
+/// Reads the layout in the section of `text` headed `heading`. The error is
+/// [`Problem::NoSection`] or [`Problem::NoBlock`].
+pub fn read(text: &str, heading: &str) -> Result<Layout, Problem> {
+    let block = Block::find(text, heading)?;
+    let mut reader = Reader::default();
+    for (index, row) in block.text.lines().enumerate() {
+        reader.read(block.line + index, row);
+    }
+    Ok(Layout {
+        heading_line: block.heading_line,
+        entries: reader.entries,
+        malformed: reader.malformed,
+    })
+}
+
 /// Checks one file, whose decoded contents are `text` and which sits in `dir`. A file with no
 /// settings is not checked, and nor is one whose limits contradict each other, which
 /// [`check_repo`](crate::check_repo) refuses before any lint runs.
@@ -128,18 +168,21 @@ pub fn check(text: &str, dir: &Path, settings: Option<&RepoLayout>) -> Option<Ov
     let heading = settings.heading();
     let (min_entries, max_entries) = settings.limits().ok()?;
 
-    let problems = match Block::find(text, heading) {
+    let problems = match read(text, heading) {
         Err(problem) => vec![problem],
-        Ok(block) => {
-            let mut reader = Reader::new(dir);
-            for (index, row) in block.text.lines().enumerate() {
-                reader.read(block.line + index, row);
-            }
-            let entries = reader.entries;
-            let mut problems = reader.problems;
+        Ok(layout) => {
+            let entries = layout.entries.len() as u64;
+            let mut problems: Vec<Problem> = layout
+                .malformed
+                .into_iter()
+                .map(|(line, malformed)| Problem::Format { line, malformed })
+                .collect();
+            problems.extend(layout.entries.iter().filter_map(|entry| entry.find(dir)));
             if !(min_entries..=max_entries).contains(&entries) {
-                problems.insert(0, Problem::Count { entries });
+                problems.push(Problem::Count { entries });
             }
+            // A stable sort: the count comes first, and a line's format problems before its path's.
+            problems.sort_by_key(Problem::line);
             problems
         }
     };
@@ -191,7 +234,43 @@ pub fn render(path: &str, over: &Over) -> String {
     )
 }
 
+impl Entry {
+    /// What is wrong with this entry's path on disk, where the paths are relative to `dir`.
+    fn find(&self, dir: &Path) -> Option<Problem> {
+        let path = self.path.as_ref()?;
+        let (name, directory) = match path.strip_suffix('/') {
+            Some(name) => (name, true),
+            None => (path.as_str(), false),
+        };
+        let on_disk = dir.join(name);
+        if !on_disk.exists() {
+            return Some(Problem::Missing {
+                line: self.line,
+                path: path.clone(),
+            });
+        }
+        if directory && !on_disk.is_dir() {
+            return Some(Problem::NotDirectory {
+                line: self.line,
+                path: path.clone(),
+            });
+        }
+        None
+    }
+}
+
 impl Problem {
+    /// The line the problem is on, or `None` when it is about the whole section.
+    fn line(&self) -> Option<usize> {
+        match self {
+            Problem::NoSection | Problem::Count { .. } => None,
+            Problem::NoBlock { line }
+            | Problem::Format { line, .. }
+            | Problem::Missing { line, .. }
+            | Problem::NotDirectory { line, .. } => Some(*line),
+        }
+    }
+
     /// This problem as a line of the report, for a section headed `heading` whose entries must
     /// number `range`.
     fn describe(&self, heading: &str, range: &str) -> String {
@@ -255,6 +334,8 @@ fn default_advice(path: &str, heading: &str, range: &str) -> String {
 
 /// The code block that holds the layout.
 struct Block {
+    /// The line of the section's heading.
+    heading_line: usize,
     /// The line of the file its text starts on.
     line: usize,
     text: String,
@@ -293,11 +374,14 @@ impl Block {
                         }
                     }
                 }
-                Event::Start(Tag::CodeBlock(_)) if section.is_some() => {
-                    block = Some(Block {
-                        line: 0,
-                        text: String::new(),
-                    });
+                Event::Start(Tag::CodeBlock(_)) => {
+                    if let Some((_, heading_line)) = section {
+                        block = Some(Block {
+                            heading_line,
+                            line: 0,
+                            text: String::new(),
+                        });
+                    }
                 }
                 Event::Text(code) => {
                     if let Some(block) = block.as_mut() {
@@ -323,12 +407,11 @@ impl Block {
     }
 }
 
-/// Reads a layout block a line at a time, counting its entries and gathering its problems.
-struct Reader<'a> {
-    /// The directory of the Markdown file, which the paths are relative to.
-    dir: &'a Path,
-    entries: u64,
-    problems: Vec<Problem>,
+/// Reads a layout block a line at a time, gathering its entries and the lines out of format.
+#[derive(Default)]
+struct Reader {
+    entries: Vec<Entry>,
+    malformed: Vec<(usize, Malformed)>,
     /// Whether a line that is not blank has been read, after which no line is the root.
     started: bool,
     /// The 0-based column the first entry's path starts in.
@@ -339,19 +422,7 @@ struct Reader<'a> {
     description_column: Option<usize>,
 }
 
-impl<'a> Reader<'a> {
-    fn new(dir: &'a Path) -> Reader<'a> {
-        Reader {
-            dir,
-            entries: 0,
-            problems: Vec::new(),
-            started: false,
-            path_column: None,
-            arrow_column: None,
-            description_column: None,
-        }
-    }
-
+impl Reader {
     /// Reads `row`, the file's line `line`.
     fn read(&mut self, line: usize, row: &str) {
         if row.trim().is_empty() {
@@ -376,26 +447,26 @@ impl<'a> Reader<'a> {
         let path = before.trim();
         let words = path.split_whitespace().count();
         if after.is_none() && words > 1 {
-            self.malformed(line, Malformed::Stray);
+            self.malformed.push((line, Malformed::Stray));
             self.description_column = None;
             return;
         }
-        self.entries += 1;
         if words != 1 {
-            self.malformed(line, Malformed::NotOnePath);
+            self.entries.push(Entry { line, path: None });
+            self.malformed.push((line, Malformed::NotOnePath));
             self.description_column = None;
             return;
         }
 
         let path_column = *self.path_column.get_or_insert(indent);
         if indent != path_column {
-            self.malformed(
+            self.malformed.push((
                 line,
                 Malformed::Indent {
                     expected: path_column + 1,
                     found: indent + 1,
                 },
-            );
+            ));
         }
         let arrow = before.chars().count();
         self.description_column = None;
@@ -403,13 +474,13 @@ impl<'a> Reader<'a> {
             Some(after) => {
                 let arrow_column = *self.arrow_column.get_or_insert(arrow);
                 if arrow != arrow_column {
-                    self.malformed(
+                    self.malformed.push((
                         line,
                         Malformed::Arrow {
                             expected: arrow_column + 1,
                             found: arrow + 1,
                         },
-                    );
+                    ));
                 }
                 let gap = after.chars().take_while(|c| c.is_whitespace()).count();
                 if after.trim().is_empty() {
@@ -421,38 +492,24 @@ impl<'a> Reader<'a> {
             None => self.no_description(line, path),
         }
 
+        let path = path.to_string();
         if path.starts_with('/') {
-            self.malformed(
-                line,
-                Malformed::Absolute {
-                    path: path.to_string(),
-                },
-            );
+            self.entries.push(Entry { line, path: None });
+            self.malformed.push((line, Malformed::Absolute { path }));
             return;
         }
-        let (name, directory) = match path.strip_suffix('/') {
-            Some(name) => (name, true),
-            None => (path, false),
-        };
-        let on_disk = self.dir.join(name);
-        let path = path.to_string();
-        if !on_disk.exists() {
-            self.problems.push(Problem::Missing { line, path });
-        } else if directory && !on_disk.is_dir() {
-            self.problems.push(Problem::NotDirectory { line, path });
-        }
-    }
-
-    fn malformed(&mut self, line: usize, malformed: Malformed) {
-        self.problems.push(Problem::Format { line, malformed });
+        self.entries.push(Entry {
+            line,
+            path: Some(path),
+        });
     }
 
     fn no_description(&mut self, line: usize, path: &str) {
-        self.malformed(
+        self.malformed.push((
             line,
             Malformed::NoDescription {
                 path: path.to_string(),
             },
-        );
+        ));
     }
 }

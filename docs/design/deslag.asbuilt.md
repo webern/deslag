@@ -160,6 +160,11 @@ and runs each lint. `lint/max_size_bytes.rs` returns an `Over` holding the size,
 any configured message when the file is larger than its budget; `check_repo` wraps it in a
 `Finding` with a `Violation::MaxSizeBytes`. A new lint is a new module and a new `Violation`.
 
+A lint keeps what it decides from the text alone in a function of the text, which the corpus can
+run on every fixture: `max_emphasis::measure` and `repo_layout::read`. What needs the settings, or
+anything outside the file such as the disk, is a thin layer over it, tested on trees the tests
+write.
+
 `lint/max_emphasis.rs` parses the file with `pulldown-cmark` and counts **spans**: each
 outermost emphasis or strong, and each run of two or more words in capitals, split only by
 whitespace, that holds one of `SHOUTED_WORDS`. **Prose** is the text events outside code blocks
@@ -180,11 +185,12 @@ layout is the first code block in it. Each line of the block is one of:
 - blank, which ends a description.
 
 The first entry fixes the column of every path and every `<-`. A line that is none of these, an
-entry that is not one relative path, lacks a description, or is out of column, is a `Malformed`
-problem. A path is joined to the Markdown file's directory and must exist on disk; one ending in
-`/` must be a directory. The file fails with a `Problem` list: no section, or no block, alone;
-otherwise the count, when it is outside `min_entries` to `max_entries` (default 5 to 15), then
-each line's problems in order.
+entry that is not one relative path, lacks a description, or is out of column, is `Malformed`.
+`read` does all of this from the text and returns a `Layout`: the entries and the malformed lines.
+`check` adds the rest: a path is joined to the Markdown file's directory and must exist on disk,
+and one ending in `/` must be a directory. The file fails with a `Problem` list: no section, or no
+block, alone; otherwise the count, when it is outside `min_entries` to `max_entries` (default 5 to
+15), then each line's problems in order.
 
 `Finding::render` produces the message. The first two lines are fixed; the advice after them is
 the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
@@ -266,7 +272,10 @@ writes a frontmatter block into its copy.
 
 The whole corpus then runs twice in its real layout: under one budget with an override for
 `README.md`, and under one emphasis limit, where the binary must report exactly the files the
-library's `max_emphasis::check` flags.
+library's `max_emphasis::check` flags. The fixtures' repos are not in the corpus, so `repo_layout`
+runs only its `read`, on every fixture under a few headings real repos use. The lines it reports
+must fall in the section, and an entry's line must hold its path. `core/rt-agents.md`, the one
+fixture in deslag's format, must read with no malformed line.
 
 ## Build
 

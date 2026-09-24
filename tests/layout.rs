@@ -5,7 +5,7 @@ mod common;
 
 use common::{Repo, code, stderr};
 use deslag::config::RepoLayout;
-use deslag::lint::repo_layout::{HEADING, Malformed, Problem, check};
+use deslag::lint::repo_layout::{Entry, HEADING, Layout, Malformed, Problem, check, read};
 
 fn settings(min_entries: Option<u64>, max_entries: Option<u64>) -> RepoLayout {
     RepoLayout {
@@ -56,6 +56,32 @@ const GOOD: &str = "# Title\n\
     ```\n\
     \n\
     ## Build\n";
+
+#[test]
+fn reading_needs_only_the_text() {
+    let text = "# A\n\n## Repository layout\n\n```\nrepo/\n  nowhere/   <- a\n  /abs       <- b\n  two words  <- c\n```\n";
+    let entry = |line, path: Option<&str>| Entry {
+        line,
+        path: path.map(str::to_string),
+    };
+    assert_eq!(
+        read(text, "Repository layout"),
+        Ok(Layout {
+            heading_line: 3,
+            entries: vec![entry(7, Some("nowhere/")), entry(8, None), entry(9, None)],
+            malformed: vec![
+                (
+                    8,
+                    Malformed::Absolute {
+                        path: "/abs".to_string()
+                    }
+                ),
+                (9, Malformed::NotOnePath),
+            ],
+        })
+    );
+    assert_eq!(read("# A\n", "Repository layout"), Err(Problem::NoSection));
+}
 
 #[test]
 fn a_good_layout_passes() {

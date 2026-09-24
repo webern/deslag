@@ -1,0 +1,23 @@
+ERROR: deslag detected a broken repository layout!
+
+src/AGENTS.md has 1 problem in its "Repository layout" section.
+
+The "Repository layout" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 15 of the files and directories that matter most, with paths relative to the directory src/AGENTS.md is in, like this:
+
+## Repository layout
+
+```
+repo/
+  Makefile   <- every build, test and check
+  src/       <- the source
+  docs/      <- the design docs
+```
+
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and no line is wider than 100 characters. Paths must exist, and one ending in `/` must be a directory.
+
+Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The problems:
+  line 11: Makefile does not exist
+
+deslag: 1 of 1 Markdown files with a broken repository layout.

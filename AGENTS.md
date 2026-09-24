@@ -18,7 +18,7 @@ deslag/
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
   src/parse/           <- reading what the lints need out of a file
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
-  tests/               <- the unit tests, and the corpus tests over quoted fixtures
+  tests/               <- the unit tests; cases/ holds small repos, each with what deslag prints
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,
                           human/, llm/ and mixed/ are collected, one directory per source repo
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus

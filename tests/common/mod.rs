@@ -18,6 +18,27 @@ impl Repo {
         Repo { _dir: dir, root }
     }
 
+    /// A repo root holding a copy of every file under `source`.
+    pub fn copy_of(source: &Path) -> Repo {
+        let repo = Repo::new();
+        let mut dirs = vec![source.to_path_buf()];
+        while let Some(dir) = dirs.pop() {
+            for entry in std::fs::read_dir(&dir).expect("a readable directory") {
+                let path = entry.expect("a directory entry").path();
+                if path.is_dir() {
+                    dirs.push(path);
+                    continue;
+                }
+                let relative = path.strip_prefix(source).expect("a path under the source");
+                repo.write_bytes(
+                    relative.to_str().expect("a UTF-8 path"),
+                    &std::fs::read(&path).expect("a readable file"),
+                );
+            }
+        }
+        repo
+    }
+
     /// The repo root.
     pub fn root(&self) -> &Path {
         &self.root

@@ -61,7 +61,8 @@ Target names start with a verb. The vocabulary:
 - preflight: checks the environment for prerequisites before other targets run, with a clear
   user-facing error when the machine needs attention
 - check: runs a linter, formatter or other static analysis in check mode; what gates CI
-- fix: applies the automatic fixes for what `check` reports (rustfmt in place, clippy --fix)
+- fix: applies the automatic fixes for what `check` reports (rustfmt in place, clippy --fix), and
+  rewrites expected test output from what the code prints now
 - fetch: pulls resources
 - generate: writes files derived from others in the tree and kept out of git
 - test: runs tests

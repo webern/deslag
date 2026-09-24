@@ -16,26 +16,27 @@ CARGO_FLAGS ?=
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean \
         ci \
-        fix fix-clippy fix-fmt \
+        fix fix-clippy fix-fmt fix-test-output \
         preflight
 
 help:
-	@echo "build          build the library and binary with the debug profile"
-	@echo "build-release  build with the release profile"
-	@echo "test           run every test, doctests included"
-	@echo "check          run every check that gates CI: fmt, clippy, deslag, doc, typos"
-	@echo "check-clippy   clippy with warnings denied, tests included"
-	@echo "check-deslag   run deslag on this repository's own Markdown"
-	@echo "check-doc      build the docs with warnings denied"
-	@echo "check-fmt      rustfmt in check mode"
-	@echo "check-publish  cargo publish --dry-run; slow, so not part of check"
-	@echo "check-typos    spell check the tree"
-	@echo "clean          remove everything make created"
-	@echo "ci             what CI runs: preflight, check, build, test, with --locked"
-	@echo "fix            apply every automatic fix: fmt, clippy"
-	@echo "fix-clippy     apply clippy's suggested fixes"
-	@echo "fix-fmt        rustfmt in place"
-	@echo "preflight      report what must be installed by hand before a build can succeed"
+	@echo "build            build the library and binary with the debug profile"
+	@echo "build-release    build with the release profile"
+	@echo "test             run every test, doctests included"
+	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
+	@echo "check-clippy     clippy with warnings denied, tests included"
+	@echo "check-deslag     run deslag on this repository's own Markdown"
+	@echo "check-doc        build the docs with warnings denied"
+	@echo "check-fmt        rustfmt in check mode"
+	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
+	@echo "check-typos      spell check the tree"
+	@echo "clean            remove everything make created"
+	@echo "ci               what CI runs: preflight, check, build, test, with --locked"
+	@echo "fix              apply every automatic fix: fmt, clippy, test output"
+	@echo "fix-clippy       apply clippy's suggested fixes"
+	@echo "fix-fmt          rustfmt in place"
+	@echo "fix-test-output  rewrite the .stderr files of tests/cases from what deslag prints"
+	@echo "preflight        report what must be installed by hand before a build can succeed"
 
 # ---------------------------------------------------------------------------
 # build
@@ -93,13 +94,17 @@ clean:
 ci: CARGO_FLAGS += --locked
 ci: preflight check build test
 
-fix: fix-fmt fix-clippy
+fix: fix-fmt fix-clippy fix-test-output
 
 fix-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --all-features --all-targets --fix --allow-dirty --allow-staged
 
 fix-fmt: preflight
 	cargo fmt
+
+# Accepts whatever deslag prints now, so read the diff before committing it.
+fix-test-output: preflight
+	DESLAG_FIX_TEST_OUTPUT=1 cargo test $(CARGO_FLAGS) --all-features --test cases
 
 preflight:
 	@$(SCRIPTS)/preflight.sh

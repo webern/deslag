@@ -3,12 +3,13 @@
 mod common;
 
 use common::{Repo, code, stderr};
+use deslag::Document;
 use deslag::config::MaxEmphasis;
 use deslag::lint::max_emphasis::{HEADING, Kind, QUOTE_CHARS, check, measure};
 
 /// The line, kind and quote of every span in `text`.
 fn spans(text: &str) -> Vec<(usize, Kind, String)> {
-    measure(text)
+    measure(&Document::markdown(text))
         .spans
         .into_iter()
         .map(|span| (span.line, span.kind, span.quote))
@@ -40,7 +41,7 @@ fn every_kind_of_emphasis_is_a_span() {
 
 #[test]
 fn nested_emphasis_is_one_span() {
-    let measure = measure("**bold *and* more**\n");
+    let measure = measure(&Document::markdown("**bold *and* more**\n"));
     assert_eq!(measure.spans.len(), 1);
     assert_eq!(measure.spans[0].chars, "bold and more".len());
     assert_eq!(measure.prose_chars, "bold and more".len());
@@ -85,9 +86,17 @@ fn a_run_across_a_soft_break_is_one_span() {
 #[test]
 fn code_frontmatter_and_bullets_are_not_prose() {
     let text = "---\ntitle: *x*\n---\n\n* item\n\n```\n**not** DO NOT\n```\n\n`**no**`\n";
-    let measure = measure(text);
+    let measure = measure(&Document::markdown(text));
     assert!(measure.spans.is_empty(), "{:?}", measure.spans);
     assert_eq!(measure.prose_chars, "item".len());
+}
+
+#[test]
+fn the_indentation_of_an_html_block_is_not_prose() {
+    let text = "text\n\n   <div>\n   <b>DO NOT</b>\n   </div>\n";
+    let measure = measure(&Document::markdown(text));
+    assert!(measure.spans.is_empty(), "{:?}", measure.spans);
+    assert_eq!(measure.prose_chars, "text".len());
 }
 
 #[test]
@@ -98,7 +107,7 @@ fn snake_case_is_not_emphasis() {
 #[test]
 fn a_long_span_is_cut_short() {
     let long = format!("*{}*", "word ".repeat(30).trim_end());
-    let quoted = &measure(&long).spans[0].quote;
+    let quoted = &measure(&Document::markdown(&long)).spans[0].quote;
     assert!(quoted.chars().count() <= QUOTE_CHARS, "{quoted}");
     assert!(quoted.ends_with("..."), "{quoted}");
 }
@@ -107,18 +116,24 @@ fn a_long_span_is_cut_short() {
 fn both_limits_have_to_be_exceeded() {
     let text = "plain words here, and **one** and **two** and **three**\n";
 
-    assert!(check(text, Some(&settings(Some(3), None))).is_none());
-    assert!(check(text, Some(&settings(Some(2), None))).is_some());
-    assert!(check(text, Some(&settings(None, Some(50.0)))).is_none());
-    assert!(check(text, Some(&settings(None, Some(1.0)))).is_some());
-    assert!(check(text, Some(&settings(Some(3), Some(1.0)))).is_none());
+    assert!(check(&Document::markdown(text), Some(&settings(Some(3), None))).is_none());
+    assert!(check(&Document::markdown(text), Some(&settings(Some(2), None))).is_some());
+    assert!(check(&Document::markdown(text), Some(&settings(None, Some(50.0)))).is_none());
+    assert!(check(&Document::markdown(text), Some(&settings(None, Some(1.0)))).is_some());
+    assert!(
+        check(
+            &Document::markdown(text),
+            Some(&settings(Some(3), Some(1.0)))
+        )
+        .is_none()
+    );
 }
 
 #[test]
 fn settings_without_a_limit_check_nothing() {
     let text = "**all** **of** **it**\n";
-    assert!(check(text, Some(&settings(None, None))).is_none());
-    assert!(check(text, None).is_none());
+    assert!(check(&Document::markdown(text), Some(&settings(None, None))).is_none());
+    assert!(check(&Document::markdown(text), None).is_none());
 }
 
 #[test]
@@ -244,11 +259,17 @@ fn a_file_just_over_its_share_is_not_reported_at_it() {
     let text = (100..5000)
         .map(|length| format!("*b* *c* *dd* {}\n", "a".repeat(length)))
         .find(|text| {
-            let percent = measure(text).percent();
+            let percent = measure(&Document::markdown(text)).percent();
             percent > 1.0 && percent < 1.01
         })
         .expect("a prose length just over 1%");
-    assert!(check(&text, Some(&settings(Some(2), Some(1.0)))).is_some());
+    assert!(
+        check(
+            &Document::markdown(&text),
+            Some(&settings(Some(2), Some(1.0)))
+        )
+        .is_some()
+    );
 
     let repo = Repo::new();
     repo.write(

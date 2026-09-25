@@ -14,6 +14,7 @@ use std::path::Path;
 
 use crate::Error;
 use crate::config::Config;
+use crate::document::Document;
 use crate::glob;
 
 /// One file that a lint failed.
@@ -136,6 +137,7 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
             });
         }
         let dir = file.absolute.parent().unwrap_or(root);
+        let document = Document::markdown(&text);
 
         let violations = [
             max_size_bytes::check(
@@ -145,10 +147,11 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
                 lints.max_size_bytes.as_ref(),
             )?
             .map(Violation::MaxSizeBytes),
-            max_emphasis::check(&text, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
-            repo_layout::check(&text, dir, lints.repo_layout.as_ref()).map(Violation::RepoLayout),
-            banned_chars::check(&text, lints.banned_chars.as_ref()).map(Violation::BannedChars),
-            density::check(&text, lints.density.as_ref()).map(Violation::Density),
+            max_emphasis::check(&document, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
+            repo_layout::check(&document, dir, lints.repo_layout.as_ref())
+                .map(Violation::RepoLayout),
+            banned_chars::check(&document, lints.banned_chars.as_ref()).map(Violation::BannedChars),
+            density::check(&document, lints.density.as_ref()).map(Violation::Density),
         ];
         report
             .findings

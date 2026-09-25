@@ -7,13 +7,11 @@
 //! arrows. Frontmatter, headings, tables and HTML are checked. The file is read as written, so an
 //! HTML entity such as `&mdash;` is not a character of it.
 //!
-//! [`scan`] needs only the text: it finds every character outside code that is not ASCII.
+//! [`scan`] needs only the document: it finds every character outside code that is not ASCII.
 //! [`check`] picks out the ones the settings ban.
 
-use pulldown_cmark::{Event, Parser, Tag, TagEnd};
-
 use crate::config::{BannedChars, Groups};
-use crate::parse::markdown::{self, Lines};
+use crate::document::{BlockKind, Body, Document, PieceKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned characters!";
@@ -286,42 +284,42 @@ pub struct Over {
     pub message: Option<String>,
 }
 
-/// Finds every character of `text`, a whole Markdown file, that is outside code and not ASCII.
-/// A byte order mark that opens the file is not counted.
-pub fn scan(text: &str) -> Vec<Found> {
-    let lines = Lines::new(text);
+/// Finds every character of `document` that is outside code and not ASCII. A byte order mark
+/// that opens the file is not counted.
+pub fn scan(document: &Document<'_>) -> Vec<Found> {
     let mut found = Vec::new();
-    let mut code_depth = 0usize;
-
-    for (event, range) in Parser::new_ext(text, markdown::options()).into_offset_iter() {
-        match event {
-            Event::Start(Tag::CodeBlock(_)) => code_depth += 1,
-            Event::End(TagEnd::CodeBlock) => code_depth = code_depth.saturating_sub(1),
-            // The source, not the event's text, so that an entity is read as it is written.
-            Event::Text(_) | Event::Html(_) | Event::InlineHtml(_) if code_depth == 0 => {
-                for (at, ch) in text[range.clone()].char_indices() {
-                    let offset = range.start + at;
-                    if !ch.is_ascii() && !(offset == 0 && ch == '\u{FEFF}') {
-                        found.push(Found {
-                            line: lines.line(offset),
-                            ch,
-                        });
-                    }
+    for (block, _) in document.walk() {
+        let pieces = match (&block.kind, &block.body) {
+            (BlockKind::Code { .. }, _) => continue,
+            (_, Body::Raw(pieces)) => pieces.as_slice(),
+            _ => document.pieces_of(block),
+        };
+        let written = pieces
+            .iter()
+            .filter(|piece| matches!(piece.kind, PieceKind::Text | PieceKind::Html));
+        for piece in written {
+            // The source, not the piece's text, so that an entity is read as it is written.
+            for (at, ch) in document.source[piece.range.clone()].char_indices() {
+                let offset = piece.range.start + at;
+                if !ch.is_ascii() && !(offset == 0 && ch == '\u{FEFF}') {
+                    found.push(Found {
+                        line: document.line(offset),
+                        ch,
+                    });
                 }
             }
-            _ => {}
         }
     }
     found
 }
 
-/// Checks one file, whose decoded contents are `text`. A file with no settings is not checked.
-pub fn check(text: &str, settings: Option<&BannedChars>) -> Option<Over> {
+/// Checks one file, read into `document`. A file with no settings is not checked.
+pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<Over> {
     let settings = settings?;
     let mut count = 0;
     let mut banned: Vec<Banned> = Vec::new();
 
-    for Found { line, ch } in scan(text) {
+    for Found { line, ch } in scan(document) {
         let Some(instead) = verdict(settings, ch) else {
             continue;
         };

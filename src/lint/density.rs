@@ -10,12 +10,12 @@
 //! `max_item_chars`. The report lists each with its line. The limit is on each block because a
 //! whole file's share of whitespace barely moves between a wall of text and a file that breathes.
 //!
-//! [`measure`] needs only the text. [`check`] adds the limits.
+//! [`measure`] needs only the document. [`check`] adds the limits.
 
-use pulldown_cmark::{Event, Parser, Tag};
+use std::ops::Range;
 
 use crate::config::Density;
-use crate::parse::markdown::{self, Lines};
+use crate::document::{BlockKind, Document, PieceKind, PointKind, SpanKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected dense text!";
@@ -53,13 +53,13 @@ pub struct Over {
     pub message: Option<String>,
 }
 
-/// Checks one file, whose decoded contents are `text`. A file with no settings is not checked.
-pub fn check(text: &str, settings: Option<&Density>) -> Option<Over> {
+/// Checks one file, read into `document`. A file with no settings is not checked.
+pub fn check(document: &Document<'_>, settings: Option<&Density>) -> Option<Over> {
     let settings = settings?;
     let max_paragraph_chars = settings.max_paragraph_chars();
     let max_item_chars = settings.max_item_chars();
 
-    let blocks: Vec<Block> = measure(text)
+    let blocks: Vec<Block> = measure(document)
         .into_iter()
         .filter(|block| {
             let limit = match block.kind {
@@ -80,126 +80,51 @@ pub fn check(text: &str, settings: Option<&Density>) -> Option<Over> {
     })
 }
 
-/// Measures every block of `text`, a whole Markdown file, in the order of the file. A block with
-/// nothing a reader sees but whitespace, such as a paragraph of images, is left out.
-pub fn measure(text: &str) -> Vec<Block> {
-    let lines = Lines::new(text);
+/// Measures every block of `document`, in the order of the file. A block with nothing a reader
+/// sees but whitespace, such as a paragraph of images, is left out.
+pub fn measure(document: &Document<'_>) -> Vec<Block> {
     let mut blocks = Vec::new();
-    // The tags open around the parser, innermost last.
-    let mut open: Vec<Open> = Vec::new();
-    // The block being read, and whether it holds anything but whitespace.
-    let mut block: Option<(Block, bool)> = None;
-    let mut finish = |block: &mut Option<(Block, bool)>| {
-        if let Some((block, true)) = block.take() {
-            blocks.push(block);
-        }
-    };
-
-    for (event, range) in Parser::new_ext(text, markdown::options()).into_offset_iter() {
-        let words = match event {
-            Event::Start(tag) => {
-                let tag = Open::of(&tag);
-                if !tag.is_inline() {
-                    finish(&mut block);
-                }
-                if tag == Open::Paragraph && !open.iter().any(|open| open.hides()) {
-                    let kind = match open.last() {
-                        Some(Open::Item) => Kind::Item,
-                        _ => Kind::Paragraph,
-                    };
-                    block = Some((Block::new(lines.line(range.start), kind), false));
-                }
-                open.push(tag);
-                continue;
-            }
-            Event::End(_) => {
-                if open.pop().is_some_and(|tag| !tag.is_inline()) {
-                    finish(&mut block);
-                }
-                continue;
-            }
-            Event::Text(words) | Event::Code(words) => words,
-            Event::SoftBreak | Event::HardBreak => " ".into(),
-            _ => continue,
-        };
-        if open.iter().any(|open| open.hides()) {
+    for (block, parent) in document.walk() {
+        if block.kind != BlockKind::Paragraph {
             continue;
         }
-        // A tight list's item has no paragraph: its text is the block.
-        if block.is_none() && open.last() == Some(&Open::Item) {
-            block = Some((Block::new(lines.line(range.start), Kind::Item), false));
+        let kind = match parent.map(|parent| &parent.kind) {
+            Some(BlockKind::Item { .. }) => Kind::Item,
+            _ => Kind::Paragraph,
+        };
+        // An image's text describes it, and the reader does not see it.
+        let images: Vec<&Range<usize>> = document
+            .spans_in(block.range.clone())
+            .filter(|span| matches!(span.kind, SpanKind::Image { .. }))
+            .map(|span| &span.range)
+            .collect();
+        let seen = |range: &Range<usize>| {
+            !images
+                .iter()
+                .any(|image| image.start <= range.start && range.end <= image.end)
+        };
+        let mut chars = 0;
+        let mut visible = false;
+        for piece in document.pieces_of(block) {
+            if matches!(piece.kind, PieceKind::Text | PieceKind::Code) && seen(&piece.range) {
+                chars += piece.text.chars().count();
+                visible |= !piece.text.trim().is_empty();
+            }
         }
-        if let Some((block, visible)) = block.as_mut() {
-            block.chars += words.chars().count();
-            *visible |= !words.trim().is_empty();
+        chars += document
+            .points_in(block.range.clone())
+            .iter()
+            .filter(|point| point.kind != PointKind::Gap && seen(&point.range))
+            .count();
+        if visible {
+            blocks.push(Block {
+                line: document.line(block.range.start),
+                kind,
+                chars,
+            });
         }
     }
-    finish(&mut block);
-
     blocks
-}
-
-impl Block {
-    fn new(line: usize, kind: Kind) -> Block {
-        Block {
-            line,
-            kind,
-            chars: 0,
-        }
-    }
-}
-
-/// What an open tag means for measuring.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Open {
-    Paragraph,
-    Item,
-    /// A container of blocks, such as a block quote or a list.
-    Container,
-    /// A block whose text is not measured, such as a heading or a table.
-    Hidden,
-    /// Markup inside a block, such as emphasis or a link.
-    Inline,
-    /// An image, whose text the reader does not see.
-    Image,
-}
-
-impl Open {
-    fn of(tag: &Tag) -> Open {
-        match tag {
-            Tag::Paragraph => Open::Paragraph,
-            Tag::Item => Open::Item,
-            Tag::Heading { .. }
-            | Tag::CodeBlock(_)
-            | Tag::HtmlBlock
-            | Tag::MetadataBlock(_)
-            | Tag::Table(_)
-            | Tag::TableHead
-            | Tag::TableRow
-            | Tag::TableCell => Open::Hidden,
-            Tag::Emphasis
-            | Tag::Strong
-            | Tag::Strikethrough
-            | Tag::Superscript
-            | Tag::Subscript
-            | Tag::Link { .. } => Open::Inline,
-            Tag::Image { .. } => Open::Image,
-            Tag::BlockQuote(_)
-            | Tag::List(_)
-            | Tag::FootnoteDefinition(_)
-            | Tag::DefinitionList
-            | Tag::DefinitionListTitle
-            | Tag::DefinitionListDefinition => Open::Container,
-        }
-    }
-
-    fn is_inline(self) -> bool {
-        matches!(self, Open::Inline | Open::Image)
-    }
-
-    fn hides(self) -> bool {
-        matches!(self, Open::Hidden | Open::Image)
-    }
 }
 
 /// The report for one dense file at `path`, with no trailing newline.

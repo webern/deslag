@@ -13,20 +13,23 @@
 //! A file with none of the three has no budget and is left alone. See the crate README and
 //! `docs/design/` for the design.
 //!
-//! [`instructions`] holds what an agent setting deslag up needs to read, and [`config::schema`]
-//! the JSON schema of the config.
+//! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
+//! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
+//! and [`config::schema`] the JSON schema of the config.
 
 use std::io;
 use std::num::NonZeroU32;
 
 pub mod cli;
 pub mod config;
+pub mod document;
 pub mod glob;
 pub mod instructions;
 pub mod lint;
 pub mod parse;
 
 pub use config::{Config, ConfigSource};
+pub use document::Document;
 pub use lint::{Finding, Report, Violation, check_repo};
 
 /// Everything that can go wrong inside the library.

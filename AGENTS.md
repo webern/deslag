@@ -12,11 +12,11 @@ has to say what is wrong in a way an agent reading the output can act on.
 ```
 deslag/
   Makefile             <- every build, test and check; `make help` lists the targets
-  src/lib.rs           <- the library: the error type and the module list; src/main.rs wraps it
-  src/cli/             <- the clap types
+  src/lib.rs           <- the library's error type and module list; src/main.rs and src/cli/ wrap it
   src/config/          <- the config schema, and finding the config file
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
-  src/parse/           <- reading what the lints need out of a file
+  src/document/        <- a file read once into blocks, tokens and sentences, which the lints read
+  src/parse/           <- the keys a file declares in its frontmatter, such as its byte budget
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
   tests/               <- the unit tests; cases/ holds small repos, each with what deslag prints
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,

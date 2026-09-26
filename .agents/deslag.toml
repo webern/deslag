@@ -3,8 +3,14 @@
 
 schema_version = 1
 
+# ACKNOWLEDGEMENTS.md gets no byte budget: it grows with each project deslag borrows from.
 [md]
-globs = ["/AGENTS.md", "/.agents/skills/**/*.md", "/src/instructions/guide.md"]
+globs = [
+  "/AGENTS.md",
+  "/ACKNOWLEDGEMENTS.md",
+  "/.agents/skills/**/*.md",
+  "/src/instructions/guide.md",
+]
 
 [md.lints.max_emphasis]
 free_spans = 2

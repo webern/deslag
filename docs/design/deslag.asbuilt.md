@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-25
+updated: 2026-09-26
 subsystems:
   - cli
   - config
@@ -236,7 +236,7 @@ repeats its source.
 ```
 Cargo.toml  Makefile  AGENTS.md  README.md
 _typos.toml           keeps the spell checker out of the quoted corpus
-.agents/deslag.toml   deslag's config for this repo: AGENTS.md and the skills
+.agents/deslag.toml   deslag's config for this repo
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   *.rs                one file per lint or concern, such as unit.rs for small trees

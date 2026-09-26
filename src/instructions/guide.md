@@ -94,7 +94,8 @@ wrote, show the human the report and ask first. When every file passes, the conf
 ## 6. Run it in CI
 
 Add `deslag check` where the repository runs its other checks, such as a Makefile target or a CI
-job, so a failure blocks a merge. A CI job can install it with `cargo install deslag --locked`.
+job, so a failure blocks a merge. deslag is not on crates.io yet, so ask the human how a CI job
+should install it.
 
 ## 7. Tell the next agent
 

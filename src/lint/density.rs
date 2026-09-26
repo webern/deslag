@@ -88,10 +88,10 @@ pub fn measure(document: &Document<'_>) -> Vec<Block> {
         if block.kind != BlockKind::Paragraph {
             continue;
         }
-        let kind = match ancestors.last().map(|parent| &parent.kind) {
-            Some(BlockKind::Item { .. }) => Kind::Item,
-            _ => Kind::Paragraph,
-        };
+        let in_item = ancestors
+            .iter()
+            .any(|ancestor| matches!(ancestor.kind, BlockKind::Item { .. }));
+        let kind = if in_item { Kind::Item } else { Kind::Paragraph };
         // An image's text describes it, and the reader does not see it.
         let images: Vec<&Range<usize>> = document
             .spans_in(block.range.clone())

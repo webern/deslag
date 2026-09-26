@@ -73,11 +73,11 @@ which settings apply to a file; `lint` runs the lints with them. `lint` calls `c
 ## The document
 
 `Document::markdown` reads a file once; every lint but the byte budget reads that `Document`. Its
-first layer is what `pulldown-cmark` finds, with frontmatter read as a metadata block. **Blocks**
-nest as the Markdown does, and a tight list item's text is a paragraph. A block of prose holds
-**pieces**, the text it renders, under **spans** of formatting such as emphasis, links and images,
-and among **points**: soft and hard line breaks, and the gaps between blocks. Code, HTML and
-frontmatter blocks are raw: kept as written, never split.
+first layer is what `pulldown-cmark` finds. **Blocks** nest as the Markdown does, and a tight list
+item's text is a paragraph. `Document::walk` yields each block in file order with the blocks that
+hold it, outermost first. A block of prose holds **pieces**, the text it renders, under **spans**
+of formatting, and among **points**: line breaks and the gaps between blocks. Code, HTML and
+frontmatter blocks are raw: kept as written.
 
 The second layer splits each block of prose into **tokens** by the Unicode word rules; a code
 span, an image, a URL and the like are one token each. A **sentence** ends with its block,

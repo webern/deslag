@@ -84,11 +84,11 @@ pub fn check(document: &Document<'_>, settings: Option<&Density>) -> Option<Over
 /// sees but whitespace, such as a paragraph of images, is left out.
 pub fn measure(document: &Document<'_>) -> Vec<Block> {
     let mut blocks = Vec::new();
-    for (block, parent) in document.walk() {
+    for (block, ancestors) in document.walk() {
         if block.kind != BlockKind::Paragraph {
             continue;
         }
-        let kind = match parent.map(|parent| &parent.kind) {
+        let kind = match ancestors.last().map(|parent| &parent.kind) {
             Some(BlockKind::Item { .. }) => Kind::Item,
             _ => Kind::Paragraph,
         };

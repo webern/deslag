@@ -3,7 +3,7 @@
 
 schema_version = 1
 
-# ACKNOWLEDGEMENTS.md gets no byte budget: it grows with each project deslag borrows from.
+# ACKNOWLEDGEMENTS.md does not require a byte budget.
 [md]
 globs = [
   "/AGENTS.md",

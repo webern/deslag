@@ -2,7 +2,7 @@
 llm_instructions: >
   When we specifically look at a codebase for inspiration, record it here. Do not get overly
   technical about this; no need to link to issues, lines of code, etc. Just give a general idea of
-  how we used it.
+  how we used it. Do not edit the `<owner>` statement.
 ---
 # Acknowledgements
 

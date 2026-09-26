@@ -39,9 +39,11 @@ struct OverrideFile {
 
 /// An override with its patterns compiled.
 #[derive(Debug)]
-struct Override {
-    patterns: Vec<Pattern>,
-    lints: MdLints,
+pub struct Override {
+    /// The files it applies to.
+    pub patterns: Vec<Pattern>,
+    /// The settings it lays over the section's.
+    pub lints: MdLints,
 }
 
 /// The `[md]` section, compiled.
@@ -110,25 +112,33 @@ impl MdConfig {
         self.overrides.len()
     }
 
-    /// The lint settings for `rel_path`.
-    ///
-    /// The section's own settings come first, then every matching override from the least
-    /// specific to the most, each setting only the fields it names. An override's specificity is
-    /// that of its most specific matching pattern; of two equally specific overrides, the one
-    /// declared later wins.
-    pub fn lints_for(&self, rel_path: &str) -> MdLints {
+    /// The overrides that match `rel_path`, each with its index in the config, in the order
+    /// [`MdConfig::lints_for`] merges them: from the least specific to the most. An override's
+    /// specificity is that of its most specific matching pattern; of two equally specific
+    /// overrides, the one declared later merges later.
+    pub fn overrides_for(&self, rel_path: &str) -> Vec<(usize, &Override)> {
         let mut matching: Vec<_> = self
             .overrides
             .iter()
-            .filter_map(|entry| {
-                glob::best_match(&entry.patterns, rel_path).map(|specificity| (specificity, entry))
+            .enumerate()
+            .filter_map(|(index, entry)| {
+                glob::best_match(&entry.patterns, rel_path)
+                    .map(|specificity| (specificity, index, entry))
             })
             .collect();
         // A stable sort keeps declaration order among equals, so the later one merges last.
-        matching.sort_by_key(|(specificity, _)| *specificity);
+        matching.sort_by_key(|(specificity, _, _)| *specificity);
+        matching
+            .into_iter()
+            .map(|(_, index, entry)| (index, entry))
+            .collect()
+    }
 
+    /// The lint settings for `rel_path`: the section's own, then every override
+    /// [`MdConfig::overrides_for`] finds, each setting only the fields it names.
+    pub fn lints_for(&self, rel_path: &str) -> MdLints {
         let mut lints = self.lints.clone();
-        for (_, entry) in matching {
+        for (_, entry) in self.overrides_for(rel_path) {
             lints.merge(&entry.lints);
         }
         lints

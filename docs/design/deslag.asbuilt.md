@@ -25,7 +25,7 @@ for an agent setting deslag up.
 files, works out each lint's settings for each file, runs the lints and prints a report for each
 failure.
 
-The **repo root** is the process working directory. Deslag never walks upward looking for a
+The **repo root** is the process working directory; deslag never walks upward looking for a
 repository or a config. A **budget** is a byte count, and a file's **size** is the length of the
 file on disk, frontmatter and all.
 
@@ -46,6 +46,7 @@ src/
   glob/
     mod.rs            Pattern and its specificity
     walk.rs           the repo walk
+  explain/mod.rs      a file's settings, and where they come from
   instructions/
     mod.rs            fills in and returns the guide
     guide.md          the guide, with placeholders
@@ -91,21 +92,10 @@ specific matching `[[md.overrides]]` entry that sets `lints.max_size_bytes.value
 
 ## The config
 
-`config/search.rs` holds `CANONICAL_CONFIG_STEMS`, tried in this order relative to the repo root,
-each with every one of `CONFIG_EXTENSIONS` (`toml`, `yaml`, `yml`, `json`):
-
-```
-.deslag/config
-deslag
-config/deslag
-.config/deslag
-.agents/deslag
-.claude/deslag
-```
-
-The first stem with a file is the config; two files at one stem are `Error::ConfigAmbiguous`.
-`--config-path <PATH>` replaces the search with one file, which is resolved against the working
-directory. A missing config is an error, not an empty config.
+`config/search.rs` tries each of `CANONICAL_CONFIG_STEMS` in order, relative to the repo root,
+with each of `CONFIG_EXTENSIONS`. The first stem with a file is the config; two files at one stem
+are `Error::ConfigAmbiguous`. `--config-path <PATH>` replaces the search with one file, resolved
+against the working directory. A missing config is an error, not an empty one.
 
 `ConfigFormat::of` reads the language from the extension; any other extension is
 `Error::ConfigFormat`. The file is parsed by `serde` with `toml`, `serde-saphyr` or `serde_json`
@@ -127,8 +117,8 @@ lints.max_size_bytes.value = 8000
 lints.repo_layout = {}           # a lint's table alone turns it on
 ```
 
-`schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
-migrated. A version above `SCHEMA_VERSION`, now 1, is an error.
+`schema_version` is a `NonZeroU32` that goes up only when a change needs existing configs
+migrated; one above `SCHEMA_VERSION` is an error.
 
 The top level holds one section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with one sub-table per lint, and `overrides`. Every field of
@@ -153,13 +143,20 @@ up to the next `---` or `...` line, with no YAML parser: the value is the rest o
 quotes either side allowed. A block never closed is not frontmatter. A `max_size_bytes` that is
 not a byte count is an error.
 
+## Explaining a file
+
+`deslag explain <PATH>...` prints a TOML document per file. Its comments name the config, whether
+`[md]` selects the file, the overrides `MdConfig::overrides_for` finds, in the order they merge,
+and any frontmatter budget. Its tables are `MdLints::toml_tables`: each lint that is on, with the
+schema's `default` for each unset field; one that is off is a comment. A path is named as the walk
+names it; one missing, not a file or outside the root is `Error::Explain`.
+
 ## Walking the repo
 
-`glob/walk.rs` walks down from the repo root with the `ignore` crate's `WalkBuilder` and returns
-every regular file as a `RepoFile`: its absolute path and its `/`-separated path relative to the
-root. It skips `.git`, symlinks, and whatever git would ignore (`.gitignore` at any depth,
-`.git/info/exclude`, the global excludes file, `.ignore`), even without a `.git` directory. Ignore
-files above the root are not read. Hidden files are walked.
+`glob/walk.rs` walks the repo with the `ignore` crate's `WalkBuilder` and returns every regular
+file as a `RepoFile`: its absolute path and its `/`-separated path relative to the root. It skips
+`.git`, symlinks, and what git or a `.ignore` file would ignore, even with no `.git` directory; no
+ignore file above the root is read. Hidden files are walked.
 
 ## Checking and reporting
 
@@ -223,8 +220,8 @@ line per lint that failed a file; a clean run prints nothing.
 
 ## The command line
 
-`cli/mod.rs` defines a `check` subcommand taking `--config-path`, and `instructions`, which prints
-`instructions::guide` or, given `config-schema`, `config::schema`: the JSON schema `schemars`
+`cli/mod.rs` defines `check` and `explain`, each taking `--config-path`, and `instructions`, which
+prints `instructions::guide` or, given `config-schema`, `config::schema`: the JSON schema `schemars`
 derives from the config's types. The guide takes its config paths from the code. `src/main.rs`
 prints an error out of `run` in `anyhow`'s alternate form, which appends each underlying error once;
 an `Error`'s own message never repeats its source. The process exits 0 when nothing fails, 1 when a
@@ -251,7 +248,7 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
 ## Tests
 
 `tests/unit.rs` and `tests/formats.rs` build small trees in a temp directory and pin one rule
-each, every canonical config path in every language included, read from `canonical_config_paths`.
+each, every canonical config path in every language included.
 
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
@@ -269,11 +266,10 @@ as its history tells: `human/` was last touched before 2022, every commit to an 
 marked as an agent's, and a `mixed/` file was begun by a person before 2022 and later edited by an
 agent.
 
-Each holds about 400 fixtures, at most three from one repository, from four forges and under
-permissive licences only. Most are English; a few are not, so the lints meet other scripts.
-
-A sidecar records the source, its licence, the label and the history behind it, and facts about
-the bytes such as sha256, which the loader checks. No fixture is quoted twice.
+Each holds about 400 fixtures, at most three from one repository, under permissive licences only;
+a few are not English, so the lints meet other scripts. A sidecar records the source, licence,
+label and history, and facts about the bytes such as sha256, which the loader checks. No fixture is
+quoted twice.
 
 The matrix runs on `core/`: each case is a config, a canonical location, a layout (flat, nested,
 or each fixture's real directory structure) and budgets. The harness derives what it expects from
@@ -291,8 +287,6 @@ fixture's tokens and sentences must keep to their blocks, in the order of the fi
 
 ## Build
 
-`make ci` is the gate: preflight, then `check`, build and test, all `--locked`. `make test` runs the
-tests alone. `scripts/preflight.sh` is what complains when a tool is missing. `make check-deslag`
-runs the debug build of deslag on this repo.
-
-The published crate is what `include` in `Cargo.toml` lists; `make check-publish` builds from it.
+`make ci` is the gate: preflight, then every check, build and test, all `--locked`.
+`scripts/preflight.sh` complains when a tool is missing. `make check-deslag` runs deslag on this
+repo. The published crate is what `include` in `Cargo.toml` lists; `make check-publish` builds it.

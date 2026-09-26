@@ -15,6 +15,8 @@ use schemars::generate::SchemaSettings;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::document::{Token, TokenKind};
+
 /// Laying a more specific set of settings over a less specific one.
 pub trait Merge {
     /// Overwrites every field of `self` that `over` sets.
@@ -48,6 +50,9 @@ pub struct MdLints {
     /// The characters the file must not hold, such as the em dash.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub banned_chars: Option<BannedChars>,
+    /// The phrases the file must not hold, which the config lists.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub banned_phrases: Option<BannedPhrases>,
     /// The longest a paragraph or list item may be.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub density: Option<Density>,
@@ -61,6 +66,11 @@ impl MdLints {
             .and_then(MaxEmphasis::invalid)
             .or_else(|| self.repo_layout.as_ref().and_then(RepoLayout::invalid))
             .or_else(|| self.banned_chars.as_ref().and_then(BannedChars::invalid))
+            .or_else(|| {
+                self.banned_phrases
+                    .as_ref()
+                    .and_then(BannedPhrases::invalid)
+            })
             .or_else(|| self.density.as_ref().and_then(Density::invalid))
     }
 
@@ -132,6 +142,7 @@ impl Merge for MdLints {
         self.max_emphasis.merge(&over.max_emphasis);
         self.repo_layout.merge(&over.repo_layout);
         self.banned_chars.merge(&over.banned_chars);
+        self.banned_phrases.merge(&over.banned_phrases);
         self.density.merge(&over.density);
     }
 }
@@ -456,6 +467,96 @@ impl Merge for Groups {
             if over.is_some() {
                 *under = *over;
             }
+        }
+    }
+}
+
+/// `lints.banned_phrases`: a file fails when its prose holds a phrase in `ban`.
+///
+/// Like `banned_chars`, the table itself turns the check on, but nothing is banned by default: with
+/// nothing in `ban`, it checks nothing. A phrase matches whatever its case and its style of
+/// apostrophe, and a match inside a match of a phrase in `allow` is not reported.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct BannedPhrases {
+    /// Phrases that are never reported, such as a longer phrase that holds a banned one.
+    #[serde(default)]
+    pub allow: Option<Vec<String>>,
+    /// Banned phrases, each mapped to the advice the report shows with it. An empty string means
+    /// delete it.
+    #[serde(default)]
+    pub ban: Option<BTreeMap<String, String>>,
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl BannedPhrases {
+    /// Why these settings are unusable, or `None` when they are fine.
+    ///
+    /// A phrase in both `ban` and `allow` is an error within one table only, so that an override
+    /// may allow a phrase the section bans.
+    pub fn invalid(&self) -> Option<String> {
+        let allowed = self.allow.iter().flatten().map(|phrase| ("allow", phrase));
+        let banned = self.ban.iter().flatten().map(|(phrase, _)| ("ban", phrase));
+        let unusable = allowed.chain(banned).find_map(|(field, phrase)| {
+            let tokens = Token::split(phrase);
+            let never_prose = tokens.iter().find(|token| {
+                !matches!(
+                    token.kind,
+                    TokenKind::Word
+                        | TokenKind::Number
+                        | TokenKind::Punctuation
+                        | TokenKind::Symbol
+                )
+            });
+            let words = tokens
+                .iter()
+                .any(|token| matches!(token.kind, TokenKind::Word | TokenKind::Number));
+            match (never_prose, words) {
+                (Some(token), _) => Some(format!(
+                    "banned_phrases.{field} holds {phrase:?}, which can never match: {:?} is not a \
+                     word, a number or a mark",
+                    token.text
+                )),
+                (None, false) => Some(format!(
+                    "banned_phrases.{field} holds {phrase:?}, which has no words"
+                )),
+                (None, true) => None,
+            }
+        });
+        unusable.or_else(|| {
+            let folded = |phrase: &str| -> Vec<String> {
+                Token::split(phrase).iter().map(Token::folded).collect()
+            };
+            let allowed: Vec<Vec<String>> = self
+                .allow
+                .iter()
+                .flatten()
+                .map(|phrase| folded(phrase))
+                .collect();
+            self.ban
+                .iter()
+                .flatten()
+                .map(|(phrase, _)| phrase)
+                .find(|phrase| allowed.contains(&folded(phrase)))
+                .map(|phrase| {
+                    format!("banned_phrases.ban and banned_phrases.allow both hold {phrase:?}")
+                })
+        })
+    }
+}
+
+impl Merge for BannedPhrases {
+    fn merge(&mut self, over: &Self) {
+        if over.allow.is_some() {
+            self.allow.clone_from(&over.allow);
+        }
+        if over.ban.is_some() {
+            self.ban.clone_from(&over.ban);
+        }
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
         }
     }
 }

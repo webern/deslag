@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.banned_phrases]
+ban = { "it's worth noting" = "" }
+message = "Cut the filler from {path}."

@@ -1,0 +1,7 @@
+schema_version = 1
+
+[md.lints.banned_phrases.ban]
+"it's worth noting" = ""
+"delve into" = "say what you found instead"
+"in today's fast-paced world" = ""
+"leverage" = "write `use`"

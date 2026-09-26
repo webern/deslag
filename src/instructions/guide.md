@@ -50,6 +50,8 @@ max_percent = 1
 
 [md.lints.banned_chars]
 
+[md.lints.banned_phrases]
+
 [md.lints.density]
 
 [[md.overrides]]
@@ -65,6 +67,8 @@ lints.repo_layout = { min_entries = 5, max_entries = 15 }
   alone, so turn it on in an override.
 - `banned_chars` fails a file holding characters agents write and people rarely do, such as the
   em dash. The empty table bans the default groups.
+- `banned_phrases` fails a file holding a phrase that `ban` lists. It bans none by default, so ask
+  the human which phrases to ban and what the report should advise instead.
 - `density` fails a file with a paragraph or a list item that is too long. The empty table sets
   the default limits.
 

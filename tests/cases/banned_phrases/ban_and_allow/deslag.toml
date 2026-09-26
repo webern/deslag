@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.banned_phrases]
+ban = { "mea culpa" = "" }
+allow = ["Mea Culpa"]

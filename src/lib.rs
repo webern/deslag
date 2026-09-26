@@ -34,7 +34,7 @@ pub use lint::{Finding, Report, Violation, check_repo};
 
 /// Everything that can go wrong inside the library.
 ///
-/// The binary turns these into a message and a nonzero exit; the library never exits on its own.
+/// The binary turns these into a message and exit code 2; the library never exits on its own.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// No config file was found in any of the canonical locations.

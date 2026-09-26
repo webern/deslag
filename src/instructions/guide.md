@@ -75,7 +75,8 @@ schema. TOML, YAML and JSON configs share it.
 ## 4. Measure, then propose
 
 Run `deslag check`. It prints a report on standard error for each file that fails, then a tally,
-and exits 1. A clean run prints nothing and exits 0.
+and exits 1. A clean run prints nothing and exits 0. Exit 2 means deslag could not run, as with a
+bad config: fix the setup, not the Markdown.
 
 For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
 file's size today stops it from growing; a budget below it asks for cuts. Where one file needs a

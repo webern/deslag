@@ -8,12 +8,15 @@ use clap::Parser;
 
 use deslag::cli::{Cli, Command, Topic};
 
+/// Exits 0 when a run finishes and nothing fails, 1 when it finishes and a file fails a lint, and 2
+/// when deslag cannot do what it was asked: any error out of `run`, whatever the subcommand. clap
+/// exits 2 on bad arguments too. So the code alone tells a file to fix from a setup to fix.
 fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
         Err(error) => {
             eprintln!("deslag: {error:#}");
-            ExitCode::FAILURE
+            ExitCode::from(2)
         }
     }
 }

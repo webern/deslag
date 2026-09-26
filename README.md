@@ -28,7 +28,8 @@ deslag check
 ```
 
 Every Markdown file that fails a lint gets a message on standard error, and the exit code is
-1. A clean run prints nothing and exits 0, so a CI job can gate on it:
+1. When deslag cannot run, as with a bad config, the exit code is 2. A clean run prints nothing and
+exits 0, so a CI job can gate on it:
 
 ```yaml
 - name: Lint Markdown size

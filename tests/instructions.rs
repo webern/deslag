@@ -254,11 +254,9 @@ fn every_config_deslag_accepts_fits_the_schema() {
     for lint in std::fs::read_dir(root.join("tests/cases")).expect("the cases") {
         for case in std::fs::read_dir(lint.expect("a lint").path()).expect("a lint's cases") {
             let case = case.expect("a case").path();
-            if !case.is_dir() {
-                continue;
-            }
-            let expected = std::fs::read_to_string(case.with_extension("stderr")).expect("stderr");
-            if expected.starts_with("deslag:") {
+            // A case with a .exit file is one deslag cannot run, such as one whose config it
+            // rejects.
+            if !case.is_dir() || case.with_extension("exit").exists() {
                 continue;
             }
             let path = canonical_config_paths()
@@ -299,7 +297,7 @@ fn the_schema_refuses_what_deslag_refuses() {
         let repo = Repo::new();
         repo.write("deslag.toml", text);
         let output = repo.check();
-        assert_eq!(code(&output), 1, "{text:?}");
+        assert_eq!(code(&output), 2, "{text:?}");
         assert!(stderr(&output).starts_with("deslag:"), "{text:?}");
     }
 }

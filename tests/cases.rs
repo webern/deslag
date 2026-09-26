@@ -1,10 +1,16 @@
 //! The cases. Each directory under `tests/cases/<lint>/` is a small repo written to show one
 //! behavior, and the `.stderr` file beside it is exactly what `deslag check` prints there, with the
-//! repo root written as `[ROOT]`. An empty `.stderr` means the run must pass, any other that it
-//! must fail.
+//! repo root written as `[ROOT]`. An empty `.stderr` means the run must exit 0, any other that it
+//! must exit 1, the code for a file that fails a lint.
 //!
-//! `make fix-test-output` rewrites the `.stderr` files from what deslag prints now; read the diff
-//! before committing it.
+//! A `.exit` file beside a case holds the code it must exit with instead. A case where deslag
+//! cannot run, such as one with an invalid setting, has one holding 2. The code is written down
+//! rather than guessed from the text because `make fix-test-output` rewrites the text: a change
+//! that turns a lint failure into an error, or back, must fail here rather than pass with the new
+//! text.
+//!
+//! `make fix-test-output` rewrites the `.stderr` files from what deslag prints now, and never a
+//! `.exit` file; read the diff before committing it.
 //!
 //! A case runs in a copy in a temp directory. It cannot hold a `.git` directory, or a `.gitignore`
 //! that ignores its own files, because git would apply it to this repo too.
@@ -26,6 +32,8 @@ struct Case {
     root: PathBuf,
     /// The file holding what deslag must print.
     expected: PathBuf,
+    /// The file holding the code deslag must exit with, when the case has one.
+    exit: PathBuf,
 }
 
 impl Case {
@@ -40,20 +48,26 @@ impl Case {
             }
             for path in entries(&group) {
                 if path.is_dir() {
-                    let mut expected = path.clone().into_os_string();
-                    expected.push(".stderr");
+                    let beside = |extension: &str| {
+                        let mut file = path.clone().into_os_string();
+                        file.push(extension);
+                        PathBuf::from(file)
+                    };
                     let name = path.strip_prefix(cases).expect("a path under the cases");
                     found.push(Case {
                         name: name.to_string_lossy().into_owned(),
-                        expected: expected.into(),
+                        expected: beside(".stderr"),
+                        exit: beside(".exit"),
                         root: path,
                     });
                     continue;
                 }
-                let stderr_file = path.extension() == Some("stderr".as_ref());
-                if !stderr_file || !path.with_extension("").is_dir() {
+                let beside_a_case = path
+                    .extension()
+                    .is_some_and(|extension| extension == "stderr" || extension == "exit");
+                if !beside_a_case || !path.with_extension("").is_dir() {
                     stray.push(format!(
-                        "{} is neither a case nor the .stderr file of one",
+                        "{} is neither a case nor the .stderr or .exit file of one",
                         path.display()
                     ));
                 }
@@ -71,11 +85,20 @@ impl Case {
         let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
         let actual = stderr(&output).replace(root.to_str().expect("a UTF-8 temp root"), "[ROOT]");
 
-        let wanted = if actual.is_empty() { 0 } else { 1 };
+        let wanted = match fs::read_to_string(&self.exit) {
+            Ok(text) => match text.trim().parse() {
+                Ok(wanted) => wanted,
+                Err(_) => return Some(format!("{name}.exit holds {text:?}, not an exit code")),
+            },
+            Err(_) if actual.is_empty() => 0,
+            Err(_) => 1,
+        };
         if code(&output) != wanted || !stdout(&output).is_empty() {
             return Some(format!(
                 "{name}: deslag exited {} and printed to stdout:\n{}\nand to stderr:\n{actual}\n\
-                 A case must exit 0 and print nothing, or exit 1 and print to stderr only.",
+                 A case must print to stderr only, and exit with the code in its .exit file or, \
+                 without one, 0 when it prints nothing and 1 when it prints. A case where deslag \
+                 cannot run exits 2, and needs a .exit file holding 2.",
                 code(&output),
                 stdout(&output),
             ));

@@ -51,4 +51,5 @@ the Makefile, `scripts/`, CI and dependencies; read it before changing any of th
 - A fixture is quoted, never edited. If a rule disagrees with a fixture, that is a finding about
   the rule. Every fixture carries its source, commit, licence and capture date in a JSON sidecar
   beside it, and a fixture without one does not belong in the corpus.
+- When you port code or borrow a design from another project, credit it in `ACKNOWLEDGEMENTS.md`.
 - The human is the author of the git commit and the PR. See `/deslag-commit`.

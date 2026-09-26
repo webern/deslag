@@ -1,0 +1,6 @@
+schema_version = 1
+
+[md.lints.max_emphasis]
+free_spans = 0
+max_percent = 2.5
+message = "Calm {path} down: at most {free_spans} spans, or {max_percent}% of its prose."

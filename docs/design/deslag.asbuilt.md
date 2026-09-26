@@ -256,8 +256,9 @@ each, every canonical config path in every language included, read from `canonic
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
 `deslag check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run
-must pass. Every lint's reports are pinned there. `make fix-test-output` rewrites the `.stderr`
-files. Unlike a fixture, a case is written for deslag and changes with it.
+must pass. Each lint in the config schema needs a directory there with a case that fails, and each
+directory must be named after a lint. `make fix-test-output` rewrites the `.stderr` files. Unlike a
+fixture, a case is written for deslag and changes with it.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
 against the bytes on disk, and runs the corpus through the binary.
@@ -290,9 +291,8 @@ fixture's tokens and sentences must keep to their blocks, in the order of the fi
 
 ## Build
 
-`make ci` is the gate: preflight, then `check` (fmt, clippy, deslag, doc, typos), build and test, all
-`--locked`. `make test` runs the tests alone. `scripts/preflight.sh` is what complains when a tool
-is missing. `make check-deslag` runs the debug build of deslag on this repo.
+`make ci` is the gate: preflight, then `check`, build and test, all `--locked`. `make test` runs the
+tests alone. `scripts/preflight.sh` is what complains when a tool is missing. `make check-deslag`
+runs the debug build of deslag on this repo.
 
-The published crate is what `include` in `Cargo.toml` lists: `src/`, the manifest, the lockfile,
-`LICENSE` and `README.md`. `make check-publish` builds from that package.
+The published crate is what `include` in `Cargo.toml` lists; `make check-publish` builds from it.

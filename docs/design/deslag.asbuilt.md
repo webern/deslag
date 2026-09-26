@@ -146,10 +146,10 @@ not a byte count is an error.
 ## Explaining a file
 
 `deslag explain <PATH>...` prints a TOML document per file. Its comments name the config, whether
-`[md]` selects the file, the overrides `MdConfig::overrides_for` finds, in the order they merge,
-and any frontmatter budget. Its tables are `MdLints::toml_tables`: each lint that is on, with the
-schema's `default` for each unset field; one that is off is a comment. A path is named as the walk
-names it; one missing, not a file or outside the root is `Error::Explain`.
+the walk skips the file or `[md]` selects it, the overrides `MdConfig::overrides_for` finds, in the
+order they merge, and any frontmatter budget. Its tables are `MdLints::toml_tables`: each lint that
+is on, with the schema's `default` for each unset field; one that is off is a comment. A path is
+named as the walk names it; one missing, not a file or outside the root is `Error::Explain`.
 
 ## Walking the repo
 

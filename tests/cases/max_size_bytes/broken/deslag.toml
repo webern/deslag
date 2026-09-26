@@ -1,0 +1,8 @@
+schema_version = 1
+
+[md.lints.max_size_bytes]
+value = 100
+
+[[md.overrides]]
+globs = ["/docs/**/*.md"]
+lints.max_size_bytes.value = 300

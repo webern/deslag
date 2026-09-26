@@ -1,0 +1,10 @@
+ERROR: deslag detected over-emphasis!
+
+README.md has 1 emphasized span covering 5.34% of its prose. The limit is 2.5% of its prose.
+
+Calm README.md down: at most 0 spans, or 2.5% of its prose.
+
+The emphasized spans:
+  line 3: **must**
+
+deslag: 1 of 1 Markdown files over-emphasized.

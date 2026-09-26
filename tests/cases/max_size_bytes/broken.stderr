@@ -1,0 +1,11 @@
+ERROR: deslag detected Markdown bloat!
+
+README.md is larger than 100 bytes.
+
+The file must be made more compact until it fits within its max_size_bytes budget of 100 bytes.
+
+Make sure you keep the most important information, but you must reword and rewrite the file to get it under its size budget.
+
+Do not increase max_size_bytes! Only a human can tell you to do that, and I am a linter, not a human.
+
+deslag: 1 of 2 Markdown files over budget.

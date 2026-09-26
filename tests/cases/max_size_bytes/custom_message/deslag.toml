@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.max_size_bytes]
+value = 40
+message = "Cut {path} to {max_size_bytes} bytes or fewer."

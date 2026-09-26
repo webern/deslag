@@ -2,28 +2,14 @@
 //! sentences, and the offsets that lead each back to the source.
 
 use deslag::Document;
-use deslag::document::{Block, BlockKind, Body, PieceKind, PointKind, SpanKind, TokenKind};
+use deslag::document::{BlockKind, Body, PieceKind, PointKind, SpanKind, TokenKind};
 
 /// The kind of every block of `text`, parents before children, each indented by its depth.
 fn tree(text: &str) -> Vec<String> {
-    let document = Document::markdown(text);
-    let mut depths: Vec<(&Block<'_>, usize)> = Vec::new();
-    let mut tree = Vec::new();
-    for (block, parent) in document.walk() {
-        let depth = match parent {
-            Some(parent) => {
-                let (_, depth) = depths
-                    .iter()
-                    .find(|(seen, _)| std::ptr::eq(*seen, parent))
-                    .expect("a parent comes before its children");
-                depth + 1
-            }
-            None => 0,
-        };
-        depths.push((block, depth));
-        tree.push(format!("{}{:?}", "  ".repeat(depth), block.kind));
-    }
-    tree
+    Document::markdown(text)
+        .walk()
+        .map(|(block, ancestors)| format!("{}{:?}", "  ".repeat(ancestors.len()), block.kind))
+        .collect()
 }
 
 /// The kind and text of every token of `text`.
@@ -107,6 +93,37 @@ html
             "Rule",
             "Code { info: Some(\"rust\") }",
             "Html",
+        ]
+    );
+}
+
+#[test]
+fn a_walk_gives_every_block_that_holds_a_block_outermost_first() {
+    let text = "- one\n  > - two\n";
+    let document = Document::markdown(text);
+    let chains: Vec<(&BlockKind<'_>, Vec<&BlockKind<'_>>)> = document
+        .walk()
+        .map(|(block, ancestors)| {
+            let kinds = ancestors.iter().map(|ancestor| &ancestor.kind).collect();
+            (&block.kind, kinds)
+        })
+        .collect();
+    let list = &BlockKind::List {
+        start: None,
+        tight: true,
+    };
+    let item = &BlockKind::Item { task: None };
+    let (quote, paragraph) = (&BlockKind::Quote, &BlockKind::Paragraph);
+    assert_eq!(
+        chains,
+        vec![
+            (list, vec![]),
+            (item, vec![list]),
+            (paragraph, vec![list, item]),
+            (quote, vec![list, item]),
+            (list, vec![list, item, quote]),
+            (item, vec![list, item, quote, list]),
+            (paragraph, vec![list, item, quote, list, item]),
         ]
     );
 }

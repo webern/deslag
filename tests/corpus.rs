@@ -1273,13 +1273,13 @@ fn the_corpus_reads_into_layers_in_the_order_of_the_file() {
         let document = Document::markdown(&text);
         let slug = fixture.slug();
         let mut last_end = 0;
-        for (block, parent) in document.walk() {
+        for (block, ancestors) in document.walk() {
             let range = &block.range;
             assert!(
                 range.start <= range.end && range.end <= text.len(),
                 "{slug}: {range:?}"
             );
-            if let Some(parent) = parent {
+            if let Some(parent) = ancestors.last() {
                 let outer = &parent.range;
                 assert!(
                     outer.start <= range.start && range.end <= outer.end,

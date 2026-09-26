@@ -318,7 +318,8 @@ impl<'a> Document<'a> {
     /// Every block, each before the blocks it holds, in the order of the file.
     pub fn walk(&self) -> Walk<'_, 'a> {
         Walk {
-            stack: vec![(None, self.blocks.iter())],
+            levels: vec![self.blocks.iter()],
+            ancestors: Vec::new(),
         }
     }
 
@@ -386,30 +387,33 @@ fn within<T>(items: &[T], range_of: impl Fn(&T) -> &Range<usize>, range: Range<u
     &items[first..last.max(first)]
 }
 
-/// The blocks of a document, each with the block that holds it, from [`Document::walk`].
+/// The blocks of a document, each with every block that holds it, from [`Document::walk`].
 pub struct Walk<'d, 'a> {
-    /// The blocks being walked, innermost last, each with the block that holds them.
-    stack: Vec<(Option<&'d Block<'a>>, std::slice::Iter<'d, Block<'a>>)>,
+    /// The blocks of each level being walked, outermost first: the document's own, then those of
+    /// each block in `ancestors`.
+    levels: Vec<std::slice::Iter<'d, Block<'a>>>,
+    /// The blocks that hold the innermost level, outermost first.
+    ancestors: Vec<&'d Block<'a>>,
 }
 
 impl<'d, 'a> Iterator for Walk<'d, 'a> {
-    /// A block, and the block that holds it, or `None` at the top level.
-    type Item = (&'d Block<'a>, Option<&'d Block<'a>>);
+    /// A block, and every block that holds it, outermost first. The last of them is its parent,
+    /// and how many there are is its depth; a top-level block has none.
+    type Item = (&'d Block<'a>, Vec<&'d Block<'a>>);
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let (parent, next) = {
-                let (parent, blocks) = self.stack.last_mut()?;
-                (*parent, blocks.next())
-            };
-            let Some(block) = next else {
-                self.stack.pop();
+            let Some(block) = self.levels.last_mut()?.next() else {
+                self.levels.pop();
+                self.ancestors.pop();
                 continue;
             };
+            let ancestors = self.ancestors.clone();
             if let Body::Blocks(children) = &block.body {
-                self.stack.push((Some(block), children.iter()));
+                self.levels.push(children.iter());
+                self.ancestors.push(block);
             }
-            return Some((block, parent));
+            return Some((block, ancestors));
         }
     }
 }

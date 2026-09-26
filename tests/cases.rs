@@ -87,13 +87,9 @@ impl Case {
         let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
         let actual = stderr(&output).replace(root.to_str().expect("a UTF-8 temp root"), "[ROOT]");
 
-        let wanted = match fs::read_to_string(&self.exit) {
-            Ok(text) => match text.trim().parse() {
-                Ok(wanted) => wanted,
-                Err(_) => return Some(format!("{name}.exit holds {text:?}, not an exit code")),
-            },
-            Err(_) if actual.is_empty() => 0,
-            Err(_) => 1,
+        let wanted = match self.wanted(&actual) {
+            Ok(wanted) => wanted,
+            Err(problem) => return Some(problem),
         };
         if code(&output) != wanted || !stdout(&output).is_empty() {
             return Some(format!(
@@ -124,6 +120,24 @@ impl Case {
         Some(format!(
             "{name}: stderr differs from line {line}.\n--- expected\n{expected}--- actual\n{actual}"
         ))
+    }
+
+    /// The code the case must exit with when deslag prints `printed`: the one in its `.exit` file
+    /// or, without one, 0 when `printed` is empty and 1 when it is not.
+    fn wanted(&self, printed: &str) -> Result<i32, String> {
+        match fs::read_to_string(&self.exit) {
+            Ok(text) => text
+                .trim()
+                .parse()
+                .map_err(|_| format!("{}.exit holds {text:?}, not an exit code", self.name)),
+            Err(_) if printed.is_empty() => Ok(0),
+            Err(_) => Ok(1),
+        }
+    }
+
+    /// Whether the case shows its lint failing a file: its `.stderr` file says deslag exits 1.
+    fn fails_a_file(&self) -> bool {
+        fs::read_to_string(&self.expected).is_ok_and(|expected| self.wanted(&expected) == Ok(1))
     }
 }
 
@@ -167,6 +181,7 @@ fn every_lint_has_a_failing_case() {
         .keys()
         .cloned()
         .collect();
+    let (all, _) = Case::find(&cases);
     let mut failures = Vec::new();
 
     for dir in entries(&cases).into_iter().filter(|path| path.is_dir()) {
@@ -195,18 +210,43 @@ fn every_lint_has_a_failing_case() {
         if fix {
             continue;
         }
-        let fails = entries(&dir).iter().any(|path| {
-            path.extension() == Some("stderr".as_ref())
-                && fs::metadata(path).is_ok_and(|metadata| metadata.len() > 0)
-        });
+        let prefix = format!("{lint}/");
+        let fails = all
+            .iter()
+            .any(|case| case.name.starts_with(&prefix) && case.fails_a_file());
         if !fails {
             failures.push(format!(
-                "{lint} has no failing case: every .stderr file under tests/cases/{lint}/ is \
-                 empty. Add a case in which {lint} fails a file, run `make fix-test-output` to \
-                 write its .stderr file, and read it."
+                "{lint} has no failing case: no case under tests/cases/{lint}/ exits 1. Each \
+                 .stderr file there is empty, or sits beside a .exit file. Add a case in which \
+                 {lint} fails a file, run `make fix-test-output` to write its .stderr file, and \
+                 read it."
             ));
         }
     }
 
     assert!(failures.is_empty(), "{}", failures.join("\n\n"));
+}
+
+#[test]
+fn a_case_where_deslag_cannot_run_does_not_fail_a_file() {
+    let repo = Repo::new();
+    for (path, text) in [
+        ("lint/clean/deslag.toml", ""),
+        ("lint/clean.stderr", ""),
+        ("lint/broken/deslag.toml", ""),
+        ("lint/broken.stderr", "a report\n"),
+        ("lint/invalid/deslag.toml", ""),
+        ("lint/invalid.stderr", "an error\n"),
+        ("lint/invalid.exit", "2\n"),
+    ] {
+        repo.write(path, text);
+    }
+    let (cases, stray) = Case::find(repo.root());
+    assert_eq!(stray, Vec::<String>::new());
+    let failing: Vec<&str> = cases
+        .iter()
+        .filter(|case| case.fails_a_file())
+        .map(|case| case.name.as_str())
+        .collect();
+    assert_eq!(failing, ["lint/broken"]);
 }

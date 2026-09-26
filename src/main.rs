@@ -41,18 +41,28 @@ fn run() -> anyhow::Result<ExitCode> {
             eprintln!("{}", report.summary());
             Ok(ExitCode::FAILURE)
         }
+        Command::Explain(args) => {
+            let root = std::env::current_dir().context("cannot read the current directory")?;
+            let config = deslag::Config::load(&root, args.config_path.as_deref())?;
+            write_stdout(&deslag::explain(&root, &config, &args.paths)?)
+        }
         Command::Instructions(args) => {
             let text = match args.topic {
                 None => deslag::instructions::guide(),
                 Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
             };
-            // A reader that stops early, such as `head`, is not an error.
-            match io::stdout().write_all(text.as_bytes()) {
-                Err(error) if error.kind() != io::ErrorKind::BrokenPipe => {
-                    Err(error).context("cannot write to standard output")
-                }
-                _ => Ok(ExitCode::SUCCESS),
-            }
+            write_stdout(&text)
         }
+    }
+}
+
+/// Writes `text`, all a command prints, to standard output, and succeeds.
+fn write_stdout(text: &str) -> anyhow::Result<ExitCode> {
+    // A reader that stops early, such as `head`, is not an error.
+    match io::stdout().write_all(text.as_bytes()) {
+        Err(error) if error.kind() != io::ErrorKind::BrokenPipe => {
+            Err(error).context("cannot write to standard output")
+        }
+        _ => Ok(ExitCode::SUCCESS),
     }
 }

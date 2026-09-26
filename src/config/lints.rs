@@ -3,11 +3,17 @@
 //! Every lint has its own table, shaped for that lint, under a `lints` table. Every field of every
 //! lint is optional, so that an override can set one field and inherit the rest: settings are
 //! resolved by [`Merge`], from the least specific source to the most.
+//!
+//! The settings serialize back to the keys a config would hold, which is how
+//! [`MdLints::toml_tables`] shows them. A lint or group left unset is left out, so the schema's
+//! default for a `lints` or `groups` table is an empty table rather than one of nulls.
 
 use std::collections::BTreeMap;
 
 use schemars::JsonSchema;
-use serde::Deserialize;
+use schemars::generate::SchemaSettings;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 /// Laying a more specific set of settings over a less specific one.
 pub trait Merge {
@@ -27,23 +33,23 @@ impl<T: Merge + Clone> Merge for Option<T> {
 
 /// The lints that apply to Markdown files: the `lints` table of the `[md]` section and of each
 /// `[[md.overrides]]` entry.
-#[derive(Debug, Clone, Default, PartialEq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MdLints {
     /// The byte budget.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_size_bytes: Option<MaxSizeBytes>,
     /// The limit on bold, italics and ALL CAPS.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_emphasis: Option<MaxEmphasis>,
     /// The index of the repo that the file must hold.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repo_layout: Option<RepoLayout>,
     /// The characters the file must not hold, such as the em dash.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub banned_chars: Option<BannedChars>,
     /// The longest a paragraph or list item may be.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub density: Option<Density>,
 }
 
@@ -65,6 +71,59 @@ impl MdLints {
             .as_ref()
             .and_then(|settings| settings.limits().err())
     }
+
+    /// Every lint by name, in the schema's order, with its settings as a TOML table, or `None`
+    /// when it is off.
+    ///
+    /// A field left unset takes the default the schema gives it, if it has one, so the table
+    /// holds what the lint runs with. The names come from the schema too, so every field of
+    /// `MdLints` is listed, and a lint is on when it serializes to a table.
+    pub fn toml_tables(&self) -> Result<Vec<(String, Option<toml::Table>)>, toml::ser::Error> {
+        let schema = SchemaSettings::draft07()
+            .with(|settings| settings.inline_subschemas = true)
+            .into_generator()
+            .into_root_schema_for::<MdLints>();
+        let mut set = toml::Table::try_from(self)?;
+        let lints = schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .into_iter()
+            .flatten();
+        Ok(lints
+            .map(|(name, lint)| match set.remove(name) {
+                Some(toml::Value::Table(mut table)) => {
+                    fill_defaults(&mut table, lint);
+                    (name.clone(), Some(table))
+                }
+                _ => (name.clone(), None),
+            })
+            .collect())
+    }
+}
+
+/// Sets every key of `table` that `schema`, the schema of a table, gives a default and `table`
+/// leaves unset, in nested tables too.
+fn fill_defaults(table: &mut toml::Table, schema: &Value) {
+    let properties = schema
+        .get("properties")
+        .and_then(Value::as_object)
+        .into_iter()
+        .flatten();
+    for (key, property) in properties {
+        match table.get_mut(key) {
+            Some(toml::Value::Table(inner)) => fill_defaults(inner, property),
+            Some(_) => {}
+            None => {
+                // A null default, which TOML cannot hold, means there is none.
+                let default = property
+                    .get("default")
+                    .and_then(|default| toml::Value::try_from(default).ok());
+                if let Some(default) = default {
+                    table.insert(key.clone(), default);
+                }
+            }
+        }
+    }
 }
 
 impl Merge for MdLints {
@@ -78,7 +137,7 @@ impl Merge for MdLints {
 }
 
 /// `lints.max_size_bytes`: a file larger than `value` bytes fails.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxSizeBytes {
     /// The budget in bytes. A file with no budget from any source is not checked.
@@ -106,7 +165,7 @@ impl Merge for MaxSizeBytes {
 ///
 /// Setting only `free_spans` caps the number of spans; setting only `max_percent` caps their
 /// share of the prose. A table that sets neither checks nothing.
-#[derive(Debug, Clone, Default, PartialEq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxEmphasis {
     /// How many spans a file may have whatever share of its prose they cover.
@@ -158,7 +217,7 @@ impl Merge for MaxEmphasis {
 ///
 /// Unlike the other lints, the table itself turns the check on: a file it applies to must have
 /// the section even when the table sets no field.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RepoLayout {
     /// The section's heading, matched at any level and in any case.
@@ -253,7 +312,7 @@ impl Merge for RepoLayout {
 /// Like `repo_layout`, the table itself turns the check on: an empty one bans the groups that are
 /// on by default. A character in `allow` is never banned; one in `ban` is banned whatever the
 /// groups say.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedChars {
     /// Turns groups of characters on or off.
@@ -309,55 +368,55 @@ impl Merge for BannedChars {
 
 /// `lints.banned_chars.groups`: each group of characters switched on or off. A group left unset
 /// is on or off as its default says.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Groups {
     /// The em dash, en dash, minus sign and other dashes, for `-`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub dashes: Option<bool>,
     /// Arrows, for `->`, `<-` and the like.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub arrows: Option<bool>,
     /// The ellipsis, for `...`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub ellipsis: Option<bool>,
     /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub bullets: Option<bool>,
     /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub math: Option<bool>,
     /// Check marks and crosses, for yes and no.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub checks: Option<bool>,
     /// The section sign, for the word section.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub section: Option<bool>,
     /// Box-drawing characters and block elements, for `-`, `|` and `+`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub box_drawing: Option<bool>,
     /// The no-break space and other unusual spaces, for a plain space.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub spaces: Option<bool>,
     /// Characters that take no space, such as the zero-width space, to be deleted.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub invisible: Option<bool>,
     /// Curly quotes and apostrophes, for `"` and `'`.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub quotes: Option<bool>,
     /// Emoji, to be deleted.
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = false))]
     pub emoji: Option<bool>,
 }
@@ -405,7 +464,7 @@ impl Merge for Groups {
 /// item longer than `max_item_chars`.
 ///
 /// Like `repo_layout`, the table itself turns the check on, with the defaults.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Density {
     /// The most characters a paragraph may hold.

@@ -15,7 +15,8 @@
 //!
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
 //! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
-//! and [`config::schema`] the JSON schema of the config.
+//! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
+//! file gets.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -23,6 +24,7 @@ use std::num::NonZeroU32;
 pub mod cli;
 pub mod config;
 pub mod document;
+pub mod explain;
 pub mod glob;
 pub mod instructions;
 pub mod lint;
@@ -30,6 +32,7 @@ pub mod parse;
 
 pub use config::{Config, ConfigSource};
 pub use document::Document;
+pub use explain::explain;
 pub use lint::{Finding, Report, Violation, check_repo};
 
 /// Everything that can go wrong inside the library.
@@ -145,5 +148,14 @@ pub enum Error {
         key: &'static str,
         /// The value as written in the frontmatter.
         value: String,
+    },
+
+    /// `deslag explain` was given a path it cannot explain.
+    #[error("cannot explain {path}: {problem}")]
+    Explain {
+        /// The path, as given or, once found, relative to the repo root.
+        path: String,
+        /// Why it cannot be explained.
+        problem: String,
     },
 }

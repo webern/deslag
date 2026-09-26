@@ -23,6 +23,8 @@ pub struct Cli {
 pub enum Command {
     /// Check every Markdown file in the repo against its byte budget
     Check(CheckArgs),
+    /// Print the settings the config gives each file, and the overrides they come from
+    Explain(ExplainArgs),
     /// Print how to set deslag up in a repo, written for an agent to follow
     Instructions(InstructionsArgs),
 }
@@ -33,6 +35,17 @@ pub struct CheckArgs {
     /// Read the config from this file instead of the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
+}
+
+/// Arguments to `deslag explain`.
+#[derive(Debug, Args)]
+pub struct ExplainArgs {
+    /// Read the config from this file instead of the canonical locations
+    #[arg(long, value_name = "PATH")]
+    pub config_path: Option<PathBuf>,
+    /// The files to explain, relative to the repo root
+    #[arg(required = true, value_name = "PATH")]
+    pub paths: Vec<PathBuf>,
 }
 
 /// Arguments to `deslag instructions`.

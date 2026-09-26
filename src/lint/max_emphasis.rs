@@ -10,16 +10,16 @@
 //!   nor does a run of acronyms such as `JSON API`, so `DO NOT` is a span and `MX API` is not.
 //!
 //! The **prose** is the text a reader sees: frontmatter, code blocks, code spans and HTML are not
-//! prose. Both are measured in characters. The file is parsed with `pulldown-cmark`, so a `*` that
-//! opens a list item or sits inside code is never taken for emphasis.
+//! prose. Both are measured in characters. Emphasis comes from the spans of the file's
+//! [`Document`], so a `*` that opens a list item or sits inside code is never taken for it.
 //!
 //! A file fails when it has more than `free_spans` spans and they cover more than `max_percent`
 //! of its prose. The report lists every span with its line, so the author can find them.
 
-use pulldown_cmark::{Event, Parser, Tag, TagEnd};
+use std::ops::Range;
 
 use crate::config::MaxEmphasis;
-use crate::parse::markdown::{self, Lines};
+use crate::document::{self, Body, Document, PieceKind, PointKind, SpanKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected over-emphasis!";
@@ -97,14 +97,14 @@ pub struct Over {
     pub message: Option<String>,
 }
 
-/// Checks one file, whose decoded contents are `text`. A file with no settings, or with settings
-/// that set no limit, is not checked.
-pub fn check(text: &str, settings: Option<&MaxEmphasis>) -> Option<Over> {
+/// Checks one file, read into `document`. A file with no settings, or with settings that set no
+/// limit, is not checked.
+pub fn check(document: &Document<'_>, settings: Option<&MaxEmphasis>) -> Option<Over> {
     let settings = settings.filter(|settings| settings.is_set())?;
     let free_spans = settings.free_spans.unwrap_or(0);
     let max_percent = settings.max_percent.unwrap_or(0.0);
 
-    let measure = measure(text);
+    let measure = measure(document);
     if measure.spans.len() as u64 <= free_spans || measure.percent() <= max_percent {
         return None;
     }
@@ -116,72 +116,104 @@ pub fn check(text: &str, settings: Option<&MaxEmphasis>) -> Option<Over> {
     })
 }
 
-/// Measures the emphasis in `text`, a whole Markdown file.
-pub fn measure(text: &str) -> Measure {
-    let lines = Lines::new(text);
-
+/// Measures the emphasis in `document`.
+pub fn measure(document: &Document<'_>) -> Measure {
     let mut measure = Measure::default();
-    // How deep inside emphasis, and inside code or frontmatter, the parser is.
-    let mut emphasis_depth = 0usize;
-    let mut hidden_depth = 0usize;
-    // The outermost emphasis being read: where it starts, its kind and its characters so far.
-    let mut open: Option<(usize, Kind, usize)> = None;
-    let mut plain = Plain::default();
+    // Each span, with where it starts, to put them in the order of the file.
+    let mut spans: Vec<(usize, Span)> = Vec::new();
 
-    for (event, range) in Parser::new_ext(text, markdown::options()).into_offset_iter() {
-        match event {
-            Event::Start(Tag::CodeBlock(_) | Tag::MetadataBlock(_)) => {
-                plain.flush(&lines, &mut measure);
-                hidden_depth += 1;
-            }
-            Event::End(TagEnd::CodeBlock | TagEnd::MetadataBlock(_)) => {
-                hidden_depth = hidden_depth.saturating_sub(1);
-            }
-            Event::Start(tag @ (Tag::Emphasis | Tag::Strong)) => {
-                if emphasis_depth == 0 {
-                    plain.flush(&lines, &mut measure);
-                    let kind = match tag {
-                        Tag::Strong => Kind::Strong,
-                        _ => Kind::Emphasis,
-                    };
-                    open = Some((range.start, kind, 0));
-                }
-                emphasis_depth += 1;
-            }
-            Event::End(TagEnd::Emphasis | TagEnd::Strong) => {
-                emphasis_depth = emphasis_depth.saturating_sub(1);
-                if emphasis_depth == 0 {
-                    if let Some((start, kind, chars)) = open.take() {
-                        measure.spans.push(Span {
-                            line: lines.line(start),
-                            kind,
-                            quote: quote(&text[start..range.end]),
-                            chars,
-                        });
-                    }
-                }
-            }
-            Event::Text(words) if hidden_depth == 0 => {
-                let chars = words.chars().count();
-                measure.prose_chars += chars;
-                match open.as_mut() {
-                    Some((_, _, open_chars)) => *open_chars += chars,
-                    None => plain.push(&words, range.start),
-                }
-            }
-            Event::SoftBreak | Event::HardBreak if hidden_depth == 0 => {
-                measure.prose_chars += 1;
-                match open.as_mut() {
-                    Some((_, _, open_chars)) => *open_chars += 1,
-                    None => plain.push(" ", range.start),
-                }
-            }
-            _ => plain.flush(&lines, &mut measure),
+    for (block, _) in document.walk() {
+        if !matches!(block.body, Body::Text { .. }) {
+            continue;
         }
-    }
-    plain.flush(&lines, &mut measure);
+        let mut emphasis: Vec<(&document::Span<'_>, usize)> = Vec::new();
+        let mut edges: Vec<usize> = Vec::new();
+        for span in document.spans_in(block.range.clone()) {
+            edges.extend([span.range.start, span.range.end]);
+            let outermost = emphasis
+                .last()
+                .is_none_or(|(outer, _)| !within(&span.range, &outer.range));
+            if matches!(span.kind, SpanKind::Emphasis | SpanKind::Strong) && outermost {
+                emphasis.push((span, 0));
+            }
+        }
+        edges.sort_unstable();
 
+        let mut plain = Plain::default();
+        // Where the plain text so far ends in the file.
+        let mut plain_end: Option<usize> = None;
+        for (range, text) in row(document, block) {
+            let Some(text) = text else {
+                plain.flush(document, &mut spans);
+                plain_end = None;
+                continue;
+            };
+            let chars = text.chars().count();
+            measure.prose_chars += chars;
+            if let Some((_, open_chars)) = emphasis
+                .iter_mut()
+                .find(|(span, _)| within(&range, &span.range))
+            {
+                *open_chars += chars;
+                continue;
+            }
+            // Any formatting between two pieces of plain text parts them.
+            let parted = plain_end.is_some_and(|end| {
+                let next = edges.partition_point(|edge| *edge < end);
+                edges.get(next).is_some_and(|edge| *edge <= range.start)
+            });
+            if parted {
+                plain.flush(document, &mut spans);
+            }
+            plain.push(text, range.start);
+            plain_end = Some(range.end);
+        }
+        plain.flush(document, &mut spans);
+
+        spans.extend(emphasis.into_iter().map(|(span, chars)| {
+            let start = span.range.start;
+            let kind = match span.kind {
+                SpanKind::Strong => Kind::Strong,
+                _ => Kind::Emphasis,
+            };
+            let span = Span {
+                line: document.line(start),
+                kind,
+                quote: quote(&document.source[span.range.clone()]),
+                chars,
+            };
+            (start, span)
+        }));
+    }
+
+    spans.sort_by_key(|(start, _)| *start);
+    measure.spans = spans.into_iter().map(|(_, span)| span).collect();
     measure
+}
+
+/// The prose of `block` in the order of the file: each piece of text and each line break, which
+/// reads as a space, with where it is. Anything else, such as a code span, comes with no text.
+fn row<'d>(
+    document: &'d Document<'_>,
+    block: &'d document::Block<'_>,
+) -> Vec<(Range<usize>, Option<&'d str>)> {
+    let pieces = document.pieces_of(block).iter().map(|piece| {
+        let text = (piece.kind == PieceKind::Text).then_some(piece.text.as_ref());
+        (piece.range.clone(), text)
+    });
+    let breaks = document
+        .points_in(block.range.clone())
+        .iter()
+        .filter(|point| point.kind != PointKind::Gap)
+        .map(|point| (point.range.clone(), Some(" ")));
+    let mut row: Vec<_> = pieces.chain(breaks).collect();
+    row.sort_by_key(|(range, _)| range.start);
+    row
+}
+
+/// Whether `inner` lies wholly inside `outer`.
+fn within(inner: &Range<usize>, outer: &Range<usize>) -> bool {
+    outer.start <= inner.start && inner.end <= outer.end
 }
 
 /// The report for one over-emphasized file at `path`, with no trailing newline.
@@ -264,18 +296,21 @@ impl Plain {
         self.text.push_str(words);
     }
 
-    /// Adds every run of capitals in the text gathered so far to `measure`, and starts over.
-    fn flush(&mut self, lines: &Lines, measure: &mut Measure) {
+    /// Adds every run of capitals in the text gathered so far to `spans`, each with where it
+    /// starts, and starts over.
+    fn flush(&mut self, document: &Document<'_>, spans: &mut Vec<(usize, Span)>) {
         for (start, end) in caps_runs(&self.text) {
             let piece = self.pieces.partition_point(|(at, _)| *at <= start) - 1;
             let (at, offset) = self.pieces[piece];
             let run = &self.text[start..end];
-            measure.spans.push(Span {
-                line: lines.line(offset + (start - at)),
+            let start = offset + (start - at);
+            let span = Span {
+                line: document.line(start),
                 kind: Kind::Caps,
                 quote: quote(run),
                 chars: run.chars().count(),
-            });
+            };
+            spans.push((start, span));
         }
         self.text.clear();
         self.pieces.clear();

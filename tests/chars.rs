@@ -3,12 +3,13 @@
 
 use std::collections::BTreeMap;
 
+use deslag::Document;
 use deslag::config::{BannedChars, Groups, MdLints, Merge};
 use deslag::lint::banned_chars::{GROUPS, check, scan};
 
 /// The characters `scan` finds in `text`, with their lines.
 fn found(text: &str) -> Vec<(usize, char)> {
-    scan(text)
+    scan(&Document::markdown(text))
         .into_iter()
         .map(|found| (found.line, found.ch))
         .collect()
@@ -16,7 +17,7 @@ fn found(text: &str) -> Vec<(usize, char)> {
 
 /// The characters `settings` ban in `text`, each with what to write instead and its lines.
 fn banned(text: &str, settings: &BannedChars) -> Vec<(char, String, Vec<usize>)> {
-    check(text, Some(settings))
+    check(&Document::markdown(text), Some(settings))
         .map(|over| over.banned)
         .unwrap_or_default()
         .into_iter()
@@ -101,7 +102,10 @@ fn a_byte_order_mark_opening_the_file_is_not_a_character_of_it() {
 fn letters_of_other_languages_are_found_and_not_banned() {
     let text = "Z\u{00FC}rich \u{4E2D}\u{6587}\u{FF0C} \u{00AB}hola\u{00BB}\n";
     assert_eq!(found(text).len(), 6);
-    assert_eq!(check(text, Some(&BannedChars::default())), None);
+    assert_eq!(
+        check(&Document::markdown(text), Some(&BannedChars::default())),
+        None
+    );
 }
 
 #[test]
@@ -133,7 +137,7 @@ fn an_empty_table_bans_the_groups_that_are_on_by_default() {
 
 #[test]
 fn no_settings_check_nothing() {
-    assert_eq!(check("a \u{2014} b\n", None), None);
+    assert_eq!(check(&Document::markdown("a \u{2014} b\n"), None), None);
 }
 
 #[test]
@@ -180,7 +184,7 @@ fn ban_adds_characters_and_changes_what_to_write() {
             ('\u{2122}', String::new(), vec![1]),
         ]
     );
-    let over = check(text, Some(&settings)).expect("banned characters");
+    let over = check(&Document::markdown(text), Some(&settings)).expect("banned characters");
     assert_eq!(over.banned[1].name, Some("em dash"));
     assert_eq!(over.banned[0].name, None);
 }
@@ -188,7 +192,8 @@ fn ban_adds_characters_and_changes_what_to_write() {
 #[test]
 fn every_occurrence_counts_and_each_line_is_listed_once() {
     let text = "a \u{2014}\u{2014} b\nc\nd \u{2014}\n\u{2192} \u{2014}\n";
-    let over = check(text, Some(&BannedChars::default())).expect("banned characters");
+    let over =
+        check(&Document::markdown(text), Some(&BannedChars::default())).expect("banned characters");
     assert_eq!(over.count, 5);
     assert_eq!(
         banned(text, &BannedChars::default()),

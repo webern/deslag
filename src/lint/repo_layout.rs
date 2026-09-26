@@ -21,16 +21,14 @@
 //! when a line is too wide or out of format, or when a listed path does not exist. The report
 //! lists every problem with its line.
 //!
-//! [`read`] needs only the text: it finds the section and reads the layout, so it runs on any
+//! [`read`] needs only the document: it finds the section and reads the layout, so it runs on any
 //! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits,
 //! the width and the paths.
 
 use std::path::Path;
 
-use pulldown_cmark::{Event, HeadingLevel, Parser, Tag, TagEnd};
-
 use crate::config::RepoLayout;
-use crate::parse::markdown::{self, Lines};
+use crate::document::{BlockKind, Body, Document, PieceKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected a broken repository layout!";
@@ -157,10 +155,10 @@ pub struct Entry {
     pub path: Option<String>,
 }
 
-/// Reads the layout in the section of `text` headed `heading`. The error is
+/// Reads the layout in the section of `document` headed `heading`. The error is
 /// [`Problem::NoSection`] or [`Problem::NoBlock`].
-pub fn read(text: &str, heading: &str) -> Result<Layout, Problem> {
-    let block = Block::find(text, heading)?;
+pub fn read(document: &Document<'_>, heading: &str) -> Result<Layout, Problem> {
+    let block = Block::find(document, heading)?;
     let mut reader = Reader::default();
     for (index, row) in block.text.lines().enumerate() {
         reader.read(block.line + index, row);
@@ -173,16 +171,16 @@ pub fn read(text: &str, heading: &str) -> Result<Layout, Problem> {
     })
 }
 
-/// Checks one file, whose decoded contents are `text` and which sits in `dir`. A file with no
-/// settings is not checked, and nor is one whose limits contradict each other, which
+/// Checks one file, read into `document`, which sits in `dir`. A file with no settings is not
+/// checked, and nor is one whose limits contradict each other, which
 /// [`check_repo`](crate::check_repo) refuses before any lint runs.
-pub fn check(text: &str, dir: &Path, settings: Option<&RepoLayout>) -> Option<Over> {
+pub fn check(document: &Document<'_>, dir: &Path, settings: Option<&RepoLayout>) -> Option<Over> {
     let settings = settings?;
     let heading = settings.heading();
     let (min_entries, max_entries) = settings.limits().ok()?;
     let max_width = settings.max_width();
 
-    let problems = match read(text, heading) {
+    let problems = match read(document, heading) {
         Err(problem) => vec![problem],
         Ok(layout) => {
             let entries = layout.entries.len() as u64;
@@ -386,59 +384,42 @@ struct Block {
 }
 
 impl Block {
-    /// The first code block in the section of `text` headed `heading`.
-    fn find(text: &str, heading: &str) -> Result<Block, Problem> {
+    /// The first code block in the section of `document` headed `heading`.
+    fn find(document: &Document<'_>, heading: &str) -> Result<Block, Problem> {
         let wanted = heading.trim().to_lowercase();
-        let lines = Lines::new(text);
-        // The heading being read: its level, its line and its text so far.
-        let mut reading: Option<(HeadingLevel, usize, String)> = None;
         // The section's heading, once found: its level and line.
-        let mut section: Option<(HeadingLevel, usize)> = None;
-        let mut block: Option<Block> = None;
+        let mut section: Option<(u8, usize)> = None;
 
-        for (event, range) in Parser::new_ext(text, markdown::options()).into_offset_iter() {
-            match event {
-                Event::Start(Tag::Heading { level, .. }) => {
+        for (block, _) in document.walk() {
+            match &block.kind {
+                BlockKind::Heading { level } => {
                     if let Some((section_level, line)) = section {
-                        if level <= section_level {
+                        if *level <= section_level {
                             return Err(Problem::NoBlock { line });
                         }
                     }
-                    reading = Some((level, lines.line(range.start), String::new()));
-                }
-                Event::Text(words) | Event::Code(words) if reading.is_some() => {
-                    if let Some((_, _, title)) = reading.as_mut() {
-                        title.push_str(&words);
+                    let title: String = document
+                        .pieces_of(block)
+                        .iter()
+                        .filter(|piece| matches!(piece.kind, PieceKind::Text | PieceKind::Code))
+                        .map(|piece| piece.text.as_ref())
+                        .collect();
+                    if section.is_none() && title.trim().to_lowercase() == wanted {
+                        section = Some((*level, document.line(block.range.start)));
                     }
                 }
-                Event::End(TagEnd::Heading(_)) => {
-                    if let Some((level, line, title)) = reading.take() {
-                        if section.is_none() && title.trim().to_lowercase() == wanted {
-                            section = Some((level, line));
-                        }
-                    }
-                }
-                Event::Start(Tag::CodeBlock(_)) => {
-                    if let Some((_, heading_line)) = section {
-                        block = Some(Block {
-                            heading_line,
-                            line: 0,
-                            text: String::new(),
-                        });
-                    }
-                }
-                Event::Text(code) => {
-                    if let Some(block) = block.as_mut() {
-                        if block.text.is_empty() {
-                            block.line = lines.line(range.start);
-                        }
-                        block.text.push_str(&code);
-                    }
-                }
-                Event::End(TagEnd::CodeBlock) => {
-                    if let Some(block) = block.take() {
-                        return Ok(block);
-                    }
+                BlockKind::Code { .. } => {
+                    let (Some((_, heading_line)), Body::Raw(pieces)) = (section, &block.body)
+                    else {
+                        continue;
+                    };
+                    return Ok(Block {
+                        heading_line,
+                        line: pieces
+                            .first()
+                            .map_or(0, |piece| document.line(piece.range.start)),
+                        text: pieces.iter().map(|piece| piece.text.as_ref()).collect(),
+                    });
                 }
                 _ => {}
             }

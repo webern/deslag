@@ -13,6 +13,7 @@ mod common;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, config_text, stderr, stdout};
+use deslag::Document;
 use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
@@ -975,7 +976,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
         .zip(paths)
         .filter(|(fixture, _)| {
             let text = String::from_utf8_lossy(&fixture.bytes);
-            max_emphasis::check(&text, Some(&settings)).is_some()
+            max_emphasis::check(&Document::markdown(&text), Some(&settings)).is_some()
         })
         .map(|(_, path)| path)
         .collect();
@@ -1038,7 +1039,7 @@ fn the_corpus_layouts_read_from_the_text_alone() {
         let lines: Vec<&str> = text.lines().collect();
         let slug = fixture.slug();
         for heading in LAYOUT_HEADINGS {
-            let layout = match repo_layout::read(&text, heading) {
+            let layout = match repo_layout::read(&Document::markdown(&text), heading) {
                 Ok(layout) => layout,
                 Err(Problem::NoSection) => continue,
                 Err(Problem::NoBlock { line }) => {
@@ -1077,11 +1078,9 @@ fn the_corpus_layouts_read_from_the_text_alone() {
         .iter()
         .find(|fixture| fixture.category == "core" && fixture.slug() == "rt-agents")
         .expect("core/rt-agents.md, written in deslag's format");
-    let layout = repo_layout::read(
-        &String::from_utf8_lossy(&own.bytes),
-        RepoLayout::DEFAULT_HEADING,
-    )
-    .expect("a layout");
+    let text = String::from_utf8_lossy(&own.bytes);
+    let layout = repo_layout::read(&Document::markdown(&text), RepoLayout::DEFAULT_HEADING)
+        .expect("a layout");
     assert!(!layout.entries.is_empty(), "{layout:?}");
     assert_eq!(layout.malformed, vec![], "{layout:?}");
 }
@@ -1093,7 +1092,7 @@ fn the_corpus_characters_are_found_on_their_lines() {
     for fixture in &fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let lines: Vec<&str> = text.lines().collect();
-        for hit in banned_chars::scan(&text) {
+        for hit in banned_chars::scan(&Document::markdown(&text)) {
             found += 1;
             assert!(!hit.ch.is_ascii(), "{}: {hit:?}", fixture.slug());
             let line = lines.get(hit.line - 1).unwrap_or_else(|| {
@@ -1138,7 +1137,8 @@ fn the_corpus_banned_characters_agree_with_the_library() {
         .zip(paths)
         .filter_map(|(fixture, path)| {
             let text = String::from_utf8_lossy(&fixture.bytes);
-            banned_chars::check(&text, Some(&settings)).map(|over| (path, over.count))
+            banned_chars::check(&Document::markdown(&text), Some(&settings))
+                .map(|over| (path, over.count))
         })
         .collect();
     expected.sort();
@@ -1172,7 +1172,7 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
             .filter(|fixture| fixture.category == category)
             .filter(|fixture| {
                 let text = String::from_utf8_lossy(&fixture.bytes);
-                banned_chars::check(&text, Some(&settings)).is_some()
+                banned_chars::check(&Document::markdown(&text), Some(&settings)).is_some()
             })
             .count()
     };
@@ -1188,7 +1188,7 @@ fn the_corpus_blocks_start_on_lines_of_text() {
     for fixture in &fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let lines: Vec<&str> = text.lines().collect();
-        for block in density::measure(&text) {
+        for block in density::measure(&Document::markdown(&text)) {
             measured += 1;
             assert!(block.chars > 0, "{}: {block:?}", fixture.slug());
             let line = lines.get(block.line - 1).unwrap_or_else(|| {
@@ -1236,7 +1236,7 @@ fn the_corpus_density_reports_agree_with_the_library() {
     let mut expected: Vec<(String, usize, usize)> = Vec::new();
     for (fixture, path) in fixtures.iter().zip(paths) {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        if let Some(over) = density::check(&text, Some(&settings)) {
+        if let Some(over) = density::check(&Document::markdown(&text), Some(&settings)) {
             files += 1;
             expected.extend(
                 over.blocks
@@ -1261,5 +1261,65 @@ fn the_corpus_density_reports_agree_with_the_library() {
             fixtures.len()
         )),
         "stderr:\n{stderr}"
+    );
+}
+
+#[test]
+fn the_corpus_reads_into_layers_in_the_order_of_the_file() {
+    let fixtures = load_corpus();
+    let (mut tokens, mut sentences) = (0, 0);
+    for fixture in &fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let document = Document::markdown(&text);
+        let slug = fixture.slug();
+        let mut last_end = 0;
+        for (block, parent) in document.walk() {
+            let range = &block.range;
+            assert!(
+                range.start <= range.end && range.end <= text.len(),
+                "{slug}: {range:?}"
+            );
+            if let Some(parent) = parent {
+                let outer = &parent.range;
+                assert!(
+                    outer.start <= range.start && range.end <= outer.end,
+                    "{slug}: {range:?}"
+                );
+            }
+            let row = document.tokens_of(block);
+            for token in row {
+                let at = &token.range;
+                assert!(
+                    range.start <= at.start && at.end <= range.end,
+                    "{slug}: {token:?}"
+                );
+                assert!(last_end <= at.start, "{slug}: {token:?} is out of order");
+                last_end = at.end;
+            }
+            // The block's sentences hold each of its tokens once, in order.
+            let mut next = row.as_ptr_range().start;
+            for sentence in document.sentences_of(block) {
+                let first = &document.tokens[sentence.tokens.start];
+                assert!(std::ptr::eq(first, next), "{slug}: {sentence:?}");
+                next = document.tokens[sentence.tokens.clone()].as_ptr_range().end;
+            }
+            assert!(
+                std::ptr::eq(next, row.as_ptr_range().end),
+                "{slug}: {range:?}"
+            );
+            tokens += row.len();
+            sentences += document.sentences_of(block).len();
+        }
+        assert!(
+            document
+                .points
+                .windows(2)
+                .all(|pair| pair[0].range.start <= pair[1].range.start),
+            "{slug}: the points are out of order"
+        );
+    }
+    assert!(
+        tokens > sentences && sentences > 0,
+        "{tokens} tokens, {sentences} sentences"
     );
 }

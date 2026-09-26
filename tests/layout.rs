@@ -4,6 +4,7 @@
 mod common;
 
 use common::Repo;
+use deslag::Document;
 use deslag::config::RepoLayout;
 use deslag::lint::repo_layout::{Entry, Layout, Malformed, Problem, check, read, render};
 
@@ -31,7 +32,7 @@ fn tree() -> Repo {
 
 /// The problems `check` finds in `text`, a file at the root of `repo`.
 fn problems(repo: &Repo, text: &str, settings: &RepoLayout) -> Vec<Problem> {
-    check(text, repo.root(), Some(settings))
+    check(&Document::markdown(text), repo.root(), Some(settings))
         .map(|over| over.problems)
         .unwrap_or_default()
 }
@@ -65,7 +66,7 @@ fn reading_needs_only_the_text() {
         path: path.map(str::to_string),
     };
     assert_eq!(
-        read(text, "Repository layout"),
+        read(&Document::markdown(text), "Repository layout"),
         Ok(Layout {
             heading_line: 3,
             entries: vec![entry(7, Some("nowhere/")), entry(8, None), entry(9, None)],
@@ -81,7 +82,10 @@ fn reading_needs_only_the_text() {
             widths: vec![(6, 5), (7, 17), (8, 17), (9, 17)],
         })
     );
-    assert_eq!(read("# A\n", "Repository layout"), Err(Problem::NoSection));
+    assert_eq!(
+        read(&Document::markdown("# A\n"), "Repository layout"),
+        Err(Problem::NoSection)
+    );
 }
 
 #[test]
@@ -97,7 +101,7 @@ fn the_table_alone_turns_the_check_on() {
         problems(&repo, "# Title\n", &RepoLayout::default()),
         vec![Problem::NoSection]
     );
-    assert!(check("# Title\n", repo.root(), None).is_none());
+    assert!(check(&Document::markdown("# Title\n"), repo.root(), None).is_none());
 }
 
 #[test]
@@ -333,13 +337,14 @@ fn the_example_in_the_advice_passes() {
         heading: Some("Where things are".to_string()),
         ..loose()
     };
-    let over = check("# A\n", repo.root(), Some(&settings)).expect("a file with no section");
+    let over = check(&Document::markdown("# A\n"), repo.root(), Some(&settings))
+        .expect("a file with no section");
 
     // Read as Markdown, the report holds the example under the heading.
     let report = render("AGENTS.md", &over);
 
     assert_eq!(
-        check(&report, repo.root(), Some(&settings)),
+        check(&Document::markdown(&report), repo.root(), Some(&settings)),
         None,
         "report: {report}"
     );

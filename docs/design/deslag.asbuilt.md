@@ -1,9 +1,10 @@
 ---
-updated: 2026-09-24
+updated: 2026-09-25
 subsystems:
   - cli
   - config
   - glob
+  - document
   - parse
   - lint
   - instructions
@@ -49,10 +50,13 @@ src/
   instructions/
     mod.rs            fills in and returns the guide
     guide.md          the guide, with placeholders
+  document/
+    mod.rs            Document and its layers, and offsets to lines
+    markdown.rs       the Markdown reader, on pulldown-cmark
+    tokens.rs         prose to tokens, on unicode-segmentation
+    sentences.rs      tokens to sentences
   parse/
-    mod.rs
     frontmatter.rs    reading a top-level key out of YAML frontmatter
-    markdown.rs       the pulldown-cmark options, and byte offsets to lines
   lint/
     mod.rs            Finding, Violation, Report, check_repo
     max_size_bytes.rs the size lint and its message
@@ -63,8 +67,22 @@ src/
 ```
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
-which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`
-and `parse`; nothing calls `lint` but the binary.
+which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
+`document` and `parse`; nothing calls `lint` but the binary.
+
+## The document
+
+`Document::markdown` reads a file once; every lint but the byte budget reads that `Document`. Its
+first layer is what `pulldown-cmark` finds, with frontmatter read as a metadata block. **Blocks**
+nest as the Markdown does, and a tight list item's text is a paragraph. A block of prose holds
+**pieces**, the text it renders, under **spans** of formatting such as emphasis, links and images,
+and among **points**: soft and hard line breaks, and the gaps between blocks. Code, HTML and
+frontmatter blocks are raw: kept as written, never split.
+
+The second layer splits each block of prose into **tokens** by the Unicode word rules; a code
+span, an image, a URL and the like are one token each. A **sentence** ends with its block,
+at a hard break, or after a `.`, `!` or `?` that whitespace and a word not in lower case follow.
+Every position is a byte offset into the source; `Document::line` turns one into a line.
 
 ## Where a file's budget comes from
 
@@ -107,17 +125,7 @@ message = "..."                  # optional; replaces the advice in the report
 [[md.overrides]]
 globs = ["AGENTS.md", "/docs/**/*.md"]
 lints.max_size_bytes.value = 8000
-
-[md.lints.max_emphasis]
-free_spans = 2                   # spans that pass whatever their share
-max_percent = 1.0                # the share of the prose the spans may cover
-
-[[md.overrides]]
-globs = ["/AGENTS.md"]
-lints.repo_layout = { min_entries = 5, max_entries = 12 }   # also heading, max_width
-
-[md.lints.banned_chars]          # the table alone turns it on
-groups = { emoji = true }        # also allow and ban
+lints.repo_layout = {}           # a lint's table alone turns it on
 ```
 
 `schema_version` is a `NonZeroU32`. It goes up only when a change needs existing configs
@@ -141,10 +149,10 @@ matching pattern: anchored beats basename, then longer beats shorter, then the l
 
 ## Frontmatter
 
-`parse/frontmatter.rs` reads a top-level key out of the frontmatter block: the leading `---` fence
-up to the next `---` or `...` line. The value is the rest of the key's line, quotes either side
-allowed; no YAML parser is used. A block never closed is not frontmatter, so a document opening
-with a thematic break still works. A `max_size_bytes` that is not a byte count is an error.
+`parse/frontmatter.rs` reads a top-level key out of the frontmatter block, the leading `---` fence
+up to the next `---` or `...` line, with no YAML parser: the value is the rest of the key's line,
+quotes either side allowed. A block never closed is not frontmatter. A `max_size_bytes` that is
+not a byte count is an error.
 
 ## Walking the repo
 
@@ -160,19 +168,18 @@ files above the root are not read. Hidden files are walked.
 and runs each lint. A lint returns an `Over` for a failing file, and `check_repo` wraps it in a
 `Finding` with the lint's `Violation`. A new lint is a new module and a new `Violation`.
 
-A lint keeps what it decides from the text alone in a function of the text, which the corpus can
-run on every fixture: `max_emphasis::measure` and `repo_layout::read`. What needs the settings, or
-anything outside the file such as the disk, is a thin layer over it, tested on small repos: trees
+A lint keeps what it decides from the file alone in a function of the `Document`, which the corpus
+can run on every fixture: `max_emphasis::measure` and `repo_layout::read`. What needs the settings,
+or anything outside the file such as the disk, is a thin layer over it, tested on small repos: trees
 the tests write, and the cases.
 
-`lint/max_emphasis.rs` parses the file with `pulldown-cmark` and counts **spans**: each
-outermost emphasis or strong, and each run of two or more words in capitals, split only by
-whitespace, that holds one of `SHOUTED_WORDS`. **Prose** is the text events outside code blocks
-and frontmatter; inline code and HTML are not text events. Both are counted in characters. A file
+`lint/max_emphasis.rs` counts **spans**: each outermost emphasis or strong, and each run of two or
+more words in capitals, split only by whitespace, that holds one of `SHOUTED_WORDS`; its words are
+its own, not the tokens. **Prose** is the text of the blocks of prose, code spans and HTML aside.
+Both are counted in characters. A file
 fails when it has more than `free_spans` spans and they cover more than `max_percent` of its
 prose; an unset field counts as 0, and a table setting neither checks nothing. Its `Over` holds the
-`Measure`, whose spans carry a line and a quote for the report. The lints that parse Markdown use
-`parse/markdown.rs`'s options, which read frontmatter as a metadata block.
+`Measure`, whose spans carry a line and a quote for the report.
 
 `lint/repo_layout.rs` is on for any file whose settings hold a `repo_layout` table, even an empty
 one. It finds the first heading whose text is `heading` (default `Repository layout`), in any
@@ -209,12 +216,11 @@ not measured, and a block of only whitespace is dropped. A paragraph inside a li
 an item. A block fails when it is longer than `max_paragraph_chars` (default 600) or, for an item,
 `max_item_chars` (default 300).
 
-`Finding::render` produces the message. The first two lines are fixed; the advice after them is
-the lint's own wording unless the config gives a `message`, in which `{path}` and the lint's
-settings are substituted. The emphasis report rounds its percentage up, so a file just over its share never reads as at
-it, and ends with its spans. Every finding is printed to
-standard error, followed by `Report::summary`, one tally line per lint that failed a file, and the
-process exits 1; a clean run prints nothing and exits 0.
+`Finding::render` produces the message. The first two lines are fixed; the advice after them is the
+lint's own wording unless the config gives a `message`, in which `{path}` and the lint's settings
+are substituted. The emphasis report rounds its percentage up, so a file just over its share never
+reads as at it. Every finding is printed to standard error, followed by `Report::summary`, one tally
+line per lint that failed a file, and the process exits 1; a clean run prints nothing and exits 0.
 
 ## The command line
 
@@ -233,13 +239,7 @@ _typos.toml           keeps the spell checker out of the quoted corpus
 .agents/deslag.toml   deslag's config for this repo: AGENTS.md and the skills
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
-  unit.rs             small trees written for the test
-  formats.rs          the config in TOML, YAML and JSON
-  emphasis.rs         what counts as a span, and the emphasis report
-  layout.rs           finding and reading the layout, and its paths
-  chars.rs            what banned_chars reads and bans, and its tables
-  density.rs          what a block is, its length, and the limits
-  instructions.rs     the guide, and the schema against configs deslag reads
+  *.rs                one file per lint or concern, such as unit.rs for small trees
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
@@ -251,9 +251,7 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
 ## Tests
 
 `tests/unit.rs` and `tests/formats.rs` build small trees in a temp directory and pin one rule
-each: budget precedence, override merging, `[md] globs`, `schema_version`, every canonical config
-path in every language, `--config-path`, and the error cases. They read `canonical_config_paths`
-rather than repeat it.
+each, every canonical config path in every language included, read from `canonical_config_paths`.
 
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
@@ -266,12 +264,9 @@ against the bytes on disk, and runs the corpus through the binary.
 
 The corpus has four directories. `core/` is the hand-picked set from Matt's repositories. The
 other three are collected by `scripts/llm-detection/collect.py` and named for who wrote the file,
-as far as the history of the file can tell:
-
-- `human/`: not edited since 2021; every commit that touched it predates 2022-01-01.
-- `llm/`: every commit that touched the file is marked as an AI agent's, by a co-author trailer,
-  an agent's bot account, or the text an agent writes into its commit messages.
-- `mixed/`: begun by a person, unmarked, before 2022-01-01, and later edited by an agent.
+as its history tells: `human/` was last touched before 2022, every commit to an `llm/` file is
+marked as an agent's, and a `mixed/` file was begun by a person before 2022 and later edited by an
+agent.
 
 Each holds about 400 fixtures, at most three from one repository, from four forges and under
 permissive licences only. Most are English; a few are not, so the lints meet other scripts.
@@ -290,7 +285,8 @@ the last three the binary must report exactly what the library's `check` finds, 
 flag at least four times as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in
 the corpus, so `repo_layout` runs only its `read`, on every fixture under a few headings real repos
 use. The lines it reports must fall in the section, and an entry's line must hold its path.
-`core/rt-agents.md`, the one fixture in deslag's format, must read with no malformed line.
+`core/rt-agents.md`, the one fixture in deslag's format, must read with no malformed line. Every
+fixture's tokens and sentences must keep to their blocks, in the order of the file.
 
 ## Build
 

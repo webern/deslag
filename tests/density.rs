@@ -1,12 +1,13 @@
 //! Tests for the `density` lint: what a block is, how long it is, and the limits. The reports are
 //! pinned by the cases.
 
+use deslag::Document;
 use deslag::config::{Density, MdLints, Merge};
 use deslag::lint::density::{Kind, check, measure};
 
 /// The line, kind and length of every block in `text`.
 fn blocks(text: &str) -> Vec<(usize, Kind, usize)> {
-    measure(text)
+    measure(&Document::markdown(text))
         .into_iter()
         .map(|block| (block.line, block.kind, block.chars))
         .collect()
@@ -105,6 +106,18 @@ fn list_items_are_blocks_of_their_own() {
 }
 
 #[test]
+fn a_list_item_that_opens_with_markup_counts_all_of_its_text() {
+    let text = "- **bold** rest\n- [a link](https://example.com)\n";
+    assert_eq!(
+        blocks(text),
+        vec![
+            (1, Kind::Item, "bold rest".len()),
+            (2, Kind::Item, "a link".len()),
+        ]
+    );
+}
+
+#[test]
 fn quotes_and_footnotes_hold_paragraphs() {
     let text = "> quoted\n> more\n\nsee[^1]\n\n[^1]: the note\n";
     assert_eq!(
@@ -133,14 +146,17 @@ fn the_defaults_hold_paragraphs_and_items_to_their_own_limits() {
         paragraph(Density::DEFAULT_MAX_PARAGRAPH_CHARS),
         item(Density::DEFAULT_MAX_ITEM_CHARS)
     );
-    assert_eq!(check(&at_limits, Some(&defaults)), None);
+    assert_eq!(
+        check(&Document::markdown(&at_limits), Some(&defaults)),
+        None
+    );
 
     let over = format!(
         "{}\n\n{}\n",
         paragraph(Density::DEFAULT_MAX_PARAGRAPH_CHARS + 1),
         item(Density::DEFAULT_MAX_ITEM_CHARS + 1)
     );
-    let found = check(&over, Some(&defaults)).expect("dense text");
+    let found = check(&Document::markdown(&over), Some(&defaults)).expect("dense text");
     assert_eq!(
         found
             .blocks
@@ -155,7 +171,7 @@ fn the_defaults_hold_paragraphs_and_items_to_their_own_limits() {
 fn the_limits_are_set_one_at_a_time() {
     let text = format!("{}\n\n- {}\n", "a".repeat(50), "b".repeat(50));
     let kinds = |settings: &Density| {
-        check(&text, Some(settings))
+        check(&Document::markdown(&text), Some(settings))
             .map(|over| {
                 over.blocks
                     .iter()
@@ -177,7 +193,7 @@ fn the_limits_are_set_one_at_a_time() {
 
 #[test]
 fn no_settings_check_nothing() {
-    assert_eq!(check(&"a".repeat(5000), None), None);
+    assert_eq!(check(&Document::markdown(&"a".repeat(5000)), None), None);
 }
 
 #[test]

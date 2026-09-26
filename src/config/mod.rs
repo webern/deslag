@@ -41,7 +41,8 @@ use serde::Deserialize;
 use crate::Error;
 
 pub use lints::{
-    BannedChars, Density, Groups, MaxEmphasis, MaxSizeBytes, MdLints, Merge, RepoLayout,
+    BannedChars, BannedPhrases, Density, Groups, MaxEmphasis, MaxSizeBytes, MdLints, Merge,
+    RepoLayout,
 };
 pub use md::MdConfig;
 pub use search::{

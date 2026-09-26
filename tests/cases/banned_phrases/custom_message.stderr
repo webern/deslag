@@ -1,0 +1,10 @@
+ERROR: deslag detected banned phrases!
+
+README.md has 1 banned phrase.
+
+Cut the filler from README.md.
+
+The phrases, and what to do about each:
+  line 3: "It's worth noting"; delete it
+
+deslag: 1 of 1 Markdown files with banned phrases.

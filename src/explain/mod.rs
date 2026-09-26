@@ -2,9 +2,9 @@
 //!
 //! A file's settings are the `[md]` section's `lints`, then each override that matches it in the
 //! order [`MdConfig::overrides_for`](crate::config::MdConfig::overrides_for) gives, then a budget
-//! in the file's own frontmatter. For each file this names the config, says whether `[md]` selects
-//! the file, lists the overrides and the frontmatter budget, and shows every lint's settings as
-//! TOML, whatever language the config is written in.
+//! in the file's own frontmatter. For each file this names the config, says whether the walk skips
+//! the file and whether `[md]` selects it, lists the overrides and the frontmatter budget, and
+//! shows every lint's settings as TOML, whatever language the config is written in.
 
 use std::path::{Path, PathBuf};
 
@@ -21,12 +21,16 @@ pub fn explain(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<String
         source,
     })?;
     let config_path = config.path().strip_prefix(root).unwrap_or(config.path());
+    let walked = glob::walk(&canonical)?;
 
     let blocks = paths
         .iter()
         .map(|path| {
             let file = find(&canonical, path)?;
-            block(config, config_path, &file)
+            let skipped = walked
+                .binary_search_by(|found| found.relative.cmp(&file.relative))
+                .is_err();
+            block(config, config_path, &file, skipped)
         })
         .collect::<Result<Vec<_>, Error>>()?;
     Ok(blocks.join("\n"))
@@ -62,11 +66,20 @@ fn find(root: &Path, path: &Path) -> Result<RepoFile, Error> {
 }
 
 /// The block for `file`, under the config read from `config_path`: a TOML document whose
-/// comments say where the settings come from.
-fn block(config: &Config, config_path: &Path, file: &RepoFile) -> Result<String, Error> {
+/// comments say where the settings come from. `skipped` says the walk does not find the file.
+fn block(
+    config: &Config,
+    config_path: &Path,
+    file: &RepoFile,
+    skipped: bool,
+) -> Result<String, Error> {
     let relative = &file.relative;
     let md = config.md();
     let mut out = format!("# {relative}\n# config: {}\n", config_path.display());
+    if skipped {
+        out.push_str("# ignored: yes, so deslag check never reads it\n");
+        return Ok(out);
+    }
     if !md.selects(relative) {
         out.push_str("# selected by [md]: no\n");
         return Ok(out);

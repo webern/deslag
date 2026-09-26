@@ -115,6 +115,8 @@ quotes = true
 section = true
 spaces = true
 
+# banned_phrases: off
+
 [density]
 max_item_chars = 300
 max_paragraph_chars = 500
@@ -141,6 +143,8 @@ min_entries = 5
 
 # banned_chars: off
 
+# banned_phrases: off
+
 [density]
 max_item_chars = 300
 max_paragraph_chars = 500
@@ -164,6 +168,8 @@ min_entries = 5
 # overrides: none
 
 # banned_chars: off
+
+# banned_phrases: off
 
 [density]
 max_item_chars = 300
@@ -246,6 +252,8 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          \n\
          # banned_chars: off\n\
          \n\
+         # banned_phrases: off\n\
+         \n\
          # density: off\n\
          \n\
          # max_emphasis: off\n\
@@ -255,6 +263,23 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          \n\
          # repo_layout: off\n"
     );
+}
+
+#[test]
+fn a_file_the_walk_skips_is_never_read() {
+    let repo = repo_with("deslag.toml", TOML);
+    repo.write(".gitignore", "drafts/\n");
+    for path in ["drafts/plan.md", ".git/notes.md"] {
+        repo.write(path, "# A file\n");
+        let (code, stdout, stderr) = explain(&repo, &[path]);
+        assert_eq!((code, stderr.as_str()), (0, ""), "{path}");
+        assert_eq!(
+            stdout,
+            format!(
+                "# {path}\n# config: deslag.toml\n# ignored: yes, so deslag check never reads it\n"
+            ),
+        );
+    }
 }
 
 #[test]

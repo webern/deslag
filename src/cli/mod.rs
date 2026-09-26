@@ -9,7 +9,7 @@ use clap::{Args, Parser, Subcommand};
 #[command(
     name = "deslag",
     version,
-    about = "A linter that stops Markdown files from growing past their byte budget.",
+    about = "A linter for LLM-authored Markdown.",
     long_about = None,
 )]
 pub struct Cli {
@@ -21,7 +21,7 @@ pub struct Cli {
 /// What deslag can be asked to do.
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Check every Markdown file in the repo against its byte budget
+    /// Check every Markdown file in the repo against the lints the config turns on
     Check(CheckArgs),
     /// Print the settings the config gives each file, and the overrides they come from
     Explain(ExplainArgs),

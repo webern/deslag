@@ -1,0 +1,9 @@
+schema_version = 1
+
+[md.lints.banned_phrases]
+ban = { "mea" = "write `my`", "delve into" = "say what you found instead" }
+allow = ["mea culpa"]
+
+[[md.overrides]]
+globs = ["/docs/glossary.md"]
+lints.banned_phrases.allow = ["mea culpa", "delve into"]

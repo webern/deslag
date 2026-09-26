@@ -4,6 +4,9 @@
 //! line break, code span, HTML tag or image interrupts. Formatting does not interrupt a stretch, so
 //! `**un**done` is one word. A code span, an HTML tag, an image, a footnote reference, a link whose
 //! text is its URL, and a URL bare in the prose are each one token, never split.
+//!
+//! [`Token::split`] splits plain text the same way, so that text from outside the document, such
+//! as a phrase in the config, agrees with it on what a word is.
 
 use std::borrow::Cow;
 use std::ops::Range;
@@ -31,6 +34,31 @@ pub(super) fn split(document: &mut Document<'_>) {
         points,
     };
     rows.split(blocks, tokens);
+}
+
+impl<'a> Token<'a> {
+    /// Splits `text`, read as plain prose rather than Markdown, by the rules that split a stretch
+    /// of a block: into words, numbers, marks and bare URLs. Each range is an offset into `text`.
+    pub fn split(text: &'a str) -> Vec<Token<'a>> {
+        let mut run = Run::default();
+        run.push(
+            text,
+            &Piece {
+                kind: PieceKind::Text,
+                range: 0..text.len(),
+                text: Cow::Borrowed(text),
+            },
+        );
+        let mut tokens = Vec::new();
+        run.flush(text, &mut tokens);
+        tokens
+    }
+
+    /// The text, folded so that case and the style of apostrophe do not count: in lower case,
+    /// with each curly apostrophe written straight.
+    pub fn folded(&self) -> String {
+        self.text.to_lowercase().replace('\u{2019}', "'")
+    }
 }
 
 /// The first layer, which tokens are made from.

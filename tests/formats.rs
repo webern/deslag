@@ -162,7 +162,7 @@ fn two_languages_at_one_location_are_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("found more than one config at one location")
             && stderr.contains("deslag.toml")
@@ -216,7 +216,7 @@ fn a_config_path_in_an_unknown_language_is_an_error() {
     let output = repo.run(&["check", "--config-path", "deslag.ini"]);
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("cannot tell the language of deslag.ini"),
         "stderr: {stderr}"
@@ -264,7 +264,7 @@ fn yaml_and_json_are_held_to_the_schema() {
         let output = repo.check();
         let stderr = stderr(&output);
 
-        assert_eq!(code(&output), 1, "{path} {text:?}, stderr: {stderr}");
+        assert_eq!(code(&output), 2, "{path} {text:?}, stderr: {stderr}");
         assert!(
             stderr.contains(expected) && stderr.contains(path),
             "{path} {text:?}, stderr: {stderr}"
@@ -299,7 +299,7 @@ fn a_parse_error_is_reported_once() {
         let output = repo.check();
         let stderr = stderr(&output);
 
-        assert_eq!(code(&output), 1, "{path}, stderr: {stderr}");
+        assert_eq!(code(&output), 2, "{path}, stderr: {stderr}");
         assert_eq!(
             stderr.matches(marker).count(),
             1,

@@ -246,7 +246,7 @@ fn a_percent_out_of_range_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("max_emphasis.max_percent is 101, which is not between 0 and 100"),
         "stderr: {stderr}"

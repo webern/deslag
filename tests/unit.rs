@@ -239,7 +239,7 @@ fn a_max_size_bytes_that_is_not_a_number_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("invalid max_size_bytes in the frontmatter of AGENTS.md"),
         "stderr: {stderr}"
@@ -286,7 +286,7 @@ fn a_missing_config_says_where_it_looked() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("no deslag config found in"),
         "stderr: {stderr}"
@@ -330,7 +330,7 @@ fn a_config_path_that_is_not_there_is_an_error() {
     let output = repo.run(&["check", "--config-path", "nope.toml"]);
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("cannot find the config file nope.toml"),
         "stderr: {stderr}"
@@ -349,7 +349,7 @@ fn a_config_key_that_is_not_a_byte_count_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(stderr.contains("cannot parse"), "stderr: {stderr}");
 }
 
@@ -362,7 +362,7 @@ fn a_glob_that_is_not_a_pattern_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("invalid glob pattern \"a[\""),
         "stderr: {stderr}"
@@ -580,7 +580,7 @@ fn a_config_without_a_schema_version_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(stderr.contains("schema_version"), "stderr: {stderr}");
 }
 
@@ -593,7 +593,7 @@ fn a_config_from_a_later_schema_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
         stderr.contains("declares schema_version 2, but this deslag reads schema_version 1"),
         "stderr: {stderr}"
@@ -612,6 +612,6 @@ fn an_unknown_lint_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(stderr.contains("max_size_lines"), "stderr: {stderr}");
 }

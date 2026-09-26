@@ -16,7 +16,7 @@ Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule
 a byte budget, a limit on emphasis, a true index of the repo, banned characters, or dense text. It
 is one Cargo package with two targets: the library in `src/lib.rs` decides everything, and the
 binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the library,
-prints what it returns and exits nonzero when a file fails. `deslag instructions` prints a guide
+prints what it returns and sets the exit code. `deslag instructions` prints a guide
 for an agent setting deslag up.
 
 ## A run, start to finish
@@ -26,9 +26,8 @@ files, works out each lint's settings for each file, runs the lints and prints a
 failure.
 
 The **repo root** is the process working directory. Deslag never walks upward looking for a
-repository or a config; if the config is not where it expects, the run fails and says so. A
-**budget** is a byte count, and a file's **size** is the length of the file on disk, frontmatter
-and all.
+repository or a config. A **budget** is a byte count, and a file's **size** is the length of the
+file on disk, frontmatter and all.
 
 ## Modules
 
@@ -220,16 +219,17 @@ an item. A block fails when it is longer than `max_paragraph_chars` (default 600
 lint's own wording unless the config gives a `message`, in which `{path}` and the lint's settings
 are substituted. The emphasis report rounds its percentage up, so a file just over its share never
 reads as at it. Every finding is printed to standard error, followed by `Report::summary`, one tally
-line per lint that failed a file, and the process exits 1; a clean run prints nothing and exits 0.
+line per lint that failed a file; a clean run prints nothing.
 
 ## The command line
 
 `cli/mod.rs` defines a `check` subcommand taking `--config-path`, and `instructions`, which prints
 `instructions::guide` or, given `config-schema`, `config::schema`: the JSON schema `schemars`
 derives from the config's types. The guide takes its config paths from the code. `src/main.rs`
-uses `anyhow` for its own errors, calls the library, and prints the library's `Error` in
-`anyhow`'s alternate form, which appends each underlying error once; an `Error`'s own message never
-repeats its source.
+prints an error out of `run` in `anyhow`'s alternate form, which appends each underlying error once;
+an `Error`'s own message never repeats its source. The process exits 0 when nothing fails, 1 when a
+file fails a lint, and 2 on any error out of `run`, whatever the subcommand, as clap does on bad
+arguments.
 
 ## Other files
 
@@ -256,9 +256,9 @@ each, every canonical config path in every language included, read from `canonic
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what
 `deslag check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run
-must pass. Each lint in the config schema needs a directory there with a case that fails, and each
-directory must be named after a lint. `make fix-test-output` rewrites the `.stderr` files. Unlike a
-fixture, a case is written for deslag and changes with it.
+must exit 0, any other 1, unless a `.exit` file beside it holds the code, 2 where deslag cannot run.
+Every lint's reports are pinned there. `make fix-test-output` rewrites the `.stderr`
+files. Unlike a fixture, a case is written for deslag and changes with it.
 
 `tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
 against the bytes on disk, and runs the corpus through the binary.

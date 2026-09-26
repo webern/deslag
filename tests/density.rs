@@ -131,6 +131,18 @@ fn quotes_and_footnotes_hold_paragraphs() {
 }
 
 #[test]
+fn a_paragraph_in_a_quote_in_a_list_item_is_held_to_the_item_s_limit() {
+    let text = "- one\n\n  > quoted\n";
+    assert_eq!(
+        blocks(text),
+        vec![
+            (1, Kind::Item, "one".len()),
+            (3, Kind::Item, "quoted".len()),
+        ]
+    );
+}
+
+#[test]
 fn the_defaults_hold_paragraphs_and_items_to_their_own_limits() {
     let defaults = Density::default();
     assert_eq!(

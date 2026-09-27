@@ -10,7 +10,7 @@ globs = [
   "/ACKNOWLEDGEMENTS.md",
   "/.agents/skills/**/*.md",
   "/docs/design/corpus.md",
-  "/docs/design/corpus.asbuilt.md",
+  "/docs/design/*.asbuilt.md",
   "/scripts/blobstore/blobs.md",
   "/src/instructions/guide.md",
 ]
@@ -47,3 +47,9 @@ lints.max_size_bytes.value = 16384
 [[md.overrides]]
 globs = ["/scripts/blobstore/blobs.md"]
 lints.max_size_bytes.value = 8192
+
+# Every *.asbuilt.md declares its budget in its frontmatter, which wins over this. One that does
+# not fails at 4 KB instead of going unchecked.
+[[md.overrides]]
+globs = ["/docs/design/*.asbuilt.md"]
+lints.max_size_bytes.value = 4096

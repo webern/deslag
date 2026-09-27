@@ -69,4 +69,4 @@ each one comes from.
 - `make test` is the developer workflow.
 
 The design docs are in `docs/design/`. `deslag.desired.md` is what deslag is meant to be;
-`deslag.asbuilt.md` is what it is.
+`deslag.asbuilt.md` is what it is, and indexes the as-built doc of each subsystem.

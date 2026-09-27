@@ -53,6 +53,10 @@
       "left": 83
     },
     {
+      "step": "neither in the catalogue nor refused for it",
+      "left": 80
+    },
+    {
       "step": "after merging each n-gram into a shorter one it holds",
       "left": 19
     }
@@ -203,7 +207,6 @@
       ],
       "longer": [
         "needs no warm",
-        "needs no",
         "no warm-up",
         "no warm"
       ],
@@ -354,7 +357,6 @@
       "longer": [
         "is load-bearing",
         "is load",
-        "load-bearing",
         "the buffer is load",
         "buffer is load",
         "the snapshot is load",
@@ -434,7 +436,6 @@
       ],
       "longer": [
         "is load-bearing",
-        "load-bearing",
         "bearing — keep it",
         "bearing — keep"
       ],

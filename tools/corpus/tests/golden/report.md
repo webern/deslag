@@ -65,6 +65,7 @@ the English llm files, against the English human files; rates per million prose 
 | no human file in the tree holds it | 162 |
 | the interval's lower bound is at least 4 | 122 |
 | focus files of at least 3 compared tools hold it | 83 |
+| neither in the catalogue nor refused for it | 80 |
 | after merging each n-gram into a shorter one it holds | 19 |
 
 The catalog gate, n-grams through the sieve that no reference file holds, in any language, and at least 40 focus repositories do, merged among themselves: 12, of which 1 hold no rare word.

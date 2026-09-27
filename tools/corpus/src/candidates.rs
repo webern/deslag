@@ -12,7 +12,8 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use deslag::document::{Document, TokenKind};
-use serde::Serialize;
+use deslag::lint::banned_phrases::{CATALOGUE, folded};
+use serde::{Deserialize, Serialize};
 
 use crate::chars::{COMPARED, UNITS, compared_cells};
 use crate::compare::{Compared, Sides};
@@ -30,6 +31,33 @@ pub const GATE_REPOS: u64 = 40;
 
 /// How many of the commonest words an example keeps; it masks the others.
 const COMMON_WORDS: usize = 200;
+
+/// The phrases considered for the catalogue of `banned_phrases` and refused.
+const REJECTED: &str = include_str!("../rejected.toml");
+
+/// `rejected.toml`: every refused phrase.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Rejected {
+    /// Each refused phrase.
+    #[serde(rename = "phrase")]
+    pub phrases: Vec<Refused>,
+}
+
+/// A phrase refused for the catalogue, and why.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Refused {
+    /// The phrase.
+    pub phrase: String,
+    /// Why it was refused.
+    pub reason: String,
+}
+
+/// The refused phrases.
+pub fn rejected() -> Rejected {
+    toml::from_str(REJECTED).expect("rejected.toml parses")
+}
 
 /// Which n-grams are candidates.
 #[derive(Debug, Clone, Serialize, clap::Args)]
@@ -224,6 +252,27 @@ pub fn candidates(
             &|gram, _| tools_of(gram).len() >= sieve.min_tools,
         );
     }
+
+    // A phrase the catalogue holds or refused is decided already.
+    let decided: HashSet<Vec<String>> = CATALOGUE
+        .entries
+        .iter()
+        .map(|entry| folded(&entry.phrase))
+        .chain(
+            rejected()
+                .phrases
+                .iter()
+                .map(|refused| folded(&refused.phrase)),
+        )
+        .collect();
+    step(
+        "neither in the catalogue nor refused for it".to_string(),
+        &mut left,
+        &|gram, _| {
+            let text = phrase(&corpus.vocab, counted.first_doc(gram), counted.tokens(gram));
+            !decided.contains(&folded(&text))
+        },
+    );
 
     // The gate takes the n-grams through the sieve before any is merged, so a longer one it keeps
     // never hides under a shorter one it does not: `load-bearing` under `bearing`.
@@ -556,5 +605,28 @@ impl Candidates {
             }
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_refused_phrase_is_in_the_catalogue_or_refused_twice() {
+        let mut seen = HashSet::new();
+        for refused in rejected().phrases {
+            let tokens = folded(&refused.phrase);
+            assert!(!refused.reason.is_empty(), "{}", refused.phrase);
+            assert!(
+                CATALOGUE
+                    .entries
+                    .iter()
+                    .all(|entry| folded(&entry.phrase) != tokens),
+                "{} is in the catalogue",
+                refused.phrase
+            );
+            assert!(seen.insert(tokens), "{} is refused twice", refused.phrase);
+        }
     }
 }

@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 
 use deslag::Document;
-use deslag::config::{BannedChars, Groups, MdLints, Merge};
+use deslag::config::{BannedChars, CharGroups, MdLints, Merge};
 use deslag::lint::banned_chars::{GROUPS, check, scan};
 
 /// The characters `scan` finds in `text`, with their lines.
@@ -256,7 +256,7 @@ fn every_group_is_named_by_its_key_in_the_config() {
         .join(", ");
     let parsed = settings(&format!("groups = {{ {every} }}")).groups;
     // The literal names every field, so a field no group names fails here too.
-    let all_off = Groups {
+    let all_off = CharGroups {
         dashes: Some(false),
         arrows: Some(false),
         ellipsis: Some(false),

@@ -1,6 +1,11 @@
 //! `banned_phrases`: a Markdown file must not hold the phrases the config bans.
 //!
-//! The config lists each phrase with the advice its report gives; deslag bans none of its own. A
+//! The phrases come in [`GROUPS`], each on by default and switched by the config, which may also
+//! ban more phrases, each with the advice its report gives. The groups' phrases are in
+//! `banned_phrases.toml`: each has no match in the corpus's `human` files and matches `llm` files
+//! of at least 40 repositories, counts that `make test-blobs` checks. A phrase in `ban` takes its
+//! advice from `ban`, whatever the groups say. The report names the group of each phrase it lists,
+//! so that a human can switch the group off. A
 //! phrase is split into tokens by the code that splits the document's prose, and matches the same
 //! row of tokens in one block of prose, whatever the case, the style of apostrophe, and the
 //! whitespace, line breaks and formatting between them. A code span, HTML, an image, a URL or a
@@ -13,8 +18,11 @@
 
 use std::collections::HashMap;
 use std::ops::Range;
+use std::sync::LazyLock;
 
-use crate::config::BannedPhrases;
+use serde::Deserialize;
+
+use crate::config::{BannedPhrases, PhraseGroups};
 use crate::document::{Document, Location, Token, TokenKind};
 use crate::lint::{Keep, Mark, MarkKind};
 
@@ -31,12 +39,14 @@ pub struct Match {
     pub quote: String,
     /// The advice the config gives for it; empty means delete it.
     pub advice: String,
+    /// The group it is banned by, or `None` when the config's `ban` holds it.
+    pub group: Option<&'static str>,
 }
 
 impl Match {
     /// The match of `tokens`, a stretch of a block of `document`, which the config advises on
     /// with `advice`.
-    fn new(document: &Document<'_>, tokens: &[Token<'_>], advice: &str) -> Match {
+    fn new(document: &Document<'_>, tokens: &[Token<'_>], phrase: &Phrase<'_>) -> Match {
         let mut quote = String::new();
         for (index, token) in tokens.iter().enumerate() {
             let parted = index > 0
@@ -51,7 +61,8 @@ impl Match {
         Match {
             location: document.locate(tokens[0].range.start..last.range.end),
             quote,
-            advice: advice.to_string(),
+            advice: phrase.advice.to_string(),
+            group: phrase.group,
         }
     }
 
@@ -61,7 +72,10 @@ impl Match {
             "" => "delete it",
             advice => advice,
         };
-        format!("\"{}\"; {advice}", self.quote)
+        match self.group {
+            Some(group) => format!("\"{}\"; {advice} (group: {group})", self.quote),
+            None => format!("\"{}\"; {advice}", self.quote),
+        }
     }
 }
 
@@ -80,6 +94,8 @@ struct Phrase<'s> {
     tokens: Vec<String>,
     /// The advice the config gives for it.
     advice: &'s str,
+    /// The group it comes from, or `None` for the config's own.
+    group: Option<&'static str>,
 }
 
 /// Phrases, each under its first token, so that each token of a document costs one lookup.
@@ -90,17 +106,18 @@ struct Phrases<'s> {
 
 impl<'s> Phrases<'s> {
     /// Splits and indexes `phrases`, each given with its advice.
-    fn new(phrases: impl Iterator<Item = (&'s str, &'s str)>) -> Phrases<'s> {
+    fn new(phrases: impl Iterator<Item = (&'s str, &'s str, Option<&'static str>)>) -> Phrases<'s> {
         let mut by_first: HashMap<String, Vec<Phrase<'s>>> = HashMap::new();
-        for (text, advice) in phrases {
-            let tokens: Vec<String> = Token::split(text).iter().map(Token::folded).collect();
+        for (text, advice, group) in phrases {
+            let tokens = folded(text);
             let Some(first) = tokens.first() else {
                 continue;
             };
-            by_first
-                .entry(first.clone())
-                .or_default()
-                .push(Phrase { tokens, advice });
+            by_first.entry(first.clone()).or_default().push(Phrase {
+                tokens,
+                advice,
+                group,
+            });
         }
         for phrases in by_first.values_mut() {
             phrases.sort_by_key(|phrase| std::cmp::Reverse(phrase.tokens.len()));
@@ -127,16 +144,141 @@ impl<'s> Phrases<'s> {
     }
 }
 
+/// A group of phrases that the config switches on or off as one.
+pub struct Group {
+    /// Its key in `lints.banned_phrases.groups`.
+    pub name: &'static str,
+    /// Whether it is on when the config does not say.
+    pub on_by_default: bool,
+    /// Its switch in the config.
+    pub switch: fn(&PhraseGroups) -> Option<bool>,
+}
+
+impl Group {
+    /// Whether `groups` has it on.
+    pub fn on(&self, groups: &PhraseGroups) -> bool {
+        (self.switch)(groups).unwrap_or(self.on_by_default)
+    }
+}
+
+/// Every group; the phrases of each are in [`CATALOGUE`].
+pub const GROUPS: &[Group] = &[
+    Group {
+        name: "signposts",
+        on_by_default: true,
+        switch: |groups| groups.signposts,
+    },
+    Group {
+        name: "insistence",
+        on_by_default: true,
+        switch: |groups| groups.insistence,
+    },
+    Group {
+        name: "metaphors",
+        on_by_default: true,
+        switch: |groups| groups.metaphors,
+    },
+    Group {
+        name: "precision",
+        on_by_default: true,
+        switch: |groups| groups.precision,
+    },
+];
+
+/// The group an entry of the catalogue is in, by its name in [`GROUPS`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GroupName {
+    /// `signposts`.
+    Signposts,
+    /// `insistence`.
+    Insistence,
+    /// `metaphors`.
+    Metaphors,
+    /// `precision`.
+    Precision,
+}
+
+impl GroupName {
+    /// Its group in [`GROUPS`].
+    pub fn group(self) -> &'static Group {
+        let name = match self {
+            GroupName::Signposts => "signposts",
+            GroupName::Insistence => "insistence",
+            GroupName::Metaphors => "metaphors",
+            GroupName::Precision => "precision",
+        };
+        GROUPS
+            .iter()
+            .find(|group| group.name == name)
+            .expect("every group name is in GROUPS")
+    }
+}
+
+/// The phrases the groups ban, read from `banned_phrases.toml`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Catalogue {
+    /// The corpus image the entries' counts are for.
+    pub measured_on: String,
+    /// Every phrase.
+    #[serde(rename = "entry")]
+    pub entries: Vec<Entry>,
+}
+
+/// A phrase of the catalogue, with the counts that let it in.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Entry {
+    /// The phrase.
+    pub phrase: String,
+    /// Its group.
+    pub group: GroupName,
+    /// The advice the report gives with it.
+    pub advice: String,
+    /// The version of deslag it first ships in.
+    pub since: String,
+    /// The big tier's `llm` files that hold it.
+    pub llm_files: u64,
+    /// The repositories those files come from.
+    pub llm_repos: u64,
+}
+
+/// The catalogue, parsed once.
+pub static CATALOGUE: LazyLock<Catalogue> = LazyLock::new(|| {
+    toml::from_str(include_str!("banned_phrases.toml")).expect("banned_phrases.toml parses")
+});
+
+/// The folded tokens of `phrase`, which is what two phrases are compared by.
+pub fn folded(phrase: &str) -> Vec<String> {
+    Token::split(phrase).iter().map(Token::folded).collect()
+}
+
 /// Checks one file, read into `document`. A file with no settings is not checked.
 pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Option<Over> {
     let settings = settings?;
-    let banned = settings.ban.iter().flatten();
-    let ban = Phrases::new(banned.map(|(phrase, advice)| (phrase.as_str(), advice.as_str())));
+    let banned: Vec<Vec<String>> = settings
+        .ban
+        .iter()
+        .flatten()
+        .map(|(phrase, _)| folded(phrase))
+        .collect();
+    let own = settings.ban.iter().flatten();
+    let own = own.map(|(phrase, advice)| (phrase.as_str(), advice.as_str(), None));
+    // A phrase in `ban` keeps the advice `ban` gives it.
+    let grouped = CATALOGUE.entries.iter().filter(|entry| {
+        entry.group.group().on(&settings.groups) && !banned.contains(&folded(&entry.phrase))
+    });
+    let grouped = grouped.map(|entry| {
+        let group = Some(entry.group.group().name);
+        (entry.phrase.as_str(), entry.advice.as_str(), group)
+    });
+    let ban = Phrases::new(own.chain(grouped));
     if ban.by_first.is_empty() {
         return None;
     }
     let allowed = settings.allow.iter().flatten();
-    let allow = Phrases::new(allowed.map(|phrase| (phrase.as_str(), "")));
+    let allow = Phrases::new(allowed.map(|phrase| (phrase.as_str(), "", None)));
 
     let mut matches = Vec::new();
     for (block, _) in document.walk() {
@@ -175,7 +317,7 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Optio
                 continue;
             };
             let end = at + phrase.tokens.len();
-            matches.push(Match::new(document, &tokens[at..end], phrase.advice));
+            matches.push(Match::new(document, &tokens[at..end], phrase));
             at = end;
         }
     }

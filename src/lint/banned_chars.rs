@@ -19,7 +19,7 @@
 //! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a range of characters, is a
 //! guess at meaning, and is left to the writer.
 
-use crate::config::{BannedChars, Groups};
+use crate::config::{BannedChars, CharGroups};
 use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
 use crate::lint::{Keep, Mark, MarkKind, on_lines};
 
@@ -52,7 +52,7 @@ pub struct Group {
     /// Whether it is on when the config does not say.
     pub on_by_default: bool,
     /// Its switch in the config.
-    pub switch: fn(&Groups) -> Option<bool>,
+    pub switch: fn(&CharGroups) -> Option<bool>,
     /// Its characters. A character in more than one rule takes the first.
     pub rules: &'static [Rule],
 }

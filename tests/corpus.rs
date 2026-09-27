@@ -17,12 +17,12 @@ use std::path::Path;
 use common::corpus::load_corpus;
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};
+use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::document::Location;
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{Lint, banned_chars, density, max_emphasis};
+use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis};
 use deslag::{Config, ConfigSource, Document, Violation, check_file};
 
 /// How many fixtures each collected category must hold at least.
@@ -1144,6 +1144,50 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by the default groups: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm >= 4 * human, "human {human}, llm {llm}");
+}
+
+/// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.
+const LIVE_GROUP_FILES: usize = 5;
+
+#[test]
+fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
+    let fixtures = load_corpus();
+    let settings = BannedPhrases::default();
+    let mut live: BTreeMap<&str, usize> = BTreeMap::new();
+    for fixture in &fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let Some(over) = banned_phrases::check(&Document::markdown(&text), Some(&settings)) else {
+            continue;
+        };
+        assert_ne!(
+            fixture.category,
+            "human",
+            "{}: {:?}",
+            fixture.slug(),
+            over.matches
+        );
+        if fixture.category == "llm" {
+            let mut groups: Vec<&str> = over
+                .matches
+                .iter()
+                .filter_map(|found| found.group)
+                .collect();
+            groups.sort_unstable();
+            groups.dedup();
+            for group in groups {
+                *live.entry(group).or_default() += 1;
+            }
+        }
+    }
+    eprintln!("llm fixtures each phrase group matches: {live:?}");
+    for group in banned_phrases::GROUPS {
+        let files = live.get(group.name).copied().unwrap_or(0);
+        assert!(
+            files >= LIVE_GROUP_FILES,
+            "{} matches {files} llm fixtures",
+            group.name
+        );
+    }
 }
 
 #[test]

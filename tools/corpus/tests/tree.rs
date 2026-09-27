@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
 
-use deslag::config::BannedPhrases;
+use deslag::config::{BannedPhrases, PhraseGroups};
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::banned_phrases;
 use deslag_corpus::candidates::{Sieve, candidates};
@@ -53,6 +53,12 @@ fn prose(document: &Document<'_>) -> Vec<String> {
 /// A setting that bans `phrases`, each with its index as its advice.
 fn ban(phrases: &[&str]) -> BannedPhrases {
     BannedPhrases {
+        groups: PhraseGroups {
+            signposts: Some(false),
+            insistence: Some(false),
+            metaphors: Some(false),
+            precision: Some(false),
+        },
         allow: None,
         ban: Some(
             phrases

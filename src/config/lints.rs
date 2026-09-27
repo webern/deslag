@@ -332,7 +332,7 @@ impl Merge for RepoLayout {
 pub struct BannedChars {
     /// Turns groups of characters on or off.
     #[serde(default)]
-    pub groups: Groups,
+    pub groups: CharGroups,
     /// Characters that are never banned, each written as a one-character string.
     #[serde(default)]
     pub allow: Option<Vec<String>>,
@@ -399,7 +399,7 @@ impl Merge for BannedChars {
 /// is on or off as its default says.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct Groups {
+pub struct CharGroups {
     /// The em dash, en dash, minus sign and other dashes, for `-`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
@@ -450,10 +450,10 @@ pub struct Groups {
     pub emoji: Option<bool>,
 }
 
-impl Merge for Groups {
+impl Merge for CharGroups {
     fn merge(&mut self, over: &Self) {
         // Naming every field makes a new group a compile error until it is merged here too.
-        let Groups {
+        let CharGroups {
             dashes,
             arrows,
             ellipsis,
@@ -489,14 +489,18 @@ impl Merge for Groups {
     }
 }
 
-/// `lints.banned_phrases`: a file fails when its prose holds a phrase in `ban`.
+/// `lints.banned_phrases`: a file fails when its prose holds a phrase of a group that is on, or a
+/// phrase in `ban`.
 ///
-/// Like `banned_chars`, the table itself turns the check on, but nothing is banned by default: with
-/// nothing in `ban`, it checks nothing. A phrase matches whatever its case and its style of
-/// apostrophe, and a match inside a match of a phrase in `allow` is not reported.
+/// Like `banned_chars`, the table itself turns the check on: an empty one bans the groups that are
+/// on by default. A phrase matches whatever its case and its style of apostrophe, and a match
+/// inside a match of a phrase in `allow` is not reported.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedPhrases {
+    /// Turns groups of phrases on or off.
+    #[serde(default)]
+    pub groups: PhraseGroups,
     /// Phrases that are never reported, such as a longer phrase that holds a banned one.
     #[serde(default)]
     pub allow: Option<Vec<String>>,
@@ -567,6 +571,7 @@ impl BannedPhrases {
 
 impl Merge for BannedPhrases {
     fn merge(&mut self, over: &Self) {
+        self.groups.merge(&over.groups);
         if over.allow.is_some() {
             self.allow.clone_from(&over.allow);
         }
@@ -575,6 +580,52 @@ impl Merge for BannedPhrases {
         }
         if over.message.is_some() {
             self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.banned_phrases.groups`: each group of phrases switched on or off. A group left unset is
+/// on or off as its default says.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PhraseGroups {
+    /// Phrases that announce a point instead of making it, such as `why it matters`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("default" = true))]
+    pub signposts: Option<bool>,
+    /// Phrases that insist on what a thing does not do, such as `not silently`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("default" = true))]
+    pub insistence: Option<bool>,
+    /// Metaphors that stand in for a plain verb or claim, such as `load-bearing`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("default" = true))]
+    pub metaphors: Option<bool>,
+    /// Words that claim a precision nobody measured, such as `byte-identical`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("default" = true))]
+    pub precision: Option<bool>,
+}
+
+impl Merge for PhraseGroups {
+    fn merge(&mut self, over: &Self) {
+        // Naming every field makes a new group a compile error until it is merged here too.
+        let PhraseGroups {
+            signposts,
+            insistence,
+            metaphors,
+            precision,
+        } = over;
+        let pairs = [
+            (&mut self.signposts, signposts),
+            (&mut self.insistence, insistence),
+            (&mut self.metaphors, metaphors),
+            (&mut self.precision, precision),
+        ];
+        for (under, over) in pairs {
+            if over.is_some() {
+                *under = *over;
+            }
         }
     }
 }

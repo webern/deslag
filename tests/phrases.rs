@@ -2,9 +2,9 @@
 //! and which settings are refused. The reports are pinned by the cases.
 
 use deslag::Document;
-use deslag::config::{BannedPhrases, MdLints, Merge};
+use deslag::config::{BannedPhrases, MdLints, Merge, PhraseGroups};
 use deslag::document::{Token, TokenKind};
-use deslag::lint::banned_phrases::check;
+use deslag::lint::banned_phrases::{CATALOGUE, GROUPS, check, folded};
 
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> BannedPhrases {
@@ -23,6 +23,12 @@ fn banning(phrases: &[&str]) -> BannedPhrases {
                 .map(|phrase| (phrase.to_string(), phrase.to_string()))
                 .collect(),
         ),
+        groups: PhraseGroups {
+            signposts: Some(false),
+            insistence: Some(false),
+            metaphors: Some(false),
+            precision: Some(false),
+        },
         ..BannedPhrases::default()
     }
 }
@@ -357,5 +363,80 @@ fn a_phrase_in_both_ban_and_allow_is_refused() {
             "banned_phrases.ban and banned_phrases.allow both hold \"It's worth noting\""
                 .to_string()
         )
+    );
+}
+
+#[test]
+fn every_group_has_phrases_and_every_phrase_a_group() {
+    for group in GROUPS {
+        assert!(
+            CATALOGUE
+                .entries
+                .iter()
+                .any(|entry| entry.group.group().name == group.name),
+            "{} has no phrases",
+            group.name
+        );
+    }
+}
+
+#[test]
+fn no_catalogue_phrase_repeats_or_lies_inside_another() {
+    let phrases: Vec<(&str, Vec<String>)> = CATALOGUE
+        .entries
+        .iter()
+        .map(|entry| (entry.phrase.as_str(), folded(&entry.phrase)))
+        .collect();
+    for (at, (phrase, tokens)) in phrases.iter().enumerate() {
+        for (other, (outer, around)) in phrases.iter().enumerate() {
+            let inside = around
+                .windows(tokens.len())
+                .any(|window| window == tokens.as_slice());
+            assert!(other == at || !inside, "{phrase:?} lies inside {outer:?}");
+        }
+    }
+}
+
+#[test]
+fn every_catalogue_phrase_is_one_a_config_could_ban() {
+    let version = |text: &str| -> Vec<u64> {
+        text.split('.')
+            .map(|part| part.parse().expect("a version"))
+            .collect()
+    };
+    for entry in &CATALOGUE.entries {
+        let settings = banning(&[entry.phrase.as_str()]);
+        assert_eq!(settings.invalid(), None, "{}", entry.phrase);
+        assert!(!entry.advice.is_empty(), "{}", entry.phrase);
+        assert!(
+            version(&entry.since) <= version(env!("CARGO_PKG_VERSION")),
+            "{} ships in {}",
+            entry.phrase,
+            entry.since
+        );
+        assert!(entry.llm_repos >= 40, "{}", entry.phrase);
+    }
+}
+
+#[test]
+fn the_catalogue_is_measured_on_the_pinned_image() {
+    let lock = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/blobstore/blobs.lock"),
+    )
+    .expect("blobs.lock");
+    assert_eq!(Some(CATALOGUE.measured_on.as_str()), lock.lines().next());
+}
+
+#[test]
+fn the_corpus_report_config_holds_the_repos_own_lint_settings() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let lints = |path: &str| -> toml::Value {
+        let text = std::fs::read_to_string(root.join(path)).expect(path);
+        let config: toml::Value = toml::from_str(&text).expect(path);
+        config["md"]["lints"].clone()
+    };
+    assert_eq!(
+        lints("tools/corpus/report.toml"),
+        lints(".agents/deslag.toml")
     );
 }

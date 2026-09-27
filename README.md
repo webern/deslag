@@ -73,6 +73,9 @@ globs = ["AGENTS.md"]
 lints.max_size_bytes.value = 8000
 ```
 
+`banned_chars` and `banned_phrases` ban groups of characters and phrases, switched under their
+`groups` tables; most groups are on by default.
+
 `deslag instructions config-schema` prints the config's JSON schema, which describes every lint and
 setting and gives its default. `deslag explain <PATH>...` prints the settings a file gets, and where
 each one comes from.

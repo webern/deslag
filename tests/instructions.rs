@@ -12,7 +12,7 @@ use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{guide, lints};
-use deslag::lint::banned_chars::GROUPS;
+use deslag::lint::{banned_chars, banned_phrases};
 use serde_json::Value;
 
 /// The table `name` of the table `schema`, whether or not it is optional.
@@ -329,19 +329,26 @@ fn every_table_in_the_schema_refuses_unknown_keys() {
 #[test]
 fn the_schema_gives_each_group_its_default() {
     let root = schema();
-    let groups = table(
-        &root,
-        table(&root, lints_schema(&root), "banned_chars"),
-        "groups",
-    );
-    let properties = groups["properties"].as_object().expect("the groups");
-    assert_eq!(properties.len(), GROUPS.len());
-    for group in GROUPS {
-        assert_eq!(
-            properties[group.name]["default"],
-            Value::Bool(group.on_by_default),
-            "{}",
-            group.name
-        );
+    let chars = banned_chars::GROUPS
+        .iter()
+        .map(|group| (group.name, group.on_by_default));
+    let phrases = banned_phrases::GROUPS
+        .iter()
+        .map(|group| (group.name, group.on_by_default));
+    let lints: [(&str, Vec<(&str, bool)>); 2] = [
+        ("banned_chars", chars.collect()),
+        ("banned_phrases", phrases.collect()),
+    ];
+    for (lint, groups) in lints {
+        let table = table(&root, table(&root, lints_schema(&root), lint), "groups");
+        let properties = table["properties"].as_object().expect("the groups");
+        assert_eq!(properties.len(), groups.len(), "{lint}");
+        for (name, on_by_default) in groups {
+            assert_eq!(
+                properties[name]["default"],
+                Value::Bool(on_by_default),
+                "{lint}.groups.{name}"
+            );
+        }
     }
 }

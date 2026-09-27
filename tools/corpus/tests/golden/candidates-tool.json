@@ -49,6 +49,10 @@
       "left": 39
     },
     {
+      "step": "neither in the catalogue nor refused for it",
+      "left": 37
+    },
+    {
       "step": "after merging each n-gram into a shorter one it holds",
       "left": 10
     }
@@ -200,8 +204,7 @@
         "is deliberately not",
         "is deliberately",
         "this step is deliberately",
-        "deliberately not cached",
-        "deliberately not"
+        "deliberately not cached"
       ],
       "examples": [
         "This step is [deliberately] not cached, so the next run reads it again.",
@@ -249,7 +252,6 @@
         "is deliberately not cached",
         "is deliberately not",
         "deliberately not cached",
-        "deliberately not",
         "not cached, so",
         "not cached"
       ],

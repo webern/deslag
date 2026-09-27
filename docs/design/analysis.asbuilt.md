@@ -22,7 +22,8 @@ bytes.
 - `summary`: files and repositories by label, kind, language, batch, quarter, register and tool.
 - `chars`: the characters outside ASCII in English prose, by `banned_chars` group and one by one.
 - `ngrams`: runs of prose tokens, ranked by the lower bound of their ratio's interval.
-- `candidates`: the n-grams that pass the sieve, with the catalog gate's count.
+- `candidates`: the n-grams that pass the sieve, with the catalog gate's count. It leaves out the
+  catalogue's phrases and those `rejected.toml` refused; see `catalog.md`.
 - `lints`: what a config's lints fail, per label and per compared tool.
 - `report`: the four above as one Markdown page, the lints at `tools/corpus/report.toml`.
 

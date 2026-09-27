@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "doc__decisions__adr-0000-template.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mdhender/ecv6-api",
+    "path": "doc/decisions/adr-0000-template.md",
+    "commit": "3e2b9d62f16c331a54557d2c090b2ab3a0d8e841",
+    "commit_date": "2026-07-18T13:32:40-05:00",
+    "url": "https://github.com/mdhender/ecv6-api/blob/3e2b9d62f16c331a54557d2c090b2ab3a0d8e841/doc/decisions/adr-0000-template.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-07T09:55:30-05:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-07T14:02:16-05:00",
+    "last_commit_date": "2026-07-07T14:02:16-05:00",
+    "last_commit_author": "Michael Henderson",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-07T14:02:16-05:00",
+    "last_committer_date": "2026-07-07T14:02:16-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01VFU7k6DmRGgYWHUqgtBatw",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4d600f4d38d1efc7ee1be03500803aeaa7bf11ce",
+        "date": "2026-07-07T14:02:16-05:00",
+        "committed": "2026-07-07T14:02:16-05:00",
+        "old": null,
+        "new": "308363013c93d1401857f3bb0d84d071d8c84883",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 455,
+    "sha256": "231dd26044d307ab133842be0a003b7dd42fcad7e2acf5f22ac0cddcc29cf6a4",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 71,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mdhender--ecv6-api/doc/decisions/adr-0000-template.md"
+}

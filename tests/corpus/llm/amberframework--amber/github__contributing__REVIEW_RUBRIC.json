@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__contributing__REVIEW_RUBRIC.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "amberframework/amber",
+    "path": ".github/contributing/REVIEW_RUBRIC.md",
+    "commit": "b29f257d225f2f9e189f03a892047dd825a3f934",
+    "commit_date": "2026-08-01T14:25:37-04:00",
+    "url": "https://github.com/amberframework/amber/blob/b29f257d225f2f9e189f03a892047dd825a3f934/.github/contributing/REVIEW_RUBRIC.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-12-26T09:45:04+01:00",
+    "stars": 2606,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-16T08:28:48-04:00",
+    "last_commit_date": "2026-06-16T08:28:48-04:00",
+    "last_commit_author": "crimson-knight",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-16T08:28:48-04:00",
+    "last_committer_date": "2026-06-16T08:28:48-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4745c60bfe3fd787dde6d3b42428ba45188153e0",
+        "date": "2026-06-16T08:28:48-04:00",
+        "committed": "2026-06-16T08:28:48-04:00",
+        "old": null,
+        "new": "7d57d78bcde613eca26cf1bd176e2283aea017e6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 13003,
+    "sha256": "ad77f00ab92cd857ac617e5551c1daa640f87e95a284b6c49419ba064388bb18",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 144,
+    "words": 1941,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/amberframework--amber/.github/contributing/REVIEW_RUBRIC.md"
+}

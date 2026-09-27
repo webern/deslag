@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__config.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "reidmorrison/semantic_logger",
+    "path": "docs/config.md",
+    "commit": "9e2c2c8500a00064c4999feb799688ed2179cbb5",
+    "commit_date": "2026-09-06T12:09:44-04:00",
+    "url": "https://github.com/reidmorrison/semantic_logger/blob/9e2c2c8500a00064c4999feb799688ed2179cbb5/docs/config.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2012-08-08T16:56:58-04:00",
+    "stars": 956,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-06-27T07:24:02-04:00",
+    "last_commit_date": "2026-09-05T10:23:02-04:00",
+    "last_commit_author": "Reid Morrison",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-27T07:24:02-04:00",
+    "last_committer_date": "2026-09-05T10:23:02-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "dc1a5e7d512be241faa9f76ba5ea92480230388b",
+        "date": "2026-09-05T10:23:02-04:00",
+        "committed": "2026-09-05T10:23:02-04:00",
+        "old": "2fda436cbc02c7f712e2094d190786bb0ec7ca8c",
+        "new": "dbcf1010a4111f992472b21b2ea0867597efd425",
+        "status": "agent"
+      },
+      {
+        "commit": "d843ccd93cb745b2bd267ae05ab321faa0cf8f8b",
+        "date": "2026-09-04T16:10:04-04:00",
+        "committed": "2026-09-04T16:10:04-04:00",
+        "old": "bf272c59ae7168b0017017cfd2bce0f6b8e60b32",
+        "new": "2fda436cbc02c7f712e2094d190786bb0ec7ca8c",
+        "status": "agent"
+      },
+      {
+        "commit": "a2c068ae33b36067c5781de4ffbc99e0f32a2cee",
+        "date": "2026-06-27T07:51:20-04:00",
+        "committed": "2026-06-27T07:51:20-04:00",
+        "old": "2b24955e22d3ea84b8d3a493467a1df50cca13b3",
+        "new": "bf272c59ae7168b0017017cfd2bce0f6b8e60b32",
+        "status": "agent"
+      },
+      {
+        "commit": "427326100e432db82888ebad65955f312db83772",
+        "date": "2026-06-27T07:24:02-04:00",
+        "committed": "2026-06-27T07:24:02-04:00",
+        "old": null,
+        "new": "2b24955e22d3ea84b8d3a493467a1df50cca13b3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 22364,
+    "sha256": "b629f95711ac0da8f5b787c9698ebdbde73a06637ac803b495580119fccbf2bd",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 608,
+    "words": 2957,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/reidmorrison--semantic_logger/docs/config.md"
+}

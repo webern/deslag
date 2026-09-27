@@ -1,0 +1,225 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "briandenicola/password-vault",
+    "path": "README.md",
+    "commit": "14c16d8274112425136eea1d48038e228a6e58d3",
+    "commit_date": "2026-09-01T14:22:26-05:00",
+    "url": "https://github.com/briandenicola/password-vault/blob/14c16d8274112425136eea1d48038e228a6e58d3/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-01-05T22:37:51-06:00",
+    "stars": 3,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 50,
+    "first_commit_date": "2019-01-05T22:37:51-06:00",
+    "last_commit_date": "2026-06-25T15:46:32-05:00",
+    "last_commit_author": "briandenicola",
+    "authors": 3,
+    "ai_commits": 10,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-01-05T22:37:51-06:00",
+    "last_committer_date": "2026-06-25T15:46:32-05:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 10
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2dfc8a6c887e80244703a739af51a16537d9fa23",
+        "date": "2026-06-25T15:46:32-05:00",
+        "committed": "2026-06-25T15:46:32-05:00",
+        "old": "840815fe68e8d4133f1d6b41b8a9d4a520932178",
+        "new": "da10459fce4f4e714058340c04176b2e4b0accbb",
+        "status": "agent"
+      },
+      {
+        "commit": "4b58b74e7c8b9763071a819409d3ec859006c4cc",
+        "date": "2026-06-25T14:04:25-05:00",
+        "committed": "2026-06-25T14:04:25-05:00",
+        "old": "61f512b6a79317db29b6b55210fc017fb5d2d55d",
+        "new": "840815fe68e8d4133f1d6b41b8a9d4a520932178",
+        "status": "agent"
+      },
+      {
+        "commit": "91a6cd2c7ee2fe447c331b0d1a7f6b3e39c8d1b6",
+        "date": "2026-06-25T13:36:10-05:00",
+        "committed": "2026-06-25T13:36:10-05:00",
+        "old": "c5c6e532636d07cb48bcd27bb4004612ddf894f7",
+        "new": "61f512b6a79317db29b6b55210fc017fb5d2d55d",
+        "status": "agent"
+      },
+      {
+        "commit": "af3185ddfc22f0ce8df2acab8b8d734e153343f4",
+        "date": "2026-06-25T13:35:03-05:00",
+        "committed": "2026-06-25T13:35:03-05:00",
+        "old": "54e6847e58265aa495372c752d2b7b23aaf32de5",
+        "new": "c5c6e532636d07cb48bcd27bb4004612ddf894f7",
+        "status": "agent"
+      },
+      {
+        "commit": "629562d45d2c209f517a1af6b42db219588be4f8",
+        "date": "2026-06-25T10:22:31-05:00",
+        "committed": "2026-06-25T10:22:31-05:00",
+        "old": "9d1558d8f30485a1da87174dddb24e7e2004f02b",
+        "new": "54e6847e58265aa495372c752d2b7b23aaf32de5",
+        "status": "agent"
+      },
+      {
+        "commit": "5e0668cb6fca23fe0b87e5a269639cca86925b6b",
+        "date": "2026-06-25T09:45:53-05:00",
+        "committed": "2026-06-25T09:45:53-05:00",
+        "old": "b7155d1581e04816bd677ef489955a61c8f4a860",
+        "new": "9d1558d8f30485a1da87174dddb24e7e2004f02b",
+        "status": "agent"
+      },
+      {
+        "commit": "ebb70918b77ea79b2e5130068b75cef08e262fed",
+        "date": "2026-06-25T09:12:43-05:00",
+        "committed": "2026-06-25T09:12:43-05:00",
+        "old": "ed82895ea1ed701b8ada30d78c803eb8cb642ab5",
+        "new": "b7155d1581e04816bd677ef489955a61c8f4a860",
+        "status": "agent"
+      },
+      {
+        "commit": "8bb9d2fc85aa01e5c708e85fd5b763735c8b6f2b",
+        "date": "2026-06-24T13:48:49-05:00",
+        "committed": "2026-06-24T13:48:49-05:00",
+        "old": "a75f0c8465e776d9e0a972530dba0e0289e37346",
+        "new": "ed82895ea1ed701b8ada30d78c803eb8cb642ab5",
+        "status": "agent"
+      },
+      {
+        "commit": "f2fe6836f6e2bc712c25a8d1b049f5a91e918c2f",
+        "date": "2026-06-24T13:28:37-05:00",
+        "committed": "2026-06-24T13:28:37-05:00",
+        "old": "c0d0c78b015dffc4cf5adef315102f02a573a526",
+        "new": "a75f0c8465e776d9e0a972530dba0e0289e37346",
+        "status": "agent"
+      },
+      {
+        "commit": "c0051624495e9001fdc15bdc8286af350998be2a",
+        "date": "2026-06-24T10:21:17-05:00",
+        "committed": "2026-06-24T10:21:17-05:00",
+        "old": "0ffde05d99dc22905dfb5dfd1091d6c6bc1b03f4",
+        "new": "c0d0c78b015dffc4cf5adef315102f02a573a526",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "31 of its 50 commits predate 2022-01-01 with no mark, and 10 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5478,
+    "sha256": "c30f3d812c8800cbbee9798cad43b98c47d681e3807a6166a8758f45ea3d3551",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 78,
+    "words": 631,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/briandenicola--password-vault/README.md",
+  "before": {
+    "sha256": "ecd4fa23e1c4ca3c4317301390f72036a72b6784ce3e4eb892fb36cd03df2699",
+    "commit": "8e224d801ec0a4fe791846f0fcd4a6bf9f7aed31",
+    "date": "2021-08-26T13:26:05-05:00",
+    "between": [
+      {
+        "commit": "654add8fac18b5fb3b03639bd3d5ae632f1f65f0",
+        "date": "2025-01-22T14:59:27-06:00",
+        "committed": "2025-01-22T14:59:27-06:00",
+        "old": "23a6772c6d5311857b5a63794ce6b3461d4a347a",
+        "new": "0ffde05d99dc22905dfb5dfd1091d6c6bc1b03f4",
+        "status": "late"
+      },
+      {
+        "commit": "306ba8077473a300e30442ee68a9d67f6ca50005",
+        "date": "2025-01-22T14:51:13-06:00",
+        "committed": "2025-01-22T14:51:13-06:00",
+        "old": "207a4156ce9c2c5ad84f4a8c98c6e10c90d029bd",
+        "new": "23a6772c6d5311857b5a63794ce6b3461d4a347a",
+        "status": "late"
+      },
+      {
+        "commit": "32359106141f544ddc1ca975156519997a75fc6d",
+        "date": "2025-01-09T10:20:48-06:00",
+        "committed": "2025-01-09T10:20:52-06:00",
+        "old": "a95170c75685e00225c1d71a439d6d7723383114",
+        "new": "207a4156ce9c2c5ad84f4a8c98c6e10c90d029bd",
+        "status": "late"
+      },
+      {
+        "commit": "fd9dec8e97caef5c05208c26f4ab78849c9ba0ae",
+        "date": "2025-01-08T14:01:03-06:00",
+        "committed": "2025-01-08T14:01:03-06:00",
+        "old": "691c2004a08a56ed2dce9c4edff71ac529c10c84",
+        "new": "a95170c75685e00225c1d71a439d6d7723383114",
+        "status": "late"
+      },
+      {
+        "commit": "0cbec6d18579177463c0c40591042992b8329252",
+        "date": "2025-01-08T14:00:10-06:00",
+        "committed": "2025-01-08T14:00:10-06:00",
+        "old": "aa6aaa8c5748ac4bb0a8b4c9b4cd982d1d713f46",
+        "new": "691c2004a08a56ed2dce9c4edff71ac529c10c84",
+        "status": "late"
+      },
+      {
+        "commit": "f088db570db7267a02c242869d2d2217960df923",
+        "date": "2025-01-06T16:55:55-06:00",
+        "committed": "2025-01-06T16:55:55-06:00",
+        "old": "8b863fa7e4729508eb823fc8922ae62fa6b46016",
+        "new": "aa6aaa8c5748ac4bb0a8b4c9b4cd982d1d713f46",
+        "status": "late"
+      },
+      {
+        "commit": "b88b2ec1222355d85315785a46a8eefc06eb1697",
+        "date": "2025-01-02T15:29:07-06:00",
+        "committed": "2025-01-02T15:29:07-06:00",
+        "old": "d4a55a30aa331028d6d984bf96c89cface505593",
+        "new": "8b863fa7e4729508eb823fc8922ae62fa6b46016",
+        "status": "late"
+      },
+      {
+        "commit": "a27760bdc809ad510442fd4de9149c3a65bb27a1",
+        "date": "2024-03-06T12:59:36-06:00",
+        "committed": "2024-03-06T12:59:36-06:00",
+        "old": "3b3e2a20bf432de03bdab23bf73813c582624fcc",
+        "new": "d4a55a30aa331028d6d984bf96c89cface505593",
+        "status": "late"
+      },
+      {
+        "commit": "950ad4eb994955ccda5f72beb5b8b8855c853113",
+        "date": "2023-12-29T08:54:44-06:00",
+        "committed": "2023-12-29T08:54:44-06:00",
+        "old": "4857fa9ae50012e810b1697c341c24dd2fff9afd",
+        "new": "3b3e2a20bf432de03bdab23bf73813c582624fcc",
+        "status": "late"
+      }
+    ]
+  }
+}

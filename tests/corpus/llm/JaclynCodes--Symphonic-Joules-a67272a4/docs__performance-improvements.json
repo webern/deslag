@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__performance-improvements.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JaclynCodes/Symphonic-Joules-a67272a4",
+    "path": "docs/performance-improvements.md",
+    "commit": "3b7263cead8337a0eff1ccb281a11d46d6857168",
+    "commit_date": "2026-09-22T12:33:00-06:00",
+    "url": "https://github.com/JaclynCodes/Symphonic-Joules-a67272a4/blob/3b7263cead8337a0eff1ccb281a11d46d6857168/docs/performance-improvements.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-23T18:34:55-04:00",
+    "stars": 4,
+    "found_by": "gh-commits:openhands"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-23T23:07:55Z",
+    "last_commit_date": "2026-01-23T23:07:55Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-23T23:07:55Z",
+    "last_committer_date": "2026-01-23T23:07:55Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "56a9b5fd18b85bb65afebc0800d2d6390d74723e",
+        "date": "2026-01-23T23:07:55Z",
+        "committed": "2026-01-23T23:07:55Z",
+        "old": null,
+        "new": "03e0f48d2f3efcbb7ba4da5ff1b98c4713715d05",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6225,
+    "sha256": "27401ad771ee3350a429516b9d01b362f6e528a25c5b79a697d6abcdb8468334",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 168,
+    "words": 732,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/JaclynCodes--Symphonic-Joules-a67272a4/docs/performance-improvements.md"
+}

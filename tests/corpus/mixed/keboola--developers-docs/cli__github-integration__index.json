@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "cli__github-integration__index.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "keboola/developers-docs",
+    "path": "cli/github-integration/index.md",
+    "commit": "edbd4dbd4aa968233e881e2e8260085eafd74385",
+    "commit_date": "2026-09-23T17:22:39+02:00",
+    "url": "https://github.com/keboola/developers-docs/blob/edbd4dbd4aa968233e881e2e8260085eafd74385/cli/github-integration/index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-09-22T15:04:31+02:00",
+    "stars": 3,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-11-19T14:50:01+01:00",
+    "last_commit_date": "2026-09-03T15:42:58+02:00",
+    "last_commit_author": "Nikita",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-11-19T14:50:01+01:00",
+    "last_committer_date": "2026-09-03T15:42:58+02:00",
+    "marks": [
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4aa889913038588d0846298e07930323c28d3852",
+        "date": "2025-09-22T17:43:17Z",
+        "committed": "2025-09-22T17:43:17Z",
+        "old": "4cac81446350a705314457d0fad10b63e9b8642f",
+        "new": "da14ebbbf91161a6b247a6f0fa8d4825d4f0b55a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 8 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 341,
+    "sha256": "35fc639a18beebaba059ccb20fa6d6944a8d711e784a4a0aea42d61d8b118bdd",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 7,
+    "words": 33,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/keboola--developers-docs/cli/github-integration/index.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agent-feedback__items__2026-09-04-marko-ssr-entry-injects-nothing.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "marko-js/vite",
+    "path": "agent-feedback/items/2026-09-04-marko-ssr-entry-injects-nothing.md",
+    "commit": "fc703da6340989ecbb9fa73423c3c3ebbd9397e9",
+    "commit_date": "2026-09-25T11:21:47-07:00",
+    "url": "https://github.com/marko-js/vite/blob/fc703da6340989ecbb9fa73423c3c3ebbd9397e9/agent-feedback/items/2026-09-04-marko-ssr-entry-injects-nothing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-04-24T09:51:53-07:00",
+    "stars": 59,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-04T08:00:53-07:00",
+    "last_commit_date": "2026-09-04T08:00:53-07:00",
+    "last_commit_author": "Dylan Piercey",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-04T08:09:23-07:00",
+    "last_committer_date": "2026-09-04T08:09:23-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8a58d61143f547c4cd17852b9d9483fad9af31a1",
+        "date": "2026-09-04T08:00:53-07:00",
+        "committed": "2026-09-04T08:09:23-07:00",
+        "old": null,
+        "new": "4248a010a8cd8803ad19a28f9c8d1e38b40e6c41",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1438,
+    "sha256": "f1f03764765c397db638f2961f3acafa074b0b00e267fc2565d416c5c0a37a0d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 12,
+    "words": 217,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/marko-js--vite/agent-feedback/items/2026-09-04-marko-ssr-entry-injects-nothing.md"
+}

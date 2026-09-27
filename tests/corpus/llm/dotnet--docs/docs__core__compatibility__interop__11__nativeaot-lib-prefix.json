@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__core__compatibility__interop__11__nativeaot-lib-prefix.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dotnet/docs",
+    "path": "docs/core/compatibility/interop/11/nativeaot-lib-prefix.md",
+    "commit": "d2ba342080fe78b1bb2a33f4d9d9d2a2386f35d9",
+    "commit_date": "2026-09-25T21:14:02Z",
+    "url": "https://github.com/dotnet/docs/blob/d2ba342080fe78b1bb2a33f4d9d9d2a2386f35d9/docs/core/compatibility/interop/11/nativeaot-lib-prefix.md",
+    "license": "CC-BY-4.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-CODE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4769,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-06T12:48:55-04:00",
+    "last_commit_date": "2026-04-06T12:48:55-04:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-06T12:48:55-04:00",
+    "last_committer_date": "2026-04-06T12:48:55-04:00",
+    "marks": [
+      {
+        "text": "Copilot <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f818bf2470d446900475adf007a31d34b4749076",
+        "date": "2026-04-06T12:48:55-04:00",
+        "committed": "2026-04-06T12:48:55-04:00",
+        "old": null,
+        "new": "f59a4276a6ec9c0952c55149e510b6f1ee4c51c2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2490,
+    "sha256": "c9286cbc79ddf7ce0384c530323c13627cd90a284cbe44420d499ddb25ea0041",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 63,
+    "words": 344,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dotnet--docs/docs/core/compatibility/interop/11/nativeaot-lib-prefix.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "sigrok__PROBING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "tuhde/Periph",
+    "path": "sigrok/PROBING.md",
+    "commit": "ce3e25f0af9abceff01e2a6f81905ff1328d1b3b",
+    "commit_date": "2026-09-26T20:39:03+02:00",
+    "url": "https://github.com/tuhde/Periph/blob/ce3e25f0af9abceff01e2a6f81905ff1328d1b3b/sigrok/PROBING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-30T16:39:10+02:00",
+    "stars": 1,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-20T17:12:26+02:00",
+    "last_commit_date": "2026-07-20T17:12:26+02:00",
+    "last_commit_author": "Till Uhde",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-20T17:12:26+02:00",
+    "last_committer_date": "2026-07-20T17:12:26+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "61230586fce72b20436cf2eece411dfe69f5e3ed",
+        "date": "2026-07-20T17:12:26+02:00",
+        "committed": "2026-07-20T17:12:26+02:00",
+        "old": null,
+        "new": "03ff75fed71702e08d8c1e858776c69a32ec4fc1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4126,
+    "sha256": "0898c8f598dd3f51790229bc8d169f4752175a9062f02df0a21d79d85774c9dc",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 94,
+    "words": 581,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tuhde--Periph/sigrok/PROBING.md"
+}

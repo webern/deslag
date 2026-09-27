@@ -1,0 +1,161 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "siempredelao/Distance-From-Me-Android",
+    "path": "README.md",
+    "commit": "e96b67c5958e29ffb4bd85312ded4fc4927f6961",
+    "commit_date": "2026-09-16T14:18:52+02:00",
+    "url": "https://github.com/siempredelao/Distance-From-Me-Android/blob/e96b67c5958e29ffb4bd85312ded4fc4927f6961/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2013-09-28T21:16:12+01:00",
+    "stars": 4,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 29,
+    "first_commit_date": "2013-10-09T10:19:39+01:00",
+    "last_commit_date": "2026-09-10T12:56:43+02:00",
+    "last_commit_author": "David Aguiar",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2013-10-09T10:19:39+01:00",
+    "last_committer_date": "2026-09-10T12:56:43+02:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e5a8eaff5e449ab01326f4d400319aa1b9d7aee4",
+        "date": "2026-03-10T20:11:00+01:00",
+        "committed": "2026-03-10T20:11:00+01:00",
+        "old": "3ad95744b31187ea9448ac0438c6710a3dc8c490",
+        "new": "1bcae8384ad22d843b57a7ec9228608f70102ae2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "18 of its 29 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 5112,
+    "sha256": "3d37669065fa48d47e7204bc85b34f26b1ef27f91557cf0fe718752133a17d45",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 119,
+    "words": 618,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/siempredelao--Distance-From-Me-Android/README.md",
+  "before": {
+    "sha256": "e0178c0d53c36f0e76aea8daff6fd851f5781b6022143268427914163fcbfff6",
+    "commit": "a0b402d460608428f54e91cd65175a3bae617944",
+    "date": "2021-03-06T12:41:57+01:00",
+    "between": [
+      {
+        "commit": "5a679ef2581897c79da1b389ac37b8d09fc2be4a",
+        "date": "2026-09-10T12:56:43+02:00",
+        "committed": "2026-09-10T12:56:43+02:00",
+        "old": "3abe470e229337faa5485132673150b4dcaf94e4",
+        "new": "984055b13278068b3d55f947fa2078b897a95026",
+        "status": "late"
+      },
+      {
+        "commit": "7cd3f8168a67063b536faa4e8445e711b171e931",
+        "date": "2026-09-10T10:38:06+02:00",
+        "committed": "2026-09-10T10:38:06+02:00",
+        "old": "279ef65a89154d5b99043bffddfca8d384a04693",
+        "new": "3abe470e229337faa5485132673150b4dcaf94e4",
+        "status": "late"
+      },
+      {
+        "commit": "0291d8d337093ce87696ba327dd658413e4a9876",
+        "date": "2026-09-08T13:14:55+02:00",
+        "committed": "2026-09-08T13:15:07+02:00",
+        "old": "b93ddd04e3711d52440b5bca6ea27322304aef68",
+        "new": "279ef65a89154d5b99043bffddfca8d384a04693",
+        "status": "late"
+      },
+      {
+        "commit": "77aad2ec4c40501d7a529175ebbb659bca57d153",
+        "date": "2026-03-24T20:19:25+01:00",
+        "committed": "2026-03-24T20:19:25+01:00",
+        "old": "4378cc50a7c3e1371bb00d491f2492aa2bf653c9",
+        "new": "b93ddd04e3711d52440b5bca6ea27322304aef68",
+        "status": "late"
+      },
+      {
+        "commit": "23af194cf79950b5ead9ed84c587425181258f73",
+        "date": "2026-03-24T19:54:00+01:00",
+        "committed": "2026-03-24T19:54:00+01:00",
+        "old": "e28603de5e144dae6fcb3df284b5a31409230739",
+        "new": "4378cc50a7c3e1371bb00d491f2492aa2bf653c9",
+        "status": "late"
+      },
+      {
+        "commit": "8c0d6736474d8d1dfbdf5e5ae1ea329aaf342519",
+        "date": "2026-03-24T19:12:51+01:00",
+        "committed": "2026-03-24T19:12:51+01:00",
+        "old": "16de621e705319dc90254167bbcc7b533395aacb",
+        "new": "e28603de5e144dae6fcb3df284b5a31409230739",
+        "status": "late"
+      },
+      {
+        "commit": "636e81f7cd60ec6c3eff9e83273b3506051e059a",
+        "date": "2026-03-14T10:36:51+01:00",
+        "committed": "2026-03-14T10:36:51+01:00",
+        "old": "1bcae8384ad22d843b57a7ec9228608f70102ae2",
+        "new": "16de621e705319dc90254167bbcc7b533395aacb",
+        "status": "late"
+      },
+      {
+        "commit": "58adc7f95581992be7b36f611870fca888a179da",
+        "date": "2025-01-06T19:43:08+01:00",
+        "committed": "2025-01-06T19:43:08+01:00",
+        "old": "1e89165531b8dcc36239901a3f6ba06cfdf95c88",
+        "new": "3ad95744b31187ea9448ac0438c6710a3dc8c490",
+        "status": "late"
+      },
+      {
+        "commit": "687cf2bdba4cb13566f61f01df543ddeb9b79daa",
+        "date": "2025-01-06T19:40:36+01:00",
+        "committed": "2025-01-06T19:40:36+01:00",
+        "old": "36689f9e7a2e031abca154bfabd2f25536e7b9ad",
+        "new": "1e89165531b8dcc36239901a3f6ba06cfdf95c88",
+        "status": "late"
+      },
+      {
+        "commit": "55a0a6bd1fe852331fdaba29e813da01d5817ec0",
+        "date": "2022-01-29T21:25:04+01:00",
+        "committed": "2022-01-29T21:25:04+01:00",
+        "old": "34f2c2182c3c6a98c7595f1d43ab3a4a19efa9ee",
+        "new": "36689f9e7a2e031abca154bfabd2f25536e7b9ad",
+        "status": "late"
+      }
+    ]
+  }
+}

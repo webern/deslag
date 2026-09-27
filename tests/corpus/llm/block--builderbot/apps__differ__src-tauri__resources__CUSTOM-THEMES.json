@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "apps__differ__src-tauri__resources__CUSTOM-THEMES.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "block/builderbot",
+    "path": "apps/differ/src-tauri/resources/CUSTOM-THEMES.md",
+    "commit": "9a0c354fa4d686175d57dcb875250148a405d48c",
+    "commit_date": "2026-09-24T16:03:49+10:00",
+    "url": "https://github.com/block/builderbot/blob/9a0c354fa4d686175d57dcb875250148a405d48c/apps/differ/src-tauri/resources/CUSTOM-THEMES.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-04T18:19:26Z",
+    "stars": 87,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-25T16:55:06-05:00",
+    "last_commit_date": "2026-03-25T16:55:06-05:00",
+    "last_commit_author": "Robby Cohen",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-25T14:55:06-07:00",
+    "last_committer_date": "2026-03-25T14:55:06-07:00",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a822c7866b9b776b3655211ea272b2cdd54a8d52",
+        "date": "2026-03-25T16:55:06-05:00",
+        "committed": "2026-03-25T14:55:06-07:00",
+        "old": null,
+        "new": "5cd5c2312f9ab5d950b9c4404ec9d5d89fd6e7f9",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 1211,
+    "sha256": "2738938748fcf946ff6e4d46a5309c9539a8d90f6da30746a3d2031857a5e4f9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 160,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/block--builderbot/apps/differ/src-tauri/resources/CUSTOM-THEMES.md"
+}

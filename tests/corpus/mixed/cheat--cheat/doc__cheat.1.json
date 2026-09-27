@@ -1,0 +1,121 @@
+{
+  "sidecar_version": 3,
+  "fixture": "doc__cheat.1.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cheat/cheat",
+    "path": "doc/cheat.1.md",
+    "commit": "b8098dc1b9de846d76e68102e03aeb0f918bb0da",
+    "commit_date": "2026-02-16T08:45:45-05:00",
+    "url": "https://github.com/cheat/cheat/blob/b8098dc1b9de846d76e68102e03aeb0f918bb0da/doc/cheat.1.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2013-07-29T21:34:41-04:00",
+    "stars": 13468,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-03-24T20:19:33-04:00",
+    "last_commit_date": "2026-02-15T19:40:07-05:00",
+    "last_commit_author": "Christopher Allen Lane",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-03-24T20:46:48-04:00",
+    "last_committer_date": "2026-02-15T19:51:40-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "80e0e0d3ae35f3a57001cd5f79c8108c60e4ed5d",
+        "date": "2026-02-15T19:40:07-05:00",
+        "committed": "2026-02-15T19:51:40-05:00",
+        "old": "8acadef338e407802a6be9811c6d1f09a45e666a",
+        "new": "2e6f8fb1e29025182585576ddc7affca442c757d",
+        "status": "unverified"
+      },
+      {
+        "commit": "9b922616044f45f4976c3c9138e67c8fcd0f6d9f",
+        "date": "2026-02-15T17:33:47-05:00",
+        "committed": "2026-02-15T18:19:20-05:00",
+        "old": "1d02ffa3ef5570b29025f3f95b3dfc8720c578bc",
+        "new": "8acadef338e407802a6be9811c6d1f09a45e666a",
+        "status": "agent"
+      },
+      {
+        "commit": "f61203ac1bf441b3f8e49148d305fd5ea1450280",
+        "date": "2026-02-15T12:21:35-05:00",
+        "committed": "2026-02-15T12:21:35-05:00",
+        "old": "ec9e14bc60382dcc6aa53f96cb4a017e9e6ad3a2",
+        "new": "1d02ffa3ef5570b29025f3f95b3dfc8720c578bc",
+        "status": "unverified"
+      },
+      {
+        "commit": "cc85a4bdb104474e433313724d9b381bc5f6f6b0",
+        "date": "2026-02-14T19:56:19-05:00",
+        "committed": "2026-02-14T19:56:19-05:00",
+        "old": "eb9c1ae0f6cb6295a60c96bfe2d9772dde61e662",
+        "new": "ec9e14bc60382dcc6aa53f96cb4a017e9e6ad3a2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 8 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4849,
+    "sha256": "4cc151cdb44ab79bcf245f4f068ee5012cf4e8d6300450e1473bc098e4a53a60",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 229,
+    "words": 665,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cheat--cheat/doc/cheat.1.md",
+  "before": {
+    "sha256": "0c855483a671f664632493cfd45f431e1f89864a54628967a4e6eaafd016b611",
+    "commit": "12ffa4cb5c874207df89018f14054f495a6757b1",
+    "date": "2021-10-09T12:13:01-04:00",
+    "between": [
+      {
+        "commit": "80e0e0d3ae35f3a57001cd5f79c8108c60e4ed5d",
+        "date": "2026-02-15T19:40:07-05:00",
+        "committed": "2026-02-15T19:51:40-05:00",
+        "old": "8acadef338e407802a6be9811c6d1f09a45e666a",
+        "new": "2e6f8fb1e29025182585576ddc7affca442c757d",
+        "status": "unverified"
+      },
+      {
+        "commit": "f61203ac1bf441b3f8e49148d305fd5ea1450280",
+        "date": "2026-02-15T12:21:35-05:00",
+        "committed": "2026-02-15T12:21:35-05:00",
+        "old": "ec9e14bc60382dcc6aa53f96cb4a017e9e6ad3a2",
+        "new": "1d02ffa3ef5570b29025f3f95b3dfc8720c578bc",
+        "status": "unverified"
+      }
+    ]
+  }
+}

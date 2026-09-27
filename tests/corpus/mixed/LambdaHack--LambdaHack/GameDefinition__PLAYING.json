@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "GameDefinition__PLAYING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "LambdaHack/LambdaHack",
+    "path": "GameDefinition/PLAYING.md",
+    "commit": "b2849b049f14891f64af482b3ebf596341596aec",
+    "commit_date": "2026-09-14T23:21:12+02:00",
+    "url": "https://github.com/LambdaHack/LambdaHack/blob/b2849b049f14891f64af482b3ebf596341596aec/GameDefinition/PLAYING.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 664,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 108,
+    "first_commit_date": "2018-01-01T17:31:21+01:00",
+    "last_commit_date": "2026-08-20T21:47:47+02:00",
+    "last_commit_author": "Mikolaj Konarski",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-01T18:26:15+01:00",
+    "last_committer_date": "2026-08-20T21:47:47+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bb936422a78a3c59a668ee5ee6a57e98d937455f",
+        "date": "2026-07-28T21:53:20Z",
+        "committed": "2026-07-29T14:01:09Z",
+        "old": "7c4645a3794f50359d448c86a0f7c3b9d7bef058",
+        "new": "1bd0dc94cf77f00ade0b954bc84402b7e92ed6d1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "103 of its 108 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code); the clone's history ends at 320daa3a53, of 2018-01-01, so it may be older"
+  },
+  "content": {
+    "size_bytes": 31260,
+    "sha256": "ff641af9637afc915eb839c8212056b57b5f839ee86db71a9936fe1ec05af426",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 592,
+    "words": 5074,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/LambdaHack--LambdaHack/GameDefinition/PLAYING.md",
+  "before": {
+    "sha256": "56443f000ef0b02cede539dcd145c60cb37a520df2efbdd5ebfeab8d8c3bf230",
+    "commit": "0e1f4d1d36a7e56e369432244676d1b17079f606",
+    "date": "2021-12-22T15:46:34+01:00",
+    "between": [
+      {
+        "commit": "b4375f15a24db53dacec845f9ad717e7581a722d",
+        "date": "2026-08-20T21:47:47+02:00",
+        "committed": "2026-08-20T21:47:47+02:00",
+        "old": "1bd0dc94cf77f00ade0b954bc84402b7e92ed6d1",
+        "new": "021ace339e595cc1d0986627832d985a8e141b31",
+        "status": "late"
+      },
+      {
+        "commit": "545aabc7e8e252a7c278ef7899a794234166736d",
+        "date": "2022-08-07T23:10:41+02:00",
+        "committed": "2022-08-07T23:10:41+02:00",
+        "old": "6bcb71f9e0d9de258ecdd547be0886b11f9b3b01",
+        "new": "7c4645a3794f50359d448c86a0f7c3b9d7bef058",
+        "status": "late"
+      },
+      {
+        "commit": "61e4f95fc6f3d523e5d855e3b73048fc788b9b7c",
+        "date": "2022-08-07T21:59:08+02:00",
+        "committed": "2022-08-07T21:59:08+02:00",
+        "old": "b997f669e51eff1c8e27640619f91cd5437b0680",
+        "new": "6bcb71f9e0d9de258ecdd547be0886b11f9b3b01",
+        "status": "late"
+      },
+      {
+        "commit": "a1fc14f4981ff608de77972c02c475aaa1bddf8f",
+        "date": "2022-04-15T13:55:53+02:00",
+        "committed": "2022-04-15T13:55:53+02:00",
+        "old": "db1e49633d2cdf2b2f8040b488bf72b22d1f1dcd",
+        "new": "b997f669e51eff1c8e27640619f91cd5437b0680",
+        "status": "late"
+      }
+    ]
+  }
+}

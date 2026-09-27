@@ -1,0 +1,144 @@
+{
+  "sidecar_version": 3,
+  "fixture": "assignments__introductory-assignments.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cksystemsteaching/selfie",
+    "path": "assignments/introductory-assignments.md",
+    "commit": "32aa06fcd0abecba47d2233817b00a9dc3911c70",
+    "commit_date": "2026-09-26T11:44:21+02:00",
+    "url": "https://github.com/cksystemsteaching/selfie/blob/32aa06fcd0abecba47d2233817b00a9dc3911c70/assignments/introductory-assignments.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2524,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 33,
+    "first_commit_date": "2020-10-03T13:06:10+02:00",
+    "last_commit_date": "2026-09-26T10:52:00+02:00",
+    "last_commit_author": "Christoph Kirsch",
+    "authors": 4,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-03T13:06:10+02:00",
+    "last_committer_date": "2026-09-26T10:52:00+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 6
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_018ZbtbTt9TxfQqjBjZrmzWx",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 6
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6f811fbdcc15b81b6586498eae762727a6c5580c",
+        "date": "2026-09-26T10:52:00+02:00",
+        "committed": "2026-09-26T10:52:00+02:00",
+        "old": "1300ffbfd55a8a60f9823278136e8eed5a2bd705",
+        "new": "6928f0e8002513f6cb69ce659a3bda5adf07c277",
+        "status": "agent"
+      },
+      {
+        "commit": "c1da69bd3cd0943f6caae1f73f1d0192f6422038",
+        "date": "2026-09-13T11:19:06+02:00",
+        "committed": "2026-09-13T11:19:06+02:00",
+        "old": "5f4f9a1c6f289b3fd70551df9a674a37832635a8",
+        "new": "1300ffbfd55a8a60f9823278136e8eed5a2bd705",
+        "status": "agent"
+      },
+      {
+        "commit": "0fb6efb34d97d2360281200ec3d6d6249d75167f",
+        "date": "2026-09-13T10:56:41+02:00",
+        "committed": "2026-09-13T10:56:41+02:00",
+        "old": "2cb8308aacab9f1d2b70c3f6753f1c0fc525b00e",
+        "new": "5f4f9a1c6f289b3fd70551df9a674a37832635a8",
+        "status": "agent"
+      },
+      {
+        "commit": "bf5c953eddd60e4dfa2ad9a5a2735ec068bf8f4f",
+        "date": "2026-09-13T10:46:15+02:00",
+        "committed": "2026-09-13T10:46:15+02:00",
+        "old": "d03c8661d9333792d0c0d9fd10526ce6dbc5cf71",
+        "new": "2cb8308aacab9f1d2b70c3f6753f1c0fc525b00e",
+        "status": "agent"
+      },
+      {
+        "commit": "2b11f9d34c7e66a596f0a873d6ffd5b23237c2f3",
+        "date": "2026-09-13T10:29:29+02:00",
+        "committed": "2026-09-13T10:29:29+02:00",
+        "old": "693fc08a75d61b5803f81966c66e3bbc2548d6d7",
+        "new": "d03c8661d9333792d0c0d9fd10526ce6dbc5cf71",
+        "status": "agent"
+      },
+      {
+        "commit": "8b8e957da848582e112dde8306724b3d22f32aef",
+        "date": "2026-09-11T13:39:36+02:00",
+        "committed": "2026-09-11T13:39:36+02:00",
+        "old": "63a2e897da615a772bae8cda5d86c89428f4ed01",
+        "new": "693fc08a75d61b5803f81966c66e3bbc2548d6d7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "25 of its 33 commits predate 2022-01-01 with no mark, and 6 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 22900,
+    "sha256": "021fe515251049fd3c2bbaf93e752a06fea521eb9b63a779d38314e85255fee8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 218,
+    "words": 3468,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cksystemsteaching--selfie/assignments/introductory-assignments.md",
+  "before": {
+    "sha256": "a407104d006a917945677494ea23337681ebb67b19f1f73ab47fa8cb03dcbd90",
+    "commit": "42229df917d88559282d8e75f6063b75f3a143f4",
+    "date": "2021-12-18T05:46:35-05:00",
+    "between": [
+      {
+        "commit": "877f8a58d842b113ceb155b8dcb1c01a37b48e4e",
+        "date": "2023-05-29T09:52:15+02:00",
+        "committed": "2023-05-29T09:52:15+02:00",
+        "old": "6b23c5caf0efa8f708afd552db583920ac89becd",
+        "new": "63a2e897da615a772bae8cda5d86c89428f4ed01",
+        "status": "late"
+      },
+      {
+        "commit": "fdf8a94dde13a026dbbfd27ee63bc341dfae9005",
+        "date": "2022-11-12T11:38:02+01:00",
+        "committed": "2022-11-12T11:38:02+01:00",
+        "old": "63e42cd47575d0bd551ec5c2f7a7fe0818ce6f3e",
+        "new": "6b23c5caf0efa8f708afd552db583920ac89becd",
+        "status": "late"
+      }
+    ]
+  }
+}

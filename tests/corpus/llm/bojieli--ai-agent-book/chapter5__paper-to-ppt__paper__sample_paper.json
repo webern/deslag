@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "chapter5__paper-to-ppt__paper__sample_paper.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "bojieli/ai-agent-book",
+    "path": "chapter5/paper-to-ppt/paper/sample_paper.md",
+    "commit": "c3352738f4b6fe42fe34e3cf6a79bcb424a133b8",
+    "commit_date": "2026-09-27T03:02:17Z",
+    "url": "https://github.com/bojieli/ai-agent-book/blob/c3352738f4b6fe42fe34e3cf6a79bcb424a133b8/chapter5/paper-to-ppt/paper/sample_paper.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-09-09T10:12:23+08:00",
+    "stars": 51203,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-17T23:13:39+08:00",
+    "last_commit_date": "2026-07-17T23:13:39+08:00",
+    "last_commit_author": "Bojie Li",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-17T23:13:39+08:00",
+    "last_committer_date": "2026-07-17T23:13:39+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01V3Vj434iv9viix15XdoMAo",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "369d18eb24425b03aafe9c6c90eceb29fe8a690a",
+        "date": "2026-07-17T23:13:39+08:00",
+        "committed": "2026-07-17T23:13:39+08:00",
+        "old": null,
+        "new": "c90cbd8ba5e24e294d23c7a0f4a0dd67979f804f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4574,
+    "sha256": "dfb5d0c9a8c52e7cee856acdde7b1ba9ee9e4edaa7ced4358a31db17180db572",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 91,
+    "words": 670,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/bojieli--ai-agent-book/chapter5/paper-to-ppt/paper/sample_paper.md"
+}

@@ -1,0 +1,112 @@
+{
+  "sidecar_version": 3,
+  "fixture": "PERFORMANCE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "fancy-regex/fancy-regex",
+    "path": "PERFORMANCE.md",
+    "commit": "82858f62704880264fc2b5a09bc0ccbeeb0b9fec",
+    "commit_date": "2026-09-26T15:30:07+03:00",
+    "url": "https://github.com/fancy-regex/fancy-regex/blob/82858f62704880264fc2b5a09bc0ccbeeb0b9fec/PERFORMANCE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-04-08T22:56:04-07:00",
+    "stars": 630,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-02-09T17:06:44+11:00",
+    "last_commit_date": "2026-07-02T12:26:08+02:00",
+    "last_commit_author": "Vincent Prouillet",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-02-09T17:06:44+11:00",
+    "last_committer_date": "2026-07-02T12:26:08+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d8ccaa28a4d2ee59d61050a3474c2d5668c70dc8",
+        "date": "2026-07-02T12:26:08+02:00",
+        "committed": "2026-07-02T12:26:08+02:00",
+        "old": "a80a096c4b13395b8d2eff80c34c96b2e197a508",
+        "new": "4ce15a7481243d30001d22b632acff8a22a9f4a9",
+        "status": "agent"
+      },
+      {
+        "commit": "5bdeed7d81a7e6a8097759e16f85e4fd484c33a3",
+        "date": "2026-06-30T13:00:50+02:00",
+        "committed": "2026-06-30T13:00:50+02:00",
+        "old": "cb215141b95fb261bc9420cfdd461a2348abe95d",
+        "new": "a80a096c4b13395b8d2eff80c34c96b2e197a508",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 5 commits predates 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6551,
+    "sha256": "bcec7853939a0f8589ad2176b733728008eb7c111abeb33597e14cab8846483e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 148,
+    "words": 975,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/fancy-regex--fancy-regex/PERFORMANCE.md",
+  "before": {
+    "sha256": "9de4fa787572943e7e350a2688002d571e986190e4869d08587048974bc2fcc6",
+    "commit": "8a5de568be1ec2b509d12d6ab722e0b90ff163d4",
+    "date": "2021-12-13T20:46:35+11:00",
+    "between": [
+      {
+        "commit": "f4bcac9a3c24a9819ed4f1e531939c15904bc79d",
+        "date": "2026-04-23T23:44:55+03:00",
+        "committed": "2026-05-07T20:55:36+03:00",
+        "old": "adb5c846b1bec98892503710d5dc68c798e2e581",
+        "new": "cb215141b95fb261bc9420cfdd461a2348abe95d",
+        "status": "late"
+      },
+      {
+        "commit": "a8e9e9a39646c55ac1989f8d658c81b6c78efc1e",
+        "date": "2025-07-07T05:36:23+03:00",
+        "committed": "2025-07-26T14:00:19+03:00",
+        "old": "07f07730c7adc3ae49edd9337f107dca38ce0338",
+        "new": "adb5c846b1bec98892503710d5dc68c798e2e581",
+        "status": "late"
+      }
+    ]
+  }
+}

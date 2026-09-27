@@ -1,0 +1,433 @@
+# IBAN.im
+Shorten, create and share memorable links for IBANS
+
+**BIG REFACTORING STARTED**
+
+
+## Purpose
+Shorten IBAN numbers with url such as :
+- iban.im/user/alias
+- iban.im/fakturk/garanti
+
+
+## Stacks
+
+### Backend
+- Go
+- GraphQL : [graphql-go](https://github.com/graph-gophers/graphql-go)
+- ORM : [gorm](https://gorm.io)
+
+### Frontend
+- Vue 3
+- Vite
+- Tailwind CSS v4
+- Vue Router
+- Vuex
+
+The frontend is built and embedded into the Go binary as static files, creating a single deployable artifact.
+
+
+## Features
+
+- [x] New users should Sign Up & Sign In
+- [x] Change a Password of user
+- [x] Change a Profile of user
+- [x] Delete a Profile of user
+- [x] Get Profile of user
+- [x] New IBAN add for user
+- [x] Update IBAN  for user
+- [x] Delete IBAN  for user
+- [x] Get IBAN's of user
+- [x] When adding new IBAN check if is it exist with same name (we can add with different names)
+- [x] A user should add iban to only itself
+
+## How to Run
+
+### Docker Development (Recommended for Local Development)
+
+The easiest way to get started with development is using Docker with hot reloading:
+
+```bash
+# With PostgreSQL (recommended)
+docker compose -f docker-compose.dev.yml up
+
+# With SQLite (lightweight)
+docker compose -f docker-compose.dev.sqlite.yml up
+```
+
+See [DOCKER_DEV.md](DOCKER_DEV.md) for complete Docker development documentation.
+
+### Manual Setup
+
+#### Initialize DB
+
+1. Create a database
+
+```shell
+postgres=# CREATE DATABASE ibanim;
+```
+
+2. Create a user as owner of database
+
+```shell
+postgres=# CREATE USER ibanim WITH ENCRYPTED PASSWORD 'ibanim';
+
+postgres=# ALTER DATABASE ibanim OWNER TO ibanim;
+```
+
+3. Grant all privileges to user for the database
+
+```shell
+postgres=# GRANT ALL PRIVILEGES ON DATABASE ibanim TO ibanim;
+```
+
+4. Configure the db in `db.go`
+
+```go
+// ConnectDB : connecting DB
+func ConnectDB() (*DB, error) {
+	db, err := gorm.Open("postgres", "host=localhost port=5432 user=ibanim dbname=ibanim password=ibanim sslmode=disable")
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &DB{db}, nil
+}
+```
+
+or with Docker
+
+> host address should be edited to `host.docker.internal` to connect a host interface.
+
+```go
+// ConnectDB : connecting DB
+func ConnectDB() (*DB, error) {
+	db, err := gorm.Open("postgres", "host=host.docker.internal port=5432 user=ibanim dbname=ibanim password=ibanim sslmode=disable")
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &DB{db}, nil
+}
+```
+
+### Initial Migration
+
+```shell
+$ go run ./migrations/init.go
+```
+
+or with Docker
+
+```
+$ docker build -t ibanim .
+$ docker run --rm ibanim migrate
+```
+
+This will generate the `users` table in the database as per the User Model declared in `./model/user.go`
+
+### Build and Run the server
+
+The frontend is embedded into the Go binary. You must build the frontend first, then build the Go application.
+
+#### Option 1: Using Makefile (Recommended)
+
+```shell
+$ make build
+$ ./iban.im
+```
+
+This will automatically build the frontend and copy it to `static/dist/` before building the Go binary.
+
+#### Option 2: Manual Build
+
+```shell
+# Build frontend
+$ cd web
+$ npm install
+$ npm run build
+$ cd ..
+
+# Copy frontend to static package
+$ cp -r web/dist static/
+
+# Build Go binary
+$ go build
+$ ./iban.im
+```
+
+The server will serve both the API (GraphQL) and the frontend (Vue.js SPA).
+
+or with Docker
+
+```
+$ docker run --rm -d -p 8080:8080 ibanim
+```
+
+## Frontend Development
+
+The frontend is a Vue 3 single-page application (SPA) with Tailwind CSS. For detailed information about building and embedding the frontend, see [FRONTEND_BUILD.md](FRONTEND_BUILD.md).
+
+### Development Mode
+
+For frontend development with hot-reload:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The development server runs on http://localhost:4881 and proxies API requests to http://localhost:4880.
+
+### Building the Frontend
+
+```bash
+cd web
+npm run build
+cp -r dist ../static/
+```
+
+Then rebuild the Go binary to include the updated frontend:
+
+```bash
+go build
+```
+
+### GraphQL Playground
+
+Connect to http://localhost:8080
+
+### Authentication : JWT
+
+You need to set the Http request headers `Authorization`: `{JWT_token}`
+
+## Configuration
+
+You can configure the app via environment variables and/or YAML files. Load order and precedence:
+
+1) Built-in defaults
+2) YAML files (if present): `config/database.yml`, `config/smtp.yml`, `config/application.yml`
+3) Environment variables (highest precedence)
+
+Supported environment variables:
+
+- PORT
+- ENV
+- DEBUG
+- TIMEOUT
+- MAX_REFRESH
+- AUTH_KEY
+- REALM
+- DB_ADAPTER
+- DB_HOST
+- DB_PORT
+- DB_NAME
+- DB_USER
+- DB_PASSWORD
+
+Example `.env` file (copy to `.env` and adjust as needed):
+
+```
+# Application
+PORT=7000
+ENV=localhost
+DEBUG=false
+TIMEOUT=60
+MAX_REFRESH=60
+AUTH_KEY=12345678
+REALM=ibanim zone
+
+# Database
+DB_ADAPTER=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ibanim
+DB_USER=ibanim
+DB_PASSWORD=ibanim
+```
+
+## Usage
+
+### Sign Up
+
+```graphql
+mutation {
+  signUp(
+    email: "test@test.com"
+    password: "12345678"
+    firstName: "graphql"
+    lastName: "go"
+    handle:"test"
+  ) {
+    ok
+    error
+    user {
+      id
+      handle
+      email
+      firstName
+      lastName
+      bio
+      avatar
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Sign In
+
+```graphql
+mutation {
+  signIn(email: "test@test.com", password: "12345678") {
+    ok
+    error
+    token
+  }
+}
+```
+
+### Change a Password
+
+```graphql
+mutation {
+  changePassword(password: "87654321") {
+    ok
+    error
+    user {
+      id
+      handle
+      email
+      firstName
+      lastName
+      bio
+      avatar
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Change a Profile
+
+```graphql
+mutation {
+  changeProfile(bio: "Go developer", avatar: "go-developer.png") {
+    ok
+    error
+    user {
+      id
+      handle
+      email
+      firstName
+      lastName
+      bio
+      avatar
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Delete a Profile
+
+```graphql
+mutation {
+  deleteProfile(confirmPassword: "your_current_password") {
+    ok
+    error
+    message
+  }
+}
+```
+
+### Get my profile
+
+```graphql
+query {
+  getMyProfile {
+    ok
+    error
+    user {
+      id
+      handle
+      email
+      firstName
+      lastName
+      bio
+      avatar
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Add new Iban
+
+```graphql
+mutation {
+  ibanNew(text:"TR320010009999901234567890",password:"fatih",handle:"fakturk"){
+    ok
+    error
+    iban{
+      id
+      handle
+      text
+      password
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Update Iban
+
+```graphql
+mutation {
+  ibanUpdate(text:"TR420010009999901234567891",password:"fatih",handle:"garanti"){
+    ok
+    error
+    iban{
+      id
+      handle
+      text
+      password
+      createdAt
+      updatedAt
+    }
+  }
+}
+```
+
+### Get User IBANs
+
+```graphql
+query {
+  getMyIbans {
+    ok
+    error
+    iban {
+       id
+      handle
+      text
+      password
+      createdAt
+      updatedAt
+      ownerId
+    }
+  }
+}
+```
+
+## Maintainers
+
+- [Hüseyin Mert](https://github.com/hmert)
+- [Fatma Polat](https://github.com/Fbulkaya)

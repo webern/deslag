@@ -1,0 +1,169 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JeffSteinbok/jeffpardy",
+    "path": "README.md",
+    "commit": "66c420e0b774fca1cc295acd41484729b5d20131",
+    "commit_date": "2026-09-07T20:43:02-07:00",
+    "url": "https://github.com/JeffSteinbok/jeffpardy/blob/66c420e0b774fca1cc295acd41484729b5d20131/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-03T17:37:12-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2020-04-03T17:37:12-07:00",
+    "last_commit_date": "2026-09-04T22:47:21-07:00",
+    "last_commit_author": "Jeff Steinbok",
+    "authors": 1,
+    "ai_commits": 11,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-04-03T17:37:12-07:00",
+    "last_committer_date": "2026-09-04T22:47:21-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 10
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01RUrsHp9ZpYz4HurgSAoKos",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4b61b27f7f2b126bee4ba172bc4dfc517dfff075",
+        "date": "2026-09-04T22:47:21-07:00",
+        "committed": "2026-09-04T22:47:21-07:00",
+        "old": "f1a2a48972b024923839eb42bf81e065f62b4e19",
+        "new": "c5d6df06e09fa8d604646a1d031468beeabce738",
+        "status": "agent"
+      },
+      {
+        "commit": "49c6d22e18a2083842fd7ef1b5d3e9e2a07cb360",
+        "date": "2026-05-03T23:11:05-07:00",
+        "committed": "2026-05-03T23:11:05-07:00",
+        "old": "21dffe9645f1479573ba1315c16c99671ab94ec1",
+        "new": "f1a2a48972b024923839eb42bf81e065f62b4e19",
+        "status": "agent"
+      },
+      {
+        "commit": "ec00433f8111b197037e433b8c15b9ae409983ba",
+        "date": "2026-05-03T23:10:46-07:00",
+        "committed": "2026-05-03T23:10:46-07:00",
+        "old": "d257a4f59adaf9d53a881826eeba5fe38042bd6d",
+        "new": "21dffe9645f1479573ba1315c16c99671ab94ec1",
+        "status": "agent"
+      },
+      {
+        "commit": "ef167ef864f67b3f4aef30f0b50182897712dc09",
+        "date": "2026-05-03T22:51:59-07:00",
+        "committed": "2026-05-03T22:51:59-07:00",
+        "old": "9ee201fe454d67cdcb3a058e4b82244fe9953724",
+        "new": "d257a4f59adaf9d53a881826eeba5fe38042bd6d",
+        "status": "agent"
+      },
+      {
+        "commit": "b366b1e1fe2fa5326ca6dc07812dea23aa549359",
+        "date": "2026-05-03T22:51:25-07:00",
+        "committed": "2026-05-03T22:51:25-07:00",
+        "old": "4de5a70e55a879fa7716ec3e31cb85f058d53a3c",
+        "new": "9ee201fe454d67cdcb3a058e4b82244fe9953724",
+        "status": "agent"
+      },
+      {
+        "commit": "e01120d90db31f4b9d9ed8b7f2286975fa2adff5",
+        "date": "2026-03-30T00:32:14-07:00",
+        "committed": "2026-03-30T00:32:14-07:00",
+        "old": "0cc6d62b6a736480135b88940b897d1c895c4f54",
+        "new": "4de5a70e55a879fa7716ec3e31cb85f058d53a3c",
+        "status": "agent"
+      },
+      {
+        "commit": "793bc7ae87f791a999a7fc2982d007b8587acde7",
+        "date": "2026-03-30T00:28:50-07:00",
+        "committed": "2026-03-30T00:28:50-07:00",
+        "old": "ad6953d153078e57ae7fe85ea9d4f372d2802830",
+        "new": "0cc6d62b6a736480135b88940b897d1c895c4f54",
+        "status": "agent"
+      },
+      {
+        "commit": "c79958ead5dc4c2161b0cf28781318d44f0880c2",
+        "date": "2026-03-30T00:04:54-07:00",
+        "committed": "2026-03-30T00:04:54-07:00",
+        "old": "5ca77f44bf7b884cc8f2328223948f1732b1dc00",
+        "new": "ad6953d153078e57ae7fe85ea9d4f372d2802830",
+        "status": "agent"
+      },
+      {
+        "commit": "bc20284ac9f36c19112282c9c9a2d612da925fdd",
+        "date": "2026-03-22T21:47:40-07:00",
+        "committed": "2026-03-22T21:47:40-07:00",
+        "old": "8bdae27f9e707c58fb1d34dc0112dcc375d87a0b",
+        "new": "5ca77f44bf7b884cc8f2328223948f1732b1dc00",
+        "status": "agent"
+      },
+      {
+        "commit": "33c2c52bfda351db1ac5219f74f75e437ba32746",
+        "date": "2026-03-22T02:11:49-07:00",
+        "committed": "2026-03-22T02:11:49-07:00",
+        "old": "a14ad1227310d2d7a0ffc6bd6d0ccd80ef36ac8d",
+        "new": "8bdae27f9e707c58fb1d34dc0112dcc375d87a0b",
+        "status": "agent"
+      },
+      {
+        "commit": "d5dd4c8b252f09e954a9982fedd57dba3861bdc1",
+        "date": "2026-03-21T21:49:06-07:00",
+        "committed": "2026-03-21T21:49:06-07:00",
+        "old": "6d15f5d0fe9112af8fab882451a6d138794fdb9b",
+        "new": "a14ad1227310d2d7a0ffc6bd6d0ccd80ef36ac8d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 17 commits predate 2022-01-01 with no mark, and 11 are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 6586,
+    "sha256": "1ce0c15b5169bd557a1a6df2eca15fbc87cf6224c3d639a6ad475531ba985bbc",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 171,
+    "words": 952,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JeffSteinbok--jeffpardy/README.md"
+}

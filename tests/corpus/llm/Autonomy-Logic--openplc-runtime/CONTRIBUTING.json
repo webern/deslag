@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Autonomy-Logic/openplc-runtime",
+    "path": "CONTRIBUTING.md",
+    "commit": "42d66324004ff9fc9d72bb7a6c18a63084510cce",
+    "commit_date": "2026-09-23T07:14:31-04:00",
+    "url": "https://github.com/Autonomy-Logic/openplc-runtime/blob/42d66324004ff9fc9d72bb7a6c18a63084510cce/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-08-08T10:49:24-04:00",
+    "stars": 373,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-02T17:45:26-03:00",
+    "last_commit_date": "2026-07-02T17:45:26-03:00",
+    "last_commit_author": "Daniel Coutinho",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-02T17:52:54-03:00",
+    "last_committer_date": "2026-07-02T17:52:54-03:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_019thCMmxxVfACL7dBodtZB9",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "643f445914fa637529c42404e43cae274e321d75",
+        "date": "2026-07-02T17:45:26-03:00",
+        "committed": "2026-07-02T17:52:54-03:00",
+        "old": null,
+        "new": "a4d5cac455fe6e78c1f95a5c5ef99270de288707",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 964,
+    "sha256": "fe842965a22cd32d2de516fd55dac14dbae04392e2715cf8217d4468f2b97852",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 27,
+    "words": 127,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Autonomy-Logic--openplc-runtime/CONTRIBUTING.md"
+}

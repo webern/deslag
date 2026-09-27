@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__tutorial-hyperledger.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "accordproject/techdocs",
+    "path": "docs/tutorial-hyperledger.md",
+    "commit": "95560de540c6110cac4324ff4e5b99500a258cca",
+    "commit_date": "2026-08-07T19:59:59+01:00",
+    "url": "https://github.com/accordproject/techdocs/blob/95560de540c6110cac4324ff4e5b99500a258cca/docs/tutorial-hyperledger.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-18T16:53:41+01:00",
+    "stars": 107,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2019-10-18T16:49:53-04:00",
+    "last_commit_date": "2026-05-05T21:23:11+01:00",
+    "last_commit_author": "Matt Roberts",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-10-19T17:52:03-04:00",
+    "last_committer_date": "2026-05-05T21:23:11+01:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cfce40fc0d17e20d117d45eed57f722cc70ab246",
+        "date": "2026-05-05T21:23:11+01:00",
+        "committed": "2026-05-05T21:23:11+01:00",
+        "old": "3ceb3911c6a61e213a3fa9e0b4baabdb951ca7cd",
+        "new": "5c49cd7a32632122b16f8f433904ce9e39362f1d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 6 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 740,
+    "sha256": "b99fb6f8963df08337b0ab92d45afa2e76da0d4ece4aecfe66e2924533d3c0eb",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 96,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/accordproject--techdocs/docs/tutorial-hyperledger.md",
+  "before": {
+    "sha256": "e2a683ec04419dc2078ac96f9cdd47237b97b6c2ff2e865255b14b6852ba0182",
+    "commit": "b24a0d9f6b9b60276bfd10c1a215777948362e6b",
+    "date": "2021-10-04T13:38:16+01:00",
+    "between": [
+      {
+        "commit": "a4c6a64d52a2c4e7a0afa18b7a1bdf22dbe52792",
+        "date": "2026-04-26T20:29:59+01:00",
+        "committed": "2026-04-26T20:29:59+01:00",
+        "old": "5cdfdb25a61ba80d2f04a763f768a6806c8eeaff",
+        "new": "3ceb3911c6a61e213a3fa9e0b4baabdb951ca7cd",
+        "status": "late"
+      }
+    ]
+  }
+}

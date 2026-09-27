@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "archived__cowork-dashboard-team-dashboard-v1.3.0__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/CoworkDashboard",
+    "path": "archived/cowork-dashboard-team-dashboard-v1.3.0/README.md",
+    "commit": "1cc6cfefe64ad61d99a58791c68d1b0670fc5c9e",
+    "commit_date": "2026-09-25T16:05:28-05:00",
+    "url": "https://github.com/microsoft/CoworkDashboard/blob/1cc6cfefe64ad61d99a58791c68d1b0670fc5c9e/archived/cowork-dashboard-team-dashboard-v1.3.0/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-06T17:24:42+02:00",
+    "stars": 10,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-13T12:30:05+02:00",
+    "last_commit_date": "2026-07-13T12:30:05+02:00",
+    "last_commit_author": "Fepilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-13T12:30:05+02:00",
+    "last_committer_date": "2026-07-13T12:30:05+02:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "067636c6a71199e2631f869df097b60a03cd15f9",
+        "date": "2026-07-13T12:30:05+02:00",
+        "committed": "2026-07-13T12:30:05+02:00",
+        "old": null,
+        "new": "b733a587e012ab5af7ab9fb4218a20dacf05f50f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 7589,
+    "sha256": "14b8f647f5a4577165996cdf6f774dba04a6426bb7da25b4fd5d062090069a38",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 125,
+    "words": 887,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--CoworkDashboard/archived/cowork-dashboard-team-dashboard-v1.3.0/README.md"
+}

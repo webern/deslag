@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__RELEASE_NOTES_TEMPLATE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Rinne414/sd-image-sorter",
+    "path": "docs/RELEASE_NOTES_TEMPLATE.md",
+    "commit": "ef9c666748d9208cafe6438a30c1c8cdc976e2f2",
+    "commit_date": "2026-09-25T05:59:27+08:00",
+    "url": "https://github.com/Rinne414/sd-image-sorter/blob/ef9c666748d9208cafe6438a30c1c8cdc976e2f2/docs/RELEASE_NOTES_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-14T23:57:27+08:00",
+    "stars": 49,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-16T11:38:47+08:00",
+    "last_commit_date": "2026-06-16T11:38:47+08:00",
+    "last_commit_author": "peter119lee",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-16T11:38:47+08:00",
+    "last_committer_date": "2026-06-16T11:38:47+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "177eaab6d3669e28556775790b8de7d3caa5ac66",
+        "date": "2026-06-16T11:38:47+08:00",
+        "committed": "2026-06-16T11:38:47+08:00",
+        "old": null,
+        "new": "9a1cf525f0953c0e6dba436336d21c6ff93e4f99",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10405,
+    "sha256": "e0179abe842e8f96330165186fea3f5b85d564f55248fc9cb018eb71248812a7",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 310,
+    "words": 1257,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Rinne414--sd-image-sorter/docs/RELEASE_NOTES_TEMPLATE.md"
+}

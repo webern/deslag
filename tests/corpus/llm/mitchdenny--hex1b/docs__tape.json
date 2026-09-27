@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__tape.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mitchdenny/hex1b",
+    "path": "docs/tape.md",
+    "commit": "f01b043e26422d7b090b857181710aa28da3b306",
+    "commit_date": "2026-09-26T08:16:39+10:00",
+    "url": "https://github.com/mitchdenny/hex1b/blob/f01b043e26422d7b090b857181710aa28da3b306/docs/tape.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-06T19:59:22+11:00",
+    "stars": 175,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-10T12:21:00+10:00",
+    "last_commit_date": "2026-09-10T12:21:00+10:00",
+    "last_commit_author": "Mitch Denny",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-10T12:21:00+10:00",
+    "last_committer_date": "2026-09-10T12:21:00+10:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Copilot-Session: 829ef716-3a3e-4ad0-92ae-94a135199cd6",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "798b26c8a297e3060bb9e3a509f76668be6b9022",
+        "date": "2026-09-10T12:21:00+10:00",
+        "committed": "2026-09-10T12:21:00+10:00",
+        "old": null,
+        "new": "9984f0e68c7ca72c311a591488b7458082b3fe08",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 17743,
+    "sha256": "b3c191698929cac4f68959dd4b3ae3ddb2fd25ed0735ef2b9958c4423ac252c0",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 386,
+    "words": 2245,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mitchdenny--hex1b/docs/tape.md"
+}

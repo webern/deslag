@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "element-software/CasaBoard",
+    "path": ".github/copilot-instructions.md",
+    "commit": "c856faa6c0e1d480f9bace14b35bf89d9971007c",
+    "commit_date": "2026-07-28T00:25:55+01:00",
+    "url": "https://github.com/element-software/CasaBoard/blob/c856faa6c0e1d480f9bace14b35bf89d9971007c/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-25T10:44:08+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-25T10:44:08+01:00",
+    "last_commit_date": "2026-07-25T10:44:08+01:00",
+    "last_commit_author": "Element Software",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-25T10:44:08+01:00",
+    "last_committer_date": "2026-07-25T10:44:08+01:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "dea7461127a6dd58e728bf5428ee0291d7a52c7a",
+        "date": "2026-07-25T10:44:08+01:00",
+        "committed": "2026-07-25T10:44:08+01:00",
+        "old": null,
+        "new": "facf34b306744e027d234c26c4987bbabba23644",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 11795,
+    "sha256": "de36b324448c901df3ae32412843d2db10c4595cdbffc82e028a30be6e022616",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 280,
+    "words": 1500,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/element-software--CasaBoard/.github/copilot-instructions.md"
+}

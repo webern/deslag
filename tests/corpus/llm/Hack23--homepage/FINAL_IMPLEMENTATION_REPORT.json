@@ -1,0 +1,76 @@
+{
+  "sidecar_version": 3,
+  "fixture": "FINAL_IMPLEMENTATION_REPORT.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Hack23/homepage",
+    "path": "FINAL_IMPLEMENTATION_REPORT.md",
+    "commit": "18f84483fca89f02cb1eff7aae57c0327ea26bce",
+    "commit_date": "2026-09-24T20:28:53Z",
+    "url": "https://github.com/Hack23/homepage/blob/18f84483fca89f02cb1eff7aae57c0327ea26bce/FINAL_IMPLEMENTATION_REPORT.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-10-26T15:21:42+02:00",
+    "stars": 11,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-12-08T02:01:59Z",
+    "last_commit_date": "2025-12-08T02:01:59Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-12-08T02:01:59Z",
+    "last_committer_date": "2025-12-08T02:01:59Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "31be136c545424eb056aa51d4e552f084d50306c",
+        "date": "2025-12-08T02:01:59Z",
+        "committed": "2025-12-08T02:01:59Z",
+        "old": null,
+        "new": "1d72f5bd4bfe8c64c34808647c1fcd399b01f3e0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10453,
+    "sha256": "4b9964d8f68c3931864fececde741e9198d7f1fb303b81c5bd0ffb615871e75d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 324,
+    "words": 1304,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Arabic",
+      "Hebrew",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Hack23--homepage/FINAL_IMPLEMENTATION_REPORT.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "specs__finance_v3_design.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "colton615-coder/life-in-sync",
+    "path": "specs/finance_v3_design.md",
+    "commit": "7ca085601e345e737891e1fd75c06a1dd546cd1d",
+    "commit_date": "2026-01-02T19:57:11-05:00",
+    "url": "https://github.com/colton615-coder/life-in-sync/blob/7ca085601e345e737891e1fd75c06a1dd546cd1d/specs/finance_v3_design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-13T21:27:42Z",
+    "stars": 0,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-11-30T03:10:44Z",
+    "last_commit_date": "2025-11-30T03:10:44Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-11-30T03:10:44Z",
+    "last_committer_date": "2025-11-30T03:10:44Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6f3ccfe19a7ca9054f0e713b369d6d8c71c34180",
+        "date": "2025-11-30T03:10:44Z",
+        "committed": "2025-11-30T03:10:44Z",
+        "old": null,
+        "new": "534f003c3236a96ad6d70b9ca4cf253cec2fb7f4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 7428,
+    "sha256": "b0ca0311c5b7acc204ad3baaa53101c3e4ef52825e0e9968218ec1f147425d7f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 127,
+    "words": 1005,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/colton615-coder--life-in-sync/specs/finance_v3_design.md"
+}

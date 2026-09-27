@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ofershap/real-browser-mcp",
+    "path": "CONTRIBUTING.md",
+    "commit": "cf0fb5e330bb73c7ba9b9df75b05ade1cd2f17ef",
+    "commit_date": "2026-09-21T13:09:35Z",
+    "url": "https://github.com/ofershap/real-browser-mcp/blob/cf0fb5e330bb73c7ba9b9df75b05ade1cd2f17ef/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-02T18:35:36Z",
+    "stars": 52,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-02T20:34:15+02:00",
+    "last_commit_date": "2026-03-02T20:34:15+02:00",
+    "last_commit_author": "Ofer Shapira",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-02T20:34:15+02:00",
+    "last_committer_date": "2026-03-02T20:34:15+02:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c9a650d1c44f4b6f37b6ee0da667a1414aed92a6",
+        "date": "2026-03-02T20:34:15+02:00",
+        "committed": "2026-03-02T20:34:15+02:00",
+        "old": null,
+        "new": "38d96d38d5cad79f2e46a760b363115ecdb794e4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1527,
+    "sha256": "1370fb894ea333f78ade768a9205939ba22faa029f6515ac378b37bd1c95963d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 193,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ofershap--real-browser-mcp/CONTRIBUTING.md"
+}

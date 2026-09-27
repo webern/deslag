@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "guide__src__type-conversions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ubolonton/emacs-module-rs",
+    "path": "guide/src/type-conversions.md",
+    "commit": "e362c0dd05dffbe6f23a8d8ab7c4a7fe48351169",
+    "commit_date": "2026-09-23T22:14:13+07:00",
+    "url": "https://github.com/ubolonton/emacs-module-rs/blob/e362c0dd05dffbe6f23a8d8ab7c4a7fe48351169/guide/src/type-conversions.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-05-21T17:16:50+02:00",
+    "stars": 373,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2018-02-18T22:23:12+07:00",
+    "last_commit_date": "2026-03-18T18:57:20+07:00",
+    "last_commit_author": "Tuấn-Anh Nguyễn",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-02-18T23:02:18+07:00",
+    "last_committer_date": "2026-03-18T18:58:11+07:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c626ab4045998a0c8b683e27502a5c41c4a4eac1",
+        "date": "2026-03-18T18:57:20+07:00",
+        "committed": "2026-03-18T18:58:11+07:00",
+        "old": "d7bf8597ca65a4ab811995b330ab88450174a5f0",
+        "new": "ef4d49260c4dd71def360b9f86d4994569309373",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "11 of its 13 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3489,
+    "sha256": "e1a684ecc8953847450b7452252ebf3295cb3ad0361a3ff0a755cd27349c6dbb",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 110,
+    "words": 492,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ubolonton--emacs-module-rs/guide/src/type-conversions.md"
+}

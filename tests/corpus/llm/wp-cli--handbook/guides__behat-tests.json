@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "guides__behat-tests.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wp-cli/handbook",
+    "path": "guides/behat-tests.md",
+    "commit": "823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2",
+    "commit_date": "2026-09-24T02:54:33+05:30",
+    "url": "https://github.com/wp-cli/handbook/blob/823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2/guides/behat-tests.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-11-04T23:55:42+02:00",
+    "stars": 204,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2025-11-02T15:17:55Z",
+    "last_commit_date": "2026-01-20T15:09:18Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-11-02T15:17:55Z",
+    "last_committer_date": "2026-01-20T15:09:18Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "43f795cfc03f5b2dbd33cfbf851166340bc2c16d",
+        "date": "2026-01-20T15:09:18Z",
+        "committed": "2026-01-20T15:09:18Z",
+        "old": "f921e8e86b5f5eab2578c026301b754d79b7b113",
+        "new": "65022cdae9beb636057c249c882cec9368eb7e71",
+        "status": "agent"
+      },
+      {
+        "commit": "5894788411739e256975c3997535e004b5bc1b30",
+        "date": "2025-11-02T16:26:22Z",
+        "committed": "2025-11-02T16:26:22Z",
+        "old": "7921e9e1b591f97c8ec1a79446d67228f46806cb",
+        "new": "f921e8e86b5f5eab2578c026301b754d79b7b113",
+        "status": "agent"
+      },
+      {
+        "commit": "0fd5019d65b28ac1458d393c58369a44801b96db",
+        "date": "2025-11-02T15:17:55Z",
+        "committed": "2025-11-02T15:17:55Z",
+        "old": null,
+        "new": "7921e9e1b591f97c8ec1a79446d67228f46806cb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 15171,
+    "sha256": "f3eeb9ba5a4a8ba76162224f1edeb70b272ca8b2b61004c85e1e4cbaad62f1ff",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 526,
+    "words": 2151,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/wp-cli--handbook/guides/behat-tests.md"
+}

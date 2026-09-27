@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "free_courses__openclaw_mastery_for_everyone__days__day-03-connect-a-channel__claw-instructions-connect-telegram.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "aishwaryanr/awesome-generative-ai-guide",
+    "path": "free_courses/openclaw_mastery_for_everyone/days/day-03-connect-a-channel/claw-instructions-connect-telegram.md",
+    "commit": "f0185981c19f2f09a97601f12d6b8cec6a3c727d",
+    "commit_date": "2026-09-17T16:53:04-07:00",
+    "url": "https://github.com/aishwaryanr/awesome-generative-ai-guide/blob/f0185981c19f2f09a97601f12d6b8cec6a3c727d/free_courses/openclaw_mastery_for_everyone/days/day-03-connect-a-channel/claw-instructions-connect-telegram.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2024-02-06T10:14:15-08:00",
+    "stars": 29601,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-24T17:35:44+05:30",
+    "last_commit_date": "2026-03-24T17:35:44+05:30",
+    "last_commit_author": "aishwaryanr",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-24T17:35:44+05:30",
+    "last_committer_date": "2026-03-24T17:35:44+05:30",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c2f748d0c70c93fb6c76fcae68c825b9aa663c56",
+        "date": "2026-03-24T17:35:44+05:30",
+        "committed": "2026-03-24T17:35:44+05:30",
+        "old": null,
+        "new": "d6f9f0269cfe485f081ee19b0ad0fb77f189f172",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3036,
+    "sha256": "e6f2063e653e59968936ca194e84702f698e962121408cbfc622b439569c7fd8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 111,
+    "words": 482,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aishwaryanr--awesome-generative-ai-guide/free_courses/openclaw_mastery_for_everyone/days/day-03-connect-a-channel/claw-instructions-connect-telegram.md"
+}

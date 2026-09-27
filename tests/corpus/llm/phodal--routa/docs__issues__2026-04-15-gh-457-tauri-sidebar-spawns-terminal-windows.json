@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__issues__2026-04-15-gh-457-tauri-sidebar-spawns-terminal-windows.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "phodal/routa",
+    "path": "docs/issues/2026-04-15-gh-457-tauri-sidebar-spawns-terminal-windows.md",
+    "commit": "e48861ab81e2b30378fd32f05204a3ab424c4fec",
+    "commit_date": "2026-08-14T01:15:35+08:00",
+    "url": "https://github.com/phodal/routa/blob/e48861ab81e2b30378fd32f05204a3ab424c4fec/docs/issues/2026-04-15-gh-457-tauri-sidebar-spawns-terminal-windows.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-13T21:37:38+08:00",
+    "stars": 1822,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-15T20:52:51+08:00",
+    "last_commit_date": "2026-04-21T15:49:37+08:00",
+    "last_commit_author": "Test User",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "codex",
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-15T20:52:51+08:00",
+    "last_committer_date": "2026-04-21T15:49:37+08:00",
+    "marks": [
+      {
+        "text": "Codex (GPT 5.4) <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "GitHub Copilot Agent (GPT 5.4) <198982749+copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e0861c1355f36471bcca5742336c41488849f6bd",
+        "date": "2026-04-21T15:49:37+08:00",
+        "committed": "2026-04-21T15:49:37+08:00",
+        "old": "46cbc0917ddb1bb26446c3db0bb4c3efbf2178e0",
+        "new": "1bbe58074269818f9aef7b5712b44b4b0311526c",
+        "status": "agent"
+      },
+      {
+        "commit": "cf24fb2e7af960ca4c138d893a339c0bd878598b",
+        "date": "2026-04-15T20:52:51+08:00",
+        "committed": "2026-04-15T20:52:51+08:00",
+        "old": null,
+        "new": "46cbc0917ddb1bb26446c3db0bb4c3efbf2178e0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (codex, copilot)"
+  },
+  "content": {
+    "size_bytes": 3040,
+    "sha256": "8a205cb24bd15d70b5f6388c29573d015c1a2cdf5bd6589feb873e003f832050",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 64,
+    "words": 391,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/phodal--routa/docs/issues/2026-04-15-gh-457-tauri-sidebar-spawns-terminal-windows.md"
+}

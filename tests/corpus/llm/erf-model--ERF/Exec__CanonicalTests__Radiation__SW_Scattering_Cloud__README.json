@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Exec__CanonicalTests__Radiation__SW_Scattering_Cloud__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "erf-model/ERF",
+    "path": "Exec/CanonicalTests/Radiation/SW_Scattering_Cloud/README.md",
+    "commit": "2558e0d4e28a58a3dae1c400899ae4fb0085b657",
+    "commit_date": "2026-09-26T21:50:08-07:00",
+    "url": "https://github.com/erf-model/ERF/blob/2558e0d4e28a58a3dae1c400899ae4fb0085b657/Exec/CanonicalTests/Radiation/SW_Scattering_Cloud/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-10-19T11:27:58-07:00",
+    "stars": 81,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-01T13:03:28Z",
+    "last_commit_date": "2026-09-13T08:28:14-06:00",
+    "last_commit_author": "Harish",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-01T13:03:28Z",
+    "last_committer_date": "2026-09-13T08:28:14-06:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "01fddb61b985ca12fd8f40b1d473be7564ee32af",
+        "date": "2026-09-13T08:28:14-06:00",
+        "committed": "2026-09-13T08:28:14-06:00",
+        "old": "1458d4ddee8fe45bd91887ad7b433f8cf57a0b6d",
+        "new": "0757732568fb3410216ff3257d9a847a3f8a5963",
+        "status": "agent"
+      },
+      {
+        "commit": "24513ba39d5e9ad5ab8e08bb3c74503299efa85f",
+        "date": "2026-09-02T20:50:27-06:00",
+        "committed": "2026-09-02T20:50:27-06:00",
+        "old": "9528c337794b84ebd002fd08f5bf560056161967",
+        "new": "1458d4ddee8fe45bd91887ad7b433f8cf57a0b6d",
+        "status": "agent"
+      },
+      {
+        "commit": "96919ed6317fa9c2d8309051a914223db4aec0ed",
+        "date": "2026-09-01T13:03:28Z",
+        "committed": "2026-09-01T13:03:28Z",
+        "old": null,
+        "new": "9528c337794b84ebd002fd08f5bf560056161967",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 2351,
+    "sha256": "c379c7b9be35af6c0ec82b64b37ce1a9ce62d9824279f4ec5497084cdf6f4bd2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 77,
+    "words": 323,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/erf-model--ERF/Exec/CanonicalTests/Radiation/SW_Scattering_Cloud/README.md"
+}

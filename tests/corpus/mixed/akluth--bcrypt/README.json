@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "akluth/bcrypt",
+    "path": "README.md",
+    "commit": "3610c90a3429b12f38c54ff50f82888e52296ff2",
+    "commit_date": "2026-05-31T00:28:29+02:00",
+    "url": "https://github.com/akluth/bcrypt/blob/3610c90a3429b12f38c54ff50f82888e52296ff2/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-23T02:12:01+01:00",
+    "stars": 1,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-11-23T23:30:27+01:00",
+    "last_commit_date": "2026-05-31T00:26:09+02:00",
+    "last_commit_author": "Codex",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-11-23T23:30:27+01:00",
+    "last_committer_date": "2026-05-31T00:26:09+02:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a9ff35e2a70a9abcd713669f66936fd2b6fe2140",
+        "date": "2026-05-31T00:26:09+02:00",
+        "committed": "2026-05-31T00:26:09+02:00",
+        "old": "a386b717450cacb4cf09938e58adb9261996b556",
+        "new": "b2d7937047fbb2db40197e04e5c37182e22398c7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 3 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 729,
+    "sha256": "985bf62334cec6baa59d497671fc54e27998fd6150317aa672a75f422a7c54e5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 102,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/akluth--bcrypt/README.md",
+  "before": {
+    "sha256": "bdb243b3f912bd3c4bdec82f27e27d2a38e26022bf198ade8e3d3d1eaa054c8d",
+    "commit": "65a60579a65fe1ab3fb0e6a44f6fdedf7bde85b9",
+    "date": "2019-09-25T11:57:50+02:00",
+    "between": []
+  }
+}

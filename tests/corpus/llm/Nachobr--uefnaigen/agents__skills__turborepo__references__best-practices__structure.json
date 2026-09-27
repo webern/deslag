@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__turborepo__references__best-practices__structure.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Nachobr/uefnaigen",
+    "path": ".agents/skills/turborepo/references/best-practices/structure.md",
+    "commit": "180666c525ae49794bbfd72add8465f5246c64e6",
+    "commit_date": "2026-06-10T10:57:22-03:00",
+    "url": "https://github.com/Nachobr/uefnaigen/blob/180666c525ae49794bbfd72add8465f5246c64e6/.agents/skills/turborepo/references/best-practices/structure.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-16T09:26:14-03:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-16T09:26:14-03:00",
+    "last_commit_date": "2026-04-16T09:26:14-03:00",
+    "last_commit_author": "Nachobr",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-16T09:26:14-03:00",
+    "last_committer_date": "2026-04-16T09:26:14-03:00",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-019d962e-983e-75cc-b984-afaea45607c7",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2a98d4f2595af103930ab47b200f2fe9488b489b",
+        "date": "2026-04-16T09:26:14-03:00",
+        "committed": "2026-04-16T09:26:14-03:00",
+        "old": null,
+        "new": "75eeb4bcfc4f9ed6cafb27cde220cbc0a90c66de",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 5511,
+    "sha256": "5aa65c2ba2adad6fc1e3caae6287ff945746f50de4dcd0d497d42e9217aa38b2",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 297,
+    "words": 657,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Nachobr--uefnaigen/.agents/skills/turborepo/references/best-practices/structure.md"
+}

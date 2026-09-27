@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "genres__j-pop__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "bitwize-music-studio/claude-ai-music-skills",
+    "path": "genres/j-pop/README.md",
+    "commit": "58f32c25b9fb2dfe569478459b0a591e0dff22e8",
+    "commit_date": "2026-09-16T18:38:31-04:00",
+    "url": "https://github.com/bitwize-music-studio/claude-ai-music-skills/blob/58f32c25b9fb2dfe569478459b0a591e0dff22e8/genres/j-pop/README.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-25T02:50:09Z",
+    "stars": 515,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-05T13:00:24-05:00",
+    "last_commit_date": "2026-04-05T13:00:24-05:00",
+    "last_commit_author": "bitwize",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-05T13:00:24-05:00",
+    "last_committer_date": "2026-04-05T13:00:24-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f2cce9d3ceb1fa1a9ea5b61fb1cdebe1d548e102",
+        "date": "2026-04-05T13:00:24-05:00",
+        "committed": "2026-04-05T13:00:24-05:00",
+        "old": null,
+        "new": "2b6b2a39604dc614c4f84a7380424edfe0e351d9",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 21578,
+    "sha256": "c4fc33f87e1a382f1ab28b6c1b9b6c78e49d0333bad27a5e176a5b0a417008fe",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 147,
+    "words": 3040,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/bitwize-music-studio--claude-ai-music-skills/genres/j-pop/README.md"
+}

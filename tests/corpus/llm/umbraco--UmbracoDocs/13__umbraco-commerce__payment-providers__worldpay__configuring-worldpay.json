@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "13__umbraco-commerce__payment-providers__worldpay__configuring-worldpay.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "umbraco/UmbracoDocs",
+    "path": "13/umbraco-commerce/payment-providers/worldpay/configuring-worldpay.md",
+    "commit": "eb0ee57858faaa53acc86ac5874ca3a55facb870",
+    "commit_date": "2026-09-25T12:50:55+02:00",
+    "url": "https://github.com/umbraco/UmbracoDocs/blob/eb0ee57858faaa53acc86ac5874ca3a55facb870/13/umbraco-commerce/payment-providers/worldpay/configuring-worldpay.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 292,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-25T09:24:32+02:00",
+    "last_commit_date": "2026-08-25T09:24:32+02:00",
+    "last_commit_author": "Sofie Toft",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-25T09:24:32+02:00",
+    "last_committer_date": "2026-08-25T09:24:32+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8e257a8271eddfe11c33d145f6e82e2ecf2e97f3",
+        "date": "2026-08-25T09:24:32+02:00",
+        "committed": "2026-08-25T09:24:32+02:00",
+        "old": null,
+        "new": "44130688657a2ebeba39115e4123862f1ce06f13",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1015,
+    "sha256": "4533689e07199289b798fbd70abd7a32f2c9910d46d8c90982cc0e7f65d80893",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 111,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/umbraco--UmbracoDocs/13/umbraco-commerce/payment-providers/worldpay/configuring-worldpay.md"
+}

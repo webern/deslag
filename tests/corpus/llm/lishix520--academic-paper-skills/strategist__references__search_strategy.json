@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "strategist__references__search_strategy.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "lishix520/academic-paper-skills",
+    "path": "strategist/references/search_strategy.md",
+    "commit": "c325557646e9418939ccc7b99171b149ad6314f1",
+    "commit_date": "2026-01-04T10:42:04+08:00",
+    "url": "https://github.com/lishix520/academic-paper-skills/blob/c325557646e9418939ccc7b99171b149ad6314f1/strategist/references/search_strategy.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-04T10:22:46+08:00",
+    "stars": 1340,
+    "found_by": "sg-register:philosophy"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-04T10:22:46+08:00",
+    "last_commit_date": "2026-01-04T10:22:46+08:00",
+    "last_commit_author": "Li Shixiong",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-04T10:22:46+08:00",
+    "last_committer_date": "2026-01-04T10:22:46+08:00",
+    "marks": [
+      {
+        "text": "🤖 Generated with Claude Code",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0a05329281fd61314c8bb07b5a57c8e111c73d0d",
+        "date": "2026-01-04T10:22:46+08:00",
+        "committed": "2026-01-04T10:22:46+08:00",
+        "old": null,
+        "new": "5326df9ee13cade196c87aa0688f614682b5b542",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 13446,
+    "sha256": "3e9380074499a8017130e8005910d691b248743f293155c4cf25038e18ade63e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 459,
+    "words": 1844,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lishix520--academic-paper-skills/strategist/references/search_strategy.md"
+}

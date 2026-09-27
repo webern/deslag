@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "logstash-plugins/logstash-mixin-http_client",
+    "path": "README.md",
+    "commit": "216c986354750fa32046c14af1668ccecd950cc6",
+    "commit_date": "2026-08-06T16:46:22-07:00",
+    "url": "https://github.com/logstash-plugins/logstash-mixin-http_client/blob/216c986354750fa32046c14af1668ccecd950cc6/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-06-29T14:38:49-05:00",
+    "stars": 6,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2015-06-29T14:39:06-05:00",
+    "last_commit_date": "2026-08-06T16:46:22-07:00",
+    "last_commit_author": "Copilot",
+    "authors": 6,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2015-06-29T14:39:06-05:00",
+    "last_committer_date": "2026-08-06T16:46:22-07:00",
+    "marks": [
+      {
+        "text": "Copilot <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "216c986354750fa32046c14af1668ccecd950cc6",
+        "date": "2026-08-06T16:46:22-07:00",
+        "committed": "2026-08-06T16:46:22-07:00",
+        "old": "b39cee9c1df7d96ccad26daab816d265b41c1037",
+        "new": "fa5c871bf47e3fe700116b3dac0f7fe7b321b5c5",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 14 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6941,
+    "sha256": "1d434ef9eddddfdd254b678544823a75d3aa13b1091d2b9aa1c4c564398c6b19",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 165,
+    "words": 968,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/logstash-plugins--logstash-mixin-http_client/README.md",
+  "before": {
+    "sha256": "cddd7ec9989e55df44d8198dea3f8e27a9ac80c9f78064f23a4e0103542961f6",
+    "commit": "671005ce0f7769938bbf2f5a417f7212f4c7209e",
+    "date": "2021-01-04T12:49:18Z",
+    "between": []
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "samples__screenshots__qa_report.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "SceneView/sceneview",
+    "path": "samples/screenshots/qa_report.md",
+    "commit": "6a62eaa444f54b0dae4da7278548da617f7aa254",
+    "commit_date": "2026-09-26T22:21:22+02:00",
+    "url": "https://github.com/SceneView/sceneview/blob/6a62eaa444f54b0dae4da7278548da617f7aa254/samples/screenshots/qa_report.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-11-10T00:06:25+01:00",
+    "stars": 1326,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-13T01:17:37+02:00",
+    "last_commit_date": "2026-04-13T02:04:19+02:00",
+    "last_commit_author": "Thomas Gorisse",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-13T01:17:37+02:00",
+    "last_committer_date": "2026-04-13T02:04:19+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b47dea170552d6a17ff4dc70fa7a45c635bba6ab",
+        "date": "2026-04-13T02:04:19+02:00",
+        "committed": "2026-04-13T02:04:19+02:00",
+        "old": "71d281f86aee3690ea154df5df25cdfdb5387560",
+        "new": "b54c5e7b969be577e42ef2db78dc90af98a74e1a",
+        "status": "agent"
+      },
+      {
+        "commit": "5bf06092337846da5bec588710e351b9cb411e21",
+        "date": "2026-04-13T01:17:37+02:00",
+        "committed": "2026-04-13T01:17:37+02:00",
+        "old": null,
+        "new": "71d281f86aee3690ea154df5df25cdfdb5387560",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5631,
+    "sha256": "52643289008dde1814e0be9860b385a76465115417904a75d6c6ffe3040a66d8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 923,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/SceneView--sceneview/samples/screenshots/qa_report.md"
+}

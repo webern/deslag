@@ -1,0 +1,209 @@
+{
+  "sidecar_version": 3,
+  "fixture": "slides__data-viz.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ContextLab/storytelling-with-data",
+    "path": "slides/data-viz.md",
+    "commit": "34d9aae2e0e475aed1ad267a8b34b1394b1d92b3",
+    "commit_date": "2026-06-02T12:02:24-04:00",
+    "url": "https://github.com/ContextLab/storytelling-with-data/blob/34d9aae2e0e475aed1ad267a8b34b1394b1d92b3/slides/data-viz.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2017-08-27T20:08:23-04:00",
+    "stars": 121,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 22,
+    "first_commit_date": "2020-04-04T23:10:07-04:00",
+    "last_commit_date": "2026-04-08T13:22:44-04:00",
+    "last_commit_author": "Jeremy Manning",
+    "authors": 2,
+    "ai_commits": 12,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-04-04T23:10:07-04:00",
+    "last_committer_date": "2026-04-08T13:22:44-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 12
+      }
+    ],
+    "edits": [
+      {
+        "commit": "322c279a11b55e2e90af80f0babac5997d9c8f3d",
+        "date": "2026-04-08T00:16:56-04:00",
+        "committed": "2026-04-08T00:16:56-04:00",
+        "old": "fa2e2ba6d0331d170c720e61d534a69c818bded2",
+        "new": "41432394a0a848731ae31222ebab54c8ff9ed4fa",
+        "status": "agent"
+      },
+      {
+        "commit": "c5854b61b7a218f6216055f270569eebbddac87a",
+        "date": "2026-04-07T23:59:39-04:00",
+        "committed": "2026-04-07T23:59:39-04:00",
+        "old": "49f54264ea706b8d2a27defa2b53536dd8b448f7",
+        "new": "fa2e2ba6d0331d170c720e61d534a69c818bded2",
+        "status": "agent"
+      },
+      {
+        "commit": "12d4382a686f3d846bc4096c0cb55b2d64f35bdd",
+        "date": "2026-04-07T23:42:05-04:00",
+        "committed": "2026-04-07T23:42:05-04:00",
+        "old": "9d024c9415ca2ab01c013e8b8f84930931b99ad6",
+        "new": "49f54264ea706b8d2a27defa2b53536dd8b448f7",
+        "status": "agent"
+      },
+      {
+        "commit": "5ec4cb9a8d7ba7a448eb63b2874c17ed936f7dd5",
+        "date": "2026-04-07T23:31:37-04:00",
+        "committed": "2026-04-07T23:31:37-04:00",
+        "old": "977c33c045a7516583ca0b91aec0f2ef2119ce6a",
+        "new": "9d024c9415ca2ab01c013e8b8f84930931b99ad6",
+        "status": "agent"
+      },
+      {
+        "commit": "f0a12ffd1c1721b12c61be8d94c0da69b7ac6491",
+        "date": "2026-04-07T23:25:45-04:00",
+        "committed": "2026-04-07T23:25:45-04:00",
+        "old": "301270daf8c5acb96050d2f657cd9751960769fb",
+        "new": "977c33c045a7516583ca0b91aec0f2ef2119ce6a",
+        "status": "agent"
+      },
+      {
+        "commit": "e239e28957699d9993e09b8ec4a354cc741d03ce",
+        "date": "2026-04-07T22:44:40-04:00",
+        "committed": "2026-04-07T22:44:40-04:00",
+        "old": "32c271953d02cdd14d766047f2da155f15acdbf8",
+        "new": "301270daf8c5acb96050d2f657cd9751960769fb",
+        "status": "agent"
+      },
+      {
+        "commit": "8a4000984c0612d987a3831ddd30cb84e5ab0692",
+        "date": "2026-04-07T22:43:03-04:00",
+        "committed": "2026-04-07T22:43:03-04:00",
+        "old": "38bb893d94486dc93e169737edb29d6a94be937d",
+        "new": "32c271953d02cdd14d766047f2da155f15acdbf8",
+        "status": "agent"
+      },
+      {
+        "commit": "23711ad6233e020926dacfbc4f252ed793cfcec5",
+        "date": "2026-04-07T20:59:14-04:00",
+        "committed": "2026-04-07T20:59:14-04:00",
+        "old": "c88c1144994e95e025972a61e831baf87a549185",
+        "new": "38bb893d94486dc93e169737edb29d6a94be937d",
+        "status": "agent"
+      },
+      {
+        "commit": "b161a4f243fcd2467ceffa22b74c932eab8185aa",
+        "date": "2026-04-07T20:56:51-04:00",
+        "committed": "2026-04-07T20:56:51-04:00",
+        "old": "d48fcb1652093ea1151dcb1baecea33edbc17329",
+        "new": "c88c1144994e95e025972a61e831baf87a549185",
+        "status": "agent"
+      },
+      {
+        "commit": "4076f9607a78f9fb2fafaa7de0b6059a17abd9ec",
+        "date": "2026-03-30T12:48:19-04:00",
+        "committed": "2026-03-30T12:48:19-04:00",
+        "old": "005fb403e25701b92554b0dbd38ae6ae737b3305",
+        "new": "d48fcb1652093ea1151dcb1baecea33edbc17329",
+        "status": "agent"
+      },
+      {
+        "commit": "68ffd0e60061d5fcf280c80b0e26cbc91d7e49e1",
+        "date": "2026-03-30T01:49:46-04:00",
+        "committed": "2026-03-30T01:49:46-04:00",
+        "old": "eda3ecac528032bbed26f013982567ce563c65ef",
+        "new": "005fb403e25701b92554b0dbd38ae6ae737b3305",
+        "status": "agent"
+      },
+      {
+        "commit": "d6fb4df291d24086ee36a33a00fb4b41a735093d",
+        "date": "2026-03-24T10:54:04-04:00",
+        "committed": "2026-03-24T10:54:04-04:00",
+        "old": "6e4248bb0d7627a556312ae5b29bd544447dab64",
+        "new": "eda3ecac528032bbed26f013982567ce563c65ef",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 22 commits predate 2022-01-01 with no mark, and 12 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11547,
+    "sha256": "824295c5a41bce1c59707d0918906407598ad0e4b9c0f0aff1ae47291fc8c957",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 382,
+    "words": 1443,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ContextLab--storytelling-with-data/slides/data-viz.md",
+  "before": {
+    "sha256": "1bd27d432bd5a3b0f5c6d614788827107a5333099094d4efeab8b3d0ba02df0d",
+    "commit": "0434ee920372ce55de9d80872ec3ce2c4700075b",
+    "date": "2021-08-11T20:52:54-04:00",
+    "between": [
+      {
+        "commit": "02e4cf465d86814f2b5a3e8576195ffd2ca422b1",
+        "date": "2026-04-08T13:22:44-04:00",
+        "committed": "2026-04-08T13:22:44-04:00",
+        "old": "d3736104bafe468f2a55776e88f0b5eda162ab49",
+        "new": "4c05db4b81d84bd5998bfefd078a5a4f5bc4e9d2",
+        "status": "late"
+      },
+      {
+        "commit": "5d8a1c1b3debee1cf865eb4a2157df6aa3d46d4d",
+        "date": "2026-04-08T09:42:57-04:00",
+        "committed": "2026-04-08T09:42:57-04:00",
+        "old": "f76119c67f16d5be68da356aa7330dce29faccdb",
+        "new": "d3736104bafe468f2a55776e88f0b5eda162ab49",
+        "status": "late"
+      },
+      {
+        "commit": "8e39c9358855c20f1493a22f6a83a0900871ef35",
+        "date": "2026-04-08T08:12:01-04:00",
+        "committed": "2026-04-08T08:12:01-04:00",
+        "old": "2e629f42c8dca3fa324a33f060b476fb8bfe7a70",
+        "new": "f76119c67f16d5be68da356aa7330dce29faccdb",
+        "status": "late"
+      },
+      {
+        "commit": "386b337e138547bda6d92e930b59574858cbb333",
+        "date": "2026-04-08T00:45:54-04:00",
+        "committed": "2026-04-08T00:45:54-04:00",
+        "old": "41432394a0a848731ae31222ebab54c8ff9ed4fa",
+        "new": "2e629f42c8dca3fa324a33f060b476fb8bfe7a70",
+        "status": "late"
+      },
+      {
+        "commit": "22c674f428933322a894a7f6989e067dfe8b0ce3",
+        "date": "2024-01-15T17:08:12-05:00",
+        "committed": "2024-01-15T17:08:12-05:00",
+        "old": "478f903b415c57c316ee016d25c656bb9b2afc84",
+        "new": "6e4248bb0d7627a556312ae5b29bd544447dab64",
+        "status": "late"
+      }
+    ]
+  }
+}

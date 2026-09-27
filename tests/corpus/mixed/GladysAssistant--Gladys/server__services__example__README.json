@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "server__services__example__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "GladysAssistant/Gladys",
+    "path": "server/services/example/README.md",
+    "commit": "43a3d6880b98ce1366680cee18129bb621323c9c",
+    "commit_date": "2026-09-25T12:25:23Z",
+    "url": "https://github.com/GladysAssistant/Gladys/blob/43a3d6880b98ce1366680cee18129bb621323c9c/server/services/example/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-06-05T13:11:19+02:00",
+    "stars": 3204,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2019-06-26T09:09:05+08:00",
+    "last_commit_date": "2026-08-27T15:43:41Z",
+    "last_commit_author": "Pierre-Gilles Leymarie",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-06-26T09:09:05+08:00",
+    "last_committer_date": "2026-08-27T15:43:41Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "610681e7178889d81e7ed32353cffa9637f971c5",
+        "date": "2026-08-27T15:43:41Z",
+        "committed": "2026-08-27T15:43:41Z",
+        "old": "f9fd9558c4b6845639f47d689b040da1b31b0c5d",
+        "new": "93c2b1ba928e9f6f27cee8860ada7d31710adf6c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 4 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2824,
+    "sha256": "e0a49fcdc4969a54bccaf50a9544495f9bc55a5c5c307e8f7a60df01e0024812",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 421,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/GladysAssistant--Gladys/server/services/example/README.md",
+  "before": {
+    "sha256": "f9f6df0f05de21cf18080c7b847e3cbcde23dc4342dfca089e76cb02d3ef499a",
+    "commit": "afe4a2473333ef7f8984adf8a778f96f65becb76",
+    "date": "2021-12-06T09:37:41+01:00",
+    "between": [
+      {
+        "commit": "06dc8b634ad5004cdad2fbb31b73deee7d5bcc72",
+        "date": "2022-11-28T12:15:59+07:00",
+        "committed": "2022-11-28T12:15:59+07:00",
+        "old": "b3dfbf0d6ffb38e44c0240818bdffc1a17a91ae6",
+        "new": "f9fd9558c4b6845639f47d689b040da1b31b0c5d",
+        "status": "late"
+      }
+    ]
+  }
+}

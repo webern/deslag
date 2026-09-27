@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__ecosystem-compatibility.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "WillEhrendreich/SageFs",
+    "path": "docs/ecosystem-compatibility.md",
+    "commit": "c86c3402460543849e771e527aa75b5892770ea0",
+    "commit_date": "2026-09-25T21:34:07-05:00",
+    "url": "https://github.com/WillEhrendreich/SageFs/blob/c86c3402460543849e771e527aa75b5892770ea0/docs/ecosystem-compatibility.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-14T14:22:28-06:00",
+    "stars": 70,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-20T12:16:21-05:00",
+    "last_commit_date": "2026-09-21T19:18:48-05:00",
+    "last_commit_author": "Will Ehrendreich",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-20T12:16:21-05:00",
+    "last_committer_date": "2026-09-21T19:18:48-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_015dwq8MCQsuKLWG8H572cDq",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "02751aa4186d9ee28d258b736d02dea1a8fc256e",
+        "date": "2026-09-21T19:18:48-05:00",
+        "committed": "2026-09-21T19:18:48-05:00",
+        "old": "043f48d5b941907984e6ab9fa1e0a79e2fd0a074",
+        "new": "87c510fbd5ed1b15a87541ef201a17abf5d121a0",
+        "status": "agent"
+      },
+      {
+        "commit": "a1c3d86b72a99c89f9eb3b4ce4e052a638352fdf",
+        "date": "2026-09-21T18:42:33-05:00",
+        "committed": "2026-09-21T18:42:33-05:00",
+        "old": "974a220c1c8b8422e1bc95c48f5fca7171027652",
+        "new": "043f48d5b941907984e6ab9fa1e0a79e2fd0a074",
+        "status": "agent"
+      },
+      {
+        "commit": "0a6d77f4f6afd4cdd534fad0de583145d069f8c9",
+        "date": "2026-09-20T12:16:21-05:00",
+        "committed": "2026-09-20T12:16:21-05:00",
+        "old": null,
+        "new": "974a220c1c8b8422e1bc95c48f5fca7171027652",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 17064,
+    "sha256": "370673d5c9c494710f2566bd34f12516acbca45757ca11ea9c1688c11dde6904",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 318,
+    "words": 2620,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/WillEhrendreich--SageFs/docs/ecosystem-compatibility.md"
+}

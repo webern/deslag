@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__skills__better-typography__details-and-accessibility.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ahmadghoniem/Hypermark",
+    "path": ".claude/skills/better-typography/details-and-accessibility.md",
+    "commit": "684b9c6e04c602fc6f77045ab7d1bd4d81d9df5d",
+    "commit_date": "2026-09-15T04:01:48+03:00",
+    "url": "https://github.com/ahmadghoniem/Hypermark/blob/684b9c6e04c602fc6f77045ab7d1bd4d81d9df5d/.claude/skills/better-typography/details-and-accessibility.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2025-12-27T18:14:10-08:00",
+    "stars": 0,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-11T21:52:21+03:00",
+    "last_commit_date": "2026-09-11T21:52:21+03:00",
+    "last_commit_author": "ahmadghoniem",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-11T21:52:21+03:00",
+    "last_committer_date": "2026-09-11T21:52:21+03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4f5555e669d1a466da968cf031aed57db0814dab",
+        "date": "2026-09-11T21:52:21+03:00",
+        "committed": "2026-09-11T21:52:21+03:00",
+        "old": null,
+        "new": "74c2eef1363cf221527fab5223a382547107ba25",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4211,
+    "sha256": "d74e2719ee793fbf7408883e0e5eb396b67514ce07e02412f33d5408ecb4a02e",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 119,
+    "words": 623,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ahmadghoniem--Hypermark/.claude/skills/better-typography/details-and-accessibility.md"
+}

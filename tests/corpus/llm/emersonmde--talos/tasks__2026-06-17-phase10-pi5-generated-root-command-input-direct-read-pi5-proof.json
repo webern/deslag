@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "tasks__2026-06-17-phase10-pi5-generated-root-command-input-direct-read-pi5-proof.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "emersonmde/talos",
+    "path": "tasks/2026-06-17-phase10-pi5-generated-root-command-input-direct-read-pi5-proof.md",
+    "commit": "efcd58b7f40512a76a26e82dbd95c0bc0b1b9252",
+    "commit_date": "2026-07-02T20:27:12-04:00",
+    "url": "https://github.com/emersonmde/talos/blob/efcd58b7f40512a76a26e82dbd95c0bc0b1b9252/tasks/2026-06-17-phase10-pi5-generated-root-command-input-direct-read-pi5-proof.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-18T06:53:43-04:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-17T00:45:49-04:00",
+    "last_commit_date": "2026-06-17T00:45:49-04:00",
+    "last_commit_author": "Matthew Emerson",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-17T00:45:49-04:00",
+    "last_committer_date": "2026-06-17T00:45:49-04:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bbf57680a358dbaeb0b3adf6475c36e9a62b0899",
+        "date": "2026-06-17T00:45:49-04:00",
+        "committed": "2026-06-17T00:45:49-04:00",
+        "old": null,
+        "new": "7a724ccb28efdeca36a71b7bf24de322dac5f75d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 4792,
+    "sha256": "1c704392ee8c28160eb659984a0a948395849ee4857faafc96db92bc61d47c0d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 103,
+    "words": 546,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/emersonmde--talos/tasks/2026-06-17-phase10-pi5-generated-root-command-input-direct-read-pi5-proof.md"
+}

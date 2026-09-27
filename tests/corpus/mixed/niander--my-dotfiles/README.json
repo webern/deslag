@@ -1,0 +1,257 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "niander/my-dotfiles",
+    "path": "README.md",
+    "commit": "d6ca173cf6b6021723697263efdfe127bc3721a0",
+    "commit_date": "2026-09-03T22:57:16Z",
+    "url": "https://github.com/niander/my-dotfiles/blob/d6ca173cf6b6021723697263efdfe127bc3721a0/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2010-04-15T02:16:51-07:00",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 37,
+    "first_commit_date": "2018-03-08T12:38:08-03:00",
+    "last_commit_date": "2026-09-01T00:00:33-07:00",
+    "last_commit_author": "niander",
+    "authors": 3,
+    "ai_commits": 23,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-03-08T12:38:08-03:00",
+    "last_committer_date": "2026-09-01T00:00:33-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 23
+      },
+      {
+        "text": "Copilot-Session: ec525a21-7d3c-471d-9577-6a1ca2ef04f1",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9daf796b0196a925b34119b399c82abe090deca0",
+        "date": "2026-09-01T00:00:33-07:00",
+        "committed": "2026-09-01T00:00:33-07:00",
+        "old": "d8b36b95dac22a454942b68f55b38d168d873b9c",
+        "new": "be1c414e73c241063e6d6dc4c56d035ebd94ffd0",
+        "status": "agent"
+      },
+      {
+        "commit": "df502979b8318d838f2721a2ad324d4143f04726",
+        "date": "2026-08-31T05:28:02Z",
+        "committed": "2026-08-31T05:28:02Z",
+        "old": "b11f8016b4550ed3b73d2ae75030ee14aefc88ba",
+        "new": "98b2563af791fdb35a54ddb56564b7bc5f60c747",
+        "status": "agent"
+      },
+      {
+        "commit": "78a9c59f672f41c5eefc019d4d6a445e19dee323",
+        "date": "2026-08-29T20:21:25-07:00",
+        "committed": "2026-08-29T20:21:25-07:00",
+        "old": "49500b238aeb8f72ac82002d0432961243190a5f",
+        "new": "53c520323e05cfbd14116bf49146ddb9e35fbc30",
+        "status": "agent"
+      },
+      {
+        "commit": "6cfb1914ae501f2ebc528c3f7efc6c50456843c1",
+        "date": "2026-08-29T10:38:55-07:00",
+        "committed": "2026-08-29T10:38:55-07:00",
+        "old": "5c831478928dfb3cfdb6181392b5722ad0815e7b",
+        "new": "49500b238aeb8f72ac82002d0432961243190a5f",
+        "status": "agent"
+      },
+      {
+        "commit": "440a9b3b3e9dca2ae5b30f302f3869c72ab9a656",
+        "date": "2026-08-28T18:49:12-07:00",
+        "committed": "2026-08-28T18:49:12-07:00",
+        "old": "f8c13dc9e4b8d0848de54809ff4afadaf4a40d48",
+        "new": "5c831478928dfb3cfdb6181392b5722ad0815e7b",
+        "status": "agent"
+      },
+      {
+        "commit": "029be947db4d833e8eb2401984b8dfec92b3694c",
+        "date": "2026-08-28T15:03:11-07:00",
+        "committed": "2026-08-28T15:03:11-07:00",
+        "old": "175c7db701b884dbe2546e6b7aa4677217ad7a29",
+        "new": "f8c13dc9e4b8d0848de54809ff4afadaf4a40d48",
+        "status": "agent"
+      },
+      {
+        "commit": "a38b68103d2af1e4b1315d98d40e3ba269250016",
+        "date": "2026-06-23T14:40:50-07:00",
+        "committed": "2026-06-23T16:00:33-07:00",
+        "old": "56da0f7c086304255559fd0d1b1059ff3f325232",
+        "new": "cb3f2fde48af4248133ac5c71b34c9010e9c6d80",
+        "status": "agent"
+      },
+      {
+        "commit": "d9c9e851bb648c30c7cfd71a1a700466f3f64aac",
+        "date": "2026-05-20T13:32:44-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "60f976e95ff6cdefa74f099042457cc1939ea144",
+        "new": "56da0f7c086304255559fd0d1b1059ff3f325232",
+        "status": "agent"
+      },
+      {
+        "commit": "20a7b4b6e159146a7395928e13db0dd52b4303db",
+        "date": "2026-05-20T13:31:18-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "85b74cf75b0086a3e35c0abc5c5187ad6c9022a8",
+        "new": "60f976e95ff6cdefa74f099042457cc1939ea144",
+        "status": "agent"
+      },
+      {
+        "commit": "abf022202825eb25cf413acc3cbca0f802e36e07",
+        "date": "2026-05-20T13:30:06-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "33660c0202732a494477fb81ebb36791ba81bad8",
+        "new": "85b74cf75b0086a3e35c0abc5c5187ad6c9022a8",
+        "status": "agent"
+      },
+      {
+        "commit": "dc1309331eb178fa0bc5a89f785502ed3ebb8f00",
+        "date": "2026-05-20T13:25:55-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "0257668c9e35d73aa5960c755b9558c67e352036",
+        "new": "33660c0202732a494477fb81ebb36791ba81bad8",
+        "status": "agent"
+      },
+      {
+        "commit": "bb79617d69aa42975dc571370e3edf3b6ff95487",
+        "date": "2026-05-20T13:25:09-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "77326ef578b41fbff49a333a240da84b58b3c8e9",
+        "new": "0257668c9e35d73aa5960c755b9558c67e352036",
+        "status": "agent"
+      },
+      {
+        "commit": "9964875d6892476347e0395d8c921c6213d56c24",
+        "date": "2026-05-20T13:24:07-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "ee5b46fc05b6e15d4e0aad234029cb60053b7c5c",
+        "new": "77326ef578b41fbff49a333a240da84b58b3c8e9",
+        "status": "agent"
+      },
+      {
+        "commit": "f31a2c621e70d13ee85f722d53d642be4fe0c270",
+        "date": "2026-05-20T13:23:22-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "65b7bf85cbefe6bfe62a4d4ea76809bd76aafb84",
+        "new": "ee5b46fc05b6e15d4e0aad234029cb60053b7c5c",
+        "status": "agent"
+      },
+      {
+        "commit": "00ab00468afd4bafcc89d15e519e0d5c38dadbcd",
+        "date": "2026-05-20T13:22:25-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "e3b801f9d0beae360358a79e3e1b30f521383cf1",
+        "new": "65b7bf85cbefe6bfe62a4d4ea76809bd76aafb84",
+        "status": "agent"
+      },
+      {
+        "commit": "b57275e80f314cd891599668078ed9effca25e84",
+        "date": "2026-05-20T13:21:39-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "047b920d2679ae9327f53604cdbc9912f42de96a",
+        "new": "e3b801f9d0beae360358a79e3e1b30f521383cf1",
+        "status": "agent"
+      },
+      {
+        "commit": "669860e00337b193a954f152ea92a96853521280",
+        "date": "2026-05-20T13:19:23-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "d750c7a14ba0604771356366e581b0f25fb47f46",
+        "new": "047b920d2679ae9327f53604cdbc9912f42de96a",
+        "status": "agent"
+      },
+      {
+        "commit": "be23125cdc5ee342d09c1d2edd349a081d9b52a9",
+        "date": "2026-05-19T10:43:29-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "a00e8cab771c0b3f0edf38f20baa6b7a02591e44",
+        "new": "d750c7a14ba0604771356366e581b0f25fb47f46",
+        "status": "agent"
+      },
+      {
+        "commit": "a5052a9435685e3178fbfba81a29d59e6fca3635",
+        "date": "2026-05-19T10:37:29-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "c10f686d28cafeb7f5664209f1ecbe132a7fdca0",
+        "new": "a00e8cab771c0b3f0edf38f20baa6b7a02591e44",
+        "status": "agent"
+      },
+      {
+        "commit": "be5d72e555cff2ae2c35cd8ef7bf283b1b7f7010",
+        "date": "2026-05-19T10:35:36-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "cafd10c0356dd81fca1d5b3e91137ea97b8238d4",
+        "new": "c10f686d28cafeb7f5664209f1ecbe132a7fdca0",
+        "status": "agent"
+      },
+      {
+        "commit": "bedf52422663f15f466748c7bd938b87606f103d",
+        "date": "2026-05-19T10:35:05-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "d926cfd60b5f9a64bd26f0f73bbd80f577299ef8",
+        "new": "cafd10c0356dd81fca1d5b3e91137ea97b8238d4",
+        "status": "agent"
+      },
+      {
+        "commit": "0e3f265bffb97b373f8cf5482b356e6c876a273b",
+        "date": "2026-05-19T10:34:27-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "b069b32f5e751c82c7f009362d73e093bafe66db",
+        "new": "d926cfd60b5f9a64bd26f0f73bbd80f577299ef8",
+        "status": "agent"
+      },
+      {
+        "commit": "f0c7303c506661f53837ed45e39ba804d2e5790d",
+        "date": "2026-05-19T10:29:36-07:00",
+        "committed": "2026-05-20T13:52:43-07:00",
+        "old": "495d593431942b46424d561cba19283e02ee253b",
+        "new": "b069b32f5e751c82c7f009362d73e093bafe66db",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 37 commits predates 2022-01-01 with no mark, and 23 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5791,
+    "sha256": "e82fb32b15cc25720c200a892cf6b91856b4710e799eb168f4b06c709f6e9988",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 139,
+    "words": 816,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/niander--my-dotfiles/README.md"
+}

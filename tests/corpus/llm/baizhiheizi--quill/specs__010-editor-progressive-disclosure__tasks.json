@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "specs__010-editor-progressive-disclosure__tasks.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "baizhiheizi/quill",
+    "path": "specs/010-editor-progressive-disclosure/tasks.md",
+    "commit": "2d73d548db2d714d0cdcfe97126a784e28227928",
+    "commit_date": "2026-09-25T08:50:02+08:00",
+    "url": "https://github.com/baizhiheizi/quill/blob/2d73d548db2d714d0cdcfe97126a784e28227928/specs/010-editor-progressive-disclosure/tasks.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-22T07:05:42+08:00",
+    "stars": 69,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-22T18:37:31+08:00",
+    "last_commit_date": "2026-07-22T18:37:31+08:00",
+    "last_commit_author": "an-lee",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-22T18:37:31+08:00",
+    "last_committer_date": "2026-07-22T18:37:31+08:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f8dc0f76754582cae426c3ce8832f94d399fe0ce",
+        "date": "2026-07-22T18:37:31+08:00",
+        "committed": "2026-07-22T18:37:31+08:00",
+        "old": null,
+        "new": "c8ff437d58ffbfb42ca7f1d1c7b5807b2ff6508a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 23062,
+    "sha256": "e00402313a806082a5f9d9ff1902b16d2f65be8441429b16488d92c7cccad194",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 255,
+    "words": 2955,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/baizhiheizi--quill/specs/010-editor-progressive-disclosure/tasks.md"
+}

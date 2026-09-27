@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGES.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "missingfaktor/akar",
+    "path": "CHANGES.md",
+    "commit": "ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195",
+    "commit_date": "2026-04-26T22:02:47+01:00",
+    "url": "https://github.com/missingfaktor/akar/blob/ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195/CHANGES.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-10-23T11:34:31+02:00",
+    "stars": 182,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 16,
+    "first_commit_date": "2015-11-08T16:22:07+01:00",
+    "last_commit_date": "2026-04-25T21:53:53+01:00",
+    "last_commit_author": "missingfaktor",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2015-11-08T16:22:07+01:00",
+    "last_committer_date": "2026-04-25T21:53:53+01:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "89a8579e9d7d9d4259eced8c798e971a59d89a28",
+        "date": "2026-04-25T21:53:53+01:00",
+        "committed": "2026-04-25T21:53:53+01:00",
+        "old": "40e4a045da260f4080ea07ad5fb7f7c7105e06aa",
+        "new": "ddd8f6b1fa9d5be54c804525d74f2a677622a3b9",
+        "status": "agent"
+      },
+      {
+        "commit": "e208df5de31d9c41015996a8c2aaaad9d701847f",
+        "date": "2026-04-25T20:07:06+01:00",
+        "committed": "2026-04-25T20:07:06+01:00",
+        "old": "5ebf653f9f966d6c977fac5f9cbaa6b1ec4cd4f0",
+        "new": "40e4a045da260f4080ea07ad5fb7f7c7105e06aa",
+        "status": "agent"
+      },
+      {
+        "commit": "6bf8dbb93779ad5cbd52b8fb0300fb04b5914778",
+        "date": "2026-04-25T19:59:20+01:00",
+        "committed": "2026-04-25T19:59:20+01:00",
+        "old": "dbc0f8da24460657458876d12db654eb8cd41211",
+        "new": "5ebf653f9f966d6c977fac5f9cbaa6b1ec4cd4f0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "11 of its 16 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 2422,
+    "sha256": "f272bacc43a847ab5567dc95dc253a9f555215f94d239c364e8853e9c72cb662",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 345,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/missingfaktor--akar/CHANGES.md",
+  "before": {
+    "sha256": "6778980b5836579b7d01a65c0aaa8c615bb34d135a01cb78d42f56fd3665c73f",
+    "commit": "66403b735cafab4e9fb971b4bf56e899ee84962f",
+    "date": "2018-04-13T01:18:20+01:00",
+    "between": [
+      {
+        "commit": "aa9aae48673d50c3c254a44b6e409acc042d35e8",
+        "date": "2025-12-28T16:58:42Z",
+        "committed": "2025-12-28T16:58:42Z",
+        "old": "81b034d20dc7059a3abbca09677fe490440bc19c",
+        "new": "dbc0f8da24460657458876d12db654eb8cd41211",
+        "status": "late"
+      },
+      {
+        "commit": "6ae9403710db7519dc78de65aeeaec477b225f9f",
+        "date": "2024-07-29T22:16:30+01:00",
+        "committed": "2024-07-29T22:16:30+01:00",
+        "old": "5c9db522f9c8ad6693d6f9483ca8f6c876a4cb68",
+        "new": "81b034d20dc7059a3abbca09677fe490440bc19c",
+        "status": "late"
+      }
+    ]
+  }
+}

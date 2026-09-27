@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "changeset__brevo-api-create-campaign-target-groups.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "vivid-planet/dextinity",
+    "path": ".changeset/brevo-api-create-campaign-target-groups.md",
+    "commit": "4a1da4ee4091eddf42db345340a2e98334a3177a",
+    "commit_date": "2026-09-24T12:44:22+02:00",
+    "url": "https://github.com/vivid-planet/dextinity/blob/4a1da4ee4091eddf42db345340a2e98334a3177a/.changeset/brevo-api-create-campaign-target-groups.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-01-22T14:11:17+01:00",
+    "stars": 52,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-21T10:02:03+02:00",
+    "last_commit_date": "2026-09-21T10:02:03+02:00",
+    "last_commit_author": "Johannes Obermair",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-21T10:02:03+02:00",
+    "last_committer_date": "2026-09-21T10:02:03+02:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b855b961ee41393ff61811357cc6c50011b5d2ce",
+        "date": "2026-09-21T10:02:03+02:00",
+        "committed": "2026-09-21T10:02:03+02:00",
+        "old": null,
+        "new": "4fd0ed4c90bb6aed7eda2adad28adfeb0d4a5a81",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 300,
+    "sha256": "307e5c8ae754b4ffe69d026cdbf56f83642c258e4ad7e59f611eddeed770fa02",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 7,
+    "words": 41,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/vivid-planet--dextinity/.changeset/brevo-api-create-campaign-target-groups.md"
+}

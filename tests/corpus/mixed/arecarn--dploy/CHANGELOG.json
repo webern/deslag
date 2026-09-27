@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "arecarn/dploy",
+    "path": "CHANGELOG.md",
+    "commit": "6e5c2365cfc1351b431405dc506048cafbd0e76a",
+    "commit_date": "2026-08-19T08:49:43-07:00",
+    "url": "https://github.com/arecarn/dploy/blob/6e5c2365cfc1351b431405dc506048cafbd0e76a/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2016-03-09T05:32:15-08:00",
+    "stars": 93,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2016-11-10T10:20:53-08:00",
+    "last_commit_date": "2026-03-05T23:11:06-08:00",
+    "last_commit_author": "Ryan Carney",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2016-11-10T11:16:07-08:00",
+    "last_committer_date": "2026-03-05T23:11:06-08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2bba3c3d690102ce3079c48b742b151d9098e95b",
+        "date": "2026-02-13T22:42:38+01:00",
+        "committed": "2026-02-13T23:10:07+01:00",
+        "old": "143a019ba862a437688982faf9fed513449b5da0",
+        "new": "baa1c776d1cf9fd6e38b506430e8f8f3798c03ec",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "15 of its 20 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6695,
+    "sha256": "d842043bea325cdff76590c68bf20f56815f791c59aefab01d367e2b26e36b10",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 184,
+    "words": 1112,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/arecarn--dploy/CHANGELOG.md",
+  "before": {
+    "sha256": "3cf08cc653f597f6b73fce200a543865819ee37152b89ae25dd6dd63dc1164c2",
+    "commit": "0545a22dc80c3eb8103c61306be2fa726fb6a0e8",
+    "date": "2021-10-19T21:44:59-07:00",
+    "between": [
+      {
+        "commit": "bddc0c7d272e423a97fb674773f266f045b0b1f1",
+        "date": "2026-03-05T23:11:06-08:00",
+        "committed": "2026-03-05T23:11:06-08:00",
+        "old": "d6455f30cff3fc412f47a684eaaf45bc2cb0d657",
+        "new": "c8f15698ce3494a067fa73fce231161a7d72b5e4",
+        "status": "late"
+      },
+      {
+        "commit": "7faf380a3e8c4de4738ed8322fc370bfc954c46d",
+        "date": "2026-03-05T22:58:23-08:00",
+        "committed": "2026-03-05T22:58:23-08:00",
+        "old": "baa1c776d1cf9fd6e38b506430e8f8f3798c03ec",
+        "new": "d6455f30cff3fc412f47a684eaaf45bc2cb0d657",
+        "status": "late"
+      },
+      {
+        "commit": "36609632ff1dc19a017aff39c2d9289badb042ba",
+        "date": "2022-07-22T09:51:15+02:00",
+        "committed": "2022-07-22T09:51:15+02:00",
+        "old": "68d1b695b7763d218552d830f711e3e4eb3d2e68",
+        "new": "143a019ba862a437688982faf9fed513449b5da0",
+        "status": "late"
+      },
+      {
+        "commit": "d771a92c6907e2ce67ca5a5ddf08ae51b6c4ac4a",
+        "date": "2022-07-12T14:22:39+02:00",
+        "committed": "2022-07-12T14:22:39+02:00",
+        "old": "29f0c226cfcd4bc8b72e3d299742ff444d4bdd29",
+        "new": "68d1b695b7763d218552d830f711e3e4eb3d2e68",
+        "status": "late"
+      }
+    ]
+  }
+}

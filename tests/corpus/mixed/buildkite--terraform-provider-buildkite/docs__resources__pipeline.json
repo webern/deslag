@@ -1,0 +1,119 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__resources__pipeline.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "buildkite/terraform-provider-buildkite",
+    "path": "docs/resources/pipeline.md",
+    "commit": "46280d71cfe08eb0c06e80219f8d5ef091b37273",
+    "commit_date": "2026-09-24T01:28:56+10:00",
+    "url": "https://github.com/buildkite/terraform-provider-buildkite/blob/46280d71cfe08eb0c06e80219f8d5ef091b37273/docs/resources/pipeline.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-06-08T17:23:13+08:00",
+    "stars": 56,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 72,
+    "first_commit_date": "2020-10-13T14:15:36+01:00",
+    "last_commit_date": "2026-09-07T12:28:24-07:00",
+    "last_commit_author": "Jason Barnett",
+    "authors": 33,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-13T21:15:36+08:00",
+    "last_committer_date": "2026-09-07T19:28:24Z",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e383fe27f7f17c60f63c6aa61050023515e994f0",
+        "date": "2026-09-07T12:28:24-07:00",
+        "committed": "2026-09-07T19:28:24Z",
+        "old": "fc1c1c4d54ea7fe7c3c3d679dc85faa444e6fe13",
+        "new": "8df06d4b4b1504bda9c555d681cb69064ed6f07c",
+        "status": "squash"
+      },
+      {
+        "commit": "c72d9d640eb7dcdb0f24120078e5778413a1e1a3",
+        "date": "2026-08-26T21:42:11+10:00",
+        "committed": "2026-08-26T11:42:11Z",
+        "old": "20988f470267ec60e996a9392b6b2da5264d6d5c",
+        "new": "dce6d9d3faa5f85b8cd9ee65cca10604f9d6b96d",
+        "status": "squash"
+      },
+      {
+        "commit": "0c5871008c48a548ea05f818e9178d5d0c05b40b",
+        "date": "2026-07-30T23:01:19-07:00",
+        "committed": "2026-07-31T16:01:19+10:00",
+        "old": "e951506bcecb0719ab123539b7b30465b07be969",
+        "new": "7f6b4982d809092ccacf010e9614b6e4674da727",
+        "status": "agent"
+      },
+      {
+        "commit": "3f910d713057bcfff9d2357f67fcbe54b2642f59",
+        "date": "2026-03-31T14:54:03-05:00",
+        "committed": "2026-04-01T06:54:03+11:00",
+        "old": "f9a84d6b0504373f6146d9a5cbafc7c4517ae6da",
+        "new": "eb85fc35ea5ca34041957d393fe21e019a4a6a45",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 72 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 17358,
+    "sha256": "87bda3d8651b9e63c3dedd289515720ccf9dcd245169775497fb32c648e83ab6",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 289,
+    "words": 2184,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/buildkite--terraform-provider-buildkite/docs/resources/pipeline.md"
+}

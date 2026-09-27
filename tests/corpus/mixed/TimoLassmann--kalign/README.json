@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "TimoLassmann/kalign",
+    "path": "README.md",
+    "commit": "c9651d043b5777385476514136a66d467870152e",
+    "commit_date": "2026-07-22T20:02:05+08:00",
+    "url": "https://github.com/TimoLassmann/kalign/blob/c9651d043b5777385476514136a66d467870152e/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "COPYING"
+    ],
+    "repo_first_commit_date": "2019-04-18T01:14:59+02:00",
+    "stars": 162,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 38,
+    "first_commit_date": "2019-07-29T05:09:04-04:00",
+    "last_commit_date": "2026-03-24T14:31:24+08:00",
+    "last_commit_author": "Timo Lassmann",
+    "authors": 4,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-07-29T05:09:04-04:00",
+    "last_committer_date": "2026-03-24T14:55:29+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3e84b9ab9408811e15e4d61e8e7797e7b58ee953",
+        "date": "2026-03-24T14:31:24+08:00",
+        "committed": "2026-03-24T14:55:29+08:00",
+        "old": "db40270f3edb13b65c51d070c8892ec52956e3d6",
+        "new": "7bf7fd5511e828cc4a9b262d88170040fe427906",
+        "status": "agent"
+      },
+      {
+        "commit": "150ee01a8ac69f66ed8c4a980d17f9092e4195b3",
+        "date": "2026-02-26T09:14:06+08:00",
+        "committed": "2026-02-26T09:14:06+08:00",
+        "old": "78cef9135ab2c28b3ceb62700cfc93a0b2c6a50a",
+        "new": "6ca573abe49657b5a9c5b605f2ca657c778cf5fb",
+        "status": "agent"
+      },
+      {
+        "commit": "783b1d09eaf3005c83c83f90b7efc76252207da5",
+        "date": "2026-02-09T14:13:52+08:00",
+        "committed": "2026-02-09T14:16:19+08:00",
+        "old": "618bed4e2b68567cd9b6e69ce8eecb0a4e2f1f90",
+        "new": "95733971aaef02b7ece753614a81c9a7a38d4d90",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "17 of its 38 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3564,
+    "sha256": "2e8aa83d40710159dff85ed25aa233747391c179773790df9a8ff912ec8152d7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 132,
+    "words": 380,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/TimoLassmann--kalign/README.md"
+}

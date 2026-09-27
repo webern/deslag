@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AIQ-Kitware/aiq-dkps-formalization",
+    "path": "dev/posthoc-prompt-analysis/findings/aivm-2404-jon/FINDINGS.md",
+    "commit": "64e234954217f3ca907ac980c8cbde2900109a66",
+    "commit_date": "2026-09-24T11:48:53-04:00",
+    "url": "https://github.com/AIQ-Kitware/aiq-dkps-formalization/blob/64e234954217f3ca907ac980c8cbde2900109a66/dev/posthoc-prompt-analysis/findings/aivm-2404-jon/FINDINGS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-13T12:51:48-05:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-09T22:13:41-04:00",
+    "last_commit_date": "2026-08-09T22:13:41-04:00",
+    "last_commit_author": "Jon Crall (Agent)",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-09T22:13:41-04:00",
+    "last_committer_date": "2026-08-09T22:13:41-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01V8ebYL7aoq1P2WwQJMHTL6",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "baa200d3fe1e03a9ba7f7c24099e2e315c23fa19",
+        "date": "2026-08-09T22:13:41-04:00",
+        "committed": "2026-08-09T22:13:41-04:00",
+        "old": null,
+        "new": "69617a11ec3df898ee121c367289b13bc798b486",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11807,
+    "sha256": "512a4e9e11b8f0153ddbef94a5550dc2d2d9e170d7b9effc8eba2bb890c476a4",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 214,
+    "words": 1928,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AIQ-Kitware--aiq-dkps-formalization/dev/posthoc-prompt-analysis/findings/aivm-2404-jon/FINDINGS.md"
+}

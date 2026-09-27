@@ -1,0 +1,177 @@
+{
+  "sidecar_version": 3,
+  "fixture": "knowledge-base__editor-convert-to-plain-text.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "telerik/blazor-docs",
+    "path": "knowledge-base/editor-convert-to-plain-text.md",
+    "commit": "921727d12ab53593d561e834d51bc96e82aa9ae1",
+    "commit_date": "2026-09-18T12:14:26+03:00",
+    "url": "https://github.com/telerik/blazor-docs/blob/921727d12ab53593d561e834d51bc96e82aa9ae1/knowledge-base/editor-convert-to-plain-text.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-04-10T12:06:31+03:00",
+    "stars": 64,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2021-07-13T11:53:23+03:00",
+    "last_commit_date": "2026-08-03T11:37:35+03:00",
+    "last_commit_author": "PetarMladenov",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-07-13T11:53:23+03:00",
+    "last_committer_date": "2026-08-03T11:37:35+03:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3a4e3df089712cf04b3dee5260e3a887f555eba6",
+        "date": "2026-08-03T11:37:35+03:00",
+        "committed": "2026-08-03T11:37:35+03:00",
+        "old": "9bc0eba1c61f8b6bff361cbbd34bcb77f3019899",
+        "new": "2daa4caa2e69bbbe9137815284dfb6085186f4a3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 14 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2989,
+    "sha256": "0a6d36752eac5f08fb7702d6a2b3da7a3479a0bdf14584c9449cef243a57e8fb",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 89,
+    "words": 281,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/telerik--blazor-docs/knowledge-base/editor-convert-to-plain-text.md",
+  "before": {
+    "sha256": "0377140c3a4c170b73da9af52236cb6e57730b0222bd49d9823f952bd27231dc",
+    "commit": "f97d71f05bcf99252e859f0a6e0b4f3419822f17",
+    "date": "2021-12-27T09:40:53+02:00",
+    "between": [
+      {
+        "commit": "e242fa4b8e36845cfedd62defc557fe2ce4d7cc3",
+        "date": "2026-07-15T17:16:29+03:00",
+        "committed": "2026-07-15T17:16:29+03:00",
+        "old": "1d2e122b3f4246945a38211b3e1bd1e4893801cd",
+        "new": "9bc0eba1c61f8b6bff361cbbd34bcb77f3019899",
+        "status": "late"
+      },
+      {
+        "commit": "653838b83739507cac8f10730b2be8e1d5216719",
+        "date": "2026-06-24T10:01:19+03:00",
+        "committed": "2026-06-24T10:01:19+03:00",
+        "old": "05f3cd5400e4303034b64622e1a2f0c986c8ca73",
+        "new": "1d2e122b3f4246945a38211b3e1bd1e4893801cd",
+        "status": "late"
+      },
+      {
+        "commit": "587ef65fb9758512e7d84f15f43e43dfcd270a34",
+        "date": "2026-01-27T14:41:46+02:00",
+        "committed": "2026-01-27T14:41:46+02:00",
+        "old": "1a01a6df3a28790b282256e5d7ee6bf7cf172472",
+        "new": "05f3cd5400e4303034b64622e1a2f0c986c8ca73",
+        "status": "late"
+      },
+      {
+        "commit": "9e1eb9bf83b06bbcffd1a58329b92989d6a7019e",
+        "date": "2025-05-07T09:59:36+03:00",
+        "committed": "2025-05-13T08:22:53+03:00",
+        "old": "00761b41bc25a5aea91a295f9fceefd0f72ae033",
+        "new": "1a01a6df3a28790b282256e5d7ee6bf7cf172472",
+        "status": "late"
+      },
+      {
+        "commit": "67ed4af119e06a40851a3986e7de97d45cd3b0a1",
+        "date": "2025-02-11T16:41:59+02:00",
+        "committed": "2025-02-11T16:41:59+02:00",
+        "old": "e211cbd495200f9bd146741940b1d3b7f4c8e4d9",
+        "new": "00761b41bc25a5aea91a295f9fceefd0f72ae033",
+        "status": "late"
+      },
+      {
+        "commit": "4ca759f01e96cea0bc29ac8b1b83e8d193b1e72e",
+        "date": "2025-01-08T17:53:54+02:00",
+        "committed": "2025-01-08T17:53:54+02:00",
+        "old": "c594cd01413d407e8ae30b6f479e419873ad8704",
+        "new": "e211cbd495200f9bd146741940b1d3b7f4c8e4d9",
+        "status": "late"
+      },
+      {
+        "commit": "f96f8d99fd008f7cfe55ad83033e9270d19469a2",
+        "date": "2025-01-07T13:16:34+02:00",
+        "committed": "2025-01-07T13:16:34+02:00",
+        "old": "a3921afcb460608d7075d2f5b4706f6cd7842b07",
+        "new": "c594cd01413d407e8ae30b6f479e419873ad8704",
+        "status": "late"
+      },
+      {
+        "commit": "1826961bf4ea02ec4334bd7474e8d7c3c1e6391d",
+        "date": "2024-12-13T11:44:35+02:00",
+        "committed": "2024-12-13T11:44:35+02:00",
+        "old": "b76490da0f1ad8a4f845245d3ee27f1ff91df0aa",
+        "new": "a3921afcb460608d7075d2f5b4706f6cd7842b07",
+        "status": "late"
+      },
+      {
+        "commit": "663a8dce9d2d96f1fb37efd13160919a3c3ebedf",
+        "date": "2024-12-13T11:12:47+02:00",
+        "committed": "2024-12-13T11:12:47+02:00",
+        "old": "db8ea1404186b41f5dbef9d52dfe3a17eda31190",
+        "new": "b76490da0f1ad8a4f845245d3ee27f1ff91df0aa",
+        "status": "late"
+      },
+      {
+        "commit": "45499daee5c38381eac39da0fab817aa7c0cef04",
+        "date": "2024-07-31T17:11:06+03:00",
+        "committed": "2024-07-31T17:11:06+03:00",
+        "old": "d67d8f065f7746e524fc183ae362e395de0349d7",
+        "new": "db8ea1404186b41f5dbef9d52dfe3a17eda31190",
+        "status": "late"
+      },
+      {
+        "commit": "90546e61d8723c1369a4941f6252ad1f4d8334b7",
+        "date": "2023-08-29T12:54:58+01:00",
+        "committed": "2023-08-29T14:54:58+03:00",
+        "old": "a327c6ec6c66fb1d82779640b646af6a51622d70",
+        "new": "d67d8f065f7746e524fc183ae362e395de0349d7",
+        "status": "late"
+      },
+      {
+        "commit": "fd18eaff75b9ef4214bc92b91ecbd532fefa7844",
+        "date": "2023-06-12T13:37:16+03:00",
+        "committed": "2023-06-12T13:37:16+03:00",
+        "old": "8fd007db60625e5400c321341b2dcca07e88c955",
+        "new": "a327c6ec6c66fb1d82779640b646af6a51622d70",
+        "status": "late"
+      }
+    ]
+  }
+}

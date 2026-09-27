@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__changelogs__v1.2.2.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cozystack/cozystack",
+    "path": "docs/changelogs/v1.2.2.md",
+    "commit": "101d1d9861befeff8687bd5dc1da655704c70c38",
+    "commit_date": "2026-09-26T18:51:48+04:00",
+    "url": "https://github.com/cozystack/cozystack/blob/101d1d9861befeff8687bd5dc1da655704c70c38/docs/changelogs/v1.2.2.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-12-10T20:09:43+01:00",
+    "stars": 2239,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-04-14T14:38:50+05:00",
+    "last_commit_date": "2026-04-14T23:10:10+05:00",
+    "last_commit_author": "Myasnikov Daniil",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-14T14:38:50+05:00",
+    "last_committer_date": "2026-04-14T23:10:10+05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cc3af6c0db7646ffb85b427b61f8ea7210e558aa",
+        "date": "2026-04-14T23:10:10+05:00",
+        "committed": "2026-04-14T23:10:10+05:00",
+        "old": "3cf1731c371df7826904ff46e2d9c45cc0c8d902",
+        "new": "2b6a1ae5a8312642e86360eb297876f6827c5ae9",
+        "status": "agent"
+      },
+      {
+        "commit": "25f6ae2f296e1a89d58d0ab519949a9b9ce56fba",
+        "date": "2026-04-14T14:38:50+05:00",
+        "committed": "2026-04-14T14:38:50+05:00",
+        "old": null,
+        "new": "3cf1731c371df7826904ff46e2d9c45cc0c8d902",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8295,
+    "sha256": "dfdc54ba757fac7496a6e7fc6281e214119168ca0f1703738905df5e31f928cd",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 63,
+    "words": 911,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/cozystack--cozystack/docs/changelogs/v1.2.2.md"
+}

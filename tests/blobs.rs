@@ -13,9 +13,10 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use common::Repo;
-use common::blobs::{Entry, Exclusion, load_blobs};
+use common::blobs::{Entry, Exclusion, Tried, load_blobs};
 use common::corpus::{TREE, load_corpus};
-use common::fixture::Fixture;
+use common::fixture::{Fixture, Sidecar};
+use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
 const FETCHED: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/.blobs/unpacked/corpus");
@@ -53,6 +54,168 @@ fn write_batch(repo: &Repo, name: &str, excluded: &[&str], fixtures: &[&Fixture]
     }
     repo.write(&format!("{batch}/manifest.jsonl"), &manifest);
     repo.write(&format!("{batch}/exclude.jsonl"), &exclude);
+}
+
+/// A fixture as a batch holds it: its path in the tree, its bytes and its sidecar's.
+struct Held<'a> {
+    fixture: &'a Fixture,
+    sidecar: Vec<u8>,
+}
+
+impl<'a> Held<'a> {
+    /// The fixture with the sidecar the tree gives it.
+    fn as_is(fixture: &'a Fixture) -> Held<'a> {
+        Held {
+            fixture,
+            sidecar: sidecar_bytes(Path::new(TREE), fixture),
+        }
+    }
+
+    /// The fixture with its sidecar changed by `edit`.
+    fn edited(fixture: &'a Fixture, edit: impl FnOnce(&mut Value)) -> Held<'a> {
+        let mut sidecar: Value =
+            serde_json::from_slice(&sidecar_bytes(Path::new(TREE), fixture)).expect("a sidecar");
+        edit(&mut sidecar);
+        Held {
+            fixture,
+            sidecar: serde_json::to_vec_pretty(&sidecar).expect("a sidecar"),
+        }
+    }
+}
+
+/// Writes a batch as `write_batch` does, from fixtures with the sidecars given, and with
+/// `ledger` as its repos.jsonl when there is one.
+fn write_batch_of(
+    repo: &Repo,
+    name: &str,
+    excluded: &[&str],
+    held: &[Held],
+    ledger: Option<&[Tried]>,
+) {
+    let batch = format!("batches/{name}");
+    let mut manifest = String::new();
+    for Held { fixture, sidecar } in held {
+        repo.write_bytes(&format!("{batch}/{}", fixture.path), &fixture.bytes);
+        let json = Path::new(&fixture.path).with_extension("json");
+        repo.write_bytes(&format!("{batch}/{}", json.display()), sidecar);
+        let parsed: Sidecar = serde_json::from_slice(sidecar).expect("a sidecar");
+        let entry = Entry::describing(&fixture.path, &parsed);
+        manifest += &(serde_json::to_string(&entry).expect("an entry") + "\n");
+    }
+    let exclude: String = excluded
+        .iter()
+        .map(|sha256| {
+            let exclusion = Exclusion {
+                sha256: sha256.to_string(),
+                reason: "a test".to_string(),
+            };
+            serde_json::to_string(&exclusion).expect("an exclusion") + "\n"
+        })
+        .collect();
+    repo.write(&format!("{batch}/manifest.jsonl"), &manifest);
+    repo.write(&format!("{batch}/exclude.jsonl"), &exclude);
+    if let Some(ledger) = ledger {
+        let lines: String = ledger
+            .iter()
+            .map(|tried| serde_json::to_string(tried).expect("a ledger line") + "\n")
+            .collect();
+        repo.write(&format!("{batch}/repos.jsonl"), &lines);
+    }
+}
+
+/// The ledger line of a repository the batch took `kept` fixtures from, by label.
+fn tried(fixture: &Fixture, kept: &[(&str, u64)]) -> Tried {
+    let source = &fixture.sidecar.source;
+    serde_json::from_value(json!({
+        "host": source.host, "repo": source.repo, "found_by": ["a test"],
+        "outcome": "harvested", "head": null, "cutoff_rev": null, "depth": "full",
+        "commits": 1, "license": "MIT", "license_at_cutoff": null,
+        "qualified": {}, "unasked": {},
+        "kept": kept.iter().map(|(label, n)| (label.to_string(), *n)).collect::<HashMap<_, _>>(),
+    }))
+    .expect("a ledger line")
+}
+
+/// A sidecar turned into version 2, without what version 3 adds.
+fn to_version_2(sidecar: &mut Value) {
+    let history = sidecar["history"].as_object_mut().expect("a history");
+    for field in [
+        "truncated",
+        "first_committer_date",
+        "last_committer_date",
+        "marks",
+        "edits",
+    ] {
+        history.remove(field);
+    }
+    sidecar.as_object_mut().expect("a sidecar").remove("before");
+    sidecar["sidecar_version"] = json!(2);
+}
+
+/// A sidecar turned into version 3, with made-up evidence of the kind that version adds: an
+/// agent's commit for each AI commit the history counts.
+fn to_version_3(sidecar: &mut Value) {
+    let history = &mut sidecar["history"];
+    let edits: Vec<Value> = (0..history["ai_commits"].as_u64().expect("ai_commits"))
+        .map(|i| {
+            json!({"commit": format!("{i:040x}"), "date": "2026-01-01T00:00:00Z",
+                   "committed": "2026-01-01T00:00:00Z", "old": null,
+                   "new": format!("{:040x}", i + 1), "status": "agent"})
+        })
+        .collect();
+    let marks: Vec<Value> = history["ai_tools"]
+        .as_array()
+        .expect("ai_tools")
+        .iter()
+        .map(|tool| {
+            json!({"text": "An Agent <agent@example.com>", "tool": tool,
+                   "kind": "agent-identity", "place": "identity", "commits": 1})
+        })
+        .collect();
+    history["truncated"] = json!(false);
+    history["first_committer_date"] = history["first_commit_date"].clone();
+    history["last_committer_date"] = history["last_commit_date"].clone();
+    history["marks"] = json!(marks);
+    history["edits"] = json!(edits);
+    sidecar["sidecar_version"] = json!(3);
+}
+
+/// A `mixed` fixture of the tree, moved in its sidecar to the file `human` quotes, whose
+/// earlier revision it names.
+fn mixed_after<'a>(mixed: &'a Fixture, human: &Fixture) -> Held<'a> {
+    let source = &human.sidecar.source;
+    Held::edited(mixed, |sidecar| {
+        to_version_3(sidecar);
+        let commit = sidecar["source"]["commit"]
+            .as_str()
+            .expect("a commit")
+            .to_string();
+        sidecar["source"]["host"] = json!(source.host);
+        sidecar["source"]["repo"] = json!(source.repo);
+        sidecar["source"]["path"] = json!(source.path);
+        sidecar["source"]["url"] = json!(format!(
+            "https://{}/{}/blob/{commit}/{}",
+            source.host, source.repo, source.path
+        ));
+        sidecar["before"] = json!({
+            "sha256": human.sidecar.content.sha256, "commit": source.commit,
+            "date": "2021-01-01T00:00:00Z", "between": [],
+        });
+    })
+}
+
+/// One collected fixture of each label from the tree, none naming an earlier revision, which a
+/// batch of three would not hold.
+fn one_of_each() -> (Fixture, Fixture, Fixture) {
+    let mut fixtures = load_corpus();
+    let mut take = |label: &str| {
+        let index = fixtures
+            .iter()
+            .position(|fixture| fixture.category == label && fixture.sidecar.before.is_none())
+            .expect("a fixture of the label");
+        fixtures.swap_remove(index)
+    };
+    (take("human"), take("llm"), take("mixed"))
 }
 
 /// Two collected fixtures from the tree.
@@ -156,6 +319,106 @@ fn a_manifest_line_agrees_with_its_sidecar() {
         "batches/2026-01-01-01/manifest.jsonl",
         &(serde_json::to_string(&entry).expect("an entry") + "\n"),
     );
+    load_blobs(repo.root());
+}
+
+#[test]
+fn the_loader_reads_version_2_and_version_3_sidecars() {
+    let (human, llm, mixed) = one_of_each();
+    let repo = Repo::new();
+    write_batch_of(
+        &repo,
+        "2026-01-01-01",
+        &[],
+        &[Held::edited(&llm, to_version_2)],
+        None,
+    );
+    let later = [
+        Held::edited(&human, to_version_3),
+        Held::edited(&mixed, to_version_3),
+    ];
+    write_batch_of(&repo, "2026-01-02-01", &[], &later, None);
+    let versions: Vec<u32> = load_blobs(repo.root())
+        .iter()
+        .map(|fixture| fixture.sidecar.sidecar_version)
+        .collect();
+    assert_eq!(versions, [2, 3, 3]);
+}
+
+#[test]
+#[should_panic(expected = "is in version 3 and only there")]
+fn a_version_2_sidecar_has_none_of_what_version_3_adds() {
+    let (human, _, _) = one_of_each();
+    let repo = Repo::new();
+    let held = Held::edited(&human, |sidecar| {
+        to_version_3(sidecar);
+        sidecar["sidecar_version"] = json!(2);
+    });
+    write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
+    load_blobs(repo.root());
+}
+
+#[test]
+fn a_mixed_fixture_names_its_earlier_revision() {
+    let (human, _, mixed) = one_of_each();
+    let repo = Repo::new();
+    let held = [Held::as_is(&human), mixed_after(&mixed, &human)];
+    write_batch_of(&repo, "2026-01-01-01", &[], &held, None);
+    let fixtures = load_blobs(repo.root());
+    let before = fixtures[1].sidecar.before.as_ref().expect("a before");
+    assert_eq!(before.sha256, human.sidecar.content.sha256);
+}
+
+#[test]
+#[should_panic(expected = "names an earlier revision that is not a live human fixture")]
+fn the_earlier_revision_is_live() {
+    let (human, _, mixed) = one_of_each();
+    let repo = Repo::new();
+    write_batch_of(
+        &repo,
+        "2026-01-01-01",
+        &[],
+        &[mixed_after(&mixed, &human)],
+        None,
+    );
+    load_blobs(repo.root());
+}
+
+#[test]
+#[should_panic(expected = "names an earlier revision that is not a live human fixture")]
+fn an_earlier_revision_is_excluded_only_with_its_mixed_fixture() {
+    let (human, _, mixed) = one_of_each();
+    let repo = Repo::new();
+    let held = [Held::as_is(&human), mixed_after(&mixed, &human)];
+    write_batch_of(&repo, "2026-01-01-01", &[], &held, None);
+    write_batch_of(
+        &repo,
+        "2026-01-02-01",
+        &[&human.sidecar.content.sha256],
+        &[],
+        None,
+    );
+    load_blobs(repo.root());
+}
+
+#[test]
+fn a_batch_carries_its_ledger() {
+    let (human, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let ledger = [tried(&human, &[("human", 1)]), tried(&llm, &[("llm", 1)])];
+    let held = [Held::as_is(&human), Held::as_is(&llm)];
+    write_batch_of(&repo, "2026-01-01-01", &[], &held, Some(&ledger));
+    assert_eq!(load_blobs(repo.root()).len(), 2);
+}
+
+#[test]
+#[should_panic(expected = "repos.jsonl and the manifest disagree")]
+fn a_ledger_agrees_with_its_manifest() {
+    let (human, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let ledger = [tried(&human, &[("human", 2)]), tried(&llm, &[])];
+    let held = [Held::as_is(&human), Held::as_is(&llm)];
+    write_batch_of(&repo, "2026-01-01-01", &[], &held, Some(&ledger));
     load_blobs(repo.root());
 }
 

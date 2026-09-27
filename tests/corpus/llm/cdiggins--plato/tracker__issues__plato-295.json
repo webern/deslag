@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "tracker__issues__plato-295.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cdiggins/plato",
+    "path": "tracker/issues/plato-295.md",
+    "commit": "f6e02cf003d3af2929a3027ba1e45a8c4399fe8f",
+    "commit_date": "2026-09-26T14:20:50-04:00",
+    "url": "https://github.com/cdiggins/plato/blob/f6e02cf003d3af2929a3027ba1e45a8c4399fe8f/tracker/issues/plato-295.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2020-12-31T17:17:08-05:00",
+    "stars": 105,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-31T11:34:46-04:00",
+    "last_commit_date": "2026-08-03T00:22:38-04:00",
+    "last_commit_author": "Christopher Diggins",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-31T11:34:46-04:00",
+    "last_committer_date": "2026-08-03T00:22:38-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "be401590ace138e3e0b1c2ce91af97ae2dfa2fee",
+        "date": "2026-08-03T00:22:38-04:00",
+        "committed": "2026-08-03T00:22:38-04:00",
+        "old": "c4d85c94f5f836bfedc0001fbf955a15257b7c5b",
+        "new": "edcd1ea940003c686aa677960c05ad7e5a9f5de6",
+        "status": "agent"
+      },
+      {
+        "commit": "7628e867b01efa922e469433228021e56fdee4fa",
+        "date": "2026-07-31T11:34:46-04:00",
+        "committed": "2026-07-31T11:34:46-04:00",
+        "old": null,
+        "new": "c4d85c94f5f836bfedc0001fbf955a15257b7c5b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 5973,
+    "sha256": "5713d4bd75a482f8bd63cc4ae27af01d2e110cda5682dfd06e399640262f80e8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 110,
+    "words": 705,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/cdiggins--plato/tracker/issues/plato-295.md"
+}

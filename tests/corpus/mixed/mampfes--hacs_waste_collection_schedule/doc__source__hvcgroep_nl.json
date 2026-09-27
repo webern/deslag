@@ -1,0 +1,129 @@
+{
+  "sidecar_version": 3,
+  "fixture": "doc__source__hvcgroep_nl.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mampfes/hacs_waste_collection_schedule",
+    "path": "doc/source/hvcgroep_nl.md",
+    "commit": "3131c9f57ed562952473f90da9ecdc8dfd751bbe",
+    "commit_date": "2026-09-26T10:08:28+02:00",
+    "url": "https://github.com/mampfes/hacs_waste_collection_schedule/blob/3131c9f57ed562952473f90da9ecdc8dfd751bbe/doc/source/hvcgroep_nl.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-09T13:04:43+02:00",
+    "stars": 2245,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-05-31T00:07:08+02:00",
+    "last_commit_date": "2026-07-04T11:16:57+02:00",
+    "last_commit_author": "Ihor Vovk",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-05-31T00:07:08+02:00",
+    "last_committer_date": "2026-07-04T11:16:57+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9264db74ec900b4002226cfcc4c4d127614cfa9a",
+        "date": "2026-04-09T13:50:53+10:00",
+        "committed": "2026-04-09T13:50:53+10:00",
+        "old": "90cd4594e10d8e158b419fa3206875ec487cf88d",
+        "new": "a047f0ec16435f9c578a54c0eb40bfa4d5452475",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 8 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1557,
+    "sha256": "03b68209b82f791f811becf575741681de5af6abbab73f8791f935c16fa8d175",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 94,
+    "words": 163,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mampfes--hacs_waste_collection_schedule/doc/source/hvcgroep_nl.md",
+  "before": {
+    "sha256": "44cc1d4a5434565fb30425f6e25f0864f3869333f85da89f368c47fcc7ad2ab5",
+    "commit": "dbd0696160cbbe4ffe467474ffecfe3081dbf8e3",
+    "date": "2021-12-30T16:11:32+01:00",
+    "between": [
+      {
+        "commit": "3f859a087cfa1fb51fa7e488864631cb7f7749bd",
+        "date": "2026-07-04T11:16:57+02:00",
+        "committed": "2026-07-04T11:16:57+02:00",
+        "old": "3d8bc87e218fa83738a20d440534288f8846bf53",
+        "new": "cba51209447da6a933cc8a11274f76ab54e0db37",
+        "status": "late"
+      },
+      {
+        "commit": "6b5d58e7dc4ff4fe1b2f45f847a344c71000bbae",
+        "date": "2026-04-15T09:33:29+02:00",
+        "committed": "2026-04-15T15:33:29+08:00",
+        "old": "a047f0ec16435f9c578a54c0eb40bfa4d5452475",
+        "new": "3d8bc87e218fa83738a20d440534288f8846bf53",
+        "status": "late"
+      },
+      {
+        "commit": "ba0d6c93867911168759e95664bb3421aaf8b76a",
+        "date": "2026-04-02T01:43:43+02:00",
+        "committed": "2026-04-02T10:16:37+02:00",
+        "old": "6a3218003e01e5fabc095de0a7a5b37063c6018c",
+        "new": "90cd4594e10d8e158b419fa3206875ec487cf88d",
+        "status": "late"
+      },
+      {
+        "commit": "5f5ad013e1f1e9edae33930328aea3d711c265d2",
+        "date": "2023-04-05T21:44:52+02:00",
+        "committed": "2023-04-05T21:44:52+02:00",
+        "old": "9866d405eda9c9014d6c4e8de1032b3d812a8797",
+        "new": "6a3218003e01e5fabc095de0a7a5b37063c6018c",
+        "status": "late"
+      },
+      {
+        "commit": "2e00838638854976215a056e49f685d3ae26016f",
+        "date": "2023-04-02T14:25:07+02:00",
+        "committed": "2023-04-02T14:31:07+02:00",
+        "old": "5d55dae849bd6af0a17016f79dca27231b53b2f6",
+        "new": "9866d405eda9c9014d6c4e8de1032b3d812a8797",
+        "status": "late"
+      },
+      {
+        "commit": "d419c273d997f7872863ea06e75bf0ab08eb1e0b",
+        "date": "2022-12-24T09:32:13+01:00",
+        "committed": "2022-12-24T09:32:13+01:00",
+        "old": "4419e30b1789716b74aa26bfcc91aead5710e59c",
+        "new": "5d55dae849bd6af0a17016f79dca27231b53b2f6",
+        "status": "late"
+      }
+    ]
+  }
+}

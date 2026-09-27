@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__steno__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "stenolabs/stenoai",
+    "path": "skills/steno/README.md",
+    "commit": "d6d3f3c408d2a7aafc641f64a248ba7a4462a72f",
+    "commit_date": "2026-09-15T17:15:29+02:00",
+    "url": "https://github.com/stenolabs/stenoai/blob/d6d3f3c408d2a7aafc641f64a248ba7a4462a72f/skills/steno/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-08-30T20:31:36+01:00",
+    "stars": 1324,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-02T18:46:16+01:00",
+    "last_commit_date": "2026-08-02T18:46:16+01:00",
+    "last_commit_author": "Ruzin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-02T18:46:16+01:00",
+    "last_committer_date": "2026-08-02T18:46:16+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "05581e5c95d140752a697f6b49477de1a6bdf1da",
+        "date": "2026-08-02T18:46:16+01:00",
+        "committed": "2026-08-02T18:46:16+01:00",
+        "old": null,
+        "new": "8af93a7328271a97558cac4c280993a6aa12f496",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3674,
+    "sha256": "21e6d92284936070451a154b4565a06ab497a196822031657934b95d0ffe2fa7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 88,
+    "words": 560,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/stenolabs--stenoai/skills/steno/README.md"
+}

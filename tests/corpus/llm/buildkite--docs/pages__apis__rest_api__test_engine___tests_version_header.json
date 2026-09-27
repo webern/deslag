@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "pages__apis__rest_api__test_engine___tests_version_header.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "buildkite/docs",
+    "path": "pages/apis/rest_api/test_engine/_tests_version_header.md",
+    "commit": "cca8c5c950a7143269a90e7d8197901260e59240",
+    "commit_date": "2026-09-24T09:15:07+03:00",
+    "url": "https://github.com/buildkite/docs/blob/cca8c5c950a7143269a90e7d8197901260e59240/pages/apis/rest_api/test_engine/_tests_version_header.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 59,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-18T10:30:31+12:00",
+    "last_commit_date": "2026-08-18T10:30:31+12:00",
+    "last_commit_author": "Meghan Kradolfer",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-19T10:27:25+12:00",
+    "last_committer_date": "2026-08-19T10:27:25+12:00",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-01a011cd-fed2-71b0-9334-7fd55bfc6686",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5d28e1eb4ebad4fecdfa2c8ff8156f16a4bd10ae",
+        "date": "2026-08-18T10:30:31+12:00",
+        "committed": "2026-08-19T10:27:25+12:00",
+        "old": null,
+        "new": "54282dbad39d6820afd51115bae79d4d3a9af5d2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 849,
+    "sha256": "3f83afb80c272fbd95d50922635dca26b32bc86b38b159c5d57534337f79afe0",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 106,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/buildkite--docs/pages/apis/rest_api/test_engine/_tests_version_header.md"
+}

@@ -553,7 +553,12 @@ fn reported_emphasis(stderr: &str) -> Vec<(String, u64, f64)> {
 }
 
 /// Writes every fixture at its `layout_path` in `repo`, returning the paths in corpus order.
+///
+/// The walk honours the global git excludes file, which on some machines ignores a directory such
+/// as `.vscode` that a fixture's path holds. A `.ignore` that ignores nothing takes precedence over
+/// that file, so every machine walks the same corpus.
 fn place_real(repo: &Repo, fixtures: &[Fixture]) -> Vec<String> {
+    repo.write(".ignore", "!*\n");
     fixtures
         .iter()
         .enumerate()
@@ -955,29 +960,33 @@ fn the_corpus_banned_characters_agree_with_the_library() {
 }
 
 /// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 5400;
+const FIXED: usize = 6443;
 
 /// How many fixtures with banned characters it fixes whole.
-const FIXED_WHOLE: usize = 350;
+const FIXED_WHOLE: usize = 358;
 
 /// How many banned characters it leaves for each reason.
 const LEFT_BY_REASON: &[(&str, usize)] = &[
-    ("it is in HTML, which is not prose", 71),
+    (
+        "it is drawn as one with the character beside it, which the edit would leave behind",
+        2,
+    ),
+    ("it is in HTML, which is not prose", 56),
     ("it is in a URL", 1),
-    ("it is in the frontmatter, which is not prose", 23),
+    ("it is in the frontmatter, which is not prose", 40),
     (
         "the edit changes how the file reads, as when a line comes to start a list or a code \
          block, so reword it",
-        153,
+        143,
     ),
     (
         "the replacement holds letters or digits, a guess at meaning that can run into the text \
          beside it",
-        737,
+        732,
     ),
     (
         "the replacement is the default for a range of characters, a guess at what this one means",
-        14,
+        6,
     ),
 ];
 

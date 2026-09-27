@@ -1,0 +1,169 @@
+## Project overview
+
+The code in this repository is primarily divided into three top-level directories:
+
+- `scalameta/`: syntactic APIs like tokenizers, parsers, trees, quasiquotes and
+  pretty printers.
+- `semanticdb/`: semantic APIs like the SemanticDB protobuf schema, compiler plugin,
+  metacp to process classpaths and metap to pretty-print SemanticDB payloads.
+- `tests/`: unit and integration tests for both Scalameta and SemanticDB.
+
+## Quickstart
+
+### Native dependencies
+
+The build uses [sbt-protoc](https://github.com/thesamet/sbt-protoc) to generate protobuf files.
+Unfortunately, this relies on a native dependency bundled in a jarfile. If your Linux distribution does
+not support arbitary binaries (such as [NixOS](https://nixos.org) or [Guix](https://guix.gnu.org)) then
+you can force the sbt plugin to use a binary bundled by your distribution by adding the following setting
+to your sbt file.
+
+```shell
+PB.protocExecutable := file("/path/to/protoc")
+```
+
+## Narrowing what an IDE imports
+
+sbt builds each project of this build once per Scala version and platform. Several of those rows
+use the same source directories. Two system properties control which rows an IDE imports: the
+build sets `bspEnabled := false` on the other rows, and sbt then leaves them out of the BSP
+workspace.
+
+- `-Dide.scala=X` — sbt keeps only the rows for Scala version `X`.
+  - matches full or binary version. Ordinary projects build at one patch while the semanticdb rows
+    build at every patch, so a full version such as `2.13.18` selects the semanticdb row and
+    leaves the rest out.
+  - if unspecified or empty: keep all scala versions
+    - IntelliJ only: will be forced to `2.13`; see below why IntelliJ can't load multiple
+      versions.
+- `-Dide.platform=Y` — sbt keeps only the rows for the platforms in `Y`, a comma-separated list.
+  - matches `jvm`, `js`, or `native`
+  - if unspecified: keep every platform
+  - `-Dide.platform=`, with nothing after it, keeps every platform
+  - the Scala.js and Native rows stay out either way, because `commonJsSettings` and
+    `nativeSettings` turn BSP off for them
+
+IntelliJ cannot import the whole matrix. It puts the sources that several rows use into one module,
+and then compiles the Scala 2 and the Scala 3 sources of a project together. It starts sbt with
+`-Didea.managed=true`. If you do not set `-Dide.scala`, that property selects 2.13. To choose
+another version, add `-Dide.scala=X` under `Settings -> Build, Execution, Deployment -> Build Tools
+-> sbt -> VM parameters`, then reload the sbt project.
+
+These properties change what an IDE imports over BSP. A command-line `sbt` is not a BSP client, so
+it still sees every row and builds and tests them all.
+
+An sbt server runs with the system properties from its own command line. A later `sbt` in the same
+directory attaches to that server, so a property you pass then changes nothing. Run `sbt shutdown`
+before you test a change to these properties.
+
+## Testing
+
+The exact test command to run tests depends on what you are working on:
+
+- `tests2_13/testFull`: run all parser tests
+- `testsSemanticdb2_13`: run integration tests for semantic APIs.
+
+Tips to make your edit/test/debug workflow as productive as possible:
+
+- Use `testOnly` to speedup your workflow. Running `tests2_13/testFull` may
+  still be too slow if you want fast feedback while iterating on a small change.
+  It's recommended to use `tests2_13/testOnly *CUSTOM_SUITE` where `CUSTOM_SUITE`
+  is the name of your test suite.
+- Use `testOnly *CUSTOM_SUITE -- -z "TEST_NAME"` to target an individual test case
+  from a test suite.
+- Use the sbt command `save-expect` to make `ExpectSuite` pass. This command
+  writes to disk the output of the current behavior. The diff may be large,
+  please review it thoroughly to ensure that the new expected behavior is correct.
+  The name "expect tests" comes from
+  [this blog post](https://blog.janestreet.com/testing-with-expectations/).
+
+## Ticket Guidelines
+
+- **Bugs**:
+  - Contain steps to reproduce.
+  - Contain a code sample that exhibits the error.
+  - *Ideally* contain your scalameta/semanticdb versions.
+  - *Ideally* contain the scala version you are using.
+  - Inform us if the issue is blocking you with no visible workaround
+    - This will give the ticket priority
+- **Features**
+  - Show a code example of how that feature would be used.
+
+## Contribution Guidelines
+
+- **All code PRs follow the
+  [contributing guide](https://github.com/scalameta/.github/blob/main/CONTRIBUTING.md)
+  of the scalameta organization**. Format with `./bin/scalafmt`.
+- **Be prepared to discuss/argue-for your changes if you want them merged**!
+  You will probably need to refactor so your changes fit into the larger
+  codebase
+- **If your code is hard to unit test, and you don't want to unit test it,
+  that's ok**. But be prepared to argue why that's the case!
+- **It's entirely possible your changes won't be merged**, or will get ripped
+  out later. This is also the case for maintainer changes.
+- **Even a rejected/reverted PR is valuable**! It helps explore the solution
+  space, and know what works and what doesn't. For every line in the repo, at
+  least three lines were tried, committed, and reverted/refactored, and more
+  than 10 were tried without committing.
+
+## Contributing with agents
+
+Your agent reads [`AGENTS.md`](AGENTS.md) in this repository, which points at
+the organization's [`AGENTS.md`](https://github.com/scalameta/.github/blob/main/AGENTS.md).
+The section "Contributing with agents" of the organization's guide applies to
+you and to the agent.
+
+## Documentation Guidelines
+
+- Prefer the terms `enrichment` and `extension` as opposed to `pimp`
+
+In case of any questions, don't hesitate to ask on our
+[Discord](https://discord.gg/fWRUgyqKyD).
+
+(these guidelines have been adapted from
+https://github.com/lihaoyi/ammonite#contribution-guidelines)
+
+
+### Running the site locally
+
+The website is built using [Docusaurus](https://docusaurus.io/).
+
+For running the website locally, you'll need:
+
+- `yarn` (https://yarnpkg.com/lang/en/docs/install-ci/)
+- `sbt` (https://www.scala-sbt.org/1.0/docs/Setup.html)
+
+In addition to Docusaurus, we preprocess the markdown files using:
+
+- [mdoc](https://github.com/scalameta/mdoc), to type-check, interpret Scala
+  code fences, and to generate the site using its [built-in Docusaurus support](https://scalameta.org/mdoc/docs/docusaurus.html).
+
+The first step is to then preprocess the markdown files. You can do it with:
+
+```sh
+sbt
+docs/mdoc -w
+```
+
+This command will watch for new changes for Markdown files in the `docs/`
+directory and regenerate the files when they change.
+
+You can now build and launch the website using these commands:
+
+```sh
+cd website
+yarn install # only the first time, to install the dependencies
+yarn start
+```
+
+Now visit http://localhost:3000 and you should see a local version of the
+website. New changes should trigger a reload in the browser.
+
+## Back publishing
+
+To release a new version of the SemanticDB compiler plugin, you need to back publish it for a specific Scala version. To do this push a tag to the scalameta repository in a form of:
+
+  `v4.13.43@2.13.17@releaseSemanticdb`
+
+This will trigger a release workflow that will publish the plugin artifact to
+Sonatype. Replace `v4.13.4` and `2.13.17` with the version of the release you are making.

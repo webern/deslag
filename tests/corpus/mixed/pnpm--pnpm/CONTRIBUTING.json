@@ -1,0 +1,428 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "pnpm/pnpm",
+    "path": "CONTRIBUTING.md",
+    "commit": "7379c954f3157eaa0413de2773db517d09a9c23e",
+    "commit_date": "2026-09-27T06:50:58+05:30",
+    "url": "https://github.com/pnpm/pnpm/blob/7379c954f3157eaa0413de2773db517d09a9c23e/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 36664,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 45,
+    "first_commit_date": "2018-01-01T14:06:24+02:00",
+    "last_commit_date": "2026-09-18T02:09:48+02:00",
+    "last_commit_author": "Zoltan Kochan",
+    "authors": 13,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-01T14:06:24+02:00",
+    "last_committer_date": "2026-09-18T02:09:48+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01Gg6uVUzLw1MniCLC81TQjP",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01HwJS1pAz9HHQpJWEJAiaUu",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "03dee70a54e0f9f6b0a240162f0114f0509554e0",
+        "date": "2026-09-16T01:51:02+02:00",
+        "committed": "2026-09-16T01:51:02+02:00",
+        "old": "dd700b2a548eb5ceb49257c9c18c403df600e1f0",
+        "new": "0280a9fe3b1328f37f5a07b7f90ace79a0fa339e",
+        "status": "squash"
+      },
+      {
+        "commit": "822f2dcb231c2c158e20a0f44dffd11c297d0d52",
+        "date": "2026-09-11T02:27:47+02:00",
+        "committed": "2026-09-11T02:27:47+02:00",
+        "old": "f00b32f3ff3121576b30e2864481b90d8d05a079",
+        "new": "2805a1f5f17237acfcec744639d7d53619ba5fcb",
+        "status": "agent"
+      },
+      {
+        "commit": "4d32532cc7250156f8d8ce9ee0fa27369ed8394e",
+        "date": "2026-09-10T21:17:43+02:00",
+        "committed": "2026-09-10T21:17:43+02:00",
+        "old": "93c923be73a3055bbd39b0dc0efa2fceb4024179",
+        "new": "f00b32f3ff3121576b30e2864481b90d8d05a079",
+        "status": "squash"
+      },
+      {
+        "commit": "94d1b1f0411c9c861b27a9d53cff54a664cd4800",
+        "date": "2026-09-02T17:33:04+02:00",
+        "committed": "2026-09-02T17:33:04+02:00",
+        "old": "79f371c6e98ddaaf04c387430f420e4911ea17ed",
+        "new": "16d29195b1288cbf94aa959c77c32fa609802372",
+        "status": "squash"
+      },
+      {
+        "commit": "78c2245fd43e818a2beb9f7431e4262b3f9a68c2",
+        "date": "2026-07-10T20:13:09+02:00",
+        "committed": "2026-07-10T20:13:09+02:00",
+        "old": "ac8c558416031f4e99f02d4e21b956b0ec60d66a",
+        "new": "12dca197a4613cbd0ff7f8337cecd69928b92c9a",
+        "status": "agent"
+      },
+      {
+        "commit": "8ecbbd356ca74c3819edabd6dfd37a9620d63292",
+        "date": "2026-07-09T14:07:44+02:00",
+        "committed": "2026-07-09T14:07:44+02:00",
+        "old": "e89a1f903d35d05e0f5d4e007a42e04b2eea9451",
+        "new": "c97621d720c215df44897db0e5af78f75dde35aa",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "9 of its 45 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code); the clone's history ends at 0a404c2a18, of 2018-01-01, so it may be older"
+  },
+  "content": {
+    "size_bytes": 24721,
+    "sha256": "488efb3b2fb8bae545eda2551e1bb8b42a42c14b593de39a0ecab3905ba46301",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 447,
+    "words": 3602,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pnpm--pnpm/CONTRIBUTING.md",
+  "before": {
+    "sha256": "0d2ffb61a24a0afeb1fd487cc2a050556b2400a3f6cfc61a2cbc6c1aead33c9c",
+    "commit": "732d4962f5f26b241677cb341df496887dab74ae",
+    "date": "2021-12-31T22:41:54+02:00",
+    "between": [
+      {
+        "commit": "e1b573d31d2f5f2d94e35840acf3408a850ef36e",
+        "date": "2026-09-18T02:09:48+02:00",
+        "committed": "2026-09-18T02:09:48+02:00",
+        "old": "b7e8f511edbec75e6d90d80657ed0a91690d7c40",
+        "new": "d0a8b0bce84e1aeb22169a6d90201eb7b4f761c5",
+        "status": "late"
+      },
+      {
+        "commit": "6d7364856528de12cf54d2676ef04a5ee23da468",
+        "date": "2026-09-16T22:26:31+02:00",
+        "committed": "2026-09-16T22:26:31+02:00",
+        "old": "0280a9fe3b1328f37f5a07b7f90ace79a0fa339e",
+        "new": "b7e8f511edbec75e6d90d80657ed0a91690d7c40",
+        "status": "late"
+      },
+      {
+        "commit": "03dee70a54e0f9f6b0a240162f0114f0509554e0",
+        "date": "2026-09-16T01:51:02+02:00",
+        "committed": "2026-09-16T01:51:02+02:00",
+        "old": "dd700b2a548eb5ceb49257c9c18c403df600e1f0",
+        "new": "0280a9fe3b1328f37f5a07b7f90ace79a0fa339e",
+        "status": "squash"
+      },
+      {
+        "commit": "2ea04e6e52bd5091ea8cf12c394c671d31ec8b10",
+        "date": "2026-09-13T22:39:50+02:00",
+        "committed": "2026-09-13T22:39:50+02:00",
+        "old": "2805a1f5f17237acfcec744639d7d53619ba5fcb",
+        "new": "dd700b2a548eb5ceb49257c9c18c403df600e1f0",
+        "status": "late"
+      },
+      {
+        "commit": "4d32532cc7250156f8d8ce9ee0fa27369ed8394e",
+        "date": "2026-09-10T21:17:43+02:00",
+        "committed": "2026-09-10T21:17:43+02:00",
+        "old": "93c923be73a3055bbd39b0dc0efa2fceb4024179",
+        "new": "f00b32f3ff3121576b30e2864481b90d8d05a079",
+        "status": "squash"
+      },
+      {
+        "commit": "c05be611eca799e25fb02b2bb76dd31a2a16c17c",
+        "date": "2026-09-09T04:16:37-07:00",
+        "committed": "2026-09-09T13:16:37+02:00",
+        "old": "16d29195b1288cbf94aa959c77c32fa609802372",
+        "new": "93c923be73a3055bbd39b0dc0efa2fceb4024179",
+        "status": "late"
+      },
+      {
+        "commit": "94d1b1f0411c9c861b27a9d53cff54a664cd4800",
+        "date": "2026-09-02T17:33:04+02:00",
+        "committed": "2026-09-02T17:33:04+02:00",
+        "old": "79f371c6e98ddaaf04c387430f420e4911ea17ed",
+        "new": "16d29195b1288cbf94aa959c77c32fa609802372",
+        "status": "squash"
+      },
+      {
+        "commit": "f4d196afd19d35129edc032a1ad32e15d7ed6365",
+        "date": "2026-08-25T15:03:50+02:00",
+        "committed": "2026-08-25T15:03:50+02:00",
+        "old": "f1087f78df3d02633515dfb85e5ebe89fa85a4bf",
+        "new": "79f371c6e98ddaaf04c387430f420e4911ea17ed",
+        "status": "late"
+      },
+      {
+        "commit": "11f703c7f35ae5ee333b5d0a74f0cd45408aa3d2",
+        "date": "2026-08-18T04:50:00-04:00",
+        "committed": "2026-08-18T10:50:00+02:00",
+        "old": "af9c1ab5e748ad7556ebae5bc263e6c25abd8e3d",
+        "new": "f1087f78df3d02633515dfb85e5ebe89fa85a4bf",
+        "status": "late"
+      },
+      {
+        "commit": "5b063b9e32d41fd30adface120e592ebc55c9762",
+        "date": "2026-07-30T13:48:58+02:00",
+        "committed": "2026-07-30T13:48:58+02:00",
+        "old": "12dca197a4613cbd0ff7f8337cecd69928b92c9a",
+        "new": "af9c1ab5e748ad7556ebae5bc263e6c25abd8e3d",
+        "status": "late"
+      },
+      {
+        "commit": "8e17c3d36643afcb146b3bdec5756db8701e6b31",
+        "date": "2026-07-10T18:06:56+02:00",
+        "committed": "2026-07-10T18:06:56+02:00",
+        "old": "c97621d720c215df44897db0e5af78f75dde35aa",
+        "new": "ac8c558416031f4e99f02d4e21b956b0ec60d66a",
+        "status": "late"
+      },
+      {
+        "commit": "8ecbbd356ca74c3819edabd6dfd37a9620d63292",
+        "date": "2026-07-09T14:07:44+02:00",
+        "committed": "2026-07-09T14:07:44+02:00",
+        "old": "e89a1f903d35d05e0f5d4e007a42e04b2eea9451",
+        "new": "c97621d720c215df44897db0e5af78f75dde35aa",
+        "status": "squash"
+      },
+      {
+        "commit": "c2414e8236b13f3137079cbc1c665af9adfb7417",
+        "date": "2026-06-18T11:47:53+02:00",
+        "committed": "2026-06-18T11:47:53+02:00",
+        "old": "1eee8549f3f91fb952b23f98fcc4199ee2bace88",
+        "new": "e89a1f903d35d05e0f5d4e007a42e04b2eea9451",
+        "status": "late"
+      },
+      {
+        "commit": "7f2ac5ddc02b4cc3dac6b47f3b14a784af4c06bf",
+        "date": "2026-06-13T01:44:47+02:00",
+        "committed": "2026-06-13T01:44:47+02:00",
+        "old": "95274dec007a83fcb2deeda3411abf7901408f6e",
+        "new": "1eee8549f3f91fb952b23f98fcc4199ee2bace88",
+        "status": "late"
+      },
+      {
+        "commit": "2d061b74a66fba4224787b68e701eecd45bbcce8",
+        "date": "2026-04-29T00:36:03+02:00",
+        "committed": "2026-04-29T22:58:24+02:00",
+        "old": "d8919628f964b4bc181065c941d0084b7b723c87",
+        "new": "a1e9379b636fb9c4841d06d9e3c0aae8534f3e69",
+        "status": "late"
+      },
+      {
+        "commit": "3f37d17b234cd04d1348f160ea451df582468ce5",
+        "date": "2026-04-29T00:36:03+02:00",
+        "committed": "2026-04-29T00:36:03+02:00",
+        "old": "0d987f45a98eeafdea7cf6fc1a985103e55a7e07",
+        "new": "95274dec007a83fcb2deeda3411abf7901408f6e",
+        "status": "late"
+      },
+      {
+        "commit": "890efaf472e29ddb4ff5189759899388c13106f6",
+        "date": "2026-04-24T09:09:18+02:00",
+        "committed": "2026-04-24T09:09:18+02:00",
+        "old": "d8919628f964b4bc181065c941d0084b7b723c87",
+        "new": "0d987f45a98eeafdea7cf6fc1a985103e55a7e07",
+        "status": "late"
+      },
+      {
+        "commit": "b1da07eb043cd93563b2aee99f7bf4726f7980a6",
+        "date": "2026-03-27T00:54:42+11:00",
+        "committed": "2026-03-26T14:54:42+01:00",
+        "old": "e031290ee23cdd0f4ef34cc9fa8079e3edb175b0",
+        "new": "d8919628f964b4bc181065c941d0084b7b723c87",
+        "status": "late"
+      },
+      {
+        "commit": "f7960244ea8251ccef9cf8f93a2b71f0153342bd",
+        "date": "2026-03-20T18:23:09+08:00",
+        "committed": "2026-03-20T11:23:09+01:00",
+        "old": "1d542ad532a3b42b333dbb3c1242698c9c54169d",
+        "new": "e031290ee23cdd0f4ef34cc9fa8079e3edb175b0",
+        "status": "late"
+      },
+      {
+        "commit": "39afb24ce608ab1f3917d47f9758f5015b811f3f",
+        "date": "2026-03-11T22:59:42+01:00",
+        "committed": "2026-03-11T22:59:42+01:00",
+        "old": "1ac16ef1bf8c232c28e8f060945d5d5c0728a490",
+        "new": "1d542ad532a3b42b333dbb3c1242698c9c54169d",
+        "status": "late"
+      },
+      {
+        "commit": "c50357f1b8b61c529571d572c04628e46b814178",
+        "date": "2026-01-26T15:04:22+01:00",
+        "committed": "2026-01-26T15:04:22+01:00",
+        "old": "7cdd6c2bfe7980f8b13e896b2a250cc1a03c26c9",
+        "new": "1ac16ef1bf8c232c28e8f060945d5d5c0728a490",
+        "status": "late"
+      },
+      {
+        "commit": "02c8ec50cb0fe5abd3e3ebbf4d3422b85910b295",
+        "date": "2026-01-16T16:31:31+01:00",
+        "committed": "2026-01-16T16:31:31+01:00",
+        "old": "26d4326a96d897254c86e01728e6fdb01bc4a613",
+        "new": "7cdd6c2bfe7980f8b13e896b2a250cc1a03c26c9",
+        "status": "late"
+      },
+      {
+        "commit": "34738e00e56b122f344eeda06d6226f767a0ba6e",
+        "date": "2025-03-09T17:29:36-04:00",
+        "committed": "2025-03-09T22:29:36+01:00",
+        "old": "b7941296ee6aa9a19f9bdbae3e60de30f7758e93",
+        "new": "26d4326a96d897254c86e01728e6fdb01bc4a613",
+        "status": "late"
+      },
+      {
+        "commit": "ccf5fbc1b222cc9b9ed4e9e40717afc429d8ab2b",
+        "date": "2024-10-14T18:00:18-04:00",
+        "committed": "2024-10-15T00:00:18+02:00",
+        "old": "26d4326a96d897254c86e01728e6fdb01bc4a613",
+        "new": "b7941296ee6aa9a19f9bdbae3e60de30f7758e93",
+        "status": "late"
+      },
+      {
+        "commit": "4d5bcba0e7c81569430f2ed00db8b3fc9c2b53d7",
+        "date": "2024-05-19T19:15:14+09:00",
+        "committed": "2024-05-19T12:15:14+02:00",
+        "old": "9205e0240c403e2910ceee5cc5dc7615a35c5582",
+        "new": "26d4326a96d897254c86e01728e6fdb01bc4a613",
+        "status": "late"
+      },
+      {
+        "commit": "6e8a5bc6ebd07cf0efd873869880fd8e962ed7c4",
+        "date": "2024-05-19T04:05:27+09:00",
+        "committed": "2024-05-18T21:05:27+02:00",
+        "old": "f9a27e0d1c4f34a2011aaffd4df5c10a6a242246",
+        "new": "9205e0240c403e2910ceee5cc5dc7615a35c5582",
+        "status": "late"
+      },
+      {
+        "commit": "e60005635dad3d52e104a3b338da89aad4921616",
+        "date": "2023-07-28T14:24:11+03:00",
+        "committed": "2023-07-28T14:24:11+03:00",
+        "old": "ba2405b7c3cc169922a600b679978e0c2f64b85c",
+        "new": "f9a27e0d1c4f34a2011aaffd4df5c10a6a242246",
+        "status": "late"
+      },
+      {
+        "commit": "a70c77ac43b6bc89704d482085734ae564bc24de",
+        "date": "2023-07-15T23:00:41+03:00",
+        "committed": "2023-07-15T23:00:41+03:00",
+        "old": "ceaecb813b7bfc69543e8ae8a1eea79f5855b3a2",
+        "new": "ba2405b7c3cc169922a600b679978e0c2f64b85c",
+        "status": "late"
+      },
+      {
+        "commit": "41562584abd2bcde1e9664fbd54adf64579d031e",
+        "date": "2023-04-05T17:47:51+08:00",
+        "committed": "2023-04-05T12:47:51+03:00",
+        "old": "96e00f7b91ea56219b49fd2affe03a1f2449849f",
+        "new": "ceaecb813b7bfc69543e8ae8a1eea79f5855b3a2",
+        "status": "late"
+      },
+      {
+        "commit": "4ca53b0b50220da5e1aa8345817d04f09cda0c7b",
+        "date": "2022-11-20T01:35:22+02:00",
+        "committed": "2022-11-20T01:35:22+02:00",
+        "old": "239626051ba69ae5101f50f9665e9b2f218e5091",
+        "new": "96e00f7b91ea56219b49fd2affe03a1f2449849f",
+        "status": "late"
+      },
+      {
+        "commit": "678933a9b497c51a19d5323b45ee779a03bbb23b",
+        "date": "2022-08-31T15:50:39-04:00",
+        "committed": "2022-08-31T22:50:39+03:00",
+        "old": "d727dfbe1c87cac2d50de9629ad6eebfaa410104",
+        "new": "239626051ba69ae5101f50f9665e9b2f218e5091",
+        "status": "late"
+      },
+      {
+        "commit": "7f192f195ccd957e534fc81647225bc1e0e1ded5",
+        "date": "2022-07-02T23:24:45+03:00",
+        "committed": "2022-07-02T23:24:45+03:00",
+        "old": "27d6cf2392e7a672918d746ef01908e35577bbf7",
+        "new": "d727dfbe1c87cac2d50de9629ad6eebfaa410104",
+        "status": "late"
+      },
+      {
+        "commit": "9b41cab3ff81d8cdb5656b6857eaec5a16519951",
+        "date": "2022-05-07T21:03:14+03:00",
+        "committed": "2022-05-07T21:03:14+03:00",
+        "old": "4a7db916ddc73d4c7508828e8ccd655c90cbe8c6",
+        "new": "27d6cf2392e7a672918d746ef01908e35577bbf7",
+        "status": "late"
+      },
+      {
+        "commit": "9f5ef0214fd26e8743f1e38226fde3887b429cde",
+        "date": "2022-04-30T19:08:40+03:00",
+        "committed": "2022-04-30T19:08:40+03:00",
+        "old": "a4a443a380407dd061e1397522699004b2b978e4",
+        "new": "4a7db916ddc73d4c7508828e8ccd655c90cbe8c6",
+        "status": "late"
+      }
+    ]
+  }
+}

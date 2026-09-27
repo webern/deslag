@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Docs__findings-cli-history.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "danikf/tik4net",
+    "path": "Docs/findings-cli-history.md",
+    "commit": "0adf29b48ef156ef5e756ddbd6fa88dc4e1ccc9f",
+    "commit_date": "2026-09-25T20:58:29+02:00",
+    "url": "https://github.com/danikf/tik4net/blob/0adf29b48ef156ef5e756ddbd6fa88dc4e1ccc9f/Docs/findings-cli-history.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-08-16T20:59:34+02:00",
+    "stars": 198,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-16T00:36:16+02:00",
+    "last_commit_date": "2026-09-05T23:33:41+02:00",
+    "last_commit_author": "Daniel Frantík",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-16T00:36:16+02:00",
+    "last_committer_date": "2026-09-05T23:33:41+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ed2ba22c37e17bb60cd8678774546f47f54b3f77",
+        "date": "2026-09-05T23:33:41+02:00",
+        "committed": "2026-09-05T23:33:41+02:00",
+        "old": "65aa2b9d111b6c648c834e46ed21d3c467f48dcf",
+        "new": "1aaba46662b83dd8fd9de84de11ec440d9be0e4e",
+        "status": "agent"
+      },
+      {
+        "commit": "9d9ebfffe900109935f15474e1a697c64ce55747",
+        "date": "2026-08-16T00:36:16+02:00",
+        "committed": "2026-08-16T00:36:16+02:00",
+        "old": null,
+        "new": "65aa2b9d111b6c648c834e46ed21d3c467f48dcf",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11153,
+    "sha256": "2acf8fa46dae2b97ddeef7095dd0e9b3af4f875e39165f9768e42a6b5f7f46a3",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 160,
+    "words": 1799,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/danikf--tik4net/Docs/findings-cli-history.md"
+}

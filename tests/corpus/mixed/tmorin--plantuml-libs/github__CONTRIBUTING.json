@@ -1,0 +1,87 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "tmorin/plantuml-libs",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "16e396e5ac0b3802a9995f90576cd833a71eda91",
+    "commit_date": "2026-08-01T19:19:26+02:00",
+    "url": "https://github.com/tmorin/plantuml-libs/blob/16e396e5ac0b3802a9995f90576cd833a71eda91/.github/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-04-16T10:24:50+02:00",
+    "stars": 167,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-11-05T10:39:55+01:00",
+    "last_commit_date": "2026-08-01T19:11:38+02:00",
+    "last_commit_author": "tmorin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-11-05T10:39:55+01:00",
+    "last_committer_date": "2026-08-01T19:11:38+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_015YvTxRDFZM6WWYipVBUSzt",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cebe3a234e652ea31d8576db240d9b29a69adea2",
+        "date": "2026-08-01T19:11:38+02:00",
+        "committed": "2026-08-01T19:11:38+02:00",
+        "old": "a7dd6effc9d22c01474b4997f5e439d40ccdff69",
+        "new": "436518044e6ad15d82e0bbced7911a952f281662",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 2 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 505,
+    "sha256": "25e352b050f562e7a5625c097c70d6e4024d75f3e40df900b77175d776d2de1d",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 9,
+    "words": 60,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tmorin--plantuml-libs/.github/CONTRIBUTING.md",
+  "before": {
+    "sha256": "74296540934eafe165a104adf557a152719f52577644d97385d5ba67db605757",
+    "commit": "600db92bb352f1bd9085beb4f3fefbeb8eedf52b",
+    "date": "2021-12-20T10:25:13+01:00",
+    "between": []
+  }
+}

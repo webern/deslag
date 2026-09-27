@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "documentation__decisions__0004-the-mailbox-holds-the-delivered-artifact.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "emcd/agentmux",
+    "path": "documentation/decisions/0004-the-mailbox-holds-the-delivered-artifact.md",
+    "commit": "912f32bae2322cb2dff969decec9ce875ba5574b",
+    "commit_date": "2026-09-22T20:28:09-07:00",
+    "url": "https://github.com/emcd/agentmux/blob/912f32bae2322cb2dff969decec9ce875ba5574b/documentation/decisions/0004-the-mailbox-holds-the-delivered-artifact.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-25T18:37:22-08:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-08-31T08:49:27-07:00",
+    "last_commit_date": "2026-09-01T12:43:37-07:00",
+    "last_commit_author": "Eric McDonald",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-01T23:42:15-07:00",
+    "last_committer_date": "2026-09-01T23:42:15-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b56cac01888919a958df9d729d6e013867cc3fe3",
+        "date": "2026-09-01T12:43:37-07:00",
+        "committed": "2026-09-01T23:42:15-07:00",
+        "old": "7864568892291bd0963294dc7c5c61495a3f2c1a",
+        "new": "0e4317d0305602efbedb3be9efff5cd6fb43d4c0",
+        "status": "agent"
+      },
+      {
+        "commit": "6cea0261293fec567fbdad19af3a59d0ea28cf60",
+        "date": "2026-08-31T09:36:46-07:00",
+        "committed": "2026-09-01T23:42:15-07:00",
+        "old": "8f88bd36c792e296faf29fac408fb35aae4f4a2a",
+        "new": "7864568892291bd0963294dc7c5c61495a3f2c1a",
+        "status": "agent"
+      },
+      {
+        "commit": "133820597099e0819767adc727bfa9209f9126f3",
+        "date": "2026-08-31T08:49:27-07:00",
+        "committed": "2026-09-01T23:42:15-07:00",
+        "old": null,
+        "new": "8f88bd36c792e296faf29fac408fb35aae4f4a2a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3577,
+    "sha256": "d4f83c13cfe01f1b415f06afa7d9331a5323d86b8203800a11443a8a8374ee6f",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 70,
+    "words": 618,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/emcd--agentmux/documentation/decisions/0004-the-mailbox-holds-the-delivered-artifact.md"
+}

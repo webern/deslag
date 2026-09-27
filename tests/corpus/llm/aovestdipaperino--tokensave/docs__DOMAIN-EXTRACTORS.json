@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__DOMAIN-EXTRACTORS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "aovestdipaperino/tokensave",
+    "path": "docs/DOMAIN-EXTRACTORS.md",
+    "commit": "fdc153684e73d69673c5cf75788b4d3a70f7d2cd",
+    "commit_date": "2026-09-27T05:11:10+02:00",
+    "url": "https://github.com/aovestdipaperino/tokensave/blob/fdc153684e73d69673c5cf75788b4d3a70f7d2cd/docs/DOMAIN-EXTRACTORS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-26T11:05:47+01:00",
+    "stars": 649,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-30T14:49:46+02:00",
+    "last_commit_date": "2026-04-30T14:49:46+02:00",
+    "last_commit_author": "Paperino",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-30T14:49:46+02:00",
+    "last_committer_date": "2026-04-30T14:49:46+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5d6c25d934a666d9df5093d14fee1c86cce6d671",
+        "date": "2026-04-30T14:49:46+02:00",
+        "committed": "2026-04-30T14:49:46+02:00",
+        "old": null,
+        "new": "93492faac7845651fc372fe9f7683aea4471e335",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 14225,
+    "sha256": "32c4385f44dcbd511b618ed3c5ad4787979ddd288a10225acae5cfa720d51884",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 298,
+    "words": 2099,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aovestdipaperino--tokensave/docs/DOMAIN-EXTRACTORS.md"
+}

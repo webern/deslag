@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "changeset__merge-overlapping-peer-ranges.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "pnpm/pnpm",
+    "path": ".changeset/merge-overlapping-peer-ranges.md",
+    "commit": "7379c954f3157eaa0413de2773db517d09a9c23e",
+    "commit_date": "2026-09-27T06:50:58+05:30",
+    "url": "https://github.com/pnpm/pnpm/blob/7379c954f3157eaa0413de2773db517d09a9c23e/.changeset/merge-overlapping-peer-ranges.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 36664,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-27T02:04:23+02:00",
+    "last_commit_date": "2026-09-27T02:04:23+02:00",
+    "last_commit_author": "Zoltan Kochan",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-27T02:04:23+02:00",
+    "last_committer_date": "2026-09-27T02:04:23+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8a07528946af215dbe831326227b5d512438800e",
+        "date": "2026-09-27T02:04:23+02:00",
+        "committed": "2026-09-27T02:04:23+02:00",
+        "old": null,
+        "new": "d030e88599165f541a028bc97e7d484cb740374b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 227,
+    "sha256": "e8e22a6e4a51021faae89f107fdebff7b9665330c81e7e82acdab90efdc80c25",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 5,
+    "words": 25,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pnpm--pnpm/.changeset/merge-overlapping-peer-ranges.md"
+}

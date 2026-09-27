@@ -1,0 +1,288 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "WikipediaBrown/napkin",
+    "path": "README.md",
+    "commit": "e3ea06eb45b68ae29946227ec2322c709af17335",
+    "commit_date": "2026-07-17T17:55:45-07:00",
+    "url": "https://github.com/WikipediaBrown/napkin/blob/e3ea06eb45b68ae29946227ec2322c709af17335/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2021-04-02T17:07:57-07:00",
+    "stars": 3,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 45,
+    "first_commit_date": "2021-04-02T17:07:57-07:00",
+    "last_commit_date": "2026-07-15T21:17:36-07:00",
+    "last_commit_author": "WikipediaBrown",
+    "authors": 2,
+    "ai_commits": 26,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-04-02T17:07:57-07:00",
+    "last_committer_date": "2026-07-15T21:17:36-07:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 12
+      },
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 12
+      },
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8367b6fcbf0be0aedd00fa388e820b42744215cd",
+        "date": "2026-07-15T21:17:36-07:00",
+        "committed": "2026-07-15T21:17:36-07:00",
+        "old": "f15fe648b962f94f2fa1c0cd621f2ffde5b373fd",
+        "new": "7669a8ed1119a6beb2ad61ad845987240055765a",
+        "status": "agent"
+      },
+      {
+        "commit": "17a250fbec6c839751cc5fdefc7531e75cb68182",
+        "date": "2026-07-15T20:11:24-07:00",
+        "committed": "2026-07-15T20:11:24-07:00",
+        "old": "ed91e24aa8d77f4cf5888ae1859f145c0bbca5c1",
+        "new": "f15fe648b962f94f2fa1c0cd621f2ffde5b373fd",
+        "status": "agent"
+      },
+      {
+        "commit": "c406133d6d33a0be4753b7aeeb7564fff17963fc",
+        "date": "2026-07-02T13:19:18-07:00",
+        "committed": "2026-07-02T13:19:18-07:00",
+        "old": "283d26491426887d8ae794c801ce2fc07c2f20f4",
+        "new": "ed91e24aa8d77f4cf5888ae1859f145c0bbca5c1",
+        "status": "agent"
+      },
+      {
+        "commit": "914130a942e88adbf84eecf1fc94e0f53bef1e53",
+        "date": "2026-07-02T13:07:57-07:00",
+        "committed": "2026-07-02T13:07:57-07:00",
+        "old": "a3e233aa6ff6d3ad337ad755291ab4e10395ff4d",
+        "new": "283d26491426887d8ae794c801ce2fc07c2f20f4",
+        "status": "agent"
+      },
+      {
+        "commit": "fec22e1bc7487a5efca7db3e45b23bc20c20785a",
+        "date": "2026-07-02T12:56:00-07:00",
+        "committed": "2026-07-02T12:56:00-07:00",
+        "old": "724501a5b2ac404e506364c4e2fd5ce3566f25ad",
+        "new": "a3e233aa6ff6d3ad337ad755291ab4e10395ff4d",
+        "status": "agent"
+      },
+      {
+        "commit": "5e4cf9cd8db59cccb207313782db339f20f59193",
+        "date": "2026-07-02T12:43:49-07:00",
+        "committed": "2026-07-02T12:43:49-07:00",
+        "old": "63ef7d16ec9b3c602ce5ee5138aba283364e6051",
+        "new": "724501a5b2ac404e506364c4e2fd5ce3566f25ad",
+        "status": "agent"
+      },
+      {
+        "commit": "29e145a36a1a20d12286bfc99cade762ab8d2404",
+        "date": "2026-07-02T12:33:56-07:00",
+        "committed": "2026-07-02T12:33:56-07:00",
+        "old": "71128b6ce3098783e01966b3e3f9f6636a15eaa2",
+        "new": "63ef7d16ec9b3c602ce5ee5138aba283364e6051",
+        "status": "agent"
+      },
+      {
+        "commit": "37cf30d24cf3fb66b3629e626159c577d28bc90f",
+        "date": "2026-07-02T06:55:45-07:00",
+        "committed": "2026-07-02T06:55:45-07:00",
+        "old": "24f72e20534a6fb7fa631e066fafb7c80dc825a3",
+        "new": "71128b6ce3098783e01966b3e3f9f6636a15eaa2",
+        "status": "agent"
+      },
+      {
+        "commit": "cce59826d08271137f259164dc53111078670c39",
+        "date": "2026-07-02T06:37:19-07:00",
+        "committed": "2026-07-02T06:37:19-07:00",
+        "old": "568b5da6bf164864c8a7d6db161d69607e971722",
+        "new": "24f72e20534a6fb7fa631e066fafb7c80dc825a3",
+        "status": "agent"
+      },
+      {
+        "commit": "9af4e8cbd43b373c8c063c718ad74490be7c4588",
+        "date": "2026-07-02T03:24:24-07:00",
+        "committed": "2026-07-02T03:24:24-07:00",
+        "old": "09dbad622684f759a6610b3f3cde3916e92be675",
+        "new": "568b5da6bf164864c8a7d6db161d69607e971722",
+        "status": "agent"
+      },
+      {
+        "commit": "f8f8041b55dda7c6a023fab12161b811f7937b29",
+        "date": "2026-07-02T03:05:01-07:00",
+        "committed": "2026-07-02T03:05:01-07:00",
+        "old": "0baf5ec63e3801c2c2d645a84acf74f96032c668",
+        "new": "09dbad622684f759a6610b3f3cde3916e92be675",
+        "status": "agent"
+      },
+      {
+        "commit": "e3491b0bc9d12011453d4de624c5e4cd76aa3315",
+        "date": "2026-07-02T02:58:57-07:00",
+        "committed": "2026-07-02T02:58:57-07:00",
+        "old": "02305b3fe9f2596c5f4fe19cb8302e8e98980e2a",
+        "new": "0baf5ec63e3801c2c2d645a84acf74f96032c668",
+        "status": "agent"
+      },
+      {
+        "commit": "1525a73d39702655af270529e43b662c314fe30e",
+        "date": "2026-06-02T22:45:41-07:00",
+        "committed": "2026-06-02T22:45:41-07:00",
+        "old": "244c1b0e2452b908a3bda647a01c015fb9d8bc78",
+        "new": "02305b3fe9f2596c5f4fe19cb8302e8e98980e2a",
+        "status": "agent"
+      },
+      {
+        "commit": "bb4fcfe67cf4e108ea415f1d2a9283fa640e3f0b",
+        "date": "2026-06-02T21:44:57-07:00",
+        "committed": "2026-06-02T21:44:57-07:00",
+        "old": "2a9619628722634ed4668718b356c20d6dc09849",
+        "new": "244c1b0e2452b908a3bda647a01c015fb9d8bc78",
+        "status": "agent"
+      },
+      {
+        "commit": "e5437d287843508cfd80366d507e3980c788c14e",
+        "date": "2026-05-18T02:01:01-07:00",
+        "committed": "2026-05-18T02:01:01-07:00",
+        "old": "83e2a92b8dabc5d05e75cbe4433a13e005592eb2",
+        "new": "2a9619628722634ed4668718b356c20d6dc09849",
+        "status": "agent"
+      },
+      {
+        "commit": "84e51af2ede2d39a77b885a53efb7236f50822e0",
+        "date": "2026-05-17T17:46:59-07:00",
+        "committed": "2026-05-17T17:46:59-07:00",
+        "old": "bd61ec56fc10624513d77ebfbdab5b3c6a48cfae",
+        "new": "83e2a92b8dabc5d05e75cbe4433a13e005592eb2",
+        "status": "agent"
+      },
+      {
+        "commit": "6ba7785ce9ea6d66a58b78c5c6c4c9426a2f89c9",
+        "date": "2026-05-16T22:54:32-07:00",
+        "committed": "2026-05-16T22:54:32-07:00",
+        "old": "f554e5d8d477e6256277a933e3b3b8da9b1af4d9",
+        "new": "bd61ec56fc10624513d77ebfbdab5b3c6a48cfae",
+        "status": "agent"
+      },
+      {
+        "commit": "23d9abc49adc49c31686e192b1ad9e1b1063a07e",
+        "date": "2026-05-16T15:24:29-07:00",
+        "committed": "2026-05-16T15:24:29-07:00",
+        "old": "c9a42ae86a27d5ab517dae110f8382e6877e53c9",
+        "new": "f554e5d8d477e6256277a933e3b3b8da9b1af4d9",
+        "status": "agent"
+      },
+      {
+        "commit": "f96a1a7704c0f3a20eb4ca7ecec4fa25423d7ecc",
+        "date": "2026-05-16T14:32:02-07:00",
+        "committed": "2026-05-16T14:32:02-07:00",
+        "old": "b8240ddcd6c1a66f71ed4bf7b0ad09a0874b516b",
+        "new": "c9a42ae86a27d5ab517dae110f8382e6877e53c9",
+        "status": "agent"
+      },
+      {
+        "commit": "fd051fde02d516da1bde037c837db4002be3cc53",
+        "date": "2026-05-14T22:39:56-07:00",
+        "committed": "2026-05-14T22:39:56-07:00",
+        "old": "42e740a5950c002bf2bcc82d428febeab4c43fb0",
+        "new": "b8240ddcd6c1a66f71ed4bf7b0ad09a0874b516b",
+        "status": "agent"
+      },
+      {
+        "commit": "67e6a04f6a7bec560e533f4a11c9cce3e40b9935",
+        "date": "2026-05-14T20:41:26-07:00",
+        "committed": "2026-05-14T20:41:26-07:00",
+        "old": "0c46d02befde79d2079d36e6e46b4742e108d193",
+        "new": "42e740a5950c002bf2bcc82d428febeab4c43fb0",
+        "status": "agent"
+      },
+      {
+        "commit": "ff05234858c5a54bd4b7a1aee6357c152d7453a7",
+        "date": "2026-05-14T12:41:19-07:00",
+        "committed": "2026-05-14T12:41:19-07:00",
+        "old": "2f1369e44a4fb26228e12494793dbac93d64e481",
+        "new": "0c46d02befde79d2079d36e6e46b4742e108d193",
+        "status": "agent"
+      },
+      {
+        "commit": "a71e954abf728aed54c621c592d08faa01ca473b",
+        "date": "2026-05-12T19:32:20-07:00",
+        "committed": "2026-05-12T19:32:20-07:00",
+        "old": "b2f72427345e29c6906d5e245ba07d485bd8719f",
+        "new": "2f1369e44a4fb26228e12494793dbac93d64e481",
+        "status": "agent"
+      },
+      {
+        "commit": "59611be5720c4eca47666eb5db905cf0aff92c99",
+        "date": "2026-05-05T13:55:54-07:00",
+        "committed": "2026-05-05T13:55:54-07:00",
+        "old": "73c4aaf5f27b150b2da41593c4085ed95e24b863",
+        "new": "b2f72427345e29c6906d5e245ba07d485bd8719f",
+        "status": "agent"
+      },
+      {
+        "commit": "12c8afda6bc62949862e915602bbe6bd43a7b915",
+        "date": "2026-05-04T23:22:55-07:00",
+        "committed": "2026-05-04T23:22:55-07:00",
+        "old": "de2e7041acb3616d20eb2429b2d73aa150979d5d",
+        "new": "73c4aaf5f27b150b2da41593c4085ed95e24b863",
+        "status": "agent"
+      },
+      {
+        "commit": "55a2765697dad50a6914dcd2f122f8033b77ee08",
+        "date": "2026-05-04T19:10:48-07:00",
+        "committed": "2026-05-04T19:10:48-07:00",
+        "old": "afe10a59e6e4cd6e3c7bf1c81e278dcd812e007e",
+        "new": "de2e7041acb3616d20eb2429b2d73aa150979d5d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 45 commits predate 2022-01-01 with no mark, and 26 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 51541,
+    "sha256": "c6dbf04d8e3fe4fe3537e4d8750b527ce6eda1b36fe5688fde9a6c6cb8b524ea",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1172,
+    "words": 5944,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/WikipediaBrown--napkin/README.md"
+}

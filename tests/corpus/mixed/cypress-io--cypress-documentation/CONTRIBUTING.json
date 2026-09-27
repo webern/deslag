@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cypress-io/cypress-documentation",
+    "path": "CONTRIBUTING.md",
+    "commit": "dc94f07bc03ff6d46a356440c0ddccde80a35778",
+    "commit_date": "2026-09-26T23:11:22-04:00",
+    "url": "https://github.com/cypress-io/cypress-documentation/blob/dc94f07bc03ff6d46a356440c0ddccde80a35778/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1049,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 47,
+    "first_commit_date": "2019-12-10T11:53:30+06:30",
+    "last_commit_date": "2026-07-06T20:12:28-04:00",
+    "last_commit_author": "Jennifer Shehane",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-12-10T11:53:37+06:30",
+    "last_committer_date": "2026-07-06T20:12:28-04:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01EU4ba6apbada7naPbK5C9N",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bd3b8f3b12d08a9cfed1b5d78a2122e36f0913c8",
+        "date": "2026-07-06T20:12:28-04:00",
+        "committed": "2026-07-06T20:12:28-04:00",
+        "old": "6103b0873092d08b3258d63c440783cda00201f9",
+        "new": "bfeb4e1baaa9c0db38de8cd88306424a380f7745",
+        "status": "agent"
+      },
+      {
+        "commit": "a63e47c574296f535b9e0b2aac470ece4dc3648b",
+        "date": "2026-07-04T07:57:55-04:00",
+        "committed": "2026-07-04T07:57:55-04:00",
+        "old": "3ecf091c5b05deae574cebeda9082c9e43ca489c",
+        "new": "6103b0873092d08b3258d63c440783cda00201f9",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "28 of its 47 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10565,
+    "sha256": "7e26b5218428f294e940db0d0e97999e0e77366deb6eeae7e62661ddc79ced7a",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 233,
+    "words": 1286,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cypress-io--cypress-documentation/CONTRIBUTING.md"
+}

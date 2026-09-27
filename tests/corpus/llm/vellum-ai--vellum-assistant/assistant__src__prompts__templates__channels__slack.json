@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "assistant__src__prompts__templates__channels__slack.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "vellum-ai/vellum-assistant",
+    "path": "assistant/src/prompts/templates/channels/slack.md",
+    "commit": "2575c708429dbb25424d4ba5e23fb2d2edcc1e2a",
+    "commit_date": "2026-09-26T09:41:41-04:00",
+    "url": "https://github.com/vellum-ai/vellum-assistant/blob/2575c708429dbb25424d4ba5e23fb2d2edcc1e2a/assistant/src/prompts/templates/channels/slack.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-07T16:19:17-05:00",
+    "stars": 1327,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-13T19:59:21-04:00",
+    "last_commit_date": "2026-04-13T19:59:21-04:00",
+    "last_commit_author": "asharma53",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-13T19:59:21-04:00",
+    "last_committer_date": "2026-04-13T19:59:21-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0eb4228f4ca041bd71f78792df79953ca31332dd",
+        "date": "2026-04-13T19:59:21-04:00",
+        "committed": "2026-04-13T19:59:21-04:00",
+        "old": null,
+        "new": "b5965f358b411488330836ad3232f2868c696eb7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1166,
+    "sha256": "b454ca5e3645383dd8d04564eab00f4ad3d2aef0979d5d13d362a645df232e42",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 191,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/vellum-ai--vellum-assistant/assistant/src/prompts/templates/channels/slack.md"
+}

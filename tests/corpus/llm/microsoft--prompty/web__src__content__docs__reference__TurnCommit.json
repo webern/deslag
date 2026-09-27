@@ -1,0 +1,96 @@
+{
+  "sidecar_version": 3,
+  "fixture": "web__src__content__docs__reference__TurnCommit.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/prompty",
+    "path": "web/src/content/docs/reference/TurnCommit.md",
+    "commit": "290c80064da9029918b93c3ec42128edd222955b",
+    "commit_date": "2026-09-17T22:47:54-07:00",
+    "url": "https://github.com/microsoft/prompty/blob/290c80064da9029918b93c3ec42128edd222955b/web/src/content/docs/reference/TurnCommit.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-04-22T09:55:53-07:00",
+    "stars": 1273,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-23T11:14:05-07:00",
+    "last_commit_date": "2026-08-27T15:25:04-07:00",
+    "last_commit_author": "Seth Juarez",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-23T11:14:05-07:00",
+    "last_committer_date": "2026-08-27T15:25:04-07:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Copilot-Session: 19d2f1a9-b9b4-457d-8235-251c374c31f2",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Copilot-Session: 6aff469d-9c10-44ec-b343-c32e0a44af7f",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "72f3b531a248e39448fa4f960a2dfa2d3476ad8a",
+        "date": "2026-08-27T15:25:04-07:00",
+        "committed": "2026-08-27T15:25:04-07:00",
+        "old": "9a1061836e99a543101a37a239a0973fde695eaf",
+        "new": "28984ff41dc4223fa05b9b2724f7afd8ca7ca6a3",
+        "status": "agent"
+      },
+      {
+        "commit": "10f35ee3ee05b487e05838da909369fb5ae35e93",
+        "date": "2026-07-23T11:14:05-07:00",
+        "committed": "2026-07-23T11:14:05-07:00",
+        "old": null,
+        "new": "9a1061836e99a543101a37a239a0973fde695eaf",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2280,
+    "sha256": "c135b7d53d7dc5196d9a80f614bbb366c7908f53e7295d1bb5fb2168e2b99b00",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 81,
+    "words": 255,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--prompty/web/src/content/docs/reference/TurnCommit.md"
+}

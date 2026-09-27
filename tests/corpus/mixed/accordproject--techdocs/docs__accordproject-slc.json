@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__accordproject-slc.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "accordproject/techdocs",
+    "path": "docs/accordproject-slc.md",
+    "commit": "95560de540c6110cac4324ff4e5b99500a258cca",
+    "commit_date": "2026-08-07T19:59:59+01:00",
+    "url": "https://github.com/accordproject/techdocs/blob/95560de540c6110cac4324ff4e5b99500a258cca/docs/accordproject-slc.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-18T16:53:41+01:00",
+    "stars": 107,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-09-28T09:50:15-04:00",
+    "last_commit_date": "2026-05-05T21:23:11+01:00",
+    "last_commit_author": "Matt Roberts",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-09-29T13:46:46-04:00",
+    "last_committer_date": "2026-05-05T21:23:11+01:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cfce40fc0d17e20d117d45eed57f722cc70ab246",
+        "date": "2026-05-05T21:23:11+01:00",
+        "committed": "2026-05-05T21:23:11+01:00",
+        "old": "da9f9f8855fb6e132ebe201493f806be5a1f8ec8",
+        "new": "b5b757acd9091d2e2daf14c84144cb03db78a2bc",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 6 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6560,
+    "sha256": "6f8cdbefae976955d528a70d649d20612a8081137f4bc3ed97cf0967328a5dd9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 91,
+    "words": 889,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/accordproject--techdocs/docs/accordproject-slc.md",
+  "before": {
+    "sha256": "a04e00be070498846668d51cc1ff274cd82d904a3618035b4fd3fc89462cda6c",
+    "commit": "b24a0d9f6b9b60276bfd10c1a215777948362e6b",
+    "date": "2021-10-04T13:38:16+01:00",
+    "between": [
+      {
+        "commit": "a4c6a64d52a2c4e7a0afa18b7a1bdf22dbe52792",
+        "date": "2026-04-26T20:29:59+01:00",
+        "committed": "2026-04-26T20:29:59+01:00",
+        "old": "607e4212631159229c1da6985e7e8c66df764207",
+        "new": "da9f9f8855fb6e132ebe201493f806be5a1f8ec8",
+        "status": "late"
+      },
+      {
+        "commit": "072de5c85ad0ce9f03227f2fd96124d40061f27e",
+        "date": "2023-01-27T15:57:38Z",
+        "committed": "2023-01-27T15:57:38Z",
+        "old": "5a3b55d79b6eab4c73d969fa66588c3c91a2d5fa",
+        "new": "607e4212631159229c1da6985e7e8c66df764207",
+        "status": "late"
+      },
+      {
+        "commit": "3a21990e19b729863be78e43f5df8b329d44729b",
+        "date": "2022-10-06T19:04:44+01:00",
+        "committed": "2022-10-06T19:04:44+01:00",
+        "old": "4caada7a739db8347dd9414f3ddb6bf4136538b6",
+        "new": "5a3b55d79b6eab4c73d969fa66588c3c91a2d5fa",
+        "status": "late"
+      }
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__skills__test-design__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jjjkkkjjj/Matft",
+    "path": ".claude/skills/test-design/SKILL.md",
+    "commit": "396c2fc8f380bbe5bd5b64119661bac922d9b694",
+    "commit_date": "2026-09-27T12:10:25+09:00",
+    "url": "https://github.com/jjjkkkjjj/Matft/blob/396c2fc8f380bbe5bd5b64119661bac922d9b694/.claude/skills/test-design/SKILL.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-27T12:56:45+09:00",
+    "stars": 147,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-27T09:36:49+09:00",
+    "last_commit_date": "2026-09-27T09:36:49+09:00",
+    "last_commit_author": "jjjkkkjjj",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-27T09:36:49+09:00",
+    "last_committer_date": "2026-09-27T09:36:49+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cf86f037a5d3ebe64d50c5c5a3c5a41a8762ac39",
+        "date": "2026-09-27T09:36:49+09:00",
+        "committed": "2026-09-27T09:36:49+09:00",
+        "old": null,
+        "new": "c63dcc9dd8f7271f423d97b0e3f8d427eff818c6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8073,
+    "sha256": "1e2af9897f10740bba53f6898d498e0ab2780c8aa54bd87996fdcaad7eef3568",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 117,
+    "words": 1216,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jjjkkkjjj--Matft/.claude/skills/test-design/SKILL.md"
+}

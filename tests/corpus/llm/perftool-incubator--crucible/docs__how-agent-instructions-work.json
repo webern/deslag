@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__how-agent-instructions-work.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "perftool-incubator/crucible",
+    "path": "docs/how-agent-instructions-work.md",
+    "commit": "4f90e356c69acc39dd34420094cda1af4b5c6eab",
+    "commit_date": "2026-09-23T08:35:12-05:00",
+    "url": "https://github.com/perftool-incubator/crucible/blob/4f90e356c69acc39dd34420094cda1af4b5c6eab/docs/how-agent-instructions-work.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-18T12:48:04-05:00",
+    "stars": 16,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-25T10:31:58-05:00",
+    "last_commit_date": "2026-08-25T10:31:58-05:00",
+    "last_commit_author": "Karl Rister",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-25T10:31:58-05:00",
+    "last_committer_date": "2026-08-25T10:31:58-05:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bb0c8cca7c63607d8d110bdddb1c4d1a958e2d60",
+        "date": "2026-08-25T10:31:58-05:00",
+        "committed": "2026-08-25T10:31:58-05:00",
+        "old": null,
+        "new": "4dd6d0a0ebbda7664c8fb88399bfdf7e404af786",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2851,
+    "sha256": "3579a80f630355ceae1bb1faf32d47046e9741ad41f3611ff9556c0e88015471",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 405,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/perftool-incubator--crucible/docs/how-agent-instructions-work.md"
+}

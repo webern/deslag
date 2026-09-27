@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__proposals__dataprep-tokenizer-integration.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ahrefs/ocannl",
+    "path": "docs/proposals/dataprep-tokenizer-integration.md",
+    "commit": "28fe143d43d06b23a8656d31ab49a95fe8db1e55",
+    "commit_date": "2026-09-25T22:21:41+02:00",
+    "url": "https://github.com/ahrefs/ocannl/blob/28fe143d43d06b23a8656d31ab49a95fe8db1e55/docs/proposals/dataprep-tokenizer-integration.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 116,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-25T20:05:27+01:00",
+    "last_commit_date": "2026-07-07T15:58:30+02:00",
+    "last_commit_author": "Lukasz Stafiniak",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-25T20:05:27+01:00",
+    "last_committer_date": "2026-07-07T15:58:30+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "57239dc2c4d931b007f334f52604c3ad13c5273c",
+        "date": "2026-07-07T15:58:30+02:00",
+        "committed": "2026-07-07T15:58:30+02:00",
+        "old": "4d46f3a373bfd89dd6c663a78cbae2ddb5e31c89",
+        "new": "330783284514ab555f954fe8bf0670f0650374ea",
+        "status": "agent"
+      },
+      {
+        "commit": "72923256ae655627fadbad86fd9db488868db5ff",
+        "date": "2026-03-25T20:05:27+01:00",
+        "committed": "2026-03-25T20:05:27+01:00",
+        "old": null,
+        "new": "4d46f3a373bfd89dd6c663a78cbae2ddb5e31c89",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4387,
+    "sha256": "41da0ee02a0cbb2a805fedaf0205f7c81cbad44995c8f919f11863f687772be4",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 566,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ahrefs--ocannl/docs/proposals/dataprep-tokenizer-integration.md"
+}

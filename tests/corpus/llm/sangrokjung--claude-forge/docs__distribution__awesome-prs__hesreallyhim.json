@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__distribution__awesome-prs__hesreallyhim.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sangrokjung/claude-forge",
+    "path": "docs/distribution/awesome-prs/hesreallyhim.md",
+    "commit": "34d881dc9bdc669aadc3a1e8147a4bd5467ecbe3",
+    "commit_date": "2026-09-03T04:14:41-07:00",
+    "url": "https://github.com/sangrokjung/claude-forge/blob/34d881dc9bdc669aadc3a1e8147a4bd5467ecbe3/docs/distribution/awesome-prs/hesreallyhim.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-23T16:55:57+09:00",
+    "stars": 843,
+    "found_by": "sg-topic:dotfiles"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-05-03T14:16:09+09:00",
+    "last_commit_date": "2026-06-30T15:13:21+09:00",
+    "last_commit_author": "sangrokjung",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-03T14:16:09+09:00",
+    "last_committer_date": "2026-06-30T15:13:21+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fc7daf04edacd65e1adcea4298b1b8ac6501ec35",
+        "date": "2026-06-30T15:13:21+09:00",
+        "committed": "2026-06-30T15:13:21+09:00",
+        "old": "bd70e275cb4856ad7cb4050d25db34b955383690",
+        "new": "3fa4973c8688aa9eb019b8b6a425e2a00778503f",
+        "status": "agent"
+      },
+      {
+        "commit": "3e48acebacf20f59499906ee644689a1eeff2d3b",
+        "date": "2026-05-03T14:16:09+09:00",
+        "committed": "2026-05-03T14:16:09+09:00",
+        "old": null,
+        "new": "bd70e275cb4856ad7cb4050d25db34b955383690",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5438,
+    "sha256": "cfe04ff529c94c5515ef5084cb228b843267ae4316e699fdd9b39bee6332182e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 786,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sangrokjung--claude-forge/docs/distribution/awesome-prs/hesreallyhim.md"
+}

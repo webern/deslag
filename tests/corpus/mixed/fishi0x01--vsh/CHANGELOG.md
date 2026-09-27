@@ -1,0 +1,221 @@
+# Changelog
+
+## v1.0.0 (May 25, 2026)
+
+ENHANCEMENTS:
+
+* concurrent recursive operations for `cp`, `mv` and `rm` via goroutine pool, tunable with `--worker-count` flag (default: 10) ([#126](https://github.com/fishi0x01/vsh/pull/126))
+* update README and add `make demo` target to generate demo gif ([#127](https://github.com/fishi0x01/vsh/pull/127))
+* require `-r` flag for recursive `cp` and `rm` operations on directories ([#128](https://github.com/fishi0x01/vsh/pull/128))
+* replace unmaintained `c-bata/go-prompt` with `charmbracelet/bubbletea` for a richer interactive TUI: styled completion dropdown with selection marker, stable prompt prefix colour, history navigation, and a braille spinner during long-running operations ([#139](https://github.com/fishi0x01/vsh/pull/139))
+* prompt confirmation before recursive `rm -r` in interactive mode; use `-f` to skip the prompt ([#140](https://github.com/fishi0x01/vsh/pull/140))
+* concurrent reads for `grep` and `replace` (find phase) and concurrent writes for `replace`, tunable with `--worker-count` flag (default: 10) ([#142](https://github.com/fishi0x01/vsh/pull/142))
+
+BUG FIXES:
+
+* fix `add` using unresolved relative path when `cwd` is set via `VAULT_PATH` ([#131](https://github.com/fishi0x01/vsh/pull/131))
+* fix variable shadowing in `SetData` causing KV2 branch to be dead code ([#132](https://github.com/fishi0x01/vsh/pull/132))
+* fix concurrency and error handling issues: cache race condition, swallowed errors in recursive operations, logger data race, and resource leak in debug logging ([#133](https://github.com/fishi0x01/vsh/pull/133))
+* fix `ls <arg>` from root incorrectly listing all backends when argument is not a valid path ([#136](https://github.com/fishi0x01/vsh/pull/136))
+* fix `rm -r` confirmation prompt garbled by spinner; fix spurious blank lines between completion dropdown entries ([#141](https://github.com/fishi0x01/vsh/pull/141))
+* fix `add` and `replace` confirmation prompts garbled by spinner ([#142](https://github.com/fishi0x01/vsh/pull/142))
+
+DEPENDENCIES:
+
+* set `CGO_ENABLED=0` in `make compile-releases` to guarantee truly static release binaries ([#139](https://github.com/fishi0x01/vsh/pull/139))
+* bump Go to 1.26 and update dependencies ([#134](https://github.com/fishi0x01/vsh/pull/134))
+* remove `notokenhelper` release variant — inline token helper logic into `main.go` ([#135](https://github.com/fishi0x01/vsh/pull/135))
+* replace `c-bata/go-prompt` with `charmbracelet/bubbletea`, `charmbracelet/bubbles`, and `charmbracelet/lipgloss` ([#139](https://github.com/fishi0x01/vsh/pull/139))
+
+REFACTORING:
+
+* move `cli`, `client`, `completer`, `log` packages under `internal/` to prevent unintended external imports, rename `log` package to `logger` to avoid shadowing stdlib, and replace package-level globals in `main.go` with an `app` struct ([#137](https://github.com/fishi0x01/vsh/pull/137))
+
+## v0.14.0 (August, 16 2025)
+
+ENHANCEMENTS:
+
+* allow secret mounts to be specified by env var ([#121](https://github.com/fishi0x01/vsh/pull/121)) - Thank you [mattlqx](https://github.com/mattlqx))
+* patch dependencies - reduce dependency footprint - smaller binaries ([#122](https://github.com/fishi0x01/vsh/pull/122))
+
+## v0.13.0 (May, 12, 2024)
+
+ENHANCEMENTS:
+
+* support vault tls by cert path ([#112](https://github.com/fishi0x01/vsh/pull/112)) - Thank you [meridsa](https://github.com/meridsa)
+* shrink binary size ([#115](https://github.com/fishi0x01/vsh/pull/115)) - Thank you [kindy](https://github.com/kindy))
+* release minimized builds ([#116](https://github.com/fishi0x01/vsh/pull/116))
+* patch dependencies ([#118](https://github.com/fishi0x01/vsh/pull/118))
+
+## v0.12.2 (February, 21, 2023)
+
+ENHANCEMENTS:
+
+* Remove bad dependency and patch dependencies ([#101](https://github.com/fishi0x01/vsh/pull/101))
+* bump go version 1.17 and patch dependencies ([#102](https://github.com/fishi0x01/vsh/pull/102))
+* bump go version 1.19 and patch dependencies ([#111](https://github.com/fishi0x01/vsh/pull/111))
+
+## v0.12.1 (October, 06, 2021)
+
+ENHANCEMENTS:
+
+* Patch dependencies ([#99](https://github.com/fishi0x01/vsh/pull/99))
+
+## v0.12.0 (June 15, 2021)
+
+ENHANCEMENTS:
+
+* In interactive mode, assume path for command is pwd for grep and replace ([#95](https://github.com/fishi0x01/vsh/pull/95))
+* add shallow flag to grep/replace commands ([#97](https://github.com/fishi0x01/vsh/pull/97)) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+
+## v0.11.0 (February 27, 2021)
+
+ENHANCEMENTS:
+
+* Adding dry-run/confirm flags to the `add` command ([#91](https://github.com/fishi0x01/vsh/pull/91) - Thank you for implementation [dugshnay](https://github.com/dugshnay))
+
+BUG FIXES:
+
+* Fix stale cache in interactive mode ([#92](https://github.com/fishi0x01/vsh/pull/92))
+
+## v0.10.0 (February 24, 2021)
+
+ENHANCEMENTS:
+
+* Add `--output` flag to `replace` command to output as line diffs for each replacement in addition to the default inline format. ([#88](https://github.com/fishi0x01/vsh/pull/88))
+* Add `add` command for single key insertion ([#87](https://github.com/fishi0x01/vsh/pull/87))
+
+BUG FIXES:
+
+* Don't show error on empty line enter in interactive mode ([#85](https://github.com/fishi0x01/vsh/pull/85))
+
+## v0.9.0 (February 6, 2021)
+
+Big thank you to [mattlqx](https://github.com/mattlqx) for the great enhancements.
+
+ENHANCEMENTS:
+
+* Proper arg parsing with help text for subcommands ([#73](https://github.com/fishi0x01/vsh/pull/73) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+* Add replace command ([#69](https://github.com/fishi0x01/vsh/pull/69) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+* Add key selector to replace command ([#72](https://github.com/fishi0x01/vsh/pull/72) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+* Allow limiting scope of grep to keys or values ([#66](https://github.com/fishi0x01/vsh/pull/66) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+* Do not show and operate on KV2 metadata ([#68](https://github.com/fishi0x01/vsh/pull/68))
+
+## v0.8.0 (January 27, 2021)
+
+ENHANCEMENTS:
+
+* Allow regex on `grep` operation ([#61](https://github.com/fishi0x01/vsh/pull/61) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+* Allow quotes and escapes in input ([#61](https://github.com/fishi0x01/vsh/pull/61) - Thank you for implementation [mattlqx](https://github.com/mattlqx))
+
+BUG FIXES:
+
+* Fix panic on `data` keys in KV1 ([#63](https://github.com/fishi0x01/vsh/pull/63) - Thank you for issue submission [tommartensen](https://github.com/tommartensen))
+
+## v0.7.2 (October 4, 2020)
+
+BUG FIXES:
+
+* Fix copy of ambiguous sub-file ([#55](https://github.com/fishi0x01/vsh/pull/55))
+
+## v0.7.1 (October 2, 2020)
+
+BUG FIXES:
+
+* Proper return codes ([#51](https://github.com/fishi0x01/vsh/pull/51))
+* Proper logging ([#52](https://github.com/fishi0x01/vsh/pull/52))
+
+## v0.7.0 (September 26, 2020)
+
+ENHANCEMENTS:
+
+* Add option to disable path auto-completion ([#48](https://github.com/fishi0x01/vsh/pull/48))
+
+## v0.6.3 (September 22, 2020)
+
+BUG FIXES:
+
+* Properly handle ambiguous files without read permission [#46](https://github.com/fishi0x01/vsh/pull/46) - Thank you for detailed report [agaudreault-jive](https://github.com/agaudreault-jive)
+
+## v0.6.2 (June 18, 2020)
+
+ENHANCEMENTS:
+
+* Allow separation of command params with multiple whitespaces ([#40](https://github.com/fishi0x01/vsh/pull/40)) - Thank you [vikin91](https://github.com/vikin91)
+* Unify verbose behavior ([#41](https://github.com/fishi0x01/vsh/pull/41)) - Thank you [vikin91](https://github.com/vikin91)
+
+BUG FIXES:
+
+* Properly handle ambiguous files ([#37](https://github.com/fishi0x01/vsh/pull/37))
+
+## v0.6.1 (June 15, 2020)
+
+BUG FIXES:
+
+* Properly handle suffix '/' in source path ([#39](https://github.com/fishi0x01/vsh/pull/39))
+
+## v0.6.0 (June 13, 2020)
+
+ENHANCEMENTS:
+
+* add `append` command ([#30](https://github.com/fishi0x01/vsh/issues/30)) - Thank you [vikin91](https://github.com/vikin91)
+
+BUG FIXES:
+
+* Remove file/dir ambiguity for `rm` ([#29](https://github.com/fishi0x01/vsh/issues/29))
+
+## v0.5.0 (April 5, 2020)
+
+ENHANCEMENTS:
+
+* add `grep` command ([#25](https://github.com/fishi0x01/vsh/issues/25))
+* `ls` with new line instead of single line ([#27](https://github.com/fishi0x01/vsh/issues/27))
+
+BUG FIXES:
+
+* remove `//` from paths ([#26](https://github.com/fishi0x01/vsh/issues/26))
+* fix broken tests
+
+## v0.4.1 (March 21, 2020)
+
+ENHANCEMENTS:
+
+* performance: cache `List()` queries ([#23](https://github.com/fishi0x01/vsh/issues/23))
+
+## v0.4.0 (March 10, 2020)
+
+ENHANCEMENTS:
+
+* use TokenHelper mechanism ([#20](https://github.com/fishi0x01/vsh/issues/20))
+
+## v0.3.1 (October 31, 2019)
+
+BUG FIXES:
+
+* fix top-level path panic ([#17](https://github.com/fishi0x01/vsh/issues/17))
+
+## v0.3.0 (October 31, 2019)
+
+ENHANCEMENTS:
+
+* token list permission on sys/mounts is not mandatory
+
+## v0.2.0 (October 20, 2019)
+
+ENHANCEMENTS:
+
+* use `~/.vault-token` as fallback if `VAULT_TOKEN` is not set ([#12](https://github.com/fishi0x01/vsh/issues/12))
+
+BUG FIXES:
+
+* error handling to catch bad input ([#13](https://github.com/fishi0x01/vsh/issues/13))
+
+## v0.1.1 (October 8, 2019)
+
+BUG FIXES:
+
+* more sanity checks on user input to avoid crashes ([#10](https://github.com/fishi0x01/vsh/issues/10))
+
+## v0.1.0 (October 7, 2019)
+
+Initial release

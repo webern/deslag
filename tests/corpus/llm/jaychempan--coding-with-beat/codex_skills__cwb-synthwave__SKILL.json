@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "codex_skills__cwb-synthwave__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jaychempan/coding-with-beat",
+    "path": "codex_skills/cwb-synthwave/SKILL.md",
+    "commit": "0c5eb49da6f82cb1e2fac9d9d8bf3f76986bf6a2",
+    "commit_date": "2026-05-28T23:38:43+08:00",
+    "url": "https://github.com/jaychempan/coding-with-beat/blob/0c5eb49da6f82cb1e2fac9d9d8bf3f76986bf6a2/codex_skills/cwb-synthwave/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-21T11:07:59+08:00",
+    "stars": 114,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-24T01:43:24+08:00",
+    "last_commit_date": "2026-05-24T01:43:24+08:00",
+    "last_commit_author": "Jiancheng Pan",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-24T01:43:24+08:00",
+    "last_committer_date": "2026-05-24T01:43:24+08:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c81ec275b2452eb5c195c40e8edc728b1787b319",
+        "date": "2026-05-24T01:43:24+08:00",
+        "committed": "2026-05-24T01:43:24+08:00",
+        "old": null,
+        "new": "0d4290afa352799476a87d1790ca2b79e6783aea",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1094,
+    "sha256": "4d1e49111abf072b589edf4875e6ffc4bc29b18490178fc046a143917bebe5ab",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 38,
+    "words": 156,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jaychempan--coding-with-beat/codex_skills/cwb-synthwave/SKILL.md"
+}

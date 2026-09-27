@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "karngyan/karngyan.com",
+    "path": "CONTRIBUTING.md",
+    "commit": "854505f2d1998abd4242ac8ad027791ae0a156b4",
+    "commit_date": "2026-07-09T02:55:44+05:30",
+    "url": "https://github.com/karngyan/karngyan.com/blob/854505f2d1998abd4242ac8ad027791ae0a156b4/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-06-15T00:16:40+05:30",
+    "stars": 371,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-06-15T15:06:51+05:30",
+    "last_commit_date": "2026-07-09T02:51:35+05:30",
+    "last_commit_author": "Karn",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-06-15T15:06:51+05:30",
+    "last_committer_date": "2026-07-09T02:51:35+05:30",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "49820870bf42cdee50046f611bce62d572a59d60",
+        "date": "2026-07-09T02:51:35+05:30",
+        "committed": "2026-07-09T02:51:35+05:30",
+        "old": "0f0752860529c22fdd8ed29258fc16c3f9694c58",
+        "new": "75eb196b72b5475de99becf1c1c4f5d6a13c578d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 3 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1136,
+    "sha256": "0e57e9e49a23954df3fca97be0cdab02d80a530c521d14de0093cec2bd8525fe",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 35,
+    "words": 167,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/karngyan--karngyan.com/CONTRIBUTING.md",
+  "before": {
+    "sha256": "e2fd66ed28e875faf2cce540b2bd2c7df155dbe8f523e99746433bab26f812e7",
+    "commit": "82fb178bc73a8813597549b30e268bf1a8e58186",
+    "date": "2021-10-24T12:49:06+05:30",
+    "between": [
+      {
+        "commit": "d65bcbb475ff9073dc5a26ecd246d2ed7b2fa5cc",
+        "date": "2026-07-09T02:47:33+05:30",
+        "committed": "2026-07-09T02:47:33+05:30",
+        "old": "393034068f892aaf2c62f08387c85ca7a553ce29",
+        "new": "0f0752860529c22fdd8ed29258fc16c3f9694c58",
+        "status": "late"
+      }
+    ]
+  }
+}

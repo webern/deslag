@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "research__gpt56-decomp-workbench-parity-2026-07.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sparq-org/sparq",
+    "path": "research/gpt56-decomp-workbench-parity-2026-07.md",
+    "commit": "4b0c17a367dfadb999c4d19682d2eb30d68208f5",
+    "commit_date": "2026-09-22T16:36:52Z",
+    "url": "https://github.com/sparq-org/sparq/blob/4b0c17a367dfadb999c4d19682d2eb30d68208f5/research/gpt56-decomp-workbench-parity-2026-07.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-07T23:17:38+01:00",
+    "stars": 12,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-12T02:58:35+01:00",
+    "last_commit_date": "2026-07-12T02:58:35+01:00",
+    "last_commit_author": "Jesse Wright",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-12T01:58:35Z",
+    "last_committer_date": "2026-07-12T01:58:35Z",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ad9649835f993401e937c3bd8f9101c9fd8fb6e2",
+        "date": "2026-07-12T02:58:35+01:00",
+        "committed": "2026-07-12T01:58:35Z",
+        "old": null,
+        "new": "e4ea323df5df541c972fd8f8115dd3b863ea6ea1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6463,
+    "sha256": "af6d79999d3ae6c62ee25d40c6b3165871dc699c83e7e1018a33661f5a139345",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 108,
+    "words": 808,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sparq-org--sparq/research/gpt56-decomp-workbench-parity-2026-07.md"
+}

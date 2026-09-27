@@ -1,0 +1,159 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Umplify/xunit-dependency-injection",
+    "path": "README.md",
+    "commit": "57dc7d0dd5e4c0ff87b6c478dff219b2153f3746",
+    "commit_date": "2026-08-29T08:22:23-04:00",
+    "url": "https://github.com/Umplify/xunit-dependency-injection/blob/57dc7d0dd5e4c0ff87b6c478dff219b2153f3746/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-11-15T10:03:01-05:00",
+    "stars": 72,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 53,
+    "first_commit_date": "2020-11-15T10:03:01-05:00",
+    "last_commit_date": "2026-08-28T11:45:22-04:00",
+    "last_commit_author": "Arash Sabet",
+    "authors": 4,
+    "ai_commits": 8,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-11-15T10:03:01-05:00",
+    "last_committer_date": "2026-08-28T11:45:22-04:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01M2A8VpvDiGbi6Ru6A5b5a6",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01VN7ZtcD27xMM1iXVCukGKE",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "06c27810ce82010277ee9a2bd6a55cfe6fd4d299",
+        "date": "2026-08-28T11:45:22-04:00",
+        "committed": "2026-08-28T11:45:22-04:00",
+        "old": "568873e1b78fa1d706e470c8871a59b8abc34809",
+        "new": "e9f1f125056edbacefb55e02189086ff3753e9a6",
+        "status": "agent"
+      },
+      {
+        "commit": "abcde1b17970b25be97b95ce2c60dec15278b5f1",
+        "date": "2026-08-18T22:05:25-04:00",
+        "committed": "2026-08-18T22:05:25-04:00",
+        "old": "7f66c0e96c2137b0896009acb495a65e879dde94",
+        "new": "568873e1b78fa1d706e470c8871a59b8abc34809",
+        "status": "agent"
+      },
+      {
+        "commit": "9a7338aee9913f0144ed5a6406707b1cf51eb697",
+        "date": "2026-08-18T21:29:33-04:00",
+        "committed": "2026-08-18T21:29:33-04:00",
+        "old": "2905d6fb9ab0ef7ea80641287acf8cbe5c4e63ff",
+        "new": "7f66c0e96c2137b0896009acb495a65e879dde94",
+        "status": "agent"
+      },
+      {
+        "commit": "e70f950dcdbfeba1914a549d145fc6c590b54b7f",
+        "date": "2025-11-15T15:17:07Z",
+        "committed": "2025-11-15T15:17:07Z",
+        "old": "fd2d97e790ac2d33a034d5fb426837761da7dae3",
+        "new": "4cdf631d760369ff0dddd0e061f5fce0f4ec4827",
+        "status": "agent"
+      },
+      {
+        "commit": "b364ca33fb37e4e906de51e332992e1ddd040cff",
+        "date": "2025-10-16T16:24:11Z",
+        "committed": "2025-10-16T16:24:11Z",
+        "old": "3d5734aec85469ba3ff95866bf09eb53067a24ad",
+        "new": "1242119469bb7c968ad5f840d9ed37bf6daeba1d",
+        "status": "agent"
+      },
+      {
+        "commit": "4e076f07d099b57907ceff552379ba6fddcf77d9",
+        "date": "2025-10-09T17:59:30Z",
+        "committed": "2025-10-09T17:59:30Z",
+        "old": "b7651810db18b91f91a4dd41425d9a18a710a234",
+        "new": "ca16b2050dbf26935bc13a8c666f218abf3113b3",
+        "status": "agent"
+      },
+      {
+        "commit": "65a8be0fbfec57a612223036b9d76e55612bce55",
+        "date": "2025-10-09T17:57:50Z",
+        "committed": "2025-10-09T17:57:50Z",
+        "old": "09c091c689f6f8eae5fe0b6febf2770df6845f18",
+        "new": "b7651810db18b91f91a4dd41425d9a18a710a234",
+        "status": "agent"
+      },
+      {
+        "commit": "49d1faa086be09ba031fbab8275736a52ac35c33",
+        "date": "2025-09-05T14:18:02Z",
+        "committed": "2025-09-05T14:18:02Z",
+        "old": "06f4994acfe88c686520d23670a64b30fe7a6097",
+        "new": "f59c3411ca65fef15f2bfb1b8c2289af435d474f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "16 of its 53 commits predate 2022-01-01 with no mark, and 8 are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 26912,
+    "sha256": "294f15daab798666b6624d654a31f79f18ce6fe0d0ccd888404ef5eda83ed6e9",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 590,
+    "words": 3052,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Umplify--xunit-dependency-injection/README.md"
+}

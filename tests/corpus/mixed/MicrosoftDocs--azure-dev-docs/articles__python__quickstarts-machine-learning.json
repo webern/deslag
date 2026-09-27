@@ -1,0 +1,218 @@
+{
+  "sidecar_version": 3,
+  "fixture": "articles__python__quickstarts-machine-learning.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "MicrosoftDocs/azure-dev-docs",
+    "path": "articles/python/quickstarts-machine-learning.md",
+    "commit": "631613e0a4d2e1f84c3ef5c7e599aad19f6cd969",
+    "commit_date": "2026-09-25T23:04:14Z",
+    "url": "https://github.com/MicrosoftDocs/azure-dev-docs/blob/631613e0a4d2e1f84c3ef5c7e599aad19f6cd969/articles/python/quickstarts-machine-learning.md",
+    "license": "CC-BY-4.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-CODE"
+    ],
+    "repo_first_commit_date": "2019-06-06T17:12:08Z",
+    "stars": 186,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 25,
+    "first_commit_date": "2020-03-25T13:45:38-07:00",
+    "last_commit_date": "2026-06-17T10:14:43-07:00",
+    "last_commit_author": "Pat Altimore",
+    "authors": 10,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-03-25T13:45:38-07:00",
+    "last_committer_date": "2026-06-17T10:14:43-07:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1a74ce91f30fdc1e384157c3b0f8c7abafe4520d",
+        "date": "2026-01-22T20:42:12Z",
+        "committed": "2026-01-22T20:42:12Z",
+        "old": "b4b10f38226b6234db676f119a96371f4315deb7",
+        "new": "e93c3c20a5880901d7e6b29900cb0e83602152f5",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "7 of its 25 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2971,
+    "sha256": "232223851c5015d972d98451a73630fce2fe358cfe1d3c1aa5d8835c9e8df489",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 341,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/MicrosoftDocs--azure-dev-docs/articles/python/quickstarts-machine-learning.md",
+  "before": {
+    "sha256": "f6ea1a0a0d501227f881a9631d288ebccf1bba772a7cb4a8ed9f88c6d8fa83c1",
+    "commit": "ad05444d4f5ce0809428924b9849e561ff262359",
+    "date": "2021-12-30T19:26:17-05:00",
+    "between": [
+      {
+        "commit": "9fb283b0d8685f193dfeea5a6b28e6ba322cca2f",
+        "date": "2026-06-17T10:14:43-07:00",
+        "committed": "2026-06-17T10:14:43-07:00",
+        "old": "e93c3c20a5880901d7e6b29900cb0e83602152f5",
+        "new": "3a9794819eeae39748bb4a28f847ae5cca236ba7",
+        "status": "late"
+      },
+      {
+        "commit": "8c7e3955c65065880259a649e0dd5d88f19f43e2",
+        "date": "2025-12-08T12:11:26-06:00",
+        "committed": "2025-12-08T12:11:26-06:00",
+        "old": "51ed29c7dc1a0b5279b486a8b5c71d174fe083b2",
+        "new": "b4b10f38226b6234db676f119a96371f4315deb7",
+        "status": "late"
+      },
+      {
+        "commit": "30cafe2fdb2177461d2d1c8ac6e46c71b1777bcf",
+        "date": "2025-06-11T12:05:46-07:00",
+        "committed": "2025-06-11T12:05:46-07:00",
+        "old": "42a7a342412d16ab5a4b1235f8cc8f73a555554c",
+        "new": "51ed29c7dc1a0b5279b486a8b5c71d174fe083b2",
+        "status": "late"
+      },
+      {
+        "commit": "6a21de3b80914ac119dc4af42ba122c758c3842c",
+        "date": "2025-06-05T13:50:52+08:00",
+        "committed": "2025-06-05T13:50:52+08:00",
+        "old": "42a7a342412d16ab5a4b1235f8cc8f73a555554c",
+        "new": "7689e9b3d2ba407010924208cbf1113019c4529b",
+        "status": "late"
+      },
+      {
+        "commit": "ebf9cdd79c9854eff4b48264da28e6b7139aea32",
+        "date": "2024-03-14T10:01:22-05:00",
+        "committed": "2024-03-14T10:01:22-05:00",
+        "old": "c6b8918cde43983c60360b32db4fbb17579510c2",
+        "new": "42a7a342412d16ab5a4b1235f8cc8f73a555554c",
+        "status": "late"
+      },
+      {
+        "commit": "7c8fc2734a2f85c0e93508db7b2d04ca4179291c",
+        "date": "2024-03-09T16:24:26-08:00",
+        "committed": "2024-03-09T16:24:26-08:00",
+        "old": "2deae0f26be3378aaf406639a1c2c5a7fc378d0b",
+        "new": "c6b8918cde43983c60360b32db4fbb17579510c2",
+        "status": "late"
+      },
+      {
+        "commit": "2045cd11e2640ac096e488f730603a13bf9e7c97",
+        "date": "2024-03-09T16:09:11-08:00",
+        "committed": "2024-03-09T16:09:11-08:00",
+        "old": "25a87afe5ac5e86756a083ece6b6ad707d1106df",
+        "new": "2deae0f26be3378aaf406639a1c2c5a7fc378d0b",
+        "status": "late"
+      },
+      {
+        "commit": "16c8fe4475950628e21fecfd2d1312e622fa949c",
+        "date": "2023-03-15T10:14:05-07:00",
+        "committed": "2023-03-15T10:14:05-07:00",
+        "old": "0235eaa4b2d3d224d31378e599bc4f87859c637b",
+        "new": "25a87afe5ac5e86756a083ece6b6ad707d1106df",
+        "status": "late"
+      },
+      {
+        "commit": "5d0380d80332f7460778216c88efd276cd120454",
+        "date": "2023-03-15T10:46:22+01:00",
+        "committed": "2023-03-15T10:46:22+01:00",
+        "old": "cf5256618cec284c6e3924052901e7689f551c6a",
+        "new": "25a87afe5ac5e86756a083ece6b6ad707d1106df",
+        "status": "late"
+      },
+      {
+        "commit": "d77c6cefc36a56237bd0bcb7a5c9a01e6fb26c48",
+        "date": "2023-03-15T09:56:59+01:00",
+        "committed": "2023-03-15T09:56:59+01:00",
+        "old": "d282be5903085f29e1f568f70d536fa69b500831",
+        "new": "cf5256618cec284c6e3924052901e7689f551c6a",
+        "status": "late"
+      },
+      {
+        "commit": "9828fa4b483f7c44a70ddcd8439d590735da40f4",
+        "date": "2023-03-14T21:59:53+01:00",
+        "committed": "2023-03-14T21:59:53+01:00",
+        "old": "416ca6ab908f4b942c43bd07056563b07065a1f0",
+        "new": "d282be5903085f29e1f568f70d536fa69b500831",
+        "status": "late"
+      },
+      {
+        "commit": "b6d43a99fe4ab91aa3e3eef215df21173c503458",
+        "date": "2023-03-14T21:49:35+01:00",
+        "committed": "2023-03-14T21:49:35+01:00",
+        "old": "a878e2e498e15bb5d50226ee267aa0722d1c80ea",
+        "new": "416ca6ab908f4b942c43bd07056563b07065a1f0",
+        "status": "late"
+      },
+      {
+        "commit": "00df0e63aae7bb34338be5f2a940c2f745d5d572",
+        "date": "2023-03-14T19:08:32+01:00",
+        "committed": "2023-03-14T19:08:32+01:00",
+        "old": "a029aff10ec24203f53e932e70fa7dcdb0826ef9",
+        "new": "a878e2e498e15bb5d50226ee267aa0722d1c80ea",
+        "status": "late"
+      },
+      {
+        "commit": "eba3fa2a6e6348cbfdd51a51dd1f1efee221d473",
+        "date": "2023-03-14T18:56:51+01:00",
+        "committed": "2023-03-14T18:56:51+01:00",
+        "old": "6dc9ef9c5df66bf289d551d1302b04f4301190d9",
+        "new": "a029aff10ec24203f53e932e70fa7dcdb0826ef9",
+        "status": "late"
+      },
+      {
+        "commit": "d16898991ff2dd3d831d5665a14cc1ed86b4b1ba",
+        "date": "2023-03-14T17:13:17+01:00",
+        "committed": "2023-03-14T17:13:17+01:00",
+        "old": "fedb6625819ffe8bf9d8b9f17c8b90f370b49e2a",
+        "new": "6dc9ef9c5df66bf289d551d1302b04f4301190d9",
+        "status": "late"
+      },
+      {
+        "commit": "57126a2f7c9fc6c71010475c7bd7e7eda005da3c",
+        "date": "2023-03-14T16:59:17+01:00",
+        "committed": "2023-03-14T16:59:17+01:00",
+        "old": "0235eaa4b2d3d224d31378e599bc4f87859c637b",
+        "new": "fedb6625819ffe8bf9d8b9f17c8b90f370b49e2a",
+        "status": "late"
+      },
+      {
+        "commit": "8f701a7fca1dbd026a418f7ce86ae2225cbdbbdd",
+        "date": "2022-12-02T16:21:30+01:00",
+        "committed": "2022-12-02T16:21:30+01:00",
+        "old": "e668c5103db7e79b46e32337cfd036df3f483291",
+        "new": "0235eaa4b2d3d224d31378e599bc4f87859c637b",
+        "status": "late"
+      }
+    ]
+  }
+}

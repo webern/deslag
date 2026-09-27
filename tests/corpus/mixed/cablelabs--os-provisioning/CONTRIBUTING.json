@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cablelabs/os-provisioning",
+    "path": "CONTRIBUTING.md",
+    "commit": "117cf48e917681c6c47ba966132c2fbf1e606f4b",
+    "commit_date": "2026-06-22T18:10:06+02:00",
+    "url": "https://github.com/cablelabs/os-provisioning/blob/117cf48e917681c6c47ba966132c2fbf1e606f4b/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 88,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2021-05-11T14:59:36-06:00",
+    "last_commit_date": "2026-06-12T11:12:56+02:00",
+    "last_commit_author": "Torsten Schmidt",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-06-02T14:31:44+02:00",
+    "last_committer_date": "2026-06-12T11:12:56+02:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "687704540659ea32b059319f6634c4f2c0f61378",
+        "date": "2026-06-12T11:12:56+02:00",
+        "committed": "2026-06-12T11:12:56+02:00",
+        "old": "86caa199dc3232aeb38b6e4df2878a895c6075bd",
+        "new": "77b2315379b4e08463f2558d37c7622864f14356",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "7 of its 8 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2731,
+    "sha256": "bc9bc77a210a0a3d607a3fcc5d19da37a3d52afcab615b80c452cb0545272a94",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 356,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cablelabs--os-provisioning/CONTRIBUTING.md",
+  "before": {
+    "sha256": "b23d6823b2cd8d7475b6aa873a4c45fb5359cf52d5dde8be87bf5df7de0b3d67",
+    "commit": "fe78a980acc9565f06014351526e57357481f9a1",
+    "date": "2021-03-04T10:16:53+01:00",
+    "between": []
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__outer-loop__week0-v2__policy.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "toku345/dotfiles",
+    "path": "docs/outer-loop/week0-v2/policy.md",
+    "commit": "89c906fce0ab75c0ec0b9e53e9a649e37b508bde",
+    "commit_date": "2026-09-26T17:47:02+09:00",
+    "url": "https://github.com/toku345/dotfiles/blob/89c906fce0ab75c0ec0b9e53e9a649e37b508bde/docs/outer-loop/week0-v2/policy.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-04-09T02:07:36+09:00",
+    "stars": 1,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-15T18:17:49+09:00",
+    "last_commit_date": "2026-07-16T14:32:52+09:00",
+    "last_commit_author": "Fumitaka Tokumitsu",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-15T18:17:49+09:00",
+    "last_committer_date": "2026-07-16T14:32:52+09:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b94eb436d5cbee635a133212d83510c73a45acee",
+        "date": "2026-07-16T14:32:52+09:00",
+        "committed": "2026-07-16T14:32:52+09:00",
+        "old": "20e1105a6b3f402d7fc352b8f2398b39a481094b",
+        "new": "21a6bc4fbc21a7b79647ac5dc0d16d5e8abca6bb",
+        "status": "agent"
+      },
+      {
+        "commit": "80541be1120f3878a75914bb2f6c6e4bd8d7e7db",
+        "date": "2026-07-15T18:17:49+09:00",
+        "committed": "2026-07-15T18:17:49+09:00",
+        "old": null,
+        "new": "20e1105a6b3f402d7fc352b8f2398b39a481094b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 50287,
+    "sha256": "daaffcb9384cf1c533d9205017e1bd37f2c50f9d02c89da4a9a695563f04a070",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 243,
+    "words": 6765,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/toku345--dotfiles/docs/outer-loop/week0-v2/policy.md"
+}

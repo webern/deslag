@@ -1,0 +1,313 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "fishi0x01/vsh",
+    "path": "CHANGELOG.md",
+    "commit": "982f86620278d10ecebfc6a96ab474fb104f9ab1",
+    "commit_date": "2026-05-25T21:46:35+02:00",
+    "url": "https://github.com/fishi0x01/vsh/blob/982f86620278d10ecebfc6a96ab474fb104f9ab1/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-01T18:06:41+02:00",
+    "stars": 290,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 48,
+    "first_commit_date": "2019-10-08T18:58:55+02:00",
+    "last_commit_date": "2026-05-25T21:46:35+02:00",
+    "last_commit_author": "Karl Fischer",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-10-08T18:58:55+02:00",
+    "last_committer_date": "2026-05-25T21:46:35+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 13
+      }
+    ],
+    "edits": [
+      {
+        "commit": "982f86620278d10ecebfc6a96ab474fb104f9ab1",
+        "date": "2026-05-25T21:46:35+02:00",
+        "committed": "2026-05-25T21:46:35+02:00",
+        "old": "d582519c6647766b7b97417e21ab99d4ccf6cb99",
+        "new": "a03a9a5a9c42da8bcca9a7ff48b6dc37db09d697",
+        "status": "agent"
+      },
+      {
+        "commit": "991716652ec44afe5936e419634d161ef4150a75",
+        "date": "2026-05-06T00:30:30+02:00",
+        "committed": "2026-05-06T00:30:30+02:00",
+        "old": "c4cf119603458d1a344c98f17254dd7363ea418a",
+        "new": "d582519c6647766b7b97417e21ab99d4ccf6cb99",
+        "status": "squash"
+      },
+      {
+        "commit": "b11da7e452da58d5bddf5d37e9bbf41a7d30dcee",
+        "date": "2026-05-05T22:14:44+02:00",
+        "committed": "2026-05-05T22:14:44+02:00",
+        "old": "05277c913719ae922da6d11155fccccc411324a3",
+        "new": "c4cf119603458d1a344c98f17254dd7363ea418a",
+        "status": "squash"
+      },
+      {
+        "commit": "f4102537ab6adced40e1a8af3a527096ea4f375d",
+        "date": "2026-04-06T22:26:42+02:00",
+        "committed": "2026-04-06T22:26:42+02:00",
+        "old": "34b755d5ed022615e5917d9fc150779416e6fb08",
+        "new": "05277c913719ae922da6d11155fccccc411324a3",
+        "status": "squash"
+      },
+      {
+        "commit": "cbbbcc2c99e5d3f65aba65f507155e238ed78e25",
+        "date": "2026-03-29T11:41:52+02:00",
+        "committed": "2026-03-29T11:41:52+02:00",
+        "old": "c8c8c7cac7c81b162dac0305b732ae63dee56cca",
+        "new": "34b755d5ed022615e5917d9fc150779416e6fb08",
+        "status": "squash"
+      },
+      {
+        "commit": "6f9cf7becf6906d967f7b0e1fab4fbf15166a9d4",
+        "date": "2026-03-29T10:40:48+02:00",
+        "committed": "2026-03-29T10:40:48+02:00",
+        "old": "0a02b0a12ab8d319a9d8db720b59d4a7bd6b5556",
+        "new": "c8c8c7cac7c81b162dac0305b732ae63dee56cca",
+        "status": "squash"
+      },
+      {
+        "commit": "e4e4c368ba8777a12b7610e9020cff4556609cd0",
+        "date": "2026-03-29T10:17:00+02:00",
+        "committed": "2026-03-29T10:17:00+02:00",
+        "old": "a26e47b409c12ab11dc8fcd6609b09e4fc73f3c7",
+        "new": "0a02b0a12ab8d319a9d8db720b59d4a7bd6b5556",
+        "status": "squash"
+      },
+      {
+        "commit": "b0d8ca95585dca0d9162e9caaf6472f7bb9e6f62",
+        "date": "2026-03-29T00:42:44+01:00",
+        "committed": "2026-03-29T00:42:44+01:00",
+        "old": "4e2f044d1a77f9178e65279857493c0a50a58f69",
+        "new": "a26e47b409c12ab11dc8fcd6609b09e4fc73f3c7",
+        "status": "squash"
+      },
+      {
+        "commit": "0287023ebe573561fb1fc5de71eab198d169462f",
+        "date": "2026-03-29T00:04:09+01:00",
+        "committed": "2026-03-29T00:04:09+01:00",
+        "old": "f9daba904fa621e3a7514d4d9ee514ac0660ef27",
+        "new": "4e2f044d1a77f9178e65279857493c0a50a58f69",
+        "status": "squash"
+      },
+      {
+        "commit": "5f2ae50068f44ac77cb340b3ce4900e3b4048135",
+        "date": "2026-03-28T22:53:37+01:00",
+        "committed": "2026-03-28T22:53:37+01:00",
+        "old": "5ff5dc84dd2b11322d5c6c2c543662b84884f707",
+        "new": "f9daba904fa621e3a7514d4d9ee514ac0660ef27",
+        "status": "squash"
+      },
+      {
+        "commit": "81b044420a58683038471eb4ea0100e97d2e79f2",
+        "date": "2026-03-28T21:35:56+01:00",
+        "committed": "2026-03-28T21:35:56+01:00",
+        "old": "5191b4b47f0b9fb33feb88276bf355166fd7ab55",
+        "new": "5ff5dc84dd2b11322d5c6c2c543662b84884f707",
+        "status": "squash"
+      },
+      {
+        "commit": "5c1f14bd2ef3691d3803cb71761a02ea11a037ac",
+        "date": "2026-03-28T11:37:26+01:00",
+        "committed": "2026-03-28T11:37:26+01:00",
+        "old": "fc62adef27c19aac2f6fbc8b9528724beb4266e5",
+        "new": "5191b4b47f0b9fb33feb88276bf355166fd7ab55",
+        "status": "squash"
+      },
+      {
+        "commit": "a4d93ff75e738e79b6fcb8c6f0c4b83888ca3edf",
+        "date": "2026-03-27T18:14:31+01:00",
+        "committed": "2026-03-27T18:14:31+01:00",
+        "old": "104f032e8bf6c84326d30adf6e531892b28c53af",
+        "new": "fc62adef27c19aac2f6fbc8b9528724beb4266e5",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "30 of its 48 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9403,
+    "sha256": "7cdb492f9ead8941195ceaaba80ac76dcc4a4488147c072ac4dc7747eadec4ce",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 221,
+    "words": 946,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/fishi0x01--vsh/CHANGELOG.md",
+  "before": {
+    "sha256": "6b2ea3c174a20f5364a6f1ca9495108f956f99ab6be1dc7c6d34c88ee80e8dde",
+    "commit": "2fac88d2d0255700b2a0ccbf1edc0dbc22bcd1f5",
+    "date": "2021-10-31T10:16:11+01:00",
+    "between": [
+      {
+        "commit": "991716652ec44afe5936e419634d161ef4150a75",
+        "date": "2026-05-06T00:30:30+02:00",
+        "committed": "2026-05-06T00:30:30+02:00",
+        "old": "c4cf119603458d1a344c98f17254dd7363ea418a",
+        "new": "d582519c6647766b7b97417e21ab99d4ccf6cb99",
+        "status": "squash"
+      },
+      {
+        "commit": "b11da7e452da58d5bddf5d37e9bbf41a7d30dcee",
+        "date": "2026-05-05T22:14:44+02:00",
+        "committed": "2026-05-05T22:14:44+02:00",
+        "old": "05277c913719ae922da6d11155fccccc411324a3",
+        "new": "c4cf119603458d1a344c98f17254dd7363ea418a",
+        "status": "squash"
+      },
+      {
+        "commit": "f4102537ab6adced40e1a8af3a527096ea4f375d",
+        "date": "2026-04-06T22:26:42+02:00",
+        "committed": "2026-04-06T22:26:42+02:00",
+        "old": "34b755d5ed022615e5917d9fc150779416e6fb08",
+        "new": "05277c913719ae922da6d11155fccccc411324a3",
+        "status": "squash"
+      },
+      {
+        "commit": "cbbbcc2c99e5d3f65aba65f507155e238ed78e25",
+        "date": "2026-03-29T11:41:52+02:00",
+        "committed": "2026-03-29T11:41:52+02:00",
+        "old": "c8c8c7cac7c81b162dac0305b732ae63dee56cca",
+        "new": "34b755d5ed022615e5917d9fc150779416e6fb08",
+        "status": "squash"
+      },
+      {
+        "commit": "6f9cf7becf6906d967f7b0e1fab4fbf15166a9d4",
+        "date": "2026-03-29T10:40:48+02:00",
+        "committed": "2026-03-29T10:40:48+02:00",
+        "old": "0a02b0a12ab8d319a9d8db720b59d4a7bd6b5556",
+        "new": "c8c8c7cac7c81b162dac0305b732ae63dee56cca",
+        "status": "squash"
+      },
+      {
+        "commit": "e4e4c368ba8777a12b7610e9020cff4556609cd0",
+        "date": "2026-03-29T10:17:00+02:00",
+        "committed": "2026-03-29T10:17:00+02:00",
+        "old": "a26e47b409c12ab11dc8fcd6609b09e4fc73f3c7",
+        "new": "0a02b0a12ab8d319a9d8db720b59d4a7bd6b5556",
+        "status": "squash"
+      },
+      {
+        "commit": "b0d8ca95585dca0d9162e9caaf6472f7bb9e6f62",
+        "date": "2026-03-29T00:42:44+01:00",
+        "committed": "2026-03-29T00:42:44+01:00",
+        "old": "4e2f044d1a77f9178e65279857493c0a50a58f69",
+        "new": "a26e47b409c12ab11dc8fcd6609b09e4fc73f3c7",
+        "status": "squash"
+      },
+      {
+        "commit": "0287023ebe573561fb1fc5de71eab198d169462f",
+        "date": "2026-03-29T00:04:09+01:00",
+        "committed": "2026-03-29T00:04:09+01:00",
+        "old": "f9daba904fa621e3a7514d4d9ee514ac0660ef27",
+        "new": "4e2f044d1a77f9178e65279857493c0a50a58f69",
+        "status": "squash"
+      },
+      {
+        "commit": "5f2ae50068f44ac77cb340b3ce4900e3b4048135",
+        "date": "2026-03-28T22:53:37+01:00",
+        "committed": "2026-03-28T22:53:37+01:00",
+        "old": "5ff5dc84dd2b11322d5c6c2c543662b84884f707",
+        "new": "f9daba904fa621e3a7514d4d9ee514ac0660ef27",
+        "status": "squash"
+      },
+      {
+        "commit": "81b044420a58683038471eb4ea0100e97d2e79f2",
+        "date": "2026-03-28T21:35:56+01:00",
+        "committed": "2026-03-28T21:35:56+01:00",
+        "old": "5191b4b47f0b9fb33feb88276bf355166fd7ab55",
+        "new": "5ff5dc84dd2b11322d5c6c2c543662b84884f707",
+        "status": "squash"
+      },
+      {
+        "commit": "5c1f14bd2ef3691d3803cb71761a02ea11a037ac",
+        "date": "2026-03-28T11:37:26+01:00",
+        "committed": "2026-03-28T11:37:26+01:00",
+        "old": "fc62adef27c19aac2f6fbc8b9528724beb4266e5",
+        "new": "5191b4b47f0b9fb33feb88276bf355166fd7ab55",
+        "status": "squash"
+      },
+      {
+        "commit": "a4d93ff75e738e79b6fcb8c6f0c4b83888ca3edf",
+        "date": "2026-03-27T18:14:31+01:00",
+        "committed": "2026-03-27T18:14:31+01:00",
+        "old": "104f032e8bf6c84326d30adf6e531892b28c53af",
+        "new": "fc62adef27c19aac2f6fbc8b9528724beb4266e5",
+        "status": "squash"
+      },
+      {
+        "commit": "dc3d83f4888094841662984d3f81aec35d82f2a1",
+        "date": "2025-08-16T16:52:30+02:00",
+        "committed": "2025-08-16T16:52:30+02:00",
+        "old": "44b529dde542a858f4cef49f088f8fd851e4f73c",
+        "new": "104f032e8bf6c84326d30adf6e531892b28c53af",
+        "status": "late"
+      },
+      {
+        "commit": "32d84ccd4cf2491a5253d5245e1b39060920b289",
+        "date": "2024-05-12T10:17:03+02:00",
+        "committed": "2024-05-12T10:17:03+02:00",
+        "old": "a2ffea4c56da8f87d802f5fd0cd823199390f026",
+        "new": "44b529dde542a858f4cef49f088f8fd851e4f73c",
+        "status": "late"
+      },
+      {
+        "commit": "176f0e6ea2a96c9585444a85df5a1ecde9d415a0",
+        "date": "2024-04-11T13:34:39+02:00",
+        "committed": "2024-04-11T13:34:39+02:00",
+        "old": "bb2004c1a0a6f6716cc3e1d9e4b19b15b055d44a",
+        "new": "a2ffea4c56da8f87d802f5fd0cd823199390f026",
+        "status": "late"
+      },
+      {
+        "commit": "5ea17160bce5492b9255109f7d84b2a2b7d6e9eb",
+        "date": "2023-02-21T09:48:31+01:00",
+        "committed": "2023-02-21T09:48:31+01:00",
+        "old": "cec6715801fade1d218d1dfa1c5299c6b276d4a6",
+        "new": "bb2004c1a0a6f6716cc3e1d9e4b19b15b055d44a",
+        "status": "late"
+      },
+      {
+        "commit": "a2c39dd5167bd677b8bf0e37f195dafa711370c1",
+        "date": "2022-01-01T21:13:18+01:00",
+        "committed": "2022-01-01T21:13:18+01:00",
+        "old": "9eb397356d5710e4418892573077c421bb1f5496",
+        "new": "cec6715801fade1d218d1dfa1c5299c6b276d4a6",
+        "status": "late"
+      }
+    ]
+  }
+}

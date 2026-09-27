@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "aperisolve__wiki_content__en__tools__identify.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Zeecka/AperiSolve",
+    "path": "aperisolve/wiki_content/en/tools/identify.md",
+    "commit": "2a675c206cf7a4108682d6d96459c03680c9b2c4",
+    "commit_date": "2026-09-12T16:08:46Z",
+    "url": "https://github.com/Zeecka/AperiSolve/blob/2a675c206cf7a4108682d6d96459c03680c9b2c4/aperisolve/wiki_content/en/tools/identify.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-12T22:55:04+02:00",
+    "stars": 847,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-04T16:33:52Z",
+    "last_commit_date": "2026-07-04T16:33:52Z",
+    "last_commit_author": "bzhcoder",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-06T07:29:13Z",
+    "last_committer_date": "2026-07-06T07:29:13Z",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_016fuv458L1yqaxfATnvkF71",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c0ff7efa52b2faaf4122ed06d544c20e7e97821a",
+        "date": "2026-07-04T16:33:52Z",
+        "committed": "2026-07-06T07:29:13Z",
+        "old": null,
+        "new": "f83bbb65e6e37ad5fbc7823a274dea312c6e125c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2666,
+    "sha256": "b351b7ac70fafee0f4a4f47577b32e243acfed7a91a6a80b9ed6e7252597a6ca",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 357,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Zeecka--AperiSolve/aperisolve/wiki_content/en/tools/identify.md"
+}

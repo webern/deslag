@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "examples__maps__dot_density_map__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "LukeAFullard/SIVO_dev",
+    "path": "examples/maps/dot_density_map/README.md",
+    "commit": "6b0f9f36b82aab93df30ab1e0c3de8c2c86b5099",
+    "commit_date": "2026-09-23T12:56:51+12:00",
+    "url": "https://github.com/LukeAFullard/SIVO_dev/blob/6b0f9f36b82aab93df30ab1e0c3de8c2c86b5099/examples/maps/dot_density_map/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-05T08:49:43Z",
+    "stars": 1,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-12T05:22:22Z",
+    "last_commit_date": "2026-04-12T05:22:22Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-12T05:22:22Z",
+    "last_committer_date": "2026-04-12T05:22:22Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "7102300ca691c9a33a2552024100ef6fc1b427e2",
+        "date": "2026-04-12T05:22:22Z",
+        "committed": "2026-04-12T05:22:22Z",
+        "old": null,
+        "new": "efc2dc769a729b6425bcf1e8138ba2d2e6169e84",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 2291,
+    "sha256": "7e8edc490e02cab84addbbf20adef438876e57d1ea1c004d1ab71a28a936978d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 48,
+    "words": 317,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/LukeAFullard--SIVO_dev/examples/maps/dot_density_map/README.md"
+}

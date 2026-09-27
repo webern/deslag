@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "extensions__introspection__ui__agents__skills__antcn__references__dropdown.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "toa-io/toa",
+    "path": "extensions/introspection/ui/.agents/skills/antcn/references/dropdown.md",
+    "commit": "a771f8303e7a1b09e79dc6842e8e96e21f57d8c5",
+    "commit_date": "2026-09-27T01:07:40+04:00",
+    "url": "https://github.com/toa-io/toa/blob/a771f8303e7a1b09e79dc6842e8e96e21f57d8c5/extensions/introspection/ui/.agents/skills/antcn/references/dropdown.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-10T16:47:20+03:00",
+    "stars": 3,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-28T17:04:18+04:00",
+    "last_commit_date": "2026-09-06T05:46:44+04:00",
+    "last_commit_author": "temich",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-28T17:04:18+04:00",
+    "last_committer_date": "2026-09-06T05:46:44+04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "48a0b40af2848ec411c5b4c9c9b57dec90642644",
+        "date": "2026-09-06T05:46:44+04:00",
+        "committed": "2026-09-06T05:46:44+04:00",
+        "old": "33dbe5cfc204af3b5e1589f99807d9659af5a57a",
+        "new": "e127b773124c7dff5f357ce2c3960669676b42a6",
+        "status": "agent"
+      },
+      {
+        "commit": "21b16b2220a1b26796bdbedc85a0df2a88df31dd",
+        "date": "2026-08-28T17:04:18+04:00",
+        "committed": "2026-08-28T17:04:18+04:00",
+        "old": null,
+        "new": "33dbe5cfc204af3b5e1589f99807d9659af5a57a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6109,
+    "sha256": "120187d7b51170909efe62ad856552400efe6e6034b8a6e6074a3731dcfe5772",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 153,
+    "words": 643,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/toa-io--toa/extensions/introspection/ui/.agents/skills/antcn/references/dropdown.md"
+}

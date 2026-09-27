@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__public-update-drafts__2026-06-28-milestone-1-complete.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "redclawanon-rgb/decentralized-forge",
+    "path": "docs/public-update-drafts/2026-06-28-milestone-1-complete.md",
+    "commit": "e0e005fac5edb69bfcc27a0f461eca6b36549ed6",
+    "commit_date": "2026-07-02T23:23:38-04:00",
+    "url": "https://github.com/redclawanon-rgb/decentralized-forge/blob/e0e005fac5edb69bfcc27a0f461eca6b36549ed6/docs/public-update-drafts/2026-06-28-milestone-1-complete.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-21T23:54:16Z",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-28T17:28:50-04:00",
+    "last_commit_date": "2026-06-28T17:28:50-04:00",
+    "last_commit_author": "OpenAI Codex",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-28T17:28:50-04:00",
+    "last_committer_date": "2026-06-28T17:28:50-04:00",
+    "marks": [
+      {
+        "text": "OpenAI Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2277c84a18459e5561e9049602d360edfe03b40a",
+        "date": "2026-06-28T17:28:50-04:00",
+        "committed": "2026-06-28T17:28:50-04:00",
+        "old": null,
+        "new": "8fb2fa1d624419f7d33a2b7175a9c1cf8bc68fa5",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 3537,
+    "sha256": "f846fd320b79177b4dae3fe177552edaf8e0d489897b8b4550a4f1a1d78e28e9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 56,
+    "words": 415,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/redclawanon-rgb--decentralized-forge/docs/public-update-drafts/2026-06-28-milestone-1-complete.md"
+}

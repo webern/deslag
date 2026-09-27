@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "slides__pandas.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ContextLab/storytelling-with-data",
+    "path": "slides/pandas.md",
+    "commit": "34d9aae2e0e475aed1ad267a8b34b1394b1d92b3",
+    "commit_date": "2026-06-02T12:02:24-04:00",
+    "url": "https://github.com/ContextLab/storytelling-with-data/blob/34d9aae2e0e475aed1ad267a8b34b1394b1d92b3/slides/pandas.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2017-08-27T20:08:23-04:00",
+    "stars": 121,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2020-04-22T00:44:47-04:00",
+    "last_commit_date": "2026-03-30T12:48:19-04:00",
+    "last_commit_author": "Jeremy Manning",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-04-22T00:44:47-04:00",
+    "last_committer_date": "2026-03-30T12:48:19-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4076f9607a78f9fb2fafaa7de0b6059a17abd9ec",
+        "date": "2026-03-30T12:48:19-04:00",
+        "committed": "2026-03-30T12:48:19-04:00",
+        "old": "b1ece78e8acb37cdcfe2e94aa4c5b1a5de5f23f5",
+        "new": "4031411e740465c144f4f21b440a33006df7ccfc",
+        "status": "agent"
+      },
+      {
+        "commit": "68ffd0e60061d5fcf280c80b0e26cbc91d7e49e1",
+        "date": "2026-03-30T01:49:46-04:00",
+        "committed": "2026-03-30T01:49:46-04:00",
+        "old": "553d6b429561361c8f53f5d49eba85d6dbff7f30",
+        "new": "b1ece78e8acb37cdcfe2e94aa4c5b1a5de5f23f5",
+        "status": "agent"
+      },
+      {
+        "commit": "d6fb4df291d24086ee36a33a00fb4b41a735093d",
+        "date": "2026-03-24T10:54:04-04:00",
+        "committed": "2026-03-24T10:54:04-04:00",
+        "old": "51323d519ae5a416443fa54309787d56c900cdf1",
+        "new": "553d6b429561361c8f53f5d49eba85d6dbff7f30",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 9 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8108,
+    "sha256": "b5b0dc835a1b947607b3d3cb46a8c758160a6e577dedf8ebc2341a2d24b55bee",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 282,
+    "words": 1194,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ContextLab--storytelling-with-data/slides/pandas.md",
+  "before": {
+    "sha256": "6deafc52e98e180f3c43c6f707bd589ecf49532b6c001df415d9e7bf30fe8576",
+    "commit": "0434ee920372ce55de9d80872ec3ce2c4700075b",
+    "date": "2021-08-11T20:52:54-04:00",
+    "between": [
+      {
+        "commit": "21959e274a58da4c81041dd493ac1bff5822260f",
+        "date": "2024-01-02T13:32:44-05:00",
+        "committed": "2024-01-02T13:32:44-05:00",
+        "old": "a5506b09664786ec376da84e9e9619d7bb232a26",
+        "new": "51323d519ae5a416443fa54309787d56c900cdf1",
+        "status": "late"
+      }
+    ]
+  }
+}

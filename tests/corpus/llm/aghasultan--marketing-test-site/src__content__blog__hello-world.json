@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "src__content__blog__hello-world.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "aghasultan/marketing-test-site",
+    "path": "src/content/blog/hello-world.md",
+    "commit": "4bda43d02af9a13b72fa8705fc140b09dc217e4f",
+    "commit_date": "2026-02-22T20:28:50+05:00",
+    "url": "https://github.com/aghasultan/marketing-test-site/blob/4bda43d02af9a13b72fa8705fc140b09dc217e4f/src/content/blog/hello-world.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-20T20:24:46+05:00",
+    "stars": 0,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-12-03T16:41:48Z",
+    "last_commit_date": "2025-12-03T16:41:48Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-12-03T16:41:48Z",
+    "last_committer_date": "2025-12-03T16:41:48Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "7a7bbbd8d410ede290411ef828b42268b062087e",
+        "date": "2025-12-03T16:41:48Z",
+        "committed": "2025-12-03T16:41:48Z",
+        "old": null,
+        "new": "f98ff305b3730f292e2c15db0bb643f87b8c381f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 735,
+    "sha256": "b9b1fec2936b434aa404f35a9ee1e56c53dbf3115a285f5ab380b4930360d8a9",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 124,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/aghasultan--marketing-test-site/src/content/blog/hello-world.md"
+}

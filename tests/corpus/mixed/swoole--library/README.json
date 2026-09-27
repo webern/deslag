@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "swoole/library",
+    "path": "README.md",
+    "commit": "fe84d83ec33e55dcc4dde5fd9652fa7de73cf029",
+    "commit_date": "2026-09-26T21:33:59-07:00",
+    "url": "https://github.com/swoole/library/blob/fe84d83ec33e55dcc4dde5fd9652fa7de73cf029/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-25T17:12:04+08:00",
+    "stars": 251,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 29,
+    "first_commit_date": "2019-11-25T17:12:04+08:00",
+    "last_commit_date": "2026-07-26T00:49:41-07:00",
+    "last_commit_author": "Demin Yin",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-11-25T17:12:04+08:00",
+    "last_committer_date": "2026-07-26T00:49:41-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "dee422fc1d68a8cbf89479e66b67bf8b8980ba3d",
+        "date": "2026-07-26T00:49:41-07:00",
+        "committed": "2026-07-26T00:49:41-07:00",
+        "old": "8ed5dffce0ba8e8101bc0ab57df6ab91e5d4b149",
+        "new": "03b56ba9b6a889951989d6d0b23228566338777a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "26 of its 29 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3021,
+    "sha256": "0d67334cd1f312d64e9880c6db9f88248fca74edf9b30b55b55eeb249fad1b6f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 91,
+    "words": 334,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/swoole--library/README.md",
+  "before": {
+    "sha256": "1dfa5f3b57b91228c4201bafd573a9354ef8bb74bbe7083a5b9e71df281957b4",
+    "commit": "8ecb5177759c0c12b984079de69e15235e2a8505",
+    "date": "2021-12-28T11:43:04+08:00",
+    "between": [
+      {
+        "commit": "58e5346bb06a0763c7295c1a5d9458564aaca409",
+        "date": "2024-02-07T13:38:21-08:00",
+        "committed": "2024-02-07T13:38:21-08:00",
+        "old": "cba55699fe47d60ef16dacf2e2e2b608a422f58f",
+        "new": "8ed5dffce0ba8e8101bc0ab57df6ab91e5d4b149",
+        "status": "late"
+      },
+      {
+        "commit": "83d9c741e3b49d71b62572456ee9f6fe74d1057c",
+        "date": "2023-12-08T15:08:34-08:00",
+        "committed": "2023-12-08T15:08:34-08:00",
+        "old": "32fa95badb6f69a8a0f46e98517d838f9bf6617c",
+        "new": "cba55699fe47d60ef16dacf2e2e2b608a422f58f",
+        "status": "late"
+      }
+    ]
+  }
+}

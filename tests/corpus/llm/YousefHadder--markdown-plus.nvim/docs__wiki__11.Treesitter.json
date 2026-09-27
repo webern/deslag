@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__wiki__11.Treesitter.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "YousefHadder/markdown-plus.nvim",
+    "path": "docs/wiki/11.Treesitter.md",
+    "commit": "adb063144700fa4c3d2cdf3997f48e34f74d5dd2",
+    "commit_date": "2026-09-22T04:44:31Z",
+    "url": "https://github.com/YousefHadder/markdown-plus.nvim/blob/adb063144700fa4c3d2cdf3997f48e34f74d5dd2/docs/wiki/11.Treesitter.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-09-28T20:16:44-05:00",
+    "stars": 292,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-31T17:35:25-05:00",
+    "last_commit_date": "2026-07-31T17:35:25-05:00",
+    "last_commit_author": "Yousef Hadder 🇵🇸",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-31T17:35:25-05:00",
+    "last_committer_date": "2026-07-31T17:35:25-05:00",
+    "marks": [
+      {
+        "text": "Copilot-Session: c64028cb-7e10-4d19-a433-1ba2c391e41f",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4cc9ef336aefc70ded0e90fd03ead983b8a8e2e3",
+        "date": "2026-07-31T17:35:25-05:00",
+        "committed": "2026-07-31T17:35:25-05:00",
+        "old": null,
+        "new": "f5399c0c8882669c86ce16e9397f4c31b524db37",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5505,
+    "sha256": "2518e091dc5a23d17189ad754e647fb209c439fd39f3c733754fd2675357bde4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 162,
+    "words": 797,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/YousefHadder--markdown-plus.nvim/docs/wiki/11.Treesitter.md"
+}

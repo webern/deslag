@@ -1,0 +1,201 @@
+{
+  "sidecar_version": 3,
+  "fixture": "about.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dcroote/dcroote.github.io",
+    "path": "about.md",
+    "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+    "commit_date": "2026-09-07T10:53:08-07:00",
+    "url": "https://github.com/dcroote/dcroote.github.io/blob/d14729c561cc70b533859ad02b9f42b52a6f9e87/about.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-06-03T22:15:23-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2016-06-03T22:26:01-07:00",
+    "last_commit_date": "2026-08-24T13:39:29-07:00",
+    "last_commit_author": "Derek Croote",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2016-06-03T22:26:01-07:00",
+    "last_committer_date": "2026-08-24T13:39:29-07:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "7b81d748262d00786aa9093daab6f18318c2f80c",
+        "date": "2026-02-07T15:46:35-08:00",
+        "committed": "2026-02-07T15:46:35-08:00",
+        "old": "a975c5d4464597e8964408370c797daf38db7d25",
+        "new": "b5df1003c66e1d08b95d29af0306262135ea9e7a",
+        "status": "agent"
+      },
+      {
+        "commit": "4202ed47dba96f24eca76cb3ecd3ccbffed2fa68",
+        "date": "2026-02-07T15:04:44-08:00",
+        "committed": "2026-02-07T15:04:44-08:00",
+        "old": "c62a5c62ec6169cbc98b953db0bd26bd2319dd6d",
+        "new": "a975c5d4464597e8964408370c797daf38db7d25",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "8 of its 23 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 3896,
+    "sha256": "1a5d2567a39c225c205d751bc6a63f388c590da041a63fa52a323822942ff006",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 62,
+    "words": 442,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dcroote--dcroote.github.io/about.md",
+  "before": {
+    "sha256": "d4a7274593887fcd1af204661dc0a2f1d9500fb56410644c61331294a65ef701",
+    "commit": "e4734525cb4cc95cde0893d2c7d8d2cc6f68819a",
+    "date": "2021-12-25T13:14:03-08:00",
+    "between": [
+      {
+        "commit": "d88cc97b18c257e49f092fb941540b0d9e44779f",
+        "date": "2026-08-24T13:39:29-07:00",
+        "committed": "2026-08-24T13:39:29-07:00",
+        "old": "d3a29caf605d2a984d87959848fdecd67ea912e0",
+        "new": "8d629bf0780834b1a7f211bc68c357fbcd65fd79",
+        "status": "late"
+      },
+      {
+        "commit": "645903b0f72437599e8f35f55eca8f6154610ccb",
+        "date": "2026-08-21T14:35:59-07:00",
+        "committed": "2026-08-21T14:35:59-07:00",
+        "old": "c70e6648199d4daa2c7e8c15ea7e6644389011f0",
+        "new": "d3a29caf605d2a984d87959848fdecd67ea912e0",
+        "status": "late"
+      },
+      {
+        "commit": "91d0d5807a555fde770ce4e766ea90e9a19d14e1",
+        "date": "2026-06-21T10:33:18-07:00",
+        "committed": "2026-06-21T10:33:18-07:00",
+        "old": "49c4c8dd87c86261af90cff0ac363a7c33975859",
+        "new": "c70e6648199d4daa2c7e8c15ea7e6644389011f0",
+        "status": "late"
+      },
+      {
+        "commit": "4064b89ff4d4449c56eb3dffb395b0fc5cb857f6",
+        "date": "2026-04-07T12:02:29-07:00",
+        "committed": "2026-04-07T12:02:29-07:00",
+        "old": "b5df1003c66e1d08b95d29af0306262135ea9e7a",
+        "new": "49c4c8dd87c86261af90cff0ac363a7c33975859",
+        "status": "late"
+      },
+      {
+        "commit": "4202ed47dba96f24eca76cb3ecd3ccbffed2fa68",
+        "date": "2026-02-07T15:04:44-08:00",
+        "committed": "2026-02-07T15:04:44-08:00",
+        "old": "c62a5c62ec6169cbc98b953db0bd26bd2319dd6d",
+        "new": "a975c5d4464597e8964408370c797daf38db7d25",
+        "status": "squash"
+      },
+      {
+        "commit": "a72e321c350408e356658ac87ab7106baa2cca1a",
+        "date": "2026-01-24T15:57:44-08:00",
+        "committed": "2026-01-24T15:57:44-08:00",
+        "old": "26f710bbb9cb124e00cfcee805e9b4c025046de1",
+        "new": "c62a5c62ec6169cbc98b953db0bd26bd2319dd6d",
+        "status": "late"
+      },
+      {
+        "commit": "e98bb433db3178bc34fe5cc8541709ddbe7e861a",
+        "date": "2025-12-02T22:30:58-08:00",
+        "committed": "2025-12-02T22:30:58-08:00",
+        "old": "8b6f982accddc8775f3393f5cf722cd963b16722",
+        "new": "26f710bbb9cb124e00cfcee805e9b4c025046de1",
+        "status": "late"
+      },
+      {
+        "commit": "3d9e4cdba0494420255516ceb3ff18f720fbdd7e",
+        "date": "2025-10-13T10:43:09-07:00",
+        "committed": "2025-10-13T10:43:09-07:00",
+        "old": "34d059e4ecf41fb70a6630020b6f26a21e3980d3",
+        "new": "8b6f982accddc8775f3393f5cf722cd963b16722",
+        "status": "late"
+      },
+      {
+        "commit": "8b1bd2f0d6f872bd1fe462bf59de5acd5bd146a9",
+        "date": "2025-10-05T10:15:28-07:00",
+        "committed": "2025-10-05T10:15:28-07:00",
+        "old": "6df57d0d711e39e32172db46df1a7a3bbd91ea0f",
+        "new": "34d059e4ecf41fb70a6630020b6f26a21e3980d3",
+        "status": "late"
+      },
+      {
+        "commit": "acef2712189b9d8921a04603344c4a655eda635b",
+        "date": "2025-04-20T22:19:43-07:00",
+        "committed": "2025-04-20T22:19:43-07:00",
+        "old": "a2d152a33b0d70ef207b04ed416ceea208d44463",
+        "new": "6df57d0d711e39e32172db46df1a7a3bbd91ea0f",
+        "status": "late"
+      },
+      {
+        "commit": "bd49812dbfaf56686ced62dbbf53822698935135",
+        "date": "2025-02-23T12:59:54-08:00",
+        "committed": "2025-02-23T12:59:54-08:00",
+        "old": "93698d2a5e477b359693d7e94b13a2f9bcb68ccb",
+        "new": "a2d152a33b0d70ef207b04ed416ceea208d44463",
+        "status": "late"
+      },
+      {
+        "commit": "5830b93bd92e2c26beb5c748b41490086b85a3ce",
+        "date": "2025-02-02T20:07:33-08:00",
+        "committed": "2025-02-02T20:07:33-08:00",
+        "old": "dceee69a9b5b7bf34d1dc6ade62a78ddb0d7c6e3",
+        "new": "93698d2a5e477b359693d7e94b13a2f9bcb68ccb",
+        "status": "late"
+      },
+      {
+        "commit": "39578d68fb1b0ce88a1ec96d3909c18f471b4bae",
+        "date": "2025-02-02T19:22:49-08:00",
+        "committed": "2025-02-02T19:22:49-08:00",
+        "old": "d71c92cbf277bc5600d3fbe90b1abff2246018f1",
+        "new": "dceee69a9b5b7bf34d1dc6ade62a78ddb0d7c6e3",
+        "status": "late"
+      },
+      {
+        "commit": "cca2c7060221c744ba9b65037ac0a0fba9877aff",
+        "date": "2023-05-27T11:52:04-07:00",
+        "committed": "2023-05-27T11:52:04-07:00",
+        "old": "7dfc65db7d1de9e0c82496ab00c2d4f39b03ce4c",
+        "new": "d71c92cbf277bc5600d3fbe90b1abff2246018f1",
+        "status": "late"
+      }
+    ]
+  }
+}

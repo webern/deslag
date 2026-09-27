@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__upgrade-preflight__resources__output-reference.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "lightdash/lightdash",
+    "path": "skills/upgrade-preflight/resources/output-reference.md",
+    "commit": "9d64ddbddbb3439a86eab050970682716e0548f8",
+    "commit_date": "2026-09-26T11:41:00Z",
+    "url": "https://github.com/lightdash/lightdash/blob/9d64ddbddbb3439a86eab050970682716e0548f8/skills/upgrade-preflight/resources/output-reference.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-18T14:57:05+01:00",
+    "stars": 6163,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-12T15:58:55+01:00",
+    "last_commit_date": "2026-08-12T15:58:55+01:00",
+    "last_commit_author": "Charlie Dowler",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-12T15:58:55+01:00",
+    "last_committer_date": "2026-08-12T15:58:55+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01GWvzJr915SXkKpAMZTD5g1",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ad3e1995087a48a1cbe5e2939839ec9aa710d325",
+        "date": "2026-08-12T15:58:55+01:00",
+        "committed": "2026-08-12T15:58:55+01:00",
+        "old": null,
+        "new": "30f735eecdd845b8fcb4ab0c5f2e92d22c4ddf25",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10552,
+    "sha256": "c79720ed79817f3d1917c1245255070bb84adc53c2c18eb88046cd9dee77c399",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 235,
+    "words": 1130,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lightdash--lightdash/skills/upgrade-preflight/resources/output-reference.md"
+}

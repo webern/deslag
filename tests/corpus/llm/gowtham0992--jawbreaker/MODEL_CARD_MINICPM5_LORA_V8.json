@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "MODEL_CARD_MINICPM5_LORA_V8.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "gowtham0992/jawbreaker",
+    "path": "MODEL_CARD_MINICPM5_LORA_V8.md",
+    "commit": "ea9cf1c7378be59687a4158c6aecbd3493598d4b",
+    "commit_date": "2026-06-15T17:01:09-06:00",
+    "url": "https://github.com/gowtham0992/jawbreaker/blob/ea9cf1c7378be59687a4158c6aecbd3493598d4b/MODEL_CARD_MINICPM5_LORA_V8.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-05T16:26:47-06:00",
+    "stars": 1,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-09T18:18:22-06:00",
+    "last_commit_date": "2026-06-09T18:18:22-06:00",
+    "last_commit_author": "Gowtham",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-09T18:18:22-06:00",
+    "last_committer_date": "2026-06-09T18:18:22-06:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "28030afcf34e1f3e5c92dbe499a54c4507fe7bdd",
+        "date": "2026-06-09T18:18:22-06:00",
+        "committed": "2026-06-09T18:18:22-06:00",
+        "old": null,
+        "new": "da0418d2a762917b7d37c578eaae5550f12c88ba",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 3295,
+    "sha256": "bfc2e6252d52da74a9139cb5e99f69d46cb03bc0b968c2beb725a0e1ccd249e9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 90,
+    "words": 466,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gowtham0992--jawbreaker/MODEL_CARD_MINICPM5_LORA_V8.md"
+}

@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "nuget__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dependabot/dependabot-core",
+    "path": "nuget/README.md",
+    "commit": "f3a79fa0711aca171b2174b855d9f21b16237961",
+    "commit_date": "2026-09-25T14:59:43-07:00",
+    "url": "https://github.com/dependabot/dependabot-core/blob/f3a79fa0711aca171b2174b855d9f21b16237961/nuget/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5788,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2018-12-10T15:40:12Z",
+    "last_commit_date": "2026-09-24T14:47:36-06:00",
+    "last_commit_author": "Brett V. Forsgren",
+    "authors": 5,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-12-10T17:28:53Z",
+    "last_committer_date": "2026-09-24T14:47:36-06:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a689f14bd21af0e5333165b55cd91d432ddd6b3f",
+        "date": "2026-09-24T14:47:36-06:00",
+        "committed": "2026-09-24T14:47:36-06:00",
+        "old": "b5d026868b1551c551eccd5dff3b3670c438fa8e",
+        "new": "ffc9bbcddd874376cd707410cb66274a7514de7c",
+        "status": "agent"
+      },
+      {
+        "commit": "e66f82408c7c24a406dab782463361672e280b59",
+        "date": "2026-05-15T15:29:43-06:00",
+        "committed": "2026-05-20T11:55:17-06:00",
+        "old": "7903eab4ccd6213de44be54e0c2d577d542f9a4c",
+        "new": "2b9aa7ae16701cae0d2862a0d427aa374558e41f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 10 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1572,
+    "sha256": "d1f6d299f29a7454d30e5b84ce7f4ab2700c7ed089cec6d846b2e5881ccc012d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 44,
+    "words": 202,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dependabot--dependabot-core/nuget/README.md"
+}

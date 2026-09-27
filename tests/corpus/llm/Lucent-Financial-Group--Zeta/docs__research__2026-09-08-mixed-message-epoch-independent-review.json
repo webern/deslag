@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__research__2026-09-08-mixed-message-epoch-independent-review.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Lucent-Financial-Group/Zeta",
+    "path": "docs/research/2026-09-08-mixed-message-epoch-independent-review.md",
+    "commit": "ea6524e127efe89f039b775f21b7bd66ce1ec205",
+    "commit_date": "2026-09-25T10:00:23-04:00",
+    "url": "https://github.com/Lucent-Financial-Group/Zeta/blob/ea6524e127efe89f039b775f21b7bd66ce1ec205/docs/research/2026-09-08-mixed-message-epoch-independent-review.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-18T05:04:23-04:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-08T07:52:11-04:00",
+    "last_commit_date": "2026-09-08T07:52:11-04:00",
+    "last_commit_author": "Aaron Stainback",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-08T07:52:11-04:00",
+    "last_committer_date": "2026-09-08T07:52:11-04:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "84cc7a0cd2c78bff2ca01fc699fa4d054d3a8223",
+        "date": "2026-09-08T07:52:11-04:00",
+        "committed": "2026-09-08T07:52:11-04:00",
+        "old": null,
+        "new": "4e5aed384d55e0b5034f03ecd5057d26151155e4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 12609,
+    "sha256": "17b13e338c4f44decd9307f37b7b08620fd25101efeaebcb4879dceaeaaac026",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 215,
+    "words": 1611,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Lucent-Financial-Group--Zeta/docs/research/2026-09-08-mixed-message-epoch-independent-review.md"
+}

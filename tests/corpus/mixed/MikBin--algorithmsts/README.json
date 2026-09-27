@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "MikBin/algorithmsts",
+    "path": "README.md",
+    "commit": "040699594bd187950e9341b9147fb5ded3db78ac",
+    "commit_date": "2026-06-27T23:08:00+02:00",
+    "url": "https://github.com/MikBin/algorithmsts/blob/040699594bd187950e9341b9147fb5ded3db78ac/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-01-14T12:00:46+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2019-01-14T12:00:46+01:00",
+    "last_commit_date": "2026-02-26T11:31:13Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 3,
+    "ai_commits": 3,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-01-14T12:00:46+01:00",
+    "last_committer_date": "2026-02-26T11:31:13Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e95484bfaca19ce6129e81cb6989656ae495f26e",
+        "date": "2026-02-26T11:31:13Z",
+        "committed": "2026-02-26T11:31:13Z",
+        "old": "794a47ca95797cd1b4ce88ef062863ff8021f698",
+        "new": "9b48ce83d598738a3b7c1a1dea46f12bd6a6d585",
+        "status": "agent"
+      },
+      {
+        "commit": "badfb010272455f32672756ef2f4a9312c41faed",
+        "date": "2025-10-27T14:45:51Z",
+        "committed": "2025-10-27T14:45:51Z",
+        "old": "c3b894ecbe3cc2bf25fa3d669db2680e5299c588",
+        "new": "794a47ca95797cd1b4ce88ef062863ff8021f698",
+        "status": "agent"
+      },
+      {
+        "commit": "6d76ba29f53353254b51c5823d682ac3e6bf321b",
+        "date": "2025-10-13T08:15:13Z",
+        "committed": "2025-10-13T08:15:13Z",
+        "old": "92bca7f339b52542ce1573e93906b380fb8378f9",
+        "new": "8a0837c8d21901cfca5d09714e7cb6116282ef8d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 6 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 15226,
+    "sha256": "97be96f64be70bd0e8ac6957bfdae659c96850054f0189d59d5ecab5a8370561",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 571,
+    "words": 1812,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/MikBin--algorithmsts/README.md"
+}

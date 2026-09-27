@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "site__src__content__guides__best-figma-to-react-tools-for-docs-sites.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kevinhorek/bluepainter-studio",
+    "path": "site/src/content/guides/best-figma-to-react-tools-for-docs-sites.md",
+    "commit": "244966a0f950560e4191feea06312e9528258e12",
+    "commit_date": "2026-09-06T13:50:27-07:00",
+    "url": "https://github.com/kevinhorek/bluepainter-studio/blob/244966a0f950560e4191feea06312e9528258e12/site/src/content/guides/best-figma-to-react-tools-for-docs-sites.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-18T11:36:28-06:00",
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-21T11:35:45-06:00",
+    "last_commit_date": "2026-07-21T11:35:45-06:00",
+    "last_commit_author": "Kevin Horek",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-21T11:35:45-06:00",
+    "last_committer_date": "2026-07-21T11:35:45-06:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "34b3097b4a4752144260b9a78f3d4235f8e3e6c8",
+        "date": "2026-07-21T11:35:45-06:00",
+        "committed": "2026-07-21T11:35:45-06:00",
+        "old": null,
+        "new": "005edaac3e54e4c741b9432e9cb8494d04cd6946",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1192,
+    "sha256": "5cc16416e920e68570d5c41f70b69e902dbcf7abca2aece040de574fb842349d",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 31,
+    "words": 164,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kevinhorek--bluepainter-studio/site/src/content/guides/best-figma-to-react-tools-for-docs-sites.md"
+}

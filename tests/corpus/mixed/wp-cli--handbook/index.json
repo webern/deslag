@@ -1,0 +1,151 @@
+{
+  "sidecar_version": 3,
+  "fixture": "index.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wp-cli/handbook",
+    "path": "index.md",
+    "commit": "823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2",
+    "commit_date": "2026-09-24T02:54:33+05:30",
+    "url": "https://github.com/wp-cli/handbook/blob/823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2/index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-11-04T23:55:42+02:00",
+    "stars": 204,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 20,
+    "first_commit_date": "2017-01-25T07:02:51-08:00",
+    "last_commit_date": "2026-06-09T15:03:36+05:30",
+    "last_commit_author": "Kamran Abdul Aziz",
+    "authors": 8,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-01-25T07:02:51-08:00",
+    "last_committer_date": "2026-06-09T11:33:36+02:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "assist",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Copilot <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b36ce98678b80ba31ff0c7982b4874e493afc3b5",
+        "date": "2026-03-17T17:55:37+01:00",
+        "committed": "2026-03-17T17:55:37+01:00",
+        "old": "8b2a68858f2aec16929402307574f11075ef4bec",
+        "new": "c419e0ffd64d8ddf4200b3eca2ca0462389b96c9",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "9759ffda8c846d363bf5dcafbbdae2d4799181ca",
+        "date": "2025-11-08T10:49:39Z",
+        "committed": "2025-11-08T10:49:39Z",
+        "old": "14d8040438a94ad0f575b1fe5db32aa56115681f",
+        "new": "742230e6626e9c99ad2e297c70e742fbad82dc02",
+        "status": "agent"
+      },
+      {
+        "commit": "0fd5019d65b28ac1458d393c58369a44801b96db",
+        "date": "2025-11-02T15:17:55Z",
+        "committed": "2025-11-02T15:17:55Z",
+        "old": "14d8040438a94ad0f575b1fe5db32aa56115681f",
+        "new": "018a2a23cc246730da8e27aaf14f9a654f38d2dd",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 20 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5836,
+    "sha256": "15e5bb8bcd289f6ad93cd93b30334927a7e37bc2c06e52f2723e185a42726070",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 62,
+    "words": 503,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/wp-cli--handbook/index.md",
+  "before": {
+    "sha256": "9de54f77c96c2ea51583130ea9d2a0821749ce0c8836453aad0a2ef950e0bfdb",
+    "commit": "5eeb0ee07f36e1bdf5266a1bd71ba26f44a234fa",
+    "date": "2021-12-17T15:03:21+01:00",
+    "between": [
+      {
+        "commit": "8ce838cdcab8d63f39e08de1f6b1e5e4f553cfb1",
+        "date": "2026-06-09T15:03:36+05:30",
+        "committed": "2026-06-09T11:33:36+02:00",
+        "old": "b067fe5d1fb09af4099803887d4c5a703e90fc11",
+        "new": "8b526bd55173923f62b05536635905487de29822",
+        "status": "late"
+      },
+      {
+        "commit": "2a80663d3038bc5132d4c97221e9a5233f43940e",
+        "date": "2026-06-09T10:40:23+02:00",
+        "committed": "2026-06-09T10:40:23+02:00",
+        "old": "c419e0ffd64d8ddf4200b3eca2ca0462389b96c9",
+        "new": "b067fe5d1fb09af4099803887d4c5a703e90fc11",
+        "status": "late"
+      },
+      {
+        "commit": "b36ce98678b80ba31ff0c7982b4874e493afc3b5",
+        "date": "2026-03-17T17:55:37+01:00",
+        "committed": "2026-03-17T17:55:37+01:00",
+        "old": "8b2a68858f2aec16929402307574f11075ef4bec",
+        "new": "c419e0ffd64d8ddf4200b3eca2ca0462389b96c9",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "264cb131bf442ff3ad22481234693568a951d936",
+        "date": "2025-06-25T12:05:32+02:00",
+        "committed": "2025-06-25T15:38:39+02:00",
+        "old": "31f63b99e6521dd758539db1d30809707033d4ee",
+        "new": "14d8040438a94ad0f575b1fe5db32aa56115681f",
+        "status": "late"
+      },
+      {
+        "commit": "f03f6d2911c0046968c00eb39a2a6478787ecc54",
+        "date": "2023-08-22T00:46:35+02:00",
+        "committed": "2023-08-22T00:46:35+02:00",
+        "old": "eb1afc1cc1996fcbbba3c6c44d2204835148fec4",
+        "new": "31f63b99e6521dd758539db1d30809707033d4ee",
+        "status": "late"
+      }
+    ]
+  }
+}

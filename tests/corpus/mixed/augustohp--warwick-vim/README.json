@@ -1,0 +1,87 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "augustohp/warwick-vim",
+    "path": "README.md",
+    "commit": "a02df2d3cfff1d30f809e63459c5c99ba7cfe685",
+    "commit_date": "2026-09-07T01:55:59Z",
+    "url": "https://github.com/augustohp/warwick-vim/blob/a02df2d3cfff1d30f809e63459c5c99ba7cfe685/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2018-08-06T16:35:55-03:00",
+    "stars": 3,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-08-06T16:35:55-03:00",
+    "last_commit_date": "2026-09-07T01:55:59Z",
+    "last_commit_author": "Augusto Pascutti",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-08-06T16:37:45-03:00",
+    "last_committer_date": "2026-09-07T01:55:59Z",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-01a077fb-69ad-72e9-99f0-f7495855c0dd",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a02df2d3cfff1d30f809e63459c5c99ba7cfe685",
+        "date": "2026-09-07T01:55:59Z",
+        "committed": "2026-09-07T01:55:59Z",
+        "old": "22ae6d8efd0dfe14a3a2f4a04f1e043ac51e8071",
+        "new": "4ec85048e23605d0f8330a2a3cfe1e1544c8ac8d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 5 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 3476,
+    "sha256": "c8a96ce4ececc8f224344e9b0295ecfb36303a5cc50bf7a9255676a08b9dd12c",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 91,
+    "words": 509,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/augustohp--warwick-vim/README.md",
+  "before": {
+    "sha256": "a72a0d27828fe4542c19ff3dd5dfb708f07ba0029c54d65911eea5a49291e272",
+    "commit": "fef612c882193edf13a3ef482e92b3694ed50b44",
+    "date": "2019-08-05T00:40:31-03:00",
+    "between": []
+  }
+}

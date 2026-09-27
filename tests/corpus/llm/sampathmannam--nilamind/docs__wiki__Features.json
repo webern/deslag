@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__wiki__Features.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sampathmannam/nilamind",
+    "path": "docs/wiki/Features.md",
+    "commit": "e894d713e76e7852548283b94b4c8efee664019d",
+    "commit_date": "2026-08-07T08:33:10+05:30",
+    "url": "https://github.com/sampathmannam/nilamind/blob/e894d713e76e7852548283b94b4c8efee664019d/docs/wiki/Features.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-29T07:55:35+05:30",
+    "stars": 3,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-06-30T13:46:51+05:30",
+    "last_commit_date": "2026-07-11T15:39:46+05:30",
+    "last_commit_author": "sampathmannam",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-30T13:46:51+05:30",
+    "last_committer_date": "2026-07-11T15:39:46+05:30",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "42d4557f1bb2c253c74ab58978b8d4bc572018c7",
+        "date": "2026-07-11T15:39:46+05:30",
+        "committed": "2026-07-11T15:39:46+05:30",
+        "old": "1f8512af511a3a5331659c66fe8aea4b4cf6a620",
+        "new": "29f6b4ef880253602a640cc3d28b37f45506762f",
+        "status": "agent"
+      },
+      {
+        "commit": "fd43d9b06e7ff9ad8b9b6976b995bf83a833c65b",
+        "date": "2026-06-30T13:46:51+05:30",
+        "committed": "2026-06-30T13:46:51+05:30",
+        "old": null,
+        "new": "1f8512af511a3a5331659c66fe8aea4b4cf6a620",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3737,
+    "sha256": "98cb8e2edba39e2aafe0aae023bf36c756ddc089943743a0c79dcd92a1ee7cd7",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 516,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sampathmannam--nilamind/docs/wiki/Features.md"
+}

@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "andfanilo/streamlit-echarts",
+    "path": "CHANGELOG.md",
+    "commit": "a8f5577168f0eb3a82ba58f2e72bc59df220127f",
+    "commit_date": "2026-09-02T10:21:47+02:00",
+    "url": "https://github.com/andfanilo/streamlit-echarts/blob/a8f5577168f0eb3a82ba58f2e72bc59df220127f/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-04T20:18:59+02:00",
+    "stars": 634,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-07-06T19:55:24+02:00",
+    "last_commit_date": "2026-06-08T22:28:32+02:00",
+    "last_commit_author": "Fanilo Andrianasolo",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-07-06T19:55:24+02:00",
+    "last_committer_date": "2026-06-08T22:28:59+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9557e23de18d33d3f1ec38ed8855ef058c9b1e73",
+        "date": "2026-06-08T22:28:32+02:00",
+        "committed": "2026-06-08T22:28:59+02:00",
+        "old": "f1b7ba600d01a299981ef5653d92bf22f8f43783",
+        "new": "3b5c0609eda5c12cd3c200e895a541b19af32d9e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "8 of its 10 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4579,
+    "sha256": "2a9253d69da3d64f70880cfee9ba041aa586da5697c2045025b33fd36816a358",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 106,
+    "words": 645,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/andfanilo--streamlit-echarts/CHANGELOG.md",
+  "before": {
+    "sha256": "c205cfce584d27a3c1c2932c1c54f006f59cc2ff3aeeaa4210cb719e7e050673",
+    "commit": "7bdb6f16afcb6c32451ae3e7b020aa945347ac69",
+    "date": "2021-12-12T14:34:46+01:00",
+    "between": [
+      {
+        "commit": "38762b5482f324045f91b1bd0b1e33f667983c69",
+        "date": "2026-02-22T15:16:26+01:00",
+        "committed": "2026-02-22T15:16:26+01:00",
+        "old": "cf1db181e49c4a171e9670b62ce636b653e2de36",
+        "new": "f1b7ba600d01a299981ef5653d92bf22f8f43783",
+        "status": "late"
+      }
+    ]
+  }
+}

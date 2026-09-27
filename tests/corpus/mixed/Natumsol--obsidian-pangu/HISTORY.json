@@ -1,0 +1,194 @@
+{
+  "sidecar_version": 3,
+  "fixture": "HISTORY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Natumsol/obsidian-pangu",
+    "path": "HISTORY.md",
+    "commit": "0da9cd257de30068e2f1729730c0dc01b2e2af0c",
+    "commit_date": "2026-09-23T19:55:40+08:00",
+    "url": "https://github.com/Natumsol/obsidian-pangu/blob/0da9cd257de30068e2f1729730c0dc01b2e2af0c/HISTORY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-02-26T16:18:12+08:00",
+    "stars": 108,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 29,
+    "first_commit_date": "2021-07-09T13:22:52+08:00",
+    "last_commit_date": "2026-09-23T19:55:40+08:00",
+    "last_commit_author": "青岚",
+    "authors": 2,
+    "ai_commits": 16,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-07-09T13:22:52+08:00",
+    "last_committer_date": "2026-09-23T19:55:40+08:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 16
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0da9cd257de30068e2f1729730c0dc01b2e2af0c",
+        "date": "2026-09-23T19:55:40+08:00",
+        "committed": "2026-09-23T19:55:40+08:00",
+        "old": "c8103cbe5df9daaa03e14978de50ed5102b2a470",
+        "new": "e6cb16c84498671b6c3670bd0ea102ae439d4c10",
+        "status": "agent"
+      },
+      {
+        "commit": "9d59bdda0eed4959e67c650c9d2c65b24838cc4d",
+        "date": "2026-09-22T16:09:16+08:00",
+        "committed": "2026-09-22T16:09:16+08:00",
+        "old": "3100379e58946b53d8818c9e657393c7807e75de",
+        "new": "c8103cbe5df9daaa03e14978de50ed5102b2a470",
+        "status": "agent"
+      },
+      {
+        "commit": "12fd3450bed68b91f1c78bf79b3f6b0288e0f6d8",
+        "date": "2026-09-22T15:48:13+08:00",
+        "committed": "2026-09-22T15:48:13+08:00",
+        "old": "39f2676d4e83705bbacc15e9222570d68c342038",
+        "new": "3100379e58946b53d8818c9e657393c7807e75de",
+        "status": "agent"
+      },
+      {
+        "commit": "fb0c70819f5d649acbd60d69a864d6ad51c1b73e",
+        "date": "2026-09-22T15:34:24+08:00",
+        "committed": "2026-09-22T15:34:24+08:00",
+        "old": "eab7d2d81531edb12f7a7d6625aa21d492f79091",
+        "new": "39f2676d4e83705bbacc15e9222570d68c342038",
+        "status": "agent"
+      },
+      {
+        "commit": "96c02500121837752534562d00a4a8c01415d99f",
+        "date": "2026-09-22T15:20:23+08:00",
+        "committed": "2026-09-22T15:20:23+08:00",
+        "old": "46d256742b74c81e70dbc96cf9577f81ec263f61",
+        "new": "eab7d2d81531edb12f7a7d6625aa21d492f79091",
+        "status": "agent"
+      },
+      {
+        "commit": "0bd7fb514f51be4d8ede583e77ae00e4a285c970",
+        "date": "2026-09-22T15:11:53+08:00",
+        "committed": "2026-09-22T15:11:53+08:00",
+        "old": "02c3c7106b607fae9ef7fa40860f348e1cc8ad9a",
+        "new": "46d256742b74c81e70dbc96cf9577f81ec263f61",
+        "status": "agent"
+      },
+      {
+        "commit": "6d3302b3714e9772ad18647fcfc91a35e41a44d0",
+        "date": "2026-09-22T14:34:23+08:00",
+        "committed": "2026-09-22T14:34:23+08:00",
+        "old": "e56a3638a740d0ab53474c4eccb4c1fd5699233b",
+        "new": "02c3c7106b607fae9ef7fa40860f348e1cc8ad9a",
+        "status": "agent"
+      },
+      {
+        "commit": "b9c7e76cc78134f371b6cdff3a31dda4c15b9907",
+        "date": "2026-09-22T12:06:21+08:00",
+        "committed": "2026-09-22T12:06:21+08:00",
+        "old": "604bd77e600c072825986502552a92a1dc97eaba",
+        "new": "e56a3638a740d0ab53474c4eccb4c1fd5699233b",
+        "status": "agent"
+      },
+      {
+        "commit": "d30ad9221b8e8bc9f0994bb2d132fd888654981f",
+        "date": "2026-09-21T20:53:58+08:00",
+        "committed": "2026-09-21T20:53:58+08:00",
+        "old": "860deae605453727492bf0eee6b81e1c0f34dcd2",
+        "new": "604bd77e600c072825986502552a92a1dc97eaba",
+        "status": "agent"
+      },
+      {
+        "commit": "6419d1f2124d309c02736bb8d3fe4771b5e1d2a3",
+        "date": "2026-09-21T20:39:00+08:00",
+        "committed": "2026-09-21T20:39:00+08:00",
+        "old": "fcdf9ee325d10e1a2f918fbae1331b7dd8a4a04d",
+        "new": "860deae605453727492bf0eee6b81e1c0f34dcd2",
+        "status": "agent"
+      },
+      {
+        "commit": "e8af625e33824c797b9b53150584db82c6334d75",
+        "date": "2026-09-21T19:38:16+08:00",
+        "committed": "2026-09-21T19:38:16+08:00",
+        "old": "9c0bb62efa048ac96a05c894766c0018048c69a2",
+        "new": "fcdf9ee325d10e1a2f918fbae1331b7dd8a4a04d",
+        "status": "agent"
+      },
+      {
+        "commit": "4f7d3e4aa515bd8103075cb8614b241b9c26b3ca",
+        "date": "2026-09-21T18:21:55+08:00",
+        "committed": "2026-09-21T18:21:55+08:00",
+        "old": "98803a1772d3cfbc7af336585c8edaeaa5cae1fc",
+        "new": "9c0bb62efa048ac96a05c894766c0018048c69a2",
+        "status": "agent"
+      },
+      {
+        "commit": "5da647a21a16debddd2c3edac4820f3982605b70",
+        "date": "2026-09-21T18:17:32+08:00",
+        "committed": "2026-09-21T18:17:32+08:00",
+        "old": "e6843561e416ee53ff3adc23cb7d5ae1161ad438",
+        "new": "98803a1772d3cfbc7af336585c8edaeaa5cae1fc",
+        "status": "agent"
+      },
+      {
+        "commit": "ae4adcd694134f30a88970eff140e474e18ec497",
+        "date": "2026-09-21T18:01:21+08:00",
+        "committed": "2026-09-21T18:01:21+08:00",
+        "old": "036b464ea10d4787713a2a621bcde4f4148a4975",
+        "new": "e6843561e416ee53ff3adc23cb7d5ae1161ad438",
+        "status": "agent"
+      },
+      {
+        "commit": "af45af9777eec7c80e67f925855a87dc60d7cbf8",
+        "date": "2026-09-21T17:58:07+08:00",
+        "committed": "2026-09-21T17:58:07+08:00",
+        "old": "7a9390689929f508c07797e147b391a93a32a81d",
+        "new": "036b464ea10d4787713a2a621bcde4f4148a4975",
+        "status": "agent"
+      },
+      {
+        "commit": "fba917b5e46064335e509db8a7c23a29dbab45c0",
+        "date": "2026-09-21T16:56:37+08:00",
+        "committed": "2026-09-21T16:56:37+08:00",
+        "old": "a754a170c743fc0b264fe7ac336028b1c1c0c265",
+        "new": "7a9390689929f508c07797e147b391a93a32a81d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 29 commits predate 2022-01-01 with no mark, and 16 are marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 14605,
+    "sha256": "748e32abce118b460b0801314df66a98b85fd6cd4c8062f8cdde1241f617ed5f",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 286,
+    "words": 1212,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Natumsol--obsidian-pangu/HISTORY.md"
+}

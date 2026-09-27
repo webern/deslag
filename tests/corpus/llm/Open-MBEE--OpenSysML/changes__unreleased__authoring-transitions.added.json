@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "changes__unreleased__authoring-transitions.added.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Open-MBEE/OpenSysML",
+    "path": "changes/unreleased/authoring-transitions.added.md",
+    "commit": "28278a1bc15adeb05d3b8a9ae55aeac825fdfeb0",
+    "commit_date": "2026-09-26T20:34:58-07:00",
+    "url": "https://github.com/Open-MBEE/OpenSysML/blob/28278a1bc15adeb05d3b8a9ae55aeac825fdfeb0/changes/unreleased/authoring-transitions.added.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-07-27T12:10:28-07:00",
+    "stars": 31,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-26T12:52:17Z",
+    "last_commit_date": "2026-09-26T15:54:12Z",
+    "last_commit_author": "Devin AI",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-26T12:52:17Z",
+    "last_committer_date": "2026-09-26T15:54:12Z",
+    "marks": [
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "098ff193a4e1ca994ffe2295e3bacdf3e156112e",
+        "date": "2026-09-26T15:54:12Z",
+        "committed": "2026-09-26T15:54:12Z",
+        "old": "fb7bd0731c774b9604e77ec6d548ea4dfc844438",
+        "new": "97ef008e21b3fcbf64a4b9d61d09acc58d40edcc",
+        "status": "agent"
+      },
+      {
+        "commit": "1ca3e995040c5c8b7f73d4b57a433712fe8f9832",
+        "date": "2026-09-26T15:20:04Z",
+        "committed": "2026-09-26T15:20:04Z",
+        "old": "98e76cf583fc28142b318a241d295b419039afd3",
+        "new": "fb7bd0731c774b9604e77ec6d548ea4dfc844438",
+        "status": "agent"
+      },
+      {
+        "commit": "8a9d180d6ed3b5e92021210881bd30067f64759f",
+        "date": "2026-09-26T12:52:17Z",
+        "committed": "2026-09-26T12:52:17Z",
+        "old": null,
+        "new": "98e76cf583fc28142b318a241d295b419039afd3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 321,
+    "sha256": "982a435c4d00a5c63dd9ec32f04d7d3520cbeb90dd60ee90a3daf9cd1b856064",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1,
+    "words": 47,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Open-MBEE--OpenSysML/changes/unreleased/authoring-transitions.added.md"
+}

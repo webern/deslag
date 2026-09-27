@@ -1,0 +1,193 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-rest-api-specs",
+    "path": "README.md",
+    "commit": "7e7a9372bd1e8b88a00db8f100c0ba84a05b6e1c",
+    "commit_date": "2026-09-25T19:33:36-04:00",
+    "url": "https://github.com/Azure/azure-rest-api-specs/blob/7e7a9372bd1e8b88a00db8f100c0ba84a05b6e1c/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 3095,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 27,
+    "first_commit_date": "2018-01-02T12:51:21-08:00",
+    "last_commit_date": "2026-08-27T18:24:29-07:00",
+    "last_commit_author": "Lori Fraleigh",
+    "authors": 19,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-02T12:51:21-08:00",
+    "last_committer_date": "2026-08-27T18:24:29-07:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "98f0e30d0678d6cb3c881e8c1e66298e1ffb1af5",
+        "date": "2026-08-27T18:24:29-07:00",
+        "committed": "2026-08-27T18:24:29-07:00",
+        "old": "245f1e3efc627a04005ee6830457a68553585409",
+        "new": "ff13a590b4bc6950b5792d0d6016b13c9560c0f3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "12 of its 27 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot); the clone's history ends at 27b3baac27, of 2018-01-02, so it may be older"
+  },
+  "content": {
+    "size_bytes": 2413,
+    "sha256": "30cbd267585dcfd77543ee9750eb28c496b3f0c694efdeb04ac42ae8475f3d72",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 33,
+    "words": 205,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Azure--azure-rest-api-specs/README.md",
+  "before": {
+    "sha256": "f8c19d958a10a52e904d90ab48c1b2a7f5ef7100604b8850f9662d1df73159ea",
+    "commit": "0a6665506efb86dba686aa87cab3bdd836fac36a",
+    "date": "2021-12-30T20:52:56-08:00",
+    "between": [
+      {
+        "commit": "90e9e68ca05a6d19688546e4cf0bc078dc571426",
+        "date": "2025-11-18T10:23:09-08:00",
+        "committed": "2025-11-18T10:23:09-08:00",
+        "old": "67fa7fb451b4a21440aefcd74d45196aedb58850",
+        "new": "245f1e3efc627a04005ee6830457a68553585409",
+        "status": "late"
+      },
+      {
+        "commit": "b533d94ed925dfca6f8c70c0d8b19042fc86cb36",
+        "date": "2024-04-08T13:41:24-07:00",
+        "committed": "2024-04-08T20:41:24Z",
+        "old": "49db1c9d7156fa4fcb26594acfc00fc4468ec9d1",
+        "new": "67fa7fb451b4a21440aefcd74d45196aedb58850",
+        "status": "late"
+      },
+      {
+        "commit": "835b124ff8160d23823c0e770b4989ca79e7418c",
+        "date": "2024-04-05T14:50:20-07:00",
+        "committed": "2024-04-05T14:50:20-07:00",
+        "old": "838227728eb7d9072a9ddfb0a082f663d276f17b",
+        "new": "49db1c9d7156fa4fcb26594acfc00fc4468ec9d1",
+        "status": "late"
+      },
+      {
+        "commit": "dc39184aeaa7db6f99e5c76b22c7772525a2ee46",
+        "date": "2023-11-16T19:47:42-08:00",
+        "committed": "2023-11-16T19:47:42-08:00",
+        "old": "a939db846cb21f474990ba6b15ee1be5dbfaf084",
+        "new": "838227728eb7d9072a9ddfb0a082f663d276f17b",
+        "status": "late"
+      },
+      {
+        "commit": "d74dfdef1e3a288f76f5a00dde1128257dd91772",
+        "date": "2023-10-30T21:27:45+05:30",
+        "committed": "2023-10-30T08:57:45-07:00",
+        "old": "6f8f17104c9b627fd1df77dd4b50c985ba53feac",
+        "new": "a939db846cb21f474990ba6b15ee1be5dbfaf084",
+        "status": "late"
+      },
+      {
+        "commit": "ac44b88ba4c8c6c9a9ca67c230d3b44b49f1ee9a",
+        "date": "2023-08-30T14:01:10-07:00",
+        "committed": "2023-08-30T14:01:10-07:00",
+        "old": "8672ddb6abeff0e10aaa92a0e6b2a68944804c0b",
+        "new": "6f8f17104c9b627fd1df77dd4b50c985ba53feac",
+        "status": "late"
+      },
+      {
+        "commit": "24166cedd1055380f1b9d40df270bf51b287d7d9",
+        "date": "2023-04-13T15:24:07-07:00",
+        "committed": "2023-04-13T15:24:07-07:00",
+        "old": "e1865ce9be1b00e03a8ed6cf261a7f47bb1fd87c",
+        "new": "8672ddb6abeff0e10aaa92a0e6b2a68944804c0b",
+        "status": "late"
+      },
+      {
+        "commit": "9a46bdbfea7730a3521ac11f5ea1120007d67f79",
+        "date": "2023-04-04T16:57:01-07:00",
+        "committed": "2023-04-04T16:57:01-07:00",
+        "old": "b3fa15c4b1ef3243b00f270d8d6b0d7556f693d7",
+        "new": "e1865ce9be1b00e03a8ed6cf261a7f47bb1fd87c",
+        "status": "late"
+      },
+      {
+        "commit": "21826324d0c76ef0309fe7761eaa34d4da174359",
+        "date": "2022-10-25T09:02:54-07:00",
+        "committed": "2022-10-25T09:02:54-07:00",
+        "old": "e03a87ea8d4b634f3b54cc18dce4e593ff8803d0",
+        "new": "b3fa15c4b1ef3243b00f270d8d6b0d7556f693d7",
+        "status": "late"
+      },
+      {
+        "commit": "75d4efda8d46c2804cbda426d9761d262c0e5a55",
+        "date": "2022-09-26T04:55:10+02:00",
+        "committed": "2022-09-26T10:55:10+08:00",
+        "old": "775637822f2cffca20faa1b5c3935a64b90b4e28",
+        "new": "e03a87ea8d4b634f3b54cc18dce4e593ff8803d0",
+        "status": "late"
+      },
+      {
+        "commit": "df34683e4fba82127d19e1e7f11a7d8713a91ec0",
+        "date": "2022-09-06T07:17:35+05:30",
+        "committed": "2022-09-06T09:47:35+08:00",
+        "old": "8f248602db082aea77708701e68a1ebe036e7abc",
+        "new": "775637822f2cffca20faa1b5c3935a64b90b4e28",
+        "status": "late"
+      },
+      {
+        "commit": "95b1e034fa4ead08dbb551a3bf93a74c76152fe6",
+        "date": "2022-07-28T16:35:28+08:00",
+        "committed": "2022-07-28T16:35:28+08:00",
+        "old": "cd416deef9ee02a3c34c6e15872aef7317785bcb",
+        "new": "8f248602db082aea77708701e68a1ebe036e7abc",
+        "status": "late"
+      },
+      {
+        "commit": "799f9f71fe33b7005742a9deff3fb2c412c01cba",
+        "date": "2022-07-27T10:27:46+09:00",
+        "committed": "2022-07-27T09:27:46+08:00",
+        "old": "65326f8e75cec9a7ee9b37d3daf240bbf26337fa",
+        "new": "cd416deef9ee02a3c34c6e15872aef7317785bcb",
+        "status": "late"
+      },
+      {
+        "commit": "953c8812ba07b24cac05b70e271cb0f9b49aed17",
+        "date": "2022-06-01T09:22:03+08:00",
+        "committed": "2022-06-01T09:22:03+08:00",
+        "old": "55238c9f061e241756417842fc8fc37b21b94ac5",
+        "new": "65326f8e75cec9a7ee9b37d3daf240bbf26337fa",
+        "status": "late"
+      }
+    ]
+  }
+}

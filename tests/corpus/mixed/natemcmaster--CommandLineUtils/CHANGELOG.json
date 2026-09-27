@@ -1,0 +1,188 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "natemcmaster/CommandLineUtils",
+    "path": "CHANGELOG.md",
+    "commit": "00c331e7359cf5e6e5ace82ede6984cb14d760bd",
+    "commit_date": "2026-04-04T23:02:08-07:00",
+    "url": "https://github.com/natemcmaster/CommandLineUtils/blob/00c331e7359cf5e6e5ace82ede6984cb14d760bd/CHANGELOG.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2015-02-17T11:03:52-08:00",
+    "stars": 2274,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 103,
+    "first_commit_date": "2018-02-15T20:58:36-08:00",
+    "last_commit_date": "2026-04-04T23:02:08-07:00",
+    "last_commit_author": "Nate McMaster",
+    "authors": 5,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-02-15T21:00:22-08:00",
+    "last_committer_date": "2026-04-04T23:02:08-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "claude[bot] <41898282+claude[bot]@users.noreply.github.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "00c331e7359cf5e6e5ace82ede6984cb14d760bd",
+        "date": "2026-04-04T23:02:08-07:00",
+        "committed": "2026-04-04T23:02:08-07:00",
+        "old": "1781e8ea052b360e084d7963fbafed3046a8d895",
+        "new": "8f203488b4e06e79c52112f4a071bf2060ec7ee7",
+        "status": "squash"
+      },
+      {
+        "commit": "33b59d726a60968fade3940a1afca5872d2ede9a",
+        "date": "2026-04-04T22:51:26-07:00",
+        "committed": "2026-04-04T22:51:26-07:00",
+        "old": "9f5c631961449c72b67bad70e6a2c3b39a7cdb12",
+        "new": "1781e8ea052b360e084d7963fbafed3046a8d895",
+        "status": "squash"
+      },
+      {
+        "commit": "bb38fa965b7916e21784c3a78c6cc33da3dc5267",
+        "date": "2026-04-04T20:17:05-07:00",
+        "committed": "2026-04-04T20:17:05-07:00",
+        "old": "5c428df7c624a3c17e5c2e83c4e96eacce107167",
+        "new": "9f5c631961449c72b67bad70e6a2c3b39a7cdb12",
+        "status": "agent"
+      },
+      {
+        "commit": "713b42ed02df5eac588154ccf1784cf09679ed10",
+        "date": "2026-01-20T15:51:38-10:00",
+        "committed": "2026-01-20T15:51:38-10:00",
+        "old": "dcad4504c7b0b7c2106488f6a24e49b56a3b3fab",
+        "new": "a4ca9a14ab500d52928329a3a900257d3e09759b",
+        "status": "agent"
+      },
+      {
+        "commit": "94acbc832a223faaec19ff0709c5348bf018563a",
+        "date": "2026-01-11T17:56:58-08:00",
+        "committed": "2026-01-11T17:56:58-08:00",
+        "old": "09840e1da016c7471d226e3b12cbd0fe39125dca",
+        "new": "dcad4504c7b0b7c2106488f6a24e49b56a3b3fab",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "95 of its 103 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 31030,
+    "sha256": "35f5e7b32dc682ba8371397f9df9dced33e75ff23dfe6dd45a75390a2d91a87e",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 663,
+    "words": 2928,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/natemcmaster--CommandLineUtils/CHANGELOG.md",
+  "before": {
+    "sha256": "903e99097d209df32b295a73a3ce24715913b0efa1a83e171b3813d4da98f78a",
+    "commit": "1cb2c2455f677efe274c1cfc5e5dad91b9226ef0",
+    "date": "2021-12-26T16:54:57-08:00",
+    "between": [
+      {
+        "commit": "00c331e7359cf5e6e5ace82ede6984cb14d760bd",
+        "date": "2026-04-04T23:02:08-07:00",
+        "committed": "2026-04-04T23:02:08-07:00",
+        "old": "1781e8ea052b360e084d7963fbafed3046a8d895",
+        "new": "8f203488b4e06e79c52112f4a071bf2060ec7ee7",
+        "status": "squash"
+      },
+      {
+        "commit": "33b59d726a60968fade3940a1afca5872d2ede9a",
+        "date": "2026-04-04T22:51:26-07:00",
+        "committed": "2026-04-04T22:51:26-07:00",
+        "old": "9f5c631961449c72b67bad70e6a2c3b39a7cdb12",
+        "new": "1781e8ea052b360e084d7963fbafed3046a8d895",
+        "status": "squash"
+      },
+      {
+        "commit": "6bb00eabb098aac343409f7dffd383e4241932dd",
+        "date": "2026-02-07T21:50:12-08:00",
+        "committed": "2026-02-07T21:55:59-08:00",
+        "old": "a4ca9a14ab500d52928329a3a900257d3e09759b",
+        "new": "5c428df7c624a3c17e5c2e83c4e96eacce107167",
+        "status": "late"
+      },
+      {
+        "commit": "21931380ed2a42a7f2a819650cf32d7341d5f305",
+        "date": "2022-11-19T14:53:05-08:00",
+        "committed": "2022-11-19T14:53:05-08:00",
+        "old": "fa0379ba2d8f13621113cec4cb7067482c00fed3",
+        "new": "09840e1da016c7471d226e3b12cbd0fe39125dca",
+        "status": "late"
+      },
+      {
+        "commit": "171cf80595b7e66d7222378bf011a8e0428e9f20",
+        "date": "2022-01-31T16:40:21-08:00",
+        "committed": "2022-01-31T16:40:21-08:00",
+        "old": "0b077aa015cd61fbd3f0cc4d857a5d3e6da1b166",
+        "new": "fa0379ba2d8f13621113cec4cb7067482c00fed3",
+        "status": "late"
+      }
+    ]
+  }
+}

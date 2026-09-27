@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "davidpelayo/awesome-parenting",
+    "path": "README.md",
+    "commit": "1998d859dde650addba27d15d5618d8b454748b3",
+    "commit_date": "2026-07-31T21:41:46+08:00",
+    "url": "https://github.com/davidpelayo/awesome-parenting/blob/1998d859dde650addba27d15d5618d8b454748b3/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-06T09:51:19+02:00",
+    "stars": 53,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2018-05-06T09:51:19+02:00",
+    "last_commit_date": "2026-07-31T21:41:46+08:00",
+    "last_commit_author": "tim",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-05-06T09:51:19+02:00",
+    "last_committer_date": "2026-07-31T15:41:46+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9f07884c5fd5eff3ff3a98eb5cdf557c7f116d6e",
+        "date": "2026-03-18T22:24:07+01:00",
+        "committed": "2026-03-18T22:24:07+01:00",
+        "old": "7dbfeb64b518821ed3f8c371450836bd2a688cb0",
+        "new": "377603feb516c4f369fa62260ff6c21effcec45b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "10 of its 13 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6232,
+    "sha256": "55583d5bf892567256285d6a93a29902d901638e23d8e910e854fa048eaa91b5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 94,
+    "words": 448,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/davidpelayo--awesome-parenting/README.md",
+  "before": {
+    "sha256": "f0988d3065afe964f5bd86814c57c580d62c45cd857f478078fbfd63e8fd395e",
+    "commit": "790770551bd6f25771913d770af5ddd4fd5a6d11",
+    "date": "2019-07-24T15:27:23+02:00",
+    "between": [
+      {
+        "commit": "1998d859dde650addba27d15d5618d8b454748b3",
+        "date": "2026-07-31T21:41:46+08:00",
+        "committed": "2026-07-31T15:41:46+02:00",
+        "old": "377603feb516c4f369fa62260ff6c21effcec45b",
+        "new": "d9ae73a0dabeb6e06f040c1939245b3672c85f4e",
+        "status": "late"
+      },
+      {
+        "commit": "ce87cd97d477c836a07afb9e8274df6849f75cac",
+        "date": "2025-03-21T12:55:49+01:00",
+        "committed": "2025-03-21T12:55:49+01:00",
+        "old": "f90cc879ab7d84fd85ac5eac589c628cce81245b",
+        "new": "7dbfeb64b518821ed3f8c371450836bd2a688cb0",
+        "status": "late"
+      }
+    ]
+  }
+}

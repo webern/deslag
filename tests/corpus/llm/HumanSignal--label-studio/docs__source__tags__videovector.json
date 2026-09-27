@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__source__tags__videovector.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "HumanSignal/label-studio",
+    "path": "docs/source/tags/videovector.md",
+    "commit": "42e585fe287beda0f0f9b7a4c7a365cd6ce451da",
+    "commit_date": "2026-09-25T10:13:03+01:00",
+    "url": "https://github.com/HumanSignal/label-studio/blob/42e585fe287beda0f0f9b7a4c7a365cd6ce451da/docs/source/tags/videovector.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-18T19:00:45-07:00",
+    "stars": 28351,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-16T11:58:00-04:00",
+    "last_commit_date": "2026-07-16T11:58:00-04:00",
+    "last_commit_author": "micaelakaplan",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-16T11:58:00-04:00",
+    "last_committer_date": "2026-07-16T11:58:00-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4197452eadfad231969313ad82ed063ed7d4df93",
+        "date": "2026-07-16T11:58:00-04:00",
+        "committed": "2026-07-16T11:58:00-04:00",
+        "old": null,
+        "new": "e1e31b8541c00ac277a7284ce5eea6633c80a04e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6080,
+    "sha256": "183bab7938b69d819eabc22dfef6099fd7a3eb69fc6625ef65d06e1a1e217dd2",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 127,
+    "words": 781,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/HumanSignal--label-studio/docs/source/tags/videovector.md"
+}

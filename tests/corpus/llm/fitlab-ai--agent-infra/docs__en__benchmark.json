@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__en__benchmark.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "fitlab-ai/agent-infra",
+    "path": "docs/en/benchmark.md",
+    "commit": "b89bb760b919a5f622590ac7c4f039e780b91d00",
+    "commit_date": "2026-09-26T13:22:58+08:00",
+    "url": "https://github.com/fitlab-ai/agent-infra/blob/b89bb760b919a5f622590ac7c4f039e780b91d00/docs/en/benchmark.md",
+    "license": "MIT",
+    "license_files": [
+      "License.txt"
+    ],
+    "repo_first_commit_date": "2026-03-06T14:33:06+08:00",
+    "stars": 85,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-29T21:19:07+08:00",
+    "last_commit_date": "2026-07-29T21:19:07+08:00",
+    "last_commit_author": "季聿阶",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-29T21:19:07+08:00",
+    "last_committer_date": "2026-07-29T21:19:07+08:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "97e56a0d39c0d4414fb44641d849e3bad3e5e13f",
+        "date": "2026-07-29T21:19:07+08:00",
+        "committed": "2026-07-29T21:19:07+08:00",
+        "old": null,
+        "new": "7a5478ebf8bd96783d18b97539b47cfdb667a559",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 13400,
+    "sha256": "c7d0282c224703d8bbd6de807508a3b8408fd46248ff8a03aad6af34c83dc81f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 248,
+    "words": 1750,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/fitlab-ai--agent-infra/docs/en/benchmark.md"
+}

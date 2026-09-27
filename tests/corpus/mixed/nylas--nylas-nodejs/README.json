@@ -1,0 +1,129 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "nylas/nylas-nodejs",
+    "path": "README.md",
+    "commit": "fabe2d679baf20f45f941a7148544acb2434aafa",
+    "commit_date": "2026-08-28T09:33:56-07:00",
+    "url": "https://github.com/nylas/nylas-nodejs/blob/fabe2d679baf20f45f941a7148544acb2434aafa/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2015-03-03T12:42:35-08:00",
+    "stars": 181,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 59,
+    "first_commit_date": "2015-03-03T12:42:35-08:00",
+    "last_commit_date": "2026-06-25T12:05:18-06:00",
+    "last_commit_author": "Nick Barraclough",
+    "authors": 25,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2015-03-03T12:42:35-08:00",
+    "last_committer_date": "2026-06-25T14:05:18-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ca893af5db761356abbe88a85255e49ddc041673",
+        "date": "2026-05-06T14:40:43-06:00",
+        "committed": "2026-05-06T14:40:43-06:00",
+        "old": "549d9c898aebf1143a8f7b0647130b65a0b0b880",
+        "new": "7f704c978657585ac2e90369bd459b7500986bd2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "52 of its 59 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8338,
+    "sha256": "607fd1a83db074a42cf79d3afc03b340c0239799cd914481de5a66f49beec4f0",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 180,
+    "words": 759,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/nylas--nylas-nodejs/README.md",
+  "before": {
+    "sha256": "1f9dd8e39a506a9ff2860c9c331ff15dbd57e70dad622b1ec61b2f82b9c33770",
+    "commit": "f458ccf03f9902f78aee4529e68ba680bb719bd2",
+    "date": "2021-12-16T13:28:55-05:00",
+    "between": [
+      {
+        "commit": "a970008e9e6e8f6e3241dc8235b8e821df2c8b25",
+        "date": "2026-06-25T12:05:18-06:00",
+        "committed": "2026-06-25T14:05:18-04:00",
+        "old": "7f704c978657585ac2e90369bd459b7500986bd2",
+        "new": "ea7d76cffa2b68569835bb4dd36b538a5259e4a5",
+        "status": "late"
+      },
+      {
+        "commit": "2f376fe754bd0e6ed7d06681e51d48d1debb4b65",
+        "date": "2025-10-10T09:37:25-04:00",
+        "committed": "2025-10-10T09:37:25-04:00",
+        "old": "42e3fd74831f236050c8f439704275c153c2e16d",
+        "new": "549d9c898aebf1143a8f7b0647130b65a0b0b880",
+        "status": "late"
+      },
+      {
+        "commit": "19678d9547a5a08dad85222e3851ae3ac006b7a2",
+        "date": "2024-02-06T01:42:34+04:00",
+        "committed": "2024-02-06T01:42:34+04:00",
+        "old": "a96e29d7ec22932eeef15615018cb886b8ef10ff",
+        "new": "42e3fd74831f236050c8f439704275c153c2e16d",
+        "status": "late"
+      },
+      {
+        "commit": "a28e120cdc444b9cb1807590dd66bd2c789ca6a7",
+        "date": "2023-11-29T09:55:18-05:00",
+        "committed": "2023-11-29T09:55:18-05:00",
+        "old": "c9d47ce66d39bcb91edaadd43d3f790e84116fc5",
+        "new": "a96e29d7ec22932eeef15615018cb886b8ef10ff",
+        "status": "late"
+      },
+      {
+        "commit": "cb42d16b3c597d4297e71303066f2266a66084ee",
+        "date": "2023-09-29T16:27:54-04:00",
+        "committed": "2023-09-29T16:27:54-04:00",
+        "old": "a96e29d7ec22932eeef15615018cb886b8ef10ff",
+        "new": "c9d47ce66d39bcb91edaadd43d3f790e84116fc5",
+        "status": "late"
+      },
+      {
+        "commit": "1539b8c0417d67bd69674a13a4e50bbb034d8fe3",
+        "date": "2022-09-02T16:38:11-04:00",
+        "committed": "2022-09-02T16:38:11-04:00",
+        "old": "ab18f8523e689e99a84778043d7ae468098376c7",
+        "new": "a96e29d7ec22932eeef15615018cb886b8ef10ff",
+        "status": "late"
+      }
+    ]
+  }
+}

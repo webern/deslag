@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__adr-008-multi-platform-binary-distribution.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "oocx/tfplan2md",
+    "path": "docs/adr-008-multi-platform-binary-distribution.md",
+    "commit": "e422e9f9c013fb891912a1986c376bd1718d0312",
+    "commit_date": "2026-09-05T13:33:32Z",
+    "url": "https://github.com/oocx/tfplan2md/blob/e422e9f9c013fb891912a1986c376bd1718d0312/docs/adr-008-multi-platform-binary-distribution.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-14T17:15:32+01:00",
+    "stars": 173,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-02-12T11:02:33Z",
+    "last_commit_date": "2026-05-04T11:32:29Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-12T12:58:15+01:00",
+    "last_committer_date": "2026-05-04T14:50:13+02:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1c234056ff6a166f895c10a9f53ae7f375d7b52d",
+        "date": "2026-05-04T11:32:29Z",
+        "committed": "2026-05-04T14:50:13+02:00",
+        "old": "f36800b6b0f5f78fbe1efb75ad50bfac26b30c8c",
+        "new": "c584a311b273adb98dfdb318bc87cf96e85c5608",
+        "status": "agent"
+      },
+      {
+        "commit": "83250c0b6303cd11841d906930055b2507af7a4a",
+        "date": "2026-02-12T12:52:13Z",
+        "committed": "2026-02-12T15:15:52+01:00",
+        "old": "b52e5aabbb7178155237d097d264cdd82dc02b05",
+        "new": "f36800b6b0f5f78fbe1efb75ad50bfac26b30c8c",
+        "status": "agent"
+      },
+      {
+        "commit": "5de477374e114db74804f4526e822980c7d97533",
+        "date": "2026-02-12T11:02:33Z",
+        "committed": "2026-02-12T12:58:15+01:00",
+        "old": null,
+        "new": "b52e5aabbb7178155237d097d264cdd82dc02b05",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6500,
+    "sha256": "dd6db85536eff0fe0fa237424b9c2e54a5547930772622a25ee15d123f73ae4e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 149,
+    "words": 818,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/oocx--tfplan2md/docs/adr-008-multi-platform-binary-distribution.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "extend__generic-extractor__configuration__api__pagination__response-param.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "keboola/developers-docs",
+    "path": "extend/generic-extractor/configuration/api/pagination/response-param.md",
+    "commit": "edbd4dbd4aa968233e881e2e8260085eafd74385",
+    "commit_date": "2026-09-23T17:22:39+02:00",
+    "url": "https://github.com/keboola/developers-docs/blob/edbd4dbd4aa968233e881e2e8260085eafd74385/extend/generic-extractor/configuration/api/pagination/response-param.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-09-22T15:04:31+02:00",
+    "stars": 3,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2017-05-30T12:40:39+02:00",
+    "last_commit_date": "2026-08-25T13:27:00+02:00",
+    "last_commit_author": "Nikita",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-05-30T12:40:39+02:00",
+    "last_committer_date": "2026-08-25T13:27:00+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8c780cfdac82cdd25a1889f301dce0a518650a51",
+        "date": "2026-08-25T13:27:00+02:00",
+        "committed": "2026-08-25T13:27:00+02:00",
+        "old": "b7524d224cd728a07c4b25001145552c3506d60e",
+        "new": "87e799330f81f56a00f0c6919fba8e1a90c0f3d1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 6 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 248,
+    "sha256": "f98d8c65ced5756270734e6b92bf4d8f46c4b018ac22a9dedc86635784ddd22b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 5,
+    "words": 10,
+    "frontmatter": true,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/keboola--developers-docs/extend/generic-extractor/configuration/api/pagination/response-param.md"
+}

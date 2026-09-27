@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__adr__0014-agent-facing-docs-surface.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "retentioneering/retentioneering-tools",
+    "path": "docs/adr/0014-agent-facing-docs-surface.md",
+    "commit": "7c6f251415dc7aa1410dfa788a55f61e1425bacd",
+    "commit_date": "2026-09-25T11:26:03+02:00",
+    "url": "https://github.com/retentioneering/retentioneering-tools/blob/7c6f251415dc7aa1410dfa788a55f61e1425bacd/docs/adr/0014-agent-facing-docs-surface.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-10-09T18:03:22+03:00",
+    "stars": 919,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-28T21:32:46+02:00",
+    "last_commit_date": "2026-07-28T21:32:46+02:00",
+    "last_commit_author": "v.kukushkin",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-28T21:32:46+02:00",
+    "last_committer_date": "2026-07-28T21:32:46+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "66ca683a1081c42c7a178c367d8732e5f72eacdf",
+        "date": "2026-07-28T21:32:46+02:00",
+        "committed": "2026-07-28T21:32:46+02:00",
+        "old": null,
+        "new": "080d4cde6207ae51dfb0d485cd6450c9d3cba6df",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4222,
+    "sha256": "31dc98c165007fccb827fbbd66ecf2e9662f55f28af069ca29687c80d84a6879",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 71,
+    "words": 645,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/retentioneering--retentioneering-tools/docs/adr/0014-agent-facing-docs-surface.md"
+}

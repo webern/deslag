@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__design__ledger-export-triggers.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "gastownhall/gastown",
+    "path": "docs/design/ledger-export-triggers.md",
+    "commit": "649b832b7672bc7a2dbef26f5983aba6198b819b",
+    "commit_date": "2026-07-23T09:03:02-04:00",
+    "url": "https://github.com/gastownhall/gastown/blob/649b832b7672bc7a2dbef26f5983aba6198b819b/docs/design/ledger-export-triggers.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-15T16:38:23-08:00",
+    "stars": 18199,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-06T20:03:54-08:00",
+    "last_commit_date": "2026-02-06T20:03:54-08:00",
+    "last_commit_author": "gastown/crew/mel",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-06T20:04:04-08:00",
+    "last_committer_date": "2026-02-06T20:04:04-08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "88789748672a8c4e6987b1e879ffc2a9f0356de2",
+        "date": "2026-02-06T20:03:54-08:00",
+        "committed": "2026-02-06T20:04:04-08:00",
+        "old": null,
+        "new": "886d8525c07310656e9f8727a3dcb1f92348d7ce",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 22540,
+    "sha256": "311ee03bcd2a3df97389dec67e3121a78db91bcdd96c6cf9914dd72defabbbfc",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 640,
+    "words": 3271,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/gastownhall--gastown/docs/design/ledger-export-triggers.md"
+}

@@ -1,0 +1,143 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__build_system__index.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "learningequality/kolibri",
+    "path": "docs/build_system/index.md",
+    "commit": "2759d4e5ddb1e2d5ed3c144a85fb746fb1c5644d",
+    "commit_date": "2026-09-27T02:20:51+05:30",
+    "url": "https://github.com/learningequality/kolibri/blob/2759d4e5ddb1e2d5ed3c144a85fb746fb1c5644d/docs/build_system/index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1123,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2020-10-06T14:42:19-07:00",
+    "last_commit_date": "2026-09-22T14:46:18-07:00",
+    "last_commit_author": "rtibblesbot",
+    "authors": 3,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-06T14:42:19-07:00",
+    "last_committer_date": "2026-09-22T22:09:57-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c8af9ab24cb8e2140850810c6cc0840a458a73ec",
+        "date": "2026-09-22T14:46:18-07:00",
+        "committed": "2026-09-22T22:09:57-07:00",
+        "old": "3c78e1cba12554133bae423d505cc2d7f087bec8",
+        "new": "40c0272d0f1ec081ce4d042fa103f46dcc603c02",
+        "status": "agent"
+      },
+      {
+        "commit": "ad92489abff8d3fcc33b3f84a78c75694bcde705",
+        "date": "2026-09-22T14:46:04-07:00",
+        "committed": "2026-09-22T21:30:15-07:00",
+        "old": "a1c50d4ae5d62c2d126b8fde5dca3140fe13dce6",
+        "new": "3c78e1cba12554133bae423d505cc2d7f087bec8",
+        "status": "agent"
+      },
+      {
+        "commit": "5396df4d671ebc612daa6c2d7bc1bd165dd6bd45",
+        "date": "2026-07-05T15:35:51-07:00",
+        "committed": "2026-07-05T15:35:51-07:00",
+        "old": "19154aa6d7c67fb4955bd77198b92d28aa01b2e3",
+        "new": "aa00859f495d303e286620e7d0c8c60d72966d7e",
+        "status": "agent"
+      },
+      {
+        "commit": "8dfe4d8871818b01f5be2523137941159af61ee6",
+        "date": "2026-05-28T11:57:24-07:00",
+        "committed": "2026-05-28T12:23:41-07:00",
+        "old": "6fefa2f1173264c146245e92bcec2e60c6f122df",
+        "new": "19154aa6d7c67fb4955bd77198b92d28aa01b2e3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 11 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6346,
+    "sha256": "cd9c431489f1437417777395084b2aafb0e90337d67c0f72c4204089e4fc8d92",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 120,
+    "words": 835,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/learningequality--kolibri/docs/build_system/index.md",
+  "before": {
+    "sha256": "2509fb0fdf807ba936ec726922478a7ae2a7bcaa24cc21ab9717a27c6a02043b",
+    "commit": "ae2733c8ba91bc7be22b67134381448294745dce",
+    "date": "2021-12-29T14:17:04-08:00",
+    "between": [
+      {
+        "commit": "ce333069a31f283c7c8b0c44cf83a7428ee56d39",
+        "date": "2026-07-05T17:13:48-07:00",
+        "committed": "2026-07-05T17:13:48-07:00",
+        "old": "aa00859f495d303e286620e7d0c8c60d72966d7e",
+        "new": "a1c50d4ae5d62c2d126b8fde5dca3140fe13dce6",
+        "status": "late"
+      },
+      {
+        "commit": "8241d5b8e5c57564e932f5267aa046bfabb6ba3b",
+        "date": "2025-10-16T18:02:48-07:00",
+        "committed": "2025-10-16T18:02:48-07:00",
+        "old": "db484319970b42ed81537a1e925ac17fa1b3a936",
+        "new": "6fefa2f1173264c146245e92bcec2e60c6f122df",
+        "status": "late"
+      },
+      {
+        "commit": "2f45778e9f25ab72505a31b8096dd903b470b183",
+        "date": "2025-09-26T11:05:59-07:00",
+        "committed": "2025-09-26T11:05:59-07:00",
+        "old": "2f5fa56f8affe471439d0e126fcfaec369576c19",
+        "new": "db484319970b42ed81537a1e925ac17fa1b3a936",
+        "status": "late"
+      }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "pytest-dev/pytest",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "c333125d977b323fafbeb0e09cd86e203ab4af39",
+    "commit_date": "2026-09-27T05:12:40Z",
+    "url": "https://github.com/pytest-dev/pytest/blob/c333125d977b323fafbeb0e09cd86e203ab4af39/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 14540,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2018-01-09T18:41:00-02:00",
+    "last_commit_date": "2026-02-28T08:38:06+01:00",
+    "last_commit_author": "Ronny Pfannschmidt",
+    "authors": 7,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-09T18:41:00-02:00",
+    "last_committer_date": "2026-02-28T08:38:06+01:00",
+    "marks": [
+      {
+        "text": "Claude claude-4.6-opus-high-thinking <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "58efa0ea6e036e39d805c4a86b0896fa8cf7f623",
+        "date": "2026-02-28T08:38:06+01:00",
+        "committed": "2026-02-28T08:38:06+01:00",
+        "old": "5b00e4434a08ac1031dd2145441e844138133fdb",
+        "new": "ab9e1640d0680d262b899b28516db021d045d958",
+        "status": "agent"
+      },
+      {
+        "commit": "84047db3e0fd0cf1a86796dc5f85f7d1c4dbc1de",
+        "date": "2026-02-23T10:32:06+01:00",
+        "committed": "2026-02-23T10:32:06+01:00",
+        "old": "98e2444aad508dbbfa149eaba17629399510f731",
+        "new": "5b00e4434a08ac1031dd2145441e844138133fdb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "15 of its 19 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code); the clone's history ends at 93306f6a5e, of 2018-01-09, so it may be older"
+  },
+  "content": {
+    "size_bytes": 1660,
+    "sha256": "08ceeba2b56f6752fbfea7f8c9687dd5930503cab7f150a1fb39fe78832c1f3a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 31,
+    "words": 216,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/pytest-dev--pytest/.github/PULL_REQUEST_TEMPLATE.md",
+  "before": {
+    "sha256": "1e5c4929a4fb18a7d5713cca6b59192aa2625fc8d0484893e6fbc2f167966e3e",
+    "commit": "9a992df3c93ae330765e81316f7fb65ef40692af",
+    "date": "2021-12-30T11:54:49-05:00",
+    "between": [
+      {
+        "commit": "87d95b79f35e45dd76f37c7f7e2de4e6da8e68c9",
+        "date": "2026-02-21T21:07:36+01:00",
+        "committed": "2026-02-21T21:07:36+01:00",
+        "old": "6f638ba853b9bb9a95a1db6093f9b7da1af58554",
+        "new": "98e2444aad508dbbfa149eaba17629399510f731",
+        "status": "late"
+      },
+      {
+        "commit": "5d0c52b6d0a011772fdf388d8f79757ea1821a3e",
+        "date": "2026-01-18T19:20:40+02:00",
+        "committed": "2026-01-18T19:25:07+02:00",
+        "old": "5e7282bfd77aa4214f70062e3fa8850bcd8396d5",
+        "new": "6f638ba853b9bb9a95a1db6093f9b7da1af58554",
+        "status": "late"
+      }
+    ]
+  }
+}

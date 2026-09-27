@@ -1,0 +1,111 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__journeys__junior-data-engineer.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "henryodibi11/Odibi",
+    "path": "docs/journeys/junior-data-engineer.md",
+    "commit": "095dc2a09bf599f218c097c8360702ce9c22e751",
+    "commit_date": "2026-08-11T16:17:17-05:00",
+    "url": "https://github.com/henryodibi11/Odibi/blob/095dc2a09bf599f218c097c8360702ce9c22e751/docs/journeys/junior-data-engineer.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-06T15:58:52-06:00",
+    "stars": 2,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-03-13T23:54:31-05:00",
+    "last_commit_date": "2026-03-16T20:33:35-05:00",
+    "last_commit_author": "Henry Odibi",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-13T23:54:31-05:00",
+    "last_committer_date": "2026-03-16T20:33:35-05:00",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-019cee2d-faae-715c-82de-00ac71f34ce4",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-019cf966-a1af-707a-b2c8-5d79ccecff99",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-f7612226-398a-4174-8d54-ed83fa442bc1",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5490d8731f26b150484c0b4917ba458500ca71ff",
+        "date": "2026-03-16T20:33:35-05:00",
+        "committed": "2026-03-16T20:33:35-05:00",
+        "old": "97b12056d5c2513aa02b3a9f6d791fdf06c844bc",
+        "new": "3b6d6ce9230de9debadbdf2568c23eb3f8183894",
+        "status": "agent"
+      },
+      {
+        "commit": "0cd0329eeedeb84f3025a5f36aa1e6e4da9e52af",
+        "date": "2026-03-14T16:32:00-05:00",
+        "committed": "2026-03-14T16:32:00-05:00",
+        "old": "be5e23806526a78bb3707cb083f2feccead11285",
+        "new": "97b12056d5c2513aa02b3a9f6d791fdf06c844bc",
+        "status": "agent"
+      },
+      {
+        "commit": "f7a29f386f38ae2eee9de6a748e18b8a20a5f3b7",
+        "date": "2026-03-13T23:54:31-05:00",
+        "committed": "2026-03-13T23:54:31-05:00",
+        "old": null,
+        "new": "be5e23806526a78bb3707cb083f2feccead11285",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 11377,
+    "sha256": "a37b7e3549886f98f5485a55dd607103157c0cc8672a60ea3c681551b6c9b978",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 496,
+    "words": 1602,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/henryodibi11--Odibi/docs/journeys/junior-data-engineer.md"
+}

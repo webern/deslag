@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "src__sdk__documentation__TemplateEngine__design__proposed__interactive-mode.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dotnet/dotnet",
+    "path": "src/sdk/documentation/TemplateEngine/design/proposed/interactive-mode.md",
+    "commit": "c38d0900682e8ee67cf6eb5dcff6b35de9019c7e",
+    "commit_date": "2026-09-27T04:26:28Z",
+    "url": "https://github.com/dotnet/dotnet/blob/c38d0900682e8ee67cf6eb5dcff6b35de9019c7e/src/sdk/documentation/TemplateEngine/design/proposed/interactive-mode.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.TXT",
+      "src/sdk/LICENSE.TXT"
+    ],
+    "repo_first_commit_date": "2022-12-22T09:54:14Z",
+    "stars": 1279,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-08T09:36:40-07:00",
+    "last_commit_date": "2026-04-08T09:36:40-07:00",
+    "last_commit_author": "Marc Paine",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-08T09:36:40-07:00",
+    "last_committer_date": "2026-04-08T09:36:40-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4717265bc078fbf83d257723df041414c7a686c8",
+        "date": "2026-04-08T09:36:40-07:00",
+        "committed": "2026-04-08T09:36:40-07:00",
+        "old": null,
+        "new": "565fc365ec3bebcb2a62d70481a322a04be05d3f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5577,
+    "sha256": "8bd96b14bc32822ab32a3d6886cb83b6056f039b8ccd9eb994cdb56715190c9b",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 68,
+    "words": 898,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dotnet--dotnet/src/sdk/documentation/TemplateEngine/design/proposed/interactive-mode.md"
+}

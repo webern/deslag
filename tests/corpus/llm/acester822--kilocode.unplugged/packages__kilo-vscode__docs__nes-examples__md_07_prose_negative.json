@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "packages__kilo-vscode__docs__nes-examples__md_07_prose_negative.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "acester822/kilocode.unplugged",
+    "path": "packages/kilo-vscode/docs/nes-examples/md_07_prose_negative.md",
+    "commit": "7c92cf8014f7051fc952c289edf9fd61f60255fc",
+    "commit_date": "2026-07-15T15:42:04-05:00",
+    "url": "https://github.com/acester822/kilocode.unplugged/blob/7c92cf8014f7051fc952c289edf9fd61f60255fc/packages/kilo-vscode/docs/nes-examples/md_07_prose_negative.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE",
+      "packages/kilo-vscode/LICENSE"
+    ],
+    "repo_first_commit_date": "2025-03-21T18:20:28+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-26T09:17:53-07:00",
+    "last_commit_date": "2026-05-26T09:17:53-07:00",
+    "last_commit_author": "Firas Trabelsi",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-26T09:17:53-07:00",
+    "last_committer_date": "2026-05-26T09:17:53-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fe60a467d1e102b0580ca8d7515404b96683e4d7",
+        "date": "2026-05-26T09:17:53-07:00",
+        "committed": "2026-05-26T09:17:53-07:00",
+        "old": null,
+        "new": "3751a203cf222826e6d099e541b4945ab1e5eeed",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 510,
+    "sha256": "49784729744152e073ccc01bb5b2a12777b2e3fdb8d85f4ddbc562f872782c70",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 10,
+    "words": 84,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/acester822--kilocode.unplugged/packages/kilo-vscode/docs/nes-examples/md_07_prose_negative.md"
+}

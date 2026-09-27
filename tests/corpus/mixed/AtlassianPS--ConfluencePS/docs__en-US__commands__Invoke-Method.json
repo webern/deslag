@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__en-US__commands__Invoke-Method.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AtlassianPS/ConfluencePS",
+    "path": "docs/en-US/commands/Invoke-Method.md",
+    "commit": "322048aa2a5b94d5da23aa5b2511aa8589852602",
+    "commit_date": "2026-09-15T00:37:51+02:00",
+    "url": "https://github.com/AtlassianPS/ConfluencePS/blob/322048aa2a5b94d5da23aa5b2511aa8589852602/docs/en-US/commands/Invoke-Method.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-11-15T21:01:51-08:00",
+    "stars": 162,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2018-10-08T13:27:14+02:00",
+    "last_commit_date": "2026-05-19T20:22:43+02:00",
+    "last_commit_author": "Oliver Lipkau",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-10-08T13:27:14+02:00",
+    "last_committer_date": "2026-05-19T20:22:43+02:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1425a85ac19d595ea6519b79dd23b1b1dfcfbee8",
+        "date": "2026-05-19T20:22:43+02:00",
+        "committed": "2026-05-19T20:22:43+02:00",
+        "old": "e1930bd731aa1ab070f7491eef487dff5a9dc051",
+        "new": "457315865accc7e0c7a8aef13ddcf75f0e886d5e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 6 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10407,
+    "sha256": "2638d353457201a0cfa4f30651eed86484ea3b4c64a05d6eb90933dd914f5344",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 480,
+    "words": 1347,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/AtlassianPS--ConfluencePS/docs/en-US/commands/Invoke-Method.md",
+  "before": {
+    "sha256": "60833720c6fc69054ffc3d54bff26013feb0ee144069c3f70a570ddfe272c442",
+    "commit": "593e0e4ddb7e432af956fab2688f36110508c773",
+    "date": "2021-05-01T12:10:40+02:00",
+    "between": [
+      {
+        "commit": "40108ddb3877a530232e3b29a53ef33a3815f7d7",
+        "date": "2022-01-09T10:26:50+01:00",
+        "committed": "2022-01-09T10:26:50+01:00",
+        "old": "57f8d66532f106c8d2f470d161cd7ca7df55af31",
+        "new": "e1930bd731aa1ab070f7491eef487dff5a9dc051",
+        "status": "late"
+      },
+      {
+        "commit": "28511c40260095e6a52549f17dad48309f414f0f",
+        "date": "2022-01-05T11:41:35+01:00",
+        "committed": "2022-01-05T15:54:52+01:00",
+        "old": "75adf5663a6c3b2df10ab2ac2ca3f5b1c048c708",
+        "new": "57f8d66532f106c8d2f470d161cd7ca7df55af31",
+        "status": "late"
+      }
+    ]
+  }
+}

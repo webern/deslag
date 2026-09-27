@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "rs__ethereum__cketh__mainnet__ckshib_archive_settings_2026_09_14.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dfinity/ic",
+    "path": "rs/ethereum/cketh/mainnet/ckshib_archive_settings_2026_09_14.md",
+    "commit": "365984703db511822eac9fa177e39477ed4a2d8d",
+    "commit_date": "2026-09-25T21:08:16Z",
+    "url": "https://github.com/dfinity/ic/blob/365984703db511822eac9fa177e39477ed4a2d8d/rs/ethereum/cketh/mainnet/ckshib_archive_settings_2026_09_14.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-10T08:14:58+02:00",
+    "stars": 1793,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-15T11:59:50Z",
+    "last_commit_date": "2026-09-15T11:59:50Z",
+    "last_commit_author": "Mathias Björkqvist",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-15T11:59:50Z",
+    "last_committer_date": "2026-09-15T11:59:50Z",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e2bab1a4b8f3b6a02a35d5fd6749a0b222a51a2a",
+        "date": "2026-09-15T11:59:50Z",
+        "committed": "2026-09-15T11:59:50Z",
+        "old": null,
+        "new": "fb7f6a0c047b6092af665bfc6e6f3596006df7c5",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1606,
+    "sha256": "5d1f3d131e193a4afa37f6aaff5dd36be999ccac8306d0350272c64830fef034",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 18,
+    "words": 212,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dfinity--ic/rs/ethereum/cketh/mainnet/ckshib_archive_settings_2026_09_14.md"
+}

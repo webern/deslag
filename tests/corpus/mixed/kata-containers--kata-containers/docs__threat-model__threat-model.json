@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__threat-model__threat-model.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kata-containers/kata-containers",
+    "path": "docs/threat-model/threat-model.md",
+    "commit": "8a2c6acfa662dc579b69a296275337d803b4f5ab",
+    "commit_date": "2026-09-25T07:59:07+02:00",
+    "url": "https://github.com/kata-containers/kata-containers/blob/8a2c6acfa662dc579b69a296275337d803b4f5ab/docs/threat-model/threat-model.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8801,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-07-27T20:19:58+05:30",
+    "last_commit_date": "2026-03-19T09:38:15Z",
+    "last_commit_author": "stevenhorsman",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-09-21T20:20:39+05:30",
+    "last_committer_date": "2026-03-19T10:22:54Z",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5c0269881e32aa2a990bb0e1b4bf4658dfbcd0a9",
+        "date": "2026-02-10T12:24:22+01:00",
+        "committed": "2026-02-10T21:58:28+01:00",
+        "old": "070a2247b0fbff254a56e27fa1e265f6bc7166dd",
+        "new": "18f11b5862eac24452ff9b89027df4a5893ca032",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 6 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 13945,
+    "sha256": "ea87676181922716a63de91f59337f7a9981530a2dcaab1ec4a351f854b498ab",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 271,
+    "words": 2107,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kata-containers--kata-containers/docs/threat-model/threat-model.md",
+  "before": {
+    "sha256": "11bc5477b5f7ba1413e9902e437d62d127d851558b27d90040e95153560a7558",
+    "commit": "073a345908db970add3e1087a37d51318363bd78",
+    "date": "2021-10-14T14:55:41Z",
+    "between": [
+      {
+        "commit": "d06dadd8ef579210373521957e082def99e27f43",
+        "date": "2026-03-19T09:38:15Z",
+        "committed": "2026-03-19T10:22:54Z",
+        "old": "18f11b5862eac24452ff9b89027df4a5893ca032",
+        "new": "a30919ef34181c9eaab9023f9a82071eeaea92c3",
+        "status": "late"
+      },
+      {
+        "commit": "c6c20ac253931f34889cc1b47d59f37b371f87f9",
+        "date": "2024-02-05T10:04:52Z",
+        "committed": "2024-05-28T07:39:26Z",
+        "old": "d61f4f337a7dbe62295f5f7fc277b087314c8689",
+        "new": "070a2247b0fbff254a56e27fa1e265f6bc7166dd",
+        "status": "late"
+      },
+      {
+        "commit": "8ec2cc9c0de2abf4e7ed341f5551f5c70c1de430",
+        "date": "2024-01-29T10:01:33Z",
+        "committed": "2024-05-10T07:18:44Z",
+        "old": "efa380d7898ba62cc600cfb5a300e95268df4e76",
+        "new": "d61f4f337a7dbe62295f5f7fc277b087314c8689",
+        "status": "late"
+      },
+      {
+        "commit": "0608e20a0171ffe4487bcf4854fad4b87ea87b3d",
+        "date": "2023-10-19T06:40:49-07:00",
+        "committed": "2023-10-26T10:17:01-07:00",
+        "old": "91abb6eb0e7e1934a83ea7dc19ee40fd1efcc7dc",
+        "new": "efa380d7898ba62cc600cfb5a300e95268df4e76",
+        "status": "late"
+      }
+    ]
+  }
+}

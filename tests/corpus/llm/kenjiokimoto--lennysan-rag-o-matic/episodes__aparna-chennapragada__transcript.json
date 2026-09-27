@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "episodes__aparna-chennapragada__transcript.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kenjiokimoto/lennysan-rag-o-matic",
+    "path": "episodes/aparna-chennapragada/transcript.md",
+    "commit": "fdd21e1aa0f64997ea236b9f759da52bc2df6452",
+    "commit_date": "2026-03-16T01:59:46-04:00",
+    "url": "https://github.com/kenjiokimoto/lennysan-rag-o-matic/blob/fdd21e1aa0f64997ea236b9f759da52bc2df6452/episodes/aparna-chennapragada/transcript.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-13T19:16:59-08:00",
+    "stars": 0,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-01-14T21:34:47Z",
+    "last_commit_date": "2026-01-15T21:09:41-05:00",
+    "last_commit_author": "matthewdricci",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-14T21:34:47Z",
+    "last_committer_date": "2026-01-15T21:09:41-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a14e07004d1e75c3cce5ecdf1dd1d75d7a295d62",
+        "date": "2026-01-15T21:09:41-05:00",
+        "committed": "2026-01-15T21:09:41-05:00",
+        "old": "b2e835c04c0c11dd56cb3e4616ff5b5e827dee39",
+        "new": "3cc30c3bbb7cc1a28b128e8308d54bca2ad8bca0",
+        "status": "agent"
+      },
+      {
+        "commit": "3461ec48f4bade5c71e40ef0526ff59146140fd8",
+        "date": "2026-01-14T21:34:47Z",
+        "committed": "2026-01-14T21:34:47Z",
+        "old": null,
+        "new": "b2e835c04c0c11dd56cb3e4616ff5b5e827dee39",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code, devin)"
+  },
+  "content": {
+    "size_bytes": 63687,
+    "sha256": "1df012ac842b4eb66682b0fd7d4828130eabb87bc03af62175db98f90377a8aa",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 486,
+    "words": 11188,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/kenjiokimoto--lennysan-rag-o-matic/episodes/aparna-chennapragada/transcript.md"
+}

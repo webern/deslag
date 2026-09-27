@@ -49,9 +49,7 @@ its label, and `history` holds the counts behind it. A file whose history proves
 out of the big tier. No classifier or detector model assigns a label.
 
 The provable three-way split is what makes the corpus worth measuring, so every analysis of it
-keeps the split: it reports each label on its own and never pools `mixed` with `llm`. `human` is
-one register, repository Markdown written before 2022, and every number measured against it says
-so.
+keeps the split: it reports each label on its own and never pools `mixed` with `llm`.
 
 ### Marks
 
@@ -74,38 +72,38 @@ is the robot emoji a footer opens with. Each example is a commit that carries th
 
 | Tool | Kind | Place | Pattern | Example |
 |---|---|---|---|---|
-| claude-code | agent-identity | identity | `... <noreply@anthropic.com>` | [pwndoc](https://github.com/pwndoc/pwndoc/commit/4f5c6fd38fa41154b452ef87369e16211b98e426) |
-| claude-code | agent-identity | identity | `... <N+claude[bot]@gh>` | [cli](https://github.com/depot/cli/commit/ae92fafd8841d7fa58c4757c348f76c3234a6868) |
-| claude-code | agent-session | trailer | `Claude-Session: https://claude.ai/code/session_<id>` | [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl/commit/2c1ee5cac8ab6a15e3d99e643bfe3aec8286b3d5) |
-| claude-code | agent-session | footer | `https://claude.ai/code/session_<id>` | [OpenExecutive](https://github.com/SenteLabsAI/OpenExecutive/commit/01f24f2d065809044c675feff7f7a946d58a965e) |
-| claude-code | agent-session | footer | robot `Generated with [Claude Code](https://claude.com/claude-code)`, or `claude.ai/code` | [.claude](https://github.com/travisjneuman/.claude/commit/06008ca2f80961a9ed5dcfbef5e275f835708e1d) |
-| claude-code | agent-session | footer | robot `Generated with Claude Code`, then ` (https://claude.ai/code)` or not | [academic-paper-skills](https://github.com/lishix520/academic-paper-skills/commit/0a05329281fd61314c8bb07b5a57c8e111c73d0d) |
-| copilot | agent-identity | identity | `... <198982749+Copilot@gh>`, the coding agent | [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui/commit/cb8aec7de95e4d71eccf93916c21958eef8f670e) |
-| copilot | agent-identity | identity | `... <223556219+Copilot@gh>`, the CLI and SDK | [ClangSharp](https://github.com/dotnet/ClangSharp/commit/4774489991ff2fe42f5c1ebd294263162f32d1c4) |
-| copilot | agent-session | trailer | `Copilot-Session: <uuid>` | [opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust/commit/92557b433472fb9fc83e9c1f471c6f506eb6afcc) |
-| copilot | agent-session | trailer | `Agent-Logs-Url: https://github.com/<owner>/<repo>/sessions/<id>` | [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui/commit/cb8aec7de95e4d71eccf93916c21958eef8f670e) |
-| copilot | agent-session | footer | `For more details, open the [Copilot Workspace session](https://copilot-workspace.githubnext.com/...)` | [EventFlow](https://github.com/eventflow/EventFlow/commit/d472a8b5b20381a1b9a4baa7b6c82ccd0f9cacf6) |
-| copilot | assist | identity | `... <175728472+Copilot@gh>`, a review's suggestion | [sanity](https://github.com/sanity-io/sanity/commit/160cd9d3c8dea83776dd0f3b3997774c03a28f7a) |
-| copilot | assist | identity | `Copilot Autofix powered by AI <...>` | [arrow](https://github.com/apache/arrow/commit/43751939f285c6e972508942933580520fa39728) |
-| copilot | assist | identity | `... <copilot@github.com>`, VS Code's `git.addAICoAuthor` | [calva](https://github.com/BetterThanTomorrow/calva/commit/e530f64755874a687a556f0bff4c9f4b2c30e9c3) |
-| cursor | agent-identity | identity | `... <cursoragent@cursor.com>` | [storybook](https://github.com/storybookjs/storybook/commit/7fe9e88a5569bb5e6374d48bd72f5ef5ea369e32) |
-| cursor | agent-session | trailer | `Made-with: Cursor` | [lizard](https://github.com/terryyin/lizard/commit/f5172b15219a311c2f99fb51b3fe79649484239b) |
-| cursor | agent-session | footer | `Made with [Cursor](https://cursor.com)` | [skills](https://github.com/MetaMask/skills/commit/1193e1e24e291c981befa24cf6f2f048079cff64) |
-| codex | agent-identity | identity | `Codex... <noreply@openai.com>` | [claude-usage](https://github.com/phuryn/claude-usage/commit/ad05701a9c4db583bb6f5f0bee735d6985a22eec) |
-| codex | agent-identity | identity | `... <codex@openai.com>` | [petsc](https://github.com/petsc/petsc/commit/c67fa7d6d5b50a15f87bc4f791289811f5d3b786) |
-| codex | agent-identity | identity | `... <267193182+codex@gh>` | [free4chat](https://github.com/i365dev/free4chat/commit/9ba12b99b6a9cc75e2ab1023640136979f7d9cce) |
-| jules | agent-identity | identity | `... <N+google-labs-jules[bot]@gh>` | [cargo-workspaces](https://github.com/pksunkara/cargo-workspaces/commit/17b5467d516559d2bf22e707d0f268e5aa1ecfc3) |
-| gemini | assist | identity | `... <N+gemini-code-assist[bot]@gh>`, a review's suggestion | [firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk/commit/8f858bd6cb6ba16f1d44f24a9b86583857482928) |
-| devin | agent-identity | identity | `... <N+devin-ai-integration[bot]@gh>`, `N+` or not | [feast](https://github.com/feast-dev/feast/commit/99f40047645fd820e4b741d19d20958c03ac9dae) |
-| kiro | agent-identity | identity | `... <244629292+kiro-agent@gh>` | [strands-acp](https://github.com/ryancormack/strands-acp/commit/6c58a8dadd5c44ac5252bbd72f7288b6ffd4c018) |
-| aider | agent-identity | identity | `... (aider) <...>` | [awesome-ocap](https://github.com/dckc/awesome-ocap/commit/cf5139391695a692b47ba26e14dc95748e475019) |
-| aider | agent-identity | identity | `... <noreply@aider.chat>` | [iporave-sistema](https://github.com/iporaveparaguay/iporave-sistema/commit/a2275d40a170e75d00d08e5662a5515f3d21cb3d) |
-| amp | agent-identity | identity | `... <amp@ampcode.com>` | [howmuch](https://github.com/yjsoon/howmuch/commit/785d468af03a2a55a9dfc9a11914ba362e9ad5b1) |
-| amp | agent-session | trailer | `Amp-Thread-ID: https://ampcode.com/threads/T-<id>` | [howmuch](https://github.com/yjsoon/howmuch/commit/785d468af03a2a55a9dfc9a11914ba362e9ad5b1) |
-| openhands | agent-identity | identity | `... <openhands@all-hands.dev>` | [backing-track-generator](https://github.com/animetubeonlinebr-star/backing-track-generator/commit/d38c56e2baa16c2d40156d20024b0f05982b1bd3) |
-| opencode | agent-identity | identity | `... <noreply@opencode.ai>` | [ai-guardian](https://github.com/RedHatProductSecurity/ai-guardian/commit/b62884bcb6f85808ed416fe36438c0de3f58978b) |
-| opencode | agent-session | footer | robot `Generated with [OpenCode](https://opencode.ai)` | [ai-guardian](https://github.com/RedHatProductSecurity/ai-guardian/commit/b62884bcb6f85808ed416fe36438c0de3f58978b) |
-| any | assist | trailer | `Assisted-by: ...`, the kernel's and Apache's convention | [grails-core](https://github.com/apache/grails-core/commit/72a3c0a514aa5b70f5af83f191073e749f8d0ef6) |
+| claude-code | agent-identity | identity | `... <noreply@anthropic.com>` | [pwndoc](https://github.com/pwndoc/pwndoc/commit/4f5c6fd38f) |
+| claude-code | agent-identity | identity | `... <N+claude[bot]@gh>` | [cli](https://github.com/depot/cli/commit/ae92fafd88) |
+| claude-code | agent-session | trailer | `Claude-Session: https://claude.ai/code/session_<id>` | [ModelingToolkit.jl](https://github.com/SciML/ModelingToolkit.jl/commit/2c1ee5cac8) |
+| claude-code | agent-session | footer | `https://claude.ai/code/session_<id>` | [OpenExecutive](https://github.com/SenteLabsAI/OpenExecutive/commit/01f24f2d06) |
+| claude-code | agent-session | footer | robot `Generated with [Claude Code](https://claude.com/claude-code)`, or `claude.ai/code` | [.claude](https://github.com/travisjneuman/.claude/commit/06008ca2f8) |
+| claude-code | agent-session | footer | robot `Generated with Claude Code`, then ` (https://claude.ai/code)` or not | [academic-paper-skills](https://github.com/lishix520/academic-paper-skills/commit/0a05329281) |
+| copilot | agent-identity | identity | `... <198982749+Copilot@gh>`, the coding agent | [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui/commit/cb8aec7de9) |
+| copilot | agent-identity | identity | `... <223556219+Copilot@gh>`, the CLI and SDK | [ClangSharp](https://github.com/dotnet/ClangSharp/commit/4774489991) |
+| copilot | agent-session | trailer | `Copilot-Session: <uuid>` | [opentelemetry-rust](https://github.com/open-telemetry/opentelemetry-rust/commit/92557b4334) |
+| copilot | agent-session | trailer | `Agent-Logs-Url: https://github.com/<owner>/<repo>/sessions/<id>` | [Terminal.Gui](https://github.com/gui-cs/Terminal.Gui/commit/cb8aec7de9) |
+| copilot | agent-session | footer | `For more details, open the [Copilot Workspace session](https://copilot-workspace.githubnext.com/...)` | [EventFlow](https://github.com/eventflow/EventFlow/commit/d472a8b5b2) |
+| copilot | assist | identity | `... <175728472+Copilot@gh>`, a review's suggestion | [sanity](https://github.com/sanity-io/sanity/commit/160cd9d3c8) |
+| copilot | assist | identity | `Copilot Autofix powered by AI <...>` | [arrow](https://github.com/apache/arrow/commit/43751939f2) |
+| copilot | assist | identity | `... <copilot@github.com>`, VS Code's `git.addAICoAuthor` | [calva](https://github.com/BetterThanTomorrow/calva/commit/e530f64755) |
+| cursor | agent-identity | identity | `... <cursoragent@cursor.com>` | [storybook](https://github.com/storybookjs/storybook/commit/7fe9e88a55) |
+| cursor | agent-session | trailer | `Made-with: Cursor` | [lizard](https://github.com/terryyin/lizard/commit/f5172b1521) |
+| cursor | agent-session | footer | `Made with [Cursor](https://cursor.com)` | [skills](https://github.com/MetaMask/skills/commit/1193e1e24e) |
+| codex | agent-identity | identity | `Codex... <noreply@openai.com>` | [claude-usage](https://github.com/phuryn/claude-usage/commit/ad05701a9c) |
+| codex | agent-identity | identity | `... <codex@openai.com>` | [petsc](https://github.com/petsc/petsc/commit/c67fa7d6d5) |
+| codex | agent-identity | identity | `... <267193182+codex@gh>` | [free4chat](https://github.com/i365dev/free4chat/commit/9ba12b99b6) |
+| jules | agent-identity | identity | `... <N+google-labs-jules[bot]@gh>` | [cargo-workspaces](https://github.com/pksunkara/cargo-workspaces/commit/17b5467d51) |
+| gemini | assist | identity | `... <N+gemini-code-assist[bot]@gh>`, a review's suggestion | [firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk/commit/8f858bd6cb) |
+| devin | agent-identity | identity | `... <N+devin-ai-integration[bot]@gh>`, `N+` or not | [feast](https://github.com/feast-dev/feast/commit/99f4004764) |
+| kiro | agent-identity | identity | `... <244629292+kiro-agent@gh>` | [strands-acp](https://github.com/ryancormack/strands-acp/commit/6c58a8dadd) |
+| aider | agent-identity | identity | `... (aider) <...>` | [awesome-ocap](https://github.com/dckc/awesome-ocap/commit/cf51393916) |
+| aider | agent-identity | identity | `... <noreply@aider.chat>` | [iporave-sistema](https://github.com/iporaveparaguay/iporave-sistema/commit/a2275d40a1) |
+| amp | agent-identity | identity | `... <amp@ampcode.com>` | [howmuch](https://github.com/yjsoon/howmuch/commit/785d468af0) |
+| amp | agent-session | trailer | `Amp-Thread-ID: https://ampcode.com/threads/T-<id>` | [howmuch](https://github.com/yjsoon/howmuch/commit/785d468af0) |
+| openhands | agent-identity | identity | `... <openhands@all-hands.dev>` | [backing-track-generator](https://github.com/animetubeonlinebr-star/backing-track-generator/commit/d38c56e2ba) |
+| opencode | agent-identity | identity | `... <noreply@opencode.ai>` | [ai-guardian](https://github.com/RedHatProductSecurity/ai-guardian/commit/b62884bcb6) |
+| opencode | agent-session | footer | robot `Generated with [OpenCode](https://opencode.ai)` | [ai-guardian](https://github.com/RedHatProductSecurity/ai-guardian/commit/b62884bcb6) |
+| any | assist | trailer | `Assisted-by: ...`, the kernel's and Apache's convention | [grails-core](https://github.com/apache/grails-core/commit/72a3c0a514) |
 
 ### Squashes, moves and what history cannot see
 
@@ -135,12 +133,26 @@ Issue #5 set the cutoff at 2022-01-01, and it stays there. GPT-3's API opened to
 2021-11-18; ChatGPT shipped on 2022-11-30. An earlier cutoff would cost months of text for a small
 risk; a later one would take in text people wrote with a model's help. It never moves later.
 
+### Register
+
+`human` is one register, Markdown kept in repositories before 2022, and every number measured
+against it says so. There is no `baseline` label: a book or a wiki kept in git proves its date as
+any repository does, and prose outside git cannot. `discover` samples topics outside software,
+tagged `sg-register:` in `repos.jsonl`, so an analysis can take that register apart.
+
 ## 4. The layout and the sidecar
 
 Every fixture has a JSON sidecar beside it, which records its source and licence, its history and
 label, and facts about its bytes. A sidecar is a capture record: once its batch is published it is
 never rewritten. Loaders accept every sidecar version they know. A sidecar in the tree is a byte
 copy of its twin in the big tier, so the tree may mix versions just as the big tier does.
+
+Version 3 adds the raw evidence, each mark as written and each marked commit's change to the file,
+so a label can be derived again.
+
+A `mixed` file's earlier revision is its `human` twin, the file at the last commit before the
+cutoff. Both are kept; the `mixed` sidecar names the twin in `before`, with the commits between
+that are not an agent's. A twin is excluded only with its `mixed` file.
 
 The big tier, under `corpus/` in the image:
 
@@ -150,15 +162,15 @@ corpus/
     2026-09-27-01/          a batch: the date it was packed and a sequence, zero padded
       manifest.jsonl        one line for each fixture the batch adds
       exclude.jsonl         one line for each earlier fixture it drops
+      repos.jsonl           one line for each repository tried, if any
       human/<repo>/<name>.md
       human/<repo>/<name>.json
       llm/...  mixed/...
 ```
 
 There is no index above the batches. Each batch carries its own manifest in its own layer, so
-adding a batch changes no earlier layer, and nothing derived can drift from the sidecars. A reader
-finds every fixture and its label in the manifests, read in batch order, without opening a sidecar.
-`<repo>` and `<name>` are the names `collect.py` gives in the tree.
+adding a batch changes no earlier layer. The manifests, read in batch order, name every fixture and
+its label. `<repo>` and `<name>` are the names `collect.py` gives in the tree.
 
 ## 5. Batches, layers and growth
 
@@ -174,6 +186,11 @@ When the rules of section 3 change, `collect.py recheck` derives every live labe
 fresh clone, and each fixture whose label no longer holds is excluded; the tree drops it too.
 Exclusions that would take a label under the tree's floors wait for their replacements and ship
 with them. One whose repository is gone is kept, since its label was proven when it was captured.
+
+The big tier holds files of 128KB at most, the tree 64KB. The harvest keeps up to 50 files of each
+label from a repository, at random, and every twin: past that, a file adds bytes, not evidence,
+as an analysis weighs each repository once. The ledger, `repos.jsonl`, counts for each label the
+files that qualified and those kept.
 
 A fixture's identity is its content and its origin. No two live fixtures share a sha256, and no
 two with the same label share a host, repository and path. So a file's human revision from before

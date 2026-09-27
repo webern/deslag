@@ -1,0 +1,28 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "list_growth",
+      "report": "ERROR: deslag detected list growth!\n\nREADME.md has 2 list items, 1 more than the 1 it had at [BASE].\n\nKeep README.md to the lists it had; write the rule instead.\n\nThe items on lines this change added:\n  line 4: Writes a report.",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 25,
+          "end": 43,
+          "line": 4,
+          "column": 1,
+          "end_line": 4,
+          "end_column": 19,
+          "note": "Writes a report."
+        }
+      ]
+    }
+  ],
+  "base": {
+    "rev": "HEAD",
+    "merge_base": "[BASE]"
+  }
+}

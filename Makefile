@@ -73,9 +73,10 @@ check: check-fmt check-clippy check-deslag check-doc check-typos
 check-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --all-features --all-targets -- -D warnings
 
-# The debug build of deslag, run against .agents/deslag.toml.
+# The debug build of deslag, run against .agents/deslag.toml. list_growth judges
+# the change from where origin/main and HEAD meet, which is empty on main.
 check-deslag: preflight
-	cargo run $(CARGO_FLAGS) --quiet -- check
+	cargo run $(CARGO_FLAGS) --quiet -- check --base origin/main
 
 # rustdoc has warnings of its own, broken links say, that clippy never sees.
 check-doc: preflight

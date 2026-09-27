@@ -20,6 +20,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::Error;
+use crate::change::Change;
 use crate::config::Config;
 use crate::document::{Edit, Refusal};
 use crate::glob::{self, RepoFile};
@@ -70,7 +71,8 @@ impl fmt::Display for Unfixed {
 }
 
 /// Fixes the files of the repo rooted at `root` that the config selects: those `paths` names, each
-/// relative to the root, or every one when it names none. With `dry_run`, writes nothing.
+/// relative to the root, or every one when it names none. With `dry_run`, writes nothing. The
+/// files are read as `check` reads them in a run with `change`.
 ///
 /// Returns what became of each file there is anything to say about, in the order of their paths.
 pub fn fix(
@@ -78,13 +80,14 @@ pub fn fix(
     config: &Config,
     paths: &[PathBuf],
     dry_run: bool,
+    change: Option<&Change>,
 ) -> Result<Vec<FileFix>, Error> {
     let mut fixes = Vec::new();
     for file in chosen(root, config, paths)? {
         let outcome = match String::from_utf8(lint::read(&file)?) {
             Ok(text) => {
                 let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, &file.relative, text, dir)?
+                passes(config, &file.relative, text, dir, change)?
             }
             Err(_) => Outcome::NotUtf8,
         };
@@ -191,7 +194,13 @@ fn chosen(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<Vec<RepoFil
 
 /// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one makes no
 /// edit.
-fn passes(config: &Config, relative: &str, mut text: String, dir: &Path) -> Result<Outcome, Error> {
+fn passes(
+    config: &Config,
+    relative: &str,
+    mut text: String,
+    dir: &Path,
+    change: Option<&Change>,
+) -> Result<Outcome, Error> {
     let unsettled = |problem: String| Error::Fix {
         path: relative.to_string(),
         problem,
@@ -199,7 +208,8 @@ fn passes(config: &Config, relative: &str, mut text: String, dir: &Path) -> Resu
     let mut fixed = Vec::new();
     let mut bound = None;
     for pass in 0.. {
-        let (document, findings) = lint::check_text(config, relative, text.as_bytes(), &text, dir)?;
+        let (document, findings) =
+            lint::check_text(config, relative, text.as_bytes(), &text, dir, change)?;
         let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
             .iter()
             .flat_map(|finding| finding.violation.edits())

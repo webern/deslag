@@ -16,6 +16,11 @@
 //! A case runs `deslag check` unless an `.args` file beside it holds other arguments, one to a
 //! line, the subcommand first.
 //!
+//! A `.base` directory beside a case is the repo as it was before a change, for the lints that
+//! judge one. The case then runs in a git repo whose one commit holds the base, with the case's
+//! files in its working tree in place of the base's, and with `--base HEAD` after its arguments.
+//! The commit is written as `[BASE]`.
+//!
 //! `make fix-test-output` rewrites the `.stderr` and `.json` files from what deslag prints now, and
 //! never a `.exit` or `.args` file; read the diff before committing it.
 //!
@@ -27,7 +32,9 @@ mod common;
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
+use common::git::{commit, git, hermetic};
 use common::{Repo, code, stderr, stdout};
 use deslag::Lint;
 
@@ -47,6 +54,8 @@ struct Case {
     json: PathBuf,
     /// The file holding the arguments to run deslag with, when they are not `check`.
     args: PathBuf,
+    /// The directory holding the repo as it was before the change, when the case has one.
+    base: PathBuf,
 }
 
 /// The extensions of the files beside a case.
@@ -63,6 +72,14 @@ impl Case {
                 continue;
             }
             for path in entries(&group) {
+                let beside_a_case = |extensions: &[&str]| {
+                    path.extension().is_some_and(|extension| {
+                        extensions.iter().any(|beside| extension == *beside)
+                    }) && path.with_extension("").is_dir()
+                };
+                if path.is_dir() && beside_a_case(&["base"]) {
+                    continue;
+                }
                 if path.is_dir() {
                     let beside = |extension: &str| {
                         let mut file = path.clone().into_os_string();
@@ -76,16 +93,15 @@ impl Case {
                         exit: beside(".exit"),
                         json: beside(".json"),
                         args: beside(".args"),
+                        base: beside(".base"),
                         root: path,
                     });
                     continue;
                 }
-                let beside_a_case = path
-                    .extension()
-                    .is_some_and(|extension| BESIDE.iter().any(|beside| extension == *beside));
-                if !beside_a_case || !path.with_extension("").is_dir() {
+                if !beside_a_case(BESIDE) {
                     stray.push(format!(
-                        "{} is neither a case nor its .stderr, .exit, .json or .args file",
+                        "{} is neither a case nor its .stderr, .exit, .json or .args file or \
+                         .base directory",
                         path.display()
                     ));
                 }
@@ -103,14 +119,17 @@ impl Case {
             Ok(text) => text.lines().map(str::to_string).collect(),
             Err(_) => vec!["check".to_string()],
         };
-        let args: Vec<&str> = args.iter().map(String::as_str).collect();
+        let mut args: Vec<&str> = args.iter().map(String::as_str).collect();
+        if self.base.is_dir() {
+            args.extend(["--base", "HEAD"]);
+        }
         let (output, root) = self.run_in_copy(&args);
         let (json_output, json_root) =
             self.run_in_copy(&[args.as_slice(), &["--format", "json"]].concat());
-        let actual = stderr(&output).replace(&root, "[ROOT]");
+        let actual = root.hide(&stderr(&output));
         let version = format!("\"deslag_version\": \"{}\"", env!("CARGO_PKG_VERSION"));
-        let json = stdout(&json_output)
-            .replace(&json_root, "[ROOT]")
+        let json = json_root
+            .hide(&stdout(&json_output))
             .replace(&version, "\"deslag_version\": \"[VERSION]\"");
 
         let wanted = match self.wanted(&actual) {
@@ -127,9 +146,7 @@ impl Case {
                 stdout(&output),
             ));
         }
-        if code(&json_output) != wanted
-            || stderr(&json_output).replace(&json_root, "[ROOT]") != actual
-        {
+        if code(&json_output) != wanted || json_root.hide(&stderr(&json_output)) != actual {
             return Some(format!(
                 "{name}: with --format json, deslag exited {} and printed to stderr:\n{}\n\
                  The format changes only what deslag prints on stdout.",
@@ -154,13 +171,36 @@ impl Case {
             .or_else(|| differs(name, "the stdout of --format json", &expected_json, &json))
     }
 
-    /// Runs deslag with `args` in a fresh copy of the case. Returns its output and the copy's root.
-    fn run_in_copy(&self, args: &[&str]) -> (std::process::Output, String) {
-        let repo = Repo::copy_of(&self.root);
-        let output = repo.run(args);
+    /// Runs deslag with `args` in a fresh copy of the case, over a commit of its base when it has
+    /// one. Returns its output and what in it differs from one run to the next.
+    fn run_in_copy(&self, args: &[&str]) -> (std::process::Output, Varying) {
+        let repo = Repo::new();
+        let mut base = None;
+        if self.base.is_dir() {
+            repo.copy(&self.base);
+            git(repo.root(), &["init", "-q"]);
+            commit(repo.root(), "base");
+            base = Some(git(repo.root(), &["rev-parse", "HEAD"]).trim().to_string());
+            for entry in entries(repo.root()) {
+                if entry.file_name().is_some_and(|name| name == ".git") {
+                    continue;
+                }
+                if entry.is_dir() {
+                    fs::remove_dir_all(&entry).expect("a removable directory");
+                } else {
+                    fs::remove_file(&entry).expect("a removable file");
+                }
+            }
+        }
+        repo.copy(&self.root);
+        let output = hermetic(&mut Command::new(env!("CARGO_BIN_EXE_deslag")))
+            .args(args)
+            .current_dir(repo.root())
+            .output()
+            .expect("deslag runs");
         let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
         let root = root.to_str().expect("a UTF-8 temp root").to_string();
-        (output, root)
+        (output, Varying { root, base })
     }
 
     /// The code the case must exit with when deslag prints `printed`: the one in its `.exit` file
@@ -179,6 +219,27 @@ impl Case {
     /// Whether the case shows its lint failing a file: its `.stderr` file says deslag exits 1.
     fn fails_a_file(&self) -> bool {
         fs::read_to_string(&self.expected).is_ok_and(|expected| self.wanted(&expected) == Ok(1))
+    }
+}
+
+/// What differs in what deslag prints from one run of a case to the next.
+struct Varying {
+    /// The root of the copy it ran in.
+    root: String,
+    /// The commit of the case's base, when it has one.
+    base: Option<String>,
+}
+
+impl Varying {
+    /// `printed` with the root written as `[ROOT]` and the base's commit as `[BASE]`, in full and
+    /// cut short as a report cuts it.
+    fn hide(&self, printed: &str) -> String {
+        let mut printed = printed.replace(&self.root, "[ROOT]");
+        if let Some(base) = &self.base {
+            printed = printed.replace(base.as_str(), "[BASE]");
+            printed = printed.replace(&base[..7], "[BASE]");
+        }
+        printed
     }
 }
 
@@ -292,6 +353,7 @@ fn a_case_where_deslag_cannot_run_does_not_fail_a_file() {
         ("lint/invalid.exit", "2\n"),
         ("lint/broken.json", "{}\n"),
         ("lint/broken.args", "check\n"),
+        ("lint/broken.base/README.md", ""),
     ] {
         repo.write(path, text);
     }
@@ -303,4 +365,5 @@ fn a_case_where_deslag_cannot_run_does_not_fail_a_file() {
         .map(|case| case.name.as_str())
         .collect();
     assert_eq!(failing, ["lint/broken"]);
+    assert_eq!(cases.len(), 3);
 }

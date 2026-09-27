@@ -1,0 +1,10 @@
+ERROR: deslag detected list growth!
+
+README.md has 2 list items, 1 more than the 1 it had at [BASE].
+
+Keep README.md to the lists it had; write the rule instead.
+
+The items on lines this change added:
+  line 4: Writes a report.
+
+deslag: 1 of 1 Markdown files with more list items than at the base.

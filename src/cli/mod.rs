@@ -40,6 +40,11 @@ pub struct ReportArgs {
     /// What to print on standard output; the text report goes to standard error in every format
     #[arg(long, value_enum, default_value_t = Format::Text)]
     pub format: Format,
+    /// Judge the change from where REV and HEAD meet to the working tree, such as with
+    /// `origin/main`, for the lints that compare a file with what it was; the whole tree is
+    /// checked
+    #[arg(long, value_name = "REV")]
+    pub base: Option<String>,
 }
 
 /// Arguments to `deslag check`.
@@ -49,8 +54,9 @@ pub struct CheckArgs {
     #[command(flatten)]
     pub report: ReportArgs,
     /// Report only what the change from where BASE and HEAD meet to the working tree touched, such
-    /// as with `origin/main`: a step toward a clean tree, which the whole check still gates
-    #[arg(long, value_name = "BASE")]
+    /// as with `origin/main`: a step toward a clean tree, which the whole check still gates. It
+    /// judges the change as `--base` does
+    #[arg(long, value_name = "BASE", conflicts_with = "base")]
     pub diff: Option<String>,
 }
 

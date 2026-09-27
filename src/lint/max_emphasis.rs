@@ -20,13 +20,10 @@ use std::ops::Range;
 
 use crate::config::MaxEmphasis;
 use crate::document::{self, Body, Document, Gathered, Location, PieceKind, PointKind, SpanKind};
-use crate::lint::{Mark, MarkKind};
+use crate::lint::{Mark, MarkKind, quote};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected over-emphasis!";
-
-/// The longest a span is quoted in the report, in characters.
-pub const QUOTE_CHARS: usize = 60;
 
 /// The everyday words that make a run of capitals shouting rather than a string of acronyms.
 /// `AND` and `OR` are left out, since licence expressions such as `MIT OR Apache-2.0` use them.
@@ -385,14 +382,4 @@ fn is_caps(word: &str) -> bool {
         && word
             .chars()
             .all(|c| is_apostrophe(c) || (c.is_alphabetic() && !c.is_lowercase()))
-}
-
-/// `source` on one line, cut to [`QUOTE_CHARS`] characters.
-fn quote(source: &str) -> String {
-    let one_line = source.split_whitespace().collect::<Vec<_>>().join(" ");
-    if one_line.chars().count() <= QUOTE_CHARS {
-        return one_line;
-    }
-    let cut: String = one_line.chars().take(QUOTE_CHARS - 3).collect();
-    format!("{}...", cut.trim_end())
 }

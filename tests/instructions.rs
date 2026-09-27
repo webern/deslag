@@ -168,8 +168,11 @@ fn every_config_deslag_accepts_fits_the_schema() {
         for case in std::fs::read_dir(lint.expect("a lint").path()).expect("a lint's cases") {
             let case = case.expect("a case").path();
             // A case with a .exit file is one deslag cannot run, such as one whose config it
-            // rejects.
-            if !case.is_dir() || case.with_extension("exit").exists() {
+            // rejects. A base is the repo before a case's change, not a case.
+            let base = case
+                .extension()
+                .is_some_and(|extension| extension == "base");
+            if !case.is_dir() || base || case.with_extension("exit").exists() {
                 continue;
             }
             // A case whose .args file gives a --config-path reads its config from there.

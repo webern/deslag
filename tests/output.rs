@@ -1,8 +1,11 @@
 //! Tests for `deslag check --format`: what holds of the JSON, SARIF and GitHub formats, on one repo
-//! where every lint fails a file. The cases pin the JSON of each behavior.
+//! where every lint fails a file, a change to it included. The cases pin the JSON of each behavior.
 
 mod common;
 
+use std::process::{Command, Output};
+
+use common::git::{commit, git, hermetic};
 use common::schema::misfit;
 use common::{Repo, code, stderr, stdout};
 use deslag::Lint;
@@ -30,6 +33,8 @@ max_entries = 2
 
 [md.lints.density]
 max_paragraph_chars = 60
+
+[md.lints.list_growth]
 ";
 
 /// A file every lint but `max_size_bytes` fails, whose name needs escaping in every format.
@@ -45,26 +50,35 @@ repo/
 ```
 
 A paragraph that runs on well past sixty characters, which is the limit here.
+
+- An item the change adds.
 ";
 
 /// The name of the file holding [`EVERY_LINT`].
 const ESCAPED: &str = "a, b: 100%.md";
 
-/// A repo where every lint fails a file.
+/// A repo where every lint fails a file: [`EVERY_LINT`] grew from a heading alone at HEAD.
 fn failing() -> Repo {
     let repo = Repo::new();
     repo.write("deslag.toml", CONFIG);
-    repo.write(ESCAPED, EVERY_LINT);
+    repo.write(ESCAPED, "# All\n");
     repo.write(
         "docs/big.md",
         &format!("# Big\n\n{}\n", "word ".repeat(100)),
     );
+    git(repo.root(), &["init", "-q"]);
+    commit(repo.root(), "base");
+    repo.write(ESCAPED, EVERY_LINT);
     repo
 }
 
-/// Runs `deslag check --format <format>` in `repo`.
-fn check(repo: &Repo, format: &str) -> std::process::Output {
-    repo.run(&["check", "--format", format])
+/// Runs `deslag check --base HEAD --format <format>` in `repo`.
+fn check(repo: &Repo, format: &str) -> Output {
+    hermetic(&mut Command::new(env!("CARGO_BIN_EXE_deslag")))
+        .args(["check", "--base", "HEAD", "--format", format])
+        .current_dir(repo.root())
+        .output()
+        .expect("deslag runs")
 }
 
 /// What `deslag check --format json` prints in `repo`.
@@ -92,7 +106,7 @@ fn region(mark: &Value) -> Value {
 #[test]
 fn every_format_prints_the_same_report_and_exit_code() {
     let repo = failing();
-    let text = repo.check();
+    let text = check(&repo, "text");
     assert_eq!(code(&text), 1);
     assert_eq!(stdout(&text), "");
     for format in ["text", "json", "sarif", "github"] {
@@ -108,7 +122,7 @@ fn a_run_that_cannot_run_prints_nothing_on_stdout() {
     let repo = Repo::new();
     repo.write("a.md", "# A\n");
     for format in ["text", "json", "sarif", "github"] {
-        let output = check(&repo, format);
+        let output = repo.run(&["check", "--format", format]);
         assert_eq!(code(&output), 2, "{format}");
         assert_eq!(stdout(&output), "", "{format}");
     }
@@ -123,6 +137,8 @@ fn a_clean_run_has_no_findings() {
         "# A\n\n## Repository layout\n\n```\n  a.md  <- this\n  b/    <- that\n```\n",
     );
     repo.write("b/c.txt", "");
+    git(repo.root(), &["init", "-q"]);
+    commit(repo.root(), "base");
     let sarif: Value = serde_json::from_str(&stdout(&check(&repo, "sarif"))).expect("a SARIF log");
 
     assert_eq!(json_run(&repo)["findings"], json!([]));

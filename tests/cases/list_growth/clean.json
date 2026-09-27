@@ -1,0 +1,10 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [],
+  "base": {
+    "rev": "HEAD",
+    "merge_base": "[BASE]"
+  }
+}

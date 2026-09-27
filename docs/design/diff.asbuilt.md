@@ -6,15 +6,16 @@ max_size_bytes: 4096
 ---
 # The change: as built
 
-`deslag check --diff <BASE>` runs the whole check, then narrows the report to what a change
-touched. The **change** runs from the **merge base**, where `BASE` and HEAD meet, to the working
-tree: commits, staged and unstaged edits, and untracked files. `change` reads it from git;
-`Report::within`, in `lint`, narrows a report to it.
+`--base <REV>`, on `check` and `fix`, gives a run a **change** to judge. It runs from the **merge
+base**, where `REV` and HEAD meet, to the working tree: commits, staged and unstaged edits, and
+untracked files. `change` reads it from git, once per run, and `check_repo` takes it. `deslag check
+--diff <BASE>` takes a base as `--base` does, which it refuses beside it, then narrows the report
+to what the change touched with `Report::within`, in `lint`.
 
 ```
 src/
   change/
-    mod.rs            Change, File, Hunk, Status; Change::against runs git
+    mod.rs            Change, File, Hunk, Status; Change::against and base_text run git
     patch.rs          parse: git's patch, as what it did to each file
 ```
 
@@ -33,6 +34,14 @@ library. `Change::against(root, base)` runs git in `root`:
 
 A failure is `Error::Change`, saying which: no git, no work tree, an unknown base, or no shared
 history, shallow or not. The binary exits 2 on it and prints nothing on stdout.
+
+## Reading the base
+
+`Change::base_text(path)` reads a file as it was at the merge base, for a lint that judges a
+change: `cat-file --filters <merge base>:./<base path>`, the text git would write to the working
+tree, line endings included. `./` makes the path relative to the root, as the diff's are. Only a
+modified or renamed file that edits content has one, and git reads it only for a file such a lint
+selects. `File::adds` a line a hunk added, or any line of an added or binary file.
 
 ## The patch
 
@@ -60,5 +69,6 @@ fails only the whole-tree run.
 
 `tests/diff.rs` builds repositories with git reading no global or system config, and runs deslag
 the same way. It pins each rule above, each exit 2 and each `--format`, and that a hostile git
-config prints the same. Every case, committed on an empty commit, must print its whole-tree report
-under `--diff HEAD~1`, and a line on the change. `parse` runs on a literal patch.
+config prints the same. Every case, committed on an empty commit, must print under `--diff HEAD~1`
+what the whole tree prints under `--base HEAD~1`, and a line on the change. `parse` runs on a
+literal patch. `tests/growth.rs` pins the base read.

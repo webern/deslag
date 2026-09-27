@@ -29,8 +29,11 @@ jobs:
       contents: read
       packages: read
     steps:
+      # make check-deslag judges the change from origin/main, which needs its history.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+        with:
+          fetch-depth: 0
 
       # Installs what rust-toolchain.toml names and caches the registry and target dir.
       - name: Install Rust

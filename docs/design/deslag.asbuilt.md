@@ -29,7 +29,7 @@ src/
   lib.rs              the Error type and the module list
   main.rs             the binary
   cli/mod.rs          the clap types
-  change/             --diff: what git says a change did
+  change/             what git says a change did
   config/             the config schema, and finding the config file
   glob/               the repo walk and glob patterns
   explain/mod.rs      a file's settings, and where they come from
@@ -46,7 +46,7 @@ src/
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
 `document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves. `lint` narrows a `Report` to what `change` reads.
+`document` proves. `lint` judges and narrows by what `change` reads.
 
 ## The subsystem docs
 
@@ -60,13 +60,13 @@ fails when a module is in no doc or in two. This doc holds `cli`, `instructions`
 - [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
   `--format`.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
-- [diff.asbuilt.md](diff.asbuilt.md): `change`: `--diff`, asking git, and narrowing to a change.
+- [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 
 ## The command line
 
-`cli/mod.rs` defines `check` and `fix`, with `--format`, `--diff` on `check` alone, and `explain`,
-each taking `--config-path`, and `instructions`, which prints `instructions::guide`, or a schema
-`schemars` derives: `config-schema` for the config's types, `output-schema` for `json::Run`.
+`cli/mod.rs` defines `check` and `fix`, with `--format` and `--base`, `--diff` on `check` alone, and
+`explain`, each taking `--config-path`, and `instructions`, which prints `instructions::guide`, or a
+schema `schemars` derives: `config-schema` for the config's types, `output-schema` for `json::Run`.
 `src/main.rs` prints an error out of `run` in `anyhow`'s alternate form, which appends each
 underlying error once; an `Error`'s own message never repeats its source.
 
@@ -118,7 +118,9 @@ check` prints in a fresh copy of it, with the temp root as `[ROOT]`; an empty on
 must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
 
 The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
-replaces `check` with other arguments. `make fix-test-output` rewrites `.stderr` and `.json` files.
+replaces `check` with other arguments. A `.base` directory is the repo before a change: the case
+runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-test-output` rewrites
+`.stderr` and `.json` files.
 
 `tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
 output from the JSON by hand.
@@ -138,7 +140,7 @@ each as reported, give each one left a reason, and settle; its tally is pinned.
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
 `tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every
-path missing; a fixture with no section is left out.
+path missing; a fixture with no section is left out, as is a lint that judges a change.
 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or

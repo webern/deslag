@@ -10,41 +10,13 @@ use std::ops::Range;
 use std::path::Path;
 use std::process::{Command, Output};
 
+use common::git::{commit, git, hermetic};
 use common::{Repo, code, stderr, stdout};
 use deslag::change::{File, Hunk, Status, parse};
 use deslag::document::Location;
 use deslag::lint::{Keep, MarkKind};
 use deslag::{Config, check_file, check_repo};
 use serde_json::Value;
-
-/// Variables that would point git at another repository or config, such as the ones a git hook
-/// runs with.
-const CLEARED: &[&str] = &[
-    "GIT_DIR",
-    "GIT_WORK_TREE",
-    "GIT_INDEX_FILE",
-    "GIT_OBJECT_DIRECTORY",
-    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-    "GIT_COMMON_DIR",
-    "GIT_NAMESPACE",
-    "GIT_CONFIG",
-    "GIT_CONFIG_PARAMETERS",
-    "GIT_CONFIG_COUNT",
-    "GIT_EXTERNAL_DIFF",
-    "GIT_DIFF_OPTS",
-];
-
-/// What git runs with.
-const HERMETIC: &[(&str, &str)] = &[
-    ("GIT_CONFIG_GLOBAL", "/dev/null"),
-    ("GIT_CONFIG_NOSYSTEM", "1"),
-    ("GIT_AUTHOR_NAME", "deslag"),
-    ("GIT_AUTHOR_EMAIL", "deslag@example.com"),
-    ("GIT_COMMITTER_NAME", "deslag"),
-    ("GIT_COMMITTER_EMAIL", "deslag@example.com"),
-    // Where git and the walk would find a global ignore file.
-    ("XDG_CONFIG_HOME", "/nonexistent"),
-];
 
 /// A config under which each lint fails something small.
 const CONFIG: &str = "schema_version = 1
@@ -64,27 +36,6 @@ globs = [\"/AGENTS.md\"]
 lints.repo_layout = { min_entries = 1, max_entries = 2, max_width = 40 }
 ";
 
-/// `command` with git's environment made [`HERMETIC`].
-fn hermetic(command: &mut Command) -> &mut Command {
-    for name in CLEARED {
-        command.env_remove(name);
-    }
-    command.envs(HERMETIC.iter().copied())
-}
-
-/// Runs git with `args` in `dir`, which must succeed, and returns what it prints.
-fn git(dir: &Path, args: &[&str]) -> String {
-    let output = hermetic(Command::new("git").arg("-C").arg(dir).args(args))
-        .output()
-        .expect("git runs");
-    assert!(
-        output.status.success(),
-        "git {args:?} failed: {}",
-        stderr(&output)
-    );
-    stdout(&output)
-}
-
 /// Runs deslag with `args` in `dir`.
 fn deslag(dir: &Path, args: &[&str]) -> Output {
     hermetic(
@@ -94,12 +45,6 @@ fn deslag(dir: &Path, args: &[&str]) -> Output {
     )
     .output()
     .expect("deslag runs")
-}
-
-/// Commits everything in `dir`.
-fn commit(dir: &Path, message: &str) {
-    git(dir, &["add", "-A"]);
-    git(dir, &["commit", "-q", "--allow-empty", "-m", message]);
 }
 
 /// A repository on `main` with [`CONFIG`] and `files` committed.
@@ -447,14 +392,19 @@ fn every_format_is_narrowed_alike() {
         run["change"],
         serde_json::json!({ "base": "main", "merge_base": merge_base.trim(), "files_changed": 1 })
     );
+    assert_eq!(
+        run["base"],
+        serde_json::json!({ "rev": "main", "merge_base": merge_base.trim() })
+    );
     assert_eq!(run["files_scanned"], 2);
-    // A run of the whole tree names no change.
+    // A run of the whole tree names no change, and no base.
     let whole: Value = serde_json::from_str(&stdout(&deslag(
         repo.root(),
         &["check", "--format", "json"],
     )))
     .expect("a JSON document");
     assert_eq!(whole.get("change"), None);
+    assert_eq!(whole.get("base"), None);
 
     let sarif = deslag(repo.root(), &[&args[..], &["--format", "sarif"]].concat());
     let log: Value = serde_json::from_str(&stdout(&sarif)).expect("a SARIF log");
@@ -663,6 +613,74 @@ fn without_git_it_cannot_run() {
     );
 }
 
+/// A base alone judges the change for the lints that read one, and narrows nothing: every finding
+/// of the whole tree is reported, with no line on the change.
+#[test]
+fn a_base_does_not_narrow_the_report() {
+    let repo = repo(&[
+        ("a.md", "# A\n\nold \u{2014} one\n"),
+        ("b.md", "# B\n\nold \u{2014} one\n"),
+    ]);
+    repo.write("a.md", "# A\n\nold \u{2014} one\n\nnew \u{2014} two\n");
+
+    let whole = deslag(repo.root(), &["check"]);
+    let based = deslag(repo.root(), &["check", "--base", "main"]);
+    assert_eq!(code(&based), 1);
+    assert_eq!(stderr(&based), stderr(&whole));
+    assert_eq!(
+        found(repo.root(), &["check", "--base", "main"]),
+        found(repo.root(), &["check"])
+    );
+
+    let run: Value = serde_json::from_str(&stdout(&deslag(
+        repo.root(),
+        &["check", "--base", "main", "--format", "json"],
+    )))
+    .expect("a JSON document");
+    let merge_base = git(repo.root(), &["rev-parse", "main"]);
+    assert_eq!(
+        run["base"],
+        serde_json::json!({ "rev": "main", "merge_base": merge_base.trim() })
+    );
+    assert_eq!(run.get("change"), None);
+}
+
+#[test]
+fn a_base_and_a_diff_are_refused_together() {
+    let repo = repo(&[("a.md", "# A\n")]);
+    let output = deslag(repo.root(), &["check", "--base", "main", "--diff", "main"]);
+    assert_eq!(code(&output), 2);
+    assert!(
+        stderr(&output).contains("'--base <REV>' cannot be used with '--diff <BASE>'"),
+        "{}",
+        stderr(&output)
+    );
+}
+
+/// `fix` takes a base as `check` does, and cannot run when git cannot read it.
+#[test]
+fn fix_takes_a_base() {
+    let repo = repo(&[("a.md", "# A\n\none \u{2014} two\n")]);
+    let output = deslag(repo.root(), &["fix", "--base", "nope"]);
+    assert_eq!(code(&output), 2);
+    assert_eq!(
+        stderr(&output),
+        "deslag: cannot diff against nope: git knows no commit by that name\n"
+    );
+    // Nothing is written before the base is read.
+    assert_eq!(
+        fs::read_to_string(repo.root().join("a.md")).expect("a.md"),
+        "# A\n\none \u{2014} two\n"
+    );
+
+    let output = deslag(repo.root(), &["fix", "--base", "main"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert_eq!(
+        fs::read_to_string(repo.root().join("a.md")).expect("a.md"),
+        "# A\n\none - two\n"
+    );
+}
+
 #[test]
 fn fix_takes_no_diff() {
     let repo = repo(&[("a.md", "# A\n\none \u{2014} two\n")]);
@@ -707,7 +725,8 @@ fn the_config_has_no_setting_for_a_change() {
 }
 
 /// Every case, committed whole on top of an empty commit, is all change: `--diff` against the
-/// empty commit prints what the whole-tree run prints, and a line on the change.
+/// empty commit prints what a run of the whole tree from the same base prints, and a line on the
+/// change.
 #[test]
 fn every_case_is_all_change_from_an_empty_commit() {
     let cases = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
@@ -715,7 +734,12 @@ fn every_case_is_all_change_from_an_empty_commit() {
     for group in fs::read_dir(&cases).expect("tests/cases") {
         for case in fs::read_dir(group.expect("a group").path()).expect("a group of cases") {
             let case = case.expect("a case").path();
-            if !case.is_dir() {
+            // A base is the repo before a case's change, not a case.
+            if !case.is_dir()
+                || case
+                    .extension()
+                    .is_some_and(|extension| extension == "base")
+            {
                 continue;
             }
             let args: Vec<String> = match fs::read_to_string(case.with_extension("args")) {
@@ -747,7 +771,10 @@ fn all_change(case: &Path, args: &[String]) {
     commit(repo.root(), "case");
 
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
-    let whole = deslag(repo.root(), &[&args[..], &["--format", "json"]].concat());
+    let whole = deslag(
+        repo.root(),
+        &[&args[..], &["--format", "json", "--base", "HEAD~1"]].concat(),
+    );
     let diffed = deslag(
         repo.root(),
         &[&args[..], &["--format", "json", "--diff", "HEAD~1"]].concat(),
@@ -1088,7 +1115,9 @@ repo/
     assert_eq!(findings.len(), 6, "every lint fails the file");
     // The whole-tree report holds each finding whole.
     assert_eq!(
-        check_repo(repo.root(), &config).expect("a report").findings,
+        check_repo(repo.root(), &config, None)
+            .expect("a report")
+            .findings,
         findings
     );
 

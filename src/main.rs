@@ -31,19 +31,32 @@ fn run() -> anyhow::Result<ExitCode> {
         Command::Check(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
-            let change = args
-                .diff
-                .map(|base| deslag::Change::against(&root, &base))
-                .transpose()?;
-            check(&root, &config, args.report.format, change.as_ref())
+            // clap refuses --diff with --base, so there is one base at most.
+            let base = args.diff.as_deref().or(args.report.base.as_deref());
+            let change = changed(&root, base)?;
+            let narrowed = args.diff.is_some();
+            check(
+                &root,
+                &config,
+                args.report.format,
+                change.as_ref(),
+                narrowed,
+            )
         }
         Command::Fix(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
-            for file in deslag::fix::fix(&root, &config, &args.paths, args.dry_run)? {
+            let base = args.report.base.as_deref();
+            // A base git cannot read stops the run before fix writes anything.
+            let before = changed(&root, base)?;
+            let fixes =
+                deslag::fix::fix(&root, &config, &args.paths, args.dry_run, before.as_ref());
+            for file in fixes? {
                 eprintln!("{}\n", file.render(args.dry_run));
             }
-            check(&root, &config, args.report.format, None)
+            // What fix wrote is part of the change.
+            let change = changed(&root, base)?;
+            check(&root, &config, args.report.format, change.as_ref(), false)
         }
         Command::Explain(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
@@ -63,17 +76,25 @@ fn run() -> anyhow::Result<ExitCode> {
     }
 }
 
-/// Checks the repo rooted at `root`, printing the report as `format` says, and returns the exit
-/// code: 0 when every file passes and 1 when one fails. With a `change`, only what it touched
-/// counts.
+/// The change from `base`, when there is one, to the working tree of the repo rooted at `root`.
+fn changed(root: &Path, base: Option<&str>) -> anyhow::Result<Option<deslag::Change>> {
+    Ok(base
+        .map(|base| deslag::Change::against(root, base))
+        .transpose()?)
+}
+
+/// Checks the repo rooted at `root`, judging `change` for the lints that compare a file with what
+/// it was, printing the report as `format` says, and returns the exit code: 0 when every file
+/// passes and 1 when one fails. When `narrowed`, only what the change touched counts.
 fn check(
     root: &Path,
     config: &deslag::Config,
     format: Format,
     change: Option<&deslag::Change>,
+    narrowed: bool,
 ) -> anyhow::Result<ExitCode> {
-    let mut report = deslag::check_repo(root, config)?;
-    if let Some(change) = change {
+    let mut report = deslag::check_repo(root, config, change)?;
+    if let (Some(change), true) = (change, narrowed) {
         report = report.within(change);
     }
     for finding in &report.findings {

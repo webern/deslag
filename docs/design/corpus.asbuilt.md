@@ -147,6 +147,7 @@ fixtures, in the order they were added.
 `load_blobs` on small batches built from tree fixtures in a temporary directory: one of
 exclusions alone, others with version 3 sidecars, a `before` or a ledger.
 
-It holds three tests that `make test` lists as ignored: every fetched batch keeps the rules, every
-collected fixture of the tree is in the big tier with the same sidecar, and none is a `core/`
-fixture. `make test-blobs` fetches the image and runs them.
+It holds four tests that `make test` lists as ignored: every fetched batch keeps the rules, every
+collected fixture of the tree is in the big tier with the same sidecar, none is a `core/` fixture,
+and `list_growth` fails the pairs, each `mixed` fixture over its `before`, that
+`tests/golden/list_growth.txt` lists. `make test-blobs` fetches the image and runs them.

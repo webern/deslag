@@ -10,7 +10,8 @@
 //! Each fixture is linted alone in an empty directory, so a lint that looks at the disk finds
 //! nothing there. `repo_layout` fails every fixture that has the section, since none of the paths
 //! it lists exist. It fails one without the section in any directory, and the set leaves it out.
-//! A fixture alone is no change, so a lint that judges one is left out here.
+//! A fixture alone is no change, so a lint that judges one is left out here: `tests/blobs.rs`
+//! writes its golden file from the corpus's pairs.
 //!
 //! `make fix-golden` rewrites the files from what the lints find now; read the diff before
 //! committing it.

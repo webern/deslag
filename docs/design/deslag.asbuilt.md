@@ -118,7 +118,9 @@ check` prints in a fresh copy of it, with the temp root as `[ROOT]`; an empty on
 must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
 
 The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
-replaces `check` with other arguments. `make fix-test-output` rewrites `.stderr` and `.json` files.
+replaces `check` with other arguments. A `.base` directory is the repo before a change: the case
+runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-test-output` rewrites
+`.stderr` and `.json` files.
 
 `tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
 output from the JSON by hand.
@@ -138,7 +140,7 @@ each as reported, give each one left a reason, and settle; its tally is pinned.
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
 `tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every
-path missing; a fixture with no section is left out.
+path missing; a fixture with no section is left out, as is a lint that judges a change.
 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or

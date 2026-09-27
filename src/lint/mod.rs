@@ -7,6 +7,7 @@
 pub mod banned_chars;
 pub mod banned_phrases;
 pub mod density;
+pub mod list_growth;
 pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod repo_layout;
@@ -40,17 +41,20 @@ pub enum Lint {
     BannedPhrases,
     /// `density`: the length of paragraphs and list items.
     Density,
+    /// `list_growth`: what a change does to the count of list items.
+    ListGrowth,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 6] = [
+    pub const ALL: [Lint; 7] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
         Lint::BannedChars,
         Lint::BannedPhrases,
         Lint::Density,
+        Lint::ListGrowth,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -62,6 +66,21 @@ impl Lint {
             Lint::BannedChars => "banned_chars",
             Lint::BannedPhrases => "banned_phrases",
             Lint::Density => "density",
+            Lint::ListGrowth => "list_growth",
+        }
+    }
+
+    /// Whether it judges a change rather than a file: it compares a file with what it was at the
+    /// run's base, and cannot run without one.
+    pub fn reads_change(self) -> bool {
+        match self {
+            Lint::ListGrowth => true,
+            Lint::MaxSizeBytes
+            | Lint::MaxEmphasis
+            | Lint::RepoLayout
+            | Lint::BannedChars
+            | Lint::BannedPhrases
+            | Lint::Density => false,
         }
     }
 
@@ -77,6 +96,9 @@ impl Lint {
             }
             Lint::BannedPhrases => "A file must not hold the phrases the config bans.",
             Lint::Density => "A paragraph or list item must not be longer than its limit.",
+            Lint::ListGrowth => {
+                "A change must not leave a file with more list items than it had before."
+            }
         }
     }
 
@@ -90,6 +112,7 @@ impl Lint {
             Lint::BannedChars => "with banned characters",
             Lint::BannedPhrases => "with banned phrases",
             Lint::Density => "with dense text",
+            Lint::ListGrowth => "with more list items than at the base",
         }
     }
 }
@@ -148,6 +171,8 @@ pub enum Violation {
     BannedPhrases(banned_phrases::Over),
     /// The file has a paragraph or list item longer than it is allowed.
     Density(density::Over),
+    /// The change left the file with more list items than it had.
+    ListGrowth(list_growth::Over),
 }
 
 impl Violation {
@@ -160,6 +185,7 @@ impl Violation {
             Violation::BannedChars(_) => Lint::BannedChars,
             Violation::BannedPhrases(_) => Lint::BannedPhrases,
             Violation::Density(_) => Lint::Density,
+            Violation::ListGrowth(_) => Lint::ListGrowth,
         }
     }
 
@@ -173,6 +199,7 @@ impl Violation {
             Violation::BannedChars(over) => banned_chars::marks(over),
             Violation::BannedPhrases(over) => banned_phrases::marks(over),
             Violation::Density(over) => density::marks(over),
+            Violation::ListGrowth(over) => list_growth::marks(over),
         }
     }
 
@@ -188,6 +215,7 @@ impl Violation {
             // Its values are advice, not replacements, and a match's words can cross markup.
             Violation::BannedPhrases(_) => Vec::new(),
             Violation::Density(_) => Vec::new(),
+            Violation::ListGrowth(_) => Vec::new(),
         }
     }
 
@@ -197,7 +225,7 @@ impl Violation {
     pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
         match self {
             // A verdict on the whole file, and its evidence.
-            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) => {
+            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) | Violation::ListGrowth(_) => {
                 keep.verdict().then(|| self.clone())
             }
             Violation::RepoLayout(over) => {
@@ -252,6 +280,19 @@ pub(crate) fn on_lines(lines: &[usize]) -> String {
     }
 }
 
+/// The longest a report quotes the text at a place, in characters.
+pub const QUOTE_CHARS: usize = 60;
+
+/// `source` on one line, cut to [`QUOTE_CHARS`] characters, as a report quotes it.
+pub(crate) fn quote(source: &str) -> String {
+    let one_line = source.split_whitespace().collect::<Vec<_>>().join(" ");
+    if one_line.chars().count() <= QUOTE_CHARS {
+        return one_line;
+    }
+    let cut: String = one_line.chars().take(QUOTE_CHARS - 3).collect();
+    format!("{}...", cut.trim_end())
+}
+
 impl Finding {
     /// The report for this finding, with no trailing newline.
     pub fn render(&self) -> String {
@@ -262,6 +303,7 @@ impl Finding {
             Violation::BannedChars(over) => banned_chars::render(&self.path, over),
             Violation::BannedPhrases(over) => banned_phrases::render(&self.path, over),
             Violation::Density(over) => density::render(&self.path, over),
+            Violation::ListGrowth(over) => list_growth::render(&self.path, over),
         }
     }
 
@@ -389,9 +431,9 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
 
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
-        report
-            .findings
-            .extend(check_file(config, &file.relative, &contents, dir)?);
+        let text = String::from_utf8_lossy(&contents);
+        let (_, findings) = check_text(config, &file.relative, &contents, &text, dir, change)?;
+        report.findings.extend(findings);
     }
 
     Ok(report)
@@ -415,9 +457,10 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
     })
 }
 
-/// Runs every lint over one file: `relative` is its path from the repo root, `contents` its bytes
-/// and `dir` the directory it is in, which a lint that looks at the disk reads. The findings are
-/// in the order the lints run.
+/// Runs every lint over one file, in a run with no base: `relative` is its path from the repo
+/// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
+/// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
+/// run here, so a file one selects is an error.
 pub fn check_file(
     config: &Config,
     relative: &str,
@@ -425,18 +468,31 @@ pub fn check_file(
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
     let text = String::from_utf8_lossy(contents);
-    Ok(check_text(config, relative, contents, &text, dir)?.1)
+    Ok(check_text(config, relative, contents, &text, dir, None)?.1)
 }
 
-/// Runs every lint over one file, as [`check_file`] does, given `text`, its `contents` decoded.
-/// Returns the document the lints read with what they found, for a caller that edits it: this is
-/// where a file's reader is chosen, so a fix reads a file as the check does.
+/// A file as it was at the base of a run, which a lint that judges a change compares it with.
+#[derive(Debug, Clone)]
+pub struct Before<'a> {
+    /// The commit the change is measured from.
+    pub merge_base: &'a str,
+    /// The file there.
+    pub document: Document<'a>,
+    /// What the change did to it.
+    pub file: &'a change::File,
+}
+
+/// Runs every lint over one file, as [`check_file`] does, given `text`, its `contents` decoded,
+/// and the run's `change`, which the lints that judge one need. Returns the document the lints
+/// read with what they found, for a caller that edits it: this is where a file's reader is chosen,
+/// so a fix reads a file as the check does.
 pub(crate) fn check_text<'a>(
     config: &Config,
     relative: &str,
     contents: &[u8],
     text: &'a str,
     dir: &Path,
+    change: Option<&Change>,
 ) -> Result<(Document<'a>, Vec<Finding>), Error> {
     let lints = config.md().lints_for(relative);
     let contradiction = lints.contradiction().or_else(|| {
@@ -451,6 +507,27 @@ pub(crate) fn check_text<'a>(
             message: format!("for {relative}, {message}"),
         });
     }
+    // Only a file a lint that judges a change selects is read at the base.
+    let judged = lints.list_growth.is_some().then_some(Lint::ListGrowth);
+    let base_text = match (judged, change) {
+        (None, _) => None,
+        (Some(lint), None) => {
+            return Err(Error::NoBase {
+                lint: lint.id(),
+                path: relative.to_string(),
+            });
+        }
+        (Some(_), Some(change)) => change
+            .base_text(relative)?
+            .map(|base_text| (change, base_text)),
+    };
+    let before = base_text.as_ref().and_then(|(change, base_text)| {
+        Some(Before {
+            merge_base: &change.merge_base,
+            document: Document::markdown(base_text),
+            file: change.files.get(relative)?,
+        })
+    });
     let document = Document::markdown(text);
 
     let mut findings = Vec::new();
@@ -470,6 +547,10 @@ pub(crate) fn check_text<'a>(
                 .map(Violation::BannedPhrases),
             Lint::Density => {
                 density::check(&document, lints.density.as_ref()).map(Violation::Density)
+            }
+            Lint::ListGrowth => {
+                list_growth::check(&document, before.as_ref(), lints.list_growth.as_ref())
+                    .map(Violation::ListGrowth)
             }
         };
         findings.extend(violation.map(|violation| Finding {

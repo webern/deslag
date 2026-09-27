@@ -1,0 +1,14 @@
+ERROR: deslag detected list growth!
+
+README.md has 5 list items, 3 more than the 2 it had at [BASE].
+
+A list that gains an item with every change becomes an inventory of everything that exists, and stops helping anyone find anything. Where the items follow a rule, such as one entry for each directory of tests, write the rule once instead of the list. Otherwise, take out an item that matters less for each one you add.
+
+Do not turn the items into paragraphs, a table or a code block to get past this check, and do not change its settings. Only a human can tell you to do that, and I am a linter, not a human.
+
+The items on lines this change added:
+  line 9: `--format`: the format of the report.
+  line 10: `text`, the default.
+  line 14: The input passed.
+
+deslag: 1 of 1 Markdown files with more list items than at the base.

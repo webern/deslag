@@ -58,6 +58,7 @@ max_percent = 1
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
 lints.repo_layout = { min_entries = 5, max_entries = 15 }
+lints.list_growth = {}
 ```
 
 - `max_size_bytes` fails a file larger than its budget. A `max_size_bytes` key in a file's own
@@ -71,6 +72,9 @@ lints.repo_layout = { min_entries = 5, max_entries = 15 }
   the human which phrases to ban and what the report should advise instead.
 - `density` fails a file with a paragraph or a list item that is too long. The empty table sets
   the default limits.
+- `list_growth` fails a change that leaves a file with more list items than it had, so a new rule
+  replaces an old one. It skips new files. `check` and `fix` then need a base, such as
+  `--base origin/main`.
 
 Every lint also takes a `message`, which replaces the advice in its report. For every setting, its
 default and its meaning, run `deslag instructions config-schema`, which prints the config's JSON
@@ -78,9 +82,9 @@ schema. TOML, YAML and JSON configs share it.
 
 ## 4. Measure, then propose
 
-Run `deslag check`. It prints a report on standard error for each file that fails, then a tally,
-and exits 1. A clean run prints nothing and exits 0. Exit 2 means deslag could not run, as with a
-bad config: fix the setup, not the Markdown.
+Run `deslag check --base origin/main`. It prints a report on standard error for each file that
+fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means deslag
+could not run, as with a bad config: fix the setup, not the Markdown.
 
 For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
 file's size today stops it from growing; a budget below it asks for cuts. Where one file needs a
@@ -95,20 +99,16 @@ ask first, before running `deslag fix` too. When every file passes, the config i
 
 ## 6. Run it in CI
 
-Add `deslag check` where the repository runs its other checks, such as a Makefile target or a CI
-job, so a failure blocks a merge. deslag is not on crates.io yet, so ask the human how a CI job
-should install it.
+Add `deslag check --base origin/main` where the repository runs its other checks, such as a
+Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. Until the
+tree passes, `--diff origin/main` in its place reports only what the change touched. deslag is not
+on crates.io yet, so ask the human how a CI job should install it.
 
 In a GitHub Actions job, `--format github` prints a workflow command per failing file, which GitHub
 shows as an annotation on it, and `--format sarif` prints a log to upload to code scanning. The
-report and the exit code do not change. Paths are relative to where deslag runs and GitHub reads
-them from the root of the repository, so run it there.
-
-Until `deslag check` passes, a `pull_request` job may run
-`deslag check --format github --diff HEAD^1` with `fetch-depth: 2`, or `--diff origin/<base>` with
-`fetch-depth: 0`. It reports only what the change touched, which misses some failures, such as a
-path deleted from under an untouched layout, so remove it once the tree passes. Upload SARIF only
-from whole-tree runs: code scanning closes the alerts a `--diff` run leaves out.
+report and the exit code do not change. Upload no log from a `--diff` run: code scanning closes the
+alerts it leaves out. Paths are relative to where deslag runs and GitHub reads them from the root
+of the repository, so run it there.
 
 ## 7. Tell the next agent
 

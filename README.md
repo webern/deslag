@@ -48,6 +48,10 @@ that does not pass yet stop getting worse; the whole-tree `deslag check` stays t
 `deslag instructions` says how to run it in CI and what it misses. The config has no setting for
 it.
 
+`--base <BASE>`, on `check` and `fix`, gives the run the same change without narrowing the report.
+A lint that judges a change, such as `list_growth`, which fails a file left with more list items
+than it had, needs one: without it, a run that selects a file for that lint exits 2.
+
 `deslag fix [PATH]...` writes the replacements that `banned_chars` names, where it can prove the
 file reads as before apart from those characters. It says what it fixed, and why it left the rest,
 then prints what `deslag check` would and exits as it would. `--dry-run` writes nothing.

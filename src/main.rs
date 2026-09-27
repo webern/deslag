@@ -48,8 +48,10 @@ fn run() -> anyhow::Result<ExitCode> {
             let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
             let base = args.report.base.as_deref();
             // A base git cannot read stops the run before fix writes anything.
-            changed(&root, base)?;
-            for file in deslag::fix::fix(&root, &config, &args.paths, args.dry_run)? {
+            let before = changed(&root, base)?;
+            let fixes =
+                deslag::fix::fix(&root, &config, &args.paths, args.dry_run, before.as_ref());
+            for file in fixes? {
                 eprintln!("{}\n", file.render(args.dry_run));
             }
             // What fix wrote is part of the change.

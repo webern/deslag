@@ -5,7 +5,8 @@ mod common;
 use common::{Repo, code, stderr};
 use deslag::Document;
 use deslag::config::MaxEmphasis;
-use deslag::lint::max_emphasis::{HEADING, Kind, QUOTE_CHARS, check, measure};
+use deslag::lint::QUOTE_CHARS;
+use deslag::lint::max_emphasis::{HEADING, Kind, check, measure};
 
 /// The line, kind and quote of every span in `text`.
 fn spans(text: &str) -> Vec<(usize, Kind, String)> {

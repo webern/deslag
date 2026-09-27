@@ -725,7 +725,8 @@ fn the_config_has_no_setting_for_a_change() {
 }
 
 /// Every case, committed whole on top of an empty commit, is all change: `--diff` against the
-/// empty commit prints what the whole-tree run prints, and a line on the change.
+/// empty commit prints what a run of the whole tree from the same base prints, and a line on the
+/// change.
 #[test]
 fn every_case_is_all_change_from_an_empty_commit() {
     let cases = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
@@ -733,7 +734,12 @@ fn every_case_is_all_change_from_an_empty_commit() {
     for group in fs::read_dir(&cases).expect("tests/cases") {
         for case in fs::read_dir(group.expect("a group").path()).expect("a group of cases") {
             let case = case.expect("a case").path();
-            if !case.is_dir() {
+            // A base is the repo before a case's change, not a case.
+            if !case.is_dir()
+                || case
+                    .extension()
+                    .is_some_and(|extension| extension == "base")
+            {
                 continue;
             }
             let args: Vec<String> = match fs::read_to_string(case.with_extension("args")) {
@@ -765,7 +771,10 @@ fn all_change(case: &Path, args: &[String]) {
     commit(repo.root(), "case");
 
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
-    let whole = deslag(repo.root(), &[&args[..], &["--format", "json"]].concat());
+    let whole = deslag(
+        repo.root(),
+        &[&args[..], &["--format", "json", "--base", "HEAD~1"]].concat(),
+    );
     let diffed = deslag(
         repo.root(),
         &[&args[..], &["--format", "json", "--diff", "HEAD~1"]].concat(),

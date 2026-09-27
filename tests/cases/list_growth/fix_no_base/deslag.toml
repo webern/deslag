@@ -1,0 +1,5 @@
+schema_version = 1
+
+[md.lints.list_growth]
+
+[md.lints.banned_chars]

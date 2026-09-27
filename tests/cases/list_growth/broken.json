@@ -1,0 +1,48 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "list_growth",
+      "report": "ERROR: deslag detected list growth!\n\nREADME.md has 5 list items, 3 more than the 2 it had at [BASE].\n\nA list that gains an item with every change becomes an inventory of everything that exists, and stops helping anyone find anything. Where the items follow a rule, such as one entry for each directory of tests, write the rule once instead of the list. Otherwise, take out an item that matters less for each one you add.\n\nDo not turn the items into paragraphs, a table or a code block to get past this check, and do not change its settings. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe items on lines this change added:\n  line 9: `--format`: the format of the report.\n  line 10: `text`, the default.\n  line 14: The input passed.",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 144,
+          "end": 208,
+          "line": 9,
+          "column": 1,
+          "end_line": 10,
+          "end_column": 25,
+          "note": "`--format`: the format of the report."
+        },
+        {
+          "kind": "evidence",
+          "start": 186,
+          "end": 208,
+          "line": 10,
+          "column": 3,
+          "end_line": 10,
+          "end_column": 25,
+          "note": "`text`, the default."
+        },
+        {
+          "kind": "evidence",
+          "start": 225,
+          "end": 245,
+          "line": 14,
+          "column": 1,
+          "end_line": 14,
+          "end_column": 21,
+          "note": "The input passed."
+        }
+      ]
+    }
+  ],
+  "base": {
+    "rev": "HEAD",
+    "merge_base": "[BASE]"
+  }
+}

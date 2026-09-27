@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.list_growth]
+message = "Keep {path} to the lists it had; write the rule instead."

@@ -10,6 +10,7 @@
 //! Each fixture is linted alone in an empty directory, so a lint that looks at the disk finds
 //! nothing there. `repo_layout` fails every fixture that has the section, since none of the paths
 //! it lists exist. It fails one without the section in any directory, and the set leaves it out.
+//! A fixture alone is no change, so a lint that judges one is left out here.
 //!
 //! `make fix-golden` rewrites the files from what the lints find now; read the diff before
 //! committing it.
@@ -65,6 +66,7 @@ fn record_of(violation: &Violation) -> Option<String> {
                 .collect();
             blocks.join(" ")
         }
+        Violation::ListGrowth(over) => format!("items:{} base:{}", over.items, over.base_items),
     };
     Some(record)
 }
@@ -199,7 +201,7 @@ fn every_lint_finds_what_its_golden_file_says() {
         .into_iter()
         .collect();
     let mut drift = Vec::new();
-    for lint in Lint::ALL {
+    for lint in Lint::ALL.into_iter().filter(|lint| !lint.reads_change()) {
         let Some(Some(settings)) = tables.remove(lint.id()) else {
             failures.push(format!(
                 "{lint} has no settings in tests/golden/config.toml. Add a [md.lints.{lint}] table \

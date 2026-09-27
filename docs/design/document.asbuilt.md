@@ -15,6 +15,7 @@ max_size_bytes: 3000
 src/
   document/
     mod.rs            Document and its layers, and Location
+    edit.rs           Edit, and Document::apply, which proves edits
     markdown.rs       the Markdown reader, on pulldown-cmark
     tokens.rs         prose to tokens, on unicode-segmentation
     sentences.rs      tokens to sentences
@@ -45,6 +46,15 @@ Every position is a byte offset into the source. `Document::locate` alone turns 
 `Location`: bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1,
 with a leading byte order mark taking none. The end line is the last byte's; the end column is
 exclusive.
+
+## Edits
+
+An `Edit` replaces a range of the source. `Document::apply` makes one only in a text piece of prose
+as written, not an entity, escape or URL, and never in frontmatter or HTML; on whole grapheme
+clusters; with no control character; and where the reader the document keeps, which fills the first
+layer, finds the same blocks, spans, line breaks and pieces in the result, with the same text but
+for the edits. It tries them all at once, then one at a time, and gives each refused edit a
+`Refusal`.
 
 ## Frontmatter
 

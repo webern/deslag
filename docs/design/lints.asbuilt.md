@@ -97,6 +97,19 @@ frontmatter, HTML and images are not measured; a block of only whitespace is dro
 paragraph in a list item counts as an item. A block fails over `max_paragraph_chars` (default 600)
 or, for an item, `max_item_chars` (default 300).
 
+## Fixing
+
+`Violation::edits` gives each mark an `Edit` or the lint's reason for none, matching every
+`Violation`, so a new lint must choose. Only `banned_chars::edits` names any, replacing a
+character's bytes where its replacement is set for that character alone, by `ban` or a rule of one
+character, and holds no letter or digit. A word such as `yes`, or a range rule's default, is a guess
+at meaning, and left.
+
+`banned_chars::contradiction` fails a file whose `ban` value holds a character its settings ban, so
+a fix never writes what the lint reports. `banned_phrases` names none: its values are advice, and a
+match can cross markup. `check_text` is `check_file`'s core, which also returns the `Document`, so
+fix reads a file as `check` does.
+
 ## Reports
 
 `Finding::render` produces the report. The first two lines are fixed; the advice after them is the

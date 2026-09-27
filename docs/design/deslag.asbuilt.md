@@ -3,6 +3,7 @@ updated: 2026-09-27
 subsystems:
   - cli
   - instructions
+  - fix
 max_size_bytes: 8192
 ---
 # deslag: as built
@@ -31,6 +32,7 @@ src/
   config/             the config schema, and finding the config file
   glob/               the repo walk and glob patterns
   explain/mod.rs      a file's settings, and where they come from
+  fix/mod.rs          deslag fix: the edits the lints name, proven, then written
   instructions/
     mod.rs            fills in and returns the guide
     guide.md          the guide, with placeholders
@@ -42,12 +44,13 @@ src/
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
-`document` and `parse`; `output` reads a `Report`.
+`document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
+`document` proves.
 
 ## The subsystem docs
 
 Each module above is described in one doc, the one whose `subsystems:` names it; `tests/asbuilt.rs`
-fails when a module is in no doc or in two. This doc holds `cli` and `instructions`.
+fails when a module is in no doc or in two. This doc holds `cli`, `instructions` and `fix`.
 
 - [config.asbuilt.md](config.asbuilt.md): `config`, `glob` and `explain`: the config, glob
   patterns, the walk and `deslag explain`.
@@ -59,14 +62,26 @@ fails when a module is in no doc or in two. This doc holds `cli` and `instructio
 
 ## The command line
 
-`cli/mod.rs` defines `check`, with `--format`, and `explain`, each taking `--config-path`, and
-`instructions`, which prints `instructions::guide`, or a schema `schemars` derives: `config-schema`
-for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an error out of `run`
-in `anyhow`'s alternate form, which appends each underlying error once; an `Error`'s own message
-never repeats its source.
+`cli/mod.rs` defines `check` and `fix`, with `--format`, and `explain`, each taking `--config-path`,
+and `instructions`, which prints `instructions::guide`, or a schema `schemars` derives:
+`config-schema` for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an
+error out of `run` in `anyhow`'s alternate form, which appends each underlying error once; an
+`Error`'s own message never repeats its source.
 
 The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
 whatever the subcommand, as clap does on bad arguments.
+
+## Fixing
+
+`fix/mod.rs` runs `deslag fix [PATH]...` on the named files, or on every file `check` reads; a named
+path `check` would not read is an error. It lints a file as `check` does, makes each edit a lint
+names that `Document::apply` proves, and repeats until a pass makes none, bounded by the first
+pass's edits plus one.
+
+It works out every file before writing any, and writes a changed one through a temp file beside it
+and a rename, keeping its permissions; a file that is not UTF-8 is skipped. It prints what it fixed
+and what it left, with why, then what `check` prints, with its `--format` and exit code. `--dry-run`
+writes nothing.
 
 ## Other files
 
@@ -93,12 +108,12 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
 ## Tests
 
 `tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each, every canonical
-config path in every language included.
+config path in every language included. `tests/fix.rs` pins each refusal and the bytes fix writes.
 
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what `deslag
-check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run must exit
-0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
+check` prints in a fresh copy of it, with the temp root as `[ROOT]`; an empty one means the run
+must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
 
 The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
 replaces `check` with other arguments. `make fix-test-output` rewrites `.stderr` and `.json` files.
@@ -116,7 +131,8 @@ four times as many `llm/` fixtures as `human/` ones.
 
 `repo_layout::read` runs under a few real headings, and `core/rt-agents.md` must read with no
 malformed line. Tokens and sentences must keep to their blocks, and each location found under the
-golden config must hold what it names.
+golden config must hold what it names. Fix over the corpus must change only banned characters,
+each as reported, give each one left a reason, and settle; its tally is pinned.
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
 `tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every

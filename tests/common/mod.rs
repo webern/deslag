@@ -1,6 +1,8 @@
 //! Helpers shared by the integration tests.
 #![allow(dead_code)]
 
+pub mod corpus;
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 

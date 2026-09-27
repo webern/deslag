@@ -119,7 +119,7 @@ asks GitHub, and one it cannot check proves nothing.
 
 `llm` also needs the file's text to be the agents'. When the commit that added the file deleted a
 Markdown file of the same name, or one git's rename detection pairs with it, the text may be older
-than its history, and the file has no label; a merge that added a file is treated the same, since
+than its history, and the file is unlabelled; a merge that added a file is treated the same, since
 the history leaves merges out. A copy of older text is not caught.
 
 A shallow clone ends at a boundary. When the oldest commit that git shows for a file is that
@@ -169,8 +169,8 @@ corpus/
 ```
 
 There is no index above the batches. Each batch carries its own manifest in its own layer, so
-adding a batch changes no earlier layer. The manifests, read in batch order, name every fixture and
-its label. `<repo>` and `<name>` are the names `collect.py` gives in the tree.
+a new batch never changes an earlier layer. The manifests, read in batch order, name every fixture
+and its label. `<repo>` and `<name>` are the names `collect.py` gives in the tree.
 
 ## 5. Batches, layers and growth
 
@@ -207,7 +207,7 @@ Nothing reads the corpus when deslag lints. A lint never consults it, and the pu
 holds none of it. The corpus is where maintainers decide and prove a lint's rule and threshold,
 offline, with tests and tools; the loaders live outside the library.
 
-deslag exposes no metric to the agent it gates. docstats' evaluation (`docs/scoring-spec.md` at
+deslag never shows a metric to the agent it gates. docstats' evaluation (`docs/scoring-spec.md` at
 commit d958885a) found that live numeric targets during drafting did not improve the text over
 plain guidance, p = 0.7253, and led models to game the numbers. Issue #34 records the leniency and
 formulas deslag does not take for the same reason: an agent works to whatever signal it is shown.

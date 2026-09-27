@@ -19,3 +19,5 @@ groups = { emoji = true }
 
 [md.lints.density]
 max_paragraph_chars = 500
+
+[md.lints.verbs_no_nouns]

@@ -42,7 +42,7 @@ pub struct Rate {
 
 impl Rate {
     /// The rate of `failing` over `docs`, each a doc with whether it fails.
-    fn of(docs: &[(&Doc, bool)]) -> Rate {
+    pub(crate) fn of(docs: &[(&Doc, bool)]) -> Rate {
         let mut repos: BTreeMap<u32, (u64, u64)> = BTreeMap::new();
         let mut paths = Vec::new();
         for (doc, fails) in docs {
@@ -256,7 +256,7 @@ pub fn lints(
 }
 
 /// A rate as a cell: failing/checked, the file share, and the repository-weighted share.
-fn cell(rate: &Rate) -> String {
+pub(crate) fn cell(rate: &Rate) -> String {
     format!(
         "{}/{} {} ({:.1}% of repos)",
         rate.failing,

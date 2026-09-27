@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nREADME.md has 1 verb with a no-noun.\n\nNegate the verb in README.md.\n\nThe places:\n  line 3: \"needs no setup\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 17,
+          "end": 31,
+          "line": 3,
+          "column": 8,
+          "end_line": 3,
+          "end_column": 22,
+          "note": "\"needs no setup\""
+        }
+      ]
+    }
+  ]
+}

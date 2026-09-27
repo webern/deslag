@@ -1,0 +1,39 @@
+deslag-corpus patterns: ghcr.io/example/blobs:test@sha256:0000
+human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer
+filters: none
+files with no language left out: 0
+
+English files that hold the pattern, by label: holding/checked, file share (repository-weighted share); matches
+pattern                                                  human                                         llm                                    mixed
+code_series               0/45 0.0% (0.0% of repos); 0 matches        0/80 0.0% (0.0% of repos); 0 matches      0/6 0.0% (0.0% of repos); 0 matches
+not_x_but_y               0/45 0.0% (0.0% of repos); 0 matches        0/80 0.0% (0.0% of repos); 0 matches      0/6 0.0% (0.0% of repos); 0 matches
+its_not_just              0/45 0.0% (0.0% of repos); 0 matches        0/80 0.0% (0.0% of repos); 0 matches      0/6 0.0% (0.0% of repos); 0 matches
+verbs_no_nouns (shipped)  0/45 0.0% (0.0% of repos); 0 matches  80/80 100.0% (100.0% of repos); 80 matches  6/6 100.0% (100.0% of repos); 6 matches
+
+English llm files by the one tool that marked them: holding/checked, file share (repository-weighted share); matches
+pattern                                                  claude-code                                     copilot                                      cursor
+code_series                     0/27 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches
+not_x_but_y                     0/27 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches
+its_not_just                    0/27 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches        0/26 0.0% (0.0% of repos); 0 matches
+verbs_no_nouns (shipped)  27/27 100.0% (100.0% of repos); 27 matches  26/26 100.0% (100.0% of repos); 26 matches  26/26 100.0% (100.0% of repos); 26 matches
+
+files in another language, in no rate above: holding/checked, file share (repository-weighted share); matches
+pattern                                                 human                                  llm                             mixed
+code_series               0/1 0.0% (0.0% of repos); 0 matches  0/1 0.0% (0.0% of repos); 0 matches  0/0 - (0.0% of repos); 0 matches
+not_x_but_y               0/1 0.0% (0.0% of repos); 0 matches  0/1 0.0% (0.0% of repos); 0 matches  0/0 - (0.0% of repos); 0 matches
+its_not_just              0/1 0.0% (0.0% of repos); 0 matches  0/1 0.0% (0.0% of repos); 0 matches  0/0 - (0.0% of repos); 0 matches
+verbs_no_nouns (shipped)  0/1 0.0% (0.0% of repos); 0 matches  0/1 0.0% (0.0% of repos); 0 matches  0/0 - (0.0% of repos); 0 matches
+
+examples of code_series, masked:
+
+examples of not_x_but_y, masked:
+
+examples of its_not_just, masked:
+
+examples of verbs_no_nouns (shipped), masked:
+  llm: The cache [needs no warm]-up step, and the buffer is load-bearing — keep it.
+  llm: The queue [needs no warm]-up step, and the snapshot is load-bearing — keep it.
+  llm: The parser [needs no warm]-up step, and the manifest is load-bearing — keep it.
+  mixed: The buffer [needs no care], and it is load-bearing.
+  mixed: The snapshot [needs no care], and it is load-bearing.
+  mixed: The manifest [needs no care], and it is load-bearing.

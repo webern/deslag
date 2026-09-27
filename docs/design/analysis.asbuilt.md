@@ -26,6 +26,8 @@ bytes.
   catalogue's phrases and those `rejected.toml` refused; see `catalog.md`.
 - `lints`: what a config's lints fail, per label and per compared tool.
 - `report`: the four above as one Markdown page, the lints at `tools/corpus/report.toml`.
+- `patterns`: the English files that hold each construction in `CANDIDATES`, which no lint ships,
+  or a shipped lint's pattern named by its id, per label and per compared tool, with examples.
 
 The filters, which every command takes, keep files by `--kind`, `--batch`, `--repo`,
 `--language`, `--quarter`, `--single-tool` and `--register`. The two sides of a comparison are
@@ -46,17 +48,18 @@ tools/corpus/src/
   candidates.rs   candidates: the sieve, the gate, word counts and examples
   lints.rs        lints
   report.rs       report
+  patterns.rs     patterns: the candidate constructions and the shipped ones
   table.rs        plain text and Markdown tables
   work.rs         in_chunks: work over threads, in a fixed order
 ```
 
 `main.rs` calls one command module; each command calls `measure` for its files, and all but
-`summary` and `lints` call `compare`, which calls `stats`. `candidates` calls `ngrams`; `report`
-calls the four others.
+`summary`, `lints` and `patterns` call `compare`, which calls `stats`. `candidates` calls `ngrams`;
+`report` calls the four others; `patterns` calls `candidates` and `lints`.
 
 ## Reading a tier
 
-`Corpus::read` loads the tier through `load`, drops the tree's `core/`, which carries no label, and
+`Corpus::read` loads the tier through `load`, drops the tree's `core/`, which is not labelled, and
 reads each fixture with `Document::markdown`. Each file becomes a `Doc`: its facets from the
 sidecar, its path in the tier and in its source repository, and its tokens as `u32` ids.
 
@@ -110,7 +113,7 @@ the reference side's other files, which no rate reads.
 ## Lints
 
 `lints` loads a config as `deslag` does, from `--config` or the repository at `--root`, less each
-lint whose `reads_change()` is true, such as `list_growth`: a corpus file has no base. Each file
+lint whose `reads_change()` is true, such as `list_growth`: no corpus file has a base. Each file
 its globs select, or every file with `--every-file`, is checked with `check_file` at its path in
 its source repository, so overrides apply. `repo_layout` is left out too. Each lint that fails a
 file, then `any`, gets a rate per label and per compared tool: failing files, their share, and the
@@ -118,6 +121,13 @@ share weighed by repository.
 
 `report` runs the lints at `tools/corpus/report.toml` unless given `--config`. It selects every
 file and holds the repository config's `[md.lints]`, with no budget.
+
+## Patterns
+
+`patterns` reads each file again with `Document::markdown`, since a `Doc`'s ids make every code
+span `SEP`, and matches with `deslag::lint::pattern`. A file in another language is in no label's
+rate but in a table of its own; one with no language is left out. Examples are masked as in
+`candidates`, keeping the 200 words most English files hold.
 
 ## Tests
 

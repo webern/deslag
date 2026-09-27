@@ -20,7 +20,7 @@ max_percent = 1.0
 
 [md.lints.banned_chars]
 
-# Nothing is banned by default. These run each part of the matcher: one word, a row of words, an
+# The default groups run too. These run each part of the matcher: one word, a row of words, an
 # apostrophe, a hyphen, and a match dropped inside an allowed phrase. They are not advice.
 [md.lints.banned_phrases]
 allow = ["please note that"]
@@ -33,3 +33,5 @@ comprehensive = ""
 production-ready = ""
 
 [md.lints.density]
+
+[md.lints.verbs_no_nouns]

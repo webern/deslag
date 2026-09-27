@@ -137,6 +137,8 @@ max_entries = 15
 max_width = 80
 min_entries = 5
 
+# verbs_no_nouns: off
+
 # docs/intro.md
 # config: deslag.toml
 # selected by [md]: yes
@@ -166,6 +168,8 @@ max_entries = 15
 max_width = 80
 min_entries = 5
 
+# verbs_no_nouns: off
+
 # README.md
 # config: deslag.toml
 # selected by [md]: yes
@@ -189,6 +193,8 @@ max_percent = 1.0
 value = 20000
 
 # repo_layout: off
+
+# verbs_no_nouns: off
 
 # notes.txt
 # config: deslag.toml
@@ -269,7 +275,9 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          [max_size_bytes]\n\
          value = 300\n\
          \n\
-         # repo_layout: off\n"
+         # repo_layout: off\n\
+         \n\
+         # verbs_no_nouns: off\n"
     );
 }
 

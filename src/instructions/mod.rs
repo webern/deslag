@@ -49,5 +49,6 @@ fn section(lint: Lint) -> &'static str {
         Lint::BannedPhrases => include_str!("lints/banned_phrases.md"),
         Lint::Density => include_str!("lints/density.md"),
         Lint::ListGrowth => include_str!("lints/list_growth.md"),
+        Lint::VerbsNoNouns => include_str!("lints/verbs_no_nouns.md"),
     }
 }

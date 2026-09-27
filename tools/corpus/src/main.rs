@@ -13,6 +13,7 @@ use deslag_corpus::lints::{lints, load_config};
 use deslag_corpus::load::Problem;
 use deslag_corpus::measure::{Corpus, Filters, Tier};
 use deslag_corpus::ngrams::{Counting, ngrams};
+use deslag_corpus::patterns::patterns;
 use deslag_corpus::report::{DEFAULT_CONFIG, report};
 use deslag_corpus::summary::summary;
 
@@ -98,6 +99,16 @@ enum Command {
         #[arg(long)]
         every_file: bool,
     },
+    /// How many English files hold each construction the pattern matcher finds, per label and
+    /// per tool, with masked examples: those considered for a lint and not shipped, and each
+    /// shipped lint's. Files in another language are counted apart.
+    Patterns {
+        #[command(flatten)]
+        filters: Filters,
+        /// The patterns to run, by name or by the id of the lint that ships one; by default,
+        /// every one.
+        names: Vec<String>,
+    },
     /// One Markdown page for a pull request that grows the corpus: the summary, the characters,
     /// the candidates with the catalog gate, and the lints, each from the command of that name at
     /// its defaults.
@@ -165,6 +176,10 @@ fn run(cli: Cli) -> Result<(), Problem> {
             let config = load_config(&cli.root, config.as_deref())?;
             let found = lints(&corpus, &filters, &config, every_file)?;
             print(cli.json, &found, |l| l.render());
+        }
+        Command::Patterns { filters, names } => {
+            let found = patterns(&corpus, &filters, &names)?;
+            print(cli.json, &found, |p| p.render());
         }
         Command::Report {
             filters,

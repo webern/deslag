@@ -1,0 +1,280 @@
+{
+  "header": {
+    "command": "summary",
+    "tier": "tree",
+    "measured_on": "tests/corpus, commit unknown",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "left_out": 0,
+  "labels": [
+    {
+      "label": "human",
+      "count": {
+        "files": 2,
+        "repos": 2
+      },
+      "english": {
+        "files": 2,
+        "repos": 2
+      },
+      "bytes": 396,
+      "tokens": 82,
+      "words": 68,
+      "sentences": 9,
+      "tokens_per_file": [
+        34.0,
+        34.0,
+        48.0
+      ],
+      "twins": 0
+    },
+    {
+      "label": "llm",
+      "count": {
+        "files": 2,
+        "repos": 2
+      },
+      "english": {
+        "files": 2,
+        "repos": 2
+      },
+      "bytes": 485,
+      "tokens": 102,
+      "words": 82,
+      "sentences": 10,
+      "tokens_per_file": [
+        39.0,
+        39.0,
+        63.0
+      ],
+      "twins": 0
+    },
+    {
+      "label": "mixed",
+      "count": {
+        "files": 0,
+        "repos": 0
+      },
+      "english": {
+        "files": 0,
+        "repos": 0
+      },
+      "bytes": 0,
+      "tokens": 0,
+      "words": 0,
+      "sentences": 0,
+      "tokens_per_file": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "twins": 0
+    }
+  ],
+  "kinds": [
+    {
+      "value": "docs",
+      "counts": [
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "readme",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "value": "en",
+      "counts": [
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "value": "tree",
+      "counts": [
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "quarters": [
+    {
+      "value": "2020Q1",
+      "counts": [
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "2026Q1",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "2026Q2",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "registers": [
+    {
+      "value": "outside",
+      "counts": [
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "software",
+      "counts": [
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 2,
+          "repos": 2
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "tool": "claude-code",
+      "llm_alone": {
+        "files": 1,
+        "repos": 1
+      },
+      "llm_any": {
+        "files": 1,
+        "repos": 1
+      },
+      "mixed_any": {
+        "files": 0,
+        "repos": 0
+      },
+      "compared": false
+    },
+    {
+      "tool": "cursor",
+      "llm_alone": {
+        "files": 1,
+        "repos": 1
+      },
+      "llm_any": {
+        "files": 1,
+        "repos": 1
+      },
+      "mixed_any": {
+        "files": 0,
+        "repos": 0
+      },
+      "compared": false
+    }
+  ]
+}

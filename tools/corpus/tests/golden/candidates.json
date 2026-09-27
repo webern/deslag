@@ -1,0 +1,515 @@
+{
+  "header": {
+    "command": "candidates",
+    "tier": "blobs",
+    "measured_on": "ghcr.io/example/blobs:test@sha256:0000",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "comparison": "the English llm files, against the English human files",
+  "counting": {
+    "min_n": 1,
+    "max_n": 4,
+    "min_repos": 10,
+    "top": 6
+  },
+  "sieve": {
+    "max_share": 0.25,
+    "min_ratio": 4.0,
+    "min_tools": 3
+  },
+  "compared_tools": [
+    "claude-code",
+    "copilot",
+    "cursor"
+  ],
+  "funnel": [
+    {
+      "step": "n-grams of 1 to 4 tokens in at least 10 focus repositories",
+      "left": 204
+    },
+    {
+      "step": "no one repository holds more than 25% of its focus files",
+      "left": 204
+    },
+    {
+      "step": "no human file in the tree holds it",
+      "left": 162
+    },
+    {
+      "step": "the interval's lower bound is at least 4",
+      "left": 122
+    },
+    {
+      "step": "focus files of at least 3 compared tools hold it",
+      "left": 83
+    },
+    {
+      "step": "after merging each n-gram into a shorter one it holds",
+      "left": 19
+    }
+  ],
+  "gate": {
+    "rule": "n-grams through the sieve that no reference file holds, in any language, and at least 40 focus repositories do, merged among themselves",
+    "count": 12,
+    "without_rare_words": 1,
+    "phrases": [
+      "the default",
+      "no",
+      "and",
+      "is stale",
+      "load",
+      "bearing",
+      "keep",
+      "stays",
+      "byte",
+      "identical",
+      "across",
+      "runs"
+    ]
+  },
+  "candidates": [
+    {
+      "phrase": "the default",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "the",
+          "reference_files": 45,
+          "rare": false
+        },
+        {
+          "word": "default",
+          "reference_files": 40,
+          "rare": false
+        }
+      ],
+      "longer": [],
+      "examples": [
+        "See `_` → [the default].",
+        "See `_` → [the default].",
+        "See `_` → [the default]."
+      ]
+    },
+    {
+      "phrase": "no",
+      "n": 1,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "no",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "needs no warm",
+        "needs no",
+        "no warm-up",
+        "no warm"
+      ],
+      "examples": [
+        "The _ needs [no] warm-up step, and the buffer is load-bearing — keep it ...",
+        "The _ needs [no] warm-up step, and the snapshot is load-bearing — keep it ...",
+        "The _ needs [no] warm-up step, and the manifest is load-bearing — keep it ..."
+      ]
+    },
+    {
+      "phrase": "and",
+      "n": 1,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "and",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "up step, and",
+        "step, and the",
+        "step, and",
+        "and the",
+        "and the buffer is",
+        "and the buffer",
+        "and the snapshot is",
+        "and the snapshot",
+        "and the manifest is",
+        "and the manifest",
+        "and the token is",
+        "and the token",
+        "and the table is",
+        "and the table",
+        "and the handle is",
+        "and the handle",
+        "and the batch is",
+        "and the batch"
+      ],
+      "examples": [
+        "The _ needs no warm-up step, [and] the buffer is load-bearing — keep it.",
+        "The _ needs no warm-up step, [and] the snapshot is load-bearing — keep it.",
+        "The _ needs no warm-up step, [and] the manifest is load-bearing — keep it."
+      ]
+    },
+    {
+      "phrase": "load",
+      "n": 1,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "load",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "is load-bearing",
+        "is load",
+        "load-bearing",
+        "the buffer is load",
+        "buffer is load",
+        "the snapshot is load",
+        "snapshot is load",
+        "the manifest is load",
+        "manifest is load",
+        "the token is load",
+        "token is load",
+        "the table is load",
+        "table is load",
+        "the handle is load",
+        "the batch is load",
+        "handle is load",
+        "batch is load"
+      ],
+      "examples": [
+        "The _ needs no warm-up step, and the buffer is [load]-bearing — keep it.",
+        "The _ needs no warm-up step, and the snapshot is [load]-bearing — keep it.",
+        "The _ needs no warm-up step, and the manifest is [load]-bearing — keep it."
+      ]
+    },
+    {
+      "phrase": "bearing",
+      "n": 1,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "bearing",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "is load-bearing",
+        "load-bearing",
+        "bearing — keep it",
+        "bearing — keep"
+      ],
+      "examples": [
+        "The _ needs no warm-up step, and the buffer is load-[bearing] — keep it.",
+        "The _ needs no warm-up step, and the snapshot is load-[bearing] — keep it.",
+        "The _ needs no warm-up step, and the manifest is load-[bearing] — keep it."
+      ]
+    },
+    {
+      "phrase": "keep",
+      "n": 1,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "keep",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "bearing — keep it",
+        "bearing — keep",
+        "keep it"
+      ],
+      "examples": [
+        "...needs no warm-up step, and the buffer is load-bearing — [keep] it.",
+        "...needs no warm-up step, and the snapshot is load-bearing — [keep] it.",
+        "...needs no warm-up step, and the manifest is load-bearing — [keep] it."
+      ]
+    }
+  ]
+}

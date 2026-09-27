@@ -1,0 +1,374 @@
+{
+  "header": {
+    "command": "chars",
+    "tier": "blobs",
+    "measured_on": "ghcr.io/example/blobs:test@sha256:0000",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "comparison": "the English llm files, against the English human files",
+  "groups": [
+    {
+      "group": "dashes",
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ]
+    },
+    {
+      "group": "arrows",
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ]
+    },
+    {
+      "group": "ellipsis",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "bullets",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "math",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "checks",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "section",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "box_drawing",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "spaces",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "invisible",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "quotes",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 40,
+        "repos": 40,
+        "occurrences": 80,
+        "rate": 54394.06318082793
+      },
+      "ratio": 0.006082733726310175,
+      "interval": [
+        0.0058736065140471624,
+        0.006321164529274133
+      ]
+    },
+    {
+      "group": "emoji",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
+      "group": "none",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "chars": [
+    {
+      "ch": "—",
+      "code": "U+2014",
+      "name": "em dash",
+      "group": "dashes",
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ]
+    },
+    {
+      "ch": "→",
+      "code": "U+2192",
+      "name": "rightwards arrow",
+      "group": "arrows",
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ]
+    },
+    {
+      "ch": "“",
+      "code": "U+201C",
+      "name": "left double quotation mark",
+      "group": "quotes",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 40,
+        "repos": 40,
+        "occurrences": 40,
+        "rate": 27197.031590413964
+      },
+      "ratio": 0.012091915550088133,
+      "interval": [
+        0.011678617424713463,
+        0.012562916794522507
+      ]
+    },
+    {
+      "ch": "”",
+      "code": "U+201D",
+      "name": "right double quotation mark",
+      "group": "quotes",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 40,
+        "repos": 40,
+        "occurrences": 40,
+        "rate": 27197.031590413964
+      },
+      "ratio": 0.012091915550088133,
+      "interval": [
+        0.011678617424713463,
+        0.012562916794522507
+      ]
+    }
+  ]
+}

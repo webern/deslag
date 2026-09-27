@@ -39,7 +39,8 @@ help:
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
-	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus"
+	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
+	@echo "                 tools/corpus/tests/golden from what deslag-corpus prints"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed by hand before a build can succeed"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
@@ -120,9 +121,10 @@ fix-clippy: preflight
 fix-fmt: preflight
 	cargo fmt
 
-# Accepts whatever the lints find now, so read the diff before committing it.
+# Accepts whatever the lints find and deslag-corpus prints now, so read the diff
+# before committing it.
 fix-golden: preflight
-	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test golden
+	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --workspace --all-features --test golden
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight

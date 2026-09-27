@@ -1,0 +1,397 @@
+{
+  "header": {
+    "command": "summary",
+    "tier": "blobs",
+    "measured_on": "ghcr.io/example/blobs:test@sha256:0000",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "left_out": 0,
+  "labels": [
+    {
+      "label": "human",
+      "count": {
+        "files": 46,
+        "repos": 41
+      },
+      "english": {
+        "files": 45,
+        "repos": 40
+      },
+      "bytes": 7446,
+      "tokens": 1514,
+      "words": 1251,
+      "sentences": 185,
+      "tokens_per_file": [
+        34.0,
+        34.0,
+        34.0
+      ],
+      "twins": 0
+    },
+    {
+      "label": "llm",
+      "count": {
+        "files": 81,
+        "repos": 81
+      },
+      "english": {
+        "files": 80,
+        "repos": 80
+      },
+      "bytes": 18773,
+      "tokens": 3893,
+      "words": 3118,
+      "sentences": 389,
+      "tokens_per_file": [
+        39.0,
+        48.0,
+        54.0
+      ],
+      "twins": 0
+    },
+    {
+      "label": "mixed",
+      "count": {
+        "files": 6,
+        "repos": 6
+      },
+      "english": {
+        "files": 6,
+        "repos": 6
+      },
+      "bytes": 542,
+      "tokens": 126,
+      "words": 102,
+      "sentences": 18,
+      "tokens_per_file": [
+        21.0,
+        21.0,
+        21.0
+      ],
+      "twins": 0
+    }
+  ],
+  "kinds": [
+    {
+      "value": "agent-skill",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 26,
+          "repos": 26
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "changelog",
+      "counts": [
+        {
+          "files": 5,
+          "repos": 5
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "docs",
+      "counts": [
+        {
+          "files": 40,
+          "repos": 40
+        },
+        {
+          "files": 27,
+          "repos": 27
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "readme",
+      "counts": [
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 28,
+          "repos": 28
+        },
+        {
+          "files": 6,
+          "repos": 6
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "value": "en",
+      "counts": [
+        {
+          "files": 45,
+          "repos": 40
+        },
+        {
+          "files": 80,
+          "repos": 80
+        },
+        {
+          "files": 6,
+          "repos": 6
+        }
+      ]
+    },
+    {
+      "value": "other",
+      "counts": [
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 1,
+          "repos": 1
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "value": "2026-09-01-01",
+      "counts": [
+        {
+          "files": 46,
+          "repos": 41
+        },
+        {
+          "files": 81,
+          "repos": 81
+        },
+        {
+          "files": 6,
+          "repos": 6
+        }
+      ]
+    }
+  ],
+  "quarters": [
+    {
+      "value": "2020Q1",
+      "counts": [
+        {
+          "files": 41,
+          "repos": 41
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "2021Q2",
+      "counts": [
+        {
+          "files": 5,
+          "repos": 5
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "2026Q1",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 28,
+          "repos": 28
+        },
+        {
+          "files": 2,
+          "repos": 2
+        }
+      ]
+    },
+    {
+      "value": "2026Q2",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 27,
+          "repos": 27
+        },
+        {
+          "files": 2,
+          "repos": 2
+        }
+      ]
+    },
+    {
+      "value": "2026Q3",
+      "counts": [
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 26,
+          "repos": 26
+        },
+        {
+          "files": 2,
+          "repos": 2
+        }
+      ]
+    }
+  ],
+  "registers": [
+    {
+      "value": "outside",
+      "counts": [
+        {
+          "files": 12,
+          "repos": 10
+        },
+        {
+          "files": 0,
+          "repos": 0
+        },
+        {
+          "files": 0,
+          "repos": 0
+        }
+      ]
+    },
+    {
+      "value": "software",
+      "counts": [
+        {
+          "files": 34,
+          "repos": 31
+        },
+        {
+          "files": 81,
+          "repos": 81
+        },
+        {
+          "files": 6,
+          "repos": 6
+        }
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "tool": "claude-code",
+      "llm_alone": {
+        "files": 27,
+        "repos": 27
+      },
+      "llm_any": {
+        "files": 27,
+        "repos": 27
+      },
+      "mixed_any": {
+        "files": 2,
+        "repos": 2
+      },
+      "compared": true
+    },
+    {
+      "tool": "codex",
+      "llm_alone": {
+        "files": 0,
+        "repos": 0
+      },
+      "llm_any": {
+        "files": 1,
+        "repos": 1
+      },
+      "mixed_any": {
+        "files": 0,
+        "repos": 0
+      },
+      "compared": false
+    },
+    {
+      "tool": "copilot",
+      "llm_alone": {
+        "files": 26,
+        "repos": 26
+      },
+      "llm_any": {
+        "files": 26,
+        "repos": 26
+      },
+      "mixed_any": {
+        "files": 2,
+        "repos": 2
+      },
+      "compared": true
+    },
+    {
+      "tool": "cursor",
+      "llm_alone": {
+        "files": 27,
+        "repos": 27
+      },
+      "llm_any": {
+        "files": 28,
+        "repos": 28
+      },
+      "mixed_any": {
+        "files": 2,
+        "repos": 2
+      },
+      "compared": true
+    }
+  ]
+}

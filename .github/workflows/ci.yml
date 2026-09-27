@@ -46,7 +46,7 @@ jobs:
       # fetch-blobs touches nothing. Keyed on the lock, with no restore keys: another image is
       # of no use.
       - name: Cache the corpus's big tier
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v6.1.0, 2026-06-26
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
         with:
           path: .blobs
           key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}

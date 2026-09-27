@@ -33,7 +33,7 @@ pub mod parse;
 pub use config::{Config, ConfigSource};
 pub use document::Document;
 pub use explain::explain;
-pub use lint::{Finding, Report, Violation, check_repo};
+pub use lint::{Finding, Report, Violation, check_file, check_repo};
 
 /// Everything that can go wrong inside the library.
 ///

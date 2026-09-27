@@ -173,7 +173,7 @@ pub fn read(document: &Document<'_>, heading: &str) -> Result<Layout, Problem> {
 
 /// Checks one file, read into `document`, which sits in `dir`. A file with no settings is not
 /// checked, and nor is one whose limits contradict each other, which
-/// [`check_repo`](crate::check_repo) refuses before any lint runs.
+/// [`check_file`](crate::check_file) refuses before any lint runs.
 pub fn check(document: &Document<'_>, dir: &Path, settings: Option<&RepoLayout>) -> Option<Over> {
     let settings = settings?;
     let heading = settings.heading();

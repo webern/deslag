@@ -136,40 +136,50 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
             path: file.absolute.display().to_string(),
             source,
         })?;
-        let text = String::from_utf8_lossy(&contents);
-        let lints = md.lints_for(&file.relative);
-        if let Some(message) = lints.contradiction() {
-            return Err(Error::Setting {
-                path: config.path().display().to_string(),
-                message: format!("for {}, {message}", file.relative),
-            });
-        }
         let dir = file.absolute.parent().unwrap_or(root);
-        let document = Document::markdown(&text);
-
-        let violations = [
-            max_size_bytes::check(
-                &file.relative,
-                &contents,
-                &text,
-                lints.max_size_bytes.as_ref(),
-            )?
-            .map(Violation::MaxSizeBytes),
-            max_emphasis::check(&document, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
-            repo_layout::check(&document, dir, lints.repo_layout.as_ref())
-                .map(Violation::RepoLayout),
-            banned_chars::check(&document, lints.banned_chars.as_ref()).map(Violation::BannedChars),
-            banned_phrases::check(&document, lints.banned_phrases.as_ref())
-                .map(Violation::BannedPhrases),
-            density::check(&document, lints.density.as_ref()).map(Violation::Density),
-        ];
         report
             .findings
-            .extend(violations.into_iter().flatten().map(|violation| Finding {
-                path: file.relative.clone(),
-                violation,
-            }));
+            .extend(check_file(config, &file.relative, &contents, dir)?);
     }
 
     Ok(report)
+}
+
+/// Runs every lint over one file: `relative` is its path from the repo root, `contents` its bytes
+/// and `dir` the directory it is in, which a lint that looks at the disk reads. The findings are
+/// in the order the lints run.
+pub fn check_file(
+    config: &Config,
+    relative: &str,
+    contents: &[u8],
+    dir: &Path,
+) -> Result<Vec<Finding>, Error> {
+    let text = String::from_utf8_lossy(contents);
+    let lints = config.md().lints_for(relative);
+    if let Some(message) = lints.contradiction() {
+        return Err(Error::Setting {
+            path: config.path().display().to_string(),
+            message: format!("for {relative}, {message}"),
+        });
+    }
+    let document = Document::markdown(&text);
+
+    let violations = [
+        max_size_bytes::check(relative, contents, &text, lints.max_size_bytes.as_ref())?
+            .map(Violation::MaxSizeBytes),
+        max_emphasis::check(&document, lints.max_emphasis.as_ref()).map(Violation::MaxEmphasis),
+        repo_layout::check(&document, dir, lints.repo_layout.as_ref()).map(Violation::RepoLayout),
+        banned_chars::check(&document, lints.banned_chars.as_ref()).map(Violation::BannedChars),
+        banned_phrases::check(&document, lints.banned_phrases.as_ref())
+            .map(Violation::BannedPhrases),
+        density::check(&document, lints.density.as_ref()).map(Violation::Density),
+    ];
+    Ok(violations
+        .into_iter()
+        .flatten()
+        .map(|violation| Finding {
+            path: relative.to_string(),
+            violation,
+        })
+        .collect())
 }

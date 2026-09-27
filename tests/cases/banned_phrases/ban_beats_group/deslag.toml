@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.banned_phrases]
+ban = { "Load-Bearing" = "say which release depends on it" }

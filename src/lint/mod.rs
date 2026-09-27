@@ -14,6 +14,9 @@ pub mod repo_layout;
 use std::fmt;
 use std::path::Path;
 
+use schemars::JsonSchema;
+use serde::Serialize;
+
 use crate::Error;
 use crate::config::Config;
 use crate::document::{Document, Location};
@@ -21,7 +24,8 @@ use crate::glob;
 
 /// Every lint deslag has. Everything that lists the lints, such as the order they run in and the
 /// tally of a run, takes them from here.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum Lint {
     /// `max_size_bytes`: the byte budget.
     MaxSizeBytes,
@@ -60,6 +64,21 @@ impl Lint {
         }
     }
 
+    /// The rule it holds a file to, in one sentence that names no kind of file.
+    pub fn summary(self) -> &'static str {
+        match self {
+            Lint::MaxSizeBytes => "A file must not be larger than its byte budget.",
+            Lint::MaxEmphasis => "A file must not lean on bold, italics and capitals.",
+            Lint::RepoLayout => "A file must hold a short index of the repository that is true.",
+            Lint::BannedChars => {
+                "A file must not hold characters, such as the em dash, that have something plain \
+                 to write instead."
+            }
+            Lint::BannedPhrases => "A file must not hold the phrases the config bans.",
+            Lint::Density => "A paragraph or list item must not be longer than its limit.",
+        }
+    }
+
     /// How the tally of a run describes the files this lint failed, as in `2 of 9 Markdown files
     /// over budget`.
     fn tally(self) -> &'static str {
@@ -81,18 +100,20 @@ impl fmt::Display for Lint {
 }
 
 /// A place in a file that a finding points at.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Mark {
     /// What the place is to the finding.
     pub kind: MarkKind,
     /// Where it is.
+    #[serde(flatten)]
     pub location: Location,
     /// What the report says of it, in the lint's words.
     pub note: String,
 }
 
 /// What a place that a finding points at is to the finding.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum MarkKind {
     /// Something wrong in its own right, such as a banned character, or a line of a layout that is
     /// out of format.
@@ -165,6 +186,15 @@ impl Finding {
             Violation::BannedChars(over) => banned_chars::render(&self.path, over),
             Violation::BannedPhrases(over) => banned_phrases::render(&self.path, over),
             Violation::Density(over) => density::render(&self.path, over),
+        }
+    }
+
+    /// The report without the heading it opens with, for a format that names the lint on its own.
+    pub fn message(&self) -> String {
+        let report = self.render();
+        match report.split_once("\n\n") {
+            Some((_, message)) => message.to_string(),
+            None => report,
         }
     }
 }

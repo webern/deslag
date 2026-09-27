@@ -1,0 +1,74 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "AGENTS.md",
+      "lint": "max_emphasis",
+      "report": "ERROR: deslag detected over-emphasis!\n\nAGENTS.md has 6 emphasized spans covering 50.15% of its prose. The limit is 5% of its prose, or 1 span whatever their share.\n\nBold, italics and ALL CAPS stop working when there is this much of them: the reader learns to skip them. Take the emphasis off all but the few words a reader would get wrong without it. Where something matters, say why in plain words instead of raising your voice.\n\nDo not move the emphasis into headings, code spans or other formatting to get past this check, and do not change the limits. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe emphasized spans:\n  line 3: **must**\n  line 5: DO NOT\n  line 5: *rewritten on every build*\n  line 5: __any change__\n  line 7: **Never push to main without a review, and never skip the...\n  line 10: ALWAYS RUN THE TESTS",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 14,
+          "end": 22,
+          "line": 3,
+          "column": 5,
+          "end_line": 3,
+          "end_column": 13,
+          "note": "**must**"
+        },
+        {
+          "kind": "evidence",
+          "start": 57,
+          "end": 63,
+          "line": 5,
+          "column": 1,
+          "end_line": 5,
+          "end_column": 7,
+          "note": "DO NOT"
+        },
+        {
+          "kind": "evidence",
+          "start": 99,
+          "end": 125,
+          "line": 5,
+          "column": 43,
+          "end_line": 5,
+          "end_column": 69,
+          "note": "*rewritten on every build*"
+        },
+        {
+          "kind": "evidence",
+          "start": 130,
+          "end": 144,
+          "line": 5,
+          "column": 74,
+          "end_line": 5,
+          "end_column": 88,
+          "note": "__any change__"
+        },
+        {
+          "kind": "evidence",
+          "start": 155,
+          "end": 264,
+          "line": 7,
+          "column": 1,
+          "end_line": 8,
+          "end_column": 17,
+          "note": "**Never push to main without a review, and never skip the..."
+        },
+        {
+          "kind": "evidence",
+          "start": 301,
+          "end": 321,
+          "line": 10,
+          "column": 36,
+          "end_line": 11,
+          "end_column": 14,
+          "note": "ALWAYS RUN THE TESTS"
+        }
+      ]
+    }
+  ]
+}

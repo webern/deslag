@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.max_size_bytes]
+value = 20

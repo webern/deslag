@@ -1,0 +1,134 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [
+    {
+      "path": "AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nAGENTS.md has 12 problems in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and no line is wider than 80 characters. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  the layout lists 10 entries; it must list between 1 and 5\n  line 11: the path starts in column 4; the first entry's starts in column 3\n  line 11: src/main.rs does not exist\n  line 12: `<-` is in column 16; the first entry's is in column 17\n  line 13: the line is 110 characters wide; shorten it to 80 or fewer\n  line 14: gone.rs does not exist\n  line 15: Makefile/ ends in / but is not a directory\n  line 16: /etc/hosts must be relative, not absolute\n  line 17: the text before `<-` must be one path\n  line 18: README.md has no description after `<-`\n  line 19: this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it\n  line 20: this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 71,
+          "end": 574,
+          "line": 7,
+          "column": 1,
+          "end_line": 21,
+          "end_column": 4,
+          "note": "the layout lists 10 entries; it must list between 1 and 5"
+        },
+        {
+          "kind": "occurrence",
+          "start": 156,
+          "end": 185,
+          "line": 11,
+          "column": 1,
+          "end_line": 11,
+          "end_column": 30,
+          "note": "the path starts in column 4; the first entry's starts in column 3"
+        },
+        {
+          "kind": "occurrence",
+          "start": 156,
+          "end": 185,
+          "line": 11,
+          "column": 1,
+          "end_line": 11,
+          "end_column": 30,
+          "note": "src/main.rs does not exist"
+        },
+        {
+          "kind": "occurrence",
+          "start": 186,
+          "end": 219,
+          "line": 12,
+          "column": 1,
+          "end_line": 12,
+          "end_column": 34,
+          "note": "`<-` is in column 16; the first entry's is in column 17"
+        },
+        {
+          "kind": "occurrence",
+          "start": 220,
+          "end": 330,
+          "line": 13,
+          "column": 1,
+          "end_line": 13,
+          "end_column": 111,
+          "note": "the line is 110 characters wide; shorten it to 80 or fewer"
+        },
+        {
+          "kind": "occurrence",
+          "start": 331,
+          "end": 367,
+          "line": 14,
+          "column": 1,
+          "end_line": 14,
+          "end_column": 37,
+          "note": "gone.rs does not exist"
+        },
+        {
+          "kind": "occurrence",
+          "start": 368,
+          "end": 412,
+          "line": 15,
+          "column": 1,
+          "end_line": 15,
+          "end_column": 45,
+          "note": "Makefile/ ends in / but is not a directory"
+        },
+        {
+          "kind": "occurrence",
+          "start": 413,
+          "end": 452,
+          "line": 16,
+          "column": 1,
+          "end_line": 16,
+          "end_column": 40,
+          "note": "/etc/hosts must be relative, not absolute"
+        },
+        {
+          "kind": "occurrence",
+          "start": 453,
+          "end": 480,
+          "line": 17,
+          "column": 1,
+          "end_line": 17,
+          "end_column": 28,
+          "note": "the text before `<-` must be one path"
+        },
+        {
+          "kind": "occurrence",
+          "start": 481,
+          "end": 499,
+          "line": 18,
+          "column": 1,
+          "end_line": 18,
+          "end_column": 19,
+          "note": "README.md has no description after `<-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 500,
+          "end": 538,
+          "line": 19,
+          "column": 1,
+          "end_line": 19,
+          "end_column": 39,
+          "note": "this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 539,
+          "end": 570,
+          "line": 20,
+          "column": 1,
+          "end_line": 20,
+          "end_column": 32,
+          "note": "this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it"
+        }
+      ]
+    }
+  ]
+}

@@ -97,6 +97,11 @@ Add `deslag check` where the repository runs its other checks, such as a Makefil
 job, so a failure blocks a merge. deslag is not on crates.io yet, so ask the human how a CI job
 should install it.
 
+In a GitHub Actions job, `--format github` prints a workflow command per failing file, which GitHub
+shows as an annotation on it, and `--format sarif` prints a log to upload to code scanning. The
+report and the exit code do not change. Paths are relative to where deslag runs and GitHub reads
+them from the root of the repository, so run it there.
+
 ## 7. Tell the next agent
 
 If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.

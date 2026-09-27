@@ -21,6 +21,9 @@ mod tokens;
 use std::borrow::Cow;
 use std::ops::Range;
 
+use schemars::JsonSchema;
+use serde::Serialize;
+
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Document<'a> {
@@ -270,15 +273,15 @@ pub enum WordType {
 /// Unicode scalar values, from 1; a byte order mark that opens the file takes no column, as SARIF
 /// counts them. `end_line` is the line of the last byte, and `end_column` is one past the column of
 /// the last character. An empty stretch ends where it starts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Location {
-    /// The offset of the first byte.
+    /// The offset of the first byte, counted from 0.
     pub start: usize,
     /// The offset just past the last byte.
     pub end: usize,
-    /// The line of the first byte.
+    /// The line of the first byte, counted from 1.
     pub line: usize,
-    /// The column of the first character.
+    /// The column of the first character, counted in characters from 1.
     pub column: usize,
     /// The line of the last byte.
     pub end_line: usize,

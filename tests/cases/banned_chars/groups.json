@@ -1,0 +1,91 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 6 banned characters.\n\nThis repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2192 rightwards arrow \"→\"; write `->`\n  line 3: U+1F389 emoji \"🎉\"; delete it\n  line 5: U+2500 box-drawing character \"─\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 34,
+          "end": 37,
+          "line": 3,
+          "column": 21,
+          "end_line": 3,
+          "end_column": 22,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 51,
+          "end": 55,
+          "line": 3,
+          "column": 36,
+          "end_line": 3,
+          "end_column": 37,
+          "note": "U+1F389 emoji \"🎉\"; delete it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 71,
+          "end": 74,
+          "line": 5,
+          "column": 1,
+          "end_line": 5,
+          "end_column": 2,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 74,
+          "end": 77,
+          "line": 5,
+          "column": 2,
+          "end_line": 5,
+          "end_column": 3,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 77,
+          "end": 80,
+          "line": 5,
+          "column": 3,
+          "end_line": 5,
+          "end_column": 4,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 80,
+          "end": 83,
+          "line": 5,
+          "column": 4,
+          "end_line": 5,
+          "end_column": 5,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        }
+      ]
+    },
+    {
+      "path": "docs/diagram.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\ndocs/diagram.md has 1 banned character.\n\nThis repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+1F389 emoji \"🎉\"; delete it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 52,
+          "end": 56,
+          "line": 3,
+          "column": 36,
+          "end_line": 3,
+          "end_column": 37,
+          "note": "U+1F389 emoji \"🎉\"; delete it"
+        }
+      ]
+    }
+  ]
+}

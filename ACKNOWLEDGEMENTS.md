@@ -59,6 +59,18 @@ check, which the golden set does for each lint and its golden file.
 Code was not ported. Each rule's examples are its tests and its docs at once, but nothing fails a
 rule that has none; the golden set fails a lint with no golden file.
 
+## unicode-safety-check
+
+- URL: https://github.com/dcondrey/unicode-safety-check
+- Licence: MIT
+- Copyright: "Copyright (c) 2026 David Condrey"
+- Studied at: commit
+  [de490427](https://github.com/dcondrey/unicode-safety-check/tree/de4904276b98d87e7f3bea240a508b97d8c29374)
+
+Code was not ported, but we took two ideas: every output format, SARIF and GitHub annotations
+included, derived from one finding type, and a test that keeps the list of rule ids in step with
+the rules, which deslag applies to its lint ids and the config.
+
 ## komp
 
 - Matt's own project, private and closed-source

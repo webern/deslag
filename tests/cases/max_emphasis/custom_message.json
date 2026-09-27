@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "max_emphasis",
+      "report": "ERROR: deslag detected over-emphasis!\n\nREADME.md has 1 emphasized span covering 5.34% of its prose. The limit is 2.5% of its prose.\n\nCalm README.md down: at most 0 spans, or 2.5% of its prose.\n\nThe emphasized spans:\n  line 3: **must**",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 58,
+          "end": 66,
+          "line": 3,
+          "column": 49,
+          "end_line": 3,
+          "end_column": 57,
+          "note": "**must**"
+        }
+      ]
+    }
+  ]
+}

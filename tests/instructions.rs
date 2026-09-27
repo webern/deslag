@@ -6,6 +6,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use common::{Repo, code, stderr, stdout};
+use deslag::Lint;
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
@@ -208,6 +209,34 @@ fn the_guide_fills_in_what_the_code_knows() {
     for extension in CONFIG_EXTENSIONS {
         assert!(guide.contains(&format!("`.{extension}`")), "{extension}");
     }
+}
+
+/// The lints are the tables of the config's sections: each section's `lints` table names only
+/// lints, and the sections together name every one. A lint the config gains or loses fails here
+/// until `Lint` gains or loses it too, so an id in a report is always a key of the config.
+#[test]
+fn every_lint_is_a_table_of_the_config() {
+    let root = schema();
+    let ids: BTreeSet<&str> = Lint::ALL.iter().map(|lint| lint.id()).collect();
+    let sections: Vec<(&String, &Value)> = root["definitions"]
+        .as_object()
+        .expect("the definitions")
+        .iter()
+        .filter(|(name, _)| name.ends_with("Lints"))
+        .collect();
+    assert!(!sections.is_empty(), "no section's lints in the schema");
+
+    let mut named = BTreeSet::new();
+    for (section, lints) in sections {
+        for key in lints["properties"].as_object().expect("the lints").keys() {
+            assert!(
+                ids.contains(key.as_str()),
+                "{section} holds {key}, which is no lint"
+            );
+            named.insert(key.as_str());
+        }
+    }
+    assert_eq!(named, ids);
 }
 
 #[test]

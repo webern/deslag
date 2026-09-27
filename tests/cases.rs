@@ -17,12 +17,11 @@
 
 mod common;
 
-use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, stderr, stdout};
-use serde_json::Value;
+use deslag::Lint;
 
 /// Set to 1 to rewrite the `.stderr` files instead of comparing with them.
 const FIX: &str = "DESLAG_FIX_TEST_OUTPUT";
@@ -167,30 +166,24 @@ fn every_case_prints_its_stderr_file() {
     );
 }
 
-/// Every lint the config schema names has a directory of cases, at least one of which fails, and
-/// every directory is named after a lint. A lint with no failing case could change its report, or
+/// Every lint has a directory of cases, at least one of which fails, and every directory is named
+/// after a lint. A lint with no failing case could change its report, or
 /// stop firing, and no case would notice.
 #[test]
 fn every_lint_has_a_failing_case() {
     let fix = std::env::var(FIX).as_deref() == Ok("1");
     let cases = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
-    let lints: BTreeSet<String> = deslag::config::schema()
-        .pointer("/definitions/MdLints/properties")
-        .and_then(Value::as_object)
-        .expect("the lints are the properties of MdLints")
-        .keys()
-        .cloned()
-        .collect();
+    let lints = Lint::ALL.map(Lint::id);
     let (all, _) = Case::find(&cases);
     let mut failures = Vec::new();
 
     for dir in entries(&cases).into_iter().filter(|path| path.is_dir()) {
         let name = dir.file_name().expect("a directory name").to_string_lossy();
-        if !lints.contains(name.as_ref()) {
+        if !lints.contains(&name.as_ref()) {
             failures.push(format!(
                 "tests/cases/{name} is not named after a lint. Each directory there holds the \
                  cases of one lint, named as the config names it: {}.",
-                lints.iter().cloned().collect::<Vec<_>>().join(", "),
+                lints.join(", "),
             ));
         }
     }

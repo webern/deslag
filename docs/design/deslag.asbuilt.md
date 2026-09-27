@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-26
+updated: 2026-09-27
 subsystems:
   - cli
   - config
@@ -13,11 +13,10 @@ max_size_bytes: 16384
 # deslag: as built
 
 Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets,
-such as a byte budget, a true index of the repo, or a ban on characters or phrases. It
-is one Cargo package with two targets: the library in `src/lib.rs` decides everything, and the
-binary in `src/main.rs` is a thin command line that reads arguments with clap, calls the library,
-prints what it returns and sets the exit code. `deslag instructions` prints a guide
-for an agent setting deslag up.
+such as a byte budget, a true index of the repo, or a ban on characters or phrases. It is one
+Cargo package: the library in `src/lib.rs` decides everything, and the binary in `src/main.rs` is
+a thin command line over it that prints what it returns and sets the exit code. `deslag
+instructions` prints a guide for an agent setting deslag up.
 
 ## A run, start to finish
 
@@ -58,7 +57,7 @@ src/
   parse/
     frontmatter.rs    reading a top-level key out of YAML frontmatter
   lint/
-    mod.rs            Finding, Violation, Report, check_repo
+    mod.rs            Finding, Violation, Report, check_repo, check_file
     max_size_bytes.rs the size lint and its message
     max_emphasis.rs   the emphasis lint and its message
     repo_layout.rs    the layout lint and its message
@@ -110,7 +109,6 @@ globs = ["*.md"]                 # the files this section lints; the default
 
 [md.lints.max_size_bytes]        # applies to every selected file
 value = 20000
-message = "..."                  # optional; replaces the advice in the report
 
 [[md.overrides]]
 globs = ["AGENTS.md", "/docs/**/*.md"]
@@ -127,7 +125,7 @@ a lint's settings is optional, and a value the lint cannot use, such as a `densi
 an `Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and merges in each
 matching override, least specific first, with `Merge`: an override sets only the fields it names.
 Whether `min_entries` exceeds `max_entries` depends on that merge and on the
-defaults, so `check_repo` asks it of each file's merged settings and fails the run with an
+defaults, so `check_file` asks it of each file's merged settings and fails the run with an
 `Error::Setting` naming the file.
 
 A pattern is compiled by `glob::Pattern` into a `globset` matcher with `literal_separator`, so a
@@ -160,22 +158,19 @@ ignore file above the root is read. Hidden files are walked.
 
 ## Checking and reporting
 
-`lint::check_repo` walks once, keeps the files `[md]` selects, reads each, resolves its settings,
-and runs each lint. A lint returns an `Over` for a failing file, and `check_repo` wraps it in a
-`Finding` with the lint's `Violation`. A new lint is a new module and a new `Violation`.
+`lint::check_repo` walks once, keeps the files `[md]` selects and reads each; `check_file`
+resolves a file's settings and runs each lint. A lint returns an `Over` for a failing file, which
+becomes a `Finding` with the lint's `Violation`. A new lint is a new module and a new `Violation`.
 
-A lint keeps what it decides from the file alone in a function of the `Document`, which the corpus
-can run on every fixture, such as `repo_layout::read`. What needs the settings,
-or anything outside the file such as the disk, is a thin layer over it, tested on small repos: trees
-the tests write, and the cases.
+A lint keeps what it decides from the file alone in a function of the `Document`, such as
+`repo_layout::read`; what needs the settings or the disk is a thin layer over it.
 
 `lint/max_emphasis.rs` counts **spans**: each outermost emphasis or strong, and each run of two or
 more words in capitals, split only by whitespace, that holds one of `SHOUTED_WORDS`; its words are
 its own, not the tokens. **Prose** is the text of the blocks of prose, code spans and HTML aside.
 Both are counted in characters. A file
 fails when it has more than `free_spans` spans and they cover more than `max_percent` of its
-prose; an unset field counts as 0, and a table setting neither checks nothing. Its `Over` holds the
-`Measure`, whose spans carry a line and a quote for the report.
+prose; an unset field counts as 0, and a table setting neither checks nothing.
 
 `lint/repo_layout.rs` finds the first heading whose text is `heading` (default `Repository
 layout`), in any case and at any level; the section runs to the next heading of that level or
@@ -223,25 +218,27 @@ line per lint that failed a file; a clean run prints nothing.
 
 `cli/mod.rs` defines `check` and `explain`, each taking `--config-path`, and `instructions`, which
 prints `instructions::guide` or, given `config-schema`, `config::schema`: the JSON schema `schemars`
-derives from the config's types. The guide takes its config paths from the code. `src/main.rs`
-prints an error out of `run` in `anyhow`'s alternate form, which appends each underlying error once;
-an `Error`'s own message never repeats its source. The process exits 0 when nothing fails, 1 when a
-file fails a lint, and 2 on any error out of `run`, whatever the subcommand, as clap does on bad
-arguments.
+derives from the config's types. `src/main.rs` prints an error out of `run` in `anyhow`'s
+alternate form, which appends each underlying error once; an `Error`'s own message never repeats
+its source. The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any
+error out of `run`, whatever the subcommand, as clap does on bad arguments.
 
 ## Other files
 
 ```
 Cargo.toml  Makefile  AGENTS.md  README.md
-_typos.toml           keeps the spell checker out of the quoted corpus
+_typos.toml           keeps the spell checker out of the corpus and golden files
 .agents/deslag.toml   deslag's config for this repo
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
+  common/corpus.rs    the corpus loader, which checks each sidecar
   *.rs                one file per lint or concern, such as unit.rs for small trees
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
+  golden.rs           runs the golden set
+  golden/             its config, and what each lint finds in the corpus
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus
 ```
@@ -258,33 +255,36 @@ must exit 0, any other 1, unless a `.exit` file beside it holds the code, 2 wher
 Every lint's reports are pinned there. `make fix-test-output` rewrites the `.stderr`
 files. Unlike a fixture, a case is written for deslag and changes with it.
 
-`tests/corpus.rs` is end-to-end. It loads every fixture under `tests/corpus/`, checks its sidecar
-against the bytes on disk, and runs the corpus through the binary.
+`tests/corpus.rs` is end-to-end: it runs the corpus through the binary.
 
-The corpus has four directories. `core/` is the hand-picked set from Matt's repositories. The
-other three are collected by `scripts/llm-detection/collect.py` and named for who wrote the file,
-as its history tells: `human/` was last touched before 2022, every commit to an `llm/` file is
-marked as an agent's, and a `mixed/` file was begun by a person before 2022 and later edited by an
-agent.
+The corpus's `core/` is hand-picked from Matt's repositories. The other three directories are
+collected by `scripts/llm-detection/collect.py` and named for who wrote the file, as its history
+tells: `human/` was last touched before 2022, every commit to an `llm/` file is marked as an
+agent's, and a `mixed/` file was begun by a person before 2022 and later edited by an agent.
 
-Each holds about 400 fixtures, at most three from one repository, under permissive licences only;
-a few are not English, so the lints meet other scripts. A sidecar records the source, licence,
-label and history, and facts about the bytes such as sha256, which the loader checks. No fixture is
-quoted twice.
+Each holds about 400 fixtures, at most three from one repository, under permissive licences only.
+A sidecar records the source, licence, label and history, and facts such as sha256, which the
+loader checks. No fixture is quoted twice.
 
-The matrix runs on `core/`: each case is a config, a canonical location, a layout (flat, nested,
-or each fixture's real directory structure) and budgets. The harness derives what it expects from
-the bytes it placed, so nothing is hard-coded and no fixture is edited; a case that wants a file to
-declare a budget writes frontmatter into its copy.
+The matrix runs on `core/`: each case is a config, a canonical location, a layout and budgets,
+and derives what it expects from the bytes it placed; a case that wants a file to declare a budget
+writes frontmatter into its copy.
 
 The whole corpus then runs in its real layout under one budget with an override for `README.md`,
 under one emphasis limit, under the default character groups, and under the default density. For
 the last three the binary must report exactly what the library's `check` finds, and the groups must
-flag at least four times as many `llm/` fixtures as `human/` ones. The fixtures' repos are not in
-the corpus, so `repo_layout` runs only its `read`, on every fixture under a few headings real repos
-use. The lines it reports must fall in the section, and an entry's line must hold its path.
+flag at least four times as many `llm/` fixtures as `human/` ones. There `repo_layout` runs only
+its `read`, under a few headings real repos use, and what it reports must fall in the section.
 `core/rt-agents.md`, the one fixture in deslag's format, must read with no malformed line. Every
 fixture's tokens and sentences must keep to their blocks, in the order of the file.
+
+The **golden set** pins what each lint finds on the corpus, so a change shows in review.
+`tests/golden.rs` runs `check_file` with the settings in `tests/golden/config.toml` on each fixture
+alone in an empty directory, where `repo_layout` finds every listed path missing; a fixture with no
+section is left out. Each `tests/golden/<lint>.txt` holds the lint's settings from `toml_tables`, a
+tally, and each failing fixture with what its verdict compared. It fails on a difference, a lint
+with no table or file, a stray file, or a lint failing no fixture or all. `make fix-golden`
+rewrites the files.
 
 ## Build
 

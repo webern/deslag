@@ -1,0 +1,289 @@
+# density: each fixture under tests/corpus/ that it fails, with what it measured there.
+# A fixture that passes is not listed. Each is linted alone, in an empty directory.
+# tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
+# `make fix-golden` rewrites it; read the diff before committing it.
+# fails 279 of 1230: core 8, human 53, llm 92, mixed 126
+
+[md.lints.density]
+max_item_chars = 300
+max_paragraph_chars = 600
+
+core/den-agents.md item:361 item:632 item:605 item:431 item:565
+core/den-classifier-design.md item:312
+core/den-code-comments.md item:378 item:406
+core/den-design-decisions.md paragraph:696 paragraph:659 paragraph:667 paragraph:643 paragraph:665 paragraph:733 paragraph:766 paragraph:655
+core/den-mx-api-gaps.md paragraph:996 paragraph:624 paragraph:614
+core/den-readme.md paragraph:603 paragraph:731 paragraph:613
+core/den-roadmap.md paragraph:701 paragraph:621 paragraph:715 item:376 paragraph:720
+core/midi-spec.md paragraph:881 paragraph:855 paragraph:875 paragraph:840 paragraph:707 paragraph:746 paragraph:863 paragraph:619 paragraph:671
+human/AcademySoftwareFoundation--OpenShadingLanguage/CONTRIBUTING.md item:428
+human/CommunityToolkit--Maui/README.md paragraph:631
+human/EndBug--add-and-commit/CHANGELOG.md item:406
+human/HQSquantumsimulations--qoqo/CHANGELOG.md item:334
+human/Koenkk--zigbee-herdsman-converters/README.md item:415
+human/SAP--open-ux-tools/CONTRIBUTING.md item:501 item:804
+human/Squidex--squidex/CHANGELOG.md paragraph:753
+human/agitter--single-cell-pseudotime/README.md paragraph:649 paragraph:773 paragraph:655
+human/beepnl--beep-vue-app/package.json.md item:643
+human/chakra-ui--chakra-ui/CONTRIBUTING.md item:305
+human/chronotope--chrono/CHANGELOG.md item:308 item:331 item:305 item:336 item:307
+human/cloudposse--atmos/CHANGELOG.md item:404 item:318 item:343
+human/codeberg--Codeberg-Infrastructure--forgejo/docs__content__doc__installation__database-preparation.en-us.md paragraph:678 item:307 item:318 item:328 item:371
+human/codeberg--Starfish--TinyWeatherForecastGermany/README.md paragraph:887 paragraph:683 item:449 item:424
+human/codeberg--curl--curl-mirror/docs__INSTALL.md paragraph:775
+human/codeberg--dnkl--fcft/CHANGELOG.md item:306
+human/codeberg--dnkl--foot/CHANGELOG.md item:313 item:353 item:312 item:382 item:514 item:324 item:379 item:338 item:321
+human/codeberg--jbruchon--jdupes/README.md paragraph:668 paragraph:973 paragraph:1169 paragraph:624 paragraph:714 paragraph:1180 paragraph:947 paragraph:1173 paragraph:650
+human/codeberg--mc776--HideousDestructor/hd_lore_nonfree.md paragraph:665 paragraph:627 paragraph:836 paragraph:841 paragraph:608
+human/codeberg--privacyguides--privacyguides.org/collections___posts__2019-10-30-choosing-a-vpn.md item:339
+human/codeberg--redict--redict/TLS.md item:310
+human/codeberg--skyjake--lagrange/README.md item:357 item:389
+human/codeberg--ziglang--zig/CONTRIBUTING.md item:343 item:325 item:347
+human/danielpclark--rutie/README.md paragraph:706 paragraph:779
+human/django-oauth--django-oauth-toolkit/CHANGELOG.md item:313 item:318 item:323
+human/firebase--FirebaseUI-iOS/CONTRIBUTING.md paragraph:642
+human/gitlab--AOMediaCodec--SVT-AV1/Docs__Appendix-Adaptive-Prediction-Structure.md paragraph:910
+human/gitlab--drummyfish--anarch/README.md paragraph:689 paragraph:811 paragraph:943 paragraph:664 paragraph:750 paragraph:754 paragraph:677 paragraph:949 paragraph:795 paragraph:641 paragraph:680 paragraph:652 paragraph:727
+human/gitlab--gitlab-com--chatops/README.md item:334 item:321
+human/gitlab--gitlab-org--charts--gitlab/doc__development__release.md item:317
+human/gitlab--mdhr-extension--markdown-here-revival/_prefork__CLA-individual.md paragraph:725
+human/gitlab--rosie-pattern-language--rosie/doc__notes__compilation-overview.md paragraph:750 item:333
+human/gitlab--thorchain--thornode/docs__mimir.md paragraph:605
+human/gitlab--versionlens--vscode-versionlens/CHANGELOG.md item:315
+human/hf--google-bert--bert-base-uncased/README.md item:469
+human/hf--speechbrain--slu-direct-fluent-speech-commands-librispeech-asr/README.md paragraph:1006
+human/idris-lang--Idris2/CHANGELOG.md item:382 item:428 item:557 item:435 item:602 item:310 item:335 item:323 item:394 item:352 item:633 item:332 item:458 item:614 item:437 item:317 item:327
+human/kevinychen--snap2/snap-server__README.md item:406 item:686
+human/latte-central--LaTTe/doc__102_Lambda_the_ultimate.md paragraph:639 paragraph:605
+human/mldangelo--personal-site/docs__adapting-guide.md item:567 item:373
+human/mongodb--mongo-go-driver/x__mongo__driver__topology__DESIGN.md paragraph:768
+human/openjournals--joss/docs__submitting.md paragraph:601
+human/pmq20--node-packer/current__doc__api__dns.md item:334 item:341
+human/pyo3--pyo3/guide__src__building_and_distribution.md paragraph:678 paragraph:741
+human/react-dnd--react-dnd/packages__docsite__markdown__examples__drag-around__custom-drag-layer.md paragraph:661
+human/react-tools--react-charts/docs__src__pages__docs__overview.md item:328
+human/retep998--winapi-rs/CONTRIBUTING.md item:317
+human/serde-rs--serde/crates-io.md paragraph:639
+human/sslarch--sslarch.github.io/content__documents__caa_proposal.md paragraph:669 paragraph:717 paragraph:718 paragraph:816
+human/subquery--subql/packages__node__CHANGELOG.md item:384
+human/tlaplus-community--tree-sitter-tlaplus/README.md paragraph:722
+human/vercel--vercel/examples__hugo__themes__ananke__exampleSite__content__post__chapter-3.md paragraph:1436 paragraph:726 paragraph:1045 paragraph:1450
+human/yozorajs--yozora/README.md item:405
+llm/AgriciDaniel--claude-seo/skills__seo-plan__assets__publisher.md item:317
+llm/BerriAI--litellm/litellm-rust__crates__secrets__PARITY.md paragraph:1035 paragraph:948 paragraph:886 paragraph:802
+llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md paragraph:606 item:329 paragraph:784 paragraph:1118 item:414 item:387 item:612 item:332 item:419 item:365
+llm/CopilotKit--OpenBot/examples__pydantic-ai-bot__README.md item:308
+llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md paragraph:826 paragraph:742 paragraph:743 item:561 item:302 item:582
+llm/GoogleCloudPlatform--cloud-foundation-fabric/tools__skill-turn-harness__docs__DESIGN.md item:344
+llm/JetBrains--kotlin-web-site/air__cloud__README.md item:382 item:484
+llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md paragraph:624 paragraph:669 item:439
+llm/MaxGramser--homeassistant_espscreen/docs__TEST_RESULTS_0239.md item:579 item:702 item:378 item:326 item:310 item:360 item:534 item:514 item:354
+llm/Nanako0129--sepia/evals__deaify-release-note__prompt.md paragraph:793
+llm/NativePHP--mobile-air/docs__async-task-design.md item:375 item:410 item:415 item:1049 item:305 item:325 item:648 item:690 item:484 item:395 item:436 item:311 item:534 item:317 item:376
+llm/OHIF--Viewers/platform__docs__docs__platform__extensions__pluginConfig.md item:337
+llm/OpenNHP--opennhp/docs__protocol__messages.md paragraph:657 paragraph:705
+llm/OrchardCMS--OrchardCore/agents__skills__orchardcore-nswag-regenerate__SKILL.md item:887 item:311 item:335 item:717
+llm/PriorLabs--tabpfn-extensions/src__tabpfn_extensions__tabebm__README.md paragraph:1489
+llm/Provenance-Emu--Provenance/docs__dpad-diagonal-token-audit.md item:306 item:457 item:556 item:463 item:397 item:316
+llm/SenteLabsAI--OpenExecutive/packages__core__openexecutive__knowledge__builtin__failures__strategy__peloton.md paragraph:620 paragraph:763 item:323 item:315 item:315 item:360
+llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md paragraph:708 item:469 item:513 item:308 item:331 item:423 item:346 item:336 item:347 item:303 item:320 paragraph:911 paragraph:911 paragraph:925 item:416 paragraph:766 paragraph:848 item:419 item:344
+llm/Soju06--codex-lb/openspec__changes__thread-cache-identity-mode__specs__responses-api-compat__spec.md paragraph:1013 paragraph:836 paragraph:985 item:461 paragraph:821 paragraph:691
+llm/TanStack--table/docs__framework__ember__guide__column-ordering.md item:308
+llm/TencentCloud--CubeSandbox/docs__guide__agent-platform-freeze.md item:310
+llm/UfoMiao--zcf/templates__skills__en__init-project__SKILL.md item:311
+llm/aden-hive--hive/docs__releases__v0.10.5.md item:325 item:374 item:382
+llm/aipoch--medical-research-skills/scientific-skills__Other__ppt-master__references__image-renderings__glassmorphism.md paragraph:747 paragraph:903
+llm/amberframework--amber/github__contributing__DESIGN_DECISIONS.md item:415 item:317 item:370
+llm/apache--sedona/docs__community__geopandas.md paragraph:665 paragraph:646
+llm/apify--crawlee-python/website__versioned_docs__version-0.6__upgrading__upgrading_to_v0x.md item:439
+llm/atopile--atopile/claude__skills__planning__SKILL.md item:355
+llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md item:530 item:338 item:314 item:332 item:302 item:309
+llm/cloudless-garden--ha-gardena-smart-local-preview/AGENTS.md item:318 item:392 item:464
+llm/codeberg--jlmakiola--calendula/docs__fdroid-official__README.md item:585
+llm/crestalnetwork--intentkit/docs__plans__2026-03-26-rich-media-messaging-plan.md item:383
+llm/dyad-sh--dyad/benchmarks__app-builder__specs__curbside__m2.md paragraph:838
+llm/elementalsouls--Claude-OSINT/skills__email-domain-security__SKILL.md item:337 item:302 item:340 paragraph:735 paragraph:642 paragraph:848 item:333 item:358 paragraph:698 item:304 item:707
+llm/expressots--expressots/docs__rfcs__2026-08-07-fetch-native-micro-runtime.md paragraph:604
+llm/fluentmigrator--fluentmigrator/adr__proposed__TableLevelForeignKeys.md item:310
+llm/geoserver--geoserver/doc__en__user__community__backuprestore__migration.md item:553 item:323 item:394 item:361 item:303 item:331
+llm/ggui-ai--ggui/misc__benchmark__src__baseline__CI.md item:506
+llm/gitbutlerapp--gitbutler/error-cleanup-checklist.md item:349 item:481 item:383 item:322 item:469 item:374 item:361 item:324
+llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md item:336 item:479 item:353 item:567 item:407 item:429
+llm/gitlab--cznic--ql/AUDIT.md item:645 paragraph:648 paragraph:777
+llm/gitlab--gitlab-com--runbooks/docs__patroni__alerts__PatroniIsDown.md item:307 item:338
+llm/gitlab--gitlab-org--cloud-native--gitlab-operator/doc__developer__render.md item:312
+llm/gpustack--gpustack/docs__integrations__integrate-with-newapi.md item:360
+llm/huggingface--trl/docs__source__a2po_trainer.md paragraph:1304
+llm/jaegertracing--documentation/content__docs__v2___dev__deployment__custom-distribution.md item:320
+llm/jaegertracing--jaeger/docs__rfc__0018-streaming-http-api.md paragraph:1013 paragraph:717 item:623 item:511 paragraph:1411 paragraph:615 item:323 item:372 item:320 paragraph:800 item:377 paragraph:953 paragraph:1097 item:337 paragraph:718 paragraph:806 paragraph:1053 item:413 item:921 paragraph:2575 paragraph:1095 paragraph:1397 paragraph:1262 item:346 item:306 item:530 item:748
+llm/jaredwray--writr/DEFENSE_IN_DEPTH.md item:398
+llm/jasonacox--tinytuya/DESIGN.md item:317 item:406
+llm/jdx--mise/docs__bootstrap__packages__scoop.md paragraph:891
+llm/johnpapa--vscode-peacock/claude__skills__ai-ready__references__report-template.md item:329 item:327
+llm/kbennett2000--lan-games/server__games__life__help.md item:552
+llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md item:320
+llm/kirodotdev--KiroCrew/docs__task-specs__2026__08__pycache-unbounded-growth__analysis.md item:414 item:559 item:521 item:450 item:435
+llm/kyverno--kyverno/PR_REBASE_PLAN.md paragraph:620 item:326 paragraph:787 item:360 item:338 item:352
+llm/kzahel--web-server-chrome/docs__research__cli-servers-comparison.md paragraph:760
+llm/lokus-ai--lokus/docs__architecture__team-collaboration-roadmap.md item:344
+llm/makerspet--oomwoo/contributions__health-monitor__README.md item:345 item:384 item:393 item:347 item:327
+llm/micasa-dev--micasa/plans__comprehensive-refactoring-plan.md item:409 item:390
+llm/microsoft--PowerToys/src__modules__AdvancedPaste__AdvancedPaste.UITests.Next__README.md paragraph:1194 paragraph:968
+llm/microsoft--winget-cli/github__instructions__specs.instructions.md item:313
+llm/nasa--fprime/Svc__Ccsds__AesGcmDecryptor__docs__sdd.md item:577
+llm/nefarius--DsHidMini/docs__RELEASE.md item:355
+llm/newton-physics--newton/changelog__soft-self-dat-epsilon-4b8d6e23.changed.md paragraph:846
+llm/nubjs--nub/wiki__research__libuv-threadpool.md paragraph:645 paragraph:620 paragraph:624 paragraph:840 item:486
+llm/openfga--openfga/github__instructions__changelog-review.instructions.md item:302
+llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md paragraph:627 paragraph:664
+llm/plasma-umass--coz/java__README.md item:369 item:315
+llm/robinebers--openusage/agents__skills__swiftui-patterns__SKILL.md item:320 item:363 item:411 item:476 item:549
+llm/sgl-project--sglang-omni/docs__cookbook__nemotron_voicechat.md item:641
+llm/slackapi--python-slack-sdk/claude__skills__managing-dependencies__SKILL.md item:381
+llm/smartcontractkit--chainlink/core__scripts__cre__environment__docs__cresettings-override-README.md item:321
+llm/software-mansion--scarb/website__docs__reference__overriding-dependencies.md paragraph:712
+llm/spec-kitty--spec-kitty/kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md item:336 item:353 paragraph:825
+llm/sqlfluff--sqlfluff/docsv__guide__in-the-wild.md item:306 item:411
+llm/ssmichael1--satkit/THIRDPARTY-DATA.md item:327 item:436
+llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md item:410 item:382 item:337
+llm/sunscrapers--djoser/claude__skills__release__SKILL.md item:347
+llm/super-productivity--super-productivity/docs__plans__2026-09-04-multi-select-tasks-concept.md paragraph:602 paragraph:633 paragraph:718 item:498 item:395 item:411 item:450 item:442 item:847 item:636 paragraph:767 item:511 item:507
+llm/synthetic-sciences--openscience/backend__cli__skills__biology__bionemo-nims__SKILL.md item:581 item:311 item:331
+llm/temporalio--temporal/docs__architecture__worker-commands.md item:339 item:387
+llm/topoteretes--cognee/examples__integrations__docker-sandbox-kit__README.md item:309 paragraph:638 item:335 item:479 item:428
+llm/typescript-eslint--typescript-eslint/agents__skills__rule-conventions__SKILL.md item:321
+llm/vamplabAI--sgr-agent-core/docs__en__framework__skills.md item:424
+llm/vercel--next.js/agents__skills__sandbox-bench__SKILL.md item:356 item:981 paragraph:708 paragraph:736 item:346 item:600 item:380 item:309 paragraph:661 paragraph:628 item:634
+llm/videojs--v10/internal__design__spf__features__ll-hls-support.md item:892 item:710 item:449 item:532 item:580 item:606 item:317 item:309 item:308 item:329 item:403 item:325 item:359 item:352 item:350
+llm/warmcat--libwebsockets/plugins__protocol_lws_webrtc_mixer__README.md item:350 item:493 item:377
+llm/whitphx--stlite/AGENTS.md item:357
+llm/workglow-dev--libs/packages__triggers__README.md item:677 item:1562 item:640 item:361 item:1014 item:421 item:485 item:418
+llm/wshobson--agents/plugins__documentation-standards__skills__grounded-vault__references__details.md item:340
+llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md paragraph:780 item:521 item:810 item:550 item:559 item:542 paragraph:768 item:654 item:348 item:409 item:374 item:368 item:434
+llm/zane-ops--zane-ops/backend__notes__PERMISSIONS_CHANGELIST.md item:319 item:426 item:408
+mixed/Azure--azure-sdk-for-python/sdk__loganalytics__azure-mgmt-loganalytics__CHANGELOG.md item:329 item:339 item:403 item:408 item:392 item:352 item:408
+mixed/BYVoid--OpenCC/NEWS.md item:361 item:317 item:303 item:463 item:550 item:586 item:443 item:304 item:473 item:332
+mixed/BetterThanTomorrow--calva/docs__site__connect-sequences.md item:509 item:450 item:423 item:308 item:488 item:506
+mixed/Cloud-CV--EvalAI/github__CONTRIBUTING.md item:336 item:460
+mixed/ColorlibHQ--gentelella/changelog.md item:610 item:511 item:342 item:306 item:334 item:424 item:523 item:310 item:322 item:438 item:566 item:399 item:455 item:350 item:325 item:364 item:326 item:372 item:369 item:320 item:350
+mixed/FOSSBilling--FOSSBilling/CONTRIBUTING.md item:459 item:486
+mixed/GitTools--GitVersion/BREAKING_CHANGES.md item:348 item:356 item:362 item:414 item:331 item:343 item:553 item:605 item:480
+mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md paragraph:801 item:497
+mixed/JuliaMath--Polynomials.jl/docs__src__index.md item:316
+mixed/MaterializeInc--materialize/doc__developer__sqllogictest.md item:307
+mixed/MichaelGrafnetter--DSInternals/Documentation__CHANGELOG.md item:333 item:457 item:335 item:327 item:351 item:383 item:304
+mixed/Microsoft--Nova/README.md paragraph:967 item:318
+mixed/MudBlazor--MudBlazor/CONTRIBUTING.md paragraph:642
+mixed/NVIDIA--deepops/docs__pxe__maas.md item:311 item:324 item:578
+mixed/NuGetPackageExplorer--NuGetPackageExplorer/README.md item:345 item:310
+mixed/OWASP--CheatSheetSeries/cheatsheets__LDAP_Injection_Prevention_Cheat_Sheet.md paragraph:661
+mixed/PrivateBin--PrivateBin/CHANGELOG.md item:314
+mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md item:330
+mixed/SciML--ModelingToolkit.jl/docs__src__tutorials__acausal_components.md paragraph:620
+mixed/actions--runner-images/docs__create-image-and-azure-resources.md item:303 item:337 item:314
+mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md paragraph:615 item:416 item:785 item:409 item:555 item:485 item:551 item:316 item:388 item:330 item:615 item:836 item:407 item:497 item:575 item:338
+mixed/amberframework--amber/github__CONTRIBUTING.md item:461 item:317
+mixed/angular-eslint--angular-eslint/packages__eslint-plugin__docs__rules__no-forward-ref.md paragraph:631
+mixed/apache--grails-core/RELEASE.md item:491 paragraph:637 item:453 item:454 item:409
+mixed/authgear--authgear-server/docs__specs__oidc.md item:363 item:475 item:314
+mixed/boardgameio--boardgame.io/docs__documentation__api__Server.md item:332 item:367
+mixed/brsloan--warewoolf/README.md item:315 item:323 item:413 paragraph:755 paragraph:616 item:880 item:590
+mixed/cadence-workflow--cadence/docs__visibility-on-elasticsearch.md item:306
+mixed/cdxgen--cdxgen/README.md paragraph:631 paragraph:754 paragraph:637 paragraph:886
+mixed/cksystemsteaching--selfie/assignments__systems-assignments.md item:303 item:402
+mixed/cloudfoundry--uaa/docs__UAA-LDAP.md item:406 item:406 item:322 item:452 item:433 item:395 item:329 item:398 item:359 item:456 item:367 item:333 item:342 item:602
+mixed/codeberg--1lab--mikan/HACKING.md item:350 item:365
+mixed/compiler-explorer--compiler-explorer/CONTRIBUTING.md item:524
+mixed/coverlet-coverage--coverlet/Documentation__Changelog.md item:676
+mixed/datahub-project--datahub/docs__developers.md paragraph:640
+mixed/dckc--awesome-ocap/README.md item:315 item:443 item:347 item:307 item:319 item:306 item:322 item:566 item:394 item:466 item:391 item:467 item:575 item:552 item:301 item:302 item:350 item:860 item:474 item:623 item:424 item:499 item:987
+mixed/dependabot--dependabot-core/README.md paragraph:660
+mixed/dh-tech--awesome-digital-humanities/README.md item:587 item:311 item:500 item:342 item:303 item:379 item:352 item:502 item:407 item:499
+mixed/dimforge--rapier/README.md item:383
+mixed/dosco--graphjin/SECURITY.md paragraph:704 item:598 paragraph:711 item:419 paragraph:768
+mixed/dotnet--ClangSharp/README.md paragraph:807 paragraph:641
+mixed/dotnet--docs/docs__fundamentals__code-analysis__quality-rules__ca2200.md paragraph:613
+mixed/dragonflydb--dragonfly/README.md paragraph:822
+mixed/dropbox--rust-brotli-decompressor/README.md item:436 item:361 item:406
+mixed/envoyproxy--envoy/EXTENSION_POLICY.md item:371 paragraph:667
+mixed/eshaham--israeli-bank-scrapers/README.md item:402
+mixed/ether--etherpad/CONTRIBUTING.md item:511 item:302
+mixed/firebase--firebase-ios-sdk/Firestore__CHANGELOG.md item:356 item:381 item:324 item:408 item:368 item:308 item:379 item:327 item:311 item:423 item:522 item:681 item:317 item:349
+mixed/fluentmigrator--fluentmigrator/CHANGELOG.md item:438 item:463 item:370 item:313
+mixed/getkin--kin-openapi/README.md item:341
+mixed/getsentry--sentry-python/CONTRIBUTING.md paragraph:628 item:318 item:328 item:303
+mixed/github--codeql-action/CONTRIBUTING.md item:338 item:369 item:328 item:349
+mixed/gitlab--catamphetamine--read-excel-file/README.md item:970 item:692 item:402 item:420
+mixed/gitlab--gitlab-com--runbooks/docs__rate-limiting__README.md item:319 item:397 item:337 item:304 item:330
+mixed/gitlab--gitlab-org--cluster-integration--gitlab-agent/doc__releases.md item:365 item:376
+mixed/gitlab--gitlab-org--gitlab-qa/docs__what_tests_can_be_run.md item:577 item:344 item:334 item:579 item:403
+mixed/gitlab--gitlab-org--gitlab-runner/docs__development__add-windows-version.md item:465 item:304
+mixed/googleapis--google-cloud-go/spanner__README.md paragraph:654
+mixed/gookit--validate/CHANGELOG.md item:341 item:838 item:531 item:305
+mixed/gopasspw--gopass/docs__backends.md item:308
+mixed/graphhopper--graphhopper/CHANGELOG.md item:513 item:409 item:357 item:306
+mixed/graphql-java--graphql-java/CONTRIBUTING.md item:302
+mixed/halide--Halide/apps__HelloAndroid__README.md paragraph:749
+mixed/helmfile--helmfile/docs__writing-helmfile.md item:433
+mixed/homebridge--homebridge/CHANGELOG.md item:379 item:392 item:408
+mixed/huggingface--pytorch-image-models/README.md paragraph:609
+mixed/huggingface--transformers/examples__pytorch__speech-recognition__README.md paragraph:778 paragraph:757
+mixed/hydra-ecosystem--hydra/website__docs__advanced__instantiate_objects__overview.md paragraph:750 item:319
+mixed/icosa-foundation--open-brush/README.md paragraph:606 paragraph:674
+mixed/input-output-hk--haskell.nix/changelog.md paragraph:629 paragraph:665 item:428 item:334 item:327 item:323
+mixed/isl-org--Open3D/CHANGELOG.md item:350 item:664 item:362
+mixed/jasonacox--tinytuya/RELEASE.md item:521 item:614 item:350 item:331 item:313 item:314
+mixed/jitsi--jitsi-videobridge/doc__svc.md item:342 item:499 paragraph:838
+mixed/jupyter-lsp--jupyterlab-lsp/CHANGELOG.md item:307 item:368 item:412
+mixed/kata-containers--kata-containers/docs__how-to__how-to-run-rootless-vmm.md item:349
+mixed/kdash-rs--kdash/CHANGELOG.md item:332
+mixed/knowm--XChart/README.md item:554
+mixed/markshust--docker-magento/README.md item:455 item:314 item:307
+mixed/maxmind--GeoIP2-php/CHANGELOG.md item:408 item:380 item:358 item:447 item:303 item:332
+mixed/mesonbuild--meson/docs__markdown__Fs-module.md item:555
+mixed/microsoft--fhir-server/docs__BulkExport.md item:323 item:541
+mixed/microsoft--pict/doc__pict.md paragraph:625 paragraph:644
+mixed/ncalc--ncalc/CHANGELOG.md item:324 item:316 item:367 item:369 item:451
+mixed/nodejs--node/doc__api__debugger.md item:338 item:375
+mixed/nteract--semiotic/README.md item:536 item:390 paragraph:623 paragraph:658 paragraph:921 paragraph:651 item:362
+mixed/onnx--onnx/CONTRIBUTING.md item:394 item:324
+mixed/open-policy-agent--gatekeeper/website__docs__constrainttemplates.md paragraph:665
+mixed/open-telemetry--opentelemetry-go/CONTRIBUTING.md item:308 item:345 item:326
+mixed/open-telemetry--opentelemetry-java-instrumentation/docs__contributing__writing-instrumentation-module.md item:307 paragraph:856
+mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp__CHANGELOG.md item:501 item:417 item:406 item:301 item:301 item:495 item:701 item:613 item:378 item:410 item:336 item:500 item:476 item:380 item:635 item:428
+mixed/opendatadiscovery--odd-platform/docker__README.md item:322
+mixed/openjournals--joss/docs__installing.md item:352
+mixed/pamburus--hl/README.md paragraph:869
+mixed/prettier--prettier-vscode/CHANGELOG.md item:372
+mixed/project-chip--connectedhomeip/CONTRIBUTING.md item:311
+mixed/prometheus-community--helm-charts/charts__kube-prometheus-stack__README.md paragraph:666 item:326 paragraph:686
+mixed/pubkey--rxdb/orga__before-next-major.md item:357 item:595 item:600 item:302
+mixed/pyo3--pyo3/Architecture.md item:330 item:516
+mixed/pytorch--TensorRT/CONTRIBUTING.md paragraph:621 item:332 paragraph:605
+mixed/pytorch--pytorch/RELEASE.md item:683 item:997 item:320 item:353
+mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md paragraph:631
+mixed/radius-project--radius/CONTRIBUTING.md item:465
+mixed/rfordatascience--tidytuesday/README.md item:344 item:462
+mixed/rordenlab--dcm2niix/FILENAMING.md item:506 item:477 paragraph:717 item:643 paragraph:756
+mixed/ruby-git--ruby-git/CONTRIBUTING.md item:316 item:317 item:531 item:359 item:363 paragraph:801 item:353 item:367 item:367 item:352 item:457 item:379
+mixed/rust-lang--libc/ci__README.md item:363
+mixed/scalameta--scalafmt/docs__installation.md item:537
+mixed/scalameta--scalameta/docs__semanticdb__guide.md item:353 item:327 item:413 item:301
+mixed/shakacode--react_on_rails/CONTRIBUTING.md item:452 item:449 item:414 item:325
+mixed/sirixdb--sirix/ROADMAP.md item:319
+mixed/soutaro--steep/CHANGELOG.md item:308
+mixed/square--leakcanary/docs__releasing.md item:404
+mixed/srl-labs--containerlab/docs__install.md paragraph:624
+mixed/stackrox--stackrox/github__contributing.md item:584 item:525 item:475 item:490 item:362 item:343 item:554 item:758 item:540 item:384 item:309 item:317 item:565
+mixed/super-productivity--super-productivity/README.md item:372 item:338
+mixed/surveyjs--survey-library/README.md item:309
+mixed/tamagui--tamagui/next.md item:430 item:351 item:593
+mixed/tektoncd--pipeline/DEVELOPMENT.md paragraph:612 item:335
+mixed/ulisesbocchio--jasypt-spring-boot/README.md item:432
+mixed/visgl--deck.gl/docs__api-reference__core__controller.md item:321 item:396 item:615
+mixed/warmcat--libwebsockets/READMEs__README.lwsws.md item:313 item:332 item:405 item:648 item:559 item:319 item:334 item:310 item:391 item:337 item:593
+mixed/warp-drive-data--warp-drive/github__PULL_REQUEST_TEMPLATE.md item:308
+mixed/wasp-lang--wasp/web__docs__telemetry.md item:329
+mixed/wuwentao--midea_ac_lan/README.md item:598 paragraph:646
+mixed/xtermjs--xterm.js/CONTRIBUTING.md item:350
+mixed/zrepl--zrepl/README.md item:349 item:319

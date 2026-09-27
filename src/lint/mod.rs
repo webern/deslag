@@ -10,6 +10,7 @@ pub mod density;
 pub mod list_growth;
 pub mod max_emphasis;
 pub mod max_size_bytes;
+pub mod pattern;
 pub mod repo_layout;
 
 use std::fmt;

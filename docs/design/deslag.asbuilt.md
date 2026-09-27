@@ -8,17 +8,15 @@ max_size_bytes: 8192
 ---
 # deslag: as built
 
-Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets,
-such as a byte budget, a true index of the repo, or a ban on characters or phrases. The library in
-`src/lib.rs` decides everything; the binary in `src/main.rs` prints what it returns and sets the
-exit code. `deslag instructions` prints a guide for an agent setting deslag up.
+Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets.
+The library in `src/lib.rs` decides everything; the binary in `src/main.rs` prints what it returns
+and sets the exit code.
 
 ## A run
 
 `deslag check` loads the config, walks the tree for Markdown files, works out each file's settings,
 runs the lints and reports each failure. The **repo root** is the working directory; deslag never
-walks upward for a repository or config. A budget is a byte count, and a file's size its
-length on disk, frontmatter and all.
+walks upward for a repository or config. A budget counts bytes on disk, frontmatter and all.
 
 ## Modules
 
@@ -51,7 +49,7 @@ which settings apply to a file; `lint` runs the lints with them. `lint` calls `c
 ## The subsystem docs
 
 Each module above is described in one doc, the one whose `subsystems:` names it; `tests/asbuilt.rs`
-fails when a module is in no doc or in two. This doc holds `cli`, `instructions` and `fix`.
+fails when a module is in no doc or in two.
 
 - [config.asbuilt.md](config.asbuilt.md): `config`, `glob` and `explain`: the config, glob
   patterns, the walk and `deslag explain`.
@@ -65,10 +63,10 @@ fails when a module is in no doc or in two. This doc holds `cli`, `instructions`
 ## The command line
 
 `cli/mod.rs` defines `check` and `fix`, with `--format` and `--base`, `--diff` on `check` alone, and
-`explain`, each taking `--config-path`, and `instructions`, which prints `instructions::guide`, or a
-schema `schemars` derives: `config-schema` for the config's types, `output-schema` for `json::Run`.
-`src/main.rs` prints an error out of `run` in `anyhow`'s alternate form, which appends each
-underlying error once; an `Error`'s own message never repeats its source.
+`explain`, each taking `--config-path`, and `instructions`, which prints `instructions::guide` for
+an agent setting deslag up, or a schema `schemars` derives: `config-schema` for the config's types,
+`output-schema` for `json::Run`. `src/main.rs` prints an error out of `run` in `anyhow`'s alternate
+form, which appends each underlying error once; an `Error`'s own message never repeats its source.
 
 The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
 whatever the subcommand, as clap does on bad arguments.
@@ -94,7 +92,7 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 .agents/skills/       agent skills, each named deslag-*; .claude/skills links to it
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
-  common/*.rs         the corpus loaders, and a JSON schema check
+  common/*.rs         calls to the corpus loaders, and a JSON schema check
   *.rs                one file per lint or concern
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with what deslag must print in it
@@ -105,6 +103,7 @@ tests/
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
                       blobstore/, which moves its big tier
+tools/corpus/         deslag-corpus, never published: the corpus loaders
 ```
 
 ## Tests
@@ -125,9 +124,9 @@ runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-tes
 `tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
 output from the JSON by hand.
 
-`tests/corpus.rs` is end-to-end; the corpus's tiers and loaders are in `corpus.asbuilt.md`, and
-`tests/blobs.rs` checks the big tier under `make test-blobs`. A matrix on `core/` crosses configs,
-canonical locations, layouts and budgets, deriving what it expects from the bytes it placed.
+`tests/corpus.rs` is end-to-end, and `tests/blobs.rs` checks the big tier under `make test-blobs`. A
+matrix on `core/` crosses configs, canonical locations, layouts and budgets, deriving what it
+expects from the bytes it placed.
 
 The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
 and the default density, and the binary must report what the library finds; the groups must flag
@@ -150,7 +149,7 @@ a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
 `--locked`. `make check-deslag` runs deslag on this repo. The published crate is what `include` in
-`Cargo.toml` lists; `make check-publish` builds it.
+`Cargo.toml` lists; `make check-publish` builds it, and every other cargo call covers the workspace.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as

@@ -1,8 +1,8 @@
 [package]
 name = "deslag"
 version = "0.1.0"
-edition = "2024"
-rust-version = "1.85"
+edition.workspace = true
+rust-version.workspace = true
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 description = "A linter for LLM-authored Markdown."
 repository = "https://github.com/webern/deslag"
@@ -27,8 +27,20 @@ toml = "1.1.6"
 unicode-segmentation = "1.13.3"
 
 [dev-dependencies]
-sha2 = "0.11.0"
+deslag-corpus = { path = "tools/corpus" }
 tempfile = "3.27.0"
 
-[lints.rust]
+[lints]
+workspace = true
+
+# tools/corpus measures the test corpus. It is never published, and a path-only dev-dependency is
+# dropped from the package, so `cargo publish` sees deslag alone.
+[workspace]
+members = ["tools/corpus"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+
+[workspace.lints.rust]
 missing_docs = "warn"

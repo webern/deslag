@@ -116,12 +116,13 @@ The batch is named for the day, with the next sequence, and must sort after ever
 
 ## The loaders
 
-The loaders are test code under `tests/common/`:
+The loaders are the crate `deslag-corpus` in `tools/corpus/`, never published. The tests call
+them through `tests/common/`, which panics on the first `Problem` they return:
 
 ```
-fixture.rs   Fixture, Sidecar, read_fixture, assert_unique
-corpus.rs    load_corpus: the tree
-blobs.rs     load_blobs(root): the big tier, and its Entry and Exclusion lines
+tools/corpus/src/
+  sidecar.rs   Sidecar, and the Entry, Exclusion and Tried lines of a batch
+  load.rs      Fixture, read_fixture, tree, blobs, unique, Problem
 ```
 
 `read_fixture` reads a fixture and its sidecar and checks one against the other: a version it
@@ -129,17 +130,17 @@ knows; attribution present, from a known host, under an accepted licence; a labe
 directory's and that the history backs, with the fields of version 3 present in it and only there;
 and bytes whose size, sha256, encoding and declared budget are the ones recorded.
 
-`load_corpus` reads every file of the tree and requires a sidecar for each fixture, no other
+`tree` reads every file of the tree and requires a sidecar for each fixture, no other
 files, and no two fixtures with one `layout_path` or `sha256`.
 
-`load_blobs` reads the batches under `root` in order. For each, it applies the exclusions first:
+`blobs` reads the batches under `root` in order. For each, it applies the exclusions first:
 each needs a reason and must name a fixture an earlier batch left live. Then the manifest and the
 files must match one to one, each fixture must pass `read_fixture` and agree with its manifest
 line, and no two live fixtures may share a `sha256`, or a label, host, repository and path.
 
 A `repos.jsonl` must name each repository once and keep the manifest's count of each label, and
-each `before` must name a live `human` fixture of the same file. `load_blobs` returns the live
-fixtures, in the order they were added.
+each `before` must name a live `human` fixture of the same file. `blobs` returns the live
+fixtures, in the order they were added, and every ledger line.
 
 ## Tests
 

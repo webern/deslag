@@ -1,5 +1,6 @@
-//! Helpers shared by the integration tests.
-#![allow(dead_code)]
+//! Helpers shared by the integration tests. Each test binary uses some of them, and the
+//! re-exports of `deslag-corpus` too.
+#![allow(dead_code, unused_imports)]
 
 pub mod blobs;
 pub mod corpus;

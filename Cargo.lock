@@ -222,6 +222,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "deslag-corpus",
  "globset",
  "ignore",
  "pulldown-cmark",
@@ -229,11 +230,20 @@ dependencies = [
  "serde",
  "serde-saphyr",
  "serde_json",
- "sha2",
  "tempfile",
  "thiserror",
  "toml",
  "unicode-segmentation",
+]
+
+[[package]]
+name = "deslag-corpus"
+version = "0.0.0"
+dependencies = [
+ "deslag",
+ "serde",
+ "serde_json",
+ "sha2",
 ]
 
 [[package]]

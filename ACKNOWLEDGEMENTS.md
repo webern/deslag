@@ -70,13 +70,3 @@ rule that has none; the golden set fails a lint with no golden file.
 Code was not ported, but we took two ideas: every output format, SARIF and GitHub annotations
 included, derived from one finding type, and a test that keeps the list of rule ids in step with
 the rules, which deslag applies to its lint ids and the config.
-
-## komp
-
-- Matt's own project, private and closed-source
-- Studied at: commit 4ca8b4fb
-
-Code was ported. `scripts/blobstore/` began as a copy of komp's blob store, which Matt wrote: the
-script that fetches and publishes an OCI image with crane, its notes and its layer list. Matt
-licenses those files to deslag under MIT. deslag's copy fetches without a login where it can,
-writes pax tars and checks each one against the tree before it is pushed.

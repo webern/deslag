@@ -6,10 +6,11 @@ max_size_bytes: 4096
 ---
 # The change: as built
 
-`deslag check --diff <BASE>` runs the whole check, then narrows the report to what a change
-touched. The **change** runs from the **merge base**, where `BASE` and HEAD meet, to the working
-tree: commits, staged and unstaged edits, and untracked files. `change` reads it from git;
-`Report::within`, in `lint`, narrows a report to it.
+`--base <REV>`, on `check` and `fix`, gives a run a **change** to judge. It runs from the **merge
+base**, where `REV` and HEAD meet, to the working tree: commits, staged and unstaged edits, and
+untracked files. `change` reads it from git, once per run, and `check_repo` takes it. `deslag check
+--diff <BASE>` takes a base as `--base` does, which it refuses beside it, then narrows the report
+to what the change touched with `Report::within`, in `lint`.
 
 ```
 src/

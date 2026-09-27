@@ -392,14 +392,19 @@ fn every_format_is_narrowed_alike() {
         run["change"],
         serde_json::json!({ "base": "main", "merge_base": merge_base.trim(), "files_changed": 1 })
     );
+    assert_eq!(
+        run["base"],
+        serde_json::json!({ "rev": "main", "merge_base": merge_base.trim() })
+    );
     assert_eq!(run["files_scanned"], 2);
-    // A run of the whole tree names no change.
+    // A run of the whole tree names no change, and no base.
     let whole: Value = serde_json::from_str(&stdout(&deslag(
         repo.root(),
         &["check", "--format", "json"],
     )))
     .expect("a JSON document");
     assert_eq!(whole.get("change"), None);
+    assert_eq!(whole.get("base"), None);
 
     let sarif = deslag(repo.root(), &[&args[..], &["--format", "sarif"]].concat());
     let log: Value = serde_json::from_str(&stdout(&sarif)).expect("a SARIF log");
@@ -605,6 +610,74 @@ fn without_git_it_cannot_run() {
     assert_eq!(
         stderr(&output),
         "deslag: cannot diff against main: git is not installed, or not on PATH\n"
+    );
+}
+
+/// A base alone judges the change for the lints that read one, and narrows nothing: every finding
+/// of the whole tree is reported, with no line on the change.
+#[test]
+fn a_base_does_not_narrow_the_report() {
+    let repo = repo(&[
+        ("a.md", "# A\n\nold \u{2014} one\n"),
+        ("b.md", "# B\n\nold \u{2014} one\n"),
+    ]);
+    repo.write("a.md", "# A\n\nold \u{2014} one\n\nnew \u{2014} two\n");
+
+    let whole = deslag(repo.root(), &["check"]);
+    let based = deslag(repo.root(), &["check", "--base", "main"]);
+    assert_eq!(code(&based), 1);
+    assert_eq!(stderr(&based), stderr(&whole));
+    assert_eq!(
+        found(repo.root(), &["check", "--base", "main"]),
+        found(repo.root(), &["check"])
+    );
+
+    let run: Value = serde_json::from_str(&stdout(&deslag(
+        repo.root(),
+        &["check", "--base", "main", "--format", "json"],
+    )))
+    .expect("a JSON document");
+    let merge_base = git(repo.root(), &["rev-parse", "main"]);
+    assert_eq!(
+        run["base"],
+        serde_json::json!({ "rev": "main", "merge_base": merge_base.trim() })
+    );
+    assert_eq!(run.get("change"), None);
+}
+
+#[test]
+fn a_base_and_a_diff_are_refused_together() {
+    let repo = repo(&[("a.md", "# A\n")]);
+    let output = deslag(repo.root(), &["check", "--base", "main", "--diff", "main"]);
+    assert_eq!(code(&output), 2);
+    assert!(
+        stderr(&output).contains("'--base <REV>' cannot be used with '--diff <BASE>'"),
+        "{}",
+        stderr(&output)
+    );
+}
+
+/// `fix` takes a base as `check` does, and cannot run when git cannot read it.
+#[test]
+fn fix_takes_a_base() {
+    let repo = repo(&[("a.md", "# A\n\none \u{2014} two\n")]);
+    let output = deslag(repo.root(), &["fix", "--base", "nope"]);
+    assert_eq!(code(&output), 2);
+    assert_eq!(
+        stderr(&output),
+        "deslag: cannot diff against nope: git knows no commit by that name\n"
+    );
+    // Nothing is written before the base is read.
+    assert_eq!(
+        fs::read_to_string(repo.root().join("a.md")).expect("a.md"),
+        "# A\n\none \u{2014} two\n"
+    );
+
+    let output = deslag(repo.root(), &["fix", "--base", "main"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert_eq!(
+        fs::read_to_string(repo.root().join("a.md")).expect("a.md"),
+        "# A\n\none - two\n"
     );
 }
 
@@ -1033,7 +1106,9 @@ repo/
     assert_eq!(findings.len(), 6, "every lint fails the file");
     // The whole-tree report holds each finding whole.
     assert_eq!(
-        check_repo(repo.root(), &config).expect("a report").findings,
+        check_repo(repo.root(), &config, None)
+            .expect("a report")
+            .findings,
         findings
     );
 

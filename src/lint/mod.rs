@@ -282,8 +282,19 @@ pub struct Report {
     pub scanned: Vec<String>,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,
+    /// The base the run judged a change from, when it had one.
+    pub base: Option<Base>,
     /// The change the findings were narrowed to, by [`Report::within`].
     pub change: Option<Narrowed>,
+}
+
+/// The base a run judged a change from, given with `--base` or `--diff`.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct Base {
+    /// The base as given, such as `origin/main`.
+    pub rev: String,
+    /// The commit where the base and HEAD meet, which the change is measured from.
+    pub merge_base: String,
 }
 
 /// The change a report was narrowed to.
@@ -352,6 +363,7 @@ impl Report {
         Report {
             scanned: self.scanned.clone(),
             findings,
+            base: self.base.clone(),
             change: Some(Narrowed {
                 base: change.base.clone(),
                 merge_base: change.merge_base.clone(),
@@ -361,9 +373,16 @@ impl Report {
     }
 }
 
-/// Runs every lint over the repo rooted at `root`.
-pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
-    let mut report = Report::default();
+/// Runs every lint over the repo rooted at `root`, judging `change`, when there is one, for the
+/// lints that compare a file with what it was.
+pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Result<Report, Error> {
+    let mut report = Report {
+        base: change.map(|change| Base {
+            rev: change.base.clone(),
+            merge_base: change.merge_base.clone(),
+        }),
+        ..Report::default()
+    };
 
     for file in selected(root, config)? {
         report.scanned.push(file.relative.clone());

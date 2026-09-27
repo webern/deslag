@@ -130,7 +130,7 @@ narrowed run; a clean run prints nothing there.
 
 `--format` adds a document on standard output, made by `output` from the `Report` alone; stderr and
 the exit code never change, and exit 2 prints none. `json::Run` holds each finding's report and
-marks, and a narrowed run's `change`. SARIF 2.1.0 has a rule per lint, a result per occurrence, and
-one per verdict at 1:1 with its evidence as related locations; columns are `unicodeCodePoints`, and
-regions carry bytes.
-`github` prints an `::error` per finding at its first mark, titled with the lint.
+marks, a run's `base` and a narrowed run's `change`. SARIF 2.1.0 has a rule per lint, a result per
+occurrence, and one per verdict at 1:1 with its evidence as related locations; columns are
+`unicodeCodePoints`, and regions carry bytes. `github` prints an `::error` per finding at its first
+mark, titled with the lint.

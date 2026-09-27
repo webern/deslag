@@ -46,8 +46,8 @@ which settings apply to a file; `lint` runs the lints with them. `lint` calls `c
 
 ## The subsystem docs
 
-Each module above is described in one doc, the one whose `subsystems:` names it. This doc holds
-`cli` and `instructions`.
+Each module above is described in one doc, the one whose `subsystems:` names it; `tests/asbuilt.rs`
+fails when a module is in no doc or in two. This doc holds `cli` and `instructions`.
 
 - [config.asbuilt.md](config.asbuilt.md): `config`, `glob` and `explain`: the config, glob
   patterns, the walk and `deslag explain`.

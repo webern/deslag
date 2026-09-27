@@ -179,7 +179,10 @@ mod tests {
             items: &[Item::NotIn(&[&["ships"], &["has"]]), Item::Literal("no")],
         };
         assert_eq!(found(&IN, "It builds no x, and runs no y."), ["builds no"]);
-        assert_eq!(found(&NOT_IN, "It ships no x, has no y, runs no z."), ["runs no"]);
+        assert_eq!(
+            found(&NOT_IN, "It ships no x, has no y, runs no z."),
+            ["runs no"]
+        );
     }
 
     #[test]

@@ -10,6 +10,9 @@ says why it is Python rather than bash.
     collect.py harvest  --work DIR [--jobs N] clone each one and classify its Markdown
     collect.py select   --work DIR --out tests/corpus [--per-category N]
                                               choose the fixtures and write them with sidecars
+    collect.py pack     --from tests/corpus --corpus .blobs/unpacked/corpus --work DIR
+                                              write the fixtures as a new batch of the corpus's
+                                              big tier, for make publish-blobs
 
 Every stage is resumable: `discover` and `harvest` keep what they have already done in DIR.
 
@@ -1233,6 +1236,118 @@ def history_record(hist: list[Commit]) -> dict:
     }
 
 
+# ---------------------------------------------------------------------------------------------
+# pack
+
+LABELS = ("human", "llm", "mixed")
+BATCH_NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})-(\d{2})$")
+
+
+def jsonl(path: Path) -> list[dict]:
+    return [json.loads(line) for line in path.read_text().splitlines() if line]
+
+
+def pack(args: argparse.Namespace) -> None:
+    """Writes the collected fixtures of a tree laid out as tests/corpus/ is into a new batch of
+    the big tier, with the batch's manifest. Fixtures and sidecars are copied byte for byte; one
+    the big tier already holds is left out. The batch is written under --work, where make clean
+    cannot reach it before it is published, then copied into --corpus, the fetched big tier.
+
+    A fixture is held already when a live fixture has its sha256, or its label, host, repo and
+    path: a file's human revision and its mixed revision may both be fixtures, once each."""
+    source = Path(args.source)
+    corpus = Path(args.corpus)
+    work = Path(args.work)
+    if not corpus.is_dir():
+        raise SystemExit(f"{corpus} does not exist: run make fetch-blobs first, so that the new "
+                         "batch is held to the ones already published")
+
+    # What the published batches hold once their exclusions are applied, in the order a loader
+    # reads them.
+    published = sorted(p for p in (corpus / "batches").glob("*") if p.is_dir())
+    live: dict[str, tuple[str, str, str, str]] = {}
+    for batch in published:
+        for row in jsonl(batch / "exclude.jsonl"):
+            if live.pop(row["sha256"], None) is None:
+                raise SystemExit(f"{batch}: excludes {row['sha256']}, which no earlier batch holds")
+        for row in jsonl(batch / "manifest.jsonl"):
+            live[row["sha256"]] = (row["label"], row["host"], row["repo"], row["path"])
+    origins = set(live.values())
+
+    entries: list[dict] = []
+    copies: list[tuple[Path, str]] = []
+    # What this batch adds, so that it adds nothing twice and names no two fixtures alike.
+    added: set = set()
+    held = 0
+    for label in LABELS:
+        for sidecar_path in sorted((source / label).glob("*/*.json")):
+            fixture = sidecar_path.with_suffix(".md")
+            sidecar = json.loads(sidecar_path.read_text())
+            data = fixture.read_bytes()
+            src, content = sidecar["source"], sidecar["content"]
+            if hashlib.sha256(data).hexdigest() != content["sha256"] or len(data) != content["size_bytes"]:
+                raise SystemExit(f"{fixture}: its bytes are not the ones its sidecar recorded")
+            if sidecar["authorship"]["label"] != label:
+                raise SystemExit(f"{sidecar_path}: labelled {sidecar['authorship']['label']} "
+                                 f"but under {label}/")
+            origin = (label, src["host"], src["repo"], src["path"])
+            if content["sha256"] in live or origin in origins:
+                held += 1
+                continue
+            if content["sha256"] in added or origin in added:
+                raise SystemExit(f"{fixture}: a second copy of a fixture already in this batch")
+            name = fixture_name(src["path"])
+            if not name.lower().endswith(".md"):
+                name += ".md"
+            if sidecar["fixture"] != name:
+                raise SystemExit(f"{sidecar_path}: names its fixture {sidecar['fixture']}, not {name}")
+            file = f"{label}/{repo_dir(src['host'], src['repo'])}/{name}"
+            if file in added:
+                raise SystemExit(f"{fixture}: a second fixture would be {file}")
+            added |= {content["sha256"], origin, file}
+            copies.append((fixture, file))
+            entries.append({
+                "file": file,
+                "sha256": content["sha256"],
+                "size_bytes": content["size_bytes"],
+                "label": label,
+                "host": src["host"],
+                "repo": src["repo"],
+                "path": src["path"],
+                "commit": src["commit"],
+                "sidecar_version": sidecar["sidecar_version"],
+                "natural_language": content["natural_language"],
+                "kind": content["kind"],
+                "ai_tools": sidecar["history"]["ai_tools"],
+            })
+    if not entries:
+        raise SystemExit(f"nothing to pack: the big tier already holds all {held} fixtures")
+
+    # Batches are read in name order, so a new one must sort after every other.
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
+    sequence = 1 + max((int(m[2]) for n in names if (m := BATCH_NAME.match(n)) and m[1] == today),
+                       default=0)
+    name = f"{today}-{sequence:02d}"
+    if sequence > 99 or any(n >= name for n in names):
+        raise SystemExit(f"{name} would not sort after the batches already in {corpus} and {work}")
+
+    # mkdir and copytree refuse a directory that exists, so no batch is ever written into twice.
+    staged = work / "batches" / name
+    staged.mkdir(parents=True)
+    for fixture, file in copies:
+        target = staged / file
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(fixture, target)
+        shutil.copyfile(fixture.with_suffix(".json"), target.with_suffix(".json"))
+    (staged / "manifest.jsonl").write_text(
+        "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries))
+    (staged / "exclude.jsonl").write_text("")
+    shutil.copytree(staged, corpus / "batches" / name)
+    log(f"pack {name}: {len(entries)} fixtures, {held} left out as already in the big tier; "
+        f"staged in {staged} and copied into {corpus / 'batches' / name}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1253,8 +1368,13 @@ def main() -> None:
     p = sub.add_parser("describe")
     p.add_argument("--work", required=True)
     p.add_argument("--dir", required=True)
+    p = sub.add_parser("pack")
+    p.add_argument("--from", dest="source", required=True)
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--work", required=True)
     args = parser.parse_args()
-    {"discover": discover, "harvest": harvest, "select": select, "describe": describe}[args.command](args)
+    {"discover": discover, "harvest": harvest, "select": select, "describe": describe,
+     "pack": pack}[args.command](args)
 
 
 if __name__ == "__main__":

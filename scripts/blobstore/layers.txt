@@ -1,0 +1,22 @@
+# How publish splits .blobs/unpacked into image layers.
+#
+# It walks the tree from the top. Each entry it meets -- directory, file or
+# symlink -- becomes one layer holding that entry and everything under it,
+# unless the entry is a directory listed in this file. A listed directory is
+# no layer at all; publish steps into it and applies the same rule to each
+# of its children. Listing a child of a listed directory steps in one level
+# further.
+#
+# So with corpus/ listed alone, corpus/batches/ would be one layer holding
+# every batch. Listing corpus/batches/ as well makes each batch a layer of its
+# own, so publishing a new batch uploads that batch and nothing else, and a
+# directory or file added beside batches/ under corpus/ is a layer of its own.
+#
+# One path per line, relative to .blobs/unpacked, trailing slash optional.
+# Blank lines and lines starting with # are ignored. publish refuses the file
+# if a path is absolute, has a . or .. component, is listed twice, is not a
+# directory in the tree, or is nested under a directory that is not listed
+# here too, since the walk would never reach it. fetch never reads this file.
+
+corpus/
+corpus/batches/

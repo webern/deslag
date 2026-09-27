@@ -22,7 +22,8 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use common::corpus::{CATEGORIES, Fixture, load_corpus};
+use common::corpus::{CATEGORIES, load_corpus};
+use common::fixture::Fixture;
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
 use deslag::{Config, ConfigSource, Violation, check_file};

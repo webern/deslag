@@ -10,7 +10,8 @@
 
 mod common;
 
-use common::corpus::{Fixture, load_corpus};
+use common::corpus::load_corpus;
+use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::Document;
 use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};

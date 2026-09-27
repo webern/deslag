@@ -1,7 +1,9 @@
 //! Helpers shared by the integration tests.
 #![allow(dead_code)]
 
+pub mod blobs;
 pub mod corpus;
+pub mod fixture;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

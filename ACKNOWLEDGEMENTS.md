@@ -58,3 +58,13 @@ check, which the golden set does for each lint and its golden file.
 
 Code was not ported. Each rule's examples are its tests and its docs at once, but nothing fails a
 rule that has none; the golden set fails a lint with no golden file.
+
+## komp
+
+- Matt's own project, private and closed-source
+- Studied at: commit 4ca8b4fb
+
+Code was ported. `scripts/blobstore/` began as a copy of komp's blob store, which Matt wrote: the
+script that fetches and publishes an OCI image with crane, its notes and its layer list. Matt
+licenses those files to deslag under MIT. deslag's copy fetches without a login where it can,
+writes pax tars and checks each one against the tree before it is pushed.

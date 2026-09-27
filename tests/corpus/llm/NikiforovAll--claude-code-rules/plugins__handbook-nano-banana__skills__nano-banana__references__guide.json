@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "plugins__handbook-nano-banana__skills__nano-banana__references__guide.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "NikiforovAll/claude-code-rules",
+    "path": "plugins/handbook-nano-banana/skills/nano-banana/references/guide.md",
+    "commit": "068539d0b71f831797be4d0b38fb30817d36c18e",
+    "commit_date": "2026-09-22T10:25:07+03:00",
+    "url": "https://github.com/NikiforovAll/claude-code-rules/blob/068539d0b71f831797be4d0b38fb30817d36c18e/plugins/handbook-nano-banana/skills/nano-banana/references/guide.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-13T21:07:32+03:00",
+    "stars": 141,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-12-13T21:30:29+02:00",
+    "last_commit_date": "2025-12-13T21:30:29+02:00",
+    "last_commit_author": "Oleksii Nikiforov",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-12-13T21:30:29+02:00",
+    "last_committer_date": "2025-12-13T21:30:29+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9ec1ff48b5da18a382b418e961596b2f11bd6f8d",
+        "date": "2025-12-13T21:30:29+02:00",
+        "committed": "2025-12-13T21:30:29+02:00",
+        "old": null,
+        "new": "1c3874680b549dd12a6a0bbeb139cab2a614e42f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6637,
+    "sha256": "a1a957cfc2a8aa9a9ecc8428d89de194d15527de69aad916b4abd00e86652de8",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 249,
+    "words": 722,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/NikiforovAll--claude-code-rules/plugins/handbook-nano-banana/skills/nano-banana/references/guide.md"
+}

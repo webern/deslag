@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "DamageLabs/rims",
+    "path": "CONTRIBUTING.md",
+    "commit": "ab0352045a0dee23594fc3f6a2fcf93feee4000e",
+    "commit_date": "2026-03-10T09:17:19-05:00",
+    "url": "https://github.com/DamageLabs/rims/blob/ab0352045a0dee23594fc3f6a2fcf93feee4000e/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2013-05-24T07:20:29-07:00",
+    "stars": 59,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2017-07-06T18:44:37-07:00",
+    "last_commit_date": "2026-01-25T14:48:23-06:00",
+    "last_commit_author": "Tony Guntharp",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-07-06T18:44:37-07:00",
+    "last_committer_date": "2026-01-25T14:48:23-06:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "796353ae9b4da7e00c2bdba8f4abaf48e09081de",
+        "date": "2026-01-25T14:48:23-06:00",
+        "committed": "2026-01-25T14:48:23-06:00",
+        "old": "cce5da47ced39004f5736de4cf8b82c7059c1898",
+        "new": "c897629a5125d8bb279bd114839c2c891043e178",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 2 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4391,
+    "sha256": "050ae25346dbe6ce92058010f18e91a216808257b83fbf31b4a67e0d9d59e019",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 65,
+    "words": 703,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/DamageLabs--rims/CONTRIBUTING.md",
+  "before": {
+    "sha256": "c9e21673ec0f41b771d328bb9491c55463ec5eee27a6cc0f03735c4280ff853b",
+    "commit": "61d1adb19211a6c2b965594cbee8ad3b362aeb08",
+    "date": "2017-07-07T18:32:42-07:00",
+    "between": []
+  }
+}

@@ -1,0 +1,425 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__RELEASE_CHECKLIST.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Shekyl-Foundation/shekyl-core",
+    "path": "docs/RELEASE_CHECKLIST.md",
+    "commit": "d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480",
+    "commit_date": "2026-09-10T20:35:49-04:00",
+    "url": "https://github.com/Shekyl-Foundation/shekyl-core/blob/d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480/docs/RELEASE_CHECKLIST.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 45,
+    "first_commit_date": "2020-10-03T09:39:20+02:00",
+    "last_commit_date": "2026-09-09T09:38:16-04:00",
+    "last_commit_author": "Rick Dawson",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-03T09:42:16+02:00",
+    "last_committer_date": "2026-09-09T09:38:16-04:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5c457de3a642496e6a9e5cf89a15e499184dd679",
+        "date": "2026-04-13T08:54:57-04:00",
+        "committed": "2026-04-13T08:54:57-04:00",
+        "old": "23da5a47ab3936ca867ee8dd5fea5715feb671d0",
+        "new": "9d436e9a2c4bd022b15eb99aa4a1f9a652600695",
+        "status": "agent"
+      },
+      {
+        "commit": "f9b5350030d91fcf4c0c5d7149c26f31334d6068",
+        "date": "2026-04-03T12:40:11-04:00",
+        "committed": "2026-04-03T12:40:11-04:00",
+        "old": "ff820eb84c8eb407e70cfecc804fada945b32605",
+        "new": "4e3d5a6fd7cf62ce2bd84177f8fde75267dc0328",
+        "status": "agent"
+      },
+      {
+        "commit": "9f76476451b4e939fa266fbb6ae0a7144adb2758",
+        "date": "2026-04-02T08:02:04-04:00",
+        "committed": "2026-04-02T08:02:04-04:00",
+        "old": "4f9955e6b41e4e3443d29a80310a446eea1c08e7",
+        "new": "ff820eb84c8eb407e70cfecc804fada945b32605",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 45 commits predates 2022-01-01 with no mark, and 3 are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 15090,
+    "sha256": "42aa4062e3740984bef8b32c20676acae2ca41e767b06f67801dffe751f68ef7",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 130,
+    "words": 2179,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Shekyl-Foundation--shekyl-core/docs/RELEASE_CHECKLIST.md",
+  "before": {
+    "sha256": "6b36d9a94402cfaf1e9bebec75a9a11a7ce2d3d44b12edba45bfc9c3d738df74",
+    "commit": "7dc34fe2ecd1e4ee8c2c0c27ea8dad09fa2ad520",
+    "date": "2021-12-31T01:05:22-08:00",
+    "between": [
+      {
+        "commit": "b7d66bc1751907f9d81d730949bcd4ddd63b0682",
+        "date": "2026-09-09T09:38:16-04:00",
+        "committed": "2026-09-09T09:38:16-04:00",
+        "old": "fe061ffc0820a38946486629241317510ac6687a",
+        "new": "fedc08d4606adae4c7faab8ed2420eea8a007336",
+        "status": "late"
+      },
+      {
+        "commit": "925d1f618b00aaa801727bbbdf2898d1773fca5f",
+        "date": "2026-09-09T01:04:09-04:00",
+        "committed": "2026-09-09T01:04:28-04:00",
+        "old": "55ffe8d7af819d6a7bbb3cd1838a46bc9df55497",
+        "new": "fe061ffc0820a38946486629241317510ac6687a",
+        "status": "late"
+      },
+      {
+        "commit": "e86441e17dbf8445eb0b819be602832d5182d93e",
+        "date": "2026-09-02T14:02:39-04:00",
+        "committed": "2026-09-02T14:02:39-04:00",
+        "old": "f5455a3150529140a40ed4035946289412d2af50",
+        "new": "55ffe8d7af819d6a7bbb3cd1838a46bc9df55497",
+        "status": "late"
+      },
+      {
+        "commit": "b56369fc8c4ec30968d9c1e0745ea3cbbd3682e5",
+        "date": "2026-08-16T09:55:07-04:00",
+        "committed": "2026-08-16T10:41:32-04:00",
+        "old": "94906d4aa54c165b8391a31c3712b38e3bd7b98d",
+        "new": "f5455a3150529140a40ed4035946289412d2af50",
+        "status": "late"
+      },
+      {
+        "commit": "8de5c2fde7140793e4235d9d9479b45bfe804810",
+        "date": "2026-08-15T20:56:57-04:00",
+        "committed": "2026-08-16T10:41:03-04:00",
+        "old": "d8377951041949b93a3cea1fc376aa309a5c8ddf",
+        "new": "94906d4aa54c165b8391a31c3712b38e3bd7b98d",
+        "status": "late"
+      },
+      {
+        "commit": "a6002100d67a3100bdf20bf725cde2d4a109fe67",
+        "date": "2026-08-15T10:35:35-04:00",
+        "committed": "2026-08-15T10:35:35-04:00",
+        "old": "4ee38af86feeb56ad0c31c2fcfbe6873a46f660c",
+        "new": "d8377951041949b93a3cea1fc376aa309a5c8ddf",
+        "status": "late"
+      },
+      {
+        "commit": "7a9e2702ac0dccdcc81ab54a065fe988387165b2",
+        "date": "2026-08-15T10:30:50-04:00",
+        "committed": "2026-08-15T10:30:50-04:00",
+        "old": "c70d9f701a59d07c921d7f8a553ca44516300d95",
+        "new": "4ee38af86feeb56ad0c31c2fcfbe6873a46f660c",
+        "status": "late"
+      },
+      {
+        "commit": "9edb9dff538245126550ec10d62e70790c6e91c0",
+        "date": "2026-08-14T07:31:40-04:00",
+        "committed": "2026-08-14T07:31:40-04:00",
+        "old": "77910873615b5e8fe71e62a90f1a4c7dfc958085",
+        "new": "c70d9f701a59d07c921d7f8a553ca44516300d95",
+        "status": "late"
+      },
+      {
+        "commit": "f29ed4846af57032bedb8eecf7b9153f8c4ec89f",
+        "date": "2026-08-13T21:22:17-04:00",
+        "committed": "2026-08-13T21:22:17-04:00",
+        "old": "1f10ff1f2b707b8b6c113a77ea8aa23ba8871146",
+        "new": "77910873615b5e8fe71e62a90f1a4c7dfc958085",
+        "status": "late"
+      },
+      {
+        "commit": "7bb3345ca4b8d13ff74007295bc770c4336c0c25",
+        "date": "2026-08-10T18:37:54-04:00",
+        "committed": "2026-08-10T18:37:54-04:00",
+        "old": "24e1b10f7ece2881045385104e73038b4f512cd1",
+        "new": "1f10ff1f2b707b8b6c113a77ea8aa23ba8871146",
+        "status": "late"
+      },
+      {
+        "commit": "70f8bd1b486be03bf60da778d508d533344c12bb",
+        "date": "2026-08-10T14:04:37-04:00",
+        "committed": "2026-08-10T14:04:37-04:00",
+        "old": "ed344caa80bf298399ae0e9f0e405fbcc65ab73e",
+        "new": "ad2ebf0d308080365d7c21cb5cb87c375166e16c",
+        "status": "late"
+      },
+      {
+        "commit": "7c92607c9a7b66096a3ffc091900d0f0034959c2",
+        "date": "2026-08-07T22:23:33-04:00",
+        "committed": "2026-08-10T12:43:55-04:00",
+        "old": "edb785932ea500fabe0de46b92919337840e956e",
+        "new": "e4cbda8ff2715047378a95a4eb4aee2a7e5e147d",
+        "status": "late"
+      },
+      {
+        "commit": "8e9ba1401b77b69b11b649372d97e1e5090e9831",
+        "date": "2026-08-10T00:42:43-04:00",
+        "committed": "2026-08-10T00:42:43-04:00",
+        "old": "043e314087ccaf4271a2225f15b6606365a4e74e",
+        "new": "ed344caa80bf298399ae0e9f0e405fbcc65ab73e",
+        "status": "late"
+      },
+      {
+        "commit": "cb76ba3aa0f9bde4eb790adf3a6c884db4fe9032",
+        "date": "2026-08-10T00:17:28-04:00",
+        "committed": "2026-08-10T00:17:28-04:00",
+        "old": "edb785932ea500fabe0de46b92919337840e956e",
+        "new": "043e314087ccaf4271a2225f15b6606365a4e74e",
+        "status": "late"
+      },
+      {
+        "commit": "d9443941fde2434313ccc404dd1de0e4a5c4bc87",
+        "date": "2026-08-08T19:47:07-04:00",
+        "committed": "2026-08-08T19:47:25-04:00",
+        "old": "95a4d509bda90efeb672c315dd0036d9d40168a3",
+        "new": "edb785932ea500fabe0de46b92919337840e956e",
+        "status": "late"
+      },
+      {
+        "commit": "d0da597df64ed8e1ac4c134c77dcc90bb0c5a37a",
+        "date": "2026-08-08T19:47:07-04:00",
+        "committed": "2026-08-08T19:47:07-04:00",
+        "old": "95a4d509bda90efeb672c315dd0036d9d40168a3",
+        "new": "edb785932ea500fabe0de46b92919337840e956e",
+        "status": "late"
+      },
+      {
+        "commit": "f39ac64421af1768968e76cbf7cc297578ea18b6",
+        "date": "2026-08-08T16:50:33-04:00",
+        "committed": "2026-08-08T16:50:33-04:00",
+        "old": "53e407b31162e087d0d07e4cebb1dc6266e9cef8",
+        "new": "95a4d509bda90efeb672c315dd0036d9d40168a3",
+        "status": "late"
+      },
+      {
+        "commit": "466dd5e2322bde834b5971504ca9c2081525ab41",
+        "date": "2026-08-08T14:11:31-04:00",
+        "committed": "2026-08-08T14:11:31-04:00",
+        "old": "58100ea90fbb82f9d6c4c8e3cae575c043961cfa",
+        "new": "53e407b31162e087d0d07e4cebb1dc6266e9cef8",
+        "status": "late"
+      },
+      {
+        "commit": "354d8e1c1822f46365215e7b2ec943051287d386",
+        "date": "2026-07-26T23:17:41-04:00",
+        "committed": "2026-07-26T23:17:41-04:00",
+        "old": "8b6b0aed3045d729060cef00086772f796f0b287",
+        "new": "58100ea90fbb82f9d6c4c8e3cae575c043961cfa",
+        "status": "late"
+      },
+      {
+        "commit": "4167610e1c0b7652d1322262c40310236c75898e",
+        "date": "2026-07-19T23:08:48-04:00",
+        "committed": "2026-07-19T23:08:48-04:00",
+        "old": "9c935c6b8d6a98eeea5516336d42168235e54bae",
+        "new": "8b6b0aed3045d729060cef00086772f796f0b287",
+        "status": "late"
+      },
+      {
+        "commit": "1e88f10d1866074309ff0b070c73828225a1cc08",
+        "date": "2026-07-19T09:57:40-04:00",
+        "committed": "2026-07-19T09:57:40-04:00",
+        "old": "11c0da51a3f1113be85c7d679c9b39d1060f8d40",
+        "new": "9c935c6b8d6a98eeea5516336d42168235e54bae",
+        "status": "late"
+      },
+      {
+        "commit": "8d3e9dda2e40408bfdcb4eb8857900a795213c83",
+        "date": "2026-07-16T13:20:17-04:00",
+        "committed": "2026-07-16T13:20:17-04:00",
+        "old": "339fcb56f7a25d679e58482b7e86704081708111",
+        "new": "11c0da51a3f1113be85c7d679c9b39d1060f8d40",
+        "status": "late"
+      },
+      {
+        "commit": "9a9283f6531f53668f8815478775d28e452755eb",
+        "date": "2026-07-16T11:35:34-04:00",
+        "committed": "2026-07-16T12:47:18-04:00",
+        "old": "96a9e32632eb43a7a8d38f16de51e7341786763f",
+        "new": "339fcb56f7a25d679e58482b7e86704081708111",
+        "status": "late"
+      },
+      {
+        "commit": "e581c96b6e1220d3149b7a741e9e5e7c60dc1e10",
+        "date": "2026-07-16T11:21:18-04:00",
+        "committed": "2026-07-16T12:47:18-04:00",
+        "old": "1e8ab67ccbd4ce3775105ffd99cb54cbcdfe4a11",
+        "new": "96a9e32632eb43a7a8d38f16de51e7341786763f",
+        "status": "late"
+      },
+      {
+        "commit": "d0d23b7faa68918e5902dc323d52fdbf0a6dbb22",
+        "date": "2026-07-16T07:45:12-04:00",
+        "committed": "2026-07-16T07:45:12-04:00",
+        "old": "d8b59dd71649f020c2c58398f5e4de555ed0e3ab",
+        "new": "1e8ab67ccbd4ce3775105ffd99cb54cbcdfe4a11",
+        "status": "late"
+      },
+      {
+        "commit": "94199b1b24c4403a812e9dd15d24ddffd13e72b6",
+        "date": "2026-07-15T22:51:05-04:00",
+        "committed": "2026-07-15T22:51:05-04:00",
+        "old": "a7ace32985355d7c4511b807ee956fd6ee0077ae",
+        "new": "d8b59dd71649f020c2c58398f5e4de555ed0e3ab",
+        "status": "late"
+      },
+      {
+        "commit": "5cfc163c6f9c0236e49789259b2d710c9d7722fb",
+        "date": "2026-07-15T22:19:47-04:00",
+        "committed": "2026-07-15T22:43:14-04:00",
+        "old": "96a9e32632eb43a7a8d38f16de51e7341786763f",
+        "new": "a7ace32985355d7c4511b807ee956fd6ee0077ae",
+        "status": "late"
+      },
+      {
+        "commit": "34669570227a022a880e7fe4b2f4176a38019055",
+        "date": "2026-07-15T02:54:00-04:00",
+        "committed": "2026-07-15T02:54:00-04:00",
+        "old": "bead551fd57736cd514b97275c7234d0ffb959aa",
+        "new": "96a9e32632eb43a7a8d38f16de51e7341786763f",
+        "status": "late"
+      },
+      {
+        "commit": "8e07c3f11e6f025e8aadbff54cc88cbccb615494",
+        "date": "2026-07-06T19:59:33-04:00",
+        "committed": "2026-07-06T19:59:33-04:00",
+        "old": "0b8e451c65a8440655903834b2605fe309b568f8",
+        "new": "bead551fd57736cd514b97275c7234d0ffb959aa",
+        "status": "late"
+      },
+      {
+        "commit": "f71894c6eab6b11e55560708eccb41768c393ec3",
+        "date": "2026-07-02T15:15:36-04:00",
+        "committed": "2026-07-02T15:15:36-04:00",
+        "old": "cf8c80930d0786fe03c8676d5bc4d0cf833b07d2",
+        "new": "0b8e451c65a8440655903834b2605fe309b568f8",
+        "status": "late"
+      },
+      {
+        "commit": "aadf8e4e631f9fb2a3d7ac0f7886158dc31e4551",
+        "date": "2026-07-01T23:59:29-04:00",
+        "committed": "2026-07-01T23:59:29-04:00",
+        "old": "b5ccb774d426b6c2a35fb572dd6ab0f24c17f787",
+        "new": "cf8c80930d0786fe03c8676d5bc4d0cf833b07d2",
+        "status": "late"
+      },
+      {
+        "commit": "ad9efced81cffce8575a5acbb4931cf4bb4915f3",
+        "date": "2026-07-01T23:09:19-04:00",
+        "committed": "2026-07-01T23:09:19-04:00",
+        "old": "9d436e9a2c4bd022b15eb99aa4a1f9a652600695",
+        "new": "b5ccb774d426b6c2a35fb572dd6ab0f24c17f787",
+        "status": "late"
+      },
+      {
+        "commit": "87d73cfd064107a393bfca512f290f4af010dacf",
+        "date": "2026-04-12T21:53:32-04:00",
+        "committed": "2026-04-12T21:53:32-04:00",
+        "old": "985b3843b34d9dfa0dc60da9d39917891a2a46d1",
+        "new": "23da5a47ab3936ca867ee8dd5fea5715feb671d0",
+        "status": "late"
+      },
+      {
+        "commit": "64cb6f5ec0e13a93eb4e409cfdf4c0677e244e01",
+        "date": "2026-04-06T08:59:03-04:00",
+        "committed": "2026-04-06T08:59:03-04:00",
+        "old": "34a070967154306c46da9f275097b0d6fb61a2b1",
+        "new": "985b3843b34d9dfa0dc60da9d39917891a2a46d1",
+        "status": "late"
+      },
+      {
+        "commit": "12e377a7a7428ebc995e78d8d9a5263c12b4f421",
+        "date": "2026-04-04T10:35:29-04:00",
+        "committed": "2026-04-04T10:35:29-04:00",
+        "old": "544b98ddb1cbaaeb1c221401d63afcda114f52a1",
+        "new": "34a070967154306c46da9f275097b0d6fb61a2b1",
+        "status": "late"
+      },
+      {
+        "commit": "fb047fdc202be20a0fc57e0f5e56c0ef662b8c8c",
+        "date": "2026-04-03T22:05:04-04:00",
+        "committed": "2026-04-03T22:05:04-04:00",
+        "old": "4e3d5a6fd7cf62ce2bd84177f8fde75267dc0328",
+        "new": "544b98ddb1cbaaeb1c221401d63afcda114f52a1",
+        "status": "late"
+      },
+      {
+        "commit": "279683861c94d9bcad4e59d0c7cd5f5571f389ab",
+        "date": "2026-03-29T17:14:12-04:00",
+        "committed": "2026-03-29T17:14:12-04:00",
+        "old": "7a7315154f6c469f777364e35048b6ff3679dfa5",
+        "new": "4f9955e6b41e4e3443d29a80310a446eea1c08e7",
+        "status": "late"
+      },
+      {
+        "commit": "ef608ea900c193d5b8b5748f170abc4131e3cf71",
+        "date": "2026-03-28T20:17:02-04:00",
+        "committed": "2026-03-28T20:17:02-04:00",
+        "old": "1624856f6130830bccecc7c58ac8fd19ad49e7ec",
+        "new": "7a7315154f6c469f777364e35048b6ff3679dfa5",
+        "status": "late"
+      },
+      {
+        "commit": "e1050e757d818aaab1cb7b2cf281f6249dfc5550",
+        "date": "2026-03-28T13:57:54-04:00",
+        "committed": "2026-03-28T13:57:54-04:00",
+        "old": "1093c5d24587d73642fafa7723c274238af4215b",
+        "new": "1624856f6130830bccecc7c58ac8fd19ad49e7ec",
+        "status": "late"
+      },
+      {
+        "commit": "55c114132161d5c78d8d830a2b3a9670c2394b94",
+        "date": "2026-03-27T22:55:00-04:00",
+        "committed": "2026-03-27T22:55:00-04:00",
+        "old": "ea4036793083ecf033ae3539ef35f1952713f94e",
+        "new": "1093c5d24587d73642fafa7723c274238af4215b",
+        "status": "late"
+      },
+      {
+        "commit": "4c093d8c776a7deb9dfa5f053c57f05b990a0a51",
+        "date": "2026-03-09T11:06:36-04:00",
+        "committed": "2026-03-09T11:06:36-04:00",
+        "old": "6323669850dfb659c3554fbc8704b036f1d8cce8",
+        "new": "ea4036793083ecf033ae3539ef35f1952713f94e",
+        "status": "late"
+      }
+    ]
+  }
+}

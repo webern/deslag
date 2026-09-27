@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__adapters__s3.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "raia-live/amfs",
+    "path": "docs/adapters/s3.md",
+    "commit": "9fcd4d0a1ad6ad388f56b95e8139f044539dfe8b",
+    "commit_date": "2026-09-26T06:47:24-07:00",
+    "url": "https://github.com/raia-live/amfs/blob/9fcd4d0a1ad6ad388f56b95e8139f044539dfe8b/docs/adapters/s3.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-31T17:32:38+09:00",
+    "stars": 82,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-02T11:49:25+09:00",
+    "last_commit_date": "2026-04-02T11:49:25+09:00",
+    "last_commit_author": "br-raia",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-02T11:49:25+09:00",
+    "last_committer_date": "2026-04-02T11:49:25+09:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c44b6f09cb3d9811581a45b34a682b74822ff8cf",
+        "date": "2026-04-02T11:49:25+09:00",
+        "committed": "2026-04-02T11:49:25+09:00",
+        "old": null,
+        "new": "9097c1cefa0b91e306b77434c26b36c7756098c3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4862,
+    "sha256": "4627351f5ad45a9957de64f4ab0f85beac656434c94c70fda0e97d5e6f3d5bdf",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 175,
+    "words": 584,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/raia-live--amfs/docs/adapters/s3.md"
+}

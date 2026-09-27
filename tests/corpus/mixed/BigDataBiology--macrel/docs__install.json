@@ -1,0 +1,128 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__install.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "BigDataBiology/macrel",
+    "path": "docs/install.md",
+    "commit": "8c1f7321618ccde2a28b960d32525620d2c737e3",
+    "commit_date": "2026-07-18T17:50:16+10:00",
+    "url": "https://github.com/BigDataBiology/macrel/blob/8c1f7321618ccde2a28b960d32525620d2c737e3/docs/install.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-01T10:35:38+08:00",
+    "stars": 98,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-01-23T15:57:40+08:00",
+    "last_commit_date": "2026-07-05T15:26:10+10:00",
+    "last_commit_author": "Luis Pedro Coelho",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-01-23T15:57:40+08:00",
+    "last_committer_date": "2026-07-05T15:26:10+10:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8e40930b601a439fe51c9c9ca291a25be05cab27",
+        "date": "2026-07-05T15:26:10+10:00",
+        "committed": "2026-07-05T15:26:10+10:00",
+        "old": "39794f2e398efdb52d30e6ff545f03289e26f0f6",
+        "new": "9f8d3737540a18836399bc74d4290d89f3c45cee",
+        "status": "agent"
+      },
+      {
+        "commit": "4a00e162d33950322c0aedf6f8a89d7dc22961d0",
+        "date": "2026-07-05T09:19:40+10:00",
+        "committed": "2026-07-05T09:19:40+10:00",
+        "old": "b34169fa7a7855734f757372b221be65f3849c9c",
+        "new": "39794f2e398efdb52d30e6ff545f03289e26f0f6",
+        "status": "agent"
+      },
+      {
+        "commit": "3ca730b7799dee7b3ec3c71d2a203bbe9b366cc9",
+        "date": "2026-07-05T09:06:42+10:00",
+        "committed": "2026-07-05T09:06:42+10:00",
+        "old": "4510e24fe17eed12619c7e9b212058b4f7db3ba2",
+        "new": "b34169fa7a7855734f757372b221be65f3849c9c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 10 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1748,
+    "sha256": "8c538bf5b7b11200429b39d800c63bfefa2e7211aebe5daf928aaa7042da82dd",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 236,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/BigDataBiology--macrel/docs/install.md",
+  "before": {
+    "sha256": "1e960a8f45083c2a01105dd3916cfc471e5a956f97a5cf991cc8d9985621b390",
+    "commit": "02ab002b270b87979c23c66fc85d0163d8fd04e4",
+    "date": "2021-12-20T14:26:24-03:00",
+    "between": [
+      {
+        "commit": "e2873a75809b5669b4986936d335bd070ba58cba",
+        "date": "2024-11-10T20:57:08+10:00",
+        "committed": "2024-11-10T20:57:08+10:00",
+        "old": "c3aac2231ebd4a5903a598fe0b4da75def28c1f8",
+        "new": "4510e24fe17eed12619c7e9b212058b4f7db3ba2",
+        "status": "late"
+      },
+      {
+        "commit": "76b2c6090878a1cd8adbe210be876c4341334e20",
+        "date": "2024-06-27T16:01:25+10:00",
+        "committed": "2024-06-27T16:01:25+10:00",
+        "old": "5029d0e041022b1528241275f397607978bd7a93",
+        "new": "c3aac2231ebd4a5903a598fe0b4da75def28c1f8",
+        "status": "late"
+      },
+      {
+        "commit": "6050aa7bcdf05f415a59646573e0d520b1c1b4b5",
+        "date": "2024-06-26T15:54:19+10:00",
+        "committed": "2024-06-26T16:08:03+10:00",
+        "old": "aa9dcfb735fff0453ee5358b9514795b4e91d261",
+        "new": "5029d0e041022b1528241275f397607978bd7a93",
+        "status": "late"
+      }
+    ]
+  }
+}

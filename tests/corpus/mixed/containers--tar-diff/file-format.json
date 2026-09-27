@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "file-format.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "containers/tar-diff",
+    "path": "file-format.md",
+    "commit": "fcb3c8f8c1554e5349f04fb584d93e7b537ca1f5",
+    "commit_date": "2026-08-31T13:50:53+02:00",
+    "url": "https://github.com/containers/tar-diff/blob/fcb3c8f8c1554e5349f04fb584d93e7b537ca1f5/file-format.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-09T11:54:43+02:00",
+    "stars": 66,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-05-11T14:44:18+02:00",
+    "last_commit_date": "2026-08-27T14:14:10+03:00",
+    "last_commit_author": "Asaf Ben Natan",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-05-11T14:57:32+02:00",
+    "last_committer_date": "2026-08-27T14:14:10+03:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d88e266658f30bece7173ad23e8c8c137e6a0812",
+        "date": "2026-08-27T14:14:10+03:00",
+        "committed": "2026-08-27T14:14:10+03:00",
+        "old": "57a2c48d0bdb0f435bcaf2b291ea8eb866af61ce",
+        "new": "6a7e7c4a665747f609624b36761f59151008a954",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 2 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2772,
+    "sha256": "1dffd1c3542a9f24174e78164fff5eee4f1fd1d22563166f3bb1099a20e9f787",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 421,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/containers--tar-diff/file-format.md",
+  "before": {
+    "sha256": "287767a55b74543fd5dc9d512b705fb2d9a81fef944eb3e5abc6e9c0b880a7b9",
+    "commit": "f08980f165b5b4e50c466a695b906b9b28069c6c",
+    "date": "2020-05-26T12:47:56+02:00",
+    "between": []
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "dwertheimer.TaskAutomations__changelog.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "NotePlan/plugins",
+    "path": "dwertheimer.TaskAutomations/changelog.md",
+    "commit": "f01f0de1114dc53b819bb8338003f473a096e005",
+    "commit_date": "2026-09-26T07:32:38+01:00",
+    "url": "https://github.com/NotePlan/plugins/blob/f01f0de1114dc53b819bb8338003f473a096e005/dwertheimer.TaskAutomations/changelog.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-04-27T14:44:05-05:00",
+    "stars": 204,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 60,
+    "first_commit_date": "2021-08-06T15:27:36-07:00",
+    "last_commit_date": "2026-08-01T08:14:56-07:00",
+    "last_commit_author": "David Wertheimer",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-08-06T15:27:36-07:00",
+    "last_committer_date": "2026-08-01T08:14:56-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0721e0605c86d593218b2290c1c8f87fdd183b41",
+        "date": "2026-08-01T08:14:56-07:00",
+        "committed": "2026-08-01T08:14:56-07:00",
+        "old": "ac7863417163fd9b4cdcebbe3fdd33f3cc6eaff3",
+        "new": "68644e0e007c5d82c28027efa8bbb5b8d5edeae0",
+        "status": "agent"
+      },
+      {
+        "commit": "05700c92ce99d7341e385f4180e000ccad36be67",
+        "date": "2026-08-01T17:08:40+02:00",
+        "committed": "2026-08-01T08:08:40-07:00",
+        "old": "369b629f9835e9196c4e90c699fa484e49c9ec5b",
+        "new": "ac7863417163fd9b4cdcebbe3fdd33f3cc6eaff3",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "8 of its 60 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10357,
+    "sha256": "04134efea57e7be95394b37b882ce95f6cb3a4fde3b6848b27fef9c0c2b08724",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 286,
+    "words": 1577,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NotePlan--plugins/dwertheimer.TaskAutomations/changelog.md"
+}

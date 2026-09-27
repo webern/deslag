@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "designs__INDEX.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "roznet/connectstats",
+    "path": "designs/INDEX.md",
+    "commit": "0abe0606c78c4c7c75d012b4d416430c834704d0",
+    "commit_date": "2026-02-23T20:12:26Z",
+    "url": "https://github.com/roznet/connectstats/blob/0abe0606c78c4c7c75d012b4d416430c834704d0/designs/INDEX.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-01-06T17:58:24Z",
+    "stars": 86,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-02-04T20:27:27Z",
+    "last_commit_date": "2026-02-22T22:35:50Z",
+    "last_commit_author": "brice",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-04T20:27:27Z",
+    "last_committer_date": "2026-02-22T22:35:50Z",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6a06baabe77fd86ba4a86c12e28a270e6efc0842",
+        "date": "2026-02-22T22:35:50Z",
+        "committed": "2026-02-22T22:35:50Z",
+        "old": "af3c07f4d739794ace8ba443b66d1a5da0746715",
+        "new": "8845f0630079a86b48a884c565d04524e32724c3",
+        "status": "agent"
+      },
+      {
+        "commit": "0c1690dc4996efad9b8ab9ddf9c5707b5f31afa1",
+        "date": "2026-02-10T05:23:47-05:00",
+        "committed": "2026-02-10T05:23:47-05:00",
+        "old": "ffe9a0c05ff715f4af4dc2848beaaf703da7c8d5",
+        "new": "af3c07f4d739794ace8ba443b66d1a5da0746715",
+        "status": "agent"
+      },
+      {
+        "commit": "1f60c391ebfaf9ad0df0c75837e6dfa3d97b9ac5",
+        "date": "2026-02-04T20:36:12Z",
+        "committed": "2026-02-04T20:36:12Z",
+        "old": "fa905090c2560c9dc2f07479146ef71f4616925f",
+        "new": "ffe9a0c05ff715f4af4dc2848beaaf703da7c8d5",
+        "status": "agent"
+      },
+      {
+        "commit": "0503e98e62104080602584932ea09fc9e676d0f0",
+        "date": "2026-02-04T20:27:27Z",
+        "committed": "2026-02-04T20:27:27Z",
+        "old": null,
+        "new": "fa905090c2560c9dc2f07479146ef71f4616925f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2363,
+    "sha256": "a0d43f04ec9965d082531cfa4fad95ac8af2cc0de345d111122e9e34d85bf0d5",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 273,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/roznet--connectstats/designs/INDEX.md"
+}

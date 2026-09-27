@@ -1,0 +1,106 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "getnuevetech/ZuriK",
+    "path": "README.md",
+    "commit": "5f727e7e1d8a33e101776ff8732dc202bc861f32",
+    "commit_date": "2026-02-27T10:30:04-06:00",
+    "url": "https://github.com/getnuevetech/ZuriK/blob/5f727e7e1d8a33e101776ff8732dc202bc861f32/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-16T19:44:37-05:00",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-02-17T02:52:53Z",
+    "last_commit_date": "2026-02-21T21:46:43Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-17T02:52:53Z",
+    "last_committer_date": "2026-02-21T21:46:43Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b7cb61ce0f4e6b573d515bb4fe5f3c826b3ebca3",
+        "date": "2026-02-21T21:46:43Z",
+        "committed": "2026-02-21T21:46:43Z",
+        "old": "ea009c7be43a08593cc1f806a0e95463bee1d6f0",
+        "new": "5d3509745e1384b2fa60fd749b4d13eec3da1966",
+        "status": "agent"
+      },
+      {
+        "commit": "68eb5b22f4b2da1f07ac70564db4c1b4e8963fb9",
+        "date": "2026-02-21T08:53:48Z",
+        "committed": "2026-02-21T08:53:48Z",
+        "old": "311353c39bb218fb9814b325a8cf2167057eec30",
+        "new": "2b587b3e62ef5cde73be1ad4bec6b8526bec0325",
+        "status": "agent"
+      },
+      {
+        "commit": "570dff21c4a8fe0cf1a3f9d717c61f805c67c66a",
+        "date": "2026-02-21T08:47:54Z",
+        "committed": "2026-02-21T08:47:54Z",
+        "old": "311353c39bb218fb9814b325a8cf2167057eec30",
+        "new": "5b71a569115db43b323d4dd288d08f14e298f0f5",
+        "status": "agent"
+      },
+      {
+        "commit": "0653203d43e82ad4bc427ff22f90868c97989dd6",
+        "date": "2026-02-20T07:16:46Z",
+        "committed": "2026-02-20T07:16:46Z",
+        "old": "2d6291b05fe8c531326da12dde7d288d4646cb48",
+        "new": "311353c39bb218fb9814b325a8cf2167057eec30",
+        "status": "agent"
+      },
+      {
+        "commit": "8fd2984cc85bb98d898dc07a4f5c210243dce75f",
+        "date": "2026-02-17T02:52:53Z",
+        "committed": "2026-02-17T02:52:53Z",
+        "old": null,
+        "new": "2d6291b05fe8c531326da12dde7d288d4646cb48",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 5 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4569,
+    "sha256": "bc9939f70bf24f29b28e29af4df0e40d0ea1758aba9d46d6a62b325fde8df619",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 146,
+    "words": 614,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/getnuevetech--ZuriK/README.md"
+}

@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "example__cfis__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "CosmoStat/shapepipe",
+    "path": "example/cfis/README.md",
+    "commit": "0a865e394143b3b27323e17b29b313d46ede5962",
+    "commit_date": "2026-09-26T14:39:44+02:00",
+    "url": "https://github.com/CosmoStat/shapepipe/blob/0a865e394143b3b27323e17b29b313d46ede5962/example/cfis/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-09-19T20:38:42+02:00",
+    "stars": 18,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-09T06:53:08-04:00",
+    "last_commit_date": "2026-09-09T06:53:08-04:00",
+    "last_commit_author": "Cail Daley",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-09T06:53:08-04:00",
+    "last_committer_date": "2026-09-09T06:53:08-04:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_011C7UQydnTDDVLAo7yrvfCN",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e32c4fb9fa789ea5d6a3f021a3103928c99382b5",
+        "date": "2026-09-09T06:53:08-04:00",
+        "committed": "2026-09-09T06:53:08-04:00",
+        "old": null,
+        "new": "700f31e027fa978e605e7946b0855f271cab1992",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 947,
+    "sha256": "c48d6778c7b6dcdfaa76ed2b2a01b08ce96692009be7ead17b67748535d0ea87",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 17,
+    "words": 114,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/CosmoStat--shapepipe/example/cfis/README.md"
+}

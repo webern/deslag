@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__copilot-instructions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "POps-Rox/terraform-az-overlays-costmanagement",
+    "path": ".github/copilot-instructions.md",
+    "commit": "dc042d3138a6cf7d08141f3228f38769af71ed0a",
+    "commit_date": "2026-09-23T08:49:55-04:00",
+    "url": "https://github.com/POps-Rox/terraform-az-overlays-costmanagement/blob/dc042d3138a6cf7d08141f3228f38769af71ed0a/.github/copilot-instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-03-10T10:02:48-05:00",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-10T18:25:58-04:00",
+    "last_commit_date": "2026-03-10T18:25:58-04:00",
+    "last_commit_author": "JoshLuedeman",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-10T18:25:58-04:00",
+    "last_committer_date": "2026-03-10T18:25:58-04:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "64b3776ffa0d48951cae276014cd4457e832faca",
+        "date": "2026-03-10T18:25:58-04:00",
+        "committed": "2026-03-10T18:25:58-04:00",
+        "old": null,
+        "new": "eb9ea8aa5c88d65bad11652d7a6c6396917ecf1c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 13449,
+    "sha256": "0eff5ab7f95952b5026e69f0aa4680892ec137f04b7da92beb4f79bade0188ab",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 219,
+    "words": 1866,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/POps-Rox--terraform-az-overlays-costmanagement/.github/copilot-instructions.md"
+}

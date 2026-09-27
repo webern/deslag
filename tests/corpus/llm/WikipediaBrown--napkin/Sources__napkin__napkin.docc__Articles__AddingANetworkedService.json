@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Sources__napkin__napkin.docc__Articles__AddingANetworkedService.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "WikipediaBrown/napkin",
+    "path": "Sources/napkin/napkin.docc/Articles/AddingANetworkedService.md",
+    "commit": "e3ea06eb45b68ae29946227ec2322c709af17335",
+    "commit_date": "2026-07-17T17:55:45-07:00",
+    "url": "https://github.com/WikipediaBrown/napkin/blob/e3ea06eb45b68ae29946227ec2322c709af17335/Sources/napkin/napkin.docc/Articles/AddingANetworkedService.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2021-04-02T17:07:57-07:00",
+    "stars": 3,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-15T03:14:19-07:00",
+    "last_commit_date": "2026-05-15T03:14:19-07:00",
+    "last_commit_author": "WikipediaBrown",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-15T03:14:19-07:00",
+    "last_committer_date": "2026-05-15T03:14:19-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1a8b92e4f4c393001897c69d146cd50d917d3d25",
+        "date": "2026-05-15T03:14:19-07:00",
+        "committed": "2026-05-15T03:14:19-07:00",
+        "old": null,
+        "new": "bea1df225b2af151c1c771a322a3495d51836b81",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8654,
+    "sha256": "53bd096ae9028c87959a2489cc86e52f173dd064bb07904fcb7e15a132de6af8",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 196,
+    "words": 1130,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/WikipediaBrown--napkin/Sources/napkin/napkin.docc/Articles/AddingANetworkedService.md"
+}

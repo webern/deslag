@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "_posts__2020-09-06-github-actions-from-travis.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dcroote/dcroote.github.io",
+    "path": "_posts/2020-09-06-github-actions-from-travis.md",
+    "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+    "commit_date": "2026-09-07T10:53:08-07:00",
+    "url": "https://github.com/dcroote/dcroote.github.io/blob/d14729c561cc70b533859ad02b9f42b52a6f9e87/_posts/2020-09-06-github-actions-from-travis.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-06-03T22:15:23-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-09-06T15:07:40-07:00",
+    "last_commit_date": "2026-09-07T10:53:08-07:00",
+    "last_commit_author": "Derek Croote",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-09-06T15:07:40-07:00",
+    "last_committer_date": "2026-09-07T10:53:08-07:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+        "date": "2026-09-07T10:53:08-07:00",
+        "committed": "2026-09-07T10:53:08-07:00",
+        "old": "b61ad75bb1d47527a6f19dba9c075ef4825f271e",
+        "new": "08c8b806672af4fc1c0656ed544f6b351b1fa27b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 10 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 6426,
+    "sha256": "bc2bf027d5a644df25f7c351c06d52142ac67bce59b6b29433456242dcf21dfe",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 768,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dcroote--dcroote.github.io/_posts/2020-09-06-github-actions-from-travis.md",
+  "before": {
+    "sha256": "9d65cd5063c1b5ab3758a90723fc96e136efd2792183d709e467c65ec21e03fe",
+    "commit": "e4734525cb4cc95cde0893d2c7d8d2cc6f68819a",
+    "date": "2021-12-25T13:14:03-08:00",
+    "between": [
+      {
+        "commit": "accac2a4b83057888009bcd229945c2ea4db7fb1",
+        "date": "2026-07-08T13:35:32-07:00",
+        "committed": "2026-07-08T13:39:17-07:00",
+        "old": "505a59ceb10569f9c4064695da8aaad98dd20134",
+        "new": "b61ad75bb1d47527a6f19dba9c075ef4825f271e",
+        "status": "late"
+      },
+      {
+        "commit": "fe308177a9ae31b657925fc3888f23382f927ed9",
+        "date": "2026-06-30T14:15:36-07:00",
+        "committed": "2026-06-30T14:15:36-07:00",
+        "old": "0763ecb917ff26b184dd72895973e2b68a6f934c",
+        "new": "505a59ceb10569f9c4064695da8aaad98dd20134",
+        "status": "late"
+      },
+      {
+        "commit": "6db46c6d63f251e3c450ee7bd02622e8699b7282",
+        "date": "2026-01-21T08:50:35-08:00",
+        "committed": "2026-01-21T08:50:35-08:00",
+        "old": "e3d5db8d26da5f9906441a720da6f58639217b60",
+        "new": "0763ecb917ff26b184dd72895973e2b68a6f934c",
+        "status": "late"
+      },
+      {
+        "commit": "acef2712189b9d8921a04603344c4a655eda635b",
+        "date": "2025-04-20T22:19:43-07:00",
+        "committed": "2025-04-20T22:19:43-07:00",
+        "old": "76e40e9411ae421d78c4e79b614d604f1ae22ace",
+        "new": "e3d5db8d26da5f9906441a720da6f58639217b60",
+        "status": "late"
+      }
+    ]
+  }
+}

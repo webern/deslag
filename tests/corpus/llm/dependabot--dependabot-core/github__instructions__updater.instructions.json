@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__instructions__updater.instructions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dependabot/dependabot-core",
+    "path": ".github/instructions/updater.instructions.md",
+    "commit": "f3a79fa0711aca171b2174b855d9f21b16237961",
+    "commit_date": "2026-09-25T14:59:43-07:00",
+    "url": "https://github.com/dependabot/dependabot-core/blob/f3a79fa0711aca171b2174b855d9f21b16237961/.github/instructions/updater.instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5788,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-18T09:19:33+01:00",
+    "last_commit_date": "2026-02-18T09:19:33+01:00",
+    "last_commit_author": "Jurre Stender",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-18T14:40:54+01:00",
+    "last_committer_date": "2026-02-18T14:40:54+01:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0302da3502b74ad94e8a5bc82e1c0fe5f70790e2",
+        "date": "2026-02-18T09:19:33+01:00",
+        "committed": "2026-02-18T14:40:54+01:00",
+        "old": null,
+        "new": "c3d37d6bf788680b9cfa0c691d99c43223015061",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 1246,
+    "sha256": "15ede4b6eb83f47cddc315345368705ea08dfa36cff93e3690d56ef93d070e1f",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 160,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dependabot--dependabot-core/.github/instructions/updater.instructions.md"
+}

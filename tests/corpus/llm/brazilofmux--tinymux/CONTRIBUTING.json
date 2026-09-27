@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "brazilofmux/tinymux",
+    "path": "CONTRIBUTING.md",
+    "commit": "0724d7bb13114d4f2c98f4471946156a2946f0ef",
+    "commit_date": "2026-09-09T22:15:21-07:00",
+    "url": "https://github.com/brazilofmux/tinymux/blob/0724d7bb13114d4f2c98f4471946156a2946f0ef/CONTRIBUTING.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 58,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-12T16:26:54-06:00",
+    "last_commit_date": "2026-07-12T16:26:54-06:00",
+    "last_commit_author": "Stephen Dennis",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-12T16:26:54-06:00",
+    "last_committer_date": "2026-07-12T16:26:54-06:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ef7f405f9b8190994374b09ea8ca32774bbbd4f8",
+        "date": "2026-07-12T16:26:54-06:00",
+        "committed": "2026-07-12T16:26:54-06:00",
+        "old": null,
+        "new": "ba5bfdaaac30d9cafea0fa5901ae894a2c5c19f0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8146,
+    "sha256": "c06a2dd6aedb8f7a1aa3a9e089a3fd20600e72117fdea19aa752f78102524c42",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 151,
+    "words": 1256,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/brazilofmux--tinymux/CONTRIBUTING.md"
+}

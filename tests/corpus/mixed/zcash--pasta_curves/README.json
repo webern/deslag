@@ -1,0 +1,123 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "zcash/pasta_curves",
+    "path": "README.md",
+    "commit": "41e8149b028ff14569801782c665228af8e17af4",
+    "commit_date": "2026-09-25T21:13:11+01:00",
+    "url": "https://github.com/zcash/pasta_curves/blob/41e8149b028ff14569801782c665228af8e17af4/README.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "COPYING.md",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2020-08-22T14:15:39-06:00",
+    "stars": 84,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2020-08-22T14:15:39-06:00",
+    "last_commit_date": "2026-09-23T16:32:05Z",
+    "last_commit_author": "Jack Grigg",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-08-22T14:15:39-06:00",
+    "last_committer_date": "2026-09-23T16:32:05Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "96c8a2b0e26f19936f1eb0bd93d4f4c2f1497f18",
+        "date": "2026-09-02T14:31:40-03:00",
+        "committed": "2026-09-02T14:31:40-03:00",
+        "old": "e8c29e5a8fd18ca4820ffc93b4fdd8cab000bf8a",
+        "new": "ecfd835c967fa01128c5ac40d31a2b2eed3c0f06",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "7 of its 13 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2066,
+    "sha256": "bb059dd9ca46115d48340fd23a963f975cb300e3c6357938622599ca59e701d0",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 55,
+    "words": 253,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/zcash--pasta_curves/README.md",
+  "before": {
+    "sha256": "497e4e88e527d74008cb36ae66895a5e061aaa9e86147be55283a85b16985a6f",
+    "commit": "738fb60796d39b33f5b0a0337b8fabfcc81f98e1",
+    "date": "2021-12-25T12:36:29Z",
+    "between": [
+      {
+        "commit": "d3c30760552645e34fd396f17d627a85f205467e",
+        "date": "2026-09-23T16:32:05Z",
+        "committed": "2026-09-23T16:32:05Z",
+        "old": "ecfd835c967fa01128c5ac40d31a2b2eed3c0f06",
+        "new": "59f3006d210801f1f31d7e0b60e10dc2c87fd003",
+        "status": "late"
+      },
+      {
+        "commit": "27f0d1ef1d285667eb801561771e47162a0cf0c7",
+        "date": "2025-04-16T17:18:49Z",
+        "committed": "2025-04-16T19:19:42Z",
+        "old": "3102e04691217111c96fc57792f1b5143a5055c0",
+        "new": "e8c29e5a8fd18ca4820ffc93b4fdd8cab000bf8a",
+        "status": "late"
+      },
+      {
+        "commit": "43598cf303cf50510b4168b8ffb91f8d3c4637fb",
+        "date": "2023-12-19T15:36:50Z",
+        "committed": "2023-12-19T15:36:50Z",
+        "old": "03907cc70153220d4332355eaf63a70a36729be8",
+        "new": "3102e04691217111c96fc57792f1b5143a5055c0",
+        "status": "late"
+      },
+      {
+        "commit": "ef9cc828f94f12979d6b2d681efbc5ce63fe1208",
+        "date": "2023-03-02T15:51:58Z",
+        "committed": "2023-03-02T17:09:58Z",
+        "old": "c81125c44adae51744d0c73825b7a873511968f8",
+        "new": "03907cc70153220d4332355eaf63a70a36729be8",
+        "status": "late"
+      },
+      {
+        "commit": "3329b4de8554dd7be56d8633721b5fbc53c4f71e",
+        "date": "2022-05-04T23:11:59Z",
+        "committed": "2022-05-04T23:22:15Z",
+        "old": "d4a51e8022131241d24f2d81f8d68249fccb56e8",
+        "new": "c81125c44adae51744d0c73825b7a873511968f8",
+        "status": "late"
+      }
+    ]
+  }
+}

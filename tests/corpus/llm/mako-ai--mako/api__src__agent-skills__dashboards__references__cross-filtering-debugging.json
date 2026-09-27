@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "api__src__agent-skills__dashboards__references__cross-filtering-debugging.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mako-ai/mako",
+    "path": "api/src/agent-skills/dashboards/references/cross-filtering-debugging.md",
+    "commit": "717083fce6662996993ae1cc7c113ffd0374b3e8",
+    "commit_date": "2026-09-26T10:12:51+02:00",
+    "url": "https://github.com/mako-ai/mako/blob/717083fce6662996993ae1cc7c113ffd0374b3e8/api/src/agent-skills/dashboards/references/cross-filtering-debugging.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-05-27T16:50:06+02:00",
+    "stars": 15,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-08T12:31:45Z",
+    "last_commit_date": "2026-06-08T12:31:45Z",
+    "last_commit_author": "Cursor Agent",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-08T12:31:45Z",
+    "last_committer_date": "2026-06-08T12:31:45Z",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "29bde343c8edc8c83b6a23b982b23c0853c9b700",
+        "date": "2026-06-08T12:31:45Z",
+        "committed": "2026-06-08T12:31:45Z",
+        "old": null,
+        "new": "6e4c37d89e1e11c2e27d70098321e1263c75e8f4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 3857,
+    "sha256": "656b476f9129c8084c2c6cc4111cfd08e6e9f170058696e44f7f1afb4df3178e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 47,
+    "words": 593,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mako-ai--mako/api/src/agent-skills/dashboards/references/cross-filtering-debugging.md"
+}

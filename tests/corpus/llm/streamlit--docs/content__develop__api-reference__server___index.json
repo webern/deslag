@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "content__develop__api-reference__server___index.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "streamlit/docs",
+    "path": "content/develop/api-reference/server/_index.md",
+    "commit": "a7c0124a75cb0aa7c25adaa6543523c4c00ac4d6",
+    "commit_date": "2026-09-17T13:38:17-07:00",
+    "url": "https://github.com/streamlit/docs/blob/a7c0124a75cb0aa7c25adaa6543523c4c00ac4d6/content/develop/api-reference/server/_index.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-06-19T13:36:20-05:00",
+    "stars": 178,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-12T00:10:59+02:00",
+    "last_commit_date": "2026-06-12T00:10:59+02:00",
+    "last_commit_author": "Johannes Rieke",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-12T00:10:59+02:00",
+    "last_committer_date": "2026-06-12T00:10:59+02:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "612d2f0a20720c49c241febb80d0c62396ad91f2",
+        "date": "2026-06-12T00:10:59+02:00",
+        "committed": "2026-06-12T00:10:59+02:00",
+        "old": null,
+        "new": "13b17635924de1b2f8c50c04a8981f8810fb05e1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 540,
+    "sha256": "4e8c9416116892215888f39ee960a135c5dfd7b4ee52a679136b298397819942",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 22,
+    "words": 61,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/streamlit--docs/content/develop/api-reference/server/_index.md"
+}

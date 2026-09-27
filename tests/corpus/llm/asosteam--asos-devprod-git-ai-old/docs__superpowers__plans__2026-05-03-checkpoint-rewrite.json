@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__superpowers__plans__2026-05-03-checkpoint-rewrite.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "asosteam/asos-devprod-git-ai-old",
+    "path": "docs/superpowers/plans/2026-05-03-checkpoint-rewrite.md",
+    "commit": "32423d07fbac9b36a6d6a9bafdccb37832c7467a",
+    "commit_date": "2026-08-11T15:04:58+01:00",
+    "url": "https://github.com/asosteam/asos-devprod-git-ai-old/blob/32423d07fbac9b36a6d6a9bafdccb37832c7467a/docs/superpowers/plans/2026-05-03-checkpoint-rewrite.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-02T12:09:13-04:00",
+    "stars": 0,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-03T16:26:18Z",
+    "last_commit_date": "2026-05-03T16:26:18Z",
+    "last_commit_author": "Sasha Varlamov",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-03T22:08:52Z",
+    "last_committer_date": "2026-05-03T22:08:52Z",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1118721f74115c42247892723b14a7cfd57528c1",
+        "date": "2026-05-03T16:26:18Z",
+        "committed": "2026-05-03T22:08:52Z",
+        "old": null,
+        "new": "d4029dcbc4347715fe71dc2930ae11f9ee16573f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 51488,
+    "sha256": "c8dfede47dedd0a875970190eb084607543c913e77fba4e0988f86d3dc50bdcd",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1518,
+    "words": 5035,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/asosteam--asos-devprod-git-ai-old/docs/superpowers/plans/2026-05-03-checkpoint-rewrite.md"
+}

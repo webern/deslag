@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "cookbook__fivewin__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "FiveTechSoft/OpenADS",
+    "path": "cookbook/fivewin/README.md",
+    "commit": "f37fd854b64d0403e309f131b4621614201c050c",
+    "commit_date": "2026-09-27T03:34:39+02:00",
+    "url": "https://github.com/FiveTechSoft/OpenADS/blob/f37fd854b64d0403e309f131b4621614201c050c/cookbook/fivewin/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-03T02:23:19+02:00",
+    "stars": 16,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-22T21:06:29-03:00",
+    "last_commit_date": "2026-06-22T21:06:29-03:00",
+    "last_commit_author": "Admnwk",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-22T21:06:29-03:00",
+    "last_committer_date": "2026-06-22T21:06:29-03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "73a3e0fee0ae28ae639250b00bb12eacadf3a70a",
+        "date": "2026-06-22T21:06:29-03:00",
+        "committed": "2026-06-22T21:06:29-03:00",
+        "old": null,
+        "new": "0de5c69ee53d73e0dbec2573cea0dee1bda6b70b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1893,
+    "sha256": "3b4e6c3540df2bba8e0747894e19fdf17b8847edb44e8a6e7a88ca418f5fd8e2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 45,
+    "words": 301,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/FiveTechSoft--OpenADS/cookbook/fivewin/README.md"
+}

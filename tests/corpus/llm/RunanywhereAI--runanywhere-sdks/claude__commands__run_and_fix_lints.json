@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__commands__run_and_fix_lints.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "RunanywhereAI/runanywhere-sdks",
+    "path": ".claude/commands/run_and_fix_lints.md",
+    "commit": "a18d1d36a3f2b1935e4de83194d0e83dfe669a2c",
+    "commit_date": "2026-09-23T06:12:33+05:30",
+    "url": "https://github.com/RunanywhereAI/runanywhere-sdks/blob/a18d1d36a3f2b1935e4de83194d0e83dfe669a2c/.claude/commands/run_and_fix_lints.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-21T18:43:52-07:00",
+    "stars": 10318,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-30T18:26:53-07:00",
+    "last_commit_date": "2026-08-30T18:26:53-07:00",
+    "last_commit_author": "Sanchit Monga",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-30T18:26:53-07:00",
+    "last_committer_date": "2026-08-30T18:26:53-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_013uCYb7mLCXaXXKAEfRQmJu",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c11f78ef4fe070a2239c59c0af8ddca3fd463ad3",
+        "date": "2026-08-30T18:26:53-07:00",
+        "committed": "2026-08-30T18:26:53-07:00",
+        "old": null,
+        "new": "4d6378066063a6c2239532e9ec685e2d5b5a1ebf",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 13429,
+    "sha256": "e4482c15e8c6dd1d79fa648dbf75e112f4e5d318885c5138033b6b9e395a7173",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 516,
+    "words": 2009,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/RunanywhereAI--runanywhere-sdks/.claude/commands/run_and_fix_lints.md"
+}

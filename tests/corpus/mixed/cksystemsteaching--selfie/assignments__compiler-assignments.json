@@ -1,0 +1,168 @@
+{
+  "sidecar_version": 3,
+  "fixture": "assignments__compiler-assignments.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cksystemsteaching/selfie",
+    "path": "assignments/compiler-assignments.md",
+    "commit": "32aa06fcd0abecba47d2233817b00a9dc3911c70",
+    "commit_date": "2026-09-26T11:44:21+02:00",
+    "url": "https://github.com/cksystemsteaching/selfie/blob/32aa06fcd0abecba47d2233817b00a9dc3911c70/assignments/compiler-assignments.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2524,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 16,
+    "first_commit_date": "2020-10-03T13:06:10+02:00",
+    "last_commit_date": "2026-09-11T13:39:36+02:00",
+    "last_commit_author": "Christoph Kirsch",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-03T13:06:10+02:00",
+    "last_committer_date": "2026-09-11T13:39:36+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_018ZbtbTt9TxfQqjBjZrmzWx",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8b8e957da848582e112dde8306724b3d22f32aef",
+        "date": "2026-09-11T13:39:36+02:00",
+        "committed": "2026-09-11T13:39:36+02:00",
+        "old": "ebf24182fb6d043e590300d41a5500ae678eadfc",
+        "new": "01c1123de99d644303aa0f2042bbdb0de7d28d9b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 16 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7652,
+    "sha256": "d1e3a74ce915dce1762fd4ec9d63b844e5fa676366c4913103295a674c94d6fd",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 173,
+    "words": 1142,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cksystemsteaching--selfie/assignments/compiler-assignments.md",
+  "before": {
+    "sha256": "fd1993b719ac140b04c8f716b30d7d2fde309b433846ecf44ccc0b50b905efb1",
+    "commit": "42229df917d88559282d8e75f6063b75f3a143f4",
+    "date": "2021-12-18T05:46:35-05:00",
+    "between": [
+      {
+        "commit": "d2b738571744f5fd4066620a833aafb9f15f1695",
+        "date": "2026-05-07T15:08:35+02:00",
+        "committed": "2026-05-07T22:17:10+02:00",
+        "old": "a1a2d85e1461020d97055837b80832a369db3f69",
+        "new": "ebf24182fb6d043e590300d41a5500ae678eadfc",
+        "status": "late"
+      },
+      {
+        "commit": "1a819beed59bab8e209a25228cd3e90a3c40c94b",
+        "date": "2026-05-06T10:12:36+02:00",
+        "committed": "2026-05-06T10:12:36+02:00",
+        "old": "8f35f52adf90e7970ac4340ffacddfff2ce7d3e9",
+        "new": "a1a2d85e1461020d97055837b80832a369db3f69",
+        "status": "late"
+      },
+      {
+        "commit": "2a12ad82a26487c28d602e9621c3b8349b845c62",
+        "date": "2026-05-06T09:45:00+02:00",
+        "committed": "2026-05-06T09:45:00+02:00",
+        "old": "012ff655493391732bebb67b18ad7bcbeed8975e",
+        "new": "8f35f52adf90e7970ac4340ffacddfff2ce7d3e9",
+        "status": "late"
+      },
+      {
+        "commit": "8336aca9df3909b93ba13fe56b46c20c2e0250e7",
+        "date": "2023-04-08T16:58:42+02:00",
+        "committed": "2023-04-08T16:58:42+02:00",
+        "old": "9eeb5327d4648942a7333df0439b81372d6bd00a",
+        "new": "012ff655493391732bebb67b18ad7bcbeed8975e",
+        "status": "late"
+      },
+      {
+        "commit": "018482b5a5964ac4dd2cf9bf72081b1953293518",
+        "date": "2023-03-24T13:59:18+01:00",
+        "committed": "2023-03-24T13:59:18+01:00",
+        "old": "d3eba118319bde4c3bfa6c91ef0007798e309ae7",
+        "new": "9eeb5327d4648942a7333df0439b81372d6bd00a",
+        "status": "late"
+      },
+      {
+        "commit": "f34e6136930b29eb7401c9e56b1f878251206998",
+        "date": "2023-02-16T10:06:38+01:00",
+        "committed": "2023-02-16T10:06:38+01:00",
+        "old": "a4a27c5143ed5cef04d0efefbbf50decc1030383",
+        "new": "d3eba118319bde4c3bfa6c91ef0007798e309ae7",
+        "status": "late"
+      },
+      {
+        "commit": "84b5ca16893077028a10a71f840a991d52c57ec3",
+        "date": "2022-08-04T17:04:15+02:00",
+        "committed": "2022-08-04T17:04:15+02:00",
+        "old": "7e31cd2029c7eb8f46f571ec5dfd8e7e5cf7667a",
+        "new": "a4a27c5143ed5cef04d0efefbbf50decc1030383",
+        "status": "late"
+      },
+      {
+        "commit": "2d94574f4f612a3acfd6a159104975f6ea053947",
+        "date": "2022-06-07T16:19:21+02:00",
+        "committed": "2022-06-07T16:19:21+02:00",
+        "old": "6335e71562ba79176a722ae27880e449140758a4",
+        "new": "7e31cd2029c7eb8f46f571ec5dfd8e7e5cf7667a",
+        "status": "late"
+      },
+      {
+        "commit": "6e152a7ed7c5eb99ec2a097f2979dc4c700f8cd7",
+        "date": "2022-05-16T17:42:23+02:00",
+        "committed": "2022-05-16T17:42:23+02:00",
+        "old": "c55aaed5365b8deccf9b21a5d8f0719cb0691f35",
+        "new": "6335e71562ba79176a722ae27880e449140758a4",
+        "status": "late"
+      },
+      {
+        "commit": "8a5a886dffc1380602fa31810d76e40b1174132c",
+        "date": "2022-05-16T17:26:13+02:00",
+        "committed": "2022-05-16T17:26:13+02:00",
+        "old": "53c7636e96b0c591575bdc6ea01f767b93b23dbc",
+        "new": "c55aaed5365b8deccf9b21a5d8f0719cb0691f35",
+        "status": "late"
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "IgniteUI/igniteui-angular",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "882009c931d3de2c99979885ebc16c51ed60e860",
+    "commit_date": "2026-09-25T16:09:26+03:00",
+    "url": "https://github.com/IgniteUI/igniteui-angular/blob/882009c931d3de2c99979885ebc16c51ed60e860/.github/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 599,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 28,
+    "first_commit_date": "2018-01-09T13:51:46+02:00",
+    "last_commit_date": "2026-03-30T11:11:41Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 10,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-09T13:51:46+02:00",
+    "last_committer_date": "2026-03-30T11:11:41Z",
+    "marks": [
+      {
+        "text": "Agent-Logs-Url: https://github.com/IgniteUI/igniteui-angular/sessions/b9077203-6c1e-4a3b-b783-784db69680e2",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Copilot <175728472+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "assist",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "68ceb92b828cc661c4d2008ef5d4a6ac3c40f131",
+        "date": "2026-03-30T11:11:41Z",
+        "committed": "2026-03-30T11:11:41Z",
+        "old": "fe4391229ea3ee0401da47da704a4150d627a78a",
+        "new": "0259bca4bdc4500c0520c395b3bdd837487e8d2b",
+        "status": "agent"
+      },
+      {
+        "commit": "a92c9aef86860b29c17761afeac2eefbcce29e7d",
+        "date": "2026-03-30T14:09:49+03:00",
+        "committed": "2026-03-30T14:09:49+03:00",
+        "old": "d669ef8d783a6bda7b8bdf81db321864a65d0798",
+        "new": "fe4391229ea3ee0401da47da704a4150d627a78a",
+        "status": "assist"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "17 of its 28 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot); the clone's history ends at b3e2ac3bfc, of 2018-01-09, so it may be older"
+  },
+  "content": {
+    "size_bytes": 16811,
+    "sha256": "e4512fcf6fd5fb4a0e494db5b481d050ee638a2c80830ac93ab634f0ca437140",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 222,
+    "words": 2570,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/IgniteUI--igniteui-angular/.github/CONTRIBUTING.md"
+}

@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cheat/cheat",
+    "path": "CONTRIBUTING.md",
+    "commit": "b8098dc1b9de846d76e68102e03aeb0f918bb0da",
+    "commit_date": "2026-02-16T08:45:45-05:00",
+    "url": "https://github.com/cheat/cheat/blob/b8098dc1b9de846d76e68102e03aeb0f918bb0da/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2013-07-29T21:34:41-04:00",
+    "stars": 13468,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2019-10-26T16:13:46-04:00",
+    "last_commit_date": "2026-02-15T15:09:30-05:00",
+    "last_commit_author": "Christopher Allen Lane",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-10-26T16:13:46-04:00",
+    "last_committer_date": "2026-02-15T15:11:19-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5ad1a3c39fb27378e4ed7e7c89a375d6cec6ff5a",
+        "date": "2026-02-15T15:09:30-05:00",
+        "committed": "2026-02-15T15:11:19-05:00",
+        "old": "e2f8129134a57d540a2e25c443e9c9ed2c23a093",
+        "new": "60f72cd366c6b2b84134cc06d80c6060d2d24263",
+        "status": "agent"
+      },
+      {
+        "commit": "cc85a4bdb104474e433313724d9b381bc5f6f6b0",
+        "date": "2026-02-14T19:56:19-05:00",
+        "committed": "2026-02-14T19:56:19-05:00",
+        "old": "45b186d31598dcc668e142663370ebeb6b58d9a5",
+        "new": "e2f8129134a57d540a2e25c443e9c9ed2c23a093",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 5 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 660,
+    "sha256": "e3bceb0eb88422b50b7a936d44fcef942d21bc27e17aa3582ec80ff2210277ca",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 17,
+    "words": 99,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/cheat--cheat/CONTRIBUTING.md",
+  "before": {
+    "sha256": "3884f69a7fdbb115c7fd9936a9e510bfdc48cb8aea1e05c1cb0f838fddaa5a2f",
+    "commit": "12ffa4cb5c874207df89018f14054f495a6757b1",
+    "date": "2021-10-09T12:13:01-04:00",
+    "between": [
+      {
+        "commit": "7fed1f63a6d1c4f1c53d35ac424303bfbc5e44c8",
+        "date": "2022-07-05T15:05:42-04:00",
+        "committed": "2022-07-05T15:07:34-04:00",
+        "old": "9b9a7789aa5a413df14c0cc385e41661efa1db4b",
+        "new": "45b186d31598dcc668e142663370ebeb6b58d9a5",
+        "status": "late"
+      }
+    ]
+  }
+}

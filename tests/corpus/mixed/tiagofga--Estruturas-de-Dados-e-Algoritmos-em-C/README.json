@@ -1,0 +1,249 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "tiagofga/Estruturas-de-Dados-e-Algoritmos-em-C",
+    "path": "README.md",
+    "commit": "27ede2e60b56adf48f14bade4014041986ac86e8",
+    "commit_date": "2026-09-14T19:59:43-03:00",
+    "url": "https://github.com/tiagofga/Estruturas-de-Dados-e-Algoritmos-em-C/blob/27ede2e60b56adf48f14bade4014041986ac86e8/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2017-10-23T09:51:56-02:00",
+    "stars": 3,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 33,
+    "first_commit_date": "2017-10-23T09:51:56-02:00",
+    "last_commit_date": "2026-07-07T18:10:59-03:00",
+    "last_commit_author": "Tiago Alves de Oliveira",
+    "authors": 2,
+    "ai_commits": 15,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-10-23T09:51:56-02:00",
+    "last_committer_date": "2026-07-07T18:10:59-03:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 15
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a8cac0d9f47db8d8e9e9d9beb9fde19d785253bb",
+        "date": "2026-06-04T15:23:27Z",
+        "committed": "2026-06-04T15:23:27Z",
+        "old": "a5f1f80002262d897c2dc28bbb93ada1856f0e1a",
+        "new": "36a241e88161298e0b6adc928865fe468089e1f7",
+        "status": "agent"
+      },
+      {
+        "commit": "b9baf836cc81750ca72f8ceecb617ebf1aea863d",
+        "date": "2026-06-04T15:07:36Z",
+        "committed": "2026-06-04T15:07:36Z",
+        "old": "ba74de0f2aa717e92eea1824a832b415259efe24",
+        "new": "a5f1f80002262d897c2dc28bbb93ada1856f0e1a",
+        "status": "agent"
+      },
+      {
+        "commit": "02d77dcac1c7c9292f63a9b410c7f1affda9cd35",
+        "date": "2026-06-04T15:02:45Z",
+        "committed": "2026-06-04T15:02:45Z",
+        "old": "0d951b95e08b44c7b35ffa55e9f0592d1a73b69d",
+        "new": "ba74de0f2aa717e92eea1824a832b415259efe24",
+        "status": "agent"
+      },
+      {
+        "commit": "0809f1d06d24729bc83c9308a30b28f545af79f3",
+        "date": "2026-06-04T14:52:43Z",
+        "committed": "2026-06-04T14:52:43Z",
+        "old": "f0d0079de2ed3841c68ea7c2ac5c8a383ac09fb3",
+        "new": "0d951b95e08b44c7b35ffa55e9f0592d1a73b69d",
+        "status": "agent"
+      },
+      {
+        "commit": "bc88243fdc29d168631beae5348734cba2c8b77b",
+        "date": "2026-06-03T23:53:25Z",
+        "committed": "2026-06-03T23:53:25Z",
+        "old": "dc6166e555f8a8c74bb7a9683b1032c4d3dfabec",
+        "new": "f0d0079de2ed3841c68ea7c2ac5c8a383ac09fb3",
+        "status": "agent"
+      },
+      {
+        "commit": "aece4d55995eada5c5aea37aeeaa9ccb6354d304",
+        "date": "2026-06-03T23:52:09Z",
+        "committed": "2026-06-03T23:52:09Z",
+        "old": "da2d763ab4211a7a4a8982af97110a86e5fb48c2",
+        "new": "dc6166e555f8a8c74bb7a9683b1032c4d3dfabec",
+        "status": "agent"
+      },
+      {
+        "commit": "1125a28c08b5c4eef25fe1c84638c7bd027e8a8a",
+        "date": "2026-06-03T23:30:05Z",
+        "committed": "2026-06-03T23:30:05Z",
+        "old": "9e366013e1321d0b84e4d9e5eeb5432641aa7a2b",
+        "new": "da2d763ab4211a7a4a8982af97110a86e5fb48c2",
+        "status": "agent"
+      },
+      {
+        "commit": "58d1924e1f2861db61bb376ca9d6a8e779ef33b0",
+        "date": "2026-06-03T21:52:40Z",
+        "committed": "2026-06-03T21:52:40Z",
+        "old": "3c4f68dfaaf8665d63a58296a4f33e23a69bdf4f",
+        "new": "9e366013e1321d0b84e4d9e5eeb5432641aa7a2b",
+        "status": "agent"
+      },
+      {
+        "commit": "53872c272e68684eae0c94f0c1810880380f8be9",
+        "date": "2026-06-03T21:45:05Z",
+        "committed": "2026-06-03T21:45:05Z",
+        "old": "caf1d716157e7b5f0bb2eab70c58079ef56fb51f",
+        "new": "3c4f68dfaaf8665d63a58296a4f33e23a69bdf4f",
+        "status": "agent"
+      },
+      {
+        "commit": "1e649ef8d08965b141e20e63e8c4cd2f989f4bcd",
+        "date": "2026-06-03T21:44:27Z",
+        "committed": "2026-06-03T21:44:27Z",
+        "old": "bd5e2830316374d5147f28bd77c210ed8408d431",
+        "new": "caf1d716157e7b5f0bb2eab70c58079ef56fb51f",
+        "status": "agent"
+      },
+      {
+        "commit": "fce93398f7d2704c78cbf2969cd621a916fe09b7",
+        "date": "2026-06-03T21:35:05Z",
+        "committed": "2026-06-03T21:35:05Z",
+        "old": "82eb34a6c0a68f09b88880833bf65b44ce9bad25",
+        "new": "bd5e2830316374d5147f28bd77c210ed8408d431",
+        "status": "agent"
+      },
+      {
+        "commit": "8c6eafa8b75c8c285224544242b4333bcfbe51ca",
+        "date": "2026-06-03T21:26:14Z",
+        "committed": "2026-06-03T21:26:14Z",
+        "old": "9ddf6d1c45896bb4fde087fd13854920d76ed7c2",
+        "new": "82eb34a6c0a68f09b88880833bf65b44ce9bad25",
+        "status": "agent"
+      },
+      {
+        "commit": "93b5c297976f93fa82202996747d9b800a3234b4",
+        "date": "2026-06-03T21:24:58Z",
+        "committed": "2026-06-03T21:24:58Z",
+        "old": "19decba61b259a08df18a65baef60cabfb73628a",
+        "new": "9ddf6d1c45896bb4fde087fd13854920d76ed7c2",
+        "status": "agent"
+      },
+      {
+        "commit": "df8f9810ad973796789bc35ab9173ec3ed24dbe2",
+        "date": "2026-06-03T21:10:57Z",
+        "committed": "2026-06-03T21:10:57Z",
+        "old": "be7937949b94e8f1af251cd4e3228202de420a12",
+        "new": "19decba61b259a08df18a65baef60cabfb73628a",
+        "status": "agent"
+      },
+      {
+        "commit": "ebc584166f87f4d2c1e3e205d5ad262b1530e953",
+        "date": "2026-06-03T21:01:44Z",
+        "committed": "2026-06-03T21:01:44Z",
+        "old": "8aaa6f59b09a2b2275c20bb68f8c7b118e221adb",
+        "new": "be7937949b94e8f1af251cd4e3228202de420a12",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "11 of its 33 commits predate 2022-01-01 with no mark, and 15 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10076,
+    "sha256": "b86725f522ae2b9177e0d50da2238420309ffffe4eee29ddde2fdd2331ce6584",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 198,
+    "words": 1212,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tiagofga--Estruturas-de-Dados-e-Algoritmos-em-C/README.md",
+  "before": {
+    "sha256": "ec3017dff802a5a5c29722c3827f4a0949e0642e45fb77402efe1ab1597392b7",
+    "commit": "50e634db0128d35542252d26f6871a43a6036932",
+    "date": "2019-10-15T10:16:09-03:00",
+    "between": [
+      {
+        "commit": "d4b90037af0dc007159bfa68000bec79e378af90",
+        "date": "2026-07-07T18:10:59-03:00",
+        "committed": "2026-07-07T18:10:59-03:00",
+        "old": "455a26d81b5a1dbb39c5c1ece273a32a560ab1f1",
+        "new": "40a78cfb335f99d5efcfea08d5ff568f54b43201",
+        "status": "late"
+      },
+      {
+        "commit": "956bfdb5cb42a189a16beddea489b1e4a87dfbf5",
+        "date": "2026-07-07T17:40:20-03:00",
+        "committed": "2026-07-07T17:40:20-03:00",
+        "old": "a15a948bc797792dcbaf5c825f844f38d53f5926",
+        "new": "455a26d81b5a1dbb39c5c1ece273a32a560ab1f1",
+        "status": "late"
+      },
+      {
+        "commit": "41b8caaa301e8118ed22f412b8ffd458f4cfccb7",
+        "date": "2026-06-05T12:25:57-03:00",
+        "committed": "2026-06-05T12:25:57-03:00",
+        "old": "4cc6bfb4709366acd041f0fc547cb74ed68e9450",
+        "new": "a15a948bc797792dcbaf5c825f844f38d53f5926",
+        "status": "late"
+      },
+      {
+        "commit": "3b5a5ae32a107cb0b2211e7f6f43fe7b940d69ed",
+        "date": "2026-06-04T23:55:04-03:00",
+        "committed": "2026-06-04T23:55:04-03:00",
+        "old": "95117324f0cc46c918193c972b3851607b938085",
+        "new": "4cc6bfb4709366acd041f0fc547cb74ed68e9450",
+        "status": "late"
+      },
+      {
+        "commit": "2b3fb575ca9c2c254d9d9fdfec7f811986814c53",
+        "date": "2026-06-04T15:44:33-03:00",
+        "committed": "2026-06-04T15:44:33-03:00",
+        "old": "906dd69cd9cd271c4268291a2283b8b6aba00090",
+        "new": "95117324f0cc46c918193c972b3851607b938085",
+        "status": "late"
+      },
+      {
+        "commit": "04077b9a89df8234d9713016da8db2cba38773cf",
+        "date": "2026-06-04T14:53:43-03:00",
+        "committed": "2026-06-04T14:53:43-03:00",
+        "old": "9172198f836167e421bf5c7bfcad54aeb1b89d06",
+        "new": "906dd69cd9cd271c4268291a2283b8b6aba00090",
+        "status": "late"
+      },
+      {
+        "commit": "5fcb2ac24497c4e539ce39bb5b05674013454d02",
+        "date": "2026-06-04T13:55:07-03:00",
+        "committed": "2026-06-04T13:55:07-03:00",
+        "old": "36a241e88161298e0b6adc928865fe468089e1f7",
+        "new": "9172198f836167e421bf5c7bfcad54aeb1b89d06",
+        "status": "late"
+      }
+    ]
+  }
+}

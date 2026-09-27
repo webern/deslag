@@ -1,0 +1,135 @@
+{
+  "sidecar_version": 3,
+  "fixture": "src__twicc__agent__plugin__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "twidi/twicc",
+    "path": "src/twicc/agent/plugin/README.md",
+    "commit": "5c0f5daf880b713f74b689505d437b15962e8bd1",
+    "commit_date": "2026-09-25T13:46:29+02:00",
+    "url": "https://github.com/twidi/twicc/blob/5c0f5daf880b713f74b689505d437b15962e8bd1/src/twicc/agent/plugin/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-23T23:35:10+01:00",
+    "stars": 28,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2026-05-31T18:46:36+02:00",
+    "last_commit_date": "2026-09-24T10:48:44+02:00",
+    "last_commit_author": "Stephane Angel (Twidi)",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-01T16:35:10+02:00",
+    "last_committer_date": "2026-09-24T10:48:44+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "90952cf9779b4a02faf1cc88794da5163a2b8728",
+        "date": "2026-09-24T10:48:44+02:00",
+        "committed": "2026-09-24T10:48:44+02:00",
+        "old": "8c4fc36bae378cd55a5815ab2a0b172600f9fc9f",
+        "new": "a4e9ede5d4b92751c90c5fd7d1838c19a46dfa78",
+        "status": "agent"
+      },
+      {
+        "commit": "6c5e29f0630536927cd9c802036890a268cf83cd",
+        "date": "2026-09-24T07:32:55+02:00",
+        "committed": "2026-09-24T07:37:06+02:00",
+        "old": "2af4eb142e7cf14fc610e3cce3f23532400eeaea",
+        "new": "8c4fc36bae378cd55a5815ab2a0b172600f9fc9f",
+        "status": "agent"
+      },
+      {
+        "commit": "63d0c22d07adc97f80bb5510845705e388b993bb",
+        "date": "2026-08-15T01:37:41+02:00",
+        "committed": "2026-08-15T01:37:41+02:00",
+        "old": "d8492a6612c671849dfdec3a0305141b9c04b4de",
+        "new": "2af4eb142e7cf14fc610e3cce3f23532400eeaea",
+        "status": "agent"
+      },
+      {
+        "commit": "038506eaa4d18a27ce1072b397cd02bd9c056d39",
+        "date": "2026-07-06T20:54:34+02:00",
+        "committed": "2026-07-07T00:37:56+02:00",
+        "old": "d1209d1f587a2d687ebb2688747021d43343cda6",
+        "new": "d8492a6612c671849dfdec3a0305141b9c04b4de",
+        "status": "agent"
+      },
+      {
+        "commit": "154154c70d4e4f50d718541df3fbf8049ee70339",
+        "date": "2026-06-04T11:26:04+02:00",
+        "committed": "2026-06-04T11:26:04+02:00",
+        "old": "e0b8cb6720e81ae3f8bcdc1c434bee9a4a8f2604",
+        "new": "d1209d1f587a2d687ebb2688747021d43343cda6",
+        "status": "agent"
+      },
+      {
+        "commit": "4f6c103786a924bb39b7e41ab7b943dfa4da7320",
+        "date": "2026-05-31T18:46:36+02:00",
+        "committed": "2026-06-01T16:35:10+02:00",
+        "old": null,
+        "new": "e0b8cb6720e81ae3f8bcdc1c434bee9a4a8f2604",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 6 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 13221,
+    "sha256": "36c1e6135fca7710b01029243116212a019c5eba7b3da37cb8603b97ec99c241",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 257,
+    "words": 2059,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/twidi--twicc/src/twicc/agent/plugin/README.md"
+}

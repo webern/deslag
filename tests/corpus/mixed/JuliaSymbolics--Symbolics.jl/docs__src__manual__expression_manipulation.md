@@ -1,0 +1,53 @@
+# Expression Manipulation
+
+Symbolics.jl provides functionality for easily manipulating expressions.
+Most of the functionality comes by the expression objects obeying the standard
+mathematical semantics. For example, if one has `A` a matrix of symbolic
+expressions wrapped in `Num`, then `A^2` calculates the expressions for the
+squared matrix.  It is thus encouraged to use standard Julia
+for performing many of the manipulation on the IR. For example,
+calculating the sparse form of the matrix via `sparse(A)` is valid, legible,
+and easily understandable to all Julia programmers.
+
+## Functionality Inherited From SymbolicUtils.jl
+
+The [`substitute`](https://symbolicutils.juliasymbolics.org/api/#SymbolicUtils.substitute)
+and [`simplify`](https://symbolicutils.juliasymbolics.org/api/#SymbolicUtils.simplify)
+functions are provided by SymbolicUtils and reexported by Symbolics.
+Documentation for `rewriter` can be found [here](https://docs.sciml.ai/SymbolicUtils/stable/manual/rewrite/#Rule-based-rewriting), using the `@rule` macro or the `@acrule` macro from SymbolicUtils.jl.
+
+## Functionality Provided by SymPy.jl Integration
+
+SymPy also includes solves as well, and the SymPy.jl extensions allow for automatically converting
+Symbolics expressions for use in its simplifier.
+
+```@docs
+Symbolics.sympy_simplify
+```
+
+## Additional Manipulation Functions
+
+Other additional manipulation functions are given below.
+
+```@docs
+SymbolicUtils.substitute
+Symbolics.get_variables
+Symbolics.tosymbol
+Symbolics.diff2term
+Symbolics.degree
+Symbolics.coeff
+Symbolics.fixpoint_sub
+Symbolics.evaluate
+Symbolics.symbolic_to_float
+Symbolics.terms(x)
+Symbolics.factors(x)
+numerator(x::Union{Num, SymbolicUtils.BasicSymbolic})
+denominator(x::Union{Num, SymbolicUtils.BasicSymbolic})
+Symbolics.arguments
+Symbolics.hasnode
+Symbolics.filterchildren
+Symbolics.replacenode
+Symbolics.gather_factor
+Symbolics.FixpointSubstituter
+Symbolics.sympy_pythoncall_simplify
+```

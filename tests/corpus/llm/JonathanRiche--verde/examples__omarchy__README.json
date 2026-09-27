@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "examples__omarchy__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JonathanRiche/verde",
+    "path": "examples/omarchy/README.md",
+    "commit": "ecacb80f814be5816271a1806029be9201e8c132",
+    "commit_date": "2026-09-27T01:04:51-04:00",
+    "url": "https://github.com/JonathanRiche/verde/blob/ecacb80f814be5816271a1806029be9201e8c132/examples/omarchy/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-24T09:53:55-04:00",
+    "stars": 27,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-22T21:53:25-04:00",
+    "last_commit_date": "2026-09-22T21:53:25-04:00",
+    "last_commit_author": "JonathanRiche",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-22T21:53:25-04:00",
+    "last_committer_date": "2026-09-22T21:53:25-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fa77ea1f340d7ed9feddff886b46b9a551ae7ab4",
+        "date": "2026-09-22T21:53:25-04:00",
+        "committed": "2026-09-22T21:53:25-04:00",
+        "old": null,
+        "new": "1103a06de409a2cb137ea78231ce3a86290c2217",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1119,
+    "sha256": "a032be0db96eed155ee4046001bc4af827d90f2866d952182f8a653489e1adcb",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 162,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/JonathanRiche--verde/examples/omarchy/README.md"
+}

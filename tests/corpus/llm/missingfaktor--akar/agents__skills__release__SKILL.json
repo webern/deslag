@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__release__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "missingfaktor/akar",
+    "path": ".agents/skills/release/SKILL.md",
+    "commit": "ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195",
+    "commit_date": "2026-04-26T22:02:47+01:00",
+    "url": "https://github.com/missingfaktor/akar/blob/ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195/.agents/skills/release/SKILL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-10-23T11:34:31+02:00",
+    "stars": 182,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-25T20:07:06+01:00",
+    "last_commit_date": "2026-04-25T20:07:06+01:00",
+    "last_commit_author": "missingfaktor",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-25T20:07:06+01:00",
+    "last_committer_date": "2026-04-25T20:07:06+01:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e208df5de31d9c41015996a8c2aaaad9d701847f",
+        "date": "2026-04-25T20:07:06+01:00",
+        "committed": "2026-04-25T20:07:06+01:00",
+        "old": null,
+        "new": "e880163312a390d476b3a7230e915dca433aca35",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 876,
+    "sha256": "ea186f01e1a9f8cd3120a19add259069345b888eaa42e25eeede8ee411c1572f",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 19,
+    "words": 144,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/missingfaktor--akar/.agents/skills/release/SKILL.md"
+}

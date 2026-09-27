@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "custom_modes__plan_instructions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Baukebrenninkmeijer/table-evaluator",
+    "path": "custom_modes/plan_instructions.md",
+    "commit": "9171b5477d416cb5ad552d8d00b66e73a30fa087",
+    "commit_date": "2025-07-28T16:31:03+02:00",
+    "url": "https://github.com/Baukebrenninkmeijer/table-evaluator/blob/9171b5477d416cb5ad552d8d00b66e73a30fa087/custom_modes/plan_instructions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-08-24T16:31:33+02:00",
+    "stars": 93,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-06-29T13:24:48+02:00",
+    "last_commit_date": "2025-06-29T13:24:48+02:00",
+    "last_commit_author": "Bauke Brenninkmeijer",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-06-29T13:24:48+02:00",
+    "last_committer_date": "2025-06-29T13:24:48+02:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.ai/code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8d9b19e875dea81429899e6aa45a69237fff55e5",
+        "date": "2025-06-29T13:24:48+02:00",
+        "committed": "2025-06-29T13:24:48+02:00",
+        "old": null,
+        "new": "b450cd77da8dd555f430e20b047ba9e1ecb4b583",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9876,
+    "sha256": "e77b42f92a4de694d510ad1fb23bbb8e71eb3c468ec7180105a37051d5a190f1",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 225,
+    "words": 906,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Baukebrenninkmeijer--table-evaluator/custom_modes/plan_instructions.md"
+}

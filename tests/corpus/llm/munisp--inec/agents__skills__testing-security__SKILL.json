@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__testing-security__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "munisp/inec",
+    "path": ".agents/skills/testing-security/SKILL.md",
+    "commit": "52a1f0b479aa39ba4589e2fde6500528b17f10d1",
+    "commit_date": "2026-09-20T16:35:04-04:00",
+    "url": "https://github.com/munisp/inec/blob/52a1f0b479aa39ba4589e2fde6500528b17f10d1/.agents/skills/testing-security/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-05-04T17:31:15-04:00",
+    "stars": 1,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-10T12:19:37Z",
+    "last_commit_date": "2026-06-10T12:19:37Z",
+    "last_commit_author": "devin-ai-integration[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-10T12:19:37Z",
+    "last_committer_date": "2026-06-10T12:19:37Z",
+    "marks": [
+      {
+        "text": "devin-ai-integration[bot] <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bdac66123a27e13c825223402f1080a54c066bfd",
+        "date": "2026-06-10T12:19:37Z",
+        "committed": "2026-06-10T12:19:37Z",
+        "old": null,
+        "new": "546510fd5eb00b5acfa38acc039a576c7870052b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 4147,
+    "sha256": "aca11b88eebf303eaec0feb6db99b4e307fd16a36d27ba800b52334532b22d34",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 103,
+    "words": 506,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/munisp--inec/.agents/skills/testing-security/SKILL.md"
+}

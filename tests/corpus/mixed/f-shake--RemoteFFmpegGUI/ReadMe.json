@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "ReadMe.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "f-shake/RemoteFFmpegGUI",
+    "path": "ReadMe.md",
+    "commit": "de80580ec1b3fc7cad171ed240deedf1f4d9e2e6",
+    "commit_date": "2026-09-18T12:43:31Z",
+    "url": "https://github.com/f-shake/RemoteFFmpegGUI/blob/de80580ec1b3fc7cad171ed240deedf1f4d9e2e6/ReadMe.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-08-11T19:19:33+08:00",
+    "stars": 193,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 40,
+    "first_commit_date": "2021-08-11T19:19:33+08:00",
+    "last_commit_date": "2026-09-12T12:53:15Z",
+    "last_commit_author": "f-shake",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-08-11T19:19:33+08:00",
+    "last_committer_date": "2026-09-12T12:53:15Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "03c8a27cd1fc8a2ddb284221a9c3f72c974ec977",
+        "date": "2026-06-13T13:17:28+08:00",
+        "committed": "2026-06-13T13:17:28+08:00",
+        "old": "67fed2845bfc43bc739732fb5ea76f31591c23ab",
+        "new": "872d72516584c36ad469bc75cdea6f414af00bdb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "10 of its 40 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7820,
+    "sha256": "a2cbec4c1914dd00d2214c0ccae95adea19f0af20614eb92e3f6ac3af7034a77",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 183,
+    "words": 546,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/f-shake--RemoteFFmpegGUI/ReadMe.md"
+}

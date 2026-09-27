@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "evidence__source_causal_history_family__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "FloatingPragma/observer-patch-holography",
+    "path": "evidence/source_causal_history_family/README.md",
+    "commit": "4511928b1d4bee6bca5601e309b44595a76f797f",
+    "commit_date": "2026-09-25T17:02:30+07:00",
+    "url": "https://github.com/FloatingPragma/observer-patch-holography/blob/4511928b1d4bee6bca5601e309b44595a76f797f/evidence/source_causal_history_family/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-18T12:45:35+07:00",
+    "stars": 747,
+    "found_by": "sg-topic:physics"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-22T22:36:42+07:00",
+    "last_commit_date": "2026-09-22T22:36:42+07:00",
+    "last_commit_author": "Bernhard Mueller",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-22T22:36:42+07:00",
+    "last_committer_date": "2026-09-22T22:36:42+07:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "992486deb21dd64fd58a4afb2056a431327e2e59",
+        "date": "2026-09-22T22:36:42+07:00",
+        "committed": "2026-09-22T22:36:42+07:00",
+        "old": null,
+        "new": "1b772e0e4e53dd9a9f3c95d926cc08d400a72c63",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1309,
+    "sha256": "a8db99462a1a5d0886ef71efa68a98e9d0c65d37e0c13a7c784e37e524be36a4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 28,
+    "words": 113,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/FloatingPragma--observer-patch-holography/evidence/source_causal_history_family/README.md"
+}

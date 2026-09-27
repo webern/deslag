@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agent__src__skills__bottleneck-hunter__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "abdul037/VibeTrading",
+    "path": "agent/src/skills/bottleneck-hunter/SKILL.md",
+    "commit": "098d67c2235a083d57655c6fb7c2ebaa7e289036",
+    "commit_date": "2026-08-04T23:50:57+04:00",
+    "url": "https://github.com/abdul037/VibeTrading/blob/098d67c2235a083d57655c6fb7c2ebaa7e289036/agent/src/skills/bottleneck-hunter/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-01T18:14:49+08:00",
+    "stars": 1,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-07-05T13:39:34+08:00",
+    "last_commit_date": "2026-07-06T17:25:39+08:00",
+    "last_commit_author": "sambazhu",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-05T13:39:34+08:00",
+    "last_committer_date": "2026-07-06T17:25:39+08:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6c09d25c3467f6bce042b25170c29dc4701b296d",
+        "date": "2026-07-06T17:25:39+08:00",
+        "committed": "2026-07-06T17:25:39+08:00",
+        "old": "d426814e967a55b82785464162e8d1f17df98ba1",
+        "new": "4b3f32229cf4c9a8a5c440bd0a0e49190b67c04a",
+        "status": "agent"
+      },
+      {
+        "commit": "ef74a22370d9270ed2d302c80822bb67ad23ab61",
+        "date": "2026-07-05T13:39:34+08:00",
+        "committed": "2026-07-05T13:39:34+08:00",
+        "old": null,
+        "new": "d426814e967a55b82785464162e8d1f17df98ba1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10961,
+    "sha256": "2b8063b299929028b4a16c98ce0c67832af47d518eb68faa3a408c7187184f01",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 190,
+    "words": 1580,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/abdul037--VibeTrading/agent/src/skills/bottleneck-hunter/SKILL.md"
+}

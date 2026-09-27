@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "worklogs__2026-06-03-221938-pin-release-yml-actions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "berelevant-ai/slopless",
+    "path": ".worklogs/2026-06-03-221938-pin-release-yml-actions.md",
+    "commit": "5658158e09a1e0c2614424f942538b3e125f9f2c",
+    "commit_date": "2026-09-24T13:59:46+01:00",
+    "url": "https://github.com/berelevant-ai/slopless/blob/5658158e09a1e0c2614424f942538b3e125f9f2c/.worklogs/2026-06-03-221938-pin-release-yml-actions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-16T21:41:35+01:00",
+    "stars": 325,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-03T22:21:47+01:00",
+    "last_commit_date": "2026-06-03T22:21:47+01:00",
+    "last_commit_author": "Eugene Tartakovsky",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-03T22:21:47+01:00",
+    "last_committer_date": "2026-06-03T22:21:47+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3b5668083b40d9960c524a8259b555b165d98f8f",
+        "date": "2026-06-03T22:21:47+01:00",
+        "committed": "2026-06-03T22:21:47+01:00",
+        "old": null,
+        "new": "2cf2cc64d98b4003d77e4d1e0de450b847a2a786",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 834,
+    "sha256": "5ea70f9d6ade8062234415d30a3cdcc0815e4d47a4f282a960bb5dd8ad4b1881",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 110,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/berelevant-ai--slopless/.worklogs/2026-06-03-221938-pin-release-yml-actions.md"
+}

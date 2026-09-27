@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__design__architecture__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kata-containers/kata-containers",
+    "path": "docs/design/architecture/README.md",
+    "commit": "8a2c6acfa662dc579b69a296275337d803b4f5ab",
+    "commit_date": "2026-09-25T07:59:07+02:00",
+    "url": "https://github.com/kata-containers/kata-containers/blob/8a2c6acfa662dc579b69a296275337d803b4f5ab/docs/design/architecture/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8801,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2021-12-15T17:44:24Z",
+    "last_commit_date": "2026-02-10T12:24:22+01:00",
+    "last_commit_author": "Fabiano Fidêncio",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-12-16T12:26:17Z",
+    "last_committer_date": "2026-02-10T21:58:28+01:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5c0269881e32aa2a990bb0e1b4bf4658dfbcd0a9",
+        "date": "2026-02-10T12:24:22+01:00",
+        "committed": "2026-02-10T21:58:28+01:00",
+        "old": "fc643aaa6cd572c4e38065f7b050de6f4583241e",
+        "new": "de79d3a3fcde897e893aa8db73d29fc40fdd8d1c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "8 of its 12 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 19776,
+    "sha256": "5a48c237fb00f97d4a1dbd327c9fcac4d6d350ced41c19d3c1072a105dce657b",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 487,
+    "words": 2611,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/kata-containers--kata-containers/docs/design/architecture/README.md"
+}

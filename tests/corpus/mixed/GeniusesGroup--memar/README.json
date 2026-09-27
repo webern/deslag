@@ -1,0 +1,177 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "GeniusesGroup/memar",
+    "path": "README.md",
+    "commit": "657b69d8955fe43c31c717f748236f3ee33d6b1d",
+    "commit_date": "2026-09-25T08:11:29-04:00",
+    "url": "https://github.com/GeniusesGroup/memar/blob/657b69d8955fe43c31c717f748236f3ee33d6b1d/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-09T13:06:11+04:30",
+    "stars": 12,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2020-05-10T10:46:38+04:30",
+    "last_commit_date": "2026-09-24T12:51:24-04:00",
+    "last_commit_author": "omidhekayati",
+    "authors": 3,
+    "ai_commits": 4,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-05-10T10:46:38+04:30",
+    "last_committer_date": "2026-09-24T12:51:24-04:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b38513288971467fb6ff29d23963cc1a72354bdf",
+        "date": "2026-09-19T11:38:11-04:00",
+        "committed": "2026-09-19T11:38:11-04:00",
+        "old": "8326e670e8b8a48f68047dc4e1ce4a6beeae1fe3",
+        "new": "c5c5afd4dcfd55e116f7e387aa5cc0c8f38e1430",
+        "status": "agent"
+      },
+      {
+        "commit": "a18073d9232aaf8eec10c5768aa88656c9dd420f",
+        "date": "2026-09-18T10:38:00-04:00",
+        "committed": "2026-09-18T10:38:00-04:00",
+        "old": "fe3b2548c7b1806c98218686cf4494eeb991a2f3",
+        "new": "8326e670e8b8a48f68047dc4e1ce4a6beeae1fe3",
+        "status": "agent"
+      },
+      {
+        "commit": "54ee20bca8707843ebd44ee227d9c36399a0cdcb",
+        "date": "2026-09-17T07:52:21-04:00",
+        "committed": "2026-09-17T07:52:21-04:00",
+        "old": "680cf0b05f16c5661a5342fbf85edcbb2a35b2bf",
+        "new": "fe3b2548c7b1806c98218686cf4494eeb991a2f3",
+        "status": "agent"
+      },
+      {
+        "commit": "474984e6b00cbc93114b9103aea16c7441688f16",
+        "date": "2026-09-15T09:13:36-04:00",
+        "committed": "2026-09-15T09:13:36-04:00",
+        "old": "2f96e0ad08dda9a328f53a6b655719d55d01a2cd",
+        "new": "680cf0b05f16c5661a5342fbf85edcbb2a35b2bf",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 14 commits predates 2022-01-01 with no mark, and 4 are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 11773,
+    "sha256": "e39328920d5d4c4cc4682f383fd576f23caad1953823f8725c634f610913d9b5",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 101,
+    "words": 1603,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/GeniusesGroup--memar/README.md",
+  "before": {
+    "sha256": "74a5a54f4e8ee6ac50d034a86182a830d20a7c8c5e46d6bdf888f9b17fcc1230",
+    "commit": "02706678300e7fd3c5b87578cdc6f92199cb0092",
+    "date": "2021-12-23T09:40:07+03:30",
+    "between": [
+      {
+        "commit": "46e7027fe8b97e764aa7b2b05d43da86eb462f96",
+        "date": "2026-09-24T12:51:24-04:00",
+        "committed": "2026-09-24T12:51:24-04:00",
+        "old": "c5c5afd4dcfd55e116f7e387aa5cc0c8f38e1430",
+        "new": "6a533d6083fa48b24da59d61659892619433ce40",
+        "status": "late"
+      },
+      {
+        "commit": "f532e11a39301f43e58a0994fa5b27e7254f0aa6",
+        "date": "2026-09-05T08:31:48-04:00",
+        "committed": "2026-09-05T08:31:48-04:00",
+        "old": "c32124eae7cd4a0d41d4e9f7607e97b9aae6e98a",
+        "new": "2f96e0ad08dda9a328f53a6b655719d55d01a2cd",
+        "status": "late"
+      },
+      {
+        "commit": "ec6e37ce609ad2e4ded1f8bb0b8118465448cd54",
+        "date": "2026-08-26T12:30:58-07:00",
+        "committed": "2026-08-26T12:30:58-07:00",
+        "old": "38ad9deb0cd4cda82291c82e7093e27243d72920",
+        "new": "c32124eae7cd4a0d41d4e9f7607e97b9aae6e98a",
+        "status": "late"
+      },
+      {
+        "commit": "3f816ec2f2c2c36b1ce55451829f7eaa547ed251",
+        "date": "2026-08-12T17:01:00+03:30",
+        "committed": "2026-08-12T17:01:00+03:30",
+        "old": "d0c88f65c65afef5a5da2debcc8a8cf65f61e8b6",
+        "new": "38ad9deb0cd4cda82291c82e7093e27243d72920",
+        "status": "late"
+      },
+      {
+        "commit": "e19ffdeb4b00beeafdae0bfc358185cabb3edcd9",
+        "date": "2026-07-24T19:29:27+03:30",
+        "committed": "2026-07-24T19:29:27+03:30",
+        "old": "ea05b1532a4e03b85d68d8ae7235730a5c0c8440",
+        "new": "d0c88f65c65afef5a5da2debcc8a8cf65f61e8b6",
+        "status": "late"
+      },
+      {
+        "commit": "bf6131b9136280fcb89816c780e22af3c7312380",
+        "date": "2026-07-21T13:25:51+03:30",
+        "committed": "2026-07-21T13:25:51+03:30",
+        "old": "4e9f377064dd6bddf47efbf9b2aaf2ca19c979ef",
+        "new": "ea05b1532a4e03b85d68d8ae7235730a5c0c8440",
+        "status": "late"
+      },
+      {
+        "commit": "b4085775172be0b1ad79769c95c96c8cb3aa49c8",
+        "date": "2024-11-02T12:31:59+03:30",
+        "committed": "2024-11-02T12:31:59+03:30",
+        "old": "7d5baeeae86fe993222326feaf30ae9aafadc433",
+        "new": "4e9f377064dd6bddf47efbf9b2aaf2ca19c979ef",
+        "status": "late"
+      },
+      {
+        "commit": "72f4c8103baea500bbb4a982a6194157fe116976",
+        "date": "2024-10-12T19:02:47+03:30",
+        "committed": "2024-10-12T19:02:47+03:30",
+        "old": "1efe065412effccfcde96730487fb494643d0406",
+        "new": "7d5baeeae86fe993222326feaf30ae9aafadc433",
+        "status": "late"
+      },
+      {
+        "commit": "25f3627331e298bb49daa407d777dcb1d9fd76b9",
+        "date": "2023-07-29T10:06:24+03:30",
+        "committed": "2023-07-29T10:06:24+03:30",
+        "old": "e4c0ddfbc4b9c3d29a2e449d5ce6580463f95450",
+        "new": "1efe065412effccfcde96730487fb494643d0406",
+        "status": "late"
+      }
+    ]
+  }
+}

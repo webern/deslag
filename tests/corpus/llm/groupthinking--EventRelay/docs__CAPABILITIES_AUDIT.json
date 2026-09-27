@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__CAPABILITIES_AUDIT.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "groupthinking/EventRelay",
+    "path": "docs/CAPABILITIES_AUDIT.md",
+    "commit": "ea4efea5a91ebcf2b5c907fe5a72404526977500",
+    "commit_date": "2026-09-26T13:46:45-05:00",
+    "url": "https://github.com/groupthinking/EventRelay/blob/ea4efea5a91ebcf2b5c907fe5a72404526977500/docs/CAPABILITIES_AUDIT.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-10T14:59:46-06:00",
+    "stars": 0,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-06T20:43:50-05:00",
+    "last_commit_date": "2026-07-06T20:43:50-05:00",
+    "last_commit_author": "Hayden",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-06T20:43:50-05:00",
+    "last_committer_date": "2026-07-06T20:43:50-05:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_015AR6d4fECw3yHNM2xfcuzS",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6f080b2312b07f5b552490ad0884459de95a7597",
+        "date": "2026-07-06T20:43:50-05:00",
+        "committed": "2026-07-06T20:43:50-05:00",
+        "old": null,
+        "new": "e2ace620bb3db38fcb42048eb45b64184186e812",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7350,
+    "sha256": "b9e325056ac2150a01c05a4a65b74b97be0a4b9fd3bf584f4e729bc9db52ee40",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 957,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/groupthinking--EventRelay/docs/CAPABILITIES_AUDIT.md"
+}

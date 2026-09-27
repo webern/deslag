@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "copilot__commands__review.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "neko3cs/skills",
+    "path": "copilot/commands/review.md",
+    "commit": "5cbbcbb0e8d6adb797f051ea12258c994247cbc9",
+    "commit_date": "2026-09-23T03:35:31+09:00",
+    "url": "https://github.com/neko3cs/skills/blob/5cbbcbb0e8d6adb797f051ea12258c994247cbc9/copilot/commands/review.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-08T19:37:22+09:00",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-08T13:53:35+09:00",
+    "last_commit_date": "2026-07-08T13:53:35+09:00",
+    "last_commit_author": "neko3cs",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-08T13:53:35+09:00",
+    "last_committer_date": "2026-07-08T13:53:35+09:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2589265c249ba1220dfb4740bbc8cb2429dda1dc",
+        "date": "2026-07-08T13:53:35+09:00",
+        "committed": "2026-07-08T13:53:35+09:00",
+        "old": null,
+        "new": "8480329b99d8f44a794c28b212ed29e767814c9f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3071,
+    "sha256": "7d58a55285e5397621f2081af3f579b6e343a2973eab5aa49799d3144505fd25",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 60,
+    "words": 440,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/neko3cs--skills/copilot/commands/review.md"
+}

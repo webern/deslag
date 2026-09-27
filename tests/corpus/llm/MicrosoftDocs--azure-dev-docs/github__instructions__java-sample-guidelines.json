@@ -1,0 +1,83 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__instructions__java-sample-guidelines.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "MicrosoftDocs/azure-dev-docs",
+    "path": ".github/instructions/java-sample-guidelines.md",
+    "commit": "631613e0a4d2e1f84c3ef5c7e599aad19f6cd969",
+    "commit_date": "2026-09-25T23:04:14Z",
+    "url": "https://github.com/MicrosoftDocs/azure-dev-docs/blob/631613e0a4d2e1f84c3ef5c7e599aad19f6cd969/.github/instructions/java-sample-guidelines.md",
+    "license": "CC-BY-4.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-CODE"
+    ],
+    "repo_first_commit_date": "2019-06-06T17:12:08Z",
+    "stars": 186,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-31T20:48:11-07:00",
+    "last_commit_date": "2026-04-01T12:32:00-07:00",
+    "last_commit_author": "Karl Erickson",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-31T20:48:11-07:00",
+    "last_committer_date": "2026-04-01T12:32:00-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c354ee367c36f638730182c83ef244f5578a90b1",
+        "date": "2026-04-01T12:32:00-07:00",
+        "committed": "2026-04-01T12:32:00-07:00",
+        "old": "eea583a9680c6515a8a4ea9ede51316429276243",
+        "new": "89316c95c3ac0e8a614918ae69ce0a2457ee4987",
+        "status": "agent"
+      },
+      {
+        "commit": "0ce127362039ac9dc70fd91bee8234fbb96ee014",
+        "date": "2026-03-31T20:48:11-07:00",
+        "committed": "2026-03-31T20:48:11-07:00",
+        "old": null,
+        "new": "eea583a9680c6515a8a4ea9ede51316429276243",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 20448,
+    "sha256": "249142b0c2ad382beb27622987086a89c3cfcb43d20de7de35298c2e324d0373",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 174,
+    "words": 2920,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/MicrosoftDocs--azure-dev-docs/.github/instructions/java-sample-guidelines.md"
+}

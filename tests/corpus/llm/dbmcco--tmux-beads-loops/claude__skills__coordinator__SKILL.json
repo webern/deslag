@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__skills__coordinator__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dbmcco/tmux-beads-loops",
+    "path": ".claude/skills/coordinator/SKILL.md",
+    "commit": "10aefbc5447c967bff4df1922545aec51c221087",
+    "commit_date": "2026-03-06T08:49:07-05:00",
+    "url": "https://github.com/dbmcco/tmux-beads-loops/blob/10aefbc5447c967bff4df1922545aec51c221087/.claude/skills/coordinator/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-11T20:07:36-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-17T17:23:31-05:00",
+    "last_commit_date": "2026-01-17T17:23:31-05:00",
+    "last_commit_author": "Braydon McCormick",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-17T17:23:31-05:00",
+    "last_committer_date": "2026-01-17T17:23:31-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0a777dbc5645a37b84bcb8fa4d7ef23286e74b65",
+        "date": "2026-01-17T17:23:31-05:00",
+        "committed": "2026-01-17T17:23:31-05:00",
+        "old": null,
+        "new": "0413f5209f4f76079254bc6d1aaa41e43f90c175",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1043,
+    "sha256": "e08b9b9fb5a73a79eef86b0728f019cec2986e414c6839d481e94d5f65e2c02f",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 176,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dbmcco--tmux-beads-loops/.claude/skills/coordinator/SKILL.md"
+}

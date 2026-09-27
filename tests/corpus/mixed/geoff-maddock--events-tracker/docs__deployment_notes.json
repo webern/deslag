@@ -1,0 +1,190 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__deployment_notes.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "geoff-maddock/events-tracker",
+    "path": "docs/deployment_notes.md",
+    "commit": "0520730f4323d054147d5499969c7d5ab456c8d4",
+    "commit_date": "2026-09-27T00:40:18-04:00",
+    "url": "https://github.com/geoff-maddock/events-tracker/blob/0520730f4323d054147d5499969c7d5ab456c8d4/docs/deployment_notes.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-11-29T21:44:15-08:00",
+    "stars": 25,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2021-02-13T21:29:14Z",
+    "last_commit_date": "2026-09-26T18:49:18-04:00",
+    "last_commit_author": "Geoff Maddock",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-02-13T16:34:01-05:00",
+    "last_committer_date": "2026-09-26T18:49:18-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "45171d577fba88d19c6ac42a74e2e98a07355d55",
+        "date": "2026-09-26T18:49:18-04:00",
+        "committed": "2026-09-26T18:49:18-04:00",
+        "old": "92650e0f3aafa71c578a7dab4017336ff21ed9ab",
+        "new": "90ab10bfa7bcdadddd6c7e270b5bf32e2fa1743e",
+        "status": "agent"
+      },
+      {
+        "commit": "77e13f1d4452a2b771d37302ffa6c604a1a45c7a",
+        "date": "2026-08-10T14:32:10-04:00",
+        "committed": "2026-08-10T14:32:10-04:00",
+        "old": "2ae573ed3ab4cb2c1d47b059d782ad532c028bc2",
+        "new": "92650e0f3aafa71c578a7dab4017336ff21ed9ab",
+        "status": "agent"
+      },
+      {
+        "commit": "189de2e4d11171b6dba8bc32d1bc9d26df94bd7a",
+        "date": "2026-08-08T18:13:42-04:00",
+        "committed": "2026-08-08T18:13:42-04:00",
+        "old": "77afebd851cce4c9d27ff5b2d4c2fcc3d7026f75",
+        "new": "2ae573ed3ab4cb2c1d47b059d782ad532c028bc2",
+        "status": "squash"
+      },
+      {
+        "commit": "ad90836ac19bc6ebbd25a5a8bcb04b5562787431",
+        "date": "2026-07-29T01:47:46-04:00",
+        "committed": "2026-07-29T01:47:46-04:00",
+        "old": "219e401281b620dbd7565eb66178843b6d7d21bc",
+        "new": "77afebd851cce4c9d27ff5b2d4c2fcc3d7026f75",
+        "status": "squash"
+      },
+      {
+        "commit": "49dc02adbcac6e14a39d7edbd87ad81cfb5e7e06",
+        "date": "2026-04-23T20:02:56-04:00",
+        "committed": "2026-04-23T20:02:56-04:00",
+        "old": "a8bdb2c146c2bfa4d124ebd2e08205f8e1c65fad",
+        "new": "5f578642c059cca356e4cad3c512a6ad6cd6eb6f",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 12 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 12834,
+    "sha256": "fd56ccb46ed8dc7250aa2d599bd6a6469597000f6017b3e452b26a8680c6d10a",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 379,
+    "words": 1712,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/geoff-maddock--events-tracker/docs/deployment_notes.md",
+  "before": {
+    "sha256": "adf48f21ad2beaccd28699a1f80b6c35f6eaf7d126ae627b3e637bb558dc5f40",
+    "commit": "74b2518e6a172f319531adb05db3a3ae1616a602",
+    "date": "2021-12-31T03:00:22Z",
+    "between": [
+      {
+        "commit": "189de2e4d11171b6dba8bc32d1bc9d26df94bd7a",
+        "date": "2026-08-08T18:13:42-04:00",
+        "committed": "2026-08-08T18:13:42-04:00",
+        "old": "77afebd851cce4c9d27ff5b2d4c2fcc3d7026f75",
+        "new": "2ae573ed3ab4cb2c1d47b059d782ad532c028bc2",
+        "status": "squash"
+      },
+      {
+        "commit": "ad90836ac19bc6ebbd25a5a8bcb04b5562787431",
+        "date": "2026-07-29T01:47:46-04:00",
+        "committed": "2026-07-29T01:47:46-04:00",
+        "old": "219e401281b620dbd7565eb66178843b6d7d21bc",
+        "new": "77afebd851cce4c9d27ff5b2d4c2fcc3d7026f75",
+        "status": "squash"
+      },
+      {
+        "commit": "ee3aba89912a9097032d5fc054b62a3dfb896a1b",
+        "date": "2026-05-21T16:50:03-04:00",
+        "committed": "2026-05-21T16:50:03-04:00",
+        "old": "5f578642c059cca356e4cad3c512a6ad6cd6eb6f",
+        "new": "219e401281b620dbd7565eb66178843b6d7d21bc",
+        "status": "late"
+      },
+      {
+        "commit": "49dc02adbcac6e14a39d7edbd87ad81cfb5e7e06",
+        "date": "2026-04-23T20:02:56-04:00",
+        "committed": "2026-04-23T20:02:56-04:00",
+        "old": "a8bdb2c146c2bfa4d124ebd2e08205f8e1c65fad",
+        "new": "5f578642c059cca356e4cad3c512a6ad6cd6eb6f",
+        "status": "squash"
+      },
+      {
+        "commit": "1f6dcf030ad5c1bb45f56cd23a1964c2a7d2637a",
+        "date": "2026-04-09T19:12:16-04:00",
+        "committed": "2026-04-09T19:12:16-04:00",
+        "old": "450d48d1a723a934553dc2b153b802a60c372317",
+        "new": "a8bdb2c146c2bfa4d124ebd2e08205f8e1c65fad",
+        "status": "late"
+      },
+      {
+        "commit": "1fe52935f54ec7ba79f22c7814cab8b576154c12",
+        "date": "2025-06-10T21:23:33Z",
+        "committed": "2025-06-10T17:38:54-04:00",
+        "old": "99f12f1568c9a713200de3e73fbe5eb8fb97e4cc",
+        "new": "450d48d1a723a934553dc2b153b802a60c372317",
+        "status": "late"
+      },
+      {
+        "commit": "21fa55679592d269fdb1e53aaf84725da6df8449",
+        "date": "2023-04-27T06:27:52Z",
+        "committed": "2023-04-27T02:32:18-04:00",
+        "old": "b7b969dc7949532466f83ad5ffc026e2ed9db8a5",
+        "new": "99f12f1568c9a713200de3e73fbe5eb8fb97e4cc",
+        "status": "late"
+      }
+    ]
+  }
+}

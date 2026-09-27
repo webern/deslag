@@ -1,0 +1,137 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__ANONYMITY_NETWORKS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Shekyl-Foundation/shekyl-core",
+    "path": "docs/ANONYMITY_NETWORKS.md",
+    "commit": "d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480",
+    "commit_date": "2026-09-10T20:35:49-04:00",
+    "url": "https://github.com/Shekyl-Foundation/shekyl-core/blob/d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480/docs/ANONYMITY_NETWORKS.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-10-03T08:59:54+02:00",
+    "last_commit_date": "2026-07-30T18:00:36-04:00",
+    "last_commit_author": "Rick Dawson",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-03T09:18:59+02:00",
+    "last_committer_date": "2026-07-30T18:00:36-04:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "36983453fc10a366ec9c945eaa0ff55d9ab6466d",
+        "date": "2026-04-04T10:10:28-04:00",
+        "committed": "2026-04-04T10:10:28-04:00",
+        "old": "a72f6bf78055baf059be2f265dd7a6153cb5af2b",
+        "new": "05e7045cea4684670663a55e464395efba97872e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 10 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 20113,
+    "sha256": "6e51e30f03c02a63f8dfbfd600b6ca0fdc72bd4774e931aa9a2cfe1e4304feaa",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 402,
+    "words": 2887,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Shekyl-Foundation--shekyl-core/docs/ANONYMITY_NETWORKS.md",
+  "before": {
+    "sha256": "69444f2034f30523759e413871f4904a5da5a7b4b548f0608ea384da2a118a97",
+    "commit": "7dc34fe2ecd1e4ee8c2c0c27ea8dad09fa2ad520",
+    "date": "2021-12-31T01:05:22-08:00",
+    "between": [
+      {
+        "commit": "7dc894ca13e24f6ccbbc2f97a040250b105f9714",
+        "date": "2026-07-30T18:00:36-04:00",
+        "committed": "2026-07-30T18:00:36-04:00",
+        "old": "0f80f61b4a75d7abe4d06f6951b5249974d2b171",
+        "new": "9d96f5b51732965966bb37fe2e4577613ae394e6",
+        "status": "late"
+      },
+      {
+        "commit": "34669570227a022a880e7fe4b2f4176a38019055",
+        "date": "2026-07-15T02:54:00-04:00",
+        "committed": "2026-07-15T02:54:00-04:00",
+        "old": "33965b08749c5bb4e42a9bd8daa3c2f339a905ba",
+        "new": "0f80f61b4a75d7abe4d06f6951b5249974d2b171",
+        "status": "late"
+      },
+      {
+        "commit": "3b9b09ad5df5340de84c5856956acdf4b999b6cb",
+        "date": "2026-06-06T13:31:20-04:00",
+        "committed": "2026-06-06T13:31:20-04:00",
+        "old": "3235444ba829192f292f8f104a859855630d804a",
+        "new": "33965b08749c5bb4e42a9bd8daa3c2f339a905ba",
+        "status": "late"
+      },
+      {
+        "commit": "8f95b2b343452313dd65982dfba0a98675a704f4",
+        "date": "2026-04-13T06:52:04-04:00",
+        "committed": "2026-04-13T06:52:04-04:00",
+        "old": "05e7045cea4684670663a55e464395efba97872e",
+        "new": "3235444ba829192f292f8f104a859855630d804a",
+        "status": "late"
+      },
+      {
+        "commit": "55c114132161d5c78d8d830a2b3a9670c2394b94",
+        "date": "2026-03-27T22:55:00-04:00",
+        "committed": "2026-03-27T22:55:00-04:00",
+        "old": "19ef563b6bcd1c26e8d0f5e0e6566848aa5393ac",
+        "new": "a72f6bf78055baf059be2f265dd7a6153cb5af2b",
+        "status": "late"
+      },
+      {
+        "commit": "4c093d8c776a7deb9dfa5f053c57f05b990a0a51",
+        "date": "2026-03-09T11:06:36-04:00",
+        "committed": "2026-03-09T11:06:36-04:00",
+        "old": "16099aea87fa32f61e77b57f202508e9ca987d97",
+        "new": "19ef563b6bcd1c26e8d0f5e0e6566848aa5393ac",
+        "status": "late"
+      },
+      {
+        "commit": "4ad126449b1435485eb52eb13a237a6b1d70ab78",
+        "date": "2024-02-21T01:03:11+01:00",
+        "committed": "2024-02-21T01:03:11+01:00",
+        "old": "f8d08b05ffd23c1866ecfdf2372783c5d9bc831e",
+        "new": "16099aea87fa32f61e77b57f202508e9ca987d97",
+        "status": "late"
+      }
+    ]
+  }
+}

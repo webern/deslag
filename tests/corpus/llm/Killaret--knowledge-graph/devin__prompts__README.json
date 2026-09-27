@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "devin__prompts__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Killaret/knowledge-graph",
+    "path": ".devin/prompts/README.md",
+    "commit": "c43311f2b14d46cd49c5b9c5f5c715ab15f39a6a",
+    "commit_date": "2026-09-24T17:54:59+03:00",
+    "url": "https://github.com/Killaret/knowledge-graph/blob/c43311f2b14d46cd49c5b9c5f5c715ab15f39a6a/.devin/prompts/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-29T14:49:56+03:00",
+    "stars": 0,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-05T13:02:33+03:00",
+    "last_commit_date": "2026-09-22T15:05:18+03:00",
+    "last_commit_author": "Devin",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-05T13:02:33+03:00",
+    "last_committer_date": "2026-09-22T15:08:07+03:00",
+    "marks": [
+      {
+        "text": "Devin <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "15809ecd26c248ab0173645ed1b704e75d23ff22",
+        "date": "2026-09-22T15:05:18+03:00",
+        "committed": "2026-09-22T15:08:07+03:00",
+        "old": "03cdddb044140bcdde6e3ba201a249220cad169b",
+        "new": "05eea2a0e59ddd6b8758b6ca5e1ca8ebb468f029",
+        "status": "agent"
+      },
+      {
+        "commit": "c6399a5d03d410e2ffbd5715b0258484acdcec21",
+        "date": "2026-09-05T19:07:14+03:00",
+        "committed": "2026-09-05T19:07:14+03:00",
+        "old": "d584fb8515776ff65b9de7c91f823edc6ab3d89a",
+        "new": "03cdddb044140bcdde6e3ba201a249220cad169b",
+        "status": "agent"
+      },
+      {
+        "commit": "eee478d4ff1c2cc4d1a91ed70c4944b58e8f3302",
+        "date": "2026-09-05T13:02:33+03:00",
+        "committed": "2026-09-05T13:02:33+03:00",
+        "old": null,
+        "new": "d584fb8515776ff65b9de7c91f823edc6ab3d89a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code, devin)"
+  },
+  "content": {
+    "size_bytes": 2547,
+    "sha256": "7e5e94e7263e3f036d17420efeafffcbcb27395dc40bea6495b23165fa02b5c2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 45,
+    "words": 315,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Killaret--knowledge-graph/.devin/prompts/README.md"
+}

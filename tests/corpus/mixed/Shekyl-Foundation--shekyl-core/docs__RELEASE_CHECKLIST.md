@@ -1,0 +1,130 @@
+- [ ] **Stressnet stable for 4 consecutive weeks** (Phase 7.7)
+  - [x] ~~Prerequisite of stressnet ENTRY: `K_COVER` sealed~~ **RETIRED 2026-07-19** (`docs/completed/ARCHIVAL_REWARD_GATE_M1.md` §13): the gate and the collective reward-withholding concept are retired by ruling — reward withholding is individually-caused only (slash, onset, holdings shape, claim expiry). No seal act remains; the machinery-removal implementation PR is tracked in `docs/FOLLOWUPS.md`. The stressnet-entry prerequisite this row guarded is dissolved (the gate has only ever run as the `k_cover = 0` identity, so no activation boundary exists to exercise).
+  - [ ] All stressnet acceptance criteria met (see `tests/stressnet/README.md`)
+  - [ ] Zero tree root divergences for full 4-week run
+  - [ ] Block validation p95 < 500ms sustained
+  - [ ] Verification cache hit rate > 95% sustained
+  - [ ] Stressnet summary report archived
+  - [ ] Stressnet artifact links recorded in release notes (metrics dashboards, logs, and report commit hash)
+- [ ] **4-scalar leaf circuit audit completed** (Phase 9)
+  - [ ] Audit engagement initiated after stressnet gate
+  - [ ] No critical or high findings in final report
+  - [ ] All findings remediated and re-verified
+  - [ ] Written security assessment report archived (see `docs/AUDIT_SCOPE.md`)
+  - [ ] Audit artifact links recorded in release notes (report URL or digest, remediation PRs)
+- [ ] Security audit
+- [ ] Code audit
+- [x] Genesis address format: PQ signing anchor (address v2) — **CLOSED 2026-08-16.** Fork (ii) SELECTED by SM-R-8 (2026-08-08); freeze-window signed 2026-08-13; layout + vectors landed 2026-08-15 (in-place `0x01`, `ADDRESS_DERIVATION_V2`); R6-a verify gate lifted. See child rows.
+  - [x] **192f UX gate (owner: R. Dawson, release owner) — CLOSED 2026-08-13 by release-owner ruling: 192s stands.** Closed by decision, not by test: no floor-hardware UX test was run and none is planned. The ~4.3 s session figure was accepted deliberately at SM-R-8 ratification for a rare, deliberate operation ("4 seconds feels like something important is being done"); 192f was only ever pre-priced as a fallback **if** pre-freeze UX testing found 4 s intolerable, and no such testing exists. Reopen: only if pre-freeze UX testing is actually run and comes back bad. After the freeze the s→f swap stays foreclosed as stated (same length, different scheme — a format change no later round can make). Fallback record retained: 192f = 171 ms floor signing at ~47.7 KB armored.
+  - [x] Genesis-lane freeze-window sign-off on the v2 layout — **SIGNED 2026-08-13 (R. Dawson, release owner).** The 48-byte SLH-DSA-192s public-key fourth field in the classical segment is the committed frozen wire field, exactly as SM-R-8 ratified it. This row records the ratified position; it decided nothing new.
+  - [x] Address v2 layout + test vectors landed (`ADDRESS_DERIVATION_V1` successor) — **2026-08-15.** Applied as an IN-PLACE correction by ruling: version byte stays `0x01`, the classical segment is `version ‖ spend ‖ view ‖ msg_sign_pk(48)` (113 B; bound form 129 B), and the 65-byte draft layout is deleted everywhere (multisig `MULTISIG_ADDRESS_VERSION` precedent — never deployed beyond the pre-genesis test estate). Successor corpus `ADDRESS_DERIVATION_V2` regenerated + freeze-hash re-pinned; the persisted wallet-envelope field keeps the 65-byte `version‖spend‖view` PREFIX so every existing wallet file stays openable. Persona receive addresses carry a per-slot key under the new seventh archival-P label (`shekyl-archival-p-msg-sign-slh-dsa-192s-v1`, registry row + census bump) — uniformity, not a new capability. The SM-R-6 R6-a verify gate is LIFTED: `verify_message` is live end to end and the interim `-29803` code was retired unused
+  - [x] Message-signing round unblocked — **2026-08-13, by the sign-off above.** PR-SM-2's address-integrated verify freezes against the signed-off layout; the SM-R-6 R6-a type-gate lifts in code once the v2 layout row above lands.
+- [ ] **Release-asset manifest signing wired into the gitian job** (CBOM §6, SA-6; owner: R. Dawson, release owner) — **the policy is NOT open: `docs/SIGNING.md` rules it** (GPG; the Shekyl Foundation institutional key — certification-only primary stored offline with the `sec#` stub check as a verifiable invariant, hardware-token-held signing subkey requiring physical possession + PIN, personal-key fallback documented; the primary/subkey split means a lost token never compromises the identity). The earlier three-way scheme framing (2026-08-14) overstated the gap. What remains is the **wiring half, which tag-signing does not close**: `SIGNING.md` governs the release *tag* (authenticating the commit the release was cut from), while the gitian job publishes *assets* that carry no signature — a user who downloads `shekyld` and runs it has verified nothing. Owed before the first non-RC release tag: the **signed `SHA256SUMS` manifest ceremony** — the Foundation signing subkey signs one manifest of asset hashes (same key, same hardware-token ceremony as tags; composes with reproducible builds). **The ceremony is scripted: `scripts/release/sign_release_assets.py` (see `docs/SIGNING.md` §Release assets)** — it enforces the key-hygiene invariants before signing, round-trip-verifies before upload, and doubles as the downstream verifier (`--verify-only`). Because the subkey is token-held the ceremony is the release owner's local act, not a CI step; this row checks when it has been exercised on a real release. Cutting a release with this row unchecked is the failure the row exists to prevent (`docs/CRYPTOGRAPHIC_INVENTORY.md` §6).
+- [ ] PQC specification frozen
+  - [x] `docs/POST_QUANTUM_CRYPTOGRAPHY.md` matches implementation — updated in PR-SA-2 to the nested combiner (v2, 64-byte domain-separated preimage), `Result<()>` verify, and the v2/frozen-v1 test-vector split
+  - [x] canonical transaction/signature serialization documented
+  - [x] signed payload definition documented
+  - [x] V4 PQC Privacy Roadmap published
+  - [ ] **Hybrid signature construction frozen (SA-2, `SIGNATURE_ALIGNMENT.md`):** the nested combiner (`HYBRID_SIG_VERSION = 2`, PQ-inner / Ed25519-outer over a domain-separated preimage) and the per-surface `SCHEME_DOMAIN_*` strings are consensus-visible on bonded/settlement surfaces (bond-post auth, attestation witness, emission auth). After genesis a change here is a hard fork; the version byte is the security boundary. Landed pre-genesis in PR-SA-2.
+  - [x] **Bond-preimage reconciliation closed (SA-2b, `SIGNATURE_ALIGNMENT.md` §2.2):** the P-role replay analysis found the surface-A whole-tx hash (which binds the vin type tag) forecloses cross-role replay, so **generic won**. The bond vin's `pqc_auths` slot signs the generic surface-A payload hash; S1 + `signature_preimage` + `SCHEME_DOMAIN_BOND_POST` deleted. No wire change. Landed pre-genesis in PR-SA-2b.
+- [ ] PQC crypto review
+  - [ ] hybrid sign/verify implementation reviewed (external audit pending)
+  - [ ] FFI ownership / zeroization reviewed (external audit pending)
+  - [x] test vectors generated and archived (`PQC_HYBRID_V2_KAT.json`: 6 pinned positives, one per signing surface — bond-post's dropped in SA-2b, §2.2 — with cross-surface rejection; frozen v1 parse-rejection fixture; 3 negative vector integration tests)
+- [ ] PQC interoperability verification
+  - [ ] wallet sign/daemon verify path tested
+  - [x] malformed hybrid signature rejection tested (3 negative vector integration tests)
+  - [x] encoded transaction size impact measured (5389 bytes `pqc_auth` per input via `pqc_auth_weight()`)
+  - [x] payload limit guidance documented in V3_ROLLOUT.md
+- [ ] Ledger integration (deferred to v1.1)
+  - [x] FCMP++ device abstraction stubs in place (`device_ledger.cpp`)
+  - [ ] Ledger app updated with FCMP++ proof generation support
+  - [ ] Ledger Shekyl app (or Monero-compatible app) update available
+- [ ] Trezor integration (deferred to v1.1)
+  - [x] FCMP++ device abstraction defaults inherited (unsupported, returns false)
+  - [ ] Trezor cold-signing protocol updated for FCMP++ transactions
+  - [ ] Trezor firmware update available (if needed)
+
+**Software wallets only for v1.0 launch. Hardware support (Ledger/Trezor) targeted for v1.1.**
+The device abstraction layer (`device.hpp`) exposes `fcmp_prepare`, `fcmp_proof_start`,
+and `fcmp_proof_add_input` so that hardware wallet implementations can be added without
+further changes to the interface.
+
+- [x] Fork height set (rebooted chain: all features at HF 1 from genesis)
+  - [ ] Shekyl announcement mailer / notice
+  - [ ] Twitter announcement
+  - [ ] Reddit announcement
+  - [ ] Project website announcement
+- [ ] Notify wallets *(placeholder -- replace with actual Shekyl-compatible wallets pre-launch)*
+  - [ ] Shekyl GUI Wallet (first-party)
+  - [ ] Shekyl CLI (first-party)
+  - [ ] *(third-party wallet integrations TBD)*
+- [ ] Notify exchanges *(placeholder -- replace with actual exchange partners pre-launch)*
+  - [ ] *(exchange integrations TBD)*
+- [ ] Notify 3rd party payment processors *(placeholder)*
+  - [ ] *(payment gateway integrations TBD)*
+- [ ] Notify mining pools *(placeholder)*
+  - [ ] *(mining pool partnerships TBD)*
+- [ ] Release tagged
+  - [ ] Update src/version.cpp.in with new version AND new name (if necessary)
+  - [ ] Update Gitian YML files in contrib/gitian/ to the new version number
+  - [ ] Update README.md with new fork table entry (or recommended Shekyl version)
+  - [ ] Update contrib/gitian/README.md so that the instructions reflect the current version
+  - [ ] Update src/checkpoints/checkpoints.cpp with a recent hardcoded checkpoint
+- [ ] Testnet forked
+- [ ] Testnet testing/verification
+  - [ ] Run deterministic tuple check across seed nodes:
+    - `python3 scripts/check_testnet_genesis_consensus.py --rpc http://SEED_EAST:12029 --rpc http://SEED_WEST:12029 --rpc http://SEED_EU:12029 --check-economy`
+  - [ ] Follow rehearsal runbook: `shekyl-dev/docs/TESTNET_MINER.md`
+  - [ ] Follow rehearsal gates: `shekyl-dev/docs/TESTNET_REHEARSAL_CHECKLIST.md`
+  - [ ] Ledger
+  - [ ] Trezor
+  - [ ] Release-specific testing
+  - [ ] RPC testing/update RPC documentation
+  - [ ] PQC transaction validation testing
+  - [ ] PQC wallet send/receive testing
+  - [ ] PQC multisig group creation (2-of-3, 3-of-5)
+  - [ ] PQC multisig signing flow (export request, partial sign, import, broadcast)
+  - [ ] PQC multisig scheme downgrade rejection verified
+  - [ ] PQC multisig fuzz targets run (5 harnesses, 10M iterations each)
+  - [ ] PQC multisig test vectors validated against docs/PQC_TEST_VECTOR_002_MULTISIG.json
+  - [ ] FCMP++ proof verification tested (prove/verify round-trip)
+  - [ ] Curve tree operations tested (grow/trim/root/path)
+  - [ ] FCMP++/staking/PQC fuzz targets run (11 harnesses total, 10M iterations each)
+  - [ ] CI fuzz smoke gate passed (required harness inventory check in `.github/workflows/build.yml`)
+  - [ ] Per-output PQC key derivation tested
+  - [ ] Bech32m address encoding/decoding tested
+  - [ ] Transaction pruning mode tested (`--prune-blockchain`)
+  - [ ] Block header `curve_tree_root` commitment validated
+  - [ ] RPC consumer regression testing for larger transactions
+- [ ] CLI reproducible builds validated
+- [ ] Rust/PQC reproducible build inputs documented
+- [ ] **Bundled Tor pin current** (2d-2 archival firewall, SP-T0c — `rust/shekyl-tor-control-client/src/binary.rs`)
+  - The wallet's *managed* tor launch is hash-pin gated (`binary.rs` mints the `VerifiedTorBinary` witness a launch requires); a stale or unverified pin is a mission-#1 (security-precondition) gap, so this is a **recurring** duty, not a one-time step.
+  - [ ] Watch <https://www.torproject.org/download/tor/> for a new **stable Tor Expert Bundle** or a security advisory since the recorded pin.
+  - [ ] Ensure the signing key is in your keyring (fresh machine): `gpg --auto-key-locate nodefault,wkd --locate-keys torbrowser@torproject.org`, then confirm the primary fingerprint is `EF6E286DDA85EA2A4BA7DE684E2C6E8793298290` (`TOR_SIGNING_KEY_FPR` in `binary.rs`).
+  - [ ] On a new stable / advisory, per supported target: download the Expert Bundle tarball **and** its `.asc`, then `gpg --verify <file>.asc <file>` — require a **Good signature** whose primary key is that fingerprint (the durable pin is *this key*, not any single hash).
+  - [ ] Extract and record `sha256sum` of the **extracted `tor` binary** (not the tarball) into `CURRENT_PIN` for each target `cfg` arm (`hex!("…")` — paste the digest verbatim).
+  - [ ] Update the other two pin records so no copy drifts: the "Current pin" paragraph in `docs/design/ARCHIVAL_BOND_2D2_SP_T0_TOR.md` (move the old pin to its "Superseded pin" note **with** its tarball hash) and the "Current pin" line below.
+  - [ ] Re-verify: run `SHEKYL_TEST_PINNED_TOR_BINARY=<new extracted tor> cargo test -p shekyl-tor-control-client --lib binary -- --ignored` — `bundled_tor_matches_recorded_pin` must pass against the new binary. (The test is not `cfg`-gated: on a target missing its pin arm it fails loudly instead of reporting a vacuous 0-test green.) The `tor-pin-verify` workflow (`.github/workflows/tor-pin-verify.yml`, manual dispatch) runs the same download → GPG-verify → re-verify chain in CI, and against that one verified binary also runs the SP-T0 `--lib` live lifecycle tests (actor + supervisor) — dispatch it after a bump.
+  - Current pin: **Expert Bundle 15.0.19 (tor 0.4.9.11)**, recorded 2026-08-06 (see `CURRENT_PIN` for the gate value — code is canonical; this line is a pointer, not a second source of truth). The extracted-binary digest is **unchanged from the 15.0.17 pin** — same tor version, byte-identical binary — so this bump moved the label and not the gate.
+  - **No `linux-aarch64` pin, and the reason is upstream:** the stable line publishes only `linux-i686` and `linux-x86_64` (the aarch64 builds are `android-` and `macos-`). `linux-aarch64` first appears in the **16.0a1 alpha**. So the rule-76 floor device cannot obtain a `VerifiedTorBinary` today; `discover_and_verify` fails closed with `Unpinned`, which is correct. Revisit when 16.0 goes stable — see `docs/design/ARCHIVAL_BOND_2D2_SP_T0_TOR.md`.
+- [ ] CLI released
+  - [ ] Project downloads page updated
+  - [ ] Update hashes.txt on website
+  - [ ] Update downloads.yml on website
+  - [ ] Update auto-update DNS records on all 5 TLDs (see `shekyl-dev/docs/DNS_CONFIG.md`)
+  - [ ] Update redirects on downloads box
+  - [ ] Update seed nodes
+- [ ] GUI released (if applicable)
+  - [ ] Project downloads page updated
+  - [ ] Update hashes.txt on website
+  - [ ] Update hashes.txt.sig on website
+  - [ ] Update downloads.yml on website
+  - [ ] Update auto-update DNS records on all 5 TLDs (see `shekyl-dev/docs/DNS_CONFIG.md`)
+  - [ ] Update redirects on downloads box
+- [ ] Release Announcements
+  - [ ] Shekyl announcement mailer notice
+  - [ ] Twitter announcement
+  - [ ] Reddit announcement
+  - [ ] Project website announcement

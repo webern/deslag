@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "platforms__android__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "learningequality/kolibri",
+    "path": "platforms/android/README.md",
+    "commit": "2759d4e5ddb1e2d5ed3c144a85fb746fb1c5644d",
+    "commit_date": "2026-09-27T02:20:51+05:30",
+    "url": "https://github.com/learningequality/kolibri/blob/2759d4e5ddb1e2d5ed3c144a85fb746fb1c5644d/platforms/android/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE",
+      "platforms/android/LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1123,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2018-06-14T13:09:23-07:00",
+    "last_commit_date": "2026-07-29T22:07:56-07:00",
+    "last_commit_author": "rtibblesbot",
+    "authors": 6,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-06-14T13:09:23-07:00",
+    "last_committer_date": "2026-08-04T00:37:24-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e80c9c567a7b99e5a52b274a47c57f030bfd90c3",
+        "date": "2026-07-29T22:07:56-07:00",
+        "committed": "2026-08-04T00:37:24-07:00",
+        "old": "6f9ebd3187a1350799d7434ef77a86c4889c4447",
+        "new": "c7c4cfdb34fff8c874f63e9b9fa85951c2e40682",
+        "status": "agent"
+      },
+      {
+        "commit": "b5a0f9e8eee92e7fd442487205e7632ba1718e8c",
+        "date": "2026-02-20T18:30:29-08:00",
+        "committed": "2026-06-10T09:59:39-07:00",
+        "old": "422ad770a3c9bdf14b6464a3004443b87d33b3ac",
+        "new": "514e0b559a624618b51229b549b5dead75207383",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 19 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code); the clone's history ends at e854dfd7f7, of 2018-06-14, so it may be older"
+  },
+  "content": {
+    "size_bytes": 8901,
+    "sha256": "afa34e92d2671bd388489dfefe1cba11d707f7889ba9d477c0985ebe2f747a5f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 220,
+    "words": 930,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/learningequality--kolibri/platforms/android/README.md"
+}

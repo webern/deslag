@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "doc__source__muellmax_de.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mampfes/hacs_waste_collection_schedule",
+    "path": "doc/source/muellmax_de.md",
+    "commit": "3131c9f57ed562952473f90da9ecdc8dfd751bbe",
+    "commit_date": "2026-09-26T10:08:28+02:00",
+    "url": "https://github.com/mampfes/hacs_waste_collection_schedule/blob/3131c9f57ed562952473f90da9ecdc8dfd751bbe/doc/source/muellmax_de.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-09T13:04:43+02:00",
+    "stars": 2245,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-05-09T08:37:21+02:00",
+    "last_commit_date": "2026-04-05T18:51:46+10:00",
+    "last_commit_author": "markvp",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-05-09T17:51:51+02:00",
+    "last_committer_date": "2026-04-05T16:51:46+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d16f7b051c54314c65d304e9ddcb45702fb9c50a",
+        "date": "2026-04-05T18:51:46+10:00",
+        "committed": "2026-04-05T16:51:46+08:00",
+        "old": "9622250ec5d96abe9659743f155ef24586c087fd",
+        "new": "d51ea5c8a81b9cdae823cae4211053f46e315953",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 5 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1661,
+    "sha256": "a628bc3c78fc0d5e71b673796f39a122622f08b4b75874befd799eed059e2fb5",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 50,
+    "words": 147,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mampfes--hacs_waste_collection_schedule/doc/source/muellmax_de.md",
+  "before": {
+    "sha256": "a13deb8d707fffa454b74aef8682b9d328cc8feaacd6adc5261fec3821f7fa7a",
+    "commit": "dbd0696160cbbe4ffe467474ffecfe3081dbf8e3",
+    "date": "2021-12-30T16:11:32+01:00",
+    "between": [
+      {
+        "commit": "293f2a1187094712fe63bb0e21f3c1edbdbe9224",
+        "date": "2022-12-24T11:01:36+01:00",
+        "committed": "2022-12-24T11:01:36+01:00",
+        "old": "5cfb9b8d49c3925b95583038b2b6f658dc0c6a66",
+        "new": "9622250ec5d96abe9659743f155ef24586c087fd",
+        "status": "late"
+      }
+    ]
+  }
+}

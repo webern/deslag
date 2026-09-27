@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "resources__fabricator-templates__fabricator-universal__agents__skills__app-design__references__ui-style-recipes.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "spatney/rayfin-fabricator",
+    "path": "resources/fabricator-templates/fabricator-universal/.agents/skills/app-design/references/ui-style-recipes.md",
+    "commit": "0d3a79e169fc1f25f8aad1d303769238b36d49fa",
+    "commit_date": "2026-09-26T21:59:39-07:00",
+    "url": "https://github.com/spatney/rayfin-fabricator/blob/0d3a79e169fc1f25f8aad1d303769238b36d49fa/resources/fabricator-templates/fabricator-universal/.agents/skills/app-design/references/ui-style-recipes.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-20T22:27:32-07:00",
+    "stars": 130,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-24T12:47:51-07:00",
+    "last_commit_date": "2026-07-24T12:47:51-07:00",
+    "last_commit_author": "Sachin Patney",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-24T12:47:51-07:00",
+    "last_committer_date": "2026-07-24T12:47:51-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Copilot-Session: c8e01c36-2bb0-48de-bed9-57e0cb4913bf",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "73f8ab9ca70a2f3c7f24e70061f3e2d7793478c8",
+        "date": "2026-07-24T12:47:51-07:00",
+        "committed": "2026-07-24T12:47:51-07:00",
+        "old": null,
+        "new": "8643b8fbd6eec5ae99d1d6cb1767cc4b98a75844",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 12792,
+    "sha256": "d4d6ad8ec3a6f3b88d5c4516019e8417b05f9e3adf769715194b3094278922c1",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 222,
+    "words": 1792,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/spatney--rayfin-fabricator/resources/fabricator-templates/fabricator-universal/.agents/skills/app-design/references/ui-style-recipes.md"
+}

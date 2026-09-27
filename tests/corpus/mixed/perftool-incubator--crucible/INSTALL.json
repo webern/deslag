@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "INSTALL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "perftool-incubator/crucible",
+    "path": "INSTALL.md",
+    "commit": "4f90e356c69acc39dd34420094cda1af4b5c6eab",
+    "commit_date": "2026-09-23T08:35:12-05:00",
+    "url": "https://github.com/perftool-incubator/crucible/blob/4f90e356c69acc39dd34420094cda1af4b5c6eab/INSTALL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-18T12:48:04-05:00",
+    "stars": 16,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-02-24T15:38:15-03:00",
+    "last_commit_date": "2026-07-09T09:06:42-05:00",
+    "last_commit_author": "Karl Rister",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-03-02T11:15:05-03:00",
+    "last_committer_date": "2026-07-09T09:06:42-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e0b7e21f78dbbd926b331731dff66f4c005badb1",
+        "date": "2026-07-09T09:06:42-05:00",
+        "committed": "2026-07-09T09:06:42-05:00",
+        "old": "84cf6fad2b4abf388063c2c88761faa246d78b2c",
+        "new": "a868b1a1186e611ab248aac3f07c86e5e4c15da4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 3 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 358,
+    "sha256": "a2fd13154a501b9eb769975aaf81234c84f61fe4745d5fb37b10f7d0b8248e84",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 10,
+    "words": 30,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/perftool-incubator--crucible/INSTALL.md",
+  "before": {
+    "sha256": "e6cdd06c0819c478959fee2a735bb630f317a1d1ad54e85050f05d7242a3bac5",
+    "commit": "a4f320f05cbd9ad41c7f44babbb7cf8631ac4978",
+    "date": "2021-12-02T16:36:09-06:00",
+    "between": []
+  }
+}

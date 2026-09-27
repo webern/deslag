@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__features__validation__investigations__terminology-completeness.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "brendankowitz/ignixa-fhir",
+    "path": "docs/features/validation/investigations/terminology-completeness.md",
+    "commit": "70093ec509a200b3b80bb5bd3472c4fc9bdc74df",
+    "commit_date": "2026-09-24T11:02:26-07:00",
+    "url": "https://github.com/brendankowitz/ignixa-fhir/blob/70093ec509a200b3b80bb5bd3472c4fc9bdc74df/docs/features/validation/investigations/terminology-completeness.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-16T13:32:10+01:00",
+    "stars": 5,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-06T16:30:34-07:00",
+    "last_commit_date": "2026-07-06T16:30:34-07:00",
+    "last_commit_author": "Brendan Kowitz",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-06T16:30:34-07:00",
+    "last_committer_date": "2026-07-06T16:30:34-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f1b1004037d21536f4040def1a59d9f291363a9d",
+        "date": "2026-07-06T16:30:34-07:00",
+        "committed": "2026-07-06T16:30:34-07:00",
+        "old": null,
+        "new": "f74630e90de5aa637a729b98d7f1abf4ed859daa",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6395,
+    "sha256": "46afb7c02f65369e302512bd84267831bde7506d797f5273750649133ce142f1",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 120,
+    "words": 805,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/brendankowitz--ignixa-fhir/docs/features/validation/investigations/terminology-completeness.md"
+}

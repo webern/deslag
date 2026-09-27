@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "vscode__github__demo__prompt-3-readme-banner.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "github/octocanvas",
+    "path": ".vscode/.github/demo/prompt-3-readme-banner.md",
+    "commit": "80836276baa3ebe03d1fdd0d3f0ad2fe1af44efc",
+    "commit_date": "2026-09-06T12:33:16-07:00",
+    "url": "https://github.com/github/octocanvas/blob/80836276baa3ebe03d1fdd0d3f0ad2fe1af44efc/.vscode/.github/demo/prompt-3-readme-banner.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-27T03:02:58Z",
+    "stars": 53,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-10-27T03:02:58Z",
+    "last_commit_date": "2025-10-27T03:02:58Z",
+    "last_commit_author": "Jessica Deen",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-10-27T03:02:58Z",
+    "last_committer_date": "2025-10-27T03:02:58Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6c9e9e6cf44d636459ae8f84a93481192e080839",
+        "date": "2025-10-27T03:02:58Z",
+        "committed": "2025-10-27T03:02:58Z",
+        "old": null,
+        "new": "7337bd43c0e4cc5c2f3fa3406df0e6419579df8a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 9118,
+    "sha256": "6a35dde5309f55c16ad0439e98f659a4dcdffd524ae9b4a565094ec1c46e935b",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 221,
+    "words": 1229,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/github--octocanvas/.vscode/.github/demo/prompt-3-readme-banner.md"
+}

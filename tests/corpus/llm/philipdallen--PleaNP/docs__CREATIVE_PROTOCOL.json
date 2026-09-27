@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__CREATIVE_PROTOCOL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "philipdallen/PleaNP",
+    "path": "docs/CREATIVE_PROTOCOL.md",
+    "commit": "afd7ee49f493444f325a4ff532e34f190985c161",
+    "commit_date": "2026-09-26T16:40:06Z",
+    "url": "https://github.com/philipdallen/PleaNP/blob/afd7ee49f493444f325a4ff532e34f190985c161/docs/CREATIVE_PROTOCOL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-18T10:31:05-04:00",
+    "stars": 0,
+    "found_by": "gh-commits:openhands"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-06T20:13:35Z",
+    "last_commit_date": "2026-09-16T19:52:03Z",
+    "last_commit_author": "openhands",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "openhands"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-06T20:13:35Z",
+    "last_committer_date": "2026-09-16T19:52:03Z",
+    "marks": [
+      {
+        "text": "openhands <openhands@all-hands.dev>",
+        "tool": "openhands",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "44f6c763793833df8f0acba398332aeeb44e2fc3",
+        "date": "2026-09-16T19:52:03Z",
+        "committed": "2026-09-16T19:52:03Z",
+        "old": "168c28c60563b15c683cba99392fb64c7673e12b",
+        "new": "33be7232d9e77ca296f6c104fbf95cb9a5ebee86",
+        "status": "agent"
+      },
+      {
+        "commit": "a303b45759bc166ab30156d51a1fd5a9fd1610d6",
+        "date": "2026-09-10T23:47:59Z",
+        "committed": "2026-09-10T23:47:59Z",
+        "old": "0ea54b3dd0ed5d801741dde95bc83ad35d53e493",
+        "new": "168c28c60563b15c683cba99392fb64c7673e12b",
+        "status": "agent"
+      },
+      {
+        "commit": "6ef3e1d5976f1e3212ccce67ada3df1dff827547",
+        "date": "2026-09-06T20:13:35Z",
+        "committed": "2026-09-06T20:13:35Z",
+        "old": null,
+        "new": "0ea54b3dd0ed5d801741dde95bc83ad35d53e493",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (openhands)"
+  },
+  "content": {
+    "size_bytes": 10038,
+    "sha256": "c2c22c0b35ef89bcb1f3c5fb49e9c434d900c43bee51fd193d746480f1a5e3bd",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 174,
+    "words": 1412,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/philipdallen--PleaNP/docs/CREATIVE_PROTOCOL.md"
+}

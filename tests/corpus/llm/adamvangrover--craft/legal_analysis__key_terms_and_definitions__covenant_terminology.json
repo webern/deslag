@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "legal_analysis__key_terms_and_definitions__covenant_terminology.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "adamvangrover/craft",
+    "path": "legal_analysis/key_terms_and_definitions/covenant_terminology.md",
+    "commit": "756b2fc6f220d6016017f6236a396bda21701a94",
+    "commit_date": "2026-04-25T15:19:42-04:00",
+    "url": "https://github.com/adamvangrover/craft/blob/756b2fc6f220d6016017f6236a396bda21701a94/legal_analysis/key_terms_and_definitions/covenant_terminology.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-21T22:55:20-04:00",
+    "stars": 1,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-07-01T02:05:36Z",
+    "last_commit_date": "2025-07-01T02:05:36Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-07-01T02:05:36Z",
+    "last_committer_date": "2025-07-01T02:05:36Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "50e7202a317f45fdda46e99b0d45041d005909c4",
+        "date": "2025-07-01T02:05:36Z",
+        "committed": "2025-07-01T02:05:36Z",
+        "old": null,
+        "new": "14f97b4b357af90c02e4584205d3c06f9f053337",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 14442,
+    "sha256": "a60c38ed9e433008931cc110b4899b3e46ff08f9a290669486f0945d2417b170",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 100,
+    "words": 1920,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/adamvangrover--craft/legal_analysis/key_terms_and_definitions/covenant_terminology.md"
+}

@@ -1,0 +1,160 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "BigDataBiology/macrel",
+    "path": "README.md",
+    "commit": "8c1f7321618ccde2a28b960d32525620d2c737e3",
+    "commit_date": "2026-07-18T17:50:16+10:00",
+    "url": "https://github.com/BigDataBiology/macrel/blob/8c1f7321618ccde2a28b960d32525620d2c737e3/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-07-01T10:35:38+08:00",
+    "stars": 98,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 75,
+    "first_commit_date": "2019-07-01T10:35:38+08:00",
+    "last_commit_date": "2026-07-05T15:26:10+10:00",
+    "last_commit_author": "Luis Pedro Coelho",
+    "authors": 4,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-07-01T10:35:38+08:00",
+    "last_committer_date": "2026-07-05T15:26:10+10:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8e40930b601a439fe51c9c9ca291a25be05cab27",
+        "date": "2026-07-05T15:26:10+10:00",
+        "committed": "2026-07-05T15:26:10+10:00",
+        "old": "78032b6001ce554449b71f511f6c1b5bc5c937be",
+        "new": "d65a94e976e9ccc4f83079ce6f04f990f1d0cf04",
+        "status": "agent"
+      },
+      {
+        "commit": "2543eb31450a869dcc18308f40403201c44cc579",
+        "date": "2026-07-05T09:03:04+10:00",
+        "committed": "2026-07-05T09:03:04+10:00",
+        "old": "1ef540b33642cbd88ee855277c879ff9a1439241",
+        "new": "78032b6001ce554449b71f511f6c1b5bc5c937be",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "65 of its 75 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6557,
+    "sha256": "50aa628ee09b55d04a3d30292ae63dc304c54d5c8874949baf758f2590406b39",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 180,
+    "words": 772,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/BigDataBiology--macrel/README.md",
+  "before": {
+    "sha256": "a3c21bcf3d82a61387334b3646da5b315cbde57a557e395639b80e355af55c3d",
+    "commit": "02ab002b270b87979c23c66fc85d0163d8fd04e4",
+    "date": "2021-12-20T14:26:24-03:00",
+    "between": [
+      {
+        "commit": "83fe40b4ce05a10aab449d3b22cb77148360fcbd",
+        "date": "2024-09-20T21:09:34+10:00",
+        "committed": "2024-09-20T22:32:08+10:00",
+        "old": "b7125a407ce40f8287779c8b5c3e91aedfee3b80",
+        "new": "1ef540b33642cbd88ee855277c879ff9a1439241",
+        "status": "late"
+      },
+      {
+        "commit": "cc4fdb181e6ef48ded534692715dd968307964d4",
+        "date": "2024-06-27T23:08:45+10:00",
+        "committed": "2024-06-27T23:08:45+10:00",
+        "old": "dbe28d21f3e921f2f4d085c33811304b93aab538",
+        "new": "b7125a407ce40f8287779c8b5c3e91aedfee3b80",
+        "status": "late"
+      },
+      {
+        "commit": "3b7d2697832c8215b40ae0a59e0de6adaa329265",
+        "date": "2024-06-26T16:17:17+10:00",
+        "committed": "2024-06-26T16:17:17+10:00",
+        "old": "b519e4ef76486a3905104088e4a8def067001e6b",
+        "new": "dbe28d21f3e921f2f4d085c33811304b93aab538",
+        "status": "late"
+      },
+      {
+        "commit": "98a0f69d6849eb483bd84caa32411f4890102f90",
+        "date": "2023-12-03T20:22:43+10:00",
+        "committed": "2023-12-03T20:22:43+10:00",
+        "old": "fadcbc32ba17a2aaefaa4992fe13adc257bead4a",
+        "new": "b519e4ef76486a3905104088e4a8def067001e6b",
+        "status": "late"
+      },
+      {
+        "commit": "e84341d26786871aab62150d996e940016e1a2c3",
+        "date": "2023-12-03T09:49:16+10:00",
+        "committed": "2023-12-03T09:49:16+10:00",
+        "old": "dfe78cf64c33bf07035423cb4075b1eaecea367a",
+        "new": "fadcbc32ba17a2aaefaa4992fe13adc257bead4a",
+        "status": "late"
+      },
+      {
+        "commit": "59e35329f42413ba8600f860c55a2e422673e93c",
+        "date": "2023-10-30T18:11:43-03:00",
+        "committed": "2023-10-30T18:11:43-03:00",
+        "old": "f909d156b7b00d6b6757570511290960edd42129",
+        "new": "dfe78cf64c33bf07035423cb4075b1eaecea367a",
+        "status": "late"
+      },
+      {
+        "commit": "b74093c3d3c03ffbbfcce125340c5af561d20ea5",
+        "date": "2023-01-30T15:25:43-03:00",
+        "committed": "2023-01-30T15:25:43-03:00",
+        "old": "1f1fed0c5f123b64b528e4023aa51cf074f7bedc",
+        "new": "f909d156b7b00d6b6757570511290960edd42129",
+        "status": "late"
+      },
+      {
+        "commit": "01fb91e528b85dbed320be335d1b67322ba8303c",
+        "date": "2023-01-29T17:00:43+01:00",
+        "committed": "2023-01-29T17:00:43+01:00",
+        "old": "c98b023676433d6a9067a7bc53cba79fa0fa054e",
+        "new": "1f1fed0c5f123b64b528e4023aa51cf074f7bedc",
+        "status": "late"
+      }
+    ]
+  }
+}

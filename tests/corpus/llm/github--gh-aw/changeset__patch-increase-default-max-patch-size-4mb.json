@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "changeset__patch-increase-default-max-patch-size-4mb.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "github/gh-aw",
+    "path": ".changeset/patch-increase-default-max-patch-size-4mb.md",
+    "commit": "ba0499c5a462b89053b6030ca331e7fdadb6ffc8",
+    "commit_date": "2026-09-26T18:36:48-07:00",
+    "url": "https://github.com/github/gh-aw/blob/ba0499c5a462b89053b6030ca331e7fdadb6ffc8/.changeset/patch-increase-default-max-patch-size-4mb.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-08-12T12:20:57-07:00",
+    "stars": 5187,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-13T13:10:25-07:00",
+    "last_commit_date": "2026-06-13T13:10:25-07:00",
+    "last_commit_author": "Copilot",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-13T13:10:25-07:00",
+    "last_committer_date": "2026-06-13T13:10:25-07:00",
+    "marks": [
+      {
+        "text": "Copilot <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "24aab94bf89454f179791744a2984045fa6d0643",
+        "date": "2026-06-13T13:10:25-07:00",
+        "committed": "2026-06-13T13:10:25-07:00",
+        "old": null,
+        "new": "f1ef4f85c620a1862f5b877c0985a815453025e4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 421,
+    "sha256": "ad3d4a2b0f9787ab1996308d2bf151d3b2d977273af7eca6dcc5fa3d37e32df7",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 4,
+    "words": 60,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/github--gh-aw/.changeset/patch-increase-default-max-patch-size-4mb.md"
+}

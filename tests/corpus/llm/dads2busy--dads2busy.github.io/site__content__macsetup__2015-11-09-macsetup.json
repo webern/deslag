@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "site__content__macsetup__2015-11-09-macsetup.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dads2busy/dads2busy.github.io",
+    "path": "site/content/macsetup/2015-11-09-macsetup.md",
+    "commit": "95803724203bb108a554e08b335adf4d41f0f0e3",
+    "commit_date": "2026-06-24T10:11:50-04:00",
+    "url": "https://github.com/dads2busy/dads2busy.github.io/blob/95803724203bb108a554e08b335adf4d41f0f0e3/site/content/macsetup/2015-11-09-macsetup.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2014-02-06T19:18:00-05:00",
+    "stars": 2,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-25T10:54:12-05:00",
+    "last_commit_date": "2026-02-25T10:54:12-05:00",
+    "last_commit_author": "Aaron Schroeder",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-25T10:54:12-05:00",
+    "last_committer_date": "2026-02-25T10:54:12-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0605f7ba9cb6c9a9f4e58dac4bca7f2847ff60fc",
+        "date": "2026-02-25T10:54:12-05:00",
+        "committed": "2026-02-25T10:54:12-05:00",
+        "old": null,
+        "new": "5ba42981bd4508bd9a1f136e60840c3ba100412d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2399,
+    "sha256": "e76f7afbcc005359df79877bf08ea6b43ebb21d1713cf9b8ccbd85007e37fd26",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 291,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dads2busy--dads2busy.github.io/site/content/macsetup/2015-11-09-macsetup.md"
+}

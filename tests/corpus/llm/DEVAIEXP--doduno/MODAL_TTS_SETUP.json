@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "MODAL_TTS_SETUP.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "DEVAIEXP/doduno",
+    "path": "MODAL_TTS_SETUP.md",
+    "commit": "37600591539081bf7126c041824ecc2db13c179b",
+    "commit_date": "2026-06-15T11:05:06-03:00",
+    "url": "https://github.com/DEVAIEXP/doduno/blob/37600591539081bf7126c041824ecc2db13c179b/MODAL_TTS_SETUP.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-07T20:42:38-03:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-10T20:18:54-03:00",
+    "last_commit_date": "2026-06-10T20:18:54-03:00",
+    "last_commit_author": "Eliseu Silva",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-10T20:18:54-03:00",
+    "last_committer_date": "2026-06-10T20:18:54-03:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "111d9fe06c9721e802b0ce61dbdf04a70ae04b51",
+        "date": "2026-06-10T20:18:54-03:00",
+        "committed": "2026-06-10T20:18:54-03:00",
+        "old": null,
+        "new": "b26642018e059afc76f14b7fd3e455dc95a086c8",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 2453,
+    "sha256": "c579c7108110adc08c037c68d50a9977e57cb810e52f48b751875a111f14279d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 103,
+    "words": 332,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/DEVAIEXP--doduno/MODAL_TTS_SETUP.md"
+}

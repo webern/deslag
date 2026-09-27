@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__dotnet-best-practices__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "github/awesome-copilot",
+    "path": "skills/dotnet-best-practices/SKILL.md",
+    "commit": "6c4d33b9cfca967a28bb2962ef4d55e4a384c88c",
+    "commit_date": "2026-09-25T01:58:01Z",
+    "url": "https://github.com/github/awesome-copilot/blob/6c4d33b9cfca967a28bb2962ef4d55e4a384c88c/skills/dotnet-best-practices/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-19T11:50:55+10:00",
+    "stars": 39430,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-19T04:34:07Z",
+    "last_commit_date": "2026-02-19T04:34:07Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-24T14:39:33+11:00",
+    "last_committer_date": "2026-02-24T14:39:33+11:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "caab1f623bb68a330f294a11279597d7ae7be737",
+        "date": "2026-02-19T04:34:07Z",
+        "committed": "2026-02-24T14:39:33+11:00",
+        "old": null,
+        "new": "183d3beb113dd62a8bc6d2f2c9ea1b4fd8d3c5ed",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3230,
+    "sha256": "3181f44dfc866313c96cd784a7f003b4b109836a6f02648f95b3323e73e85d62",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 426,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/github--awesome-copilot/skills/dotnet-best-practices/SKILL.md"
+}

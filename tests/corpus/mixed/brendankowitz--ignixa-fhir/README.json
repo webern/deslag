@@ -1,0 +1,195 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "brendankowitz/ignixa-fhir",
+    "path": "README.md",
+    "commit": "70093ec509a200b3b80bb5bd3472c4fc9bdc74df",
+    "commit_date": "2026-09-24T11:02:26-07:00",
+    "url": "https://github.com/brendankowitz/ignixa-fhir/blob/70093ec509a200b3b80bb5bd3472c4fc9bdc74df/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-16T13:32:10+01:00",
+    "stars": 5,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 17,
+    "first_commit_date": "2018-11-16T13:32:10+01:00",
+    "last_commit_date": "2026-09-24T11:02:26-07:00",
+    "last_commit_author": "Brendan Kowitz",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-11-16T13:32:10+01:00",
+    "last_committer_date": "2026-09-24T11:02:26-07:00",
+    "marks": [
+      {
+        "text": "Copilot <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Copilot-Session: bc4716cc-9fdd-46da-a670-f64b7c5c75a8",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "70093ec509a200b3b80bb5bd3472c4fc9bdc74df",
+        "date": "2026-09-24T11:02:26-07:00",
+        "committed": "2026-09-24T11:02:26-07:00",
+        "old": "7d3c4b75380665f98d712b4e762b4570e0d6349a",
+        "new": "1b683e7086c1f2bc9a74c893075a0c01fe416dc6",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "95124d6bce4c40992e5656f32391b75bccbc409a",
+        "date": "2026-08-19T22:07:05-07:00",
+        "committed": "2026-08-19T22:07:05-07:00",
+        "old": "17b102b8811d3e1f79bcf724086c9b7c6fd5092f",
+        "new": "7d3c4b75380665f98d712b4e762b4570e0d6349a",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "f28e0c2f68b44f5f0911e9f8339271c086db3699",
+        "date": "2026-07-21T22:15:01-07:00",
+        "committed": "2026-07-21T22:15:01-07:00",
+        "old": "6b1afc2f2691c44b116d62888e12e7ebec8aa5f8",
+        "new": "17b102b8811d3e1f79bcf724086c9b7c6fd5092f",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "f602b101bc1bb4f2919a140f7da78e1ef7e0ecba",
+        "date": "2026-06-12T07:45:57-07:00",
+        "committed": "2026-06-12T07:45:57-07:00",
+        "old": "5c890bc1cd249270762dab0f477ff0fd56bbf51e",
+        "new": "159413f3f255ed1394df09ad5be99f902bf4808f",
+        "status": "agent"
+      },
+      {
+        "commit": "45971e7f6d2bd11860b955562f76f06e84333f06",
+        "date": "2026-05-12T16:24:30-07:00",
+        "committed": "2026-05-12T16:24:30-07:00",
+        "old": "019142213bfd694077fbf5f3266bb096cd93a5d5",
+        "new": "5c890bc1cd249270762dab0f477ff0fd56bbf51e",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "91dd23457ef9b4a0af8429f1d40eb90410166398",
+        "date": "2025-12-22T11:09:51-08:00",
+        "committed": "2025-12-22T11:09:51-08:00",
+        "old": "5bc923bed699300cdbb94d73537848af24cb98f2",
+        "new": "019142213bfd694077fbf5f3266bb096cd93a5d5",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "81bf2f3bfce0a94b1a5b0eb020aa59a783d95b72",
+        "date": "2025-12-17T16:20:46-08:00",
+        "committed": "2025-12-17T16:20:46-08:00",
+        "old": "bf3eb1c170fee4a6da94f291e689ef6958eff465",
+        "new": "5bc923bed699300cdbb94d73537848af24cb98f2",
+        "status": "agent"
+      },
+      {
+        "commit": "751f833ec1d0ade3344062f64b74b35703a30870",
+        "date": "2025-12-12T22:09:54-08:00",
+        "committed": "2025-12-12T22:09:54-08:00",
+        "old": "c707864a22768b279c7568bd171c91f9a0e01053",
+        "new": "bf3eb1c170fee4a6da94f291e689ef6958eff465",
+        "status": "squash-merge"
+      },
+      {
+        "commit": "36c3e3ec6779bd9f45c8de8382895ee91e44d19c",
+        "date": "2025-10-22T08:47:28-07:00",
+        "committed": "2025-10-22T08:47:28-07:00",
+        "old": "3769c049e22e28c554637bf7174827d9c9dd42a7",
+        "new": "8c9a0bf203acb0ba46a51491e23f56df4ae15a53",
+        "status": "squash-merge"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 17 commits predates 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code, copilot)"
+  },
+  "content": {
+    "size_bytes": 10446,
+    "sha256": "d0b126bf6a576078b239703fbf18464fa4f081d18b56bc30e73c978440d1f61e",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 230,
+    "words": 1076,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/brendankowitz--ignixa-fhir/README.md"
+}

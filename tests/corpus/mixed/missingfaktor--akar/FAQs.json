@@ -1,0 +1,88 @@
+{
+  "sidecar_version": 3,
+  "fixture": "FAQs.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "missingfaktor/akar",
+    "path": "FAQs.md",
+    "commit": "ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195",
+    "commit_date": "2026-04-26T22:02:47+01:00",
+    "url": "https://github.com/missingfaktor/akar/blob/ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195/FAQs.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-10-23T11:34:31+02:00",
+    "stars": 182,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2016-07-04T23:09:23+01:00",
+    "last_commit_date": "2026-04-26T21:27:28+01:00",
+    "last_commit_author": "missingfaktor",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2016-07-04T23:09:23+01:00",
+    "last_committer_date": "2026-04-26T21:27:28+01:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5c20550e7601643f22c44668aac156828419195d",
+        "date": "2026-04-26T21:27:28+01:00",
+        "committed": "2026-04-26T21:27:28+01:00",
+        "old": "8c63419b9d8e82c2bea1fd2ba1265cd5cbd27846",
+        "new": "eb523856543686ba5b60f092038ad32771c9f16f",
+        "status": "agent"
+      },
+      {
+        "commit": "6bf8dbb93779ad5cbd52b8fb0300fb04b5914778",
+        "date": "2026-04-25T19:59:20+01:00",
+        "committed": "2026-04-25T19:59:20+01:00",
+        "old": "3544621264c7e575da14389f79457eeee9f375b3",
+        "new": "8c63419b9d8e82c2bea1fd2ba1265cd5cbd27846",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 7 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 8084,
+    "sha256": "aac2323fd708627bbeafa9e21119a67c4d1583e5ad18c28529dc7821ab2d35a6",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 126,
+    "words": 965,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/missingfaktor--akar/FAQs.md",
+  "before": {
+    "sha256": "f3d8d31b3c1e44127e39692da5666860a9c325ee4355424c9929bc02d3309479",
+    "commit": "66403b735cafab4e9fb971b4bf56e899ee84962f",
+    "date": "2018-04-13T01:18:20+01:00",
+    "between": []
+  }
+}

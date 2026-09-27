@@ -1,0 +1,154 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Jules__palette.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "awest813/Camelot",
+    "path": ".Jules/palette.md",
+    "commit": "a499503dbb20bf569754f08f4beae17c1e10e6e3",
+    "commit_date": "2026-09-21T21:37:43-04:00",
+    "url": "https://github.com/awest813/Camelot/blob/a499503dbb20bf569754f08f4beae17c1e10e6e3/.Jules/palette.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-22T20:49:43-05:00",
+    "stars": 1,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2026-03-02T23:06:41Z",
+    "last_commit_date": "2026-05-21T22:10:07Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 11,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-02T23:06:41Z",
+    "last_committer_date": "2026-05-21T22:10:07Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 11
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3142f735d113c6d0dee08ed3b2ceca30efc24b8d",
+        "date": "2026-05-21T22:10:07Z",
+        "committed": "2026-05-21T22:10:07Z",
+        "old": "8c0e8386636eca2a6b6417f0ec38869adbf1d4e2",
+        "new": "0615ce5dbd84ed6fa246c9c2f51867a897d8e844",
+        "status": "agent"
+      },
+      {
+        "commit": "f9bab181ba76dc77cae74b3b88e607283e7423dc",
+        "date": "2026-05-14T22:05:34Z",
+        "committed": "2026-05-14T22:05:34Z",
+        "old": "ad36b31ad6818fc9deeb09519befde8f13a8a733",
+        "new": "8c0e8386636eca2a6b6417f0ec38869adbf1d4e2",
+        "status": "agent"
+      },
+      {
+        "commit": "138ce69cf27325228dd0922082f4e0408afb04d7",
+        "date": "2026-05-11T22:44:38Z",
+        "committed": "2026-05-11T22:44:38Z",
+        "old": "73e5a97bfb9db955d75059c64a249a53d0a1b440",
+        "new": "ad36b31ad6818fc9deeb09519befde8f13a8a733",
+        "status": "agent"
+      },
+      {
+        "commit": "833d030ab8c57c555d4d68530c4dab8e615d9014",
+        "date": "2026-05-05T22:04:16Z",
+        "committed": "2026-05-05T22:04:16Z",
+        "old": "18acfcfa232de50ca34e639ed4d104afcd9b2c93",
+        "new": "73e5a97bfb9db955d75059c64a249a53d0a1b440",
+        "status": "agent"
+      },
+      {
+        "commit": "219f75e2b3a769d3da4ed202a5183b89a73ece9d",
+        "date": "2026-05-03T22:19:26Z",
+        "committed": "2026-05-03T22:19:26Z",
+        "old": "35a1b216dabf1632eab3b4180fe485c002a58f88",
+        "new": "18acfcfa232de50ca34e639ed4d104afcd9b2c93",
+        "status": "agent"
+      },
+      {
+        "commit": "1a8818c1a5b63cae50523cc5a21a04e369332514",
+        "date": "2026-04-08T22:06:50Z",
+        "committed": "2026-04-08T22:06:50Z",
+        "old": "02341d03050f2c31de241023722348afe71c6601",
+        "new": "35a1b216dabf1632eab3b4180fe485c002a58f88",
+        "status": "agent"
+      },
+      {
+        "commit": "e0d6169928e59860873d84f859f8262694791543",
+        "date": "2026-04-05T22:03:28Z",
+        "committed": "2026-04-05T22:03:28Z",
+        "old": "d9cd00ec1a2b9068bbc858528c154b1237e1b5f7",
+        "new": "02341d03050f2c31de241023722348afe71c6601",
+        "status": "agent"
+      },
+      {
+        "commit": "f8fb7a17f027294293201ff9a8bf89cff2348a43",
+        "date": "2026-03-20T22:16:13Z",
+        "committed": "2026-03-20T22:16:13Z",
+        "old": "bed2946799000ea27ff5ace70f212c8fd62aa38d",
+        "new": "d9cd00ec1a2b9068bbc858528c154b1237e1b5f7",
+        "status": "agent"
+      },
+      {
+        "commit": "3fb61123190750dbec318037ca900cd0be84be73",
+        "date": "2026-03-06T23:01:44Z",
+        "committed": "2026-03-06T23:01:44Z",
+        "old": "66cefa5745712f84afbc0539f8395f1c3adfff1d",
+        "new": "bed2946799000ea27ff5ace70f212c8fd62aa38d",
+        "status": "agent"
+      },
+      {
+        "commit": "4146d3e19aca49728f2ad2d7a95188e840ae0efb",
+        "date": "2026-03-04T23:00:48Z",
+        "committed": "2026-03-04T23:00:48Z",
+        "old": "b25a5c25016ef4dcaead7bc6d88b74ddc7d01a59",
+        "new": "66cefa5745712f84afbc0539f8395f1c3adfff1d",
+        "status": "agent"
+      },
+      {
+        "commit": "283f1f5b0841a7b2a865dbffb8a24c3671aaa476",
+        "date": "2026-03-02T23:06:41Z",
+        "committed": "2026-03-02T23:06:41Z",
+        "old": null,
+        "new": "b25a5c25016ef4dcaead7bc6d88b74ddc7d01a59",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 11 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 4012,
+    "sha256": "31133eeef117031904602768681b34489b8cf12dccaed611f6a41ed97276e31c",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 24,
+    "words": 510,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/awest813--Camelot/.Jules/palette.md"
+}

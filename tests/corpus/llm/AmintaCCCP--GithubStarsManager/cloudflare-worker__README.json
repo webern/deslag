@@ -1,0 +1,91 @@
+{
+  "sidecar_version": 3,
+  "fixture": "cloudflare-worker__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AmintaCCCP/GithubStarsManager",
+    "path": "cloudflare-worker/README.md",
+    "commit": "6f509d6c65fd537538281b794a6fbdfdb233e8db",
+    "commit_date": "2026-09-27T00:41:10+08:00",
+    "url": "https://github.com/AmintaCCCP/GithubStarsManager/blob/6f509d6c65fd537538281b794a6fbdfdb233e8db/cloudflare-worker/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-29T18:39:59+08:00",
+    "stars": 3608,
+    "found_by": "sg-register:productivity"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-24T19:06:18+08:00",
+    "last_commit_date": "2026-06-24T20:20:59+08:00",
+    "last_commit_author": "AmintaCCCP",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-24T19:06:18+08:00",
+    "last_committer_date": "2026-06-24T20:20:59+08:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "877eab5f44d278ce7248f3ea1dda4b6f12763e03",
+        "date": "2026-06-24T20:20:59+08:00",
+        "committed": "2026-06-24T20:20:59+08:00",
+        "old": "cd96cf6ac41227be00d539e83c7ae403a68b4735",
+        "new": "8f684d954ead1f8fffa90ad59a4e3746b0044b33",
+        "status": "agent"
+      },
+      {
+        "commit": "8425b3c45a620cd03cb990fbfabdc22b65a12931",
+        "date": "2026-06-24T19:23:21+08:00",
+        "committed": "2026-06-24T19:23:21+08:00",
+        "old": "1c4533ddc17c88d13188dfccb46e5d3adf5f2d98",
+        "new": "cd96cf6ac41227be00d539e83c7ae403a68b4735",
+        "status": "agent"
+      },
+      {
+        "commit": "8bcd079c147e0a6c27bf79af9b47c3144a4ee706",
+        "date": "2026-06-24T19:06:18+08:00",
+        "committed": "2026-06-24T19:06:18+08:00",
+        "old": null,
+        "new": "1c4533ddc17c88d13188dfccb46e5d3adf5f2d98",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3904,
+    "sha256": "68d7996d9b80d24f36812e32be14cb91b4f64829e780a037202b18056fc07ad9",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 143,
+    "words": 414,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AmintaCCCP--GithubStarsManager/cloudflare-worker/README.md"
+}

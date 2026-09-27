@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__grokbot-blinded-evals.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "escoffier-labs/brigade",
+    "path": "docs/grokbot-blinded-evals.md",
+    "commit": "77acab58d3f1c8051d58d7dcf30dfe00d6b3197d",
+    "commit_date": "2026-09-24T20:39:06-04:00",
+    "url": "https://github.com/escoffier-labs/brigade/blob/77acab58d3f1c8051d58d7dcf30dfe00d6b3197d/docs/grokbot-blinded-evals.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-28T15:38:10-04:00",
+    "stars": 71,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-06T13:08:37-04:00",
+    "last_commit_date": "2026-09-06T13:08:37-04:00",
+    "last_commit_author": "Solomon Neas",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-06T13:08:37-04:00",
+    "last_committer_date": "2026-09-06T13:08:37-04:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d38e43e3c800540810a49a3fa8e45d25b61eb959",
+        "date": "2026-09-06T13:08:37-04:00",
+        "committed": "2026-09-06T13:08:37-04:00",
+        "old": null,
+        "new": "58178994021ecba46f3c215250a7d214437949a6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 3541,
+    "sha256": "ec4d3b91f88edaef4858cccf77d371743bb53f2c564874b7535338c1e8d43569",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 573,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/escoffier-labs--brigade/docs/grokbot-blinded-evals.md"
+}

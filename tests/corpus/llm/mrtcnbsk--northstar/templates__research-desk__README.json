@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "templates__research-desk__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mrtcnbsk/northstar",
+    "path": "templates/research-desk/README.md",
+    "commit": "c8f29e7b5bab0a13a38b77196d18a0bc47491c42",
+    "commit_date": "2026-07-15T20:44:56Z",
+    "url": "https://github.com/mrtcnbsk/northstar/blob/c8f29e7b5bab0a13a38b77196d18a0bc47491c42/templates/research-desk/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-03-21T18:20:28+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-12T03:23:49+03:00",
+    "last_commit_date": "2026-07-12T03:23:49+03:00",
+    "last_commit_author": "Mertcan",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-12T03:23:49+03:00",
+    "last_committer_date": "2026-07-12T03:23:49+03:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "7e75edb3216a67767dafcb9088b4b4e2a6461a70",
+        "date": "2026-07-12T03:23:49+03:00",
+        "committed": "2026-07-12T03:23:49+03:00",
+        "old": null,
+        "new": "0cda08336701a48b8900e38b8eaa430763e9a583",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1588,
+    "sha256": "470229edead4dd841f2dd579053ef7b998b517502ab86c58e89c7dd6b499c60a",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 196,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mrtcnbsk--northstar/templates/research-desk/README.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "planning__phases__173-counterexample-harvest-and-replay-regeneration__173-01-SUMMARY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "backbay-labs/ambush",
+    "path": ".planning/phases/173-counterexample-harvest-and-replay-regeneration/173-01-SUMMARY.md",
+    "commit": "437c4514c60c0b324792e7948a80094de2342b23",
+    "commit_date": "2026-09-08T15:22:57-04:00",
+    "url": "https://github.com/backbay-labs/ambush/blob/437c4514c60c0b324792e7948a80094de2342b23/.planning/phases/173-counterexample-harvest-and-replay-regeneration/173-01-SUMMARY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-06T21:00:58Z",
+    "stars": 1,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-11T14:03:10-04:00",
+    "last_commit_date": "2026-04-11T14:03:10-04:00",
+    "last_commit_author": "bb-connor",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-11T14:03:10-04:00",
+    "last_committer_date": "2026-04-11T14:03:10-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "69814a44f8b5f0209faa0dff3d88a27e3736096c",
+        "date": "2026-04-11T14:03:10-04:00",
+        "committed": "2026-04-11T14:03:10-04:00",
+        "old": null,
+        "new": "be050fd69b7098907e6646f7f77a226be241587e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2702,
+    "sha256": "bdc3a2eb86580d2064fc279c4f71e541a16bb2e3c03330d86c091b97ed932b92",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 277,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/backbay-labs--ambush/.planning/phases/173-counterexample-harvest-and-replay-regeneration/173-01-SUMMARY.md"
+}

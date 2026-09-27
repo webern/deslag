@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__specs__047__phase4-results__LAPTOP-4MEP83VI__2026-05-30-arm64-postgate__RESULTS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/microsoft-ui-reactor",
+    "path": "docs/specs/047/phase4-results/LAPTOP-4MEP83VI/2026-05-30-arm64-postgate/RESULTS.md",
+    "commit": "85802e651b3c715ab76a94dd666f15e6f4de19ee",
+    "commit_date": "2026-09-25T16:48:57-07:00",
+    "url": "https://github.com/microsoft/microsoft-ui-reactor/blob/85802e651b3c715ab76a94dd666f15e6f4de19ee/docs/specs/047/phase4-results/LAPTOP-4MEP83VI/2026-05-30-arm64-postgate/RESULTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-18T03:04:48Z",
+    "stars": 652,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-30T10:30:01-07:00",
+    "last_commit_date": "2026-05-30T10:30:01-07:00",
+    "last_commit_author": "Chris Anderson",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-30T10:30:01-07:00",
+    "last_committer_date": "2026-05-30T10:30:01-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "11ef89e98451cf056596bec1e57cd10b4232b7aa",
+        "date": "2026-05-30T10:30:01-07:00",
+        "committed": "2026-05-30T10:30:01-07:00",
+        "old": null,
+        "new": "75af3fd4709bb9309d848dad889470c519a5e913",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2903,
+    "sha256": "d264ed8eda007a18ff9c18928e745bd3a535b0e77a78cc8d077f0a98fc883f94",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 59,
+    "words": 408,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/microsoft--microsoft-ui-reactor/docs/specs/047/phase4-results/LAPTOP-4MEP83VI/2026-05-30-arm64-postgate/RESULTS.md"
+}

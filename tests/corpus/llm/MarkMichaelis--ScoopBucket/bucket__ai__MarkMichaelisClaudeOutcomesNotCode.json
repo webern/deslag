@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "bucket__ai__MarkMichaelisClaudeOutcomesNotCode.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "MarkMichaelis/ScoopBucket",
+    "path": "bucket/ai/MarkMichaelisClaudeOutcomesNotCode.md",
+    "commit": "eefa62f0b8d03bc9d1550ae0d250f959fee93607",
+    "commit_date": "2026-09-26T21:20:13-07:00",
+    "url": "https://github.com/MarkMichaelis/ScoopBucket/blob/eefa62f0b8d03bc9d1550ae0d250f959fee93607/bucket/ai/MarkMichaelisClaudeOutcomesNotCode.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-22T06:40:17-08:00",
+    "stars": 4,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-13T09:02:20-07:00",
+    "last_commit_date": "2026-09-13T09:02:20-07:00",
+    "last_commit_author": "Mark Michaelis",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-13T18:27:13-07:00",
+    "last_committer_date": "2026-09-13T18:27:13-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_013DZZvui9YkhRJKbJdcrYWu",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "62546b78aa86e2a939bd1b5889c99cf67e6bb675",
+        "date": "2026-09-13T09:02:20-07:00",
+        "committed": "2026-09-13T18:27:13-07:00",
+        "old": null,
+        "new": "0126a3211938fe3f04ad67effbaafa5116657ced",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2513,
+    "sha256": "061d0ba21ea9bf3a16f959587b284388a7ec4d3e9608bd66cee4ff409cbe0e3d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 39,
+    "words": 411,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/MarkMichaelis--ScoopBucket/bucket/ai/MarkMichaelisClaudeOutcomesNotCode.md"
+}

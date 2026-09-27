@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__java-refactoring-extract-method__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "RazzaBear/copilot-toolkit",
+    "path": "skills/java-refactoring-extract-method/SKILL.md",
+    "commit": "98931b240401e6acccbf2b4bfaf0c92aafdd854e",
+    "commit_date": "2026-05-24T19:31:51-04:00",
+    "url": "https://github.com/RazzaBear/copilot-toolkit/blob/98931b240401e6acccbf2b4bfaf0c92aafdd854e/skills/java-refactoring-extract-method/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-06-19T11:50:55+10:00",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-19T04:34:07Z",
+    "last_commit_date": "2026-02-19T04:34:07Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-24T14:39:33+11:00",
+    "last_committer_date": "2026-02-24T14:39:33+11:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "caab1f623bb68a330f294a11279597d7ae7be737",
+        "date": "2026-02-19T04:34:07Z",
+        "committed": "2026-02-24T14:39:33+11:00",
+        "old": null,
+        "new": "173e6d7811b60c75a8cb67f261e1528efa5733ad",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3490,
+    "sha256": "4f23304d1c3ea81035cae02381e6f6bf70d4652a46990cfd71620f384ad78a2b",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 104,
+    "words": 393,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/RazzaBear--copilot-toolkit/skills/java-refactoring-extract-method/SKILL.md"
+}

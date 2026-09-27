@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "rkttu/python-nanoserver",
+    "path": "README.md",
+    "commit": "0b01599406df8d821eb83e213466198e73114e90",
+    "commit_date": "2025-11-10T05:47:20Z",
+    "url": "https://github.com/rkttu/python-nanoserver/blob/0b01599406df8d821eb83e213466198e73114e90/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-03-11T17:22:22+09:00",
+    "stars": 14,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2020-03-11T17:22:22+09:00",
+    "last_commit_date": "2025-11-10T05:18:37Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-03-11T17:22:22+09:00",
+    "last_committer_date": "2025-11-10T14:37:10+09:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f5a801a8a7f77e55e62c4982c75b5eeebb5411a3",
+        "date": "2025-11-10T05:18:37Z",
+        "committed": "2025-11-10T14:37:10+09:00",
+        "old": "c0a7b6ad78a1a6cb5557f41ad25c137f68247d7f",
+        "new": "61dcfff3a2f56256c24375bc975772cac78935cf",
+        "status": "agent"
+      },
+      {
+        "commit": "6e6a323d82da740cac0d419e6f61015f7efa1133",
+        "date": "2025-11-10T04:40:30Z",
+        "committed": "2025-11-10T14:37:10+09:00",
+        "old": "92287d247b83c8e61c0b6235cca4b7c0d301731d",
+        "new": "c0a7b6ad78a1a6cb5557f41ad25c137f68247d7f",
+        "status": "agent"
+      },
+      {
+        "commit": "80470dfcb8b425c108e06945ab0d36ed6635eba4",
+        "date": "2025-11-09T23:54:13Z",
+        "committed": "2025-11-10T08:57:42+09:00",
+        "old": "a8bfcda4570fe7d10e358e71ff58f677aaa31ccd",
+        "new": "92287d247b83c8e61c0b6235cca4b7c0d301731d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 8 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 5702,
+    "sha256": "7dbedf19b3be8c7348a3bd3f62e55cfd58114647d32eb0ee79394faf75e8d0da",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 126,
+    "words": 716,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/rkttu--python-nanoserver/README.md"
+}

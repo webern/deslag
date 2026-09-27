@@ -1,0 +1,120 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dads2busy/dads2busy.github.io",
+    "path": "README.md",
+    "commit": "95803724203bb108a554e08b335adf4d41f0f0e3",
+    "commit_date": "2026-06-24T10:11:50-04:00",
+    "url": "https://github.com/dads2busy/dads2busy.github.io/blob/95803724203bb108a554e08b335adf4d41f0f0e3/README.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2014-02-06T19:18:00-05:00",
+    "stars": 2,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 127,
+    "first_commit_date": "2014-02-06T19:18:00-05:00",
+    "last_commit_date": "2026-04-29T14:19:37-04:00",
+    "last_commit_author": "Aaron Schroeder",
+    "authors": 4,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2014-02-06T19:18:00-05:00",
+    "last_committer_date": "2026-04-29T14:19:37-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ed82cb1e23e6d241b3afcf84c87d6dc5229382db",
+        "date": "2026-04-29T14:19:37-04:00",
+        "committed": "2026-04-29T14:19:37-04:00",
+        "old": "caaef998d3743b9e2ff7df3782e17250a6f53333",
+        "new": "02afbf8bfa9417e6d55e578b5497f6ba1170c862",
+        "status": "agent"
+      },
+      {
+        "commit": "46eef4d70238d32c7fc70133b03f3a96f84ad51e",
+        "date": "2026-04-29T12:25:15-04:00",
+        "committed": "2026-04-29T12:25:15-04:00",
+        "old": "f17e837465d71ad13fa3ad1b6a5ad5500d0179f1",
+        "new": "bfa3677960c7b55469b9bfaa4cca79ee3786cb21",
+        "status": "agent"
+      },
+      {
+        "commit": "c3d10b584640888d0d5931c2d40c80693f45742d",
+        "date": "2026-02-25T11:14:44-05:00",
+        "committed": "2026-02-25T11:14:44-05:00",
+        "old": "672e44b35a95806f2c25a078ec1d178cd1a3ea37",
+        "new": "84199c40745049739da87a01595ce8fa10a827fd",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "122 of its 127 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10655,
+    "sha256": "59998d9c6445d1c549937d7c1a23fc8f45ef1ecc0a8dcd21c0fde097967026ef",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 212,
+    "words": 1077,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dads2busy--dads2busy.github.io/README.md",
+  "before": {
+    "sha256": "5541d1a774519786d467a55ed740c97fdee6619e538c81d6d84922926f9913df",
+    "commit": "812be7049d120c0a1ad2a3bdaa917b3764cd12b7",
+    "date": "2021-09-02T13:51:47-04:00",
+    "between": [
+      {
+        "commit": "30600106c4b73beb19638c7c20ecdf20153fbefd",
+        "date": "2026-04-29T12:37:28-04:00",
+        "committed": "2026-04-29T12:37:28-04:00",
+        "old": "bfa3677960c7b55469b9bfaa4cca79ee3786cb21",
+        "new": "caaef998d3743b9e2ff7df3782e17250a6f53333",
+        "status": "late"
+      },
+      {
+        "commit": "477d08fc6c01bc827c4ad66c0ffa8b992b3d98e2",
+        "date": "2026-03-17T10:54:57-04:00",
+        "committed": "2026-03-17T10:54:57-04:00",
+        "old": "84199c40745049739da87a01595ce8fa10a827fd",
+        "new": "f17e837465d71ad13fa3ad1b6a5ad5500d0179f1",
+        "status": "late"
+      }
+    ]
+  }
+}

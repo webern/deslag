@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__ComplianceGuide.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "christianlouis/DocuElevate",
+    "path": "docs/ComplianceGuide.md",
+    "commit": "6c10885490c95f3b706fef280fc06359bee6faba",
+    "commit_date": "2026-08-22T03:41:42Z",
+    "url": "https://github.com/christianlouis/DocuElevate/blob/6c10885490c95f3b706fef280fc06359bee6faba/docs/ComplianceGuide.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-02-09T16:14:31+01:00",
+    "stars": 5,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-16T22:40:15Z",
+    "last_commit_date": "2026-03-16T22:40:15Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-16T22:40:15Z",
+    "last_committer_date": "2026-03-16T22:40:15Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "204000aabcf94bd9eeff7cb67d8707e9af8b7fa3",
+        "date": "2026-03-16T22:40:15Z",
+        "committed": "2026-03-16T22:40:15Z",
+        "old": null,
+        "new": "c85150c7679cbf2d96e90e605570ba94060526d0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6194,
+    "sha256": "3f85ee6ebf47eb6cbd63bd3696cee722e9b13a1bd4c705c375d8b219c6dad02e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 190,
+    "words": 825,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/christianlouis--DocuElevate/docs/ComplianceGuide.md"
+}

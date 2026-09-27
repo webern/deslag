@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__guide__deployment.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "pmaojo/kthulu-go",
+    "path": "docs/guide/deployment.md",
+    "commit": "b1fc292bfa98a5758dc35b502a701c6d11455ae4",
+    "commit_date": "2026-09-21T21:00:31Z",
+    "url": "https://github.com/pmaojo/kthulu-go/blob/b1fc292bfa98a5758dc35b502a701c6d11455ae4/docs/guide/deployment.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-14T20:34:34Z",
+    "stars": 2,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-01-14T00:13:27Z",
+    "last_commit_date": "2026-01-23T00:58:00Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-14T00:13:27Z",
+    "last_committer_date": "2026-01-23T00:58:00Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "23c3bd663b0d322b5931829543c3a9731e3417fd",
+        "date": "2026-01-23T00:58:00Z",
+        "committed": "2026-01-23T00:58:00Z",
+        "old": "7c2fdb035770d15a92bbd5a337a18f89966b08d6",
+        "new": "2e73582ca9bed88fe88c8c8cab46949d85c942a2",
+        "status": "agent"
+      },
+      {
+        "commit": "a1f251156f578bc81a389bfe8542218a34220f1f",
+        "date": "2026-01-14T00:28:35Z",
+        "committed": "2026-01-14T00:28:35Z",
+        "old": "ad00cb615dd4dbff0865512ab6d46f20fd96be41",
+        "new": "7c2fdb035770d15a92bbd5a337a18f89966b08d6",
+        "status": "agent"
+      },
+      {
+        "commit": "163d9912f7b8a9f53f662a324ffc11ccafdfb1fd",
+        "date": "2026-01-14T00:13:27Z",
+        "committed": "2026-01-14T00:13:27Z",
+        "old": null,
+        "new": "ad00cb615dd4dbff0865512ab6d46f20fd96be41",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 2198,
+    "sha256": "ceefc04f09a58a292c2260bc0cb9d51a9307e94a163e41424a66359c2296da44",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 77,
+    "words": 304,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pmaojo--kthulu-go/docs/guide/deployment.md"
+}

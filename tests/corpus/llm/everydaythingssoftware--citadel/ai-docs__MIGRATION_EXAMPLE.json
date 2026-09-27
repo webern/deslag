@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "ai-docs__MIGRATION_EXAMPLE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "everydaythingssoftware/citadel",
+    "path": "ai-docs/MIGRATION_EXAMPLE.md",
+    "commit": "d52a55d0a516c01ee0ed439ae64a10ece7fd4a7a",
+    "commit_date": "2026-09-23T23:21:38-07:00",
+    "url": "https://github.com/everydaythingssoftware/citadel/blob/d52a55d0a516c01ee0ed439ae64a10ece7fd4a7a/ai-docs/MIGRATION_EXAMPLE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-12-18T20:20:37-08:00",
+    "stars": 1296,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-10-17T00:32:08-07:00",
+    "last_commit_date": "2025-10-17T00:32:08-07:00",
+    "last_commit_author": "Phil Denhoff",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-10-17T08:48:33-07:00",
+    "last_committer_date": "2025-10-17T08:48:33-07:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e2ef7d14c72ff854c33c2a9e89593d4c31386885",
+        "date": "2025-10-17T00:32:08-07:00",
+        "committed": "2025-10-17T08:48:33-07:00",
+        "old": null,
+        "new": "f5d39a8419ac71aba77a747d2320d365ab55b321",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 18565,
+    "sha256": "1734fc5d61d8f3fb8ab47862634ed525e035ab347e7d3f54ad25011eff0528ad",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 755,
+    "words": 2202,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/everydaythingssoftware--citadel/ai-docs/MIGRATION_EXAMPLE.md"
+}

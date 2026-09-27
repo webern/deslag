@@ -1,0 +1,96 @@
+{
+  "sidecar_version": 3,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "haxtheweb/haxcms-php",
+    "path": "SECURITY.md",
+    "commit": "6139c5a4c2fbf3b95d34315b9ea51130a8b80e1d",
+    "commit_date": "2026-09-24T10:26:16-04:00",
+    "url": "https://github.com/haxtheweb/haxcms-php/blob/6139c5a4c2fbf3b95d34315b9ea51130a8b80e1d/SECURITY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2018-07-19T08:41:13-07:00",
+    "stars": 130,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-12-14T09:34:46-05:00",
+    "last_commit_date": "2026-05-29T16:07:08-04:00",
+    "last_commit_author": "btopro",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-12-14T09:34:46-05:00",
+    "last_committer_date": "2026-05-29T16:07:08-04:00",
+    "marks": [
+      {
+        "text": "Agent-Logs-Url: https://github.com/haxtheweb/haxcms-php/sessions/33ba4c6a-5ffd-4727-9ce8-914b223fbdbf",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8677c90f3f85343617017346ac28cea4d6b5b8df",
+        "date": "2026-05-19T17:57:16Z",
+        "committed": "2026-05-19T17:57:16Z",
+        "old": "44b881973c40808deb9936f43b5c3d90fbfbf730",
+        "new": "9c6bb9d4b1944530752a1b1611e68ab5fe6f3942",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 3 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 461,
+    "sha256": "2a42711c0096113e54f928d53bca4c50c3860b9ad342e02cbaaef307d1a7a6d3",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 51,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/haxtheweb--haxcms-php/SECURITY.md",
+  "before": {
+    "sha256": "42d62c5a0db47fc94a36cd0d188a5e03249bf2020b4d4a28497d955cc4062c92",
+    "commit": "21c898c51564d4a28eedbba9eba681fa3486eb81",
+    "date": "2021-12-10T14:59:19-05:00",
+    "between": [
+      {
+        "commit": "5a272efe6d08c212cc2da97196af0054b4b6c698",
+        "date": "2026-05-29T16:07:08-04:00",
+        "committed": "2026-05-29T16:07:08-04:00",
+        "old": "9c6bb9d4b1944530752a1b1611e68ab5fe6f3942",
+        "new": "da862cf87e332c74ade330ba9c13a6feb8eddba6",
+        "status": "late"
+      }
+    ]
+  }
+}

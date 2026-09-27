@@ -1,0 +1,104 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__releases__v2.8.6.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ndycode/codex-multi-auth",
+    "path": "docs/releases/v2.8.6.md",
+    "commit": "227782f9cb48dddea0e45ce24b2d05bdb41cd381",
+    "commit_date": "2026-09-26T06:56:36+08:00",
+    "url": "https://github.com/ndycode/codex-multi-auth/blob/227782f9cb48dddea0e45ce24b2d05bdb41cd381/docs/releases/v2.8.6.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-23T06:37:25+08:00",
+    "stars": 519,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-08-16T23:10:58+08:00",
+    "last_commit_date": "2026-09-23T05:37:32+08:00",
+    "last_commit_author": "ndycode",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-16T23:10:58+08:00",
+    "last_committer_date": "2026-09-23T05:37:32+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01WYnWb16vmd1XdS33GPtdxi",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c9077a21e82428ed7c08daee1d82e9ace69aa78c",
+        "date": "2026-09-23T05:37:32+08:00",
+        "committed": "2026-09-23T05:37:32+08:00",
+        "old": "5db5aed3374207d5fb709b6f9b5cf2611e007e80",
+        "new": "62df674ff09a16f9938ac952bf1ec42468d02006",
+        "status": "agent"
+      },
+      {
+        "commit": "fcca464294fd86596324cc5aea85997e1190845c",
+        "date": "2026-08-16T23:11:01+08:00",
+        "committed": "2026-08-16T23:11:01+08:00",
+        "old": "a3cac76a53cb0dde7e8c47d8c6712cebfd07af61",
+        "new": "5db5aed3374207d5fb709b6f9b5cf2611e007e80",
+        "status": "agent"
+      },
+      {
+        "commit": "473c29647e924259daf924619a16ebbfb5c59551",
+        "date": "2026-08-16T23:10:58+08:00",
+        "committed": "2026-08-16T23:10:58+08:00",
+        "old": null,
+        "new": "a3cac76a53cb0dde7e8c47d8c6712cebfd07af61",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2384,
+    "sha256": "adefb878078a6375e2f75f936298adfd5f18979a6aa881758df03ee3da0c29ec",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 344,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ndycode--codex-multi-auth/docs/releases/v2.8.6.md"
+}

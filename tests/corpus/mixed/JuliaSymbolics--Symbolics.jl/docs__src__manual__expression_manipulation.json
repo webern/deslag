@@ -1,0 +1,200 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__manual__expression_manipulation.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JuliaSymbolics/Symbolics.jl",
+    "path": "docs/src/manual/expression_manipulation.md",
+    "commit": "c2775dfb659c48e0dffbdcf8f936fce30d4368db",
+    "commit_date": "2026-09-25T10:16:11-04:00",
+    "url": "https://github.com/JuliaSymbolics/Symbolics.jl/blob/c2775dfb659c48e0dffbdcf8f936fce30d4368db/docs/src/manual/expression_manipulation.md",
+    "license": "MIT-0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-08-16T12:39:49-04:00",
+    "stars": 1531,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2021-02-26T20:36:34-05:00",
+    "last_commit_date": "2026-08-27T07:49:53Z",
+    "last_commit_author": "Chris Rackauckas - Beep Boop Edition",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-02-26T20:36:34-05:00",
+    "last_committer_date": "2026-08-27T07:49:53Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "cd47dbf82031f99253c83be2d9886ee28e3cb19b",
+        "new": "20ae7ab423e8b1871a1dc28f81b7a38a090dec86",
+        "status": "squash"
+      },
+      {
+        "commit": "9e3a96b505fc1a91ff61a79f1574df7dd0c29f91",
+        "date": "2026-02-11T14:31:54-05:00",
+        "committed": "2026-02-11T14:31:54-05:00",
+        "old": "cd47dbf82031f99253c83be2d9886ee28e3cb19b",
+        "new": "e9ccb5c969a8b376f20ce3bdc1e164f994afccb3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 18 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1946,
+    "sha256": "c0a6483a501d0fd438f69167e8089f1815806fa207dc3309bbd923f61cf769e0",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 185,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JuliaSymbolics--Symbolics.jl/docs/src/manual/expression_manipulation.md",
+  "before": {
+    "sha256": "23544b6b96072796d712f8cd09297f26c3fd85f8141cc34c6867aaf51e979246",
+    "commit": "2d809405ade0bc69ddc48d11eed86e7e51a82886",
+    "date": "2021-12-22T10:19:38-05:00",
+    "between": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "cd47dbf82031f99253c83be2d9886ee28e3cb19b",
+        "new": "20ae7ab423e8b1871a1dc28f81b7a38a090dec86",
+        "status": "squash"
+      },
+      {
+        "commit": "b8c2fa17b03a771474a3bc4c7503cede3e335bf6",
+        "date": "2026-02-11T14:36:41-05:00",
+        "committed": "2026-02-11T14:36:41-05:00",
+        "old": "e9ccb5c969a8b376f20ce3bdc1e164f994afccb3",
+        "new": "cd47dbf82031f99253c83be2d9886ee28e3cb19b",
+        "status": "late"
+      },
+      {
+        "commit": "05c152f8fdb786ae1edc1a745cdae5b2f684a1fe",
+        "date": "2025-12-04T12:28:29+11:00",
+        "committed": "2025-12-04T12:28:29+11:00",
+        "old": "8852df6a73bfb399d9c3bc7f69beaeb640e5f82f",
+        "new": "cd47dbf82031f99253c83be2d9886ee28e3cb19b",
+        "status": "late"
+      },
+      {
+        "commit": "1a8e128163ac5fcdfe1da04961660af65d2147bd",
+        "date": "2025-11-05T11:57:49+05:30",
+        "committed": "2025-11-06T17:30:32+05:30",
+        "old": "6884fd8c5f24a87b9fcb7516892d2f3a9c88fb56",
+        "new": "8852df6a73bfb399d9c3bc7f69beaeb640e5f82f",
+        "status": "late"
+      },
+      {
+        "commit": "0f69e83d00dbc81a33698cd9e1e31c21d7da7e58",
+        "date": "2025-06-19T23:12:59Z",
+        "committed": "2025-06-19T23:12:59Z",
+        "old": "62ffec4237f2aa782b81c0ac7ac61e2c7fa70dfe",
+        "new": "6884fd8c5f24a87b9fcb7516892d2f3a9c88fb56",
+        "status": "late"
+      },
+      {
+        "commit": "56943d70761f75a9a5989982053b9304bc8910ef",
+        "date": "2025-05-05T16:48:47Z",
+        "committed": "2025-05-05T16:48:47Z",
+        "old": "2d22ba135462024178695d928d8c0f051587ff57",
+        "new": "62ffec4237f2aa782b81c0ac7ac61e2c7fa70dfe",
+        "status": "late"
+      },
+      {
+        "commit": "0dfd04b144cc26715b54f7dd8150c423737e2b82",
+        "date": "2025-02-20T15:38:18+01:00",
+        "committed": "2025-02-20T15:38:18+01:00",
+        "old": "85c3be87d159c0fea29f4299f84c75883766c3de",
+        "new": "2d22ba135462024178695d928d8c0f051587ff57",
+        "status": "late"
+      },
+      {
+        "commit": "e49f153a9087e1ab20ee65a440a02c15a4939054",
+        "date": "2024-08-27T10:17:24-04:00",
+        "committed": "2024-08-27T10:17:24-04:00",
+        "old": "102aa985c99a8b126c91bbb2e43b6d8ea10ae5cb",
+        "new": "85c3be87d159c0fea29f4299f84c75883766c3de",
+        "status": "late"
+      },
+      {
+        "commit": "33ce32b6304e22a59f0df54484bb75be93e94dec",
+        "date": "2024-03-25T15:03:46+05:30",
+        "committed": "2024-03-25T15:03:46+05:30",
+        "old": "3dfbbd44b5a6d0f0460b9639556fe266dc9be259",
+        "new": "102aa985c99a8b126c91bbb2e43b6d8ea10ae5cb",
+        "status": "late"
+      },
+      {
+        "commit": "4d37631eec573e5f3ccde8be2bb6961252bd5553",
+        "date": "2024-03-18T12:46:13-04:00",
+        "committed": "2024-03-18T12:46:13-04:00",
+        "old": "9d9bfae331399be121bc87a624f1ce5c181b6253",
+        "new": "3dfbbd44b5a6d0f0460b9639556fe266dc9be259",
+        "status": "late"
+      },
+      {
+        "commit": "474bad1ad645b878efd921d02698fa121dddc348",
+        "date": "2023-01-20T01:56:09+01:00",
+        "committed": "2023-01-20T01:56:09+01:00",
+        "old": "d6fbcfa34da32533191e45c3f6ed5ea785ebf8af",
+        "new": "17745b1d00e22080dd043a954a4b7bf11d13fe10",
+        "status": "late"
+      },
+      {
+        "commit": "212896d539e64b821a6aa75fc6726428d9cf8b02",
+        "date": "2022-10-28T09:50:59+08:00",
+        "committed": "2022-10-28T09:50:59+08:00",
+        "old": "15a6a83edd93dd472f68efa63a60f9f6b941d771",
+        "new": "d6fbcfa34da32533191e45c3f6ed5ea785ebf8af",
+        "status": "late"
+      },
+      {
+        "commit": "c8e3791e5d5d74fff422e45db7e1050c9fe33f90",
+        "date": "2022-09-07T20:02:38+02:00",
+        "committed": "2022-09-07T20:02:38+02:00",
+        "old": "15a6a83edd93dd472f68efa63a60f9f6b941d771",
+        "new": "6ba14f46da004808fe78111fb088dd6bfa8996d5",
+        "status": "late"
+      }
+    ]
+  }
+}

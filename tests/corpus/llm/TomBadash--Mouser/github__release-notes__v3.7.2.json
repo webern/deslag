@@ -1,0 +1,88 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__release-notes__v3.7.2.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "TomBadash/Mouser",
+    "path": ".github/release-notes/v3.7.2.md",
+    "commit": "e780641d3e709f914d6273985da9ac2ab85a7322",
+    "commit_date": "2026-08-12T23:32:48+02:00",
+    "url": "https://github.com/TomBadash/Mouser/blob/e780641d3e709f914d6273985da9ac2ab85a7322/.github/release-notes/v3.7.2.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-25T01:49:01+02:00",
+    "stars": 5270,
+    "found_by": "sg-topic:linux"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-27T14:52:00Z",
+    "last_commit_date": "2026-07-27T14:52:00Z",
+    "last_commit_author": "Claude",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-27T14:52:00Z",
+    "last_committer_date": "2026-07-27T14:52:00Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01NVbaB22LcgK1EeJZb4VEVj",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d33c5b77ccbfd7f6168066d7195619ac52d629ea",
+        "date": "2026-07-27T14:52:00Z",
+        "committed": "2026-07-27T14:52:00Z",
+        "old": null,
+        "new": "0ef62df337f2776f9b8cca7aac44de860888429f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3937,
+    "sha256": "f234a0b0e614f89b6f6776f271469070d343009338f81f43a9a52849f87c4283",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 42,
+    "words": 655,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/TomBadash--Mouser/.github/release-notes/v3.7.2.md"
+}

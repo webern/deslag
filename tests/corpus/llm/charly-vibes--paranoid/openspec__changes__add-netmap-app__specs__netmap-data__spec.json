@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "openspec__changes__add-netmap-app__specs__netmap-data__spec.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "charly-vibes/paranoid",
+    "path": "openspec/changes/add-netmap-app/specs/netmap-data/spec.md",
+    "commit": "bdae01113201461d609097d1265f68dd95fd217b",
+    "commit_date": "2026-07-21T20:48:02-03:00",
+    "url": "https://github.com/charly-vibes/paranoid/blob/bdae01113201461d609097d1265f68dd95fd217b/openspec/changes/add-netmap-app/specs/netmap-data/spec.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-07T12:57:34-03:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-07T19:35:52-03:00",
+    "last_commit_date": "2026-04-07T19:35:52-03:00",
+    "last_commit_author": "charly vibes",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-07T19:35:52-03:00",
+    "last_committer_date": "2026-04-07T19:35:52-03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3dd6df2b054257b2655e42b107832ab48a292ff1",
+        "date": "2026-04-07T19:35:52-03:00",
+        "committed": "2026-04-07T19:35:52-03:00",
+        "old": null,
+        "new": "9cdc636729c46021757dcbc8d1cd84a5a21afc96",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2189,
+    "sha256": "d4e5ebbd574242be07e657f0f804fa6789330b6745ea8eb8d32e97bd232e5d49",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 40,
+    "words": 318,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/charly-vibes--paranoid/openspec/changes/add-netmap-app/specs/netmap-data/spec.md"
+}

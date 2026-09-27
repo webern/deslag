@@ -1,0 +1,130 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mokekuma-git/JLeague_Matches-Bar_Graph",
+    "path": "README.md",
+    "commit": "0d44ae66a35f5046c808d3a24cd6822f44fddc24",
+    "commit_date": "2026-09-26T19:08:18Z",
+    "url": "https://github.com/mokekuma-git/JLeague_Matches-Bar_Graph/blob/0d44ae66a35f5046c808d3a24cd6822f44fddc24/README.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-05-24T22:28:37+09:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 40,
+    "first_commit_date": "2021-05-24T22:28:37+09:00",
+    "last_commit_date": "2026-07-01T23:33:04+09:00",
+    "last_commit_author": "mokekuma-git",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-05-24T22:28:37+09:00",
+    "last_committer_date": "2026-07-01T23:33:04+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "59df45cef7fbe5f8fbcb5051f039c2a52bb71470",
+        "date": "2026-07-01T23:33:04+09:00",
+        "committed": "2026-07-01T23:33:04+09:00",
+        "old": "ab3cce46b93888da8164fb8af6da5c498dd3db01",
+        "new": "e1e823f75f91aed64aa4fd05df1602552303882e",
+        "status": "agent"
+      },
+      {
+        "commit": "d376ebce6cf0c401c361221605b5535e7dc69d3e",
+        "date": "2026-03-11T10:54:14+09:00",
+        "committed": "2026-03-11T10:54:14+09:00",
+        "old": "2f9751b93daf38a96c63ebf952fb86d1b8f7f3bb",
+        "new": "ab3cce46b93888da8164fb8af6da5c498dd3db01",
+        "status": "agent"
+      },
+      {
+        "commit": "28c717c5326c99214dae88178528fd3446e44914",
+        "date": "2026-03-05T20:08:10+09:00",
+        "committed": "2026-03-05T20:08:10+09:00",
+        "old": "ae2fac6de16bfc638e679afd6d4a2dbab23d813b",
+        "new": "2f9751b93daf38a96c63ebf952fb86d1b8f7f3bb",
+        "status": "agent"
+      },
+      {
+        "commit": "4e60309ecad5504112ee9324abc6e16d624d4857",
+        "date": "2026-02-19T19:11:26+09:00",
+        "committed": "2026-02-19T19:11:26+09:00",
+        "old": "0425eaeb10f9b3e937db6ca4489db7a8d6a9cf3d",
+        "new": "ae2fac6de16bfc638e679afd6d4a2dbab23d813b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "35 of its 40 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 12292,
+    "sha256": "1692de494c8dd2716e8924cb3c01d7a13f69ac1a2b7ec635130289a01f53252d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 164,
+    "words": 251,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Kana",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/mokekuma-git--JLeague_Matches-Bar_Graph/README.md",
+  "before": {
+    "sha256": "3cf4e695e738bae22e1b49f0ce454c86299367ae7b1aabb738a82985506fff22",
+    "commit": "963a30f9b22e96dd286d50ef67f458781e461a52",
+    "date": "2021-12-23T13:34:09+09:00",
+    "between": [
+      {
+        "commit": "59e05d256e4df86fe38bb56f03c3ccd9fe65f511",
+        "date": "2022-11-23T01:46:24+09:00",
+        "committed": "2022-11-23T01:46:24+09:00",
+        "old": "661cf98e87bc38866ff956ccbd67e3f46f1cbf7d",
+        "new": "0425eaeb10f9b3e937db6ca4489db7a8d6a9cf3d",
+        "status": "late"
+      }
+    ]
+  }
+}

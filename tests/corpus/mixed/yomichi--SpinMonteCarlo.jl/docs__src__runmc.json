@@ -1,0 +1,103 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__runmc.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "yomichi/SpinMonteCarlo.jl",
+    "path": "docs/src/runmc.md",
+    "commit": "e8701e3ad559b7c27df1d2841f3dc3ff9650086f",
+    "commit_date": "2026-08-28T22:28:40+09:00",
+    "url": "https://github.com/yomichi/SpinMonteCarlo.jl/blob/e8701e3ad559b7c27df1d2841f3dc3ff9650086f/docs/src/runmc.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-10-06T21:10:01+09:00",
+    "stars": 52,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2018-07-20T17:08:37+09:00",
+    "last_commit_date": "2026-08-20T20:55:52+09:00",
+    "last_commit_author": "Yuichi Motoyama",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-07-20T17:08:37+09:00",
+    "last_committer_date": "2026-08-20T20:55:52+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01PMUh6YMgrPEE2e4V9icedS",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "94620b1b54e2c47c3d409e53e5f95513b242a883",
+        "date": "2026-08-20T20:55:52+09:00",
+        "committed": "2026-08-20T20:55:52+09:00",
+        "old": "487b8a7af3faf6c2abc6a23f516d4974b08080ab",
+        "new": "ebb564c0c081197ec56aabd6e2f56fe47a4a3cbe",
+        "status": "agent"
+      },
+      {
+        "commit": "27a19871e285c2285fd4d38438a8bcf7edaffb53",
+        "date": "2026-08-20T20:29:34+09:00",
+        "committed": "2026-08-20T20:29:34+09:00",
+        "old": "850dc695a67ca13fafee6598bdb36014d2bdf6a1",
+        "new": "487b8a7af3faf6c2abc6a23f516d4974b08080ab",
+        "status": "agent"
+      },
+      {
+        "commit": "a80fbbe977d3cf687ec682e5eaf85f13e7307d1a",
+        "date": "2026-08-20T18:41:24+09:00",
+        "committed": "2026-08-20T18:47:21+09:00",
+        "old": "5f2d1614c809008be365b1480f144e4a6bbb603a",
+        "new": "850dc695a67ca13fafee6598bdb36014d2bdf6a1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 5 commits predate 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4252,
+    "sha256": "1571a70d462a6b589109b20abdd37fb90be5138793723710df53936b99d8a39f",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 611,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/yomichi--SpinMonteCarlo.jl/docs/src/runmc.md",
+  "before": {
+    "sha256": "fe64074343a97a72cf6398fc952749668c834f128bf3f2a8a626f24cb7c42d21",
+    "commit": "beffe45f76fe34958d50816b82a8aed96c03819b",
+    "date": "2021-11-22T17:29:55Z",
+    "between": []
+  }
+}

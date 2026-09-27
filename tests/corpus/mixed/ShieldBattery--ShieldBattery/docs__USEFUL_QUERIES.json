@@ -1,0 +1,177 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__USEFUL_QUERIES.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ShieldBattery/ShieldBattery",
+    "path": "docs/USEFUL_QUERIES.md",
+    "commit": "92df263618e4a866ac6a6466d4d04c7864324d46",
+    "commit_date": "2026-09-25T22:46:10+02:00",
+    "url": "https://github.com/ShieldBattery/ShieldBattery/blob/92df263618e4a866ac6a6466d4d04c7864324d46/docs/USEFUL_QUERIES.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 190,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2021-09-02T22:27:40-07:00",
+    "last_commit_date": "2026-07-19T03:41:39-07:00",
+    "last_commit_author": "Travis Collins",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-09-02T22:27:40-07:00",
+    "last_committer_date": "2026-07-19T03:41:39-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "659e8c41d89b277a8fa27778a94732d1e409c154",
+        "date": "2026-06-28T15:16:26+02:00",
+        "committed": "2026-06-28T15:16:26+02:00",
+        "old": "e2a2a4f17451cda4ef8980862328f7557bcbe410",
+        "new": "ec37c01dfa51eb0028a7f67d89b38a7e2eeafdf3",
+        "status": "agent"
+      },
+      {
+        "commit": "42464c73645a287a5610c580dff1188ecc3c72be",
+        "date": "2026-06-28T12:36:28+02:00",
+        "committed": "2026-06-28T12:36:28+02:00",
+        "old": "d421a31d9c18fbfb1bf8ef51dda1ab02e447d87d",
+        "new": "e2a2a4f17451cda4ef8980862328f7557bcbe410",
+        "status": "squash"
+      },
+      {
+        "commit": "684819173c68b8ff32f188199bdc5f4e90c302f1",
+        "date": "2026-06-26T15:57:03+02:00",
+        "committed": "2026-06-26T15:57:03+02:00",
+        "old": "08d234a51de9dcfd78a2265e9ec732e52c909b73",
+        "new": "d421a31d9c18fbfb1bf8ef51dda1ab02e447d87d",
+        "status": "squash"
+      },
+      {
+        "commit": "d2cc32d04caa82a236df52dc2f596fd9ef659dc5",
+        "date": "2026-06-25T18:53:55+02:00",
+        "committed": "2026-06-25T18:53:55+02:00",
+        "old": "843b2f54c21f720abaa48a616d5984c650a024ee",
+        "new": "08d234a51de9dcfd78a2265e9ec732e52c909b73",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 15 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 19781,
+    "sha256": "c7d4d5eca792b25a56b435e7673a983f90afd3270958e8839fc525fe1308a558",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 501,
+    "words": 2538,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ShieldBattery--ShieldBattery/docs/USEFUL_QUERIES.md",
+  "before": {
+    "sha256": "2979df97cad929f4323f2249d155a7caddd6c70d7a3340bc31e6a89cb13774bd",
+    "commit": "9008ba2cfc5a67657b363ae7df89825f556a1cc4",
+    "date": "2021-12-31T15:19:52-08:00",
+    "between": [
+      {
+        "commit": "924efc22c68e599dd879383d5cd28cd6da252e46",
+        "date": "2026-07-19T03:41:39-07:00",
+        "committed": "2026-07-19T03:41:39-07:00",
+        "old": "ec37c01dfa51eb0028a7f67d89b38a7e2eeafdf3",
+        "new": "8f11527c9faf680dbafc7f4037fc4fe61998fcbf",
+        "status": "late"
+      },
+      {
+        "commit": "42464c73645a287a5610c580dff1188ecc3c72be",
+        "date": "2026-06-28T12:36:28+02:00",
+        "committed": "2026-06-28T12:36:28+02:00",
+        "old": "d421a31d9c18fbfb1bf8ef51dda1ab02e447d87d",
+        "new": "e2a2a4f17451cda4ef8980862328f7557bcbe410",
+        "status": "squash"
+      },
+      {
+        "commit": "684819173c68b8ff32f188199bdc5f4e90c302f1",
+        "date": "2026-06-26T15:57:03+02:00",
+        "committed": "2026-06-26T15:57:03+02:00",
+        "old": "08d234a51de9dcfd78a2265e9ec732e52c909b73",
+        "new": "d421a31d9c18fbfb1bf8ef51dda1ab02e447d87d",
+        "status": "squash"
+      },
+      {
+        "commit": "8d847cd3d45a72c822573b1c519213f1e9aef88e",
+        "date": "2023-09-30T16:07:33+02:00",
+        "committed": "2023-09-30T16:07:33+02:00",
+        "old": "63a23c44e88bb089c06362f6725d72cec8534f8b",
+        "new": "843b2f54c21f720abaa48a616d5984c650a024ee",
+        "status": "late"
+      },
+      {
+        "commit": "2a18de757c107dc326fc24170ec4f7580a7940c2",
+        "date": "2023-07-08T01:56:53+02:00",
+        "committed": "2023-07-08T01:56:53+02:00",
+        "old": "1da25cac8b78ad90f07f1aea1656a1d107603d6e",
+        "new": "63a23c44e88bb089c06362f6725d72cec8534f8b",
+        "status": "late"
+      },
+      {
+        "commit": "f459f2806ed9f6abd85588568805e4444d495089",
+        "date": "2023-04-22T11:59:04+02:00",
+        "committed": "2023-04-22T11:59:04+02:00",
+        "old": "c594daf0f55aedd87e363511f713d96a399dce18",
+        "new": "1da25cac8b78ad90f07f1aea1656a1d107603d6e",
+        "status": "late"
+      },
+      {
+        "commit": "f215d2b442738673aa02c8201f8efacc72073c7d",
+        "date": "2023-01-14T07:20:34+01:00",
+        "committed": "2023-01-13T22:20:34-08:00",
+        "old": "2ffdd59d0d5dc4c8b28a0a341a865e6b294db48a",
+        "new": "c594daf0f55aedd87e363511f713d96a399dce18",
+        "status": "late"
+      },
+      {
+        "commit": "d5a7396208042fe6023509ce48643726c11c723c",
+        "date": "2022-10-27T14:02:16-07:00",
+        "committed": "2022-10-27T14:02:16-07:00",
+        "old": "d5d096ac266f85222d401d46691aa9dda5f78203",
+        "new": "2ffdd59d0d5dc4c8b28a0a341a865e6b294db48a",
+        "status": "late"
+      },
+      {
+        "commit": "0a59770995cfc4ec9bc708d871cd65b264dca7bd",
+        "date": "2022-03-29T02:32:51+02:00",
+        "committed": "2022-03-28T17:32:51-07:00",
+        "old": "c95be13649e62271c7e12fed387e7169f7613841",
+        "new": "d5d096ac266f85222d401d46691aa9dda5f78203",
+        "status": "late"
+      }
+    ]
+  }
+}

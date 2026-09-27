@@ -1,0 +1,173 @@
+{
+  "sidecar_version": 3,
+  "fixture": "crates__ganja-serve__AGENTS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "zchee/ganja-code",
+    "path": "crates/ganja-serve/AGENTS.md",
+    "commit": "a6d342c7908484ccd2d5d888660688806fb1b52d",
+    "commit_date": "2026-09-27T12:08:50+09:00",
+    "url": "https://github.com/zchee/ganja-code/blob/a6d342c7908484ccd2d5d888660688806fb1b52d/crates/ganja-serve/AGENTS.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-03T18:10:57+09:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 8,
+    "first_commit_date": "2026-08-05T23:36:02+09:00",
+    "last_commit_date": "2026-09-23T20:37:34+09:00",
+    "last_commit_author": "Koichi Shiraishi",
+    "authors": 1,
+    "ai_commits": 8,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-05T23:36:02+09:00",
+    "last_committer_date": "2026-09-23T20:37:34+09:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      },
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01RKPbfjnBmjfHVHrPDtUaLX",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 2
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_016z3ahyyUfrEbS7sveDsRU6",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01LmrzecuRbSmux8AKx2LKD5",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4fc7830778517aed14e9753767c2371d3ecef4bf",
+        "date": "2026-09-23T20:37:34+09:00",
+        "committed": "2026-09-23T20:37:34+09:00",
+        "old": "ae9941f56dd6f37e315b46bd42e61966451f077c",
+        "new": "dbc587cf5732ddd8ea4b2d410de90812c148f2e1",
+        "status": "agent"
+      },
+      {
+        "commit": "55558cc8f77952e9db29c4e0d7248fed043f0654",
+        "date": "2026-09-23T20:33:17+09:00",
+        "committed": "2026-09-23T20:33:17+09:00",
+        "old": "11a21759cff55e014df1efc84006a90a77ad94ec",
+        "new": "ae9941f56dd6f37e315b46bd42e61966451f077c",
+        "status": "agent"
+      },
+      {
+        "commit": "824ca04d3475d2cd7f185a257e3c64030f9bc64e",
+        "date": "2026-08-31T22:14:09+09:00",
+        "committed": "2026-08-31T22:14:09+09:00",
+        "old": "2f7894b6fd3bae1bfeee4411f48de30a42fb9871",
+        "new": "11a21759cff55e014df1efc84006a90a77ad94ec",
+        "status": "agent"
+      },
+      {
+        "commit": "2945c59522a948c23254ac658e0c24f1ed9751b0",
+        "date": "2026-08-18T22:20:40+09:00",
+        "committed": "2026-08-18T22:20:40+09:00",
+        "old": "b749aa77eabbcc7d1ec9e52b162d3a21cf029cb7",
+        "new": "2f7894b6fd3bae1bfeee4411f48de30a42fb9871",
+        "status": "agent"
+      },
+      {
+        "commit": "6014bd9aa7a162edc6e62ad5066107470e44be54",
+        "date": "2026-08-18T11:14:55+09:00",
+        "committed": "2026-08-18T11:48:19+09:00",
+        "old": "9cb891e4048afadfc34a40d4427f902be4c7e5a2",
+        "new": "b749aa77eabbcc7d1ec9e52b162d3a21cf029cb7",
+        "status": "agent"
+      },
+      {
+        "commit": "57f53bb262b202158dea06b9adcb5d2c9aa2a302",
+        "date": "2026-08-18T05:23:30+09:00",
+        "committed": "2026-08-18T05:49:29+09:00",
+        "old": "450beee802cee2768c89d91b6a70c210ddc305dc",
+        "new": "9cb891e4048afadfc34a40d4427f902be4c7e5a2",
+        "status": "agent"
+      },
+      {
+        "commit": "b107322c1140b02abba6c5aa6a5bd8f16dc506fa",
+        "date": "2026-08-11T21:56:37+09:00",
+        "committed": "2026-08-11T21:56:37+09:00",
+        "old": "518eb14c55f7e0cce5305255667adb74fce2a52f",
+        "new": "450beee802cee2768c89d91b6a70c210ddc305dc",
+        "status": "agent"
+      },
+      {
+        "commit": "2c970e25ddb2fa5613c9addaabd6747cc54bef6d",
+        "date": "2026-08-05T23:36:02+09:00",
+        "committed": "2026-08-05T23:36:02+09:00",
+        "old": null,
+        "new": "518eb14c55f7e0cce5305255667adb74fce2a52f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 8 in all, is marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 6805,
+    "sha256": "c292296a0678735997aefd38637caf90f1173d67d19537f3453bc5154083b0dc",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 906,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/zchee--ganja-code/crates/ganja-serve/AGENTS.md"
+}

@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__HANDOFF.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jamditis/claude-skills-journalism",
+    "path": "docs/HANDOFF.md",
+    "commit": "fda6048cc4403551ecea08db5512083d45701722",
+    "commit_date": "2026-09-24T20:28:49-04:00",
+    "url": "https://github.com/jamditis/claude-skills-journalism/blob/fda6048cc4403551ecea08db5512083d45701722/docs/HANDOFF.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-25T18:04:01-05:00",
+    "stars": 403,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-02-04T15:14:32-05:00",
+    "last_commit_date": "2026-02-14T12:12:08-05:00",
+    "last_commit_author": "Joe Amditis",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-04T15:14:57-05:00",
+    "last_committer_date": "2026-02-14T12:13:57-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cb2df67503a6bdf9f2fa664c65d2766d30480d45",
+        "date": "2026-02-14T12:12:08-05:00",
+        "committed": "2026-02-14T12:13:57-05:00",
+        "old": "3fe68db5cf89c0597298616972f3e145f34e9acc",
+        "new": "76e6b044d3fe4fb98b2fc15c25b204528deb338c",
+        "status": "agent"
+      },
+      {
+        "commit": "40ec32e6ea403fc56d3bf33b89894e274697e505",
+        "date": "2026-02-04T15:31:58-05:00",
+        "committed": "2026-02-04T15:31:58-05:00",
+        "old": "294c701f69f70861f407306dd1596c99fd057e85",
+        "new": "3fe68db5cf89c0597298616972f3e145f34e9acc",
+        "status": "agent"
+      },
+      {
+        "commit": "17cdf3dc6598f12bc470929dec037c70b86da073",
+        "date": "2026-02-04T15:14:32-05:00",
+        "committed": "2026-02-04T15:14:57-05:00",
+        "old": null,
+        "new": "294c701f69f70861f407306dd1596c99fd057e85",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4197,
+    "sha256": "4db081b959e9386654ed4c320664fdf470093423cc532d652eca49e0faa0401b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 154,
+    "words": 447,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jamditis--claude-skills-journalism/docs/HANDOFF.md"
+}

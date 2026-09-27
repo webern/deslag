@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agent-docs__exec-plans__completed__2026-05-18-murph-age-r1175-current-loop-audit-surfacing.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cobuildwithus/murph",
+    "path": "agent-docs/exec-plans/completed/2026-05-18-murph-age-r1175-current-loop-audit-surfacing.md",
+    "commit": "a3ae957f854d920fd1b8937e4d98215213b06403",
+    "commit_date": "2026-09-25T21:53:10-04:00",
+    "url": "https://github.com/cobuildwithus/murph/blob/a3ae957f854d920fd1b8937e4d98215213b06403/agent-docs/exec-plans/completed/2026-05-18-murph-age-r1175-current-loop-audit-surfacing.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-12T17:15:57-04:00",
+    "stars": 14,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-18T15:02:46-04:00",
+    "last_commit_date": "2026-05-18T15:02:46-04:00",
+    "last_commit_author": "rocketman",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-18T15:02:46-04:00",
+    "last_committer_date": "2026-05-18T15:02:46-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "908237a8f771241f73d728c3ab24d5d8baff4cfd",
+        "date": "2026-05-18T15:02:46-04:00",
+        "committed": "2026-05-18T15:02:46-04:00",
+        "old": null,
+        "new": "37588a903ca5efde59d62ff64a009b3b6a77cd98",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1379,
+    "sha256": "5cd4efb0ec49f1cf389d2ab72312b59f70145591da11e61fabcfdf2fbca75881",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 30,
+    "words": 186,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/cobuildwithus--murph/agent-docs/exec-plans/completed/2026-05-18-murph-age-r1175-current-loop-audit-surfacing.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "explore__internal-analysis__2026-08-21-non-normalized-float-equality.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "pine-vm/pine",
+    "path": "explore/internal-analysis/2026-08-21-non-normalized-float-equality.md",
+    "commit": "ec5c9f1a585f2234b330db1484b2363121397a61",
+    "commit_date": "2026-09-26T21:11:13Z",
+    "url": "https://github.com/pine-vm/pine/blob/ec5c9f1a585f2234b330db1484b2363121397a61/explore/internal-analysis/2026-08-21-non-normalized-float-equality.md",
+    "license": "MIT",
+    "license_files": [
+      "License.txt"
+    ],
+    "repo_first_commit_date": "2016-05-05T17:53:36+02:00",
+    "stars": 257,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-21T11:51:12Z",
+    "last_commit_date": "2026-08-21T11:51:12Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-21T11:51:12Z",
+    "last_committer_date": "2026-08-21T11:51:12Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "24e9cbdefd17894df003bf3444766e2ba063f85a",
+        "date": "2026-08-21T11:51:12Z",
+        "committed": "2026-08-21T11:51:12Z",
+        "old": null,
+        "new": "2fb43f44ce3e61a98a41618577c9c5dbeb277ad8",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3276,
+    "sha256": "54c31e313702ccbb76f884a8e77a4da6f56ba51a551c0f09518ca50f4296fc73",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 436,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/pine-vm--pine/explore/internal-analysis/2026-08-21-non-normalized-float-equality.md"
+}

@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "guards__github-guard__docs__WORKIQ_GUARD_PLAN.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "github/gh-aw-mcpg",
+    "path": "guards/github-guard/docs/WORKIQ_GUARD_PLAN.md",
+    "commit": "ed65db4313b4dce64a2254fd517513763018ed06",
+    "commit_date": "2026-09-26T13:05:04-07:00",
+    "url": "https://github.com/github/gh-aw-mcpg/blob/ed65db4313b4dce64a2254fd517513763018ed06/guards/github-guard/docs/WORKIQ_GUARD_PLAN.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE",
+      "guards/github-guard/LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-10T13:43:52-08:00",
+    "stars": 180,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-08T17:21:50-07:00",
+    "last_commit_date": "2026-03-08T17:21:50-07:00",
+    "last_commit_author": "Landon Cox",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-08T17:21:50-07:00",
+    "last_committer_date": "2026-03-08T17:21:50-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ef26786a118b3ce09485110c4756e4f56b4aa8c2",
+        "date": "2026-03-08T17:21:50-07:00",
+        "committed": "2026-03-08T17:21:50-07:00",
+        "old": null,
+        "new": "e0212ca3bb6c28e8217e7e16da6b5c158cea0faa",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 24605,
+    "sha256": "407d12e38f4ea24c1021f1dc6c6532d37650d44af7d4ed25881673e5c67905e3",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 429,
+    "words": 3398,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/github--gh-aw-mcpg/guards/github-guard/docs/WORKIQ_GUARD_PLAN.md"
+}

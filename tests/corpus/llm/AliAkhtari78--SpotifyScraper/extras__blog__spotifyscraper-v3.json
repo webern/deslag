@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "extras__blog__spotifyscraper-v3.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AliAkhtari78/SpotifyScraper",
+    "path": "extras/blog/spotifyscraper-v3.md",
+    "commit": "9cbf05aa4963bac3684bb941270dcb62fc851ab7",
+    "commit_date": "2026-06-26T13:58:24+04:00",
+    "url": "https://github.com/AliAkhtari78/SpotifyScraper/blob/9cbf05aa4963bac3684bb941270dcb62fc851ab7/extras/blog/spotifyscraper-v3.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-04-29T03:11:45+04:30",
+    "stars": 310,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-13T16:55:17+04:00",
+    "last_commit_date": "2026-06-13T23:04:19+04:00",
+    "last_commit_author": "Ali Akhtari",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-13T16:55:17+04:00",
+    "last_committer_date": "2026-06-13T23:04:19+04:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "380184d666b4b9bd46e68ff7a0c8f585ac36826c",
+        "date": "2026-06-13T23:04:19+04:00",
+        "committed": "2026-06-13T23:04:19+04:00",
+        "old": "bc7a9f8a280c9c00685b934c2677c54c1f3b1bdf",
+        "new": "a954a209ddabe237ed8cf7548ccfb9c11e581cde",
+        "status": "agent"
+      },
+      {
+        "commit": "5a55650cf7ba9b1cc531f8f9de1dce52a78fda77",
+        "date": "2026-06-13T20:29:48+04:00",
+        "committed": "2026-06-13T20:29:48+04:00",
+        "old": "dd7b768671aaef1e0844633aef23af465b34389c",
+        "new": "bc7a9f8a280c9c00685b934c2677c54c1f3b1bdf",
+        "status": "agent"
+      },
+      {
+        "commit": "2a1d0f1d1798e10a78f521a53ad4d2ff50fe36b6",
+        "date": "2026-06-13T16:55:17+04:00",
+        "committed": "2026-06-13T16:55:17+04:00",
+        "old": null,
+        "new": "dd7b768671aaef1e0844633aef23af465b34389c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4598,
+    "sha256": "955c009e33c8a81fe209aae4d737083fafbbede0a02bd1600bb9264ebae8041e",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 128,
+    "words": 617,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AliAkhtari78--SpotifyScraper/extras/blog/spotifyscraper-v3.md"
+}

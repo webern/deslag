@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "design__RFC-056-clarify-cross-agent__patch-2026-06-22-designer-rerun-no-rollback.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wangbinquan/agent-workflow",
+    "path": "design/RFC-056-clarify-cross-agent/patch-2026-06-22-designer-rerun-no-rollback.md",
+    "commit": "a53425b87bc6fa124d74829c278f52059ca04c93",
+    "commit_date": "2026-09-23T18:03:50+08:00",
+    "url": "https://github.com/wangbinquan/agent-workflow/blob/a53425b87bc6fa124d74829c278f52059ca04c93/design/RFC-056-clarify-cross-agent/patch-2026-06-22-designer-rerun-no-rollback.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-13T18:45:02+08:00",
+    "stars": 51,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-06-22T18:53:18+08:00",
+    "last_commit_date": "2026-06-22T19:15:51+08:00",
+    "last_commit_author": "WangBinquan",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-22T18:53:18+08:00",
+    "last_committer_date": "2026-06-22T19:15:51+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8fcca32342d12c9c3ff277d1c5cc6b87232bd952",
+        "date": "2026-06-22T19:15:51+08:00",
+        "committed": "2026-06-22T19:15:51+08:00",
+        "old": "4fea3f1028a35f94fe0c7e7b7f1e01a9386f7f0c",
+        "new": "aa77338f6916a557cd2c26ce970d79d9f80bf85b",
+        "status": "agent"
+      },
+      {
+        "commit": "3c9ba12f9cbbd9cb7c82b221e0dd14af8c72217f",
+        "date": "2026-06-22T18:53:18+08:00",
+        "committed": "2026-06-22T18:53:18+08:00",
+        "old": null,
+        "new": "4fea3f1028a35f94fe0c7e7b7f1e01a9386f7f0c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11447,
+    "sha256": "d9f0997828e94cf44eef092d3aae994159613dac6064bacb61b8112cc48273f4",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 225,
+    "words": 1478,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/wangbinquan--agent-workflow/design/RFC-056-clarify-cross-agent/patch-2026-06-22-designer-rerun-no-rollback.md"
+}

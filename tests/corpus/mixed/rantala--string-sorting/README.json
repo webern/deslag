@@ -1,0 +1,112 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "rantala/string-sorting",
+    "path": "README.md",
+    "commit": "c64640d2d6e3214dc888631b8ab1927df5990641",
+    "commit_date": "2026-05-16T23:47:18+03:00",
+    "url": "https://github.com/rantala/string-sorting/blob/c64640d2d6e3214dc888631b8ab1927df5990641/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2008-02-26T09:11:15Z",
+    "stars": 58,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-02-13T10:19:26+02:00",
+    "last_commit_date": "2026-05-16T21:55:56+03:00",
+    "last_commit_author": "Tommi Rantala",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-02-13T10:19:26+02:00",
+    "last_committer_date": "2026-05-16T23:40:31+03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      }
+    ],
+    "edits": [
+      {
+        "commit": "36b3187163af117de29fb7f69dd51a80ca72c451",
+        "date": "2026-05-16T21:55:56+03:00",
+        "committed": "2026-05-16T23:40:31+03:00",
+        "old": "afbd398f6bed30067290441b13be9bcf9b0a9e19",
+        "new": "4f0ab6048d81e5922d1ee28422f4f27e670fd10a",
+        "status": "agent"
+      },
+      {
+        "commit": "1798ccbd09288a7129b3ffa6cc37f6ef5e6b1517",
+        "date": "2026-05-13T23:39:17+03:00",
+        "committed": "2026-05-16T23:40:31+03:00",
+        "old": "25c82f5fe0076bdcda58621b598bfbd7daae5881",
+        "new": "afbd398f6bed30067290441b13be9bcf9b0a9e19",
+        "status": "agent"
+      },
+      {
+        "commit": "10685ba23b2b359f159e632441ab9b6f24826321",
+        "date": "2026-05-08T14:34:04+03:00",
+        "committed": "2026-05-16T22:41:44+03:00",
+        "old": "ca7f689abde72f96804874a6d6a8eee331e8db04",
+        "new": "25c82f5fe0076bdcda58621b598bfbd7daae5881",
+        "status": "agent"
+      },
+      {
+        "commit": "09fb443aef2d58c40f8a7f457c7eaa7fd8e4ffc8",
+        "date": "2026-05-08T14:26:48+03:00",
+        "committed": "2026-05-16T22:41:44+03:00",
+        "old": "49351efee8cd23f71dcafc00606d33e2c015bec0",
+        "new": "ca7f689abde72f96804874a6d6a8eee331e8db04",
+        "status": "agent"
+      },
+      {
+        "commit": "c2f5e5c9c1e807ff8739e3bc8b5d1a3526865965",
+        "date": "2026-05-08T14:27:03+03:00",
+        "committed": "2026-05-16T22:41:44+03:00",
+        "old": "f60cbc8bb84bc0d9200647a80b22f812d4ec49fd",
+        "new": "49351efee8cd23f71dcafc00606d33e2c015bec0",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 6 commits predates 2022-01-01 with no mark, and 5 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5082,
+    "sha256": "18005c88f361630e204beffe38a22bf5bf959f581012e0744516915408bde8a1",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 139,
+    "words": 717,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/rantala--string-sorting/README.md",
+  "before": {
+    "sha256": "865f6beebb77aaf2dd8a0db148e82bdff41fa56414d7cc8b7938ec12197dc5a6",
+    "commit": "3403612c1234091d6ce8d2a1ed404e7f24ef9c19",
+    "date": "2020-12-28T13:19:11+02:00",
+    "between": []
+  }
+}

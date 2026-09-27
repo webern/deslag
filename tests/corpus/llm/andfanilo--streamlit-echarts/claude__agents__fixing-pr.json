@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__agents__fixing-pr.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "andfanilo/streamlit-echarts",
+    "path": ".claude/agents/fixing-pr.md",
+    "commit": "a8f5577168f0eb3a82ba58f2e72bc59df220127f",
+    "commit_date": "2026-09-02T10:21:47+02:00",
+    "url": "https://github.com/andfanilo/streamlit-echarts/blob/a8f5577168f0eb3a82ba58f2e72bc59df220127f/.claude/agents/fixing-pr.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-04T20:18:59+02:00",
+    "stars": 634,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-01T10:17:49+01:00",
+    "last_commit_date": "2026-03-01T10:17:49+01:00",
+    "last_commit_author": "Fanilo Andrianasolo",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-04T20:16:39+01:00",
+    "last_committer_date": "2026-03-04T20:16:39+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "517a4b383dcce4a3068ecc533e31cd160ed58b9a",
+        "date": "2026-03-01T10:17:49+01:00",
+        "committed": "2026-03-04T20:16:39+01:00",
+        "old": null,
+        "new": "32281a55900035d22fa3dfb6db4db12b60ec923f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3609,
+    "sha256": "3a24d0a036211bcd98c9a1a46c46a24b5231fd806238c5ac35848b11df0e4f15",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 114,
+    "words": 608,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/andfanilo--streamlit-echarts/.claude/agents/fixing-pr.md"
+}

@@ -1,0 +1,119 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__presentations__what-is-selfie__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "cksystemsteaching/selfie",
+    "path": "docs/presentations/what-is-selfie/README.md",
+    "commit": "32aa06fcd0abecba47d2233817b00a9dc3911c70",
+    "commit_date": "2026-09-26T11:44:21+02:00",
+    "url": "https://github.com/cksystemsteaching/selfie/blob/32aa06fcd0abecba47d2233817b00a9dc3911c70/docs/presentations/what-is-selfie/README.md",
+    "license": "BSD-2-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2524,
+    "found_by": "sg-agent:(^|/)GEMINI\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-08-02T20:42:35+02:00",
+    "last_commit_date": "2026-09-05T15:59:18Z",
+    "last_commit_author": "Claude",
+    "authors": 2,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-02T20:42:35+02:00",
+    "last_committer_date": "2026-09-05T15:59:18Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01AbRFGQjvn7Q8oBF3TCiZrr",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "901cfd6f41ef66dbbbf1b51ca275c62cd88c18b0",
+        "date": "2026-09-05T15:59:18Z",
+        "committed": "2026-09-05T15:59:18Z",
+        "old": "fa9f881f1e85839c54dfca7b4bb83fecdfb02fbb",
+        "new": "2d71ceea06a28c17585f6705c8cc499caeb9da8f",
+        "status": "agent"
+      },
+      {
+        "commit": "0460dafe2f96ad9c0c3853d19937fbda237ca13f",
+        "date": "2026-09-03T09:31:25Z",
+        "committed": "2026-09-03T09:31:25Z",
+        "old": "4de0d360d04e77bea315849fbc41beaa5d22185c",
+        "new": "fa9f881f1e85839c54dfca7b4bb83fecdfb02fbb",
+        "status": "agent"
+      },
+      {
+        "commit": "eef3a366d62272e3e668cf20b19fc3ef95cb2a7b",
+        "date": "2026-08-07T10:04:18+02:00",
+        "committed": "2026-08-07T10:04:18+02:00",
+        "old": "ceec746cf7a5b64bda8d37113d6cfb8bb4e167c3",
+        "new": "4de0d360d04e77bea315849fbc41beaa5d22185c",
+        "status": "agent"
+      },
+      {
+        "commit": "1a26f7c1f82b4bd94dd352d13cb9eedb892379ad",
+        "date": "2026-08-02T20:42:35+02:00",
+        "committed": "2026-08-02T20:42:35+02:00",
+        "old": null,
+        "new": "ceec746cf7a5b64bda8d37113d6cfb8bb4e167c3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11625,
+    "sha256": "eb7018b738e0c0b982c29300844bde6201d7fe8ec1f3d7b7bae6d9f58ef3113a",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 181,
+    "words": 1873,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/cksystemsteaching--selfie/docs/presentations/what-is-selfie/README.md"
+}

@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "reviews__task-55__002-consumer-migration__feedback__2026-05-23-01-reviewer.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "agent-ix/ecaz",
+    "path": "reviews/task-55/002-consumer-migration/feedback/2026-05-23-01-reviewer.md",
+    "commit": "d8c72f44d814e486b8cf718796aace6241279c9a",
+    "commit_date": "2026-09-20T15:57:26-07:00",
+    "url": "https://github.com/agent-ix/ecaz/blob/d8c72f44d814e486b8cf718796aace6241279c9a/reviews/task-55/002-consumer-migration/feedback/2026-05-23-01-reviewer.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-03T22:07:10-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-23T18:15:50-07:00",
+    "last_commit_date": "2026-05-23T18:15:50-07:00",
+    "last_commit_author": "Codex",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-23T18:15:50-07:00",
+    "last_committer_date": "2026-05-23T18:15:50-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e522441ce6aa9b811302724879254426512a0d9d",
+        "date": "2026-05-23T18:15:50-07:00",
+        "committed": "2026-05-23T18:15:50-07:00",
+        "old": null,
+        "new": "a356c511d25bd5061a7e8a886bd4a8bd9b7edd5a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 9898,
+    "sha256": "d48af5731222249e98fce083dd3a5f29ab3b4bc85bab5bd29d5a9f380b379080",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 234,
+    "words": 1350,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/agent-ix--ecaz/reviews/task-55/002-consumer-migration/feedback/2026-05-23-01-reviewer.md"
+}

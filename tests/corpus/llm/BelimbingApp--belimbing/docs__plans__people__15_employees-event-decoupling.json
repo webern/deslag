@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__plans__people__15_employees-event-decoupling.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "BelimbingApp/belimbing",
+    "path": "docs/plans/people/15_employees-event-decoupling.md",
+    "commit": "d53a790f75b36a052362bb5f7b5c361c8ac72983",
+    "commit_date": "2026-09-24T18:19:15+08:00",
+    "url": "https://github.com/BelimbingApp/belimbing/blob/d53a790f75b36a052362bb5f7b5c361c8ac72983/docs/plans/people/15_employees-event-decoupling.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-01T15:02:42+08:00",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-05-16T20:04:20+08:00",
+    "last_commit_date": "2026-08-06T09:27:07+08:00",
+    "last_commit_author": "kiatng",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-16T20:04:20+08:00",
+    "last_committer_date": "2026-08-06T09:27:07+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Codex GPT-5.6 Sol <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ff44f92a3feab0522e0774505e59940560ffa54e",
+        "date": "2026-08-06T09:27:07+08:00",
+        "committed": "2026-08-06T09:27:07+08:00",
+        "old": "6b649fe6d6a0e60185f4932870eed82a19395ff7",
+        "new": "ccc4309aa05016552a82d11895d06a3e483963c5",
+        "status": "agent"
+      },
+      {
+        "commit": "11e6fcbced332609d1c7e4314b926325e69b788a",
+        "date": "2026-05-16T20:04:20+08:00",
+        "committed": "2026-05-16T20:04:20+08:00",
+        "old": null,
+        "new": "6b649fe6d6a0e60185f4932870eed82a19395ff7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 6177,
+    "sha256": "b4691ba21ad64587590a869201c360a85411bd69c98618aa8e90e9eb73bb2045",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 70,
+    "words": 767,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/BelimbingApp--belimbing/docs/plans/people/15_employees-event-decoupling.md"
+}

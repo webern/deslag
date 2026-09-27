@@ -1,0 +1,138 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__superpowers__plans__2026-06-05-language-settings-implementation-plan.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "tajiaoyezi/vibestation",
+    "path": "docs/superpowers/plans/2026-06-05-language-settings-implementation-plan.md",
+    "commit": "c6335804d8e9a9bfed933c6360483e5a594271dd",
+    "commit_date": "2026-06-16T23:18:25+08:00",
+    "url": "https://github.com/tajiaoyezi/vibestation/blob/c6335804d8e9a9bfed933c6360483e5a594271dd/docs/superpowers/plans/2026-06-05-language-settings-implementation-plan.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-18T11:53:40+08:00",
+    "stars": 1,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2026-06-06T09:57:21+08:00",
+    "last_commit_date": "2026-06-06T11:29:56+08:00",
+    "last_commit_author": "leafiellune",
+    "authors": 1,
+    "ai_commits": 9,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-06T09:57:21+08:00",
+    "last_committer_date": "2026-06-06T11:29:56+08:00",
+    "marks": [
+      {
+        "text": "Codex CLI <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 9
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0db2f2efa5289d638d611ae30da541b2cfe6e130",
+        "date": "2026-06-06T11:29:56+08:00",
+        "committed": "2026-06-06T11:29:56+08:00",
+        "old": "29a2999806135735d62af5b6a46c2a1e18568b63",
+        "new": "ea57c13be0d36b1fdd8568ea94c3ade94913e960",
+        "status": "agent"
+      },
+      {
+        "commit": "81848798f8a45bacd9ec56e9ae9a3b45078bea9b",
+        "date": "2026-06-06T11:26:58+08:00",
+        "committed": "2026-06-06T11:26:58+08:00",
+        "old": "936f203f7be929b1651412adcc7e1e4e2e1dbc54",
+        "new": "29a2999806135735d62af5b6a46c2a1e18568b63",
+        "status": "agent"
+      },
+      {
+        "commit": "5249617ae0dc7eef23591e4c05626034dd218ccb",
+        "date": "2026-06-06T11:21:16+08:00",
+        "committed": "2026-06-06T11:21:16+08:00",
+        "old": "3fea4f9cf3240d8432199248794b93d21d73db4d",
+        "new": "936f203f7be929b1651412adcc7e1e4e2e1dbc54",
+        "status": "agent"
+      },
+      {
+        "commit": "fade999e7a062efdbd63952383ef16bbe36b6788",
+        "date": "2026-06-06T11:10:29+08:00",
+        "committed": "2026-06-06T11:10:29+08:00",
+        "old": "5b78e1b6af645e02d075fe65c4020553b8d81c57",
+        "new": "3fea4f9cf3240d8432199248794b93d21d73db4d",
+        "status": "agent"
+      },
+      {
+        "commit": "266a2c1a9e72b32067c415efd45e388b3c8046e0",
+        "date": "2026-06-06T11:01:00+08:00",
+        "committed": "2026-06-06T11:01:00+08:00",
+        "old": "9afba199698d12a735398d27d710e975c08f562d",
+        "new": "5b78e1b6af645e02d075fe65c4020553b8d81c57",
+        "status": "agent"
+      },
+      {
+        "commit": "64ba4acbdc281b9181482a3e0ef39984d0535a1b",
+        "date": "2026-06-06T10:35:13+08:00",
+        "committed": "2026-06-06T10:35:13+08:00",
+        "old": "218c5559a4a9df09fbc9658625b3fcea6fc9e1fc",
+        "new": "9afba199698d12a735398d27d710e975c08f562d",
+        "status": "agent"
+      },
+      {
+        "commit": "c9fb43cab27a885164f7cc348ac73f16f9907d39",
+        "date": "2026-06-06T10:15:09+08:00",
+        "committed": "2026-06-06T10:15:09+08:00",
+        "old": "7ffffca7a90ff16f37c1a8b5ae4a0db271c1babc",
+        "new": "218c5559a4a9df09fbc9658625b3fcea6fc9e1fc",
+        "status": "agent"
+      },
+      {
+        "commit": "588b4aff6a61cc934d19721932f6b4911909930e",
+        "date": "2026-06-06T10:11:53+08:00",
+        "committed": "2026-06-06T10:11:53+08:00",
+        "old": "7e132bd149010e0be2995d77fafd49a91fcc094f",
+        "new": "7ffffca7a90ff16f37c1a8b5ae4a0db271c1babc",
+        "status": "agent"
+      },
+      {
+        "commit": "34a7beddd27c322705a76b2f51f1f47cc47383d3",
+        "date": "2026-06-06T09:57:21+08:00",
+        "committed": "2026-06-06T09:57:21+08:00",
+        "old": null,
+        "new": "7e132bd149010e0be2995d77fafd49a91fcc094f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 9 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 58408,
+    "sha256": "da0a8a2510c973e239bec1002a957a2ee211207dbb72caa4230fa97fe2f3142b",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1073,
+    "words": 5982,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/tajiaoyezi--vibestation/docs/superpowers/plans/2026-06-05-language-settings-implementation-plan.md"
+}

@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__runbooks__hermes-profile-backups.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "edmundmiller/dotfiles",
+    "path": "docs/runbooks/hermes-profile-backups.md",
+    "commit": "5157d263dd76efe88131e136df781f221f8c0d55",
+    "commit_date": "2026-09-26T22:40:24-05:00",
+    "url": "https://github.com/edmundmiller/dotfiles/blob/5157d263dd76efe88131e136df781f221f8c0d55/docs/runbooks/hermes-profile-backups.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 80,
+    "found_by": "sg-topic:emacs"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-01T08:25:42-05:00",
+    "last_commit_date": "2026-09-01T08:25:42-05:00",
+    "last_commit_author": "Edmund Miller",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-01T08:27:40-05:00",
+    "last_committer_date": "2026-09-01T08:27:40-05:00",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-01a05ab4-67ca-77bd-b363-8d4e662c53e7",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fa040ee2c5586fb31236c5b7a734f237355f91a1",
+        "date": "2026-09-01T08:25:42-05:00",
+        "committed": "2026-09-01T08:27:40-05:00",
+        "old": null,
+        "new": "e046025325961673a53574cfb0aa84903622252e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 3553,
+    "sha256": "ac9ed788481c2fac91195ce20481af3afd2a0e33dd6314c17ba03ba8b6848e17",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 89,
+    "words": 423,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/edmundmiller--dotfiles/docs/runbooks/hermes-profile-backups.md"
+}

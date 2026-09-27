@@ -1,0 +1,169 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "tapsilat/iban.im",
+    "path": "README.md",
+    "commit": "12432b382d97a1dce83eac68727d4f3f436f1e80",
+    "commit_date": "2026-09-26T14:49:34+03:00",
+    "url": "https://github.com/tapsilat/iban.im/blob/12432b382d97a1dce83eac68727d4f3f436f1e80/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-06T17:32:40+03:00",
+    "stars": 68,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 26,
+    "first_commit_date": "2019-09-06T17:32:40+03:00",
+    "last_commit_date": "2025-11-02T12:15:50Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 6,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-09-06T17:32:40+03:00",
+    "last_committer_date": "2025-11-02T12:15:50Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1ea35cbfa376dde7cdba0653664a69f4da9afb75",
+        "date": "2025-11-02T12:15:50Z",
+        "committed": "2025-11-02T12:15:50Z",
+        "old": "ce404dfc1e0637a15608c410c147b1c102439d09",
+        "new": "0296e58871248bfd83b663cefa710a39c75194c0",
+        "status": "agent"
+      },
+      {
+        "commit": "2dffcf61cc3f8d6014a35d522857d0c203ff6e70",
+        "date": "2025-11-02T11:18:09Z",
+        "committed": "2025-11-02T11:18:09Z",
+        "old": "bf1c68bccc25dd014770613b228ecd9f541083de",
+        "new": "ce404dfc1e0637a15608c410c147b1c102439d09",
+        "status": "agent"
+      },
+      {
+        "commit": "6beb2a5bb850d61bac11b4b6b3f7379fda75581b",
+        "date": "2025-11-01T20:01:54Z",
+        "committed": "2025-11-01T20:01:54Z",
+        "old": "13e8972eaf7e4cb506c3f64f9c6a26cd6248ec98",
+        "new": "bf1c68bccc25dd014770613b228ecd9f541083de",
+        "status": "agent"
+      },
+      {
+        "commit": "d30450aea0e742c29781cd198e54f5e8be3ef528",
+        "date": "2025-11-01T19:20:54Z",
+        "committed": "2025-11-01T19:20:54Z",
+        "old": "5a8e1be699799ca9982e2a7db72b5de8b716ccc2",
+        "new": "13e8972eaf7e4cb506c3f64f9c6a26cd6248ec98",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "14 of its 26 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 6969,
+    "sha256": "71f4e73834bc59e23ee280865580c711cd1574aef5d16f2e6ff73dbac5c695d3",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 433,
+    "words": 958,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/tapsilat--iban.im/README.md",
+  "before": {
+    "sha256": "84cdc73c89fef1ecf77af84b52859195f4a21ca23eeabf3f7045c8b0d873dae8",
+    "commit": "acf8191e28fa68c200e7a1f33ddfa0d063cb5ae0",
+    "date": "2021-11-22T21:27:59Z",
+    "between": [
+      {
+        "commit": "88a888dff38bc8da7b213ca7b0697afe12bb394b",
+        "date": "2025-09-19T17:20:52+03:00",
+        "committed": "2025-09-19T17:20:52+03:00",
+        "old": "0ef25b26ce2f4670586266bfd791e553e0fa6991",
+        "new": "5a8e1be699799ca9982e2a7db72b5de8b716ccc2",
+        "status": "late"
+      },
+      {
+        "commit": "70efd25581268832f7d388a3c6b5e3c7bd9334bb",
+        "date": "2025-09-19T16:47:19+03:00",
+        "committed": "2025-09-19T16:47:19+03:00",
+        "old": "61bf2cbd73de5b24a82a04248f5ac7a8bf8228df",
+        "new": "0ef25b26ce2f4670586266bfd791e553e0fa6991",
+        "status": "late"
+      },
+      {
+        "commit": "bce0a196e043f9cbde317b870f11348fbae13ad7",
+        "date": "2025-09-19T15:26:55+03:00",
+        "committed": "2025-09-19T15:26:55+03:00",
+        "old": "24e20fdff240592131adc2930d3729c56e83e1e6",
+        "new": "61bf2cbd73de5b24a82a04248f5ac7a8bf8228df",
+        "status": "late"
+      },
+      {
+        "commit": "13ad6a009cde1baa9c8058429b6f899453d102a3",
+        "date": "2025-09-19T13:07:57+03:00",
+        "committed": "2025-09-19T13:07:57+03:00",
+        "old": "5e22ebd370423950899d40b84f1c2fb64c0a613a",
+        "new": "24e20fdff240592131adc2930d3729c56e83e1e6",
+        "status": "late"
+      },
+      {
+        "commit": "1ced7881c00c7485988ea54a188b4b637fd0d6f5",
+        "date": "2025-09-19T12:44:05+03:00",
+        "committed": "2025-09-19T12:44:05+03:00",
+        "old": "c2bb6fa3fd4d5ef03d7d2bf6f38a3ae04801822b",
+        "new": "5e22ebd370423950899d40b84f1c2fb64c0a613a",
+        "status": "late"
+      },
+      {
+        "commit": "3dec35e7c5ee13f24013d5732da82dbb8312e45d",
+        "date": "2025-09-19T12:19:51+03:00",
+        "committed": "2025-09-19T12:19:51+03:00",
+        "old": "a12398e8b39413fe54660c5f132dd0ac931fc506",
+        "new": "c2bb6fa3fd4d5ef03d7d2bf6f38a3ae04801822b",
+        "status": "late"
+      },
+      {
+        "commit": "1f6d142e18f663846bbd01b04cd3fd4b7f983784",
+        "date": "2025-09-19T12:16:42+03:00",
+        "committed": "2025-09-19T12:16:42+03:00",
+        "old": "c4ab97d680f2d8dae4849dfb8f32b3cfe816eaa4",
+        "new": "a12398e8b39413fe54660c5f132dd0ac931fc506",
+        "status": "late"
+      },
+      {
+        "commit": "829d2c45485659ca92cdcb5b91baebd96f875f6c",
+        "date": "2025-02-15T14:13:26+03:00",
+        "committed": "2025-02-15T14:13:26+03:00",
+        "old": "2b96b067ddfd6a067c9d4086a2c3bd2f78630230",
+        "new": "c4ab97d680f2d8dae4849dfb8f32b3cfe816eaa4",
+        "status": "late"
+      }
+    ]
+  }
+}

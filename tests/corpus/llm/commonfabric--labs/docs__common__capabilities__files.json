@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__common__capabilities__files.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "commonfabric/labs",
+    "path": "docs/common/capabilities/files.md",
+    "commit": "ecd9463a28b76284964c9ec119e3192edaef6727",
+    "commit_date": "2026-09-26T21:44:44-07:00",
+    "url": "https://github.com/commonfabric/labs/blob/ecd9463a28b76284964c9ec119e3192edaef6727/docs/common/capabilities/files.md",
+    "license": "0BSD",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-05-11T11:53:25-04:00",
+    "stars": 53,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-11T15:09:05-06:00",
+    "last_commit_date": "2026-09-11T15:09:05-06:00",
+    "last_commit_author": "William Kelly",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-11T15:09:05-06:00",
+    "last_committer_date": "2026-09-11T15:09:05-06:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_017pT4pdg9BrectDDuPbcy5Q",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8a615f5062774dde08e47650599ba150ed4221aa",
+        "date": "2026-09-11T15:09:05-06:00",
+        "committed": "2026-09-11T15:09:05-06:00",
+        "old": null,
+        "new": "8bafaa8662f18b502ef0cbfdb5fa8bf809233de2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3473,
+    "sha256": "af1241bb19b6f1f39a478c4d973180ecad7a4246e6efe27df420dbda4fb38502",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 76,
+    "words": 597,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/commonfabric--labs/docs/common/capabilities/files.md"
+}

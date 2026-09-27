@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "benchmark_results__work_amplification__2026-08-25-r3__PLAN.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jarmak-personal/vibeSpatial",
+    "path": "benchmark_results/work_amplification/2026-08-25-r3/PLAN.md",
+    "commit": "97de777bccab78a94520cdcc82594c6fb214ca3f",
+    "commit_date": "2026-09-11T08:15:57-04:00",
+    "url": "https://github.com/jarmak-personal/vibeSpatial/blob/97de777bccab78a94520cdcc82594c6fb214ca3f/benchmark_results/work_amplification/2026-08-25-r3/PLAN.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-09T23:15:16-04:00",
+    "stars": 1,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-26T01:31:28-04:00",
+    "last_commit_date": "2026-08-26T01:31:28-04:00",
+    "last_commit_author": "Jarmak",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-26T01:31:28-04:00",
+    "last_committer_date": "2026-08-26T01:31:28-04:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "52f6fc96537cf99e2eb289ae69049c484836423a",
+        "date": "2026-08-26T01:31:28-04:00",
+        "committed": "2026-08-26T01:31:28-04:00",
+        "old": null,
+        "new": "dd401a733bb38d342fd72cbc70dd79ef1f514d32",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 2649,
+    "sha256": "becab74285c563660996b11c924be61bde6453ad1a7657d9cf814318c61fe46d",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 353,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jarmak-personal--vibeSpatial/benchmark_results/work_amplification/2026-08-25-r3/PLAN.md"
+}

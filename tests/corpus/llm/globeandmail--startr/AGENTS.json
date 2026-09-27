@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "AGENTS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "globeandmail/startr",
+    "path": "AGENTS.md",
+    "commit": "e2d53dd2662fbd50ded46556b0f3d4018a43952b",
+    "commit_date": "2026-07-27T15:05:17-04:00",
+    "url": "https://github.com/globeandmail/startr/blob/e2d53dd2662fbd50ded46556b0f3d4018a43952b/AGENTS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-04-12T17:47:51-04:00",
+    "stars": 127,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-26T19:54:59-04:00",
+    "last_commit_date": "2026-07-26T19:54:59-04:00",
+    "last_commit_author": "Tom Cardoso",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-26T19:54:59-04:00",
+    "last_committer_date": "2026-07-26T19:54:59-04:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "57bb68826ebd4499574a7e16f5ae9b49f6c247b5",
+        "date": "2026-07-26T19:54:59-04:00",
+        "committed": "2026-07-26T19:54:59-04:00",
+        "old": null,
+        "new": "dd75968cb15543c097ece23b0063cf30f2fb7ad9",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3540,
+    "sha256": "42b6f07e15a1671285afac81aa61b1de37036e13e65849227872c4644217ba37",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 68,
+    "words": 490,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/globeandmail--startr/AGENTS.md"
+}

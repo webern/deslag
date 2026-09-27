@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__superpowers__plans__2026-08-22-2c-b-reachability-plan.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AI-Native-Ventures/Colony",
+    "path": "docs/superpowers/plans/2026-08-22-2c-b-reachability-plan.md",
+    "commit": "a91e517ecb1e1e02f780070e5127b32fd62c79fc",
+    "commit_date": "2026-09-19T21:41:03+02:00",
+    "url": "https://github.com/AI-Native-Ventures/Colony/blob/a91e517ecb1e1e02f780070e5127b32fd62c79fc/docs/superpowers/plans/2026-08-22-2c-b-reachability-plan.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-06T21:00:58Z",
+    "stars": 0,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-22T17:17:43+02:00",
+    "last_commit_date": "2026-08-22T17:17:43+02:00",
+    "last_commit_author": "Basheer Phiri",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-22T17:17:43+02:00",
+    "last_committer_date": "2026-08-22T17:17:43+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01Y3dpw4GjGCm5556YXDEVMH",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6043167a07fe1f1fc085109dd577456fd7c17543",
+        "date": "2026-08-22T17:17:43+02:00",
+        "committed": "2026-08-22T17:17:43+02:00",
+        "old": null,
+        "new": "7a5bda7b63c70b520def38b22ef6237d096ad7e6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2139,
+    "sha256": "35ac7b5870d484b7b7c2ae98551b3123674e75df0d2d456a8a38cdab2a92dfb6",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 56,
+    "words": 351,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AI-Native-Ventures--Colony/docs/superpowers/plans/2026-08-22-2c-b-reachability-plan.md"
+}

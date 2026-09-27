@@ -1,0 +1,168 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "scalameta/scalameta",
+    "path": "CONTRIBUTING.md",
+    "commit": "70f1655be3e742fab9726773ef9ad12d65b82ece",
+    "commit_date": "2026-09-23T11:37:07-07:00",
+    "url": "https://github.com/scalameta/scalameta/blob/70f1655be3e742fab9726773ef9ad12d65b82ece/CONTRIBUTING.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1156,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2018-01-01T20:08:12+01:00",
+    "last_commit_date": "2026-09-18T09:38:46-07:00",
+    "last_commit_author": "Albert Meltzer",
+    "authors": 7,
+    "ai_commits": 6,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-01T20:08:12+01:00",
+    "last_committer_date": "2026-09-18T11:43:14-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      },
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b82c5bf8ea07c05bf93198acefec9aadae57f92e",
+        "date": "2026-09-18T09:38:46-07:00",
+        "committed": "2026-09-18T11:43:14-07:00",
+        "old": "31f13098d78160402f8bba6a67b9f0890a40e120",
+        "new": "e7550800f9caa1e792d87e9327a24bd6cd404b7b",
+        "status": "agent"
+      },
+      {
+        "commit": "f7493a76ce065d055a2f04460b0e5df76afb8c09",
+        "date": "2026-09-18T09:38:45-07:00",
+        "committed": "2026-09-18T11:43:14-07:00",
+        "old": "9ad508db24d6095c4e54c34e5b7af020defb7151",
+        "new": "31f13098d78160402f8bba6a67b9f0890a40e120",
+        "status": "agent"
+      },
+      {
+        "commit": "ea29f659131031636205166bfc524504ecd881f0",
+        "date": "2026-09-07T17:30:35-07:00",
+        "committed": "2026-09-07T19:43:51-07:00",
+        "old": "e8d81e78e4d9d4413e3113fe25dd2995a335e583",
+        "new": "9ad508db24d6095c4e54c34e5b7af020defb7151",
+        "status": "agent"
+      },
+      {
+        "commit": "40376fa6236991ff2de51e977ddc524abbc2a5da",
+        "date": "2026-09-07T14:23:33-07:00",
+        "committed": "2026-09-07T14:54:48-07:00",
+        "old": "8dc57d7f5a4d8fa902588d912d3c39a8c8db735b",
+        "new": "e8d81e78e4d9d4413e3113fe25dd2995a335e583",
+        "status": "agent"
+      },
+      {
+        "commit": "76892769bd17869961c2d668cf55a15bc1e72666",
+        "date": "2026-09-04T18:36:04-07:00",
+        "committed": "2026-09-04T22:15:31-07:00",
+        "old": "5128ff06ac8010cf943ebc5bde49d482a75a4ed6",
+        "new": "8dc57d7f5a4d8fa902588d912d3c39a8c8db735b",
+        "status": "agent"
+      },
+      {
+        "commit": "b8863d48369ba847b491dfcad2505b3555501676",
+        "date": "2026-09-04T13:07:01-07:00",
+        "committed": "2026-09-04T22:14:22-07:00",
+        "old": "dc4a8477a3bcc4a3016e45207409127cededd219",
+        "new": "5128ff06ac8010cf943ebc5bde49d482a75a4ed6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "4 of its 15 commits predate 2022-01-01 with no mark, and 6 are marked as an AI agent's (claude-code); the clone's history ends at d1e6104d1b, of 2018-01-01, so it may be older"
+  },
+  "content": {
+    "size_bytes": 7364,
+    "sha256": "9fea3f5d2d903cb1fac822c600b49b57431243f8d2aaf32c9e72aa2762d13e92",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 169,
+    "words": 1082,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/scalameta--scalameta/CONTRIBUTING.md",
+  "before": {
+    "sha256": "84c478b033ea127a67cb4fa740fc36c5b655a72617b7a0aeb6144336690104fb",
+    "commit": "1ad927ce1cde3b743f82bb7bf5c4cd56c2d66694",
+    "date": "2021-12-31T15:28:32-08:00",
+    "between": [
+      {
+        "commit": "9789eacae1fc9b32dc80ceb7574267c2a0524e32",
+        "date": "2025-03-31T17:01:32+02:00",
+        "committed": "2025-04-08T19:38:04+02:00",
+        "old": "b74b97d377fd094b2a3c252eadcc49de046ee296",
+        "new": "dc4a8477a3bcc4a3016e45207409127cededd219",
+        "status": "late"
+      },
+      {
+        "commit": "53342a8cce2c046914b2973806b6578abccb2eff",
+        "date": "2024-12-03T17:01:15+01:00",
+        "committed": "2024-12-03T08:01:15-08:00",
+        "old": "3c31526b44dbf54b79ac23a6c67c86cebc6b1a14",
+        "new": "b74b97d377fd094b2a3c252eadcc49de046ee296",
+        "status": "late"
+      },
+      {
+        "commit": "030e30b49e4c9a2c513fb2c72eb5c91ef6fefe9d",
+        "date": "2024-02-06T16:31:08+01:00",
+        "committed": "2024-02-06T20:16:16+01:00",
+        "old": "144864f37225d30063c6bfceb6409f9f9ddde37f",
+        "new": "3c31526b44dbf54b79ac23a6c67c86cebc6b1a14",
+        "status": "late"
+      },
+      {
+        "commit": "adf73ff7a056c44a4e5109cb6fcc1c91413614e8",
+        "date": "2024-01-19T17:03:42Z",
+        "committed": "2024-01-19T17:03:42Z",
+        "old": "22ec7d06bbecf17eed3d90d7be878d625f4bdd10",
+        "new": "144864f37225d30063c6bfceb6409f9f9ddde37f",
+        "status": "late"
+      },
+      {
+        "commit": "f051b0af3a0eed6448373391d5610c333368908d",
+        "date": "2022-06-08T15:45:33+02:00",
+        "committed": "2022-06-08T15:45:35+02:00",
+        "old": "401c5fda1ccd3e7bcfb4f7f46a2f14f2b5885ade",
+        "new": "22ec7d06bbecf17eed3d90d7be878d625f4bdd10",
+        "status": "late"
+      }
+    ]
+  }
+}

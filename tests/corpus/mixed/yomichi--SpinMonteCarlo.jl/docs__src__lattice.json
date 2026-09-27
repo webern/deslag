@@ -1,0 +1,87 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__lattice.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "yomichi/SpinMonteCarlo.jl",
+    "path": "docs/src/lattice.md",
+    "commit": "e8701e3ad559b7c27df1d2841f3dc3ff9650086f",
+    "commit_date": "2026-08-28T22:28:40+09:00",
+    "url": "https://github.com/yomichi/SpinMonteCarlo.jl/blob/e8701e3ad559b7c27df1d2841f3dc3ff9650086f/docs/src/lattice.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-10-06T21:10:01+09:00",
+    "stars": 52,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2019-10-25T11:38:19+09:00",
+    "last_commit_date": "2026-08-20T21:38:06+09:00",
+    "last_commit_author": "Yuichi Motoyama",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-10-25T11:38:19+09:00",
+    "last_committer_date": "2026-08-20T21:38:06+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01UkNUvebFvvQH5MbFVUNUz4",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0c20fa95af77c5e8abc4469c12dbe16208e39199",
+        "date": "2026-08-20T21:38:06+09:00",
+        "committed": "2026-08-20T21:38:06+09:00",
+        "old": "16932913e58aea9eba8c9cb1f1513ae6b8b2521b",
+        "new": "b5579f48434af14d8b0c412a92efea70b6908120",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 2 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2513,
+    "sha256": "cfeec14a75bad66b26527fd7df27f437a905fae6e00061cfc2122d1d4ccd0ce4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 407,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/yomichi--SpinMonteCarlo.jl/docs/src/lattice.md",
+  "before": {
+    "sha256": "ec2a1a0c32fa9cec13446339d8242ee8cd1ea91c312fe92fbbbc2a1b0d00c079",
+    "commit": "beffe45f76fe34958d50816b82a8aed96c03819b",
+    "date": "2021-11-22T17:29:55Z",
+    "between": []
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "sidecar_version": 3,
+  "fixture": "NEWS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JuliaSymbolics/Symbolics.jl",
+    "path": "NEWS.md",
+    "commit": "c2775dfb659c48e0dffbdcf8f936fce30d4368db",
+    "commit_date": "2026-09-25T10:16:11-04:00",
+    "url": "https://github.com/JuliaSymbolics/Symbolics.jl/blob/c2775dfb659c48e0dffbdcf8f936fce30d4368db/NEWS.md",
+    "license": "MIT-0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-08-16T12:39:49-04:00",
+    "stars": 1531,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-09-02T17:02:45-04:00",
+    "last_commit_date": "2026-08-05T07:20:25-04:00",
+    "last_commit_author": "ChrisRackauckas-Claude",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-09-02T17:02:45-04:00",
+    "last_committer_date": "2026-08-05T07:20:25-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01WLWVfZSWAySGqC7ausSJ18",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "08f5c97e2fdcd67be6b79378c5d6a42a0492654d",
+        "date": "2026-08-05T07:20:25-04:00",
+        "committed": "2026-08-05T07:20:25-04:00",
+        "old": "771f03363383207b37b0650631ace05cc7d1ef2d",
+        "new": "a7dba12966ca8000f845c5b4305cd8aff807458d",
+        "status": "agent"
+      },
+      {
+        "commit": "9e3a96b505fc1a91ff61a79f1574df7dd0c29f91",
+        "date": "2026-02-11T14:31:54-05:00",
+        "committed": "2026-02-11T14:31:54-05:00",
+        "old": "bd785a72c0220deb4d9ddb1fafee6c1199a730ae",
+        "new": "771f03363383207b37b0650631ace05cc7d1ef2d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 4 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1685,
+    "sha256": "8690712b4043b360f007c055ac16293a5b1e9edae6a854536ef0bbee83fb429b",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 36,
+    "words": 210,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JuliaSymbolics--Symbolics.jl/NEWS.md",
+  "before": {
+    "sha256": "74d46d23b013e1c7a831e7059bcf868ae11758f843f6cd49b5a37f6141c64616",
+    "commit": "2d809405ade0bc69ddc48d11eed86e7e51a82886",
+    "date": "2021-12-22T10:19:38-05:00",
+    "between": []
+  }
+}

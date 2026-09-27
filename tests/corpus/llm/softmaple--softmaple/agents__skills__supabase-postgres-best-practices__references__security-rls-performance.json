@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__supabase-postgres-best-practices__references__security-rls-performance.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "softmaple/softmaple",
+    "path": ".agents/skills/supabase-postgres-best-practices/references/security-rls-performance.md",
+    "commit": "b482b01754a9d98f31c3f982ee2fe78c60a86837",
+    "commit_date": "2026-09-27T08:09:34+08:00",
+    "url": "https://github.com/softmaple/softmaple/blob/b482b01754a9d98f31c3f982ee2fe78c60a86837/.agents/skills/supabase-postgres-best-practices/references/security-rls-performance.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-12-20T10:31:15+08:00",
+    "stars": 159,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-08T17:21:37+08:00",
+    "last_commit_date": "2026-08-08T17:21:37+08:00",
+    "last_commit_author": "Yadong (Adam) Zhang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-08T17:21:37+08:00",
+    "last_committer_date": "2026-08-08T17:21:37+08:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3b9c00d94b0ba552cb91b908d9c2eb32521aa503",
+        "date": "2026-08-08T17:21:37+08:00",
+        "committed": "2026-08-08T17:21:37+08:00",
+        "old": null,
+        "new": "c3c7c416d57d9a46a9993f4e0c20f772fb64483d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2103,
+    "sha256": "2e1faeca7d5746e246b1c78f9492fe2a9cfa41c4d7fa1e23c402d58fa18ea014",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 63,
+    "words": 279,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/softmaple--softmaple/.agents/skills/supabase-postgres-best-practices/references/security-rls-performance.md"
+}

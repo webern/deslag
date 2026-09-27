@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__zus_chorobowe.en.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sobolevbel/jdg",
+    "path": "docs/zus_chorobowe.en.md",
+    "commit": "3584811aed593842ed3018553919eefb43e067de",
+    "commit_date": "2026-09-01T10:22:13Z",
+    "url": "https://github.com/sobolevbel/jdg/blob/3584811aed593842ed3018553919eefb43e067de/docs/zus_chorobowe.en.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-07-15T08:05:27+02:00",
+    "stars": 483,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-07-18T22:39:10+02:00",
+    "last_commit_date": "2026-07-19T10:17:29+02:00",
+    "last_commit_author": "Jaŭhien Sobaleŭ",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-18T22:39:10+02:00",
+    "last_committer_date": "2026-07-19T10:17:29+02:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "82caf306dfa1219c0641ea5fed956a46267d6e46",
+        "date": "2026-07-19T10:17:29+02:00",
+        "committed": "2026-07-19T10:17:29+02:00",
+        "old": "0b59be7f83c306c6fa0ae32fd1eee5cbc910793f",
+        "new": "c8422499e37421c2837bda9a3c2a33533d404825",
+        "status": "agent"
+      },
+      {
+        "commit": "cce33fcf7fe010def3aa6d36498019c2a1f375ae",
+        "date": "2026-07-18T22:52:04+02:00",
+        "committed": "2026-07-18T22:52:04+02:00",
+        "old": "fd13762d212c6df7a6f2a2121f20e06cfce80c19",
+        "new": "0b59be7f83c306c6fa0ae32fd1eee5cbc910793f",
+        "status": "agent"
+      },
+      {
+        "commit": "4407d3c9acf3c1bc587825f69a1e9de69c07c979",
+        "date": "2026-07-18T22:39:10+02:00",
+        "committed": "2026-07-18T22:39:10+02:00",
+        "old": null,
+        "new": "fd13762d212c6df7a6f2a2121f20e06cfce80c19",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7841,
+    "sha256": "47c1689a999f32a29db1639136e7df14a5032637bb5e4d83543926a242cc9269",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 149,
+    "words": 1190,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/sobolevbel--jdg/docs/zus_chorobowe.en.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Cloudflare__imagerelay-oauth-callback__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "oliverames/imagerelay-client",
+    "path": "Cloudflare/imagerelay-oauth-callback/README.md",
+    "commit": "e08aca7526c6d90b44c393456920ae3931e09382",
+    "commit_date": "2026-09-24T14:54:25-04:00",
+    "url": "https://github.com/oliverames/imagerelay-client/blob/e08aca7526c6d90b44c393456920ae3931e09382/Cloudflare/imagerelay-oauth-callback/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-05T16:32:43-04:00",
+    "stars": 0,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-09T09:24:10-04:00",
+    "last_commit_date": "2026-06-09T09:24:10-04:00",
+    "last_commit_author": "Oliver Ames",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-09T09:24:10-04:00",
+    "last_committer_date": "2026-06-09T09:24:10-04:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "15cbf9834fe40a32cf9789f9d20294a64e670a92",
+        "date": "2026-06-09T09:24:10-04:00",
+        "committed": "2026-06-09T09:24:10-04:00",
+        "old": null,
+        "new": "961fef30c102d354dc8b6678c292a9072329bdd9",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 593,
+    "sha256": "e7d5212bde80d52bc945d15f8d3373e15a7ccb1c2eaeebd7a5523fd57da55318",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 22,
+    "words": 81,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/oliverames--imagerelay-client/Cloudflare/imagerelay-oauth-callback/README.md"
+}

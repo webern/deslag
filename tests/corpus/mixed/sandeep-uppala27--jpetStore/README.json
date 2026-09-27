@@ -1,0 +1,161 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sandeep-uppala27/jpetStore",
+    "path": "README.md",
+    "commit": "2b4ae8c815bca91a3bd201217028f31716fccf59",
+    "commit_date": "2026-04-05T17:22:49Z",
+    "url": "https://github.com/sandeep-uppala27/jpetStore/blob/2b4ae8c815bca91a3bd201217028f31716fccf59/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE",
+      "LICENSE_HEADER"
+    ],
+    "repo_first_commit_date": "2010-12-27T23:54:57Z",
+    "stars": 0,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 71,
+    "first_commit_date": "2014-10-25T17:27:56-04:00",
+    "last_commit_date": "2026-03-22T02:27:39Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2014-10-25T17:27:56-04:00",
+    "last_committer_date": "2026-03-22T02:27:39Z",
+    "marks": [
+      {
+        "text": "Agent-Logs-Url: https://github.com/mybatis/jpetstore-6/sessions/9ffc20df-6eda-4653-8748-36953a275b54",
+        "tool": "copilot",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "02f99b9b2bbcbb23eb939a72812f836b87130db8",
+        "date": "2026-03-22T02:27:39Z",
+        "committed": "2026-03-22T02:27:39Z",
+        "old": "94a7a59311cc11d4aadcb916abb9bb05de31f0bd",
+        "new": "b02167d0dcfc2e91a3f7f771337ee19cb3b1604d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "61 of its 71 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2703,
+    "sha256": "a1ba9b17683ce3e4dfeb462929e6de22f924742cdc9725bb1d0ce4e3cc2005e2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 298,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/sandeep-uppala27--jpetStore/README.md",
+  "before": {
+    "sha256": "8daab1653ed724578f3702d6beb0666c15d21593134d9b8065f2be9b3eccbdf5",
+    "commit": "2e76ffa54e11d5136e8f644a5394d46df75ed93d",
+    "date": "2021-12-27T10:14:43-05:00",
+    "between": [
+      {
+        "commit": "81c9324c55ec2d72ac60de62f100c27507b92b84",
+        "date": "2026-03-18T20:34:48-04:00",
+        "committed": "2026-03-18T20:34:48-04:00",
+        "old": "34d7ebde9ea93c37d943dc8ac5fcc4fcd5b0e04c",
+        "new": "94a7a59311cc11d4aadcb916abb9bb05de31f0bd",
+        "status": "late"
+      },
+      {
+        "commit": "2835eb6131a50aad1dda275ce97786d479848b38",
+        "date": "2026-03-18T20:01:22-04:00",
+        "committed": "2026-03-18T20:01:22-04:00",
+        "old": "eaf7e2f76600cba35ad3f88ca2d4dab06a483226",
+        "new": "34d7ebde9ea93c37d943dc8ac5fcc4fcd5b0e04c",
+        "status": "late"
+      },
+      {
+        "commit": "eed0eaa02dad747d1fe9a8341c54e646b18b86d1",
+        "date": "2026-01-01T03:01:18-05:00",
+        "committed": "2026-01-01T03:46:08-05:00",
+        "old": "4cb6a7425adc9b54d14e87efdf6af995d396b1da",
+        "new": "eaf7e2f76600cba35ad3f88ca2d4dab06a483226",
+        "status": "late"
+      },
+      {
+        "commit": "12e6d0f6782f1b6a642025f237ee2aa9ca4be344",
+        "date": "2023-01-19T23:09:46+08:00",
+        "committed": "2023-01-19T23:09:46+08:00",
+        "old": "9407db18874b31cf4e4063e8a4249be3d76dc70f",
+        "new": "4cb6a7425adc9b54d14e87efdf6af995d396b1da",
+        "status": "late"
+      },
+      {
+        "commit": "7a93bd847de552c7afd9d920a71cbe69ffd77bed",
+        "date": "2023-01-19T14:19:31+08:00",
+        "committed": "2023-01-19T14:19:31+08:00",
+        "old": "02f3dd6fd4af88683911209f83751d69b531d203",
+        "new": "9407db18874b31cf4e4063e8a4249be3d76dc70f",
+        "status": "late"
+      },
+      {
+        "commit": "f53ecf87a16ea08c06f9870a9a652e82c1320fcc",
+        "date": "2022-09-06T21:04:10-04:00",
+        "committed": "2022-09-06T21:49:32-04:00",
+        "old": "651e7dfc05768756e0fc31b582c3c2e4d9009c17",
+        "new": "02f3dd6fd4af88683911209f83751d69b531d203",
+        "status": "late"
+      },
+      {
+        "commit": "3805f08b9ef325722d99a207367a6d008a2d4c5c",
+        "date": "2022-08-13T21:09:51-04:00",
+        "committed": "2022-08-13T21:17:28-04:00",
+        "old": "814f722cf702fdd0e61cc442153922bc96f56e7b",
+        "new": "651e7dfc05768756e0fc31b582c3c2e4d9009c17",
+        "status": "late"
+      },
+      {
+        "commit": "5172b1c03e46c21c7807a227ac1adc71e21885ec",
+        "date": "2022-08-13T21:09:34-04:00",
+        "committed": "2022-08-13T21:17:28-04:00",
+        "old": "0646e20f89819b200e1413b1393512a050d4868c",
+        "new": "814f722cf702fdd0e61cc442153922bc96f56e7b",
+        "status": "late"
+      },
+      {
+        "commit": "84dc623c6e263dc8f6df75b89de0fcd3db53bc09",
+        "date": "2022-08-13T21:09:27-04:00",
+        "committed": "2022-08-13T21:17:28-04:00",
+        "old": "b529e3e0b9efe7758867baef8c091591608f8ce2",
+        "new": "0646e20f89819b200e1413b1393512a050d4868c",
+        "status": "late"
+      }
+    ]
+  }
+}

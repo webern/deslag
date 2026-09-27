@@ -1,0 +1,112 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__temporal-prerequisites.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "omneval/devloop",
+    "path": "docs/temporal-prerequisites.md",
+    "commit": "b8c5b6f8e1457b07f48f5b532c8e0977110de05d",
+    "commit_date": "2026-09-21T07:39:56-04:00",
+    "url": "https://github.com/omneval/devloop/blob/b8c5b6f8e1457b07f48f5b532c8e0977110de05d/docs/temporal-prerequisites.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-01T10:02:40-04:00",
+    "stars": 3,
+    "found_by": "gh-commits:openhands"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-01T22:28:45Z",
+    "last_commit_date": "2026-06-11T12:06:50Z",
+    "last_commit_author": "Claude",
+    "authors": 3,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "openhands"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-01T22:28:45Z",
+    "last_committer_date": "2026-06-11T12:06:50Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "https://claude.ai/code/session_016dhf3Lr4pqYbqAZAndPVes",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      },
+      {
+        "text": "openhands <openhands@all-hands.dev>",
+        "tool": "openhands",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a564e416b26a605511c3f5009952579098fdb0d4",
+        "date": "2026-06-11T12:06:50Z",
+        "committed": "2026-06-11T12:06:50Z",
+        "old": "628160068f9d3a45bcbb218c71a02f79eba8e401",
+        "new": "aace873311877a0019d521d0d69941f615215ec0",
+        "status": "agent"
+      },
+      {
+        "commit": "baff3b4aa6ffb1f451ffbb15556ae1dedab04808",
+        "date": "2026-06-10T18:13:38-04:00",
+        "committed": "2026-06-10T18:13:38-04:00",
+        "old": "8d201d6ea306f7f3fdc2d542b677a1ba85e1c17e",
+        "new": "628160068f9d3a45bcbb218c71a02f79eba8e401",
+        "status": "agent"
+      },
+      {
+        "commit": "265de98fcb4f7cbbef2781fb87c43d1b906fa1b4",
+        "date": "2026-06-01T22:28:45Z",
+        "committed": "2026-06-01T22:28:45Z",
+        "old": null,
+        "new": "8d201d6ea306f7f3fdc2d542b677a1ba85e1c17e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code, openhands)"
+  },
+  "content": {
+    "size_bytes": 3631,
+    "sha256": "9e5d8e0bd9e7e92d941494770084da072f41f89938fd131f28fb7cef53025a7d",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 107,
+    "words": 406,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/omneval--devloop/docs/temporal-prerequisites.md"
+}

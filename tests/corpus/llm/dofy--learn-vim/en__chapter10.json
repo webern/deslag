@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "en__chapter10.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dofy/learn-vim",
+    "path": "en/chapter10.md",
+    "commit": "d37ca0e940431bf1a28354db3cd24943ad19ad68",
+    "commit_date": "2026-09-10T14:23:42+08:00",
+    "url": "https://github.com/dofy/learn-vim/blob/d37ca0e940431bf1a28354db3cd24943ad19ad68/en/chapter10.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-01-13T16:17:42+08:00",
+    "stars": 1729,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-24T15:43:02+08:00",
+    "last_commit_date": "2026-07-24T15:43:02+08:00",
+    "last_commit_author": "Seven Yu",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-24T15:43:02+08:00",
+    "last_committer_date": "2026-07-24T15:43:02+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fd04571811855d8485087f1bbdc40214f064b116",
+        "date": "2026-07-24T15:43:02+08:00",
+        "committed": "2026-07-24T15:43:02+08:00",
+        "old": null,
+        "new": "ef5a558b95cdca97165396225f0983325a5a5589",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3494,
+    "sha256": "a394230b17cb47718d56a0d73be4abfcc95657241f2c11b54aaddebd7c60f812",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 83,
+    "words": 636,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dofy--learn-vim/en/chapter10.md"
+}

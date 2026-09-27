@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "planning__todos__done__2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "defi-io/smarts",
+    "path": ".planning/todos/done/2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md",
+    "commit": "3bdca2c9e9763848fbc0d130cf3205f60845128c",
+    "commit_date": "2026-05-29T09:31:00-04:00",
+    "url": "https://github.com/defi-io/smarts/blob/3bdca2c9e9763848fbc0d130cf3205f60845128c/.planning/todos/done/2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-20T16:46:30-04:00",
+    "stars": 1,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-21T19:00:19-04:00",
+    "last_commit_date": "2026-04-21T19:00:19-04:00",
+    "last_commit_author": "Bob Wang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-21T19:00:19-04:00",
+    "last_committer_date": "2026-04-21T19:00:19-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "854298b6ff99312d9e266f0d73fa599c0d87953c",
+        "date": "2026-04-21T19:00:19-04:00",
+        "committed": "2026-04-21T19:00:19-04:00",
+        "old": null,
+        "new": "03121ed080fbd06bb76ad14995c2b3d88f430bfc",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2879,
+    "sha256": "9f9e49c929a07804d502868f6a6ba133e529c1e710579371a57c2f6887af31b9",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 39,
+    "words": 332,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/defi-io--smarts/.planning/todos/done/2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md"
+}

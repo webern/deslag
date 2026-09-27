@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AsBuiltReport/AsBuiltReport.Veeam.VBR",
+    "path": "CHANGELOG.md",
+    "commit": "aa535ee3e25c2ea919ddff612b9f81700f01e4ee",
+    "commit_date": "2026-09-25T21:49:49-04:00",
+    "url": "https://github.com/AsBuiltReport/AsBuiltReport.Veeam.VBR/blob/aa535ee3e25c2ea919ddff612b9f81700f01e4ee/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-06-23T11:15:38+10:00",
+    "stars": 92,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 260,
+    "first_commit_date": "2020-06-23T12:41:30+10:00",
+    "last_commit_date": "2026-09-25T21:11:26-04:00",
+    "last_commit_author": "Jonathan Colon",
+    "authors": 3,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-06-23T12:41:30+10:00",
+    "last_committer_date": "2026-09-25T21:11:26-04:00",
+    "marks": [
+      {
+        "text": "Copilot <copilot@github.com>",
+        "tool": "copilot",
+        "kind": "assist",
+        "place": "identity",
+        "commits": 4
+      },
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fe7437e14a38f24a53bf518ab449f1ad0e3d56dc",
+        "date": "2026-05-03T14:46:58-04:00",
+        "committed": "2026-05-03T14:46:58-04:00",
+        "old": "bbeac18e9fc76f56ef489bbef07c12bcb5fa7c0e",
+        "new": "a574b2923d9c92bbd7543456e21574ea3a0c093d",
+        "status": "assist"
+      },
+      {
+        "commit": "f8b56014be6448e199ae63290ecfc6296cf37b3d",
+        "date": "2026-04-25T19:28:01-04:00",
+        "committed": "2026-04-25T19:28:01-04:00",
+        "old": "ef18a35dcbe37a653cd0805d7af84908dfbc0088",
+        "new": "bbeac18e9fc76f56ef489bbef07c12bcb5fa7c0e",
+        "status": "agent"
+      },
+      {
+        "commit": "350540ce352e90b2a9ed6fe73669426e4d9dcf80",
+        "date": "2026-04-25T17:50:55-04:00",
+        "committed": "2026-04-25T17:50:55-04:00",
+        "old": "0a4fece3ca3b9d417319f898f4c6cfdc18424cdd",
+        "new": "ef18a35dcbe37a653cd0805d7af84908dfbc0088",
+        "status": "assist"
+      },
+      {
+        "commit": "4b26591bcbf81ea5fee3389cdfc2c1fd30b1a4b5",
+        "date": "2026-04-25T15:54:05-04:00",
+        "committed": "2026-04-25T15:54:05-04:00",
+        "old": "2efd7afe4f9b14df01a9ffd33e89eec2d75c6b76",
+        "new": "0a4fece3ca3b9d417319f898f4c6cfdc18424cdd",
+        "status": "assist"
+      },
+      {
+        "commit": "3decdc460a00134fc9a354615d5aafab88ee5be0",
+        "date": "2026-04-22T19:50:11-04:00",
+        "committed": "2026-04-22T19:50:11-04:00",
+        "old": "21b83bbdadcd5fffb3a6b0358d6f4b2e47c81f2f",
+        "new": "b49ab59c05df0ffd4d5829d4c5d89fdd534dc5e5",
+        "status": "assist"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 260 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 33813,
+    "sha256": "20bdd3e3e2c4eabdd68d99f84c4eeac0e79787745f03c71f15c548a43d6d5e35",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1007,
+    "words": 4280,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/AsBuiltReport--AsBuiltReport.Veeam.VBR/CHANGELOG.md"
+}

@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__issue-investigation__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "influxdata/docs-v2",
+    "path": ".agents/skills/issue-investigation/SKILL.md",
+    "commit": "f63b63ec89597d47298dbff3643906b2bdfc4e33",
+    "commit_date": "2026-09-25T19:54:24Z",
+    "url": "https://github.com/influxdata/docs-v2/blob/f63b63ec89597d47298dbff3643906b2bdfc4e33/.agents/skills/issue-investigation/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-12-13T11:47:02-07:00",
+    "stars": 82,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-30T11:08:24Z",
+    "last_commit_date": "2026-06-30T11:08:24Z",
+    "last_commit_author": "Claude",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-30T16:36:59-05:00",
+    "last_committer_date": "2026-06-30T16:36:59-05:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5032b2b4c2ff91042584a911772fae5267a5f726",
+        "date": "2026-06-30T11:08:24Z",
+        "committed": "2026-06-30T16:36:59-05:00",
+        "old": null,
+        "new": "df6f84bbae31d7e747273ee838883d2c56f5829c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3732,
+    "sha256": "3780512212a73a5a895f5ac8ecf3b9ed2d944bbbef836a020b2b6aae7433348b",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 87,
+    "words": 619,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/influxdata--docs-v2/.agents/skills/issue-investigation/SKILL.md"
+}

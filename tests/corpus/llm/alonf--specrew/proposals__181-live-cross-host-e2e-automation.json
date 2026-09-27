@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "proposals__181-live-cross-host-e2e-automation.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "alonf/specrew",
+    "path": "proposals/181-live-cross-host-e2e-automation.md",
+    "commit": "7debb9fd14967927d13264a33a8ddc52e45c456e",
+    "commit_date": "2026-09-01T01:32:52+03:00",
+    "url": "https://github.com/alonf/specrew/blob/7debb9fd14967927d13264a33a8ddc52e45c456e/proposals/181-live-cross-host-e2e-automation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-17T03:50:28+03:00",
+    "stars": 55,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-10T20:05:11+03:00",
+    "last_commit_date": "2026-06-10T20:05:11+03:00",
+    "last_commit_author": "Alon Fliess",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-10T20:05:11+03:00",
+    "last_committer_date": "2026-06-10T20:05:11+03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "71153acd9b7319b23c80920f5ae81880dc28b597",
+        "date": "2026-06-10T20:05:11+03:00",
+        "committed": "2026-06-10T20:05:11+03:00",
+        "old": null,
+        "new": "0cb5990c810e5fe213cd09a0819627f8752b9c1f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11237,
+    "sha256": "599598f5c0a9c6316e226629bef35c2b792ef8287939907154da37f71d559408",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 145,
+    "words": 1599,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/alonf--specrew/proposals/181-live-cross-host-e2e-automation.md"
+}

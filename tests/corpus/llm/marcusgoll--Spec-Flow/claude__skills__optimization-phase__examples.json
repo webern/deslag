@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__skills__optimization-phase__examples.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "marcusgoll/Spec-Flow",
+    "path": ".claude/skills/optimization-phase/examples.md",
+    "commit": "70e92795df74ffb1e85062348866b8923cbc262b",
+    "commit_date": "2026-09-23T11:53:15-05:00",
+    "url": "https://github.com/marcusgoll/Spec-Flow/blob/70e92795df74ffb1e85062348866b8923cbc262b/.claude/skills/optimization-phase/examples.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-10-03T20:21:16-05:00",
+    "stars": 94,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-10-19T08:36:15-05:00",
+    "last_commit_date": "2025-10-19T08:36:15-05:00",
+    "last_commit_author": "Marcus Gollahon",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-10-19T08:36:15-05:00",
+    "last_committer_date": "2025-10-19T08:36:15-05:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d3da73323413cf42fc533e41cc77d595864a2ded",
+        "date": "2025-10-19T08:36:15-05:00",
+        "committed": "2025-10-19T08:36:15-05:00",
+        "old": null,
+        "new": "81adb94ed55a8c03b93e52b823fcacdebe0a51eb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 247,
+    "sha256": "4ba2fa0d4bfa6139e4a86dbdf2e65ab84be36d405bb42f8c99edf36256a4841a",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 13,
+    "words": 39,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/marcusgoll--Spec-Flow/.claude/skills/optimization-phase/examples.md"
+}

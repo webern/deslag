@@ -1,0 +1,379 @@
+# Documentation
+
+## Deploment Notes
+Follow these steps to configure and deploy the application
+0. Verify pre-requisites and set up environment
+1. Clone code from Github repository into environment
+2. Add required configurations
+3. Add optional configurations
+4. Configure and secure webserver
+5. Build app
+6. Open app and login
+
+## Platform / Pre-requisites
+* Provision environment that can run Laravel code [unix?]
+	 ```
+    Digital Ocean Droplet
+		Ubuntu LEMP on 16.014
+		2vCPUs
+		4GB / 80 GB Disk
+  ```
+* PHP 8.4+ [verify version]
+	```
+	gmaddock@Wrecked:/var/www/events-tracker$ php -v
+  PHP 8.4.17 (cli) (built: Jan 18 2026 14:18:33) (NTS)
+	```
+* Verify required extensions are installed:  pdo_mysql, zip
+* MySQL 8 [verify version - may not require 8]
+  ```
+  gmaddock@Wrecked:/var/www/events-tracker$ mysql -V
+  mysql  Ver 8.0.45-0ubuntu0.22.04.1 for Linux on x86_64 ((Ubuntu))
+  ```
+* NodeJS 24.14.1+
+  ```
+  gmaddock@Wrecked:/var/www/events-tracker$ node -v
+  v24.14.1
+  ```
+* Provision a database and add a user with access
+```
+        - CREATE DATABASE
+        ```
+        CREATE DATABASE `stage_events_tracker` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */
+        ```
+        - CREATE USER
+        ```
+        CREATE USER 'stage_user'@'%' IDENTIFIED BY 'ActualPassword';
+        GRANT ALL ON stage_events_tracker.* TO 'stage_user'@'%';
+        FLUSH PRIVILEGES; 
+        ```
+        - Log in with this user to test
+```
+
+## Installing / Getting started
+* Connect to the server
+* Go to the default path for deployments
+```bash
+cd /var/www
+```
+* Clone the repo.
+```bash
+$ git clone git@github.com:geoff-maddock/events-tracker.git project-name
+$ cd project-name
+```
+
+* Install the PHP dependencies.
+```
+$ composer install
+```
+
+* Install node dependencies
+```
+$ npm install
+```
+
+## Configuration
+* Copy .env.example to .env and add values
+  ** Add a database configuration that matches your provisioned database 
+  ```
+  	APP_ENV=local
+    APP_DEBUG=false
+    APP_KEY=THIS_VALUE_ADDED_BY_KEY_GENERATION
+    APP_URL=https://project-domain.com
+    APP_FEEDBACK_EMAIL=your-feedback-email@domain.com
+    APP_NOREPLY_EMAIL=noreply@domain.com
+    APP_ADMIN_EMAIL=your-admin-email@domain.com
+    APP_SUPERUSER=1
+    APP_FB_APP_ID=1111111111
+    FACEBOOK_APP_ID=999
+    FACEBOOK_APP_SECRET=999
+    FACEBOOK_GRAPH_VERSION=v5.0
+
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=stage_events_tracker
+    DB_USERNAME=stage_user
+    DB_PASSWORD=database_password
+  ```
+* Run key generation `php artisan key:generate`
+* Run `composer install`
+* Run `npm install`
+* Run node build for your environment
+  - ```npm run build```
+* Run migrations to create the initial database (new installs only — never use `migrate:fresh` on an existing deployment as it drops all data).
+  - ```php artisan migrate```
+* Seed database tables from one of the provided default seeders.  Only run this when starting the production app the first time.
+  - ```php artisan db:seed --class=ProdBasicDatabaseSeeder```
+    - The most basic data to run the app, some additional config will be required.
+  - ```php artisan db:seed --class=ProdExtraDatabaseSeeder```
+    - This includes base data for all modules and more fleshed out permissions.  No specific content.
+  - ```php artisan db:seed --class=ProdPittsburghDatabaseSeeder```
+    - This includes everything in the ProdExtra seeder, plus some base specific data for Pittsburgh.
+* Add a DNS A record with your authoritative DNS Provider for your domain
+* Point web server to /html/index.php
+  - Configure NGINX [Recommended]
+  - [EXAMPLE]
+    ```
+        server {
+
+        root /var/www/events-tracker/public;
+        index index.php index.html index.htm;
+
+        # Make site accessible from http://localhost/
+        server_name events-tracker.com;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ /index.php?$args;
+                # Uncomment to enable naxsi on this location
+                # include /etc/nginx/naxsi.rules
+        }
+
+        error_page 404 /404.html;
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+                root /usr/share/nginx/html;
+        }
+
+        location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        }
+    ```
+* Set up SSL 
+  - Configure Lets Encrypt
+    - https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-18-04
+    `sudo certbot --nginx -d your-domain.com`
+* Modify permissions
+```
+	sudo chmod 777 /var/www/project-name/storage/logs/laravel.log
+	sudo chgrp -R www-data storage bootstrap/cache
+	sudo chmod -R ug+rwx storage bootstrap/cache
+```
+
+The scheduled `sitemap:generate` command writes `sitemap*.xml` straight into
+`public/`, so the **sitemap files must be writable by the user that runs
+`schedule:run`** (`www-data` — check with `sudo grep -rn 'schedule:run'
+/var/spool/cron/crontabs/ /etc/cron.d/ /etc/crontab`). A manual run as the
+deploying user leaves them owned by that user, and every subsequent cron run
+then fails:
+
+```bash
+	sudo chgrp www-data public/sitemap*.xml
+	sudo chmod 664 public/sitemap*.xml
+```
+
+Deliberately **not** making `public/` itself group-writable: replacing an
+existing file only needs write permission on the file, so the daily run works
+without handing PHP the ability to create files in the docroot. The trade-off
+is that new sitemap files cannot be created by the scheduler — if a section
+outgrows one file (45k URLs) or a new section is added to the command, the
+first run after that must be done by a user who can write `public/`:
+
+```bash
+	php artisan sitemap:generate && sudo chgrp www-data public/sitemap*.xml && sudo chmod 664 public/sitemap*.xml
+```
+
+The command checks all of this up front and exits non-zero naming the offending
+files, so the condition shows up as a failed command rather than a silent
+staleness — Spatie's `writeToFile()` is a bare `file_put_contents()` that only
+raises a warning on failure. Verify a fix with a run as the scheduler user:
+
+```bash
+	sudo -u www-data php /var/www/project-name/artisan sitemap:generate
+```
+
+* Build assets
+```bash
+npm run build
+```
+
+### Optional Configurations
+- S3 Storage [RECOMMENDED]
+- Mailgun API key [RECOMMENDED]
+- Facebook API key [OPTIONAL]
+- Twitter API key  [OPTIONAL]
+- AI Provider API key [OPTIONAL]
+
+## Log in to running app
+* Visit the domain at https://domain.name
+* Log in with the default admin user
+  ** admin@yourdomain.com / encodedpassword
+
+# Developers
+## CI and Testing
+
+Pull requests and pushes to `main` run `.github/workflows/php.yml`:
+- `composer validate`, `composer audit` and `npm audit --audit-level=high`
+- ESLint (`npm run lint`) and the Vite production build (`npm run build`)
+- PHPStan (Larastan, level 3, with `phpstan-baseline.neon`)
+- the PHPUnit suite against a MySQL 8 service container (migrate + seed first)
+
+Run parts of CI manually:
+
+```bash
+composer phpstan
+composer tests            # clears cached config, migrate:fresh --seed on the testing DB, then phpunit
+npm run lint && npm run build
+```
+
+## Deploying to production
+
+`.github/workflows/build-prod.yml` (**Actions → Build Prod → Run workflow**) deploys `main`. It first checks that the **PHP Composer** CI run for that exact commit passed, and refuses to deploy otherwise. On the server it runs these steps, which are also the checklist for a manual deploy:
+
+```bash
+cd /var/www/events-tracker && git checkout main && git pull
+rm -f bootstrap/cache/*.php                 # stale config/route caches can fatal the next artisan call
+composer install --no-dev --optimize-autoloader --no-interaction   # always: lockfile changes need it
+php artisan migrate --force                 # additive migrations ship with the code that needs them
+npm ci && npm run build
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+php artisan queue:restart                   # the supervised worker keeps old code until restarted
+```
+
+Only cache config and routes on **production**. On the dev checkout, a cached config makes PHPUnit ignore `.env.testing`. The test suite refuses to run in that case, and `php artisan config:clear && php artisan route:clear` fixes it.
+
+## Environments:  Dev, Testing, Production
+* Dev environment notes
+* Testing environment notes
+* Prod environment notes
+
+---
+
+## Upgrading to v2026.05.01
+
+This is a major release with a full UI refresh (Tailwind CSS / Vite), new features, and database schema changes. Follow these steps to upgrade an existing installation.
+
+### Pre-upgrade checklist
+- [ ] Back up the database before making any changes
+- [ ] Put the app into maintenance mode: `php artisan down`
+- [ ] Confirm you are on PHP 8.4+ and Node 24+
+
+### 1. Pull the latest code
+```bash
+git pull origin master
+```
+
+### 2. Update PHP dependencies
+```bash
+composer install --no-dev --optimize-autoloader
+```
+
+### 3. Update Node dependencies and rebuild assets
+The build pipeline has migrated from Laravel Mix/webpack to Vite. If you have old `webpack.mix.js`-based build artifacts, they will be replaced.
+```bash
+npm install
+npm run build
+```
+
+### 4. Run database migrations
+Five new migrations are included. Run them against the existing database — **do not use `migrate:fresh`** as that will drop all data.
+```bash
+php artisan migrate
+```
+
+Migrations included in this release:
+- `add_description_to_tags_table`
+- `create_event_shares_table`
+- `create_click_tracks_table`
+- `add_user_id_to_click_tracks_table`
+- `create_blog_photo_table`
+
+### 5. Clear caches
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### 6. Bring the app back online
+```bash
+php artisan up
+```
+
+### 7. Verify
+- Log in and confirm the UI loads correctly (dark theme by default)
+- Check that events, entities, and series pages render as expected
+- Confirm click-tracking redirects (`/go/evt-{id}`, `/go/ser-{id}`) are working if you use ticket links
+
+## Background queue worker
+
+Long-running actions (Instagram posting, account data exports) run as queued jobs
+instead of blocking the web request. This requires the **database** queue driver
+and a running worker process.
+
+### One-time setup
+```bash
+# In .env
+QUEUE_DRIVER=database
+# Optional: also email users when a queued job finishes
+QUEUE_NOTIFY_EMAIL=false
+
+# Create the queue tables (jobs, failed_jobs, job_batches, notifications, job_statuses)
+php artisan migrate
+```
+
+### Run the worker
+A worker must be running for queued jobs to process. In production, supervise it:
+
+```ini
+; /etc/supervisor/conf.d/events-worker.conf
+[program:events-queue]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/events/artisan queue:work --sleep=3 --tries=3 --timeout=700
+autostart=true
+autorestart=true
+stopwaitsecs=1260
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/events/storage/logs/queue-worker.log
+```
+
+```bash
+supervisorctl reread && supervisorctl update && supervisorctl start events-queue:*
+# Restart the worker after every deploy so it picks up new code:
+php artisan queue:restart
+```
+
+For local development, run `php artisan queue:work` in a separate terminal, or set
+`QUEUE_DRIVER=sync` to execute jobs inline (the test suite always uses `sync`).
+
+Users see queued job progress and completion under the **Notifications** item in
+the sidebar (`/job-status`).
+
+## Scheduled tasks
+
+Everything registered in `app/Console/Kernel::schedule()` — weekly notifications,
+entity notifications, user cleanup, export cleanup, series event creation, feedback
+invitations, the admin activity summary, and the Discord reminder and digest commands
+— runs from a **single** cron entry:
+
+```crontab
+* * * * * php /var/www/events/artisan schedule:run >> /dev/null 2>&1
+```
+
+Laravel's scheduler works by having cron invoke `schedule:run` every minute; the
+framework then decides which commands are actually due. Without that one line,
+**nothing scheduled runs at all**, and there is no error — the commands simply never
+fire. That failure mode is silent, so check it explicitly rather than assuming.
+
+Confirm what the app believes is scheduled:
+
+```bash
+php artisan schedule:list
+```
+
+Confirm cron is actually invoking it — the entry may live in the deploying user's
+crontab, `www-data`'s, root's, or `/etc/cron.d/`:
+
+```bash
+sudo grep -rn 'schedule:run' /var/spool/cron/crontabs/ /etc/cron.d/ /etc/crontab
+```
+
+Scheduled commands inherit the timezone set per-task in the Kernel (most use
+`America/New_York`), not the server timezone.
+
+Some scheduled commands queue jobs rather than doing the work inline, so they also
+need the queue worker above to be running.

@@ -1,0 +1,120 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "quay/quay",
+    "path": ".github/CONTRIBUTING.md",
+    "commit": "a17064d5fd77bc338d3740139dfebd5b27ea4a68",
+    "commit_date": "2026-09-26T00:59:28+05:30",
+    "url": "https://github.com/quay/quay/blob/a17064d5fd77bc338d3740139dfebd5b27ea4a68/.github/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2824,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2021-04-09T09:06:22-04:00",
+    "last_commit_date": "2026-09-25T09:09:34-05:00",
+    "last_commit_author": "jbpratt",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-04-09T09:06:22-04:00",
+    "last_committer_date": "2026-09-25T14:09:34Z",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2c8e5a656b5ee40d8f4beb461dfc69f51110b8d1",
+        "date": "2026-09-25T09:09:34-05:00",
+        "committed": "2026-09-25T14:09:34Z",
+        "old": "26abe7b8edb3e584f0bfac6b94856c09e46056d2",
+        "new": "a2885b6b9faa0928dacf983a6a645d8eeeb23290",
+        "status": "agent"
+      },
+      {
+        "commit": "aa8252f22d436a253beb644643a8203da0763a31",
+        "date": "2026-06-02T09:54:35-05:00",
+        "committed": "2026-06-02T09:54:35-05:00",
+        "old": "ba5ab1ba238aa838b7111813d5f28e51d635a1bf",
+        "new": "526a41e9596fde793d82b405f4bf51008cc2c11d",
+        "status": "squash"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 7 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 9208,
+    "sha256": "659544c3b812149967c9342982f98b78c0d427fb2c211154f027a27766446b1e",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 254,
+    "words": 1209,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/quay--quay/.github/CONTRIBUTING.md",
+  "before": {
+    "sha256": "eb1299834cc9273ecb62c917169ecd10f9d723f1ee7d99ca3d3be023b1dc7cbb",
+    "commit": "0033f9b851502bd474d8ddd3faf4e5d78f43f9ca",
+    "date": "2021-12-23T14:17:36-05:00",
+    "between": [
+      {
+        "commit": "923799e793077724d6dcb54d090921d36d5d6330",
+        "date": "2026-07-08T20:01:46+02:00",
+        "committed": "2026-07-08T20:01:46+02:00",
+        "old": "526a41e9596fde793d82b405f4bf51008cc2c11d",
+        "new": "26abe7b8edb3e584f0bfac6b94856c09e46056d2",
+        "status": "late"
+      },
+      {
+        "commit": "aa8252f22d436a253beb644643a8203da0763a31",
+        "date": "2026-06-02T09:54:35-05:00",
+        "committed": "2026-06-02T09:54:35-05:00",
+        "old": "ba5ab1ba238aa838b7111813d5f28e51d635a1bf",
+        "new": "526a41e9596fde793d82b405f4bf51008cc2c11d",
+        "status": "squash"
+      },
+      {
+        "commit": "365ffb1a5acebbffed39a6d86ffc18cbd15bed9f",
+        "date": "2026-05-28T10:56:36-04:00",
+        "committed": "2026-05-28T10:56:36-04:00",
+        "old": "0dc0ef68494e14a37b29795d23e7cc6606de103c",
+        "new": "ba5ab1ba238aa838b7111813d5f28e51d635a1bf",
+        "status": "late"
+      }
+    ]
+  }
+}

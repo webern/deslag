@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "plans__waveform-service.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "naomiaro/waveform-playlist",
+    "path": "plans/waveform-service.md",
+    "commit": "509280ee3124ee6c05a922d9c9d97328cee072a8",
+    "commit_date": "2026-08-17T12:34:16-07:00",
+    "url": "https://github.com/naomiaro/waveform-playlist/blob/509280ee3124ee6c05a922d9c9d97328cee072a8/plans/waveform-service.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2013-05-28T18:51:48-07:00",
+    "stars": 1679,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-01-29T22:44:46-08:00",
+    "last_commit_date": "2026-01-30T18:34:54-08:00",
+    "last_commit_author": "Naomi Aro",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-29T22:44:46-08:00",
+    "last_committer_date": "2026-01-30T18:34:54-08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9458936e636d87ef04518943ef84f6803e765f5f",
+        "date": "2026-01-30T18:34:54-08:00",
+        "committed": "2026-01-30T18:34:54-08:00",
+        "old": "a232091020c8022469e36016c2ed1aa598b234f7",
+        "new": "128f89fb4330de1d1ee6ffb4a340fd000b9834a6",
+        "status": "agent"
+      },
+      {
+        "commit": "560eb5df3a621d687571946df8ebd783bbf6eebe",
+        "date": "2026-01-29T22:44:46-08:00",
+        "committed": "2026-01-29T22:44:46-08:00",
+        "old": null,
+        "new": "a232091020c8022469e36016c2ed1aa598b234f7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7017,
+    "sha256": "db5930909521fcdeeb731d6624a42d0364cd6597247c22b94429c210b39a5707",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 178,
+    "words": 982,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/naomiaro--waveform-playlist/plans/waveform-service.md"
+}

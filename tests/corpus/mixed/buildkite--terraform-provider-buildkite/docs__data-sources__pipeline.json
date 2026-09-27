@@ -1,0 +1,129 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__data-sources__pipeline.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "buildkite/terraform-provider-buildkite",
+    "path": "docs/data-sources/pipeline.md",
+    "commit": "46280d71cfe08eb0c06e80219f8d5ef091b37273",
+    "commit_date": "2026-09-24T01:28:56+10:00",
+    "url": "https://github.com/buildkite/terraform-provider-buildkite/blob/46280d71cfe08eb0c06e80219f8d5ef091b37273/docs/data-sources/pipeline.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2019-06-08T17:23:13+08:00",
+    "stars": 56,
+    "found_by": "gh-commits:amp"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2021-02-20T00:36:52+11:00",
+    "last_commit_date": "2026-07-30T23:01:19-07:00",
+    "last_commit_author": "Paul Annesley",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-02-20T11:29:32+11:00",
+    "last_committer_date": "2026-07-31T16:01:19+10:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0c5871008c48a548ea05f818e9178d5d0c05b40b",
+        "date": "2026-07-30T23:01:19-07:00",
+        "committed": "2026-07-31T16:01:19+10:00",
+        "old": "fb9703d60a16a41d83d6e01f00fd926f94f51ef5",
+        "new": "24b4da5cef45120f4f985f8c6f976dba575b785c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 9 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1696,
+    "sha256": "eab85f8f4b72efa83a32b128278420d87278b45630ef42c94fe44b84b6ea6184",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 43,
+    "words": 240,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/buildkite--terraform-provider-buildkite/docs/data-sources/pipeline.md",
+  "before": {
+    "sha256": "9849be02e5a407763add30a86435585ca59d853595844d628d70e4778d81f278",
+    "commit": "c90b0093f4a4d45b5ba53833679c7d07a95736f9",
+    "date": "2021-12-16T18:59:25-08:00",
+    "between": [
+      {
+        "commit": "24a4175cb847c490e1b603d331122dedec05fa8d",
+        "date": "2026-02-11T11:02:17-05:00",
+        "committed": "2026-02-11T11:02:17-05:00",
+        "old": "4270c9e0adbb9163a1ad45e6b829155b7cfafe9c",
+        "new": "fb9703d60a16a41d83d6e01f00fd926f94f51ef5",
+        "status": "late"
+      },
+      {
+        "commit": "b6d9741d493ca02bbf5e72c2c0e6099650b44ce7",
+        "date": "2025-05-28T18:52:16-04:00",
+        "committed": "2025-05-29T08:52:16+10:00",
+        "old": "d64d5f89d300228613fee9ddbf62c95964ccddc8",
+        "new": "4270c9e0adbb9163a1ad45e6b829155b7cfafe9c",
+        "status": "late"
+      },
+      {
+        "commit": "328325c809a0145555cfef5667a37a96aaa3797c",
+        "date": "2024-01-16T16:47:24-06:00",
+        "committed": "2024-01-17T09:47:24+11:00",
+        "old": "874c86e46bc2d6fd8a9829925f1829b6d643d39d",
+        "new": "d64d5f89d300228613fee9ddbf62c95964ccddc8",
+        "status": "late"
+      },
+      {
+        "commit": "57604eb203bfe84bd32465522b6c35d9ba714ec3",
+        "date": "2023-09-13T07:05:05+08:00",
+        "committed": "2023-09-13T07:05:05+08:00",
+        "old": "6d1df0cb65e61d4654088b9586691c7d0e9ecb1b",
+        "new": "874c86e46bc2d6fd8a9829925f1829b6d643d39d",
+        "status": "late"
+      },
+      {
+        "commit": "07366127dfd386e80cd4e07afe28649e38881286",
+        "date": "2023-07-20T17:55:06+10:00",
+        "committed": "2023-07-20T17:55:06+10:00",
+        "old": "645663ca2c079dc7f94410705cc2f0d01dbb8414",
+        "new": "6d1df0cb65e61d4654088b9586691c7d0e9ecb1b",
+        "status": "late"
+      },
+      {
+        "commit": "45673d201e99c62708501138da88a8984876c4bf",
+        "date": "2023-05-30T06:39:47+05:45",
+        "committed": "2023-05-30T10:54:47+10:00",
+        "old": "39006bff377178afb8f9fe4e2a789b389c947cb2",
+        "new": "645663ca2c079dc7f94410705cc2f0d01dbb8414",
+        "status": "late"
+      }
+    ]
+  }
+}

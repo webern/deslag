@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__extensions__thermoworks__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jongio/thermoworks",
+    "path": ".github/extensions/thermoworks/README.md",
+    "commit": "69bd964d6c3b5197c9e40483831e10845f79597f",
+    "commit_date": "2026-09-22T12:04:44-07:00",
+    "url": "https://github.com/jongio/thermoworks/blob/69bd964d6c3b5197c9e40483831e10845f79597f/.github/extensions/thermoworks/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-04T07:08:34-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-30T18:56:28-07:00",
+    "last_commit_date": "2026-06-30T18:56:28-07:00",
+    "last_commit_author": "Jon Gallant",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-30T18:56:28-07:00",
+    "last_committer_date": "2026-06-30T18:56:28-07:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "f1c7fc49fc631ada5e66798e5b44eb7c9b4673a0",
+        "date": "2026-06-30T18:56:28-07:00",
+        "committed": "2026-06-30T18:56:28-07:00",
+        "old": null,
+        "new": "a5934693c94db2bcd06b6c883fb3c45bb855d1c8",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 7083,
+    "sha256": "76e70f838ad94170847a53219898a87b893e522f3cea1385dbae0a33e93b5f18",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 133,
+    "words": 1023,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jongio--thermoworks/.github/extensions/thermoworks/README.md"
+}

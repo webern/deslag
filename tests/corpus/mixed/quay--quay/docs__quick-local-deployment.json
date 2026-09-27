@@ -1,0 +1,119 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__quick-local-deployment.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "quay/quay",
+    "path": "docs/quick-local-deployment.md",
+    "commit": "a17064d5fd77bc338d3740139dfebd5b27ea4a68",
+    "commit_date": "2026-09-26T00:59:28+05:30",
+    "url": "https://github.com/quay/quay/blob/a17064d5fd77bc338d3740139dfebd5b27ea4a68/docs/quick-local-deployment.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 2824,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-10-28T14:50:04+02:00",
+    "last_commit_date": "2026-08-31T22:39:39+05:30",
+    "last_commit_author": "sameern4",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-10-28T14:50:04+02:00",
+    "last_committer_date": "2026-08-31T13:09:39-04:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3ff78b0df1d32e1c1849b55f47c256505f05209d",
+        "date": "2026-08-31T22:39:39+05:30",
+        "committed": "2026-08-31T13:09:39-04:00",
+        "old": "3dc9708f4a6f3524339b43712017303337edc454",
+        "new": "96071da3a6840676b9ae462baacb3e69cc193c4e",
+        "status": "squash"
+      },
+      {
+        "commit": "0f2f96a5143494527d17167ee749f44aefecab2b",
+        "date": "2025-12-19T08:52:20-08:00",
+        "committed": "2025-12-19T08:52:20-08:00",
+        "old": "f2410bf9be0226b790c6b1fa976dc3b8e343f1b8",
+        "new": "3dc9708f4a6f3524339b43712017303337edc454",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 4 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 12356,
+    "sha256": "66cdb1f4f595f91af9b73b2eb0cd7639945337c98b3ebf3a1c0830c73bced54c",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 308,
+    "words": 1655,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/quay--quay/docs/quick-local-deployment.md",
+  "before": {
+    "sha256": "22134c1d308d6651a3e3353a6bc8605e82bcc30657ba603dff92214a1c5b46a5",
+    "commit": "0033f9b851502bd474d8ddd3faf4e5d78f43f9ca",
+    "date": "2021-12-23T14:17:36-05:00",
+    "between": [
+      {
+        "commit": "3ff78b0df1d32e1c1849b55f47c256505f05209d",
+        "date": "2026-08-31T22:39:39+05:30",
+        "committed": "2026-08-31T13:09:39-04:00",
+        "old": "3dc9708f4a6f3524339b43712017303337edc454",
+        "new": "96071da3a6840676b9ae462baacb3e69cc193c4e",
+        "status": "squash"
+      },
+      {
+        "commit": "6f27e60f2acf2504e64d7ccb84048ac35e50d96b",
+        "date": "2023-03-09T18:05:38+03:00",
+        "committed": "2023-03-09T16:05:38+01:00",
+        "old": "a2bd118d69b0e05fff86de427ca2d0dfc61963f5",
+        "new": "f2410bf9be0226b790c6b1fa976dc3b8e343f1b8",
+        "status": "late"
+      }
+    ]
+  }
+}

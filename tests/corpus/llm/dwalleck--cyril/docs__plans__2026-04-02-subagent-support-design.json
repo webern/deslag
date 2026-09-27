@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__plans__2026-04-02-subagent-support-design.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dwalleck/cyril",
+    "path": "docs/plans/2026-04-02-subagent-support-design.md",
+    "commit": "f9bc81d83c22e8abbf25194fcd245e6b8b207310",
+    "commit_date": "2026-09-27T00:12:46-05:00",
+    "url": "https://github.com/dwalleck/cyril/blob/f9bc81d83c22e8abbf25194fcd245e6b8b207310/docs/plans/2026-04-02-subagent-support-design.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-16T14:48:59-06:00",
+    "stars": 5,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-02T22:39:19-05:00",
+    "last_commit_date": "2026-04-02T22:39:19-05:00",
+    "last_commit_author": "Daryl Walleck",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-02T22:39:19-05:00",
+    "last_committer_date": "2026-04-02T22:39:19-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "4da5aec1f8cd7f1ac5e1466933e775a28b84c048",
+        "date": "2026-04-02T22:39:19-05:00",
+        "committed": "2026-04-02T22:39:19-05:00",
+        "old": null,
+        "new": "be563a79520c76f92a1fc52f9df5ed5dbe637522",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10526,
+    "sha256": "c7b336d733331bd6e96503fecee246544bddd97a214f9641d1a0225af8135df9",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 299,
+    "words": 1207,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dwalleck--cyril/docs/plans/2026-04-02-subagent-support-design.md"
+}

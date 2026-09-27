@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__proposals__task-e2c7cef8-migrate-project-regex-reads.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "lukstafi/ludics",
+    "path": "docs/proposals/task-e2c7cef8-migrate-project-regex-reads.md",
+    "commit": "ab5eff6a19bd21b20e8b128822a367a0071abd91",
+    "commit_date": "2026-09-12T12:18:30+02:00",
+    "url": "https://github.com/lukstafi/ludics/blob/ab5eff6a19bd21b20e8b128822a367a0071abd91/docs/proposals/task-e2c7cef8-migrate-project-regex-reads.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-29T16:38:05+01:00",
+    "stars": 1,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-14T00:53:26+02:00",
+    "last_commit_date": "2026-04-14T00:53:26+02:00",
+    "last_commit_author": "Lukasz Stafiniak",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-14T00:53:32+02:00",
+    "last_committer_date": "2026-04-14T00:53:32+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6ec6a5f48d00e653ac41802491dddcdc48fdc5e0",
+        "date": "2026-04-14T00:53:26+02:00",
+        "committed": "2026-04-14T00:53:32+02:00",
+        "old": null,
+        "new": "7ccbf1d64f53d389b45c9abb05fca0588e09d2a3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3301,
+    "sha256": "5ab3c401d64babc5b8ec9421bf78935a2782c90b175a3b1cfd26475135dec7ed",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 45,
+    "words": 429,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lukstafi--ludics/docs/proposals/task-e2c7cef8-migrate-project-regex-reads.md"
+}

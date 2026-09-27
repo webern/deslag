@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "server__test-plan.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dylan-mccapes/2ndOpinionMD",
+    "path": "server/test-plan.md",
+    "commit": "3ef387cab0a91163a2237dc6b793063408b2b4e3",
+    "commit_date": "2026-05-06T07:55:41-10:00",
+    "url": "https://github.com/dylan-mccapes/2ndOpinionMD/blob/3ef387cab0a91163a2237dc6b793063408b2b4e3/server/test-plan.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-03-30T05:45:24-07:00",
+    "stars": 0,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-04-25T22:29:56Z",
+    "last_commit_date": "2025-04-25T22:29:56Z",
+    "last_commit_author": "Devin AI",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-04-25T22:29:56Z",
+    "last_committer_date": "2025-04-25T22:29:56Z",
+    "marks": [
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8e230b642bdae8c00a98204f9a7eca6f4a500bc0",
+        "date": "2025-04-25T22:29:56Z",
+        "committed": "2025-04-25T22:29:56Z",
+        "old": null,
+        "new": "feb2be682ef31ec4da50d55f53614b79088864f6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 9678,
+    "sha256": "a0f6b419c26cad9dd2313672157859ebd4767e5ecfee03ce9a2b8a2a6f9b7e94",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 283,
+    "words": 1420,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/dylan-mccapes--2ndOpinionMD/server/test-plan.md"
+}

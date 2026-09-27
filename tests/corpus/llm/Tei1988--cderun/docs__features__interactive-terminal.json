@@ -1,0 +1,114 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__features__interactive-terminal.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Tei1988/cderun",
+    "path": "docs/features/interactive-terminal.md",
+    "commit": "2f2b6102579f53877dfa8ef60cdae673a89b270d",
+    "commit_date": "2026-09-26T17:59:03+09:00",
+    "url": "https://github.com/Tei1988/cderun/blob/2f2b6102579f53877dfa8ef60cdae673a89b270d/docs/features/interactive-terminal.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-24T00:59:40+09:00",
+    "stars": 0,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2026-01-31T10:11:39Z",
+    "last_commit_date": "2026-08-04T04:36:27Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 6,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-31T10:11:39Z",
+    "last_committer_date": "2026-08-04T04:36:27Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 6
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8af4311dcec57ba9b48cc90242d8a111d4b543b4",
+        "date": "2026-08-04T04:36:27Z",
+        "committed": "2026-08-04T04:36:27Z",
+        "old": "c1e16a1d3a0ff786290e8aadbc9a9a8318e9e5c4",
+        "new": "b3ac95d5fd95a766fec683d790cc5aa30dcd49db",
+        "status": "agent"
+      },
+      {
+        "commit": "be1ba27f0f8615a1bec7eab4163ced8654888253",
+        "date": "2026-08-03T17:31:12Z",
+        "committed": "2026-08-03T17:31:12Z",
+        "old": "26530cbee310d8f73f28fe80430ee09d455f23e2",
+        "new": "c1e16a1d3a0ff786290e8aadbc9a9a8318e9e5c4",
+        "status": "agent"
+      },
+      {
+        "commit": "90aeb918cf0b3c8e81d863b46405e73cb7e21cd4",
+        "date": "2026-02-11T17:26:04Z",
+        "committed": "2026-02-11T17:26:04Z",
+        "old": "b53d3ba69ffd7d386ada7e70442d761bb3545726",
+        "new": "26530cbee310d8f73f28fe80430ee09d455f23e2",
+        "status": "agent"
+      },
+      {
+        "commit": "cf1c6aea5328a05e91a84394a791e85197f0e72b",
+        "date": "2026-02-03T02:02:31Z",
+        "committed": "2026-02-03T02:02:31Z",
+        "old": "45ea8abc451e35aad2d54da24fc284a23b51c981",
+        "new": "b53d3ba69ffd7d386ada7e70442d761bb3545726",
+        "status": "agent"
+      },
+      {
+        "commit": "8f6c7efe087054e693c107ab4759fee1ba37e66c",
+        "date": "2026-02-01T01:56:33Z",
+        "committed": "2026-02-01T01:56:33Z",
+        "old": "95e26c580abe4351348997ecd74a7c673534b600",
+        "new": "45ea8abc451e35aad2d54da24fc284a23b51c981",
+        "status": "agent"
+      },
+      {
+        "commit": "cd76a4174144494465f773a8c9c2c8dbd62c2362",
+        "date": "2026-01-31T10:11:39Z",
+        "committed": "2026-01-31T10:11:39Z",
+        "old": null,
+        "new": "95e26c580abe4351348997ecd74a7c673534b600",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 6 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 2818,
+    "sha256": "1c040e661859ea93926c41f95c849b108f3c607ee69151d28044dd4b0ceec3e4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 33,
+    "words": 365,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Tei1988--cderun/docs/features/interactive-terminal.md"
+}

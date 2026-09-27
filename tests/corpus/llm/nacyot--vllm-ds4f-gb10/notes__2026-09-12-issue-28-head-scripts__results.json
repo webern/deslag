@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "notes__2026-09-12-issue-28-head-scripts__results.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "nacyot/vllm-ds4f-gb10",
+    "path": ".notes/2026-09-12-issue-28-head-scripts/results.md",
+    "commit": "5be09c584432fa1d1d25683ce8b51c68736bb17f",
+    "commit_date": "2026-09-16T09:07:35+09:00",
+    "url": "https://github.com/nacyot/vllm-ds4f-gb10/blob/5be09c584432fa1d1d25683ce8b51c68736bb17f/.notes/2026-09-12-issue-28-head-scripts/results.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-02-09T11:24:15Z",
+    "stars": 8,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-09-12T23:21:08+09:00",
+    "last_commit_date": "2026-09-12T23:31:42+09:00",
+    "last_commit_author": "Daegwon Nacyot Kim",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-12T23:32:09+09:00",
+    "last_committer_date": "2026-09-12T23:32:09+09:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "02456afd16f8ba4490f511b8315c20e92e62b2d1",
+        "date": "2026-09-12T23:31:42+09:00",
+        "committed": "2026-09-12T23:32:09+09:00",
+        "old": "c0f57a0bd2c8d04a4bdad0de14ccb9e5cb9262cf",
+        "new": "e80bfc331aca24c5a06268dfdbe8dbcfa74ff9f3",
+        "status": "agent"
+      },
+      {
+        "commit": "f53bc1c007f47dc978d3fd47811a0b926b54f5a3",
+        "date": "2026-09-12T23:24:33+09:00",
+        "committed": "2026-09-12T23:32:09+09:00",
+        "old": "de0ad64da135f9134fbfbf2dfbf3a28406c40a04",
+        "new": "c0f57a0bd2c8d04a4bdad0de14ccb9e5cb9262cf",
+        "status": "agent"
+      },
+      {
+        "commit": "95eb9d1415aa667397dad8a6a680e6c1c9979f5f",
+        "date": "2026-09-12T23:21:08+09:00",
+        "committed": "2026-09-12T23:32:09+09:00",
+        "old": null,
+        "new": "de0ad64da135f9134fbfbf2dfbf3a28406c40a04",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 31970,
+    "sha256": "d126f4ab332e35efc730d63171b4997a8f71d82352b1b36314620a3f719b0edb",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 415,
+    "words": 3075,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/nacyot--vllm-ds4f-gb10/.notes/2026-09-12-issue-28-head-scripts/results.md"
+}

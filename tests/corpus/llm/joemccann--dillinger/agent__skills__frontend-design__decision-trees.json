@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agent__skills__frontend-design__decision-trees.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "joemccann/dillinger",
+    "path": ".agent/skills/frontend-design/decision-trees.md",
+    "commit": "17010b79c18553cf9c1757c297e128f9b950c9be",
+    "commit_date": "2026-06-07T20:17:28-07:00",
+    "url": "https://github.com/joemccann/dillinger/blob/17010b79c18553cf9c1757c297e128f9b950c9be/.agent/skills/frontend-design/decision-trees.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2011-11-25T14:20:50-05:00",
+    "stars": 8287,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-29T17:09:48-07:00",
+    "last_commit_date": "2026-03-29T17:09:48-07:00",
+    "last_commit_author": "Joe McCann",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-29T17:09:48-07:00",
+    "last_committer_date": "2026-03-29T17:09:48-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b5e549e5e67b1a34722f9cd761100bb604e5acef",
+        "date": "2026-03-29T17:09:48-07:00",
+        "committed": "2026-03-29T17:09:48-07:00",
+        "old": null,
+        "new": "972ab58a2d22ae0d49b83645ed07044f224cb079",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 17265,
+    "sha256": "d521ce17fb9f33d3c8a899270ba15b82f1c9ae414624a6720013ddf133f59807",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 418,
+    "words": 1580,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/joemccann--dillinger/.agent/skills/frontend-design/decision-trees.md"
+}

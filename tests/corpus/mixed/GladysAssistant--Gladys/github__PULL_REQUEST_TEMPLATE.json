@@ -1,0 +1,137 @@
+{
+  "sidecar_version": 3,
+  "fixture": "github__PULL_REQUEST_TEMPLATE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "GladysAssistant/Gladys",
+    "path": ".github/PULL_REQUEST_TEMPLATE.md",
+    "commit": "43a3d6880b98ce1366680cee18129bb621323c9c",
+    "commit_date": "2026-09-25T12:25:23Z",
+    "url": "https://github.com/GladysAssistant/Gladys/blob/43a3d6880b98ce1366680cee18129bb621323c9c/.github/PULL_REQUEST_TEMPLATE.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-06-05T13:11:19+02:00",
+    "stars": 3204,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2018-10-12T09:49:24+08:00",
+    "last_commit_date": "2026-09-07T11:28:35Z",
+    "last_commit_author": "Pierre-Gilles Leymarie",
+    "authors": 2,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-10-12T09:49:24+08:00",
+    "last_committer_date": "2026-09-07T11:28:35Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b42b93476634dddc6511dc3077786bc03be9f212",
+        "date": "2026-09-07T11:28:35Z",
+        "committed": "2026-09-07T11:28:35Z",
+        "old": "80523ef24435361bd9fead4cc0d1d61921610f48",
+        "new": "f8fbf12f1f04a393197f9619bde897185e41fc2e",
+        "status": "agent"
+      },
+      {
+        "commit": "9484daee086577ae6d84bbf3089301a8f2feebf2",
+        "date": "2026-07-31T20:31:35+02:00",
+        "committed": "2026-07-31T20:31:35+02:00",
+        "old": "654e341463054aaf07e8a39a716a098bb30900a6",
+        "new": "80523ef24435361bd9fead4cc0d1d61921610f48",
+        "status": "agent"
+      },
+      {
+        "commit": "ee5d530a2468753ff303b2ae30e4ea07b219ea2b",
+        "date": "2026-07-20T18:50:04+02:00",
+        "committed": "2026-07-20T18:50:04+02:00",
+        "old": "18cdfbf43e51ad7963fa88201c42d6acdc9bb7eb",
+        "new": "654e341463054aaf07e8a39a716a098bb30900a6",
+        "status": "agent"
+      },
+      {
+        "commit": "3931f8ce83fbe9f7dde42bb2a42021a20df7315d",
+        "date": "2026-07-03T21:29:33+02:00",
+        "committed": "2026-07-03T21:29:33+02:00",
+        "old": "b280c80f45365c4bf1e21477159f871b0fbf4073",
+        "new": "18cdfbf43e51ad7963fa88201c42d6acdc9bb7eb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "7 of its 14 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 1540,
+    "sha256": "2409de9549403ca65590128cdac29c486020d1a20642de645a2869e599de2182",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 250,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/GladysAssistant--Gladys/.github/PULL_REQUEST_TEMPLATE.md",
+  "before": {
+    "sha256": "4308c622af00e8d372f95d94f16a5b6f4e4418e82b55af7d7eb51e06ac3a521d",
+    "commit": "afe4a2473333ef7f8984adf8a778f96f65becb76",
+    "date": "2021-12-06T09:37:41+01:00",
+    "between": [
+      {
+        "commit": "9ab21bf55b7e76671d5c3e0a9e43c612c98deb8a",
+        "date": "2026-01-16T17:07:11+01:00",
+        "committed": "2026-01-16T17:07:11+01:00",
+        "old": "f69f546633a18d10149da7086d9ac2773904b444",
+        "new": "b280c80f45365c4bf1e21477159f871b0fbf4073",
+        "status": "late"
+      },
+      {
+        "commit": "84d277fa67cde796f9ba088c190a845cc6a32262",
+        "date": "2025-11-17T15:11:47+01:00",
+        "committed": "2025-11-17T15:11:47+01:00",
+        "old": "1b557df5d7f429d9604ed2f947a2e69e01eac1c0",
+        "new": "f69f546633a18d10149da7086d9ac2773904b444",
+        "status": "late"
+      },
+      {
+        "commit": "3c545d2c2c3211075b76a5a064b67e81ea4dd8b0",
+        "date": "2023-09-08T11:03:59+02:00",
+        "committed": "2023-09-08T11:03:59+02:00",
+        "old": "6eb096bb5712b48079db040416699529d3c7e4d3",
+        "new": "1b557df5d7f429d9604ed2f947a2e69e01eac1c0",
+        "status": "late"
+      }
+    ]
+  }
+}

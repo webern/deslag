@@ -1,0 +1,111 @@
+{
+  "sidecar_version": 3,
+  "fixture": "exports__obsidian__pm-creator__content-repurposer__content-repurposer.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mohitagw15856/pm-claude-skills",
+    "path": "exports/obsidian/pm-creator/content-repurposer/content-repurposer.md",
+    "commit": "f6ca79348c5518f1b0e8bcfd6da53b61251c0fa2",
+    "commit_date": "2026-09-22T22:05:03+01:00",
+    "url": "https://github.com/mohitagw15856/pm-claude-skills/blob/f6ca79348c5518f1b0e8bcfd6da53b61251c0fa2/exports/obsidian/pm-creator/content-repurposer/content-repurposer.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-29T08:28:36Z",
+    "stars": 1405,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-06-22T13:14:09Z",
+    "last_commit_date": "2026-07-14T11:40:39+01:00",
+    "last_commit_author": "Mohit",
+    "authors": 2,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-22T13:14:09Z",
+    "last_committer_date": "2026-07-14T11:40:39+01:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01RNrXCKwcDVSeh77n9o4aAR",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "71cf778f2d7355955226a4465bd5ad05dcc1b998",
+        "date": "2026-07-14T11:40:39+01:00",
+        "committed": "2026-07-14T11:40:39+01:00",
+        "old": "d73a5c63563aaf625a2838039c13b933ff0665f0",
+        "new": "ccd7960ea391f47fda8a28464723a35a00d26f77",
+        "status": "agent"
+      },
+      {
+        "commit": "69886aa870f212c13b3cd6e7f2ba4cdc487c2bed",
+        "date": "2026-07-02T14:32:53+01:00",
+        "committed": "2026-07-02T14:32:53+01:00",
+        "old": "e27bd1313908f080889a4df75fc17a9a847ab616",
+        "new": "d73a5c63563aaf625a2838039c13b933ff0665f0",
+        "status": "agent"
+      },
+      {
+        "commit": "bbf9cb16cdcc490675c36541707abb65fecb2b91",
+        "date": "2026-06-22T13:14:09Z",
+        "committed": "2026-06-22T13:14:09Z",
+        "old": null,
+        "new": "e27bd1313908f080889a4df75fc17a9a847ab616",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5766,
+    "sha256": "799a1694c43855732a7073ca4f746ff945d0fde8ffdb6b30302a913919d9e652",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 925,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mohitagw15856--pm-claude-skills/exports/obsidian/pm-creator/content-repurposer/content-repurposer.md"
+}

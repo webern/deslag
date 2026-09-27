@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JRebirth/JRebirth",
+    "path": "README.md",
+    "commit": "4c1df88536d9fe9adf9cbdf6bc54ce61744cbd9f",
+    "commit_date": "2026-08-24T21:31:17+02:00",
+    "url": "https://github.com/JRebirth/JRebirth/blob/4c1df88536d9fe9adf9cbdf6bc54ce61744cbd9f/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-02-22T14:15:55+01:00",
+    "stars": 92,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2012-12-08T07:21:05-08:00",
+    "last_commit_date": "2026-04-02T13:09:36+02:00",
+    "last_commit_author": "Sébastien Bordes",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2012-12-08T07:21:05-08:00",
+    "last_committer_date": "2026-04-02T13:09:36+02:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c005d5d40cbcf0edf6d4935a3bb3b2b88ad8b19d",
+        "date": "2026-04-02T13:09:36+02:00",
+        "committed": "2026-04-02T13:09:36+02:00",
+        "old": "fa220d2dd2da778911bca4493915f36fa793ce30",
+        "new": "719311ea2b97e75f0653a9b4f95958f3dd47f3d9",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 14 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2670,
+    "sha256": "bf09c0c45950b6f8dc375ebe3a4cc522901e285df413c718487f9bc1e41d9e7f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 198,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JRebirth--JRebirth/README.md",
+  "before": {
+    "sha256": "2b0e7df28b511e0827ae40fd8992385f3acbe630a828a00b4c1871ee7822eefe",
+    "commit": "50176bb19d3870e4ea3f6f826afc9cfbbb7a0023",
+    "date": "2020-01-08T22:03:10+01:00",
+    "between": []
+  }
+}

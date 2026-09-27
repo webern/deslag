@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "blpsoares/agentistics",
+    "path": "docs/superpowers/plans/2026-06-30-team-mode-phase7-ondemand-chat.md",
+    "commit": "02e05fa4cfd10531c00efee9646f42fdcf56b511",
+    "commit_date": "2026-09-27T05:09:58Z",
+    "url": "https://github.com/blpsoares/agentistics/blob/02e05fa4cfd10531c00efee9646f42fdcf56b511/docs/superpowers/plans/2026-06-30-team-mode-phase7-ondemand-chat.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-09T00:42:56-03:00",
+    "stars": 44,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-30T15:28:23-03:00",
+    "last_commit_date": "2026-06-30T15:28:23-03:00",
+    "last_commit_author": "scion",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-30T15:28:23-03:00",
+    "last_committer_date": "2026-06-30T15:28:23-03:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01SWfHiQTbWjNk7mF52QzmCk",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "dbbca5807112da3d857b7d5e806936608ce8ce1c",
+        "date": "2026-06-30T15:28:23-03:00",
+        "committed": "2026-06-30T15:28:23-03:00",
+        "old": null,
+        "new": "95072a3285261fd3d73cf887c43a3d40c792354a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8913,
+    "sha256": "4f5d2743b4956bfedf0ddab340023286752d7f6c696608d7911be5391679a7ac",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 81,
+    "words": 1207,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/blpsoares--agentistics/docs/superpowers/plans/2026-06-30-team-mode-phase7-ondemand-chat.md"
+}

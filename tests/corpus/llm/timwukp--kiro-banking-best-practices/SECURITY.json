@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "timwukp/kiro-banking-best-practices",
+    "path": "SECURITY.md",
+    "commit": "3c7a75b99c67b8a6788544ee67470602594b4b5b",
+    "commit_date": "2026-06-30T18:12:15+08:00",
+    "url": "https://github.com/timwukp/kiro-banking-best-practices/blob/3c7a75b99c67b8a6788544ee67470602594b4b5b/SECURITY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-25T12:43:01+08:00",
+    "stars": 4,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-11T17:17:35+08:00",
+    "last_commit_date": "2026-03-11T17:17:35+08:00",
+    "last_commit_author": "WU KUNPENG",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-11T17:17:35+08:00",
+    "last_committer_date": "2026-03-11T17:17:35+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3fec8f612c4b7acd406a74929c9be270cb85f43b",
+        "date": "2026-03-11T17:17:35+08:00",
+        "committed": "2026-03-11T17:17:35+08:00",
+        "old": null,
+        "new": "0a05fad87992f87a18a0f34ebf4591a93139d0bb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1798,
+    "sha256": "494094576234cc8660eb636d8d7ecd7bf4a2a4493fb88971ad0879ac8dc2ad2e",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 243,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/timwukp--kiro-banking-best-practices/SECURITY.md"
+}

@@ -1,0 +1,111 @@
+{
+  "sidecar_version": 3,
+  "fixture": "economist-style__skills__economist-style__reference__DIALECT-CONVENTIONS.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "TAJD/economist-style-guide-plugin",
+    "path": "economist-style/skills/economist-style/reference/DIALECT-CONVENTIONS.md",
+    "commit": "cfb132d62447b959dea5a49940e28da89e1ba75b",
+    "commit_date": "2026-08-01T04:42:48+01:00",
+    "url": "https://github.com/TAJD/economist-style-guide-plugin/blob/cfb132d62447b959dea5a49940e28da89e1ba75b/economist-style/skills/economist-style/reference/DIALECT-CONVENTIONS.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-30T18:22:01Z",
+    "stars": 122,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2025-12-30T18:22:01Z",
+    "last_commit_date": "2026-07-31T08:29:31+01:00",
+    "last_commit_author": "Thomas Dickson",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-12-30T18:22:01Z",
+    "last_committer_date": "2026-07-31T08:29:48+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.ai/code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 2
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_0131tgKBF3gYNe7aKaDmkP2j",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "5c57e0cd8bc3554749a21b30a4a08b4852c82131",
+        "date": "2026-07-31T08:29:31+01:00",
+        "committed": "2026-07-31T08:29:48+01:00",
+        "old": "19058b7b1e8f393a13ad260267effe3a1055eebc",
+        "new": "88ec26ff14f993c6ff3738f795731b7c844b5820",
+        "status": "agent"
+      },
+      {
+        "commit": "c32056f02375dc57638caa4a720ade413541ecc6",
+        "date": "2025-12-30T18:58:59Z",
+        "committed": "2025-12-30T18:58:59Z",
+        "old": "dceb180458a10638d72b84b009f13bb4617a9258",
+        "new": "19058b7b1e8f393a13ad260267effe3a1055eebc",
+        "status": "agent"
+      },
+      {
+        "commit": "4253e5008765c32cc37f3376fdf1c8f0761f9c2e",
+        "date": "2025-12-30T18:22:01Z",
+        "committed": "2025-12-30T18:22:01Z",
+        "old": null,
+        "new": "dceb180458a10638d72b84b009f13bb4617a9258",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7943,
+    "sha256": "a71ec8cd1296a8e66956c5d0b0f1c8009a0e2ba2bd6ed9205ce12ae381d79a32",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 341,
+    "words": 1325,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/TAJD--economist-style-guide-plugin/economist-style/skills/economist-style/reference/DIALECT-CONVENTIONS.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "loom__ralph-gfx906-vllm-diagnostic-digest-2026-05-19.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "flexinfer/flexinfer",
+    "path": ".loom/ralph-gfx906-vllm-diagnostic-digest-2026-05-19.md",
+    "commit": "68fe8ed6cc0efd16d4e216133a56b53b6e9a02dc",
+    "commit_date": "2026-08-14T18:00:20-04:00",
+    "url": "https://github.com/flexinfer/flexinfer/blob/68fe8ed6cc0efd16d4e216133a56b53b6e9a02dc/.loom/ralph-gfx906-vllm-diagnostic-digest-2026-05-19.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-12T04:09:32-04:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-19T18:51:16-04:00",
+    "last_commit_date": "2026-05-19T18:51:16-04:00",
+    "last_commit_author": "Cody Blevins",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-19T18:51:16-04:00",
+    "last_committer_date": "2026-05-19T18:51:16-04:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "9ece0441154a17a17d1e497be5dcedf195ae3fd6",
+        "date": "2026-05-19T18:51:16-04:00",
+        "committed": "2026-05-19T18:51:16-04:00",
+        "old": null,
+        "new": "214d471b6cf9055b2b5824df7e76a9c1b9afc856",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 3471,
+    "sha256": "153763066670ff30989cc7d0cbd2c3e2630ba4f64a1680bdda8a2506ef8c5103",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 413,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/flexinfer--flexinfer/.loom/ralph-gfx906-vllm-diagnostic-digest-2026-05-19.md"
+}

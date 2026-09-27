@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__get-shit-done__references__questioning.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "anchapin/planar-nexus",
+    "path": ".claude/get-shit-done/references/questioning.md",
+    "commit": "f08f14ca6d4b0b3644910e076d2ff072343d3ed9",
+    "commit_date": "2026-09-27T03:14:31Z",
+    "url": "https://github.com/anchapin/planar-nexus/blob/f08f14ca6d4b0b3644910e076d2ff072343d3ed9/.claude/get-shit-done/references/questioning.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-10T20:18:00Z",
+    "stars": 0,
+    "found_by": "gh-commits:openhands"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-18T16:43:32-04:00",
+    "last_commit_date": "2026-03-18T16:43:32-04:00",
+    "last_commit_author": "openhands",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "openhands"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-18T16:43:32-04:00",
+    "last_committer_date": "2026-03-18T16:43:32-04:00",
+    "marks": [
+      {
+        "text": "openhands <openhands@all-hands.dev>",
+        "tool": "openhands",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "bfe4fb60ad899fcf4dc70d3a174c99a9a051742b",
+        "date": "2026-03-18T16:43:32-04:00",
+        "committed": "2026-03-18T16:43:32-04:00",
+        "old": null,
+        "new": "14a03db3873a70ea48655154eba8974dde13fce4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (openhands)"
+  },
+  "content": {
+    "size_bytes": 6284,
+    "sha256": "a8c988cab05f4651f9b88b7e6217fc8569ba4748a795a47711ee8cf64b2c70b0",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 162,
+    "words": 956,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/anchapin--planar-nexus/.claude/get-shit-done/references/questioning.md"
+}

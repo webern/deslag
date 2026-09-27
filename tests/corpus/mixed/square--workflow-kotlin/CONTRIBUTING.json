@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "square/workflow-kotlin",
+    "path": "CONTRIBUTING.md",
+    "commit": "068977c67c522f38dc2c4ad8b3a79a4198f607b2",
+    "commit_date": "2026-09-04T16:00:52-07:00",
+    "url": "https://github.com/square/workflow-kotlin/blob/068977c67c522f38dc2c4ad8b3a79a4198f607b2/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-15T21:16:31-05:00",
+    "stars": 1122,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-05-09T16:43:30-07:00",
+    "last_commit_date": "2026-08-18T11:41:21-07:00",
+    "last_commit_author": "Zach Klippenstein",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-05-11T10:57:54-07:00",
+    "last_committer_date": "2026-08-18T11:41:21-07:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "be70cc24b66b66198daeb3b3f31666c3b081ea67",
+        "date": "2026-08-18T11:41:21-07:00",
+        "committed": "2026-08-18T11:41:21-07:00",
+        "old": "7725594c986059781c55dc958d64364fdd018413",
+        "new": "4e0021960a6b993639d70b9ad123df44437c8731",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 3 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1584,
+    "sha256": "54f66855577f64132bffe4b3a06696c2b617497354505457ad6739f5b5e2f8c8",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 36,
+    "words": 221,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/square--workflow-kotlin/CONTRIBUTING.md"
+}

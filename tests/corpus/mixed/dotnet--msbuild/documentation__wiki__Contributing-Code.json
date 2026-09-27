@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "documentation__wiki__Contributing-Code.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dotnet/msbuild",
+    "path": "documentation/wiki/Contributing-Code.md",
+    "commit": "ee0352192ed6f9de974e63b849d7b874dfac83ec",
+    "commit_date": "2026-09-25T08:19:07-05:00",
+    "url": "https://github.com/dotnet/msbuild/blob/ee0352192ed6f9de974e63b849d7b874dfac83ec/documentation/wiki/Contributing-Code.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 5551,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2018-05-10T14:37:40-05:00",
+    "last_commit_date": "2026-07-14T12:42:41+02:00",
+    "last_commit_author": "Jan Kratochvíl",
+    "authors": 9,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-05-10T14:37:40-05:00",
+    "last_committer_date": "2026-07-14T12:42:41+02:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0ee9d77c70901ec620d00184dfcc84c1168d2aa5",
+        "date": "2026-07-14T12:42:41+02:00",
+        "committed": "2026-07-14T12:42:41+02:00",
+        "old": "6e6e8b40c62b62b678df0d7b2648f14cd010a4f5",
+        "new": "c27bf22eaabb62ca0c9f804bfbf36936641140bf",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 10 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot); the clone's history ends at 5ed3254f00, of 2018-05-10, so it may be older"
+  },
+  "content": {
+    "size_bytes": 3685,
+    "sha256": "e13d7b3fb15c13aed6d85f0b8ac4d37dd9ceca2e45cc7f1e83e80382d64d42f2",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 37,
+    "words": 561,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dotnet--msbuild/documentation/wiki/Contributing-Code.md",
+  "before": {
+    "sha256": "38c83e485a74ea529bf8d965d17e2a707914faa5bed192ac75ac8e4d4f31e03a",
+    "commit": "b827bf58c21f7a38770d786848c76f771d995a94",
+    "date": "2021-12-24T03:43:49+11:00",
+    "between": [
+      {
+        "commit": "31108edc1f9cafc0103ed467906a31ddd8f914fa",
+        "date": "2023-11-27T06:56:38+01:00",
+        "committed": "2023-11-27T13:56:38+08:00",
+        "old": "c71172b83052eddbb0a3a9cb70ebcba75241ffb6",
+        "new": "6e6e8b40c62b62b678df0d7b2648f14cd010a4f5",
+        "status": "late"
+      },
+      {
+        "commit": "dba9b2343547c39971c92627476a926bf6f730bd",
+        "date": "2023-02-12T04:13:23Z",
+        "committed": "2023-02-12T12:13:23+08:00",
+        "old": "690cf797972b9f37df3296d7d9c10e8374c80740",
+        "new": "c71172b83052eddbb0a3a9cb70ebcba75241ffb6",
+        "status": "late"
+      },
+      {
+        "commit": "3777dcaf7edb3e86a070037ba53e742dd1872873",
+        "date": "2022-10-26T09:26:18+02:00",
+        "committed": "2022-10-26T09:26:18+02:00",
+        "old": "71db1a4961db3214b7444517b2c42cd2e55c1618",
+        "new": "690cf797972b9f37df3296d7d9c10e8374c80740",
+        "status": "late"
+      },
+      {
+        "commit": "930786a75137ee545f754d106c734d56a37fb266",
+        "date": "2022-06-23T14:39:08-05:00",
+        "committed": "2022-06-23T14:39:08-05:00",
+        "old": "02760fb0b8bd9827e90dbcde1de863a7cca102cb",
+        "new": "71db1a4961db3214b7444517b2c42cd2e55c1618",
+        "status": "late"
+      }
+    ]
+  }
+}

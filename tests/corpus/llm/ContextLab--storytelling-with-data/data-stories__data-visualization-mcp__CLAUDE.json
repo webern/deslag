@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "data-stories__data-visualization-mcp__CLAUDE.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ContextLab/storytelling-with-data",
+    "path": "data-stories/data-visualization-mcp/CLAUDE.md",
+    "commit": "34d9aae2e0e475aed1ad267a8b34b1394b1d92b3",
+    "commit_date": "2026-06-02T12:02:24-04:00",
+    "url": "https://github.com/ContextLab/storytelling-with-data/blob/34d9aae2e0e475aed1ad267a8b34b1394b1d92b3/data-stories/data-visualization-mcp/CLAUDE.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE",
+      "data-stories/data-visualization-mcp/LICENSE"
+    ],
+    "repo_first_commit_date": "2017-08-27T20:08:23-04:00",
+    "stars": 121,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-02T11:42:05-04:00",
+    "last_commit_date": "2026-06-02T11:42:05-04:00",
+    "last_commit_author": "Jeremy Manning",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-02T11:42:05-04:00",
+    "last_committer_date": "2026-06-02T11:42:05-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "57a7be112cbb2e410681411492cd9c187ea91af0",
+        "date": "2026-06-02T11:42:05-04:00",
+        "committed": "2026-06-02T11:42:05-04:00",
+        "old": null,
+        "new": "95990e4fe0cee1d58318100860bdc94e8d395fe4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2249,
+    "sha256": "d43884ef518fc8905a078f3b02c71a88066f90c8391009c42ccf8fb1ceeec274",
+    "kind": "agent-instructions",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 46,
+    "words": 290,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ContextLab--storytelling-with-data/data-stories/data-visualization-mcp/CLAUDE.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Data-Wise/atlas",
+    "path": "BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md",
+    "commit": "69c5ab7426682d77837815d038105c98ea2dfe24",
+    "commit_date": "2026-08-02T00:16:22-06:00",
+    "url": "https://github.com/Data-Wise/atlas/blob/69c5ab7426682d77837815d038105c98ea2dfe24/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-12-24T20:34:27-05:00",
+    "stars": 1,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-01T14:41:47-06:00",
+    "last_commit_date": "2026-08-01T14:41:47-06:00",
+    "last_commit_author": "Test User",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-01T14:41:47-06:00",
+    "last_committer_date": "2026-08-01T14:41:47-06:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "847acf822f3d48c9121e5615cbef973fa6f6dbcb",
+        "date": "2026-08-01T14:41:47-06:00",
+        "committed": "2026-08-01T14:41:47-06:00",
+        "old": null,
+        "new": "e168db9211c6f9fad181600657032057ba2f69d3",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 11070,
+    "sha256": "e9e0f38437d89f44482597453ecc6a070a71839a19672ec539c4f66769bb6e6e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 222,
+    "words": 1490,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Data-Wise--atlas/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md"
+}

@@ -1,0 +1,144 @@
+{
+  "sidecar_version": 3,
+  "fixture": "backend__HELP.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "nerds-odd-e/doughnut",
+    "path": "backend/HELP.md",
+    "commit": "c526dba221f8019facc30ebe7276d4152ed7c5be",
+    "commit_date": "2026-09-27T12:52:07+08:00",
+    "url": "https://github.com/nerds-odd-e/doughnut/blob/c526dba221f8019facc30ebe7276d4152ed7c5be/backend/HELP.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-12-14T14:52:50+08:00",
+    "stars": 49,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2020-12-14T16:05:00+08:00",
+    "last_commit_date": "2026-08-28T09:28:14+08:00",
+    "last_commit_author": "Terry Yin",
+    "authors": 4,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-12-14T16:05:00+08:00",
+    "last_committer_date": "2026-08-28T09:28:14+08:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_011cUHeAUeVUktxftX5eoUq1",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8bfd158987cddd90959010dffd786c38436b464d",
+        "date": "2026-08-28T09:28:14+08:00",
+        "committed": "2026-08-28T09:28:14+08:00",
+        "old": "51e4a5c828ef64ede9bbda3bfda0221a2d854793",
+        "new": "bf6935ef0cc0f81255f267ea6acd9982c04a0d4c",
+        "status": "agent"
+      },
+      {
+        "commit": "ff48d85316687d306d1402dfa69285365a719383",
+        "date": "2026-08-26T15:33:57+08:00",
+        "committed": "2026-08-26T15:33:57+08:00",
+        "old": "fcb2aca3b5c637d32750e11cc015977cc1920e15",
+        "new": "51e4a5c828ef64ede9bbda3bfda0221a2d854793",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 9 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 1208,
+    "sha256": "94fb509005fc6a38eb87d58cc0a4bf7b20876e024efa89065161b7c76a3caacf",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 88,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/nerds-odd-e--doughnut/backend/HELP.md",
+  "before": {
+    "sha256": "ba962cdff0648ddbdd460ccda7f92dbfb58b934c077f0a0582cbd310ac34c2b5",
+    "commit": "0af2537be1af0e7e10c6689015ef5b6c2d25f49e",
+    "date": "2021-12-31T16:54:03+08:00",
+    "between": [
+      {
+        "commit": "009e02f829456d852e3a8fe4feca45035c533e9b",
+        "date": "2025-07-28T15:24:14+08:00",
+        "committed": "2025-07-28T15:24:14+08:00",
+        "old": "2785d5983a1a394104dfc9a5c05cf65b68b3b3a1",
+        "new": "fcb2aca3b5c637d32750e11cc015977cc1920e15",
+        "status": "late"
+      },
+      {
+        "commit": "6ac9f38ece6e4dce27c0498bb01b187fa96310c8",
+        "date": "2025-01-09T10:46:22+08:00",
+        "committed": "2025-01-09T10:46:22+08:00",
+        "old": "09310e68fac197c6ddadf5affb1ede2de575a349",
+        "new": "2785d5983a1a394104dfc9a5c05cf65b68b3b3a1",
+        "status": "late"
+      },
+      {
+        "commit": "5b52c68e81d51223167287f7c7ff925ad437d182",
+        "date": "2025-01-02T18:11:52+08:00",
+        "committed": "2025-01-02T18:11:52+08:00",
+        "old": "514371412a0a142faf7c46ef9fd41d15f327e3ca",
+        "new": "09310e68fac197c6ddadf5affb1ede2de575a349",
+        "status": "late"
+      },
+      {
+        "commit": "ba42580d24a81375a2c0958b20fc7c18c91a4e98",
+        "date": "2022-08-01T20:06:48+08:00",
+        "committed": "2022-08-01T20:06:48+08:00",
+        "old": "cab80ca141b89bf5ccf753c0d419760ded799221",
+        "new": "514371412a0a142faf7c46ef9fd41d15f327e3ca",
+        "status": "late"
+      },
+      {
+        "commit": "33299607ed98ccc4a8bd0d26c27976801d5b9c49",
+        "date": "2022-07-14T11:49:39+08:00",
+        "committed": "2022-07-14T11:49:39+08:00",
+        "old": "aacad5b4bc3f94a4158e23bdd7233baed46c93b0",
+        "new": "cab80ca141b89bf5ccf753c0d419760ded799221",
+        "status": "late"
+      }
+    ]
+  }
+}

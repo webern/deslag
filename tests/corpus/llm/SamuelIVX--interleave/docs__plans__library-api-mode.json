@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__plans__library-api-mode.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "SamuelIVX/interleave",
+    "path": "docs/plans/library-api-mode.md",
+    "commit": "c56ef84e792c35162f928d287bdda630c414cad3",
+    "commit_date": "2026-09-26T23:25:11-04:00",
+    "url": "https://github.com/SamuelIVX/interleave/blob/c56ef84e792c35162f928d287bdda630c414cad3/docs/plans/library-api-mode.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-22T21:09:34-04:00",
+    "stars": 0,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-08-22T23:24:16-04:00",
+    "last_commit_date": "2026-08-22T23:37:48-04:00",
+    "last_commit_author": "Samuel",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-22T23:24:16-04:00",
+    "last_committer_date": "2026-08-22T23:37:48-04:00",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b245074c2cdd27ddbb545a4719c576bedd8d9a09",
+        "date": "2026-08-22T23:37:48-04:00",
+        "committed": "2026-08-22T23:37:48-04:00",
+        "old": "57c1b998332c3a6b88ddba050fd2ecb1a2d11e4e",
+        "new": "c2ee90a33b4ae7cb52c93bebcf07804e587cff9f",
+        "status": "agent"
+      },
+      {
+        "commit": "9b7f1ca99d48a14aee9ca9ed178d626923236e13",
+        "date": "2026-08-22T23:33:41-04:00",
+        "committed": "2026-08-22T23:33:41-04:00",
+        "old": "f1f4cdcc402b2d8f1734eeb312fdfb7ad0726890",
+        "new": "57c1b998332c3a6b88ddba050fd2ecb1a2d11e4e",
+        "status": "agent"
+      },
+      {
+        "commit": "daa65e8c4099a00386dd0348d7f21fd85604010c",
+        "date": "2026-08-22T23:24:57-04:00",
+        "committed": "2026-08-22T23:24:57-04:00",
+        "old": "fd68e67f5679d8d6c173072a3aca59c9d83828f1",
+        "new": "f1f4cdcc402b2d8f1734eeb312fdfb7ad0726890",
+        "status": "agent"
+      },
+      {
+        "commit": "b9ced3b8db09b6ebbbf727f9d1bf19d095d108fd",
+        "date": "2026-08-22T23:24:16-04:00",
+        "committed": "2026-08-22T23:24:16-04:00",
+        "old": null,
+        "new": "fd68e67f5679d8d6c173072a3aca59c9d83828f1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 7043,
+    "sha256": "a3a6cdb13ebcaa265e6c5042a09242ce7a03e71b0e7547b0453eca1a9ba2cb86",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 153,
+    "words": 849,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/SamuelIVX--interleave/docs/plans/library-api-mode.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "changeset__gh-aw-issues-prerequisite.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "bradygaster/squad",
+    "path": ".changeset/gh-aw-issues-prerequisite.md",
+    "commit": "0f2586ea7ca51c0cdbf91a09b1b8911f653a643b",
+    "commit_date": "2026-09-25T07:28:46-07:00",
+    "url": "https://github.com/bradygaster/squad/blob/0f2586ea7ca51c0cdbf91a09b1b8911f653a643b/.changeset/gh-aw-issues-prerequisite.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-05T23:11:30-08:00",
+    "stars": 3235,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-24T14:10:07-07:00",
+    "last_commit_date": "2026-09-24T14:10:07-07:00",
+    "last_commit_author": "Brady Gaster",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-24T18:26:12-07:00",
+    "last_committer_date": "2026-09-24T18:26:12-07:00",
+    "marks": [
+      {
+        "text": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "244d770847026066216ed5a094ac9286ee314abd",
+        "date": "2026-09-24T14:10:07-07:00",
+        "committed": "2026-09-24T18:26:12-07:00",
+        "old": null,
+        "new": "eb855047ae1f4d88717fe41554914aaca4144f02",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 234,
+    "sha256": "a093d5233ca44cbf778db769149a7dc2455eedd5bc8f7faab2e05321323b93c1",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 6,
+    "words": 29,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/bradygaster--squad/.changeset/gh-aw-issues-prerequisite.md"
+}

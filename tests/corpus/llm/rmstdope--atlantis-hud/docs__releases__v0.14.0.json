@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__releases__v0.14.0.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "rmstdope/atlantis-hud",
+    "path": "docs/releases/v0.14.0.md",
+    "commit": "6ce969373aa9f6592b390a8fd3021b16fab9f0bb",
+    "commit_date": "2026-09-27T05:46:14+02:00",
+    "url": "https://github.com/rmstdope/atlantis-hud/blob/6ce969373aa9f6592b390a8fd3021b16fab9f0bb/docs/releases/v0.14.0.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-07T00:15:46+02:00",
+    "stars": 2,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-01T20:38:43+02:00",
+    "last_commit_date": "2026-09-01T20:38:43+02:00",
+    "last_commit_author": "Henrik Kurelid",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-01T20:38:43+02:00",
+    "last_committer_date": "2026-09-01T20:38:43+02:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8baa1facba5b9fec924cb4765fba47d8d01ab076",
+        "date": "2026-09-01T20:38:43+02:00",
+        "committed": "2026-09-01T20:38:43+02:00",
+        "old": null,
+        "new": "ac606eee90d721232cdb6e5cbff2894f2659cef1",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4031,
+    "sha256": "8e4a19bde0cb20ff58ef576cb7d079e2be63ad72d607a3a0bcb6048c62092098",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 737,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/rmstdope--atlantis-hud/docs/releases/v0.14.0.md"
+}

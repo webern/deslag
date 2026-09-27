@@ -1,0 +1,80 @@
+{
+  "sidecar_version": 3,
+  "fixture": "how-to.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wp-cli/handbook",
+    "path": "how-to.md",
+    "commit": "823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2",
+    "commit_date": "2026-09-24T02:54:33+05:30",
+    "url": "https://github.com/wp-cli/handbook/blob/823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2/how-to.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-11-04T23:55:42+02:00",
+    "stars": 204,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2020-06-04T19:16:31+01:00",
+    "last_commit_date": "2026-01-12T12:51:06Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-06-04T19:16:31+01:00",
+    "last_committer_date": "2026-01-12T12:51:06Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e4de1d2a5da7db774e43f6a8a02d4a1ae5352981",
+        "date": "2026-01-12T12:51:06Z",
+        "committed": "2026-01-12T12:51:06Z",
+        "old": "2dab54760d71ef28373a598010aa0081862933e0",
+        "new": "4b7b0146f4bbd7f1d5cab5a206db73450cf35162",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 3 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 715,
+    "sha256": "a960d1304fa55200958db7b64a2d0d39891e64c38ca6bf848a95a9dbe4c7d82a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 70,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/wp-cli--handbook/how-to.md",
+  "before": {
+    "sha256": "3a72d0a51e9b9cffb75f4985673bb056f65c1abe5ed5ed4a92a302e22d5ebfe7",
+    "commit": "5eeb0ee07f36e1bdf5266a1bd71ba26f44a234fa",
+    "date": "2021-12-17T15:03:21+01:00",
+    "between": []
+  }
+}

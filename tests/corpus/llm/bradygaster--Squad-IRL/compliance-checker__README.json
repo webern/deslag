@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "compliance-checker__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "bradygaster/Squad-IRL",
+    "path": "compliance-checker/README.md",
+    "commit": "c6312546b912452e67d04382d73a83acf71b4f41",
+    "commit_date": "2026-03-12T15:45:50-07:00",
+    "url": "https://github.com/bradygaster/Squad-IRL/blob/c6312546b912452e67d04382d73a83acf71b4f41/compliance-checker/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-05T23:11:30-08:00",
+    "stars": 47,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-07T08:36:58-08:00",
+    "last_commit_date": "2026-03-08T07:38:36-07:00",
+    "last_commit_author": "bradygaster",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-07T08:36:58-08:00",
+    "last_committer_date": "2026-03-08T07:38:36-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8301a55071f04bd7937842f4422ca7b64f08645c",
+        "date": "2026-03-08T07:38:36-07:00",
+        "committed": "2026-03-08T07:38:36-07:00",
+        "old": "9b2cc934ffd3713ce1a008566e99afa89f0eca80",
+        "new": "b36491ef8991ed1eafcfb49278e3569a1644ab52",
+        "status": "agent"
+      },
+      {
+        "commit": "2c5169bffbc3b9b581e1fc83eadfacc08121127c",
+        "date": "2026-03-07T08:36:58-08:00",
+        "committed": "2026-03-07T08:36:58-08:00",
+        "old": null,
+        "new": "9b2cc934ffd3713ce1a008566e99afa89f0eca80",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2195,
+    "sha256": "16c62bbd5f858c0f3638292e9f130f2644554747a9307b711fa95729c7b0f252",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 47,
+    "words": 322,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/bradygaster--Squad-IRL/compliance-checker/README.md"
+}

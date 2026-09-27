@@ -1,0 +1,154 @@
+{
+  "sidecar_version": 3,
+  "fixture": "part25-architecture-overview.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "OnlyTerp/openclaw-optimization-guide",
+    "path": "part25-architecture-overview.md",
+    "commit": "75f483363bd1fbee3c406b4e9011a8715d0158ac",
+    "commit_date": "2026-07-01T18:30:18-04:00",
+    "url": "https://github.com/OnlyTerp/openclaw-optimization-guide/blob/75f483363bd1fbee3c406b4e9011a8715d0158ac/part25-architecture-overview.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-13T18:03:11-04:00",
+    "stars": 388,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2026-04-17T03:16:10Z",
+    "last_commit_date": "2026-07-01T21:21:34Z",
+    "last_commit_author": "Devin AI",
+    "authors": 1,
+    "ai_commits": 11,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-17T03:16:10Z",
+    "last_committer_date": "2026-07-01T21:21:34Z",
+    "marks": [
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 11
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0f6f9b034d71db935c35dc07c27840136e2aeecd",
+        "date": "2026-07-01T21:21:34Z",
+        "committed": "2026-07-01T21:21:34Z",
+        "old": "741fbd72577fced0e6a9060470148aae1ab5ed11",
+        "new": "85e8d6895868ca401f5d9960171f05a02e015718",
+        "status": "agent"
+      },
+      {
+        "commit": "a061a39efc6cdb58ada7c0be6865979b2e50c997",
+        "date": "2026-06-18T04:57:27Z",
+        "committed": "2026-06-18T04:57:27Z",
+        "old": "9ea0fe4be76054b88522eba2fbf578eeb98bf5b7",
+        "new": "741fbd72577fced0e6a9060470148aae1ab5ed11",
+        "status": "agent"
+      },
+      {
+        "commit": "72546b45fb0831ca2b44642d50507c24822898f6",
+        "date": "2026-05-25T08:30:38Z",
+        "committed": "2026-05-25T08:30:38Z",
+        "old": "8fdb735eac0c2ea8e9be51e0b9d0387a262cd353",
+        "new": "9ea0fe4be76054b88522eba2fbf578eeb98bf5b7",
+        "status": "agent"
+      },
+      {
+        "commit": "8a014cb3db8c713dd9c6510ae5497b65a882d9fb",
+        "date": "2026-05-14T23:36:35Z",
+        "committed": "2026-05-14T23:36:35Z",
+        "old": "24850dbb8febda890c133ce9bd94c27302a8c521",
+        "new": "8fdb735eac0c2ea8e9be51e0b9d0387a262cd353",
+        "status": "agent"
+      },
+      {
+        "commit": "748e26975b95cd907a89b33c425771ecf8e430e1",
+        "date": "2026-04-30T20:27:06Z",
+        "committed": "2026-04-30T20:27:06Z",
+        "old": "f44584c0d37e49bdb6eebb354795ad4d088a777c",
+        "new": "24850dbb8febda890c133ce9bd94c27302a8c521",
+        "status": "agent"
+      },
+      {
+        "commit": "a9e0c0d8cca4d0b5200574231b5561e540c68c9e",
+        "date": "2026-04-30T20:16:22Z",
+        "committed": "2026-04-30T20:16:22Z",
+        "old": "08dbf1e2dce59501a4b3b22433ce12478d936908",
+        "new": "f44584c0d37e49bdb6eebb354795ad4d088a777c",
+        "status": "agent"
+      },
+      {
+        "commit": "1c672fc305855278d8413cde4155be0874cf62bb",
+        "date": "2026-04-17T06:15:12Z",
+        "committed": "2026-04-17T06:15:12Z",
+        "old": "ae18534fe69a3a4e16334fd24577604214ea5cf1",
+        "new": "08dbf1e2dce59501a4b3b22433ce12478d936908",
+        "status": "agent"
+      },
+      {
+        "commit": "735f204d34342c782ef58aa90d19493268c2cc15",
+        "date": "2026-04-17T04:12:59Z",
+        "committed": "2026-04-17T04:12:59Z",
+        "old": "c397ac52511c163e618b6312e3a2251636528437",
+        "new": "ae18534fe69a3a4e16334fd24577604214ea5cf1",
+        "status": "agent"
+      },
+      {
+        "commit": "4a2e446a82013e14664115929ebe2462a48670e1",
+        "date": "2026-04-17T03:48:50Z",
+        "committed": "2026-04-17T03:48:50Z",
+        "old": "23116d05db7882f3fc585da28d62650d409152c5",
+        "new": "c397ac52511c163e618b6312e3a2251636528437",
+        "status": "agent"
+      },
+      {
+        "commit": "7392e83f4952dab762814c5a04872da4cd8661fe",
+        "date": "2026-04-17T03:24:03Z",
+        "committed": "2026-04-17T03:24:03Z",
+        "old": "10c6863aeea36b681ae57ef5ead18d30ed21a0bc",
+        "new": "23116d05db7882f3fc585da28d62650d409152c5",
+        "status": "agent"
+      },
+      {
+        "commit": "16771145de745cd4e162f42d25831beeee1dd5c0",
+        "date": "2026-04-17T03:16:10Z",
+        "committed": "2026-04-17T03:16:10Z",
+        "old": null,
+        "new": "10c6863aeea36b681ae57ef5ead18d30ed21a0bc",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 11 in all, is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 15933,
+    "sha256": "41e9bf316ca607c0214908afc8d7ca215bd2c6ed9bb873df5917482a20276317",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 218,
+    "words": 2104,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/OnlyTerp--openclaw-optimization-guide/part25-architecture-overview.md"
+}

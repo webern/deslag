@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "openwiki__testing.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "flyvercity/syntagmax",
+    "path": "openwiki/testing.md",
+    "commit": "ebddff3bbf86c8fb62712f6c32da07348bb9534f",
+    "commit_date": "2026-09-23T12:58:50+03:00",
+    "url": "https://github.com/flyvercity/syntagmax/blob/ebddff3bbf86c8fb62712f6c32da07348bb9534f/openwiki/testing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-03-29T10:58:42+03:00",
+    "stars": 2,
+    "found_by": "gh-commits:kiro"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-07-03T14:48:07+03:00",
+    "last_commit_date": "2026-08-08T16:43:44+03:00",
+    "last_commit_author": "Boris Resnick",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "aider"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-03T14:48:07+03:00",
+    "last_committer_date": "2026-08-08T16:43:44+03:00",
+    "marks": [
+      {
+        "text": "Boris Resnick (aider) <boris@flyver.city>",
+        "tool": "aider",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "700e37de53cce76a3b6ef1ac4c2d21f343ee5468",
+        "date": "2026-08-08T16:43:44+03:00",
+        "committed": "2026-08-08T16:43:44+03:00",
+        "old": "160a88348c900b0cfdbb15ce71da2205dd9461e3",
+        "new": "1be3249fe57cfd00cbaa62b79314a4188dba6329",
+        "status": "agent"
+      },
+      {
+        "commit": "7e7d0c2d7e5d48b12a1f8c191f3448c30906bb66",
+        "date": "2026-08-06T11:08:25+03:00",
+        "committed": "2026-08-06T11:08:25+03:00",
+        "old": "fa6f44bf08261252072a8e5d29b7733c4e889b56",
+        "new": "160a88348c900b0cfdbb15ce71da2205dd9461e3",
+        "status": "agent"
+      },
+      {
+        "commit": "21a25adccb4959acfb8f913be087bf8d85ad39ff",
+        "date": "2026-07-17T10:30:37+03:00",
+        "committed": "2026-07-17T10:30:37+03:00",
+        "old": "5c3e5ab006cbc1d25228e49ea226d6f38269159a",
+        "new": "fa6f44bf08261252072a8e5d29b7733c4e889b56",
+        "status": "agent"
+      },
+      {
+        "commit": "4fecacd8485fb2a2611a0ef830b9855265c0f8dc",
+        "date": "2026-07-03T14:48:07+03:00",
+        "committed": "2026-07-03T14:48:07+03:00",
+        "old": null,
+        "new": "5c3e5ab006cbc1d25228e49ea226d6f38269159a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (aider)"
+  },
+  "content": {
+    "size_bytes": 4722,
+    "sha256": "c9768129f52ed0a1915e39407139c910a8ded2f363fa7a54116d37a3840b0045",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 75,
+    "words": 532,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/flyvercity--syntagmax/openwiki/testing.md"
+}

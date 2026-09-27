@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "enhavo__tradukenda__it__gramatiko__03.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Esperanto/kurso-zagreba-metodo",
+    "path": "enhavo/tradukenda/it/gramatiko/03.md",
+    "commit": "7c10690487207a1d4a273c757aa46c14f9d07670",
+    "commit_date": "2026-08-23T21:17:25+02:00",
+    "url": "https://github.com/Esperanto/kurso-zagreba-metodo/blob/7c10690487207a1d4a273c757aa46c14f9d07670/enhavo/tradukenda/it/gramatiko/03.md",
+    "license": "CC-BY-4.0",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 181,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2018-01-01T17:21:02+03:00",
+    "last_commit_date": "2026-07-15T22:59:37+02:00",
+    "last_commit_author": "Georg Jähnig",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": true,
+    "first_committer_date": "2018-01-01T17:21:02+03:00",
+    "last_committer_date": "2026-07-15T22:59:37+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d3c1f90eecf8682fc4d40fbbb9667fb39b9f6617",
+        "date": "2026-07-01T13:50:08+02:00",
+        "committed": "2026-07-01T13:50:08+02:00",
+        "old": "0647eb355e3f9e14f49de930ce28528adaa07027",
+        "new": "488ff1da71757d69145b623a3455b27a2549756c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 3 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code); the clone's history ends at e46d236834, of 2018-01-01, so it may be older"
+  },
+  "content": {
+    "size_bytes": 2534,
+    "sha256": "1c2d7a0df44e4c8443d744d82b32060c7ebd416258e335475d0b2bf5d9c778bd",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 88,
+    "words": 385,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Esperanto--kurso-zagreba-metodo/enhavo/tradukenda/it/gramatiko/03.md",
+  "before": {
+    "sha256": "fcdbc2b92e778e0ec76c46a0c6d9b57ceac84a17e087b18670e7770187ead6c2",
+    "commit": "ebbf61f5066013c411e6a97ed5616f64cf3a0ea2",
+    "date": "2021-12-29T14:15:03+01:00",
+    "between": [
+      {
+        "commit": "c651b564220e8b871e8bf662fb0b3576e22239b6",
+        "date": "2026-07-15T22:59:37+02:00",
+        "committed": "2026-07-15T22:59:37+02:00",
+        "old": "488ff1da71757d69145b623a3455b27a2549756c",
+        "new": "a88861ea0a4e8aca6f0e73b6bdb1ad6b51c919f8",
+        "status": "late"
+      }
+    ]
+  }
+}

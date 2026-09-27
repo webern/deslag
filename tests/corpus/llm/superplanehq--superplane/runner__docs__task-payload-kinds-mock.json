@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "runner__docs__task-payload-kinds-mock.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "superplanehq/superplane",
+    "path": "runner/docs/task-payload-kinds-mock.md",
+    "commit": "c7100d8e495dcf164cb8042c1503a1b116f76623",
+    "commit_date": "2026-09-26T23:03:14-03:00",
+    "url": "https://github.com/superplanehq/superplane/blob/c7100d8e495dcf164cb8042c1503a1b116f76623/runner/docs/task-payload-kinds-mock.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-05-07T19:48:39+02:00",
+    "stars": 7549,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-23T12:59:01-03:00",
+    "last_commit_date": "2026-09-23T12:59:01-03:00",
+    "last_commit_author": "Pedro Leão",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-23T12:59:01-03:00",
+    "last_committer_date": "2026-09-23T12:59:01-03:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1a01b27e5158a087030cb5ef64c78ac18eee3284",
+        "date": "2026-09-23T12:59:01-03:00",
+        "committed": "2026-09-23T12:59:01-03:00",
+        "old": null,
+        "new": "fb0936f00ab092954db3ded4224bc9bbe5204f6d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 12231,
+    "sha256": "8cb9d9f2d1e280a6206837134851da3a87cf7f94914b0ed91c2e8f2838f133e8",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 361,
+    "words": 1478,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/superplanehq--superplane/runner/docs/task-payload-kinds-mock.md"
+}

@@ -1,0 +1,193 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "toku345/.emacs.d",
+    "path": "README.md",
+    "commit": "6eb0b8112693d05585d4a90ec47000f6794c7203",
+    "commit_date": "2026-06-17T10:43:10+09:00",
+    "url": "https://github.com/toku345/.emacs.d/blob/6eb0b8112693d05585d4a90ec47000f6794c7203/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-04-30T17:54:55+09:00",
+    "stars": 1,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2017-09-25T09:52:43+09:00",
+    "last_commit_date": "2026-06-13T12:49:10+09:00",
+    "last_commit_author": "Fumitaka Tokumitsu",
+    "authors": 2,
+    "ai_commits": 14,
+    "ai_tools": [
+      "claude-code",
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-09-25T09:52:43+09:00",
+    "last_committer_date": "2026-06-13T12:49:10+09:00",
+    "marks": [
+      {
+        "text": "Codex <noreply@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 11
+      },
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "95920923a749d3512c058c57db74265210cdec61",
+        "date": "2026-06-13T12:49:10+09:00",
+        "committed": "2026-06-13T12:49:10+09:00",
+        "old": "c7a572ff8d1bb462a792bedf92b0622bb22b5e84",
+        "new": "0cbe3de8b8c1d1a6d0ec595d439333eccc4c04d0",
+        "status": "agent"
+      },
+      {
+        "commit": "f86d37fac647f9dc4a927a194134d997a32b4b9c",
+        "date": "2026-06-13T08:05:07+09:00",
+        "committed": "2026-06-13T08:05:07+09:00",
+        "old": "9de4470da5b8966802ac7bd5f5d947badc8f47bf",
+        "new": "c7a572ff8d1bb462a792bedf92b0622bb22b5e84",
+        "status": "agent"
+      },
+      {
+        "commit": "73ab61654bb8552a0e94adf51581d02118b20b3f",
+        "date": "2026-06-12T23:48:22+09:00",
+        "committed": "2026-06-12T23:48:22+09:00",
+        "old": "6bfebecfb23813ae7c272cece76122669faa0372",
+        "new": "9de4470da5b8966802ac7bd5f5d947badc8f47bf",
+        "status": "agent"
+      },
+      {
+        "commit": "f452bf6849c38afd520bb8fbc462b587465a96dd",
+        "date": "2026-06-12T19:39:56+09:00",
+        "committed": "2026-06-12T19:39:56+09:00",
+        "old": "9f868a9167ed0374c560aed7bf10140753a43ddd",
+        "new": "6bfebecfb23813ae7c272cece76122669faa0372",
+        "status": "agent"
+      },
+      {
+        "commit": "c75463a30fb71e4c6be02bb410d3d1385f0294ba",
+        "date": "2026-06-12T18:20:53+09:00",
+        "committed": "2026-06-12T18:22:36+09:00",
+        "old": "2ca5f8e98e5e5ad1f22a6bb64b2e77d1124225d7",
+        "new": "9f868a9167ed0374c560aed7bf10140753a43ddd",
+        "status": "agent"
+      },
+      {
+        "commit": "c68bca7a10c832bed3d6ed8fa9e9ed67c8c00743",
+        "date": "2026-06-11T17:22:58+09:00",
+        "committed": "2026-06-11T17:22:58+09:00",
+        "old": "d8ab0981b62bbe3d0fc7d03797fa46db552bc0d8",
+        "new": "2ca5f8e98e5e5ad1f22a6bb64b2e77d1124225d7",
+        "status": "agent"
+      },
+      {
+        "commit": "09b044a0dc1c88f426f54389df8081db6fa9631b",
+        "date": "2026-06-11T00:29:46+09:00",
+        "committed": "2026-06-11T00:29:46+09:00",
+        "old": "6292fa199ebc43c8b0bf0970ce8fc2497e0dc3ed",
+        "new": "d8ab0981b62bbe3d0fc7d03797fa46db552bc0d8",
+        "status": "agent"
+      },
+      {
+        "commit": "3f16eaedf2856c2b2f4a9b9e287167da95e8db6e",
+        "date": "2026-06-10T18:36:11+09:00",
+        "committed": "2026-06-10T18:36:11+09:00",
+        "old": "3fd3d9406386e495f065d8b2c8a2691f087e1d39",
+        "new": "6292fa199ebc43c8b0bf0970ce8fc2497e0dc3ed",
+        "status": "agent"
+      },
+      {
+        "commit": "400e05a8a360c416a378ccc5e0e0280d81bacdc1",
+        "date": "2026-06-08T18:15:10+09:00",
+        "committed": "2026-06-08T18:15:10+09:00",
+        "old": "08467cf206ffa35c5f8c71dc924671269be792ae",
+        "new": "3fd3d9406386e495f065d8b2c8a2691f087e1d39",
+        "status": "agent"
+      },
+      {
+        "commit": "fc2f62154b9e2ba082759dc953f928e7d7ad9bac",
+        "date": "2026-06-08T16:49:57+09:00",
+        "committed": "2026-06-08T16:49:57+09:00",
+        "old": "a15e5b8aed8875229dc29cb88c13400246ef0b36",
+        "new": "08467cf206ffa35c5f8c71dc924671269be792ae",
+        "status": "agent"
+      },
+      {
+        "commit": "ef1794f796ab7ca169248e986abb63a66426edfc",
+        "date": "2026-06-08T08:01:14+09:00",
+        "committed": "2026-06-08T08:01:14+09:00",
+        "old": "a478a8a0cbb91d62524074759d924d6255708e1a",
+        "new": "a15e5b8aed8875229dc29cb88c13400246ef0b36",
+        "status": "agent"
+      },
+      {
+        "commit": "557faac39034228a38a0866de97a1711a1dd8d7c",
+        "date": "2026-06-07T23:44:44+09:00",
+        "committed": "2026-06-07T23:44:44+09:00",
+        "old": "f8c884353c0f1753026318f33b5bf18698bdcf76",
+        "new": "a478a8a0cbb91d62524074759d924d6255708e1a",
+        "status": "agent"
+      },
+      {
+        "commit": "e79fd71f58d30fcd3f0992d408a9ed4c08c15a17",
+        "date": "2026-06-07T00:08:08+09:00",
+        "committed": "2026-06-07T00:08:08+09:00",
+        "old": "123130f2a60567067f687e4d0743a005ef056d2c",
+        "new": "f8c884353c0f1753026318f33b5bf18698bdcf76",
+        "status": "agent"
+      },
+      {
+        "commit": "edcb04113dae9b077d61e7b9222d90eecdd49f36",
+        "date": "2026-06-06T07:34:30Z",
+        "committed": "2026-06-06T07:34:30Z",
+        "old": "479a186e01e10a1a21676df05a405946b8651d8d",
+        "new": "123130f2a60567067f687e4d0743a005ef056d2c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 15 commits predates 2022-01-01 with no mark, and 14 are marked as an AI agent's (claude-code, codex)"
+  },
+  "content": {
+    "size_bytes": 3893,
+    "sha256": "784c61e988d15d8ab717d885eec6de8e11fa82f2ace00bc6bb5f00300fcb7337",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 112,
+    "words": 532,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/toku345--emacs.d/README.md"
+}

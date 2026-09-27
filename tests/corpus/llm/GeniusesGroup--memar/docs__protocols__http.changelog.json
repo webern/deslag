@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__protocols__http.changelog.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "GeniusesGroup/memar",
+    "path": "docs/protocols/http.changelog.md",
+    "commit": "657b69d8955fe43c31c717f748236f3ee33d6b1d",
+    "commit_date": "2026-09-25T08:11:29-04:00",
+    "url": "https://github.com/GeniusesGroup/memar/blob/657b69d8955fe43c31c717f748236f3ee33d6b1d/docs/protocols/http.changelog.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-05-09T13:06:11+04:30",
+    "stars": 12,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-21T12:26:30-04:00",
+    "last_commit_date": "2026-09-21T12:26:30-04:00",
+    "last_commit_author": "omidhekayati",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-21T12:26:30-04:00",
+    "last_committer_date": "2026-09-21T12:26:30-04:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "dfeb53cef31dd8b9b201ba658dbee68d6d7bac9e",
+        "date": "2026-09-21T12:26:30-04:00",
+        "committed": "2026-09-21T12:26:30-04:00",
+        "old": null,
+        "new": "2d59993e2f8b60e257fdd9b4ca61371a0ec13b32",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 8294,
+    "sha256": "2199b622d0ea17fbdec8fa7b112589a88fc7b697eee4cb8c1c6541bca4e4bee5",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 79,
+    "words": 1118,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/GeniusesGroup--memar/docs/protocols/http.changelog.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__design__BLOCK_TX_WIRE_FORMAT_PORT.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Shekyl-Foundation/shekyl-core",
+    "path": "docs/design/BLOCK_TX_WIRE_FORMAT_PORT.md",
+    "commit": "d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480",
+    "commit_date": "2026-09-10T20:35:49-04:00",
+    "url": "https://github.com/Shekyl-Foundation/shekyl-core/blob/d8f0f24b03b3a0cb1bf846e7228da20eb2dd6480/docs/design/BLOCK_TX_WIRE_FORMAT_PORT.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 1,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-20T12:56:56-04:00",
+    "last_commit_date": "2026-06-20T12:56:56-04:00",
+    "last_commit_author": "Rick Dawson",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-20T12:56:56-04:00",
+    "last_committer_date": "2026-06-20T12:56:56-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "2dcf042f02b0302c462720113d0a7fe908b88865",
+        "date": "2026-06-20T12:56:56-04:00",
+        "committed": "2026-06-20T12:56:56-04:00",
+        "old": null,
+        "new": "279d4990b8c55b1c7f7f28f1a3dd3756cbda525e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8698,
+    "sha256": "7fea8ea57c0dc7ca75c9d4e4c282180e80371570aa3e3468406b22176647124e",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 161,
+    "words": 1110,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Shekyl-Foundation--shekyl-core/docs/design/BLOCK_TX_WIRE_FORMAT_PORT.md"
+}

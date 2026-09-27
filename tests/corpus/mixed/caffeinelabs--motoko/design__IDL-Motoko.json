@@ -1,0 +1,96 @@
+{
+  "sidecar_version": 3,
+  "fixture": "design__IDL-Motoko.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "caffeinelabs/motoko",
+    "path": "design/IDL-Motoko.md",
+    "commit": "fd2cc4de1de4e4d6c51fc724e2117c4ea4ba8076",
+    "commit_date": "2026-09-25T16:25:07+02:00",
+    "url": "https://github.com/caffeinelabs/motoko/blob/fd2cc4de1de4e4d6c51fc724e2117c4ea4ba8076/design/IDL-Motoko.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-05-11T13:12:11+02:00",
+    "stars": 590,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 14,
+    "first_commit_date": "2019-10-29T11:12:46+01:00",
+    "last_commit_date": "2026-05-06T17:44:44+02:00",
+    "last_commit_author": "Kamil Listopad",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-10-29T10:12:46Z",
+    "last_committer_date": "2026-05-06T15:44:44Z",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Made with [Cursor](https://cursor.com)",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "87fd129c572f7914056354888a96bd4aa4157538",
+        "date": "2026-05-06T17:44:44+02:00",
+        "committed": "2026-05-06T15:44:44Z",
+        "old": "a179959381291b37f0acc7188bb5bae029f2c24f",
+        "new": "362819ef7c84a5f2dcdef70112f17afd3bbeeaf6",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "12 of its 14 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 12149,
+    "sha256": "9d4a9e3913bf2412b6be522b84e54b958bf67e0b46a57c5db51a0571bed28dc7",
+    "kind": "design",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 340,
+    "words": 1958,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/caffeinelabs--motoko/design/IDL-Motoko.md",
+  "before": {
+    "sha256": "f670200b4d064d23aefaabaa059debd743b8458efcc02e4a256830bcd17c890f",
+    "commit": "f11a7d5723cc561784183df085cec8dc50f5eb1a",
+    "date": "2021-12-31T17:42:04+01:00",
+    "between": [
+      {
+        "commit": "006a65cbe75536840fff33bc409e6c804e774bf0",
+        "date": "2023-06-23T11:01:23-07:00",
+        "committed": "2023-06-23T18:01:23Z",
+        "old": "9f57fe659aa69cf7123f205832bb31e70a077e49",
+        "new": "a179959381291b37f0acc7188bb5bae029f2c24f",
+        "status": "late"
+      }
+    ]
+  }
+}

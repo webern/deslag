@@ -1,0 +1,184 @@
+{
+  "sidecar_version": 3,
+  "fixture": "packages__website__docs__integrations.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "algolia/docsearch",
+    "path": "packages/website/docs/integrations.md",
+    "commit": "9eb5db9c93c75487929da8e11e1593684bd8d5a3",
+    "commit_date": "2026-09-18T12:40:26-04:00",
+    "url": "https://github.com/algolia/docsearch/blob/9eb5db9c93c75487929da8e11e1593684bd8d5a3/packages/website/docs/integrations.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-11-20T14:54:08-08:00",
+    "stars": 4379,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2020-11-26T15:01:25+01:00",
+    "last_commit_date": "2026-09-09T14:05:28+02:00",
+    "last_commit_author": "Kai Welke",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-11-26T15:01:25+01:00",
+    "last_committer_date": "2026-09-09T14:05:28+02:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ecd905d44008eb6249c00addb5fa7023ccb8119d",
+        "date": "2026-08-06T15:31:45-04:00",
+        "committed": "2026-08-06T15:31:45-04:00",
+        "old": "59806313d7b5b988c284c0d20df05c7b46ae4968",
+        "new": "ec8a2eec175094ee4b910b9c08b3e772ce91ca5f",
+        "status": "squash"
+      },
+      {
+        "commit": "047a769791fddc31d4d6d3c535f41901a7fcd4c5",
+        "date": "2026-05-18T09:10:06-07:00",
+        "committed": "2026-05-18T12:10:06-04:00",
+        "old": "4770be2f749e6ee005b208d48405b6bf63a37c1c",
+        "new": "59806313d7b5b988c284c0d20df05c7b46ae4968",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 15 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2342,
+    "sha256": "81b431ffb773b4f7ef0218fc2ea4b104af59baffae3c1d64000a7ce68f69532d",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 43,
+    "words": 197,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/algolia--docsearch/packages/website/docs/integrations.md",
+  "before": {
+    "sha256": "e1aa32b2fb3883acfd61ecdc9177795c382d57cf0eea3efb62f8d9cd3d67fe5e",
+    "commit": "2ef1bae6626b15e3be85b4d614c1248e30e733bf",
+    "date": "2021-12-28T09:23:14+01:00",
+    "between": [
+      {
+        "commit": "bc3a54b6a42bf5f4cae1079e456ebb3dbb8a8f24",
+        "date": "2026-09-09T14:05:28+02:00",
+        "committed": "2026-09-09T14:05:28+02:00",
+        "old": "ec8a2eec175094ee4b910b9c08b3e772ce91ca5f",
+        "new": "a721bd3f1aa2a3e269270a99f9cbf51c21c5f8a9",
+        "status": "late"
+      },
+      {
+        "commit": "ecd905d44008eb6249c00addb5fa7023ccb8119d",
+        "date": "2026-08-06T15:31:45-04:00",
+        "committed": "2026-08-06T15:31:45-04:00",
+        "old": "59806313d7b5b988c284c0d20df05c7b46ae4968",
+        "new": "ec8a2eec175094ee4b910b9c08b3e772ce91ca5f",
+        "status": "squash"
+      },
+      {
+        "commit": "4f68ebbc06e515f54de3986464bcb633acc7337d",
+        "date": "2026-02-17T17:53:12+01:00",
+        "committed": "2026-02-17T17:53:12+01:00",
+        "old": "39adc3ca628abd538e60944ef58a3caa57db6b93",
+        "new": "4770be2f749e6ee005b208d48405b6bf63a37c1c",
+        "status": "late"
+      },
+      {
+        "commit": "4aa0c2c67a5ba4d5d786c63cbce749d674b8ce44",
+        "date": "2024-07-11T12:02:14-05:00",
+        "committed": "2024-07-11T19:02:14+02:00",
+        "old": "cf0b9a57ac8a1cb51a8b5def0db9948b47ad1f35",
+        "new": "39adc3ca628abd538e60944ef58a3caa57db6b93",
+        "status": "late"
+      },
+      {
+        "commit": "b72c9331d558f08d49b5e28ee6cdb369287dc55f",
+        "date": "2024-05-31T11:51:17-05:00",
+        "committed": "2024-05-31T11:51:17-05:00",
+        "old": "1b658f653bc3b670aa34e9617f8341631423093e",
+        "new": "cf0b9a57ac8a1cb51a8b5def0db9948b47ad1f35",
+        "status": "late"
+      },
+      {
+        "commit": "707177f2474dd50c4b1abce38342750f1a7d1d56",
+        "date": "2024-05-31T11:45:39-05:00",
+        "committed": "2024-05-31T11:45:39-05:00",
+        "old": "5084db512c555486f440e238d13f2a66b71c0d9d",
+        "new": "1b658f653bc3b670aa34e9617f8341631423093e",
+        "status": "late"
+      },
+      {
+        "commit": "6462d11826eea334e2fad1738d396571ea158035",
+        "date": "2024-04-08T13:02:32+02:00",
+        "committed": "2024-04-08T13:02:32+02:00",
+        "old": "8094e4bc0645f6054f92928415397c97848f5197",
+        "new": "5084db512c555486f440e238d13f2a66b71c0d9d",
+        "status": "late"
+      },
+      {
+        "commit": "63619c99c779043b2cda8d5a89ff6b860507547e",
+        "date": "2023-12-15T17:41:54+01:00",
+        "committed": "2023-12-15T11:41:54-05:00",
+        "old": "d7bc02260815635752d37757b6bf63ae17e6bb6a",
+        "new": "8094e4bc0645f6054f92928415397c97848f5197",
+        "status": "late"
+      },
+      {
+        "commit": "10ba2de5f78cdbade049ebbfe8e4744e71e83f72",
+        "date": "2023-08-16T14:04:17-04:00",
+        "committed": "2023-08-16T14:04:17-04:00",
+        "old": "d01fb0f93eb7f99a3852ca393428d5e230290224",
+        "new": "d7bc02260815635752d37757b6bf63ae17e6bb6a",
+        "status": "late"
+      },
+      {
+        "commit": "04ed51e24c72391d86ea46e1c6e438297e53bf5f",
+        "date": "2023-08-16T14:00:36-04:00",
+        "committed": "2023-08-16T14:00:36-04:00",
+        "old": "d5f8202b61c84458e7ded159bce61d0dbe9a425e",
+        "new": "d01fb0f93eb7f99a3852ca393428d5e230290224",
+        "status": "late"
+      },
+      {
+        "commit": "387e35e01b3d991a26ec857a84c165ad048ea703",
+        "date": "2023-08-16T10:19:17-04:00",
+        "committed": "2023-08-16T10:19:17-04:00",
+        "old": "8bc2c803d2d084c25d9420a03b26be752940c099",
+        "new": "d5f8202b61c84458e7ded159bce61d0dbe9a425e",
+        "status": "late"
+      }
+    ]
+  }
+}

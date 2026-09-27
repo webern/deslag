@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "contrib__metadata-types__RFC.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "hasura/graphql-engine",
+    "path": "contrib/metadata-types/RFC.md",
+    "commit": "94915fe51d6d21bd7f6d4452dc16221bef8cfefd",
+    "commit_date": "2026-09-21T19:29:39+05:30",
+    "url": "https://github.com/hasura/graphql-engine/blob/94915fe51d6d21bd7f6d4452dc16221bef8cfefd/contrib/metadata-types/RFC.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-community"
+    ],
+    "repo_first_commit_date": "2018-06-24T19:10:48+05:30",
+    "stars": 32121,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2020-10-30T10:52:55-04:00",
+    "last_commit_date": "2026-07-27T10:32:13-07:00",
+    "last_commit_author": "dliub",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-10-30T14:52:55Z",
+    "last_committer_date": "2026-07-27T17:33:51Z",
+    "marks": [
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8072274f07da78726b71fefe29e2aebcd138ccef",
+        "date": "2026-07-27T10:32:13-07:00",
+        "committed": "2026-07-27T17:33:51Z",
+        "old": "ad95ec8855d59b8dd47796b6d35b5a1dd2abe3ce",
+        "new": "2526c448603459a6ec68c508190ca6a99812225f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 2 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6616,
+    "sha256": "91fe38a69c03885687084828b27e973daab6894b7700845104bc40e2633b5180",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 198,
+    "words": 884,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/hasura--graphql-engine/contrib/metadata-types/RFC.md",
+  "before": {
+    "sha256": "35c94863b748efbdd3e697a4c021db1be7c3d13bc16d0af377c351175301c120",
+    "commit": "a5f2161e1ceb9c07d29d556b110e538a33d54963",
+    "date": "2021-12-31T12:56:06+02:00",
+    "between": []
+  }
+}

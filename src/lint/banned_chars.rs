@@ -19,7 +19,7 @@
 
 use crate::config::{BannedChars, Groups};
 use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
-use crate::lint::{Mark, MarkKind, on_lines};
+use crate::lint::{Keep, Mark, MarkKind, on_lines};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned characters!";
@@ -468,6 +468,31 @@ pub fn edits(over: &Over) -> Vec<(Mark, Result<Edit, &'static str>)> {
             })
         })
         .collect()
+}
+
+/// The part of `over` that `keep` keeps: the places of each character, each an occurrence, that
+/// it keeps.
+pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
+    let banned: Vec<Banned> = over
+        .banned
+        .iter()
+        .filter_map(|banned| {
+            let locations: Vec<Location> = banned
+                .locations
+                .iter()
+                .filter(|location| keep.occurrence(location))
+                .copied()
+                .collect();
+            (!locations.is_empty()).then(|| Banned {
+                locations,
+                ..banned.clone()
+            })
+        })
+        .collect();
+    (!banned.is_empty()).then(|| Over {
+        banned,
+        message: over.message.clone(),
+    })
 }
 
 /// Why a fix may not write what the report says to write in place of `banned`, or `None` when it

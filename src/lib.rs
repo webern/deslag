@@ -17,11 +17,13 @@
 //! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
 //! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
 //! file gets. [`output`] prints a run in the formats a machine reads, and [`fix`](mod@fix)
-//! makes the edits to a file that the lints name and the document proves safe.
+//! makes the edits to a file that the lints name and the document proves safe. [`change`] asks git
+//! what a change did, which [`Report::within`] narrows a run to.
 
 use std::io;
 use std::num::NonZeroU32;
 
+pub mod change;
 pub mod cli;
 pub mod config;
 pub mod document;
@@ -33,6 +35,7 @@ pub mod lint;
 pub mod output;
 pub mod parse;
 
+pub use change::Change;
 pub use config::{Config, ConfigSource};
 pub use document::Document;
 pub use explain::explain;
@@ -179,5 +182,15 @@ pub enum Error {
         /// The underlying error.
         #[source]
         source: io::Error,
+    },
+
+    /// `deslag check --diff` cannot read the change from its base: git is missing, the root is in
+    /// no work tree, or the base names no commit that shares history with HEAD.
+    #[error("cannot diff against {base}: {problem}")]
+    Change {
+        /// The base as given.
+        base: String,
+        /// Why not.
+        problem: String,
     },
 }

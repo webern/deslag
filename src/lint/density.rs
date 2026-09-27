@@ -16,7 +16,7 @@ use std::ops::Range;
 
 use crate::config::Density;
 use crate::document::{BlockKind, Document, Location, PieceKind, PointKind, SpanKind};
-use crate::lint::{Mark, MarkKind};
+use crate::lint::{Keep, Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected dense text!";
@@ -200,6 +200,20 @@ pub fn marks(over: &Over) -> Vec<Mark> {
             note: block.note(),
         })
         .collect()
+}
+
+/// The part of `over` that `keep` keeps: each block, an occurrence, that it keeps.
+pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
+    let blocks: Vec<Block> = over
+        .blocks
+        .iter()
+        .filter(|block| keep.occurrence(&block.location))
+        .cloned()
+        .collect();
+    (!blocks.is_empty()).then(|| Over {
+        blocks,
+        ..over.clone()
+    })
 }
 
 /// The advice for a file with walls of text.

@@ -30,16 +30,20 @@ fn run() -> anyhow::Result<ExitCode> {
     match cli.command {
         Command::Check(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = deslag::Config::load(&root, args.config_path.as_deref())?;
-            check(&root, &config, args.format)
+            let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
+            let change = args
+                .diff
+                .map(|base| deslag::Change::against(&root, &base))
+                .transpose()?;
+            check(&root, &config, args.report.format, change.as_ref())
         }
         Command::Fix(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = deslag::Config::load(&root, args.check.config_path.as_deref())?;
+            let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
             for file in deslag::fix::fix(&root, &config, &args.paths, args.dry_run)? {
                 eprintln!("{}\n", file.render(args.dry_run));
             }
-            check(&root, &config, args.check.format)
+            check(&root, &config, args.report.format, None)
         }
         Command::Explain(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
@@ -60,9 +64,18 @@ fn run() -> anyhow::Result<ExitCode> {
 }
 
 /// Checks the repo rooted at `root`, printing the report as `format` says, and returns the exit
-/// code: 0 when every file passes and 1 when one fails.
-fn check(root: &Path, config: &deslag::Config, format: Format) -> anyhow::Result<ExitCode> {
-    let report = deslag::check_repo(root, config)?;
+/// code: 0 when every file passes and 1 when one fails. With a `change`, only what it touched
+/// counts.
+fn check(
+    root: &Path,
+    config: &deslag::Config,
+    format: Format,
+    change: Option<&deslag::Change>,
+) -> anyhow::Result<ExitCode> {
+    let mut report = deslag::check_repo(root, config)?;
+    if let Some(change) = change {
+        report = report.within(change);
+    }
     for finding in &report.findings {
         eprintln!("{}\n", finding.render());
     }

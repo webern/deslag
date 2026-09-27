@@ -16,7 +16,7 @@ use std::ops::Range;
 
 use crate::config::BannedPhrases;
 use crate::document::{Document, Location, Token, TokenKind};
-use crate::lint::{Mark, MarkKind};
+use crate::lint::{Keep, Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned phrases!";
@@ -223,6 +223,20 @@ pub fn marks(over: &Over) -> Vec<Mark> {
             note: found.note(),
         })
         .collect()
+}
+
+/// The part of `over` that `keep` keeps: each phrase, an occurrence, that it keeps.
+pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
+    let matches: Vec<Match> = over
+        .matches
+        .iter()
+        .filter(|found| keep.occurrence(&found.location))
+        .cloned()
+        .collect();
+    (!matches.is_empty()).then(|| Over {
+        matches,
+        message: over.message.clone(),
+    })
 }
 
 /// The advice for a file that holds banned phrases.

@@ -5,7 +5,7 @@ use schemars::generate::SchemaSettings;
 use serde::Serialize;
 
 use crate::Report;
-use crate::lint::{self, Lint, Mark};
+use crate::lint::{self, Lint, Mark, Narrowed};
 
 /// The version of the document's shape. It goes up when a change could break a reader, not when
 /// a field is added.
@@ -22,6 +22,9 @@ pub struct Run {
     pub files_scanned: usize,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,
+    /// With `--diff`, the change the findings were narrowed to; a run of the whole tree has none.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub change: Option<Narrowed>,
 }
 
 /// One file that a lint failed.
@@ -43,8 +46,9 @@ impl From<&Report> for Run {
         Run {
             format_version: FORMAT_VERSION,
             deslag_version: env!("CARGO_PKG_VERSION").to_string(),
-            files_scanned: report.scanned,
+            files_scanned: report.scanned.len(),
             findings: report.findings.iter().map(Finding::from).collect(),
+            change: report.change.clone(),
         }
     }
 }

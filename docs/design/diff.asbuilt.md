@@ -1,0 +1,64 @@
+---
+updated: 2026-09-27
+subsystems:
+  - change
+max_size_bytes: 4096
+---
+# The change: as built
+
+`deslag check --diff <BASE>` runs the whole check, then narrows the report to what a change
+touched. The **change** runs from the **merge base**, where `BASE` and HEAD meet, to the working
+tree: commits, staged and unstaged edits, and untracked files. `change` reads it from git;
+`Report::within`, in `lint`, narrows a report to it.
+
+```
+src/
+  change/
+    mod.rs            Change, File, Hunk, Status; Change::against runs git
+    patch.rs          parse: git's patch, as what it did to each file
+```
+
+## Asking git
+
+`change` is the one module that starts a process, and git is the only one; there is no git
+library. `Change::against(root, base)` runs git in `root`:
+
+1. `rev-parse --is-inside-work-tree`.
+2. `rev-parse --verify --end-of-options <BASE>^{commit}`: a base such as `--output=x` stays a base.
+3. `merge-base`; when there is none, `rev-parse --is-shallow-repository` says if a shallow clone is
+   why.
+4. `diff -U0` from the merge base. Each option a user's config could change is on the command line:
+   prefixes, color, renames, `--relative`, the algorithm, the hunk context, `core.quotePath`.
+5. `ls-files --others --exclude-standard`: an untracked file is added whole.
+
+A failure is `Error::Change`, saying which: no git, no work tree, an unknown base, or no shared
+history, shallow or not. The binary exits 2 on it and prints nothing on stdout.
+
+## The patch
+
+`parse` reads each file's paths from its own header lines, `rename from`, `---` and `+++`, and from
+`diff --git` only when both sides name one path. A quoted path is unescaped. A hunk's lines are
+counted off by its header, so a removed line reading `--- a/x` is not a header. A file whose type
+changed is two patches, merged into one added file.
+
+A `File` has a `Status`, its base path, its `Hunk`s and whether git calls it binary. A hunk holds
+the base lines it removes and the working lines it adds, counted from 1 by LF as a `Location`'s are.
+Keys are paths from the root, as the walk names files; a deleted file is under its base path. With
+`--relative`, a file moved in from outside the root is added whole.
+
+## Narrowing
+
+`File::touches` a line a hunk added, and the lines on either side of a hunk that only removes, so
+deleting the blank line between two paragraphs touches the paragraph they become. An added,
+untracked or binary file is touched everywhere. `File::edits_content` is false for a pure rename or
+mode change. `lint` keeps a finding's parts by these two (`lints.asbuilt.md`).
+
+What a change does not touch is not reported: deleting a directory that an untouched layout lists
+fails only the whole-tree run.
+
+## Tests
+
+`tests/diff.rs` builds repositories with git reading no global or system config, and runs deslag
+the same way. It pins each rule above, each exit 2 and each `--format`, and that a hostile git
+config prints the same. Every case, committed on an empty commit, must print its whole-tree report
+under `--diff HEAD~1`, and a line on the change. `parse` runs on a literal patch.

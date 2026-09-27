@@ -19,6 +19,7 @@ need() {
 need rustup "https://rustup.rs"
 need cargo "installed by rustup"
 need typos "cargo install typos-cli, or brew install typos-cli"
+need git "https://git-scm.com/downloads; the --diff tests build repositories"
 
 if [ "$missing" -ne 0 ]; then
     echo "install what is listed above, then run make again" >&2

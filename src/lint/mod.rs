@@ -18,6 +18,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 
 use crate::Error;
+use crate::change::{self, Change};
 use crate::config::Config;
 use crate::document::{Document, Edit, Location};
 use crate::glob::{self, RepoFile};
@@ -189,6 +190,50 @@ impl Violation {
             Violation::Density(_) => Vec::new(),
         }
     }
+
+    /// The part of it that `keep` keeps, or `None` when that is nothing: each occurrence it keeps,
+    /// and a verdict on the whole file with its evidence, whole or not at all. Its report and its
+    /// marks list only what is kept.
+    pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
+        match self {
+            // A verdict on the whole file, and its evidence.
+            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) => {
+                keep.verdict().then(|| self.clone())
+            }
+            Violation::RepoLayout(over) => {
+                repo_layout::retain(over, keep).map(Violation::RepoLayout)
+            }
+            Violation::BannedChars(over) => {
+                banned_chars::retain(over, keep).map(Violation::BannedChars)
+            }
+            Violation::BannedPhrases(over) => {
+                banned_phrases::retain(over, keep).map(Violation::BannedPhrases)
+            }
+            Violation::Density(over) => density::retain(over, keep).map(Violation::Density),
+        }
+    }
+}
+
+/// What part of one file's findings to keep, for [`Violation::retain`]: a mark's kind says which
+/// question it answers.
+pub trait Keep {
+    /// Whether to keep an occurrence at `location`.
+    fn occurrence(&self, location: &Location) -> bool;
+
+    /// Whether to keep a verdict on the whole file, with the evidence it rests on.
+    fn verdict(&self) -> bool;
+}
+
+/// A changed file keeps an occurrence on a line the change touched, and a verdict when the change
+/// touched what the file says: renaming a file over its budget does not report it.
+impl Keep for change::File {
+    fn occurrence(&self, location: &Location) -> bool {
+        self.touches(location.line..=location.end_line)
+    }
+
+    fn verdict(&self) -> bool {
+        self.edits_content()
+    }
 }
 
 /// `line 3`, or `lines 3, 5` for more than one, as a report names the lines a character or the like
@@ -233,10 +278,23 @@ impl Finding {
 /// What one run of `deslag check` found.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
-    /// How many Markdown files were examined, including the ones no lint had settings for.
-    pub scanned: usize,
+    /// The path of each Markdown file examined, including the ones no lint had settings for.
+    pub scanned: Vec<String>,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,
+    /// The change the findings were narrowed to, by [`Report::within`].
+    pub change: Option<Narrowed>,
+}
+
+/// The change a report was narrowed to.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct Narrowed {
+    /// The base as given to `--diff`, such as `origin/main`.
+    pub base: String,
+    /// The commit where the base and HEAD meet, which the change is measured from.
+    pub merge_base: String,
+    /// How many of the files examined the change touched.
+    pub files_changed: usize,
 }
 
 impl Report {
@@ -245,26 +303,61 @@ impl Report {
         self.findings.is_empty()
     }
 
-    /// The tally that closes a failing run: one line for each lint that failed a file.
+    /// The tally that closes a failing run: one line for each lint that failed a file, and a line
+    /// on the change when the run was narrowed to one.
     pub fn summary(&self) -> String {
-        Lint::ALL
+        let scanned = self.scanned.len();
+        let tally = Lint::ALL.iter().filter_map(|lint| {
+            let failed = self
+                .findings
+                .iter()
+                .filter(|finding| finding.violation.lint() == *lint)
+                .count();
+            (failed > 0).then(|| {
+                format!(
+                    "deslag: {failed} of {scanned} Markdown files {}.",
+                    lint.tally()
+                )
+            })
+        });
+        let change = self.change.iter().map(|change| {
+            format!(
+                "deslag: {} of {scanned} Markdown files changed since {}; findings outside the \
+                 change are not shown.",
+                change.files_changed, change.base
+            )
+        });
+        tally.chain(change).collect::<Vec<_>>().join("\n")
+    }
+
+    /// This report narrowed to `change`: of each file the change touched, the part of each finding
+    /// that [`Keep`] keeps for it, and nothing of any other file.
+    pub fn within(&self, change: &Change) -> Report {
+        let findings = self
+            .findings
             .iter()
-            .filter_map(|lint| {
-                let failed = self
-                    .findings
-                    .iter()
-                    .filter(|finding| finding.violation.lint() == *lint)
-                    .count();
-                (failed > 0).then(|| {
-                    format!(
-                        "deslag: {failed} of {} Markdown files {}.",
-                        self.scanned,
-                        lint.tally()
-                    )
+            .filter_map(|finding| {
+                let file = change.files.get(&finding.path)?;
+                Some(Finding {
+                    path: finding.path.clone(),
+                    violation: finding.violation.retain(file)?,
                 })
             })
-            .collect::<Vec<_>>()
-            .join("\n")
+            .collect();
+        let files_changed = self
+            .scanned
+            .iter()
+            .filter(|path| change.files.contains_key(*path))
+            .count();
+        Report {
+            scanned: self.scanned.clone(),
+            findings,
+            change: Some(Narrowed {
+                base: change.base.clone(),
+                merge_base: change.merge_base.clone(),
+                files_changed,
+            }),
+        }
     }
 }
 
@@ -273,7 +366,7 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
     let mut report = Report::default();
 
     for file in selected(root, config)? {
-        report.scanned += 1;
+        report.scanned.push(file.relative.clone());
 
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);

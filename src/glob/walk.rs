@@ -59,6 +59,29 @@ pub fn walk(root: &Path) -> Result<Vec<RepoFile>, Error> {
     Ok(found)
 }
 
+/// The file that `path`, given relative to the canonical repo root `root`, names, with any link and
+/// `..` resolved, as the walk would find it. The error says why it names no file in the repo.
+pub fn find(root: &Path, path: &Path) -> Result<RepoFile, String> {
+    let joined = root.join(path);
+    if !joined.exists() {
+        return Err("it does not exist".to_string());
+    }
+    if !joined.is_file() {
+        return Err("it is not a file".to_string());
+    }
+    let absolute = joined
+        .canonicalize()
+        .map_err(|error| format!("it cannot be resolved: {error}"))?;
+    if !absolute.starts_with(root) {
+        return Err("it is outside the repo".to_string());
+    }
+
+    Ok(RepoFile {
+        relative: relative_slash_path(root, &absolute),
+        absolute,
+    })
+}
+
 /// `path` relative to `root`, with `/` separators whatever the platform uses.
 pub fn relative_slash_path(root: &Path, path: &Path) -> String {
     let relative = path.strip_prefix(root).unwrap_or(path);

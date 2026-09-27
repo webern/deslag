@@ -26,7 +26,10 @@ pub fn explain(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<String
     let blocks = paths
         .iter()
         .map(|path| {
-            let file = find(&canonical, path)?;
+            let file = glob::find(&canonical, path).map_err(|problem| Error::Explain {
+                path: path.display().to_string(),
+                problem,
+            })?;
             let skipped = walked
                 .binary_search_by(|found| found.relative.cmp(&file.relative))
                 .is_err();
@@ -34,35 +37,6 @@ pub fn explain(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<String
         })
         .collect::<Result<Vec<_>, Error>>()?;
     Ok(blocks.join("\n"))
-}
-
-/// The file that `path`, relative to the canonical repo root `root`, names, with any link and
-/// `..` resolved, as the walk would find it.
-fn find(root: &Path, path: &Path) -> Result<RepoFile, Error> {
-    let problem = |problem: &str| Error::Explain {
-        path: path.display().to_string(),
-        problem: problem.to_string(),
-    };
-
-    let joined = root.join(path);
-    if !joined.exists() {
-        return Err(problem("it does not exist"));
-    }
-    if !joined.is_file() {
-        return Err(problem("it is not a file"));
-    }
-    let absolute = joined.canonicalize().map_err(|source| Error::Read {
-        path: joined.display().to_string(),
-        source,
-    })?;
-    if !absolute.starts_with(root) {
-        return Err(problem("it is outside the repo"));
-    }
-
-    Ok(RepoFile {
-        relative: glob::relative_slash_path(root, &absolute),
-        absolute,
-    })
 }
 
 /// The block for `file`, under the config read from `config_path`: a TOML document whose

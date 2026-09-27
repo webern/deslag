@@ -1,6 +1,7 @@
 //! The command-line entry point. The logic lives in the library.
 
 use std::io::{self, Write};
+use std::path::Path;
 use std::process::ExitCode;
 
 use anyhow::Context;
@@ -30,26 +31,15 @@ fn run() -> anyhow::Result<ExitCode> {
         Command::Check(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             let config = deslag::Config::load(&root, args.config_path.as_deref())?;
-
-            let report = deslag::check_repo(&root, &config)?;
-            for finding in &report.findings {
-                eprintln!("{}\n", finding.render());
+            check(&root, &config, args.format)
+        }
+        Command::Fix(args) => {
+            let root = std::env::current_dir().context("cannot read the current directory")?;
+            let config = deslag::Config::load(&root, args.check.config_path.as_deref())?;
+            for file in deslag::fix::fix(&root, &config, &args.paths, args.dry_run)? {
+                eprintln!("{}\n", file.render(args.dry_run));
             }
-            if !report.is_clean() {
-                eprintln!("{}", report.summary());
-            }
-            write_stdout(&match args.format {
-                Format::Text => String::new(),
-                Format::Json => json::render(&report),
-                Format::Sarif => sarif::render(&report),
-                Format::Github => github::render(&report),
-            })?;
-
-            if report.is_clean() {
-                Ok(ExitCode::SUCCESS)
-            } else {
-                Ok(ExitCode::FAILURE)
-            }
+            check(&root, &config, args.check.format)
         }
         Command::Explain(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
@@ -66,6 +56,30 @@ fn run() -> anyhow::Result<ExitCode> {
             write_stdout(&text)?;
             Ok(ExitCode::SUCCESS)
         }
+    }
+}
+
+/// Checks the repo rooted at `root`, printing the report as `format` says, and returns the exit
+/// code: 0 when every file passes and 1 when one fails.
+fn check(root: &Path, config: &deslag::Config, format: Format) -> anyhow::Result<ExitCode> {
+    let report = deslag::check_repo(root, config)?;
+    for finding in &report.findings {
+        eprintln!("{}\n", finding.render());
+    }
+    if !report.is_clean() {
+        eprintln!("{}", report.summary());
+    }
+    write_stdout(&match format {
+        Format::Text => String::new(),
+        Format::Json => json::render(&report),
+        Format::Sarif => sarif::render(&report),
+        Format::Github => github::render(&report),
+    })?;
+
+    if report.is_clean() {
+        Ok(ExitCode::SUCCESS)
+    } else {
+        Ok(ExitCode::FAILURE)
     }
 }
 

@@ -10,6 +10,8 @@
 
 mod common;
 
+use std::collections::{BTreeMap, HashMap};
+use std::fs;
 use std::path::Path;
 
 use common::corpus::load_corpus;
@@ -17,6 +19,7 @@ use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};
 use deslag::document::Location;
+use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{Lint, banned_chars, density, max_emphasis};
@@ -948,6 +951,166 @@ fn the_corpus_banned_characters_agree_with_the_library() {
             fixtures.len()
         )),
         "stderr:\n{stderr}"
+    );
+}
+
+/// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
+const FIXED: usize = 5400;
+
+/// How many fixtures with banned characters it fixes whole.
+const FIXED_WHOLE: usize = 350;
+
+/// How many banned characters it leaves for each reason.
+const LEFT_BY_REASON: &[(&str, usize)] = &[
+    ("it is in HTML, which is not prose", 71),
+    ("it is in a URL", 1),
+    ("it is in the frontmatter, which is not prose", 23),
+    (
+        "the edit changes how the file reads, as when a line comes to start a list or a code \
+         block, so reword it",
+        153,
+    ),
+    (
+        "the replacement holds letters or digits, a guess at meaning that can run into the text \
+         beside it",
+        737,
+    ),
+    (
+        "the replacement is the default for a range of characters, a guess at what this one means",
+        14,
+    ),
+];
+
+/// `deslag fix` over the corpus, with the default groups: every byte it changes is a banned
+/// character replaced as the report says, every banned character it leaves has a reason, and a
+/// second run changes nothing.
+#[test]
+fn the_corpus_is_fixed_only_where_the_report_says() {
+    let fixtures = load_corpus();
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+    );
+    let settings = BannedChars::default();
+    let paths = place_real(&repo, &fixtures);
+    let config = Config::load(repo.root(), None).expect("a config");
+    let fixes = fix::fix(repo.root(), &config, &[], false).expect("fix runs");
+    let fixes: HashMap<&str, &Outcome> = fixes
+        .iter()
+        .map(|file| (file.path.as_str(), &file.outcome))
+        .collect();
+
+    let mut banned = 0;
+    let mut fixed = 0;
+    let mut whole = 0;
+    let mut not_utf8 = 0;
+    let mut left_by_reason: BTreeMap<String, usize> = BTreeMap::new();
+    for (fixture, path) in fixtures.iter().zip(&paths) {
+        let after = fs::read(repo.root().join(path)).expect("a readable file");
+        let Ok(text) = std::str::from_utf8(&fixture.bytes) else {
+            assert_eq!(
+                after, fixture.bytes,
+                "{path} is not UTF-8, and fix wrote it"
+            );
+            not_utf8 += usize::from(fixes.get(path.as_str()) == Some(&&Outcome::NotUtf8));
+            continue;
+        };
+        let after = String::from_utf8(after).expect("fix writes UTF-8");
+        let mut places = banned_chars::check(&Document::markdown(text), Some(&settings))
+            .map(|over| banned_chars::edits(&over))
+            .unwrap_or_default();
+        places.sort_by_key(|(mark, _)| mark.location.start);
+        banned += places.len();
+
+        // Walk the original and the fixed text side by side: they match between the places, and
+        // at each place the fixed text holds the character or, when the report names one, its
+        // replacement.
+        let (mut from, mut at, mut made) = (0, 0, 0);
+        for (mark, edit) in &places {
+            let between = &text[from..mark.location.start];
+            assert!(
+                after[at..].starts_with(between),
+                "{path}: fix changed bytes {from}..{} that hold no banned character",
+                mark.location.start
+            );
+            at += between.len();
+            let original = &text[mark.location.start..mark.location.end];
+            match edit {
+                Ok(edit) if !after[at..].starts_with(original) => {
+                    assert!(
+                        after[at..].starts_with(&edit.replacement),
+                        "{path}: line {} holds neither {original:?} nor {:?}",
+                        mark.location.line,
+                        edit.replacement
+                    );
+                    at += edit.replacement.len();
+                    made += 1;
+                }
+                _ => at += original.len(),
+            }
+            from = mark.location.end;
+        }
+        assert_eq!(&after[at..], &text[from..], "{path}: fix changed its tail");
+
+        let (fixed_here, left) = match fixes.get(path.as_str()) {
+            Some(Outcome::Read { text, fixed, left }) => {
+                assert_eq!(*text, after, "{path}: fix wrote other than it returned");
+                (fixed.len(), left.as_slice())
+            }
+            Some(Outcome::NotUtf8) => panic!("{path} is UTF-8"),
+            None => (0, [].as_slice()),
+        };
+        assert_eq!(made, fixed_here, "{path}: fix reports {fixed_here} fixed");
+        fixed += made;
+
+        // What is left is what check still finds, each place with a reason.
+        let mut remaining: Vec<usize> =
+            banned_chars::check(&Document::markdown(&after), Some(&settings))
+                .map(|over| {
+                    banned_chars::marks(&over)
+                        .into_iter()
+                        .map(|mark| mark.location.start)
+                        .collect()
+                })
+                .unwrap_or_default();
+        remaining.sort_unstable();
+        let reported: Vec<usize> = left.iter().map(|(mark, _)| mark.location.start).collect();
+        assert_eq!(
+            reported, remaining,
+            "{path}: fix leaves other places than check finds"
+        );
+        for (_, why) in left {
+            *left_by_reason.entry(why.to_string()).or_default() += 1;
+        }
+        whole += usize::from(!places.is_empty() && left.is_empty());
+    }
+
+    let again = fix::fix(repo.root(), &config, &[], false).expect("fix runs again");
+    assert!(
+        again.iter().all(|file| match &file.outcome {
+            Outcome::Read { fixed, .. } => fixed.is_empty(),
+            Outcome::NotUtf8 => true,
+        }),
+        "a second fix changed a file"
+    );
+
+    let left_by_reason: Vec<(&str, usize)> = left_by_reason
+        .iter()
+        .map(|(why, count)| (why.as_str(), *count))
+        .collect();
+    eprintln!(
+        "fix: {fixed} of {banned} banned characters fixed, {whole} files fixed whole, {not_utf8} \
+         not UTF-8; left: {left_by_reason:#?}"
+    );
+    assert_eq!(
+        (fixed, whole, left_by_reason.as_slice()),
+        (FIXED, FIXED_WHOLE, LEFT_BY_REASON),
+        "if the corpus changed, pin the new numbers"
+    );
+    assert_eq!(
+        fixed + LEFT_BY_REASON.iter().map(|(_, count)| count).sum::<usize>(),
+        banned
     );
 }
 

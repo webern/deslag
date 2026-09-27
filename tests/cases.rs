@@ -19,7 +19,8 @@
 //! `make fix-test-output` rewrites the `.stderr` and `.json` files from what deslag prints now, and
 //! never a `.exit` or `.args` file; read the diff before committing it.
 //!
-//! A case runs in a copy in a temp directory. It cannot hold a `.git` directory, or a `.gitignore`
+//! Each run is in a fresh copy of the case in a temp directory, so a run that writes, such as
+//! `deslag fix`, writes to its copy alone. A case cannot hold a `.git` directory, or a `.gitignore`
 //! that ignores its own files, because git would apply it to this repo too.
 
 mod common;
@@ -93,7 +94,7 @@ impl Case {
         (found, stray)
     }
 
-    /// Runs deslag in a copy of the case, then again with `--format json`. Returns what is wrong
+    /// Runs deslag in a copy of the case, then in another with `--format json`. Returns what is wrong
     /// with their output, or, when `fix` is set, writes the output to the `.stderr` and `.json`
     /// files.
     fn run(&self, fix: bool) -> Option<String> {
@@ -103,15 +104,13 @@ impl Case {
             Err(_) => vec!["check".to_string()],
         };
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
-        let repo = Repo::copy_of(&self.root);
-        let output = repo.run(&args);
-        let json_output = repo.run(&[args.as_slice(), &["--format", "json"]].concat());
-        let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
-        let root = root.to_str().expect("a UTF-8 temp root");
-        let actual = stderr(&output).replace(root, "[ROOT]");
+        let (output, root) = self.run_in_copy(&args);
+        let (json_output, json_root) =
+            self.run_in_copy(&[args.as_slice(), &["--format", "json"]].concat());
+        let actual = stderr(&output).replace(&root, "[ROOT]");
         let version = format!("\"deslag_version\": \"{}\"", env!("CARGO_PKG_VERSION"));
         let json = stdout(&json_output)
-            .replace(root, "[ROOT]")
+            .replace(&json_root, "[ROOT]")
             .replace(&version, "\"deslag_version\": \"[VERSION]\"");
 
         let wanted = match self.wanted(&actual) {
@@ -128,7 +127,9 @@ impl Case {
                 stdout(&output),
             ));
         }
-        if code(&json_output) != wanted || stderr(&json_output).replace(root, "[ROOT]") != actual {
+        if code(&json_output) != wanted
+            || stderr(&json_output).replace(&json_root, "[ROOT]") != actual
+        {
             return Some(format!(
                 "{name}: with --format json, deslag exited {} and printed to stderr:\n{}\n\
                  The format changes only what deslag prints on stdout.",
@@ -151,6 +152,15 @@ impl Case {
         let expected_json = fs::read_to_string(&self.json).unwrap_or_default();
         differs(name, "stderr", &expected, &actual)
             .or_else(|| differs(name, "the stdout of --format json", &expected_json, &json))
+    }
+
+    /// Runs deslag with `args` in a fresh copy of the case. Returns its output and the copy's root.
+    fn run_in_copy(&self, args: &[&str]) -> (std::process::Output, String) {
+        let repo = Repo::copy_of(&self.root);
+        let output = repo.run(args);
+        let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
+        let root = root.to_str().expect("a UTF-8 temp root").to_string();
+        (output, root)
     }
 
     /// The code the case must exit with when deslag prints `printed`: the one in its `.exit` file

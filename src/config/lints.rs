@@ -346,7 +346,7 @@ impl BannedChars {
     pub fn invalid(&self) -> Option<String> {
         let allowed = self.allow.iter().flatten().map(|ch| ("allow", ch));
         let banned = self.ban.iter().flatten().map(|(ch, _)| ("ban", ch));
-        allowed.chain(banned).find_map(|(field, text)| {
+        let unusable = allowed.chain(banned).find_map(|(field, text)| {
             let mut chars = text.chars();
             match (chars.next(), chars.next()) {
                 (Some(ch), None) if ch.is_ascii() => Some(format!(
@@ -358,6 +358,20 @@ impl BannedChars {
                     "banned_chars.{field} holds {text:?}, which is not one character"
                 )),
             }
+        });
+        // A control character, such as a line break, cannot stand in for a character without
+        // changing the lines around it.
+        unusable.or_else(|| {
+            self.ban
+                .iter()
+                .flatten()
+                .find(|(_, instead)| instead.chars().any(char::is_control))
+                .map(|(ch, instead)| {
+                    format!(
+                        "banned_chars.ban maps {ch:?} to {instead:?}, which holds a control \
+                         character"
+                    )
+                })
         })
     }
 }

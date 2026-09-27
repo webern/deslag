@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: for README.md, banned_chars.ban maps "—" to "–", which holds U+2013, a character it bans

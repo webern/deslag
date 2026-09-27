@@ -1,0 +1,84 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 7 banned characters.\n\nThis repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 3, 6, 8: U+2014 em dash \"—\"; write `-`\n  line 3: U+201C left double quotation mark \"“\"; write `\"`\n  line 3: U+201D right double quotation mark \"”\"; write `\"`\n  line 8: U+2705 white heavy check mark \"✅\"; write `yes`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 18,
+          "end": 21,
+          "line": 3,
+          "column": 10,
+          "end_line": 3,
+          "end_column": 11,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 31,
+          "end": 34,
+          "line": 3,
+          "column": 21,
+          "end_line": 3,
+          "end_column": 22,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 78,
+          "end": 81,
+          "line": 6,
+          "column": 1,
+          "end_line": 6,
+          "end_column": 2,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 152,
+          "end": 155,
+          "line": 8,
+          "column": 44,
+          "end_line": 8,
+          "end_column": 45,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 38,
+          "end": 41,
+          "line": 3,
+          "column": 26,
+          "end_line": 3,
+          "end_column": 27,
+          "note": "U+201C left double quotation mark \"“\"; write `\"`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 50,
+          "line": 3,
+          "column": 33,
+          "end_line": 3,
+          "end_column": 34,
+          "note": "U+201D right double quotation mark \"”\"; write `\"`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 116,
+          "end": 119,
+          "line": 8,
+          "column": 10,
+          "end_line": 8,
+          "end_column": 11,
+          "note": "U+2705 white heavy check mark \"✅\"; write `yes`"
+        }
+      ]
+    }
+  ]
+}

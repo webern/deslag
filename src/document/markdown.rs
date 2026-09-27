@@ -41,7 +41,7 @@ pub(super) fn read(source: &str) -> Document<'_> {
     } = reader;
     // A gap is recorded when the block after it ends, after the breaks inside that block.
     points.sort_by_key(|point| point.range.start);
-    Document::new(source, top, pieces, spans, points)
+    Document::new(read, source, top, pieces, spans, points)
 }
 
 /// A block whose end has not been read yet.

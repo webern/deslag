@@ -11,7 +11,7 @@
 
 mod walk;
 
-pub use walk::{RepoFile, relative_slash_path, walk};
+pub use walk::{RepoFile, find, relative_slash_path, walk};
 
 use globset::{GlobBuilder, GlobMatcher};
 

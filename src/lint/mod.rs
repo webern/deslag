@@ -19,8 +19,8 @@ use serde::Serialize;
 
 use crate::Error;
 use crate::config::Config;
-use crate::document::{Document, Location};
-use crate::glob;
+use crate::document::{Document, Edit, Location};
+use crate::glob::{self, RepoFile};
 
 /// Every lint deslag has. Everything that lists the lints, such as the order they run in and the
 /// tally of a run, takes them from here.
@@ -174,6 +174,37 @@ impl Violation {
             Violation::Density(over) => density::marks(over),
         }
     }
+
+    /// The places a fix could change, each with the edit the lint names there, or why it names
+    /// none. A lint whose module does not say what makes its edits safe has none: its findings
+    /// are for a writer to resolve.
+    pub fn edits(&self) -> Vec<(Mark, Result<Edit, &'static str>)> {
+        match self {
+            Violation::MaxSizeBytes(_) => Vec::new(),
+            Violation::MaxEmphasis(_) => Vec::new(),
+            Violation::RepoLayout(_) => Vec::new(),
+            Violation::BannedChars(over) => banned_chars::edits(over),
+            // Its values are advice, not replacements, and a match's words can cross markup.
+            Violation::BannedPhrases(_) => Vec::new(),
+            Violation::Density(_) => Vec::new(),
+        }
+    }
+}
+
+/// `line 3`, or `lines 3, 5` for more than one, as a report names the lines a character or the like
+/// is on.
+pub(crate) fn on_lines(lines: &[usize]) -> String {
+    match lines {
+        [line] => format!("line {line}"),
+        _ => format!(
+            "lines {}",
+            lines
+                .iter()
+                .map(|line| line.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    }
 }
 
 impl Finding {
@@ -240,18 +271,11 @@ impl Report {
 /// Runs every lint over the repo rooted at `root`.
 pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
     let mut report = Report::default();
-    let md = config.md();
 
-    for file in glob::walk(root)? {
-        if !md.selects(&file.relative) {
-            continue;
-        }
+    for file in selected(root, config)? {
         report.scanned += 1;
 
-        let contents = std::fs::read(&file.absolute).map_err(|source| Error::Read {
-            path: file.absolute.display().to_string(),
-            source,
-        })?;
+        let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
         report
             .findings
@@ -259,6 +283,24 @@ pub fn check_repo(root: &Path, config: &Config) -> Result<Report, Error> {
     }
 
     Ok(report)
+}
+
+/// Every file under `root` that the config selects: the files [`check_repo`] checks, and so the
+/// only ones a fix may touch.
+pub(crate) fn selected(root: &Path, config: &Config) -> Result<Vec<RepoFile>, Error> {
+    let md = config.md();
+    Ok(glob::walk(root)?
+        .into_iter()
+        .filter(|file| md.selects(&file.relative))
+        .collect())
+}
+
+/// The bytes of `file`.
+pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
+    std::fs::read(&file.absolute).map_err(|source| Error::Read {
+        path: file.absolute.display().to_string(),
+        source,
+    })
 }
 
 /// Runs every lint over one file: `relative` is its path from the repo root, `contents` its bytes
@@ -271,20 +313,39 @@ pub fn check_file(
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
     let text = String::from_utf8_lossy(contents);
+    Ok(check_text(config, relative, contents, &text, dir)?.1)
+}
+
+/// Runs every lint over one file, as [`check_file`] does, given `text`, its `contents` decoded.
+/// Returns the document the lints read with what they found, for a caller that edits it: this is
+/// where a file's reader is chosen, so a fix reads a file as the check does.
+pub(crate) fn check_text<'a>(
+    config: &Config,
+    relative: &str,
+    contents: &[u8],
+    text: &'a str,
+    dir: &Path,
+) -> Result<(Document<'a>, Vec<Finding>), Error> {
     let lints = config.md().lints_for(relative);
-    if let Some(message) = lints.contradiction() {
+    let contradiction = lints.contradiction().or_else(|| {
+        lints
+            .banned_chars
+            .as_ref()
+            .and_then(banned_chars::contradiction)
+    });
+    if let Some(message) = contradiction {
         return Err(Error::Setting {
             path: config.path().display().to_string(),
             message: format!("for {relative}, {message}"),
         });
     }
-    let document = Document::markdown(&text);
+    let document = Document::markdown(text);
 
     let mut findings = Vec::new();
     for lint in Lint::ALL {
         let violation = match lint {
             Lint::MaxSizeBytes => {
-                max_size_bytes::check(relative, contents, &text, lints.max_size_bytes.as_ref())?
+                max_size_bytes::check(relative, contents, text, lints.max_size_bytes.as_ref())?
                     .map(Violation::MaxSizeBytes)
             }
             Lint::MaxEmphasis => max_emphasis::check(&document, lints.max_emphasis.as_ref())
@@ -304,5 +365,5 @@ pub fn check_file(
             violation,
         }));
     }
-    Ok(findings)
+    Ok((document, findings))
 }

@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: banned_chars.ban maps "—" to "\n", which holds a control character

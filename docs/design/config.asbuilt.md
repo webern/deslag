@@ -8,7 +8,7 @@ max_size_bytes: 5000
 ---
 # The config: as built
 
-`Config::load` finds and parses the config; `src/main.rs` calls it for `check` and `explain`.
+`Config::load` finds and parses the config; `src/main.rs` calls it for `check`, `fix` and `explain`.
 `glob::walk` lists the repo's files, `MdConfig::selects` picks the ones to lint and
 `MdConfig::lints_for` gives each its settings; `lint` and `explain` call all three.
 
@@ -56,13 +56,13 @@ lints.repo_layout = {}           # a lint's table alone turns it on
 
 The top level has a section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with a sub-table per lint, and `overrides`. Every field of a
-lint's settings is optional, and a value the lint cannot use, such as a `density` limit of 0, is an
-`Error::Setting`.
+lint's settings is optional, and a value the lint cannot use, such as a `density` limit of 0 or a
+`ban` value holding a control character, is an `Error::Setting`.
 
 `MdConfig::lints_for` starts from the section's `lints` and merges in each matching override, least
 specific first, with `Merge`: an override sets only the fields it names. Whether `min_entries`
-exceeds `max_entries` depends on the merge, so `check_file` asks it per file and fails the run with
-an `Error::Setting`.
+exceeds `max_entries`, or a `ban` value holds a character the file bans, depends on the merge, so
+`check_file` asks per file and fails the run with an `Error::Setting`.
 
 ## Glob patterns
 
@@ -77,7 +77,8 @@ beats basename, then longer beats shorter, then the later override.
 `glob/walk.rs` walks with the `ignore` crate's `WalkBuilder` and returns every regular file as a
 `RepoFile`: its absolute path and its `/`-separated path from the root. It skips `.git`, symlinks,
 and what git or a `.ignore` file would ignore, even with no `.git` directory, and reads no ignore
-file above the root. Hidden files are walked.
+file above the root. Hidden files are walked. `glob::find` resolves a path a command names as the
+walk would find it, or says why it names no file in the repo.
 
 ## Explaining a file
 

@@ -28,7 +28,9 @@ agent's, and a `mixed/` file has commits of both kinds. `corpus.md` section 3 ha
 the marks that make a commit an agent's.
 
 Each holds about 400 fixtures, at most three from one repository, under permissive licences only.
-No fixture is quoted twice.
+No fixture is quoted twice. Some `llm/` and `mixed/` fixtures, here and in the big tier, have
+labels the current rules do not prove. `recheck` lists them, and they stay until the batch that
+adds their replacements drops them.
 
 ## The sidecar
 
@@ -67,9 +69,15 @@ sidecars of `core/`; `recheck`; and `pack`. `MARKS` is the table of agent marks,
 
 `recheck --corpus .blobs/unpacked/corpus --work DIR` makes a blobless clone of each repository the
 live big tier quotes, full depth unless that times out, and derives each fixture's label again
-from its file's history. It keeps the evidence for each repository under `DIR/evidence/`, so a
-run resumes where the last stopped, retries a repository that failed, and writes
-`DIR/verdicts.jsonl` and, once every repository is done, `DIR/exclude.jsonl`.
+from its file's history. For a squash-merge that carries a mark, `PullRequests` asks GitHub with
+`gh api`, one request at a time, which commits its pull request held. `describe` asks GitHub the
+same way. `harvest` does not, and leaves out a file whose label rests on a squash-merge.
+
+The evidence for each repository is kept under `DIR/evidence/`, and the clone deleted; GitHub's
+answers are kept under `DIR/pulls/`. So a run resumes where the last stopped and retries a
+repository or a question that failed. It writes `DIR/verdicts.jsonl` on every run, and
+`DIR/exclude.jsonl` once every repository is done; from then on a run clones nothing and judges
+every label again in moments.
 
 `pack --from tests/corpus --corpus .blobs/unpacked/corpus --work DIR` reads the published batches,
 then writes the collected fixtures of the tree they do not hold into a new batch under `DIR`, with

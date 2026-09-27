@@ -64,7 +64,7 @@ a tool writes into that block that is not a trailer.
 Its kind says what it proves. `agent-identity`: an agent is the author, the committer or a
 co-author. `agent-session`: a line an agent writes into a commit it made, such as a link to its
 session. Both count. An `assist` never counts: it is a tool's suggestion that a person committed,
-such as a Copilot Autofix, a suggestion from a Copilot review, or an editor's completion.
+such as a Copilot Autofix or an editor's completion.
 
 Only marks a tool writes itself, or its own account, are listed. A trailer one project invents
 for its agents, or an account a person runs an agent under, proves nothing about another project.
@@ -114,9 +114,10 @@ file. A commit is taken for one when its body lists two or more commits as GitHu
 paragraphs that open with `* `, or holds the header `git merge --squash` writes, or ends with a
 line of nine dashes and then only the trailers GitHub gathers from the squashed commits.
 
-That last shape is also what a pull request of one commit gives when its description is the
-message, so the rule errs toward leaving a file out. A squash-merge whose message keeps none of
-these shapes looks like one commit to git; only the forge knows its pull request's commits.
+A pull request of one commit can give that last shape too, so the rule errs toward leaving a file
+out. A GitHub squash-merge may keep none of these shapes, but ends its subject in `(#N)`. It
+proves its marks only when every commit of pull request N carries one that counts; `collect.py`
+asks GitHub, and one it cannot check proves nothing.
 
 `llm` also needs the file's text to be the agents'. When the commit that added the file deleted a
 Markdown file of the same name, or one git's rename detection pairs with it, the text may be older
@@ -170,8 +171,9 @@ may hold only exclusions. `pack` never writes into a batch that exists, and stag
 outside `.blobs/`, which `make clean` deletes.
 
 When the rules of section 3 change, `collect.py recheck` derives every live label again from a
-fresh clone, and each fixture whose label no longer holds is excluded; the tree drops it too. One
-whose repository is gone is kept, since its label was proven when it was captured.
+fresh clone, and each fixture whose label no longer holds is excluded; the tree drops it too.
+Exclusions that would take a label under the tree's floors wait for their replacements and ship
+with them. One whose repository is gone is kept, since its label was proven when it was captured.
 
 A fixture's identity is its content and its origin. No two live fixtures share a sha256, and no
 two with the same label share a host, repository and path. So a file's human revision from before

@@ -29,7 +29,9 @@ How a file is classified, from the history of the file up to the commit it is qu
 - mixed: at least one commit is a person's from before CUTOFF, and at least one an agent's.
 
 A commit is an agent's when it carries a mark in MARKS that counts, in the place the tool writes
-it, and is not a squash. A bot's commit rules out every label. Files in vendored or test-fixture
+it, and is not a squash. A GitHub squash-merge, whose subject ends in "(#N)", is one only when
+every commit of pull request N carries such a mark; `recheck` and `describe` ask GitHub, with gh,
+and `harvest` does not. A bot's commit rules out every label. Files in vendored or test-fixture
 directories, and boilerplate such as licences and codes of conduct, are left out.
 docs/design/corpus.md section 3 is the design of these rules.
 """
@@ -323,6 +325,11 @@ def is_squash(message: str) -> bool:
     return any(lines) and all(TRAILER_LINE.fullmatch(line) for line in lines if line)
 
 
+# GitHub ends the subject of a squash-merge with its pull request's number. Its message may keep
+# none of the squash shapes above, so git cannot tell it from a commit of one's own.
+SQUASH_MERGE = re.compile(r"\(#(\d+)\)$")
+
+
 BOT = re.compile(
     r"\[bot\]|dependabot|renovate|github-actions|actions-user|pre-commit-ci|allcontributors"
     r"|all-contributors|semantic-release|greenkeeper|snyk-bot|imgbot|weblate|transifex|crowdin"
@@ -354,12 +361,25 @@ class Commit:
     marks: list[tuple[Mark, str]]
     squash: bool
     bot: bool
+    # The pull request a squash-merge names, when the commit carries a mark that counts; its
+    # marks prove nothing until `PullRequests.settle` has asked GitHub about it.
+    pull: int | None = None
+    # What GitHub showed: `proven`, when every commit of the pull request carries a mark that
+    # counts; `squash-merge`, when one does not; `unverified`, when it could not show them. And a
+    # note on why, for the label's basis.
+    pull_verdict: tuple[str, str] | None = None
+
+    @property
+    def pull_state(self) -> str | None:
+        if self.pull is None:
+            return None
+        return self.pull_verdict[0] if self.pull_verdict else "unverified"
 
     @property
     def tools(self) -> list[str]:
-        """The agents the commit is proven to be from: none for a squash, or for a commit whose
-        only marks are assists."""
-        if self.squash:
+        """The agents the commit is proven to be from: none for a squash, for a squash-merge that
+        is not proven, or for a commit whose only marks are assists."""
+        if self.squash or self.pull_state not in (None, "proven"):
             return []
         return sorted({mark.tool for mark, _ in self.marks if mark.counts})
 
@@ -374,11 +394,14 @@ class Commit:
     def status(self) -> str:
         """What the commit says about who wrote the file: `bot`; `agent`; `early`, a person's
         before the cutoff; or why it is none of those: `squash`, a squash that carries a mark;
+        `squash-merge` or `unverified`, a marked squash-merge that GitHub did not prove;
         `assist`, marked by assists alone; `late`, after the cutoff with no mark."""
         if self.bot:
             return "bot"
         if self.tools:
             return "agent"
+        if self.pull is not None:
+            return self.pull_state
         if self.early and not self.marks:
             return "early"
         if self.marks:
@@ -393,9 +416,13 @@ def read_commit(sha: str, author: str, email: str, date: str, committer: str, ce
     if len(message) > MAX_MESSAGE:
         message = message[:MAX_MESSAGE // 2] + "\n\n" + message[-MAX_MESSAGE // 2:]
     marks = marks_of(f"{author} <{email}>", f"{committer} <{cemail}>", message)
+    counts = any(mark.counts for mark, _ in marks)
     # An agent's own bot account is an agent, not a bot.
-    bot = is_bot(author, email) and not any(mark.counts for mark, _ in marks)
-    return Commit(sha, date, committed, author, email, marks, is_squash(message), bot)
+    bot = is_bot(author, email) and not counts
+    squash = is_squash(message)
+    merged = SQUASH_MERGE.search(message.strip().partition("\n")[0].strip())
+    pull = int(merged[1]) if merged and counts and not squash else None
+    return Commit(sha, date, committed, author, email, marks, squash, bot, pull)
 
 
 # How the reason a label fails names a commit that is neither an agent's nor early.
@@ -404,6 +431,14 @@ NEITHER = {
     "assist": "marked only by an assist, a tool's suggestion that a person committed",
     "late": f"made after {CUTOFF_DATE} and marked by no AI agent",
 }
+
+
+def neither(commit: Commit) -> str:
+    if commit.pull is None:
+        return NEITHER[commit.status]
+    if commit.pull_verdict:
+        return commit.pull_verdict[1]
+    return f"the squash-merge of #{commit.pull}, which GitHub was not asked about"
 
 
 def label_history(hist: list[Commit], truncated: bool = False,
@@ -415,10 +450,10 @@ def label_history(hist: list[Commit], truncated: bool = False,
     - llm: every commit is an agent's, and the file's text is no older than its history.
     - mixed: at least one commit is a person's from before the cutoff, and one an agent's.
 
-    A commit is an agent's when it carries a mark that counts and is not a squash, and a bot's
-    commit rules out every label. `truncated` says the oldest commit is a shallow clone's
-    boundary, so the file may be older than its history; `moved` says why its text may be older
-    than the commit that added it."""
+    A commit is an agent's when it carries a mark that counts and is not a squash, nor a
+    squash-merge that GitHub did not prove; a bot's commit rules out every label. `truncated`
+    says the oldest commit is a shallow clone's boundary, so the file may be older than its
+    history; `moved` says why its text may be older than the commit that added it."""
     if not hist:
         return "unknown", "no commit that git shows touched it"
     n = len(hist)
@@ -442,12 +477,14 @@ def label_history(hist: list[Commit], truncated: bool = False,
                          f"marked as an AI agent's ({tools}){cut}")
     if agent == n:
         return "unknown", f"{every_agent}, but {moved or cut.removeprefix('; ')}"
-    first = next(h for h in hist if h.status not in ("agent", "early"))
+    # The example is the newest commit that looks like an agent's and is not, if there is one.
+    rank = ("squash", "squash-merge", "assist", "unverified", "late")
+    first = min((h for h in hist if h.status in rank), key=lambda h: rank.index(h.status))
     others = n - agent - early
     return "unknown", (f"{agent} of its {n} commits {agree(agent, 'is', 'are')} marked as an AI "
                        f"agent's and {early} {agree(early, 'is', 'are')} a person's from before "
                        f"{CUTOFF_DATE}; {others} {agree(others, 'is', 'are')} neither, such as "
-                       f"{first.sha[:10]}, {NEITHER[first.status]}")
+                       f"{first.sha[:10]}, {neither(first)}")
 
 
 def agree(n: int, one: str, many: str) -> str:
@@ -1104,7 +1141,8 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                     )
                     taken += 1
 
-        # llm and mixed: the tree at HEAD, if an agent has ever committed here.
+        # llm and mixed: the tree at HEAD, if an agent has ever committed here. The harvest does
+        # not ask GitHub about squash-merges, so it leaves out a file whose label rests on one.
         if any(x.tools for x in commits.values()):
             files = tree_files(clone, head)
             readme = None
@@ -1431,6 +1469,7 @@ def describe(args: argparse.Namespace) -> None:
     directory = Path(args.dir)
     work = Path(args.work)
     work.mkdir(parents=True, exist_ok=True)
+    pulls = PullRequests(work)
     groups: dict[tuple[str, str], list[tuple[Path, dict]]] = {}
     for path in sorted(directory.glob("*.json")):
         old = json.loads(path.read_text())
@@ -1458,6 +1497,7 @@ def describe(args: argparse.Namespace) -> None:
             license_id, license_files = repo_license(clone, files, False, None)
             shas = git(clone, "log", "--no-merges", "--format=%H", e["commit"], "--", e["path"]).split()
             hist = [commits[x] for x in shas if x in commits]
+            pulls.settle(host, repo, hist)
             fixture = sidecar_path.with_suffix(".md")
             data = fixture.read_bytes()
             digest = hashlib.sha256(data).hexdigest()
@@ -1491,6 +1531,161 @@ def history_record(hist: list[Commit]) -> dict:
         "ai_commits": sum(1 for h in hist if h.tools),
         "ai_tools": tools,
     }
+
+
+# ---------------------------------------------------------------------------------------------
+# squash-merges
+
+# The least time between two requests to GitHub, in seconds.
+GITHUB_PACE = 0.5
+# GitHub lists no more than this many commits of a pull request.
+MAX_PULL_COMMITS = 250
+GITHUB_STATUS = re.compile(r"HTTP/\S+ (\d{3})")
+
+
+class GitHubError(Exception):
+    pass
+
+
+class PullRequests:
+    """Asks GitHub, with `gh api`, which commits the pull request of a squash-merge held. A
+    squash-merge proves its marks only when every one of those commits carries a mark that
+    counts; one GitHub cannot show proves nothing.
+
+    Requests go one at a time, GITHUB_PACE apart, and wait out a rate limit. What GitHub shows is
+    kept in DIR/pulls/, one file for each repository, so each question is asked once; a request
+    that failed is asked again on the next run."""
+
+    def __init__(self, work: Path):
+        self.dir = work / "pulls"
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.pace = threading.Lock()
+        self.last = 0.0
+        self.store = threading.Lock()
+        self.cache: dict[str, dict] = {}
+        self.asked = 0
+        self.failed = 0
+
+    def settle(self, host: str, repo: str, hist: list[Commit]) -> None:
+        """Asks about each squash-merge in `hist` that carries a mark that counts."""
+        for commit in hist:
+            if commit.pull is not None and commit.pull_verdict is None:
+                commit.pull_verdict = self.verdict(host, repo, commit)
+
+    def verdict(self, host: str, repo: str, commit: Commit) -> tuple[str, str]:
+        name = f"the squash-merge of #{commit.pull}"
+        if host != "github.com":
+            return "unverified", f"{name}, on {host}, where only GitHub is asked"
+        try:
+            facts = self.facts(repo, commit.sha, commit.pull)
+        except GitHubError as error:
+            self.failed += 1
+            return "unverified", f"{name}, which GitHub could not show: {error}"
+        if facts["pull"] is None:
+            return "unverified", f"{name}, which GitHub could not show: {facts['why']}"
+        name = f"the squash-merge of #{facts['pull']}"
+        for fields in facts["commits"]:
+            c = read_commit(**{key: fields[key] for key in COMMIT_FIELDS})
+            if not any(mark.counts for mark, _ in c.marks):
+                return "squash-merge", (f"{name}, whose commit {c.sha[:10]} by {c.author} "
+                                        "carries no AI agent's mark")
+        if len(facts["commits"]) < facts["total"]:
+            return "unverified", f"{name}, of {facts['total']} commits, more than GitHub lists"
+        return "proven", (f"{name}, whose {facts['total']} "
+                          f"{agree(facts['total'], 'commit carries', 'commits all carry')} an AI "
+                          "agent's mark")
+
+    def facts(self, repo: str, sha: str, number: int) -> dict:
+        """What GitHub shows of the pull request merged as `sha`: `pull`, its number; `total`,
+        how many commits it had; and `commits`, as many as GitHub lists, each a dict of
+        COMMIT_FIELDS and `parents`. `pull` is None, and `why` says why, when GitHub shows no
+        pull request merged as it."""
+        path = self.dir / (hashlib.sha1(f"github.com/{repo}".encode()).hexdigest()[:16] + ".json")
+        with self.store:
+            if repo not in self.cache:
+                self.cache[repo] = json.loads(path.read_text()) if path.exists() else {}
+            known = self.cache[repo].get(sha)
+        if known is not None:
+            return known
+        pull = self.get(f"repos/{repo}/pulls/{number}")
+        if not pull or pull.get("merge_commit_sha") != sha:
+            # The number in a subject need not be its own pull request's: ask which one it was.
+            listed = self.get(f"repos/{repo}/commits/{sha}/pulls") or []
+            numbers = [p["number"] for p in listed if p.get("merge_commit_sha") == sha]
+            pull = self.get(f"repos/{repo}/pulls/{numbers[0]}") if numbers else None
+        if not pull:
+            facts: dict = {"pull": None, "why": "no pull request was merged as it"}
+        else:
+            commits = []
+            for page in range(1, (min(pull["commits"], MAX_PULL_COMMITS) + 99) // 100 + 1):
+                listed = self.get(f"repos/{repo}/pulls/{pull['number']}/commits"
+                                  f"?per_page=100&page={page}") or []
+                for c in listed:
+                    author, committer = c["commit"]["author"], c["commit"]["committer"]
+                    commits.append({
+                        "sha": c["sha"], "author": author["name"], "email": author["email"],
+                        "date": author["date"], "committer": committer["name"],
+                        "cemail": committer["email"], "committed": committer["date"],
+                        "message": c["commit"]["message"], "parents": len(c["parents"]),
+                    })
+            facts = {"pull": pull["number"], "total": pull["commits"], "commits": commits}
+        with self.store:
+            self.cache[repo][sha] = facts
+            path.write_text(json.dumps(self.cache[repo]))
+            self.asked += 1
+            if self.asked % 25 == 0:
+                log(f"asked GitHub about {self.asked} squash-merges")
+        return facts
+
+    def get(self, path: str):
+        """GitHub's answer to GET `path`, or None when it has no such thing. Waits out a rate
+        limit, tries a server error again, and raises GitHubError on any other failure."""
+        problem = ""
+        for attempt in range(4):
+            with self.pace:
+                time.sleep(max(0.0, self.last + GITHUB_PACE - time.monotonic()))
+                try:
+                    result = subprocess.run(["gh", "api", "--include", path], capture_output=True,
+                                            timeout=120)
+                except FileNotFoundError:
+                    raise SystemExit("asking GitHub about squash-merges needs gh") from None
+                except subprocess.TimeoutExpired:
+                    result = None
+                self.last = time.monotonic()
+            text = result.stdout.decode("utf-8", "replace").replace("\r\n", "\n") if result else ""
+            head, _, body = text.partition("\n\n")
+            lines = head.splitlines()
+            status = GITHUB_STATUS.match(lines[0]) if lines else None
+            if status is None:
+                problem = (result.stderr.decode("utf-8", "replace").strip()[:200] if result
+                           else "no answer in 120s")
+                time.sleep(2 ** (attempt + 1))
+                continue
+            code = int(status[1])
+            headers = {k.strip().lower(): v.strip() for k, _, v in
+                       (line.partition(":") for line in lines[1:])}
+            if 200 <= code < 300:
+                return json.loads(body)
+            if code in (404, 410, 422):
+                return None
+            if code == 401:
+                raise SystemExit("gh is not logged in to GitHub: run gh auth login")
+            if code in (403, 429) and ("retry-after" in headers
+                                       or headers.get("x-ratelimit-remaining") == "0"):
+                wait = (int(headers.get("retry-after", "0"))
+                        or int(headers.get("x-ratelimit-reset", "0")) - time.time())
+                log(f"GitHub's rate limit: waiting {max(wait, 0):.0f}s")
+                time.sleep(min(max(wait, 0) + 1, 3600))
+                continue
+            try:
+                message = json.loads(body).get("message", "").partition("\n")[0]
+            except (ValueError, AttributeError):
+                message = ""
+            problem = f"it answered {code}, {message}"[:160].rstrip(", ")
+            if code < 500:
+                raise GitHubError(problem)
+            time.sleep(2 ** (attempt + 1))
+        raise GitHubError(problem)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1612,12 +1807,13 @@ def recheck_repo(host: str, repo: str, rows: list[dict], corpus: Path, work: Pat
         shutil.rmtree(clone, ignore_errors=True)
 
 
-def judge(fixture: dict) -> tuple[str, str, str]:
+def judge(fixture: dict, host: str, repo: str, pulls: PullRequests) -> tuple[str, str, str]:
     """The verdict on one fixture from its evidence: `holds`, `fails` or `kept`, the reason, and
     a short name for it that the counts group by."""
     if fixture["gone"]:
         return "kept", f"its label was proven when it was captured, but {fixture['gone']}", "gone"
     hist = [read_commit(**commit) for commit in fixture["commits"]]
+    pulls.settle(host, repo, hist)
     moved = fixture["moved"]
     if not fixture["added"] and not fixture["truncated"]:
         moved = "a merge commit added it, and the history leaves merges out"
@@ -1632,13 +1828,15 @@ def judge(fixture: dict) -> tuple[str, str, str]:
     elif fixture["label"] == "mixed" and "agent" in statuses:
         code = "no-early"
     else:
-        # A squash or an assist is named first, as the likeliest reason a commit once taken
-        # for an agent's is not; else the newest commit the label cannot have. A `mixed` file
-        # can have late commits, so all it can lack is an agent's.
+        # A squash, a squash-merge or an assist is named first, as the likeliest reason a commit
+        # once taken for an agent's is not; else the newest commit the label cannot have; and a
+        # squash-merge GitHub could not show only when nothing else is wrong. A `mixed` file can
+        # have late commits, so all it can lack is an agent's.
         allowed = {"human": {"early"}, "llm": {"agent"}, "mixed": {"early", "late"}}
         wrong = [s for s in statuses if s not in allowed[fixture["label"]]]
-        code = next((s for s in ("squash", "assist") if s in wrong),
-                    wrong[0] if wrong else "no-agent")
+        code = next((s for s in ("squash", "squash-merge", "assist") if s in wrong),
+                    next((s for s in wrong if s != "unverified"),
+                         "unverified" if wrong else "no-agent"))
     return "fails", f"not {fixture['label']}: {basis}", code
 
 
@@ -1648,9 +1846,13 @@ def recheck(args: argparse.Namespace) -> None:
     DIR/exclude.jsonl for `pack --exclude`. A repository that is gone keeps its fixtures, since
     their labels were proven when they were captured; the report says so.
 
+    A squash-merge that carries a mark is asked about on GitHub, with PullRequests.
+
     Resumable: the evidence for each repository is kept in DIR/evidence/, and one that failed
-    for any other reason is tried again on the next run. The verdicts are written to
-    DIR/verdicts.jsonl on every run; exclude.jsonl only once every repository is done."""
+    for any other reason is tried again on the next run; GitHub's answers are kept in DIR/pulls/.
+    Once every repository is done, a run clones nothing and asks GitHub only what it has not
+    answered, so a change to the rules is checked again in moments. The verdicts are written to DIR/verdicts.jsonl on every run;
+    exclude.jsonl only once every repository is done."""
     corpus = Path(args.corpus)
     work = Path(args.work)
     evidence_dir = work / "evidence"
@@ -1700,6 +1902,7 @@ def recheck(args: argparse.Namespace) -> None:
 
     verdicts = []
     missing = 0
+    pulls = PullRequests(work)
     for key in repos:
         evidence = done(key)
         if evidence is None:
@@ -1708,7 +1911,7 @@ def recheck(args: argparse.Namespace) -> None:
         fixtures = {f["sha256"]: f for f in evidence["fixtures"]}
         for row in by_repo[key]:
             fixture = fixtures.get(row["sha256"]) or dict(row, gone=evidence["gone"])
-            verdict, reason, code = judge(fixture)
+            verdict, reason, code = judge(fixture, *key, pulls)
             verdicts.append({"file": row["file"], "sha256": row["sha256"], "label": row["label"],
                              "depth": evidence["depth"], "verdict": verdict, "code": code,
                              "reason": reason})
@@ -1720,7 +1923,11 @@ def recheck(args: argparse.Namespace) -> None:
         key = (v["label"], v["verdict"], v["code"])
         tally[key] = tally.get(key, 0) + 1
     for (label, verdict, code), count in sorted(tally.items()):
-        log(f"recheck: {label:5} {verdict:5} {code:9} {count}")
+        log(f"recheck: {label:5} {verdict:5} {code:12} {count}")
+    if pulls.failed:
+        log(f"recheck: GitHub could not answer {pulls.failed} "
+            f"{agree(pulls.failed, 'question', 'questions')} about squash-merges; their fixtures "
+            "fail as unverified, and the next run asks again")
     if missing or len(repos) < len(by_repo):
         log(f"recheck: {missing} fixtures not checked yet, so no exclude.jsonl; run it again")
         return

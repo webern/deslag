@@ -1,4 +1,4 @@
-//! Tests for `deslag instructions`: the setup guide, and the JSON schema of the config.
+//! Tests for `deslag instructions`: the setup guide, the lints, and the JSON schema of the config.
 
 mod common;
 
@@ -11,7 +11,7 @@ use deslag::Lint;
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
-use deslag::instructions::guide;
+use deslag::instructions::{guide, lints};
 use deslag::lint::banned_chars::GROUPS;
 use serde_json::Value;
 
@@ -46,12 +46,62 @@ fn toml_misfit(text: &str) -> Option<String> {
     misfit(&root, &root, &value, "the config")
 }
 
-/// The first TOML block in the guide.
-fn example_config() -> String {
-    let guide = guide();
-    let start = guide.find("```toml\n").expect("a TOML block") + "```toml\n".len();
-    let length = guide[start..].find("```").expect("the end of the block");
-    guide[start..start + length].to_string()
+/// The TOML blocks in the Markdown `text`, in order.
+fn toml_blocks(text: &str) -> Vec<&str> {
+    text.split("```toml\n")
+        .skip(1)
+        .map(|rest| rest.split_once("```").expect("the end of the block").0)
+        .collect()
+}
+
+/// Each lint's section of `deslag instructions lints` as printed: its heading, the lint's id in a
+/// code span, and its text.
+fn lint_sections(text: &str) -> Vec<(&str, &str)> {
+    text.split("\n## ")
+        .skip(1)
+        .map(|section| section.split_once('\n').expect("a heading and its text"))
+        .collect()
+}
+
+/// The lints the config `text` turns on, under `[md.lints]` or in an override.
+fn lints_turned_on(text: &str) -> BTreeSet<String> {
+    let config: toml::Value = toml::from_str(text).expect("valid TOML");
+    let md = config.get("md");
+    let overrides = md
+        .and_then(|md| md.get("overrides"))
+        .and_then(toml::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|entry| entry.get("lints"));
+    md.and_then(|md| md.get("lints"))
+        .into_iter()
+        .chain(overrides)
+        .flat_map(|lints| lints.as_table().expect("a lints table").keys().cloned())
+        .collect()
+}
+
+/// The placeholders left in `text`: a word in lower case and underscores between braces.
+fn placeholders(text: &str) -> Vec<&str> {
+    text.split('{')
+        .skip(1)
+        .filter_map(|rest| rest.split_once('}'))
+        .map(|(inside, _)| inside)
+        .filter(|inside| {
+            !inside.is_empty() && inside.chars().all(|c| c == '_' || c.is_ascii_lowercase())
+        })
+        .collect()
+}
+
+/// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else.
+fn assert_runs_clean(config: &str) {
+    let repo = Repo::new();
+    repo.write("deslag.toml", config);
+    let output = repo.check();
+    assert_eq!(
+        (code(&output), stderr(&output)),
+        (0, String::new()),
+        "{config}"
+    );
 }
 
 #[test]
@@ -74,16 +124,16 @@ fn config_schema_prints_the_schema() {
 #[test]
 fn the_guide_fills_in_what_the_code_knows() {
     let guide = guide();
-    let left: Vec<&str> = guide
-        .split('{')
-        .skip(1)
-        .filter_map(|rest| rest.split_once('}'))
-        .map(|(inside, _)| inside)
-        .filter(|inside| {
-            !inside.is_empty() && inside.chars().all(|c| c == '_' || c.is_ascii_lowercase())
-        })
-        .collect();
-    assert_eq!(left, Vec::<&str>::new(), "placeholders left in the guide");
+    assert_eq!(
+        placeholders(&guide),
+        Vec::<&str>::new(),
+        "placeholders left in the guide"
+    );
+    assert_eq!(
+        placeholders(&lints()),
+        Vec::<&str>::new(),
+        "placeholders left in the lints"
+    );
 
     assert!(guide.contains(&format!("deslag {}", env!("CARGO_PKG_VERSION"))));
     assert!(guide.contains(&format!("schema_version = {SCHEMA_VERSION}\n")));
@@ -123,41 +173,66 @@ fn every_lint_is_a_table_of_the_config() {
     assert_eq!(named, ids);
 }
 
+/// `deslag instructions lints` has a section for every lint, in the order they run, so the guide
+/// names none of them.
 #[test]
-fn the_guide_names_every_lint() {
+fn the_lints_topic_covers_every_lint() {
+    let output = Repo::new().run(&["instructions", "lints"]);
+    assert_eq!(code(&output), 0);
+    assert_eq!(stderr(&output), "");
+    assert_eq!(stdout(&output), lints());
+
+    let text = lints();
+    let headings: Vec<&str> = lint_sections(&text)
+        .into_iter()
+        .map(|(heading, _)| heading)
+        .collect();
+    let ids: Vec<String> = Lint::ALL
+        .iter()
+        .map(|lint| format!("`{}`", lint.id()))
+        .collect();
+    assert_eq!(headings, ids);
+    let ids: BTreeSet<String> = Lint::ALL.iter().map(|lint| lint.id().to_string()).collect();
+    assert_eq!(ids, lint_names());
+}
+
+/// The guide's example is a config deslag accepts, and the guide sends the reader to the lints for
+/// the rest.
+#[test]
+fn the_guide_example_is_valid_and_points_to_the_lints() {
     let guide = guide();
-    for lint in lint_names() {
-        assert!(guide.contains(&format!("- `{lint}` ")), "{lint}");
+    assert!(guide.contains("Run `deslag instructions lints`"));
+    let example = toml_blocks(&guide)[0];
+    assert_eq!(toml_misfit(example), None);
+    assert_runs_clean(example);
+}
+
+/// Each lint's section holds one table, which turns on that lint and no other.
+#[test]
+fn each_lint_section_turns_on_its_lint_alone() {
+    let text = lints();
+    for (heading, section) in lint_sections(&text) {
+        let blocks = toml_blocks(section);
+        assert_eq!(blocks.len(), 1, "{heading}");
+        let config = format!("schema_version = {SCHEMA_VERSION}\n\n{}", blocks[0]);
+        assert_eq!(toml_misfit(&config), None, "{heading}");
+        let id = heading.trim_matches('`').to_string();
+        assert_eq!(lints_turned_on(&config), BTreeSet::from([id]), "{heading}");
     }
 }
 
+/// The lints' tables, together in one config, turn on every lint, and deslag accepts it.
 #[test]
-fn the_example_config_turns_on_every_lint_and_is_valid() {
-    let example = example_config();
-    let config: toml::Value = toml::from_str(&example).expect("valid TOML");
-    let md = &config["md"];
-    let mut named: BTreeSet<String> = md["lints"]
-        .as_table()
-        .expect("a lints table")
-        .keys()
-        .cloned()
-        .collect();
-    for entry in md["overrides"].as_array().into_iter().flatten() {
-        named.extend(
-            entry["lints"]
-                .as_table()
-                .expect("a lints table")
-                .keys()
-                .cloned(),
-        );
+fn the_lints_tables_together_are_valid() {
+    let text = lints();
+    let mut config = format!("schema_version = {SCHEMA_VERSION}\n");
+    for block in toml_blocks(&text) {
+        config.push('\n');
+        config.push_str(block);
     }
-    assert_eq!(named, lint_names());
-
-    let repo = Repo::new();
-    repo.write("deslag.toml", &example);
-    let output = repo.check();
-    assert_eq!((code(&output), stderr(&output)), (0, String::new()));
-    assert_eq!(toml_misfit(&example), None);
+    assert_eq!(lints_turned_on(&config), lint_names());
+    assert_eq!(toml_misfit(&config), None);
+    assert_runs_clean(&config);
 }
 
 #[test]

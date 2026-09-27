@@ -33,7 +33,8 @@ the config's table name, and the tally, golden set and cases key off it. A new l
 `Lint` and a `Violation`.
 
 A lint's module doc comment describes it as built, and this doc gives it a line in the tree above;
-`tests/asbuilt.rs` holds each lint's doc comment to 2000 bytes.
+`tests/asbuilt.rs` holds each lint's doc comment to 2000 bytes. Its section of `deslag instructions
+lints` is a file under `src/instructions/lints/`, without which `instructions` does not compile.
 
 A lint whose `Lint::reads_change` holds judges a change: `check_text` reads each file it selects
 at the base, by `Change::base_text`, into a `Before`, or with no base returns `Error::NoBase`.

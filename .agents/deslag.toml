@@ -13,7 +13,7 @@ globs = [
   "/docs/design/corpus.md",
   "/docs/design/*.asbuilt.md",
   "/scripts/blobstore/blobs.md",
-  "/src/instructions/guide.md",
+  "/src/instructions/**/*.md",
 ]
 
 [md.lints.max_emphasis]
@@ -42,6 +42,10 @@ lints.list_growth = {}
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]
 lints.max_size_bytes.value = 5000
+
+[[md.overrides]]
+globs = ["/src/instructions/lints.md", "/src/instructions/lints/*.md"]
+lints.max_size_bytes.value = 800
 
 # corpus.asbuilt.md declares its own budget in its frontmatter.
 [[md.overrides]]

@@ -33,8 +33,9 @@ src/
   explain/mod.rs      a file's settings, and where they come from
   fix/mod.rs          deslag fix: the edits the lints name, proven, then written
   instructions/
-    mod.rs            fills in and returns the guide
+    mod.rs            fills in and returns the guide and the lints topic
     guide.md          the guide, with placeholders
+    lints.md          the lints topic's intro; lints/ holds a file per lint
   document/           a file read once into blocks, tokens and sentences
   parse/              the keys a file declares in its frontmatter
   lint/               running the lints; one module per lint
@@ -44,7 +45,8 @@ src/
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
 `document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves. `lint` judges and narrows by what `change` reads.
+`document` proves. `lint` judges and narrows by what `change` reads. `instructions` reads `Lint`
+for the lints topic, which has a section per lint in `Lint::ALL` order, from an exhaustive `match`.
 
 ## The subsystem docs
 
@@ -66,9 +68,10 @@ fails when a module is in no doc or in two.
 
 `cli/mod.rs` defines `check` and `fix`, with `--format` and `--base`, `--diff` on `check` alone, and
 `explain`, each taking `--config-path`, and `instructions`, which prints `instructions::guide` for
-an agent setting deslag up, or a schema `schemars` derives: `config-schema` for the config's types,
-`output-schema` for `json::Run`. `src/main.rs` prints an error out of `run` in `anyhow`'s alternate
-form, which appends each underlying error once; an `Error`'s own message never repeats its source.
+an agent setting deslag up, `instructions::lints` for `lints`, or a schema `schemars` derives:
+`config-schema` for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an
+error out of `run` in `anyhow`'s alternate form, which appends each underlying error once; an
+`Error`'s own message never repeats its source.
 
 The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
 whatever the subcommand, as clap does on bad arguments.

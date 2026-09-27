@@ -33,7 +33,8 @@ told to rewrite it until it passes.
 
 ## 3. Write the config
 
-This config turns on every lint:
+Run `deslag instructions lints`. It says what each lint fails and gives a table that turns it on.
+A config looks like this:
 
 ```toml
 schema_version = {schema_version}
@@ -44,37 +45,10 @@ globs = ["/AGENTS.md", "/docs/**/*.md"]
 [md.lints.max_size_bytes]
 value = 16000
 
-[md.lints.max_emphasis]
-free_spans = 2
-max_percent = 1
-
-[md.lints.banned_chars]
-
-[md.lints.banned_phrases]
-
-[md.lints.density]
-
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
-lints.repo_layout = { min_entries = 5, max_entries = 15 }
-lints.list_growth = {}
 ```
-
-- `max_size_bytes` fails a file larger than its budget. A `max_size_bytes` key in a file's own
-  frontmatter beats the config.
-- `max_emphasis` fails a file with more bold, italics and capitals than it allows.
-- `repo_layout` fails a file without a short, true index of the repository. It suits AGENTS.md
-  alone, so turn it on in an override.
-- `banned_chars` fails a file holding characters agents write and people rarely do, such as the
-  em dash. The empty table bans the default groups.
-- `banned_phrases` fails a file holding a phrase that `ban` lists. It bans none by default, so ask
-  the human which phrases to ban and what the report should advise instead.
-- `density` fails a file with a paragraph or a list item that is too long. The empty table sets
-  the default limits.
-- `list_growth` fails a change that leaves a file with more list items than it had, so a new rule
-  replaces an old one. It skips new files. `check` and `fix` then need a base, such as
-  `--base origin/main`.
 
 Every lint also takes a `message`, which replaces the advice in its report. For every setting, its
 default and its meaning, run `deslag instructions config-schema`, which prints the config's JSON

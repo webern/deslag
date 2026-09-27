@@ -25,6 +25,8 @@ tests/
 
 `tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each, every canonical
 config path in every language included. `tests/fix.rs` pins each refusal and the bytes fix writes.
+`tests/instructions.rs` holds the guide's example and each lint's table to the schema, and runs
+them: each table turns on its lint alone, and all of them together turn on every lint.
 
 ## Cases
 

@@ -52,9 +52,9 @@ checked.
 
 ## max_emphasis
 
-`lint/max_emphasis.rs` counts **spans**: each outermost emphasis or strong, and each run of two or
+`lint/max_emphasis.rs` counts spans: each outermost emphasis or strong, and each run of two or
 more words in capitals, split only by whitespace, that holds one of `SHOUTED_WORDS`; its words are
-its own, not the tokens. **Prose** is the text of the blocks of prose, code spans and HTML aside.
+its own, not the tokens. Prose is the text of the blocks of prose, code spans and HTML aside.
 Both are counted in characters. A file fails with more than `free_spans` spans covering more than
 `max_percent` of its prose; an unset field counts as 0, and a table setting neither checks nothing.
 
@@ -62,15 +62,17 @@ Both are counted in characters. A file fails with more than `free_spans` spans c
 
 `lint/repo_layout.rs` finds the first heading whose text is `heading` (default `Repository layout`),
 in any case and at any level; the layout is the first code block before the next heading of that
-level or higher. Each line is the **root** (first, unindented, one word ending in `/`), an **entry**
-(a path, `<-`, a description), a **continuation** (in the column of the description above), or
-blank, which ends a description. The first entry fixes the column of every path and `<-`; any other
-line, or an entry that is not one relative path, lacks a description or is out of column, is
-`Malformed`. `read` returns a `Layout`: entries, malformed lines and widths. `check` adds the
-limits: `max_width` (default 100) characters, trailing whitespace aside; a path, joined to the
-file's directory, must exist, and one ending in `/` must be a directory. A `Problem` list is no
-section or no block alone, or the count outside `min_entries` to `max_entries` (default 5 to 15),
-then each line's problems.
+level or higher.
+
+Each line is the root (first, unindented, one word ending in `/`), an entry (a path, `<-`, a
+description), a continuation (in the column of the description above), or blank, which ends a
+description. The first entry fixes the column of every path and `<-`; any other line, or an entry
+that is not one relative path, lacks a description or is out of column, is `Malformed`.
+
+`read` returns a `Layout`: entries, malformed lines and widths. `check` adds the limits: `max_width`
+(default 100) characters, trailing whitespace aside; a path, joined to the file's directory, must
+exist, and one ending in `/` must be a directory. A `Problem` list is no section or no block alone,
+or the count outside `min_entries` to `max_entries` (default 5 to 15), then each line's problems.
 
 ## banned_chars
 
@@ -89,7 +91,7 @@ matches overlap, the first wins, then the longest; one inside an `allow` match i
 
 ## density
 
-In `lint/density.rs`, `measure` returns each **block**, a paragraph or a tight list item's text,
+In `lint/density.rs`, `measure` returns each block, a paragraph or a tight list item's text,
 with its visible characters: text, code spans, and one per line break. Headings, tables, code,
 frontmatter, HTML and images are not measured; a block of only whitespace is dropped, and a
 paragraph in a list item counts as an item. A block fails over `max_paragraph_chars` (default 600)

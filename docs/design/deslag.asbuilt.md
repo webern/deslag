@@ -16,7 +16,7 @@ exit code. `deslag instructions` prints a guide for an agent setting deslag up.
 
 `deslag check` loads the config, walks the tree for Markdown files, works out each file's settings,
 runs the lints and reports each failure. The **repo root** is the working directory; deslag never
-walks upward for a repository or config. A **budget** is a byte count, and a file's **size** its
+walks upward for a repository or config. A budget is a byte count, and a file's size its
 length on disk, frontmatter and all.
 
 ## Modules
@@ -63,8 +63,10 @@ Each module above is described in one doc, the one whose `subsystems:` names it.
 `instructions`, which prints `instructions::guide`, or a schema `schemars` derives: `config-schema`
 for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an error out of `run`
 in `anyhow`'s alternate form, which appends each underlying error once; an `Error`'s own message
-never repeats its source. The process exits 0 when nothing fails, 1 when a file fails a lint, and 2
-on any error out of `run`, whatever the subcommand, as clap does on bad arguments.
+never repeats its source.
+
+The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
+whatever the subcommand, as clap does on bad arguments.
 
 ## Other files
 
@@ -95,28 +97,33 @@ config path in every language included.
 `tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
 config included, written to show one behavior. The `.stderr` file beside it is exactly what `deslag
 check` prints in a copy of it, with the temp root as `[ROOT]`; an empty one means the run must exit
-0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run. The `.json` file is
-what `--format json` prints, the version as `[VERSION]`; an `.args` file replaces `check` with other
-arguments. `make fix-test-output` rewrites `.stderr` and `.json` files.
+0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
+
+The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
+replaces `check` with other arguments. `make fix-test-output` rewrites `.stderr` and `.json` files.
 
 `tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
 output from the JSON by hand.
 
 `tests/corpus.rs` is end-to-end; the corpus's tiers and loaders are in `corpus.asbuilt.md`, and
 `tests/blobs.rs` checks the big tier under `make test-blobs`. A matrix on `core/` crosses configs,
-canonical locations, layouts and budgets, deriving what it expects from the bytes it placed. The
-whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups and
-the default density, and the binary must report what the library finds; the groups must flag four
-times as many `llm/` fixtures as `human/` ones. `repo_layout::read` runs under a few real headings,
-and `core/rt-agents.md` must read with no malformed line. Tokens and sentences must keep to their
-blocks, and each location found under the golden config must hold what it names.
+canonical locations, layouts and budgets, deriving what it expects from the bytes it placed.
 
-The **golden set** pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
+The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
+and the default density, and the binary must report what the library finds; the groups must flag
+four times as many `llm/` fixtures as `human/` ones.
+
+`repo_layout::read` runs under a few real headings, and `core/rt-agents.md` must read with no
+malformed line. Tokens and sentences must keep to their blocks, and each location found under the
+golden config must hold what it names.
+
+The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
 `tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every
-path missing; a fixture with no section is left out. Each `tests/golden/<lint>.txt` holds the lint's
-settings, a tally, and each failing fixture with what its verdict compared. It fails on a
-difference, a lint with no table or file, a stray file, or a lint failing no fixture or all. `make
-fix-golden` rewrites the files.
+path missing; a fixture with no section is left out.
+
+Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
+what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
+a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 ## Build
 

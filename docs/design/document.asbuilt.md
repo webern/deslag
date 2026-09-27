@@ -27,18 +27,22 @@ src/
 `Document::markdown` reads a file once; every lint but the byte budget reads that `Document`. Its
 first layer is what `pulldown-cmark` finds. **Blocks** nest as the Markdown does, and a tight list
 item's text is a paragraph. `Document::walk` yields each block in file order with the blocks that
-hold it, outermost first. A block of prose holds **pieces**, the text it renders, under **spans**
-of formatting, and among **points**: line breaks and the gaps between blocks. Code, HTML and
-frontmatter blocks are raw: kept as written.
+hold it, outermost first.
+
+A block of prose holds **pieces**, the text it renders, under spans of formatting, and among
+points: line breaks and the gaps between blocks. Code, HTML and frontmatter blocks are raw: kept
+as written.
 
 ## Tokens, sentences and locations
 
-The second layer splits each block of prose into **tokens** by the Unicode word rules; a code span,
-an image, a URL and the like are one token each. A **sentence** ends with its block, at a hard
-break, or after a `.`, `!` or `?` that whitespace and a word not in lower case follow. Every
-position is a byte offset into the source. `Document::locate` alone turns a range into a `Location`:
-bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1, with a leading
-byte order mark taking none. The end line is the last byte's; the end column is exclusive.
+The second layer splits each block of prose into tokens by the Unicode word rules; a code span,
+an image, a URL and the like are one token each. A sentence ends with its block, at a hard
+break, or after a `.`, `!` or `?` that whitespace and a word not in lower case follow.
+
+Every position is a byte offset into the source. `Document::locate` alone turns a range into a
+`Location`: bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1,
+with a leading byte order mark taking none. The end line is the last byte's; the end column is
+exclusive.
 
 ## Frontmatter
 

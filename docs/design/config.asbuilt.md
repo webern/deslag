@@ -56,10 +56,12 @@ lints.repo_layout = {}           # a lint's table alone turns it on
 The top level has a section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with a sub-table per lint, and `overrides`. Every field of a
 lint's settings is optional, and a value the lint cannot use, such as a `density` limit of 0, is an
-`Error::Setting`. `MdConfig::lints_for` starts from the section's `lints` and merges in each
-matching override, least specific first, with `Merge`: an override sets only the fields it names.
-Whether `min_entries` exceeds `max_entries` depends on the merge, so `check_file` asks it per file
-and fails the run with an `Error::Setting`.
+`Error::Setting`.
+
+`MdConfig::lints_for` starts from the section's `lints` and merges in each matching override, least
+specific first, with `Merge`: an override sets only the fields it names. Whether `min_entries`
+exceeds `max_entries` depends on the merge, so `check_file` asks it per file and fails the run with
+an `Error::Setting`.
 
 ## Glob patterns
 

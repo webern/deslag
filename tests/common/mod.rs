@@ -4,6 +4,7 @@
 pub mod blobs;
 pub mod corpus;
 pub mod fixture;
+pub mod git;
 pub mod schema;
 
 use std::path::{Path, PathBuf};

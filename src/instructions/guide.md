@@ -74,9 +74,12 @@ ask first, before running `deslag fix` too. When every file passes, the config i
 ## 6. Run it in CI
 
 Add `deslag check --base origin/main` where the repository runs its other checks, such as a
-Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. Until the
-tree passes, `--diff origin/main` in its place reports only what the change touched. deslag is not
-on crates.io yet, so ask the human how a CI job should install it.
+Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. deslag is
+not on crates.io yet, so ask the human how a CI job should install it.
+
+Until the tree passes, `--diff origin/main` in place of `--base origin/main` reports only what the
+change touched, which misses some failures, such as a path deleted from under an untouched layout.
+A `pull_request` job may run `--diff HEAD^1` with `fetch-depth: 2` instead.
 
 In a GitHub Actions job, `--format github` prints a workflow command per failing file, which GitHub
 shows as an annotation on it, and `--format sarif` prints a log to upload to code scanning. The

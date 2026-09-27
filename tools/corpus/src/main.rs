@@ -9,9 +9,11 @@ use clap::{Parser, Subcommand};
 use deslag_corpus::candidates::{Sieve, candidates};
 use deslag_corpus::chars::chars;
 use deslag_corpus::compare::Sides;
+use deslag_corpus::lints::{lints, load_config};
 use deslag_corpus::load::Problem;
 use deslag_corpus::measure::{Corpus, Filters, Tier};
 use deslag_corpus::ngrams::{Counting, ngrams};
+use deslag_corpus::report::{DEFAULT_CONFIG, report};
 use deslag_corpus::summary::summary;
 
 /// Measures deslag's test corpus: what it holds, and what sets its llm files apart from its human
@@ -82,6 +84,34 @@ enum Command {
         #[command(flatten)]
         sieve: Sieve,
     },
+    /// What a config's lints find, per label and per tool: the share of files each lint fails,
+    /// and which. Each file is checked at its path in its repository, so overrides apply;
+    /// repo_layout is left out.
+    Lints {
+        #[command(flatten)]
+        filters: Filters,
+        /// The config; by default, the one deslag finds in the repository at --root. A lint that
+        /// judges a change, such as list_growth, is not run: a corpus file has no base.
+        #[arg(long)]
+        config: Option<PathBuf>,
+        /// Check every file, not only those the config's globs select.
+        #[arg(long)]
+        every_file: bool,
+    },
+    /// One Markdown page for a pull request that grows the corpus: the summary, the characters,
+    /// the candidates with the catalog gate, and the lints, each from the command of that name at
+    /// its defaults.
+    Report {
+        #[command(flatten)]
+        filters: Filters,
+        /// The config the lints run at; by default, tools/corpus/report.toml under --root, which
+        /// selects every file.
+        #[arg(long)]
+        config: Option<PathBuf>,
+        /// How many candidates to list.
+        #[arg(long, default_value_t = 30)]
+        top: usize,
+    },
 }
 
 fn print<T: serde::Serialize>(json: bool, value: &T, render: impl Fn(&T) -> String) {
@@ -126,6 +156,25 @@ fn run(cli: Cli) -> Result<(), Problem> {
         } => {
             let found = candidates(&corpus, &filters, &sides, &counting, &sieve)?;
             print(cli.json, &found, |c| c.render());
+        }
+        Command::Lints {
+            filters,
+            config,
+            every_file,
+        } => {
+            let config = load_config(&cli.root, config.as_deref())?;
+            let found = lints(&corpus, &filters, &config, every_file)?;
+            print(cli.json, &found, |l| l.render());
+        }
+        Command::Report {
+            filters,
+            config,
+            top,
+        } => {
+            let config = config.unwrap_or_else(|| cli.root.join(DEFAULT_CONFIG));
+            let config = load_config(&cli.root, Some(&config))?;
+            let found = report(&corpus, &filters, &config, top)?;
+            print(cli.json, &found, |r| r.markdown());
         }
     }
     Ok(())

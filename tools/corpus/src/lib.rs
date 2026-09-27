@@ -11,9 +11,11 @@
 pub mod candidates;
 pub mod chars;
 pub mod compare;
+pub mod lints;
 pub mod load;
 pub mod measure;
 pub mod ngrams;
+pub mod report;
 pub mod sidecar;
 pub mod stats;
 pub mod summary;

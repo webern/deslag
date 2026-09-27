@@ -9,6 +9,7 @@ globs = [
   "/AGENTS.md",
   "/ACKNOWLEDGEMENTS.md",
   "/.agents/skills/**/*.md",
+  "/docs/design/analysis.md",
   "/docs/design/corpus.md",
   "/docs/design/*.asbuilt.md",
   "/scripts/blobstore/blobs.md",
@@ -46,6 +47,10 @@ lints.max_size_bytes.value = 5000
 [[md.overrides]]
 globs = ["/docs/design/corpus.md"]
 lints.max_size_bytes.value = 16384
+
+[[md.overrides]]
+globs = ["/docs/design/analysis.md"]
+lints.max_size_bytes.value = 8192
 
 [[md.overrides]]
 globs = ["/scripts/blobstore/blobs.md"]

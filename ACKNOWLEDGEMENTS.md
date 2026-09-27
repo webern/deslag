@@ -93,3 +93,37 @@ fix is a guess about prose; deslag instead fixes only where no guess is needed.
 
 Code was not ported, but we took two ideas: a fix is data on the finding, and only a fix that keeps
 what the author meant is made without asking, after which the files are checked again.
+
+## slop-lint
+
+- URL: https://github.com/eric-sabe/slop-lint
+- Licence: MIT
+- Copyright: "Copyright (c) 2026 Eric Sabetti"
+- Studied at: commit
+  [93441838](https://github.com/eric-sabe/slop-lint/tree/93441838695458b50ae27014ced164bdff8f172a)
+
+Code was not ported, but `deslag-corpus` takes from its `discover` the smoothed ratio of a word's
+rate in a sample to its rate in a baseline, with a floor on the files that hold it, which
+`deslag-corpus` counts in repositories instead.
+
+## slop-forensics
+
+- URL: https://github.com/sam-paech/slop-forensics
+- Licence: MIT
+- Copyright: "Copyright (c) 2025 Sam Paech"
+- Studied at: commit
+  [c313f042](https://github.com/sam-paech/slop-forensics/tree/c313f042620f027d49101da3256bd306b628071a)
+
+Code was not ported, but we took the idea that a word or phrase counts as over-represented only
+once it recurs across independent sources: prompts there, repositories in `deslag-corpus`.
+
+## llm-excess-vocab
+
+- URL: https://github.com/berenslab/llm-excess-vocab
+- Licence: MIT
+- Copyright: "Copyright (c) 2024 Dmitry Kobak, Rita González-Márquez"
+- Studied at: commit
+  [53db991a](https://github.com/berenslab/llm-excess-vocab/tree/53db991afc251782106cd817a1c3fa47a4d41781)
+
+Code was not ported. Like it, `deslag-corpus` measures a word's excess against text written before
+LLMs were in use, and counts the documents that hold a word beside how often it occurs.

@@ -23,7 +23,7 @@ deslag/
                           each fixture with a JSON sidecar: core/ hand-picked, human/, llm/ and
                           mixed/ collected, one directory per source repo
   tools/corpus/        <- deslag-corpus, never published: the corpus's one loader, which the
-                          tests read it through
+                          tests read it through, and commands that measure it; see its --help
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
                           blobstore/ fetches and publishes its big tier
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which

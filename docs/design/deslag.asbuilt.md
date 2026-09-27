@@ -57,8 +57,8 @@ fails when a module is in no doc or in two.
   patterns, the walk and `deslag explain`.
 - [document.asbuilt.md](document.asbuilt.md): `document` and `parse`: the `Document` and
   frontmatter.
-- [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
-  `--format`.
+- [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, the lint modules, reports
+  and `--format`.
 - [tests.asbuilt.md](tests.asbuilt.md): the tests, the cases, the corpus run and the golden set.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.

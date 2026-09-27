@@ -9,7 +9,8 @@
 //! character of it.
 //!
 //! [`scan`] needs only the document: it finds every character outside code that is not ASCII,
-//! but a byte order mark that opens the file. [`check`] picks out the ones the settings ban.
+//! but a byte order mark that opens the file. [`check`] picks out the ones the settings ban. On the
+//! corpus, the default groups must flag four times as many `llm/` fixtures as `human/` ones.
 //!
 //! [`edits`] names a fix for a banned character only where its replacement is exact: named for
 //! that character alone, by `ban` or a rule of one character, and holding no letter or digit. The

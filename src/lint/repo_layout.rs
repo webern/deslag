@@ -24,8 +24,9 @@
 //! are the `DEFAULT_` constants of [`RepoLayout`].
 //!
 //! [`read`] needs only the document: it finds the section and reads the layout, so it runs on any
-//! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits,
-//! the width and the paths.
+//! Markdown, the corpus included, under a few real headings; `core/rt-agents.md` must read with no
+//! malformed line. [`check`] adds what needs the settings and the disk: the limits, the width and
+//! the paths.
 
 use std::path::Path;
 

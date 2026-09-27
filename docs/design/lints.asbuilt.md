@@ -59,7 +59,8 @@ character, and holds no letter or digit. Any other, such as `yes`, is a guess at
 `banned_chars::contradiction` fails a file whose `ban` value holds a character its settings ban, so
 a fix never writes what the lint reports. `banned_phrases` names none: its values are advice, and a
 match can cross markup. `check_text` also returns the `Document`, so fix reads a file as `check`
-does.
+does. Fix over the corpus must change only banned characters, each as reported, give each one left
+a reason, and settle; its tally is pinned.
 
 ## Narrowing
 

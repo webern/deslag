@@ -3,6 +3,7 @@ updated: 2026-09-27
 subsystems:
   - config
   - glob
+  - explain
 max_size_bytes: 5000
 ---
 # The config: as built

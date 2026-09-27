@@ -19,6 +19,7 @@ src/
     tokens.rs         prose to tokens, on unicode-segmentation
     sentences.rs      tokens to sentences
   parse/
+    mod.rs            the module list
     frontmatter.rs    reading a top-level key out of YAML frontmatter
 ```
 
@@ -37,7 +38,8 @@ as written.
 
 The second layer splits each block of prose into tokens by the Unicode word rules; a code span,
 an image, a URL and the like are one token each. A sentence ends with its block, at a hard
-break, or after a `.`, `!` or `?` that whitespace and a word not in lower case follow.
+break, or after a `.`, `!`, `?` or ellipsis (U+2026) that whitespace and a word not in lower case
+follow.
 
 Every position is a byte offset into the source. `Document::locate` alone turns a range into a
 `Location`: bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1,

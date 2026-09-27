@@ -49,8 +49,8 @@ which settings apply to a file; `lint` runs the lints with them. `lint` calls `c
 Each module above is described in one doc, the one whose `subsystems:` names it. This doc holds
 `cli` and `instructions`.
 
-- [config.asbuilt.md](config.asbuilt.md): `config` and `glob`: the config, glob patterns, the walk
-  and `deslag explain`.
+- [config.asbuilt.md](config.asbuilt.md): `config`, `glob` and `explain`: the config, glob
+  patterns, the walk and `deslag explain`.
 - [document.asbuilt.md](document.asbuilt.md): `document` and `parse`: the `Document` and
   frontmatter.
 - [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
@@ -71,9 +71,10 @@ whatever the subcommand, as clap does on bad arguments.
 ## Other files
 
 ```
-Cargo.toml  Makefile  AGENTS.md  README.md
+Cargo.toml  Makefile  AGENTS.md  README.md  ACKNOWLEDGEMENTS.md
 _typos.toml           keeps the spell checker out of the corpus and golden files
 .agents/deslag.toml   deslag's config for this repo
+.agents/skills/       agent skills, each named deslag-*; .claude/skills links to it
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
   common/*.rs         the corpus loaders, and a JSON schema check
@@ -133,4 +134,4 @@ a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
-the next image. `make clean` removes both directories.
+the next image. `make clean` removes both directories and runs `cargo clean`.

@@ -11,9 +11,11 @@
 //!
 //! Every position is a byte offset into the source, so every part of every layer leads back to the
 //! text as written. [`Document::locate`] turns a range of offsets into the [`Location`] a report
-//! shows, and nothing else counts lines or columns. A fix to the file is an edit to the source at
-//! those offsets, never a change to the layers written back out.
+//! shows, and nothing else counts lines or columns. A fix to the file is an [`Edit`] to the source
+//! at those offsets, never a change to the layers written back out, and [`Document::apply`] makes
+//! only the edits it can prove leave the document reading as it did.
 
+mod edit;
 mod markdown;
 mod sentences;
 mod tokens;
@@ -24,8 +26,12 @@ use std::ops::Range;
 use schemars::JsonSchema;
 use serde::Serialize;
 
+pub use edit::{Applied, Edit, Refusal};
+
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// It is not `PartialEq`: its reader is a function, whose address says nothing.
+#[derive(Debug, Clone)]
 pub struct Document<'a> {
     /// The file as written.
     pub source: &'a str,
@@ -43,6 +49,9 @@ pub struct Document<'a> {
     pub sentences: Vec<Sentence>,
     /// Where each line of the source starts.
     lines: Vec<usize>,
+    /// What read the source into the first layer, which [`Document::apply`] reads an edited source
+    /// with to prove it. The later layers are made from the first, so they need no reading.
+    reader: fn(&str) -> Document<'_>,
 }
 
 /// A block: a paragraph, a heading, a list, a code block and the like.
@@ -308,7 +317,9 @@ impl<'a> Document<'a> {
     }
 
     /// A document of `source` whose first layer a reader has filled, with no tokens or sentences.
+    /// `reader` is that reader, which fills the first layer of any source the same way.
     fn new(
+        reader: fn(&str) -> Document<'_>,
         source: &'a str,
         blocks: Vec<Block<'a>>,
         pieces: Vec<Piece<'a>>,
@@ -327,6 +338,7 @@ impl<'a> Document<'a> {
             tokens: Vec::new(),
             sentences: Vec::new(),
             lines,
+            reader,
         }
     }
 

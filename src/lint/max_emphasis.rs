@@ -4,17 +4,18 @@
 //!
 //! - an outermost `*emphasis*`, `_emphasis_`, `**strong**` or `__strong__`, nested ones included
 //!   in it;
-//! - a run of two or more words in capitals, separated only by spaces, outside any emphasis, that
-//!   holds at least one of the everyday words in [`SHOUTED_WORDS`]. A word is in capitals when it
-//!   has at least two letters and none of them is lower case. One word alone never counts, and
-//!   nor does a run of acronyms such as `JSON API`, so `DO NOT` is a span and `MX API` is not.
+//! - a run of two or more words in capitals, separated only by whitespace, outside any emphasis,
+//!   that holds at least one of the everyday words in [`SHOUTED_WORDS`]. A word is in capitals
+//!   when it has at least two letters and none of them is lower case. One word alone never counts,
+//!   and nor does a run of acronyms such as `JSON API`, so `DO NOT` is a span and `MX API` is not.
 //!
 //! The **prose** is the text a reader sees: frontmatter, code blocks, code spans and HTML are not
 //! prose. Both are measured in characters. Emphasis comes from the spans of the file's
 //! [`Document`], so a `*` that opens a list item or sits inside code is never taken for it.
 //!
 //! A file fails when it has more than `free_spans` spans and they cover more than `max_percent`
-//! of its prose. The report lists every span with its line, so the author can find them.
+//! of its prose; an unset field counts as 0, and a table setting neither checks nothing. The
+//! report lists every span with its line, so the author can find them.
 
 use std::ops::Range;
 

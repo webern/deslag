@@ -4,11 +4,13 @@
 //! own, as in a tight list. Its length is the characters a reader sees: text and code spans, and one
 //! for each line break inside it. Markup, link targets, HTML and image text are not counted. A
 //! paragraph inside a list item is held to the item's limit. Headings, tables, code blocks and
-//! frontmatter are not blocks.
+//! frontmatter are not blocks, and a block of only whitespace is dropped.
 //!
 //! A file fails when a paragraph is longer than `max_paragraph_chars`, or a list item longer than
-//! `max_item_chars`. The report lists each with its line. The limit is on each block because a
-//! whole file's share of whitespace barely moves between a wall of text and a file that breathes.
+//! `max_item_chars`, by default [`Density::DEFAULT_MAX_PARAGRAPH_CHARS`] and
+//! [`Density::DEFAULT_MAX_ITEM_CHARS`]. The report lists each with its line. The limit is on each
+//! block because a whole file's share of whitespace barely moves between a wall of text and a file
+//! that breathes.
 //!
 //! [`measure`] needs only the document. [`check`] adds the limits.
 

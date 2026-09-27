@@ -1,8 +1,9 @@
 //! `repo_layout`: a Markdown file must hold a short index of the repo that is true.
 //!
-//! The index is the first code block in the section under the configured heading, which is found
-//! at any level and in any case and runs to the next heading of its level or higher. The block
-//! lists one **entry** per line, a path and then `<-` and a description:
+//! The index is the first code block in the section under the configured heading, by default
+//! [`RepoLayout::DEFAULT_HEADING`], which is found at any level and in any case and runs to the
+//! next heading of its level or higher. The block lists one **entry** per line, a path and then
+//! `<-` and a description:
 //!
 //! ```text
 //! deslag/
@@ -11,15 +12,16 @@
 //!                   line continues on the next, aligned under it
 //! ```
 //!
-//! A first line naming the root, unindented and ending in `/`, is not an entry, and blank lines
-//! are skipped. Every entry's path starts in the first entry's column and every `<-` sits in the
-//! first entry's column. A path is relative to the directory of the Markdown file, and one ending
-//! in `/` must be a directory. Paths are looked up on disk, so a path git ignores, such as a build
-//! directory, passes only where it has been built.
+//! A first line naming the root, unindented, one word and ending in `/`, is not an entry. A blank
+//! line is skipped, and ends the description above. Every entry's path starts in the first
+//! entry's column and every `<-` sits in the first entry's column. A path is relative to the
+//! directory of the Markdown file, and one ending in `/` must be a directory. Paths are looked up
+//! on disk, so a path git ignores, such as a build directory, passes only where it has been built.
 //!
 //! A file fails when it has no such section or block, when it lists too few or too many entries,
-//! when a line is too wide or out of format, or when a listed path does not exist. The report
-//! lists every problem with its line.
+//! when a line is too wide, trailing whitespace aside, or out of format ([`Malformed`]), or when a
+//! listed path does not exist. The report lists every problem with its line. The limits' defaults
+//! are the `DEFAULT_` constants of [`RepoLayout`].
 //!
 //! [`read`] needs only the document: it finds the section and reads the layout, so it runs on any
 //! Markdown, the corpus included. [`check`] adds what needs the settings and the disk: the limits,

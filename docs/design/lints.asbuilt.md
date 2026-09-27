@@ -32,6 +32,9 @@ file, which becomes a `Finding` with the lint's `Violation`. `Lint` lists the li
 the config's table name, and the tally, golden set and cases key off it. A new lint is a module, a
 `Lint` and a `Violation`.
 
+A lint's module doc comment describes it as built, and this doc gives it a line in the tree above;
+`tests/asbuilt.rs` holds each lint's doc comment to 2000 bytes.
+
 A lint whose `Lint::reads_change` holds judges a change: `check_text` reads each file it selects
 at the base, by `Change::base_text`, into a `Before`, or with no base returns `Error::NoBase`.
 
@@ -45,65 +48,6 @@ Where an `Over` holds a position, it holds a `Location`, and its report reads th
 an **occurrence** is wrong alone (a character, phrase, block or layout line); **evidence** backs a
 verdict on the file (an emphasized span, the layout's heading or block). A file is decoded lossily,
 so the offsets of one that is not UTF-8 are into its decoded text.
-
-## max_size_bytes
-
-A file's budget comes from, most specific first: the `max_size_bytes` key in the file's own YAML
-frontmatter, then the most specific matching override that sets one, then
-`[md.lints.max_size_bytes]`. A file with none is counted but not checked.
-
-## max_emphasis
-
-`lint/max_emphasis.rs` counts spans: each outermost emphasis or strong, and each run of two or more
-words in capitals, split only by whitespace, that holds one of `SHOUTED_WORDS`. Prose is the text of
-the blocks of prose, code spans and HTML aside. Both are counted in characters. A file fails with
-more than `free_spans` spans covering more than `max_percent` of its prose; an unset field counts as
-0, and a table setting neither checks nothing.
-
-## repo_layout
-
-`lint/repo_layout.rs` finds the first heading whose text is `heading` (default `Repository layout`),
-in any case and at any level; the layout is the first code block before the next heading of that
-level or higher.
-
-Each line is the root (first, unindented, one word ending in `/`), an entry (a path, `<-`, a
-description), a continuation (in the column of the description above), or blank, which ends a
-description. The first entry fixes the column of every path and `<-`; any other line, or an entry
-that is not one relative path, lacks a description or is out of column, is `Malformed`.
-
-`read` returns a `Layout`: entries, malformed lines and widths. `check` adds the limits: `max_width`
-(default 100) characters, trailing whitespace aside; a path, joined to the file's directory, must
-exist, and one ending in `/` must be a directory. A `Problem` list is no section or no block alone,
-or the count outside `min_entries` to `max_entries` (default 5 to 15), then each line's problems.
-
-## banned_chars
-
-In `lint/banned_chars.rs`, `scan` finds each non-ASCII character in the source of the text, HTML and
-frontmatter, skipping code blocks, code spans and a byte order mark that opens the file; an entity
-such as `&mdash;` is ASCII there. `check` passes a character in `allow`, bans one in `ban` with its
-replacement, and otherwise asks the first rule of the first group in `GROUPS` that is on. Each group
-has a switch in `Groups` and a default; `emoji` is off.
-
-## banned_phrases
-
-`lint/banned_phrases.rs` bans only the phrases in `ban`. Each is split by `Token::split`, as prose
-is, and matches the same tokens in one block, in any case, with either apostrophe, across
-formatting and line breaks but not a code span, HTML, image, URL or footnote reference. Where
-matches overlap, the first wins, then the longest; one inside an `allow` match is dropped.
-
-## density
-
-In `lint/density.rs`, `measure` returns each block, a paragraph or a tight list item's text,
-with its visible characters: text, code spans, and one per line break. Headings, tables, code,
-frontmatter, HTML and images are not measured; a block of only whitespace is dropped, and a
-paragraph in a list item counts as an item. A block fails over `max_paragraph_chars` (default 600)
-or, for an item, `max_item_chars` (default 300).
-
-## list_growth
-
-`lint/list_growth.rs` counts every list item, at every depth, and fails a file with more than its
-`Before`. Lists are not matched, so a moved or reworded item is free, and there is no allowance. A
-file the change added, or did not edit, has no `Before`. The evidence is each item on an added line.
 
 ## Fixing
 

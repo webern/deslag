@@ -29,6 +29,7 @@ src/
   lib.rs              the Error type and the module list
   main.rs             the binary
   cli/mod.rs          the clap types
+  change/             what git says a change did
   config/             the config schema, and finding the config file
   glob/               the repo walk and glob patterns
   explain/mod.rs      a file's settings, and where they come from
@@ -59,6 +60,7 @@ fails when a module is in no doc or in two. This doc holds `cli`, `instructions`
 - [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
   `--format`.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
+- [diff.asbuilt.md](diff.asbuilt.md): `change`: asking git what a change did, and reading it.
 
 ## The command line
 

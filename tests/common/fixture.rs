@@ -12,7 +12,7 @@ use sha2::{Digest, Sha256};
 
 /// The sidecar versions the loaders read. A sidecar is never rewritten once its batch is
 /// published, so a version stays here for as long as any batch holds it.
-const SIDECAR_VERSIONS: &[u32] = &[2];
+const SIDECAR_VERSIONS: &[u32] = &[2, 3];
 
 /// The authorship labels a sidecar may carry. `unknown` is only for `core`.
 const LABELS: &[&str] = &["human", "llm", "mixed", "unknown"];
@@ -51,6 +51,9 @@ pub struct Sidecar {
     pub content: Content,
     /// Where the harness puts the fixture in the `real` layout.
     pub layout_path: String,
+    /// Version 3, and only a `mixed` fixture: the file's last revision before the cutoff, which
+    /// is a live `human` fixture of the same file.
+    pub before: Option<Before>,
 }
 
 /// Where the fixture was quoted from.
@@ -81,6 +84,50 @@ pub struct History {
     authors: u64,
     ai_commits: u64,
     pub ai_tools: Vec<String>,
+    // Version 3 has these and version 2 does not.
+    /// Whether the oldest commit is the edge of a shallow clone, so the file may be older.
+    truncated: Option<bool>,
+    first_committer_date: Option<String>,
+    last_committer_date: Option<String>,
+    /// Each distinct mark of an AI tool in the history, with how many commits carry it.
+    pub marks: Option<Vec<MarkCount>>,
+    /// Each commit that carries a mark, with its change to the file.
+    pub edits: Option<Vec<Change>>,
+}
+
+/// A mark of an AI tool as a commit carries it, such as `Claude <noreply@anthropic.com>`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MarkCount {
+    pub text: String,
+    pub tool: String,
+    pub kind: String,
+    place: String,
+    commits: u64,
+}
+
+/// One commit's change to the file: its blob before, none when it added the file, and after.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Change {
+    commit: String,
+    date: String,
+    committed: String,
+    old: Option<String>,
+    new: String,
+    /// What the commit says of who wrote it: `agent`, `late`, `squash`, `assist`, ...
+    pub status: String,
+}
+
+/// A `mixed` fixture's earlier revision, and the commits between it and the fixture that no
+/// agent made.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Before {
+    pub sha256: String,
+    pub commit: String,
+    date: String,
+    between: Vec<Change>,
 }
 
 /// Who wrote the file, as far as its history can tell, and why.
@@ -250,6 +297,7 @@ fn check_sidecar(name: &str, category: &str, sidecar: &Sidecar, bytes: &[u8]) {
         history.ai_commits == 0,
         "{name}: ai_tools and ai_commits disagree"
     );
+    check_evidence(name, sidecar);
 
     // A fixture is quoted, never edited: its bytes are the bytes that were captured.
     let content = &sidecar.content;
@@ -285,6 +333,118 @@ fn check_sidecar(name: &str, category: &str, sidecar: &Sidecar, bytes: &[u8]) {
         declared, content.frontmatter_max_size_bytes,
         "{name}: the recorded frontmatter budget does not match the file"
     );
+}
+
+/// The statuses a commit can have, as `collect.py` names them.
+const STATUSES: &[&str] = &[
+    "agent",
+    "early",
+    "late",
+    "bot",
+    "squash",
+    "squash-merge",
+    "unverified",
+    "assist",
+];
+
+/// Checks what version 3 adds: the raw evidence behind the label, present in every version 3
+/// sidecar and in no earlier one.
+fn check_evidence(name: &str, sidecar: &Sidecar) {
+    let history = &sidecar.history;
+    let v3 = sidecar.sidecar_version >= 3;
+    for (field, present) in [
+        ("history.truncated", history.truncated.is_some()),
+        (
+            "history.first_committer_date",
+            history.first_committer_date.is_some(),
+        ),
+        (
+            "history.last_committer_date",
+            history.last_committer_date.is_some(),
+        ),
+        ("history.marks", history.marks.is_some()),
+        ("history.edits", history.edits.is_some()),
+    ] {
+        assert_eq!(
+            present, v3,
+            "{name}: {field} is in version 3 and only there"
+        );
+    }
+    if let Some(before) = &sidecar.before {
+        assert!(
+            v3 && sidecar.authorship.label == "mixed",
+            "{name}: only a version 3 mixed fixture names its earlier revision"
+        );
+        assert!(
+            is_hex(&before.sha256, 64) && is_hex(&before.commit, 40),
+            "{name}: before"
+        );
+        assert_ne!(
+            before.sha256, sidecar.content.sha256,
+            "{name}: its earlier revision is itself"
+        );
+        for change in &before.between {
+            check_change(name, change);
+            assert_ne!(
+                change.status, "agent",
+                "{name}: an agent's commit in between"
+            );
+        }
+    }
+    let (Some(marks), Some(edits)) = (&history.marks, &history.edits) else {
+        return;
+    };
+    for mark in marks {
+        assert!(
+            !mark.text.is_empty()
+                && !mark.tool.is_empty()
+                && mark.commits > 0
+                && ["agent-identity", "agent-session", "assist"].contains(&mark.kind.as_str())
+                && ["identity", "trailer", "footer"].contains(&mark.place.as_str()),
+            "{name}: {mark:?}"
+        );
+    }
+    for change in edits {
+        check_change(name, change);
+    }
+    let agents = edits.iter().filter(|edit| edit.status == "agent").count() as u64;
+    assert_eq!(
+        agents, history.ai_commits,
+        "{name}: the agents' edits are not its AI commits"
+    );
+    if sidecar.authorship.label == "human" {
+        assert!(
+            marks.is_empty() && edits.is_empty(),
+            "{name}: a human file with marks"
+        );
+    }
+    if sidecar.authorship.label == "llm" {
+        assert!(
+            history.truncated == Some(false),
+            "{name}: an llm file whose history a shallow clone cut short"
+        );
+    }
+}
+
+/// Checks one commit's change to a file.
+fn check_change(name: &str, change: &Change) {
+    assert!(
+        is_hex(&change.commit, 40)
+            && is_hex(&change.new, 40)
+            && change.old.as_deref().is_none_or(|old| is_hex(old, 40))
+            && !change.date.is_empty()
+            && !change.committed.is_empty()
+            && STATUSES.contains(&change.status.as_str()),
+        "{name}: {change:?}"
+    );
+}
+
+/// Whether `text` is `len` lowercase hex digits.
+fn is_hex(text: &str, len: usize) -> bool {
+    text.len() == len
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 /// Fails when two of `keys` are equal, each key being the `what` of one fixture.

@@ -6,19 +6,24 @@ This is a maintenance tool, run by hand when the corpus is rebuilt or grown; the
 it. It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill
 says why it is Python rather than bash.
 
-    collect.py discover --work DIR            find candidate repositories
-    collect.py harvest  --work DIR [--jobs N] clone each one and classify its Markdown
-    collect.py select   --work DIR --out tests/corpus [--per-category N]
-                                              choose the fixtures and write them with sidecars
+    collect.py discover --work DIR [--only RE] find candidate repositories, with each sampler
+    collect.py harvest  --work DIR [--jobs N] [--limit N] [--deadline T]
+                                              clone each one and keep the Markdown whose
+                                              history proves a label
+    collect.py stage    --work DIR --corpus .blobs/unpacked/corpus --out STAGE [--exclude FILE]
+                                              write what harvest kept as fixtures with sidecars
+    collect.py pack     --from STAGE --corpus .blobs/unpacked/corpus --work DIR
+                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
+                                              batch of the big tier, for make publish-blobs
+    collect.py select   --corpus .blobs/unpacked/corpus --out tests/corpus [--check]
+                                              sample the tree from the big tier
     collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
                                               derive every live label of the big tier again,
                                               and write the ones that fail as exclusions
-    collect.py pack     --from tests/corpus --corpus .blobs/unpacked/corpus --work DIR
-                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
-                                              batch of the big tier, for make publish-blobs
 
-Every stage is resumable: `discover`, `harvest` and `recheck` keep what they have already done in
-DIR.
+Every stage that reaches the network is resumable: `discover`, `harvest` and `recheck` keep what
+they have already done in DIR, and try again what failed. `stage` is the one writer of sidecars;
+`pack` and `select` copy them byte for byte.
 
 How a file is classified, from the history of the file up to the commit it is quoted at:
 
@@ -30,8 +35,8 @@ How a file is classified, from the history of the file up to the commit it is qu
 
 A commit is an agent's when it carries a mark in MARKS that counts, in the place the tool writes
 it, and is not a squash. A GitHub squash-merge, whose subject ends in "(#N)", is one only when
-every commit of pull request N carries such a mark; `recheck` and `describe` ask GitHub, with gh,
-and `harvest` does not. A bot's commit rules out every label. Files in vendored or test-fixture
+every commit of pull request N carries such a mark; `harvest`, `recheck` and `describe` ask
+GitHub, with gh. A bot's commit rules out every label. Files in vendored or test-fixture
 directories, and boilerplate such as licences and codes of conduct, are left out.
 docs/design/corpus.md section 3 is the design of these rules.
 """
@@ -39,7 +44,9 @@ docs/design/corpus.md section 3 is the design of these rules.
 from __future__ import annotations
 
 import argparse
+import codecs
 import concurrent.futures
+import fcntl
 import hashlib
 import json
 import os
@@ -52,19 +59,18 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 # Issue #5: a file not edited since 2021 or earlier is taken as a person's.
 CUTOFF = "2022-01-01T00:00:00Z"
 CUTOFF_DATE = CUTOFF[:10]
 USER_AGENT = "deslag-corpus-collector (https://github.com/webern/deslag)"
 MIN_BYTES = 200
+# The largest fixture the tree holds, and how many it takes from one repository.
 MAX_BYTES = 65536
-# How many candidates per category the harvest keeps from one repository, so `select` has a
-# choice. `select` itself takes at most MAX_PER_REPO.
-HARVEST_PER_REPO = 6
 MAX_PER_REPO = 3
 CLONE_TIMEOUT = 600
 SHALLOW_SINCE = "2018-01-01"
@@ -695,12 +701,15 @@ def git_lines(repo: Path, *args: str, sep: str = "\n"):
         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=git_env(),
     )
     assert proc.stdout is not None
+    # A character split across two reads is decoded whole.
+    decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
     buffer = ""
     try:
         while chunk := proc.stdout.read(1 << 16):
-            buffer += chunk.decode("utf-8", errors="replace")
+            buffer += decoder.decode(chunk)
             *records, buffer = buffer.split(sep)
             yield from records
+        buffer += decoder.decode(b"", final=True)
         if buffer:
             yield buffer
     finally:
@@ -719,7 +728,229 @@ def git_bytes(repo: Path, *args: str, timeout: int = 300) -> bytes:
 
 
 # ---------------------------------------------------------------------------------------------
+# GitHub
+
+# The least time between two requests to GitHub's REST or GraphQL API, in seconds, across every
+# process of a run: 4800 an hour, under the 5000 one login may make. Search allows 30 a minute,
+# but a commit search costs GitHub enough that a faster pace meets its secondary limit.
+GITHUB_PACE = 0.75
+SEARCH_PACE = 6.0
+# GitHub lists no more than this many commits of a pull request.
+MAX_PULL_COMMITS = 250
+GITHUB_STATUS = re.compile(r"HTTP/\S+ (\d{3})")
+
+
+class GitHubError(Exception):
+    pass
+
+
+class Pacer:
+    """Keeps requests `pace` seconds apart across every thread and process of a run, through a
+    lock file that holds the time of the last one."""
+
+    def __init__(self, path: Path, pace: float):
+        self.path = path
+        self.pace = pace
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+    def wait(self) -> None:
+        with self.path.open("a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                try:
+                    last = float(f.read().strip() or 0)
+                except ValueError:
+                    # A run killed while it wrote: the time is lost, not the pace.
+                    last = time.time()
+                delay = last + self.pace - time.time()
+                if delay > 0:
+                    time.sleep(delay)
+                f.seek(0)
+                f.truncate()
+                f.write(f"{time.time():.3f}")
+                # Written before the lock is let go, or a buffered write lands after another's.
+                f.flush()
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+
+
+def github_login() -> bool:
+    """Whether gh holds a login, which GitHub's API needs."""
+    try:
+        return subprocess.run(["gh", "auth", "token"], capture_output=True).returncode == 0
+    except FileNotFoundError:
+        return False
+
+
+def github_get(path: str, pacer: Pacer):
+    """GitHub's answer to GET `path`, asked with gh, or None when it has no such thing. Waits out
+    a rate limit, tries a server error again, and raises GitHubError on any other failure."""
+    problem = ""
+    for attempt in range(5):
+        pacer.wait()
+        try:
+            result = subprocess.run(["gh", "api", "--include", path], capture_output=True,
+                                    timeout=120)
+        except FileNotFoundError:
+            raise SystemExit("asking GitHub needs gh") from None
+        except subprocess.TimeoutExpired:
+            result = None
+        text = result.stdout.decode("utf-8", "replace").replace("\r\n", "\n") if result else ""
+        head, _, body = text.partition("\n\n")
+        lines = head.splitlines()
+        status = GITHUB_STATUS.match(lines[0]) if lines else None
+        if status is None:
+            problem = (result.stderr.decode("utf-8", "replace").strip()[:200] if result
+                       else "no answer in 120s")
+            time.sleep(2 ** (attempt + 1))
+            continue
+        code = int(status[1])
+        headers = {k.strip().lower(): v.strip() for k, _, v in
+                   (line.partition(":") for line in lines[1:])}
+        if 200 <= code < 300:
+            return json.loads(body)
+        if code in (404, 410, 422):
+            return None
+        if code == 401:
+            raise SystemExit("gh is not logged in to GitHub: run gh auth login")
+        try:
+            message = json.loads(body).get("message", "").partition("\n")[0]
+        except (ValueError, AttributeError):
+            message = ""
+        if code in (403, 429) and ("retry-after" in headers or "rate limit" in message.lower()
+                                   or headers.get("x-ratelimit-remaining") == "0"):
+            wait = (int(headers.get("retry-after", "0"))
+                    or int(headers.get("x-ratelimit-reset", "0")) - time.time())
+            wait = wait if wait > 0 else 60 * (attempt + 1)
+            log(f"GitHub's rate limit: waiting {wait:.0f}s")
+            time.sleep(min(wait + 1, 3600))
+            continue
+        problem = f"it answered {code}, {message}"[:160].rstrip(", ")
+        if code < 500:
+            raise GitHubError(problem)
+        time.sleep(2 ** (attempt + 1))
+    raise GitHubError(problem)
+
+
+def github_graphql(query: str, pacer: Pacer) -> dict:
+    """The `data` of a GraphQL query, asked with gh. A repository GitHub cannot find is null in
+    it."""
+    problem = ""
+    for attempt in range(5):
+        pacer.wait()
+        try:
+            result = subprocess.run(["gh", "api", "graphql", "-f", f"query={query}"],
+                                    capture_output=True, timeout=300)
+        except subprocess.TimeoutExpired:
+            problem = "no answer in 300s"
+            continue
+        try:
+            body = json.loads(result.stdout or b"{}")
+        except ValueError:
+            body = {}
+        if body.get("data") is not None:
+            return body["data"]
+        problem = (json.dumps(body.get("errors") or body)
+                   or result.stderr.decode("utf-8", "replace"))[:200]
+        time.sleep(2 ** (attempt + 2))
+    raise GitHubError(problem)
+
+
+class PullRequests:
+    """Asks GitHub, with `gh api`, which commits the pull request of a squash-merge held. A
+    squash-merge proves its marks only when every one of those commits carries a mark that
+    counts; one GitHub cannot show proves nothing.
+
+    Requests go one at a time across the run, GITHUB_PACE apart, and wait out a rate limit. What
+    GitHub shows is kept in DIR/pulls/, one file for each repository, so each question is asked
+    once; a request that failed is asked again on the next run."""
+
+    def __init__(self, work: Path):
+        self.dir = work / "pulls"
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.pacer = Pacer(work / "github.pace", GITHUB_PACE)
+        self.store = threading.Lock()
+        self.cache: dict[str, dict] = {}
+        self.asked = 0
+        self.failed = 0
+
+    def settle(self, host: str, repo: str, hist: list[Commit]) -> None:
+        """Asks about each squash-merge in `hist` that carries a mark that counts."""
+        for commit in hist:
+            if commit.pull is not None and commit.pull_verdict is None:
+                commit.pull_verdict = self.verdict(host, repo, commit)
+
+    def verdict(self, host: str, repo: str, commit: Commit) -> tuple[str, str]:
+        name = f"the squash-merge of #{commit.pull}"
+        if host != "github.com":
+            return "unverified", f"{name}, on {host}, where only GitHub is asked"
+        try:
+            facts = self.facts(repo, commit.sha, commit.pull)
+        except GitHubError as error:
+            self.failed += 1
+            return "unverified", f"{name}, which GitHub could not show: {error}"
+        if facts["pull"] is None:
+            return "unverified", f"{name}, which GitHub could not show: {facts['why']}"
+        name = f"the squash-merge of #{facts['pull']}"
+        for fields in facts["commits"]:
+            c = read_commit(**{key: fields[key] for key in COMMIT_FIELDS})
+            if not any(mark.counts for mark, _ in c.marks):
+                return "squash-merge", (f"{name}, whose commit {c.sha[:10]} by {c.author} "
+                                        "carries no AI agent's mark")
+        if len(facts["commits"]) < facts["total"]:
+            return "unverified", f"{name}, of {facts['total']} commits, more than GitHub lists"
+        return "proven", (f"{name}, whose {facts['total']} "
+                          f"{agree(facts['total'], 'commit carries', 'commits all carry')} an AI "
+                          "agent's mark")
+
+    def facts(self, repo: str, sha: str, number: int) -> dict:
+        """What GitHub shows of the pull request merged as `sha`: `pull`, its number; `total`,
+        how many commits it had; and `commits`, as many as GitHub lists, each a dict of
+        COMMIT_FIELDS and `parents`. `pull` is None, and `why` says why, when GitHub shows no
+        pull request merged as it."""
+        path = self.dir / (hashlib.sha1(f"github.com/{repo}".encode()).hexdigest()[:16] + ".json")
+        with self.store:
+            if repo not in self.cache:
+                self.cache[repo] = json.loads(path.read_text()) if path.exists() else {}
+            known = self.cache[repo].get(sha)
+        if known is not None:
+            return known
+        pull = github_get(f"repos/{repo}/pulls/{number}", self.pacer)
+        if not pull or pull.get("merge_commit_sha") != sha:
+            # The number in a subject need not be its own pull request's: ask which one it was.
+            listed = github_get(f"repos/{repo}/commits/{sha}/pulls", self.pacer) or []
+            numbers = [p["number"] for p in listed if p.get("merge_commit_sha") == sha]
+            pull = github_get(f"repos/{repo}/pulls/{numbers[0]}", self.pacer) if numbers else None
+        if not pull:
+            facts: dict = {"pull": None, "why": "no pull request was merged as it"}
+        else:
+            commits = []
+            for page in range(1, (min(pull["commits"], MAX_PULL_COMMITS) + 99) // 100 + 1):
+                listed = github_get(f"repos/{repo}/pulls/{pull['number']}/commits"
+                                    f"?per_page=100&page={page}", self.pacer) or []
+                for c in listed:
+                    author, committer = c["commit"]["author"], c["commit"]["committer"]
+                    commits.append({
+                        "sha": c["sha"], "author": author["name"], "email": author["email"],
+                        "date": author["date"], "committer": committer["name"],
+                        "cemail": committer["email"], "committed": committer["date"],
+                        "message": c["commit"]["message"], "parents": len(c["parents"]),
+                    })
+            facts = {"pull": pull["number"], "total": pull["commits"], "commits": commits}
+        with self.store:
+            self.cache[repo][sha] = facts
+            path.write_text(json.dumps(self.cache[repo]))
+            self.asked += 1
+            if self.asked % 25 == 0:
+                log(f"asked GitHub about {self.asked} squash-merges")
+        return facts
+
+
+# ---------------------------------------------------------------------------------------------
 # discover
+
+HOSTS = ("github.com", "gitlab.com", "codeberg.org", "huggingface.co")
 
 
 @dataclass
@@ -732,12 +963,32 @@ class Candidate:
 
     @property
     def key(self) -> str:
-        return f"{self.host}/{self.repo}"
+        """Forges match an owner and a name whatever their case, so the harvest does too, and
+        does not harvest one repository twice."""
+        return f"{self.host}/{self.repo}".lower()
+
+
+def digest(key: str) -> str:
+    return hashlib.sha1(key.encode()).hexdigest()[:16]
+
+
+def load_candidates(work: Path) -> tuple[dict[str, Candidate], dict[str, list[str]]]:
+    """The candidates `discover` found, by key, and every source that found each, the first
+    first."""
+    found: dict[str, Candidate] = {}
+    sources: dict[str, list[str]] = {}
+    path = work / "candidates.jsonl"
+    for row in jsonl(path) if path.exists() else []:
+        c = Candidate(**row)
+        found.setdefault(c.key, c)
+        if c.found_by not in sources.setdefault(c.key, []):
+            sources[c.key].append(c.found_by)
+    return found, sources
 
 
 def sourcegraph(query: str) -> list[tuple[str, int | None]]:
     url = "https://sourcegraph.com/.api/search/stream?" + urllib.parse.urlencode({"q": query})
-    body = http_get(url, accept="text/event-stream", timeout=300).decode("utf-8", "replace")
+    body = http_get(url, accept="text/event-stream", timeout=600).decode("utf-8", "replace")
     repos: dict[str, int | None] = {}
     event = None
     for line in body.splitlines():
@@ -754,6 +1005,8 @@ HAS_LICENSE = (
     r"content:(Permission.is.hereby.granted|Apache.License|Redistribution.and.use"
     r"|free.and.unencumbered|Permission.to.use,.copy|CC0|Attribution.4\.0|Boost.Software))"
 )
+# Sourcegraph answers a query without a login, up to this many repositories.
+SOURCEGRAPH_COUNT = 100000
 
 # Files that an AI agent reads, or writes for itself: a repository with one has probably had an
 # agent working in it.
@@ -782,157 +1035,396 @@ TOPICS = (
     "ocaml fsharp julia r fortran cobol perl ruby php lua zig nim crystal dart kotlin scala swift"
 ).split()
 
+# Topics outside software, for prose in other registers than a repository's own docs: books,
+# guides, lists, notes, course material. They are `human` like any other, tagged by `found_by`.
+REGISTER_TOPICS = (
+    "book books ebook textbook handbook guide guides course course-materials lecture-notes "
+    "teaching curriculum syllabus thesis dissertation essays writing poetry fiction literature "
+    "philosophy religion theology cooking recipes travel hiking gardening knitting music-theory "
+    "lyrics screenplay journalism politics government civic-tech open-government public-policy "
+    "legal human-rights awesome-list curated-list reading-list cheatsheet interview-questions "
+    "career productivity mental-health fitness nutrition parenting genealogy archaeology "
+    "anthropology sociology psychology tabletop rpg dnd board-games worldbuilding podcast "
+    "digital-garden zettelkasten knowledge-base wiki glossary language-learning translation"
+).split()
 
-def discover(args: argparse.Namespace) -> None:
-    work = Path(args.work)
-    work.mkdir(parents=True, exist_ok=True)
-    out = work / "candidates.jsonl"
-    seen: dict[str, Candidate] = {}
-    if out.exists():
-        for line in out.read_text().splitlines():
-            c = Candidate(**json.loads(line))
-            seen[c.key] = c
-    done_path = work / "discover-done.txt"
-    done = set(done_path.read_text().splitlines()) if done_path.exists() else set()
+# Commit searches for the marks agents write, with the tool each finds. GitHub's commit search
+# matches a message's words, or an author by address or account.
+COMMIT_SEARCHES = [
+    ("claude-code", '"noreply@anthropic.com"'),
+    ("claude-code", '"claude.ai/code"'),
+    ("copilot", "author-email:198982749+Copilot@users.noreply.github.com"),
+    ("copilot", '"223556219+Copilot@users.noreply.github.com"'),
+    ("copilot", '"Copilot-Session"'),
+    ("copilot", '"Agent-Logs-Url"'),
+    ("cursor", '"cursoragent@cursor.com"'),
+    ("cursor", '"Made-with: Cursor"'),
+    ("codex", '"codex@openai.com"'),
+    ("codex", "author-email:codex@openai.com"),
+    ("codex", '"noreply@openai.com"'),
+    ("jules", "author:google-labs-jules[bot]"),
+    ("devin", "author:devin-ai-integration[bot]"),
+    ("amp", '"amp@ampcode.com"'),
+    ("openhands", '"openhands@all-hands.dev"'),
+    ("opencode", '"noreply@opencode.ai"'),
+    ("kiro", '"kiro-agent"'),
+    ("aider", '"noreply@aider.chat"'),
+]
 
-    def add(c: Candidate) -> None:
-        if c.key not in seen:
-            seen[c.key] = c
-            with out.open("a") as f:
-                f.write(json.dumps(c.__dict__) + "\n")
 
-    def run(tag: str, fn) -> None:
-        if tag in done:
-            return
-        try:
-            before = len(seen)
-            fn()
-            log(f"discover {tag}: +{len(seen) - before} (total {len(seen)})")
-            with done_path.open("a") as f:
-                f.write(tag + "\n")
-            done.add(tag)
-        except Exception as error:  # noqa: BLE001 - one source failing does not stop the rest
-            log(f"discover {tag}: FAILED {error}")
+@dataclass(frozen=True)
+class Sampler:
+    """A way of finding candidate repositories. `token` says it needs a gh login; without one it
+    skips itself, and DIR/samplers.jsonl says so. `run(step, add, args)` calls `step(tag, fn)`
+    for each unit of work, which `discover` skips on a later run once it is done, and `add` for
+    each repository, with its source as `found_by`."""
 
-    def sg(tag: str, query: str) -> None:
-        def fn() -> None:
-            for name, stars in sourcegraph(query):
-                host, _, repo = name.partition("/")
-                if host not in ("github.com", "gitlab.com", "codeberg.org"):
-                    continue
-                add(Candidate(host, repo, f"https://{name}.git", tag, stars))
+    name: str
+    token: bool
+    run: Callable
 
-        run(tag, fn)
 
+def sample_sourcegraph_agents(step: Callable, add: Callable, args: argparse.Namespace) -> None:
     for pattern in AGENT_FILES:
-        sg(f"sg-agent:{pattern}", f"select:repo file:{pattern} {HAS_LICENSE} count:4000")
-    for topic in TOPICS:
-        sg(
-            f"sg-topic:{topic}",
-            f"select:repo file:^README\\.md$ repo:has.topic({topic}) {HAS_LICENSE} count:300",
-        )
+        tag = f"sg-agent:{pattern}"
+        query = f"select:repo file:{pattern} {HAS_LICENSE} count:{SOURCEGRAPH_COUNT}"
+        step(tag, lambda tag=tag, query=query: add_sourcegraph(query, tag, add))
 
-    def gitlab() -> None:
+
+def sample_sourcegraph_topics(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    """Each topic's repositories, a topic of each list in turn, so that a run cut short has
+    sampled both registers."""
+    queries = [[(f"sg-topic:{topic}", f"select:repo file:^README\\.md$ repo:has.topic({topic}) "
+                 f"{HAS_LICENSE} count:300") for topic in TOPICS],
+               [(f"sg-register:{topic}", f"select:repo file:\\.md$ repo:has.topic({topic}) "
+                 f"{HAS_LICENSE} count:500") for topic in REGISTER_TOPICS]]
+    for i in range(max(len(q) for q in queries)):
+        for tag, query in (q[i] for q in queries if i < len(q)):
+            step(tag, lambda tag=tag, query=query: add_sourcegraph(query, tag, add))
+
+
+def add_sourcegraph(query: str, tag: str, add: Callable) -> None:
+    for name, stars in sourcegraph(query):
+        host, _, repo = name.partition("/")
+        add(Candidate(host, repo, clone_url(host, repo), tag, stars))
+
+
+def sample_github_commits(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    """GitHub's commit search for the marks agents write, a day at a time on days picked at
+    random between --since and --until, the newest 100 commits of each. Each search takes its
+    first day before any takes its second, so a run cut short has sampled every tool."""
+    pacer = Pacer(Path(args.work) / "search.pace", SEARCH_PACE)
+    since = datetime.fromisoformat(args.since).date()
+    until = datetime.fromisoformat(args.until).date() if args.until else datetime.now().date()
+    days = (until - since).days
+    picked = []
+    for tool, query in COMMIT_SEARCHES:
+        rng = random.Random(f"{query} {since} {until}")
+        picked.append(rng.sample(range(days + 1), min(args.days, days + 1)))
+    for i in range(min(args.days, days + 1)):
+        for (tool, query), chosen in zip(COMMIT_SEARCHES, picked):
+            text = datetime.fromordinal(since.toordinal() + chosen[i]).date().isoformat()
+            q = f"{query} committer-date:{text}"
+
+            def fn(q: str = q, tool: str = tool) -> None:
+                path = "search/commits?" + urllib.parse.urlencode(
+                    {"q": q, "per_page": 100, "sort": "committer-date", "order": "desc"})
+                for item in (github_get(path, pacer) or {}).get("items", []):
+                    repo = item["repository"]
+                    if not repo.get("fork"):
+                        name = repo["full_name"]
+                        add(Candidate("github.com", name, clone_url("github.com", name),
+                                      f"gh-commits:{tool}"))
+
+            step(f"gh-commits:{q}", fn)
+
+
+def sample_gitlab(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    def fn() -> None:
         for page in range(1, 11):
-            data = json.loads(
-                http_get(
-                    "https://gitlab.com/api/v4/projects?order_by=star_count&sort=desc"
-                    f"&per_page=100&page={page}&visibility=public"
-                )
-            )
+            data = json.loads(http_get(
+                "https://gitlab.com/api/v4/projects?order_by=star_count&sort=desc"
+                f"&per_page=100&page={page}&visibility=public"))
             for p in data:
-                add(
-                    Candidate(
-                        "gitlab.com",
-                        p["path_with_namespace"],
-                        p["http_url_to_repo"],
-                        "gitlab-stars",
-                        p.get("star_count"),
-                    )
-                )
+                add(Candidate("gitlab.com", p["path_with_namespace"], p["http_url_to_repo"],
+                              "gitlab-stars", p.get("star_count")))
 
-    run("gitlab-stars", gitlab)
+    step("gitlab-stars", fn)
 
-    def codeberg() -> None:
+
+def sample_codeberg(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    def fn() -> None:
         for page in range(1, 11):
-            data = json.loads(
-                http_get(
-                    "https://codeberg.org/api/v1/repos/search?sort=stars&order=desc"
-                    f"&limit=50&page={page}"
-                )
-            )
+            data = json.loads(http_get("https://codeberg.org/api/v1/repos/search?sort=stars"
+                                       f"&order=desc&limit=50&page={page}"))
             for r in data.get("data", []):
-                if r.get("fork") or r.get("mirror"):
-                    continue
-                add(
-                    Candidate(
-                        "codeberg.org",
-                        r["full_name"],
-                        r["clone_url"],
-                        "codeberg-stars",
-                        r.get("stars_count"),
-                    )
-                )
+                if not (r.get("fork") or r.get("mirror")):
+                    add(Candidate("codeberg.org", r["full_name"], r["clone_url"],
+                                  "codeberg-stars", r.get("stars_count")))
 
-    run("codeberg-stars", codeberg)
+    step("codeberg-stars", fn)
 
-    def huggingface() -> None:
+
+def sample_huggingface(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    def fn() -> None:
         for kind, prefix in (("models", ""), ("datasets", "datasets/"), ("spaces", "spaces/")):
             for lic in ("mit", "apache-2.0", "cc-by-4.0", "cc0-1.0", "bsd-3-clause"):
-                data = json.loads(
-                    http_get(
-                        f"https://huggingface.co/api/{kind}?filter=license:{lic}"
-                        "&sort=likes&direction=-1&limit=100"
-                    )
-                )
+                data = json.loads(http_get(f"https://huggingface.co/api/{kind}?filter=license:"
+                                           f"{lic}&sort=likes&direction=-1&limit=100"))
                 for m in data:
-                    add(
-                        Candidate(
-                            "huggingface.co",
-                            f"{prefix}{m['id']}",
-                            f"https://huggingface.co/{prefix}{m['id']}",
-                            f"hf-{kind}-{lic}",
-                            m.get("likes"),
-                        )
-                    )
+                    add(Candidate("huggingface.co", f"{prefix}{m['id']}",
+                                  f"https://huggingface.co/{prefix}{m['id']}",
+                                  f"hf-{kind}-{lic}", m.get("likes")))
 
-    run("huggingface", huggingface)
+    step("huggingface", fn)
 
-    def crates() -> None:
+
+def add_repo_url(url: str | None, tag: str, add: Callable) -> None:
+    m = re.match(r"https?://(github\.com|gitlab\.com|codeberg\.org)/([^/#?]+/[^/#?]+)", url or "")
+    if m:
+        repo = m.group(2).removesuffix(".git")
+        add(Candidate(m.group(1), repo, clone_url(m.group(1), repo), tag))
+
+
+def sample_crates(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    def fn() -> None:
         # Pages spread across the download ranking, so famous and obscure crates both appear.
-        for page in list(range(1, 6)) + list(range(20, 400, 15)):
-            data = json.loads(
-                http_get(f"https://crates.io/api/v1/crates?sort=downloads&per_page=100&page={page}")
-            )
+        # crates.io answers no page past about 200 of these.
+        for page in list(range(1, 6)) + list(range(20, 200, 7)):
+            data = json.loads(http_get(
+                f"https://crates.io/api/v1/crates?sort=downloads&per_page=100&page={page}"))
             for c in data.get("crates", []):
-                add_repo_url(c.get("repository"), "crates.io")
+                add_repo_url(c.get("repository"), "crates.io", add)
             time.sleep(1)
 
-    def add_repo_url(url: str | None, tag: str) -> None:
-        if not url:
-            return
-        m = re.match(r"https?://(github\.com|gitlab\.com|codeberg\.org)/([^/#?]+/[^/#?]+)", url)
-        if not m:
-            return
-        repo = m.group(2).removesuffix(".git")
-        add(Candidate(m.group(1), repo, f"https://{m.group(1)}/{repo}.git", tag))
+    step("crates.io", fn)
 
-    run("crates.io", crates)
 
-    def npm() -> None:
+def sample_npm(step: Callable, add: Callable, args: argparse.Namespace) -> None:
+    def fn() -> None:
         for text in ("mcp server", "claude", "agent", "cli", "markdown", "react", "parser", "game"):
             for offset in range(0, 1000, 250):
                 q = urllib.parse.urlencode({"text": text, "size": 250, "from": offset})
                 data = json.loads(http_get(f"https://registry.npmjs.org/-/v1/search?{q}"))
                 for o in data.get("objects", []):
-                    add_repo_url((o["package"].get("links") or {}).get("repository"), "npm")
+                    add_repo_url((o["package"].get("links") or {}).get("repository"), "npm", add)
 
-    run("npm", npm)
-    log(f"discover: {len(seen)} candidates in {out}")
+    step("npm", fn)
+
+
+SAMPLERS = [
+    Sampler("sourcegraph-agent-files", False, sample_sourcegraph_agents),
+    Sampler("github-commit-marks", True, sample_github_commits),
+    Sampler("sourcegraph-topics", False, sample_sourcegraph_topics),
+    Sampler("gitlab-stars", False, sample_gitlab),
+    Sampler("codeberg-stars", False, sample_codeberg),
+    Sampler("huggingface", False, sample_huggingface),
+    Sampler("crates.io", False, sample_crates),
+    Sampler("npm", False, sample_npm),
+]
+
+
+def discover(args: argparse.Namespace) -> None:
+    """Runs each sampler, or those --only names, and appends what they find to
+    DIR/candidates.jsonl. A unit of work that finished is not run again; one that failed is."""
+    work = Path(args.work)
+    work.mkdir(parents=True, exist_ok=True)
+    found, sources = load_candidates(work)
+    out = work / "candidates.jsonl"
+    done_path = work / "discover-done.txt"
+    done = set(done_path.read_text().splitlines()) if done_path.exists() else set()
+    login = github_login()
+
+    def add(c: Candidate) -> None:
+        known = sources.setdefault(c.key, [])
+        if c.host not in HOSTS or c.found_by in known:
+            return
+        found.setdefault(c.key, c)
+        known.append(c.found_by)
+        with out.open("a") as f:
+            f.write(json.dumps(asdict(c)) + "\n")
+
+    failed: list[str] = []
+
+    def step(tag: str, fn: Callable) -> None:
+        if tag in done:
+            return
+        before = len(found)
+        try:
+            fn()
+        except Exception as error:  # noqa: BLE001 - one source failing does not stop the rest
+            log(f"discover {tag}: FAILED {str(error)[:300]}")
+            failed.append(tag)
+            return
+        log(f"discover {tag}: +{len(found) - before} (total {len(found)})")
+        with done_path.open("a") as f:
+            f.write(tag + "\n")
+        done.add(tag)
+
+    only = re.compile(args.only) if args.only else None
+    for sampler in SAMPLERS:
+        if only and not only.search(sampler.name):
+            continue
+        started, before = time.time(), len(found)
+        failed.clear()
+        if sampler.token and not login:
+            status = "skipped: it needs a gh login"
+        else:
+            sampler.run(step, add, args)
+            status = f"{len(failed)} steps failed" if failed else "ran"
+        log(f"discover {sampler.name}: {status}, +{len(found) - before}")
+        with (work / "samplers.jsonl").open("a") as f:
+            f.write(json.dumps({"sampler": sampler.name, "token": sampler.token,
+                                "status": status, "added": len(found) - before,
+                                "seconds": round(time.time() - started),
+                                "at": time.strftime("%FT%TZ", time.gmtime())}) + "\n")
+    log(f"discover: {len(found)} candidates in {out}")
+
+
+# ---------------------------------------------------------------------------------------------
+# what GitHub knows of a repository before it is cloned
+
+META_QUERY = (
+    "nameWithOwner isFork isArchived diskUsage createdAt stargazerCount licenseInfo { spdxId } "
+    "defaultBranchRef { target { ... on Commit { history { totalCount } } } }"
+)
+# A repository with this many commits or fewer is cloned whole; a longer history from
+# SHALLOW_SINCE on.
+FULL_DEPTH_COMMITS = 5000
+# How many metadata queries are in flight at once.
+META_THREADS = 4
+
+
+def github_meta(work: Path, candidates: list[Candidate]) -> dict[str, dict]:
+    """What GitHub's GraphQL API says of each GitHub candidate, asked 100 at a time and kept in
+    DIR/meta.jsonl: fork, created, licence, disk usage, stars and commits on the default
+    branch. `found` is false for one it does not know."""
+    path = work / "meta.jsonl"
+    meta = {row["key"]: row for row in (jsonl(path) if path.exists() else [])}
+    todo = [c for c in candidates if c.host == "github.com" and c.key not in meta]
+    if todo and not github_login():
+        log(f"harvest: no gh login, so {len(todo)} GitHub candidates are cloned unasked")
+        return meta
+    pacer = Pacer(work / "github.pace", GITHUB_PACE)
+
+    def ask(chunk: list[Candidate]) -> dict:
+        parts = []
+        for i, c in enumerate(chunk):
+            owner, _, name = c.repo.partition("/")
+            parts.append(f"r{i}: repository(owner: {json.dumps(owner)}, name: {json.dumps(name)})"
+                         f" {{ {META_QUERY} }}")
+        return github_graphql("query { " + " ".join(parts) + " }", pacer)
+
+    chunks = [todo[start:start + 100] for start in range(0, len(todo), 100)]
+    done = 0
+    # A query takes GitHub seconds to answer, so a few are asked at once.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=META_THREADS) as pool:
+        futures = {pool.submit(ask, chunk): chunk for chunk in chunks}
+        for future in concurrent.futures.as_completed(futures):
+            chunk = futures[future]
+            try:
+                data = future.result()
+            except GitHubError as error:
+                log(f"harvest: GitHub's metadata for {len(chunk)} candidates failed: {error}")
+                continue
+            done += len(chunk)
+            with path.open("a") as f:
+                for i, c in enumerate(chunk):
+                    r = data.get(f"r{i}")
+                    row: dict = {"key": c.key, "found": r is not None}
+                    if r:
+                        target = (r.get("defaultBranchRef") or {}).get("target") or {}
+                        row.update(fork=r["isFork"], archived=r["isArchived"],
+                                   disk_kb=r["diskUsage"], created=r["createdAt"],
+                                   stars=r["stargazerCount"],
+                                   license=(r.get("licenseInfo") or {}).get("spdxId"),
+                                   commits=(target.get("history") or {}).get("totalCount"))
+                    meta[c.key] = row
+                    f.write(json.dumps(row) + "\n")
+            if done % 2000 < 100 or done == len(todo):
+                log(f"harvest: GitHub's metadata for {done} of {len(todo)}")
+    return meta
+
+
+def meta_skip(meta: dict | None) -> str | None:
+    """Why a repository cannot give a fixture, from what GitHub says of it; None when it may.
+    This saves a clone, and proves nothing: a fixture's licence is read from its own tree."""
+    if meta is None:
+        return None
+    if not meta["found"]:
+        return "GitHub does not know it"
+    if meta["fork"]:
+        return "a fork"
+    if meta["commits"] is None:
+        return "empty"
+    if meta["commits"] > MAX_COMMITS:
+        return f"{meta['commits']} commits, more than {MAX_COMMITS}"
+    license_id = meta["license"]
+    if license_id is None:
+        return "no licence GitHub recognises"
+    if license_id not in ALLOWED_LICENSES and license_id not in ("NOASSERTION", "OTHER"):
+        return f"licensed {license_id}"
+    return None
+
+
+def family(found_by: str) -> str:
+    """The source a `found_by` names, without its query."""
+    return "hf" if found_by.startswith("hf-") else found_by.split(":")[0]
+
+
+def order_candidates(keys: list[str], sources: dict[str, list[str]], meta: dict[str, dict],
+                     order: str, seed: int) -> list[str]:
+    """The order to harvest in. `priority`: repositories an agent was found in that began before
+    the cutoff first, since only they can give `mixed`; then the other agent repositories; then
+    the rest. Within each, the sources take turns, a repository standing for the rarest source
+    that found it, so that the agents a few repositories show are not left to the end.
+    `sources`: each family of sources in turn, so that a small run sees them all."""
+    keys = sorted(keys)
+    random.Random(seed).shuffle(keys)
+
+    def in_turn(keys: list[str], group: Callable[[str], str]) -> list[str]:
+        queues: dict[str, list[str]] = {}
+        for key in keys:
+            queues.setdefault(group(key), []).append(key)
+        ordered = []
+        for i in range(max((len(q) for q in queues.values()), default=0)):
+            ordered += [queues[name][i] for name in sorted(queues) if i < len(queues[name])]
+        return ordered
+
+    if order == "sources":
+        return in_turn(keys, lambda key: family(sources[key][0]))
+
+    def rank(key: str) -> int:
+        agent = any(family(s) in ("sg-agent", "gh-commits") for s in sources[key])
+        created = (meta.get(key) or {}).get("created") or "9999"
+        return 0 if agent and created < CUTOFF else 1 if agent else 2
+
+    size: dict[str, int] = {}
+    for key in keys:
+        for s in sources[key]:
+            size[s] = size.get(s, 0) + 1
+    rarest = {key: min(sources[key], key=lambda s: (size[s], s)) for key in keys}
+    return [key for r in (0, 1, 2)
+            for key in in_turn([k for k in keys if rank(k) == r], rarest.__getitem__)]
 
 
 # ---------------------------------------------------------------------------------------------
 # harvest
+
+# How many files of each label the harvest keeps from one repository, chosen at random. Past
+# this many, a file adds bytes and harvest time but little evidence, since an analysis weighs
+# each repository once. A `human` file that is a kept `mixed` file's earlier revision is kept
+# whatever the count.
+PER_REPO = 50
+# The largest file the big tier holds. The tree holds MAX_BYTES at most. Few files are larger,
+# but they are a large share of the bytes, and many of them are changelogs and link lists.
+BIG_MAX_BYTES = 131072
+# How many times a repository whose harvest failed is tried again, over later runs.
+MAX_ATTEMPTS = 3
+# A model card the Hugging Face Trainer, or Keras, wrote for itself: a template, not prose.
+GENERATED_CARD = re.compile(r"model card has been generated automatically", re.I)
+# How many files are read from the forge in one round trip.
+CHUNK = 24
 
 
 def read_commits(repo: Path, rev: str) -> dict[str, Commit]:
@@ -946,33 +1438,28 @@ def read_commits(repo: Path, rev: str) -> dict[str, Commit]:
     return commits
 
 
-def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, list[tuple[str, str]]]]]:
-    """For every Markdown path, the commits that touched it, newest first, from a pass over the
-    raw diffs with rename detection off: (sha, status, new blob, [(status, path) of every other
-    Markdown change in the same commit])."""
-    out = git_lines(
-        repo,
-        "log",
-        "--no-merges",
-        "--no-renames",
-        "--raw",
-        "--format=@@%H",
-        rev,
-        "--",
-        ":(glob)**/*.md",
-    )
-    histories: dict[str, list] = {}
+# One change to a file, newest first: its commit, its status (`A`, `M`, `D`, ...), the blob
+# before and after, and, when it added the file, the Markdown files the same commit deleted.
+Change = tuple[str, str, str, str, list[str]]
+
+
+def md_histories(repo: Path, rev: str) -> dict[str, list[Change]]:
+    """For every Markdown path, the commits up to `rev` that touched it, newest first, from one
+    pass over the raw diffs with rename detection off."""
+    histories: dict[str, list[Change]] = {}
     sha = None
     changes: list[tuple[str, str, str, str]] = []
 
     def flush() -> None:
         # Only a file's adding commit needs the deletions beside it, to spot a move; they are
         # shared, not copied per path, since one commit can touch thousands of files.
-        deleted = [(s, p, n, o) for s, p, n, o in changes if s == "D"]
-        for status, path, new, old in changes:
-            histories.setdefault(path, []).append((sha, status, new, deleted if status == "A" else []))
+        deleted = [path for status, path, _, _ in changes if status == "D"]
+        for status, path, old, new in changes:
+            histories.setdefault(path, []).append(
+                (sha, status, old, new, deleted if status == "A" else []))
 
-    for line in out:
+    for line in git_lines(repo, "log", "--no-merges", "--no-renames", "--raw", "--no-abbrev",
+                          "--format=@@%H", rev, "--", ":(glob)**/*.md"):
         if line.startswith("@@"):
             if sha:
                 flush()
@@ -982,10 +1469,36 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
             meta, _, path = line.partition("\t")
             fields = meta.split()
             if len(fields) >= 5:
-                changes.append((fields[4][0], path, fields[3], fields[2]))
+                changes.append((fields[4][0], path, fields[2], fields[3]))
     if sha:
         flush()
     return histories
+
+
+@dataclass
+class Walk:
+    """A file's history up to a revision, newest first, back to the commit that last added it."""
+
+    hist: list[Commit]
+    # Each commit's change to the file: the blob before, None when it added the file; the blob
+    # after; and its status.
+    changes: dict[str, tuple[str | None, str, str]]
+    added: str | None
+    deleted: list[str]
+
+
+def walk(entries: list[Change], commits: dict[str, Commit]) -> Walk:
+    hist: list[Commit] = []
+    changes: dict[str, tuple[str | None, str, str]] = {}
+    for sha, status, old, new, deleted in entries:
+        commit = commits.get(sha)
+        if commit is None:
+            continue
+        hist.append(commit)
+        changes[sha] = (None if status == "A" else old, new, status)
+        if status == "A":
+            return Walk(hist, changes, sha, deleted)
+    return Walk(hist, changes, None, [])
 
 
 def shallow_boundary(git_dir: Path) -> set[str]:
@@ -1015,6 +1528,26 @@ def prefetch(repo: Path, oids: list[str]) -> None:
             timeout=600, check=False)
 
 
+def read_blobs(repo: Path, oids: list[str]) -> dict[str, bytes | None]:
+    """The bytes of each blob the clone holds, None for one it does not, fetching none."""
+    result = subprocess.run(["git", "-C", str(repo), "cat-file", "--batch"],
+                            input="".join(f"{oid}\n" for oid in oids).encode(),
+                            capture_output=True, timeout=600,
+                            env=git_env(GIT_NO_LAZY_FETCH="1"))
+    out, i, found = result.stdout, 0, {}
+    for oid in oids:
+        end = out.index(b"\n", i)
+        header = out[i:end].split()
+        if len(header) == 3:
+            size = int(header[2])
+            found[oid] = out[end + 1:end + 1 + size]
+            i = end + 2 + size
+        else:
+            found[oid] = None
+            i = end + 1
+    return found
+
+
 def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | None) -> tuple[str | None, list[str]]:
     names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
     prefetch(repo, [files[name] for name in names])
@@ -1037,219 +1570,473 @@ def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | No
             }.get(m.group(1).lower())
             if spdx:
                 return spdx, ["README.md (license: in the card metadata)"]
-    if license_id and license_id.split(" OR ")[0] in ALLOWED_LICENSES and all(
-        part in ALLOWED_LICENSES for part in license_id.split(" OR ")
-    ):
+    if license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR ")):
         return license_id, names
     return None, names
 
 
-def harvest_one(c: Candidate, work: Path) -> dict:
-    result: dict = {"candidate": c.__dict__, "files": [], "note": ""}
-    clone = work / "clones" / hashlib.sha1(c.key.encode()).hexdigest()[:16]
-    if clone.exists():
-        shutil.rmtree(clone)
+class Licences:
+    """The licences of a tree: the root's, and any nearer one on the way to a file. Each must be
+    one the corpus accepts, and the nearest is the file's."""
+
+    def __init__(self, repo: Path, files: dict[str, str], hf: bool):
+        self.repo = repo
+        self.files = files
+        readme = git_bytes(repo, "cat-file", "blob", files["README.md"]) if (
+            hf and "README.md" in files) else None
+        self.root, self.root_files = repo_license(repo, files, hf, readme)
+        self.by_dir: dict[str, list[str]] = {}
+        for path in files:
+            directory, _, name = path.rpartition("/")
+            if directory and LICENSE_FILE.match(name) and not EXCLUDED_DIRS.search(directory):
+                self.by_dir.setdefault(directory, []).append(path)
+        self.known: dict[str, str | None] = {}
+
+    def of(self, path: str) -> tuple[str, list[str]] | None:
+        """The licence `path` is under and every licence file on its way; None when one of
+        those is not a licence the corpus accepts."""
+        parts = path.split("/")[:-1]
+        nearer = [d for d in ("/".join(parts[:i]) for i in range(1, len(parts) + 1))
+                  if d in self.by_dir]
+        if not nearer or self.root is None:
+            return (self.root, self.root_files) if self.root else None
+        todo = [d for d in nearer if d not in self.known]
+        prefetch(self.repo, [self.files[f] for d in todo for f in self.by_dir[d]])
+        for d in todo:
+            found = [classify_license_text(git_bytes(self.repo, "cat-file", "blob", self.files[f])
+                                           [:200_000].decode("utf-8", "replace"))
+                     for f in self.by_dir[d]]
+            license_id = combine_licenses(found)
+            ok = license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR "))
+            self.known[d] = license_id if ok else None
+        if any(self.known[d] is None for d in nearer):
+            return None
+        return self.known[nearer[-1]], self.root_files + [f for d in nearer for f in self.by_dir[d]]
+
+
+@dataclass
+class Pick:
+    """A file whose history may give it a label, and what the harvest learns of it."""
+
+    label: str
+    path: str
+    commit: str
+    date: str
+    blob: str
+    walk: Walk
+    truncated: bool
+    license: tuple[str, list[str]]
+    basis: str = ""
+    data: bytes | None = None
+    refused: str | None = None
+    before: Pick | None = None
+    twin: bool = False
+    # Whether its commits prove its label, once `settle` has looked; None until then.
+    proven: bool | None = None
+
+    @property
+    def sha256(self) -> str:
+        return hashlib.sha256(self.data or b"").hexdigest()
+
+
+def pending(hist: list[Commit]) -> list[Commit]:
+    """The squash-merges in `hist` whose marks GitHub has not been asked about."""
+    return [h for h in hist if h.pull is not None and h.pull_verdict is None]
+
+
+def assume_proven(hist: list[Commit]) -> list[Commit]:
+    """`hist`, as it would be if GitHub proved every squash-merge not yet asked about."""
+    unasked = {h.sha for h in pending(hist)}
+    return [replace(h, pull_verdict=("proven", "")) if h.sha in unasked else h for h in hist]
+
+
+def refusal(data: bytes | None, cap: int) -> str | None:
+    """Why the bytes of a file that earned a label are not quoted, or None when they are."""
+    if data is None:
+        return "missing"
+    if len(data) < MIN_BYTES:
+        return "small"
+    if len(data) > cap:
+        return "large"
+    text = data.decode("utf-8", "replace")
+    if frontmatter_mentions_budget(text):
+        return "budget"
+    if GENERATED_CARD.search(text):
+        return "generated"
+    return None
+
+
+class Gone(Exception):
+    pass
+
+
+# A clone that failed with one of these may clone the next time.
+NETWORK = re.compile(r"ssl|unable to access|early eof|connection|timed out|RPC failed|"
+                     r"could not resolve host|the remote end hung up", re.I)
+
+
+def clone_candidate(c: Candidate, clone: Path, meta: dict | None) -> str:
+    """Makes a blobless bare clone of the default branch, whole when GitHub says it is short
+    and from SHALLOW_SINCE otherwise, and says which. Raises Gone when the forge refuses it."""
+
+    def run(*extra: str) -> None:
+        for attempt in range(3):
+            shutil.rmtree(clone, ignore_errors=True)
+            try:
+                subprocess.run(["git", "clone", "--quiet", "--bare", "--filter=blob:none",
+                                "--no-tags", "--single-branch", *extra, c.clone_url, str(clone)],
+                               check=True, capture_output=True, timeout=CLONE_TIMEOUT,
+                               env=git_env())
+                return
+            except subprocess.CalledProcessError as error:
+                # A dropped connection is tried again at once; anything else is not.
+                if attempt == 2 or not NETWORK.search(error.stderr.decode(errors="replace")):
+                    raise
+                time.sleep(5 * (attempt + 1))
+
     try:
-        subprocess.run(
-            [
-                "git",
-                "clone",
-                "--quiet",
-                "--filter=blob:none",
-                "--no-checkout",
-                "--single-branch",
-                # Old history is only needed to show that a file existed before the cutoff, and a
-                # file present at the shallow boundary did. Big repositories clone in time.
-                f"--shallow-since={SHALLOW_SINCE}",
-                c.clone_url,
-                str(clone),
-            ],
-            check=True,
-            capture_output=True,
-            timeout=CLONE_TIMEOUT,
-            env=git_env(),
-        )
-        head = git(clone, "rev-parse", "HEAD").strip()
-        count = int(git(clone, "rev-list", "--count", "--no-merges", head).strip() or 0)
-        if count > MAX_COMMITS:
-            result["note"] = f"{count} commits, more than {MAX_COMMITS}"
-            return result
-        commits = read_commits(clone, head)
-        if not commits:
-            result["note"] = "no commits"
-            return result
-        # A shallow clone cannot see where the repository began, nor where a file did when its
-        # oldest commit is a boundary.
-        boundary = shallow_boundary(clone / ".git")
-        result["repo_first_commit"] = None if boundary else min(x.date for x in commits.values())
-        result["repo_head"] = head
-        blobs = work / "blobs"
-        hf = c.host == "huggingface.co"
+        if meta and (meta.get("commits") or 0) <= FULL_DEPTH_COMMITS:
+            try:
+                run()
+                return "full"
+            except subprocess.TimeoutExpired:
+                pass
+        try:
+            run(f"--shallow-since={SHALLOW_SINCE}")
+            return f"since {SHALLOW_SINCE}"
+        except subprocess.CalledProcessError as error:
+            # A repository with no commit since SHALLOW_SINCE has no shallow clone to give.
+            if GONE.search(error.stderr.decode(errors="replace")):
+                raise
+            run()
+            return "full"
+    except subprocess.CalledProcessError as error:
+        message = error.stderr.decode(errors="replace").strip()
+        if GONE.search(message):
+            raise Gone(message[:300]) from error
+        raise RuntimeError(f"git clone: {message[:300]}") from error
 
-        def save(oid: str) -> tuple[bytes, str]:
-            data = git_bytes(clone, "cat-file", "blob", oid)
-            digest = hashlib.sha256(data).hexdigest()
-            path = blobs / digest[:2] / digest
-            if not path.exists():
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(data)
-            return data, digest
 
-        rng = random.Random(c.key)
-
-        # human: the tree at the last commit before the cutoff.
-        cutoff_rev = git(clone, "rev-list", "-1", f"--before={CUTOFF}", head).strip()
-        if cutoff_rev:
-            files = tree_files(clone, cutoff_rev)
-            readme = None
-            if hf and "README.md" in files:
-                readme = git_bytes(clone, "cat-file", "blob", files["README.md"])
-            license_id, license_files = repo_license(clone, files, hf, readme)
-            if license_id:
-                paths = [p for p in files if wanted_path(p)]
-                rng.shuffle(paths)
-                paths.sort(key=lambda p: 0 if kind_of(p) == "readme" and "/" not in p else 1)
-                paths = paths[: HARVEST_PER_REPO * 3]
-                prefetch(clone, [files[p] for p in paths])
-                taken = 0
-                for path in paths:
-                    if taken >= HARVEST_PER_REPO:
-                        break
-                    shas = git(clone, "log", "--no-merges", "--format=%H", cutoff_rev, "--", path).split()
-                    hist = [commits[s] for s in shas if s in commits]
-                    label, basis = label_history(hist, bool(hist) and hist[-1].sha in boundary)
-                    if label != "human":
-                        continue
-                    data, digest = save(files[path])
-                    text = data.decode("utf-8", "replace")
-                    if not MIN_BYTES <= len(data) <= MAX_BYTES or frontmatter_mentions_budget(text):
-                        continue
-                    result["files"].append(
-                        {
-                            "label": "human",
-                            "path": path,
-                            "commit": cutoff_rev,
-                            "commit_date": git(clone, "log", "-1", "--format=%aI", cutoff_rev).strip(),
-                            "sha256": digest,
-                            "size_bytes": len(data),
-                            "license": license_id,
-                            "license_files": license_files,
-                            "history": history_record(hist),
-                            "truncated": hist[-1].sha in boundary,
-                            "basis": basis,
-                        }
-                    )
-                    taken += 1
-
-        # llm and mixed: the tree at HEAD, if an agent has ever committed here. The harvest does
-        # not ask GitHub about squash-merges, so it leaves out a file whose label rests on one.
-        if any(x.tools for x in commits.values()):
-            files = tree_files(clone, head)
-            readme = None
-            if hf and "README.md" in files:
-                readme = git_bytes(clone, "cat-file", "blob", files["README.md"])
-            license_id, license_files = repo_license(clone, files, hf, readme)
-            if license_id:
-                histories = md_histories(clone, head)
-                llm, mixed = [], []
-                for path, entries in histories.items():
-                    if path not in files or not wanted_path(path):
-                        continue
-                    # The history is newest first; stop at the commit that added the file.
-                    hist = []
-                    added, deleted = None, []
-                    for sha, status, new, others in entries:
-                        if sha not in commits:
-                            continue
-                        hist.append(commits[sha])
-                        if status == "A":
-                            added = sha
-                            deleted = [opath for ostatus, opath, _, _ in others if ostatus == "D"]
-                            break
-                    truncated = bool(hist) and hist[-1].sha in boundary
-                    label, basis = label_history(hist, truncated)
-                    # Only an llm label rests on the text being no older than its history.
-                    if label == "llm":
-                        moved = (moved_from(clone, added, path, deleted) if added
-                                 else "a merge commit added it, and the history leaves merges out")
-                        label, basis = label_history(hist, truncated, moved)
-                    if label == "llm":
-                        llm.append((path, hist, basis, truncated))
-                    elif label == "mixed":
-                        mixed.append((path, hist, basis, truncated))
-                for label, group in (("llm", llm), ("mixed", mixed)):
-                    rng.shuffle(group)
-                    group = group[: HARVEST_PER_REPO * 3]
-                    prefetch(clone, [files[path] for path, *_ in group])
-                    taken = 0
-                    for path, hist, basis, truncated in group:
-                        if taken >= HARVEST_PER_REPO:
-                            break
-                        data, digest = save(files[path])
-                        text = data.decode("utf-8", "replace")
-                        if not MIN_BYTES <= len(data) <= MAX_BYTES or frontmatter_mentions_budget(text):
-                            continue
-                        result["files"].append(
-                            {
-                                "label": label,
-                                "path": path,
-                                "commit": head,
-                                "commit_date": commits[head].date if head in commits else git(clone, "log", "-1", "--format=%aI", head).strip(),
-                                "sha256": digest,
-                                "size_bytes": len(data),
-                                "license": license_id,
-                                "license_files": license_files,
-                                "history": history_record(hist),
-                                "truncated": truncated,
-                                "basis": basis,
-                            }
-                        )
-                        taken += 1
-        return result
-    except subprocess.TimeoutExpired:
-        result["note"] = "timeout"
-        return result
-    except Exception as error:  # noqa: BLE001 - one bad repository does not stop the harvest
-        result["note"] = f"error: {str(error)[:300]}"
-        return result
+def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path, cap: int,
+                per_repo: int) -> dict:
+    """Clones one repository and harvests it. Raises on a failure worth trying again."""
+    started = time.time()
+    result: dict = {
+        "key": c.key, "host": c.host, "repo": c.repo, "found_by": sources, "meta": meta,
+        "stars": (meta or {}).get("stars", c.stars), "outcome": "harvested", "depth": None,
+        "head": None, "cutoff_rev": None, "commits": None, "license": None,
+        "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
+        "qualified": {}, "unasked": {}, "kept": {}, "dropped": {}, "sizes": [], "files": [],
+    }
+    clone = work / "clones" / digest(c.key)
+    try:
+        try:
+            result["depth"] = clone_candidate(c, clone, meta)
+        except Gone as error:
+            result["outcome"] = f"gone: {error}"
+        else:
+            harvest_clone(c, clone, work, result, cap, per_repo)
     finally:
         shutil.rmtree(clone, ignore_errors=True)
+    result["seconds"] = round(time.time() - started, 1)
+    return result
+
+
+def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
+                  per_repo: int) -> None:
+    head = git(clone, "rev-parse", "HEAD").strip()
+    result["head"] = head
+    commits = read_commits(clone, head)
+    result["commits"] = len(commits)
+    if not commits or len(commits) > MAX_COMMITS:
+        result["outcome"] = f"{len(commits)} commits"
+        return
+    boundary = shallow_boundary(clone)
+    result["repo_first_commit"] = None if boundary else min(x.date for x in commits.values())
+    cutoff_rev = git(clone, "rev-list", "-1", f"--before={CUTOFF}", head).strip() or None
+    result["cutoff_rev"] = cutoff_rev
+    hf = c.host == "huggingface.co"
+    rng = random.Random(c.key)
+    pulls = PullRequests(work)
+    dropped: dict[str, int] = result["dropped"]
+
+    def drop(why: str) -> None:
+        dropped[why] = dropped.get(why, 0) + 1
+
+    def picks(rev: str, licences: Licences) -> dict[str, tuple[Walk, str, tuple]]:
+        """Every wanted Markdown file at `rev`, with its history and licence, whose bytes the
+        last commit in that history wrote."""
+        files = licences.files
+        found = {}
+        for path, entries in md_histories(clone, rev).items():
+            blob = files.get(path)
+            if blob is None or not wanted_path(path):
+                continue
+            w = walk(entries, commits)
+            if not w.hist or w.changes[w.hist[0].sha][1] != blob:
+                # A merge wrote these bytes, and the history leaves merges out.
+                drop("merge-bytes")
+                continue
+            found[path] = (w, blob)
+        return found
+
+    # human: the files at the last commit before the cutoff.
+    human: dict[str, Pick] = {}
+    if cutoff_rev:
+        licences = Licences(clone, tree_files(clone, cutoff_rev), hf)
+        result["license_at_cutoff"] = licences.root
+        if licences.root:
+            date = git(clone, "log", "-1", "--format=%aI", cutoff_rev).strip()
+            for path, (w, blob) in sorted(picks(cutoff_rev, licences).items()):
+                truncated = w.hist[-1].sha in boundary
+                label, basis = label_history(w.hist, truncated)
+                if label != "human":
+                    continue
+                lic = licences.of(path)
+                if lic is None:
+                    drop("nearer-license")
+                    continue
+                human[path] = Pick("human", path, cutoff_rev, date, blob, w, truncated, lic, basis)
+    result["qualified"]["human"] = len(human)
+
+    # llm and mixed: the files at HEAD, if an agent has ever committed here.
+    candidates: list[Pick] = []
+    if any(x.tools or x.pull is not None for x in commits.values()):
+        licences = Licences(clone, tree_files(clone, head), hf)
+        result["license"] = licences.root
+        if licences.root:
+            date = git(clone, "log", "-1", "--format=%aI", head).strip()
+            for path, (w, blob) in sorted(picks(head, licences).items()):
+                truncated = w.hist[-1].sha in boundary
+                label, _ = label_history(assume_proven(w.hist), truncated)
+                if label not in ("llm", "mixed"):
+                    continue
+                lic = licences.of(path)
+                if lic is None:
+                    drop("nearer-license")
+                    continue
+                candidates.append(Pick(label, path, head, date, blob, w, truncated, lic))
+
+    blobs: dict[str, bytes | None] = {}
+
+    def fetch(chunk: list[Pick]) -> None:
+        want = [p.blob for p in chunk if p.blob not in blobs]
+        for _ in range(3):
+            if not want:
+                return
+            prefetch(clone, want)
+            found = read_blobs(clone, want)
+            blobs.update((oid, data) for oid, data in found.items() if data is not None)
+            want = [oid for oid in want if found[oid] is None]
+        # The forge would not give them: the network, likely, so the repository is tried again.
+        raise RuntimeError(f"{len(want)} blobs could not be fetched")
+
+    def examine(p: Pick) -> bool:
+        """Reads the file's bytes, records its size, and says whether it is quoted."""
+        if p.data is None and p.refused is None:
+            data = blobs.get(p.blob)
+            p.refused = refusal(data, cap)
+            result["sizes"].append([p.label, len(data) if data is not None else None,
+                                    p.refused or "kept"])
+            if p.refused is None:
+                p.data = data
+        return p.refused is None
+
+    def settle(p: Pick, ask: bool) -> bool | None:
+        """Whether `p`'s commits prove its label, asking GitHub about squash-merges when `ask`
+        and the label rests on them; None when that needs a question not asked."""
+        if p.proven is None:
+            label, basis = label_history(p.walk.hist, p.truncated)
+            if label != p.label and pending(p.walk.hist):
+                if not ask:
+                    return None
+                result["questions"] += len(pending(p.walk.hist))
+                pulls.settle(c.host, c.repo, p.walk.hist)
+                label, basis = label_history(p.walk.hist, p.truncated)
+            p.basis, p.proven = basis, label == p.label
+        return p.proven
+
+    def moved(p: Pick) -> bool:
+        """Whether an `llm` file's text may be older than its history, and so has no label."""
+        if p.label != "llm":
+            return False
+        why = (moved_from(clone, p.walk.added, p.path, p.walk.deleted) if p.walk.added
+               else "a merge commit added it, and the history leaves merges out")
+        if why:
+            p.basis = label_history(p.walk.hist, p.truncated, why)[1]
+            drop("moved")
+        return why is not None
+
+    def take(ordered: list[Pick], want: int) -> list[Pick]:
+        """Up to `want` of `ordered` whose label holds and whose bytes are quoted, in order."""
+        kept: list[Pick] = []
+        i = 0
+        while i < len(ordered) and len(kept) < want:
+            chunk = [p for p in ordered[i:i + CHUNK] if p.label == "human"
+                     or (settle(p, ask=True) and not moved(p))]
+            i += CHUNK
+            fetch(chunk + [p.before for p in chunk if p.before])
+            for p in chunk:
+                if len(kept) < want and examine(p):
+                    kept.append(p)
+        # The rest are counted, not read.
+        for p in ordered[i:]:
+            if p.label != "human" and settle(p, ask=False) is None:
+                result["unasked"][p.label] = result["unasked"].get(p.label, 0) + 1
+        return kept
+
+    def shuffled(items: list[Pick]) -> list[Pick]:
+        items = sorted(items, key=lambda p: p.path)
+        rng.shuffle(items)
+        return items
+
+    # mixed first, those with a human twin before the others, so that the twins are kept.
+    mixed = shuffled([p for p in candidates if p.label == "mixed"])
+    for p in mixed:
+        p.before = human.get(p.path)
+    mixed.sort(key=lambda p: p.before is None)
+    kept_mixed = []
+    for p in take(mixed, per_repo):
+        twin = p.before
+        if twin is not None and examine(twin):
+            if twin.sha256 == p.sha256:
+                # The agents' commits left the bytes as a person wrote them.
+                drop("same-as-before")
+                continue
+            twin.twin = True
+        else:
+            p.before = None
+        kept_mixed.append(p)
+    kept_llm = take(shuffled([p for p in candidates if p.label == "llm"]), per_repo)
+    twins = [p.before for p in kept_mixed if p.before]
+    rest = shuffled([p for p in human.values() if not p.twin])
+    kept_human = twins + take(rest, max(0, per_repo - len(twins)))
+
+    # What qualified: every human file, and every llm or mixed file whose commits proved it,
+    # whether or not it was read.
+    for label in ("llm", "mixed"):
+        result["qualified"][label] = sum(1 for p in candidates if p.label == label and p.proven)
+    blob_dir = work / "blobs"
+    for p in kept_human + kept_llm + kept_mixed:
+        target = blob_dir / p.sha256[:2] / p.sha256
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(p.data or b"")
+        result["files"].append(pick_record(p))
+    result["kept"] = {"human": len(kept_human), "llm": len(kept_llm), "mixed": len(kept_mixed)}
+
+
+def change_record(commit: Commit, w: Walk) -> dict:
+    old, new, _ = w.changes[commit.sha]
+    return {"commit": commit.sha, "date": commit.date, "committed": commit.committed,
+            "old": old, "new": new, "status": commit.status}
+
+
+def pick_record(p: Pick) -> dict:
+    """What `stage` needs of a kept file to write its sidecar."""
+    record = {
+        "label": p.label, "path": p.path, "commit": p.commit, "commit_date": p.date,
+        "blob": p.blob, "sha256": p.sha256, "size_bytes": len(p.data or b""),
+        "license": p.license[0], "license_files": p.license[1], "basis": p.basis,
+        "history": history_record(p.walk.hist, p.walk, p.truncated), "before": None,
+    }
+    if p.before:
+        earlier = {h.sha for h in p.before.walk.hist}
+        record["before"] = {
+            "sha256": p.before.sha256, "commit": p.before.commit, "date": p.before.date,
+            "between": [change_record(h, p.walk) for h in p.walk.hist
+                        if h.sha not in earlier and h.status != "agent"],
+        }
+    return record
+
+
+def parse_deadline(text: str) -> float | None:
+    """A time to stop by: `90m`, `5h`, or a time such as 2026-09-27T20:00, in seconds since the
+    epoch."""
+    if not text:
+        return None
+    if m := re.fullmatch(r"(\d+(?:\.\d+)?)([mh])", text):
+        return time.time() + float(m[1]) * (60 if m[2] == "m" else 3600)
+    return datetime.fromisoformat(text).timestamp()
 
 
 def harvest(args: argparse.Namespace) -> None:
+    """Harvests the candidates `discover` found, each once, in the order --order gives, until
+    --limit repositories have been cloned or --deadline passes. GitHub's metadata is asked
+    first, and a repository it shows cannot give a fixture is not cloned. Each result is kept
+    in DIR/results/; a repository whose harvest failed is logged to DIR/errors.jsonl and tried
+    again on a later run, MAX_ATTEMPTS times in all."""
     work = Path(args.work)
     results_dir = work / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
-    candidates = [Candidate(**json.loads(line)) for line in (work / "candidates.jsonl").read_text().splitlines()]
+    found, sources = load_candidates(work)
+    keys = sorted(found)
     if args.only:
-        pattern = re.compile(args.only)
-        candidates = [c for c in candidates if pattern.search(c.found_by) or pattern.search(c.key)]
-    random.Random(0).shuffle(candidates)
-    if args.order == "stars":
-        # Well-starred repositories tend to be older, and so to have a human history an agent
-        # later edited.
-        candidates.sort(key=lambda c: -(c.stars or 0))
-    if args.limit:
-        candidates = candidates[: args.limit]
-    todo = []
-    for c in candidates:
-        path = results_dir / (hashlib.sha1(c.key.encode()).hexdigest()[:16] + ".json")
-        if not path.exists():
-            todo.append((c, path))
-    log(f"harvest: {len(todo)} of {len(candidates)} candidates to do")
+        only = re.compile(args.only)
+        keys = [k for k in keys if only.search(k) or any(only.search(s) for s in sources[k])]
+    meta = github_meta(work, [found[k] for k in keys])
+    errors_path = work / "errors.jsonl"
+    attempts: dict[str, int] = {}
+    for row in jsonl(errors_path) if errors_path.exists() else []:
+        attempts[row["key"]] = attempts.get(row["key"], 0) + 1
+    deadline = parse_deadline(args.deadline)
+
+    todo: list[str] = []
+    skipped = 0
+    for key in order_candidates(keys, sources, meta, args.order, args.seed):
+        if args.limit and len(todo) >= args.limit:
+            break
+        path = results_dir / f"{digest(key)}.json"
+        if path.exists() or attempts.get(key, 0) >= MAX_ATTEMPTS:
+            continue
+        why = meta_skip(meta.get(key))
+        if why:
+            c = found[key]
+            path.write_text(json.dumps({"key": key, "host": c.host, "repo": c.repo,
+                                        "found_by": sources[key], "meta": meta.get(key),
+                                        "outcome": f"skipped: {why}", "files": []}))
+            skipped += 1
+            continue
+        todo.append(key)
+    log(f"harvest: {len(todo)} repositories to clone; {skipped} skipped on GitHub's metadata")
+
     counts = {"human": 0, "llm": 0, "mixed": 0}
-    done = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
-        futures = {pool.submit(harvest_one, c, work): (c, path) for c, path in todo}
-        for future in concurrent.futures.as_completed(futures):
-            c, path = futures[future]
-            result = future.result()
-            path.write_text(json.dumps(result))
-            done += 1
-            for f in result["files"]:
-                counts[f["label"]] += 1
-            if done % 10 == 0 or result["files"]:
-                log(f"harvest {done}/{len(todo)} {c.key}: {len(result['files'])} {result['note']} | {counts}")
+    started = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        running: dict = {}
+        queue = iter(todo)
+        done = 0
+        while True:
+            while len(running) < args.jobs * 2 and (deadline is None or time.time() < deadline):
+                key = next(queue, None)
+                if key is None:
+                    break
+                future = pool.submit(harvest_one, found[key], sources[key], meta.get(key), work,
+                                     args.max_bytes, args.per_repo)
+                running[future] = key
+            if not running:
+                break
+            finished, _ = concurrent.futures.wait(running, timeout=60,
+                                                  return_when=concurrent.futures.FIRST_COMPLETED)
+            for future in finished:
+                key = running.pop(future)
+                done += 1
+                try:
+                    result = future.result()
+                except Exception as error:  # noqa: BLE001 - logged, and tried again next run
+                    log(f"harvest {done}/{len(todo)} {key}: FAILED {str(error)[:300]}")
+                    with errors_path.open("a") as f:
+                        f.write(json.dumps({"key": key, "at": time.strftime("%FT%TZ", time.gmtime()),
+                                            "error": str(error)[:1000]}) + "\n")
+                    continue
+                (results_dir / f"{digest(key)}.json").write_text(json.dumps(result))
+                for label, n in result["kept"].items():
+                    counts[label] += n
+                kept = "/".join(str(result["kept"].get(label, 0)) for label in LABELS)
+                log(f"harvest {done}/{len(todo)} {key}: {result['outcome'][:80]}, kept {kept} in "
+                    f"{result['seconds']:.0f}s | {counts} after {time.time() - started:.0f}s")
+    if deadline is not None and time.time() >= deadline:
+        log("harvest: stopped at the deadline; run it again to go on")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1305,128 +2092,270 @@ def content_facts(data: bytes) -> dict:
     }
 
 
-def restate(f: dict) -> bool:
-    """Checks a harvested file against the current CUTOFF, which may be earlier than the one it
-    was harvested under, and words its basis from its history. False when it no longer fits."""
-    h = f["history"]
-    tools = ", ".join(h["ai_tools"])
-    # A truncated history shows where the clone's history ends, not where the file began.
-    cut = (f"; the clone's history ends at {h['first_commit_date'][:10]}, so it may be older"
-           if f.get("truncated") else "")
-    if f["label"] == "human":
-        if h["last_commit_date"][:10] >= CUTOFF_DATE:
-            return False
-        f["basis"] = (f"not edited since {h['last_commit_date'][:10]}: all {h['commits']} commits "
-                      f"that touched it predate {CUTOFF_DATE} and none carries an AI tool's mark"
-                      f"{cut}")
-    elif f["label"] == "mixed":
-        if h["first_commit_date"][:10] >= CUTOFF_DATE:
-            return False
-        f["basis"] = (f"its oldest commit, of {h['first_commit_date'][:10]}, predates "
-                      f"{CUTOFF_DATE} and carries no mark; {h['ai_commits']} of its "
-                      f"{h['commits']} commits are marked as an AI agent's ({tools}){cut}")
-    else:
-        f["basis"] = (f"every one of the {h['commits']} commits that touched it is marked as an AI "
-                      f"agent's ({tools})")
-    return True
+def core_digests() -> set[str]:
+    """The sha256 of every fixture of tests/corpus/core, which no collected fixture may be."""
+    core = Path(__file__).resolve().parents[2] / "tests" / "corpus" / "core"
+    return {hashlib.sha256(p.read_bytes()).hexdigest() for p in core.glob("*.md")}
+
+
+def read_exclusions(path: str, live: dict[str, dict]) -> dict[str, dict]:
+    """The exclusions in the JSON Lines file at `path`, each `{"sha256", "reason"}`, as `recheck`
+    writes them: sha256 to the live fixture's manifest line, with its reason."""
+    excluded: dict[str, dict] = {}
+    for row in jsonl(Path(path)) if path else []:
+        if set(row) != {"sha256", "reason"} or not row["reason"]:
+            raise SystemExit(f"{path}: {row} is not a sha256 and a reason")
+        if row["sha256"] not in live:
+            raise SystemExit(f"{path}: {row['sha256']} is not a live fixture")
+        if row["sha256"] in excluded:
+            raise SystemExit(f"{path}: {row['sha256']} is excluded twice")
+        excluded[row["sha256"]] = dict(live[row["sha256"]], reason=row["reason"])
+    return excluded
+
+
+def origin(label: str, host: str, repo: str, path: str) -> tuple[str, str, str, str]:
+    """What makes a fixture the same file as another of its label. A forge matches owners and
+    names whatever their case."""
+    return (label, host, repo.lower(), path)
+
+
+def stage(args: argparse.Namespace) -> None:
+    """Writes the files `harvest` kept into --out, laid out as tests/corpus/ is, each with its
+    sidecar, for `pack`; with repos.jsonl, the ledger of every repository the harvest tried. It
+    is the one writer of collected sidecars.
+
+    A file the big tier already holds, by its sha256 or its label and origin, is left out, and
+    so is a `core/` fixture. Names are made unique: a repository keeps the directory it has in
+    the big tier, a new one whose name another holds gets a numbered one, and so does a fixture
+    whose name is another's without regard to case, which a case-insensitive disk would merge.
+    A `mixed` file names its earlier revision in `before` only when the big tier will hold that
+    revision as a `human` fixture."""
+    work, out, corpus = Path(args.work), Path(args.out), Path(args.corpus)
+    if out.exists():
+        raise SystemExit(f"{out} exists: stage writes a new tree")
+    captured = time.strftime("%Y-%m-%d", time.gmtime())
+    published, live = live_fixtures(corpus)
+    excluded = read_exclusions(args.exclude, live)
+    for sha in excluded:
+        live.pop(sha)
+
+    taken = set(live) | core_digests()
+    origins = {origin(r["label"], r["host"], r["repo"], r["path"]) for r in live.values()}
+    names = {r["file"].lower() for r in live.values()}
+    # Every directory any batch has used belongs to its repository for good.
+    directories: dict[str, str] = {}
+    owners: dict[str, str] = {}
+    for batch in published:
+        for row in jsonl(batch / "manifest.jsonl"):
+            key = f"{row['host']}/{row['repo']}".lower()
+            directory = row["file"].split("/")[1]
+            directories.setdefault(key, directory)
+            owners.setdefault(directory.lower(), key)
+
+    results = [json.loads(p.read_text()) for p in sorted((work / "results").glob("*.json"))]
+    results.sort(key=lambda r: r["key"])
+    staged: list[tuple[dict, dict, str]] = []
+    left: dict[str, int] = {}
+    kept: dict[str, dict[str, int]] = {}
+    for result in results:
+        key = result["key"]
+        if key not in directories:
+            base = directory = repo_dir(result["host"], result["repo"])
+            n = 1
+            while owners.get(directory.lower(), key) != key:
+                n += 1
+                directory = f"{base}--{n}"
+            directories[key] = directory
+            owners[directory.lower()] = key
+        for f in sorted(result.get("files", []), key=lambda f: (f["label"], f["path"])):
+            why = ("held" if origin(f["label"], result["host"], result["repo"], f["path"]) in origins
+                   else "duplicate" if f["sha256"] in taken
+                   else "large" if f["size_bytes"] > args.max_bytes else None)
+            if why:
+                left[why] = left.get(why, 0) + 1
+                continue
+            stem = fixture_name(f["path"]).removesuffix(".md")
+            file, n = f"{f['label']}/{directories[key]}/{stem}.md", 1
+            while file.lower() in names:
+                n += 1
+                file = f"{f['label']}/{directories[key]}/{stem}--{n}.md"
+            names.add(file.lower())
+            taken.add(f["sha256"])
+            origins.add(origin(f["label"], result["host"], result["repo"], f["path"]))
+            staged.append((f, result, file))
+            counts = kept.setdefault(key, {})
+            counts[f["label"]] = counts.get(f["label"], 0) + 1
+
+    # A `mixed` file's earlier revision must be a live `human` fixture: staged here, or held.
+    humans = {(r["sha256"], r["host"], r["repo"].lower(), r["path"], r["commit"])
+              for r in live.values() if r["label"] == "human"}
+    humans |= {(f["sha256"], r["host"], r["repo"].lower(), f["path"], f["commit"])
+               for f, r, _ in staged if f["label"] == "human"}
+    unpaired = 0
+    for f, r, _ in staged:
+        before = f.get("before")
+        if before and (before["sha256"], r["host"], r["repo"].lower(), f["path"],
+                       before["commit"]) not in humans:
+            f["before"] = None
+            unpaired += 1
+
+    for f, result, file in staged:
+        data = (work / "blobs" / f["sha256"][:2] / f["sha256"]).read_bytes()
+        if hashlib.sha256(data).hexdigest() != f["sha256"]:
+            raise SystemExit(f"{work}/blobs: {f['sha256']} does not hold its bytes")
+        label, directory, name = file.split("/")
+        record = dict(f, host=result["host"], repo=result["repo"], stars=result.get("stars"),
+                      found_by=result["found_by"][0],
+                      repo_first_commit=result.get("repo_first_commit"),
+                      facts=dict(content_facts(data), kind=kind_of(f["path"])))
+        sidecar = build_sidecar(record, label, name, f"{label}/{directory}/{f['path']}", captured)
+        sidecar["sidecar_version"] = 3
+        if f["before"]:
+            sidecar["before"] = f["before"]
+        target = out / file
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        target.with_suffix(".json").write_text(
+            json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n")
+
+    ledger = []
+    for result in results:
+        ledger.append({
+            "host": result["host"], "repo": result["repo"], "found_by": result["found_by"],
+            "outcome": result["outcome"], "head": result.get("head"),
+            "cutoff_rev": result.get("cutoff_rev"), "depth": result.get("depth"),
+            "commits": result.get("commits"), "license": result.get("license"),
+            "license_at_cutoff": result.get("license_at_cutoff"),
+            "qualified": result.get("qualified") or {}, "unasked": result.get("unasked") or {},
+            "kept": kept.get(result["key"], {}),
+        })
+    (out / "repos.jsonl").write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in ledger))
+    tally: dict[str, int] = {}
+    for f, _, _ in staged:
+        tally[f["label"]] = tally.get(f["label"], 0) + 1
+    paired = sum(1 for f, _, _ in staged if f["label"] == "mixed" and f["before"])
+    log(f"stage: {dict(sorted(tally.items()))} from {len(kept)} of {len(results)} repositories "
+        f"into {out}; {paired} mixed with their earlier revision, {unpaired} without it; left "
+        f"out {dict(sorted(left.items()))}")
+
+
+# The share of the tree one kind of document may take, and the share not in English.
+MAX_KIND_SHARE = 0.35
+MAX_OTHER_LANGUAGE_SHARE = 0.05
 
 
 def select(args: argparse.Namespace) -> None:
-    work = Path(args.work)
-    out = Path(args.out)
-    per_category = args.per_category
-    captured = time.strftime("%Y-%m-%d", time.gmtime())
+    """Samples the tree, --out, from the live big tier under --corpus: each collected category
+    keeps the fixtures it holds that the big tier still holds with the same sidecar, drops the
+    rest, and is filled up to --per-category from the big tier, at most MAX_BYTES a file and
+    MAX_PER_REPO from one repository. --replace samples each category afresh. Fixtures and
+    sidecars are copied byte for byte, so an unchanged tier leaves the tree as it is; --check
+    changes nothing and fails if a run would."""
+    corpus, out = Path(args.corpus), Path(args.out)
+    _, live = live_fixtures(corpus)
+    core = core_digests()
 
-    pools: dict[str, list[dict]] = {"human": [], "llm": [], "mixed": []}
-    for path in sorted((work / "results").glob("*.json")):
-        result = json.loads(path.read_text())
-        c = result["candidate"]
-        for f in result["files"]:
-            f = dict(f, host=c["host"], repo=c["repo"], stars=c.get("stars"), found_by=c["found_by"],
-                     repo_first_commit=result.get("repo_first_commit"))
-            if restate(f):
-                pools[f["label"]].append(f)
+    def sidecar_of(row: dict) -> Path:
+        return corpus / "batches" / row["batch"] / Path(row["file"]).with_suffix(".json")
 
     rng = random.Random(args.seed)
-    used_sha: set[str] = set()
-    # The core fixtures are already in the corpus; nothing may duplicate them.
-    for existing in out.rglob("*.md"):
-        used_sha.add(hashlib.sha256(existing.read_bytes()).hexdigest())
+    removals: list[tuple[Path, str]] = []
+    additions: list[dict] = []
+    for label in LABELS:
+        held: list[dict] = []
+        for path in sorted((out / label).glob("*/*.json")):
+            row = live.get(json.loads(path.read_text())["content"]["sha256"])
+            if args.replace:
+                removals.append((path, "replaced"))
+            elif row is None or row["label"] != label:
+                removals.append((path, "not a live fixture of the big tier"))
+            elif sidecar_of(row).read_bytes() != path.read_bytes():
+                removals.append((path, "its sidecar is not its twin's"))
+            else:
+                held.append(dict(row, tree=str(path.relative_to(out).with_suffix(".md"))))
 
-    chosen: dict[str, list[dict]] = {}
-    for label, pool in pools.items():
-        rng.shuffle(pool)
-        by_repo: dict[str, list[dict]] = {}
-        for f in pool:
-            by_repo.setdefault(f"{f['host']}/{f['repo']}", []).append(f)
-        # Repositories are taken in turn from each source, a forge or a way of finding them, so
-        # that no one source crowds out the others.
-        groups: dict[str, list[str]] = {}
-        for r, files_ in by_repo.items():
-            f0 = files_[0]
-            group = f0["host"] if f0["host"] != "github.com" else re.split(r"[-:]", f0["found_by"])[0] + (
-                "-agent" if f0["found_by"].startswith("sg-agent") else "")
-            groups.setdefault(group, []).append(r)
-        for members in groups.values():
-            rng.shuffle(members)
-        repos = []
-        for i in range(max(len(m) for m in groups.values())):
-            for name in sorted(groups):
-                if i < len(groups[name]):
-                    repos.append(groups[name][i])
-        picked: list[dict] = []
-        kinds: dict[str, int] = {}
-        non_english = 0
+        per_repo: dict[str, int] = {}
         owners: dict[str, int] = {}
-        for round_ in range(MAX_PER_REPO):
-            for r in repos:
-                if len(picked) >= per_category:
-                    break
-                taken = [f for f in picked if f"{f['host']}/{f['repo']}" == r]
-                if len(taken) != round_:
-                    continue
-                owner = r.split("/")[1]
-                if owners.get(owner, 0) >= MAX_PER_REPO * 2:
-                    continue
-                for f in by_repo[r]:
-                    if f["sha256"] in used_sha or any(t["path"] == f["path"] for t in taken):
-                        continue
-                    data = (work / "blobs" / f["sha256"][:2] / f["sha256"]).read_bytes()
-                    facts = content_facts(data)
-                    kind = kind_of(f["path"])
-                    if kinds.get(kind, 0) >= per_category * 0.35:
-                        continue
-                    if facts["natural_language"] != "en":
-                        if non_english >= per_category * 0.05:
-                            continue
-                        non_english += 1
-                    f["facts"] = facts
-                    f["kind"] = kind
-                    kinds[kind] = kinds.get(kind, 0) + 1
-                    owners[owner] = owners.get(owner, 0) + 1
-                    used_sha.add(f["sha256"])
-                    picked.append(f)
-                    break
-        chosen[label] = picked
-        log(f"select {label}: {len(picked)} from {len(by_repo)} repositories; kinds {dict(sorted(kinds.items()))}")
+        kinds: dict[str, int] = {}
+        other_language = 0
+        paths = {r["tree"].lower() for r in held}
+        for r in held:
+            repo = f"{r['host']}/{r['repo']}".lower()
+            per_repo[repo] = per_repo.get(repo, 0) + 1
+            owner = repo.split("/")[1]
+            owners[owner] = owners.get(owner, 0) + 1
+            kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
+            other_language += r["natural_language"] != "en"
 
-    for label, picked in chosen.items():
-        base = out / label
-        if base.exists() and args.replace:
-            shutil.rmtree(base)
-        for f in picked:
-            directory = repo_dir(f["host"], f["repo"])
-            name = fixture_name(f["path"])
-            if not name.lower().endswith(".md"):
-                name += ".md"
-            target = base / directory / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            data = (work / "blobs" / f["sha256"][:2] / f["sha256"]).read_bytes()
-            target.write_bytes(data)
-            f["facts"] = dict(f["facts"], kind=f["kind"])
-            sidecar = build_sidecar(f, label, name, f"{label}/{directory}/{f['path']}", captured)
-            target.with_suffix(".json").write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n")
-    log("select: done")
+        pool = sorted((r for r in live.values() if r["label"] == label
+                       and r["size_bytes"] <= MAX_BYTES and r["sha256"] not in core
+                       and r["file"].lower() not in paths
+                       and r["sha256"] not in {h["sha256"] for h in held}),
+                      key=lambda r: r["sha256"])
+        rng.shuffle(pool)
+        # Repositories are taken in turn from each source, so no one source crowds out others.
+        by_repo: dict[str, list[dict]] = {}
+        for r in pool:
+            by_repo.setdefault(f"{r['host']}/{r['repo']}".lower(), []).append(r)
+        groups: dict[str, list[str]] = {}
+        for repo, rows in by_repo.items():
+            found_by = json.loads(sidecar_of(rows[0]).read_text())["source"]["found_by"]
+            groups.setdefault(family(found_by) if rows[0]["host"] == "github.com"
+                              else rows[0]["host"], []).append(repo)
+        order = []
+        for i in range(max((len(g) for g in groups.values()), default=0)):
+            order += [groups[g][i] for g in sorted(groups) if i < len(groups[g])]
+
+        picked: list[dict] = []
+        need = args.per_category - len(held)
+        for _ in range(MAX_PER_REPO):
+            for repo in order:
+                if len(picked) >= need:
+                    break
+                owner = repo.split("/")[1]
+                if per_repo.get(repo, 0) >= MAX_PER_REPO or owners.get(owner, 0) >= 2 * MAX_PER_REPO:
+                    continue
+                for r in by_repo[repo]:
+                    if r in picked:
+                        continue
+                    if kinds.get(r["kind"], 0) >= args.per_category * MAX_KIND_SHARE:
+                        continue
+                    other = r["natural_language"] != "en"
+                    if other and other_language >= args.per_category * MAX_OTHER_LANGUAGE_SHARE:
+                        continue
+                    picked.append(r)
+                    per_repo[repo] = per_repo.get(repo, 0) + 1
+                    owners[owner] = owners.get(owner, 0) + 1
+                    kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
+                    other_language += other
+                    break
+        additions += picked
+        log(f"select {label}: keeps {len(held)}, drops "
+            f"{sum(1 for p, _ in removals if p.parts[-3] == label)}, adds {len(picked)} "
+            f"from {len(by_repo)} repositories")
+
+    if args.check:
+        for path, why in removals:
+            log(f"select --check: would drop {path.relative_to(out)}: {why}")
+        for r in additions:
+            log(f"select --check: would add {r['file']}")
+        if removals or additions:
+            raise SystemExit(1)
+        log("select --check: the tree is the sample it would take")
+        return
+    for path, _ in removals:
+        path.with_suffix(".md").unlink()
+        path.unlink()
+        if not any(path.parent.iterdir()):
+            path.parent.rmdir()
+    for r in additions:
+        source = corpus / "batches" / r["batch"] / r["file"]
+        target = out / r["file"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+        shutil.copyfile(source.with_suffix(".json"), target.with_suffix(".json"))
+    log(f"select: dropped {len(removals)}, added {len(additions)}")
 
 
 def build_sidecar(f: dict, label: str, name: str, layout_path: str, captured: str,
@@ -1519,10 +2448,14 @@ def describe(args: argparse.Namespace) -> None:
             log(f"describe {fixture.name}: {label}, {license_id}")
 
 
-def history_record(hist: list[Commit]) -> dict:
+def history_record(hist: list[Commit], w: Walk | None = None,
+                   truncated: bool | None = None) -> dict:
+    """The `history` of a sidecar. Given the file's walk, version 3's too: its committer dates,
+    whether a shallow clone cut it short, each distinct mark with how many commits carry it, and
+    each marked commit's change to the file."""
     authors = sorted({h.author for h in hist})
     tools = sorted({t for h in hist for t in h.tools})
-    return {
+    record = {
         "commits": len(hist),
         "first_commit_date": hist[-1].date if hist else None,
         "last_commit_date": hist[0].date if hist else None,
@@ -1531,161 +2464,23 @@ def history_record(hist: list[Commit]) -> dict:
         "ai_commits": sum(1 for h in hist if h.tools),
         "ai_tools": tools,
     }
-
-
-# ---------------------------------------------------------------------------------------------
-# squash-merges
-
-# The least time between two requests to GitHub, in seconds.
-GITHUB_PACE = 0.5
-# GitHub lists no more than this many commits of a pull request.
-MAX_PULL_COMMITS = 250
-GITHUB_STATUS = re.compile(r"HTTP/\S+ (\d{3})")
-
-
-class GitHubError(Exception):
-    pass
-
-
-class PullRequests:
-    """Asks GitHub, with `gh api`, which commits the pull request of a squash-merge held. A
-    squash-merge proves its marks only when every one of those commits carries a mark that
-    counts; one GitHub cannot show proves nothing.
-
-    Requests go one at a time, GITHUB_PACE apart, and wait out a rate limit. What GitHub shows is
-    kept in DIR/pulls/, one file for each repository, so each question is asked once; a request
-    that failed is asked again on the next run."""
-
-    def __init__(self, work: Path):
-        self.dir = work / "pulls"
-        self.dir.mkdir(parents=True, exist_ok=True)
-        self.pace = threading.Lock()
-        self.last = 0.0
-        self.store = threading.Lock()
-        self.cache: dict[str, dict] = {}
-        self.asked = 0
-        self.failed = 0
-
-    def settle(self, host: str, repo: str, hist: list[Commit]) -> None:
-        """Asks about each squash-merge in `hist` that carries a mark that counts."""
-        for commit in hist:
-            if commit.pull is not None and commit.pull_verdict is None:
-                commit.pull_verdict = self.verdict(host, repo, commit)
-
-    def verdict(self, host: str, repo: str, commit: Commit) -> tuple[str, str]:
-        name = f"the squash-merge of #{commit.pull}"
-        if host != "github.com":
-            return "unverified", f"{name}, on {host}, where only GitHub is asked"
-        try:
-            facts = self.facts(repo, commit.sha, commit.pull)
-        except GitHubError as error:
-            self.failed += 1
-            return "unverified", f"{name}, which GitHub could not show: {error}"
-        if facts["pull"] is None:
-            return "unverified", f"{name}, which GitHub could not show: {facts['why']}"
-        name = f"the squash-merge of #{facts['pull']}"
-        for fields in facts["commits"]:
-            c = read_commit(**{key: fields[key] for key in COMMIT_FIELDS})
-            if not any(mark.counts for mark, _ in c.marks):
-                return "squash-merge", (f"{name}, whose commit {c.sha[:10]} by {c.author} "
-                                        "carries no AI agent's mark")
-        if len(facts["commits"]) < facts["total"]:
-            return "unverified", f"{name}, of {facts['total']} commits, more than GitHub lists"
-        return "proven", (f"{name}, whose {facts['total']} "
-                          f"{agree(facts['total'], 'commit carries', 'commits all carry')} an AI "
-                          "agent's mark")
-
-    def facts(self, repo: str, sha: str, number: int) -> dict:
-        """What GitHub shows of the pull request merged as `sha`: `pull`, its number; `total`,
-        how many commits it had; and `commits`, as many as GitHub lists, each a dict of
-        COMMIT_FIELDS and `parents`. `pull` is None, and `why` says why, when GitHub shows no
-        pull request merged as it."""
-        path = self.dir / (hashlib.sha1(f"github.com/{repo}".encode()).hexdigest()[:16] + ".json")
-        with self.store:
-            if repo not in self.cache:
-                self.cache[repo] = json.loads(path.read_text()) if path.exists() else {}
-            known = self.cache[repo].get(sha)
-        if known is not None:
-            return known
-        pull = self.get(f"repos/{repo}/pulls/{number}")
-        if not pull or pull.get("merge_commit_sha") != sha:
-            # The number in a subject need not be its own pull request's: ask which one it was.
-            listed = self.get(f"repos/{repo}/commits/{sha}/pulls") or []
-            numbers = [p["number"] for p in listed if p.get("merge_commit_sha") == sha]
-            pull = self.get(f"repos/{repo}/pulls/{numbers[0]}") if numbers else None
-        if not pull:
-            facts: dict = {"pull": None, "why": "no pull request was merged as it"}
-        else:
-            commits = []
-            for page in range(1, (min(pull["commits"], MAX_PULL_COMMITS) + 99) // 100 + 1):
-                listed = self.get(f"repos/{repo}/pulls/{pull['number']}/commits"
-                                  f"?per_page=100&page={page}") or []
-                for c in listed:
-                    author, committer = c["commit"]["author"], c["commit"]["committer"]
-                    commits.append({
-                        "sha": c["sha"], "author": author["name"], "email": author["email"],
-                        "date": author["date"], "committer": committer["name"],
-                        "cemail": committer["email"], "committed": committer["date"],
-                        "message": c["commit"]["message"], "parents": len(c["parents"]),
-                    })
-            facts = {"pull": pull["number"], "total": pull["commits"], "commits": commits}
-        with self.store:
-            self.cache[repo][sha] = facts
-            path.write_text(json.dumps(self.cache[repo]))
-            self.asked += 1
-            if self.asked % 25 == 0:
-                log(f"asked GitHub about {self.asked} squash-merges")
-        return facts
-
-    def get(self, path: str):
-        """GitHub's answer to GET `path`, or None when it has no such thing. Waits out a rate
-        limit, tries a server error again, and raises GitHubError on any other failure."""
-        problem = ""
-        for attempt in range(4):
-            with self.pace:
-                time.sleep(max(0.0, self.last + GITHUB_PACE - time.monotonic()))
-                try:
-                    result = subprocess.run(["gh", "api", "--include", path], capture_output=True,
-                                            timeout=120)
-                except FileNotFoundError:
-                    raise SystemExit("asking GitHub about squash-merges needs gh") from None
-                except subprocess.TimeoutExpired:
-                    result = None
-                self.last = time.monotonic()
-            text = result.stdout.decode("utf-8", "replace").replace("\r\n", "\n") if result else ""
-            head, _, body = text.partition("\n\n")
-            lines = head.splitlines()
-            status = GITHUB_STATUS.match(lines[0]) if lines else None
-            if status is None:
-                problem = (result.stderr.decode("utf-8", "replace").strip()[:200] if result
-                           else "no answer in 120s")
-                time.sleep(2 ** (attempt + 1))
-                continue
-            code = int(status[1])
-            headers = {k.strip().lower(): v.strip() for k, _, v in
-                       (line.partition(":") for line in lines[1:])}
-            if 200 <= code < 300:
-                return json.loads(body)
-            if code in (404, 410, 422):
-                return None
-            if code == 401:
-                raise SystemExit("gh is not logged in to GitHub: run gh auth login")
-            if code in (403, 429) and ("retry-after" in headers
-                                       or headers.get("x-ratelimit-remaining") == "0"):
-                wait = (int(headers.get("retry-after", "0"))
-                        or int(headers.get("x-ratelimit-reset", "0")) - time.time())
-                log(f"GitHub's rate limit: waiting {max(wait, 0):.0f}s")
-                time.sleep(min(max(wait, 0) + 1, 3600))
-                continue
-            try:
-                message = json.loads(body).get("message", "").partition("\n")[0]
-            except (ValueError, AttributeError):
-                message = ""
-            problem = f"it answered {code}, {message}"[:160].rstrip(", ")
-            if code < 500:
-                raise GitHubError(problem)
-            time.sleep(2 ** (attempt + 1))
-        raise GitHubError(problem)
+    if w is None:
+        return record
+    marks: dict[tuple[str, str, str, str], int] = {}
+    for h in hist:
+        for mark, text in {(m, t) for m, t in h.marks}:
+            key = (text, mark.tool, mark.kind, mark.place)
+            marks[key] = marks.get(key, 0) + 1
+    record.update(
+        truncated=bool(truncated),
+        first_committer_date=hist[-1].committed,
+        last_committer_date=hist[0].committed,
+        marks=[{"text": text, "tool": tool, "kind": kind, "place": place, "commits": n}
+               for (text, tool, kind, place), n in sorted(marks.items(),
+                                                          key=lambda item: (-item[1], item[0]))],
+        edits=[change_record(h, w) for h in hist if h.marks],
+    )
+    return record
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1967,36 +2762,35 @@ def live_fixtures(corpus: Path) -> tuple[list[Path], dict[str, dict]]:
 
 
 def pack(args: argparse.Namespace) -> None:
-    """Writes the collected fixtures of a tree laid out as tests/corpus/ is into a new batch of
-    the big tier, with the batch's manifest. Fixtures and sidecars are copied byte for byte; one
-    the big tier already holds is left out. The batch is written under --work, where make clean
-    cannot reach it before it is published, then copied into --corpus, the fetched big tier.
+    """Writes the collected fixtures of a tree laid out as tests/corpus/ is, such as `stage`
+    writes, into a new batch of the big tier, with the batch's manifest, and the tree's
+    repos.jsonl when it has one. Fixtures and sidecars are copied byte for byte, each to the path
+    it has in the tree; one the big tier already holds is left out. The batch is written under
+    --work, where make clean cannot reach it before it is published, then copied into --corpus,
+    the fetched big tier.
 
-    A fixture is held already when a live fixture has its sha256, or its label, host, repo and
-    path: a file's human revision and its mixed revision may both be fixtures, once each.
+    A fixture is held already when a live fixture has its sha256, or its label and origin: a
+    file's human revision and its mixed revision may both be fixtures, once each.
 
     --exclude names a JSON Lines file of fixtures to drop, each `{"sha256", "reason"}`, as
     `recheck` writes it. They are dropped before the tree is compared with the big tier, so a
     fixture can be dropped and added again with a new sidecar; one added again unchanged is
-    refused, since that would undo the exclusion. A batch may hold exclusions alone."""
+    refused, since that would undo the exclusion. A batch may hold exclusions alone. A `human`
+    fixture that a live `mixed` fixture names as its earlier revision is excluded only with it,
+    and a `mixed` fixture may name only a live `human` one."""
     source = Path(args.source)
     corpus = Path(args.corpus)
     work = Path(args.work)
     published, live = live_fixtures(corpus)
-
-    exclusions = jsonl(Path(args.exclude)) if args.exclude else []
-    for row in exclusions:
-        if set(row) != {"sha256", "reason"} or not row["reason"]:
-            raise SystemExit(f"{args.exclude}: {row} is not a sha256 and a reason")
-        if row["sha256"] not in live:
-            raise SystemExit(f"{args.exclude}: {row['sha256']} is not a live fixture")
-    excluded = {row["sha256"]: live.pop(row["sha256"]) for row in exclusions}
-    if len(excluded) != len(exclusions):
-        raise SystemExit(f"{args.exclude}: a fixture is excluded twice")
-    origins = {(r["label"], r["host"], r["repo"], r["path"]) for r in live.values()}
+    excluded = read_exclusions(args.exclude, live)
+    for sha in excluded:
+        live.pop(sha)
+    origins = {origin(r["label"], r["host"], r["repo"], r["path"]) for r in live.values()}
+    names = {r["file"].lower() for r in live.values()}
 
     entries: list[dict] = []
     copies: list[tuple[Path, str]] = []
+    earlier: list[tuple[str, dict, dict]] = []
     # What this batch adds, so that it adds nothing twice and names no two fixtures alike.
     added: set = set()
     held = 0
@@ -2011,8 +2805,8 @@ def pack(args: argparse.Namespace) -> None:
             if sidecar["authorship"]["label"] != label:
                 raise SystemExit(f"{sidecar_path}: labelled {sidecar['authorship']['label']} "
                                  f"but under {label}/")
-            origin = (label, src["host"], src["repo"], src["path"])
-            if content["sha256"] in live or origin in origins:
+            key = origin(label, src["host"], src["repo"], src["path"])
+            if content["sha256"] in live or key in origins:
                 held += 1
                 continue
             if (gone := excluded.get(content["sha256"])) is not None:
@@ -2020,18 +2814,21 @@ def pack(args: argparse.Namespace) -> None:
                 if old.read_bytes() == sidecar_path.read_bytes():
                     raise SystemExit(f"{fixture}: excluded, and would be added again unchanged; "
                                      "drop it from the tree first")
-            if content["sha256"] in added or origin in added:
+            if content["sha256"] in added or key in added:
                 raise SystemExit(f"{fixture}: a second copy of a fixture already in this batch")
-            name = fixture_name(src["path"])
-            if not name.lower().endswith(".md"):
-                name += ".md"
-            if sidecar["fixture"] != name:
-                raise SystemExit(f"{sidecar_path}: names its fixture {sidecar['fixture']}, not {name}")
-            file = f"{label}/{repo_dir(src['host'], src['repo'])}/{name}"
-            if file in added:
-                raise SystemExit(f"{fixture}: a second fixture would be {file}")
-            added |= {content["sha256"], origin, file}
+            directory = sidecar_path.parent.name
+            if sidecar["fixture"] != fixture.name:
+                raise SystemExit(f"{sidecar_path}: names its fixture {sidecar['fixture']}")
+            if sidecar["layout_path"] != f"{label}/{directory}/{src['path']}":
+                raise SystemExit(f"{sidecar_path}: its layout_path is not its place in the tree")
+            file = f"{label}/{directory}/{fixture.name}"
+            if file.lower() in names:
+                raise SystemExit(f"{fixture}: a second fixture would be {file}, ignoring case")
+            names.add(file.lower())
+            added |= {content["sha256"], key}
             copies.append((fixture, file))
+            if sidecar.get("before"):
+                earlier.append((file, src, sidecar["before"]))
             entries.append({
                 "file": file,
                 "sha256": content["sha256"],
@@ -2046,16 +2843,31 @@ def pack(args: argparse.Namespace) -> None:
                 "kind": content["kind"],
                 "ai_tools": sidecar["history"]["ai_tools"],
             })
-    if not entries and not exclusions:
+    if not entries and not excluded:
         raise SystemExit(f"nothing to pack: the big tier already holds all {held} fixtures")
+
+    # Every live `mixed` fixture that names its earlier revision names a live `human` one.
+    humans = {(r["sha256"], r["host"], r["repo"].lower(), r["path"], r["commit"])
+              for r in [*live.values(), *entries] if r["label"] == "human"}
+    for row in live.values():
+        if row["label"] == "mixed" and row["sidecar_version"] >= 3:
+            sidecar = json.loads((corpus / "batches" / row["batch"] / row["file"])
+                                 .with_suffix(".json").read_text())
+            if sidecar.get("before"):
+                earlier.append((row["file"], sidecar["source"], sidecar["before"]))
+    for file, src, before in earlier:
+        if (before["sha256"], src["host"], src["repo"].lower(), src["path"],
+                before["commit"]) not in humans:
+            raise SystemExit(f"{file}: its earlier revision, {before['sha256']}, is not a live "
+                             "human fixture of the same file")
 
     # Batches are read in name order, so a new one must sort after every other.
     today = time.strftime("%Y-%m-%d", time.gmtime())
-    names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
-    sequence = 1 + max((int(m[2]) for n in names if (m := BATCH_NAME.match(n)) and m[1] == today),
-                       default=0)
+    batch_names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
+    sequence = 1 + max((int(m[2]) for n in batch_names
+                        if (m := BATCH_NAME.match(n)) and m[1] == today), default=0)
     name = f"{today}-{sequence:02d}"
-    if sequence > 99 or any(n >= name for n in names):
+    if sequence > 99 or any(n >= name for n in batch_names):
         raise SystemExit(f"{name} would not sort after the batches already in {corpus} and {work}")
 
     # mkdir and copytree refuse a directory that exists, so no batch is ever written into twice.
@@ -2069,9 +2881,12 @@ def pack(args: argparse.Namespace) -> None:
     (staged / "manifest.jsonl").write_text(
         "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries))
     (staged / "exclude.jsonl").write_text(
-        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in exclusions))
+        "".join(json.dumps({"sha256": sha, "reason": row["reason"]}, ensure_ascii=False) + "\n"
+                for sha, row in excluded.items()))
+    if (source / "repos.jsonl").exists():
+        shutil.copyfile(source / "repos.jsonl", staged / "repos.jsonl")
     shutil.copytree(staged, corpus / "batches" / name)
-    log(f"pack {name}: {len(entries)} fixtures, {len(exclusions)} excluded, {held} left out as "
+    log(f"pack {name}: {len(entries)} fixtures, {len(excluded)} excluded, {held} left out as "
         f"already in the big tier; staged in {staged} and copied into {corpus / 'batches' / name}")
 
 
@@ -2080,18 +2895,33 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("discover")
     p.add_argument("--work", required=True)
+    p.add_argument("--only", default="", help="run only the samplers this matches")
+    p.add_argument("--since", default="2025-10-01", help="the first day commit search looks at")
+    p.add_argument("--until", default="", help="the last day it looks at; today by default")
+    p.add_argument("--days", type=int, default=20, help="how many days it looks at, per mark")
     p = sub.add_parser("harvest")
     p.add_argument("--work", required=True)
-    p.add_argument("--jobs", type=int, default=8)
-    p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--jobs", type=int, default=os.cpu_count() or 8)
+    p.add_argument("--limit", type=int, default=0, help="clone at most this many repositories")
+    p.add_argument("--deadline", default="", help="submit no clone after this: 5h, 90m or a time")
     p.add_argument("--only", default="")
-    p.add_argument("--order", choices=["random", "stars"], default="random")
-    p = sub.add_parser("select")
+    p.add_argument("--order", choices=["priority", "sources"], default="priority")
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--per-repo", type=int, default=PER_REPO)
+    p.add_argument("--max-bytes", type=int, default=BIG_MAX_BYTES)
+    p = sub.add_parser("stage")
     p.add_argument("--work", required=True)
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--exclude", default="")
+    p.add_argument("--max-bytes", type=int, default=BIG_MAX_BYTES)
+    p = sub.add_parser("select")
+    p.add_argument("--corpus", required=True)
     p.add_argument("--out", required=True)
     p.add_argument("--per-category", type=int, default=400)
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--replace", action="store_true")
+    p.add_argument("--check", action="store_true")
     p = sub.add_parser("describe")
     p.add_argument("--work", required=True)
     p.add_argument("--dir", required=True)
@@ -2107,8 +2937,8 @@ def main() -> None:
     p.add_argument("--work", required=True)
     p.add_argument("--exclude", default="")
     args = parser.parse_args()
-    {"discover": discover, "harvest": harvest, "select": select, "describe": describe,
-     "recheck": recheck, "pack": pack}[args.command](args)
+    {"discover": discover, "harvest": harvest, "stage": stage, "select": select,
+     "describe": describe, "recheck": recheck, "pack": pack}[args.command](args)
 
 
 if __name__ == "__main__":

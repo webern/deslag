@@ -23,11 +23,14 @@ tests/corpus/
 
 `core/` is hand-picked from Matt's repositories. The other three directories are collected by
 `scripts/llm-detection/collect.py` and named for who wrote the file, as its history tells:
-`human/` was last touched before 2022, every commit to an `llm/` file is marked as an agent's, and
-a `mixed/` file was begun by a person before 2022 and later edited by an agent.
+`human/` files were last touched by a person before 2022, every commit to an `llm/` file is an
+agent's, and a `mixed/` file has commits of both kinds. `corpus.md` section 3 has the rules and
+the marks that make a commit an agent's.
 
 Each holds about 400 fixtures, at most three from one repository, under permissive licences only.
-No fixture is quoted twice.
+No fixture is quoted twice. Some `llm/` and `mixed/` fixtures, here and in the big tier, have
+labels the current rules do not prove. `recheck` lists them, and they stay until the batch that
+adds their replacements drops them.
 
 ## The sidecar
 
@@ -61,14 +64,29 @@ each as its sidecar has it. Each line of `exclude.jsonl` is an earlier fixture t
 
 Its stages are `discover`, which finds candidate repositories; `harvest`, which clones each and
 labels its Markdown from history; `select`, which samples the tree; `describe`, which rewrites the
-sidecars of `core/`; and `pack`.
+sidecars of `core/`; `recheck`; and `pack`. `MARKS` is the table of agent marks, and
+`label_history` derives a label from a file's commits.
+
+`recheck --corpus .blobs/unpacked/corpus --work DIR` makes a blobless clone of each repository the
+live big tier quotes, full depth unless that times out, and derives each fixture's label again
+from its file's history. For a squash-merge that carries a mark, `PullRequests` asks GitHub with
+`gh api`, one request at a time, which commits its pull request held. `describe` asks GitHub the
+same way. `harvest` does not, and leaves out a file whose label rests on a squash-merge.
+
+The evidence for each repository is kept under `DIR/evidence/`, and the clone deleted; GitHub's
+answers are kept under `DIR/pulls/`. So a run resumes where the last stopped and retries a
+repository or a question that failed. It writes `DIR/verdicts.jsonl` on every run, and
+`DIR/exclude.jsonl` once every repository is done; from then on a run clones nothing and judges
+every label again in moments.
 
 `pack --from tests/corpus --corpus .blobs/unpacked/corpus --work DIR` reads the published batches,
 then writes the collected fixtures of the tree they do not hold into a new batch under `DIR`, with
-its manifest and an empty `exclude.jsonl`, and copies it into `--corpus`.
+its manifest, and copies it into `--corpus`. `--exclude FILE` adds the exclusions `recheck` wrote,
+and a batch may hold those alone.
 
 It copies fixtures and sidecars byte for byte, checks each against its sidecar, and refuses a
-second fixture with one name, sha256 or origin. The batch is named for the day, with the next
+second fixture with one name, sha256 or origin, an exclusion of a fixture that is not live, and an
+excluded fixture the tree still holds unchanged. The batch is named for the day, with the next
 sequence, and must sort after every batch there is.
 
 ## The loaders
@@ -98,7 +116,8 @@ returns the live fixtures, in the order they were added.
 ## Tests
 
 `tests/corpus.rs` and `tests/golden.rs` run the tree through deslag. `tests/blobs.rs` tests
-`load_blobs` on small batches built from tree fixtures in a temporary directory, and holds three
-tests that `make test` lists as ignored: every fetched batch keeps the rules, every collected
-fixture of the tree is in the big tier with the same sidecar, and none is a `core/` fixture.
+`load_blobs` on small batches built from tree fixtures in a temporary directory, one of them a
+batch of exclusions alone. It holds three tests that `make test` lists as ignored: every fetched
+batch keeps the rules, every collected fixture of the tree is in the big tier with the same
+sidecar, and none is a `core/` fixture.
 `make test-blobs` fetches the image and runs them.

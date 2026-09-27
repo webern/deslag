@@ -12,7 +12,7 @@
 
 mod common;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 use common::Repo;
@@ -21,7 +21,8 @@ use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
-use deslag::config::ListGrowth;
+use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups};
+use deslag::lint::banned_phrases::{self, CATALOGUE};
 use deslag::lint::{Before, list_growth};
 use serde_json::{Value, json};
 
@@ -582,4 +583,104 @@ fn list_growth_finds_what_its_golden_file_says() {
          committing it.",
         differ.join("\n")
     );
+}
+
+/// Each phrase of the `banned_phrases` catalogue matches no `human` file of the big tier, and the
+/// `llm` files and repositories the catalogue records. `make fix-catalog` rewrites the counts.
+#[test]
+#[ignore = "needs make fetch-blobs"]
+fn the_catalogue_counts_are_the_big_tiers() {
+    let fixtures = load_blobs(Path::new(FETCHED));
+    let fixtures: Vec<&Fixture> = fixtures
+        .iter()
+        .filter(|fixture| fixture.category == "human" || fixture.category == "llm")
+        .collect();
+    let settings: Vec<BannedPhrases> = CATALOGUE
+        .entries
+        .iter()
+        .map(|entry| BannedPhrases {
+            groups: PhraseGroups {
+                signposts: Some(false),
+                insistence: Some(false),
+                metaphors: Some(false),
+                precision: Some(false),
+            },
+            ban: Some([(entry.phrase.clone(), String::new())].into()),
+            ..BannedPhrases::default()
+        })
+        .collect();
+    // Which entries each fixture holds, each fixture read once, over every core.
+    let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
+    let held: Vec<(&Fixture, Vec<usize>)> = std::thread::scope(|scope| {
+        let workers: Vec<_> = fixtures
+            .chunks(fixtures.len().div_ceil(threads).max(1))
+            .map(|chunk| {
+                let settings = &settings;
+                scope.spawn(move || {
+                    chunk
+                        .iter()
+                        .map(|fixture| {
+                            let text = String::from_utf8_lossy(&fixture.bytes);
+                            let document = Document::markdown(&text);
+                            let entries = (0..settings.len())
+                                .filter(|at| {
+                                    banned_phrases::check(&document, Some(&settings[*at])).is_some()
+                                })
+                                .collect();
+                            (*fixture, entries)
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        workers
+            .into_iter()
+            .flat_map(|worker| worker.join().expect("a worker"))
+            .collect()
+    });
+    let mut counts = HashMap::new();
+    for (at, entry) in CATALOGUE.entries.iter().enumerate() {
+        let holding = held.iter().filter(|(_, entries)| entries.contains(&at));
+        let mut llm_files = 0;
+        let mut llm_repos = BTreeSet::new();
+        for (fixture, _) in holding {
+            assert_ne!(
+                fixture.category, "human",
+                "{} is in {}",
+                entry.phrase, fixture.path
+            );
+            llm_files += 1;
+            llm_repos.insert(fixture.sidecar.source.repo.as_str());
+        }
+        counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
+    }
+
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
+    if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {
+        let text = std::fs::read_to_string(&path).expect("the catalogue");
+        let mut phrase = String::new();
+        let mut fixed = String::new();
+        for line in text.lines() {
+            if let Some(quoted) = line.strip_prefix("phrase = ") {
+                phrase = quoted.trim_matches('"').to_string();
+            }
+            let (files, repos) = counts.get(phrase.as_str()).copied().unwrap_or_default();
+            match line {
+                _ if line.starts_with("llm_files = ") => fixed += &format!("llm_files = {files}"),
+                _ if line.starts_with("llm_repos = ") => fixed += &format!("llm_repos = {repos}"),
+                _ => fixed += line,
+            }
+            fixed.push('\n');
+        }
+        std::fs::write(&path, fixed).expect("the catalogue");
+        return;
+    }
+    for entry in &CATALOGUE.entries {
+        assert_eq!(
+            counts[entry.phrase.as_str()],
+            (entry.llm_files, entry.llm_repos),
+            "{} has drifted: run make fix-catalog and read the diff",
+            entry.phrase
+        );
+    }
 }

@@ -1,0 +1,331 @@
+# Phrases considered for banned_phrases' catalogue and refused, each with its reason, so that
+# `candidates` leaves them out and nobody proposes one again without new evidence. Measured on
+# ghcr.io/webern/deslag-blobs:v2@sha256:33d0d99e2d588f31d7d69563d62599486bcd1e89fe8efcfed6fcdf047d6fca00.
+
+[[phrase]]
+phrase = "ai agent"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "ai agents"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "coding agent"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "coding agents"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "system prompt"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "context window"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "claude code"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "this skill"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "subagent"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "subagents"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "agentic"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "guardrails"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "human review"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "explicit user"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "per-session"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "success criteria"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "follow-ups"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "fail-closed"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "reviewable"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "exit 0"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "exits 0"
+reason = "era jargon that people write too, zero in human only because that tier predates it"
+
+[[phrase]]
+phrase = "do not invent"
+reason = "text of a prompt, not prose a reader sees"
+
+[[phrase]]
+phrase = "nothing here"
+reason = "ordinary English, zero in human only because that tier is older"
+
+[[phrase]]
+phrase = "mcp"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "llm"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "copilot"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "worktree"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "anthropic"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "agents.md"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "claude.md"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "skill.md"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "date: 2026"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "on 2026"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "the 2026"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "of 2026"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "seam"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "dedup"
+reason = "a rare word, a name or a date, which marks an era or a topic"
+
+[[phrase]]
+phrase = "needs no"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "need no"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "says so"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "reads it"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "carries its"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "it carries"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "carry no"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "already carries"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "stays a"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "ships a"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "no per"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "row per"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "per run"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "or explicit"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "evidence and"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "all five"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "all six"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "gap is"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "the stale"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "the committed"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "handed to"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "cites"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "folds"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "collapses"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "survived"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "substitutes"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "an unrelated"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "verdicts"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "restate"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "gains a"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "supplies the"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "wired into"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "is authoritative"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "absent from the"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "is untouched"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "proves the"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "not hand"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "no second"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "no live"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "is refused"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "falls back to the"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "not evidence"
+reason = "common English, zero in human only by register or size"
+
+[[phrase]]
+phrase = "only — no"
+reason = "a character banned_chars covers"
+
+[[phrase]]
+phrase = "1–2"
+reason = "a character banned_chars covers"
+
+[[phrase]]
+phrase = "2–3"
+reason = "a character banned_chars covers"

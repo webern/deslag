@@ -18,7 +18,8 @@ src/
     max_emphasis.rs   the emphasis lint
     repo_layout.rs    the layout lint
     banned_chars.rs   the character lint and its groups
-    banned_phrases.rs the phrase lint
+    banned_phrases.rs the phrase lint and its groups
+    banned_phrases.toml the groups' phrases; see catalog.md
     density.rs        the density lint
     list_growth.rs    the list growth lint
   output/             --format json, sarif and github

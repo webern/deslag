@@ -1,5 +1,6 @@
-`banned_phrases` fails a file holding a phrase that `ban` lists. It bans none by default, so ask
-the human which phrases to ban and what the report should advise instead.
+`banned_phrases` fails a file holding a phrase of its groups, which are on by default, or one that
+`ban` lists. The report names each phrase's group. Switching a group off, or adding a phrase to
+`allow` or `ban`, is the human's call: ask before you change the config.
 
 ```toml
 [md.lints.banned_phrases]

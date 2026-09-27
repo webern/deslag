@@ -17,7 +17,7 @@ CARGO_FLAGS ?=
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs \
         ci \
-        fix fix-clippy fix-fmt fix-golden fix-test-output \
+        fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight \
         fetch-blobs publish-blobs
 
@@ -37,6 +37,7 @@ help:
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
+	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
@@ -125,6 +126,11 @@ fix-fmt: preflight
 # before committing it.
 fix-golden: preflight
 	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --workspace --all-features --test golden
+
+# Rewrites the counts of banned_phrases' catalogue from the big tier, so read
+# the diff before committing it.
+fix-catalog: preflight fetch-blobs
+	DESLAG_FIX_CATALOG=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight

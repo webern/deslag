@@ -48,8 +48,8 @@ take it past that waits for a way to fetch less.
 
 The package is private. A person reads it with their own `gh` login, which needs the
 `read:packages` scope (`gh auth login`, then `gh auth refresh -s read:packages`); publishing needs
-`write:packages`. `blobs.sh` takes the token from `gh` for each run and stores no login. With no
-`gh` login it fetches anonymously, which is all a public package needs.
+`write:packages`. `blobs.sh` takes the token from `gh` for each run and never stores a
+login. With no `gh` login it fetches anonymously, which is all a public package needs.
 
 CI has no `gh` login; it reads the package with the workflow token, which only works while the
 package grants this repository access: Packages -> `deslag-blobs` -> Package settings -> Manage

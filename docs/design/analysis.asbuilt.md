@@ -56,7 +56,7 @@ calls the four others.
 
 ## Reading a tier
 
-`Corpus::read` loads the tier through `load`, drops the tree's `core/`, which carries no label, and
+`Corpus::read` loads the tier through `load`, drops the tree's `core/`, which is not labelled, and
 reads each fixture with `Document::markdown`. Each file becomes a `Doc`: its facets from the
 sidecar, its path in the tier and in its source repository, and its tokens as `u32` ids.
 
@@ -110,7 +110,7 @@ the reference side's other files, which no rate reads.
 ## Lints
 
 `lints` loads a config as `deslag` does, from `--config` or the repository at `--root`, less each
-lint whose `reads_change()` is true, such as `list_growth`: a corpus file has no base. Each file
+lint whose `reads_change()` is true, such as `list_growth`: no corpus file has a base. Each file
 its globs select, or every file with `--every-file`, is checked with `check_file` at its path in
 its source repository, so overrides apply. `repo_layout` is left out too. Each lint that fails a
 file, then `any`, gets a rate per label and per compared tool: failing files, their share, and the

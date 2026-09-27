@@ -111,7 +111,7 @@ wrote, and a batch may hold those alone.
 
 It copies fixtures and sidecars byte for byte, checks each against its sidecar, and refuses a
 second fixture with one name, sha256 or origin, an exclusion of a fixture that is not live, an
-excluded fixture the tree still holds unchanged, and a `before` that names no live `human` twin.
+excluded fixture the tree still holds unchanged, and a `before` whose `human` twin is not live.
 The batch is named for the day, with the next sequence, and must sort after every batch there is.
 
 ## The loaders

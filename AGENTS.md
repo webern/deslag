@@ -18,7 +18,8 @@ deslag/
   src/document/        <- a file read once into blocks, tokens and sentences, which the lints read
   src/parse/           <- the keys a file declares in its frontmatter, such as its byte budget
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
-  tests/               <- the unit tests; cases/ holds small repos, each with what deslag prints
+  tests/               <- the unit tests; cases/ holds small repos, each with what deslag prints,
+                          and golden/ what each lint finds in the corpus
   tests/corpus/        <- quoted Markdown, each fixture with a JSON sidecar: core/ is hand-picked,
                           human/, llm/ and mixed/ are collected, one directory per source repo
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus

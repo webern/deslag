@@ -16,7 +16,7 @@ CARGO_FLAGS ?=
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean \
         ci \
-        fix fix-clippy fix-fmt fix-test-output \
+        fix fix-clippy fix-fmt fix-golden fix-test-output \
         preflight
 
 help:
@@ -32,9 +32,10 @@ help:
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "ci               what CI runs: preflight, check, build, test, with --locked"
-	@echo "fix              apply every automatic fix: fmt, clippy, test output"
+	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
+	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus"
 	@echo "fix-test-output  rewrite the .stderr files of tests/cases from what deslag prints"
 	@echo "preflight        report what must be installed by hand before a build can succeed"
 
@@ -94,13 +95,17 @@ clean:
 ci: CARGO_FLAGS += --locked
 ci: preflight check build test
 
-fix: fix-fmt fix-clippy fix-test-output
+fix: fix-fmt fix-clippy fix-golden fix-test-output
 
 fix-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --all-features --all-targets --fix --allow-dirty --allow-staged
 
 fix-fmt: preflight
 	cargo fmt
+
+# Accepts whatever the lints find now, so read the diff before committing it.
+fix-golden: preflight
+	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test golden
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight

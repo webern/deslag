@@ -26,3 +26,35 @@ was ported directly, it will say so here.
 Code was not ported, but we like the idea of a different exit code for internal errors, the `Block`,
 `Scope` and `Parent` linkage in the tree, the command which shows a file's resolved settings, the
 testing strategy, and some of the lints and corpus analyses.
+
+## docstats
+
+- URL: https://github.com/ghchinoy/docstats
+- Licence: Apache-2.0
+- Studied at: commit
+  [d958885a](https://github.com/ghchinoy/docstats/tree/d958885ab0828a036e57b20714c895dd1461290d)
+
+Code was not ported, but we took the idea of the golden set: a committed record of what the tool
+finds that a refactor must not move, with one switch that rewrites it instead of comparing.
+
+## proselint
+
+- URL: https://github.com/amperser/proselint
+- Licence: BSD-3-Clause
+- Copyright: "Copyright (c) 2014-2015, Jordan Suchow, Michael Pacer, and Lara A. Ross"
+- Studied at: commit
+  [dbed789c](https://github.com/amperser/proselint/tree/dbed789caae662d06c7c8a5a13dd31f1acd36f5c)
+
+Code was not ported, but we like its test that every check has examples and every example names a
+check, which the golden set does for each lint and its golden file.
+
+## remark-lint
+
+- URL: https://github.com/remarkjs/remark-lint
+- Licence: MIT
+- Copyright: "Copyright (c) Titus Wormer"
+- Studied at: commit
+  [ce81d46b](https://github.com/remarkjs/remark-lint/tree/ce81d46b649884aae040562c670c588dd32d706d)
+
+Code was not ported. Each rule's examples are its tests and its docs at once, but nothing fails a
+rule that has none; the golden set fails a lint with no golden file.

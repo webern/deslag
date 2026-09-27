@@ -1,5 +1,6 @@
 # The slop corpus is Markdown quoted from other people's repositories. Its typos are the subject
-# matter, not mistakes to fix, and no fixture may be edited to suit a tool.
+# matter, not mistakes to fix, and no fixture may be edited to suit a tool. The golden files list
+# its fixtures by path, and so quote the names of those repositories and their files.
 
 [files]
-extend-exclude = ["tests/corpus"]
+extend-exclude = ["tests/corpus", "tests/golden/*.txt"]

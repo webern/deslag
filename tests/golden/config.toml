@@ -1,0 +1,35 @@
+# The settings the golden set runs the lints with. tests/golden.rs reads this file as deslag reads
+# a config, and each golden file opens with its lint's table, defaults filled in.
+#
+# Every lint needs a table here, under which some fixtures of the corpus fail and some pass. A
+# lint whose table alone turns it on runs at its defaults, so a changed default moves its file.
+
+schema_version = 1
+
+# Any budget between the smallest fixture and the largest splits the corpus. This one fails few,
+# which keeps the file short: its records barely move, since a fixture's bytes never change.
+[md.lints.max_size_bytes]
+value = 16384
+
+# The limits deslag holds its own Markdown to.
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1.0
+
+[md.lints.repo_layout]
+
+[md.lints.banned_chars]
+
+# Nothing is banned by default. These run each part of the matcher: one word, a row of words, an
+# apostrophe, a hyphen, and a match dropped inside an allowed phrase. They are not advice.
+[md.lints.banned_phrases]
+allow = ["please note that"]
+
+[md.lints.banned_phrases.ban]
+comprehensive = ""
+"in order to" = ""
+"let's" = ""
+"note that" = ""
+production-ready = ""
+
+[md.lints.density]

@@ -1,0 +1,16 @@
+# repo_layout: each fixture under tests/corpus/ that it fails, with what it measured there.
+# A fixture that passes is not listed. Each is linted alone, in an empty directory.
+# tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
+# `make fix-golden` rewrites it; read the diff before committing it.
+# In an empty directory every path a layout lists is missing, so each fixture with the
+# section fails. One without it is left out, and counted as passing.
+# fails 2 of 1230: core 1, human 0, llm 0, mixed 1
+
+[md.lints.repo_layout]
+heading = "Repository layout"
+max_entries = 15
+max_width = 100
+min_entries = 5
+
+core/rt-agents.md problems:8
+mixed/stanlemon--lectionary-js/README.md problems:1

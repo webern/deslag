@@ -2,7 +2,7 @@
 //! and which settings are refused. The reports are pinned by the cases.
 
 use deslag::Document;
-use deslag::config::{BannedPhrases, MdLints, Merge};
+use deslag::config::{BannedPhrases, MdLints, Merge, PhraseGroups};
 use deslag::document::{Token, TokenKind};
 use deslag::lint::banned_phrases::check;
 
@@ -23,6 +23,12 @@ fn banning(phrases: &[&str]) -> BannedPhrases {
                 .map(|phrase| (phrase.to_string(), phrase.to_string()))
                 .collect(),
         ),
+        groups: PhraseGroups {
+            signposts: Some(false),
+            insistence: Some(false),
+            metaphors: Some(false),
+            precision: Some(false),
+        },
         ..BannedPhrases::default()
     }
 }

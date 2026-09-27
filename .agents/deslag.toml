@@ -24,6 +24,9 @@ max_percent = 1
 [md.lints.banned_chars]
 groups = { emoji = true }
 
+# The phrase groups, on by default.
+[md.lints.banned_phrases]
+
 [md.lints.density]
 max_paragraph_chars = 500
 

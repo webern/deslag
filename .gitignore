@@ -9,6 +9,10 @@ test/output/
 .ignored/
 .tmp/
 
+# the corpus's big tier, fetched, and crane, which fetches it; see scripts/blobstore/blobs.md
+.blobs/
+.tools/
+
 # because llms love python
 __pycache__/
 

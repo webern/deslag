@@ -23,6 +23,11 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # make ci fetches the corpus's big tier, a package this repository is granted access to; see
+    # scripts/blobstore/blobs.md.
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
@@ -37,5 +42,17 @@ jobs:
         with:
           tool: typos
 
+      # .blobs is the pinned image unpacked, with the stamp that says so, so a hit means
+      # fetch-blobs touches nothing. Keyed on the lock, with no restore keys: another image is
+      # of no use.
+      - name: Cache the corpus's big tier
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v6.1.0, 2026-06-26
+        with:
+          path: .blobs
+          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
+
+      # blobs.sh reads the package with gh's token, which here is the workflow token.
       - name: CI
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: make ci

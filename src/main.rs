@@ -6,7 +6,8 @@ use std::process::ExitCode;
 use anyhow::Context;
 use clap::Parser;
 
-use deslag::cli::{Cli, Command, Topic};
+use deslag::cli::{Cli, Command, Format, Topic};
+use deslag::output::{github, json, sarif};
 
 /// Exits 0 when a run finishes and nothing fails, 1 when it finishes and a file fails a lint, and 2
 /// when deslag cannot do what it was asked: any error out of `run`, whatever the subcommand. clap
@@ -34,35 +35,47 @@ fn run() -> anyhow::Result<ExitCode> {
             for finding in &report.findings {
                 eprintln!("{}\n", finding.render());
             }
+            if !report.is_clean() {
+                eprintln!("{}", report.summary());
+            }
+            write_stdout(&match args.format {
+                Format::Text => String::new(),
+                Format::Json => json::render(&report),
+                Format::Sarif => sarif::render(&report),
+                Format::Github => github::render(&report),
+            })?;
 
             if report.is_clean() {
-                return Ok(ExitCode::SUCCESS);
+                Ok(ExitCode::SUCCESS)
+            } else {
+                Ok(ExitCode::FAILURE)
             }
-            eprintln!("{}", report.summary());
-            Ok(ExitCode::FAILURE)
         }
         Command::Explain(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             let config = deslag::Config::load(&root, args.config_path.as_deref())?;
-            write_stdout(&deslag::explain(&root, &config, &args.paths)?)
+            write_stdout(&deslag::explain(&root, &config, &args.paths)?)?;
+            Ok(ExitCode::SUCCESS)
         }
         Command::Instructions(args) => {
             let text = match args.topic {
                 None => deslag::instructions::guide(),
                 Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
+                Some(Topic::OutputSchema) => format!("{:#}\n", json::schema()),
             };
-            write_stdout(&text)
+            write_stdout(&text)?;
+            Ok(ExitCode::SUCCESS)
         }
     }
 }
 
-/// Writes `text`, all a command prints, to standard output, and succeeds.
-fn write_stdout(text: &str) -> anyhow::Result<ExitCode> {
+/// Writes `text`, all a command prints, to standard output.
+fn write_stdout(text: &str) -> anyhow::Result<()> {
     // A reader that stops early, such as `head`, is not an error.
     match io::stdout().write_all(text.as_bytes()) {
         Err(error) if error.kind() != io::ErrorKind::BrokenPipe => {
             Err(error).context("cannot write to standard output")
         }
-        _ => Ok(ExitCode::SUCCESS),
+        _ => Ok(()),
     }
 }

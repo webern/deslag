@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "max_size_bytes",
+      "report": "ERROR: deslag detected Markdown bloat!\n\nREADME.md is larger than 40 bytes.\n\nCut README.md to 40 bytes or fewer.",
+      "marks": []
+    }
+  ]
+}

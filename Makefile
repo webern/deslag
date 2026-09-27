@@ -40,7 +40,7 @@ help:
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus"
-	@echo "fix-test-output  rewrite the .stderr files of tests/cases from what deslag prints"
+	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed by hand before a build can succeed"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"

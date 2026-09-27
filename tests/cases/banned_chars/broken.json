@@ -1,0 +1,234 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 22 banned characters.\n\nThis repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 2, 6, 9: U+2014 em dash \"—\"; write `-`\n  line 4: U+2192 rightwards arrow \"→\"; write `->`\n  line 6: U+2026 horizontal ellipsis \"…\"; write `...`\n  line 6: U+00D7 multiplication sign \"×\"; write `x`\n  line 6: U+2264 less-than or equal to \"≤\"; write `<=`\n  line 8: U+2705 white heavy check mark \"✅\"; write `yes`\n  line 8: U+274C cross mark \"❌\"; write `no`\n  line 9: U+00A7 section sign \"§\"; write `section`\n  line 9: U+2022 bullet \"•\"; write `-`\n  line 9: U+200B zero width space; delete it\n  line 13: U+2248 almost equal to \"≈\"; write `~`\n  line 15: U+2500 box-drawing character \"─\"; write `-`\n  line 17: U+00A0 no-break space; write a plain space\n  line 17: U+201C left double quotation mark \"“\"; write `\"`\n  line 17: U+201D right double quotation mark \"”\"; write `\"`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 24,
+          "end": 27,
+          "line": 2,
+          "column": 21,
+          "end_line": 2,
+          "end_column": 22,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 95,
+          "end": 98,
+          "line": 6,
+          "column": 32,
+          "end_line": 6,
+          "end_column": 33,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 205,
+          "end": 208,
+          "line": 9,
+          "column": 30,
+          "end_line": 9,
+          "end_column": 31,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 52,
+          "end": 55,
+          "line": 4,
+          "column": 10,
+          "end_line": 4,
+          "end_column": 11,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 103,
+          "end": 106,
+          "line": 6,
+          "column": 38,
+          "end_line": 6,
+          "end_column": 39,
+          "note": "U+2026 horizontal ellipsis \"…\"; write `...`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 115,
+          "end": 117,
+          "line": 6,
+          "column": 48,
+          "end_line": 6,
+          "end_column": 49,
+          "note": "U+00D7 multiplication sign \"×\"; write `x`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 135,
+          "end": 138,
+          "line": 6,
+          "column": 67,
+          "end_line": 6,
+          "end_column": 68,
+          "note": "U+2264 less-than or equal to \"≤\"; write `<=`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 154,
+          "end": 157,
+          "line": 8,
+          "column": 9,
+          "end_line": 8,
+          "end_column": 10,
+          "note": "U+2705 white heavy check mark \"✅\"; write `yes`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 167,
+          "end": 170,
+          "line": 8,
+          "column": 20,
+          "end_line": 8,
+          "end_column": 21,
+          "note": "U+274C cross mark \"❌\"; write `no`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 177,
+          "end": 179,
+          "line": 9,
+          "column": 7,
+          "end_line": 9,
+          "end_column": 8,
+          "note": "U+00A7 section sign \"§\"; write `section`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 189,
+          "end": 192,
+          "line": 9,
+          "column": 18,
+          "end_line": 9,
+          "end_column": 19,
+          "note": "U+2022 bullet \"•\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 200,
+          "end": 203,
+          "line": 9,
+          "column": 27,
+          "end_line": 9,
+          "end_column": 28,
+          "note": "U+200B zero width space; delete it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 257,
+          "end": 260,
+          "line": 13,
+          "column": 11,
+          "end_line": 13,
+          "end_column": 12,
+          "note": "U+2248 almost equal to \"≈\"; write `~`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 269,
+          "end": 272,
+          "line": 15,
+          "column": 1,
+          "end_line": 15,
+          "end_column": 2,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 272,
+          "end": 275,
+          "line": 15,
+          "column": 2,
+          "end_line": 15,
+          "end_column": 3,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 275,
+          "end": 278,
+          "line": 15,
+          "column": 3,
+          "end_line": 15,
+          "end_column": 4,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 278,
+          "end": 281,
+          "line": 15,
+          "column": 4,
+          "end_line": 15,
+          "end_column": 5,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 281,
+          "end": 284,
+          "line": 15,
+          "column": 5,
+          "end_line": 15,
+          "end_column": 6,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 284,
+          "end": 287,
+          "line": 15,
+          "column": 6,
+          "end_line": 15,
+          "end_column": 7,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 290,
+          "end": 292,
+          "line": 17,
+          "column": 2,
+          "end_line": 17,
+          "end_column": 3,
+          "note": "U+00A0 no-break space; write a plain space"
+        },
+        {
+          "kind": "occurrence",
+          "start": 304,
+          "end": 307,
+          "line": 17,
+          "column": 15,
+          "end_line": 17,
+          "end_column": 16,
+          "note": "U+201C left double quotation mark \"“\"; write `\"`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 312,
+          "end": 315,
+          "line": 17,
+          "column": 21,
+          "end_line": 17,
+          "end_column": 22,
+          "note": "U+201D right double quotation mark \"”\"; write `\"`"
+        }
+      ]
+    }
+  ]
+}

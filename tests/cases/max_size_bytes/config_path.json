@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "notes.md",
+      "lint": "max_size_bytes",
+      "report": "ERROR: deslag detected Markdown bloat!\n\nnotes.md is larger than 20 bytes.\n\nThe file must be made more compact until it fits within its max_size_bytes budget of 20 bytes.\n\nMake sure you keep the most important information, but you must reword and rewrite the file to get it under its size budget.\n\nDo not increase max_size_bytes! Only a human can tell you to do that, and I am a linter, not a human.",
+      "marks": []
+    }
+  ]
+}

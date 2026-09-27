@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 1 banned character.\n\nKeep README.md to ASCII punctuation.\n\nThe characters, and what to write instead:\n  line 3: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 12,
+          "end": 15,
+          "line": 3,
+          "column": 5,
+          "end_line": 3,
+          "end_column": 6,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ]
+}

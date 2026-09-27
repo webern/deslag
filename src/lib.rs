@@ -16,7 +16,7 @@
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
 //! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
 //! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
-//! file gets.
+//! file gets. [`output`] prints a run in the formats a machine reads.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -28,12 +28,13 @@ pub mod explain;
 pub mod glob;
 pub mod instructions;
 pub mod lint;
+pub mod output;
 pub mod parse;
 
 pub use config::{Config, ConfigSource};
 pub use document::Document;
 pub use explain::explain;
-pub use lint::{Finding, Report, Violation, check_file, check_repo};
+pub use lint::{Finding, Lint, Report, Violation, check_file, check_repo};
 
 /// Everything that can go wrong inside the library.
 ///

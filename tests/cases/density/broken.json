@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "AGENTS.md",
+      "lint": "density",
+      "report": "ERROR: deslag detected dense text!\n\nAGENTS.md has 2 paragraphs longer than 600 characters and 1 list item longer than 300 characters.\n\nA long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.\n\nA line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe dense text:\n  line 5: a paragraph of 749 characters\n  line 18: a list item of 318 characters\n  line 20: a paragraph of 749 characters",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 55,
+          "end": 804,
+          "line": 5,
+          "column": 1,
+          "end_line": 5,
+          "end_column": 750,
+          "note": "a paragraph of 749 characters"
+        },
+        {
+          "kind": "occurrence",
+          "start": 1118,
+          "end": 1436,
+          "line": 18,
+          "column": 3,
+          "end_line": 18,
+          "end_column": 321,
+          "note": "a list item of 318 characters"
+        },
+        {
+          "kind": "occurrence",
+          "start": 1440,
+          "end": 2189,
+          "line": 20,
+          "column": 3,
+          "end_line": 20,
+          "end_column": 752,
+          "note": "a paragraph of 749 characters"
+        }
+      ]
+    }
+  ]
+}

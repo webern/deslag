@@ -10,9 +10,9 @@
 //! the row into [`Sentence`]s.
 //!
 //! Every position is a byte offset into the source, so every part of every layer leads back to the
-//! text as written. [`Document::line`] and [`Document::column`] turn an offset into what a report
-//! shows. A fix to the file is an edit to the source at those offsets, never a change to the layers
-//! written back out.
+//! text as written. [`Document::locate`] turns a range of offsets into the [`Location`] a report
+//! shows, and nothing else counts lines or columns. A fix to the file is an edit to the source at
+//! those offsets, never a change to the layers written back out.
 
 mod markdown;
 mod sentences;
@@ -20,6 +20,9 @@ mod tokens;
 
 use std::borrow::Cow;
 use std::ops::Range;
+
+use schemars::JsonSchema;
+use serde::Serialize;
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -263,6 +266,29 @@ pub enum WordType {
     Conjunction,
 }
 
+/// Where a stretch of the source is: its bytes, and the lines and columns a report shows.
+///
+/// The bytes run from `start` up to `end`, which is not included. Lines count from 1 and end at
+/// each LF, so the CR of a CRLF is the last character of its line. Columns count characters,
+/// Unicode scalar values, from 1; a byte order mark that opens the file takes no column, as SARIF
+/// counts them. `end_line` is the line of the last byte, and `end_column` is one past the column of
+/// the last character. An empty stretch ends where it starts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct Location {
+    /// The offset of the first byte, counted from 0.
+    pub start: usize,
+    /// The offset just past the last byte.
+    pub end: usize,
+    /// The line of the first byte, counted from 1.
+    pub line: usize,
+    /// The column of the first character, counted in characters from 1.
+    pub column: usize,
+    /// The line of the last byte.
+    pub end_line: usize,
+    /// One past the column of the last character.
+    pub end_column: usize,
+}
+
 /// A sentence of one block of prose.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Sentence {
@@ -304,14 +330,37 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// Where `range` is: a range of bytes of the source that starts and ends on characters.
+    pub fn locate(&self, range: Range<usize>) -> Location {
+        let last = self.source[range.clone()]
+            .char_indices()
+            .next_back()
+            .map(|(at, _)| range.start + at);
+        let (end_line, end_column) = match last {
+            Some(last) => (self.line(last), self.column(last) + 1),
+            None => (self.line(range.start), self.column(range.start)),
+        };
+        Location {
+            start: range.start,
+            end: range.end,
+            line: self.line(range.start),
+            column: self.column(range.start),
+            end_line,
+            end_column,
+        }
+    }
+
     /// The 1-based line holding byte `offset`.
-    pub fn line(&self, offset: usize) -> usize {
+    fn line(&self, offset: usize) -> usize {
         self.lines.partition_point(|start| *start <= offset)
     }
 
     /// The 1-based column of byte `offset`, counted in characters.
-    pub fn column(&self, offset: usize) -> usize {
-        let start = self.lines[self.line(offset) - 1];
+    fn column(&self, offset: usize) -> usize {
+        let mut start = self.lines[self.line(offset) - 1];
+        if start == 0 && offset > 0 && self.source.starts_with(BYTE_ORDER_MARK) {
+            start = BYTE_ORDER_MARK.len_utf8();
+        }
         self.source[start..offset].chars().count() + 1
     }
 
@@ -376,6 +425,70 @@ impl<'a> Document<'a> {
         self.spans[..before]
             .iter()
             .filter(move |span| span.range.end >= range.end)
+    }
+}
+
+/// The byte order mark, which opens some files and is not part of their text.
+const BYTE_ORDER_MARK: char = '\u{FEFF}';
+
+/// Text gathered from pieces of a source, such as a block's pieces, that can say where a stretch of
+/// itself is in the source.
+pub(crate) struct Gathered<'a> {
+    source: &'a str,
+    /// The text gathered so far.
+    pub(crate) text: String,
+    /// Where each piece starts in `text`, where it is in the source, and whether the source holds
+    /// it as written: an entity, or a line break read as a space, is not.
+    pieces: Vec<(usize, Range<usize>, bool)>,
+}
+
+impl<'a> Gathered<'a> {
+    /// No text yet, from pieces of `source`.
+    pub(crate) fn new(source: &'a str) -> Gathered<'a> {
+        Gathered {
+            source,
+            text: String::new(),
+            pieces: Vec::new(),
+        }
+    }
+
+    /// Adds `text`, which is what the source's bytes at `range` read as.
+    pub(crate) fn push(&mut self, text: &str, range: Range<usize>) {
+        if text.is_empty() {
+            return;
+        }
+        let as_written = self.source[range.clone()] == *text;
+        self.pieces.push((self.text.len(), range, as_written));
+        self.text.push_str(text);
+    }
+
+    /// Where the source holds `range`, a range of bytes of the text that is not empty and starts and
+    /// ends on characters. Inside a piece held as written the answer is exact; a range that starts or
+    /// ends inside another piece takes all of that piece.
+    pub(crate) fn source_range(&self, range: Range<usize>) -> Range<usize> {
+        let piece = |at: usize| {
+            let index = self.pieces.partition_point(|(from, ..)| *from <= at) - 1;
+            &self.pieces[index]
+        };
+        let (from, source, as_written) = piece(range.start);
+        let start = if *as_written {
+            source.start + (range.start - from)
+        } else {
+            source.start
+        };
+        let (from, source, as_written) = piece(range.end - 1);
+        let end = if *as_written {
+            source.start + (range.end - from)
+        } else {
+            source.end
+        };
+        start..end
+    }
+
+    /// Forgets the text gathered so far.
+    pub(crate) fn clear(&mut self) {
+        self.text.clear();
+        self.pieces.clear();
     }
 }
 

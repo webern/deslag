@@ -423,11 +423,69 @@ fn a_block_holds_its_own_tokens_and_sentences() {
     assert_eq!(inside, vec!["Three", ".", "Four"]);
 }
 
+/// Where `needle`, which `text` holds once, is in `text`: its bytes, line and column, and end line
+/// and end column.
+fn located(text: &str, needle: &str) -> (usize, usize, usize, usize, usize, usize) {
+    let start = text.find(needle).expect("the needle");
+    let location = Document::markdown(text).locate(start..start + needle.len());
+    (
+        location.start,
+        location.end,
+        location.line,
+        location.column,
+        location.end_line,
+        location.end_column,
+    )
+}
+
 #[test]
-fn an_offset_has_a_line_and_a_column() {
-    let text = "ab\n\u{e9}cd\n";
+fn a_range_has_lines_and_columns() {
+    assert_eq!(located("ab\ncd\n", "a"), (0, 1, 1, 1, 1, 2));
+    assert_eq!(located("ab\ncd\n", "cd"), (3, 5, 2, 1, 2, 3));
+}
+
+#[test]
+fn columns_count_characters_not_bytes() {
+    assert_eq!(located("ab\n\u{e9}cd\n", "d"), (6, 7, 2, 3, 2, 4));
+    assert_eq!(located("\u{e9}\u{2014}x", "\u{2014}"), (2, 5, 1, 2, 1, 3));
+    // A character outside the Basic Multilingual Plane is one column, not two.
+    assert_eq!(located("\u{1f600}ab", "b"), (5, 6, 1, 3, 1, 4));
+}
+
+#[test]
+fn a_range_ends_on_the_line_of_its_last_byte() {
+    // A range over a whole line and its LF ends on that line, not the next.
+    assert_eq!(located("ab\ncd\n", "ab\n"), (0, 3, 1, 1, 1, 4));
+    assert_eq!(located("ab\ncd\nef", "b\ncd\ne"), (1, 7, 1, 2, 3, 2));
+}
+
+#[test]
+fn a_cr_is_the_last_character_of_its_line() {
+    assert_eq!(located("ab\r\ncd\r\n", "c"), (4, 5, 2, 1, 2, 2));
+    assert_eq!(located("ab\r\ncd\r\n", "b\r"), (1, 3, 1, 2, 1, 4));
+}
+
+#[test]
+fn a_byte_order_mark_takes_no_column() {
+    assert_eq!(located("\u{feff}ab\ncd", "a"), (3, 4, 1, 1, 1, 2));
+    assert_eq!(located("\u{feff}ab\ncd", "c"), (6, 7, 2, 1, 2, 2));
+}
+
+#[test]
+fn an_empty_range_ends_where_it_starts() {
+    let text = "ab\ncd";
     let document = Document::markdown(text);
-    let d = text.find('d').expect("d");
-    assert_eq!((document.line(0), document.column(0)), (1, 1));
-    assert_eq!((document.line(d), document.column(d)), (2, 3));
+    let location = document.locate(4..4);
+    assert_eq!(
+        (
+            location.line,
+            location.column,
+            location.end_line,
+            location.end_column
+        ),
+        (2, 2, 2, 2)
+    );
+    // The end of a file with no final newline is on its last line.
+    let location = document.locate(text.len()..text.len());
+    assert_eq!((location.line, location.column), (2, 3));
 }

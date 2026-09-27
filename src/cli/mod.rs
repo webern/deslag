@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 /// The `deslag` command line.
 #[derive(Debug, Parser)]
@@ -35,6 +35,22 @@ pub struct CheckArgs {
     /// Read the config from this file instead of the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
+    /// What to print on standard output; the text report goes to standard error in every format
+    #[arg(long, value_enum, default_value_t = Format::Text)]
+    pub format: Format,
+}
+
+/// What `deslag check` prints on standard output.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum Format {
+    /// Nothing
+    Text,
+    /// One JSON document, whose schema `deslag instructions output-schema` prints
+    Json,
+    /// One SARIF 2.1.0 log, for GitHub code scanning
+    Sarif,
+    /// One GitHub Actions workflow command per finding, to annotate the files
+    Github,
 }
 
 /// Arguments to `deslag explain`.
@@ -61,4 +77,6 @@ pub struct InstructionsArgs {
 pub enum Topic {
     /// Print the JSON schema of the config file
     ConfigSchema,
+    /// Print the JSON schema of what `deslag check --format json` prints
+    OutputSchema,
 }

@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nAGENTS.md has no \"Repository layout\" section.\n\nGive AGENTS.md a Repository layout of 5 to 9 entries, 80 wide.",
+      "marks": []
+    }
+  ]
+}

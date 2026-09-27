@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "docs/guide.md",
+      "lint": "density",
+      "report": "ERROR: deslag detected dense text!\n\ndocs/guide.md has 1 list item longer than 40 characters.\n\nA long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.\n\nA line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe dense text:\n  line 6: a list item of 48 characters",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 43,
+          "end": 91,
+          "line": 6,
+          "column": 3,
+          "end_line": 6,
+          "end_column": 51,
+          "note": "a list item of 48 characters"
+        }
+      ]
+    }
+  ]
+}

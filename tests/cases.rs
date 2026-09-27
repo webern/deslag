@@ -9,22 +9,28 @@
 //! that turns a lint failure into an error, or back, must fail here rather than pass with the new
 //! text.
 //!
-//! `make fix-test-output` rewrites the `.stderr` files from what deslag prints now, and never a
-//! `.exit` file; read the diff before committing it.
+//! The `.json` file beside a case is what the same run prints on stdout with `--format json`, with
+//! the version of deslag written as `[VERSION]`. That run must print the same stderr and exit with
+//! the same code. A case where deslag cannot run prints nothing on stdout, and has no `.json`.
+//!
+//! A case runs `deslag check` unless an `.args` file beside it holds other arguments, one to a
+//! line, the subcommand first.
+//!
+//! `make fix-test-output` rewrites the `.stderr` and `.json` files from what deslag prints now, and
+//! never a `.exit` or `.args` file; read the diff before committing it.
 //!
 //! A case runs in a copy in a temp directory. It cannot hold a `.git` directory, or a `.gitignore`
 //! that ignores its own files, because git would apply it to this repo too.
 
 mod common;
 
-use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use common::{Repo, code, stderr, stdout};
-use serde_json::Value;
+use deslag::Lint;
 
-/// Set to 1 to rewrite the `.stderr` files instead of comparing with them.
+/// Set to 1 to rewrite the `.stderr` and `.json` files instead of comparing with them.
 const FIX: &str = "DESLAG_FIX_TEST_OUTPUT";
 
 struct Case {
@@ -36,7 +42,14 @@ struct Case {
     expected: PathBuf,
     /// The file holding the code deslag must exit with, when the case has one.
     exit: PathBuf,
+    /// The file holding what deslag must print on stdout with `--format json`, when it prints any.
+    json: PathBuf,
+    /// The file holding the arguments to run deslag with, when they are not `check`.
+    args: PathBuf,
 }
+
+/// The extensions of the files beside a case.
+const BESIDE: &[&str] = &["stderr", "exit", "json", "args"];
 
 impl Case {
     /// Every case under `cases`, and a complaint about each file that is not part of one.
@@ -60,16 +73,18 @@ impl Case {
                         name: name.to_string_lossy().into_owned(),
                         expected: beside(".stderr"),
                         exit: beside(".exit"),
+                        json: beside(".json"),
+                        args: beside(".args"),
                         root: path,
                     });
                     continue;
                 }
                 let beside_a_case = path
                     .extension()
-                    .is_some_and(|extension| extension == "stderr" || extension == "exit");
+                    .is_some_and(|extension| BESIDE.iter().any(|beside| extension == *beside));
                 if !beside_a_case || !path.with_extension("").is_dir() {
                     stray.push(format!(
-                        "{} is neither a case nor the .stderr or .exit file of one",
+                        "{} is neither a case nor its .stderr, .exit, .json or .args file",
                         path.display()
                     ));
                 }
@@ -78,14 +93,26 @@ impl Case {
         (found, stray)
     }
 
-    /// Runs deslag in a copy of the case. Returns what is wrong with its output, or, when `fix` is
-    /// set, writes the output to the `.stderr` file.
+    /// Runs deslag in a copy of the case, then again with `--format json`. Returns what is wrong
+    /// with their output, or, when `fix` is set, writes the output to the `.stderr` and `.json`
+    /// files.
     fn run(&self, fix: bool) -> Option<String> {
         let name = &self.name;
+        let args = match fs::read_to_string(&self.args) {
+            Ok(text) => text.lines().map(str::to_string).collect(),
+            Err(_) => vec!["check".to_string()],
+        };
+        let args: Vec<&str> = args.iter().map(String::as_str).collect();
         let repo = Repo::copy_of(&self.root);
-        let output = repo.check();
+        let output = repo.run(&args);
+        let json_output = repo.run(&[args.as_slice(), &["--format", "json"]].concat());
         let root = fs::canonicalize(repo.root()).expect("a canonical temp root");
-        let actual = stderr(&output).replace(root.to_str().expect("a UTF-8 temp root"), "[ROOT]");
+        let root = root.to_str().expect("a UTF-8 temp root");
+        let actual = stderr(&output).replace(root, "[ROOT]");
+        let version = format!("\"deslag_version\": \"{}\"", env!("CARGO_PKG_VERSION"));
+        let json = stdout(&json_output)
+            .replace(root, "[ROOT]")
+            .replace(&version, "\"deslag_version\": \"[VERSION]\"");
 
         let wanted = match self.wanted(&actual) {
             Ok(wanted) => wanted,
@@ -101,25 +128,29 @@ impl Case {
                 stdout(&output),
             ));
         }
+        if code(&json_output) != wanted || stderr(&json_output).replace(root, "[ROOT]") != actual {
+            return Some(format!(
+                "{name}: with --format json, deslag exited {} and printed to stderr:\n{}\n\
+                 The format changes only what deslag prints on stdout.",
+                code(&json_output),
+                stderr(&json_output),
+            ));
+        }
         if fix {
             fs::write(&self.expected, &actual).expect("a writable .stderr file");
+            if !json.is_empty() {
+                fs::write(&self.json, &json).expect("a writable .json file");
+            } else if self.json.exists() {
+                fs::remove_file(&self.json).expect("a removable .json file");
+            }
             return None;
         }
         let Ok(expected) = fs::read_to_string(&self.expected) else {
             return Some(format!("{name}.stderr is missing"));
         };
-        if expected == actual {
-            return None;
-        }
-        let line = expected
-            .split('\n')
-            .zip(actual.split('\n'))
-            .take_while(|(expected, actual)| expected == actual)
-            .count()
-            + 1;
-        Some(format!(
-            "{name}: stderr differs from line {line}.\n--- expected\n{expected}--- actual\n{actual}"
-        ))
+        let expected_json = fs::read_to_string(&self.json).unwrap_or_default();
+        differs(name, "stderr", &expected, &actual)
+            .or_else(|| differs(name, "the stdout of --format json", &expected_json, &json))
     }
 
     /// The code the case must exit with when deslag prints `printed`: the one in its `.exit` file
@@ -139,6 +170,23 @@ impl Case {
     fn fails_a_file(&self) -> bool {
         fs::read_to_string(&self.expected).is_ok_and(|expected| self.wanted(&expected) == Ok(1))
     }
+}
+
+/// What is wrong when `what`, printed by the case `name`, is `actual` where it should be
+/// `expected`; `None` when they are the same.
+fn differs(name: &str, what: &str, expected: &str, actual: &str) -> Option<String> {
+    if expected == actual {
+        return None;
+    }
+    let line = expected
+        .split('\n')
+        .zip(actual.split('\n'))
+        .take_while(|(expected, actual)| expected == actual)
+        .count()
+        + 1;
+    Some(format!(
+        "{name}: {what} differs from line {line}.\n--- expected\n{expected}--- actual\n{actual}"
+    ))
 }
 
 /// The entries of `dir`, sorted.
@@ -167,30 +215,24 @@ fn every_case_prints_its_stderr_file() {
     );
 }
 
-/// Every lint the config schema names has a directory of cases, at least one of which fails, and
-/// every directory is named after a lint. A lint with no failing case could change its report, or
+/// Every lint has a directory of cases, at least one of which fails, and every directory is named
+/// after a lint. A lint with no failing case could change its report, or
 /// stop firing, and no case would notice.
 #[test]
 fn every_lint_has_a_failing_case() {
     let fix = std::env::var(FIX).as_deref() == Ok("1");
     let cases = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
-    let lints: BTreeSet<String> = deslag::config::schema()
-        .pointer("/definitions/MdLints/properties")
-        .and_then(Value::as_object)
-        .expect("the lints are the properties of MdLints")
-        .keys()
-        .cloned()
-        .collect();
+    let lints = Lint::ALL.map(Lint::id);
     let (all, _) = Case::find(&cases);
     let mut failures = Vec::new();
 
     for dir in entries(&cases).into_iter().filter(|path| path.is_dir()) {
         let name = dir.file_name().expect("a directory name").to_string_lossy();
-        if !lints.contains(name.as_ref()) {
+        if !lints.contains(&name.as_ref()) {
             failures.push(format!(
                 "tests/cases/{name} is not named after a lint. Each directory there holds the \
                  cases of one lint, named as the config names it: {}.",
-                lints.iter().cloned().collect::<Vec<_>>().join(", "),
+                lints.join(", "),
             ));
         }
     }
@@ -238,6 +280,8 @@ fn a_case_where_deslag_cannot_run_does_not_fail_a_file() {
         ("lint/invalid/deslag.toml", ""),
         ("lint/invalid.stderr", "an error\n"),
         ("lint/invalid.exit", "2\n"),
+        ("lint/broken.json", "{}\n"),
+        ("lint/broken.args", "check\n"),
     ] {
         repo.write(path, text);
     }

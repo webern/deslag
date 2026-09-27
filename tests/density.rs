@@ -9,7 +9,7 @@ use deslag::lint::density::{Kind, check, measure};
 fn blocks(text: &str) -> Vec<(usize, Kind, usize)> {
     measure(&Document::markdown(text))
         .into_iter()
-        .map(|block| (block.line, block.kind, block.chars))
+        .map(|block| (block.location.line, block.kind, block.chars))
         .collect()
 }
 
@@ -173,7 +173,7 @@ fn the_defaults_hold_paragraphs_and_items_to_their_own_limits() {
         found
             .blocks
             .iter()
-            .map(|block| (block.line, block.kind))
+            .map(|block| (block.location.line, block.kind))
             .collect::<Vec<_>>(),
         vec![(1, Kind::Paragraph), (3, Kind::Item)]
     );

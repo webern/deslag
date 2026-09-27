@@ -26,7 +26,7 @@ use common::corpus::{CATEGORIES, load_corpus};
 use common::fixture::Fixture;
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
-use deslag::{Config, ConfigSource, Violation, check_file};
+use deslag::{Config, ConfigSource, Lint, Violation, check_file};
 
 /// Set to 1 to rewrite the golden files instead of comparing with them.
 const FIX: &str = "DESLAG_FIX_GOLDEN";
@@ -34,29 +34,23 @@ const FIX: &str = "DESLAG_FIX_GOLDEN";
 /// The most lines of a diff shown for one golden file.
 const MAX_DIFF_LINES: usize = 40;
 
-/// The lint that found `violation`, and the measurements its verdict compared, as a golden file
-/// records them, or `None` for a file with no layout at all, which the set leaves out. A new lint
-/// does not compile until it has an arm here.
-fn record_of(violation: &Violation) -> Option<(&'static str, String)> {
+/// The measurements the verdict on `violation` compared, as a golden file records them, or `None`
+/// for a file with no layout at all, which the set leaves out. A new lint does not compile until
+/// it has an arm here.
+fn record_of(violation: &Violation) -> Option<String> {
     let record = match violation {
-        Violation::MaxSizeBytes(over) => (
-            "max_size_bytes",
-            format!("size_bytes:{} budget:{}", over.size_bytes, over.budget),
-        ),
-        Violation::MaxEmphasis(over) => (
-            "max_emphasis",
-            format!(
-                "spans:{} percent:{:.2}",
-                over.measure.spans.len(),
-                over.measure.percent()
-            ),
+        Violation::MaxSizeBytes(over) => {
+            format!("size_bytes:{} budget:{}", over.size_bytes, over.budget)
+        }
+        Violation::MaxEmphasis(over) => format!(
+            "spans:{} percent:{:.2}",
+            over.measure.spans.len(),
+            over.measure.percent()
         ),
         Violation::RepoLayout(over) if over.problems == [Problem::NoSection] => return None,
-        Violation::RepoLayout(over) => ("repo_layout", format!("problems:{}", over.problems.len())),
-        Violation::BannedChars(over) => ("banned_chars", format!("count:{}", over.count)),
-        Violation::BannedPhrases(over) => {
-            ("banned_phrases", format!("matches:{}", over.matches.len()))
-        }
+        Violation::RepoLayout(over) => format!("problems:{}", over.problems.len()),
+        Violation::BannedChars(over) => format!("count:{}", over.count()),
+        Violation::BannedPhrases(over) => format!("matches:{}", over.matches.len()),
         Violation::Density(over) => {
             let blocks: Vec<String> = over
                 .blocks
@@ -69,16 +63,16 @@ fn record_of(violation: &Violation) -> Option<(&'static str, String)> {
                     format!("{kind}:{}", block.chars)
                 })
                 .collect();
-            ("density", blocks.join(" "))
+            blocks.join(" ")
         }
     };
     Some(record)
 }
 
 /// What the golden file of `lint` says beyond what every golden file says.
-fn note(lint: &str) -> &'static str {
+fn note(lint: Lint) -> &'static str {
     match lint {
-        "repo_layout" => {
+        Lint::RepoLayout => {
             "# In an empty directory every path a layout lists is missing, so each fixture with the\n\
              # section fails. One without it is left out, and counted as passing.\n"
         }
@@ -89,7 +83,7 @@ fn note(lint: &str) -> &'static str {
 /// The golden file of `lint`, run with `settings` over `total` fixtures, of which it failed
 /// `failed`, each with its record.
 fn golden_file(
-    lint: &str,
+    lint: Lint,
     settings: &toml::Table,
     failed: &[(&Fixture, String)],
     total: usize,
@@ -104,7 +98,7 @@ fn golden_file(
             format!("{category} {count}")
         })
         .collect();
-    let table = ["md", "lints", lint]
+    let table = ["md", "lints", lint.id()]
         .iter()
         .rev()
         .fold(toml::Value::Table(settings.clone()), |inner, key| {
@@ -184,28 +178,29 @@ fn every_lint_finds_what_its_golden_file_says() {
 
     let empty = tempfile::tempdir().expect("a temp directory");
     let fixtures = load_corpus();
-    let mut found: BTreeMap<&str, Vec<(&Fixture, String)>> = BTreeMap::new();
+    let mut found: BTreeMap<Lint, Vec<(&Fixture, String)>> = BTreeMap::new();
     for fixture in &fixtures {
         let findings = check_file(&config, &fixture.path, &fixture.bytes, empty.path())
             .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
-        for (lint, record) in findings
-            .iter()
-            .filter_map(|finding| record_of(&finding.violation))
-        {
-            found.entry(lint).or_default().push((fixture, record));
+        for finding in &findings {
+            if let Some(record) = record_of(&finding.violation) {
+                let lint = finding.violation.lint();
+                found.entry(lint).or_default().push((fixture, record));
+            }
         }
     }
 
     // With no overrides, every fixture gets the section's settings.
-    let tables = config
+    let mut tables: BTreeMap<String, Option<toml::Table>> = config
         .md()
         .lints_for("")
         .toml_tables()
-        .expect("settings that TOML can hold");
-    let lints: Vec<&str> = tables.iter().map(|(lint, _)| lint.as_str()).collect();
+        .expect("settings that TOML can hold")
+        .into_iter()
+        .collect();
     let mut drift = Vec::new();
-    for (lint, settings) in &tables {
-        let Some(settings) = settings else {
+    for lint in Lint::ALL {
+        let Some(Some(settings)) = tables.remove(lint.id()) else {
             failures.push(format!(
                 "{lint} has no settings in tests/golden/config.toml. Add a [md.lints.{lint}] table \
                  there, with settings under which some fixtures fail it and some pass, then run \
@@ -213,7 +208,7 @@ fn every_lint_finds_what_its_golden_file_says() {
             ));
             continue;
         };
-        let failed = found.remove(lint.as_str()).unwrap_or_default();
+        let failed = found.remove(&lint).unwrap_or_default();
         if failed.is_empty() || failed.len() == fixtures.len() {
             failures.push(format!(
                 "The corpus does not prove {lint}: at its settings in tests/golden/config.toml it \
@@ -225,7 +220,7 @@ fn every_lint_finds_what_its_golden_file_says() {
         }
 
         let path = dir.join(format!("{lint}.txt"));
-        let golden = golden_file(lint, settings, &failed, fixtures.len());
+        let golden = golden_file(lint, &settings, &failed, fixtures.len());
         if fix {
             fs::write(&path, &golden).expect("a writable golden file");
             continue;
@@ -251,24 +246,18 @@ fn every_lint_finds_what_its_golden_file_says() {
             "tests/golden/{lint}.txt differs from what {lint} finds now:\n{shown}"
         ));
     }
-    failures.extend(
-        found
-            .keys()
-            .map(|lint| format!("record_of() names {lint}, which is not a lint the schema lists")),
-    );
-
     for entry in fs::read_dir(&dir).expect("tests/golden") {
         let name = entry.expect("a directory entry").file_name();
         let name = name.to_string_lossy();
         let known = name == "config.toml"
-            || name
-                .strip_suffix(".txt")
-                .is_some_and(|lint| lints.contains(&lint));
+            || Lint::ALL
+                .iter()
+                .any(|lint| name.strip_suffix(".txt") == Some(lint.id()));
         if !known {
             failures.push(format!(
                 "tests/golden/{name} is named after no lint. The directory holds config.toml and a \
-                 <lint>.txt file for each lint the schema lists: {}.",
-                lints.join(", ")
+                 <lint>.txt file for each lint: {}.",
+                Lint::ALL.map(Lint::id).join(", ")
             ));
         }
     }

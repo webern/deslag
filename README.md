@@ -31,6 +31,16 @@ A file that fails a lint gets a report on standard error, and the exit code is 1
 run, as with a bad config, the exit code is 2. A clean run prints nothing and exits 0, so a CI job
 can gate on it.
 
+`--format` also prints the findings on standard output for a machine to read. The report, the exit
+code and what fails stay the same.
+
+- `json`: one document, with the places each finding points at by byte, line and column.
+  `deslag instructions output-schema` prints its schema.
+- `sarif`: a SARIF 2.1.0 log, which CI uploads to GitHub code scanning.
+- `github`: one workflow command per finding, which a GitHub Actions job shows as an annotation.
+
+Paths are relative to where deslag runs, and GitHub reads them from the root of the repository.
+
 ## Configuration
 
 The config is TOML, YAML or JSON. `[md]` says which files are Markdown, each lint has its own table

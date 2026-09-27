@@ -19,7 +19,8 @@
 use std::ops::Range;
 
 use crate::config::MaxEmphasis;
-use crate::document::{self, Body, Document, PieceKind, PointKind, SpanKind};
+use crate::document::{self, Body, Document, Gathered, Location, PieceKind, PointKind, SpanKind};
+use crate::lint::{Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected over-emphasis!";
@@ -50,8 +51,8 @@ pub enum Kind {
 /// One emphasized span.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Span {
-    /// The 1-based line it starts on.
-    pub line: usize,
+    /// Where it is.
+    pub location: Location,
     /// What kind of emphasis it is.
     pub kind: Kind,
     /// The span as it is written in the file, on one line and cut short when it is long.
@@ -119,8 +120,7 @@ pub fn check(document: &Document<'_>, settings: Option<&MaxEmphasis>) -> Option<
 /// Measures the emphasis in `document`.
 pub fn measure(document: &Document<'_>) -> Measure {
     let mut measure = Measure::default();
-    // Each span, with where it starts, to put them in the order of the file.
-    let mut spans: Vec<(usize, Span)> = Vec::new();
+    let mut spans: Vec<Span> = Vec::new();
 
     for (block, _) in document.walk() {
         if !matches!(block.body, Body::Text { .. }) {
@@ -139,12 +139,12 @@ pub fn measure(document: &Document<'_>) -> Measure {
         }
         edges.sort_unstable();
 
-        let mut plain = Plain::default();
+        let mut plain = Gathered::new(document.source);
         // Where the plain text so far ends in the file.
         let mut plain_end: Option<usize> = None;
         for (range, text) in row(document, block) {
             let Some(text) = text else {
-                plain.flush(document, &mut spans);
+                flush(&mut plain, document, &mut spans);
                 plain_end = None;
                 continue;
             };
@@ -163,31 +163,29 @@ pub fn measure(document: &Document<'_>) -> Measure {
                 edges.get(next).is_some_and(|edge| *edge <= range.start)
             });
             if parted {
-                plain.flush(document, &mut spans);
+                flush(&mut plain, document, &mut spans);
             }
-            plain.push(text, range.start);
             plain_end = Some(range.end);
+            plain.push(text, range);
         }
-        plain.flush(document, &mut spans);
+        flush(&mut plain, document, &mut spans);
 
         spans.extend(emphasis.into_iter().map(|(span, chars)| {
-            let start = span.range.start;
             let kind = match span.kind {
                 SpanKind::Strong => Kind::Strong,
                 _ => Kind::Emphasis,
             };
-            let span = Span {
-                line: document.line(start),
+            Span {
+                location: document.locate(span.range.clone()),
                 kind,
                 quote: quote(&document.source[span.range.clone()]),
                 chars,
-            };
-            (start, span)
+            }
         }));
     }
 
-    spans.sort_by_key(|(start, _)| *start);
-    measure.spans = spans.into_iter().map(|(_, span)| span).collect();
+    spans.sort_by_key(|span| span.location.start);
+    measure.spans = spans;
     measure
 }
 
@@ -246,7 +244,7 @@ pub fn render(path: &str, over: &Over) -> String {
     let spans: String = measure
         .spans
         .iter()
-        .map(|span| format!("\n  line {}: {}", span.line, span.quote))
+        .map(|span| format!("\n  line {}: {}", span.location.line, span.quote))
         .collect();
 
     format!(
@@ -265,6 +263,20 @@ pub fn render(path: &str, over: &Over) -> String {
     )
 }
 
+/// The places the report lists: each emphasized span, as evidence for a verdict on the share of
+/// the whole file.
+pub fn marks(over: &Over) -> Vec<Mark> {
+    over.measure
+        .spans
+        .iter()
+        .map(|span| Mark {
+            kind: MarkKind::Evidence,
+            location: span.location,
+            note: span.quote.clone(),
+        })
+        .collect()
+}
+
 /// `percent` to two decimal places, rounded up: a file just over its limit must not read as at
 /// it, as 1.004% would if it were shown as 1.00%.
 fn shown_percent(percent: f64) -> f64 {
@@ -281,40 +293,20 @@ const DEFAULT_ADVICE: &str = "Bold, italics and ALL CAPS stop working when there
     check, and do not change the limits. Only a human can tell you to do that, and I am a linter, \
     not a human.";
 
-/// The text between one piece of formatting and the next, gathered so that a run of capitals is
-/// found even when the parser splits it across events.
-#[derive(Default)]
-struct Plain {
-    text: String,
-    /// Where each piece starts: its byte offset in `text` and in the file.
-    pieces: Vec<(usize, usize)>,
-}
-
-impl Plain {
-    fn push(&mut self, words: &str, offset: usize) {
-        self.pieces.push((self.text.len(), offset));
-        self.text.push_str(words);
+/// Adds every run of capitals in `plain`, the text between one piece of formatting and the next,
+/// to `spans`, and starts `plain` over. The text is gathered so that a run is found even when the
+/// parser splits it across events.
+fn flush(plain: &mut Gathered<'_>, document: &Document<'_>, spans: &mut Vec<Span>) {
+    for (start, end) in caps_runs(&plain.text) {
+        let run = &plain.text[start..end];
+        spans.push(Span {
+            location: document.locate(plain.source_range(start..end)),
+            kind: Kind::Caps,
+            quote: quote(run),
+            chars: run.chars().count(),
+        });
     }
-
-    /// Adds every run of capitals in the text gathered so far to `spans`, each with where it
-    /// starts, and starts over.
-    fn flush(&mut self, document: &Document<'_>, spans: &mut Vec<(usize, Span)>) {
-        for (start, end) in caps_runs(&self.text) {
-            let piece = self.pieces.partition_point(|(at, _)| *at <= start) - 1;
-            let (at, offset) = self.pieces[piece];
-            let run = &self.text[start..end];
-            let start = offset + (start - at);
-            let span = Span {
-                line: document.line(start),
-                kind: Kind::Caps,
-                quote: quote(run),
-                chars: run.chars().count(),
-            };
-            spans.push((start, span));
-        }
-        self.text.clear();
-        self.pieces.clear();
-    }
+    plain.clear();
 }
 
 /// The byte ranges of every run of two or more words in capitals in `text` that holds one of

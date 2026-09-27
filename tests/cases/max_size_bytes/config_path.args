@@ -1,0 +1,3 @@
+check
+--config-path
+ci/lints.toml

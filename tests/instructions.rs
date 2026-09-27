@@ -5,49 +5,15 @@ mod common;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use common::schema::{misfit, resolve};
 use common::{Repo, code, stderr, stdout};
+use deslag::Lint;
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::guide;
 use deslag::lint::banned_chars::GROUPS;
 use serde_json::Value;
-
-/// The keywords the config's schema uses, which are all `misfit` knows.
-const KEYWORDS: &[&str] = &[
-    "$schema",
-    "$ref",
-    "additionalProperties",
-    "allOf",
-    "anyOf",
-    "default",
-    "definitions",
-    "description",
-    "format",
-    "items",
-    "maximum",
-    "minimum",
-    "properties",
-    "required",
-    "title",
-    "type",
-];
-
-/// `schema` with a `$ref` to a definition in `root` followed, as often as it takes.
-fn resolve<'a>(root: &'a Value, schema: &'a Value) -> &'a Value {
-    let reference = schema
-        .get("$ref")
-        .or_else(|| schema.pointer("/allOf/0/$ref"));
-    match reference.and_then(Value::as_str) {
-        Some(reference) => {
-            let name = reference
-                .strip_prefix("#/definitions/")
-                .expect("a reference to a definition");
-            resolve(root, &root["definitions"][name])
-        }
-        None => schema,
-    }
-}
 
 /// The table `name` of the table `schema`, whether or not it is optional.
 fn table<'a>(root: &'a Value, schema: &'a Value, name: &str) -> &'a Value {
@@ -70,87 +36,6 @@ fn lint_names() -> BTreeSet<String> {
         .keys()
         .cloned()
         .collect()
-}
-
-/// Why `value`, found at `at`, does not fit `schema`, a part of `root`; `None` when it fits.
-fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<String> {
-    let schema = resolve(root, schema);
-    for keyword in schema.as_object().expect("a schema").keys() {
-        assert!(
-            KEYWORDS.contains(&keyword.as_str()),
-            "a keyword misfit does not know: {keyword}"
-        );
-    }
-    if let Some(branches) = schema.get("anyOf").and_then(Value::as_array) {
-        if branches
-            .iter()
-            .all(|branch| misfit(root, branch, value, at).is_some())
-        {
-            return Some(format!("{at} fits no branch"));
-        }
-    }
-    if let Some(types) = schema.get("type") {
-        let fits = |kind: &Value| match kind.as_str() {
-            Some("object") => value.is_object(),
-            Some("array") => value.is_array(),
-            Some("string") => value.is_string(),
-            Some("boolean") => value.is_boolean(),
-            Some("integer") => value.is_i64() || value.is_u64(),
-            Some("number") => value.is_number(),
-            Some("null") => value.is_null(),
-            kind => panic!("a type the helper does not know: {kind:?}"),
-        };
-        let fits = match types {
-            Value::Array(types) => types.iter().any(fits),
-            kind => fits(kind),
-        };
-        if !fits {
-            return Some(format!("{at} is not {types}"));
-        }
-    }
-    if let Some(number) = value.as_f64() {
-        let bound = |key| schema.get(key).and_then(Value::as_f64);
-        if bound("minimum").is_some_and(|minimum| number < minimum)
-            || bound("maximum").is_some_and(|maximum| number > maximum)
-        {
-            return Some(format!("{at} is out of range"));
-        }
-    }
-    if let (Some(items), Some(each)) = (value.as_array(), schema.get("items")) {
-        for (index, item) in items.iter().enumerate() {
-            if let Some(misfit) = misfit(root, each, item, &format!("{at}[{index}]")) {
-                return Some(misfit);
-            }
-        }
-    }
-    if let Some(object) = value.as_object() {
-        for key in schema
-            .get("required")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-        {
-            let key = key.as_str().expect("a key");
-            if !object.contains_key(key) {
-                return Some(format!("{at} has no {key}"));
-            }
-        }
-        for (key, item) in object {
-            let property = schema
-                .get("properties")
-                .and_then(|properties| properties.get(key));
-            let item_schema = match (property, schema.get("additionalProperties")) {
-                (Some(property), _) => property,
-                (None, Some(Value::Bool(false))) => return Some(format!("{at} has no key {key}")),
-                (None, Some(other)) => other,
-                (None, None) => continue,
-            };
-            if let Some(misfit) = misfit(root, item_schema, item, &format!("{at}.{key}")) {
-                return Some(misfit);
-            }
-        }
-    }
-    None
 }
 
 /// Why the TOML config `text` does not fit the schema, or `None` when it does.
@@ -210,6 +95,34 @@ fn the_guide_fills_in_what_the_code_knows() {
     }
 }
 
+/// The lints are the tables of the config's sections: each section's `lints` table names only
+/// lints, and the sections together name every one. A lint the config gains or loses fails here
+/// until `Lint` gains or loses it too, so an id in a report is always a key of the config.
+#[test]
+fn every_lint_is_a_table_of_the_config() {
+    let root = schema();
+    let ids: BTreeSet<&str> = Lint::ALL.iter().map(|lint| lint.id()).collect();
+    let sections: Vec<(&String, &Value)> = root["definitions"]
+        .as_object()
+        .expect("the definitions")
+        .iter()
+        .filter(|(name, _)| name.ends_with("Lints"))
+        .collect();
+    assert!(!sections.is_empty(), "no section's lints in the schema");
+
+    let mut named = BTreeSet::new();
+    for (section, lints) in sections {
+        for key in lints["properties"].as_object().expect("the lints").keys() {
+            assert!(
+                ids.contains(key.as_str()),
+                "{section} holds {key}, which is no lint"
+            );
+            named.insert(key.as_str());
+        }
+    }
+    assert_eq!(named, ids);
+}
+
 #[test]
 fn the_guide_names_every_lint() {
     let guide = guide();
@@ -259,10 +172,20 @@ fn every_config_deslag_accepts_fits_the_schema() {
             if !case.is_dir() || case.with_extension("exit").exists() {
                 continue;
             }
-            let path = canonical_config_paths()
-                .into_iter()
-                .map(|path| case.join(path))
-                .find(|path| path.exists())
+            // A case whose .args file gives a --config-path reads its config from there.
+            let args = std::fs::read_to_string(case.with_extension("args")).unwrap_or_default();
+            let given = args
+                .lines()
+                .skip_while(|arg| *arg != "--config-path")
+                .nth(1)
+                .map(|path| case.join(path));
+            let path = given
+                .or_else(|| {
+                    canonical_config_paths()
+                        .into_iter()
+                        .map(|path| case.join(path))
+                        .find(|path| path.exists())
+                })
                 .expect("a config");
             configs.push(path);
         }

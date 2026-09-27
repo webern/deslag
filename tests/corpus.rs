@@ -10,14 +10,17 @@
 
 mod common;
 
+use std::path::Path;
+
 use common::corpus::load_corpus;
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::Document;
 use deslag::config::{BannedChars, Density, MaxEmphasis, RepoLayout};
+use deslag::document::Location;
 use deslag::lint::max_size_bytes::HEADING;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{banned_chars, density, max_emphasis};
+use deslag::lint::{Lint, banned_chars, density, max_emphasis};
+use deslag::{Config, ConfigSource, Document, Violation, check_file};
 
 /// How many fixtures each collected category must hold at least.
 const MIN_PER_CATEGORY: usize = 350;
@@ -715,7 +718,8 @@ fn the_corpus_layouts_read_from_the_text_alone() {
             let layout = match repo_layout::read(&Document::markdown(&text), heading) {
                 Ok(layout) => layout,
                 Err(Problem::NoSection) => continue,
-                Err(Problem::NoBlock { line }) => {
+                Err(Problem::NoBlock { location }) => {
+                    let line = location.line;
                     assert!((1..=lines.len()).contains(&line), "{slug}: line {line}");
                     continue;
                 }
@@ -723,22 +727,24 @@ fn the_corpus_layouts_read_from_the_text_alone() {
             };
             layouts += 1;
 
-            let in_section = |line: usize| line > layout.heading_line && line <= lines.len();
+            let in_section = |location: &Location| {
+                (layout.heading.line + 1..=lines.len()).contains(&location.line)
+            };
             for entry in &layout.entries {
-                assert!(in_section(entry.line), "{slug}: {entry:?}");
+                assert!(in_section(&entry.location), "{slug}: {entry:?}");
                 if let Some(path) = &entry.path {
+                    let line = entry.location.line;
                     assert!(
-                        lines[entry.line - 1].contains(path.as_str()),
-                        "{slug}: line {} does not hold {path}",
-                        entry.line
+                        lines[line - 1].contains(path.as_str()),
+                        "{slug}: line {line} does not hold {path}"
                     );
                 }
             }
-            for (line, malformed) in &layout.malformed {
-                assert!(in_section(*line), "{slug}: line {line}: {malformed:?}");
+            for (location, malformed) in &layout.malformed {
+                assert!(in_section(location), "{slug}: {location:?}: {malformed:?}");
             }
-            for (line, width) in &layout.widths {
-                assert!(in_section(*line), "{slug}: line {line} is {width} wide");
+            for (location, width) in &layout.widths {
+                assert!(in_section(location), "{slug}: {location:?} is {width} wide");
             }
         }
     }
@@ -758,25 +764,136 @@ fn the_corpus_layouts_read_from_the_text_alone() {
     assert_eq!(layout.malformed, vec![], "{layout:?}");
 }
 
+/// What `location` holds in `text`, once it is shown to lie inside `text`, to start and end on
+/// characters, and to start on the line it names. `context` names it in a failure.
+fn held<'t>(text: &'t str, location: &Location, context: &str) -> &'t str {
+    let Location { start, end, .. } = *location;
+    assert!(start <= end && end <= text.len(), "{context}: {location:?}");
+    assert!(
+        text.is_char_boundary(start) && text.is_char_boundary(end),
+        "{context}: {location:?} splits a character"
+    );
+    let line = text[..start].matches('\n').count() + 1;
+    assert_eq!(location.line, line, "{context}: {location:?}");
+    &text[start..end]
+}
+
 #[test]
-fn the_corpus_characters_are_found_on_their_lines() {
-    let fixtures = load_corpus();
-    let mut found = 0;
-    for fixture in &fixtures {
+fn the_corpus_locations_hold_what_they_point_at() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden/config.toml");
+    let config_text = std::fs::read_to_string(&path).expect("tests/golden/config.toml");
+    let config = Config::parse(&config_text, path, ConfigSource::Explicit).expect("a config");
+    let empty = tempfile::tempdir().expect("a temp directory");
+    let mut located: Vec<Lint> = Vec::new();
+
+    for fixture in &load_corpus() {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        let lines: Vec<&str> = text.lines().collect();
-        for hit in banned_chars::scan(&Document::markdown(&text)) {
-            found += 1;
-            assert!(!hit.ch.is_ascii(), "{}: {hit:?}", fixture.slug());
-            let line = lines.get(hit.line - 1).unwrap_or_else(|| {
-                panic!("{}: {hit:?} is past the end of the file", fixture.slug())
-            });
-            assert!(line.contains(hit.ch), "{}: {hit:?}", fixture.slug());
+        let findings = check_file(&config, &fixture.path, &fixture.bytes, empty.path())
+            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
+        for finding in &findings {
+            let lint = finding.violation.lint();
+            let context = format!("{} {lint}", fixture.slug());
+            let held = |location: &Location| held(&text, location, &context);
+            if !finding.violation.marks().is_empty() {
+                located.push(lint);
+            }
+            match &finding.violation {
+                Violation::MaxSizeBytes(_) => {}
+                Violation::BannedChars(over) => {
+                    for banned in &over.banned {
+                        for location in &banned.locations {
+                            assert_eq!(held(location), banned.ch.to_string(), "{context}");
+                        }
+                    }
+                }
+                Violation::BannedPhrases(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        let first = found.quote.chars().next().expect("a quote");
+                        let last = found.quote.chars().next_back().expect("a quote");
+                        assert!(
+                            held.starts_with(first) && held.ends_with(last),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
+                Violation::MaxEmphasis(over) => {
+                    for span in &over.measure.spans {
+                        let held = held(&span.location);
+                        let edges: &[char] = match span.kind {
+                            max_emphasis::Kind::Caps => &[],
+                            _ => &['*', '_'],
+                        };
+                        let edge = |c: Option<char>| {
+                            c.is_some_and(|c| {
+                                edges.contains(&c) || edges.is_empty() && c.is_alphanumeric()
+                            })
+                        };
+                        assert!(
+                            edge(held.chars().next()) && edge(held.chars().next_back()),
+                            "{context}: {held:?} for {span:?}"
+                        );
+                    }
+                }
+                Violation::Density(over) => {
+                    for block in &over.blocks {
+                        let held = held(&block.location);
+                        assert!(
+                            !held.is_empty() && held.trim() == held,
+                            "{context}: {held:?} for {block:?}"
+                        );
+                    }
+                }
+                Violation::RepoLayout(over) => {
+                    for problem in &over.problems {
+                        match problem {
+                            Problem::NoSection => {}
+                            Problem::NoBlock { location } => {
+                                let held = held(location).to_lowercase();
+                                assert!(
+                                    held.contains(&over.heading.to_lowercase()),
+                                    "{context}: {held:?}"
+                                );
+                            }
+                            Problem::Count { location, .. } => {
+                                let held = held(location);
+                                assert!(
+                                    held.starts_with("```") || held.starts_with("~~~"),
+                                    "{context}: {held:?}"
+                                );
+                            }
+                            Problem::Wide { location, .. } | Problem::Format { location, .. } => {
+                                let held = held(location);
+                                assert!(
+                                    !held.is_empty()
+                                        && !held.contains('\n')
+                                        && held.trim_end() == held,
+                                    "{context}: {held:?}"
+                                );
+                            }
+                            Problem::Missing { location, path }
+                            | Problem::NotDirectory { location, path } => {
+                                let held = held(location);
+                                assert!(
+                                    held.contains(path.as_str()) && !held.contains('\n'),
+                                    "{context}: {held:?}"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    assert!(
-        found > 0,
-        "the corpus should hold characters that are not ASCII"
+
+    let unlocated: Vec<Lint> = Lint::ALL
+        .into_iter()
+        .filter(|lint| *lint != Lint::MaxSizeBytes && !located.contains(lint))
+        .collect();
+    assert_eq!(
+        unlocated,
+        vec![],
+        "the corpus should fail every lint that points at places"
     );
 }
 
@@ -811,7 +928,7 @@ fn the_corpus_banned_characters_agree_with_the_library() {
         .filter_map(|(fixture, path)| {
             let text = String::from_utf8_lossy(&fixture.bytes);
             banned_chars::check(&Document::markdown(&text), Some(&settings))
-                .map(|over| (path, over.count))
+                .map(|over| (path, over.count()))
         })
         .collect();
     expected.sort();
@@ -864,7 +981,7 @@ fn the_corpus_blocks_start_on_lines_of_text() {
         for block in density::measure(&Document::markdown(&text)) {
             measured += 1;
             assert!(block.chars > 0, "{}: {block:?}", fixture.slug());
-            let line = lines.get(block.line - 1).unwrap_or_else(|| {
+            let line = lines.get(block.location.line - 1).unwrap_or_else(|| {
                 panic!("{}: {block:?} is past the end of the file", fixture.slug())
             });
             assert!(!line.trim().is_empty(), "{}: {block:?}", fixture.slug());
@@ -914,7 +1031,7 @@ fn the_corpus_density_reports_agree_with_the_library() {
             expected.extend(
                 over.blocks
                     .iter()
-                    .map(|block| (path.clone(), block.line, block.chars)),
+                    .map(|block| (path.clone(), block.location.line, block.chars)),
             );
         }
     }

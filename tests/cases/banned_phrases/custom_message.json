@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nREADME.md has 1 banned phrase.\n\nCut the filler from README.md.\n\nThe phrases, and what to do about each:\n  line 3: \"It's worth noting\"; delete it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 8,
+          "end": 25,
+          "line": 3,
+          "column": 1,
+          "end_line": 3,
+          "end_column": 18,
+          "note": "\"It's worth noting\"; delete it"
+        }
+      ]
+    }
+  ]
+}

@@ -6,10 +6,12 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
+use deslag_corpus::candidates::{Sieve, candidates};
 use deslag_corpus::chars::chars;
 use deslag_corpus::compare::Sides;
 use deslag_corpus::load::Problem;
 use deslag_corpus::measure::{Corpus, Filters, Tier};
+use deslag_corpus::ngrams::{Counting, ngrams};
 use deslag_corpus::summary::summary;
 
 /// Measures deslag's test corpus: what it holds, and what sets its llm files apart from its human
@@ -57,6 +59,29 @@ enum Command {
         #[arg(long, default_value_t = 50)]
         top: usize,
     },
+    /// The n-grams of prose tokens, as banned_phrases matches phrases, ranked by the lower bound
+    /// of their ratio's interval.
+    Ngrams {
+        #[command(flatten)]
+        filters: Filters,
+        #[command(flatten)]
+        sides: Sides,
+        #[command(flatten)]
+        counting: Counting,
+    },
+    /// The n-grams that could become banned phrases: those no one repository owns, no human file
+    /// in the tree holds, with a high enough interval, in the files of enough tools, nested ones
+    /// merged; each with its word counts and masked examples, and the catalog gate's count.
+    Candidates {
+        #[command(flatten)]
+        filters: Filters,
+        #[command(flatten)]
+        sides: Sides,
+        #[command(flatten)]
+        counting: Counting,
+        #[command(flatten)]
+        sieve: Sieve,
+    },
 }
 
 fn print<T: serde::Serialize>(json: bool, value: &T, render: impl Fn(&T) -> String) {
@@ -83,6 +108,23 @@ fn run(cli: Cli) -> Result<(), Problem> {
             top,
         } => {
             let found = chars(&corpus, &filters, &sides, min_repos, top)?;
+            print(cli.json, &found, |c| c.render());
+        }
+        Command::Ngrams {
+            filters,
+            sides,
+            counting,
+        } => {
+            let found = ngrams(&corpus, &filters, &sides, &counting)?;
+            print(cli.json, &found, |n| n.render());
+        }
+        Command::Candidates {
+            filters,
+            sides,
+            counting,
+            sieve,
+        } => {
+            let found = candidates(&corpus, &filters, &sides, &counting, &sieve)?;
             print(cli.json, &found, |c| c.render());
         }
     }

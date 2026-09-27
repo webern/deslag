@@ -1,0 +1,10 @@
+ERROR: deslag detected verbs with no-nouns!
+
+README.md has 1 verb with a no-noun.
+
+Negate the verb in README.md.
+
+The places:
+  line 3: "needs no setup"
+
+deslag: 1 of 1 Markdown files with verbs negated through their objects.

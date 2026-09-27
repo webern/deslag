@@ -22,6 +22,8 @@ src/
     banned_phrases.toml the groups' phrases; see catalog.md
     density.rs        the density lint
     list_growth.rs    the list growth lint
+    pattern.rs        a closed token pattern, as Rust data
+    verbs_no_nouns.rs the taste lint for a verb negated through its object
   output/             --format json, sarif and github
 ```
 
@@ -56,7 +58,7 @@ so the offsets of one that is not UTF-8 are into its decoded text.
 `Violation::edits` gives each mark an `Edit` or the lint's reason for none, matching every
 `Violation`, so a new lint must choose. Only `banned_chars::edits` names any, replacing a
 character's bytes where its replacement is set for that character alone, by `ban` or a rule of one
-character, and holds no letter or digit. Any other, such as `yes`, is a guess at meaning.
+character, and does not hold a letter or digit. Any other, such as `yes`, is a guess at meaning.
 
 `banned_chars::contradiction` fails a file whose `ban` value holds a character its settings ban, so
 a fix never writes what the lint reports. `banned_phrases` names none: its values are advice, and a

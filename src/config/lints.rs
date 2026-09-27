@@ -59,6 +59,9 @@ pub struct MdLints {
     /// That a change leaves no more list items than there were at the base.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub list_growth: Option<ListGrowth>,
+    /// That a sentence negates its verb, not its object.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verbs_no_nouns: Option<VerbsNoNouns>,
 }
 
 impl MdLints {
@@ -148,6 +151,7 @@ impl Merge for MdLints {
         self.banned_phrases.merge(&over.banned_phrases);
         self.density.merge(&over.density);
         self.list_growth.merge(&over.list_growth);
+        self.verbs_no_nouns.merge(&over.verbs_no_nouns);
     }
 }
 
@@ -708,6 +712,26 @@ pub struct ListGrowth {
 }
 
 impl Merge for ListGrowth {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.verbs_no_nouns`: a file fails when a sentence negates a verb through its object, as in
+/// "bakes no cakes".
+///
+/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct VerbsNoNouns {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl Merge for VerbsNoNouns {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);

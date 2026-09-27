@@ -57,7 +57,8 @@ lints.repo_layout = {}           # a lint's table alone turns it on
 The top level has a section per kind of file; `[md]` is the only one. A section has `globs`
 selecting its files, a `lints` table with a sub-table per lint, and `overrides`. Every field of a
 lint's settings is optional, and a value the lint cannot use, such as a `density` limit of 0 or a
-`ban` value holding a control character, is an `Error::Setting`.
+`ban` value holding a control character, is an `Error::Setting`. A taste lint such as
+`verbs_no_nouns` takes only `message`: its excused words are Rust data, never config.
 
 `MdConfig::lints_for` starts from the section's `lints` and merges in each matching override, least
 specific first, with `Merge`: an override sets only the fields it names. Whether `min_entries`
@@ -76,9 +77,9 @@ beats basename, then longer beats shorter, then the later override.
 
 `glob/walk.rs` walks with the `ignore` crate's `WalkBuilder` and returns every regular file as a
 `RepoFile`: its absolute path and its `/`-separated path from the root. It skips `.git`, symlinks,
-and what git or a `.ignore` file would ignore, even with no `.git` directory, and reads no ignore
-file above the root. Hidden files are walked. `glob::find` resolves a path a command names as the
-walk would find it, or says why it names no file in the repo.
+and what git or a `.ignore` file would ignore, even with no `.git` directory, and does not read an
+ignore file above the root. Hidden files are walked. `glob::find` resolves a path a command names
+as the walk would find it, or says why it does not name a file in the repo.
 
 ## Explaining a file
 

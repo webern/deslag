@@ -12,6 +12,7 @@ pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod pattern;
 pub mod repo_layout;
+pub mod verbs_no_nouns;
 
 use std::fmt;
 use std::path::Path;
@@ -44,11 +45,13 @@ pub enum Lint {
     Density,
     /// `list_growth`: what a change does to the count of list items.
     ListGrowth,
+    /// `verbs_no_nouns`: a verb negated through its object, as in "bakes no cakes".
+    VerbsNoNouns,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 7] = [
+    pub const ALL: [Lint; 8] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -56,6 +59,7 @@ impl Lint {
         Lint::BannedPhrases,
         Lint::Density,
         Lint::ListGrowth,
+        Lint::VerbsNoNouns,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -68,6 +72,7 @@ impl Lint {
             Lint::BannedPhrases => "banned_phrases",
             Lint::Density => "density",
             Lint::ListGrowth => "list_growth",
+            Lint::VerbsNoNouns => "verbs_no_nouns",
         }
     }
 
@@ -81,7 +86,8 @@ impl Lint {
             | Lint::RepoLayout
             | Lint::BannedChars
             | Lint::BannedPhrases
-            | Lint::Density => false,
+            | Lint::Density
+            | Lint::VerbsNoNouns => false,
         }
     }
 
@@ -100,6 +106,9 @@ impl Lint {
             Lint::ListGrowth => {
                 "A change must not leave a file with more list items than it had before."
             }
+            Lint::VerbsNoNouns => {
+                "A sentence must negate its verb, not its object, as in \"does not bake cakes\"."
+            }
         }
     }
 
@@ -114,6 +123,7 @@ impl Lint {
             Lint::BannedPhrases => "with banned phrases",
             Lint::Density => "with dense text",
             Lint::ListGrowth => "with more list items than at the base",
+            Lint::VerbsNoNouns => "with verbs negated through their objects",
         }
     }
 }
@@ -174,6 +184,8 @@ pub enum Violation {
     Density(density::Over),
     /// The change left the file with more list items than it had.
     ListGrowth(list_growth::Over),
+    /// The file negates a verb through its object.
+    VerbsNoNouns(verbs_no_nouns::Over),
 }
 
 impl Violation {
@@ -187,6 +199,7 @@ impl Violation {
             Violation::BannedPhrases(_) => Lint::BannedPhrases,
             Violation::Density(_) => Lint::Density,
             Violation::ListGrowth(_) => Lint::ListGrowth,
+            Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
         }
     }
 
@@ -201,6 +214,7 @@ impl Violation {
             Violation::BannedPhrases(over) => banned_phrases::marks(over),
             Violation::Density(over) => density::marks(over),
             Violation::ListGrowth(over) => list_growth::marks(over),
+            Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
         }
     }
 
@@ -217,6 +231,7 @@ impl Violation {
             Violation::BannedPhrases(_) => Vec::new(),
             Violation::Density(_) => Vec::new(),
             Violation::ListGrowth(_) => Vec::new(),
+            Violation::VerbsNoNouns(_) => Vec::new(),
         }
     }
 
@@ -239,6 +254,9 @@ impl Violation {
                 banned_phrases::retain(over, keep).map(Violation::BannedPhrases)
             }
             Violation::Density(over) => density::retain(over, keep).map(Violation::Density),
+            Violation::VerbsNoNouns(over) => {
+                verbs_no_nouns::retain(over, keep).map(Violation::VerbsNoNouns)
+            }
         }
     }
 }
@@ -305,6 +323,7 @@ impl Finding {
             Violation::BannedPhrases(over) => banned_phrases::render(&self.path, over),
             Violation::Density(over) => density::render(&self.path, over),
             Violation::ListGrowth(over) => list_growth::render(&self.path, over),
+            Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
         }
     }
 
@@ -553,6 +572,8 @@ pub(crate) fn check_text<'a>(
                 list_growth::check(&document, before.as_ref(), lints.list_growth.as_ref())
                     .map(Violation::ListGrowth)
             }
+            Lint::VerbsNoNouns => verbs_no_nouns::check(&document, lints.verbs_no_nouns.as_ref())
+                .map(Violation::VerbsNoNouns),
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

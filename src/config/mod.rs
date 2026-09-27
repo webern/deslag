@@ -42,7 +42,7 @@ use crate::Error;
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    MdLints, Merge, PhraseGroups, RepoLayout,
+    MdLints, Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use md::MdConfig;
 pub use search::{

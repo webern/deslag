@@ -21,9 +21,9 @@ use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
-use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups};
+use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{Before, list_growth};
+use deslag::lint::{Before, list_growth, verbs_no_nouns};
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -587,6 +587,9 @@ fn list_growth_finds_what_its_golden_file_says() {
 
 /// Each phrase of the `banned_phrases` catalogue matches no `human` file of the big tier, and the
 /// `llm` files and repositories the catalogue records. `make fix-catalog` rewrites the counts.
+///
+/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
+/// files hold it at least 3 times as often as `human` files, and at most 3% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -609,13 +612,15 @@ fn the_catalogue_counts_are_the_big_tiers() {
             ..BannedPhrases::default()
         })
         .collect();
+    let negating = VerbsNoNouns::default();
     // Which entries each fixture holds, each fixture read once, over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
-    let held: Vec<(&Fixture, Vec<usize>)> = std::thread::scope(|scope| {
+    let held: Vec<(&Fixture, Vec<usize>, bool)> = std::thread::scope(|scope| {
         let workers: Vec<_> = fixtures
             .chunks(fixtures.len().div_ceil(threads).max(1))
             .map(|chunk| {
                 let settings = &settings;
+                let negating = &negating;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -627,7 +632,9 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                     banned_phrases::check(&document, Some(&settings[*at])).is_some()
                                 })
                                 .collect();
-                            (*fixture, entries)
+                            let negates =
+                                verbs_no_nouns::check(&document, Some(negating)).is_some();
+                            (*fixture, entries, negates)
                         })
                         .collect::<Vec<_>>()
                 })
@@ -640,10 +647,10 @@ fn the_catalogue_counts_are_the_big_tiers() {
     });
     let mut counts = HashMap::new();
     for (at, entry) in CATALOGUE.entries.iter().enumerate() {
-        let holding = held.iter().filter(|(_, entries)| entries.contains(&at));
+        let holding = held.iter().filter(|(_, entries, _)| entries.contains(&at));
         let mut llm_files = 0;
         let mut llm_repos = BTreeSet::new();
-        for (fixture, _) in holding {
+        for (fixture, _, _) in holding {
             assert_ne!(
                 fixture.category, "human",
                 "{} is in {}",
@@ -654,6 +661,21 @@ fn the_catalogue_counts_are_the_big_tiers() {
         }
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
+
+    // Its words are English; `no` is a word of other languages too.
+    let flagged = |category: &str| {
+        let english = held.iter().filter(|(fixture, _, _)| {
+            fixture.category == category && fixture.sidecar.content.natural_language == "en"
+        });
+        let files = english.clone().count();
+        (english.filter(|(_, _, negates)| *negates).count(), files)
+    };
+    let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
+    eprintln!("flagged by verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}");
+    assert!(
+        llm * humans >= 3 * human * llms && human * 100 <= 3 * humans,
+        "verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}"
+    );
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

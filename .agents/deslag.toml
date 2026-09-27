@@ -31,6 +31,9 @@ groups = { emoji = true }
 [md.lints.density]
 max_paragraph_chars = 500
 
+# A taste lint, off by default: this repo negates the verb, not its object.
+[md.lints.verbs_no_nouns]
+
 # A change may not leave the instructions with more list items than they had.
 [[md.overrides]]
 globs = ["/AGENTS.md"]

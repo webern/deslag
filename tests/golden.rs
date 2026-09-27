@@ -68,6 +68,7 @@ fn record_of(violation: &Violation) -> Option<String> {
             blocks.join(" ")
         }
         Violation::ListGrowth(over) => format!("items:{} base:{}", over.items, over.base_items),
+        Violation::VerbsNoNouns(over) => format!("matches:{}", over.matches.len()),
     };
     Some(record)
 }

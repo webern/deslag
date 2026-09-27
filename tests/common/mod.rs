@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 pub mod corpus;
+pub mod fixture;
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};

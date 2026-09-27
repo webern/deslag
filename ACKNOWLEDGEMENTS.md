@@ -70,3 +70,26 @@ rule that has none; the golden set fails a lint with no golden file.
 Code was not ported, but we took two ideas: every output format, SARIF and GitHub annotations
 included, derived from one finding type, and a test that keeps the list of rule ids in step with
 the rules, which deslag applies to its lint ids and the config.
+
+## charcheck
+
+- URL: https://github.com/shbernal/charcheck
+- Licence: MIT
+- Copyright: "Copyright (c) 2026 shbernal"
+- Studied at: commit
+  [91df971a](https://github.com/shbernal/charcheck/tree/91df971a23e4fc2ba79bf362275185bf6660fc62)
+
+Code was not ported, but we took the idea of fixing in passes until one changes nothing, with a
+bound, and of keeping a file's byte order mark and line endings. It asks you to read the diff, as a
+fix is a guess about prose; deslag instead fixes only where no guess is needed.
+
+## Soothsay
+
+- URL: https://github.com/hybridtechie/soothsay
+- Licence: MIT
+- Copyright: "Copyright (c) 2026 hybridtechie"
+- Studied at: commit
+  [0762c8b1](https://github.com/hybridtechie/soothsay/tree/0762c8b1ae5b76887d7e990db0958ae9a2c5ee62)
+
+Code was not ported, but we took two ideas: a fix is data on the finding, and only a fix that keeps
+what the author meant is made without asking, after which the files are checked again.

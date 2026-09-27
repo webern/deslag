@@ -9,10 +9,17 @@
 //!
 //! [`scan`] needs only the document: it finds every character outside code that is not ASCII.
 //! [`check`] picks out the ones the settings ban.
+//!
+//! [`edits`] names a fix for a banned character only where its replacement is exact: named for
+//! that character alone, by `ban` or a rule of one character, and holding no letter or digit. The
+//! edit replaces the character's bytes and no others, and the replacement holds no character the
+//! settings ban, as [`contradiction`] makes sure before a file is checked, so the fixed text
+//! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a range of characters, is a
+//! guess at meaning, and is left to the writer.
 
 use crate::config::{BannedChars, Groups};
-use crate::document::{BlockKind, Body, Document, Location, PieceKind};
-use crate::lint::{Mark, MarkKind};
+use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
+use crate::lint::{Mark, MarkKind, on_lines};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned characters!";
@@ -270,6 +277,9 @@ pub struct Banned {
     pub name: Option<&'static str>,
     /// What to write instead; empty means delete it.
     pub instead: String,
+    /// Whether `instead` is the default of a rule for a range of characters, rather than named for
+    /// this one.
+    pub range_default: bool,
     /// Each place the file holds it, in order.
     pub locations: Vec<Location>,
 }
@@ -328,7 +338,7 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<
     let mut banned: Vec<Banned> = Vec::new();
 
     for Found { location, ch } in scan(document) {
-        let Some(instead) = verdict(settings, ch) else {
+        let Some((instead, range_default)) = verdict(settings, ch) else {
             continue;
         };
         match banned.iter_mut().find(|seen| seen.ch == ch) {
@@ -337,6 +347,7 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<
                 ch,
                 name: name(ch),
                 instead,
+                range_default,
                 locations: vec![location],
             }),
         }
@@ -348,8 +359,27 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<
     })
 }
 
-/// What to write instead of `ch`, or `None` when `settings` do not ban it.
-fn verdict(settings: &BannedChars, ch: char) -> Option<String> {
+/// Why `settings`, resolved for one file, contradict each other: a value in `ban` that holds a
+/// character they ban, which the report would advise writing and then report. Whether one does
+/// depends on every table merged for the file, and on the groups, which the config does not know.
+pub fn contradiction(settings: &BannedChars) -> Option<String> {
+    settings.ban.iter().flatten().find_map(|(ch, instead)| {
+        instead
+            .chars()
+            .find(|within| verdict(settings, *within).is_some())
+            .map(|within| {
+                format!(
+                    "banned_chars.ban maps {ch:?} to {instead:?}, which holds U+{:04X}, a \
+                     character it bans",
+                    within as u32
+                )
+            })
+    })
+}
+
+/// What to write instead of `ch`, and whether that is the default of a rule for a range of
+/// characters; `None` when `settings` do not ban it.
+fn verdict(settings: &BannedChars, ch: char) -> Option<(String, bool)> {
     let key = ch.to_string();
     if settings
         .allow
@@ -360,13 +390,13 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<String> {
         return None;
     }
     if let Some(instead) = settings.ban.as_ref().and_then(|ban| ban.get(&key)) {
-        return Some(instead.clone());
+        return Some((instead.clone(), false));
     }
     GROUPS
         .iter()
         .filter(|group| (group.switch)(&settings.groups).unwrap_or(group.on_by_default))
         .find_map(|group| rule(group.rules, ch))
-        .map(|rule| rule.instead.to_string())
+        .map(|rule| (rule.instead.to_string(), rule.first != rule.last))
 }
 
 /// What the report calls `ch`, from the first rule of any group that holds it, on or off.
@@ -410,17 +440,52 @@ pub fn render(path: &str, over: &Over) -> String {
 
 /// The places the report lists: each character wherever the file holds it.
 pub fn marks(over: &Over) -> Vec<Mark> {
+    edits(over).into_iter().map(|(mark, _)| mark).collect()
+}
+
+/// Each place the report lists, with the edit that writes what the report says to write there,
+/// or why a fix may not.
+pub fn edits(over: &Over) -> Vec<(Mark, Result<Edit, &'static str>)> {
     over.banned
         .iter()
         .flat_map(|banned| {
             let note = note(banned);
-            banned.locations.iter().map(move |location| Mark {
-                kind: MarkKind::Occurrence,
-                location: *location,
-                note: note.clone(),
+            let unfixable = unfixable(banned);
+            banned.locations.iter().map(move |location| {
+                let mark = Mark {
+                    kind: MarkKind::Occurrence,
+                    location: *location,
+                    note: note.clone(),
+                };
+                let edit = match unfixable {
+                    Some(why) => Err(why),
+                    None => Ok(Edit {
+                        range: location.start..location.end,
+                        replacement: banned.instead.clone(),
+                    }),
+                };
+                (mark, edit)
             })
         })
         .collect()
+}
+
+/// Why a fix may not write what the report says to write in place of `banned`, or `None` when it
+/// may.
+fn unfixable(banned: &Banned) -> Option<&'static str> {
+    if banned.range_default {
+        Some(
+            "the replacement is the default for a range of characters, a guess at what this one \
+             means",
+        )
+    } else if banned.instead.chars().any(char::is_alphanumeric) {
+        Some(
+            "the replacement holds letters or digits, a guess at meaning that can run into the \
+             text beside it",
+        )
+    } else {
+        None
+    }
 }
 
 /// One line of the report: the character, the lines it is on, and what to write instead.
@@ -431,18 +496,7 @@ fn describe(banned: &Banned) -> String {
         .map(|location| location.line)
         .collect();
     lines.dedup();
-    let on = match lines.as_slice() {
-        [line] => format!("line {line}"),
-        _ => format!(
-            "lines {}",
-            lines
-                .iter()
-                .map(|line| line.to_string())
-                .collect::<Vec<_>>()
-                .join(", ")
-        ),
-    };
-    format!("{on}: {}", note(banned))
+    format!("{}: {}", on_lines(&lines), note(banned))
 }
 
 /// What the report says of a banned character wherever it is: what it is, and what to write

@@ -16,7 +16,8 @@
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
 //! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
 //! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
-//! file gets. [`output`] prints a run in the formats a machine reads.
+//! file gets. [`output`] prints a run in the formats a machine reads, and [`fix`](mod@fix)
+//! makes the edits to a file that the lints name and the document proves safe.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -25,6 +26,7 @@ pub mod cli;
 pub mod config;
 pub mod document;
 pub mod explain;
+pub mod fix;
 pub mod glob;
 pub mod instructions;
 pub mod lint;
@@ -158,5 +160,24 @@ pub enum Error {
         path: String,
         /// Why it cannot be explained.
         problem: String,
+    },
+
+    /// `deslag fix` was given a path it cannot fix, or a lint's edits to a file do not settle.
+    #[error("cannot fix {path}: {problem}")]
+    Fix {
+        /// The path, as given or, once found, relative to the repo root.
+        path: String,
+        /// Why it cannot be fixed.
+        problem: String,
+    },
+
+    /// A fixed file could not be written.
+    #[error("cannot write {path}")]
+    Write {
+        /// The file that could not be written.
+        path: String,
+        /// The underlying error.
+        #[source]
+        source: io::Error,
     },
 }

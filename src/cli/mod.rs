@@ -23,6 +23,8 @@ pub struct Cli {
 pub enum Command {
     /// Check every Markdown file in the repo against the lints the config turns on
     Check(CheckArgs),
+    /// Make the edits the lints name where they are provably safe, then check as `check` does
+    Fix(FixArgs),
     /// Print the settings the config gives each file, and the overrides they come from
     Explain(ExplainArgs),
     /// Print how to set deslag up in a repo, written for an agent to follow
@@ -38,6 +40,20 @@ pub struct CheckArgs {
     /// What to print on standard output; the text report goes to standard error in every format
     #[arg(long, value_enum, default_value_t = Format::Text)]
     pub format: Format,
+}
+
+/// Arguments to `deslag fix`.
+#[derive(Debug, Args)]
+pub struct FixArgs {
+    /// How to read the config and what to print after fixing, as for `deslag check`
+    #[command(flatten)]
+    pub check: CheckArgs,
+    /// Say what would be fixed and write nothing
+    #[arg(long)]
+    pub dry_run: bool,
+    /// The files to fix, relative to the repo root; every file `deslag check` reads when none
+    #[arg(value_name = "PATH")]
+    pub paths: Vec<PathBuf>,
 }
 
 /// What `deslag check` prints on standard output.

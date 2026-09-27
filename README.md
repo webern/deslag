@@ -41,6 +41,10 @@ code and what fails stay the same.
 
 Paths are relative to where deslag runs, and GitHub reads them from the root of the repository.
 
+`deslag fix [PATH]...` writes the replacements that `banned_chars` names, where it can prove the
+file reads as before apart from those characters. It says what it fixed, and why it left the rest,
+then prints what `deslag check` would and exits as it would. `--dry-run` writes nothing.
+
 ## Configuration
 
 The config is TOML, YAML or JSON. `[md]` says which files are Markdown, each lint has its own table

@@ -14,7 +14,7 @@ max_size_bytes: 7500
 ```
 src/
   lint/
-    mod.rs            Lint, Finding, Violation, Mark, Report, check_repo
+    mod.rs            Lint, Finding, Violation, Mark, Keep, Report, check_repo
     max_size_bytes.rs the size lint and its message
     max_emphasis.rs   the emphasis lint and its message
     repo_layout.rs    the layout lint and its message
@@ -109,6 +109,13 @@ at meaning, and left.
 a fix never writes what the lint reports. `banned_phrases` names none: its values are advice, and a
 match can cross markup. `check_text` is `check_file`'s core, which also returns the `Document`, so
 fix reads a file as `check` does.
+
+## Narrowing
+
+`Violation::retain` keeps the part of a finding that a `Keep` keeps, matching every `Violation`:
+each occurrence it keeps, and a verdict on the whole file with its evidence, whole or not at all;
+`max_size_bytes` and `max_emphasis` are all verdict. The report and marks list only what is kept.
+SARIF finds a verdict the same way, with a `Keep` of verdicts alone.
 
 ## Reports
 

@@ -189,6 +189,38 @@ impl Violation {
             Violation::Density(_) => Vec::new(),
         }
     }
+
+    /// The part of it that `keep` keeps, or `None` when that is nothing: each occurrence it keeps,
+    /// and a verdict on the whole file with its evidence, whole or not at all. Its report and its
+    /// marks list only what is kept.
+    pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
+        match self {
+            // A verdict on the whole file, and its evidence.
+            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) => {
+                keep.verdict().then(|| self.clone())
+            }
+            Violation::RepoLayout(over) => {
+                repo_layout::retain(over, keep).map(Violation::RepoLayout)
+            }
+            Violation::BannedChars(over) => {
+                banned_chars::retain(over, keep).map(Violation::BannedChars)
+            }
+            Violation::BannedPhrases(over) => {
+                banned_phrases::retain(over, keep).map(Violation::BannedPhrases)
+            }
+            Violation::Density(over) => density::retain(over, keep).map(Violation::Density),
+        }
+    }
+}
+
+/// What part of one file's findings to keep, for [`Violation::retain`]: a mark's kind says which
+/// question it answers.
+pub trait Keep {
+    /// Whether to keep an occurrence at `location`.
+    fn occurrence(&self, location: &Location) -> bool;
+
+    /// Whether to keep a verdict on the whole file, with the evidence it rests on.
+    fn verdict(&self) -> bool;
 }
 
 /// `line 3`, or `lines 3, 5` for more than one, as a report names the lines a character or the like

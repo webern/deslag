@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use crate::Report;
 use crate::document::Location;
-use crate::lint::{Finding, Lint, Mark, MarkKind};
+use crate::lint::{Finding, Keep, Lint, MarkKind};
 
 /// The log for `report`, as `--format sarif` prints it.
 pub fn render(report: &Report) -> String {
@@ -57,15 +57,30 @@ pub fn render(report: &Report) -> String {
     format!("{log}\n")
 }
 
+/// Keeps a verdict on the whole file and its evidence, and no occurrence: what a finding's result
+/// for the whole file holds.
+struct Verdicts;
+
+impl Keep for Verdicts {
+    fn occurrence(&self, _: &Location) -> bool {
+        false
+    }
+
+    fn verdict(&self) -> bool {
+        true
+    }
+}
+
 /// The results for `finding`: one for each place that is wrong in its own right, and one for the
 /// verdict on the whole file when it is one.
 fn results(finding: &Finding) -> Vec<Value> {
     let lint = finding.violation.lint();
     let message = finding.message();
     let marks = finding.violation.marks();
-    let (occurrences, evidence): (Vec<&Mark>, Vec<&Mark>) = marks
+    let occurrences = marks
         .iter()
-        .partition(|mark| mark.kind == MarkKind::Occurrence);
+        .filter(|mark| mark.kind == MarkKind::Occurrence);
+    let verdict = finding.violation.retain(&Verdicts);
     let result = |text: String, location: Value| {
         json!({
             "ruleId": lint.id(),
@@ -77,13 +92,13 @@ fn results(finding: &Finding) -> Vec<Value> {
     };
 
     let mut results: Vec<Value> = occurrences
-        .iter()
         .map(|mark| {
             let text = format!("{}\n\n{message}", mark.note);
             result(text, place(&finding.path, Some(&mark.location)))
         })
         .collect();
-    if marks.is_empty() || !evidence.is_empty() {
+    if let Some(verdict) = verdict {
+        let evidence = verdict.marks();
         let mut verdict = result(message.clone(), place(&finding.path, None));
         if !evidence.is_empty() {
             let related: Vec<Value> = evidence

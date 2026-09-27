@@ -29,7 +29,7 @@ use std::path::Path;
 
 use crate::config::RepoLayout;
 use crate::document::{BlockKind, Body, Document, Gathered, Location, PieceKind};
-use crate::lint::{Mark, MarkKind};
+use crate::lint::{Keep, Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected a broken repository layout!";
@@ -329,6 +329,21 @@ impl Problem {
         }
     }
 
+    /// Where the problem is and what it is to the finding: a wrong line is an occurrence, and
+    /// what a verdict on the whole section rests on is evidence. A missing section has no place.
+    fn place(&self) -> Option<(MarkKind, &Location)> {
+        match self {
+            Problem::NoSection => None,
+            Problem::NoBlock { location } | Problem::Count { location, .. } => {
+                Some((MarkKind::Evidence, location))
+            }
+            Problem::Wide { location, .. }
+            | Problem::Format { location, .. }
+            | Problem::Missing { location, .. }
+            | Problem::NotDirectory { location, .. } => Some((MarkKind::Occurrence, location)),
+        }
+    }
+
     /// What the report for `over` says of this problem, after its line.
     fn note(&self, over: &Over) -> String {
         match self {
@@ -384,16 +399,7 @@ pub fn marks(over: &Over) -> Vec<Mark> {
     over.problems
         .iter()
         .filter_map(|problem| {
-            let (kind, location) = match problem {
-                Problem::NoSection => return None,
-                Problem::NoBlock { location } | Problem::Count { location, .. } => {
-                    (MarkKind::Evidence, location)
-                }
-                Problem::Wide { location, .. }
-                | Problem::Format { location, .. }
-                | Problem::Missing { location, .. }
-                | Problem::NotDirectory { location, .. } => (MarkKind::Occurrence, location),
-            };
+            let (kind, location) = problem.place()?;
             Some(Mark {
                 kind,
                 location: *location,
@@ -401,6 +407,24 @@ pub fn marks(over: &Over) -> Vec<Mark> {
             })
         })
         .collect()
+}
+
+/// The part of `over` that `keep` keeps: each wrong line it keeps, and the verdict on the whole
+/// section, whole or not at all.
+pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
+    let problems: Vec<Problem> = over
+        .problems
+        .iter()
+        .filter(|problem| match problem.place() {
+            Some((MarkKind::Occurrence, location)) => keep.occurrence(location),
+            Some((MarkKind::Evidence, _)) | None => keep.verdict(),
+        })
+        .cloned()
+        .collect();
+    (!problems.is_empty()).then(|| Over {
+        problems,
+        ..over.clone()
+    })
 }
 
 /// The layout the advice shows, for an agent to copy the format of.

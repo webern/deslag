@@ -67,6 +67,7 @@ fn run() -> anyhow::Result<ExitCode> {
         Command::Instructions(args) => {
             let text = match args.topic {
                 None => deslag::instructions::guide(),
+                Some(Topic::Lints) => deslag::instructions::lints(),
                 Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
                 Some(Topic::OutputSchema) => format!("{:#}\n", json::schema()),
             };

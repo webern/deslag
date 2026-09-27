@@ -1,13 +1,17 @@
 //! The as-built docs in `docs/design/` share out the modules under `src/`: each module is named in
-//! the `subsystems:` of exactly one of them, the one that describes it.
+//! the `subsystems:` of exactly one of them, the one that describes it. A lint is described in its
+//! module's doc comment instead, which is held to a budget as the docs are.
 
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use deslag::Document;
 use deslag::document::{BlockKind, Body};
+use deslag::{Document, Lint};
 use serde::Deserialize;
+
+/// The most bytes a lint's module doc comment may take, its `//!` lines counted whole.
+const MAX_LINT_DOC_BYTES: usize = 2000;
 
 /// The frontmatter of an as-built doc, as far as this test reads it.
 #[derive(Deserialize)]
@@ -85,4 +89,23 @@ fn each_module_is_named_in_one_asbuilt_doc() {
          docs/design/*.asbuilt.md, the one that describes it:\n{}",
         wrong.join("\n")
     );
+}
+
+#[test]
+fn each_lint_module_doc_fits_its_budget() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for lint in Lint::ALL {
+        let path = root.join("src/lint").join(format!("{}.rs", lint.id()));
+        let text = fs::read_to_string(&path).unwrap_or_else(|error| panic!("{path:?}: {error}"));
+        let bytes: usize = text
+            .lines()
+            .take_while(|line| line.starts_with("//!"))
+            .map(|line| line.len() + 1)
+            .sum();
+        assert!(
+            bytes <= MAX_LINT_DOC_BYTES,
+            "the doc comment of {path:?} is {bytes} bytes, over its budget of \
+             {MAX_LINT_DOC_BYTES}: it is the lint's as-built description, so keep what matters"
+        );
+    }
 }

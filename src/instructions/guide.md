@@ -33,7 +33,8 @@ told to rewrite it until it passes.
 
 ## 3. Write the config
 
-This config turns on every lint:
+Run `deslag instructions lints`. It says what each lint fails and gives a table that turns it on.
+A config looks like this:
 
 ```toml
 schema_version = {schema_version}
@@ -44,37 +45,10 @@ globs = ["/AGENTS.md", "/docs/**/*.md"]
 [md.lints.max_size_bytes]
 value = 16000
 
-[md.lints.max_emphasis]
-free_spans = 2
-max_percent = 1
-
-[md.lints.banned_chars]
-
-[md.lints.banned_phrases]
-
-[md.lints.density]
-
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
-lints.repo_layout = { min_entries = 5, max_entries = 15 }
-lints.list_growth = {}
 ```
-
-- `max_size_bytes` fails a file larger than its budget. A `max_size_bytes` key in a file's own
-  frontmatter beats the config.
-- `max_emphasis` fails a file with more bold, italics and capitals than it allows.
-- `repo_layout` fails a file without a short, true index of the repository. It suits AGENTS.md
-  alone, so turn it on in an override.
-- `banned_chars` fails a file holding characters agents write and people rarely do, such as the
-  em dash. The empty table bans the default groups.
-- `banned_phrases` fails a file holding a phrase that `ban` lists. It bans none by default, so ask
-  the human which phrases to ban and what the report should advise instead.
-- `density` fails a file with a paragraph or a list item that is too long. The empty table sets
-  the default limits.
-- `list_growth` fails a change that leaves a file with more list items than it had, so a new rule
-  replaces an old one. It skips new files. `check` and `fix` then need a base, such as
-  `--base origin/main`.
 
 Every lint also takes a `message`, which replaces the advice in its report. For every setting, its
 default and its meaning, run `deslag instructions config-schema`, which prints the config's JSON
@@ -100,9 +74,12 @@ ask first, before running `deslag fix` too. When every file passes, the config i
 ## 6. Run it in CI
 
 Add `deslag check --base origin/main` where the repository runs its other checks, such as a
-Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. Until the
-tree passes, `--diff origin/main` in its place reports only what the change touched. deslag is not
-on crates.io yet, so ask the human how a CI job should install it.
+Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. deslag is
+not on crates.io yet, so ask the human how a CI job should install it.
+
+Until the tree passes, `--diff origin/main` in place of `--base origin/main` reports only what the
+change touched, which misses some failures, such as a path deleted from under an untouched layout.
+A `pull_request` job may run `--diff HEAD^1` with `fetch-depth: 2` instead.
 
 In a GitHub Actions job, `--format github` prints a workflow command per failing file, which GitHub
 shows as an annotation on it, and `--format sarif` prints a log to upload to code scanning. The

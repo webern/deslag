@@ -2,7 +2,7 @@
 //!
 //! The budget comes from, most specific first, the `max_size_bytes` key in the file's own
 //! frontmatter, then the settings the config resolves for the file. A file with neither has no
-//! budget and is not checked.
+//! budget and is not checked, though it counts among the files the tally reports.
 //!
 //! The report is aimed at whoever wrote the file, which in practice is an agent: it says what is
 //! wrong, what to do about it, and the one thing not to do about it. The config may replace the

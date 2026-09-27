@@ -2,8 +2,8 @@
 //!
 //! It judges a change, not a file, so it compares a file with what it was at the merge base of a
 //! run given one with `--base` or `--diff`. A run with no base cannot judge a file it selects, and
-//! is an error rather than a pass. A file the change added whole has nothing to compare and is not
-//! judged; its byte budget is what holds it.
+//! is an error rather than a pass. A file the change did not edit is not judged, and nor is one it
+//! added whole, which has nothing to compare; its byte budget is what holds it.
 //!
 //! The count is every item of every list, at every depth, a new list's included. A file fails when
 //! it has more than it had at the base. Nothing is free: an allowance of a few items a change is a

@@ -109,6 +109,8 @@ pub struct InstructionsArgs {
 /// What `deslag instructions` can print besides the setup guide.
 #[derive(Debug, Subcommand)]
 pub enum Topic {
+    /// Print what each lint fails, and a table that turns it on
+    Lints,
     /// Print the JSON schema of the config file
     ConfigSchema,
     /// Print the JSON schema of what `deslag check --format json` prints

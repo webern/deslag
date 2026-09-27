@@ -33,8 +33,9 @@ src/
   explain/mod.rs      a file's settings, and where they come from
   fix/mod.rs          deslag fix: the edits the lints name, proven, then written
   instructions/
-    mod.rs            fills in and returns the guide
+    mod.rs            fills in and returns the guide and the lints topic
     guide.md          the guide, with placeholders
+    lints.md          the lints topic's intro; lints/ holds a file per lint
   document/           a file read once into blocks, tokens and sentences
   parse/              the keys a file declares in its frontmatter
   lint/               running the lints; one module per lint
@@ -44,7 +45,8 @@ src/
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
 `document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves. `lint` judges and narrows by what `change` reads.
+`document` proves. `lint` judges and narrows by what `change` reads. `instructions` reads `Lint`
+for the lints topic, which has a section per lint in `Lint::ALL` order, from an exhaustive `match`.
 
 ## The subsystem docs
 
@@ -55,8 +57,9 @@ fails when a module is in no doc or in two.
   patterns, the walk and `deslag explain`.
 - [document.asbuilt.md](document.asbuilt.md): `document` and `parse`: the `Document` and
   frontmatter.
-- [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
-  `--format`.
+- [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, the lint modules, reports
+  and `--format`.
+- [tests.asbuilt.md](tests.asbuilt.md): the tests, the cases, the corpus run and the golden set.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
@@ -65,9 +68,10 @@ fails when a module is in no doc or in two.
 
 `cli/mod.rs` defines `check` and `fix`, with `--format` and `--base`, `--diff` on `check` alone, and
 `explain`, each taking `--config-path`, and `instructions`, which prints `instructions::guide` for
-an agent setting deslag up, or a schema `schemars` derives: `config-schema` for the config's types,
-`output-schema` for `json::Run`. `src/main.rs` prints an error out of `run` in `anyhow`'s alternate
-form, which appends each underlying error once; an `Error`'s own message never repeats its source.
+an agent setting deslag up, `instructions::lints` for `lints`, or a schema `schemars` derives:
+`config-schema` for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an
+error out of `run` in `anyhow`'s alternate form, which appends each underlying error once; an
+`Error`'s own message never repeats its source.
 
 The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
 whatever the subcommand, as clap does on bad arguments.
@@ -91,60 +95,12 @@ Cargo.toml  Makefile  AGENTS.md  README.md  ACKNOWLEDGEMENTS.md
 _typos.toml           keeps the spell checker out of the corpus and golden files
 .agents/deslag.toml   deslag's config for this repo
 .agents/skills/       agent skills, each named deslag-*; .claude/skills links to it
-tests/
-  common/mod.rs       the temp-repo and run helpers, and a config writer
-  common/*.rs         calls to the corpus loaders, and a JSON schema check
-  *.rs                one file per lint or concern
-  cases.rs            runs each case and compares what it prints
-  cases/              small repos, each with what deslag must print in it
-  corpus.rs           the corpus checks and matrix
-  corpus/             quoted fixtures, each with a JSON sidecar
-  golden.rs           runs the golden set
-  golden/             its config, and what each lint finds in the corpus
+tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
                       blobstore/, which moves its big tier
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
 ```
-
-## Tests
-
-`tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each, every canonical
-config path in every language included. `tests/fix.rs` pins each refusal and the bytes fix writes.
-
-`tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
-config included, written to show one behavior. The `.stderr` file beside it is exactly what `deslag
-check` prints in a fresh copy of it, with the temp root as `[ROOT]`; an empty one means the run
-must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
-
-The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
-replaces `check` with other arguments. A `.base` directory is the repo before a change: the case
-runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-test-output` rewrites
-`.stderr` and `.json` files.
-
-`tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
-output from the JSON by hand.
-
-`tests/corpus.rs` is end-to-end, and `tests/blobs.rs` checks the big tier under `make test-blobs`. A
-matrix on `core/` crosses configs, canonical locations, layouts and budgets, deriving what it
-expects from the bytes it placed.
-
-The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
-and the default density, and the binary must report what the library finds; the groups must flag
-four times as many `llm/` fixtures as `human/` ones.
-
-`repo_layout::read` runs under a few real headings, and `core/rt-agents.md` must read with no
-malformed line. Tokens and sentences must keep to their blocks, and each location found under the
-golden config must hold what it names. Fix over the corpus must change only banned characters,
-each as reported, give each one left a reason, and settle; its tally is pinned.
-
-The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
-`tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every
-path missing; a fixture with no section is left out, as is a lint that judges a change.
-
-Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
-what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
-a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 ## Build
 

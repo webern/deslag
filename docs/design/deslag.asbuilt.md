@@ -231,7 +231,7 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 .agents/deslag.toml   deslag's config for this repo
 tests/
   common/mod.rs       the temp-repo and run helpers, and a config writer
-  common/corpus.rs    the corpus loader, which checks each sidecar
+  common/*.rs         the corpus loaders, which check each sidecar
   *.rs                one file per lint or concern, such as unit.rs for small trees
   cases.rs            runs each case and compares what it prints
   cases/              small repos, each with the .stderr deslag must print in it
@@ -240,7 +240,8 @@ tests/
   golden.rs           runs the golden set
   golden/             its config, and what each lint finds in the corpus
 docs/design/          design docs
-scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus
+scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
+                      blobstore/, which moves its big tier
 ```
 
 ## Tests
@@ -255,16 +256,9 @@ must exit 0, any other 1, unless a `.exit` file beside it holds the code, 2 wher
 Every lint's reports are pinned there. `make fix-test-output` rewrites the `.stderr`
 files. Unlike a fixture, a case is written for deslag and changes with it.
 
-`tests/corpus.rs` is end-to-end: it runs the corpus through the binary.
-
-The corpus's `core/` is hand-picked from Matt's repositories. The other three directories are
-collected by `scripts/llm-detection/collect.py` and named for who wrote the file, as its history
-tells: `human/` was last touched before 2022, every commit to an `llm/` file is marked as an
-agent's, and a `mixed/` file was begun by a person before 2022 and later edited by an agent.
-
-Each holds about 400 fixtures, at most three from one repository, under permissive licences only.
-A sidecar records the source, licence, label and history, and facts such as sha256, which the
-loader checks. No fixture is quoted twice.
+`tests/corpus.rs` is end-to-end: it runs the corpus through the binary. The corpus's two tiers,
+their sidecars and their loaders are in `corpus.asbuilt.md`. `tests/blobs.rs` checks the big tier
+in tests that `make test` ignores and `make test-blobs` runs.
 
 The matrix runs on `core/`: each case is a config, a canonical location, a layout and budgets,
 and derives what it expects from the bytes it placed; a case that wants a file to declare a budget
@@ -288,6 +282,11 @@ rewrites the files.
 
 ## Build
 
-`make ci` is the gate: preflight, then every check, build and test, all `--locked`.
-`scripts/preflight.sh` complains when a tool is missing. `make check-deslag` runs deslag on this
-repo. The published crate is what `include` in `Cargo.toml` lists; `make check-publish` builds it.
+`make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
+`--locked`. `scripts/preflight.sh` complains when a tool is missing. `make check-deslag` runs
+deslag on this repo. The published crate is what `include` in `Cargo.toml` lists;
+`make check-publish` builds it.
+
+The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
+into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
+the next image. `blobs.md` beside the lock says how. `make clean` removes both directories.

@@ -22,7 +22,7 @@ CARGO_FLAGS ?=
         fetch-blobs publish-blobs
 
 help:
-	@echo "build            build the library and binary with the debug profile"
+	@echo "build            build deslag and tools/corpus with the debug profile"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
@@ -39,7 +39,8 @@ help:
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
-	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus"
+	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
+	@echo "                 tools/corpus/tests/golden from what deslag-corpus prints"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed by hand before a build can succeed"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
@@ -49,16 +50,16 @@ help:
 # build
 
 build: preflight
-	cargo build $(CARGO_FLAGS) --all-features
+	cargo build $(CARGO_FLAGS) --workspace --all-features
 
 build-release: preflight
-	cargo build $(CARGO_FLAGS) --all-features --release
+	cargo build $(CARGO_FLAGS) --workspace --all-features --release
 
 # ---------------------------------------------------------------------------
 # test
 
 test: preflight
-	cargo test $(CARGO_FLAGS) --all-features
+	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
 # offline and with no login.
@@ -71,7 +72,7 @@ test-blobs: preflight fetch-blobs
 check: check-fmt check-clippy check-deslag check-doc check-typos
 
 check-clippy: preflight
-	cargo clippy $(CARGO_FLAGS) --all-features --all-targets -- -D warnings
+	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets -- -D warnings
 
 # The debug build of deslag, run against .agents/deslag.toml. list_growth judges
 # the change from where origin/main and HEAD meet, which is empty on main.
@@ -80,15 +81,16 @@ check-deslag: preflight
 
 # rustdoc has warnings of its own, broken links say, that clippy never sees.
 check-doc: preflight
-	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_FLAGS) --all-features --no-deps
+	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_FLAGS) --workspace --all-features --no-deps
 
 check-fmt: preflight
 	cargo fmt -- --check
 
 # Builds from the packaged crate, which catches a file that `exclude` dropped
 # but the build needs. Too slow for `check`; the release workflow runs it.
+# deslag is the one package that publishes; tools/corpus never does.
 check-publish: preflight
-	cargo publish $(CARGO_FLAGS) --dry-run --all-features
+	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 
 check-typos: preflight
 	typos
@@ -114,14 +116,15 @@ ci: preflight check build test test-blobs
 fix: fix-fmt fix-clippy fix-golden fix-test-output
 
 fix-clippy: preflight
-	cargo clippy $(CARGO_FLAGS) --all-features --all-targets --fix --allow-dirty --allow-staged
+	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets --fix --allow-dirty --allow-staged
 
 fix-fmt: preflight
 	cargo fmt
 
-# Accepts whatever the lints find now, so read the diff before committing it.
+# Accepts whatever the lints find and deslag-corpus prints now, so read the diff
+# before committing it.
 fix-golden: preflight
-	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test golden
+	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --workspace --all-features --test golden
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight

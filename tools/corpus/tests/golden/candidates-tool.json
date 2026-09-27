@@ -1,0 +1,263 @@
+{
+  "header": {
+    "command": "candidates",
+    "tier": "blobs",
+    "measured_on": "ghcr.io/example/blobs:test@sha256:0000",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "comparison": "the llm files claude-code alone marked, against those copilot, cursor alone marked",
+  "counting": {
+    "min_n": 1,
+    "max_n": 4,
+    "min_repos": 5,
+    "top": 4
+  },
+  "sieve": {
+    "max_share": 0.25,
+    "min_ratio": 1.0,
+    "min_tools": 3
+  },
+  "compared_tools": [
+    "claude-code",
+    "copilot",
+    "cursor"
+  ],
+  "funnel": [
+    {
+      "step": "n-grams of 1 to 4 tokens in at least 5 focus repositories",
+      "left": 99
+    },
+    {
+      "step": "no one repository holds more than 25% of its focus files",
+      "left": 99
+    },
+    {
+      "step": "no human file in the tree holds it",
+      "left": 73
+    },
+    {
+      "step": "the interval's lower bound is at least 1",
+      "left": 39
+    },
+    {
+      "step": "after merging each n-gram into a shorter one it holds",
+      "left": 10
+    }
+  ],
+  "gate": {
+    "rule": "n-grams through the sieve that no reference file holds, in any language, and at least 40 focus repositories do, merged among themselves",
+    "count": 0,
+    "without_rare_words": 0,
+    "phrases": []
+  },
+  "candidates": [
+    {
+      "phrase": "step is",
+      "n": 2,
+      "focus": {
+        "files": 27,
+        "repos": 27,
+        "occurrences": 27,
+        "rate": 17146.776406035668
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 78.57201646090537,
+      "interval": [
+        76.35567313345092,
+        80.7883597883598
+      ],
+      "top_repo_share": 0.037037037037037035,
+      "tools": [],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        }
+      ],
+      "words": [
+        {
+          "word": "step",
+          "reference_files": 52,
+          "rare": false
+        },
+        {
+          "word": "is",
+          "reference_files": 52,
+          "rare": false
+        }
+      ],
+      "longer": [
+        "step is deliberately not",
+        "step is deliberately",
+        "this step is deliberately",
+        "this step is"
+      ],
+      "examples": [
+        "This [step is] deliberately not cached, so the next run reads it again.",
+        "This [step is] deliberately not cached, so the next run reads it again.",
+        "This [step is] deliberately not cached, so the next run reads it again."
+      ]
+    },
+    {
+      "phrase": "this",
+      "n": 1,
+      "focus": {
+        "files": 27,
+        "repos": 27,
+        "occurrences": 27,
+        "rate": 17146.776406035668
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 78.57201646090537,
+      "interval": [
+        76.35567313345092,
+        80.7883597883598
+      ],
+      "top_repo_share": 0.037037037037037035,
+      "tools": [],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        }
+      ],
+      "words": [
+        {
+          "word": "this",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "this step is deliberately",
+        "this step is",
+        "this step"
+      ],
+      "examples": [
+        "[This] step is deliberately not cached, so the next run reads it again.",
+        "[This] step is deliberately not cached, so the next run reads it again.",
+        "[This] step is deliberately not cached, so the next run reads it again."
+      ]
+    },
+    {
+      "phrase": "deliberately",
+      "n": 1,
+      "focus": {
+        "files": 27,
+        "repos": 27,
+        "occurrences": 27,
+        "rate": 17146.776406035668
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 78.57201646090537,
+      "interval": [
+        76.35567313345092,
+        80.7883597883598
+      ],
+      "top_repo_share": 0.037037037037037035,
+      "tools": [],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        }
+      ],
+      "words": [
+        {
+          "word": "deliberately",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "step is deliberately not",
+        "step is deliberately",
+        "is deliberately not cached",
+        "is deliberately not",
+        "is deliberately",
+        "this step is deliberately",
+        "deliberately not cached",
+        "deliberately not"
+      ],
+      "examples": [
+        "This step is [deliberately] not cached, so the next run reads it again.",
+        "This step is [deliberately] not cached, so the next run reads it again.",
+        "This step is [deliberately] not cached, so the next run reads it again."
+      ]
+    },
+    {
+      "phrase": "not",
+      "n": 1,
+      "focus": {
+        "files": 27,
+        "repos": 27,
+        "occurrences": 27,
+        "rate": 17146.776406035668
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 78.57201646090537,
+      "interval": [
+        76.35567313345092,
+        80.7883597883598
+      ],
+      "top_repo_share": 0.037037037037037035,
+      "tools": [],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        }
+      ],
+      "words": [
+        {
+          "word": "not",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "step is deliberately not",
+        "is deliberately not cached",
+        "is deliberately not",
+        "deliberately not cached",
+        "deliberately not",
+        "not cached, so",
+        "not cached"
+      ],
+      "examples": [
+        "This step is deliberately [not] cached, so the next run reads it again.",
+        "This step is deliberately [not] cached, so the next run reads it again.",
+        "This step is deliberately [not] cached, so the next run reads it again."
+      ]
+    }
+  ]
+}

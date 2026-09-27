@@ -73,8 +73,9 @@ jobs:
       - name: Validate version matches Cargo.toml
         env:
           VERSION: ${{ inputs.version }}
+        # The workspace's one package that publishes: tools/corpus sets publish = false.
         run: |
-          manifest_version=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].version')
+          manifest_version=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.publish == null) | .version')
           if [ "$manifest_version" != "$VERSION" ]; then
             echo "::error::Input version '$VERSION' does not match Cargo.toml version '$manifest_version'."
             exit 1
@@ -93,7 +94,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          crate=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].name')
+          crate=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.publish == null) | .name')
           # crates.io answers 200 only for a version it has.
           if curl -sf "https://crates.io/api/v1/crates/$crate/$VERSION" > /dev/null; then
             echo "::error::$crate $VERSION is already published on crates.io."
@@ -154,8 +155,8 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: |
           metadata=$(cargo metadata --no-deps --format-version=1)
-          crate=$(echo "$metadata" | jq -r '.packages[0].name')
-          bin=$(echo "$metadata" | jq -r '[.packages[0].targets[] | select(.kind[] == "bin") | .name][0]')
+          crate=$(echo "$metadata" | jq -r '.packages[] | select(.publish == null) | .name')
+          bin=$(echo "$metadata" | jq -r '[.packages[] | select(.publish == null) | .targets[] | select(.kind[] == "bin") | .name][0]')
           stem="$crate-v$VERSION-$TARGET"
           mkdir -p "dist/$stem"
           cp README.md LICENSE "dist/$stem/"
@@ -208,7 +209,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          crate=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[0].name')
+          crate=$(cargo metadata --no-deps --format-version=1 | jq -r '.packages[] | select(.publish == null) | .name')
           (cd dist && sha256sum -- * > "$crate-v$VERSION-SHA256SUMS.txt")
 
       - name: Tag release

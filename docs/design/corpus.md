@@ -205,7 +205,7 @@ ends with some batch, so these rules hold after every batch, not only the last.
 
 Nothing reads the corpus when deslag lints. A lint never consults it, and the published crate
 holds none of it. The corpus is where maintainers decide and prove a lint's rule and threshold,
-offline, with tests and tools; the loaders live in test code, not in the library.
+offline, with tests and tools; the loaders live outside the library.
 
 deslag exposes no metric to the agent it gates. docstats' evaluation (`docs/scoring-spec.md` at
 commit d958885a) found that live numeric targets during drafting did not improve the text over

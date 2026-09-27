@@ -1288,3 +1288,202 @@ fn the_corpus_reads_into_layers_in_the_order_of_the_file() {
         "{tokens} tokens, {sentences} sentences"
     );
 }
+
+/// The fewest sentences a file needs for #33 to judge how much their lengths vary.
+const MIN_SENTENCES: usize = 10;
+
+/// Words that end a sentence wrongly in the splitter when a capital follows, as in "Ask Dr.
+/// Smith."; see the TODO in `src/document/sentences.rs`.
+const ABBREVIATIONS: &[&str] = &[
+    "dr", "mr", "mrs", "ms", "prof", "st", "jr", "sr", "vs", "etc", "e.g", "i.e", "cf", "al",
+    "fig", "no", "vol", "approx", "inc", "ltd", "co", "corp",
+];
+
+/// The words and numbers of each sentence of a file, for #33: over all prose, over paragraphs
+/// alone, and over all prose with each sentence that ends in an abbreviation joined to the next
+/// one of its block. Sentences of no words are left out.
+struct Lengths {
+    all: Vec<f64>,
+    paragraphs: Vec<f64>,
+    joined: Vec<f64>,
+    /// The sentences that end in an abbreviation before another sentence of their block.
+    abbreviated: usize,
+}
+
+fn lengths(bytes: &[u8]) -> Lengths {
+    use deslag::document::{BlockKind, TokenKind};
+    let text = String::from_utf8_lossy(bytes);
+    let document = Document::markdown(&text);
+    let mut found = Lengths {
+        all: Vec::new(),
+        paragraphs: Vec::new(),
+        joined: Vec::new(),
+        abbreviated: 0,
+    };
+    for (block, ancestors) in document.walk() {
+        let paragraph = matches!(block.kind, BlockKind::Paragraph)
+            && !ancestors
+                .iter()
+                .any(|outer| matches!(outer.kind, BlockKind::Item { .. }));
+        let sentences = document.sentences_of(block);
+        let mut carried = 0.0;
+        for (at, sentence) in sentences.iter().enumerate() {
+            let tokens = &document.tokens[sentence.tokens.clone()];
+            let words = tokens
+                .iter()
+                .filter(|token| matches!(token.kind, TokenKind::Word | TokenKind::Number))
+                .count() as f64;
+            let ends_abbreviated = at + 1 < sentences.len()
+                && matches!(tokens, [.., word, stop] if stop.text == "."
+                    && word.kind == TokenKind::Word
+                    && ABBREVIATIONS.contains(&word.folded().as_str()));
+            if words > 0.0 {
+                found.all.push(words);
+                if paragraph {
+                    found.paragraphs.push(words);
+                }
+            }
+            if ends_abbreviated {
+                found.abbreviated += 1;
+                carried += words;
+            } else if words + carried > 0.0 {
+                found.joined.push(words + carried);
+                carried = 0.0;
+            }
+        }
+    }
+    found
+}
+
+/// The number of sentences, the mean, the standard deviation over the file (not a sample) and
+/// the coefficient of variation of `lengths`.
+fn spread(lengths: &[f64]) -> [f64; 4] {
+    let n = lengths.len() as f64;
+    let mean = lengths.iter().sum::<f64>() / n;
+    let sd = (lengths.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n).sqrt();
+    [n, mean, sd, sd / mean]
+}
+
+/// Prints #33's tables for `files`, each a label with its sentence lengths in one scope.
+fn print_spread(title: &str, files: &[(&str, &[f64])]) {
+    use deslag_corpus::stats::quartiles;
+    eprintln!("\n{title}");
+    eprintln!(
+        "{:<7} {:>6} {:>7}  {:>17}  {:>17}  {:>17}  {:>17}",
+        "label", "files", "skipped", "sentences", "mean words", "sd", "cv"
+    );
+    let labels = ["human", "llm", "mixed"];
+    let mut cvs: BTreeMap<&str, Vec<f64>> = BTreeMap::new();
+    for label in labels {
+        let of: Vec<&[f64]> = files
+            .iter()
+            .filter(|(l, _)| *l == label)
+            .map(|(_, lengths)| *lengths)
+            .collect();
+        let judged: Vec<[f64; 4]> = of
+            .iter()
+            .filter(|lengths| lengths.len() >= MIN_SENTENCES)
+            .map(|lengths| spread(lengths))
+            .collect();
+        let column = |at: usize| {
+            let values: Vec<f64> = judged.iter().map(|row| row[at]).collect();
+            let [q1, median, q3] = quartiles(&values);
+            let places = if at == 3 { 3 } else { 1 };
+            format!("{q1:.places$} {median:.places$} {q3:.places$}")
+        };
+        eprintln!(
+            "{label:<7} {:>6} {:>7}  {:>17}  {:>17}  {:>17}  {:>17}",
+            judged.len(),
+            of.len() - judged.len(),
+            column(0),
+            column(1),
+            column(2),
+            column(3)
+        );
+        cvs.insert(label, judged.iter().map(|row| row[3]).collect());
+    }
+    eprintln!("(each column: first quartile, median, third quartile)");
+
+    // The threshold that best parts llm files from human ones, on whichever side: the largest
+    // difference between the shares of each at or below it.
+    let below = |label: &str, threshold: f64| {
+        let of = &cvs[label];
+        of.iter().filter(|cv| **cv <= threshold).count() as f64 / of.len().max(1) as f64
+    };
+    let gap = |threshold: f64| below("llm", threshold) - below("human", threshold);
+    let best = cvs["llm"]
+        .iter()
+        .chain(&cvs["human"])
+        .copied()
+        .max_by(|a, b| gap(*a).abs().total_cmp(&gap(*b).abs()).then(b.total_cmp(a)))
+        .unwrap_or(f64::NAN);
+    eprintln!(
+        "best threshold: cv <= {best:.3}, which parts {:.1}% more of the llm files than of the \
+         human ones",
+        gap(best).abs() * 100.0
+    );
+    for label in labels {
+        let share = below(label, best);
+        eprintln!(
+            "  {label:<6} {:>5.1}% at or below, {:>5.1}% above",
+            share * 100.0,
+            (1.0 - share) * 100.0
+        );
+    }
+}
+
+/// Issue #33: whether the length of sentences varies less in llm files than in human ones. Run
+/// with `cargo test --test corpus -- --ignored --nocapture`; the big tier is measured too when
+/// `make fetch-blobs` has unpacked it.
+#[test]
+#[ignore = "a measurement for issue #33, printed rather than checked"]
+fn sentence_lengths_by_label() {
+    let mut tiers = vec![("the tree, tests/corpus", load_corpus())];
+    let big = Path::new(env!("CARGO_MANIFEST_DIR")).join(".blobs/unpacked/corpus");
+    if big.is_dir() {
+        tiers.push(("the big tier", common::blobs::load_blobs(&big)));
+    }
+    for (tier, fixtures) in tiers {
+        let measured: Vec<(&str, Lengths)> = fixtures
+            .iter()
+            .filter(|fixture| fixture.category != "core")
+            .map(|fixture| {
+                (
+                    fixture.sidecar.authorship.label.as_str(),
+                    lengths(&fixture.bytes),
+                )
+            })
+            .collect();
+        eprintln!(
+            "\n=== {tier}: {} files; words and numbers per sentence; files of fewer than \
+             {MIN_SENTENCES} sentences skipped",
+            measured.len()
+        );
+        let scope = |pick: fn(&Lengths) -> &[f64]| -> Vec<(&str, &[f64])> {
+            measured
+                .iter()
+                .map(|(label, lengths)| (*label, pick(lengths)))
+                .collect()
+        };
+        print_spread("all prose", &scope(|l| &l.all));
+        print_spread(
+            "paragraphs alone: no headings, table cells or list items",
+            &scope(|l| &l.paragraphs),
+        );
+        print_spread(
+            "all prose, each sentence ending in an abbreviation joined to the next",
+            &scope(|l| &l.joined),
+        );
+        for label in ["human", "llm", "mixed"] {
+            let of = measured.iter().filter(|(l, _)| *l == label);
+            let sentences: usize = of.clone().map(|(_, l)| l.all.len()).sum();
+            let abbreviated: usize = of.clone().map(|(_, l)| l.abbreviated).sum();
+            let files = of.filter(|(_, l)| l.abbreviated > 0).count();
+            eprintln!(
+                "abbreviations, {label}: {abbreviated} of {sentences} sentences ({:.2}%) end in \
+                 one before another sentence of their block, in {files} files",
+                abbreviated as f64 * 100.0 / sentences.max(1) as f64
+            );
+        }
+    }
+}

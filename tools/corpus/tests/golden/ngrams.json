@@ -1,0 +1,291 @@
+{
+  "header": {
+    "command": "ngrams",
+    "tier": "blobs",
+    "measured_on": "ghcr.io/example/blobs:test@sha256:0000",
+    "register": "human is one register: Markdown kept in repositories before 2022-01-01; llm and mixed files are newer",
+    "filters": {
+      "kinds": [],
+      "batches": [],
+      "repos": [],
+      "languages": [],
+      "quarters": [],
+      "single_tool": false,
+      "register": null
+    }
+  },
+  "comparison": "the English llm files, against the English human files",
+  "counting": {
+    "min_n": 2,
+    "max_n": 4,
+    "min_repos": 10,
+    "top": 12
+  },
+  "counted": 164,
+  "grams": [
+    {
+      "phrase": "the default",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "needs no warm",
+      "n": 3,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "needs no",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "no warm-up",
+      "n": 4,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "no warm",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "up step, and",
+      "n": 4,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "step, and the",
+      "n": 4,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "step, and",
+      "n": 3,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "and the",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "is load-bearing",
+      "n": 4,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "is load",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    },
+    {
+      "phrase": "is stale",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 21211.71652421652
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 64.71999643874643,
+      "interval": [
+        62.37598697598697,
+        67.07164733414731
+      ],
+      "top_repo_share": 0.0125
+    }
+  ]
+}

@@ -11,17 +11,21 @@ use deslag::lint::banned_chars::{GROUPS, check, scan};
 fn found(text: &str) -> Vec<(usize, char)> {
     scan(&Document::markdown(text))
         .into_iter()
-        .map(|found| (found.line, found.ch))
+        .map(|found| (found.location.line, found.ch))
         .collect()
 }
 
-/// The characters `settings` ban in `text`, each with what to write instead and its lines.
+/// The characters `settings` ban in `text`, each with what to write instead and the line of each
+/// place it is.
 fn banned(text: &str, settings: &BannedChars) -> Vec<(char, String, Vec<usize>)> {
     check(&Document::markdown(text), Some(settings))
         .map(|over| over.banned)
         .unwrap_or_default()
         .into_iter()
-        .map(|banned| (banned.ch, banned.instead, banned.lines))
+        .map(|banned| {
+            let lines = banned.locations.iter().map(|location| location.line);
+            (banned.ch, banned.instead, lines.collect())
+        })
         .collect()
 }
 
@@ -190,15 +194,17 @@ fn ban_adds_characters_and_changes_what_to_write() {
 }
 
 #[test]
-fn every_occurrence_counts_and_each_line_is_listed_once() {
+fn every_occurrence_counts_and_has_its_place() {
     let text = "a \u{2014}\u{2014} b\nc\nd \u{2014}\n\u{2192} \u{2014}\n";
     let over =
         check(&Document::markdown(text), Some(&BannedChars::default())).expect("banned characters");
-    assert_eq!(over.count, 5);
+    assert_eq!(over.count(), 5);
+    let second = &over.banned[0].locations[1];
+    assert_eq!((second.start, second.end, second.column), (5, 8, 4));
     assert_eq!(
         banned(text, &BannedChars::default()),
         vec![
-            ('\u{2014}', "-".to_string(), vec![1, 3, 4]),
+            ('\u{2014}', "-".to_string(), vec![1, 1, 3, 4]),
             ('\u{2192}', "->".to_string(), vec![4]),
         ]
     );

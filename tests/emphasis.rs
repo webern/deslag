@@ -12,7 +12,7 @@ fn spans(text: &str) -> Vec<(usize, Kind, String)> {
     measure(&Document::markdown(text))
         .spans
         .into_iter()
-        .map(|span| (span.line, span.kind, span.quote))
+        .map(|span| (span.location.line, span.kind, span.quote))
         .collect()
 }
 

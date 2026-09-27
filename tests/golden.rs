@@ -49,7 +49,7 @@ fn record_of(violation: &Violation) -> Option<String> {
         ),
         Violation::RepoLayout(over) if over.problems == [Problem::NoSection] => return None,
         Violation::RepoLayout(over) => format!("problems:{}", over.problems.len()),
-        Violation::BannedChars(over) => format!("count:{}", over.count),
+        Violation::BannedChars(over) => format!("count:{}", over.count()),
         Violation::BannedPhrases(over) => format!("matches:{}", over.matches.len()),
         Violation::Density(over) => {
             let blocks: Vec<String> = over

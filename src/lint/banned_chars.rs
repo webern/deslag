@@ -11,7 +11,8 @@
 //! [`check`] picks out the ones the settings ban.
 
 use crate::config::{BannedChars, Groups};
-use crate::document::{BlockKind, Body, Document, PieceKind};
+use crate::document::{BlockKind, Body, Document, Location, PieceKind};
+use crate::lint::{Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned characters!";
@@ -254,13 +255,13 @@ const INVISIBLE: &[Rule] = &[
 /// A character outside code that is not ASCII.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Found {
-    /// The 1-based line it is on.
-    pub line: usize,
+    /// Where it is.
+    pub location: Location,
     /// The character.
     pub ch: char,
 }
 
-/// One banned character and the lines it is on.
+/// One banned character and where it is.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Banned {
     /// The character.
@@ -269,19 +270,27 @@ pub struct Banned {
     pub name: Option<&'static str>,
     /// What to write instead; empty means delete it.
     pub instead: String,
-    /// The lines it is on, each once, in order.
-    pub lines: Vec<usize>,
+    /// Each place the file holds it, in order.
+    pub locations: Vec<Location>,
 }
 
 /// A file that holds banned characters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Over {
-    /// How many banned characters the file holds.
-    pub count: usize,
     /// Each banned character, in the order they first appear.
     pub banned: Vec<Banned>,
     /// The config's replacement for the default advice, if it has one for this file.
     pub message: Option<String>,
+}
+
+impl Over {
+    /// How many banned characters the file holds.
+    pub fn count(&self) -> usize {
+        self.banned
+            .iter()
+            .map(|banned| banned.locations.len())
+            .sum()
+    }
 }
 
 /// Finds every character of `document` that is outside code and not ASCII. A byte order mark
@@ -303,7 +312,7 @@ pub fn scan(document: &Document<'_>) -> Vec<Found> {
                 let offset = piece.range.start + at;
                 if !ch.is_ascii() && !(offset == 0 && ch == '\u{FEFF}') {
                     found.push(Found {
-                        line: document.line(offset),
+                        location: document.locate(offset..offset + ch.len_utf8()),
                         ch,
                     });
                 }
@@ -316,31 +325,24 @@ pub fn scan(document: &Document<'_>) -> Vec<Found> {
 /// Checks one file, read into `document`. A file with no settings is not checked.
 pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<Over> {
     let settings = settings?;
-    let mut count = 0;
     let mut banned: Vec<Banned> = Vec::new();
 
-    for Found { line, ch } in scan(document) {
+    for Found { location, ch } in scan(document) {
         let Some(instead) = verdict(settings, ch) else {
             continue;
         };
-        count += 1;
         match banned.iter_mut().find(|seen| seen.ch == ch) {
-            Some(seen) => {
-                if seen.lines.last() != Some(&line) {
-                    seen.lines.push(line);
-                }
-            }
+            Some(seen) => seen.locations.push(location),
             None => banned.push(Banned {
                 ch,
                 name: name(ch),
                 instead,
-                lines: vec![line],
+                locations: vec![location],
             }),
         }
     }
 
-    (count > 0).then(|| Over {
-        count,
+    (!banned.is_empty()).then(|| Over {
         banned,
         message: settings.message.clone(),
     })
@@ -399,15 +401,53 @@ pub fn render(path: &str, over: &Over) -> String {
          {advice}\n\
          \n\
          The characters, and what to write instead:{listed}",
-        count = match over.count {
+        count = match over.count() {
             1 => "1 banned character".to_string(),
             count => format!("{count} banned characters"),
         },
     )
 }
 
-/// One line of the report: the character, where it is, and what to write instead.
+/// The places the report lists: each character wherever the file holds it.
+pub fn marks(over: &Over) -> Vec<Mark> {
+    over.banned
+        .iter()
+        .flat_map(|banned| {
+            let note = note(banned);
+            banned.locations.iter().map(move |location| Mark {
+                kind: MarkKind::Occurrence,
+                location: *location,
+                note: note.clone(),
+            })
+        })
+        .collect()
+}
+
+/// One line of the report: the character, the lines it is on, and what to write instead.
 fn describe(banned: &Banned) -> String {
+    let mut lines: Vec<usize> = banned
+        .locations
+        .iter()
+        .map(|location| location.line)
+        .collect();
+    lines.dedup();
+    let on = match lines.as_slice() {
+        [line] => format!("line {line}"),
+        _ => format!(
+            "lines {}",
+            lines
+                .iter()
+                .map(|line| line.to_string())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    };
+    format!("{on}: {}", note(banned))
+}
+
+/// What the report says of a banned character wherever it is: what it is, and what to write
+/// instead.
+fn note(banned: &Banned) -> String {
     let ch = banned.ch;
     let mut what = format!("U+{:04X}", ch as u32);
     if let Some(name) = banned.name {
@@ -419,22 +459,12 @@ fn describe(banned: &Banned) -> String {
     if !hidden {
         what.push_str(&format!(" \"{ch}\""));
     }
-    let lines = banned
-        .lines
-        .iter()
-        .map(|line| line.to_string())
-        .collect::<Vec<_>>()
-        .join(", ");
-    let on = match banned.lines.len() {
-        1 => format!("line {lines}"),
-        _ => format!("lines {lines}"),
-    };
     let instead = match banned.instead.as_str() {
         "" => "delete it".to_string(),
         " " => "write a plain space".to_string(),
         instead => format!("write `{instead}`"),
     };
-    format!("{on}: {what}; {instead}")
+    format!("{what}; {instead}")
 }
 
 /// The advice for a file that holds banned characters.

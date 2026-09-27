@@ -28,7 +28,8 @@
 use std::path::Path;
 
 use crate::config::RepoLayout;
-use crate::document::{BlockKind, Body, Document, PieceKind};
+use crate::document::{BlockKind, Body, Document, Gathered, Location, PieceKind};
+use crate::lint::{Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected a broken repository layout!";
@@ -53,46 +54,56 @@ pub struct Over {
     pub message: Option<String>,
 }
 
-/// One thing wrong with a file's layout. Lines are 1-based lines of the Markdown file.
+impl Over {
+    /// How many entries the layout must list, as the report says it.
+    fn range(&self) -> String {
+        format!("between {} and {}", self.min_entries, self.max_entries)
+    }
+}
+
+/// One thing wrong with a file's layout. A line of the layout is where it is in the Markdown file,
+/// from its first character to its last that is not whitespace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Problem {
     /// No heading in the file is the section's. Always the only problem.
     NoSection,
-    /// The section, whose heading is on `line`, holds no code block. Always the only problem.
+    /// The section holds no code block. Always the only problem.
     NoBlock {
-        /// The heading's line.
-        line: usize,
+        /// Where the section's heading is.
+        location: Location,
     },
     /// The layout lists more or fewer entries than allowed.
     Count {
         /// How many it lists.
         entries: u64,
+        /// Where the code block that lists them is.
+        location: Location,
     },
     /// A line of the layout is wider than allowed.
     Wide {
         /// The line.
-        line: usize,
+        location: Location,
         /// Its width.
         width: usize,
     },
     /// A line of the layout is out of format.
     Format {
         /// The line.
-        line: usize,
+        location: Location,
         /// How.
         malformed: Malformed,
     },
     /// An entry's path does not exist.
     Missing {
         /// The entry's line.
-        line: usize,
+        location: Location,
         /// The path as listed.
         path: String,
     },
     /// An entry's path ends in `/` and is not a directory.
     NotDirectory {
         /// The entry's line.
-        line: usize,
+        location: Location,
         /// The path as listed.
         path: String,
     },
@@ -131,25 +142,28 @@ pub enum Malformed {
     },
 }
 
-/// A layout section, read from the text alone.
+/// A layout section, read from the text alone. A line of the layout is where it is in the Markdown
+/// file, from its first character to its last that is not whitespace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Layout {
-    /// The line of the section's heading.
-    pub heading_line: usize,
+    /// Where the section's heading is.
+    pub heading: Location,
+    /// Where the code block that holds the layout is.
+    pub block: Location,
     /// The entries, in order.
     pub entries: Vec<Entry>,
     /// Each line out of format, and how, in order.
-    pub malformed: Vec<(usize, Malformed)>,
+    pub malformed: Vec<(Location, Malformed)>,
     /// Each line that is not blank, and its width in characters without trailing whitespace, in
     /// order.
-    pub widths: Vec<(usize, usize)>,
+    pub widths: Vec<(Location, usize)>,
 }
 
 /// One entry of a layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     /// Its line.
-    pub line: usize,
+    pub location: Location,
     /// The path to look up, or `None` when the line holds no one relative path, which is
     /// already a format problem.
     pub path: Option<String>,
@@ -160,11 +174,23 @@ pub struct Entry {
 pub fn read(document: &Document<'_>, heading: &str) -> Result<Layout, Problem> {
     let block = Block::find(document, heading)?;
     let mut reader = Reader::default();
-    for (index, row) in block.text.lines().enumerate() {
-        reader.read(block.line + index, row);
+    let mut start = 0;
+    for row in block.code.text.split_inclusive('\n') {
+        let at = start;
+        start += row.len();
+        // The rows are the text's lines, as `str::lines` splits them.
+        let row = match row.strip_suffix('\n') {
+            Some(row) => row.strip_suffix('\r').unwrap_or(row),
+            None => row,
+        };
+        let written = row.trim_end().len();
+        let location =
+            (written > 0).then(|| document.locate(block.code.source_range(at..at + written)));
+        reader.read(location, row);
     }
     Ok(Layout {
-        heading_line: block.heading_line,
+        heading: block.heading,
+        block: block.location,
         entries: reader.entries,
         malformed: reader.malformed,
         widths: reader.widths,
@@ -188,17 +214,20 @@ pub fn check(document: &Document<'_>, dir: &Path, settings: Option<&RepoLayout>)
                 .widths
                 .into_iter()
                 .filter(|&(_, width)| width as u64 > max_width)
-                .map(|(line, width)| Problem::Wide { line, width })
+                .map(|(location, width)| Problem::Wide { location, width })
                 .collect();
-            problems.extend(
-                layout
-                    .malformed
-                    .into_iter()
-                    .map(|(line, malformed)| Problem::Format { line, malformed }),
-            );
+            problems.extend(layout.malformed.into_iter().map(|(location, malformed)| {
+                Problem::Format {
+                    location,
+                    malformed,
+                }
+            }));
             problems.extend(layout.entries.iter().filter_map(|entry| entry.find(dir)));
             if !(min_entries..=max_entries).contains(&entries) {
-                problems.push(Problem::Count { entries });
+                problems.push(Problem::Count {
+                    entries,
+                    location: layout.block,
+                });
             }
             // A stable sort: the count comes first, then each line's width, format and path
             // problems, in that order.
@@ -222,7 +251,7 @@ pub fn check(document: &Document<'_>, dir: &Path, settings: Option<&RepoLayout>)
 /// The report for one file at `path` with a broken layout, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let heading = &over.heading;
-    let range = format!("between {} and {}", over.min_entries, over.max_entries);
+    let range = over.range();
     let advice = match &over.message {
         Some(message) => message
             .replace("{path}", path)
@@ -239,7 +268,13 @@ pub fn render(path: &str, over: &Over) -> String {
     let problems: String = over
         .problems
         .iter()
-        .map(|problem| format!("\n  {}", problem.describe(over, &range)))
+        .map(|problem| {
+            let note = problem.note(over);
+            match problem.line() {
+                Some(line) => format!("\n  line {line}: {note}"),
+                None => format!("\n  {note}"),
+            }
+        })
         .collect();
     format!(
         "{HEADING}\n\
@@ -267,13 +302,13 @@ impl Entry {
         let on_disk = dir.join(name);
         if !on_disk.exists() {
             return Some(Problem::Missing {
-                line: self.line,
+                location: self.location,
                 path: path.clone(),
             });
         }
         if directory && !on_disk.is_dir() {
             return Some(Problem::NotDirectory {
-                line: self.line,
+                location: self.location,
                 path: path.clone(),
             });
         }
@@ -282,40 +317,39 @@ impl Entry {
 }
 
 impl Problem {
-    /// The line the problem is on, or `None` when it is about the whole section.
+    /// The line the report puts the problem on, or `None` when it is about the whole section.
     fn line(&self) -> Option<usize> {
         match self {
             Problem::NoSection | Problem::Count { .. } => None,
-            Problem::NoBlock { line }
-            | Problem::Wide { line, .. }
-            | Problem::Format { line, .. }
-            | Problem::Missing { line, .. }
-            | Problem::NotDirectory { line, .. } => Some(*line),
+            Problem::NoBlock { location }
+            | Problem::Wide { location, .. }
+            | Problem::Format { location, .. }
+            | Problem::Missing { location, .. }
+            | Problem::NotDirectory { location, .. } => Some(location.line),
         }
     }
 
-    /// This problem as a line of the report for `over`, whose entries must number `range`.
-    fn describe(&self, over: &Over, range: &str) -> String {
+    /// What the report for `over` says of this problem, after its line.
+    fn note(&self, over: &Over) -> String {
         match self {
             Problem::NoSection => format!("there is no \"{}\" section", over.heading),
-            Problem::NoBlock { line } => {
-                format!("line {line}: the heading has no code block under it")
-            }
-            Problem::Count { entries } => format!(
-                "the layout lists {}; it must list {range}",
+            Problem::NoBlock { .. } => "the heading has no code block under it".to_string(),
+            Problem::Count { entries, .. } => format!(
+                "the layout lists {}; it must list {}",
                 match entries {
                     1 => "1 entry".to_string(),
                     entries => format!("{entries} entries"),
-                }
+                },
+                over.range()
             ),
-            Problem::Wide { line, width } => format!(
-                "line {line}: the line is {width} characters wide; shorten it to {} or fewer",
+            Problem::Wide { width, .. } => format!(
+                "the line is {width} characters wide; shorten it to {} or fewer",
                 over.max_width
             ),
-            Problem::Format { line, malformed } => format!("line {line}: {}", malformed.describe()),
-            Problem::Missing { line, path } => format!("line {line}: {path} does not exist"),
-            Problem::NotDirectory { line, path } => {
-                format!("line {line}: {path} ends in / but is not a directory")
+            Problem::Format { malformed, .. } => malformed.describe(),
+            Problem::Missing { path, .. } => format!("{path} does not exist"),
+            Problem::NotDirectory { path, .. } => {
+                format!("{path} ends in / but is not a directory")
             }
         }
     }
@@ -341,6 +375,32 @@ impl Malformed {
             }
         }
     }
+}
+
+/// The places the report lists: each line of the layout that is wrong, and what a verdict on the
+/// whole section rests on, the heading with no block under it or the block that lists too few or
+/// too many entries. A missing section has no place.
+pub fn marks(over: &Over) -> Vec<Mark> {
+    over.problems
+        .iter()
+        .filter_map(|problem| {
+            let (kind, location) = match problem {
+                Problem::NoSection => return None,
+                Problem::NoBlock { location } | Problem::Count { location, .. } => {
+                    (MarkKind::Evidence, location)
+                }
+                Problem::Wide { location, .. }
+                | Problem::Format { location, .. }
+                | Problem::Missing { location, .. }
+                | Problem::NotDirectory { location, .. } => (MarkKind::Occurrence, location),
+            };
+            Some(Mark {
+                kind,
+                location: *location,
+                note: problem.note(over),
+            })
+        })
+        .collect()
 }
 
 /// The layout the advice shows, for an agent to copy the format of.
@@ -375,27 +435,28 @@ fn default_advice(path: &str, heading: &str, range: &str, max_width: u64) -> Str
 }
 
 /// The code block that holds the layout.
-struct Block {
-    /// The line of the section's heading.
-    heading_line: usize,
-    /// The line of the file its text starts on.
-    line: usize,
-    text: String,
+struct Block<'a> {
+    /// Where the section's heading is.
+    heading: Location,
+    /// Where the code block is.
+    location: Location,
+    /// Its text, gathered from its pieces.
+    code: Gathered<'a>,
 }
 
-impl Block {
+impl<'a> Block<'a> {
     /// The first code block in the section of `document` headed `heading`.
-    fn find(document: &Document<'_>, heading: &str) -> Result<Block, Problem> {
+    fn find(document: &Document<'a>, heading: &str) -> Result<Block<'a>, Problem> {
         let wanted = heading.trim().to_lowercase();
-        // The section's heading, once found: its level and line.
-        let mut section: Option<(u8, usize)> = None;
+        // The section's heading, once found: its level and where it is.
+        let mut section: Option<(u8, Location)> = None;
 
         for (block, _) in document.walk() {
             match &block.kind {
                 BlockKind::Heading { level } => {
-                    if let Some((section_level, line)) = section {
+                    if let Some((section_level, location)) = section {
                         if *level <= section_level {
-                            return Err(Problem::NoBlock { line });
+                            return Err(Problem::NoBlock { location });
                         }
                     }
                     let title: String = document
@@ -405,20 +466,21 @@ impl Block {
                         .map(|piece| piece.text.as_ref())
                         .collect();
                     if section.is_none() && title.trim().to_lowercase() == wanted {
-                        section = Some((*level, document.line(block.range.start)));
+                        section = Some((*level, document.locate(block.range.clone())));
                     }
                 }
                 BlockKind::Code { .. } => {
-                    let (Some((_, heading_line)), Body::Raw(pieces)) = (section, &block.body)
-                    else {
+                    let (Some((_, heading)), Body::Raw(pieces)) = (section, &block.body) else {
                         continue;
                     };
+                    let mut code = Gathered::new(document.source);
+                    for piece in pieces {
+                        code.push(&piece.text, piece.range.clone());
+                    }
                     return Ok(Block {
-                        heading_line,
-                        line: pieces
-                            .first()
-                            .map_or(0, |piece| document.line(piece.range.start)),
-                        text: pieces.iter().map(|piece| piece.text.as_ref()).collect(),
+                        heading,
+                        location: document.locate(block.range.clone()),
+                        code,
                     });
                 }
                 _ => {}
@@ -426,7 +488,7 @@ impl Block {
         }
 
         match section {
-            Some((_, line)) => Err(Problem::NoBlock { line }),
+            Some((_, location)) => Err(Problem::NoBlock { location }),
             None => Err(Problem::NoSection),
         }
     }
@@ -437,8 +499,8 @@ impl Block {
 #[derive(Default)]
 struct Reader {
     entries: Vec<Entry>,
-    malformed: Vec<(usize, Malformed)>,
-    widths: Vec<(usize, usize)>,
+    malformed: Vec<(Location, Malformed)>,
+    widths: Vec<(Location, usize)>,
     /// Whether a line that is not blank has been read, after which no line is the root.
     started: bool,
     /// The 0-based column the first entry's path starts in.
@@ -450,13 +512,13 @@ struct Reader {
 }
 
 impl Reader {
-    /// Reads `row`, the file's line `line`.
-    fn read(&mut self, line: usize, row: &str) {
-        if row.trim().is_empty() {
+    /// Reads `row`, which is at `location` in the file, or is blank and has no location.
+    fn read(&mut self, location: Option<Location>, row: &str) {
+        let Some(location) = location else {
             self.description_column = None;
             return;
-        }
-        self.widths.push((line, row.trim_end().chars().count()));
+        };
+        self.widths.push((location, row.trim_end().chars().count()));
         let indent = row.chars().take_while(|c| c.is_whitespace()).count();
         let is_root = !self.started
             && indent == 0
@@ -475,13 +537,16 @@ impl Reader {
         let path = before.trim();
         let words = path.split_whitespace().count();
         if after.is_none() && words > 1 {
-            self.malformed.push((line, Malformed::Stray));
+            self.malformed.push((location, Malformed::Stray));
             self.description_column = None;
             return;
         }
         if words != 1 {
-            self.entries.push(Entry { line, path: None });
-            self.malformed.push((line, Malformed::NotOnePath));
+            self.entries.push(Entry {
+                location,
+                path: None,
+            });
+            self.malformed.push((location, Malformed::NotOnePath));
             self.description_column = None;
             return;
         }
@@ -489,7 +554,7 @@ impl Reader {
         let path_column = *self.path_column.get_or_insert(indent);
         if indent != path_column {
             self.malformed.push((
-                line,
+                location,
                 Malformed::Indent {
                     expected: path_column + 1,
                     found: indent + 1,
@@ -503,7 +568,7 @@ impl Reader {
                 let arrow_column = *self.arrow_column.get_or_insert(arrow);
                 if arrow != arrow_column {
                     self.malformed.push((
-                        line,
+                        location,
                         Malformed::Arrow {
                             expected: arrow_column + 1,
                             found: arrow + 1,
@@ -512,29 +577,33 @@ impl Reader {
                 }
                 let gap = after.chars().take_while(|c| c.is_whitespace()).count();
                 if after.trim().is_empty() {
-                    self.no_description(line, path);
+                    self.no_description(location, path);
                 } else {
                     self.description_column = Some(arrow + ARROW.len() + gap);
                 }
             }
-            None => self.no_description(line, path),
+            None => self.no_description(location, path),
         }
 
         let path = path.to_string();
         if path.starts_with('/') {
-            self.entries.push(Entry { line, path: None });
-            self.malformed.push((line, Malformed::Absolute { path }));
+            self.entries.push(Entry {
+                location,
+                path: None,
+            });
+            self.malformed
+                .push((location, Malformed::Absolute { path }));
             return;
         }
         self.entries.push(Entry {
-            line,
+            location,
             path: Some(path),
         });
     }
 
-    fn no_description(&mut self, line: usize, path: &str) {
+    fn no_description(&mut self, location: Location, path: &str) {
         self.malformed.push((
-            line,
+            location,
             Malformed::NoDescription {
                 path: path.to_string(),
             },

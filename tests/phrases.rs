@@ -33,7 +33,7 @@ fn found(text: &str, settings: &BannedPhrases) -> Vec<(usize, String, String)> {
         .map(|over| over.matches)
         .unwrap_or_default()
         .into_iter()
-        .map(|found| (found.line, found.quote, found.advice))
+        .map(|found| (found.location.line, found.quote, found.advice))
         .collect()
 }
 

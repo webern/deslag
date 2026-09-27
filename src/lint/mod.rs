@@ -16,7 +16,7 @@ use std::path::Path;
 
 use crate::Error;
 use crate::config::Config;
-use crate::document::Document;
+use crate::document::{Document, Location};
 use crate::glob;
 
 /// Every lint deslag has. Everything that lists the lints, such as the order they run in and the
@@ -80,6 +80,28 @@ impl fmt::Display for Lint {
     }
 }
 
+/// A place in a file that a finding points at.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Mark {
+    /// What the place is to the finding.
+    pub kind: MarkKind,
+    /// Where it is.
+    pub location: Location,
+    /// What the report says of it, in the lint's words.
+    pub note: String,
+}
+
+/// What a place that a finding points at is to the finding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MarkKind {
+    /// Something wrong in its own right, such as a banned character, or a line of a layout that is
+    /// out of format.
+    Occurrence,
+    /// Part of what a verdict on the whole file rests on, such as one emphasized span of the many
+    /// that put a file over its share.
+    Evidence,
+}
+
 /// One file that a lint failed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Finding {
@@ -116,6 +138,19 @@ impl Violation {
             Violation::BannedChars(_) => Lint::BannedChars,
             Violation::BannedPhrases(_) => Lint::BannedPhrases,
             Violation::Density(_) => Lint::Density,
+        }
+    }
+
+    /// The places it points at, in the order its report lists them. A verdict on the whole file
+    /// with nothing to point at, such as a file over its byte budget, has none.
+    pub fn marks(&self) -> Vec<Mark> {
+        match self {
+            Violation::MaxSizeBytes(_) => Vec::new(),
+            Violation::MaxEmphasis(over) => max_emphasis::marks(over),
+            Violation::RepoLayout(over) => repo_layout::marks(over),
+            Violation::BannedChars(over) => banned_chars::marks(over),
+            Violation::BannedPhrases(over) => banned_phrases::marks(over),
+            Violation::Density(over) => density::marks(over),
         }
     }
 }

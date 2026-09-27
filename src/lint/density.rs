@@ -15,7 +15,8 @@
 use std::ops::Range;
 
 use crate::config::Density;
-use crate::document::{BlockKind, Document, PieceKind, PointKind, SpanKind};
+use crate::document::{BlockKind, Document, Location, PieceKind, PointKind, SpanKind};
+use crate::lint::{Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected dense text!";
@@ -32,12 +33,23 @@ pub enum Kind {
 /// One paragraph or list item.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Block {
-    /// The 1-based line it starts on.
-    pub line: usize,
+    /// Where it is.
+    pub location: Location,
     /// What kind of block it is.
     pub kind: Kind,
     /// How many characters a reader sees in it.
     pub chars: usize,
+}
+
+impl Block {
+    /// What the report says of it: its kind and length.
+    fn note(&self) -> String {
+        let what = match self.kind {
+            Kind::Paragraph => "a paragraph",
+            Kind::Item => "a list item",
+        };
+        format!("{what} of {} characters", self.chars)
+    }
 }
 
 /// A file with blocks longer than its settings allow.
@@ -118,7 +130,7 @@ pub fn measure(document: &Document<'_>) -> Vec<Block> {
             .count();
         if visible {
             blocks.push(Block {
-                line: document.line(block.range.start),
+                location: document.locate(block.range.clone()),
                 kind,
                 chars,
             });
@@ -164,16 +176,7 @@ pub fn render(path: &str, over: &Over) -> String {
     let listed: String = over
         .blocks
         .iter()
-        .map(|block| {
-            let what = match block.kind {
-                Kind::Paragraph => "a paragraph",
-                Kind::Item => "a list item",
-            };
-            format!(
-                "\n  line {}: {what} of {} characters",
-                block.line, block.chars
-            )
-        })
+        .map(|block| format!("\n  line {}: {}", block.location.line, block.note()))
         .collect();
 
     format!(
@@ -185,6 +188,18 @@ pub fn render(path: &str, over: &Over) -> String {
          \n\
          The dense text:{listed}"
     )
+}
+
+/// The places the report lists: each block that is too long.
+pub fn marks(over: &Over) -> Vec<Mark> {
+    over.blocks
+        .iter()
+        .map(|block| Mark {
+            kind: MarkKind::Occurrence,
+            location: block.location,
+            note: block.note(),
+        })
+        .collect()
 }
 
 /// The advice for a file with walls of text.

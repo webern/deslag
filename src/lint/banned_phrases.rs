@@ -15,7 +15,8 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 use crate::config::BannedPhrases;
-use crate::document::{Document, Token, TokenKind};
+use crate::document::{Document, Location, Token, TokenKind};
+use crate::lint::{Mark, MarkKind};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned phrases!";
@@ -23,8 +24,8 @@ pub const HEADING: &str = "ERROR: deslag detected banned phrases!";
 /// A banned phrase where the file holds it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Match {
-    /// The 1-based line it starts on.
-    pub line: usize,
+    /// Where it is, from its first token to its last.
+    pub location: Location,
     /// Its tokens as the source writes them, with a space where whitespace parts two of them and
     /// the markup between them left out.
     pub quote: String,
@@ -46,11 +47,21 @@ impl Match {
             }
             quote.push_str(&document.source[token.range.clone()]);
         }
+        let last = &tokens[tokens.len() - 1];
         Match {
-            line: document.line(tokens[0].range.start),
+            location: document.locate(tokens[0].range.start..last.range.end),
             quote,
             advice: advice.to_string(),
         }
+    }
+
+    /// What the report says of it: the phrase, and what to do about it.
+    fn note(&self) -> String {
+        let advice = match self.advice.as_str() {
+            "" => "delete it",
+            advice => advice,
+        };
+        format!("\"{}\"; {advice}", self.quote)
     }
 }
 
@@ -184,13 +195,7 @@ pub fn render(path: &str, over: &Over) -> String {
     let listed: String = over
         .matches
         .iter()
-        .map(|found| {
-            let advice = match found.advice.as_str() {
-                "" => "delete it",
-                advice => advice,
-            };
-            format!("\n  line {}: \"{}\"; {advice}", found.line, found.quote)
-        })
+        .map(|found| format!("\n  line {}: {}", found.location.line, found.note()))
         .collect();
 
     format!(
@@ -206,6 +211,18 @@ pub fn render(path: &str, over: &Over) -> String {
             count => format!("{count} banned phrases"),
         },
     )
+}
+
+/// The places the report lists: each phrase where the file holds it.
+pub fn marks(over: &Over) -> Vec<Mark> {
+    over.matches
+        .iter()
+        .map(|found| Mark {
+            kind: MarkKind::Occurrence,
+            location: found.location,
+            note: found.note(),
+        })
+        .collect()
 }
 
 /// The advice for a file that holds banned phrases.

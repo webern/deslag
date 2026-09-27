@@ -15,6 +15,7 @@ pub mod lints;
 pub mod load;
 pub mod measure;
 pub mod ngrams;
+pub mod patterns;
 pub mod report;
 pub mod sidecar;
 pub mod stats;

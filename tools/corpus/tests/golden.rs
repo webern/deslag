@@ -393,6 +393,11 @@ const CASES: &[(&str, &[&str])] = &[
             "config.toml",
         ],
     ),
+    ("patterns.txt", &["--tier", "blobs", "patterns"]),
+    (
+        "patterns.json",
+        &["--tier", "blobs", "--json", "patterns", "verbs_no_nouns"],
+    ),
     (
         "report.md",
         &[

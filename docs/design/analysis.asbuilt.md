@@ -26,6 +26,8 @@ bytes.
   catalogue's phrases and those `rejected.toml` refused; see `catalog.md`.
 - `lints`: what a config's lints fail, per label and per compared tool.
 - `report`: the four above as one Markdown page, the lints at `tools/corpus/report.toml`.
+- `patterns`: the English files that hold each construction in `CANDIDATES`, which no lint ships,
+  or a shipped lint's pattern named by its id, per label and per compared tool, with examples.
 
 The filters, which every command takes, keep files by `--kind`, `--batch`, `--repo`,
 `--language`, `--quarter`, `--single-tool` and `--register`. The two sides of a comparison are
@@ -46,13 +48,14 @@ tools/corpus/src/
   candidates.rs   candidates: the sieve, the gate, word counts and examples
   lints.rs        lints
   report.rs       report
+  patterns.rs     patterns: the candidate constructions and the shipped ones
   table.rs        plain text and Markdown tables
   work.rs         in_chunks: work over threads, in a fixed order
 ```
 
 `main.rs` calls one command module; each command calls `measure` for its files, and all but
-`summary` and `lints` call `compare`, which calls `stats`. `candidates` calls `ngrams`; `report`
-calls the four others.
+`summary`, `lints` and `patterns` call `compare`, which calls `stats`. `candidates` calls `ngrams`;
+`report` calls the four others; `patterns` calls `candidates` and `lints`.
 
 ## Reading a tier
 
@@ -118,6 +121,13 @@ share weighed by repository.
 
 `report` runs the lints at `tools/corpus/report.toml` unless given `--config`. It selects every
 file and holds the repository config's `[md.lints]`, with no budget.
+
+## Patterns
+
+`patterns` reads each file again with `Document::markdown`, since a `Doc`'s ids make every code
+span `SEP`, and matches with `deslag::lint::pattern`. A file in another language is in no label's
+rate but in a table of its own; one with no language is left out. Examples are masked as in
+`candidates`, keeping the 200 words most English files hold.
 
 ## Tests
 

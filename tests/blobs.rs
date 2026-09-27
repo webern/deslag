@@ -90,6 +90,24 @@ fn a_later_batch_can_drop_a_fixture_and_add_it_again() {
 }
 
 #[test]
+fn a_batch_can_hold_only_exclusions() {
+    let (first, second) = two_fixtures();
+    let repo = Repo::new();
+    write_batch(&repo, "2026-01-01-01", &[], &[&first, &second]);
+    write_batch(
+        &repo,
+        "2026-01-01-02",
+        &[&first.sidecar.content.sha256],
+        &[],
+    );
+    let paths: Vec<String> = load_blobs(repo.root())
+        .into_iter()
+        .map(|fixture| fixture.path)
+        .collect();
+    assert_eq!(paths, [format!("batches/2026-01-01-01/{}", second.path)]);
+}
+
+#[test]
 #[should_panic(expected = "two fixtures share the sha256")]
 fn a_batch_cannot_add_a_fixture_the_tier_holds() {
     let (first, _) = two_fixtures();

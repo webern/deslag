@@ -10,23 +10,28 @@ says why it is Python rather than bash.
     collect.py harvest  --work DIR [--jobs N] clone each one and classify its Markdown
     collect.py select   --work DIR --out tests/corpus [--per-category N]
                                               choose the fixtures and write them with sidecars
+    collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
+                                              derive every live label of the big tier again,
+                                              and write the ones that fail as exclusions
     collect.py pack     --from tests/corpus --corpus .blobs/unpacked/corpus --work DIR
-                                              write the fixtures as a new batch of the corpus's
-                                              big tier, for make publish-blobs
+                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
+                                              batch of the big tier, for make publish-blobs
 
-Every stage is resumable: `discover` and `harvest` keep what they have already done in DIR.
+Every stage is resumable: `discover`, `harvest` and `recheck` keep what they have already done in
+DIR.
 
 How a file is classified, from the history of the file up to the commit it is quoted at:
 
-- human: not edited since 2021: every commit that touched it is from before CUTOFF, before a
-  large language model was a common writing tool.
-- llm: every commit that touched it carries the mark of an AI coding agent: a co-author trailer,
-  an agent's bot account, or the text an agent writes into its commits.
-- mixed: at least one commit before CUTOFF by a person and at least one later commit marked as an
-  AI agent's.
+- human: every commit that touched it is a person's from before CUTOFF, by its author and its
+  committer date, and none carries a mark.
+- llm: every commit that touched it is an AI agent's, and its text is no older than that history:
+  not moved from an older file, and not cut off by a shallow clone.
+- mixed: at least one commit is a person's from before CUTOFF, and at least one an agent's.
 
-Files that a non-AI bot touched, that sit in vendored or test-fixture directories, or that are
-boilerplate (licences, codes of conduct) are left out.
+A commit is an agent's when it carries a mark in MARKS that counts, in the place the tool writes
+it, and is not a squash. A bot's commit rules out every label. Files in vendored or test-fixture
+directories, and boilerplate such as licences and codes of conduct, are left out.
+docs/design/corpus.md section 3 is the design of these rules.
 """
 
 from __future__ import annotations
@@ -45,7 +50,8 @@ import threading
 import time
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 # Issue #5: a file not edited since 2021 or earlier is taken as a person's.
@@ -138,37 +144,184 @@ def combine_licenses(found: list[str | None]) -> str | None:
 # ---------------------------------------------------------------------------------------------
 # AI agents and bots
 
-AI_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    (
-        "claude-code",
-        re.compile(
-            r"co-authored-by:\s*claude|noreply@anthropic\.com|generated with \[?claude code"
-            r"|claude\[bot\]|claude\.ai/code",
-            re.I,
-        ),
-    ),
-    (
-        "copilot",
-        re.compile(
-            r"copilot-swe-agent|\+copilot@users\.noreply\.github\.com|co-authored-by:\s*copilot",
-            re.I,
-        ),
-    ),
-    ("cursor", re.compile(r"cursoragent@cursor\.com|co-authored-by:\s*cursor", re.I)),
-    ("openhands", re.compile(r"openhands@all-hands\.dev|co-authored-by:\s*openhands", re.I)),
-    ("amp", re.compile(r"amp@ampcode\.com|ampcode\.com/threads", re.I)),
-    ("jules", re.compile(r"google-labs-jules", re.I)),
-    ("devin", re.compile(r"devin-ai-integration|devin\.ai/sessions", re.I)),
-    (
-        "codex",
-        re.compile(r"co-authored-by:\s*(openai )?codex|codex@openai\.com|chatgpt-codex", re.I),
-    ),
-    ("gemini", re.compile(r"co-authored-by:\s*gemini|gemini-code-assist|gemini-cli", re.I)),
-    ("opencode", re.compile(r"co-authored-by:\s*opencode|opencode@sst\.dev", re.I)),
-    ("windsurf", re.compile(r"co-authored-by:\s*(windsurf|cascade)", re.I)),
-    ("kiro", re.compile(r"co-authored-by:\s*kiro", re.I)),
-    ("generic-agent", re.compile(r"🤖 generated with", re.I)),
+@dataclass(frozen=True)
+class Mark:
+    """A sign, in one of the places a tool writes it, that an AI tool had a hand in a commit.
+
+    `place` is where it is matched, and nowhere else, so a person's commit that mentions a tool
+    is not the tool's: `identity` is the `Name <email>` of the author, the committer or a
+    `Co-authored-by:` trailer; `trailer` another line of the trailer block that ends the
+    message; `footer` a line a tool writes into that block that is not a trailer. The pattern
+    matches the whole string, ignoring case.
+
+    `kind` says what the mark proves. `agent-identity`: an agent is the author, the committer or
+    a co-author. `agent-session`: a line an agent writes into a commit it made, such as a link to
+    its session. `assist`: a person committed a tool's suggestion, such as a Copilot Autofix, a
+    review comment's suggested change or an editor's completion; the commit is the person's, so
+    an assist never counts. `example` is a commit that carries the mark."""
+
+    tool: str
+    kind: str
+    place: str
+    pattern: str
+    example: str
+
+    @property
+    def counts(self) -> bool:
+        return self.kind != "assist"
+
+    def matches(self, text: str) -> bool:
+        return re.fullmatch(self.pattern, text, re.I) is not None
+
+
+GH = "https://github.com"
+# A GitHub account's commit address, `<id>+<login>@users.noreply.github.com`.
+NOREPLY = r"@users\.noreply\.github\.com"
+
+# Only the marks a tool writes itself, or its own account: a trailer some project invents for
+# its agents, or an account a person runs one under, proves nothing about any other project.
+MARKS = [
+    Mark("claude-code", "agent-identity", "identity", r"[^<>]*<noreply@anthropic\.com>",
+         f"{GH}/pwndoc/pwndoc/commit/4f5c6fd38fa41154b452ef87369e16211b98e426"),
+    Mark("claude-code", "agent-identity", "identity", rf"[^<>]*<\d+\+claude\[bot\]{NOREPLY}>",
+         f"{GH}/depot/cli/commit/ae92fafd8841d7fa58c4757c348f76c3234a6868"),
+    Mark("claude-code", "agent-session", "trailer",
+         r"claude-session: *https://claude\.ai/code/session_\w+",
+         f"{GH}/SciML/ModelingToolkit.jl/commit/2c1ee5cac8ab6a15e3d99e643bfe3aec8286b3d5"),
+    Mark("claude-code", "agent-session", "footer", r"https://claude\.ai/code/session_\w+",
+         f"{GH}/SenteLabsAI/OpenExecutive/commit/01f24f2d065809044c675feff7f7a946d58a965e"),
+    # \U0001f916 is the robot emoji the footer opens with.
+    Mark("claude-code", "agent-session", "footer",
+         r"\U0001f916 generated with \[claude code\]"
+         r"\(https://claude\.(ai|com)/(code|claude-code)\)",
+         f"{GH}/travisjneuman/.claude/commit/06008ca2f80961a9ed5dcfbef5e275f835708e1d"),
+    Mark("claude-code", "agent-session", "footer",
+         r"\U0001f916 generated with claude code( \(https://claude\.ai/code\))?",
+         f"{GH}/lishix520/academic-paper-skills/commit/0a05329281fd61314c8bb07b5a57c8e111c73d0d"),
+    # The coding agent's account; 223556219 is the one Copilot's CLI and SDK name as co-author.
+    Mark("copilot", "agent-identity", "identity", rf"[^<>]*<198982749\+copilot{NOREPLY}>",
+         f"{GH}/gui-cs/Terminal.Gui/commit/cb8aec7de95e4d71eccf93916c21958eef8f670e"),
+    Mark("copilot", "agent-identity", "identity", rf"[^<>]*<223556219\+copilot{NOREPLY}>",
+         f"{GH}/dotnet/ClangSharp/commit/4774489991ff2fe42f5c1ebd294263162f32d1c4"),
+    Mark("copilot", "agent-session", "trailer", r"copilot-session: *[0-9a-f-]{36}",
+         f"{GH}/open-telemetry/opentelemetry-rust/commit/92557b433472fb9fc83e9c1f471c6f506eb6afcc"),
+    Mark("copilot", "agent-session", "trailer",
+         r"agent-logs-url: *https://github\.com/[^/\s]+/[^/\s]+/sessions/[0-9a-f-]+",
+         f"{GH}/gui-cs/Terminal.Gui/commit/cb8aec7de95e4d71eccf93916c21958eef8f670e"),
+    Mark("copilot", "agent-session", "footer",
+         r"for more details, open the \[copilot workspace session\]"
+         r"\(https://copilot-workspace\.githubnext\.com/\S+\)\.?",
+         f"{GH}/eventflow/EventFlow/commit/d472a8b5b20381a1b9a4baa7b6c82ccd0f9cacf6"),
+    # 175728472 is the co-author of a suggestion committed from a Copilot review.
+    Mark("copilot", "assist", "identity", rf"[^<>]*<175728472\+copilot{NOREPLY}>",
+         f"{GH}/sanity-io/sanity/commit/160cd9d3c8dea83776dd0f3b3997774c03a28f7a"),
+    Mark("copilot", "assist", "identity", r"copilot autofix powered by ai <[^<>]*>",
+         f"{GH}/apache/arrow/commit/43751939f285c6e972508942933580520fa39728"),
+    # VS Code's git.addAICoAuthor, which can add it for an inline completion.
+    Mark("copilot", "assist", "identity", r"[^<>]*<copilot@github\.com>",
+         f"{GH}/BetterThanTomorrow/calva/commit/e530f64755874a687a556f0bff4c9f4b2c30e9c3"),
+    Mark("cursor", "agent-identity", "identity", r"[^<>]*<cursoragent@cursor\.com>",
+         f"{GH}/storybookjs/storybook/commit/7fe9e88a5569bb5e6374d48bd72f5ef5ea369e32"),
+    Mark("cursor", "agent-session", "trailer", r"made-with: *cursor",
+         f"{GH}/terryyin/lizard/commit/f5172b15219a311c2f99fb51b3fe79649484239b"),
+    Mark("cursor", "agent-session", "footer", r"made with \[cursor\]\(https://cursor\.com\)",
+         f"{GH}/MetaMask/skills/commit/1193e1e24e291c981befa24cf6f2f048079cff64"),
+    Mark("codex", "agent-identity", "identity", r"codex\b[^<>]*<noreply@openai\.com>",
+         f"{GH}/phuryn/claude-usage/commit/ad05701a9c4db583bb6f5f0bee735d6985a22eec"),
+    Mark("codex", "agent-identity", "identity", r"[^<>]*<codex@openai\.com>",
+         f"{GH}/petsc/petsc/commit/c67fa7d6d5b50a15f87bc4f791289811f5d3b786"),
+    Mark("codex", "agent-identity", "identity", rf"[^<>]*<267193182\+codex{NOREPLY}>",
+         f"{GH}/i365dev/free4chat/commit/9ba12b99b6a9cc75e2ab1023640136979f7d9cce"),
+    Mark("jules", "agent-identity", "identity", rf"[^<>]*<\d+\+google-labs-jules\[bot\]{NOREPLY}>",
+         f"{GH}/pksunkara/cargo-workspaces/commit/17b5467d516559d2bf22e707d0f268e5aa1ecfc3"),
+    Mark("gemini", "assist", "identity", rf"[^<>]*<\d+\+gemini-code-assist\[bot\]{NOREPLY}>",
+         f"{GH}/firebase/firebase-ios-sdk/commit/8f858bd6cb6ba16f1d44f24a9b86583857482928"),
+    Mark("devin", "agent-identity", "identity",
+         rf"[^<>]*<(\d+\+)?devin-ai-integration\[bot\]{NOREPLY}>",
+         f"{GH}/feast-dev/feast/commit/99f40047645fd820e4b741d19d20958c03ac9dae"),
+    Mark("kiro", "agent-identity", "identity", rf"[^<>]*<244629292\+kiro-agent{NOREPLY}>",
+         f"{GH}/ryancormack/strands-acp/commit/6c58a8dadd5c44ac5252bbd72f7288b6ffd4c018"),
+    Mark("aider", "agent-identity", "identity", r"[^<>]* \(aider\) <[^<>]*>",
+         f"{GH}/dckc/awesome-ocap/commit/cf5139391695a692b47ba26e14dc95748e475019"),
+    Mark("aider", "agent-identity", "identity", r"[^<>]*<noreply@aider\.chat>",
+         f"{GH}/iporaveparaguay/iporave-sistema/commit/a2275d40a170e75d00d08e5662a5515f3d21cb3d"),
+    Mark("amp", "agent-identity", "identity", r"[^<>]*<amp@ampcode\.com>",
+         f"{GH}/yjsoon/howmuch/commit/785d468af03a2a55a9dfc9a11914ba362e9ad5b1"),
+    Mark("amp", "agent-session", "trailer",
+         r"amp-thread-id: *https://ampcode\.com/threads/t-[0-9a-f-]+",
+         f"{GH}/yjsoon/howmuch/commit/785d468af03a2a55a9dfc9a11914ba362e9ad5b1"),
+    Mark("openhands", "agent-identity", "identity", r"[^<>]*<openhands@all-hands\.dev>",
+         f"{GH}/animetubeonlinebr-star/backing-track-generator/commit/"
+         "d38c56e2baa16c2d40156d20024b0f05982b1bd3"),
+    Mark("opencode", "agent-identity", "identity", r"[^<>]*<noreply@opencode\.ai>",
+         f"{GH}/RedHatProductSecurity/ai-guardian/commit/b62884bcb6f85808ed416fe36438c0de3f58978b"),
+    Mark("opencode", "agent-session", "footer",
+         r"\U0001f916 generated with \[opencode\]\(https://opencode\.ai\)",
+         f"{GH}/RedHatProductSecurity/ai-guardian/commit/b62884bcb6f85808ed416fe36438c0de3f58978b"),
+    # The kernel's and Apache's convention for a tool that helped: `Assisted-by: tool:model`.
+    Mark("any", "assist", "trailer", r"assisted-by: *\S.*",
+         f"{GH}/apache/grails-core/commit/72a3c0a514aa5b70f5af83f191073e749f8d0ef6"),
 ]
+
+# The last paragraphs of a message, where trailers and tool footers go.
+TRAILER_LINE = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]*: *\S.*")
+# What `git cherry-pick -x` adds after the trailers of the commit it copies.
+CHERRY_PICK = re.compile(r"\(cherry picked from commit [0-9a-f]{40}\)")
+
+
+def message_tail(message: str) -> tuple[list[str], list[str]]:
+    """The trailer lines and the footer lines that end a commit message. The tail is the run of
+    paragraphs at the end, after the subject, in which every line is a trailer, `Key: value`, or
+    a footer: one some mark names, or git's note of a cherry-pick. A mark found anywhere else is
+    a mention."""
+    trailers: list[str] = []
+    footers: list[str] = []
+    for paragraph in reversed(re.split(r"\n[ \t]*\n", message.strip())[1:]):
+        lines = [line.strip() for line in paragraph.splitlines() if line.strip()]
+        # A footer that is a bare URL also parses as a trailer, with the key `https`.
+        found_footers = [line for line in lines if CHERRY_PICK.fullmatch(line)
+                         or any(m.place == "footer" and m.matches(line) for m in MARKS)]
+        found_trailers = [line for line in lines
+                          if line not in found_footers and TRAILER_LINE.fullmatch(line)]
+        if len(found_trailers) + len(found_footers) != len(lines):
+            break
+        trailers += found_trailers
+        footers += found_footers
+    return trailers, footers
+
+
+def marks_of(author: str, committer: str, message: str) -> list[tuple[Mark, str]]:
+    """Every mark a commit carries, with the string it was found in. `author` and `committer` are
+    `Name <email>`."""
+    trailers, footers = message_tail(message)
+    coauthors = [value.strip() for key, _, value in (line.partition(":") for line in trailers)
+                 if key.lower() == "co-authored-by"]
+    places = {"identity": [author, committer, *coauthors], "trailer": trailers,
+              "footer": footers}
+    return [(mark, text) for mark in MARKS for text in dict.fromkeys(places[mark.place])
+            if mark.matches(text)]
+
+
+# The shapes a squash takes. GitHub lists each squashed commit as a paragraph that opens with
+# "* ", or uses the pull request's description, and in both cases puts the trailers it gathered
+# from the squashed commits after a line of nine dashes, which an edited message may leave
+# without the blank lines around it. `git merge --squash` writes "Squashed commit of the
+# following:" and each commit's header.
+SQUASH_ITEM = re.compile(r"(?:^|\n[ \t]*\n)\* \S")
+SQUASH_HEADER = re.compile(r"^Squashed commit of the following:|^commit [0-9a-f]{40}$", re.M)
+SQUASH_TRAILERS = re.compile(r"^.*\n-{9}[ \t]*\n(?P<trailers>.*)$", re.S)
+
+
+def is_squash(message: str) -> bool:
+    """A commit that squashes several commits into one. Whoever wrote each of them, the squash
+    cannot say which of them wrote a given file, so it proves nothing about one."""
+    body = message.strip().partition("\n")[2].strip()
+    if len(SQUASH_ITEM.findall(body)) >= 2 or SQUASH_HEADER.search(body):
+        return True
+    gathered = SQUASH_TRAILERS.match("\n\n" + body)
+    lines = [line.strip() for line in gathered["trailers"].splitlines()] if gathered else []
+    return any(lines) and all(TRAILER_LINE.fullmatch(line) for line in lines if line)
+
 
 BOT = re.compile(
     r"\[bot\]|dependabot|renovate|github-actions|actions-user|pre-commit-ci|allcontributors"
@@ -178,17 +331,160 @@ BOT = re.compile(
 )
 
 
-def ai_tools(author: str, email: str, committer: str, cemail: str, message: str) -> list[str]:
-    """The AI agents a commit is marked with."""
-    haystack = f"{author} <{email}>\n{committer} <{cemail}>\n{message}"
-    tools = [name for name, pattern in AI_PATTERNS if pattern.search(haystack)]
-    if author.endswith("(aider)") or message.startswith("aider: "):
-        tools.append("aider")
-    return sorted(set(tools))
-
-
 def is_bot(author: str, email: str) -> bool:
     return bool(BOT.search(author) or BOT.search(email))
+
+
+# What `read_commit` needs of a commit, in the order `git log --format=COMMIT_FORMAT` gives it.
+COMMIT_FIELDS = ("sha", "author", "email", "date", "committer", "cemail", "committed", "message")
+COMMIT_FORMAT = "%H%x1f%an%x1f%ae%x1f%aI%x1f%cn%x1f%ce%x1f%cI%x1f%B"
+CUTOFF_TIME = datetime.fromisoformat(CUTOFF.replace("Z", "+00:00"))
+# A message longer than this keeps its start, where a squash lists its commits, and its end,
+# where the trailers are.
+MAX_MESSAGE = 8000
+
+
+@dataclass
+class Commit:
+    sha: str
+    date: str
+    committed: str
+    author: str
+    email: str
+    marks: list[tuple[Mark, str]]
+    squash: bool
+    bot: bool
+
+    @property
+    def tools(self) -> list[str]:
+        """The agents the commit is proven to be from: none for a squash, or for a commit whose
+        only marks are assists."""
+        if self.squash:
+            return []
+        return sorted({mark.tool for mark, _ in self.marks if mark.counts})
+
+    @property
+    def early(self) -> bool:
+        """Before the cutoff by both of its dates: a commit can be authored long before it is
+        committed, and `cutoff_rev` is chosen by the committer's."""
+        return (datetime.fromisoformat(self.date) < CUTOFF_TIME
+                and datetime.fromisoformat(self.committed) < CUTOFF_TIME)
+
+    @property
+    def status(self) -> str:
+        """What the commit says about who wrote the file: `bot`; `agent`; `early`, a person's
+        before the cutoff; or why it is none of those: `squash`, a squash that carries a mark;
+        `assist`, marked by assists alone; `late`, after the cutoff with no mark."""
+        if self.bot:
+            return "bot"
+        if self.tools:
+            return "agent"
+        if self.early and not self.marks:
+            return "early"
+        if self.marks:
+            return "squash" if self.squash else "assist"
+        return "late"
+
+
+def read_commit(sha: str, author: str, email: str, date: str, committer: str, cemail: str,
+                committed: str, message: str) -> Commit:
+    # A message written in GitHub's web editor ends its lines with CRLF.
+    message = message.replace("\r\n", "\n")
+    if len(message) > MAX_MESSAGE:
+        message = message[:MAX_MESSAGE // 2] + "\n\n" + message[-MAX_MESSAGE // 2:]
+    marks = marks_of(f"{author} <{email}>", f"{committer} <{cemail}>", message)
+    # An agent's own bot account is an agent, not a bot.
+    bot = is_bot(author, email) and not any(mark.counts for mark, _ in marks)
+    return Commit(sha, date, committed, author, email, marks, is_squash(message), bot)
+
+
+# How the reason a label fails names a commit that is neither an agent's nor early.
+NEITHER = {
+    "squash": "a squash of several commits, which cannot say who wrote one file",
+    "assist": "marked only by an assist, a tool's suggestion that a person committed",
+    "late": f"made after {CUTOFF_DATE} and marked by no AI agent",
+}
+
+
+def label_history(hist: list[Commit], truncated: bool = False,
+                  moved: str | None = None) -> tuple[str, str]:
+    """The label the history of a file supports, and why; "unknown", and why, when it supports
+    none. `hist` is newest first, back to the commit that added the file.
+
+    - human: every commit is a person's from before the cutoff, with no mark at all.
+    - llm: every commit is an agent's, and the file's text is no older than its history.
+    - mixed: at least one commit is a person's from before the cutoff, and one an agent's.
+
+    A commit is an agent's when it carries a mark that counts and is not a squash, and a bot's
+    commit rules out every label. `truncated` says the oldest commit is a shallow clone's
+    boundary, so the file may be older than its history; `moved` says why its text may be older
+    than the commit that added it."""
+    if not hist:
+        return "unknown", "no commit that git shows touched it"
+    n = len(hist)
+    statuses = [h.status for h in hist]
+    agent, early = statuses.count("agent"), statuses.count("early")
+    tools = ", ".join(sorted({t for h in hist for t in h.tools}))
+    cut = (f"; the clone's history ends at {hist[-1].sha[:10]}, of {hist[-1].date[:10]}, so it "
+           "may be older" if truncated else "")
+    if "bot" in statuses:
+        bot = hist[statuses.index("bot")]
+        return "unknown", f"a bot, {bot.author}, made commit {bot.sha[:10]}"
+    if early == n:
+        return "human", (f"every commit that touched it, {n} in all, predates {CUTOFF_DATE} by "
+                         f"author and committer date and carries no AI tool's mark{cut}")
+    every_agent = f"every commit that touched it, {n} in all, is marked as an AI agent's ({tools})"
+    if agent == n and not truncated and not moved:
+        return "llm", every_agent
+    if agent and early:
+        return "mixed", (f"{early} of its {n} commits {agree(early, 'predates', 'predate')} "
+                         f"{CUTOFF_DATE} with no mark, and {agent} {agree(agent, 'is', 'are')} "
+                         f"marked as an AI agent's ({tools}){cut}")
+    if agent == n:
+        return "unknown", f"{every_agent}, but {moved or cut.removeprefix('; ')}"
+    first = next(h for h in hist if h.status not in ("agent", "early"))
+    others = n - agent - early
+    return "unknown", (f"{agent} of its {n} commits {agree(agent, 'is', 'are')} marked as an AI "
+                       f"agent's and {early} {agree(early, 'is', 'are')} a person's from before "
+                       f"{CUTOFF_DATE}; {others} {agree(others, 'is', 'are')} neither, such as "
+                       f"{first.sha[:10]}, {NEITHER[first.status]}")
+
+
+def agree(n: int, one: str, many: str) -> str:
+    """The word that agrees with a count of n."""
+    return one if n == 1 else many
+
+
+# Past this many deleted Markdown files, a commit that adds one is taken to have moved it
+# without asking git, whose pairing of them costs a blob for every file.
+MAX_MOVE_CHECK = 200
+
+
+def moved_from(repo: Path, sha: str, path: str, deleted: list[str]) -> str | None:
+    """Why the text of `path` may be older than commit `sha`, which added it: the commit also
+    deleted a Markdown file of the same name, or one git's rename detection pairs with it, so
+    the text was moved and perhaps edited. None when it deleted none such."""
+    name = path.rsplit("/", 1)[-1].lower()
+    same = [d for d in deleted if d.rsplit("/", 1)[-1].lower() == name]
+    if same:
+        return f"the commit that added it, {sha[:10]}, deleted {same[0]}"
+    if len(deleted) > MAX_MOVE_CHECK:
+        return f"the commit that added it, {sha[:10]}, deleted {len(deleted)} Markdown files"
+    if not deleted:
+        return None
+    out = git(repo, "--literal-pathspecs", "diff-tree", "-r", "-M", "-z", "--name-status",
+              "--no-commit-id", sha, "--", path, *deleted)
+    # Each change is its status and its path, or for a rename or copy its status and two paths.
+    fields = out.split("\0")
+    i = 0
+    while i < len(fields) and fields[i]:
+        if fields[i][0] in "RC":
+            if fields[i + 2] == path:
+                return f"the commit that added it, {sha[:10]}, moved it from {fields[i + 1]}"
+            i += 3
+        else:
+            i += 2
+    return None
 
 
 # ---------------------------------------------------------------------------------------------
@@ -339,13 +635,16 @@ def http_get(url: str, accept: str = "application/json", timeout: int = 120) -> 
     raise RuntimeError(f"GET {url}: {last}")
 
 
+def git_env(**extra: str) -> dict[str, str]:
+    return dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1", **extra)
+
+
 def git(repo: Path, *args: str, timeout: int = 600, check: bool = True) -> str:
-    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
     result = subprocess.run(
         ["git", "-C", str(repo), "-c", "core.quotepath=off", *args],
         capture_output=True,
         timeout=timeout,
-        env=env,
+        env=git_env(),
     )
     if check and result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args[:3])}: {result.stderr.decode(errors='replace')[:300]}")
@@ -354,10 +653,9 @@ def git(repo: Path, *args: str, timeout: int = 600, check: bool = True) -> str:
 
 def git_lines(repo: Path, *args: str, sep: str = "\n"):
     """Streams git's output in records ending with `sep`, so a long history is never held whole."""
-    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
     proc = subprocess.Popen(
         ["git", "-C", str(repo), "-c", "core.quotepath=off", *args],
-        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=git_env(),
     )
     assert proc.stdout is not None
     buffer = ""
@@ -375,9 +673,8 @@ def git_lines(repo: Path, *args: str, sep: str = "\n"):
 
 
 def git_bytes(repo: Path, *args: str, timeout: int = 300) -> bytes:
-    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
     result = subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, timeout=timeout, env=env
+        ["git", "-C", str(repo), *args], capture_output=True, timeout=timeout, env=git_env()
     )
     if result.returncode != 0:
         raise RuntimeError(f"git {' '.join(args[:3])}: {result.stderr.decode(errors='replace')[:300]}")
@@ -601,31 +898,14 @@ def discover(args: argparse.Namespace) -> None:
 # harvest
 
 
-@dataclass
-class Commit:
-    sha: str
-    date: str
-    author: str
-    email: str
-    tools: list[str]
-    bot: bool
-
-
 def read_commits(repo: Path, rev: str) -> dict[str, Commit]:
-    fmt = "%H%x1f%aI%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e"
     commits = {}
-    for record in git_lines(repo, "log", "--no-merges", f"--format={fmt}", rev, sep="\x1e"):
-        record = record.strip("\n")
-        if not record:
-            continue
-        parts = record.split("\x1f")
-        if len(parts) < 7:
-            continue
-        sha, date, an, ae, cn, ce, body = parts[:7]
-        body = body[:4000]
-        tools = ai_tools(an, ae, cn, ce, body)
-        # An agent's own bot account is an agent, not a bot.
-        commits[sha] = Commit(sha, date, an, ae, tools, is_bot(an, ae) and not tools)
+    for record in git_lines(repo, "log", "--no-merges", f"--format={COMMIT_FORMAT}%x1e", rev,
+                            sep="\x1e"):
+        fields = record.strip("\n").split("\x1f", len(COMMIT_FIELDS) - 1)
+        if len(fields) == len(COMMIT_FIELDS):
+            commit = read_commit(**dict(zip(COMMIT_FIELDS, fields)))
+            commits[commit.sha] = commit
     return commits
 
 
@@ -669,6 +949,12 @@ def md_histories(repo: Path, rev: str) -> dict[str, list[tuple[str, str, str, li
     if sha:
         flush()
     return histories
+
+
+def shallow_boundary(git_dir: Path) -> set[str]:
+    """The commits at the boundary of a shallow clone, whose parents it does not hold."""
+    path = git_dir / "shallow"
+    return set(path.read_text().split()) if path.exists() else set()
 
 
 def tree_files(repo: Path, rev: str) -> dict[str, str]:
@@ -727,7 +1013,6 @@ def harvest_one(c: Candidate, work: Path) -> dict:
     if clone.exists():
         shutil.rmtree(clone)
     try:
-        env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_LFS_SKIP_SMUDGE="1")
         subprocess.run(
             [
                 "git",
@@ -745,7 +1030,7 @@ def harvest_one(c: Candidate, work: Path) -> dict:
             check=True,
             capture_output=True,
             timeout=CLONE_TIMEOUT,
-            env=env,
+            env=git_env(),
         )
         head = git(clone, "rev-parse", "HEAD").strip()
         count = int(git(clone, "rev-list", "--count", "--no-merges", head).strip() or 0)
@@ -756,9 +1041,10 @@ def harvest_one(c: Candidate, work: Path) -> dict:
         if not commits:
             result["note"] = "no commits"
             return result
-        # A shallow clone cannot see where the repository began.
-        shallow = (clone / ".git" / "shallow").exists()
-        result["repo_first_commit"] = None if shallow else min(x.date for x in commits.values())
+        # A shallow clone cannot see where the repository began, nor where a file did when its
+        # oldest commit is a boundary.
+        boundary = shallow_boundary(clone / ".git")
+        result["repo_first_commit"] = None if boundary else min(x.date for x in commits.values())
         result["repo_head"] = head
         blobs = work / "blobs"
         hf = c.host == "huggingface.co"
@@ -794,7 +1080,8 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                         break
                     shas = git(clone, "log", "--no-merges", "--format=%H", cutoff_rev, "--", path).split()
                     hist = [commits[s] for s in shas if s in commits]
-                    if not hist or any(h.bot or h.tools for h in hist):
+                    label, basis = label_history(hist, bool(hist) and hist[-1].sha in boundary)
+                    if label != "human":
                         continue
                     data, digest = save(files[path])
                     text = data.decode("utf-8", "replace")
@@ -811,10 +1098,8 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                             "license": license_id,
                             "license_files": license_files,
                             "history": history_record(hist),
-                            "basis": (
-                                f"quoted as it stood at the end of 2021: all {len(hist)} commits that "
-                                f"touched it predate {CUTOFF_DATE} and none carries an AI agent's mark"
-                            ),
+                            "truncated": hist[-1].sha in boundary,
+                            "basis": basis,
                         }
                     )
                     taken += 1
@@ -834,51 +1119,38 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                         continue
                     # The history is newest first; stop at the commit that added the file.
                     hist = []
-                    origin_uncertain = False
+                    added, deleted = None, []
                     for sha, status, new, others in entries:
                         if sha not in commits:
                             continue
                         hist.append(commits[sha])
                         if status == "A":
-                            name = path.rsplit("/", 1)[-1].lower()
-                            for ostatus, opath, onew, oold in others:
-                                if ostatus == "D" and (
-                                    oold == new or opath.rsplit("/", 1)[-1].lower() == name
-                                ):
-                                    origin_uncertain = True
+                            added = sha
+                            deleted = [opath for ostatus, opath, _, _ in others if ostatus == "D"]
                             break
-                    if not hist or any(h.bot for h in hist):
-                        continue
-                    ai = [h for h in hist if h.tools]
-                    if len(ai) == len(hist) and not origin_uncertain:
-                        llm.append((path, hist))
-                    elif ai and any(not h.tools and h.date < CUTOFF_DATE for h in hist):
-                        mixed.append((path, hist))
+                    truncated = bool(hist) and hist[-1].sha in boundary
+                    label, basis = label_history(hist, truncated)
+                    # Only an llm label rests on the text being no older than its history.
+                    if label == "llm":
+                        moved = (moved_from(clone, added, path, deleted) if added
+                                 else "a merge commit added it, and the history leaves merges out")
+                        label, basis = label_history(hist, truncated, moved)
+                    if label == "llm":
+                        llm.append((path, hist, basis, truncated))
+                    elif label == "mixed":
+                        mixed.append((path, hist, basis, truncated))
                 for label, group in (("llm", llm), ("mixed", mixed)):
                     rng.shuffle(group)
                     group = group[: HARVEST_PER_REPO * 3]
-                    prefetch(clone, [files[path] for path, _ in group])
+                    prefetch(clone, [files[path] for path, *_ in group])
                     taken = 0
-                    for path, hist in group:
+                    for path, hist, basis, truncated in group:
                         if taken >= HARVEST_PER_REPO:
                             break
                         data, digest = save(files[path])
                         text = data.decode("utf-8", "replace")
                         if not MIN_BYTES <= len(data) <= MAX_BYTES or frontmatter_mentions_budget(text):
                             continue
-                        tools = sorted({t for h in hist for t in h.tools})
-                        if label == "llm":
-                            basis = (
-                                f"every one of the {len(hist)} commits that touched it is marked as "
-                                f"an AI agent's ({', '.join(tools)})"
-                            )
-                        else:
-                            human = sum(1 for h in hist if not h.tools and h.date < CUTOFF_DATE)
-                            basis = (
-                                f"{human} of its {len(hist)} commits predate {CUTOFF_DATE} and carry "
-                                f"no AI mark; {sum(1 for h in hist if h.tools)} later ones are "
-                                f"marked as an AI agent's ({', '.join(tools)})"
-                            )
                         result["files"].append(
                             {
                                 "label": label,
@@ -890,6 +1162,7 @@ def harvest_one(c: Candidate, work: Path) -> dict:
                                 "license": license_id,
                                 "license_files": license_files,
                                 "history": history_record(hist),
+                                "truncated": truncated,
                                 "basis": basis,
                             }
                         )
@@ -999,17 +1272,21 @@ def restate(f: dict) -> bool:
     was harvested under, and words its basis from its history. False when it no longer fits."""
     h = f["history"]
     tools = ", ".join(h["ai_tools"])
+    # A truncated history shows where the clone's history ends, not where the file began.
+    cut = (f"; the clone's history ends at {h['first_commit_date'][:10]}, so it may be older"
+           if f.get("truncated") else "")
     if f["label"] == "human":
         if h["last_commit_date"][:10] >= CUTOFF_DATE:
             return False
         f["basis"] = (f"not edited since {h['last_commit_date'][:10]}: all {h['commits']} commits "
-                      f"that touched it predate {CUTOFF_DATE} and none carries an AI agent's mark")
+                      f"that touched it predate {CUTOFF_DATE} and none carries an AI tool's mark"
+                      f"{cut}")
     elif f["label"] == "mixed":
         if h["first_commit_date"][:10] >= CUTOFF_DATE:
             return False
-        f["basis"] = (f"begun by a person, unmarked, on {h['first_commit_date'][:10]}, before "
-                      f"{CUTOFF_DATE}; {h['ai_commits']} of its {h['commits']} commits are marked "
-                      f"as an AI agent's ({tools})")
+        f["basis"] = (f"its oldest commit, of {h['first_commit_date'][:10]}, predates "
+                      f"{CUTOFF_DATE} and carries no mark; {h['ai_commits']} of its "
+                      f"{h['commits']} commits are marked as an AI agent's ({tools}){cut}")
     else:
         f["basis"] = (f"every one of the {h['commits']} commits that touched it is marked as an AI "
                       f"agent's ({tools})")
@@ -1202,26 +1479,6 @@ def describe(args: argparse.Namespace) -> None:
             log(f"describe {fixture.name}: {label}, {license_id}")
 
 
-def label_history(hist: list[Commit]) -> tuple[str, str]:
-    """The label the history of a file supports, and why; "unknown" when it supports none."""
-    ai = [h for h in hist if h.tools]
-    tools = ", ".join(sorted({t for h in ai for t in h.tools}))
-    early = [h for h in hist if not h.tools and h.date < CUTOFF_DATE]
-    if hist and not ai and len(early) == len(hist):
-        return "human", (f"all {len(hist)} commits that touched it predate {CUTOFF_DATE} and none "
-                         "carries an AI agent's mark")
-    if hist and len(ai) == len(hist):
-        return "llm", (f"every one of the {len(hist)} commits that touched it is marked as an AI "
-                       f"agent's ({tools})")
-    if ai and early:
-        return "mixed", (f"{len(early)} of its {len(hist)} commits predate {CUTOFF_DATE} and carry "
-                         f"no AI mark; {len(ai)} later ones are marked as an AI agent's ({tools})")
-    late = len(hist) - len(early) - len(ai)
-    return "unknown", (f"{late} of its {len(hist)} commits are from after {CUTOFF_DATE} and carry "
-                       "no AI mark, so they could be anyone's"
-                       + (f"; {len(ai)} are marked as an AI agent's ({tools})" if ai else ""))
-
-
 def history_record(hist: list[Commit]) -> dict:
     authors = sorted({h.author for h in hist})
     tools = sorted({t for h in hist for t in h.tools})
@@ -1237,6 +1494,245 @@ def history_record(hist: list[Commit]) -> dict:
 
 
 # ---------------------------------------------------------------------------------------------
+# recheck
+
+# A clone refused with one of these is refused for good: the repository is gone, private or
+# disabled. Any other failure may be the network, and is tried again on the next run.
+GONE = re.compile(
+    r"repository not found|could not read username|authentication failed"
+    r"|access to this repository has been disabled|does not appear to be a git repository"
+    r"|returned error: (401|403|404|410|451)",
+    re.I,
+)
+# A message longer than this is kept as its start and its end in the evidence.
+MAX_EVIDENCE_MESSAGE = 65536
+
+
+def clone_url(host: str, repo: str) -> str:
+    return f"https://{host}/{repo}" + ("" if host == "huggingface.co" else ".git")
+
+
+def git_blob_id(data: bytes) -> str:
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def file_history(repo: Path, rev: str, path: str) -> tuple[list[dict], str | None]:
+    """The commits that touched `path` up to `rev`, newest first, back to the one that last
+    added it, each a dict of COMMIT_FIELDS; and that commit, or None when git shows none that
+    added it."""
+    commits = []
+    for record in git_lines(repo, "--literal-pathspecs", "log", "--no-merges", "--no-renames",
+                            "--raw", f"--format=%x1e{COMMIT_FORMAT}%x1d", rev, "--", path,
+                            sep="\x1e"):
+        head, _, raw = record.partition("\x1d")
+        fields = head.split("\x1f", len(COMMIT_FIELDS) - 1)
+        if len(fields) != len(COMMIT_FIELDS):
+            continue
+        commit = dict(zip(COMMIT_FIELDS, fields))
+        if len(commit["message"]) > MAX_EVIDENCE_MESSAGE:
+            half = MAX_EVIDENCE_MESSAGE // 2
+            commit["message"] = commit["message"][:half] + "\n\n" + commit["message"][-half:]
+        commits.append(commit)
+        for line in raw.splitlines():
+            meta, _, changed = line.partition("\t")
+            if changed == path and meta.split()[4:5] == ["A"]:
+                return commits, commit["sha"]
+    return commits, None
+
+
+def fixture_evidence(repo: Path, row: dict, corpus: Path, boundary: set[str]) -> dict:
+    """What the history of one fixture's file says, from a clone of its repository."""
+    commit, path = row["commit"], row["path"]
+    evidence = {key: row[key] for key in ("sha256", "file", "batch", "label", "path", "commit")}
+    evidence["gone"] = None
+    # A partial clone fetches a missing object on sight, one at a time; ask for the commit and
+    # its history in one fetch instead.
+    present = subprocess.run(["git", "-C", str(repo), "cat-file", "-e", f"{commit}^{{commit}}"],
+                             capture_output=True, env=git_env(GIT_NO_LAZY_FETCH="1"))
+    if present.returncode != 0:
+        git(repo, "fetch", "--quiet", "--no-tags", "--filter=blob:none", "origin", commit,
+            timeout=CLONE_TIMEOUT, check=False)
+        present = subprocess.run(["git", "-C", str(repo), "cat-file", "-e", f"{commit}^{{commit}}"],
+                                 capture_output=True, env=git_env(GIT_NO_LAZY_FETCH="1"))
+        if present.returncode != 0:
+            evidence["gone"] = f"the repository no longer holds commit {commit}"
+            return evidence
+    blob = git(repo, "rev-parse", "--verify", "--quiet", f"{commit}:{path}", check=False).strip()
+    data = (corpus / "batches" / row["batch"] / row["file"]).read_bytes()
+    if blob != git_blob_id(data):
+        raise RuntimeError(f"{row['file']}: {path} at {commit} is not the fixture")
+
+    commits, added = file_history(repo, commit, path)
+    evidence["commits"] = commits
+    evidence["added"] = added
+    evidence["truncated"] = bool(commits) and commits[-1]["sha"] in boundary
+    deleted = []
+    if added:
+        for line in git(repo, "diff-tree", "-r", "--no-renames", "--no-commit-id", "--raw",
+                        added).splitlines():
+            meta, _, changed = line.partition("\t")
+            if meta.split()[4:5] == ["D"] and changed.lower().endswith(".md"):
+                deleted.append(changed)
+    evidence["deleted_markdown"] = len(deleted)
+    evidence["moved"] = moved_from(repo, added, path, deleted) if deleted else None
+    return evidence
+
+
+def recheck_repo(host: str, repo: str, rows: list[dict], corpus: Path, work: Path) -> dict:
+    """Clones one repository, as deep as it will clone in time, and gathers the evidence for each
+    of its fixtures."""
+    clone = work / "clones" / hashlib.sha1(f"{host}/{repo}".encode()).hexdigest()[:16]
+    shutil.rmtree(clone, ignore_errors=True)
+    evidence: dict = {"host": host, "repo": repo, "depth": "full", "gone": None, "fixtures": []}
+
+    def clone_bare(*extra: str) -> None:
+        subprocess.run(["git", "clone", "--quiet", "--bare", "--filter=blob:none", "--no-tags",
+                        "--single-branch", *extra, clone_url(host, repo), str(clone)],
+                       check=True, capture_output=True, timeout=CLONE_TIMEOUT, env=git_env())
+
+    try:
+        try:
+            clone_bare()
+        except subprocess.TimeoutExpired:
+            # Too big to clone whole in time: take the depth the harvest took, and say so.
+            shutil.rmtree(clone, ignore_errors=True)
+            clone_bare(f"--shallow-since={SHALLOW_SINCE}")
+            evidence["depth"] = f"since {SHALLOW_SINCE}"
+    except subprocess.CalledProcessError as error:
+        message = error.stderr.decode(errors="replace").strip()
+        if not GONE.search(message):
+            raise RuntimeError(f"git clone: {message[:300]}") from error
+        evidence["gone"] = f"the repository cannot be cloned: {message[:300]}"
+        return evidence
+    try:
+        boundary = shallow_boundary(clone)
+        evidence["fixtures"] = [fixture_evidence(clone, row, corpus, boundary) for row in rows]
+        return evidence
+    finally:
+        shutil.rmtree(clone, ignore_errors=True)
+
+
+def judge(fixture: dict) -> tuple[str, str, str]:
+    """The verdict on one fixture from its evidence: `holds`, `fails` or `kept`, the reason, and
+    a short name for it that the counts group by."""
+    if fixture["gone"]:
+        return "kept", f"its label was proven when it was captured, but {fixture['gone']}", "gone"
+    hist = [read_commit(**commit) for commit in fixture["commits"]]
+    moved = fixture["moved"]
+    if not fixture["added"] and not fixture["truncated"]:
+        moved = "a merge commit added it, and the history leaves merges out"
+    label, basis = label_history(hist, fixture["truncated"], moved)
+    if label == fixture["label"]:
+        return "holds", basis, "holds"
+    statuses = [h.status for h in hist]
+    if "bot" in statuses:
+        code = "bot"
+    elif fixture["label"] == "llm" and set(statuses) == {"agent"}:
+        code = "moved" if moved else "truncated"
+    elif fixture["label"] == "mixed" and "agent" in statuses:
+        code = "no-early"
+    else:
+        # A squash or an assist is named first, as the likeliest reason a commit once taken
+        # for an agent's is not; else the newest commit the label cannot have. A `mixed` file
+        # can have late commits, so all it can lack is an agent's.
+        allowed = {"human": {"early"}, "llm": {"agent"}, "mixed": {"early", "late"}}
+        wrong = [s for s in statuses if s not in allowed[fixture["label"]]]
+        code = next((s for s in ("squash", "assist") if s in wrong),
+                    wrong[0] if wrong else "no-agent")
+    return "fails", f"not {fixture['label']}: {basis}", code
+
+
+def recheck(args: argparse.Namespace) -> None:
+    """Checks every live fixture of the big tier again under the current rules, from a fresh
+    clone of its repository, and writes the ones whose label no longer holds to
+    DIR/exclude.jsonl for `pack --exclude`. A repository that is gone keeps its fixtures, since
+    their labels were proven when they were captured; the report says so.
+
+    Resumable: the evidence for each repository is kept in DIR/evidence/, and one that failed
+    for any other reason is tried again on the next run. The verdicts are written to
+    DIR/verdicts.jsonl on every run; exclude.jsonl only once every repository is done."""
+    corpus = Path(args.corpus)
+    work = Path(args.work)
+    evidence_dir = work / "evidence"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    _, live = live_fixtures(corpus)
+    by_repo: dict[tuple[str, str], list[dict]] = {}
+    for row in live.values():
+        by_repo.setdefault((row["host"], row["repo"]), []).append(row)
+    repos = sorted(by_repo)
+    random.Random(0).shuffle(repos)
+    if args.only:
+        pattern = re.compile(args.only)
+        repos = [r for r in repos if pattern.search(f"{r[0]}/{r[1]}")]
+    if args.limit:
+        repos = repos[: args.limit]
+
+    def evidence_path(host: str, repo: str) -> Path:
+        return evidence_dir / (hashlib.sha1(f"{host}/{repo}".encode()).hexdigest()[:16] + ".json")
+
+    def done(key: tuple[str, str]) -> dict | None:
+        path = evidence_path(*key)
+        if not path.exists():
+            return None
+        evidence = json.loads(path.read_text())
+        held = {f["sha256"] for f in evidence["fixtures"]}
+        wanted = {row["sha256"] for row in by_repo[key]}
+        return evidence if evidence["gone"] or wanted <= held else None
+
+    todo = [key for key in repos if done(key) is None]
+    log(f"recheck: {len(todo)} of {len(repos)} repositories to clone")
+    started = time.time()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
+        futures = {pool.submit(recheck_repo, *key, by_repo[key], corpus, work): key
+                   for key in todo}
+        for count, future in enumerate(concurrent.futures.as_completed(futures), 1):
+            host, repo = futures[future]
+            try:
+                evidence = future.result()
+            except Exception as error:  # noqa: BLE001 - logged, and tried again next run
+                log(f"recheck {count}/{len(todo)} {host}/{repo}: FAILED {str(error)[:300]}")
+                with (work / "errors.log").open("a") as f:
+                    f.write(f"{time.strftime('%FT%TZ', time.gmtime())} {host}/{repo} {error}\n")
+                continue
+            evidence_path(host, repo).write_text(json.dumps(evidence))
+            log(f"recheck {count}/{len(todo)} {host}/{repo}: {evidence['depth']}"
+                f"{', gone' if evidence['gone'] else ''} ({time.time() - started:.0f}s)")
+
+    verdicts = []
+    missing = 0
+    for key in repos:
+        evidence = done(key)
+        if evidence is None:
+            missing += len(by_repo[key])
+            continue
+        fixtures = {f["sha256"]: f for f in evidence["fixtures"]}
+        for row in by_repo[key]:
+            fixture = fixtures.get(row["sha256"]) or dict(row, gone=evidence["gone"])
+            verdict, reason, code = judge(fixture)
+            verdicts.append({"file": row["file"], "sha256": row["sha256"], "label": row["label"],
+                             "depth": evidence["depth"], "verdict": verdict, "code": code,
+                             "reason": reason})
+    verdicts.sort(key=lambda v: v["file"])
+    (work / "verdicts.jsonl").write_text(
+        "".join(json.dumps(v, ensure_ascii=False) + "\n" for v in verdicts))
+    tally: dict[tuple[str, str, str], int] = {}
+    for v in verdicts:
+        key = (v["label"], v["verdict"], v["code"])
+        tally[key] = tally.get(key, 0) + 1
+    for (label, verdict, code), count in sorted(tally.items()):
+        log(f"recheck: {label:5} {verdict:5} {code:9} {count}")
+    if missing or len(repos) < len(by_repo):
+        log(f"recheck: {missing} fixtures not checked yet, so no exclude.jsonl; run it again")
+        return
+    exclusions = [{"sha256": v["sha256"], "reason": v["reason"]}
+                  for v in verdicts if v["verdict"] == "fails"]
+    (work / "exclude.jsonl").write_text(
+        "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in exclusions))
+    log(f"recheck: {len(exclusions)} of {len(verdicts)} fixtures to exclude, in "
+        f"{work / 'exclude.jsonl'}")
+
+
+# ---------------------------------------------------------------------------------------------
 # pack
 
 LABELS = ("human", "llm", "mixed")
@@ -1247,6 +1743,22 @@ def jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line]
 
 
+def live_fixtures(corpus: Path) -> tuple[list[Path], dict[str, dict]]:
+    """The published batches under `corpus`, in the order a loader reads them, and what they hold
+    once each batch's exclusions are applied: sha256 to its manifest line, with its `batch`."""
+    if not corpus.is_dir():
+        raise SystemExit(f"{corpus} does not exist: run make fetch-blobs first")
+    published = sorted(p for p in (corpus / "batches").glob("*") if p.is_dir())
+    live: dict[str, dict] = {}
+    for batch in published:
+        for row in jsonl(batch / "exclude.jsonl"):
+            if live.pop(row["sha256"], None) is None:
+                raise SystemExit(f"{batch}: excludes {row['sha256']}, which no earlier batch holds")
+        for row in jsonl(batch / "manifest.jsonl"):
+            live[row["sha256"]] = dict(row, batch=batch.name)
+    return published, live
+
+
 def pack(args: argparse.Namespace) -> None:
     """Writes the collected fixtures of a tree laid out as tests/corpus/ is into a new batch of
     the big tier, with the batch's manifest. Fixtures and sidecars are copied byte for byte; one
@@ -1254,25 +1766,27 @@ def pack(args: argparse.Namespace) -> None:
     cannot reach it before it is published, then copied into --corpus, the fetched big tier.
 
     A fixture is held already when a live fixture has its sha256, or its label, host, repo and
-    path: a file's human revision and its mixed revision may both be fixtures, once each."""
+    path: a file's human revision and its mixed revision may both be fixtures, once each.
+
+    --exclude names a JSON Lines file of fixtures to drop, each `{"sha256", "reason"}`, as
+    `recheck` writes it. They are dropped before the tree is compared with the big tier, so a
+    fixture can be dropped and added again with a new sidecar; one added again unchanged is
+    refused, since that would undo the exclusion. A batch may hold exclusions alone."""
     source = Path(args.source)
     corpus = Path(args.corpus)
     work = Path(args.work)
-    if not corpus.is_dir():
-        raise SystemExit(f"{corpus} does not exist: run make fetch-blobs first, so that the new "
-                         "batch is held to the ones already published")
+    published, live = live_fixtures(corpus)
 
-    # What the published batches hold once their exclusions are applied, in the order a loader
-    # reads them.
-    published = sorted(p for p in (corpus / "batches").glob("*") if p.is_dir())
-    live: dict[str, tuple[str, str, str, str]] = {}
-    for batch in published:
-        for row in jsonl(batch / "exclude.jsonl"):
-            if live.pop(row["sha256"], None) is None:
-                raise SystemExit(f"{batch}: excludes {row['sha256']}, which no earlier batch holds")
-        for row in jsonl(batch / "manifest.jsonl"):
-            live[row["sha256"]] = (row["label"], row["host"], row["repo"], row["path"])
-    origins = set(live.values())
+    exclusions = jsonl(Path(args.exclude)) if args.exclude else []
+    for row in exclusions:
+        if set(row) != {"sha256", "reason"} or not row["reason"]:
+            raise SystemExit(f"{args.exclude}: {row} is not a sha256 and a reason")
+        if row["sha256"] not in live:
+            raise SystemExit(f"{args.exclude}: {row['sha256']} is not a live fixture")
+    excluded = {row["sha256"]: live.pop(row["sha256"]) for row in exclusions}
+    if len(excluded) != len(exclusions):
+        raise SystemExit(f"{args.exclude}: a fixture is excluded twice")
+    origins = {(r["label"], r["host"], r["repo"], r["path"]) for r in live.values()}
 
     entries: list[dict] = []
     copies: list[tuple[Path, str]] = []
@@ -1294,6 +1808,11 @@ def pack(args: argparse.Namespace) -> None:
             if content["sha256"] in live or origin in origins:
                 held += 1
                 continue
+            if (gone := excluded.get(content["sha256"])) is not None:
+                old = corpus / "batches" / gone["batch"] / Path(gone["file"]).with_suffix(".json")
+                if old.read_bytes() == sidecar_path.read_bytes():
+                    raise SystemExit(f"{fixture}: excluded, and would be added again unchanged; "
+                                     "drop it from the tree first")
             if content["sha256"] in added or origin in added:
                 raise SystemExit(f"{fixture}: a second copy of a fixture already in this batch")
             name = fixture_name(src["path"])
@@ -1320,7 +1839,7 @@ def pack(args: argparse.Namespace) -> None:
                 "kind": content["kind"],
                 "ai_tools": sidecar["history"]["ai_tools"],
             })
-    if not entries:
+    if not entries and not exclusions:
         raise SystemExit(f"nothing to pack: the big tier already holds all {held} fixtures")
 
     # Batches are read in name order, so a new one must sort after every other.
@@ -1342,10 +1861,11 @@ def pack(args: argparse.Namespace) -> None:
         shutil.copyfile(fixture.with_suffix(".json"), target.with_suffix(".json"))
     (staged / "manifest.jsonl").write_text(
         "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in entries))
-    (staged / "exclude.jsonl").write_text("")
+    (staged / "exclude.jsonl").write_text(
+        "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in exclusions))
     shutil.copytree(staged, corpus / "batches" / name)
-    log(f"pack {name}: {len(entries)} fixtures, {held} left out as already in the big tier; "
-        f"staged in {staged} and copied into {corpus / 'batches' / name}")
+    log(f"pack {name}: {len(entries)} fixtures, {len(exclusions)} excluded, {held} left out as "
+        f"already in the big tier; staged in {staged} and copied into {corpus / 'batches' / name}")
 
 
 def main() -> None:
@@ -1368,13 +1888,20 @@ def main() -> None:
     p = sub.add_parser("describe")
     p.add_argument("--work", required=True)
     p.add_argument("--dir", required=True)
+    p = sub.add_parser("recheck")
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--work", required=True)
+    p.add_argument("--jobs", type=int, default=8)
+    p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--only", default="")
     p = sub.add_parser("pack")
     p.add_argument("--from", dest="source", required=True)
     p.add_argument("--corpus", required=True)
     p.add_argument("--work", required=True)
+    p.add_argument("--exclude", default="")
     args = parser.parse_args()
     {"discover": discover, "harvest": harvest, "select": select, "describe": describe,
-     "pack": pack}[args.command](args)
+     "recheck": recheck, "pack": pack}[args.command](args)
 
 
 if __name__ == "__main__":

@@ -240,6 +240,7 @@ dependencies = [
 name = "deslag-corpus"
 version = "0.0.0"
 dependencies = [
+ "clap",
  "deslag",
  "serde",
  "serde_json",

@@ -31,9 +31,9 @@ pub enum Command {
     Instructions(InstructionsArgs),
 }
 
-/// Arguments to `deslag check`.
+/// How `deslag check` and `deslag fix` read the config and what they print.
 #[derive(Debug, Args)]
-pub struct CheckArgs {
+pub struct ReportArgs {
     /// Read the config from this file instead of the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
@@ -42,12 +42,24 @@ pub struct CheckArgs {
     pub format: Format,
 }
 
+/// Arguments to `deslag check`.
+#[derive(Debug, Args)]
+pub struct CheckArgs {
+    /// How to read the config and what to print
+    #[command(flatten)]
+    pub report: ReportArgs,
+    /// Report only what the change from where BASE and HEAD meet to the working tree touched, such
+    /// as with `origin/main`: a step toward a clean tree, which the whole check still gates
+    #[arg(long, value_name = "BASE")]
+    pub diff: Option<String>,
+}
+
 /// Arguments to `deslag fix`.
 #[derive(Debug, Args)]
 pub struct FixArgs {
     /// How to read the config and what to print after fixing, as for `deslag check`
     #[command(flatten)]
-    pub check: CheckArgs,
+    pub report: ReportArgs,
     /// Say what would be fixed and write nothing
     #[arg(long)]
     pub dry_run: bool,

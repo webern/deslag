@@ -115,19 +115,22 @@ fix reads a file as `check` does.
 `Violation::retain` keeps the part of a finding that a `Keep` keeps, matching every `Violation`:
 each occurrence it keeps, and a verdict on the whole file with its evidence, whole or not at all;
 `max_size_bytes` and `max_emphasis` are all verdict. The report and marks list only what is kept.
-SARIF finds a verdict the same way, with a `Keep` of verdicts alone.
+`Report::within` keeps, of each file a `Change` holds, what its `change::File` keeps, and nothing
+of other files. SARIF finds a verdict the same way, with a `Keep` of verdicts alone.
 
 ## Reports
 
 `Finding::render` produces the report. The first two lines are fixed; the advice after them is the
 lint's own unless the config gives a `message`, in which `{path}` and the settings are substituted.
 The emphasis report rounds its percentage up. Every report goes to standard error, then
-`Report::summary`, one tally line per lint that failed a file; a clean run prints nothing there.
+`Report::summary`, one tally line per lint that failed a file, and a line on the change of a
+narrowed run; a clean run prints nothing there.
 
 ## --format
 
 `--format` adds a document on standard output, made by `output` from the `Report` alone; stderr and
 the exit code never change, and exit 2 prints none. `json::Run` holds each finding's report and
-marks. SARIF 2.1.0 has a rule per lint, a result per occurrence, and one per verdict at 1:1 with
-its evidence as related locations; columns are `unicodeCodePoints`, and regions carry bytes.
+marks, and a narrowed run's `change`. SARIF 2.1.0 has a rule per lint, a result per occurrence, and
+one per verdict at 1:1 with its evidence as related locations; columns are `unicodeCodePoints`, and
+regions carry bytes.
 `github` prints an `::error` per finding at its first mark, titled with the lint.

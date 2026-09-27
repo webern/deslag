@@ -6,8 +6,10 @@ max_size_bytes: 4096
 ---
 # The change: as built
 
-The **change** runs from the **merge base**, where a base and HEAD meet, to the working tree:
-commits, staged and unstaged edits, and untracked files. `change` reads it from git.
+`deslag check --diff <BASE>` runs the whole check, then narrows the report to what a change
+touched. The **change** runs from the **merge base**, where `BASE` and HEAD meet, to the working
+tree: commits, staged and unstaged edits, and untracked files. `change` reads it from git;
+`Report::within`, in `lint`, narrows a report to it.
 
 ```
 src/
@@ -30,7 +32,7 @@ library. `Change::against(root, base)` runs git in `root`:
 5. `ls-files --others --exclude-standard`: an untracked file is added whole.
 
 A failure is `Error::Change`, saying which: no git, no work tree, an unknown base, or no shared
-history, shallow or not.
+history, shallow or not. The binary exits 2 on it and prints nothing on stdout.
 
 ## The patch
 
@@ -49,8 +51,14 @@ Keys are paths from the root, as the walk names files; a deleted file is under i
 `File::touches` a line a hunk added, and the lines on either side of a hunk that only removes, so
 deleting the blank line between two paragraphs touches the paragraph they become. An added,
 untracked or binary file is touched everywhere. `File::edits_content` is false for a pure rename or
-mode change.
+mode change. `lint` keeps a finding's parts by these two (`lints.asbuilt.md`).
+
+What a change does not touch is not reported: deleting a directory that an untouched layout lists
+fails only the whole-tree run.
 
 ## Tests
 
-`tests/diff.rs` runs `parse` on a literal patch, and `File::touches` on hunks.
+`tests/diff.rs` builds repositories with git reading no global or system config, and runs deslag
+the same way. It pins each rule above, each exit 2 and each `--format`, and that a hostile git
+config prints the same. Every case, committed on an empty commit, must print its whole-tree report
+under `--diff HEAD~1`, and a line on the change. `parse` runs on a literal patch.

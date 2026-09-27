@@ -18,7 +18,7 @@
 //! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
 //! file gets. [`output`] prints a run in the formats a machine reads, and [`fix`](mod@fix)
 //! makes the edits to a file that the lints name and the document proves safe. [`change`] asks git
-//! what a change did.
+//! what a change did, which [`Report::within`] narrows a run to.
 
 use std::io;
 use std::num::NonZeroU32;

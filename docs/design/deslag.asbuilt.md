@@ -29,7 +29,7 @@ src/
   lib.rs              the Error type and the module list
   main.rs             the binary
   cli/mod.rs          the clap types
-  change/             what git says a change did
+  change/             --diff: what git says a change did
   config/             the config schema, and finding the config file
   glob/               the repo walk and glob patterns
   explain/mod.rs      a file's settings, and where they come from
@@ -46,7 +46,7 @@ src/
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
 `document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves.
+`document` proves. `lint` narrows a `Report` to what `change` reads.
 
 ## The subsystem docs
 
@@ -60,15 +60,15 @@ fails when a module is in no doc or in two. This doc holds `cli`, `instructions`
 - [lints.asbuilt.md](lints.asbuilt.md): `lint` and `output`: checking, each lint, reports and
   `--format`.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
-- [diff.asbuilt.md](diff.asbuilt.md): `change`: asking git what a change did, and reading it.
+- [diff.asbuilt.md](diff.asbuilt.md): `change`: `--diff`, asking git, and narrowing to a change.
 
 ## The command line
 
-`cli/mod.rs` defines `check` and `fix`, with `--format`, and `explain`, each taking `--config-path`,
-and `instructions`, which prints `instructions::guide`, or a schema `schemars` derives:
-`config-schema` for the config's types, `output-schema` for `json::Run`. `src/main.rs` prints an
-error out of `run` in `anyhow`'s alternate form, which appends each underlying error once; an
-`Error`'s own message never repeats its source.
+`cli/mod.rs` defines `check` and `fix`, with `--format`, `--diff` on `check` alone, and `explain`,
+each taking `--config-path`, and `instructions`, which prints `instructions::guide`, or a schema
+`schemars` derives: `config-schema` for the config's types, `output-schema` for `json::Run`.
+`src/main.rs` prints an error out of `run` in `anyhow`'s alternate form, which appends each
+underlying error once; an `Error`'s own message never repeats its source.
 
 The process exits 0 when nothing fails, 1 when a file fails a lint, and 2 on any error out of `run`,
 whatever the subcommand, as clap does on bad arguments.

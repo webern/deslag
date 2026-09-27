@@ -104,6 +104,12 @@ shows as an annotation on it, and `--format sarif` prints a log to upload to cod
 report and the exit code do not change. Paths are relative to where deslag runs and GitHub reads
 them from the root of the repository, so run it there.
 
+Until `deslag check` passes, a `pull_request` job may run
+`deslag check --format github --diff HEAD^1` with `fetch-depth: 2`, or `--diff origin/<base>` with
+`fetch-depth: 0`. It reports only what the change touched, which misses some failures, such as a
+path deleted from under an untouched layout, so remove it once the tree passes. Upload SARIF only
+from whole-tree runs: code scanning closes the alerts a `--diff` run leaves out.
+
 ## 7. Tell the next agent
 
 If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.

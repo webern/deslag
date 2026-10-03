@@ -266,7 +266,7 @@ fn compare_prints_the_paired_difference_and_refuses_what_it_cannot_compare() {
         "{accuracy}"
     );
     assert!(accuracy.contains("-28.6"), "{accuracy}");
-    assert!(accuracy.trim_end().ends_with("down"), "{accuracy}");
+    assert!(accuracy.trim_end().ends_with("worse"), "{accuracy}");
     // A run against itself has nothing to say.
     let same = ok(&["compare", path(&before), path(&before)]);
     let accuracy = same

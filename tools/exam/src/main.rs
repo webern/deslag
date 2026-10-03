@@ -67,8 +67,10 @@ enum Command {
         words: usize,
     },
     /// Compares two saved runs of the same gold, sentence for sentence: each metric before and
-    /// after, and the paired difference with its interval, `up`, `down` or `same`. It refuses
-    /// runs of different gold files or sentences, and prints aggregates only.
+    /// after, and the paired difference with its interval, called `better`, `worse` or `same` by
+    /// what is better for that metric (a higher unknown rate is `worse`), or `higher` or `lower`
+    /// where neither is better. It refuses runs of different gold files or sentences, and prints
+    /// aggregates only.
     Compare {
         /// The run before the change.
         before: PathBuf,

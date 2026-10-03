@@ -120,7 +120,9 @@ Calibration.
 
 A saved run is JSON: format, tagger, gold path, SHA-256 and split, the columns, and per sentence
 `sent_id` (its position for holdout), tier, context and tally. `compare` needs the same SHA-256,
-columns, sentences and token counts, and prints `up`, `down` or `same` by the paired interval.
+columns, sentences and token counts, and prints `better`, `worse` or `same` by the paired
+interval and the metric's sense (a higher unknown rate is `worse`); `higher` or `lower` where
+neither is better, as for the share at `Sure`. `score --save` writes before the report prints.
 
 ## The treebank
 

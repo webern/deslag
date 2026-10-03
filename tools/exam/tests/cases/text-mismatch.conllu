@@ -1,0 +1,16 @@
+# sent_id = a1
+# text = Cats sleep
+1	Dogs	_	NOUN	_	Number=Plur	_	_	_	_
+2	sleep	_	VERB	_	VerbForm=Inf	_	_	_	_
+3	.	_	PUNCT	_	_	_	_	_	_
+
+# sent_id = a2
+# text = Cats sleep soundly
+1	Cats	_	NOUN	_	Number=Plur	_	_	_	_
+2	sleep	_	VERB	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+
+# sent_id = a3
+# text = Cats sleep
+1	Cats	_	NOUN	_	Number=Plur	_	_	_	_
+2	sleep	_	VERB	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+

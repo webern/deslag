@@ -6,7 +6,7 @@ name: publish-blobs
 # seed with what GitHub says of each repository and the commit to harvest, builds the batch twice
 # and fails unless both come out the same, and fails unless a completed manifest builds to exactly
 # what it records. On a push it then publishes the batches and commits the completed manifests and
-# the new blobs.lock to the branch pushed. scripts/blobstore/blobs.md has the whole story.
+# the new blobs.lock to the branch pushed. scripts/blobstore/batches.md has the whole story.
 #
 # main and m/deslag-exam both publish. A workflow file runs from the branch it is pushed to, so a
 # batch can be published from a branch long before it reaches main.

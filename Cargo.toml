@@ -33,10 +33,11 @@ tempfile = "3.27.0"
 [lints]
 workspace = true
 
-# tools/corpus measures the test corpus. It is never published, and a path-only dev-dependency is
-# dropped from the package, so `cargo publish` sees deslag alone.
+# tools/corpus measures the test corpus and tools/exam grades taggers. Neither is published, and
+# deslag depends on neither, so `cargo publish` sees deslag alone. (tools/corpus is a path-only
+# dev-dependency, which the package drops.)
 [workspace]
-members = ["tools/corpus"]
+members = ["tools/corpus", "tools/exam"]
 
 [workspace.package]
 edition = "2024"

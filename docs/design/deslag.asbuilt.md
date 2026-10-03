@@ -63,6 +63,7 @@ fails when a module is in no doc or in two.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
+- [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.
 
 ## The command line
 
@@ -98,8 +99,10 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
-                      blobstore/, which moves its big tier and builds its batches
+                      blobstore/, which moves its big tier and builds its batches; ewt/, which
+                      fetches the treebank
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
+tools/exam/           deslag-exam, never published: gold sets, alignment and the tagger contract
 ```
 
 ## Build
@@ -110,10 +113,11 @@ tools/corpus/         deslag-corpus, never published: the corpus loaders and ana
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
-the next image.
+the next image. `make fetch-ewt` fetches the UD English Web Treebank that `scripts/ewt/ewt.lock`
+pins into `.ewt/`, for the exam to measure on.
 
-`make build-batches` builds the batches that manifests in
-`scripts/blobstore/batches/` name, completing seeds, and the `publish-blobs` workflow does that and
-publishes them on a push to `main` or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
+`make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
+completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
+or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
 
-`make clean` removes both directories and runs `cargo clean`.
+`make clean` removes all three directories and runs `cargo clean`.

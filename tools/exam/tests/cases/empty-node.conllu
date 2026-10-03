@@ -1,0 +1,9 @@
+# sent_id = a1
+# text = Cats sleep and dogs too
+1	Cats	_	NOUN	_	Number=Plur	_	_	_	_
+2	sleep	_	VERB	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+3	and	_	CCONJ	_	_	_	_	_	_
+4	dogs	_	NOUN	_	Number=Plur	_	_	_	_
+4.1	sleep	_	VERB	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+5	too	_	ADV	_	_	_	_	_	_
+

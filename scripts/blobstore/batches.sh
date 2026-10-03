@@ -3,7 +3,7 @@
 # Builds the corpus batches that manifests describe, and carries them between
 # the two jobs of the publish-blobs workflow. A manifest is
 # scripts/blobstore/batches/NAME.json: a seed that names sources, which
-# collect.py batch completes, or the completed manifest. blobs.md, beside this
+# collect.py batch completes, or the completed manifest. batches.md, beside this
 # script, says how a batch is made and published. A person with a GitHub token
 # can run build to check a manifest before pushing it.
 #
@@ -35,7 +35,7 @@ NEW="$BLOBS/new-batches"      # the batches build made, one name per line
 LOCK="$HERE/blobs.lock"
 # Repo-relative, because that is how an error is worth reading.
 SELF="${HERE#"$ROOT/"}/$(basename "${BASH_SOURCE[0]}")"
-DOC="${HERE#"$ROOT/"}/blobs.md"
+DOC="${HERE#"$ROOT/"}/batches.md"
 LOCK_REL="${HERE#"$ROOT/"}/blobs.lock"
 MANIFESTS_REL="${MANIFESTS#"$ROOT/"}"
 NAME_RE='[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}'

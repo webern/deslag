@@ -6,6 +6,7 @@
 
 SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
+EWT := $(SCRIPTS)/ewt
 
 # Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails
 # there instead of being rewritten.
@@ -15,14 +16,14 @@ CARGO_FLAGS ?=
         build build-batches build-release \
         test test-blobs test-scripts \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs \
+        clean clean-blobs clean-ewt \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs publish-blobs
+        fetch-blobs fetch-ewt publish-blobs
 
 help:
-	@echo "build            build deslag and tools/corpus with the debug profile"
+	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
@@ -37,17 +38,19 @@ help:
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
+	@echo "clean-ewt        remove the fetched treebank"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
-	@echo "                 tools/corpus/tests/golden from what deslag-corpus prints"
+	@echo "                 tools/*/tests/golden from what deslag-corpus and deslag-exam print"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed before a build can succeed"
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
+	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
 
 # ---------------------------------------------------------------------------
@@ -104,7 +107,7 @@ check-fmt: preflight
 
 # Builds from the packaged crate, which catches a file that `exclude` dropped
 # but the build needs. Too slow for `check`; the release workflow runs it.
-# deslag is the one package that publishes; tools/corpus never does.
+# deslag is the one package that publishes; the crates under tools/ never do.
 check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 
@@ -114,12 +117,16 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs
+clean: clean-blobs clean-ewt
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
 clean-blobs:
 	rm -rf .blobs .tools
+
+# .ewt is what fetch-ewt downloads.
+clean-ewt:
+	rm -rf .ewt
 
 # ---------------------------------------------------------------------------
 # ci, fix, preflight, fetch, publish
@@ -164,6 +171,11 @@ install:
 # $(BLOBSTORE)/blobs.md. A stamp that matches the lock is the whole check.
 fetch-blobs:
 	@$(BLOBSTORE)/blobs.sh fetch
+
+# The treebank the exam grades on, from the release $(EWT)/ewt.lock pins. Nothing in ci reads it. A
+# stamp that matches the lock is the whole check.
+fetch-ewt:
+	@$(EWT)/fetch.sh fetch
 
 publish-blobs:
 	@$(BLOBSTORE)/blobs.sh publish

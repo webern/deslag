@@ -1,0 +1,11 @@
+# exam.tokens = deslag
+# exam.source = hand-made
+# exam.split = dev
+# exam.trains = no
+# sent_id = d1
+1	Send	_	VERB	_	Mood=Imp|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	e-mail	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	5	_	NUM	_	_	_	_	_	Kind=Word|Prov=agree
+4	now	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+5	..	_	PUNCT	_	_	_	_	_	Kind=Word|Prov=agree
+

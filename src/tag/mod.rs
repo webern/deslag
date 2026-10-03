@@ -7,14 +7,15 @@
 //! [`sentence`] reads the tokens of one sentence without the Markdown they came from, and
 //! [`document`] reads every sentence of a document in its [`Context`]. Two tables read each word
 //! on its own: the closed-class table of function words, then the open-class lexicon of nouns,
-//! verbs, adjectives and adverbs. A word in neither is an unknown noun, a name too if it is
-//! capitalised. Then the pruning passes in `pass.rs` read each word in its sentence, and narrow
+//! verbs, adjectives and adverbs. A word in neither is `Unknown`, and `shape.rs` guesses what it
+//! is from the way it is written. Then the pruning passes in `pass.rs` read each word in its sentence, and narrow
 //! what the tables left open.
 
 mod closed;
 mod lexicon;
 mod pass;
 mod proper;
+mod shape;
 mod types;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
@@ -23,7 +24,7 @@ pub use types::{Confidence, Context, Features, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 4;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]

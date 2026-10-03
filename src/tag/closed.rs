@@ -19,7 +19,7 @@
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use super::{Confidence, Features, Reading, Tag, TagSet};
+use super::{Confidence, Features, Reading, Tag};
 use Tag::{
     Adjective, Adposition, Adverb, Auxiliary, Conjunction, Determiner, Interjection, Noun, Numeral,
     Particle, Pronoun, ProperNoun, Verb,
@@ -506,28 +506,11 @@ pub fn lookup(word: &str) -> Option<Reading> {
     })
 }
 
-/// A word no table has: a noun at `Unknown`. One that starts with a capital may also be a name, a
-/// shape the tables cannot see, so a proper noun is kept beside the noun and the best guess stays a
-/// noun until a pass has a reason. A word of more than a letter that ends in `'s` is a singular noun
-/// with a second word fused on, whatever its stem.
+/// A word no table has, read at `Unknown` by its shape: see `shape.rs`. The best guess and the tags
+/// it keeps come from the way it is written, and a capitalised one keeps a proper noun beside its
+/// noun, whatever else its shape says, so that a pass can name it.
 pub fn unknown(text: &str) -> Reading {
-    let mut features = Features::NONE;
-    let mut rest = text.chars().rev();
-    if let (Some('s' | 'S'), Some('\'' | '\u{2019}'), Some(_)) =
-        (rest.next(), rest.next(), rest.next())
-    {
-        features = Features::SINGULAR.union(Features::CONTRACTION);
-    }
-    Reading {
-        tag: Tag::Noun,
-        features,
-        confidence: Confidence::Unknown,
-        kept: if text.chars().next().is_some_and(char::is_uppercase) {
-            TagSet::of(Tag::Noun).with(Tag::ProperNoun)
-        } else {
-            TagSet::of(Tag::Noun)
-        },
-    }
+    super::shape::guess(text)
 }
 
 #[cfg(test)]
@@ -535,6 +518,7 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
+    use crate::tag::TagSet;
 
     /// The table's reading of `text`, or an unknown noun, as the tagger reads with no lexicon.
     fn word(text: &str) -> Reading {
@@ -693,34 +677,30 @@ mod tests {
     }
 
     #[test]
-    fn a_word_outside_the_table_is_an_unknown_noun() {
+    fn a_word_outside_the_table_is_read_at_unknown_with_its_guess_kept() {
         for text in [
             "frobnicate",
             "foo_bar",
             "x86_64",
             "über",
-            "a-very-long-identifier",
+            "Kubernetes",
+            "4th",
         ] {
             let reading = word(text);
-            assert_eq!(reading.tag, Tag::Noun, "{text}");
             assert_eq!(reading.confidence, Confidence::Unknown, "{text}");
-            assert_eq!(reading.kept, TagSet::of(Tag::Noun), "{text}");
-            assert_eq!(reading.features, Features::NONE, "{text}");
+            assert!(reading.kept.contains(reading.tag), "{text}");
         }
+        // Its shape decides the rest; `shape.rs` tests each rule.
+        assert_eq!(word("frobnicate").tag, Tag::Noun);
+        assert_eq!(word("foo_bar").tag, Tag::ProperNoun);
     }
 
     #[test]
     fn a_capitalised_word_outside_the_table_may_also_be_a_name() {
         for text in ["Kubernetes", "KUBERNETES", "Über", "A-very-long-Identifier"] {
             let reading = word(text);
-            assert_eq!(reading.tag, Tag::Noun, "{text}");
             assert_eq!(reading.confidence, Confidence::Unknown, "{text}");
-            assert_eq!(
-                reading.kept,
-                TagSet::of(Tag::Noun).with(Tag::ProperNoun),
-                "{text}"
-            );
-            assert_eq!(reading.features, Features::NONE, "{text}");
+            assert!(reading.kept.contains(Tag::ProperNoun), "{text}");
         }
     }
 
@@ -728,7 +708,7 @@ mod tests {
     fn a_possessive_outside_the_table_is_a_noun_with_a_word_fused_on() {
         for text in ["user's", "Python\u{2019}s", "musxdom's", "GITHUB'S"] {
             let reading = word(text);
-            assert_eq!(reading.tag, Tag::Noun, "{text}");
+            assert!(matches!(reading.tag, Tag::Noun | Tag::ProperNoun), "{text}");
             assert_eq!(reading.confidence, Confidence::Unknown, "{text}");
             assert_eq!(
                 reading.features,
@@ -739,8 +719,8 @@ mod tests {
         // The table's own contractions are read from it.
         assert_eq!(word("it's").tag, Tag::Pronoun);
         // A lone `s` or `'s` is no possessive.
-        assert_eq!(word("s").features, Features::NONE);
-        assert_eq!(word("'s").features, Features::NONE);
+        assert!(!word("s").features.contains(Features::CONTRACTION));
+        assert!(!word("'s").features.contains(Features::CONTRACTION));
     }
 
     #[test]

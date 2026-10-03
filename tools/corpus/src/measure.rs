@@ -520,11 +520,10 @@ pub struct Filters {
     /// Keep the human files, and only the llm and mixed files whose history names one tool.
     #[arg(long)]
     pub single_tool: bool,
-    /// Also keep the `llm` files whose label is their publisher's statement of the model, which
-    /// are left out unless asked for: `corpus.md` section 3 keeps them apart from the `llm` files
-    /// a history proves.
+    /// Leave out the `llm` files whose label is their publisher's statement of the model. They
+    /// count as `llm` unless this is given; each file's sidecar keeps its basis either way.
     #[arg(long)]
-    pub with_declared: bool,
+    pub without_declared: bool,
     /// Keep only the files from repositories a search for topics outside software found
     /// (`outside`), or only the others (`software`).
     #[arg(long, value_enum)]
@@ -556,7 +555,7 @@ impl Filters {
             && (self.languages.is_empty() || self.languages.contains(&doc.language))
             && (dated || self.quarters.is_empty() || self.quarters.contains(&doc.quarter))
             && (dated || !self.single_tool || doc.single_tool().is_some())
-            && (self.with_declared || !doc.declared)
+            && (!self.without_declared || !doc.declared)
             && match self.register {
                 None => true,
                 Some(Register::Outside) => doc.outside_software,

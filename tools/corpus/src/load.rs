@@ -182,9 +182,9 @@ pub fn tree(root: &Path) -> Result<Vec<Fixture>, Problem> {
     Ok(fixtures)
 }
 
-/// `fixtures` without the ones whose label is a publisher's statement of the model, which
-/// `corpus.md` section 3 keeps apart from the labels a history proves. Whatever groups fixtures by
-/// label calls this, unless it is asked to take them in.
+/// `fixtures` without the ones whose label is a publisher's statement of the model, leaving the
+/// labels a history proves. Whatever groups fixtures by label counts both bases, and calls this
+/// only when it is asked to leave the declared ones out.
 pub fn history_proven(fixtures: Vec<Fixture>) -> Vec<Fixture> {
     fixtures
         .into_iter()

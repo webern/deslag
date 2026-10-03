@@ -1,5 +1,5 @@
-//! A fixture whose label is its publisher's statement of the model (`corpus.md` section 3) is
-//! read beside the ones a history proves, and a measure can leave it out.
+//! A fixture whose label is its publisher's statement of the model (`corpus.md` section 3) counts
+//! as `llm` beside the ones a history proves, and a measure can leave it out.
 
 use std::path::Path;
 
@@ -119,7 +119,7 @@ fn corpus() -> TempDir {
 }
 
 #[test]
-fn a_measure_leaves_out_the_files_a_publisher_declares_unless_asked() {
+fn a_measure_keeps_the_files_a_publisher_declares_unless_told_not_to() {
     let dir = corpus();
     let corpus = Corpus::read(dir.path(), Tier::Blobs).expect("a corpus");
     assert_eq!(corpus.docs.len(), 2);
@@ -127,18 +127,18 @@ fn a_measure_leaves_out_the_files_a_publisher_declares_unless_asked() {
     let tools: usize = corpus.docs.iter().map(|doc| doc.tools.len()).sum();
     assert_eq!(tools, 1, "only the proven file names a tool");
 
-    let by_default = Filters::default().apply(&corpus);
-    assert_eq!(by_default.len(), 1);
-    assert!(!by_default[0].declared);
-    let asked = Filters {
-        with_declared: true,
+    assert_eq!(Filters::default().apply(&corpus).len(), 2);
+    let without = Filters {
+        without_declared: true,
         ..Filters::default()
     };
-    assert_eq!(asked.apply(&corpus).len(), 2);
+    let kept = without.apply(&corpus);
+    assert_eq!(kept.len(), 1);
+    assert!(!kept[0].declared);
 }
 
 #[test]
-fn the_llm_row_of_a_summary_holds_what_a_history_proves_unless_declared_files_are_asked_for() {
+fn the_llm_row_of_a_summary_holds_declared_files_unless_told_not_to() {
     let dir = corpus();
     let corpus = Corpus::read(dir.path(), Tier::Blobs).expect("a corpus");
     let llm_files = |filters: &Filters| {
@@ -149,12 +149,12 @@ fn the_llm_row_of_a_summary_holds_what_a_history_proves_unless_declared_files_ar
             .map(|row| row.count.files)
             .expect("an llm row")
     };
-    assert_eq!(llm_files(&Filters::default()), 1);
-    let asked = Filters {
-        with_declared: true,
+    assert_eq!(llm_files(&Filters::default()), 2);
+    let without = Filters {
+        without_declared: true,
         ..Filters::default()
     };
-    assert_eq!(llm_files(&asked), 2);
+    assert_eq!(llm_files(&without), 1);
 }
 
 #[test]

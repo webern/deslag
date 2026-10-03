@@ -809,6 +809,254 @@ class ManifestTests(Scratch):
         self.assertNotEqual(collect.tree_digest(a), collect.tree_digest(b))
 
 
+CARD = "---\nlicense: {}\n---\n# A dataset of stories\n"
+
+STORY = ("The lamp burned low while the two travellers argued about the road, and neither would give "
+         "way, so they sat on the wall and ate what bread they had left. ")
+
+
+class FakeHub:
+    """Hugging Face as a dataset source asks it, with a dataset of stories that has a card, a CSV
+    and models of several licences. `moves` puts a newer revision at the tip."""
+
+    def __init__(self, license="mit", rows=None):
+        self.revisions = {"1" * 40: {"README.md": CARD.format(license).encode()}}
+        self.tip_revision = "1" * 40
+        self.rows = rows if rows is not None else self.make_rows()
+        self.revisions["1" * 40]["data.csv"] = self.csv(self.rows)
+        self.models = {
+            "org/a-awq": {"cardData": {"base_model": "org/a", "tags": []}},
+            "org/a": {"cardData": {"license": "apache-2.0"}},
+            "org/b": {"cardData": {"license": "mit"}},
+            "org/c": {"cardData": {"license": "cc-by-nc-4.0"}},
+            "org/d": {"cardData": {}},
+        }
+        self.reads = 0
+
+    @staticmethod
+    def make_rows():
+        rows = []
+        for i in range(60):
+            model = ["org/a-awq", "org/b", "org/c"][i % 3]
+            rows.append({"id": f"p{i}", "model": model, "text": f"# Story {i}\n\n" + STORY * 6,
+                         "lang": "en" if i % 5 else "de", "temperature": "0.5"})
+        return rows
+
+    @staticmethod
+    def csv(rows):
+        out = collect.io.StringIO(newline="")
+        writer = collect.csv.DictWriter(out, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+        return out.getvalue().encode()
+
+    def tip(self, name):
+        return self.tip_revision
+
+    def commit_date(self, name, revision):
+        if revision not in self.revisions:
+            raise SystemExit(f"{name}: no commit {revision}")
+        return "2025-03-01T18:14:26.000Z"
+
+    def read(self, name, revision, path):
+        self.reads += 1
+        return self.revisions[revision][path]
+
+    def model(self, name):
+        return self.models[name]
+
+
+def dataset_seed(name, **extra):
+    entry = {"kind": "dataset", "host": "huggingface.co", "repo": "datasets/owner/stories",
+             "file": "data.csv", "format": "csv",
+             "fields": {"text": "text", "model": "model", "id": "id"}, "where": {"lang": "en"},
+             "models": ["org/a-awq", "org/b"], "record": ["lang", "temperature"],
+             "document": "story", "license": "MIT", "found_by": ["sg-register:fiction"]}
+    entry.update(extra)
+    return {"batch": name, "per_repo": 10, "sources": [entry]}
+
+
+class DatasetTests(Scratch):
+    """A dataset whose publisher names the model of each text, which the `dataset` kind turns into
+    fixtures on the publisher-declared basis. Hugging Face is a fake."""
+
+    name = "2026-10-04-01"
+
+    def setUp(self):
+        super().setUp()
+        self.hub = FakeHub()
+        self.real = collect.HUB
+        collect.HUB = self.hub
+
+    def tearDown(self):
+        collect.HUB = self.real
+
+    def seed(self, **extra) -> Path:
+        path = self.dir / "manifests" / f"{self.name}.json"
+        write_json(path, dataset_seed(self.name, **extra))
+        return path
+
+    def sidecars(self):
+        batch = self.corpus / "batches" / self.name
+        return [json.loads(p.read_text()) for p in sorted(batch.glob("llm/*/*.json"))]
+
+    def test_a_seed_is_completed_and_the_texts_are_fixtures_of_the_declared_basis(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        done = json.loads(path.read_text())
+        source = done["sources"][0]
+        self.assertEqual(source["revision"], "1" * 40)
+        self.assertEqual(source["sha256"], hashlib.sha256(self.hub.revisions["1" * 40]["data.csv"]).hexdigest())
+        self.assertEqual(source["kept"], {"human": 0, "llm": 10, "mixed": 0})
+        self.assertEqual(source["model_licenses"], {
+            "org/a-awq": {"license": "Apache-2.0", "card": "org/a"},
+            "org/b": {"license": "MIT", "card": "org/b"}})
+        self.assertEqual(done["expect"]["fixtures"], 10)
+        sidecars = self.sidecars()
+        self.assertEqual(len(sidecars), 10)
+        for sidecar in sidecars:
+            self.assertEqual(sidecar["sidecar_version"], 4)
+            self.assertNotIn("history", sidecar)
+            self.assertEqual(sidecar["authorship"]["label"], "llm")
+            self.assertEqual(sidecar["source"]["license"], "MIT")
+            self.assertEqual(sidecar["source"]["commit"], "1" * 40)
+            self.assertEqual(sidecar["source"]["found_by"], "sg-register:fiction")
+            self.assertTrue(sidecar["source"]["repo"].startswith("datasets/"))
+            declared = sidecar["declared"]
+            self.assertEqual(declared["revision"], "1" * 40)
+            self.assertEqual(declared["file_sha256"], source["sha256"])
+            self.assertIn(declared["model"], ("org/a-awq", "org/b"))
+            row = self.hub.rows[declared["row"]]
+            self.assertEqual(row["model"], declared["model"])
+            self.assertEqual(row["id"], declared["row_id"])
+            self.assertEqual(declared["columns"], {"lang": "en", "temperature": "0.5"})
+            self.assertEqual(sidecar["source"]["path"], f"data.csv/row-{declared['row']}.md")
+        models = sorted(s["declared"]["model"] for s in sidecars)
+        self.assertEqual(models, ["org/a-awq"] * 5 + ["org/b"] * 5)
+
+    def test_a_text_is_quoted_as_the_cell_has_it(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        batch = self.corpus / "batches" / self.name
+        for md in batch.glob("llm/*/*.md"):
+            sidecar = json.loads(md.with_suffix(".json").read_text())
+            self.assertEqual(md.read_bytes(), self.hub.rows[sidecar["declared"]["row"]]["text"].encode())
+
+    def test_the_manifest_line_and_the_ledger_say_the_basis(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        batch = self.corpus / "batches" / self.name
+        rows = collect.jsonl(batch / "manifest.jsonl")
+        self.assertTrue(all(r["basis"] == collect.DECLARED and r["ai_tools"] == [] for r in rows))
+        self.assertTrue(all(r["host"] == "huggingface.co" and r["sidecar_version"] == 4 for r in rows))
+        ledger = collect.jsonl(batch / "repos.jsonl")
+        self.assertEqual(ledger[0]["kept"], {"llm": 10})
+        self.assertEqual(ledger[0]["head"], "1" * 40)
+
+    def test_the_completed_manifest_builds_the_same_batch_when_the_dataset_moves_on(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        done = json.loads(path.read_text())
+        moved = dict(self.hub.revisions["1" * 40])
+        moved["data.csv"] = self.hub.csv(self.hub.make_rows()[::-1])
+        self.hub.revisions["2" * 40], self.hub.tip_revision = moved, "2" * 40
+        fresh = self.dir / "fresh"
+        (fresh / "batches").mkdir(parents=True)
+        self.assertIsNone(run_batch(path, fresh, self.dir / "w2"))
+        self.assertEqual(collect.tree_digest(fresh / "batches" / self.name), done["expect"]["tree_sha256"])
+
+    def test_a_file_that_is_not_the_pinned_one_fails_and_leaves_no_batch(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        shutil.rmtree(self.corpus / "batches" / self.name)
+        self.hub.revisions["1" * 40]["data.csv"] += b"\n"
+        message = run_batch(path, self.corpus, self.dir / "w2")
+        self.assertIn("is not the file the manifest pins", message)
+        self.assertFalse((self.corpus / "batches" / self.name).exists())
+
+    def test_a_card_that_says_another_licence_refuses_the_seed(self):
+        self.hub.revisions["1" * 40]["README.md"] = CARD.format("cc-by-nc-4.0").encode()
+        message = run_batch(self.seed(), self.corpus, self.dir / "w1")
+        self.assertIn("the card at", message)
+        self.assertIn("cc-by-nc-4.0", message)
+
+    def test_a_card_with_no_licence_refuses_the_seed(self):
+        self.hub.revisions["1" * 40]["README.md"] = b"# no frontmatter\n"
+        self.assertIn("the card at", run_batch(self.seed(), self.corpus, self.dir / "w1"))
+
+    def test_a_model_whose_terms_the_corpus_does_not_accept_refuses_the_seed(self):
+        message = run_batch(self.seed(models=["org/a-awq", "org/c"]), self.corpus, self.dir / "w1")
+        self.assertIn("org/c", message)
+        self.assertIn("cc-by-nc-4.0", message)
+
+    def test_a_model_with_no_licence_up_its_chain_refuses_the_seed(self):
+        message = run_batch(self.seed(models=["org/d"]), self.corpus, self.dir / "w1")
+        self.assertIn("no licence", message)
+
+    def test_a_model_with_too_few_texts_fails(self):
+        self.hub.revisions["1" * 40]["data.csv"] = self.hub.csv(self.hub.rows[:3])
+        message = run_batch(self.seed(), self.corpus, self.dir / "w1")
+        self.assertIn("usable texts", message)
+
+    def test_a_column_the_file_lacks_fails(self):
+        message = run_batch(self.seed(record=["nothing"]), self.corpus, self.dir / "w1")
+        self.assertIn("has no column nothing", message)
+
+    def test_a_text_that_is_too_small_is_not_taken(self):
+        rows = self.hub.rows
+        for row in rows:
+            if row["model"] == "org/b":
+                row["text"] = "tiny"
+        self.hub.revisions["1" * 40]["data.csv"] = self.hub.csv(rows)
+        self.assertIn("usable texts", run_batch(self.seed(), self.corpus, self.dir / "w1"))
+
+    def test_what_is_malformed_is_refused(self):
+        name = "2026-10-04-01"
+        good = dataset_seed(name)["sources"][0]
+        bad = {
+            "a repo that is not a dataset": dict(good, repo="owner/stories"),
+            "a host that is not Hugging Face": dict(good, host="github.com"),
+            "a licence the corpus does not accept": dict(good, license="CC-BY-NC-4.0"),
+            "a format it cannot read": dict(good, format="parquet"),
+            "fields that miss one": dict(good, fields={"text": "t", "model": "m"}),
+            "no models": dict(good, models=[]),
+            "the same model twice": dict(good, models=["org/b", "org/b"]),
+            "a file that climbs out": dict(good, file="../x.csv"),
+            "a short revision": dict(good, revision="abc"),
+            "an unknown key": dict(good, extra=1),
+        }
+        for why, entry in bad.items():
+            with self.subTest(why):
+                path = self.dir / f"{name}.json"
+                write_json(path, {"batch": name, "sources": [entry]})
+                with self.assertRaises(SystemExit):
+                    collect.read_manifest(path)
+
+    def test_recheck_leaves_a_declared_fixture_alone_and_select_never_samples_it(self):
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        work = self.dir / "recheck"
+        collect.recheck(collect.argparse.Namespace(corpus=str(self.corpus), work=str(work),
+                                                   jobs=1, limit=0, only=""))
+        self.assertEqual((work / "exclude.jsonl").read_text(), "")
+        tree = self.dir / "tree"
+        collect.select(collect.argparse.Namespace(corpus=str(self.corpus), out=str(tree),
+                                                  per_category=5, seed=1, replace=False, check=False))
+        self.assertEqual(list(tree.glob("*/*/*.md")), [])
+
+    def test_a_declared_fixture_and_a_git_one_share_a_batch(self):
+        manifest = dataset_seed(self.name)
+        manifest["sources"].append({"kind": "git", "host": "gitlab.com", "repo": "demo/demo",
+                                    "clone_url": f"file://{self.source}"})
+        path = self.dir / "manifests" / f"{self.name}.json"
+        write_json(path, manifest)
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        rows = collect.jsonl(self.corpus / "batches" / self.name / "manifest.jsonl")
+        self.assertEqual(sorted({r["sidecar_version"] for r in rows}), [3, 4])
+        self.assertEqual([r.get("basis") for r in rows if r["sidecar_version"] == 3],
+                         [None] * 4)
+
+
 class BatchTests(Scratch):
     name = "2026-10-04-01"
 

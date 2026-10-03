@@ -14,8 +14,9 @@ It starts as a seed that only names sources:
 {"batch": "2026-10-04-01", "sources": [{"kind": "git", "host": "github.com", "repo": "owner/name"}]}
 ```
 
-A source names its `kind`. A `git` source is a `host` and a `repo`, and may add `head`, the commit
-to harvest at, which `git ls-remote` gives with no login. The manifest may add `captured`, the
+A source names its `kind`: `git` or `dataset`. A `git` source is a `host` and a `repo`, and may add
+`head`, the commit to harvest at, which `git ls-remote` gives with no login. A `dataset` source is
+described below. The manifest may add `captured`, the
 date the sidecars carry; `per_repo` and `max_bytes`, which override `collect.py`'s limits;
 `exclude`, rows of `sha256` and `reason` as `recheck` writes them; and `relicense`, rows of `sha256`
 and `license`.
@@ -26,7 +27,7 @@ the fixture and adds it again, with its bytes and its sidecar as they were excep
 and `relicense` rows alone has no source to resolve and is built from the fetched image. The new
 licence must be one the corpus accepts; a fixture that has none is an `exclude` row instead.
 
-The workflow completes a seed. Each source gains `head`, the metadata GitHub gave for it, and
+The workflow completes a seed. Each `git` source gains `head`, the metadata GitHub gave for it, and
 `kept`, what the harvest kept by label; the manifest gains `expect`, the fixture count and a
 digest of every file in the batch. A completed manifest asks nothing of the network, so building
 it again gives the same batch or fails.
@@ -103,11 +104,27 @@ The workflow token has about 1,000 API requests an hour per repository. Each squ
 three or more, at a pace of 0.75 seconds, and the second build asks again, so a batch of many
 repositories is slow and may take hours. The job stops at 240 minutes.
 
-## Other kinds of source
+## Kinds of source
 
 A kind is a `Source` class in `collect.py`: `check` validates a seed's entry, `resolve` completes
 it, and `harvest` writes the `results/` files `stage` reads. Manifests, the workflow and the image
-do not know the kinds. Only `git` exists.
+do not know the kinds. `git` and `dataset` exist.
+
+A `dataset` source is a file of a Hugging Face dataset whose publisher names the model of each
+text, such as a CSV with a `model_name` column. Its texts are `llm` on the publisher-declared basis
+of `docs/design/corpus.md` section 3, one fixture to a row, with a version 4 sidecar. The seed
+names `repo` (`datasets/owner/name`), `file`, `format`, the `fields` that hold each row's `text`,
+`model` and `id`, `where`, the values a row's columns must have, the `models` to take, the columns
+to `record`, `document`, the sidecar's kind of file, and `license`, which the dataset's card must
+say. The manifest's `per_repo` is the number of texts, shared out evenly among `models`.
+
+`revision` is the commit to read at, the tip if the seed leaves it out. The workflow completes the
+seed with that, its date, the `sha256` of the file, and `model_licenses`: each model's licence, or
+its base model's, which must be one the corpus accepts. A model whose licence is not accepted, or
+that has none, fails the seed. The check reads one `license:` on a card, not a model's lineage. `harvest` reads the file at
+the revision again and fails unless it has the `sha256`. Each model's texts are the first of its
+rows in the order a hash of the row number gives, so building twice gives one batch. A fixture's
+path is `FILE/row-N.md` and its text is the cell as it is.
 
 ## Tests
 

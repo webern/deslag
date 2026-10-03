@@ -1516,7 +1516,9 @@ fn sentence_lengths_by_label() {
     let mut tiers = vec![("the tree, tests/corpus", load_corpus())];
     let big = Path::new(env!("CARGO_MANIFEST_DIR")).join(".blobs/unpacked/corpus");
     if big.is_dir() {
-        tiers.push(("the big tier", common::blobs::load_blobs(&big)));
+        // Publisher-declared llm files are kept apart from the ones a history proves.
+        let proven = deslag_corpus::load::history_proven(common::blobs::load_blobs(&big));
+        tiers.push(("the big tier", proven));
     }
     for (tier, fixtures) in tiers {
         let measured: Vec<(&str, Lengths)> = fixtures

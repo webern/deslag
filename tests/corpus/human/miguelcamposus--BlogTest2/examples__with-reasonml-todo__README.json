@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "examples__with-reasonml-todo__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "miguelcamposus/BlogTest2",
+    "path": "examples/with-reasonml-todo/README.md",
+    "commit": "d72f5bd69dcd243645ce43722cd86db030b94e1e",
+    "commit_date": "2021-12-31T00:09:44-05:00",
+    "url": "https://github.com/miguelcamposus/BlogTest2/blob/d72f5bd69dcd243645ce43722cd86db030b94e1e/examples/with-reasonml-todo/README.md",
+    "license": "MIT",
+    "license_files": [
+      "license.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2019-05-23T14:48:13-07:00",
+    "last_commit_date": "2021-01-19T02:28:54-05:00",
+    "last_commit_author": "Luis Alvarez D",
+    "authors": 9,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2019-05-23T16:48:13-05:00",
+    "last_committer_date": "2021-01-19T07:28:54Z",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 15 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 2525,
+    "sha256": "505ac94f8b08c17e756eee895944a698aa1c10a41e87cb29bf0cda4670ff7157",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 52,
+    "words": 290,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/miguelcamposus--BlogTest2/examples/with-reasonml-todo/README.md"
+}

@@ -18,7 +18,8 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
 `-- corpus/                  the corpus's big tier (layers.txt)
     `-- batches/             each batch a layer of its own (layers.txt)
         |-- 2026-09-27-01/
-        `-- 2026-09-27-02/
+        |-- 2026-09-27-02/
+        `-- 2026-10-03-01/
 ```
 
 ## corpus/
@@ -32,6 +33,10 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   Markdown, 12,034,975 in all.
 - `2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599
   `mixed`, 474 of those with their twin. 142,677,577 bytes of Markdown, 203,442,958 in all.
+- `2026-10-03-01`: corrects licence labels, from `batches/2026-10-03-01.json`. It adds back 49
+  fixtures labelled MIT-0 that are MIT, byte for byte, with sidecars that differ in
+  `source.license`. It drops those and 16 more whose licence the corpus does not accept or
+  `collect.py` cannot name.
 
 The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer
 proves. Its `repos.jsonl` lists the 3,232 repositories the harvest tried, 1,388 of which gave a

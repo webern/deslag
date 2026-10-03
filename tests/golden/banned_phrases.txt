@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 245 of 1230: core 7, human 65, llm 60, mixed 113
+# fails 244 of 1230: core 7, human 65, llm 60, mixed 112
 
 [md.lints.banned_phrases]
 allow = ["please note that"]
@@ -161,7 +161,6 @@ mixed/GladysAssistant--Gladys/server__services__example__README.md matches:1
 mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md matches:8
 mixed/JuliaDocs--Documenter.jl/docs__src__man__doctests.md matches:7
 mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md matches:5
-mixed/JuliaMath--Polynomials.jl/docs__src__index.md matches:2
 mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md matches:3
 mixed/LennartHennigs--Button2/CHANGELOG.md matches:4
 mixed/LennartHennigs--ESPTelnet/CHANGELOG.md matches:1
@@ -172,6 +171,7 @@ mixed/PrivateBin--PrivateBin/CHANGELOG.md matches:2
 mixed/SchemaStore--schemastore/CONTRIBUTING.md matches:4
 mixed/SciML--ModelingToolkit.jl/docs__src__tutorials__acausal_components.md matches:5
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md matches:2
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md matches:4
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md matches:1
 mixed/Umplify--xunit-dependency-injection/README.md matches:2
 mixed/activeadmin--activeadmin/CONTRIBUTING.md matches:1
@@ -219,7 +219,6 @@ mixed/learningequality--kolibri/python_packages__kolibri-oidc-client-plugin__REA
 mixed/lightdash--lightdash/github__CONTRIBUTING.md matches:2
 mixed/mabel-dev--opteryx/README.md matches:1
 mixed/markshust--docker-magento/README.md matches:9
-mixed/microsoft--DirectXShaderCompiler/CONTRIBUTING.md matches:2
 mixed/missingfaktor--akar/FAQs.md matches:1
 mixed/mlflow--mlflow/github__workflows__cross-version-testing.md matches:2
 mixed/napi-rs--napi-rs/crates__napi__README.md matches:1

@@ -973,10 +973,10 @@ fn the_corpus_banned_characters_agree_with_the_library() {
 }
 
 /// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 6443;
+const FIXED: usize = 6445;
 
 /// How many fixtures with banned characters it fixes whole.
-const FIXED_WHOLE: usize = 358;
+const FIXED_WHOLE: usize = 359;
 
 /// How many banned characters it leaves for each reason.
 const LEFT_BY_REASON: &[(&str, usize)] = &[

@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 499 of 1230: core 2, human 86, llm 244, mixed 167
+# fails 500 of 1230: core 2, human 87, llm 244, mixed 167
 
 [md.lints.max_emphasis]
 free_spans = 2
@@ -31,6 +31,7 @@ human/codeberg--Lonami--grammers/README.md spans:11 percent:5.80
 human/codeberg--OpenTracksApp--OpenTracks/README_TESTED_SENSORS.md spans:3 percent:1.20
 human/codeberg--Starfish--TinyWeatherForecastGermany/README.md spans:26 percent:1.69
 human/codeberg--bookstack--bookstack/dev__docs__logical-theme-system.md spans:9 percent:4.87
+human/codeberg--continuwuity--continuwuity/APPSERVICES.md spans:6 percent:3.86
 human/codeberg--corona-contact-tracing-germany--cwa-android/github__SUPPORT.md spans:5 percent:17.45
 human/codeberg--dnkl--fcft/CHANGELOG.md spans:16 percent:1.39
 human/codeberg--dnkl--fnott/README.md spans:6 percent:1.87
@@ -377,6 +378,7 @@ mixed/PowerShell--vscode-powershell/docs__development.md spans:8 percent:2.17
 mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md spans:10 percent:2.34
 mixed/SchemaStore--schemastore/CONTRIBUTING.md spans:39 percent:1.83
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md spans:49 percent:7.96
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md spans:16 percent:2.28
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md spans:41 percent:10.47
 mixed/Umplify--xunit-dependency-injection/README.md spans:70 percent:9.43
 mixed/WikipediaBrown--napkin/README.md spans:57 percent:5.05
@@ -446,7 +448,6 @@ mixed/martinus--nanobench/README.md spans:13 percent:5.49
 mixed/mesonbuild--meson/docs__markdown__Fs-module.md spans:10 percent:2.85
 mixed/metowolf--MetingJS/README.md spans:7 percent:4.37
 mixed/microsoft--CSS-Exchange/docs__Emerging-Issues.md spans:18 percent:13.72
-mixed/microsoft--DirectXShaderCompiler/CONTRIBUTING.md spans:5 percent:2.20
 mixed/microsoft--FluidFramework/experimental__framework__data-objects__README.md spans:5 percent:5.54
 mixed/microsoft--msquic/docs__Release.md spans:7 percent:2.78
 mixed/missingfaktor--akar/FAQs.md spans:5 percent:1.89

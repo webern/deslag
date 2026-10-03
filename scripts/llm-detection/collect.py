@@ -148,7 +148,7 @@ OUTSIDE_TERMS = {
     "Vim License": r"\bvim licen[sc]e",
     "Creative Commons NonCommercial, ShareAlike or NoDerivatives": (
         r"attribution[- ]non-?commercial|attribution[- ]share-?alike|attribution[- ]no-?deriv"
-        r"|\bcc[- ]by[- ](?:nc|sa|nd)\b|\bby-(?:nc|sa|nd)\b|share-?alike|no-?derivatives"),
+        r"|\bcc[- ]by[- ](?:nc|sa|n[d])\b|\bby-(?:nc|sa|n[d])\b|share-?alike|no-?derivatives"),
     # Permissive in spirit, with conditions beyond attribution.
     "SIL Open Font License": r"open font licen[sc]e",
     "NCSA or LLVM licence": (

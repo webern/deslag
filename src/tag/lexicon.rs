@@ -8,8 +8,10 @@
 //!
 //! The readings are tag letters in rank order, the best guess first, and after the first an
 //! uppercase letter for the features of that guess: `runs<TAB>vZn` is a verb, finite present third
-//! person singular, that may also be a noun. The ranking comes from WordNet's tagged-sense counts,
-//! Moby's priority order and WordNet's sense counts, never from a treebank.
+//! person singular, that may also be a noun. The ranking comes from how often WordNet's
+//! senses of the lemma were met in SemCor, its sense-tagged corpus, for each part of speech (spread
+//! over the forms the part of speech has), then Moby's priority order and WordNet's sense counts,
+//! never from a treebank.
 //!
 //! - **Confidence.** Every word here is `Unsure`, whatever its tag count. The open class is open:
 //!   a word the lexicon gives as a noun can be a verb in the next sentence, so one tag in it does
@@ -354,6 +356,32 @@ mod tests {
         let aardvark = word("aardvark");
         assert_eq!(aardvark.kept, TagSet::of(Tag::Noun));
         assert_eq!(aardvark.confidence, Confidence::Unsure);
+    }
+
+    #[test]
+    fn readings_are_ranked_by_the_semcor_counts_of_each_part_of_speech() {
+        // Each of these has two or more parts of speech, and the counts put one clearly first.
+        for (text, tag) in [
+            ("project", Tag::Noun),
+            ("name", Tag::Noun),
+            ("process", Tag::Noun),
+            ("use", Tag::Verb),
+            ("file", Tag::Verb),
+            ("free", Tag::Adjective),
+            ("still", Tag::Adverb),
+        ] {
+            let reading = word(text);
+            assert_eq!(reading.tag, tag, "{text}");
+            assert!(
+                reading.kept.len() > 1,
+                "{text} has one tag, so ranks nothing"
+            );
+        }
+        // A form takes the rank of its lemma's part of speech: `saw` is the past of `see`.
+        assert_eq!(word("saw").tag, Tag::Verb);
+        assert_eq!(word("uses").tag, Tag::Verb);
+        // A name has no count of its own and ranks after the common readings.
+        assert_eq!(word("march").kept.iter().next(), Some(Tag::Noun));
     }
 
     #[test]

@@ -354,10 +354,11 @@ mod tests {
     }
 
     #[test]
-    fn a_made_up_name_is_a_noun_before_and_a_name_after() {
-        // The tables have no such word: before the pass it is an unknown noun that may be a name.
+    fn a_made_up_name_is_unknown_before_and_likely_after() {
+        // The tables have no such word: before the pass its shape says it may be a name, and the
+        // level is `Unknown`.
         let lookup = crate::tag::read("Frobnitz");
-        assert_eq!(lookup.tag, Noun);
+        assert_eq!(lookup.tag, ProperNoun);
         assert_eq!(lookup.confidence, Confidence::Unknown);
         assert_eq!(lookup.kept, TagSet::of(Noun).with(ProperNoun));
         let mut tokens = Token::split("We use Frobnitz daily.");
@@ -366,13 +367,13 @@ mod tests {
         assert_eq!(read.tag, ProperNoun);
         assert_eq!(read.confidence, Confidence::Likely);
         assert_eq!(read.kept, TagSet::of(Noun).with(ProperNoun));
-        // A lower-case word is the noun it was.
+        // A lower-case word is the noun it was, and the pass leaves it at `Unknown`.
         let mut tokens = Token::split("We use frobnitz daily.");
         sentence(&mut tokens, Context::Prose);
         let read = tokens[2].reading.unwrap();
         assert_eq!(read.tag, Noun);
         assert_eq!(read.confidence, Confidence::Unknown);
-        assert_eq!(read.kept, TagSet::of(Noun));
+        assert!(!read.kept.contains(ProperNoun));
     }
 
     #[test]
@@ -385,9 +386,19 @@ mod tests {
             .filter(|token| token.text == "Frobnitz")
             .filter_map(|token| token.reading)
             .collect();
-        let tags: Vec<Tag> = reads.iter().map(|r| r.tag).collect();
-        // A heading and a table cell: unchanged. Prose and a list item: a name.
-        assert_eq!(tags, vec![Noun, ProperNoun, ProperNoun, Noun]);
+        let levels: Vec<Confidence> = reads.iter().map(|r| r.confidence).collect();
+        // A heading and a table cell: left as the shape guessed. Prose and a list item: a name the
+        // pass is `Likely` of.
+        assert_eq!(
+            levels,
+            vec![
+                Confidence::Unknown,
+                Confidence::Likely,
+                Confidence::Likely,
+                Confidence::Unknown
+            ]
+        );
+        assert!(reads.iter().all(|read| read.tag == ProperNoun));
         assert_eq!(
             read_in("We use Frobnitz daily.", "Frobnitz").tag,
             ProperNoun

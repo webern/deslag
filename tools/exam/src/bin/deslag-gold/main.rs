@@ -104,6 +104,11 @@ enum Command {
         /// The most tokens in a sentence.
         #[arg(long, default_value_t = 60)]
         max_tokens: usize,
+        /// Also draw from the `llm` files whose label is their publisher's statement of the
+        /// model. They are left out unless asked for: `corpus.md` section 3 keeps them apart
+        /// from the `llm` files a history proves.
+        #[arg(long)]
+        with_declared: bool,
     },
     /// Writes the batches the blind tagger reads to `batches/batch-NN.txt`: only numbered
     /// sentences in the annotation guide's input format, with no tier, split or file.
@@ -212,6 +217,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             per_repo,
             min_words,
             max_tokens,
+            with_declared,
         } => {
             if mix.len() != 4 {
                 return Err(Error::load(
@@ -236,6 +242,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 tree.as_deref(),
                 exclude.as_deref(),
                 &settings,
+                with_declared,
             )
         }
         Command::Batches { size } => batches_stage(&dir, size),
@@ -269,19 +276,30 @@ fn load_sample(dir: &Path) -> Result<Sample, Problems> {
 fn corpus_files(
     corpus: &Path,
     tree: Option<&Path>,
+    with_declared: bool,
 ) -> Result<(Vec<deslag_corpus::load::Fixture>, String), Error> {
     let problem = |path: &Path, error: deslag_corpus::load::Problem| {
         Error::load(&path.display().to_string(), Place::File, error.to_string())
     };
+    // Files whose label is a publisher's statement are drawn from only when asked for.
+    let kept = |fixtures: Vec<deslag_corpus::load::Fixture>| {
+        if with_declared {
+            fixtures
+        } else {
+            deslag_corpus::load::history_proven(fixtures)
+        }
+    };
     match tree {
         Some(tree) => {
             let fixtures = deslag_corpus::load::tree(tree).map_err(|e| problem(tree, e))?;
-            Ok((fixtures, "tests/corpus tree".to_string()))
+            Ok((kept(fixtures), "tests/corpus tree".to_string()))
         }
         None => {
-            let fixtures = deslag_corpus::load::blobs(corpus)
-                .map_err(|e| problem(corpus, e))?
-                .fixtures;
+            let fixtures = kept(
+                deslag_corpus::load::blobs(corpus)
+                    .map_err(|e| problem(corpus, e))?
+                    .fixtures,
+            );
             // `make fetch-blobs` records the image it unpacked beside the tree.
             let stamp = corpus
                 .parent()
@@ -289,10 +307,13 @@ fn corpus_files(
                 .map(|root| root.join("stamp"))
                 .and_then(|stamp| std::fs::read_to_string(stamp).ok())
                 .and_then(|text| text.lines().next().map(str::to_string));
-            let note = match stamp {
+            let mut note = match stamp {
                 Some(image) => format!("big tier, image {image}"),
                 None => "big tier".to_string(),
             };
+            if with_declared {
+                note += ", with publisher-declared files";
+            }
             Ok((fixtures, note))
         }
     }
@@ -304,8 +325,9 @@ fn sample_stage(
     tree: Option<&Path>,
     exclude: Option<&Path>,
     settings: &Settings,
+    with_declared: bool,
 ) -> Result<(), Problems> {
-    let (fixtures, note) = corpus_files(corpus, tree)?;
+    let (fixtures, note) = corpus_files(corpus, tree, with_declared)?;
     let files: Vec<File<'_>> = fixtures
         .iter()
         .filter_map(|fixture| {

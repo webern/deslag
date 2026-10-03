@@ -44,6 +44,9 @@ How a file is classified, from the history of the file up to the commit it is qu
   not moved from an older file, and not cut off by a shallow clone.
 - mixed: at least one commit is a person's from before CUTOFF, and at least one an agent's.
 
+A dataset source (`kind: dataset` in a manifest) has no history to read: its texts are `llm` on the
+"publisher-declared model" basis, which `DatasetSource` explains and sidecar version 4 records.
+
 A commit is an agent's when it carries a mark in MARKS that counts, in the place the tool writes
 it, and is not a squash. A GitHub squash-merge, whose subject ends in "(#N)", is one only when
 every commit of pull request N carries such a mark; `harvest`, `recheck` and `describe` ask
@@ -57,8 +60,10 @@ from __future__ import annotations
 import argparse
 import codecs
 import concurrent.futures
+import csv
 import fcntl
 import hashlib
+import io
 import json
 import os
 import random
@@ -106,6 +111,13 @@ ALLOWED_LICENSES = {
     "CC-BY-4.0",
     "Zlib",
     "BSL-1.0",
+}
+
+# What Hugging Face's `license:` metadata calls each of them.
+HF_LICENSES = {
+    "mit": "MIT", "mit-0": "MIT-0", "apache-2.0": "Apache-2.0", "bsd-2-clause": "BSD-2-Clause",
+    "bsd-3-clause": "BSD-3-Clause", "isc": "ISC", "0bsd": "0BSD", "unlicense": "Unlicense",
+    "cc0-1.0": "CC0-1.0", "cc-by-4.0": "CC-BY-4.0", "zlib": "Zlib", "bsl-1.0": "BSL-1.0",
 }
 
 LICENSE_FILE = re.compile(
@@ -2569,9 +2581,13 @@ def stage(args: argparse.Namespace) -> None:
         record = dict(f, host=result["host"], repo=result["repo"], stars=result.get("stars"),
                       found_by=result["found_by"][0],
                       repo_first_commit=result.get("repo_first_commit"),
-                      facts=dict(content_facts(data), kind=kind_of(f["path"])))
-        sidecar = build_sidecar(record, label, name, f"{label}/{directory}/{f['path']}", captured)
-        sidecar["sidecar_version"] = 3
+                      facts=dict(content_facts(data), kind=f.get("kind") or kind_of(f["path"])))
+        layout_path = f"{label}/{directory}/{f['path']}"
+        if f.get("declared"):
+            sidecar = build_declared_sidecar(record, label, name, layout_path, captured)
+        else:
+            sidecar = build_sidecar(record, label, name, layout_path, captured)
+            sidecar["sidecar_version"] = 3
         if f["before"]:
             sidecar["before"] = f["before"]
         target = out / file
@@ -2650,7 +2666,9 @@ def select(args: argparse.Namespace) -> None:
             kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
             other_language += r["natural_language"] != "en"
 
+        # The tree holds only what a history proves; the publisher-declared basis is provisional.
         pool = sorted((r for r in live.values() if r["label"] == label
+                       and r.get("basis") != DECLARED
                        and r["size_bytes"] <= MAX_BYTES and r["sha256"] not in core
                        and r["file"].lower() not in paths
                        and r["sha256"] not in {h["sha256"] for h in held}),
@@ -2749,6 +2767,39 @@ def build_sidecar(f: dict, label: str, name: str, layout_path: str, captured: st
             {"size_bytes": f["size_bytes"], "sha256": f["sha256"], "kind": kind},
             **facts,
             frontmatter_max_size_bytes=frontmatter_budget,
+        ),
+        "layout_path": layout_path,
+    }
+
+
+def build_declared_sidecar(f: dict, label: str, name: str, layout_path: str, captured: str) -> dict:
+    """The sidecar, version 4, of a text a dataset's publisher says a named model wrote. It has
+    `declared`, the dataset's revision, file, row and model, where a git file has `history`."""
+    facts = dict(f["facts"])
+    kind = facts.pop("kind")
+    return {
+        "sidecar_version": 4,
+        "fixture": name,
+        "captured": captured,
+        "source": {
+            "host": f["host"],
+            "repo": f["repo"],
+            "path": f["path"],
+            "commit": f["commit"],
+            "commit_date": f["commit_date"],
+            "url": permalink(f["host"], f["repo"], f["commit"], f["declared"]["file"]),
+            "license": f["license"],
+            "license_files": f["license_files"],
+            "repo_first_commit_date": None,
+            "stars": None,
+            "found_by": f["found_by"],
+        },
+        "declared": f["declared"],
+        "authorship": {"label": label, "basis": f["basis"]},
+        "content": dict(
+            {"size_bytes": f["size_bytes"], "sha256": f["sha256"], "kind": kind},
+            **facts,
+            frontmatter_max_size_bytes=None,
         ),
         "layout_path": layout_path,
     }
@@ -3017,7 +3068,9 @@ def recheck(args: argparse.Namespace) -> None:
     _, live = live_fixtures(corpus)
     by_repo: dict[tuple[str, str], list[dict]] = {}
     for row in live.values():
-        by_repo.setdefault((row["host"], row["repo"]), []).append(row)
+        # A declared fixture has no history to derive its label from again.
+        if row.get("basis") != DECLARED:
+            by_repo.setdefault((row["host"], row["repo"]), []).append(row)
     repos = sorted(by_repo)
     random.Random(0).shuffle(repos)
     if args.only:
@@ -3203,7 +3256,8 @@ def pack(args: argparse.Namespace) -> None:
                 "sidecar_version": sidecar["sidecar_version"],
                 "natural_language": content["natural_language"],
                 "kind": content["kind"],
-                "ai_tools": sidecar["history"]["ai_tools"],
+                "ai_tools": sidecar["history"]["ai_tools"] if "history" in sidecar else [],
+                **({"basis": DECLARED} if "declared" in sidecar else {}),
             })
     if not entries and not excluded:
         raise SystemExit(f"nothing to pack: the big tier already holds all {held} fixtures")
@@ -3389,7 +3443,268 @@ class GitSource(Source):
                 break
 
 
-SOURCE_KINDS: dict[str, Source] = {s.kind: s for s in (GitSource(),)}
+DECLARED = "publisher-declared"
+HF_DATASETS = "datasets/"
+
+
+class Hub:
+    """What a dataset source asks of Hugging Face: the tip of a dataset repository, the date of a
+    revision, one file at a revision, and a model's metadata. The tests put a fake in `HUB`."""
+
+    base = "https://huggingface.co"
+
+    def tip(self, name: str) -> str:
+        return GitSource.tip(f"{self.base}/datasets/{name}")
+
+    def commit_date(self, name: str, revision: str) -> str:
+        url = f"{self.base}/api/datasets/{name}/commits/{revision}"
+        for commit in json.loads(http_get(url)):
+            if commit["id"] == revision:
+                return commit["date"]
+        raise SystemExit(f"{name}: Hugging Face lists no commit {revision}")
+
+    def read(self, name: str, revision: str, path: str) -> bytes:
+        quoted = urllib.parse.quote(path)
+        return http_get(f"{self.base}/datasets/{name}/resolve/{revision}/{quoted}",
+                        accept="*/*", timeout=900)
+
+    def model(self, name: str) -> dict:
+        return json.loads(http_get(f"{self.base}/api/models/{name}"))
+
+
+HUB = Hub()
+
+
+def card_license(card: str) -> str | None:
+    """The `license:` of a dataset card's frontmatter, as Hugging Face writes it."""
+    head = card.lstrip("\ufeff")
+    if not head.startswith("---"):
+        return None
+    end = head.find("\n---", 3)
+    match = re.search(r"^license:\s*['\"]?([A-Za-z0-9._-]+)['\"]?\s*$",
+                      head[3: end if end >= 0 else 0], re.M)
+    return match[1].lower() if match else None
+
+
+def model_license(name: str, hops: int = 3) -> tuple[str, str]:
+    """The SPDX licence of a model, and the model whose card says it: its own, or the one it is
+    `base_model` of. A model with no licence the corpus accepts, or none on the way up, is
+    refused. Only a card's `license:` is read, not a model's lineage."""
+    seen = []
+    while name not in seen and len(seen) <= hops:
+        seen.append(name)
+        card = HUB.model(name).get("cardData") or {}
+        licence = card.get("license")
+        if licence is not None:
+            if HF_LICENSES.get(str(licence).lower()) is None:
+                raise SystemExit(f"model {name}: licence {licence} is not one the corpus accepts")
+            return HF_LICENSES[str(licence).lower()], name
+        base = card.get("base_model")
+        base = base[0] if isinstance(base, list) and base else base
+        if not isinstance(base, str):
+            break
+        name = base
+    raise SystemExit(f"model {seen[0]}: no licence on its card or on its base models'")
+
+
+class DatasetSource(Source):
+    """The rows of a dataset that names the model which wrote each text, at a pinned revision.
+
+    The label basis is "publisher-declared model" (docs/design/corpus.md section 3): the label is
+    `llm` because the dataset's publisher says a model wrote the text, not because a history
+    proves it, and each fixture's version 4 sidecar says so, in `declared`. Only a dataset on
+    Hugging Face, whose repository is `datasets/OWNER/NAME`, is read.
+
+    A seed names `repo`, `file`, its `format` (`csv` or `jsonl`), the column of each of `fields`
+    (`text`, `model`, `id`), `where`, the columns a row must hold a value of, `models`, the models
+    to take texts of, `record`, columns to copy into the sidecar, `document`, the sidecar's
+    kind of file, and `license`, the dataset's licence, which must be what its card says. A model
+    is taken only when its own licence, or its base model's, is one the corpus accepts; the check
+    reads one `license:` on a card, not the lineage of a model. The manifest's `per_repo` is the number of texts, shared
+    out evenly among `models`, and each model's texts are the first of its rows in the order
+    the hash of the row number gives.
+
+    `resolve` pins the rest: the `revision` (the tip, unless the seed names one), its date, the
+    `sha256` of the file, and `model_licenses`. `harvest` reads the file again and fails unless
+    it has that sha256; a text is a file named for its row, `FILE/row-N.md`, quoted as it is
+    in the cell."""
+
+    kind = "dataset"
+    KEYS = ("kind", "host", "repo", "revision", "revision_date", "file", "sha256", "format", "fields",
+            "where", "models", "record", "document", "license", "found_by", "model_licenses", "kept")
+    FIELDS = ("text", "model", "id")
+    FORMATS = ("csv", "jsonl")
+
+    @staticmethod
+    def name(entry: dict) -> str:
+        return entry["repo"].removeprefix(HF_DATASETS)
+
+    def key(self, entry: dict) -> str:
+        return f"{entry['host']}/{entry['repo']}".lower()
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        if set(entry) - set(self.KEYS):
+            bad(f"a dataset source has keys among {', '.join(self.KEYS)}: {entry}")
+        repo = entry.get("repo")
+        if entry.get("host") != "huggingface.co":
+            bad(f"a dataset's `host` is huggingface.co: {entry}")
+        if not (isinstance(repo, str) and repo.startswith(HF_DATASETS)
+                and re.match(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$", repo[len(HF_DATASETS):])):
+            bad(f"`repo` must be datasets/owner/name: {entry}")
+        if "revision" in entry and not (isinstance(entry["revision"], str)
+                                        and HEAD.match(entry["revision"])):
+            bad(f"{repo}: `revision` must be a full commit hash")
+        if "sha256" in entry and not (isinstance(entry["sha256"], str)
+                                      and re.match(r"^[0-9a-f]{64}$", entry["sha256"])):
+            bad(f"{repo}: `sha256` must be 64 lowercase hex digits")
+        path = entry.get("file")
+        if not (isinstance(path, str) and SAFE_PATH.match(path) and ".." not in path.split("/")
+                and not path.startswith("/")):
+            bad(f"{repo}: `file` must be a path in the dataset")
+        if entry.get("format") not in self.FORMATS:
+            bad(f"{repo}: `format` must be one of {', '.join(self.FORMATS)}")
+        fields = entry.get("fields")
+        if not (isinstance(fields, dict) and set(fields) == set(self.FIELDS)
+                and all(isinstance(v, str) and v for v in fields.values())):
+            bad(f"{repo}: `fields` names a column for each of {', '.join(self.FIELDS)}")
+        where = entry.get("where", {})
+        if not (isinstance(where, dict) and all(isinstance(k, str) and isinstance(v, str)
+                                                for k, v in where.items())):
+            bad(f"{repo}: `where` maps columns to the values a row must have")
+        record = entry.get("record", [])
+        if not (isinstance(record, list) and all(isinstance(c, str) and c for c in record)):
+            bad(f"{repo}: `record` lists columns")
+        models = entry.get("models")
+        if not (isinstance(models, list) and models and len(set(models)) == len(models)
+                and all(isinstance(m, str) and m for m in models)):
+            bad(f"{repo}: `models` lists each model to take texts of, once")
+        if not (isinstance(entry.get("document"), str) and re.match(r"^[a-z][a-z-]*$", entry["document"])):
+            bad(f"{repo}: `document` is the kind of file, such as story")
+        if not (isinstance(entry.get("license"), str) and entry["license"] in ALLOWED_LICENSES):
+            bad(f"{repo}: `license` must be one the corpus accepts, as the dataset's card says it")
+        found_by = entry.get("found_by", ["seed"])
+        if not (isinstance(found_by, list) and found_by and all(isinstance(x, str) for x in found_by)):
+            bad(f"{repo}: `found_by` must list what found it")
+        return self.key(entry)
+
+    def resolved(self, entry: dict) -> bool:
+        return all(entry.get(k) for k in ("revision", "revision_date", "sha256", "found_by",
+                                          "model_licenses"))
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        for entry in entries:
+            if self.resolved(entry):
+                continue
+            name = self.name(entry)
+            entry.setdefault("found_by", ["seed"])
+            if not entry.get("revision"):
+                entry["revision"] = HUB.tip(name)
+            entry["revision_date"] = HUB.commit_date(name, entry["revision"])
+            card = HUB.read(name, entry["revision"], "README.md").decode("utf-8", "replace")
+            says = HF_LICENSES.get(card_license(card) or "")
+            if says != entry["license"]:
+                raise SystemExit(f"{entry['repo']}: the card at {entry['revision']} says the licence is "
+                                 f"{card_license(card)}, and the seed says {entry['license']}")
+            entry["model_licenses"] = {}
+            for model in entry["models"]:
+                licence, source = model_license(model)
+                entry["model_licenses"][model] = {"license": licence, "card": source}
+            entry["sha256"] = hashlib.sha256(
+                HUB.read(name, entry["revision"], entry["file"])).hexdigest()
+
+    @staticmethod
+    def rows(entry: dict, data: bytes) -> tuple[list[str], list[dict]]:
+        text = data.decode("utf-8")
+        if entry["format"] == "csv":
+            csv.field_size_limit(2 ** 31 - 1)
+            reader = csv.DictReader(io.StringIO(text, newline=""))
+            return list(reader.fieldnames or []), list(reader)
+        rows = [json.loads(line) for line in text.splitlines() if line.strip()]
+        return sorted({k for r in rows for k in r}), rows
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        for entry in entries:
+            result = self.harvest_one(entry, work, per_repo, max_bytes)
+            (work / "results").mkdir(parents=True, exist_ok=True)
+            (work / "results" / f"{digest(self.key(entry))}.json").write_text(json.dumps(result))
+
+    def harvest_one(self, entry: dict, work: Path, per_repo: int, max_bytes: int) -> dict:
+        name, revision, key = self.name(entry), entry["revision"], self.key(entry)
+        data = HUB.read(name, revision, entry["file"])
+        if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+            raise SystemExit(f"{entry['repo']}: {entry['file']} at {revision} is not the file "
+                             f"the manifest pins, sha256 {entry['sha256']}")
+        header, rows = self.rows(entry, data)
+        fields = entry["fields"]
+        wanted = [*fields.values(), *entry.get("where", {}), *entry.get("record", [])]
+        if missing := [c for c in wanted if c not in header]:
+            raise SystemExit(f"{entry['repo']}: {entry['file']} has no column {', '.join(missing)}")
+        result = {
+            "key": key, "host": entry["host"], "repo": entry["repo"], "found_by": entry["found_by"],
+            "meta": None, "stars": None, "outcome": "harvested", "depth": None, "head": revision,
+            "cutoff_rev": None, "commits": None, "license": entry["license"],
+            "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
+            "qualified": {}, "unasked": {}, "kept": {"human": 0, "llm": 0, "mixed": 0},
+            "dropped": {}, "sizes": [], "files": [], "pull_failures": 0,
+        }
+        models = entry["models"]
+        share = [per_repo // len(models) + (i < per_repo % len(models)) for i in range(len(models))]
+        taken: set[str] = set()
+        qualified = 0
+        for model, want in zip(models, share):
+            mine = [i for i, row in enumerate(rows)
+                    if row.get(fields["model"]) == model and row.get(fields["text"])
+                    and all(row.get(c) == v for c, v in entry.get("where", {}).items())]
+            qualified += len(mine)
+            mine.sort(key=lambda i: hashlib.sha256(f"{key}\0{i}".encode()).hexdigest())
+            kept = 0
+            for i in mine:
+                if kept >= want:
+                    break
+                text = rows[i][fields["text"]].encode("utf-8")
+                refused = refusal(text, max_bytes)
+                digest_ = hashlib.sha256(text).hexdigest()
+                if refused is None and digest_ in taken:
+                    refused = "duplicate"
+                result["sizes"].append(["llm", len(text), refused or "kept"])
+                if refused:
+                    result["dropped"][refused] = result["dropped"].get(refused, 0) + 1
+                    continue
+                taken.add(digest_)
+                kept += 1
+                target = work / "blobs" / digest_[:2] / digest_
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(text)
+                result["files"].append(self.pick(entry, rows[i], i, model, digest_, len(text)))
+            if kept < want:
+                raise SystemExit(f"{entry['repo']}: {model} has {kept} usable texts, and the "
+                                 f"manifest asks for {want}")
+        result["qualified"] = {"llm": qualified}
+        result["kept"] = {"human": 0, "llm": len(result["files"]), "mixed": 0}
+        return result
+
+    def pick(self, entry: dict, row: dict, index: int, model: str, sha256: str, size: int) -> dict:
+        name, fields = self.name(entry), entry["fields"]
+        info = entry["model_licenses"][model]
+        declared = {
+            "dataset": name, "revision": entry["revision"], "file": entry["file"],
+            "file_sha256": entry["sha256"], "row": index, "row_id": row.get(fields["id"]) or "",
+            "model": model, "model_license": info["license"], "model_license_card": info["card"],
+            "statement": f"the `{fields['model']}` column of every row of {entry['file']}",
+            "columns": {c: row.get(c, "") for c in sorted(entry.get("record", []))},
+        }
+        return {
+            "label": "llm", "path": f"{entry['file']}/row-{index}.md", "commit": entry["revision"],
+            "commit_date": entry["revision_date"], "sha256": sha256, "size_bytes": size,
+            "license": entry["license"], "license_files": ["README.md"], "kind": entry["document"],
+            "basis": (f"the publisher of {name} names the model that wrote it, {model} "
+                      f"({info['license']}), in the {fields['model']} column of row {index} of "
+                      f"{entry['file']} at revision {entry['revision'][:12]}"),
+            "history": None, "before": None, "declared": declared,
+        }
+
+
+SOURCE_KINDS: dict[str, Source] = {s.kind: s for s in (GitSource(), DatasetSource())}
 
 MANIFEST_KEYS = ("batch", "captured", "per_repo", "max_bytes", "sources", "exclude", "relicense",
                  "expect")

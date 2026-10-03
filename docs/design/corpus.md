@@ -36,7 +36,8 @@ labelled `unknown`, and no fixture in the big tier may be one of `core/`'s.
 
 ## 3. Labels are proven
 
-A fixture's label comes from the git history of its file, up to the commit it is quoted at:
+A fixture's label comes from the git history of its file, up to the commit it is quoted at, or,
+for `llm` alone, from its publisher's word (below):
 
 - `human`: every commit that touched it is a person's from before 2022-01-01, by its author date
   and its committer date both, and none carries a mark.
@@ -46,10 +47,28 @@ A fixture's label comes from the git history of its file, up to the commit it is
 
 A commit by a bot rules out every label. The sidecar's `authorship.basis` says why a fixture has
 its label, and `history` holds the counts behind it. A file whose history proves no label stays
-out of the big tier. No classifier or detector model assigns a label.
+out of the big tier, unless a publisher's word labels it `llm`. No classifier or detector model
+assigns a label.
 
 The provable three-way split is what makes the corpus worth measuring, so every analysis of it
-keeps the split: it reports each label on its own and never pools `mixed` with `llm`.
+keeps the split: it reports each label on its own and never pools `mixed` with `llm`, nor
+publisher-declared `llm` with `llm` a history proves.
+
+### Publisher-declared model
+
+A second basis for `llm`: a dataset whose publisher generated its texts with a named model, and
+says which for each text. A text is quoted unedited, at a pinned revision, under a licence of
+section 7, and only when the model's (or its base model's) licence is one too. The version 4
+sidecar holds `declared` in place of `history`, and its manifest line says
+`basis: publisher-declared`.
+
+It is the publisher's word and nobody has checked it, so it never proves `human` or `mixed`. An
+analysis or a sample leaves these files out unless it is asked to take them in; `recheck` and
+`select` skip them; and a batch may set `per_repo` above 50 for such a source, since its texts
+are one source's.
+
+The basis is provisional: it stands until the owner accepts it or drops it, and dropping it
+excludes its batches.
 
 ### Marks
 

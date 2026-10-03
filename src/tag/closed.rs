@@ -506,8 +506,10 @@ pub fn lookup(word: &str) -> Option<Reading> {
     })
 }
 
-/// A word no table has: a noun at `Unknown`. A word of more than a letter that ends in `'s` is a
-/// singular noun with a second word fused on, whatever its stem.
+/// A word no table has: a noun at `Unknown`. One that starts with a capital may also be a name, a
+/// shape the tables cannot see, so a proper noun is kept beside the noun and the best guess stays a
+/// noun until a pass has a reason. A word of more than a letter that ends in `'s` is a singular noun
+/// with a second word fused on, whatever its stem.
 pub fn unknown(text: &str) -> Reading {
     let mut features = Features::NONE;
     let mut rest = text.chars().rev();
@@ -520,7 +522,11 @@ pub fn unknown(text: &str) -> Reading {
         tag: Tag::Noun,
         features,
         confidence: Confidence::Unknown,
-        kept: TagSet::of(Tag::Noun),
+        kept: if text.chars().next().is_some_and(char::is_uppercase) {
+            TagSet::of(Tag::Noun).with(Tag::ProperNoun)
+        } else {
+            TagSet::of(Tag::Noun)
+        },
     }
 }
 
@@ -690,7 +696,6 @@ mod tests {
     fn a_word_outside_the_table_is_an_unknown_noun() {
         for text in [
             "frobnicate",
-            "Kubernetes",
             "foo_bar",
             "x86_64",
             "über",
@@ -700,6 +705,21 @@ mod tests {
             assert_eq!(reading.tag, Tag::Noun, "{text}");
             assert_eq!(reading.confidence, Confidence::Unknown, "{text}");
             assert_eq!(reading.kept, TagSet::of(Tag::Noun), "{text}");
+            assert_eq!(reading.features, Features::NONE, "{text}");
+        }
+    }
+
+    #[test]
+    fn a_capitalised_word_outside_the_table_may_also_be_a_name() {
+        for text in ["Kubernetes", "KUBERNETES", "Über", "A-very-long-Identifier"] {
+            let reading = word(text);
+            assert_eq!(reading.tag, Tag::Noun, "{text}");
+            assert_eq!(reading.confidence, Confidence::Unknown, "{text}");
+            assert_eq!(
+                reading.kept,
+                TagSet::of(Tag::Noun).with(Tag::ProperNoun),
+                "{text}"
+            );
             assert_eq!(reading.features, Features::NONE, "{text}");
         }
     }

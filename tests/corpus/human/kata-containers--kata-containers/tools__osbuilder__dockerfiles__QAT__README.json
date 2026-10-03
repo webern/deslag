@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "tools__osbuilder__dockerfiles__QAT__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kata-containers/kata-containers",
+    "path": "tools/osbuilder/dockerfiles/QAT/README.md",
+    "commit": "073a345908db970add3e1087a37d51318363bd78",
+    "commit_date": "2021-10-14T14:55:41Z",
+    "url": "https://github.com/kata-containers/kata-containers/blob/073a345908db970add3e1087a37d51318363bd78/tools/osbuilder/dockerfiles/QAT/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 8801,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2021-02-17T14:38:31-08:00",
+    "last_commit_date": "2021-06-14T09:39:10+01:00",
+    "last_commit_author": "James O. D. Hunt",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-02-18T12:46:49-08:00",
+    "last_committer_date": "2021-07-30T10:58:22+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 3 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 3320,
+    "sha256": "79bd3c4d7ff215372a892b7a77427d6f0dce24ed83f214062afcad22d248a53f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 84,
+    "words": 516,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kata-containers--kata-containers/tools/osbuilder/dockerfiles/QAT/README.md"
+}

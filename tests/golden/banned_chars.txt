@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 494 of 1230: core 6, human 57, llm 248, mixed 183
+# fails 495 of 1230: core 6, human 57, llm 248, mixed 184
 
 [md.lints.banned_chars.groups]
 arrows = true
@@ -371,6 +371,7 @@ mixed/PrivateBin--PrivateBin/CHANGELOG.md count:3
 mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md count:5
 mixed/SchemaStore--schemastore/CONTRIBUTING.md count:10
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md count:27
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md count:2
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md count:35
 mixed/ShieldBattery--ShieldBattery/docs__USEFUL_QUERIES.md count:1
 mixed/Umplify--xunit-dependency-injection/README.md count:12

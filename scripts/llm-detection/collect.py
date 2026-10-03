@@ -130,6 +130,7 @@ MIT0_GRANT = (
 # sentence of the text, lower-cased, with white space collapsed and its harmless wording removed.
 # `license_terms` says which part of the tree each is for, when the text says; if it does not, the
 # term is for the whole tree and nothing under it is quoted (docs/design/corpus.md section 7).
+CARVE_OUT = "a part of the tree the licence does not cover"
 OUTSIDE_TERMS = {
     # Copyleft, share-alike and weak copyleft.
     "GNU GPL, LGPL or AGPL": (
@@ -153,6 +154,9 @@ OUTSIDE_TERMS = {
         r"university of illinois|illinois open source licen[sc]e|\bncsa open source"
         r"|legacy llvm licen[sc]e"),
     "BSD 4-Clause": r"all advertising materials mentioning features",
+    "Apache 1.1 or a BSD with an acknowledgement clause": (
+        r"end-user documentation included with the redistribution"),
+    "GNU Free Documentation License": r"gnu free documentation licen[sc]e|\bgfdl\b",
     "Clear BSD License": r"clear bsd licen[sc]e|bsd 3-clause clear",
     "WTFPL or Beerware": r"\bwtfpl\b|beer-?ware",
     "Microsoft Software License": r"microsoft software licen[sc]e",
@@ -181,7 +185,7 @@ OUTSIDE_TERMS = {
     "a rider on the MIT licence": r"additional rider|\brider controls\b",
     "a request not to copy": r"please do not (?:duplicate|copy)",
     # A text that says part of the tree is not under it, or is not a licence at all.
-    "a part of the tree the licence does not cover": (
+    CARVE_OUT: (
         r"\b(?:does|do) not (?:cover|extend to)\b|\bnot covered by (?:this|the)\b"
         r"|\bcarve-?out\b|\b(?:mit|bsd|isc|apache|this) licen[sc]e (?:below |above )?applies only to\b"
         r"|\bnot relicensed\b"),
@@ -245,7 +249,7 @@ def accepted_licenses(text: str) -> list[str] | None:
     if "redistribution and use in source and binary forms" in t:
         if "neither the name" in t or "names of its contributors" in t:
             found.add("BSD-3-Clause")
-        else:
+        elif "redistributions in binary form must reproduce" in t:
             found.add("BSD-2-Clause")
     if "this software is provided 'as-is', without any express or implied" in t and (
         "altered source versions must be plainly marked" in t
@@ -275,7 +279,8 @@ NOTICES_FILE = re.compile(
 # A term that is for everything the text does not name, or for prose, or that says what the
 # licence covers is only what it names: not for part of the tree, whatever paths are near.
 WHOLE_TREE = re.compile(
-    r"everything else|all other|the rest of|applies only to|only applies to|not relicensed"
+    r"everything else|all other|the rest (?:of|is|are)|all remaining|other than"
+    r"|^\s*(?:except|outside|everything outside)\b|applies only to|only applies to|not relicensed"
     r"|\b(?:documentation|docs?|readme|prose|papers?|books?|essays?|non-software)\b"
 )
 # Directories of vendored code, which a term for third-party material is for.
@@ -284,30 +289,52 @@ VENDORED_DIRS = {
     "deps", "dependencies", "external", "externals", "extern", "node_modules", "bundled",
     "contrib", "fonts", "font",
 }
+# A carve-out for a kind of content that is not prose, such as data from providers.
+DATA_KINDS = re.compile(
+    r"\b(?:data|datasets?|images?|logos?|icons?|artwork|trademarks?|binaries|audio|video)\b"
+)
+PROSE_KINDS = re.compile(
+    r"\b(?:documentation|docs?|readme|prose|papers?|books?|essays?|texts?|writings?|articles?"
+    r"|content)\b"
+)
+# What a project says of itself, which is not a third party's.
+OWN_LIBRARY = re.compile(r"\b(?:this|our)\s+(?:\w+\s+)?library\b")
+# The first line of a block that is for everything but named paths: "For all content except the
+# /contents/ folder".
+EXCEPT_HEADING = re.compile(r"\s*#*\s*for (?:all|any)\b[^\n]*?\bexcept(?: for)?(?: the)?\s+(.*)", re.I)
+REST_HEADING = re.compile(r"\s*#*\s*for (?:the rest|everything else|all other)\b", re.I)
 PATH_TOKENS = (
     # A quoted or backticked path, or a quoted name that the text calls a folder or directory.
     re.compile(r"[`\"“'‘]([^\s`\"”'’]*/[^\s`\"”'’]*)[`\"”'’]"),
     re.compile(r"[`\"“]([\w.\-]+)[`\"”]\s+(?:folder|directory|directories|dir)\b"),
     # A directory written with its slash, as `ext/mbedtls/` is, and not part of a URL.
     re.compile(r"(?<![\w/:.\-])((?:[\w.\-]+/)+)(?![\w])"),
+    # The same with a leading slash, as `/contents/` is.
+    re.compile(r"(?<![\w:.\-/])/((?:[\w.\-]+/)+)(?![\w])"),
 )
+# The first part of a URL written without its scheme, which is not a directory.
+DOMAIN = re.compile(r"^[\w\-]+(?:\.[\w\-]+)*\.(?:com|org|net|io|dev|edu|gov|info|co|me|app)$")
 
 
 @dataclass(frozen=True)
 class Scope:
     """Outside terms a licence text puts on part of the tree: a fixture whose path is in one of
-    `paths`, or in a vendored directory when `vendored`, is under them."""
+    `paths`, or in a vendored directory when `vendored`, is under them; or, when `inverse`, one
+    whose path is in none of `paths`."""
 
     names: tuple[str, ...]
     paths: tuple[str, ...]
     vendored: bool
+    # The terms are for every path but `paths`.
+    inverse: bool = False
 
     def holds(self, path: str) -> bool:
         path = path.lower()
         parents = path.split("/")[:-1]
         if self.vendored and any(part in VENDORED_DIRS for part in parents):
             return True
-        return any(path.startswith(t + "/") if "/" in t else t in parents for t in self.paths)
+        named = any(path.startswith(t + "/") if "/" in t else t in parents for t in self.paths)
+        return not named if self.inverse else named
 
 
 @dataclass(frozen=True)
@@ -330,7 +357,9 @@ def named_paths(text: str) -> tuple[str, ...]:
     for pattern in PATH_TOKENS:
         for token in pattern.findall(text):
             token = token.lower().removeprefix("./").strip("/")
-            if token and "://" not in token and "www." not in token and token not in found:
+            domain = DOMAIN.match(token.split("/")[0].lower())
+            if token and "://" not in token and "www." not in token and not domain \
+                    and token not in found:
                 found.append(token)
     return tuple(found)
 
@@ -346,6 +375,8 @@ def license_terms(text: str, source: str = "") -> LicenseTerms:
     own_until = 0 if notices else len(blocks)
     whole: list[str] = []
     scoped: list[Scope] = []
+    left_out: tuple[str, ...] = ()
+    headed: tuple[str, ...] = ()
     for i, (raw, block) in enumerate(zip(blocks, normal)):
         heading = len(block) <= 160 and raw.strip().count("\n") <= 3 and (
             raw.lstrip().startswith("#") or not re.search(r"[.!?]\s*$", block)
@@ -355,18 +386,38 @@ def license_terms(text: str, source: str = "") -> LicenseTerms:
                 and accepted_licenses("\n\n".join(blocks[:i]))):
             own_until = i
         sentences = re.split(r"(?<=[.;!?])\s+|\s[*\u2022]\s", block)
+        # A heading "For all content except the /contents/ folder" makes the blocks under it, up
+        # to the next heading, for the rest.
+        first_line = raw.strip().split("\n", 1)[0]
+        opening = EXCEPT_HEADING.match(first_line)
+        if opening:
+            left_out = named_paths(opening.group(1))
+        elif REST_HEADING.match(first_line):
+            # "For the rest of this repository", after a heading that named paths: the rest.
+            left_out = headed
+        elif raw.lstrip().startswith("#"):
+            left_out, headed = (), named_paths(first_line)
         for j, sentence in enumerate(sentences):
             names = [n for n, pattern in OUTSIDE_PATTERNS.items() if pattern.search(sentence)]
             if not names:
                 continue
+            if left_out:
+                scoped.append(Scope(tuple(names), left_out, False, inverse=True))
+                continue
             before = sentences[j - 1] if j else (
                 normal[i - 1] if i and len(normal[i - 1]) <= 300 else "")
-            third = notices or i >= own_until or THIRD_PARTY.search(sentence + " " + before)
+            third = notices or i >= own_until or THIRD_PARTY.search(
+                OWN_LIBRARY.sub(" ", sentence + " " + before))
             # The directories the sentence names, or else those the sentence before it does; when
             # that one says what the licence covers, they are what it covers, not what it leaves.
             paths = named_paths(sentence) or named_paths(before)
-            if (WHOLE_TREE.search(sentence + " " + before)
-                    or (named_paths(before) and re.search(r"\bcovers\b", before))):
+            if named_paths(before) and re.search(r"\bcovers\b", before):
+                whole += names
+            elif (names == [CARVE_OUT] and DATA_KINDS.search(sentence)
+                  and not PROSE_KINDS.search(sentence)):
+                # Data is not prose, so a fixture is not under a term for data: it names no path.
+                scoped.append(Scope(tuple(names), (), False))
+            elif WHOLE_TREE.search(sentence + " " + before):
                 whole += names
             elif third:
                 scoped.append(Scope(tuple(names), paths, True))
@@ -1903,7 +1954,8 @@ class Licences:
         for d in nearer:
             if d not in self.known:
                 self.known[d] = license_files_terms(self.repo, self.files, self.by_dir[d])
-        found = [license_at(self.known[d], path) for d in nearer]
+        # A path a nested licence file names is from the file's own directory.
+        found = [license_at(self.known[d], path[len(d) + 1:]) for d in nearer]
         if not all(accepted_license(license_id) for license_id in found):
             return None
         return found[-1], self.root_files + [f for d in nearer for f in self.by_dir[d]]

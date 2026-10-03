@@ -594,6 +594,92 @@ class ScopeTests(unittest.TestCase):
         self.assertIsNone(self.at(text, "docs/a.md"))
 
 
+class ScopeEdgeTests(unittest.TestCase):
+    """The edges of `ScopeTests`: terms for everything but a path, for data, and the wording that
+    must not be read as a path or as a third party."""
+
+    def at(self, text, path, source="LICENSE"):
+        return collect.license_for_path(collect.license_terms(text, source), path)
+
+    def test_a_heading_for_everything_but_a_folder_puts_the_terms_under_it_on_the_rest(self):
+        text = ("# For all content except the /contents/ folder\n\nCopyright (c) 2020 Person\n\n"
+                "Please do not duplicate, copy, or use our website for commercial use.\n\n"
+                "# For content in the /contents/ folder\n\n" + MIT)
+        self.assertEqual(self.at(text, "contents/handbook/a.md"), "MIT")
+        self.assertIsNone(self.at(text, ".github/a.md"))
+        self.assertIsNone(self.at(text, "README.md"))
+
+    def test_a_heading_for_the_rest_after_one_that_names_a_folder_is_for_all_but_that_folder(self):
+        text = ("# For content in the /contents/ folder\n\n" + MIT + "\n\n"
+                "# For the rest of this repository\n\n"
+                "Please do not duplicate, copy or use our website for commercial use.\n")
+        self.assertEqual(self.at(text, "contents/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "src/a.md"))
+
+    def test_a_carve_out_for_data_leaves_documentation_under_the_grant(self):
+        text = (MIT + "\n-----\n\nThe MIT grant above applies to the source code of this repository "
+                "(the program files and documentation authored in this repository).\n\n"
+                "DATA CARVE-OUT: data obtained from external providers, including flight and "
+                "news data, is NOT covered by the MIT license above.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+
+    def test_a_carve_out_that_names_texts_or_what_the_licence_covers_is_for_the_whole_tree(self):
+        for why, text in {
+            "texts": "This MIT license covers the software only. It does not cover bible texts "
+                "or lexicon data, which are not ours.\n\n" + MIT,
+            "paths it covers": "This license covers the port in `src/pc/`. It does not cover "
+                "the game or its data.\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "docs/a.md"))
+
+    def test_a_term_for_the_rest_is_for_the_whole_tree_whatever_path_is_near(self):
+        for why, text in {
+            "the rest": MIT + "\nFiles in `lib/` are covered by the license above. The rest is "
+                "licensed under the GNU GPL v3.\n",
+            "except": MIT + "\nExcept for the files in tools/, this project is under the GNU "
+                "General Public License.\n",
+            "outside": MIT + "\nEverything outside of plugins/ is under the GNU Affero General "
+                "Public License.\n",
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "docs/a.md"))
+                self.assertIsNone(self.at(text, "lib/a.md"))
+
+    def test_a_url_without_its_scheme_is_not_a_directory(self):
+        text = (MIT + "\nDocumentation is under CC BY-SA 4.0 "
+                "(creativecommons.org/licenses/by-sa/4.0/).\n")
+        self.assertIsNone(self.at(text, "docs/a.md"))
+        self.assertEqual(collect.named_paths("see creativecommons.org/licenses/by-sa/4.0/ and "
+                                              "`vendor/lib/`"), ("vendor/lib",))
+
+    def test_this_library_is_the_project_and_not_a_third_party(self):
+        text = MIT + "\nThis library is licensed under the GNU General Public License v3.\n"
+        self.assertIsNone(self.at(text, "docs/a.md"))
+        theirs = MIT + "\nThe bundled library zlib-ng is licensed under the GNU General Public License.\n"
+        self.assertEqual(self.at(theirs, "docs/a.md"), "MIT")
+
+    def test_bsd_needs_its_binary_clause_and_the_acknowledgement_clause_is_outside(self):
+        bsd_like = ("Redistribution and use in source and binary forms, with or without "
+                    "modification, are permitted provided that the following conditions are met:\n"
+                    "1. Redistributions of source code must retain the above copyright notice.\n"
+                    "2. The origin of this software must not be misrepresented.\n")
+        self.assertIsNone(collect.classify_license_text(bsd_like))
+        self.assertEqual(collect.classify_license_text(
+            bsd_like.replace("2. The origin of this software must not be misrepresented.",
+                             "2. Redistributions in binary form must reproduce the above "
+                             "copyright notice.")), "BSD-2-Clause")
+        acknowledgement = (BSD_3.replace("3. Neither the name of the copyright holder nor the "
+                                         "names of its contributors", "3. The name may not")
+                           + "4. The end-user documentation included with the redistribution, "
+                           "if any, must include the following acknowledgment.\n")
+        self.assertIsNone(collect.classify_license_text(acknowledgement))
+
+    def test_the_gnu_free_documentation_license_is_outside(self):
+        self.assertIsNone(collect.classify_license_text(
+            MIT + "\nThe manual is under the GNU Free Documentation License.\n"))
+
+
 class LicencesTests(Scratch):
     """`Licences` reads a repository's licence files with `classify_license_text`: the root's
     applies to every file, a nearer one to the files below it, and every one on the way must be
@@ -643,6 +729,14 @@ class LicencesTests(Scratch):
         licences = self.licences({"LICENSE": APACHE, "LICENSE-binary": notices, "docs/a.md": "x"})
         self.assertEqual(licences.of("docs/a.md"),
                          ("Apache-2.0", ["LICENSE", "LICENSE-binary"]))
+
+    def test_a_path_a_nested_licence_names_is_from_its_own_directory(self):
+        nested = "The directory `src/pro/` is under the Commons Clause.\n\n" + MIT
+        licences = self.licences({"LICENSE": MIT, "packages/foo/LICENSE": nested,
+                                  "packages/foo/src/pro/x.md": "x", "packages/foo/docs/a.md": "x"})
+        self.assertIsNone(licences.of("packages/foo/src/pro/x.md"))
+        self.assertEqual(licences.of("packages/foo/docs/a.md"),
+                         ("MIT", ["LICENSE", "packages/foo/LICENSE"]))
 
     def test_a_nearer_licence_is_the_files_own_when_every_one_on_the_way_is_accepted(self):
         licences = self.licences({"LICENSE": MIT, "pkg/LICENSE": APACHE, "pkg/a.md": "x",

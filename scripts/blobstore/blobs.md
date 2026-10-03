@@ -39,8 +39,7 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   `source.license`. It drops those and 16 more whose licence the corpus does not accept or
   `collect.py` cannot name.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, 50 each from `18F/18f.gsa.gov`,
-  `GSA/digitalgov.gov`, `18F/handbook` and `GSA/plainlanguage.gov`, all CC0-1.0. A manifest
-  pins each source's `head`, and `publish-blobs` built the batch. Each source is tagged
+  `GSA/digitalgov.gov`, `18F/handbook` and `GSA/plainlanguage.gov`, all CC0-1.0, tagged
   `sg-register:government-writing`.
 
 The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer

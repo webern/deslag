@@ -4,12 +4,13 @@
 # for the exam to read: `deslag-exam words --gold .ewt/r2.18/en_ewt-ud-dev.conllu`. Nothing in the
 # build, the tests or CI reads it.
 #
-#   fetch.sh   download and verify every file the lock names, unless .ewt is already that
+#   fetch.sh fetch   download and verify every file the lock names, unless .ewt is already that
 #
 # .ewt/stamp is a copy of the lock .ewt was fetched from. A stamp equal to the lock is the whole
 # check, so a repeat fetch is free. A stamp that differs, or none, clears .ewt and fetches again.
-# Files are verified in a scratch directory and moved into place together, and the stamp is
-# written last, so a failure leaves nothing partial behind.
+# Files are downloaded and verified in a scratch directory outside .ewt, and only then is .ewt
+# cleared and the files moved into place together, with the stamp written last. A failed download
+# leaves a good .ewt as it was, and nothing partial behind.
 
 set -euo pipefail
 
@@ -68,11 +69,9 @@ fetch() {
     commit="$(lock_value commit)"
     base="$(lock_value base)"
 
-    rm -rf "$EWT"
-    mkdir -p "$EWT"
     # Not local: the trap runs when the script exits, after this function has returned. The scratch
     # directory goes whether this ends well or not.
-    scratch="$(mktemp -d "$EWT/fetching.XXXXXX")"
+    scratch="$(mktemp -d "${TMPDIR:-/tmp}/ewt-fetch.XXXXXX")"
     trap 'rm -rf "$scratch"' EXIT
 
     local sum name
@@ -88,10 +87,14 @@ fetch() {
         fi
     done < <(awk '$1 == "sha256"' "$LOCK")
 
+    rm -rf "$EWT"
     mkdir -p "$EWT/$release"
     mv "$scratch"/* "$EWT/$release/"
     cp "$LOCK" "$STAMP"
     echo "ewt: $release is in ${EWT#"$ROOT/"}/$release"
 }
 
-fetch
+case "${1:?usage: fetch.sh fetch}" in
+    fetch) fetch ;;
+    *) fail "Unknown command '$1'. The usage is: fetch.sh fetch" ;;
+esac

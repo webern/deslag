@@ -5,6 +5,7 @@ mod common;
 use common::{alignments, case, case_path, kinds, line, scored_texts, texts};
 use deslag::document::TokenKind;
 use deslag_exam::align::Reason;
+use deslag_exam::align::align_all;
 use deslag_exam::disputes::Disputes;
 use deslag_exam::gold::{Gold, Prov, Split, Tier, TokenMode, Trains};
 use deslag_exam::tagger::Context;
@@ -302,7 +303,7 @@ fn a_deslag_file_aligns_line_to_token() {
 #[test]
 fn provenance_is_counted_by_word() {
     let gold = case("deslag-identity.conllu");
-    let words = Words::of(&gold, &Disputes::default());
+    let words = Words::of(&gold, &align_all(&gold), &Disputes::default());
     assert_eq!(words.words, 8);
     let by: Vec<(Prov, usize)> = Prov::ALL.iter().copied().zip(words.provenance).collect();
     assert_eq!(

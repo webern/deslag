@@ -85,3 +85,101 @@ fn tokens_on_the_done_when_gold() {
         &std::fs::read_to_string(out).unwrap(),
     );
 }
+
+#[test]
+fn score_the_noun_tagger_on_the_done_when_gold() {
+    let gold = case_path("done-when.conllu");
+    let args = [
+        "score",
+        "--gold",
+        gold.to_str().unwrap(),
+        "--tagger",
+        "noun",
+    ];
+    let first = run(&args);
+    check("score-noun-done-when.txt", &first);
+    assert_eq!(first, run(&args), "two runs print the same bytes");
+}
+
+#[test]
+fn score_a_holdout_gold_prints_aggregates_only() {
+    let gold = case_path("done-when-holdout.conllu");
+    check(
+        "score-noun-done-when-holdout.txt",
+        &run(&[
+            "score",
+            "--gold",
+            gold.to_str().unwrap(),
+            "--tagger",
+            "noun",
+        ]),
+    );
+}
+
+#[test]
+fn score_an_imported_file_with_scores() {
+    let gold = case_path("fixed-answer.conllu");
+    let import = case_path("fixed-answer-import.conllu");
+    check(
+        "score-import-fixed-answer.txt",
+        &run(&[
+            "score",
+            "--gold",
+            gold.to_str().unwrap(),
+            "--import",
+            import.to_str().unwrap(),
+        ]),
+    );
+}
+
+#[test]
+fn compare_the_noun_tagger_with_the_imported_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let gold = case_path("fixed-answer.conllu");
+    let import = case_path("fixed-answer-import.conllu");
+    let before = dir.path().join("before.json");
+    let after = dir.path().join("after.json");
+    let gold = gold.to_str().unwrap();
+    run(&[
+        "score",
+        "--gold",
+        gold,
+        "--tagger",
+        "noun",
+        "--save",
+        before.to_str().unwrap(),
+    ]);
+    run(&[
+        "score",
+        "--gold",
+        gold,
+        "--import",
+        import.to_str().unwrap(),
+        "--save",
+        after.to_str().unwrap(),
+    ]);
+    let args = ["compare", before.to_str().unwrap(), after.to_str().unwrap()];
+    let first = run(&args);
+    check("compare-noun-import-fixed-answer.txt", &first);
+    assert_eq!(first, run(&args), "two runs print the same bytes");
+}
+
+#[test]
+fn the_saved_run_of_the_done_when_gold() {
+    let dir = tempfile::tempdir().unwrap();
+    let saved = dir.path().join("run.json");
+    let gold = case_path("done-when.conllu");
+    run(&[
+        "score",
+        "--gold",
+        gold.to_str().unwrap(),
+        "--tagger",
+        "noun",
+        "--save",
+        saved.to_str().unwrap(),
+    ]);
+    check(
+        "run-noun-done-when.json",
+        &std::fs::read_to_string(saved).unwrap(),
+    );
+}

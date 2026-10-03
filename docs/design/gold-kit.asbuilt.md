@@ -31,8 +31,10 @@ deslag-gold read-tags --lines FILE... --all     -> tags/blind.conllu
 deslag-gold merge                               -> merge/agreed.conllu, worklist.tsv,
                                                    worklist-NN.txt, agreement.txt
 deslag-gold read-answers --answers FILE...      -> merge/adjudicated.tsv
-deslag-gold assemble --out tests/gold           -> dev.conllu, holdout.conllu, the disputes
-                                                   files, adjudication.tsv, manifest.tsv
+deslag-gold assemble --out tests/gold           -> per split: dev.conllu, dev.disputes.tsv,
+                                                   dev.adjudication.tsv, dev.manifest.tsv, and
+                                                   the same for holdout; accuracy.tsv,
+                                                   agreement.txt
 ```
 
 `merge` also reads `tags/harper.conllu` and `tags/spacy.conllu`: `sample.conllu` filled in by those
@@ -53,8 +55,11 @@ of `deslag`). Files are read in that order, at most 2 sentences from a file and 
 until the quotas are full: 90 prose, 30 list item, 15 heading and 15 table cell sentences. No two
 sentences share their text.
 
-A third of each context is holdout, so both splits have the tier's mix. The 450 are shuffled and
-numbered `g0001`; the id says nothing of tier or split. The same seed over the same corpus gives
+A third of each context is holdout, so both splits have the tier's mix. A file is dev or holdout,
+never both: the first time it gives a sentence it goes to the split that needs more, and all it
+gives goes there. The splits share no source file.
+
+The 450 are shuffled and numbered `g0001`; the id says nothing of tier or split. The same seed over the same corpus gives
 the same files. `manifest.tsv` has the seed and corpus image in its header, and per sentence the
 split, tier, context, fixture, repository, licence and byte range.
 
@@ -76,7 +81,9 @@ be taken for one.
 Each tagger's UPOS and FEATS are read as the guide's codes. The three agree on a word when the
 bases are equal and no feature conflicts. The blind code decides which features a word has: where
 it has a number or verb form, another tagger that gives one must match, and one that gives none
-abstains. Agreed words are written `Prov=agree`. Every other word is on the worklist, with its
+abstains. Agreed words are written `Prov=agree`.
+
+Tokens that are not words are written `Prov=kind`, since no tagger decided them. Every other word is on the worklist, with its
 sentence, the three answers (`N.?` for a missing feature) and a slot. `agreed.conllu` leaves them
 without a UPOS.
 
@@ -89,8 +96,13 @@ without a UPOS.
 `assemble` fills each blank from the log, writes `dev.conllu` (`exam.trains = undecided`) and
 `holdout.conllu` (`no`, with a note that it is never training data), each sentence with its tier,
 context, source and licence, and reads both back with the exam's loader. It prints the exam's Words
-section for each, and each tagger's accuracy against the result. A blank without an answer, or an
-answer for a word already agreed, stops it.
+section for each.
+
+Everything is written per split: the disputes file, the adjudication log and the manifest of dev and
+of holdout are separate files, so a holdout word, answer, id or byte range is only in a holdout
+file. `accuracy.tsv` has each tagger's accuracy against the result on dev, holdout and both, and
+`agreement.txt` is the merge's counts; both hold numbers and no words. A blank without an answer, or
+an answer for a word already agreed, stops assembly.
 
 ## Modules
 

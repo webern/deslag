@@ -15,7 +15,7 @@
 //! `agreed.conllu` is every sentence with the agreed words filled in and the disputed words left
 //! without a UPOS, so that it cannot be mistaken for a gold file until the adjudicated answers
 //! (read by [`read_answers`]) are put into it by `assemble`. Words that are not words, code spans
-//! and marks, are filled from their kind and never in dispute.
+//! and marks, are filled from their kind, `Prov=kind`, and never in dispute.
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
@@ -347,7 +347,7 @@ impl fmt::Display for Stats {
 }
 
 /// `agreed.conllu`: every sentence, the agreed words with their UPOS, FEATS and `Prov=agree`, the
-/// words that are not words with theirs from their kind, and each disputed word with `_` for UPOS
+/// words that are not words with theirs from their kind (`Prov=kind`), and each disputed word with `_` for UPOS
 /// and no `Prov=`.
 pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
     let mut out = String::new();
@@ -360,7 +360,7 @@ pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
                     &tok.form,
                     upos_of_kind(tok.kind),
                     "_",
-                    &misc(tok, Some("agree")),
+                    &misc(tok, Some("kind")),
                 ),
                 Some(Verdict::Agreed(code)) => line(
                     index,
@@ -880,7 +880,7 @@ mod tests {
             "no pending word"
         );
         assert!(out.contains("4\tuser's\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree"));
-        assert!(out.contains("2\tmake ci\t_\tX\t_\t_\t_\t_\t_\tKind=Code|Prov=agree"));
+        assert!(out.contains("2\tmake ci\t_\tX\t_\t_\t_\t_\t_\tKind=Code|Prov=kind"));
     }
 
     #[test]

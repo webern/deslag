@@ -299,7 +299,7 @@ fn pipeline() -> (tempfile::TempDir, PathBuf) {
     let out = d.join("gold");
     let said = gold_ok(d, &["assemble", "--out", out.to_str().unwrap()]);
     assert!(said.contains("accuracy against the gold"), "{said}");
-    assert!(said.contains("blind    part of speech"), "{said}");
+    assert!(said.contains("blind\tall\t"), "{said}");
     (dir, out)
 }
 
@@ -326,6 +326,19 @@ fn the_pipeline_ends_in_a_dev_and_a_holdout_file_the_exam_reads() {
             .iter()
             .all(|s| !dev_ids.contains(&s.sent_id.as_str()))
     );
+    // Apart in their sources too: no corpus file gives sentences to both.
+    let sources = |name: &str| -> std::collections::BTreeSet<String> {
+        fs::read_to_string(out.join(name))
+            .unwrap()
+            .lines()
+            .filter_map(|line| line.strip_prefix("# source = "))
+            .map(|line| line.split(" bytes ").next().unwrap().to_string())
+            .collect()
+    };
+    let (dev_files, holdout_files) = (sources("dev.conllu"), sources("holdout.conllu"));
+    assert!(dev_files.len() > 50 && holdout_files.len() > 20);
+    assert!(dev_files.is_disjoint(&holdout_files));
+
     // Fifty a tier in the holdout, and every sentence names its tier and context.
     for tier in Tier::ALL {
         let held = holdout
@@ -362,6 +375,10 @@ fn the_pipeline_ends_in_a_dev_and_a_holdout_file_the_exam_reads() {
         assert!(words.provenance[0] > 0, "agree");
         assert!(words.provenance[1] > 0, "adjudicated");
         assert_eq!(words.provenance[2] + words.provenance[3], 0);
+        assert!(
+            words.provenance[4] > 0,
+            "kind: marks and code spans are tagged from their kind"
+        );
         assert_eq!(words.disputes, 0);
     }
 }
@@ -379,12 +396,78 @@ fn the_disputes_files_are_empty_and_the_log_and_manifest_sit_beside_the_gold() {
                 .ends_with(path.file_name().unwrap())
         );
     }
-    let log = fs::read_to_string(out.join("adjudication.tsv")).unwrap();
-    assert!(log.starts_with("item\tsent_id\ttoken\tform\tblind\tharper\tspacy\tfinal\treason\n"));
-    assert!(log.lines().count() > 10);
-    assert!(log.contains("the noun reading fits here"));
-    let manifest = fs::read_to_string(out.join("manifest.tsv")).unwrap();
-    assert!(manifest.starts_with("# seed = 0x6465736c6167\n"));
+    // The log and the manifest are made per split, and nothing mixes them.
+    for name in ["adjudication.tsv", "manifest.tsv"] {
+        assert!(!out.join(name).exists(), "{name} would hold both splits");
+    }
+    let ids = |name: &str, column: usize| -> Vec<String> {
+        fs::read_to_string(out.join(name))
+            .unwrap()
+            .lines()
+            .filter(|line| !line.starts_with('#'))
+            .skip(1)
+            .map(|line| line.split('\t').nth(column).unwrap().to_string())
+            .collect()
+    };
+    for (stem, other) in [("dev", "holdout"), ("holdout", "dev")] {
+        let log = fs::read_to_string(out.join(format!("{stem}.adjudication.tsv"))).unwrap();
+        assert!(
+            log.starts_with("item\tsent_id\ttoken\tform\tblind\tharper\tspacy\tfinal\treason\n")
+        );
+        assert!(log.lines().count() > 5, "{stem}");
+        assert!(log.contains("the noun reading fits here"));
+        let manifest = fs::read_to_string(out.join(format!("{stem}.manifest.tsv"))).unwrap();
+        assert!(manifest.starts_with("# seed = 0x6465736c6167\n"));
+        let mine = gold_ids(&out.join(format!("{stem}.conllu")));
+        let theirs = gold_ids(&out.join(format!("{other}.conllu")));
+        for sent in ids(&format!("{stem}.adjudication.tsv"), 1)
+            .into_iter()
+            .chain(ids(&format!("{stem}.manifest.tsv"), 0))
+        {
+            assert!(mine.contains(&sent), "{stem} has a row for {sent}");
+            assert!(
+                !theirs.contains(&sent),
+                "{stem} names a {other} sentence {sent}"
+            );
+        }
+        assert_eq!(ids(&format!("{stem}.manifest.tsv"), 0).len(), mine.len());
+    }
+}
+
+/// The `sent_id` of every sentence of a gold file.
+fn gold_ids(path: &Path) -> std::collections::BTreeSet<String> {
+    Gold::read(path)
+        .unwrap()
+        .sentences
+        .into_iter()
+        .map(|s| s.sent_id)
+        .collect()
+}
+
+#[test]
+fn accuracy_and_agreement_are_written_with_the_set() {
+    let (_dir, out) = pipeline();
+    let table = fs::read_to_string(out.join("accuracy.tsv")).unwrap();
+    let rows: Vec<Vec<&str>> = table.lines().map(|l| l.split('\t').collect()).collect();
+    assert_eq!(rows[0][0], "tagger");
+    assert_eq!(rows.len(), 1 + 3 * 3, "three taggers, dev, holdout and all");
+    let blind: Vec<&Vec<&str>> = rows.iter().filter(|r| r[0] == "blind").collect();
+    assert_eq!(blind.len(), 3);
+    for row in &blind {
+        assert_eq!(row[3], row[2], "the blind answer is the gold here: {row:?}");
+    }
+    let all = blind.iter().find(|r| r[1] == "all").unwrap();
+    let dev = blind.iter().find(|r| r[1] == "dev").unwrap();
+    let holdout = blind.iter().find(|r| r[1] == "holdout").unwrap();
+    let words = |r: &Vec<&str>| r[2].parse::<usize>().unwrap();
+    assert_eq!(words(all), words(dev) + words(holdout));
+    let harper = rows
+        .iter()
+        .find(|r| r[0] == "harper" && r[1] == "all")
+        .unwrap();
+    assert!(harper[3].parse::<usize>().unwrap() < harper[2].parse::<usize>().unwrap());
+    let agreement = fs::read_to_string(out.join("agreement.txt")).unwrap();
+    assert!(agreement.contains("blind and harper"));
 }
 
 #[test]

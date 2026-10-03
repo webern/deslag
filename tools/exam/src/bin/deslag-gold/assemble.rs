@@ -12,8 +12,12 @@
 //!   that does not say `exam.trains = no`. The dev file says `undecided`: whether labels a model
 //!   made may train one is still open.
 //! - `dev.disputes.tsv` and `holdout.disputes.tsv`, with no dispute open.
-//! - `adjudication.tsv`, the log, and `manifest.tsv`, the sample's own manifest, which holds the
-//!   seed.
+//! - `dev.adjudication.tsv` and `holdout.adjudication.tsv`, the log of each split, and
+//!   `dev.manifest.tsv` and `holdout.manifest.tsv`, the sample's manifest of each, which hold the
+//!   seed. Every artifact is made per split, so a holdout word, answer, reason, id or byte range
+//!   is only in a holdout file.
+//! - `accuracy.tsv`, how each tagger's answers stand against the result, on dev, holdout and
+//!   both, in counts and rates only.
 //!
 //! A word with neither an agreed nor an adjudicated tag, or an adjudicated one that was already
 //! agreed, is a problem and nothing is written. The files are read back with the exam's own loader
@@ -27,7 +31,7 @@ use deslag_exam::error::{Error, Place};
 use deslag_exam::gold::Split;
 
 use crate::code::Code;
-use crate::data::{Meta, Sample, line, misc};
+use crate::data::{Manifest, Meta, Sample, line, misc};
 use crate::merge::{Answers, Logged, Verdict, judge};
 use crate::problems::Problems;
 
@@ -36,6 +40,8 @@ use crate::problems::Problems;
 pub enum Prov {
     /// The three taggers agreed.
     Agree,
+    /// No tagger decided it: a token that is not a word, tagged from its kind.
+    Kind,
     /// A model decided.
     Adjudicated,
 }
@@ -44,6 +50,7 @@ impl Prov {
     fn name(self) -> &'static str {
         match self {
             Prov::Agree => "agree",
+            Prov::Kind => "kind",
             Prov::Adjudicated => "adjudicated",
         }
     }
@@ -124,9 +131,15 @@ pub fn build(
                 ));
                 continue;
             }
-            let agreed_here = conllu::pairs(&read.misc)
+            let said_prov = conllu::pairs(&read.misc)
                 .iter()
-                .any(|(key, value)| *key == "Prov" && *value == "agree");
+                .find(|(key, _)| *key == "Prov")
+                .map(|(_, value)| *value);
+            // A word is agreed by the taggers; a token that is not a word is tagged from its kind.
+            let agreed_here = matches!(
+                (said_prov, tok.is_word()),
+                (Some("agree"), true) | (Some("kind"), false)
+            );
             let logged = decided.get_mut(&(sent.id.as_str(), at));
             match (agreed_here, logged) {
                 (true, Some(_)) => problems.push(Problems::sentence(
@@ -153,7 +166,11 @@ pub fn build(
                     lines.push(Filled {
                         upos: read.upos.clone(),
                         feats: read.feats.clone(),
-                        prov: Prov::Agree,
+                        prov: if tok.is_word() {
+                            Prov::Agree
+                        } else {
+                            Prov::Kind
+                        },
                         code,
                     });
                 }
@@ -283,12 +300,26 @@ pub struct Accuracy {
     pub full: usize,
 }
 
-/// How `answers` stand against the final codes of `built`: the part of speech, and the part of
-/// speech with no feature the tagger gave in conflict. A feature a tagger leaves out is not held
-/// against it.
-pub fn accuracy(built: &Built, answers: &Answers) -> Accuracy {
+/// How `answers` stand against the final codes of `built`, over the sentences in `split` or, with
+/// `None`, over all: the part of speech, and the part of speech with no feature the tagger gave in
+/// conflict. A feature a tagger leaves out is not held against it.
+pub fn accuracy(
+    sample: &Sample,
+    built: &Built,
+    answers: &Answers,
+    split: Option<Split>,
+) -> Accuracy {
     let mut total = Accuracy::default();
-    for (lines, said) in built.sentences.iter().zip(&answers.0) {
+    for ((sent, lines), said) in sample.sents.iter().zip(&built.sentences).zip(&answers.0) {
+        let wanted = match split {
+            Some(split) => sample
+                .meta(&sent.id)
+                .is_some_and(|meta| meta.split == split),
+            None => true,
+        };
+        if !wanted {
+            continue;
+        }
         for (filled, said) in lines.iter().zip(said) {
             let (Some(gold), Some(said)) = (filled.code, said) else {
                 continue;
@@ -299,6 +330,68 @@ pub fn accuracy(built: &Built, answers: &Answers) -> Accuracy {
         }
     }
     total
+}
+
+fn percent(part: usize, whole: usize) -> String {
+    format!("{:.1}", 100.0 * part as f64 / whole.max(1) as f64)
+}
+
+/// `accuracy.tsv`: for each of `taggers` (a name and its answers), its accuracy on dev, on
+/// holdout and on both. The numbers are counts and rates only, so the file names no holdout word.
+pub fn accuracy_file(sample: &Sample, built: &Built, taggers: &[(&str, &Answers)]) -> String {
+    let mut out = String::from(
+        "tagger\tsplit\twords\tpart_of_speech\tpart_of_speech_pct\twith_features\twith_features_pct\n",
+    );
+    for (name, answers) in taggers {
+        for (label, split) in [
+            ("dev", Some(Split::Dev)),
+            ("holdout", Some(Split::Holdout)),
+            ("all", None),
+        ] {
+            let a = accuracy(sample, built, answers, split);
+            let _ = writeln!(
+                out,
+                "{name}\t{label}\t{}\t{}\t{}\t{}\t{}",
+                a.words,
+                a.tag,
+                percent(a.tag, a.words),
+                a.full,
+                percent(a.full, a.words)
+            );
+        }
+    }
+    out
+}
+
+/// The rows of `log`, the text of `adjudicated.tsv`, whose sentence is in `split`, under its
+/// header line. Holdout words, answers and reasons go only into the holdout file.
+pub fn log_file(sample: &Sample, log: &str, split: Split) -> String {
+    let mut lines = log.lines();
+    let mut out = format!("{}\n", lines.next().unwrap_or_default());
+    for line in lines {
+        let sent_id = line.split('\t').nth(1).unwrap_or_default();
+        if sample.meta(sent_id).is_some_and(|meta| meta.split == split) {
+            out.push_str(line);
+            out.push('\n');
+        }
+    }
+    out
+}
+
+/// The manifest of the sentences in `split` alone: the header, and their rows.
+pub fn manifest_file(sample: &Sample, split: Split) -> String {
+    let rows = sample
+        .manifest
+        .rows
+        .iter()
+        .filter(|(_, meta)| meta.split == split)
+        .cloned()
+        .collect();
+    Manifest {
+        header: sample.manifest.header.clone(),
+        rows,
+    }
+    .render()
 }
 
 /// A problem reading back what was written: the file, and why the exam would not take it.
@@ -416,6 +509,12 @@ mod tests {
         assert_eq!(files.feats, "Number=Plur");
         assert_eq!(files.prov, Prov::Adjudicated);
         assert_eq!(built.sentences[1][3].prov, Prov::Agree);
+        assert_eq!(
+            built.sentences[0][1].prov,
+            Prov::Kind,
+            "no tagger decided a code span"
+        );
+        assert_eq!(built.sentences[0][4].prov, Prov::Kind);
         assert_eq!(built.sentences[0][1].upos, "X", "code span");
         assert_eq!(built.sentences[0][1].code, None);
         assert_eq!(built.sentences[0][4].upos, "PUNCT");
@@ -458,15 +557,15 @@ mod tests {
         assert_eq!(words.words, 5);
         assert_eq!(
             words.provenance,
-            [4, 1, 0, 0],
-            "agree, adjudicated, corrected, owner"
+            [3, 1, 0, 0, 1],
+            "agree, adjudicated, corrected, owner, kind"
         );
         assert_eq!(words.unmarked, 0);
         assert_eq!(words.unalignable_total(), 0);
         assert_eq!(words.scored_words, 4);
         let dev = reread("dev.conllu", &gold_file(&sample, &built, Split::Dev)).unwrap();
         let words = Words::of(&dev, &align_all(&dev), &Disputes::default());
-        assert_eq!(words.provenance, [5, 0, 0, 0]);
+        assert_eq!(words.provenance, [3, 0, 0, 0, 2]);
         assert_eq!(words.x, 1, "the code span");
     }
 
@@ -555,8 +654,8 @@ mod tests {
 
     #[test]
     fn a_tagger_is_scored_against_the_final_gold() {
-        let (_, built, _, _, blind) = pipeline();
-        let accuracy_of = accuracy(&built, &blind);
+        let (sample, built, _, _, blind) = pipeline();
+        let accuracy_of = accuracy(&sample, &built, &blind, None);
         assert_eq!(
             accuracy_of,
             Accuracy {
@@ -570,12 +669,60 @@ mod tests {
         off.0[0][2] = Some(Code::parse("P").unwrap());
         off.0[1][4] = Some(Code::parse("N.s").unwrap());
         assert_eq!(
-            accuracy(&built, &off),
+            accuracy(&sample, &built, &off, None),
             Accuracy {
                 words: 7,
                 tag: 6,
                 full: 5
             }
         );
+    }
+
+    #[test]
+    fn accuracy_is_counted_by_split_and_written_as_a_table() {
+        let (sample, built, _, _, blind) = pipeline();
+        let dev = accuracy(&sample, &built, &blind, Some(Split::Dev));
+        let holdout = accuracy(&sample, &built, &blind, Some(Split::Holdout));
+        assert_eq!((dev.words, holdout.words), (3, 4));
+        let table = accuracy_file(&sample, &built, &[("blind", &blind)]);
+        let mut lines = table.lines();
+        assert_eq!(
+            lines.next().unwrap(),
+            "tagger\tsplit\twords\tpart_of_speech\tpart_of_speech_pct\twith_features\twith_features_pct"
+        );
+        assert_eq!(lines.next().unwrap(), "blind\tdev\t3\t3\t100.0\t3\t100.0");
+        assert_eq!(
+            lines.next().unwrap(),
+            "blind\tholdout\t4\t4\t100.0\t4\t100.0"
+        );
+        assert_eq!(lines.next().unwrap(), "blind\tall\t7\t7\t100.0\t7\t100.0");
+    }
+
+    #[test]
+    fn the_log_and_the_manifest_are_split_so_holdout_rows_are_only_in_holdout_files() {
+        let (sample, _, _, log, _) = pipeline();
+        // The one adjudicated word, s2.5, is in the holdout.
+        let dev_log = log_file(&sample, &log, Split::Dev);
+        let holdout_log = log_file(&sample, &log, Split::Holdout);
+        assert_eq!(dev_log.lines().count(), 1, "the header alone: {dev_log}");
+        assert!(dev_log.starts_with("item\tsent_id\t"));
+        assert!(!dev_log.contains("files"));
+        assert_eq!(holdout_log.lines().count(), 2);
+        assert!(holdout_log.contains("s2.5\ts2\t5\tfiles\t"));
+
+        let dev_manifest = manifest_file(&sample, Split::Dev);
+        let holdout_manifest = manifest_file(&sample, Split::Holdout);
+        let rows = |text: &str| -> Vec<String> {
+            Manifest::parse("m", text)
+                .unwrap()
+                .rows
+                .into_iter()
+                .map(|(id, _)| id)
+                .collect()
+        };
+        assert_eq!(rows(&dev_manifest), ["s1"]);
+        assert_eq!(rows(&holdout_manifest), ["s2"]);
+        assert!(dev_manifest.starts_with("# seed = 0x6465736c6167\n"));
+        assert!(!dev_manifest.contains("s2") && !holdout_manifest.contains("s1\t"));
     }
 }

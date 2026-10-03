@@ -11,9 +11,13 @@
 //! 1. The tier's files are sorted by path and shuffled with the seed.
 //! 2. Files are read in that order. From each file at most `per_file` eligible sentences are
 //!    taken, and from each repository at most `per_repo`, so no one document or project fills the
-//!    tier. A sentence is taken only if its context still has room in the tier's quota and no
-//!    earlier sentence of the whole sample has the same text.
-//! 3. The draw stops when every quota is full. A corpus that cannot fill one is an error.
+//!    tier. A sentence is taken only if its context still has room in the quota of its split and
+//!    no earlier sentence of the whole sample has the same text.
+//! 3. A file is dev or holdout, never both: the first time it gives a sentence it goes to one
+//!    split, chosen by how much each still needs, and all it gives goes there. The two splits
+//!    share no source file.
+//! 4. The draw stops when every quota of both splits is full. A corpus that cannot fill one is an
+//!    error naming the tier, context and split.
 //!
 //! Each tier's quota is split by context (prose, list item, heading, table cell) so the exam's
 //! context strata are not left to chance. The holdout takes the same share of every cell, so it
@@ -284,6 +288,8 @@ pub struct Short {
     pub tier: Tier,
     /// The context.
     pub context: Context,
+    /// The split.
+    pub split: Split,
     /// How many were asked for.
     pub wanted: usize,
     /// How many there were.
@@ -294,10 +300,11 @@ impl fmt::Display for Short {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "the {} tier has {} eligible {} sentences under the limits per file and per repository, and {} were asked for",
+            "the {} tier has {} eligible {} sentences for {} under the limits per file and per repository, and {} were asked for",
             self.tier.name(),
             self.got,
             self.context.name(),
+            self.split.name(),
             self.wanted
         )
     }
@@ -337,16 +344,21 @@ pub fn draw(files: &[File<'_>], corpus: &str, settings: &Settings) -> Result<Out
         let mut rng = rng(settings.seed, tier_at as u64 + 1);
         shuffle(&mut order, &mut rng);
 
-        let mut cells: [Vec<Pick>; 4] = Default::default();
+        // What each split of this tier takes of each context: the same share of every cell is
+        // holdout, so both splits have the tier's mix. Index 0 is dev and 1 is holdout.
+        let held = apportion(settings.holdout, &settings.quotas);
+        let mut want = [[0usize; 4]; 2];
+        for cell in 0..4 {
+            want[1][cell] = held[cell];
+            want[0][cell] = settings.quotas[cell] - held[cell].min(settings.quotas[cell]);
+        }
+        let mut have = [[0usize; 4]; 2];
         let mut repos: BTreeMap<&str, usize> = BTreeMap::new();
-        let full = |cells: &[Vec<Pick>; 4]| {
-            cells
-                .iter()
-                .zip(settings.quotas)
-                .all(|(cell, quota)| cell.len() >= quota)
+        let open = |have: &[[usize; 4]; 2], split: usize, cell: usize| {
+            have[split][cell] < want[split][cell]
         };
         for &at in &order {
-            if full(&cells) {
+            if (0..2).all(|split| (0..4).all(|cell| !open(&have, split, cell))) {
                 break;
             }
             let file = &files[at];
@@ -356,17 +368,41 @@ pub fn draw(files: &[File<'_>], corpus: &str, settings: &Settings) -> Result<Out
             files_read[tier_at] += 1;
             let mut found = candidates(file.text, settings, &mut skipped);
             shuffle(&mut found, &mut rng);
+            let cell_of = |cand: &Candidate| {
+                Context::ALL
+                    .iter()
+                    .position(|context| *context == cand.context)
+                    .unwrap_or(0)
+            };
+            // A file is dev or holdout, never both, so the two splits share no source. Of the
+            // splits the file has something to give, it goes to one chosen by how much each
+            // still needs.
+            let usable = |split: usize| {
+                found.iter().any(|cand| {
+                    open(&have, split, cell_of(cand)) && !seen.contains(&key(&cand.toks))
+                })
+            };
+            let split = match (usable(0), usable(1)) {
+                (false, false) => continue,
+                (true, false) => 0,
+                (false, true) => 1,
+                (true, true) => {
+                    let need = |split: usize| {
+                        (0..4)
+                            .map(|cell| want[split][cell] - have[split][cell])
+                            .sum::<usize>()
+                    };
+                    usize::from(rng.below(need(0) + need(1)) < need(1))
+                }
+            };
             let mut from_file = 0;
             for cand in found {
                 let used = repos.entry(file.repo.as_str()).or_default();
                 if from_file >= settings.per_file || *used >= settings.per_repo {
                     break;
                 }
-                let cell = Context::ALL
-                    .iter()
-                    .position(|context| *context == cand.context)
-                    .unwrap_or(0);
-                if cells[cell].len() >= settings.quotas[cell] {
+                let cell = cell_of(&cand);
+                if !open(&have, split, cell) {
                     continue;
                 }
                 if !seen.insert(key(&cand.toks)) {
@@ -375,31 +411,35 @@ pub fn draw(files: &[File<'_>], corpus: &str, settings: &Settings) -> Result<Out
                 }
                 *used += 1;
                 from_file += 1;
-                cells[cell].push(Pick {
+                have[split][cell] += 1;
+                picks.push(Pick {
                     tier,
                     file: at,
                     cand,
-                    split: Split::Dev,
+                    split: if split == 0 {
+                        Split::Dev
+                    } else {
+                        Split::Holdout
+                    },
                 });
             }
         }
-        for (cell, context) in Context::ALL.iter().enumerate() {
-            if cells[cell].len() < settings.quotas[cell] {
-                return Err(Short {
-                    tier,
-                    context: *context,
-                    wanted: settings.quotas[cell],
-                    got: cells[cell].len(),
-                });
+        for split in 0..2 {
+            for (cell, context) in Context::ALL.iter().enumerate() {
+                if have[split][cell] < want[split][cell] {
+                    return Err(Short {
+                        tier,
+                        context: *context,
+                        split: if split == 0 {
+                            Split::Dev
+                        } else {
+                            Split::Holdout
+                        },
+                        wanted: want[split][cell],
+                        got: have[split][cell],
+                    });
+                }
             }
-        }
-        // The same share of every cell is holdout, so both splits have the tier's mix.
-        let held = apportion(settings.holdout, &settings.quotas);
-        for (cell, mut taken) in cells.into_iter().enumerate() {
-            for pick in taken.iter_mut().take(held[cell]) {
-                pick.split = Split::Holdout;
-            }
-            picks.extend(taken);
         }
     }
 
@@ -884,6 +924,37 @@ Ok.
         }
         assert!(by_file.values().all(|n| *n <= 1), "{by_file:?}");
         assert!(by_repo.values().all(|n| *n <= 3), "{by_repo:?}");
+    }
+
+    #[test]
+    fn no_file_gives_sentences_to_both_splits() {
+        let owned = corpus(40);
+        for seed in [1, 2, 3, 4, 5] {
+            let settings = Settings { seed, ..small() };
+            let outcome = draw(&files(&owned), "hand-made", &settings).unwrap();
+            let mut split_of: BTreeMap<&str, Split> = BTreeMap::new();
+            for (_, meta) in &outcome.sample.manifest.rows {
+                let first = *split_of.entry(meta.file.as_str()).or_insert(meta.split);
+                assert_eq!(first, meta.split, "{} is in both splits", meta.file);
+            }
+            let held = outcome
+                .sample
+                .manifest
+                .rows
+                .iter()
+                .filter(|(_, m)| m.split == Split::Holdout)
+                .count();
+            assert_eq!(held, 12, "four of each of the three tiers");
+        }
+    }
+
+    #[test]
+    fn a_corpus_with_too_few_files_for_two_splits_names_the_split_that_is_short() {
+        // One file per tier holds everything, but a file goes to one split only.
+        let owned = corpus(1);
+        let error = draw(&files(&owned), "hand-made", &small()).unwrap_err();
+        assert!(error.to_string().contains("for "), "{error}");
+        assert!(["dev", "holdout"].contains(&error.split.name()));
     }
 
     #[test]

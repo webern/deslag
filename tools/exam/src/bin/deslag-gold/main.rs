@@ -473,6 +473,8 @@ fn assemble_stage(dir: &Path, out: &Path, given: [Option<PathBuf>; 3]) -> Result
     let log = merge::read_log(&log_path.display().to_string(), &log_text)?;
     let built = assemble::build(&sample, &agreed_path.display().to_string(), &agreed, &log)?;
 
+    // The three taggers' answers are needed for the accuracy table the set is reported with.
+    let taggers = load_taggers(dir, given, &sample)?;
     let mut problems = Vec::new();
     let mut files = Vec::new();
     for (split, stem) in [(Split::Dev, "dev"), (Split::Holdout, "holdout")] {
@@ -481,7 +483,7 @@ fn assemble_stage(dir: &Path, out: &Path, given: [Option<PathBuf>; 3]) -> Result
         match assemble::reread(&path.display().to_string(), &text) {
             Ok(gold) => {
                 let words = Words::of(&gold, &align_all(&gold), &Disputes::default());
-                files.push((path, text, stem, gold.sentences.len(), words));
+                files.push((split, stem, path, text, gold.sentences.len(), words));
             }
             Err(error) => problems.push(error),
         }
@@ -489,41 +491,42 @@ fn assemble_stage(dir: &Path, out: &Path, given: [Option<PathBuf>; 3]) -> Result
     if !problems.is_empty() {
         return Err(Problems(problems));
     }
-    for (path, text, stem, _, _) in &files {
+    // Everything is written per split, so a holdout word, answer or id is in a holdout file only.
+    for (split, stem, path, text, _, _) in &files {
         write_text(path, text)?;
         write_text(
             &out.join(format!("{stem}.disputes.tsv")),
             &assemble::disputes_file(stem),
         )?;
+        write_text(
+            &out.join(format!("{stem}.adjudication.tsv")),
+            &assemble::log_file(&sample, &log_text, *split),
+        )?;
+        write_text(
+            &out.join(format!("{stem}.manifest.tsv")),
+            &assemble::manifest_file(&sample, *split),
+        )?;
     }
-    write_text(&out.join("adjudication.tsv"), &log_text)?;
-    write_text(&out.join("manifest.tsv"), &sample.manifest.render())?;
+    let answers: Vec<(&str, &Answers)> = NAMES
+        .iter()
+        .copied()
+        .zip(taggers.iter().map(|(_, answers)| answers))
+        .collect();
+    let accuracy = assemble::accuracy_file(&sample, &built, &answers);
+    write_text(&out.join("accuracy.tsv"), &accuracy)?;
+    // The agreement is counts and rates only, and is reported with the set.
+    if let Ok(agreement) = read_text(&merged_dir.join("agreement.txt")) {
+        write_text(&out.join("agreement.txt"), &agreement)?;
+    }
 
-    for (path, _, _, sentences, words) in &files {
+    for (_, _, path, _, sentences, words) in &files {
         println!("{}: {sentences} sentences", path.display());
         print!("{words}");
     }
-    let taggers = load_taggers(dir, given, &sample);
-    match taggers {
-        Ok(taggers) => {
-            println!(
-                "accuracy against the gold, over word tokens (a feature a tagger leaves out is not held against it)"
-            );
-            for (name, (_, answers)) in NAMES.iter().zip(&taggers) {
-                let accuracy = assemble::accuracy(&built, answers);
-                println!(
-                    "  {name:<8} part of speech {:>6}/{} = {:.1}%, with features {:>6}/{} = {:.1}%",
-                    accuracy.tag,
-                    accuracy.words,
-                    100.0 * accuracy.tag as f64 / accuracy.words.max(1) as f64,
-                    accuracy.full,
-                    accuracy.words,
-                    100.0 * accuracy.full as f64 / accuracy.words.max(1) as f64,
-                );
-            }
-        }
-        Err(why) => println!("no accuracy report, since a tagger's file could not be read:\n{why}"),
-    }
+    println!(
+        "accuracy against the gold, over word tokens (a feature a tagger leaves out is not held against it), written to accuracy.tsv"
+    );
+    print!("{accuracy}");
     println!("wrote the gold set to {}", out.display());
     Ok(())
 }

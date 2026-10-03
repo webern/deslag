@@ -8,6 +8,7 @@
 use std::fmt;
 
 use deslag_exam::conllu;
+use deslag_exam::tags::{Class, Tag, map_upos};
 
 /// The guide's bases, one per UPOS but `C`, which stands for both kinds of conjunction.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -96,55 +97,60 @@ impl Base {
         matches!(self, Base::V | Base::Ax)
     }
 
+    /// The exam's tag for this base, `None` for `X`, which the exam does not score. This is the one
+    /// place the guide's codes meet the exam's tags; UPOS goes through `deslag_exam::tags`.
+    fn tag(self) -> Option<Tag> {
+        Some(match self {
+            Base::N => Tag::Noun,
+            Base::Pn => Tag::ProperNoun,
+            Base::V => Tag::Verb,
+            Base::Ax => Tag::Auxiliary,
+            Base::J => Tag::Adjective,
+            Base::R => Tag::Adverb,
+            Base::Pr => Tag::Pronoun,
+            Base::D => Tag::Determiner,
+            Base::P => Tag::Adposition,
+            Base::C => Tag::Conjunction,
+            Base::T => Tag::Particle,
+            Base::Nm => Tag::Numeral,
+            Base::I => Tag::Interjection,
+            Base::X => return None,
+        })
+    }
+
+    /// The base for an exam tag.
+    fn from_tag(tag: Tag) -> Base {
+        Base::ALL
+            .into_iter()
+            .find(|base| base.tag() == Some(tag))
+            .unwrap_or(Base::X)
+    }
+
     /// The UPOS of `form` tagged this way. `C` is `CCONJ` for the coordinators the guide lists and
-    /// `SCONJ` for the rest.
+    /// `SCONJ` for the rest; the others are the exam's own code for the tag.
     pub fn upos(self, form: &str) -> &'static str {
-        match self {
-            Base::N => "NOUN",
-            Base::Pn => "PROPN",
-            Base::V => "VERB",
-            Base::Ax => "AUX",
-            Base::J => "ADJ",
-            Base::R => "ADV",
-            Base::Pr => "PRON",
-            Base::D => "DET",
-            Base::P => "ADP",
-            Base::C => {
-                const COORDINATORS: [&str; 9] = [
-                    "and", "or", "but", "nor", "yet", "plus", "both", "either", "neither",
-                ];
+        const COORDINATORS: [&str; 9] = [
+            "and", "or", "but", "nor", "yet", "plus", "both", "either", "neither",
+        ];
+        match self.tag() {
+            None => "X",
+            Some(Tag::Conjunction) => {
                 if COORDINATORS.contains(&form.to_lowercase().as_str()) {
                     "CCONJ"
                 } else {
                     "SCONJ"
                 }
             }
-            Base::T => "PART",
-            Base::Nm => "NUM",
-            Base::I => "INTJ",
-            Base::X => "X",
+            Some(tag) => tag.code(),
         }
     }
 
-    /// The base a UPOS stands for. `PUNCT` and `SYM` on a word are `X`, since the guide has no
-    /// other code for a word that is not one of the thirteen.
+    /// The base a UPOS stands for, by the exam's mapping. `PUNCT` and `SYM` on a word are `X`, since
+    /// the guide has no other code for a word that is not one of the thirteen.
     pub fn from_upos(upos: &str) -> Option<Base> {
-        Some(match upos {
-            "NOUN" => Base::N,
-            "PROPN" => Base::Pn,
-            "VERB" => Base::V,
-            "AUX" => Base::Ax,
-            "ADJ" => Base::J,
-            "ADV" => Base::R,
-            "PRON" => Base::Pr,
-            "DET" => Base::D,
-            "ADP" => Base::P,
-            "CCONJ" | "SCONJ" => Base::C,
-            "PART" => Base::T,
-            "NUM" => Base::Nm,
-            "INTJ" => Base::I,
-            "X" | "PUNCT" | "SYM" => Base::X,
-            _ => return None,
+        Some(match map_upos(upos)? {
+            Class::Tagged(tag) => Base::from_tag(tag),
+            Class::Punctuation | Class::X => Base::X,
         })
     }
 }

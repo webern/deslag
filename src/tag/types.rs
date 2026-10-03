@@ -204,7 +204,7 @@ impl Features {
     }
 
     /// The flags of `self` that are also in `mask`.
-    fn only(self, mask: Features) -> Features {
+    pub(super) fn only(self, mask: Features) -> Features {
         Features(self.0 & mask.0)
     }
 

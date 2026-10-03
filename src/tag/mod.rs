@@ -5,12 +5,16 @@
 //! [`Document`]'s `Word` tokens carry one in [`Token::reading`](crate::document::Token::reading).
 //!
 //! [`sentence`] reads the tokens of one sentence without the Markdown they came from, and
-//! [`document`] reads every sentence of a document in its [`Context`]. Two tables read so far: the
-//! closed-class table of function words, then the open-class lexicon of nouns, verbs, adjectives
-//! and adverbs. A word in neither is an unknown noun.
+//! [`document`] reads every sentence of a document in its [`Context`]. Two tables read each word
+//! on its own: the closed-class table of function words, then the open-class lexicon of nouns,
+//! verbs, adjectives and adverbs. A word in neither is an unknown noun, a name too if it is
+//! capitalised. Then the pruning passes in `pass.rs` read each word in its sentence, and narrow
+//! what the tables left open.
 
 mod closed;
 mod lexicon;
+mod pass;
+mod proper;
 mod types;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
@@ -27,12 +31,14 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 
 /// Reads one sentence's tokens, in order: sets `reading` on every `Word` token and clears it on
 /// every other. Reads only the tokens' kind and text, and the context.
+///
+/// Each word is looked up on its own, then the passes narrow the readings in the sentence's
+/// context, in a fixed order.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
-    // Nothing reads the context yet: the tables answer by the word alone.
-    let _ = context;
-    for token in tokens {
+    for token in tokens.iter_mut() {
         token.reading = (token.kind == TokenKind::Word).then(|| read(&token.text));
     }
+    pass::run(tokens, context);
 }
 
 /// The longest word, in bytes, that either table can hold once folded: the lexicon's longest and a

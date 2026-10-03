@@ -16,7 +16,7 @@ deslag claims that every lint is proven on real files. The corpus is those files
 from public repositories, sorted by who wrote it. It is where a lint's rule and threshold are
 decided, and where the proof that they hold is kept, as tests.
 
-That proof is only as strong as the corpus. A small one fits what one maintainer has seen. A big
+That proof is only as strong as the corpus. A big
 one that keeps growing can show which rules hold across thousands of repositories, which new ones
 the data suggests, and whether an old rule still holds as models change.
 
@@ -27,8 +27,7 @@ The tree, `tests/corpus/`, stays as the build doctrine bounds it: about 400 fixt
 every lint's corpus test and the golden set run on it.
 
 The big tier holds far more, outside git, in an OCI image that `scripts/blobstore/blobs.md`
-describes. `make fetch-blobs` unpacks it and `make test-blobs` checks it; the build never fetches
-it.
+describes. `make fetch-blobs` unpacks it and `make test-blobs` checks it; the build never does.
 
 The big tier is a superset: every collected fixture of the tree is in it, with the same bytes and
 the same sidecar, so the tree is a sample of it. `core/` stays out, since it is hand-picked and
@@ -36,7 +35,8 @@ labelled `unknown`, and no fixture in the big tier may be one of `core/`'s.
 
 ## 3. Labels are proven
 
-A fixture's label comes from the git history of its file, up to the commit it is quoted at:
+A fixture's label comes from the git history of its file, up to the commit it is quoted at, or
+for `llm`, from its publisher's word (below):
 
 - `human`: every commit that touched it is a person's from before 2022-01-01, by its author date
   and its committer date both, and none carries a mark.
@@ -45,11 +45,19 @@ A fixture's label comes from the git history of its file, up to the commit it is
   is an agent's.
 
 A commit by a bot rules out every label. The sidecar's `authorship.basis` says why a fixture has
-its label, and `history` holds the counts behind it. A file whose history proves no label stays
+its label, and `history` holds the counts. A file whose history proves no label stays
 out of the big tier. No classifier or detector model assigns a label.
 
-The provable three-way split is what makes the corpus worth measuring, so every analysis of it
-keeps the split: it reports each label on its own and never pools `mixed` with `llm`.
+The provable three-way split is what makes the corpus worth measuring, so every analysis keeps
+it: it reports each label on its own and never pools `mixed` with `llm`, nor publisher-declared
+`llm` with `llm` a history proves.
+
+### Publisher-declared model
+
+A second basis for `llm`: a dataset whose publisher names the model that wrote each text, quoted
+at a pinned revision under a licence of section 7, if the model's own licence is one too. Its
+version 4 sidecar holds `declared`, not `history`. It is the publisher's word, so it never proves
+`human` or `mixed`, and a measure that trusts histories alone leaves it out.
 
 ### Marks
 
@@ -61,11 +69,10 @@ a tool writes into that block that is not a trailer.
 
 Its kind says what it proves. `agent-identity`: an agent is the author, the committer or a
 co-author. `agent-session`: a line an agent writes into a commit it made, such as a link to its
-session. Both count. An `assist` never counts: it is a tool's suggestion that a person committed,
-such as a Copilot Autofix or an editor's completion.
+session. Both count; an `assist`, a tool's suggestion that a person committed, does not.
 
-Only marks a tool writes itself, or its own account, are listed. A trailer one project invents
-for its agents, or an account a person runs an agent under, proves nothing about another project.
+Only marks a tool writes itself, or its own account, are listed: a trailer one project invents for
+its agents, or an account a person runs an agent under, proves nothing elsewhere.
 `MARKS` in `collect.py` holds the regular expressions, matched whole and ignoring case. Below,
 `...` is any text, `N` a number, `<id>` an id, `@gh` is `@users.noreply.github.com`, and "robot"
 is the robot emoji a footer opens with. Each example is a commit that carries the mark.
@@ -113,9 +120,9 @@ paragraphs that open with `* `, or holds the header `git merge --squash` writes,
 line of nine dashes and then only the trailers GitHub gathers from the squashed commits.
 
 A pull request of one commit can give that last shape too, so the rule errs toward leaving a file
-out. A GitHub squash-merge may keep none of these shapes, but ends its subject in `(#N)`. It
-proves its marks only when every commit of pull request N carries one that counts; `collect.py`
-asks GitHub, and one it cannot check proves nothing.
+out. A GitHub squash-merge may keep none of these shapes but ends its subject in `(#N)`; it proves
+its marks only when every commit of pull request N carries one that counts. `collect.py` asks
+GitHub, and one it cannot check proves nothing.
 
 `llm` also needs the file's text to be the agents'. When the commit that added the file deleted a
 Markdown file of the same name, or one git's rename detection pairs with it, the text may be older
@@ -123,13 +130,12 @@ than its history, and the file is unlabelled; a merge that added a file is treat
 the history leaves merges out. A copy of older text is not caught.
 
 A shallow clone ends at a boundary. When the oldest commit that git shows for a file is that
-boundary, the history is truncated: a label's basis says so and claims nothing about when the file
-began, and `llm` is ruled out. A commit is before the cutoff only by both of its dates, since one
-can be authored long before it is committed.
+boundary, the history is truncated: the basis says so, claims nothing about when the file began,
+and `llm` is ruled out.
 
 ### The cutoff
 
-Issue #5 set the cutoff at 2022-01-01, and it stays there. GPT-3's API opened to all developers on
+The cutoff is 2022-01-01, from issue #5. GPT-3's API opened to all developers on
 2021-11-18; ChatGPT shipped on 2022-11-30. An earlier cutoff would cost months of text for a small
 risk; a later one would take in text people wrote with a model's help. It never moves later.
 
@@ -145,14 +151,14 @@ tagged `sg-register:` in `repos.jsonl`, so an analysis can take that register ap
 Every fixture has a JSON sidecar beside it, which records its source and licence, its history and
 label, and facts about its bytes. A sidecar is a capture record: once its batch is published it is
 never rewritten. Loaders accept every sidecar version they know. A sidecar in the tree is a byte
-copy of its twin in the big tier, so the tree may mix versions just as the big tier does.
+copy of its twin in the big tier, so the tree may mix versions too.
 
 Version 3 adds the raw evidence, each mark as written and each marked commit's change to the file,
 so a label can be derived again.
 
-A `mixed` file's earlier revision is its `human` twin, the file at the last commit before the
-cutoff. Both are kept; the `mixed` sidecar names the twin in `before`, with the commits between
-that are not an agent's. A twin is excluded only with its `mixed` file.
+A `mixed` file's earlier revision is its `human` twin: the file at the last commit before the
+cutoff. Both are kept; the `mixed` sidecar names the twin in `before`, with the commits between that are
+not an agent's. A twin is excluded only with its `mixed` file.
 
 The big tier, under `corpus/` in the image:
 
@@ -163,14 +169,12 @@ corpus/
       manifest.jsonl        one line for each fixture the batch adds
       exclude.jsonl         one line for each earlier fixture it drops
       repos.jsonl           one line for each repository tried, if any
-      human/<repo>/<name>.md
-      human/<repo>/<name>.json
+      human/<repo>/<name>.md   and .json
       llm/...  mixed/...
 ```
 
-There is no index above the batches. Each batch carries its own manifest in its own layer, so
-a new batch never changes an earlier layer. The manifests, read in batch order, name every fixture
-and its label. `<repo>` and `<name>` are the names `collect.py` gives in the tree.
+There is no index above the batches: each carries its own manifest in its own layer, so a new batch never
+changes an earlier layer, and the manifests read in order name every fixture and its label. `<repo>` and `<name>` are the names `collect.py` gives in the tree.
 
 ## 5. Batches, layers and growth
 
@@ -189,23 +193,22 @@ with them. One whose repository is gone is kept, since its label was proven when
 
 The big tier holds files of 128KB at most, the tree 64KB. The harvest keeps up to 50 files of each
 label from a repository, at random, and every twin: past that, a file adds bytes, not evidence,
-as an analysis weighs each repository once. The ledger, `repos.jsonl`, counts for each label the
-files that qualified and those kept.
+as an analysis weighs each repository once.
 
 A fixture's identity is its content and its origin. No two live fixtures share a sha256, and no
 two with the same label share a host, repository and path. So a file's human revision from before
-2022 and its later mixed revision may both be fixtures, once each; the tree holds three such
-pairs. A fixture the big tier holds is not added again.
+2022 and its later mixed revision may both be fixtures; the tree holds three such pairs. A fixture
+the big tier holds is not added again.
 
-An exclusion releases the fixture's identity. A later batch can supersede a fixture, to give it a
-newer sidecar or a companion file, by excluding it and adding it again. Every version of the image
-ends with some batch, so these rules hold after every batch, not only the last.
+An exclusion releases the fixture's identity, so a later batch can supersede a fixture, to give it
+a newer sidecar or a companion file, by excluding it and adding it again. These rules hold after
+every batch, not only the last.
 
 ## 6. What reads the corpus, and what never does
 
-Nothing reads the corpus when deslag lints. A lint never consults it, and the published crate
-holds none of it. The corpus is where maintainers decide and prove a lint's rule and threshold,
-offline, with tests and tools; the loaders live outside the library.
+Nothing reads the corpus when deslag lints: a lint never consults it, and the published crate holds
+none of it. Maintainers decide and prove a lint's rule and threshold on it offline, with tests and
+tools; the loaders live outside the library.
 
 deslag never shows a metric to the agent it gates. docstats' evaluation (`docs/scoring-spec.md` at
 commit d958885a) found that live numeric targets during drafting did not improve the text over

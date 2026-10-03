@@ -8,6 +8,10 @@ SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
 EWT := $(SCRIPTS)/ewt
 HARPER := $(SCRIPTS)/harper
+SPACY := $(SCRIPTS)/spacy
+
+# The treebank's dev file, in the release ewt.lock pins.
+EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
 
 # Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails
 # there instead of being rewritten.
@@ -15,19 +19,21 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-release \
-        test test-blobs \
+        test test-blobs test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs clean-ewt clean-harper \
+        clean clean-blobs clean-ewt clean-harper clean-spacy \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt fetch-harper publish-blobs
+        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-spacy publish-blobs
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
+	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
+	@echo "                 first, so minutes, and not in test or ci"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
 	@echo "check-deslag     run deslag on this repository's own Markdown"
@@ -39,6 +45,7 @@ help:
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
+	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
@@ -52,6 +59,9 @@ help:
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "fetch-harper     fetch the Harper tagger model that $(HARPER)/harper.lock pins into .harper"
+	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
+	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
+	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
 
 # ---------------------------------------------------------------------------
@@ -73,6 +83,12 @@ test: preflight
 # offline and with no login.
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+
+# The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
+# scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
+# of test: it needs the network, a few GB and minutes.
+test-spacy: generate-spacy
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- score --gold $(EWT_DEV) --import .spacy/ewt-dev.import.conllu --save .spacy/ewt-dev.run.json
 
 # ---------------------------------------------------------------------------
 # check
@@ -106,7 +122,7 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt clean-harper
+clean: clean-blobs clean-ewt clean-harper clean-spacy
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
@@ -120,6 +136,10 @@ clean-ewt:
 # .harper is what fetch-harper downloads.
 clean-harper:
 	rm -rf .harper
+
+# .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
+clean-spacy:
+	rm -rf .spacy
 
 # ---------------------------------------------------------------------------
 # ci, fix, preflight, fetch, publish
@@ -175,6 +195,19 @@ fetch-ewt:
 # check.
 fetch-harper:
 	@$(HARPER)/fetch.sh fetch
+
+# spaCy, the exam's ceiling candidate, in a venv under .spacy that only $(SPACY)/run.sh reads, from
+# the packages $(SPACY)/requirements.lock pins. A stamp that matches the lock is the whole check.
+fetch-spacy:
+	@$(SPACY)/run.sh fetch
+
+# The exam's file-import path, run on the treebank's dev set: deslag's own tokens go to spaCy, and
+# its tags come back as .spacy/ewt-dev.import.conllu, for `deslag-exam score --import`. Nothing in
+# ci reads or runs it, and the model takes minutes.
+generate-spacy: preflight fetch-ewt fetch-spacy
+	@mkdir -p .spacy
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- tokens --gold $(EWT_DEV) --out .spacy/ewt-dev.tokens.conllu
+	@$(SPACY)/run.sh tag .spacy/ewt-dev.tokens.conllu .spacy/ewt-dev.import.conllu $(EWT_DEV)
 
 publish-blobs:
 	@$(BLOBSTORE)/blobs.sh publish

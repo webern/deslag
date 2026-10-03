@@ -197,6 +197,62 @@ mod tests {
         );
     }
 
+    /// The tag and confidence of `target` in `text`, read by the whole tagger.
+    fn tag_and_level(text: &str, target: &str) -> (Tag, Confidence) {
+        let reading = read(text, target);
+        (reading.tag, reading.confidence)
+    }
+
+    #[test]
+    fn a_noun_is_committed_after_an_adposition_and_before_a_verb_or_an_adposition() {
+        // Each sentence has one neighbour that a cue reads, and `afternoons` is `Unsure` without it.
+        for text in [
+            "with afternoons.",
+            "afternoons were long.",
+            "afternoons of rain.",
+        ] {
+            assert_eq!(
+                tag_and_level(text, "afternoons"),
+                (Tag::Noun, Confidence::Likely),
+                "{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_verb_is_committed_after_an_adverb_after_a_verb_and_before_a_determiner() {
+        for text in ["quickly accepted.", "is accepted.", "accepted the."] {
+            assert_eq!(
+                tag_and_level(text, "accepted"),
+                (Tag::Verb, Confidence::Likely),
+                "{text}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_adverb_is_committed_before_an_adjective_and_before_a_verb() {
+        // `abrupt` is an adjective with no other tag, `is` an auxiliary or a verb. `actually` has one
+        // tag, so the context makes it `Sure`.
+        for text in ["actually abrupt.", "actually is."] {
+            assert_eq!(
+                tag_and_level(text, "actually"),
+                (Tag::Adverb, Confidence::Sure),
+                "{text}"
+            );
+        }
+        assert_eq!(
+            tag_and_level("just abrupt.", "just"),
+            (Tag::Adverb, Confidence::Likely)
+        );
+    }
+
+    #[test]
+    fn a_cue_that_needs_a_settled_neighbour_does_nothing_beside_an_open_one() {
+        // `fine` can be a noun, a verb or an adjective, so it is no adjective for the adverb's cue.
+        assert_eq!(read("just fine.", "just").confidence, Confidence::Unsure);
+    }
+
     #[test]
     fn a_word_with_one_tag_is_sure_when_a_neighbour_agrees() {
         let accident = read("An abrupt accident.", "accident");

@@ -33,7 +33,7 @@ Features follow the code after a dot, and only these:
 - `V`, `AX`: verb form, always one of: `.pr` finite present (*runs*, *are*, *do*), `.pa` finite
   past (*ran*, *was*), `.fi` finite with no tense (imperatives, modals *can, could, will, would,
   should, must, may, might, shall*), `.in` infinitive (after *to*, a modal, *do*, *let*, *make*,
-  *help*, causative *have*, *go*, *come*: *have Vite process it*, *go read it*), `.ing` any
+  *help*, causative *have*, *go*, *come*: *have the bot merge it*, *go fetch it*), `.ing` any
   *-ing* verb, `.pp` past participle (after *have* or *be*, or alone as a modifier).
 
 A script turns codes into CoNLL-U: `C` becomes `CCONJ` for *and, or, but, nor, yet, plus* and
@@ -47,7 +47,7 @@ Adjudication uses the same codes and rules.
 
 - **N** a common noun: a thing, person, idea, or action named as a thing. Test: takes *the* and
   a plural. A noun modifying a noun stays `N` (*error codes*, *user input*, *default value*), and
-  so does a bare verb (*a deny rule* `D N.s N.s`). *today, tomorrow, yesterday, tonight* are
+  so does a bare verb (*a skip marker* `D N.s N.s`). *today, tomorrow, yesterday, tonight* are
   always `N.s`. *thanks*, *thx* are `N.p`.
 - **PN** a name of a specific person, company, product, project, tool, language, format,
   protocol, place or file: *Rust, Docker, GitHub, Python, JSON, HTTP, Markdown, npm, cargo,
@@ -63,14 +63,14 @@ Adjudication uses the same codes and rules.
   *do the work* is `V`. *get* only in the passive (*got deleted*). The modals listed in section
   1, and *ought*; *need*, *dare* only before a bare verb (*need not*).
 - **J** describes a noun or is predicated of it (*a fast build*, *it is fast*); ordinals (*first,
-  3rd*, *last*) with a noun or alone (*the second is*); quantity words *many, few, fewer, several,
-  much, more, most, less, least, enough, other, same, own, such*, before a noun or standing alone
-  (*and more*, *more on X*). *more, most, less, least* modifying an adjective or verb are `R`
-  (*least significant*); so is an ordinal modifying a verb or clause (*First, install it*; *ask
-  first*).
+  3rd*, *last*) with a noun or alone (*the second fails*); quantity words *many, few, fewer,
+  several, much, more, most, less, least, enough, other, same, own, such*, before a noun or
+  standing alone (*want more*, *more of it*). *more, most, less, least* modifying an adjective or
+  verb are `R` (*least likely*); so is an ordinal modifying a verb or clause (*First, clone it*;
+  *ask first*).
 - **R** modifies a verb, adjective, adverb or clause: *also, only, just, very, yet (not yet),
   then, here, there* (place), *e.g., i.e.*, *once, twice*. *how, why, when, whenever, where,
-  wherever* are `R` in every use, even introducing a clause (*When you add it*), as in EWT.
+  wherever* are `R` in every use, even introducing a clause (*When it starts*), as in EWT.
   *back, away, forward, together, apart, ahead* after a verb are `R`.
 - **PR** *I, me, my, mine, myself* and the rest of the personal set, possessives included (*my,
   its, their* are `PR`, not `D`); *who, whom, whose*; *something, anyone, nothing, none*;
@@ -104,20 +104,20 @@ Adjudication uses the same codes and rules.
 - **-ing words**: `V.ing` after *be*, heading a clause (with an object, adverb or subject), after
   a preposition, after a noun it describes (*a job running in CI*), in headings (*Installing
   Rust*). `N` with a determiner, adjective or plural (*the setting*, *settings*), alone without
-  object (*Logging is enabled*), after a noun that is its object (*Host Matching*, *error
+  object (*Logging is enabled*), after a noun that is its object (*Key Signing*, *error
   handling*), or before a noun when it means "for/of X-ing" (*parsing errors, loading spinner*).
   Before a noun when the noun does it now, `V.ing` (*running containers, failing tests*). `J`
   only when *very* or *more* fits (*interesting, confusing, misleading*), or one of *following,
   existing, missing, remaining, pending, upcoming, ongoing, underlying, corresponding, leading,
-  trailing* before a noun or after a determiner with none (*The following is*).
+  trailing* before a noun or after a determiner with none (*The remaining fail*).
 - **-ed/-en words** before a noun or after *be/seem/become*: `J` only when *very* or *more* fits
   (*detailed, advanced, limited, complicated, outdated, interested, related*); else `V.pp`
   (*generated files, is deprecated, is required, are supported*).
 - **Past or participle**: *it deleted* `V.pa`; *was/has deleted*, *the deleted file*, *files
   deleted by X* `V.pp`. An *-ed* word opening a fragment (changelog, list item, cell) is `V.pa`
-  with an object (*Added X*, *Fixed a crash*), else `V.pp` (*Stored as a secret*). **Present or
-  infinitive**: *they run* `V.pr`; *to run, can run, does not run, let it run* `V.in`; *Run the
-  tests* `V.fi`; *Don't run it*: *Don't* `AX.fi`.
+  with an object (*Renamed the flag*, *Dropped a check*), else `V.pp` (*Saved to disk*).
+  **Present or infinitive**: *they run* `V.pr`; *to run, can run, does not run, let it run*
+  `V.in`; *Run the tests* `V.fi`; *Don't run it*: *Don't* `AX.fi`.
 - **Adjective or noun modifier**: `J` if it compares or takes *very* or is normally an adjective
   (*main, custom, local, public, real*); else `N` (*default, test, source*).
 - **Adverb without -ly**: modifying a verb, `R` (*runs fast*); modifying a noun, `J`.
@@ -133,54 +133,54 @@ Adjudication uses the same codes and rules.
 - **Fragments** (headings, cells, labels): tag as the phrase they shorten. Noun-phrase headings
   get noun-phrase tags; *Install the CLI* `V.fi D N.s`; *Waits for web* `V.pr P N.s`; *Getting
   Started* `V.ing V.pp`. Labels: *Why:* `R`, *Note:* `N.s`, *Default* `N.s`; *Yes/No* in a cell
-  `I`. A verb-phrase label is a command (*Restore purchases* `V.fi N.p`).
-  Letter-plus-digit labels (*Q11*) and capitalised section labels (*PRE/POST*) are `N.s`.
+  `I`. A verb-phrase label is a command (*Clear history* `V.fi N.s`).
+  Letter-plus-digit labels (*Q3*) and capitalised section labels (*DRAFT/FINAL*) are `N.s`.
 - **Sentence cuts**: a sentence may start or stop at a wrong place (after *e.g.*). Tag what is
   there.
 - **Identifiers outside code spans** (commands, file names, paths, flags, variables, packages):
-  `PN.s` for each word token (*foo_bar, userId, x86_64, main.rs, docs:setup*; *run cargo build*
+  `PN.s` for each word token (*foo_bar, userId, riscv64, main.rs, docs:setup*; *run cargo build*
   `V.fi PN.s PN.s`; *src/main.rs* `PN.s _ PN.s`). An ordinary word in its ordinary sense stays
   normal (*the build failed*). Inside a code span the whole span is one `_` token. In a line
-  of source code outside a code span, and for code keywords in prose (*TRY/CATCH*), every word
-  token is `PN.s` (*import X from*).
+  of source code outside a code span, and for code keywords in prose (*SWITCH/CASE*), every word
+  token is `PN.s` (*export default App*).
 - **Slugs**: hyphen-joined words naming a file, skill, package, repository or section, where
   English would write spaces, are identifiers: every word piece `PN.s` (*the
-  complete-manual-validation skill*, *15-frontend-data-layer*, *keboola-as-code*).
+  quick-start-checklist skill*, *07-auth-token-refresh*, *acme-as-service*).
 - **Acronyms**: the tag of what they stand for. Names `PN` (*AWS, JSON, HTTP, SQL, HTML*);
   common things `N` (*API, CLI, SDK, URL, PR, CI, LLM, UI, ID, OS*); plural *APIs* `N.p`.
   Abbreviations of one word take that word's tag (*config, repo, info* `N`; *approx* `R`). An
-  abbreviation split into tokens tags each piece as its word (*N/A* "not applicable" `T _ J`).
+  abbreviation split into tokens tags each piece as its word (*T/F* "true/false" `J _ J`).
 - **Contractions** are one token. Tag the first part, with its features: *don't, doesn't, isn't*
   `AX.pr` (`AX.fi` in a command: *Don't run it*); *didn't* `AX.pa`; *can't, won't, cannot*
   `AX.fi`; *it's, I'm, that's* `PR.s`; *we'll, they're* `PR.p`; *you're, there's* `PR`; *let's*
   `V.fi`; *user's* `N.s`; *Python's* `PN.s`.
 - **Hyphenated words** are split into pieces with `-` between. Tag each piece by its role inside
-  the compound: *well-known* `R _ V.pp`; *state-of-the-art* `N.s _ P _ D _ N.s`; *open-source* `J _
+  the compound: *well-known* `R _ V.pp`; *state-of-the-art* `N.s _ P _ D _ N.s`; *full-text* `J _
   N.s`; *self-hosted* `N.s _ V.pp`; *LLM-written* `N.s _ V.pp`; *3rd-party* `J _ N.s`; an adverb
-  piece is `R` (*back-write* `R _ N.s`). A verb piece takes the feature of its form: base `.in`,
-  *-ed* `.pp`, *-ing* `.ing` (*fail-closed* `V.in _ V.pp`; *go-to* `V.in _ P`). A bound prefix
+  piece is `R` (*down-sync* `R _ N.s`). A verb piece takes the feature of its form: base `.in`,
+  *-ed* `.pp`, *-ing* `.ing` (*fail-safe* `V.in _ J`; *drop-in* `V.in _ P`). A bound prefix
   piece is `X` (*re, non, pre, co, multi, anti, sub, semi, super, ultra, hyper, inter, mid, post,
   un, mis, e*): *to re-run* `T X _ V.in`.
 - **Numbers**: digit tokens are `_`. Word tokens with digits: ordinals `J` (*1st*); decades `N.p`
   (*1990s*); number plus unit `N`, plural unless the number is 1 (*100ms* `N.p`); a unit as its
-  own token likewise (*1024 KB* `_ N.p`, *1 MB* `_ N.s`, bare *MB* `N.p`);
-  version labels `NM` (*v1.2*), and *x* as a version wildcard (*2.x* `_ _ NM`); pre-release
+  own token likewise (*512 GB* `_ N.p`, *1 TB* `_ N.s`, bare *GB* `N.p`);
+  version labels `NM` (*v1.2*), and *x* as a version wildcard (*4.x* `_ _ NM`); pre-release
   words `N.s` (*beta*, *rc1*); product names `PN` (*GPT-4o* `PN.s _ PN.s`, *C++* `PN.s _ _`).
 - **Emoji** are symbol tokens, `_`. A shortcode word (*rocket* in `:rocket:`) is `X`.
 - After a code span: *s* as a plural ending (`` `Vec`s ``) is `X`; *s* after an apostrophe
   (`` `foo`'s ``) is `T`.
 - **Mentioned words** (*avoid "very"*) and quoted values written as ordinary words keep their
-  own tag, with the features of the form written (*type "blocks"*: `V.pr`; bare verb `.in`).
+  own tag, with the features of the form written (*status "passes"*: `V.pr`; bare verb `.in`).
 
 ## 5. X, and when unsure
 
 `X` is only for: *etc*; a bound prefix split off by a hyphen; a plural *s* after a code span;
 letter labels in prose (*(a)*); emoji shortcode words; words of a stretch that is not English,
-including English pieces of a non-English compound (*Projekt-Lead* `X _ X`), though names in it
-stay `PN` (*Escuela Babytribu*; a loanword in an English sentence gets its normal tag);
+including English pieces of a non-English compound (*Kunden-Support* `X _ X`), though names in it
+stay `PN` (*Colegio Arbolito*; a loanword in an English sentence gets its normal tag);
 gibberish. Never use `X` because a word is hard.
 
-A typo is tagged as the word intended, features included (*This tools is*: *tools* `N.s`).
+A typo is tagged as the word intended, features included (*This files is*: *files* `N.s`).
 
 When unsure, every word token still gets a real tag: apply the tests above, then choose the tag
 the word most often has in technical English in that position. Between `N` and `PN` choose `N`;

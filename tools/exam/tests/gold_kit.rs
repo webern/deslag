@@ -14,6 +14,7 @@ use deslag_exam::disputes::Disputes;
 use deslag_exam::gold::{Gold, Split, Tier, Trains};
 use deslag_exam::tagger::Context;
 use deslag_exam::words::Words;
+use sha2::{Digest, Sha256};
 
 /// The small tier of the corpus, which the sampler can draw from with no fetch.
 fn tree() -> PathBuf {
@@ -160,6 +161,68 @@ fn the_sample_has_150_a_tier_in_the_quotas_and_the_same_seed_gives_the_same_file
         fs::read(a.path().join("sample.conllu")).unwrap(),
         fs::read(other.path().join("sample.conllu")).unwrap()
     );
+}
+
+#[test]
+fn an_exclusion_list_keeps_its_fixtures_out_of_the_draw_and_its_hash_is_in_the_manifest() {
+    let first = tempfile::tempdir().unwrap();
+    sample(first.path());
+    let files_of = |dir: &Path| -> Vec<String> {
+        let text = fs::read_to_string(dir.join("manifest.tsv")).unwrap();
+        let mut files: Vec<String> = text
+            .lines()
+            .filter(|l| !l.starts_with('#') && !l.starts_with("sent_id"))
+            .map(|l| l.split('\t').nth(4).unwrap().to_string())
+            .collect();
+        files.sort();
+        files.dedup();
+        files
+    };
+    let used = files_of(first.path());
+    assert!(used.len() > 20, "{}", used.len());
+    let work = tempfile::tempdir().unwrap();
+    let list = work.path().join("exclude.tsv");
+    let dropped = &used[..used.len() / 2];
+    let text = format!("# some fixtures\n{}\n", dropped.join("\tnote\n"));
+    fs::write(&list, &text).unwrap();
+    let tree = tree();
+
+    let args = [
+        "sample",
+        "--tree",
+        tree.to_str().unwrap(),
+        "--exclude",
+        list.to_str().unwrap(),
+    ];
+    let second = tempfile::tempdir().unwrap();
+    gold_ok(second.path(), &args);
+    let now = files_of(second.path());
+    assert!(dropped.iter().all(|file| !now.contains(file)), "{now:?}");
+    assert_eq!(rows(second.path()).len(), 450);
+    let manifest = fs::read_to_string(second.path().join("manifest.tsv")).unwrap();
+    let digest = Sha256::digest(text.as_bytes());
+    let digest: String = digest.iter().map(|b| format!("{b:02x}")).collect();
+    let header = format!("# exclude = sha256 {digest}, {} fixtures\n", dropped.len());
+    assert!(manifest.contains(&header), "{header}in {manifest}");
+
+    // The same list over the same corpus gives the same draw.
+    let again = tempfile::tempdir().unwrap();
+    gold_ok(again.path(), &args);
+    for name in ["sample.conllu", "manifest.tsv"] {
+        assert_eq!(
+            fs::read(second.path().join(name)).unwrap(),
+            fs::read(again.path().join(name)).unwrap(),
+            "{name}"
+        );
+    }
+
+    // An entry that names no fixture stops the draw, naming its line, and writes nothing.
+    fs::write(&list, format!("{text}human/nowhere/absent.md\n")).unwrap();
+    let broken = tempfile::tempdir().unwrap();
+    let stderr = gold_fails(broken.path(), &args);
+    assert!(stderr.contains("exclude.tsv:"), "{stderr}");
+    assert!(stderr.contains("human/nowhere/absent.md"), "{stderr}");
+    assert!(!broken.path().join("sample.conllu").exists());
 }
 
 #[test]

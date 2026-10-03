@@ -15,6 +15,7 @@ mod batch;
 mod code;
 mod compact;
 mod data;
+mod exclude;
 mod merge;
 mod problems;
 mod sample;
@@ -30,6 +31,7 @@ use deslag_exam::gold::{Split, Tier};
 use deslag_exam::words::Words;
 
 use crate::data::{Sample, read_text, write_text};
+use crate::exclude::Exclusion;
 use crate::merge::{Answers, NAMES};
 use crate::problems::Problems;
 use crate::sample::{Counts, File, Settings};
@@ -75,6 +77,12 @@ enum Command {
         /// Draw from the small tier at this path instead, `tests/corpus`, which needs no fetch.
         #[arg(long)]
         tree: Option<PathBuf>,
+        /// A list of fixtures to draw nothing from, one per line: a sha256 or a path as the
+        /// manifest's `file` column has it, then an optional note. Blank lines and lines that
+        /// start with `#` are skipped. The sha256 of the list goes in the manifest header, so the
+        /// draw can be repeated. An entry that names no fixture is an error.
+        #[arg(long)]
+        exclude: Option<PathBuf>,
         /// The seed, decimal or `0x` hex. The default is the bytes of `deslag`.
         #[arg(long, default_value = "0x6465736c6167", value_parser = parse_seed)]
         seed: u64,
@@ -191,6 +199,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
         Command::Sample {
             corpus,
             tree,
+            exclude,
             seed,
             mix,
             holdout_per_tier,
@@ -216,7 +225,13 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 min_words,
                 max_tokens,
             };
-            sample_stage(&dir, &corpus, tree.as_deref(), &settings)
+            sample_stage(
+                &dir,
+                &corpus,
+                tree.as_deref(),
+                exclude.as_deref(),
+                &settings,
+            )
         }
         Command::Batches { size } => batches_stage(&dir, size),
         Command::ReadTags { lines, prov, all } => read_tags_stage(&dir, &lines, &prov, all),
@@ -278,6 +293,7 @@ fn sample_stage(
     dir: &Path,
     corpus: &Path,
     tree: Option<&Path>,
+    exclude: Option<&Path>,
     settings: &Settings,
 ) -> Result<(), Problems> {
     let (fixtures, note) = corpus_files(corpus, tree)?;
@@ -291,11 +307,29 @@ fn sample_stage(
                 tier,
                 repo: fixture.sidecar.source.repo.clone(),
                 license: fixture.sidecar.source.license.clone(),
+                sha256: fixture.sidecar.content.sha256.clone(),
                 text,
             })
         })
         .collect();
-    let outcome = sample::draw(&files, &note, settings).map_err(Error::from)?;
+    let mut excluded = None;
+    let files = match exclude {
+        Some(path) => {
+            let shown = path.display().to_string();
+            let list = Exclusion::parse(&shown, &read_text(path)?)?;
+            let (kept, dropped) = list.apply(&shown, files)?;
+            excluded = Some((list, dropped));
+            kept
+        }
+        None => files,
+    };
+    let mut outcome = sample::draw(&files, &note, settings).map_err(Error::from)?;
+    if let Some((list, dropped)) = &excluded {
+        outcome.sample.manifest.header.push((
+            "exclude".to_string(),
+            format!("sha256 {}, {dropped} fixtures", list.digest),
+        ));
+    }
     sample::check_with_exam(&outcome.sample.sents)?;
     let sample_path = dir.join("sample.conllu");
     let manifest_path = dir.join("manifest.tsv");

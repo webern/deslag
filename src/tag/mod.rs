@@ -5,18 +5,19 @@
 //! [`Document`]'s `Word` tokens carry one in [`Token::reading`](crate::document::Token::reading).
 //!
 //! [`sentence`] reads the tokens of one sentence without the Markdown they came from, and
-//! [`document`] reads every sentence of a document in its [`Context`]. Nothing tags yet: both leave
-//! every reading `None`.
+//! [`document`] reads every sentence of a document in its [`Context`]. So far only the closed-class
+//! table reads: a word in it gets its tags, a word outside it is an unknown noun.
 
+mod closed;
 mod types;
 
-use crate::document::{Block, BlockKind, Document, Token};
+use crate::document::{Block, BlockKind, Document, Token, TokenKind};
 
 pub use types::{Confidence, Context, Features, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 0;
+pub const VERSION: u32 = 1;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]
@@ -25,10 +26,10 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// Reads one sentence's tokens, in order: sets `reading` on every `Word` token and clears it on
 /// every other. Reads only the tokens' kind and text, and the context.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
-    // TODO: nothing reads words yet, so every reading is cleared.
+    // Nothing reads the context yet: the table answers by the word alone.
     let _ = context;
     for token in tokens {
-        token.reading = None;
+        token.reading = (token.kind == TokenKind::Word).then(|| closed::read(&token.text));
     }
 }
 
@@ -65,34 +66,71 @@ fn context_of(block: &Block<'_>, ancestors: &[&Block<'_>]) -> Context {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::TokenKind;
 
     fn set_all(tokens: &mut [Token<'_>]) {
         for token in tokens {
             token.reading = Some(Reading {
-                tag: Tag::Noun,
+                tag: Tag::Verb,
                 features: Features::NONE,
                 confidence: Confidence::Sure,
-                kept: TagSet::of(Tag::Noun),
+                kept: TagSet::of(Tag::Verb),
             });
         }
     }
 
     #[test]
-    fn sentence_clears_every_reading() {
+    fn sentence_reads_every_word_and_nothing_else() {
         let mut tokens = Token::split("Send 2 forms, now.");
         set_all(&mut tokens);
         sentence(&mut tokens, Context::Prose);
-        assert!(tokens.iter().all(|token| token.reading.is_none()));
+        for token in &tokens {
+            assert_eq!(
+                token.reading.is_some(),
+                token.kind == TokenKind::Word,
+                "{}",
+                token.text
+            );
+        }
         assert!(tokens.iter().any(|token| token.kind == TokenKind::Word));
     }
 
     #[test]
-    fn document_clears_every_reading() {
-        let mut doc = Document::markdown("# Title\n\nIt ships.\n\n- a thing\n");
-        set_all(&mut doc.tokens);
+    fn sentence_reads_a_word_from_the_table_or_as_unknown() {
+        let mut tokens = Token::split("It can't run the frobnicator.");
+        sentence(&mut tokens, Context::Prose);
+        let read: Vec<(&str, Tag, Confidence)> = tokens
+            .iter()
+            .filter_map(|t| t.reading.map(|r| (t.text.as_ref(), r.tag, r.confidence)))
+            .collect();
+        assert_eq!(
+            read,
+            vec![
+                ("It", Tag::Pronoun, Confidence::Sure),
+                ("can't", Tag::Auxiliary, Confidence::Sure),
+                ("run", Tag::Noun, Confidence::Unknown),
+                ("the", Tag::Determiner, Confidence::Sure),
+                ("frobnicator", Tag::Noun, Confidence::Unknown),
+            ]
+        );
+    }
+
+    #[test]
+    fn document_reads_the_words_of_every_block() {
+        let mut doc = Document::markdown("# The title\n\nIt ships `code` here.\n\n- a thing\n");
+        for token in &mut doc.tokens {
+            token.reading = None;
+        }
         document(&mut doc);
-        assert!(doc.tokens.iter().all(|token| token.reading.is_none()));
+        for token in &doc.tokens {
+            assert_eq!(
+                token.reading.is_some(),
+                token.kind == TokenKind::Word,
+                "{}",
+                token.text
+            );
+        }
+        let the = doc.tokens.iter().find(|t| t.text == "The").unwrap();
+        assert_eq!(the.reading.unwrap().tag, Tag::Determiner);
     }
 
     /// The context of the sentence holding the word `word`, from a document read as `markdown`.

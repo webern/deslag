@@ -5,6 +5,8 @@
 [files]
 extend-exclude = ["tests/corpus", "tests/golden/*.txt"]
 
+# PN is the annotation guide's code for a proper noun, which deslag-gold reads and writes.
 # Automattic is the company that holds Harper's copyright, which the licence notices name.
 [default.extend-words]
+pn = "pn"
 Automattic = "Automattic"

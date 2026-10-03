@@ -74,6 +74,9 @@ pub enum Prov {
     Corrected,
     /// The owner edited it by hand, and it is final.
     Owner,
+    /// No tagger decided it: the line is a token that is not a word, and its UPOS comes from the
+    /// token's kind.
+    Kind,
 }
 
 macro_rules! named {
@@ -109,6 +112,7 @@ named!(Prov {
     Adjudicated => "adjudicated",
     Corrected => "corrected",
     Owner => "owner",
+    Kind => "kind",
 });
 
 /// The name a `deslag` file's `Kind=` uses for `kind`, which is the variant's name.

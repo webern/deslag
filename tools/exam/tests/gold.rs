@@ -205,7 +205,7 @@ fn the_load_errors_of_the_conventions() {
                 "# sent_id = a\n# text = x\n{}",
                 line("1", "x", "NOUN", "_", "Prov=guess")
             ),
-            "f.conllu:3: unknown Prov `guess`; it is one of agree, adjudicated, corrected, owner",
+            "f.conllu:3: unknown Prov `guess`; it is one of agree, adjudicated, corrected, owner, kind",
         ),
     ];
     for (text, expect) in cases {
@@ -347,7 +347,8 @@ fn provenance_is_counted_by_word() {
             (Prov::Agree, 5),
             (Prov::Adjudicated, 1),
             (Prov::Corrected, 1),
-            (Prov::Owner, 1)
+            (Prov::Owner, 1),
+            (Prov::Kind, 0)
         ]
     );
     assert_eq!(words.unmarked, 0);

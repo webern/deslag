@@ -36,8 +36,8 @@ asserted at compile time.
 
 ## Confidence
 
-`Sure`, `Likely`, `Unsure`, `Unknown`, most confident first. `Confidence` is not `Ord`; `at_least(min)`
-compares, and `committed()` is `Sure` or `Likely`.
+`Sure`, `Likely`, `Unsure`, `Unknown`, most confident first. `Confidence` is not `Ord`;
+`at_least(min)` compares, and `committed()` is `Sure` or `Likely`.
 
 - `Sure`: no other tag is possible, so `possible()` is the guess alone. The lexicon gives the word
   one tag, or rules removed every other.

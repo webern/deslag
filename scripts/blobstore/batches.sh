@@ -225,7 +225,19 @@ move_pin() {
     if [[ "${PIN_LOCK_REMEASURE:-}" == 1 ]]; then
         # Without the token, which the code under test has no need of. A failure is in the
         # report and the marker the last step of the job reads; the pin goes ahead.
-        env -u GH_TOKEN "$HERE/remeasure.sh" run || echo "remeasure.sh failed on the new tip; the pin goes ahead, and the job fails after it"
+        # A hang must not keep the pin from the branch: the job's own timeout would skip it, so
+        # this one is shorter. The run's marker, or the one written here, is what the job's last
+        # step reads, in place of the outcome of the first measuring.
+        local rc=0
+        local -a limit=()
+        command -v timeout >/dev/null && limit=(timeout 20m)
+        env -u GH_TOKEN ${limit[@]+"${limit[@]}"} "$HERE/remeasure.sh" run || rc=$?
+        mkdir -p "$BLOBS/remeasure"
+        : > "$BLOBS/remeasure/ran"
+        if [[ "$rc" -ne 0 && ! -e "$BLOBS/remeasure/failed" ]]; then
+            echo "  measuring on the new tip did not finish (exit $rc)" > "$BLOBS/remeasure/failed"
+        fi
+        [[ "$rc" -eq 0 ]] || echo "remeasure.sh failed on the new tip; the pin goes ahead, and the job fails after it"
     fi
     commit_pin "$names" "$@"
 }

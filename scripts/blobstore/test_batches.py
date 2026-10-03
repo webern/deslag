@@ -782,9 +782,34 @@ class ShellTests(Scratch):
                                 env=clean_env(PIN_LOCK_REMEASURE="1"), cwd=self.root,
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.root / ".blobs" / "remeasure" / "ran").exists())
+        self.assertFalse((self.root / ".blobs" / "remeasure" / "failed").exists())
         self.assertEqual(git(self.remote, "show", "main:derived.txt"), "measured on the new code")
         self.assertIn("report for the new code", git(self.remote, "log", "-1", "--format=%B", "main"))
         self.assertEqual(git(self.remote, "log", "--format=%s", "main").splitlines()[1], "other")
+
+    def test_pin_lock_pins_and_leaves_a_marker_when_measuring_again_fails(self):
+        stub = self.root / "scripts" / "blobstore" / "remeasure.sh"
+        stub.write_text("#!/usr/bin/env bash\nexit 3\n")
+        stub.chmod(0o755)
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "stub")
+        git(self.root, "push", "-q", "origin", "main")
+        self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
+        other = self.dir / "other"
+        subprocess.run(["git", "clone", "-q", str(self.remote), str(other)], check=True,
+                       env=clean_env())
+        (other / "f").write_text("x")
+        git(other, "add", "f")
+        git(other, "commit", "-q", "-m", "other")
+        git(other, "push", "-q", "origin", "main")
+        result = subprocess.run(["bash", str(self.script), "pin-lock", "main"],
+                                env=clean_env(PIN_LOCK_REMEASURE="1"), cwd=self.root,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(git(self.remote, "show", "main:scripts/blobstore/blobs.lock"),
+                         self.lock.read_text().strip())
+        self.assertIn("did not finish", (self.root / ".blobs" / "remeasure" / "failed").read_text())
 
     def test_pin_lock_goes_on_top_of_an_unrelated_commit(self):
         self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")

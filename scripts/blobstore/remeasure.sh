@@ -51,7 +51,7 @@ committed() {
 
 # Each entry whose counts moved, old then new, one line each, and each entry the floor refuses.
 catalogue_changes() {
-    join -t $'\t' -a1 -a2 -e '-' -o 0,1.2,1.3,2.2,2.3 \
+    LC_ALL=C join -t $'\t' -a1 -a2 -e '-' -o 0,1.2,1.3,2.2,2.3 \
         <(committed "$CATALOGUE" | counts) <(counts < "$ROOT/$CATALOGUE") |
         awk -F'\t' -v floor="$FLOOR" '
             $2 != $4 || $3 != $5 {
@@ -172,7 +172,14 @@ summary() {
 verdict() {
     local why=""
     [[ -e "$FAILED" ]] && why="$(cat "$FAILED")"
-    [[ "${REMEASURE_OUTCOME:-success}" == "failure" && -z "$why" ]] && why="  the step that rewrites it stopped before it could say why"
+    # Measuring again on a moved tip (batches.sh) leaves `ran`, and its result is the marker's; the
+    # outcome of the first measuring, which that replaced, no longer counts.
+    if [[ ! -e "$OUT/ran" && -z "$why" ]]; then
+        case "${REMEASURE_OUTCOME:-success}" in
+            success | skipped) ;;
+            *) why="  the step that measures it stopped before it could say why, perhaps at its time limit" ;;
+        esac
+    fi
     [[ -z "$why" ]] && return 0
     if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
         echo "::error::What is measured on the corpus image was not left passing. The image is published and blobs.lock pins it; the failing parts are in the step summary and the logs of the step before this one. $DOC says what to do."

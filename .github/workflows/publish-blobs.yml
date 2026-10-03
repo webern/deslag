@@ -187,6 +187,9 @@ jobs:
       - name: Measure the new image
         id: remeasure
         continue-on-error: true
+        # The job's limit is 60 minutes, and a hang that reached it would skip the pin. A step
+        # that times out fails, and continue-on-error lets the job go on to pin the lock.
+        timeout-minutes: 20
         env:
           CARGO_FLAGS: --locked
         run: scripts/blobstore/remeasure.sh run --refetch

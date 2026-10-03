@@ -126,9 +126,9 @@ clean: clean-blobs clean-ewt clean-spacy
 clean-blobs:
 	rm -rf .blobs .tools
 
-# .ewt is what fetch-ewt downloads.
+# .ewt is what fetch-ewt downloads, and .ewt.new.* what a killed fetch leaves.
 clean-ewt:
-	rm -rf .ewt
+	rm -rf .ewt .ewt.new.*
 
 # .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
 clean-spacy:

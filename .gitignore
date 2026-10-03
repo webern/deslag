@@ -13,8 +13,10 @@ test/output/
 .blobs/
 .tools/
 
-# the UD English Web Treebank that make fetch-ewt downloads; see scripts/ewt/ewt.lock
+# the UD English Web Treebank that make fetch-ewt downloads, and the scratch directory it builds
+# it in; see scripts/ewt/ewt.lock
 .ewt/
+.ewt.new.*/
 
 # the spaCy venv and output that make fetch-spacy and generate-spacy write; see scripts/spacy/run.sh
 .spacy/

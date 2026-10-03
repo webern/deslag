@@ -1,5 +1,6 @@
-//! The hand-made gold of the design's done-when, `tests/cases/done-when.conllu`, and the counts
-//! the design works out for it, asserted directly so a golden file cannot hide a change.
+//! The hand-made gold `tests/cases/done-when.conllu`, and the counts worked out for it by hand,
+//! asserted directly so a golden file cannot hide a change. `docs/design/exam.asbuilt.md` has the
+//! alignment rules the counts follow.
 
 mod common;
 
@@ -47,7 +48,7 @@ fn the_header_and_the_conventions_are_read() {
 }
 
 #[test]
-fn deslag_splits_the_sentences_as_the_design_says() {
+fn deslag_splits_the_sentences_as_listed() {
     let gold = case("done-when.conllu");
     let tokens: Vec<Vec<String>> = gold.sentences.iter().map(texts).collect();
     let expect: [&[&str]; 4] = [
@@ -65,7 +66,7 @@ fn deslag_splits_the_sentences_as_the_design_says() {
 }
 
 #[test]
-fn alignment_gives_the_designs_counts() {
+fn alignment_gives_the_hand_worked_counts() {
     let gold = case("done-when.conllu");
     let all = alignments(&gold);
 

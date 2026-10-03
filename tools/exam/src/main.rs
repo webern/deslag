@@ -47,9 +47,10 @@ enum Command {
         /// The gold file, CoNLL-U.
         #[arg(long)]
         gold: PathBuf,
-        /// A built-in tagger: `noun` tags every word a noun; `mct` gives each word the tag it most
-        /// often has in EWT train (run `make fetch-ewt` first), and is never shipped. `harper` is
-        /// Harper's tagger, for study only, which reads the model `make fetch-harper` downloads.
+        /// A built-in tagger: `noun` tags every word a noun; `deslag` is deslag's own tagger as it
+        /// stands; `mct` gives each word the tag it most often has in EWT train (run `make
+        /// fetch-ewt` first), and is never shipped. `harper` is Harper's tagger, for study only,
+        /// which reads the model `make fetch-harper` downloads.
         #[arg(long, required_unless_present = "import", conflicts_with = "import")]
         tagger: Option<String>,
         /// The model file `--tagger harper` reads, by default `.harper/2.12.0/` in the directory

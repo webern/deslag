@@ -44,6 +44,49 @@ IMPLIED.
 """
 
 
+MIT_0 = """MIT No Attribution
+
+Copyright 2020 Person
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED.
+"""
+
+# The University of Illinois/NCSA licence: it begins as MIT does and is not MIT-0 or MIT.
+NCSA = """University of Illinois/NCSA Open Source License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal with
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimers.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+"""
+
+# A licence that opens with the words of MIT's grant and then takes the rest of it back.
+STUDY_ONLY = """Permission is hereby granted, free of charge, to any person or organization
+obtaining the Software (the "Licensee") to privately study, review, and analyze the
+Software. Licensee shall not share or sub-license the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+"""
+
+
+def quoted(text):
+    return "".join(f"> {line}\n" if line else ">\n" for line in text.splitlines())
+
+
 def clean_env(**extra):
     env = {k: v for k, v in os.environ.items() if k not in ("GH_TOKEN", "GITHUB_TOKEN")}
     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", GIT_TERMINAL_PROMPT="0")
@@ -121,6 +164,47 @@ class Scratch(unittest.TestCase):
         self.dir = Path(tempfile.mkdtemp(dir=self.tmp))
         self.corpus = self.dir / "corpus"
         (self.corpus / "batches").mkdir(parents=True)
+
+
+class ClassifierTests(unittest.TestCase):
+    """`classify_license_text` names a licence only on positive evidence."""
+
+    def test_mit_is_mit(self):
+        self.assertEqual(collect.classify_license_text(MIT), "MIT")
+
+    def test_mit_0_is_mit_0(self):
+        self.assertEqual(collect.classify_license_text(MIT_0), "MIT-0")
+
+    def test_a_blockquoted_mit_is_mit_not_mit_0(self):
+        self.assertEqual(collect.classify_license_text(quoted(MIT)), "MIT")
+        prose = "All code in this repository is under the MIT license:\n\n" + quoted(MIT)
+        self.assertEqual(collect.classify_license_text(prose), "MIT")
+        self.assertEqual(collect.classify_license_text(quoted(quoted(MIT))), "MIT")
+
+    def test_a_blockquoted_mit_0_is_mit_0(self):
+        self.assertEqual(collect.classify_license_text(quoted(MIT_0)), "MIT-0")
+
+    def test_curly_quotes_do_not_hide_mit_0(self):
+        text = MIT_0.replace('"Software"', "\u201cSoftware\u201d")
+        self.assertEqual(collect.classify_license_text(text), "MIT-0")
+
+    def test_a_licence_that_only_resembles_mit_is_none(self):
+        for text in (NCSA, STUDY_ONLY):
+            self.assertIsNone(collect.classify_license_text(text))
+        # MIT's grant, cut off before it says what the licence is.
+        cut = "MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy..."
+        self.assertIsNone(collect.classify_license_text(cut))
+
+    def test_an_unknown_licence_is_none(self):
+        self.assertIsNone(collect.classify_license_text("All rights reserved. Do not copy."))
+        self.assertIsNone(collect.classify_license_text(""))
+
+    def test_the_other_licences_are_as_they_were(self):
+        self.assertEqual(collect.classify_license_text(
+            "This is free and unencumbered software released into the public domain."),
+            "Unlicense")
+        self.assertEqual(collect.classify_license_text(
+            "Apache License\nVersion 2.0, January 2004"), "Apache-2.0")
 
 
 class ManifestTests(Scratch):
@@ -270,6 +354,83 @@ class BatchTests(Scratch):
         write_json(later, {"batch": "2026-10-05-01", "exclude": [{"sha256": sha, "reason": "t"}]})
         self.assertIsNone(run_batch(later, self.corpus, self.dir / "w2"))
         self.assertEqual(json.loads(later.read_text())["expect"]["fixtures"], 0)
+
+    def built(self):
+        """The source's batch, built; returns its path and the manifest line of each fixture."""
+        path = self.seed()
+        self.assertIsNone(run_batch(path, self.corpus, self.dir / "w1"))
+        batch = self.corpus / "batches" / self.name
+        return batch, [json.loads(line) for line in (batch / "manifest.jsonl").read_text().splitlines()]
+
+    def relicense(self, name, **manifest):
+        later = self.dir / "manifests" / f"{name}.json"
+        write_json(later, dict({"batch": name}, **manifest))
+        return later
+
+    def test_a_batch_can_relicense_a_fixture_and_nothing_else_changes(self):
+        batch, rows = self.built()
+        row = next(r for r in rows if r["label"] == "llm")
+        later = self.relicense("2026-10-05-01", relicense=[{"sha256": row["sha256"], "license": "MIT-0"}])
+        self.assertIsNone(run_batch(later, self.corpus, self.dir / "w2"))
+        new = self.corpus / "batches" / "2026-10-05-01"
+        self.assertEqual((new / row["file"]).read_bytes(), (batch / row["file"]).read_bytes())
+        old = json.loads((batch / row["file"]).with_suffix(".json").read_text())
+        now = json.loads((new / row["file"]).with_suffix(".json").read_text())
+        self.assertEqual(old["source"]["license"], "MIT")
+        self.assertEqual(now["source"]["license"], "MIT-0")
+        old["source"]["license"] = "MIT-0"
+        self.assertEqual(old, now)
+        self.assertEqual([json.loads(l) for l in (new / "manifest.jsonl").read_text().splitlines()],
+                         [row])
+        self.assertEqual([json.loads(l) for l in (new / "exclude.jsonl").read_text().splitlines()],
+                         [{"sha256": row["sha256"], "reason": "the licence is MIT-0, not MIT"}])
+        self.assertEqual(sorted(p.name for p in new.rglob("*") if p.is_file()),
+                         sorted(["exclude.jsonl", "manifest.jsonl", Path(row["file"]).name,
+                                 Path(row["file"]).with_suffix(".json").name]))
+        # Every other fixture is still live, as it was.
+        _, live = collect.live_fixtures(self.corpus)
+        self.assertEqual({r["sha256"]: r["batch"] for r in live.values()},
+                         {r["sha256"]: (new.name if r is row or r["sha256"] == row["sha256"] else batch.name)
+                          for r in rows})
+        # The completed manifest builds the same batch again, from the held fixtures alone.
+        fresh = self.dir / "fresh"
+        shutil.copytree(self.corpus, fresh)
+        shutil.rmtree(fresh / "batches" / "2026-10-05-01")
+        self.assertIsNone(run_batch(later, fresh, self.dir / "w3"))
+        self.assertEqual(collect.tree_digest(fresh / "batches" / "2026-10-05-01"),
+                         json.loads(later.read_text())["expect"]["tree_sha256"])
+
+    def test_a_batch_can_relicense_a_fixture_and_exclude_another(self):
+        batch, rows = self.built()
+        llm = next(r for r in rows if r["label"] == "llm")
+        mixed = next(r for r in rows if r["label"] == "mixed")
+        human = next(r for r in rows if r["sha256"] == json.loads(
+            (batch / mixed["file"]).with_suffix(".json").read_text())["before"]["sha256"])
+        # A human fixture goes with its mixed one, which here is relicensed: the pair stays whole.
+        later = self.relicense("2026-10-05-01", exclude=[{"sha256": llm["sha256"], "reason": "t"}],
+                               relicense=[{"sha256": mixed["sha256"], "license": "MIT-0"}])
+        self.assertIsNone(run_batch(later, self.corpus, self.dir / "w2"))
+        _, live = collect.live_fixtures(self.corpus)
+        self.assertNotIn(llm["sha256"], live)
+        self.assertEqual(live[mixed["sha256"]]["batch"], "2026-10-05-01")
+        self.assertEqual(live[human["sha256"]]["batch"], self.name)
+
+    def test_a_relicense_that_cannot_stand_is_refused(self):
+        _, rows = self.built()
+        sha = rows[0]["sha256"]
+        cases = {
+            "not a licence the corpus accepts": [{"sha256": sha, "license": "GPL-3.0-only"}],
+            "is already MIT": [{"sha256": sha, "license": "MIT"}],
+            "is not a live fixture": [{"sha256": "0" * 64, "license": "MIT-0"}],
+            "twice": [{"sha256": sha, "license": "MIT-0"}, {"sha256": sha, "license": "ISC"}],
+        }
+        for n, (why, rows_) in enumerate(cases.items()):
+            later = self.relicense(f"2026-10-0{6 + n}-01", relicense=rows_)
+            self.assertIn(why, run_batch(later, self.corpus, self.dir / f"r{n}"), why)
+            self.assertFalse((self.corpus / "batches" / later.stem).exists())
+        both = self.relicense("2026-10-09-01", exclude=[{"sha256": sha, "reason": "t"}],
+                              relicense=[{"sha256": sha, "license": "MIT-0"}])
+        self.assertIn("excluded as well", run_batch(both, self.corpus, self.dir / "r9"))
 
     def test_a_remote_that_does_not_answer_fails_loudly(self):
         with self.assertRaises(SystemExit) as caught:

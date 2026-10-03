@@ -1,0 +1,12 @@
+# What scripts/spacy/requirements.lock is resolved from. spaCy and its model are pinned exactly: the
+# model is a GitHub release wheel, not on PyPI, and the lock pins its sha256 beside the URL.
+#
+# To change a pin, edit this file and rerun, from the repository root:
+#
+#   uv pip compile scripts/spacy/requirements.in --universal --generate-hashes \
+#       --torch-backend cpu --python-version 3.11 -o scripts/spacy/requirements.lock
+#
+# To use the smaller model instead, point the second line at the en_core_web_lg-3.8.0 wheel; the
+# lock then no longer needs torch.
+spacy==3.8.16
+en_core_web_trf @ https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.8.0/en_core_web_trf-3.8.0-py3-none-any.whl

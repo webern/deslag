@@ -26,7 +26,8 @@ deslag/
                           it through, and commands that measure it; exam/, which grades taggers
                           against gold sets; see each --help
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
-                          blobstore/ fetches its big tier, ewt/ the treebank the exam uses
+                          blobstore/ fetches its big tier, ewt/ and harper/ what the exam uses,
+                          spacy/ runs spaCy on its tokens
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
   .agents/skills/      <- agent skills, each named deslag-*; .claude/skills is a symlink to it
 ```

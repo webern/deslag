@@ -49,6 +49,10 @@ unless they must keep going after a failure, and validate arguments with `${1:?u
 The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
 library only, run by hand and never by make, tests or CI.
 
+One more, named: `scripts/spacy/tag.py`, the exam's spaCy tagger, with hash-pinned packages in the
+cache venv `.spacy/`. Only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never
+tests or CI.
+
 Development is supported on macOS and Linux.
 
 ## Makefile Doctrine

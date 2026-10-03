@@ -4,10 +4,10 @@
 //! noun. English marks a name with a capital, and a capital in the middle of a sentence is not
 //! there because a sentence began, so it says something.
 //!
-//! **The rule.** In prose and list items, a word whose best guess is a noun or a proper noun, that
-//! starts with an upper-case letter, that can be a proper noun, and that follows a word or a comma
-//! in a sentence that is not written in title case, becomes a proper noun at `Likely`, and loses
-//! every reading that is not a noun, a proper noun or an adjective.
+//! **The rule.** In prose and list items, a word that starts with an upper-case letter, that can be
+//! a proper noun, that follows a word or a comma in a sentence that is not written in title case,
+//! and that the tables either do not know (`Unknown`) or rank a name first, becomes a proper noun
+//! at `Likely`, and loses every reading that is not a noun, a proper noun or an adjective.
 //!
 //! What it leaves alone, and why.
 //!
@@ -24,6 +24,10 @@
 //! - **Words that are not nouns first.** A capitalised adjective is usually a nationality or a
 //!   title (`American`), and a capitalised verb is as often a word that opens a phrase as a name;
 //!   the lexicon ranked each first, and the capital alone is weak evidence against it.
+//! - **Common words with a name among their tags.** A lexicon word that ranks a noun first and
+//!   lists a proper noun after it (`Service`, `Key`) was tried: a capital promoted it to a name,
+//!   right 91% of the time on EWT dev and 6 of 10 on deslag dev, under the floor for `Likely`.
+//!   Technical prose capitalises its common nouns as often as its names. It keeps its guess.
 //! - **Words that cannot be names.** A word with no proper noun among its tags: a word of the
 //!   closed-class table, where a capitalised `This` is still `this`, and a word the lexicon knows
 //!   only as a common word, which a capital in running text marks as often by style as by name.
@@ -37,7 +41,7 @@
 //! so the word is `Likely` and its other tags stay in `kept`.
 
 use super::pass::View;
-use super::{Context, Tag, TagSet};
+use super::{Confidence, Context, Tag, TagSet};
 use crate::document::TokenKind;
 
 /// The tags a capitalised word keeps: those of a word that is a noun, a name or the adjective
@@ -67,8 +71,8 @@ pub(super) fn run(view: &mut View<'_, '_>) {
         let Some(reading) = view.reading(at) else {
             continue;
         };
-        if matches!(reading.tag, Tag::Noun | Tag::ProperNoun)
-            && reading.possible().contains(Tag::ProperNoun)
+        if reading.possible().contains(Tag::ProperNoun)
+            && (reading.confidence == Confidence::Unknown || reading.tag == Tag::ProperNoun)
         {
             view.narrow(at, KEPT, Tag::ProperNoun);
         }
@@ -178,8 +182,12 @@ mod tests {
             .unwrap()
     }
 
+    /// A word the tables do not know that starts with a capital, as the shape reading leaves it.
     fn name_like() -> Reading {
-        open(Noun, &[Noun, ProperNoun, Verb, Adjective, Adverb])
+        Reading {
+            confidence: Confidence::Unknown,
+            ..open(Noun, &[Noun, ProperNoun, Verb, Adjective, Adverb])
+        }
     }
 
     /// Asserts that the word is read as a name, `Likely`, keeping only a noun, a proper noun and
@@ -225,6 +233,19 @@ mod tests {
             "Bush's",
             before,
         ));
+    }
+
+    #[test]
+    fn a_common_word_with_a_name_among_its_tags_is_left_alone() {
+        // `Service` or `Key`: the lexicon ranks the noun first and lists a name after it.
+        let before = open(Noun, &[Noun, ProperNoun, Verb]);
+        assert_untouched("We met Service in town", Context::Prose, "Service", before);
+        assert_untouched(
+            "We met Service in town",
+            Context::ListItem,
+            "Service",
+            before,
+        );
     }
 
     #[test]

@@ -127,3 +127,34 @@ once it recurs across independent sources: prompts there, repositories in `desla
 
 Code was not ported. Like it, `deslag-corpus` measures a word's excess against text written before
 LLMs were in use, and counts the documents that hold a word beside how often it occurs.
+
+## spaCy
+
+- URL: https://github.com/explosion/spaCy
+- Licence: MIT
+- Copyright: "Copyright (C) 2016-2024 ExplosionAI GmbH, 2016 spaCy GmbH, 2015 Matthew Honnibal"
+- Used at: v3.8.16
+
+No code was ported. The exam runs it by hand, outside the build, as the ceiling its own tagger is
+compared with. Nothing it writes ships.
+
+## en_core_web_trf
+
+- URL: https://github.com/explosion/spacy-models
+- Licence: MIT
+- Copyright: "Copyright 2021 ExplosionAI GmbH"
+- Used at: v3.8.0
+
+spaCy's English transformer model, run the same way. It was trained on OntoNotes 5, which is
+licensed to Explosion, so the weights are not ours to redistribute, and the exam only measures
+with them.
+
+## PyTorch
+
+- URL: https://github.com/pytorch/pytorch
+- Licence: BSD-3-Clause
+- Copyright: "Copyright (c) 2016- Facebook, Inc (Adam Paszke)" and the other holders its LICENSE
+  lists
+- Used at: v2.14.1, the CPU build
+
+The model above needs it. It is installed into the cache `.spacy/` and nothing links to it.

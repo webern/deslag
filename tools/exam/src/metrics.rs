@@ -67,6 +67,17 @@ pub const VERB_FORM: usize = 19;
 /// Tokens the tense metric counts, and those it gets right.
 pub const TENSE: usize = 21;
 
+/// Which way a metric has to move for a tagger to be better by it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sense {
+    /// A higher value is better: accuracy, share committed, clean sentences.
+    HigherIsBetter,
+    /// A lower value is better: the unknown rate, the unalignable rate.
+    LowerIsBetter,
+    /// Neither is better: how a tagger splits its words between `Sure`, `Likely` and `Unsure`.
+    Neither,
+}
+
 /// One metric: a name, and the two columns whose summed ratio it is.
 #[derive(Debug, Clone, Copy)]
 pub struct Metric {
@@ -76,6 +87,8 @@ pub struct Metric {
     pub numerator: usize,
     /// The denominator's column.
     pub denominator: usize,
+    /// Which way is better.
+    pub sense: Sense,
 }
 
 /// The metrics of the Metrics block, in order.
@@ -84,51 +97,61 @@ pub const METRICS: [Metric; 10] = [
         name: "Accuracy",
         numerator: COMMITTED_RIGHT,
         denominator: COMMITTED,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Best-guess accuracy",
         numerator: RIGHT,
         denominator: TOKENS,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Committed share",
         numerator: COMMITTED,
         denominator: TOKENS,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Gold retained",
         numerator: RETAINED,
         denominator: TOKENS,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Unknown rate",
         numerator: LEVEL + 3,
         denominator: TOKENS,
+        sense: Sense::LowerIsBetter,
     },
     Metric {
         name: "Unalignable rate",
         numerator: UNALIGNABLE,
         denominator: TAGGED,
+        sense: Sense::LowerIsBetter,
     },
     Metric {
         name: "Clean sentences",
         numerator: CLEAN,
         denominator: SENTENCES,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Number",
         numerator: NUMBER + 1,
         denominator: NUMBER,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Verb form",
         numerator: VERB_FORM + 1,
         denominator: VERB_FORM,
+        sense: Sense::HigherIsBetter,
     },
     Metric {
         name: "Tense",
         numerator: TENSE + 1,
         denominator: TENSE,
+        sense: Sense::HigherIsBetter,
     },
 ];
 
@@ -143,15 +166,22 @@ pub fn level_metrics() -> Vec<Metric> {
     ];
     let mut metrics = Vec::new();
     for (index, (share, accuracy)) in NAMES.into_iter().enumerate() {
+        // More words at `Unknown` is worse; a move between the other levels says nothing alone.
         metrics.push(Metric {
             name: share,
             numerator: LEVEL + index,
             denominator: TOKENS,
+            sense: if index == 3 {
+                Sense::LowerIsBetter
+            } else {
+                Sense::Neither
+            },
         });
         metrics.push(Metric {
             name: accuracy,
             numerator: LEVEL_RIGHT + index,
             denominator: LEVEL + index,
+            sense: Sense::HigherIsBetter,
         });
     }
     metrics

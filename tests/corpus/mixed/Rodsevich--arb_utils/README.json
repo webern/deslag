@@ -1,0 +1,145 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Rodsevich/arb_utils",
+    "path": "README.md",
+    "commit": "b519ba20713a303040218158897fb658bc6a3cb6",
+    "commit_date": "2026-05-28T13:38:56-03:00",
+    "url": "https://github.com/Rodsevich/arb_utils/blob/b519ba20713a303040218158897fb658bc6a3cb6/README.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-03-03T12:02:40-03:00",
+    "stars": 23,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 16,
+    "first_commit_date": "2021-03-03T12:02:40-03:00",
+    "last_commit_date": "2026-04-08T02:30:40Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 6,
+    "ai_commits": 4,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-03-03T12:02:40-03:00",
+    "last_committer_date": "2026-04-08T02:30:40Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "66f6d546434ae6151d3a1f0891f79e6e3c9b4662",
+        "date": "2026-04-08T02:30:40Z",
+        "committed": "2026-04-08T02:30:40Z",
+        "old": "54a89f0f2c660368aac1d5fe549c88dcd7a2050f",
+        "new": "5377d384befe0e1fc56ee5732c3fb296ca36ba73",
+        "status": "agent"
+      },
+      {
+        "commit": "faf9ac407808002943e560414dd80948985fd502",
+        "date": "2026-04-06T15:45:46Z",
+        "committed": "2026-04-06T15:45:46Z",
+        "old": "ff011d79712b263ad8d673a7f1d48b6f875e6015",
+        "new": "54a89f0f2c660368aac1d5fe549c88dcd7a2050f",
+        "status": "agent"
+      },
+      {
+        "commit": "466b16d9d35da4fe2436b6c3070873ccd4cb1079",
+        "date": "2026-04-06T10:11:22Z",
+        "committed": "2026-04-06T10:11:22Z",
+        "old": "03c4491d4fd4252e4668715c4b42ff8eabf31019",
+        "new": "ff011d79712b263ad8d673a7f1d48b6f875e6015",
+        "status": "agent"
+      },
+      {
+        "commit": "ed5a5d5dfc2eb0e5c8efe0a00e1869e51c190b0f",
+        "date": "2026-04-05T23:03:51Z",
+        "committed": "2026-04-05T23:03:51Z",
+        "old": "7e37a48d812f4f4b3fa334bf29a0867f96fc05eb",
+        "new": "03c4491d4fd4252e4668715c4b42ff8eabf31019",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "7 of its 16 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 9299,
+    "sha256": "fec57a886b39c70b0358f15b7fe7cbf44003f1de7575072c820cd24593ec89f4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 377,
+    "words": 1084,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Rodsevich--arb_utils/README.md",
+  "before": {
+    "sha256": "bad73095918a9b2063f49af645af48233d0cd8a6c402136b5a8e394b6532e2b7",
+    "commit": "0bfa43088d26f9e2c54e4ced3989f7ee2faf1194",
+    "date": "2021-07-14T20:23:43-03:00",
+    "between": [
+      {
+        "commit": "a95f3a60ee7204b929d4df21ae0131b15b8d5eae",
+        "date": "2022-11-01T09:23:26-03:00",
+        "committed": "2022-11-01T09:25:53-03:00",
+        "old": "dfd27661bff5d087cd80f736a1f0796231deb92b",
+        "new": "13e0b015cbd5dccd0f335623fc36fa03148151a5",
+        "status": "late"
+      },
+      {
+        "commit": "d728e71bc0e0e8711b315fe16c969cb85f43b93d",
+        "date": "2022-11-01T09:19:26-03:00",
+        "committed": "2022-11-01T09:19:26-03:00",
+        "old": "dfd27661bff5d087cd80f736a1f0796231deb92b",
+        "new": "3a47ff875d23c8fae6205fc552662afc61ecbca0",
+        "status": "late"
+      },
+      {
+        "commit": "65dc3c980537870925f4e634cd2f7bdb0c9d3ca3",
+        "date": "2022-07-25T04:46:03-03:00",
+        "committed": "2022-07-25T04:46:03-03:00",
+        "old": "3c8eb1126fd66e0c0d9473252beddc2b2717199e",
+        "new": "dfd27661bff5d087cd80f736a1f0796231deb92b",
+        "status": "late"
+      },
+      {
+        "commit": "aadbd91f52b09a062569cfee59b46148750d34a4",
+        "date": "2022-02-20T03:10:08-03:00",
+        "committed": "2022-02-20T03:10:08-03:00",
+        "old": "f8098de823257b1deee9a042a552cb2a4a65867c",
+        "new": "3c8eb1126fd66e0c0d9473252beddc2b2717199e",
+        "status": "late"
+      },
+      {
+        "commit": "233ae92c989172c7ba0df6cb2f3c2ccfca1a5cc3",
+        "date": "2022-02-19T19:36:48-03:00",
+        "committed": "2022-02-19T19:36:48-03:00",
+        "old": "30e0cd205d2ffc8f58a84bfc3e614ea4e221b620",
+        "new": "f8098de823257b1deee9a042a552cb2a4a65867c",
+        "status": "late"
+      }
+    ]
+  }
+}

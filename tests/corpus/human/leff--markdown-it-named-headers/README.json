@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "leff/markdown-it-named-headers",
+    "path": "README.md",
+    "commit": "34a70ce138ece361ea7c84b06122f0ffaa22c59e",
+    "commit_date": "2015-11-29T13:50:45-08:00",
+    "url": "https://github.com/leff/markdown-it-named-headers/blob/34a70ce138ece361ea7c84b06122f0ffaa22c59e/README.md",
+    "license": "Unlicense",
+    "license_files": [
+      "UNLICENSE"
+    ],
+    "repo_first_commit_date": "2015-03-25T18:49:47-07:00",
+    "stars": 13,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 7,
+    "first_commit_date": "2015-03-25T18:49:47-07:00",
+    "last_commit_date": "2015-11-29T13:21:01-08:00",
+    "last_commit_author": "Jason Brackins",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2015-03-25T18:49:47-07:00",
+    "last_committer_date": "2015-11-29T13:21:01-08:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 7 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 2151,
+    "sha256": "ea0d122c42143029fe245013f73f4244046176162af794486f5c8288a6093cab",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "crlf",
+    "lines": 80,
+    "words": 255,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/leff--markdown-it-named-headers/README.md"
+}

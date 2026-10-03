@@ -1,0 +1,149 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__lib__public.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "yomichi/SpinMonteCarlo.jl",
+    "path": "docs/src/lib/public.md",
+    "commit": "e8701e3ad559b7c27df1d2841f3dc3ff9650086f",
+    "commit_date": "2026-08-28T22:28:40+09:00",
+    "url": "https://github.com/yomichi/SpinMonteCarlo.jl/blob/e8701e3ad559b7c27df1d2841f3dc3ff9650086f/docs/src/lib/public.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-10-06T21:10:01+09:00",
+    "stars": 52,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 11,
+    "first_commit_date": "2018-05-17T09:19:57+09:00",
+    "last_commit_date": "2026-08-27T15:45:31+09:00",
+    "last_commit_author": "Yuichi Motoyama",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-05-17T09:19:57+09:00",
+    "last_committer_date": "2026-08-27T15:45:31+09:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01VXMk64t2sxK5oqs31a7kgf",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 2
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01TCsChG7b3GNfkVQ6oMT5G6",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01UkNUvebFvvQH5MbFVUNUz4",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "21a4dd84e6853c2e898f8236ec05ff850fb800e2",
+        "date": "2026-08-27T15:45:31+09:00",
+        "committed": "2026-08-27T15:45:31+09:00",
+        "old": "5e37bc9bf5d34f6726e50c03844409028081685d",
+        "new": "7fb783fb3472914ed2e5dfbe2ba5e16d53e33653",
+        "status": "agent"
+      },
+      {
+        "commit": "b202baf9707b6847f13a031dd726f00ff110bb3b",
+        "date": "2026-08-20T23:02:26+09:00",
+        "committed": "2026-08-20T23:02:26+09:00",
+        "old": "6942e8b04fe1c8f0bc94163a29d48ec4f0d07979",
+        "new": "5e37bc9bf5d34f6726e50c03844409028081685d",
+        "status": "agent"
+      },
+      {
+        "commit": "b940e0c010d620fb6062d0c648d60f66cd1e1574",
+        "date": "2026-08-17T10:04:08+09:00",
+        "committed": "2026-08-17T10:04:08+09:00",
+        "old": "906e5856cc97f0409653d0c0fe3f28a653063899",
+        "new": "6942e8b04fe1c8f0bc94163a29d48ec4f0d07979",
+        "status": "agent"
+      },
+      {
+        "commit": "c3b3ac6578653dc624a7355398a081c94e013cd7",
+        "date": "2026-08-16T17:14:58+09:00",
+        "committed": "2026-08-16T17:14:58+09:00",
+        "old": "9652ee1ccc78eb8098e5363f8531e2725b83ca39",
+        "new": "906e5856cc97f0409653d0c0fe3f28a653063899",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 11 commits predate 2022-01-01 with no mark, and 4 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2313,
+    "sha256": "da3b5b17662c07e900168cfd9425d74ec602c4c99f27a60828637a5757fd57cf",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 130,
+    "words": 287,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/yomichi--SpinMonteCarlo.jl/docs/src/lib/public.md",
+  "before": {
+    "sha256": "434817e388d747ffbd9a996323d2a4401041b1cd1c4b429d58fc4ce608c3fe61",
+    "commit": "beffe45f76fe34958d50816b82a8aed96c03819b",
+    "date": "2021-11-22T17:29:55Z",
+    "between": [
+      {
+        "commit": "7bd668004f198fd6b4322adb457e95c2fb01ea7e",
+        "date": "2024-05-27T17:30:48+09:00",
+        "committed": "2024-05-27T17:30:48+09:00",
+        "old": "17409ccb56b51f742cb1177aba9f2a39641cbc3d",
+        "new": "9652ee1ccc78eb8098e5363f8531e2725b83ca39",
+        "status": "late"
+      },
+      {
+        "commit": "2dc50804ec5b630439f82cfdef40333193e38af2",
+        "date": "2024-03-16T22:39:58+09:00",
+        "committed": "2024-03-16T22:39:58+09:00",
+        "old": "737219041f4d6dee33702e7318f00c412fd375f4",
+        "new": "17409ccb56b51f742cb1177aba9f2a39641cbc3d",
+        "status": "late"
+      }
+    ]
+  }
+}

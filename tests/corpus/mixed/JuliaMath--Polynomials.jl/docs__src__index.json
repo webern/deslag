@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "docs__src__index.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "JuliaMath/Polynomials.jl",
+    "path": "docs/src/index.md",
+    "commit": "ad3b7a25ecb0081f61e8961ceaf7c86a5e2849b9",
+    "commit_date": "2026-09-09T14:08:42-04:00",
+    "url": "https://github.com/JuliaMath/Polynomials.jl/blob/ad3b7a25ecb0081f61e8961ceaf7c86a5e2849b9/docs/src/index.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 320,
+    "found_by": "sg-topic:math"
+  },
+  "history": {
+    "commits": 31,
+    "first_commit_date": "2018-01-04T13:55:05-05:00",
+    "last_commit_date": "2026-09-09T18:54:55+02:00",
+    "last_commit_author": "Thomas Dybdahl Ahle",
+    "authors": 7,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "begun by a person, unmarked, on 2018-01-04, before 2022-01-01; 1 of its 31 commits are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 29584,
+    "sha256": "fc8e83f97eecad65b73d46827ed3c66f2b859958715fb26df64a74511580e3de",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 913,
+    "words": 3689,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JuliaMath--Polynomials.jl/docs/src/index.md"
+}

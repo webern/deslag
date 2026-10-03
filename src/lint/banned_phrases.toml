@@ -8,14 +8,6 @@
 measured_on = "ghcr.io/webern/deslag-blobs:v4@sha256:65c7bad78a430f79a74708a111095f10b90058d283f1bb7093fe716a3a03976d"
 
 [[entry]]
-phrase = "why this matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 59
-llm_repos = 40
-
-[[entry]]
 phrase = "deliberately not"
 group = "insistence"
 advice = "say what it does; what it does not do rarely needs saying"

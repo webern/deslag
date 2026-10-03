@@ -164,11 +164,6 @@ impl Group {
 /// Every group; the phrases of each are in [`CATALOGUE`].
 pub const GROUPS: &[Group] = &[
     Group {
-        name: "signposts",
-        on_by_default: true,
-        switch: |groups| groups.signposts,
-    },
-    Group {
         name: "insistence",
         on_by_default: true,
         switch: |groups| groups.insistence,
@@ -189,8 +184,6 @@ pub const GROUPS: &[Group] = &[
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupName {
-    /// `signposts`.
-    Signposts,
     /// `insistence`.
     Insistence,
     /// `metaphors`.
@@ -203,7 +196,6 @@ impl GroupName {
     /// Its group in [`GROUPS`].
     pub fn group(self) -> &'static Group {
         let name = match self {
-            GroupName::Signposts => "signposts",
             GroupName::Insistence => "insistence",
             GroupName::Metaphors => "metaphors",
             GroupName::Precision => "precision",

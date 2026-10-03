@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "apps__example-collector-pipeline__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jagreehal/autotel",
+    "path": "apps/example-collector-pipeline/README.md",
+    "commit": "9bc8903763244e03796eec05999843fdd821b806",
+    "commit_date": "2026-09-23T21:54:57+01:00",
+    "url": "https://github.com/jagreehal/autotel/blob/9bc8903763244e03796eec05999843fdd821b806/apps/example-collector-pipeline/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-26T06:56:56Z",
+    "stars": 8,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-05T07:10:30+01:00",
+    "last_commit_date": "2026-08-05T07:10:30+01:00",
+    "last_commit_author": "Jag Reehal",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-05T07:10:30+01:00",
+    "last_committer_date": "2026-08-05T07:10:30+01:00",
+    "marks": [
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_015iq5AcYNuVsNtDVxn99Eiq",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fb6bee27452dfa5eaed6d86cf1b3db924ea36793",
+        "date": "2026-08-05T07:10:30+01:00",
+        "committed": "2026-08-05T07:10:30+01:00",
+        "old": null,
+        "new": "9b570ff82b3288ac06e7242dee30599feb36f111",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4706,
+    "sha256": "a9e066446dc9ecaebce1afbb01a9413794ef6030f941f46cd2a8994d82d03859",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 145,
+    "words": 712,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jagreehal--autotel/apps/example-collector-pipeline/README.md"
+}

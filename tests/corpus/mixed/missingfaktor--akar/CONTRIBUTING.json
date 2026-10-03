@@ -1,0 +1,89 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "missingfaktor/akar",
+    "path": "CONTRIBUTING.md",
+    "commit": "ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195",
+    "commit_date": "2026-04-26T22:02:47+01:00",
+    "url": "https://github.com/missingfaktor/akar/blob/ff926dd9ab55bcf1a6e58031e5a7f6e77e12a195/CONTRIBUTING.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-10-23T11:34:31+02:00",
+    "stars": 182,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 15,
+    "first_commit_date": "2015-11-08T16:22:07+01:00",
+    "last_commit_date": "2026-04-25T19:59:20+01:00",
+    "last_commit_author": "missingfaktor",
+    "authors": 2,
+    "ai_commits": 1,
+    "ai_tools": [
+      "codex"
+    ],
+    "truncated": false,
+    "first_committer_date": "2015-11-08T16:22:07+01:00",
+    "last_committer_date": "2026-04-25T19:59:20+01:00",
+    "marks": [
+      {
+        "text": "Codex <codex@openai.com>",
+        "tool": "codex",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "6bf8dbb93779ad5cbd52b8fb0300fb04b5914778",
+        "date": "2026-04-25T19:59:20+01:00",
+        "committed": "2026-04-25T19:59:20+01:00",
+        "old": "fe01dd1f5dd5e9c9cfab2093e6646fbc4eb0b8c6",
+        "new": "067fbafeac0447b458867807504a53845ddc5804",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 15 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (codex)"
+  },
+  "content": {
+    "size_bytes": 2795,
+    "sha256": "bff321fb17c1109d84388f3ad977147404540d509e372819e7ad0fea5128148e",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 54,
+    "words": 436,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/missingfaktor--akar/CONTRIBUTING.md",
+  "before": {
+    "sha256": "a7213c9aed65a32d11b7b635d2c7807c88df7169217c3b1a6b0a5ca4ff69e544",
+    "commit": "66403b735cafab4e9fb971b4bf56e899ee84962f",
+    "date": "2018-04-13T01:18:20+01:00",
+    "between": [
+      {
+        "commit": "75f31c839ca2b087c089baca3707a73a31d47376",
+        "date": "2025-12-28T20:15:53Z",
+        "committed": "2025-12-28T20:15:53Z",
+        "old": "9b633d28503ea4f7b34b8edc95d939799bb26408",
+        "new": "fe01dd1f5dd5e9c9cfab2093e6646fbc4eb0b8c6",
+        "status": "late"
+      }
+    ]
+  }
+}

@@ -973,10 +973,10 @@ fn the_corpus_banned_characters_agree_with_the_library() {
 }
 
 /// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 6475;
+const FIXED: usize = 6467;
 
 /// How many fixtures with banned characters it fixes whole.
-const FIXED_WHOLE: usize = 359;
+const FIXED_WHOLE: usize = 353;
 
 /// How many banned characters it leaves for each reason.
 const LEFT_BY_REASON: &[(&str, usize)] = &[
@@ -984,9 +984,9 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
         "it is drawn as one with the character beside it, which the edit would leave behind",
         2,
     ),
-    ("it is in HTML, which is not prose", 56),
+    ("it is in HTML, which is not prose", 55),
     ("it is in a URL", 1),
-    ("it is in the frontmatter, which is not prose", 40),
+    ("it is in the frontmatter, which is not prose", 39),
     (
         "the edit changes how the file reads, as when a line comes to start a list or a code \
          block, so reword it",
@@ -995,7 +995,7 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
     (
         "the replacement holds letters or digits, a guess at meaning that can run into the text \
          beside it",
-        732,
+        707,
     ),
     (
         "the replacement is the default for a range of characters, a guess at what this one means",

@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__migrate-to-psr18client.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "kbsali/php-redmine-api",
+    "path": "docs/migrate-to-psr18client.md",
+    "commit": "c9b33cdedbcc311d7e07433b8855ece7b11557d9",
+    "commit_date": "2021-12-25T19:22:33+01:00",
+    "url": "https://github.com/kbsali/php-redmine-api/blob/c9b33cdedbcc311d7e07433b8855ece7b11557d9/docs/migrate-to-psr18client.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-09-28T16:43:58+02:00",
+    "stars": 423,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-03-23T17:38:08+01:00",
+    "last_commit_date": "2021-12-25T19:22:33+01:00",
+    "last_commit_author": "Artur Weigandt",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-03-23T17:38:08+01:00",
+    "last_committer_date": "2021-12-25T19:22:33+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 6 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 10376,
+    "sha256": "74c4e85ca02e5b67850b68bf81f8cea226e6547d31104b59c4167dc70eeaedde",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 293,
+    "words": 1107,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/kbsali--php-redmine-api/docs/migrate-to-psr18client.md"
+}

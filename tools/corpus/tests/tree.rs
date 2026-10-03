@@ -56,10 +56,10 @@ fn prose(document: &Document<'_>) -> Vec<String> {
 fn ban(phrases: &[&str]) -> BannedPhrases {
     BannedPhrases {
         groups: PhraseGroups {
-            signposts: Some(false),
             insistence: Some(false),
             metaphors: Some(false),
             precision: Some(false),
+            ..PhraseGroups::default()
         },
         allow: None,
         ban: Some(

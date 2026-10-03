@@ -423,6 +423,24 @@ fn a_declared_fixture_has_a_publishers_statement_in_place_of_a_history() {
 }
 
 #[test]
+fn what_groups_files_by_label_takes_the_ones_a_history_proves() {
+    let (human, llm, _) = one_of_each();
+    let (_, other_llm) = two_fixtures();
+    let repo = Repo::new();
+    let held = [
+        Held::as_is(&human),
+        Held::as_is(&llm),
+        Held::edited(&other_llm, to_declared),
+    ];
+    write_batch_of(&repo, "2026-01-01-01", &[], &held, None);
+    let all = load_blobs(repo.root());
+    assert_eq!(all.len(), 3);
+    let proven = deslag_corpus::load::history_proven(all);
+    assert_eq!(proven.len(), 2);
+    assert!(proven.iter().all(|fixture| !fixture.sidecar.is_declared()));
+}
+
+#[test]
 fn a_fixture_a_history_proves_has_no_basis_in_its_manifest_line() {
     let (_, llm, _) = one_of_each();
     let repo = Repo::new();
@@ -723,7 +741,8 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// `measured_on`.
 ///
 /// A file whose label is its publisher's statement of the model (`corpus.md` section 3) is not
-/// counted: the basis is the owner's to accept, and the catalogue stands on histories alone.
+/// counted: that basis is provisional until the owner accepts it, and the catalogue stands on
+/// histories alone.
 ///
 /// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
 /// files hold it at least 3 times as often as `human` files, and at most 3% of `human` files do.

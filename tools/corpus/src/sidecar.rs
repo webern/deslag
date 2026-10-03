@@ -38,7 +38,7 @@ pub struct Sidecar {
 
 impl Sidecar {
     /// Whether its label rests on a publisher's statement and not on a history, which a measure
-    /// that only trusts histories leaves out.
+    /// leaves out unless it is asked to take such files in.
     pub fn is_declared(&self) -> bool {
         self.declared.is_some()
     }
@@ -89,7 +89,7 @@ pub struct Declared {
     pub file_sha256: String,
     /// The row in the file, counted from 0 after the header.
     pub row: u64,
-    /// The row's id in the dataset, if it has one.
+    /// The row's id in the dataset, if it has one. Rows made from one prompt share it.
     pub row_id: String,
     /// The model the publisher names for the row, as the dataset writes it.
     pub model: String,

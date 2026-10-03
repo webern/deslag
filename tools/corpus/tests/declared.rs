@@ -3,7 +3,9 @@
 
 use std::path::Path;
 
-use deslag_corpus::measure::{Corpus, Filters, Tier};
+use deslag_corpus::load;
+use deslag_corpus::measure::{Corpus, Filters, Label, Tier};
+use deslag_corpus::summary::summary;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use tempfile::TempDir;
@@ -117,25 +119,50 @@ fn corpus() -> TempDir {
 }
 
 #[test]
-fn a_measure_can_leave_out_the_files_a_publisher_declares() {
+fn a_measure_leaves_out_the_files_a_publisher_declares_unless_asked() {
     let dir = corpus();
     let corpus = Corpus::read(dir.path(), Tier::Blobs).expect("a corpus");
     assert_eq!(corpus.docs.len(), 2);
-    let declared: Vec<bool> = corpus.docs.iter().map(|doc| doc.declared).collect();
-    assert_eq!(declared.iter().filter(|declared| **declared).count(), 1);
-    let tools: Vec<usize> = corpus.docs.iter().map(|doc| doc.tools.len()).collect();
-    assert_eq!(
-        tools.iter().sum::<usize>(),
-        1,
-        "only the proven file names a tool"
-    );
+    assert_eq!(corpus.docs.iter().filter(|doc| doc.declared).count(), 1);
+    let tools: usize = corpus.docs.iter().map(|doc| doc.tools.len()).sum();
+    assert_eq!(tools, 1, "only the proven file names a tool");
 
-    assert_eq!(Filters::default().apply(&corpus).len(), 2);
-    let only = Filters {
-        history_only: true,
+    let by_default = Filters::default().apply(&corpus);
+    assert_eq!(by_default.len(), 1);
+    assert!(!by_default[0].declared);
+    let asked = Filters {
+        with_declared: true,
         ..Filters::default()
     };
-    let kept = only.apply(&corpus);
-    assert_eq!(kept.len(), 1);
-    assert!(!kept[0].declared);
+    assert_eq!(asked.apply(&corpus).len(), 2);
+}
+
+#[test]
+fn the_llm_row_of_a_summary_holds_what_a_history_proves_unless_declared_files_are_asked_for() {
+    let dir = corpus();
+    let corpus = Corpus::read(dir.path(), Tier::Blobs).expect("a corpus");
+    let llm_files = |filters: &Filters| {
+        summary(&corpus, filters)
+            .labels
+            .iter()
+            .find(|row| row.label == Label::Llm)
+            .map(|row| row.count.files)
+            .expect("an llm row")
+    };
+    assert_eq!(llm_files(&Filters::default()), 1);
+    let asked = Filters {
+        with_declared: true,
+        ..Filters::default()
+    };
+    assert_eq!(llm_files(&asked), 2);
+}
+
+#[test]
+fn the_loaders_keep_the_files_a_history_proves() {
+    let dir = corpus();
+    let blobs = load::blobs(&dir.path().join(".blobs/unpacked/corpus")).expect("the big tier");
+    assert_eq!(blobs.fixtures.len(), 2);
+    let proven = load::history_proven(blobs.fixtures);
+    assert_eq!(proven.len(), 1);
+    assert!(!proven[0].sidecar.is_declared());
 }

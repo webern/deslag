@@ -182,6 +182,16 @@ pub fn tree(root: &Path) -> Result<Vec<Fixture>, Problem> {
     Ok(fixtures)
 }
 
+/// `fixtures` without the ones whose label is a publisher's statement of the model, which
+/// `corpus.md` section 3 keeps apart from the labels a history proves. Whatever groups fixtures by
+/// label calls this, unless it is asked to take them in.
+pub fn history_proven(fixtures: Vec<Fixture>) -> Vec<Fixture> {
+    fixtures
+        .into_iter()
+        .filter(|fixture| !fixture.sidecar.is_declared())
+        .collect()
+}
+
 /// The lines of a JSON Lines file, each read as a `T`.
 fn lines<T: DeserializeOwned>(path: &Path) -> Result<Vec<T>, Problem> {
     let text = std::fs::read_to_string(path)

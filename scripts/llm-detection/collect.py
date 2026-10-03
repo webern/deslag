@@ -2666,7 +2666,7 @@ def select(args: argparse.Namespace) -> None:
             kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
             other_language += r["natural_language"] != "en"
 
-        # The tree holds only what a history proves, until the publisher-declared basis is accepted.
+        # The tree holds only what a history proves; the publisher-declared basis is provisional.
         pool = sorted((r for r in live.values() if r["label"] == label
                        and r.get("basis") != DECLARED
                        and r["size_bytes"] <= MAX_BYTES and r["sha256"] not in core
@@ -3489,7 +3489,7 @@ def card_license(card: str) -> str | None:
 def model_license(name: str, hops: int = 3) -> tuple[str, str]:
     """The SPDX licence of a model, and the model whose card says it: its own, or the one it is
     `base_model` of. A model with no licence the corpus accepts, or none on the way up, is
-    refused: the corpus quotes nothing a model's terms restrict."""
+    refused. Only a card's `license:` is read, not a model's lineage."""
     seen = []
     while name not in seen and len(seen) <= hops:
         seen.append(name)
@@ -3519,8 +3519,8 @@ class DatasetSource(Source):
     (`text`, `model`, `id`), `where`, the columns a row must hold a value of, `models`, the models
     to take texts of, `record`, columns to copy into the sidecar, `document`, the sidecar's
     kind of file, and `license`, the dataset's licence, which must be what its card says. A model
-    is taken only when its own licence, or its base model's, is one the corpus accepts, so no
-    model's terms restrict the use. The manifest's `per_repo` is the number of texts, shared
+    is taken only when its own licence, or its base model's, is one the corpus accepts; the check
+    reads one `license:` on a card, not the lineage of a model. The manifest's `per_repo` is the number of texts, shared
     out evenly among `models`, and each model's texts are the first of its rows in the order
     the hash of the row number gives.
 

@@ -245,16 +245,18 @@ impl Gold {
         };
         let mut seen = BTreeSet::new();
         for (index, block) in blocks.iter().enumerate() {
-            let sentence = GoldSentence::read(path, gold.tokens, index, block)?;
+            let sentence = GoldSentence::read(path, gold.tokens, index, gold.holdout(), block)?;
             if !seen.insert(sentence.sent_id.clone()) {
                 let line = block
                     .comment("sent_id")
                     .map_or(block.first_line, |c| c.line);
-                return Err(Error::at(
-                    path,
-                    line,
-                    format!("sent_id `{}` is used twice", sentence.sent_id),
-                ));
+                // Holdout text never names a sentence but by its position.
+                let message = if gold.holdout() {
+                    format!("sentence {}: its sent_id is used twice", index + 1)
+                } else {
+                    format!("sent_id `{}` is used twice", sentence.sent_id)
+                };
+                return Err(Error::at(path, line, message));
             }
             gold.sentences.push(sentence);
         }
@@ -301,6 +303,7 @@ impl GoldSentence {
         path: &str,
         mode: TokenMode,
         index: usize,
+        holdout: bool,
         block: &Block,
     ) -> Result<GoldSentence, Error> {
         let sent_id = block
@@ -308,6 +311,14 @@ impl GoldSentence {
             .map(|comment| comment.value.clone())
             .filter(|id| !id.is_empty())
             .ok_or_else(|| Error::at(path, block.first_line, "no `# sent_id = ` comment"))?;
+        // How an error names this sentence: by its `sent_id`, or by position in a holdout file.
+        let place = || {
+            Place::Sentence(if holdout {
+                (index + 1).to_string()
+            } else {
+                sent_id.clone()
+            })
+        };
         let mut tier = None;
         let mut context = Context::Prose;
         let mut seen = BTreeSet::new();
@@ -411,7 +422,7 @@ impl GoldSentence {
             }
         }
         if words.is_empty() {
-            return Err(Error::load(path, Place::Sentence(sent_id), "no words"));
+            return Err(Error::load(path, place(), "no words"));
         }
         let text = match mode {
             TokenMode::Ud => block
@@ -420,7 +431,7 @@ impl GoldSentence {
                 .ok_or_else(|| {
                     Error::load(
                         path,
-                        Place::Sentence(sent_id.clone()),
+                        place(),
                         "no `# text = ` comment, which a file with exam.tokens = ud needs",
                     )
                 })?,

@@ -15,6 +15,7 @@ pub mod error;
 pub mod gold;
 pub mod import;
 pub mod metrics;
+pub mod most_common;
 pub mod report;
 pub mod saved;
 pub mod score;

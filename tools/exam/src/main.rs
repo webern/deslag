@@ -10,11 +10,12 @@ use deslag_exam::compare;
 use deslag_exam::disputes::Disputes;
 use deslag_exam::gold::Gold;
 use deslag_exam::import::Imported;
+use deslag_exam::most_common::{self, MostCommonTag};
 use deslag_exam::report;
 use deslag_exam::saved::SavedRun;
 use deslag_exam::score::{Source, score};
 use deslag_exam::skeleton::skeleton;
-use deslag_exam::tagger::{BUILT_IN, built_in};
+use deslag_exam::tagger::{BUILT_IN, Tagger, built_in};
 use deslag_exam::words::{GoldHeader, Words};
 
 /// Grades part-of-speech taggers against gold sets.
@@ -45,7 +46,8 @@ enum Command {
         /// The gold file, CoNLL-U.
         #[arg(long)]
         gold: PathBuf,
-        /// A built-in tagger: `noun` tags every word a noun.
+        /// A built-in tagger: `noun` tags every word a noun; `mct` gives each word the tag it most
+        /// often has in EWT train (run `make fetch-ewt` first), and is never shipped.
         #[arg(long, required_unless_present = "import", conflicts_with = "import")]
         tagger: Option<String>,
         /// A file another program filled: the output of `tokens` with `UPOS` on every `Word`
@@ -67,8 +69,10 @@ enum Command {
         words: usize,
     },
     /// Compares two saved runs of the same gold, sentence for sentence: each metric before and
-    /// after, and the paired difference with its interval, `up`, `down` or `same`. It refuses
-    /// runs of different gold files or sentences, and prints aggregates only.
+    /// after, and the paired difference with its interval, called `better`, `worse` or `same` by
+    /// what is better for that metric (a higher unknown rate is `worse`), or `higher` or `lower`
+    /// where neither is better. It refuses runs of different gold files or sentences, and prints
+    /// aggregates only.
     Compare {
         /// The run before the change.
         before: PathBuf,
@@ -139,12 +143,16 @@ fn run(cli: Cli) -> Result<(), Error> {
             let aligned = align_all(&gold);
             let scoring = match (&tagger, &import) {
                 (Some(name), _) => {
-                    let tagger = built_in(name).ok_or_else(|| {
-                        Error::Cannot(format!(
-                            "no built-in tagger `{name}`; the built-in taggers are {}",
-                            BUILT_IN.join(", ")
-                        ))
-                    })?;
+                    let tagger: Box<dyn Tagger> = match name.as_str() {
+                        most_common::NAME => Box::new(MostCommonTag::from_cache()?),
+                        _ => built_in(name).ok_or_else(|| {
+                            Error::Cannot(format!(
+                                "no built-in tagger `{name}`; the built-in taggers are {}, {}",
+                                BUILT_IN.join(", "),
+                                most_common::NAME
+                            ))
+                        })?,
+                    };
                     score(&gold, &aligned, &Source::Tagger(tagger.as_ref()), full)?
                 }
                 (None, Some(path)) => {
@@ -153,13 +161,15 @@ fn run(cli: Cli) -> Result<(), Error> {
                 }
                 (None, None) => unreachable!("clap needs one of --tagger and --import"),
             };
+            // The run is saved before the report is printed, so a path that cannot be written
+            // exits 2 with nothing on stdout.
+            if let Some(path) = save {
+                SavedRun::of(&gold, &scoring).write(&path)?;
+            }
             print!(
                 "{}",
                 report::render(&gold, &aligned, &disputes, &scoring, full, words)
             );
-            if let Some(path) = save {
-                SavedRun::of(&gold, &scoring).write(&path)?;
-            }
             Ok(())
         }
         Command::Compare { before, after } => {

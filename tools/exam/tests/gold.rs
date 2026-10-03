@@ -215,6 +215,41 @@ fn the_load_errors_of_the_conventions() {
     }
 }
 
+/// A holdout file names a sentence by its position in every load error, never by its `sent_id`.
+#[test]
+fn holdout_load_errors_name_sentences_by_position() {
+    let head = "# exam.split = holdout\n# exam.trains = no\n";
+    let first = sentence("secret-1", head);
+    let cases = [
+        (
+            format!("{first}\n{}", sentence("secret-1", "")),
+            "f.conllu:8: sentence 2: its sent_id is used twice",
+        ),
+        (
+            format!("{first}\n# sent_id = secret-2\n# text = x\n"),
+            "f.conllu: sentence 2: no words",
+        ),
+        (
+            format!(
+                "{first}\n# sent_id = secret-2\n{}",
+                line("1", "Cats", "NOUN", "_", "_")
+            ),
+            "f.conllu: sentence 2: no `# text = ` comment",
+        ),
+    ];
+    for (text, expect) in cases {
+        let got = error(&text);
+        assert!(got.contains(expect), "\n got: {got}\nwant: {expect}");
+        assert!(
+            !got.contains("secret"),
+            "a holdout error names no sent_id: {got}"
+        );
+    }
+    // The same mistakes in a file that is not holdout still name the sentence.
+    let dev = format!("{}\n{}", sentence("secret-1", ""), sentence("secret-1", ""));
+    assert!(error(&dev).contains("sent_id `secret-1` is used twice"));
+}
+
 #[test]
 fn the_load_errors_of_the_case_files() {
     let cases = [

@@ -47,7 +47,7 @@ is a script. Scripts are bash, open with a comment saying what they are for, use
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
 The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
-library only, run by hand and never by make, tests or CI.
+library only, run by hand; make, tests and CI run `batch`.
 
 One more, named: `scripts/spacy/tag.py`, the exam's spaCy tagger, with hash-pinned packages in the
 cache venv `.spacy/`. Only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never

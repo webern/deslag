@@ -102,9 +102,9 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
-                      blobstore/, which moves its big tier; ewt/ and harper/, which fetch the
-                      treebank and Harper's model for the exam; spacy/, which runs spaCy on the
-                      exam's tokens
+                      blobstore/, which moves its big tier and builds its batches; ewt/ and
+                      harper/, which fetch the treebank and Harper's model for the exam; spacy/,
+                      which runs spaCy on the exam's tokens
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
 tools/exam/           deslag-exam, never published: grades taggers against gold sets;
                       deslag-gold, which makes the gold set
@@ -122,8 +122,12 @@ the next image. `make fetch-ewt` fetches the UD English Web Treebank that `scrip
 pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's tagger model into
 `.harper/`, which the exam grades and nothing ships.
 
+`make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
+completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
+or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
+
 `make fetch-spacy` installs spaCy and its model, pinned by hash in `scripts/spacy/requirements.lock`,
 into a venv in `.spacy/`, and `make generate-spacy` writes the exam's import file for the
 treebank's dev set there. `make test-spacy` then scores it with `deslag-exam`. None is in `make ci`.
 
-`make clean` removes all five directories and runs `cargo clean`.
+`make clean` removes all six directories and runs `cargo clean`.

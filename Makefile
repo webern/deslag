@@ -18,8 +18,8 @@ EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en
 CARGO_FLAGS ?=
 
 .PHONY: help \
-        build build-release \
-        test test-blobs test-spacy \
+        build build-batches build-release \
+        test test-blobs test-scripts test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy \
         ci \
@@ -29,10 +29,12 @@ CARGO_FLAGS ?=
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
+	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier, test it and time reading and tagging it; needs"
 	@echo "                 the network, so not in test"
+	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
@@ -71,13 +73,20 @@ help:
 build: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features
 
+# Harvests, stages and packs each batch a manifest names into .blobs/unpacked,
+# completing a seed first, and fails unless it comes to what the manifest
+# expects. Needs GH_TOKEN or a gh login for GitHub sources. The publish-blobs
+# workflow runs this before it publishes; see $(BLOBSTORE)/blobs.md.
+build-batches: fetch-blobs
+	@$(BLOBSTORE)/batches.sh build
+
 build-release: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features --release
 
 # ---------------------------------------------------------------------------
 # test
 
-test: preflight
+test: preflight test-scripts
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
@@ -86,6 +95,11 @@ test: preflight
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time
+
+# The scripts under scripts/blobstore, run against git repositories the tests
+# make: no network, no login.
+test-scripts: preflight
+	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
 # scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part

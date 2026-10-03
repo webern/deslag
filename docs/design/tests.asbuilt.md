@@ -54,6 +54,9 @@ and the default density, and the binary must report what the library finds. Toke
 must keep to their blocks, and each location found under the golden config must hold what it
 names.
 
+`make test-scripts` runs `scripts/blobstore/test_batches.py`, which tests how batches are built and
+published against local git repositories.
+
 ## The golden set
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with

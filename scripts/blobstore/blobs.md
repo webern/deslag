@@ -1,9 +1,10 @@
 # The blob store
 
 The big tier of the test corpus is too big for git. It is one OCI image, `FROM scratch`, which
-GitHub calls the package `ghcr.io/webern/deslag-blobs`. The four files here manage it:
-`blobs.lock` pins the image by digest, the tag being for people; `blobs.sh` moves it; `layers.txt`
-says where one layer ends and the next begins; and this file says what is in it.
+GitHub calls the package `ghcr.io/webern/deslag-blobs`. The files here manage it: `blobs.lock`
+pins the image by digest, the tag being for people; `blobs.sh` moves it; `layers.txt` says where
+one layer ends and the next begins; `batches.sh` builds batches from the manifests in `batches/`,
+which `batches.md` describes; and this file says what is in it.
 
 `make fetch-blobs` unpacks the image into `.blobs/unpacked/` at the repo root, so that directory
 is the image's filesystem, exactly, and git ignores it. `blobs.sh` does not know what is in the
@@ -48,8 +49,9 @@ take it past that waits for a way to fetch less.
 
 The package is public, so fetching does not need a login: `make fetch-blobs` works on a fresh
 machine, in a hosted agent environment and in CI with nothing set up. Publishing needs a `gh`
-login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`).
-`blobs.sh` takes the token from `gh` for each run and never stores a login.
+login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`),
+or the workflow token below. `blobs.sh` takes the token from `gh` for each run and never stores a
+login.
 
 `blobs.sh` reads anonymously first and turns to `gh` only when that fails, which happens with a
 private package: this repo's was private until 2026-10-03, and a fork's may be.
@@ -60,11 +62,11 @@ login is checked against the registry before it is relied on and dropped when re
 error says which of the two it was and what fixes it. Without the check, a stand-in token made
 every fetch fail with a message about a private package.
 
-CI has no `gh` login; it reads the package anonymously like everyone else, and a workflow that
-publishes would use the workflow token, which works only while the package grants this repository
-access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access -> `webern/deslag`
-with the Write role. The grant is per package, not per tag, so publishing does not need it
-repeated.
+CI has no `gh` login; it reads the package anonymously like everyone else, and the `publish-blobs`
+workflow publishes with the workflow token, which works only while the package grants this
+repository access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access ->
+`webern/deslag` with the Write role. The grant is per package, not per tag, so publishing does not
+need it repeated.
 
 A ghcr.io outage fails `make ci`, and with it every pull request.
 
@@ -107,6 +109,9 @@ changed, new or gone, and which files moved since the fetch -- and pushes nothin
 4. `scripts/blobstore/blobs.sh plan` to see what will be pushed, then `make publish-blobs`. It
    pushes the next `vN`, reusing every layer that did not change, and rewrites `blobs.lock`.
 5. Commit `blobs.lock` with this file.
+
+A batch can also be a manifest that the `publish-blobs` workflow builds and publishes with no
+login or machine; `batches.md` says how.
 
 Publishing needs `bsdtar`, which macOS ships; on Linux it is the `libarchive-tools` package.
 Fetching works with any `tar`. Each command checks for what it needs, all of it in one pass.

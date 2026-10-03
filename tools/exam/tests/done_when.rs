@@ -6,6 +6,7 @@ mod common;
 use common::{alignments, case, scored_texts, texts};
 use deslag::document::TokenKind;
 use deslag_exam::align::Reason;
+use deslag_exam::align::align_all;
 use deslag_exam::disputes::Disputes;
 use deslag_exam::gold::{Split, Tier, TokenMode, Trains};
 use deslag_exam::tagger::Context;
@@ -123,7 +124,7 @@ fn the_agreeing_one_to_many_is_out_of_the_feature_metrics_and_the_rest_are_in() 
 #[test]
 fn the_words_section_counts_the_same() {
     let gold = case("done-when.conllu");
-    let words = Words::of(&gold, &Disputes::default());
+    let words = Words::of(&gold, &align_all(&gold), &Disputes::default());
     assert_eq!(words.sentences, 4);
     assert_eq!(words.words, 23);
     assert_eq!((words.punctuation, words.x, words.tagged), (3, 1, 19));
@@ -144,7 +145,7 @@ fn the_words_section_counts_the_same() {
 fn disputes_are_counted_and_the_unknown_ones_too() {
     let gold = case("done-when.conllu");
     let disputes = Disputes::parse("d.tsv", "s1\t4\tNOUN\tmaybe\ns99\t1\tVERB\tgone\n").unwrap();
-    let words = Words::of(&gold, &disputes);
+    let words = Words::of(&gold, &align_all(&gold), &disputes);
     assert_eq!((words.disputes, words.unknown_disputes), (2, 1));
 }
 
@@ -155,7 +156,7 @@ fn a_holdout_copy_reads_the_same_and_says_so() {
     assert!(holdout.holdout());
     assert_eq!(holdout.trains, Trains::No);
     assert_eq!(
-        Words::of(&plain, &Disputes::default()),
-        Words::of(&holdout, &Disputes::default())
+        Words::of(&plain, &align_all(&plain), &Disputes::default()),
+        Words::of(&holdout, &align_all(&holdout), &Disputes::default())
     );
 }

@@ -102,7 +102,7 @@ scripts/              preflight; llm-detection/collect.py, which rebuilds the co
                       blobstore/, which moves its big tier and builds its batches; ewt/, which
                       fetches the treebank
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
-tools/exam/           deslag-exam, never published: gold sets, alignment and the tagger contract
+tools/exam/           deslag-exam, never published: grades taggers against gold sets
 ```
 
 ## Build

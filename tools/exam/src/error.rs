@@ -22,6 +22,8 @@ pub enum Error {
         /// What is wrong.
         message: String,
     },
+    /// A request the exam cannot carry out: an unknown tagger, runs that cannot be compared.
+    Cannot(String),
     /// A tagger broke the contract of the `Tagger` trait.
     Contract {
         /// The tagger's name.
@@ -79,6 +81,7 @@ impl fmt::Display for Error {
                 place: Place::Sentence(sent_id),
                 message,
             } => write!(f, "{path}: sentence {sent_id}: {message}"),
+            Error::Cannot(message) => write!(f, "{message}"),
             Error::Contract {
                 tagger,
                 sent_id,

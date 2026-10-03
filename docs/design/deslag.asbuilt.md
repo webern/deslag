@@ -111,5 +111,5 @@ tools/corpus/         deslag-corpus, never published: the corpus loaders and ana
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
 the next image. `make build-batches` builds the batches that manifests in
-`scripts/blobstore/batches/` name, and the `publish-blobs` workflow does that and publishes them on
-a push to `main` or `m/deslag-exam`. `make clean` removes both directories and runs `cargo clean`.
+`scripts/blobstore/batches/` name, completing seeds, and the `publish-blobs` workflow does that and
+publishes them on a push to `main` or `m/deslag-exam`. `make clean` removes both directories and runs `cargo clean`.

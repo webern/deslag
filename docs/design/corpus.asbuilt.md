@@ -8,7 +8,7 @@ max_size_bytes: 8192
 
 The corpus is Markdown quoted from public repositories, each **fixture** with a JSON **sidecar**
 beside it. It has two tiers: the **tree**, `tests/corpus/`, in git, and the **big tier**, in the
-OCI image `scripts/blobstore/blobs.md` describes. `corpus.md` has the reasons.
+OCI image `scripts/blobstore/blobs.md` describes.
 
 ## The tree
 
@@ -67,7 +67,7 @@ Each line of `repos.jsonl` is a repository the harvest tried: `host`, `repo`, `f
 ## collect.py
 
 Its stages are `discover`, which runs the `SAMPLERS`; `harvest`; `stage`, which writes what
-`harvest` kept as fixtures with sidecars, the one stage that writes them; `pack`; `pin`; `batch`;
+`harvest` kept as fixtures with sidecars, the one stage that writes them; `pack`; `batch`;
 `select`, which samples the tree from the big tier; `describe`, which rewrites the sidecars of
 `core/`; and `recheck`. `MARKS` is the table of agent marks, and `label_history` derives a label from a file's
 commits.
@@ -110,10 +110,10 @@ The batch is named for the day, with the next sequence, or by `--name`, and must
 batch there is.
 
 `batch MANIFEST --corpus .blobs/unpacked/corpus --work DIR` builds the batch of
-`scripts/blobstore/batches/NAME.json`: each repository it lists harvested at its pinned `head`,
-with the GitHub metadata it holds, then staged and packed under its name and date. It fails unless
-the batch is what `expect` records, a fixture count and a digest of its files. `pin` writes the
-manifest from a harvest and records `expect`.
+`scripts/blobstore/batches/NAME.json`. Each of its `sources` has a `kind`, a `Source` in
+`SOURCE_KINDS` that resolves, harvests and writes the `results/` `stage` reads; `git` is the one.
+A seed, with no `expect`, is resolved, built twice, and written back completed if the builds
+match. A completed manifest must build to `expect`, a fixture count and a digest of the files.
 
 ## The loaders
 

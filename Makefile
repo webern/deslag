@@ -56,7 +56,8 @@ build: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features
 
 # Harvests, stages and packs each batch a manifest names into .blobs/unpacked,
-# and fails unless it comes to what the manifest expects. The publish-blobs
+# completing a seed first, and fails unless it comes to what the manifest
+# expects. Needs GH_TOKEN or a gh login for GitHub sources. The publish-blobs
 # workflow runs this before it publishes; see $(BLOBSTORE)/blobs.md.
 build-batches: fetch-blobs
 	@$(BLOBSTORE)/batches.sh build

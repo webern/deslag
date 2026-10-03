@@ -99,32 +99,37 @@ changed, new or gone, and which files moved since the fetch -- and pushes nothin
 
 ## Changing the image
 
-A new batch is a manifest, `batches/NAME.json`, and the `publish-blobs` workflow does the rest.
-NAME is `YYYY-MM-DD-NN`, later than every earlier batch. The manifest lists each repository with
-the commit to harvest it at and what GitHub said of it then, the sidecars' date, any exclusions,
-and `expect`: the fixture count and a digest of the batch's files. None of it is asked of the
-network again.
+A new batch is a manifest, `batches/NAME.json`, and the `publish-blobs` workflow does the rest, so
+no one needs a login. NAME is `YYYY-MM-DD-NN`, later than every earlier batch. The manifest starts
+as a seed that only names sources:
 
-1. `make fetch-blobs`, then `collect.py discover` and `harvest` into a work directory. The
-   metadata the manifest keeps needs a `gh` login.
-2. `collect.py pin --work DIR --corpus .blobs/unpacked/corpus --name NAME --out
-   scripts/blobstore/batches/NAME.json` writes the manifest, builds the batch from it into the
-   tree and records `expect`. A published batch is never changed.
-3. `make test-blobs`. Open a pull request with the manifest and a line here on what the batch
-   holds. The workflow builds it again from the manifest alone,
-   and fails if it differs.
-4. Pushed to `main` or `m/deslag-exam`, the manifest is built once more, the next `vN` is
-   published, reusing every layer that did not change, and `blobs.lock` is committed to that
-   branch. The workflow token pushes that commit, so it does not start a workflow.
+```json
+{"batch": "2026-10-04-01", "sources": [{"kind": "git", "host": "github.com", "repo": "owner/name"}]}
+```
 
-A batch that cannot be built as pinned fails the workflow and leaves `blobs.lock` alone: a
-repository that went or lost the pinned commit, a pull request GitHub now describes another way,
-a fixture another batch now holds. Pin it again. A manifest whose batch the image holds is only
-checked against it, so a run can be repeated. `make build-batches` builds locally.
+A source names its `kind`; `git` is the only one. It may add `head`, the commit to harvest at,
+which `git ls-remote` gives without a login. The manifest may add `captured`, `per_repo`,
+`max_bytes` and `exclude`.
+
+1. Commit the seed and open a pull request. The workflow reads each repository's metadata with
+   its own token, takes the tip as `head` where the seed gives none, builds the batch, then builds
+   it again from the completed manifest; the two must match. It publishes nothing.
+2. Pushed to `main` or `m/deslag-exam`, it does that again, publishes the next `vN`, and commits
+   the completed manifest and `blobs.lock` to that branch. The workflow token pushes that commit,
+   so it does not start a workflow.
+
+A completed manifest holds each source's `head` and GitHub metadata, `kept`, and `expect`: the
+fixture count and a digest of the batch's files. Built from the file alone it must match, so a
+batch that cannot be reproduced fails the workflow and leaves `blobs.lock` alone: a repository
+that went or lost its `head`, a pull request GitHub now describes another way, a fixture another
+batch now holds.
+
+A seed with no `head` may publish newer commits than its pull request run saw. A batch the image holds is only checked against its manifest. `make build-batches` builds locally,
+with `GH_TOKEN` or a `gh` login for GitHub sources.
 
 By hand, edit `.blobs/unpacked/`, run `blobs.sh plan`, then `make publish-blobs`, and commit
-`blobs.lock` with this file. That needs `bsdtar`, which macOS ships; on Linux it is the
-`libarchive-tools` package; fetching works with any `tar`.
+`blobs.lock` with this file. That needs `bsdtar`; on Linux it is the
+`libarchive-tools` package.
 
 ## Unpublished edits
 
@@ -133,8 +138,8 @@ belongs to one lock: the one it was unpacked from, kept in `.blobs/stamp`. While
 equals the stamp, `fetch-blobs` is a file compare and nothing else, so an edited tree can be
 tested before it is published.
 
-Once the lock differs, after a branch switch, a pull or a merge, fetch replaces the tree. Before
-it does, it looks for edits, and if it finds any, stops and says what they are and what to do: publish them from the branch whose
-lock they belong to, move `.blobs/unpacked/` aside, or `make clean-blobs` to drop them. A tree
-without a stamp is a fetch that did not finish and is replaced. `make clean` removes the tree too,
-edits and all.
+Once the lock differs (a branch switch, a pull, a merge), fetch replaces the tree, but first looks
+for edits and, if it finds any, stops and says what they are and what to do: publish them from the
+branch whose lock they belong to, move `.blobs/unpacked/` aside, or `make clean-blobs`. A tree
+without a stamp is an unfinished fetch and is replaced. `make clean` removes the tree too, edits
+and all.

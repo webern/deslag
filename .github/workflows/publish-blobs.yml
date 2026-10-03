@@ -1,16 +1,18 @@
 name: publish-blobs
 
-# A new batch of the corpus's big tier reaches the registry without anyone's machine. The batch
-# is a manifest, scripts/blobstore/batches/NAME.json, that `collect.py pin` wrote. This workflow
-# builds every batch whose manifest the pinned image lacks, from nothing, and fails unless each
-# comes to exactly what its manifest records; on a push it then publishes them and commits the
-# new blobs.lock to the branch pushed. scripts/blobstore/blobs.md has the whole story.
+# A new batch of the corpus's big tier reaches the registry without anyone's machine or login. The
+# batch is a manifest, scripts/blobstore/batches/NAME.json, which may be a seed that only names
+# sources. This workflow builds every batch whose manifest the pinned image lacks: it completes a
+# seed with what GitHub says of each repository and the commit to harvest, builds the batch twice
+# and fails unless both come out the same, and fails unless a completed manifest builds to exactly
+# what it records. On a push it then publishes the batches and commits the completed manifests and
+# the new blobs.lock to the branch pushed. scripts/blobstore/blobs.md has the whole story.
 #
 # main and m/deslag-exam both publish. A workflow file runs from the branch it is pushed to, so a
 # batch can be published from a branch long before it reaches main.
 #
-# A pull request builds the batches and publishes nothing. That proves a batch can be built again
-# from its manifest before the manifest merges.
+# A pull request builds the batches and publishes nothing, so a seed is shown to build, and to
+# build the same way twice, before it merges.
 
 on:
   push:
@@ -64,7 +66,8 @@ jobs:
       - name: Fetch the corpus's big tier
         run: make fetch-blobs
 
-      # gh asks GitHub which commits a squash-merged pull request held, with the workflow token.
+      # gh reads each repository's metadata and the pull requests behind squash-merges, public
+      # data, with the workflow token. That is all a seed needs of GitHub.
       - name: Build the batches the manifests name
         env:
           GH_TOKEN: ${{ github.token }}
@@ -118,7 +121,7 @@ jobs:
           name: new-batches
           path: ${{ runner.temp }}
 
-      - name: Add the new batches to the tree
+      - name: Add the new batches and completed manifests to the tree
         run: scripts/blobstore/batches.sh unbundle "$RUNNER_TEMP/new-batches.tar"
 
       # blobs.sh logs crane in with this token. The package must grant this repository the Write
@@ -129,5 +132,5 @@ jobs:
         run: make publish-blobs
 
       # The push is made with the workflow token, so it starts no workflow of its own.
-      - name: Commit the lock
+      - name: Commit the lock and the completed manifests
         run: scripts/blobstore/batches.sh pin-lock "$GITHUB_REF_NAME"

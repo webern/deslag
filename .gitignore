@@ -13,6 +13,9 @@ test/output/
 .blobs/
 .tools/
 
+# the UD English Web Treebank that make fetch-ewt downloads; see scripts/ewt/ewt.lock
+.ewt/
+
 # because llms love python
 __pycache__/
 

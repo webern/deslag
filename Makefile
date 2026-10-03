@@ -6,6 +6,7 @@
 
 SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
+EWT := $(SCRIPTS)/ewt
 
 # Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails
 # there instead of being rewritten.
@@ -15,11 +16,11 @@ CARGO_FLAGS ?=
         build build-release \
         test test-blobs \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs \
+        clean clean-blobs clean-ewt \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs publish-blobs
+        fetch-blobs fetch-ewt publish-blobs
 
 help:
 	@echo "build            build deslag and tools/corpus with the debug profile"
@@ -35,6 +36,7 @@ help:
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
+	@echo "clean-ewt        remove the fetched treebank"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
@@ -46,6 +48,7 @@ help:
 	@echo "preflight        report what must be installed before a build can succeed"
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
+	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
 
 # ---------------------------------------------------------------------------
@@ -100,12 +103,16 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs
+clean: clean-blobs clean-ewt
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
 clean-blobs:
 	rm -rf .blobs .tools
+
+# .ewt is what fetch-ewt downloads.
+clean-ewt:
+	rm -rf .ewt
 
 # ---------------------------------------------------------------------------
 # ci, fix, preflight, fetch, publish
@@ -150,6 +157,11 @@ install:
 # $(BLOBSTORE)/blobs.md. A stamp that matches the lock is the whole check.
 fetch-blobs:
 	@$(BLOBSTORE)/blobs.sh fetch
+
+# The treebank the exam grades on, from the release $(EWT)/ewt.lock pins. Nothing in ci reads it. A
+# stamp that matches the lock is the whole check.
+fetch-ewt:
+	@$(EWT)/fetch.sh fetch
 
 publish-blobs:
 	@$(BLOBSTORE)/blobs.sh publish

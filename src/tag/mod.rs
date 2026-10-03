@@ -15,6 +15,7 @@ mod closed;
 mod function;
 mod infinitive;
 mod lexicon;
+mod nounverb;
 mod pass;
 mod proper;
 mod shape;
@@ -26,7 +27,7 @@ pub use types::{Confidence, Context, Features, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 6;
+pub const VERSION: u32 = 7;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]
@@ -155,7 +156,7 @@ mod tests {
 
     #[test]
     fn a_possessive_is_read_from_its_stem_or_is_an_unknown_noun() {
-        let mut tokens = Token::split("The user's frobnicator's file.");
+        let mut tokens = Token::split("Set user's frobnicator's file.");
         sentence(&mut tokens, Context::Prose);
         let user = tokens[1].reading.unwrap();
         assert_eq!(user.tag, Tag::Noun);

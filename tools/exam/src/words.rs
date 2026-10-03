@@ -3,7 +3,7 @@
 
 use std::fmt;
 
-use crate::align::Reason;
+use crate::align::{Aligned, Reason};
 use crate::disputes::Disputes;
 use crate::gold::{Gold, Prov, TokenMode};
 
@@ -25,13 +25,16 @@ pub struct Words {
     /// The scored tokens they stand for.
     pub scored_tokens: usize,
     /// The unalignable words, by [`Reason`] in the order of [`Reason::ALL`].
-    pub unalignable: [usize; 4],
+    pub unalignable: Vec<usize>,
     /// The tagged words on no word token.
     pub not_word: usize,
     /// The words by `Prov=`, in the order of [`Prov::ALL`].
-    pub provenance: [usize; 4],
+    pub provenance: Vec<usize>,
     /// The words that name no `Prov=`.
     pub unmarked: usize,
+    /// For an imported file, its `Word` lines tagged `PUNCT`, `SYM` or `X`, which the exam reads as
+    /// `Noun` at `Unknown`. `None` when no file was imported.
+    pub imported_outside: Option<usize>,
     /// The open gold disputes.
     pub disputes: usize,
     /// The disputes that name a `sent_id` the gold does not have.
@@ -39,8 +42,9 @@ pub struct Words {
 }
 
 impl Words {
-    /// Aligns every sentence of `gold` and counts what it finds, with `disputes` beside it.
-    pub fn of(gold: &Gold, disputes: &Disputes) -> Words {
+    /// Counts what `aligned`, the alignment of every sentence of `gold`, found, with `disputes`
+    /// beside it.
+    pub fn of(gold: &Gold, aligned: &[Aligned<'_>], disputes: &Disputes) -> Words {
         let mut words = Words {
             sentences: gold.sentences.len(),
             words: 0,
@@ -49,16 +53,20 @@ impl Words {
             tagged: 0,
             scored_words: 0,
             scored_tokens: 0,
-            unalignable: [0; 4],
+            unalignable: vec![0; Reason::ALL.len()],
             not_word: 0,
-            provenance: [0; 4],
+            provenance: vec![0; Prov::ALL.len()],
             unmarked: 0,
+            imported_outside: None,
             disputes: disputes.open.len(),
             unknown_disputes: disputes.unknown(gold),
         };
-        for sentence in &gold.sentences {
-            let tokens = sentence.tokens();
-            let alignment = sentence.align(&tokens);
+        for Aligned {
+            sentence,
+            alignment,
+            ..
+        } in aligned
+        {
             words.words += sentence.words.len();
             words.punctuation += alignment.punctuation;
             words.x += alignment.x;
@@ -71,10 +79,7 @@ impl Words {
             words.not_word += alignment.not_word.len();
             for word in &sentence.words {
                 match word.prov {
-                    Some(prov) => {
-                        let at = Prov::ALL.iter().position(|p| *p == prov).unwrap_or(0);
-                        words.provenance[at] += 1;
-                    }
+                    Some(prov) => words.provenance[prov.index()] += 1,
                     None => words.unmarked += 1,
                 }
             }
@@ -145,9 +150,12 @@ impl fmt::Display for Words {
             row(f, 8, reason.label(), self.unalignable[reason.index()], "")?;
         }
         row(f, 6, "not word tokens", self.not_word, "")?;
+        if let Some(outside) = self.imported_outside {
+            row(f, 2, "imported lines outside the 13", outside, "")?;
+        }
         writeln!(f, "  provenance")?;
-        for (prov, count) in Prov::ALL.iter().zip(self.provenance) {
-            row(f, 4, prov.name(), count, "")?;
+        for (prov, count) in Prov::ALL.iter().zip(&self.provenance) {
+            row(f, 4, prov.name(), *count, "")?;
         }
         row(f, 4, "unmarked", self.unmarked, "")?;
         let unknown = format!(

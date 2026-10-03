@@ -327,6 +327,11 @@ impl Confidence {
         }
     }
 
+    /// Its place in [`Confidence::ALL`].
+    pub fn index(self) -> usize {
+        self as usize
+    }
+
     /// The level named `name`.
     pub fn from_name(name: &str) -> Option<Confidence> {
         Confidence::ALL

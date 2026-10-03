@@ -2,17 +2,25 @@
 //!
 //! A **gold set** is sentences where a person has written the right tag for every word, in
 //! CoNLL-U. The exam reads one ([`gold`]), matches its words to deslag's tokens ([`align`]), and,
-//! given a [`tagger::Tagger`], scores what the tagger says of each token. This crate holds the
-//! first half of that: reading and aligning gold, the tagger contract, the mapping from UD's tags
-//! to deslag's ([`tags`]), the `tokens` skeleton an outside tagger fills ([`skeleton`]), and the
-//! Words section of the report ([`words`]). `docs/design/exam.asbuilt.md` describes it.
+//! given a [`tagger::Tagger`] or a file another program filled ([`import`]), scores what it says
+//! of each token ([`score`], [`metrics`]), with sentence-bootstrap intervals ([`stats`]), and
+//! prints a report ([`report`]), a saved run ([`saved`]) and a paired comparison of two
+//! ([`compare`]). `docs/design/exam.asbuilt.md` describes it.
 
 pub mod align;
+pub mod compare;
 pub mod conllu;
 pub mod disputes;
 pub mod error;
 pub mod gold;
+pub mod import;
+pub mod metrics;
+pub mod report;
+pub mod saved;
+pub mod score;
 pub mod skeleton;
+pub mod stats;
+pub mod strata;
 pub mod tagger;
 pub mod tags;
 pub mod words;

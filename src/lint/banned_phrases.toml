@@ -16,14 +16,6 @@ llm_files = 63
 llm_repos = 50
 
 [[entry]]
-phrase = "why this matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 59
-llm_repos = 40
-
-[[entry]]
 phrase = "deliberately not"
 group = "insistence"
 advice = "say what it does; what it does not do rarely needs saying"

@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 244 of 1230: core 7, human 63, llm 64, mixed 110
+# fails 241 of 1230: core 7, human 63, llm 61, mixed 110
 
 [md.lints.banned_phrases]
 allow = ["please note that"]
@@ -103,7 +103,6 @@ llm/JetBrains--kotlin-web-site/air__cloud__README.md matches:1
 llm/Killaret--knowledge-graph/devin__prompts__ANALYSIS_PROMPT.md matches:1
 llm/Lucent-Financial-Group--Zeta/docs__research__2026-09-08-mixed-message-epoch-independent-review.md matches:1
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md matches:1
-llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md matches:1
 llm/RazzaBear--copilot-toolkit/skills__memory-merger__SKILL.md matches:1
 llm/Shekyl-Foundation--shekyl-core/docs__design__BLOCK_TX_WIRE_FORMAT_PORT.md matches:5
 llm/Sonophoto--sioo/cli__help__rete-net.md matches:1
@@ -123,9 +122,8 @@ llm/eggjs--egg/packages__koa__docs__api__request.md matches:4
 llm/elastic--elastic-transport-net/claude__skills__writing-style.md matches:1
 llm/evalstate--hf-mcp-server/GRADIO_DISCOVERY_OPTIMIZATION.md matches:2
 llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md matches:2
-llm/gastownhall--gastown/docs__design__ledger-export-triggers.md matches:3
 llm/github--awesome-copilot/skills__dotnet-best-practices__SKILL.md matches:1
-llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:3
+llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:2
 llm/gitlab--cznic--ql/AUDIT.md matches:1
 llm/gitlab--gitlab-com--runbooks/docs__patroni__alerts__PatroniIsDown.md matches:1
 llm/groupthinking--EventRelay/docs__CAPABILITIES_AUDIT.md matches:1
@@ -137,7 +135,6 @@ llm/lishix520--academic-paper-skills/strategist__SKILL.md matches:2
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md matches:2
 llm/lostisland--faraday/github__copilot-instructions.md matches:1
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md matches:5
-llm/naomiaro--waveform-playlist/plans__waveform-service.md matches:1
 llm/philipdallen--PleaNP/docs__CREATIVE_PROTOCOL.md matches:3
 llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:1
 llm/plasma-umass--coz/java__README.md matches:1

@@ -406,3 +406,21 @@ fn the_words_flag_limits_the_most_missed() {
     let listed = missed.lines().take_while(|l| l.starts_with("  ")).count();
     assert_eq!(listed, 2, "{missed}");
 }
+
+#[test]
+fn a_save_path_that_cannot_be_written_exits_2_with_nothing_printed() {
+    let gold = case("done-when.conllu");
+    let dir = tempfile::tempdir().unwrap();
+    let run = dir.path().join("no-such-directory").join("run.json");
+    // `fails` checks that stdout is empty, so no report came out before the error.
+    let error = fails(&[
+        "score",
+        "--gold",
+        &gold,
+        "--tagger",
+        "noun",
+        "--save",
+        path(&run),
+    ]);
+    assert!(error.contains("run.json"), "{error}");
+}

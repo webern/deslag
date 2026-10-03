@@ -153,13 +153,15 @@ fn run(cli: Cli) -> Result<(), Error> {
                 }
                 (None, None) => unreachable!("clap needs one of --tagger and --import"),
             };
+            // The run is saved before the report is printed, so a path that cannot be written
+            // exits 2 with nothing on stdout.
+            if let Some(path) = save {
+                SavedRun::of(&gold, &scoring).write(&path)?;
+            }
             print!(
                 "{}",
                 report::render(&gold, &aligned, &disputes, &scoring, full, words)
             );
-            if let Some(path) = save {
-                SavedRun::of(&gold, &scoring).write(&path)?;
-            }
             Ok(())
         }
         Command::Compare { before, after } => {

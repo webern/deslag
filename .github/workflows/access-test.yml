@@ -1,0 +1,30 @@
+name: access-test
+
+# Throwaway. Proves a workflow on a branch other than main can push to
+# the deslag-blobs package. Pushes a tiny image under its own tag; the
+# pinned corpus digest is not touched.
+
+on:
+  push:
+    branches: [access-test]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: imjasonh/setup-crane@v0.4
+      - name: push a tiny image
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "$TOKEN" | crane auth login ghcr.io -u "${{ github.actor }}" --password-stdin
+          echo "access test ${{ github.sha }}" > access-test.txt
+          tar cf layer.tar access-test.txt
+          crane append -f layer.tar -t ghcr.io/webern/deslag-blobs:access-test
+          crane manifest ghcr.io/webern/deslag-blobs:access-test

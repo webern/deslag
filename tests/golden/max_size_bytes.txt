@@ -85,7 +85,6 @@ mixed/HumanSignal--label-studio/docs__source__guide__install_enterprise_k8s.md s
 mixed/HumanSignal--label-studio/docs__source__guide__quality.md size_bytes:19213 budget:16384
 mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md size_bytes:16811 budget:16384
 mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md size_bytes:23471 budget:16384
-mixed/JuliaMath--Polynomials.jl/docs__src__index.md size_bytes:29584 budget:16384
 mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md size_bytes:31260 budget:16384
 mixed/LennartHennigs--Button2/CHANGELOG.md size_bytes:22891 budget:16384
 mixed/MarkMichaelis--ScoopBucket/README.md size_bytes:36099 budget:16384
@@ -95,6 +94,7 @@ mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md size_bytes:24735 budget:
 mixed/PrivateBin--PrivateBin/CHANGELOG.md size_bytes:34226 budget:16384
 mixed/SchemaStore--schemastore/CONTRIBUTING.md size_bytes:32916 budget:16384
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md size_bytes:20113 budget:16384
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md size_bytes:18684 budget:16384
 mixed/ShieldBattery--ShieldBattery/docs__USEFUL_QUERIES.md size_bytes:19781 budget:16384
 mixed/Umplify--xunit-dependency-injection/README.md size_bytes:26912 budget:16384
 mixed/WikipediaBrown--napkin/README.md size_bytes:51541 budget:16384

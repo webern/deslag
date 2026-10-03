@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 128 of 1230: core 5, human 18, llm 63, mixed 42
+# fails 126 of 1230: core 5, human 18, llm 63, mixed 40
 
 [md.lints.verbs_no_nouns]
 
@@ -95,7 +95,6 @@ llm/zhitongblog--solomd/app-store__macos__metadata__DESCRIPTION_en.md matches:1
 mixed/AsBuiltReport--AsBuiltReport.Veeam.VBR/CHANGELOG.md matches:1
 mixed/ColorlibHQ--gentelella/changelog.md matches:2
 mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__en__gramatiko__07.md matches:1
-mixed/JuliaMath--Polynomials.jl/docs__src__index.md matches:1
 mixed/MarkMichaelis--ScoopBucket/README.md matches:5
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md matches:2
 mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:1
@@ -117,7 +116,6 @@ mixed/jitsi--jitsi-videobridge/doc__svc.md matches:1
 mixed/keithrbennett--wifiwand/README.md matches:1
 mixed/mabel-dev--opteryx/README.md matches:1
 mixed/markshust--docker-magento/README.md matches:1
-mixed/microsoft--DirectXShaderCompiler/CONTRIBUTING.md matches:1
 mixed/missingfaktor--akar/FAQs.md matches:1
 mixed/ncsa--NEAT/ChangeLog.md matches:3
 mixed/niander--my-dotfiles/README.md matches:1

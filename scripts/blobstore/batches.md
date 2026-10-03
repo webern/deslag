@@ -16,8 +16,15 @@ It starts as a seed that only names sources:
 
 A source names its `kind`. A `git` source is a `host` and a `repo`, and may add `head`, the commit
 to harvest at, which `git ls-remote` gives with no login. The manifest may add `captured`, the
-date the sidecars carry; `per_repo` and `max_bytes`, which override `collect.py`'s limits; and
-`exclude`, rows of `sha256` and `reason` as `recheck` writes them.
+date the sidecars carry; `per_repo` and `max_bytes`, which override `collect.py`'s limits;
+`exclude`, rows of `sha256` and `reason` as `recheck` writes them; and `relicense`, rows of `sha256`
+and `license`.
+
+A `relicense` row supersedes a live fixture whose licence its sidecar has wrong: the batch excludes
+the fixture and adds it again, with its bytes and its sidecar as they were except
+`source.license`, which is the row's. It asks nothing of the network, so a manifest of `exclude`
+and `relicense` rows alone has no source to resolve and is built from the fetched image. The new
+licence must be one the corpus accepts; a fixture that has none is an `exclude` row instead.
 
 The workflow completes a seed. Each source gains `head`, the metadata GitHub gave for it, and
 `kept`, what the harvest kept by label; the manifest gains `expect`, the fixture count and a

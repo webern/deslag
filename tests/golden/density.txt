@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 294 of 1230: core 8, human 53, llm 104, mixed 129
+# fails 291 of 1230: core 8, human 52, llm 104, mixed 127
 
 [md.lints.density]
 max_item_chars = 300
@@ -48,7 +48,6 @@ human/gitlab--gitlab-com--chatops/README.md item:334 item:321
 human/gitlab--gitlab-org--charts--gitlab/doc__development__release.md item:317
 human/gitlab--mdhr-extension--markdown-here-revival/_prefork__CLA-individual.md paragraph:725
 human/gitlab--rosie-pattern-language--rosie/doc__notes__compilation-overview.md paragraph:750 item:333
-human/gitlab--thorchain--thornode/docs__mimir.md paragraph:605
 human/gitlab--versionlens--vscode-versionlens/CHANGELOG.md item:315
 human/hf--google-bert--bert-base-uncased/README.md item:469
 human/hf--speechbrain--slu-direct-fluent-speech-commands-librispeech-asr/README.md paragraph:1006
@@ -183,8 +182,6 @@ mixed/GitTools--GitVersion/BREAKING_CHANGES.md item:348 item:356 item:362 item:4
 mixed/HumanSignal--label-studio/docs__source__guide__quality.md item:312
 mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md item:417 item:313 item:356 item:301 item:411
 mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md paragraph:801 item:497
-mixed/JuliaMath--Polynomials.jl/docs__src__index.md item:316
-mixed/JuliaSymbolics--Symbolics.jl/NEWS.md item:433 item:378
 mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md paragraph:886 paragraph:750 paragraph:989 paragraph:1003 paragraph:723 paragraph:873 paragraph:799 paragraph:735 paragraph:803 paragraph:640
 mixed/LennartHennigs--Button2/CHANGELOG.md item:308 item:423 item:345 item:371 item:438 item:406 item:358 item:310
 mixed/MarkMichaelis--ScoopBucket/README.md paragraph:773 paragraph:1003 item:656 item:304 item:845 item:510 item:367 paragraph:725 item:440 item:367 paragraph:622
@@ -198,6 +195,7 @@ mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md item:330
 mixed/SciML--ModelingToolkit.jl/docs__src__tutorials__acausal_components.md paragraph:620
 mixed/SciML--NeuralPDE.jl/docs__src__index.md paragraph:820
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md paragraph:705 item:440 item:707 item:529 item:361 item:320 item:330 item:373
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md item:305 paragraph:819
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md item:548 item:761 item:305 item:917 item:1597 item:440 item:390 item:599 item:335 item:418
 mixed/ShieldBattery--ShieldBattery/docs__USEFUL_QUERIES.md paragraph:648
 mixed/Umplify--xunit-dependency-injection/README.md item:342
@@ -258,7 +256,6 @@ mixed/learningequality--kolibri/docs__build_system__index.md item:431 item:389 i
 mixed/markshust--docker-magento/README.md item:455 item:314 item:307
 mixed/maxmind--GeoIP2-php/CHANGELOG.md item:408 item:380 item:358 item:447 item:303 item:332
 mixed/mesonbuild--meson/docs__markdown__Fs-module.md item:555
-mixed/microsoft--DirectXShaderCompiler/CONTRIBUTING.md paragraph:612
 mixed/missingfaktor--akar/FAQs.md item:327
 mixed/natemcmaster--CommandLineUtils/CHANGELOG.md item:478
 mixed/ncsa--NEAT/ChangeLog.md item:1120 item:1376 paragraph:609 paragraph:907 item:551 paragraph:1461 paragraph:676 paragraph:967 paragraph:685 paragraph:702 paragraph:695 item:598 item:507 item:443 item:358 item:379 item:363 item:432 item:430 item:320 item:360 item:321

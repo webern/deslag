@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "worklogs__2026-09-24-135804-release-0.2.40.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "berelevant-ai/slopless",
+    "path": ".worklogs/2026-09-24-135804-release-0.2.40.md",
+    "commit": "5658158e09a1e0c2614424f942538b3e125f9f2c",
+    "commit_date": "2026-09-24T13:59:46+01:00",
+    "url": "https://github.com/berelevant-ai/slopless/blob/5658158e09a1e0c2614424f942538b3e125f9f2c/.worklogs/2026-09-24-135804-release-0.2.40.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-16T21:41:35+01:00",
+    "stars": 325,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-24T13:58:04+01:00",
+    "last_commit_date": "2026-09-24T13:58:04+01:00",
+    "last_commit_author": "Eugene Tartakovsky",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-24T13:58:04+01:00",
+    "last_committer_date": "2026-09-24T13:58:04+01:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b5f03b5dbe2813337efe6b3f457b510f36b6df3e",
+        "date": "2026-09-24T13:58:04+01:00",
+        "committed": "2026-09-24T13:58:04+01:00",
+        "old": null,
+        "new": "f53a87e9fefbdbfa277182c9be3b3d8288a8109b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 521,
+    "sha256": "a964123e9e87fc4002ba5f3472c34b44adb0aabac6b228016a909c678a1b4cff",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 77,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/berelevant-ai--slopless/.worklogs/2026-09-24-135804-release-0.2.40.md"
+}

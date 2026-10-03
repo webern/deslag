@@ -286,8 +286,9 @@ class ClassifierTests(unittest.TestCase):
 
 class MultiLicenceTests(unittest.TestCase):
     """A licence file may hold several licences. `classify_license_text` names every accepted one
-    it holds, and is None when it holds any the corpus does not accept: each case is a pattern
-    the published fixtures' licence files have."""
+    it holds, and is None when it holds any the corpus does not accept, for the whole tree: each
+    case is a pattern the published fixtures' licence files have. `ScopeTests` is for what a text
+    says of the paths its terms are for."""
 
     def none(self, text):
         self.assertIsNone(collect.classify_license_text(text))
@@ -351,7 +352,7 @@ class MultiLicenceTests(unittest.TestCase):
                   "under the Apache License, Version 2.0.\n\nDocumentation, READMEs and figures: "
                   "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International.")
 
-    def test_a_licence_that_applies_to_some_files_is_none_whichever_files_they_are(self):
+    def test_a_licence_for_some_files_leaves_the_whole_tree_without_one(self):
         for why, text in {
             "a GPL notice for a bundled module": MIT + "\nModule foo uses the bar framework, "
                 "which is licensed under LGPL.\n",
@@ -481,6 +482,118 @@ class MultiLicenceTests(unittest.TestCase):
         self.none(APACHE + "\n" + STUDY_ONLY)
 
 
+class ScopeTests(unittest.TestCase):
+    """`license_for_path`: a term outside the accepted licences that the text puts on named
+    directories, or on what the project took from others, is only for those. A term the text does
+    not place, or that is for prose, or for everything the text does not name, is for the whole
+    tree. Every case is a pattern the published fixtures' licence files have."""
+
+    def at(self, text, path, source="LICENSE"):
+        return collect.license_for_path(collect.license_terms(text, source), path)
+
+    def test_a_directory_the_text_names_for_an_enterprise_licence_is_the_only_one_under_it(self):
+        text = ('Portions of this software are licensed as follows:\n\n'
+                '* All software that resides under an "ee/" directory is licensed under the '
+                'license defined in "ee/license".\n'
+                '* All software outside of the above-mentioned directories is available under '
+                'the MIT license.\n\n' + MIT)
+        self.assertEqual(self.at(text, "docs/guide.md"), "MIT")
+        self.assertEqual(self.at(text, "README.md"), "MIT")
+        self.assertIsNone(self.at(text, "ee/docs/guide.md"))
+        self.assertIsNone(self.at(text, "packages/api/ee/README.md"))
+        # The text alone, without a path, is for the whole tree.
+        self.assertIsNone(collect.classify_license_text(text))
+
+    def test_a_path_the_text_gives_in_full_is_matched_from_the_root(self):
+        text = ('Everything is MIT but the content under the "packages/backend/src/ee" directory, '
+                'which is licensed under the license defined in '
+                '"packages/backend/src/ee/license".\n\n' + MIT)
+        self.assertEqual(self.at(text, "packages/backend/README.md"), "MIT")
+        self.assertIsNone(self.at(text, "packages/backend/src/ee/README.md"))
+
+    def test_a_proprietary_directory_is_the_only_one_under_the_terms(self):
+        text = ("The MIT License below applies to everything EXCEPT the directory "
+                "`plugins/gcloud/`, which is proprietary and licensed separately.\n\n" + MIT)
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "plugins/gcloud/README.md"))
+
+    def test_paths_the_text_leaves_out_of_its_licence_are_the_only_ones_left_out(self):
+        text = ("This license (MIT) covers the code in this repository. It does not cover the "
+                "content under brain-b/knowledge/, which is licensed by others.\n\n" + MIT)
+        self.assertEqual(self.at(text, "README.md"), "MIT")
+        self.assertIsNone(self.at(text, "brain-b/knowledge/a.md"))
+
+    def test_a_section_of_notices_for_third_parties_is_for_what_was_taken(self):
+        text = (APACHE.replace("Licensed under", "The project is licensed under") + "\n"
+                "-----\n\nThird-party notices\n\n=====\n\n"
+                "Font used under the SIL Open Font License, Version 1.1.\n\n"
+                "Permission is hereby granted, free of charge, to any person obtaining a copy of "
+                "the Font Software, to use it with fonts. The Font Software is not for sale.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "Apache-2.0")
+        self.assertIsNone(self.at(text, "static/fonts/a.md"))
+        self.assertIsNone(self.at(text, "vendor/font/README.md"))
+
+    def test_notices_after_the_projects_own_licence_leave_its_label_alone(self):
+        # The label is the project's, not one of every licence in the notices after it.
+        text = (MIT + "\n-----\n\nripple-lib is included under the ISC License\n\nISC License\n\n"
+                "Permission to use, copy, modify, and/or distribute this software for any purpose "
+                "with or without fee is hereby granted, provided that the above copyright notice "
+                "and this permission notice appear in all copies.\n\n-----\n\n"
+                "Space Mono: font used under the SIL Open Font License, Version 1.1.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+
+    def test_a_section_of_notices_that_comes_first_does_not_hide_the_licence_after_it(self):
+        # The notices are for third parties, so the GPL is for part of the tree; the MIT text
+        # that follows is the project's, as no licence of its own came before.
+        text = ("The following files are from different authors and have their own licenses\n\n"
+                "Some files are under the GNU General Public License.\n\n" + MIT)
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "vendor/a/README.md"))
+
+    def test_a_notices_file_lists_the_licences_of_others_and_adds_none_of_its_own(self):
+        notices = ("Apache License, Version 2.0\n\nEclipse Public License (EPL) 1.0\n"
+                   "com.example:lib:1.0\n\nCommon Development and Distribution License (CDDL) 1.0\n")
+        terms = collect.license_terms(notices, "LICENSE-binary")
+        self.assertTrue(terms.notices)
+        self.assertEqual(collect.license_for_path(terms, "docs/a.md"), "")
+        self.assertIsNone(collect.license_for_path(terms, "vendor/lib/README.md"))
+        self.assertEqual(collect.combine_licenses(["Apache-2.0", ""]), "Apache-2.0")
+        self.assertIsNone(collect.combine_licenses([""]))
+
+    def test_directories_the_text_names_for_third_party_code_are_the_only_ones_under_it(self):
+        text = (MIT + "\nThird-party and vendored material is covered by its own licenses, which "
+                "are authoritative for those paths. In particular:\n"
+                "- `vendor/linux-framework/` is the Linux kernel, GPL-2.0.\n"
+                "- `vendor/libbpf/` is LGPL-2.1 or BSD-2-Clause.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "vendor/linux-framework/Documentation/a.md"))
+        self.assertIsNone(self.at(text, "vendor/libbpf/README.md"))
+
+    def test_a_term_for_everything_else_or_for_prose_is_for_the_whole_tree(self):
+        for why, text in {
+            "everything else": "Two directories are MIT: `GraphcodeKit/` and `graphcode-cli/`. "
+                "Everything else is under the Functional Source License.\n\n" + MIT,
+            "documentation and READMEs": "Software: Apache License 2.0, under `code/`. The "
+                "documentation (`docs/`, README files) is under Creative Commons "
+                "Attribution-NonCommercial-ShareAlike 4.0 International.\n\n" + APACHE,
+            "what the licence covers is what it names": "This license covers the port in "
+                "`src/pc/`. It does not cover the upstream decompilation, which belongs to its "
+                "authors.\n\n" + MIT,
+            "a licence for a module that the text does not place": MIT + "\nModule foo is "
+                "using the bar framework, which is licensed under LGPL.\n",
+            "the licence applies only to what it names": "The MIT License below applies only to "
+                "the tooling in `scripts/`. Nothing here relicenses third-party content.\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "somewhere/else/a.md"))
+                self.assertIsNone(self.at(text, "README.md"))
+
+    def test_a_term_for_the_whole_tree_beside_a_scoped_one_is_for_the_whole_tree(self):
+        text = ('Source code is variously licensed under the Apache License Version 2.0 or the '
+                'Elastic License. Within the "x-pack" folder it is under the Elastic License.\n')
+        self.assertIsNone(self.at(text, "docs/a.md"))
+
+
 class LicencesTests(Scratch):
     """`Licences` reads a repository's licence files with `classify_license_text`: the root's
     applies to every file, a nearer one to the files below it, and every one on the way must be
@@ -516,6 +629,20 @@ class LicencesTests(Scratch):
             "LICENSE": "This license covers the code. It does not cover the texts.\n\n" + MIT,
             "docs/a.md": "x"})
         self.assertIsNone(licences.of("docs/a.md"))
+
+    def test_a_root_licence_that_puts_terms_on_a_directory_leaves_the_other_files_a_licence(self):
+        text = ('All software under the "ee/" directory is licensed under the license defined '
+                'in "ee/license"; the rest is under the MIT license.\n\n' + MIT)
+        licences = self.licences({"LICENSE": text, "ee/a.md": "x", "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md"), ("MIT", ["LICENSE"]))
+        self.assertIsNone(licences.of("ee/a.md"))
+        self.assertEqual(licences.root, "MIT")
+
+    def test_a_notices_file_beside_the_licence_adds_nothing_to_it(self):
+        notices = "Eclipse Public License (EPL) 1.0\ncom.example:lib:1.0\n"
+        licences = self.licences({"LICENSE": APACHE, "LICENSE-binary": notices, "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md"),
+                         ("Apache-2.0", ["LICENSE", "LICENSE-binary"]))
 
     def test_a_nearer_licence_is_the_files_own_when_every_one_on_the_way_is_accepted(self):
         licences = self.licences({"LICENSE": MIT, "pkg/LICENSE": APACHE, "pkg/a.md": "x",

@@ -1,0 +1,121 @@
+{
+  "sidecar_version": 3,
+  "fixture": "README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-cosmos-dotnet-v3",
+    "path": "README.md",
+    "commit": "f25191452e8ac151eb48b20a23d20f158d15810c",
+    "commit_date": "2026-09-26T13:35:55-07:00",
+    "url": "https://github.com/Azure/azure-cosmos-dotnet-v3/blob/f25191452e8ac151eb48b20a23d20f158d15810c/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-11-05T10:03:17-08:00",
+    "stars": 797,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 19,
+    "first_commit_date": "2018-11-05T10:03:21-08:00",
+    "last_commit_date": "2026-07-01T12:22:36-07:00",
+    "last_commit_author": "Arooshi Avasthy",
+    "authors": 11,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-11-05T10:03:21-08:00",
+    "last_committer_date": "2026-07-01T12:22:36-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0830090ca4dc47b71398ea0871cbe00b591aa8fc",
+        "date": "2026-04-29T16:18:36-07:00",
+        "committed": "2026-04-29T16:18:36-07:00",
+        "old": "861235223a33416a4bd501e5c0eff602514eb67f",
+        "new": "294553b1946da6ca2b744769edf937e0539afc3f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 19 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4452,
+    "sha256": "f577309e89ca6043d7855940499eb6a7e4916cf4082b7864c5a177c703ab92c2",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 81,
+    "words": 366,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/Azure--azure-cosmos-dotnet-v3/README.md",
+  "before": {
+    "sha256": "0c5351329b0756e00731143d202101cde55b0a807035535ae4e24bef5df46c12",
+    "commit": "dd31c667b9dfdd150e3a4b994f2ef797cd4ac502",
+    "date": "2021-12-14T22:55:06+05:30",
+    "between": [
+      {
+        "commit": "2ce94915d895e268aa8af49a38d68d41c67d7497",
+        "date": "2026-07-01T12:22:36-07:00",
+        "committed": "2026-07-01T12:22:36-07:00",
+        "old": "294553b1946da6ca2b744769edf937e0539afc3f",
+        "new": "db182163df2e3169b2e037c0d63550bdcb6f56ed",
+        "status": "late"
+      },
+      {
+        "commit": "a0f1c30521024791aaf93aa3a07aba77c2f8b1bd",
+        "date": "2023-11-21T14:00:40-08:00",
+        "committed": "2023-11-21T22:00:40Z",
+        "old": "f1dcffa7b968735bd68370e6d012ace659e83a16",
+        "new": "861235223a33416a4bd501e5c0eff602514eb67f",
+        "status": "late"
+      },
+      {
+        "commit": "e41eea5ad6db54e51e953552bfccf751c0de291f",
+        "date": "2023-04-04T07:50:11-07:00",
+        "committed": "2023-04-04T07:50:11-07:00",
+        "old": "1d39e6e2041f2088029ec6aa91fe3d9b7a107ae0",
+        "new": "f1dcffa7b968735bd68370e6d012ace659e83a16",
+        "status": "late"
+      },
+      {
+        "commit": "1eaae654845f83faf3283ee3be53d8d2c31e5256",
+        "date": "2022-10-07T12:07:53-07:00",
+        "committed": "2022-10-07T12:07:53-07:00",
+        "old": "413b5adeee92a37c0ffc10531f0784f52bab1dc1",
+        "new": "1d39e6e2041f2088029ec6aa91fe3d9b7a107ae0",
+        "status": "late"
+      },
+      {
+        "commit": "08bdfceaf67cea32b9d3e4efb330e49a8266f960",
+        "date": "2022-07-26T08:34:12-07:00",
+        "committed": "2022-07-26T15:34:12Z",
+        "old": "c8350a97d398ebfa96fe0669da3398237485b251",
+        "new": "413b5adeee92a37c0ffc10531f0784f52bab1dc1",
+        "status": "late"
+      }
+    ]
+  }
+}

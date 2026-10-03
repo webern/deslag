@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "contracts__2026-09-22-worker-observability__rev2__plan.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "swornagent/sworn",
+    "path": "contracts/2026-09-22-worker-observability/rev2/plan.md",
+    "commit": "081905ca3cf78ff1dda06edee717b2c59d85f5c4",
+    "commit_date": "2026-09-26T13:48:39+10:00",
+    "url": "https://github.com/swornagent/sworn/blob/081905ca3cf78ff1dda06edee717b2c59d85f5c4/contracts/2026-09-22-worker-observability/rev2/plan.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-15T19:39:52+10:00",
+    "stars": 0,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-22T19:13:35+10:00",
+    "last_commit_date": "2026-09-22T19:13:35+10:00",
+    "last_commit_author": "sawy3r",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-22T19:13:35+10:00",
+    "last_committer_date": "2026-09-22T19:13:35+10:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5.1 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_016mjbuJdeFWJ7GSyrB2xqTp",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1b6f229fe696e1544d2abeb6e32113464d26c9cc",
+        "date": "2026-09-22T19:13:35+10:00",
+        "committed": "2026-09-22T19:13:35+10:00",
+        "old": null,
+        "new": "c3c297f699bf849079c65b265cf7b18bfd97289f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5376,
+    "sha256": "4490184e9a702bac42b7112b5a9d9617f8361a79ac6b1b4302f2588a353ab4a2",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 127,
+    "words": 512,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/swornagent--sworn/contracts/2026-09-22-worker-observability/rev2/plan.md"
+}

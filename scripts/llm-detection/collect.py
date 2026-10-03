@@ -126,12 +126,10 @@ MIT0_GRANT = (
 
 
 # What a licence text says when it holds terms the corpus does not accept: the name of a licence
-# outside the list, or the words that add a condition to one on it. Each pattern is matched in the
-# text lower-cased, with white space collapsed and its harmless wording removed. A text with any
-# of them is not classified, whichever accepted licences it also holds and whichever part of the
-# tree the other terms are for: a licence file says in prose which paths a licence is for, and
-# prose is not read for that. A fixture that may be under terms the corpus does not accept is not
-# quoted (docs/design/corpus.md section 7), so a case that cannot be settled is left out.
+# outside the list, or the words that add a condition to one on it. Each pattern is matched in a
+# sentence of the text, lower-cased, with white space collapsed and its harmless wording removed.
+# `license_terms` says which part of the tree each is for, when the text says; if it does not, the
+# term is for the whole tree and nothing under it is quoted (docs/design/corpus.md section 7).
 OUTSIDE_TERMS = {
     # Copyleft, share-alike and weak copyleft.
     "GNU GPL, LGPL or AGPL": (
@@ -185,7 +183,8 @@ OUTSIDE_TERMS = {
     # A text that says part of the tree is not under it, or is not a licence at all.
     "a part of the tree the licence does not cover": (
         r"\b(?:does|do) not (?:cover|extend to)\b|\bnot covered by (?:this|the)\b"
-        r"|\bcarve-?out\b"),
+        r"|\bcarve-?out\b|\b(?:mit|bsd|isc|apache|this) licen[sc]e (?:below |above )?applies only to\b"
+        r"|\bnot relicensed\b"),
     "a placeholder for a licence": (
         r"licen[sc]e content to be determined|replace this placeholder"
         r"|licen[sc]e (?:goes|to be added) here"),
@@ -211,13 +210,6 @@ def normalise_license_text(text: str) -> str:
     text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
     text = text.replace("“", '"').replace("”", '"').replace("’", "'")
     return re.sub(r"\s+", " ", text).lower()
-
-
-def outside_licenses(text: str) -> list[str]:
-    """What a licence text holds that is outside the terms the corpus accepts: the names in
-    OUTSIDE_TERMS of what it says, in that order; none for a text that says nothing of the kind."""
-    t = HARMLESS_TERMS.sub(" ", normalise_license_text(text))
-    return [name for name, pattern in OUTSIDE_PATTERNS.items() if pattern.search(t)]
 
 
 def accepted_licenses(text: str) -> list[str] | None:
@@ -262,29 +254,172 @@ def accepted_licenses(text: str) -> list[str] | None:
     return sorted(found)
 
 
+# Where a licence file says a term is for part of the tree. A sentence that names an outside term
+# is for the whole tree unless one of these places it. THIRD_PARTY says the term is for something
+# the project took from others; a SECTION_HEAD, a short block that opens a section of such notices,
+# makes every term after it so; and a notices file, LICENSE-THIRD-PARTY or LICENSE-binary, is only
+# that. PATHS are the directories the text names, which the term is for.
+THIRD_PARTY = re.compile(
+    r"third[- ]party|bundled|vendored|externally[- ]maintained|their own licen[sc]es?"
+    r"|\bfonts?\b|\bicons?\b|librar(?:y|ies)|dependenc(?:y|ies)|incorporated|\bjars?\b"
+)
+SECTION_HEAD = re.compile(
+    r"third[- ]party|bundled|vendored|externally[- ]maintained|their own licen[sc]es?"
+    r"|\bdependencies\b|following (?:libraries|components|packages|software)"
+    r"|(?:is|are) included under"
+)
+NOTICES_FILE = re.compile(
+    r"third[-_.]?party|3rd[-_.]?party|notice|binary|bundled|vendor|dependenc|credits"
+    r"|attribution|acknowledg"
+)
+# A term that is for everything the text does not name, or for prose, or that says what the
+# licence covers is only what it names: not for part of the tree, whatever paths are near.
+WHOLE_TREE = re.compile(
+    r"everything else|all other|the rest of|applies only to|only applies to|not relicensed"
+    r"|\b(?:documentation|docs?|readme|prose|papers?|books?|essays?|non-software)\b"
+)
+# Directories of vendored code, which a term for third-party material is for.
+VENDORED_DIRS = {
+    "third_party", "third-party", "thirdparty", "3rdparty", "vendor", "vendors", "vendored",
+    "deps", "dependencies", "external", "externals", "extern", "node_modules", "bundled",
+    "contrib", "fonts", "font",
+}
+PATH_TOKENS = (
+    # A quoted or backticked path, or a quoted name that the text calls a folder or directory.
+    re.compile(r"[`\"“'‘]([^\s`\"”'’]*/[^\s`\"”'’]*)[`\"”'’]"),
+    re.compile(r"[`\"“]([\w.\-]+)[`\"”]\s+(?:folder|directory|directories|dir)\b"),
+    # A directory written with its slash, as `ext/mbedtls/` is, and not part of a URL.
+    re.compile(r"(?<![\w/:.\-])((?:[\w.\-]+/)+)(?![\w])"),
+)
+
+
+@dataclass(frozen=True)
+class Scope:
+    """Outside terms a licence text puts on part of the tree: a fixture whose path is in one of
+    `paths`, or in a vendored directory when `vendored`, is under them."""
+
+    names: tuple[str, ...]
+    paths: tuple[str, ...]
+    vendored: bool
+
+    def holds(self, path: str) -> bool:
+        path = path.lower()
+        parents = path.split("/")[:-1]
+        if self.vendored and any(part in VENDORED_DIRS for part in parents):
+            return True
+        return any(path.startswith(t + "/") if "/" in t else t in parents for t in self.paths)
+
+
+@dataclass(frozen=True)
+class LicenseTerms:
+    """What a licence file says: `accepted`, the accepted licences of the project's own text;
+    `whole`, outside terms for the whole tree, or for a part the text does not place; `scoped`,
+    outside terms the text places; `unrecognised`, an MIT-like grant that is neither MIT nor
+    MIT-0; and `notices`, a file that only lists the licences of others."""
+
+    accepted: tuple[str, ...]
+    whole: tuple[str, ...] = ()
+    scoped: tuple[Scope, ...] = ()
+    unrecognised: bool = False
+    notices: bool = False
+
+
+def named_paths(text: str) -> tuple[str, ...]:
+    """The directories a licence text names, lower-cased, without their slashes."""
+    found: list[str] = []
+    for pattern in PATH_TOKENS:
+        for token in pattern.findall(text):
+            token = token.lower().removeprefix("./").strip("/")
+            if token and "://" not in token and "www." not in token and token not in found:
+                found.append(token)
+    return tuple(found)
+
+
+def license_terms(text: str, source: str = "") -> LicenseTerms:
+    """Reads a licence text: `source` is the file's name, which says a notices file. See
+    `license_for_path` for what the terms come to."""
+    text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
+    blocks = [b for b in re.split(r"\n[ \t]*\n", text) if b.strip()]
+    normal = [HARMLESS_TERMS.sub(" ", normalise_license_text(b)) for b in blocks]
+    notices = bool(NOTICES_FILE.search(source.rsplit("/", 1)[-1].lower()))
+    # The own text ends where a section of notices for third parties begins.
+    own_until = 0 if notices else len(blocks)
+    whole: list[str] = []
+    scoped: list[Scope] = []
+    for i, (raw, block) in enumerate(zip(blocks, normal)):
+        heading = len(block) <= 160 and raw.strip().count("\n") <= 3 and (
+            raw.lstrip().startswith("#") or not re.search(r"[.!?]\s*$", block)
+        )
+        # A section of notices follows the project's own licence, which must come first.
+        if (own_until == len(blocks) and heading and SECTION_HEAD.search(block)
+                and accepted_licenses("\n\n".join(blocks[:i]))):
+            own_until = i
+        sentences = re.split(r"(?<=[.;!?])\s+|\s[*\u2022]\s", block)
+        for j, sentence in enumerate(sentences):
+            names = [n for n, pattern in OUTSIDE_PATTERNS.items() if pattern.search(sentence)]
+            if not names:
+                continue
+            before = sentences[j - 1] if j else (
+                normal[i - 1] if i and len(normal[i - 1]) <= 300 else "")
+            third = notices or i >= own_until or THIRD_PARTY.search(sentence + " " + before)
+            # The directories the sentence names, or else those the sentence before it does; when
+            # that one says what the licence covers, they are what it covers, not what it leaves.
+            paths = named_paths(sentence) or named_paths(before)
+            if (WHOLE_TREE.search(sentence + " " + before)
+                    or (named_paths(before) and re.search(r"\bcovers\b", before))):
+                whole += names
+            elif third:
+                scoped.append(Scope(tuple(names), paths, True))
+            elif paths:
+                scoped.append(Scope(tuple(names), paths, False))
+            else:
+                whole += names
+    if notices:
+        return LicenseTerms((), tuple(dict.fromkeys(whole)), tuple(scoped), notices=True)
+    own = accepted_licenses("\n\n".join(blocks[:own_until]))
+    return LicenseTerms(tuple(own or ()), tuple(dict.fromkeys(whole)), tuple(scoped),
+                        unrecognised=own is None)
+
+
+def license_for_path(terms: LicenseTerms, path: str | None) -> str | None:
+    """The licence a fixture at `path` is under, by what a licence file says: its accepted
+    licences, joined by `OR`; "" from a file that only lists the licences of others, and so says
+    nothing of the project's own, for a path it does not put under one; None when the file puts
+    the path under terms the corpus does not accept, or says nothing the corpus accepts. A
+    `path` of None asks for the whole tree, which any term for part of it is under."""
+    if terms.whole or terms.unrecognised:
+        return None
+    if any(path is None or scope.holds(path) for scope in terms.scoped):
+        return None
+    if terms.notices:
+        return ""
+    return " OR ".join(terms.accepted) or None
+
+
 def classify_license_text(text: str) -> str | None:
-    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts.
+    """The SPDX identifier of a licence text for the whole tree, or None when it is not one the
+    corpus accepts.
 
     A text that holds several accepted licences, whether it offers a choice of them or is a
     project's licence with notices for the parts it took from others, gets all of them, joined by
-    `OR` as `combine_licenses` joins the licences of several files. A text that holds any licence
-    outside the accepted ones is None, even when it also holds an accepted one: a file under
-    several licences, one of which is for some of the tree, does not say which of them a fixture
-    is under, and a fixture that might be under a licence the corpus does not accept is not
-    quoted. A text that is none of them, or merely resembles one, is None."""
-    if outside_licenses(text):
-        return None
-    found = accepted_licenses(text)
-    return " OR ".join(found) if found else None
+    `OR` as `combine_licenses` joins the licences of several files. A text that holds any
+    licence outside the accepted ones, or a term that adds a condition to an accepted one, is
+    None, even when it also holds an accepted one: a fixture that may be under terms the corpus
+    does not accept is not quoted. `license_for_path` is for a fixture's own path, which a text
+    may put outside the terms that are for part of the tree. A text that is none of them, or
+    merely resembles one, is None."""
+    return license_for_path(license_terms(text), None) or None
 
 
 def combine_licenses(found: list[str | None]) -> str | None:
     """The licence of a repository from its licence files, or None if any is unacceptable: a
     licence file that cannot be classified might restrict the others. A file's own `A OR B` is
-    split, so that the licences of all the files come out once each."""
+    split, so that the licences of all the files come out once each, and a file that says
+    nothing of the project's own, "", adds none."""
     if not found or any(f is None for f in found):
         return None
-    return " OR ".join(sorted({part for f in found for part in f.split(" OR ")}))
+    parts = {part for f in found for part in f.split(" OR ") if part}
+    return " OR ".join(sorted(parts)) or None
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1688,14 +1823,34 @@ def read_blobs(repo: Path, oids: list[str]) -> dict[str, bytes | None]:
     return found
 
 
-def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | None) -> tuple[str | None, list[str]]:
-    names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+def license_files_terms(repo: Path, files: dict[str, str], names: list[str]) -> list[tuple[str, LicenseTerms]]:
+    """What each of the licence files `names` says."""
     prefetch(repo, [files[name] for name in names])
-    found = []
-    for name in names:
-        data = git_bytes(repo, "cat-file", "blob", files[name])
-        found.append(classify_license_text(data[:200_000].decode("utf-8", "replace")))
-    license_id = combine_licenses(found) if names else None
+    return [(name, license_terms(git_bytes(repo, "cat-file", "blob", files[name])[:200_000]
+                                 .decode("utf-8", "replace"), name)) for name in names]
+
+
+def license_at(found: list[tuple[str, LicenseTerms]], path: str) -> str | None:
+    """The licence of a fixture at `path` by the licence files `found` in one directory: those
+    of each file for that path, combined; "" is a path outside everything a file puts a
+    licence on."""
+    return combine_licenses([license_for_path(terms, path) for _, terms in found])
+
+
+def accepted_license(license_id: str | None) -> bool:
+    return bool(license_id) and all(part in ALLOWED_LICENSES for part in license_id.split(" OR "))
+
+
+def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | None) -> tuple[str | None, list[str]]:
+    """The licence of the tree outside everything its root licence files put under terms for part
+    of it, and the files it comes from."""
+    names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+    return root_license(license_files_terms(repo, files, names), names, hf, readme)
+
+
+def root_license(found: list[tuple[str, LicenseTerms]], names: list[str], hf: bool,
+                 readme: bytes | None) -> tuple[str | None, list[str]]:
+    license_id = license_at(found, "") if names else None
     if license_id is None and hf and not names and readme is not None:
         m = re.search(r"^license:\s*([A-Za-z0-9.-]+)\s*$", readme.decode("utf-8", "replace")[:3000], re.M)
         if m:
@@ -1710,48 +1865,48 @@ def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | No
             }.get(m.group(1).lower())
             if spdx:
                 return spdx, ["README.md (license: in the card metadata)"]
-    if license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR ")):
+    if accepted_license(license_id):
         return license_id, names
     return None, names
 
 
 class Licences:
     """The licences of a tree: the root's, and any nearer one on the way to a file. Each must be
-    one the corpus accepts, and the nearest is the file's."""
+    one the corpus accepts for the file's path, and the nearest is the file's."""
 
     def __init__(self, repo: Path, files: dict[str, str], hf: bool):
         self.repo = repo
         self.files = files
         readme = git_bytes(repo, "cat-file", "blob", files["README.md"]) if (
             hf and "README.md" in files) else None
-        self.root, self.root_files = repo_license(repo, files, hf, readme)
+        names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+        self.root_terms = license_files_terms(repo, files, names)
+        self.root, self.root_files = root_license(self.root_terms, names, hf, readme)
         self.by_dir: dict[str, list[str]] = {}
         for path in files:
             directory, _, name = path.rpartition("/")
             if directory and LICENSE_FILE.match(name) and not EXCLUDED_DIRS.search(directory):
                 self.by_dir.setdefault(directory, []).append(path)
-        self.known: dict[str, str | None] = {}
+        self.known: dict[str, list[tuple[str, LicenseTerms]]] = {}
 
     def of(self, path: str) -> tuple[str, list[str]] | None:
         """The licence `path` is under and every licence file on its way; None when one of
-        those is not a licence the corpus accepts."""
+        those is not a licence the corpus accepts for it."""
         parts = path.split("/")[:-1]
         nearer = [d for d in ("/".join(parts[:i]) for i in range(1, len(parts) + 1))
                   if d in self.by_dir]
-        if not nearer or self.root is None:
-            return (self.root, self.root_files) if self.root else None
-        todo = [d for d in nearer if d not in self.known]
-        prefetch(self.repo, [self.files[f] for d in todo for f in self.by_dir[d]])
-        for d in todo:
-            found = [classify_license_text(git_bytes(self.repo, "cat-file", "blob", self.files[f])
-                                           [:200_000].decode("utf-8", "replace"))
-                     for f in self.by_dir[d]]
-            license_id = combine_licenses(found)
-            ok = license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR "))
-            self.known[d] = license_id if ok else None
-        if any(self.known[d] is None for d in nearer):
+        root = license_at(self.root_terms, path) if self.root_terms else self.root
+        if not accepted_license(root):
             return None
-        return self.known[nearer[-1]], self.root_files + [f for d in nearer for f in self.by_dir[d]]
+        if not nearer:
+            return root, self.root_files
+        for d in nearer:
+            if d not in self.known:
+                self.known[d] = license_files_terms(self.repo, self.files, self.by_dir[d])
+        found = [license_at(self.known[d], path) for d in nearer]
+        if not all(accepted_license(license_id) for license_id in found):
+            return None
+        return found[-1], self.root_files + [f for d in nearer for f in self.by_dir[d]]
 
 
 @dataclass

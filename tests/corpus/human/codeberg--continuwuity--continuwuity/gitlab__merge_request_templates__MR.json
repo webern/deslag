@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "gitlab__merge_request_templates__MR.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "continuwuity/continuwuity",
+    "path": ".gitlab/merge_request_templates/MR.md",
+    "commit": "8d51359668199585175e7e0095de66e96bc1a3e1",
+    "commit_date": "2021-12-26T20:49:19+01:00",
+    "url": "https://codeberg.org/continuwuity/continuwuity/src/commit/8d51359668199585175e7e0095de66e96bc1a3e1/.gitlab/merge_request_templates/MR.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-15T22:42:21+01:00",
+    "stars": 81,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2021-07-17T12:22:11+02:00",
+    "last_commit_date": "2021-07-18T20:43:21Z",
+    "last_commit_author": "Jonas Zohren",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-07-17T12:22:11+02:00",
+    "last_committer_date": "2021-07-18T20:43:21Z",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 2 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 261,
+    "sha256": "8a03495dee0eef78b679f97c99c2cdbe9c88b00fd4b9880af980c6247b62d5f2",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 8,
+    "words": 38,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--continuwuity--continuwuity/.gitlab/merge_request_templates/MR.md"
+}

@@ -1,0 +1,160 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__manual__derivatives.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JuliaSymbolics/Symbolics.jl",
+    "path": "docs/src/manual/derivatives.md",
+    "commit": "c2775dfb659c48e0dffbdcf8f936fce30d4368db",
+    "commit_date": "2026-09-25T10:16:11-04:00",
+    "url": "https://github.com/JuliaSymbolics/Symbolics.jl/blob/c2775dfb659c48e0dffbdcf8f936fce30d4368db/docs/src/manual/derivatives.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-08-16T12:39:49-04:00",
+    "stars": 1531,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2021-02-26T20:36:34-05:00",
+    "last_commit_date": "2026-08-27T07:49:53Z",
+    "last_commit_author": "Chris Rackauckas - Beep Boop Edition",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-02-26T20:36:34-05:00",
+    "last_committer_date": "2026-08-27T07:49:53Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "0851339cd11908e847f7561e3d091686dbf96f7f",
+        "new": "677177c33b5c6eff85167859f49bf387736a3872",
+        "status": "squash"
+      },
+      {
+        "commit": "9e3a96b505fc1a91ff61a79f1574df7dd0c29f91",
+        "date": "2026-02-11T14:31:54-05:00",
+        "committed": "2026-02-11T14:31:54-05:00",
+        "old": "0851339cd11908e847f7561e3d091686dbf96f7f",
+        "new": "1c1e828ed527cdbc0b897eced62a9536de4856eb",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "3 of its 12 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2591,
+    "sha256": "648db1baf70268c11de3cde7a02318c0de02d4ec21306a9e161944e343e3beb4",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 331,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JuliaSymbolics--Symbolics.jl/docs/src/manual/derivatives.md",
+  "before": {
+    "sha256": "5419dd9b3d9169aca2f20a4a742edc1f69844637b7bc8b4dda8b7082335346b3",
+    "commit": "2d809405ade0bc69ddc48d11eed86e7e51a82886",
+    "date": "2021-12-22T10:19:38-05:00",
+    "between": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "0851339cd11908e847f7561e3d091686dbf96f7f",
+        "new": "677177c33b5c6eff85167859f49bf387736a3872",
+        "status": "squash"
+      },
+      {
+        "commit": "bd13ae98dc480786589710201d6840aafebe7aad",
+        "date": "2026-02-11T14:36:48-05:00",
+        "committed": "2026-02-11T14:36:48-05:00",
+        "old": "1c1e828ed527cdbc0b897eced62a9536de4856eb",
+        "new": "0851339cd11908e847f7561e3d091686dbf96f7f",
+        "status": "late"
+      },
+      {
+        "commit": "1a8e128163ac5fcdfe1da04961660af65d2147bd",
+        "date": "2025-11-05T11:57:49+05:30",
+        "committed": "2025-11-06T17:30:32+05:30",
+        "old": "bbbda2fe479888575aaf633e878fc366d64df8c6",
+        "new": "0851339cd11908e847f7561e3d091686dbf96f7f",
+        "status": "late"
+      },
+      {
+        "commit": "4d37631eec573e5f3ccde8be2bb6961252bd5553",
+        "date": "2024-03-18T12:46:13-04:00",
+        "committed": "2024-03-18T12:46:13-04:00",
+        "old": "ffd752794194c357efee6499f306647a1a2f2a40",
+        "new": "bbbda2fe479888575aaf633e878fc366d64df8c6",
+        "status": "late"
+      },
+      {
+        "commit": "32c663738ee81a9ccce559ec80b7f6181c3efbc0",
+        "date": "2024-02-21T11:44:36-05:00",
+        "committed": "2024-02-21T11:44:36-05:00",
+        "old": "2c8061f2694423798d3505e239b6af1742117d9c",
+        "new": "ffd752794194c357efee6499f306647a1a2f2a40",
+        "status": "late"
+      },
+      {
+        "commit": "f22ef1a6c640b7f4a5cadc029ae43a8bf1e30970",
+        "date": "2023-03-15T19:47:27-04:00",
+        "committed": "2023-03-15T19:47:27-04:00",
+        "old": "42f4965ccc149974fb696b021b962a66a3b552de",
+        "new": "2c8061f2694423798d3505e239b6af1742117d9c",
+        "status": "late"
+      },
+      {
+        "commit": "474bad1ad645b878efd921d02698fa121dddc348",
+        "date": "2023-01-20T01:56:09+01:00",
+        "committed": "2023-01-20T01:56:09+01:00",
+        "old": "ba4cb65ef4740c9d36d2d4bdba1b8c6cec8a65ed",
+        "new": "42f4965ccc149974fb696b021b962a66a3b552de",
+        "status": "late"
+      },
+      {
+        "commit": "bd1e8b625b1621b624b9b98f24bfab7ab7ede617",
+        "date": "2022-10-30T10:13:52+01:00",
+        "committed": "2022-10-30T10:13:52+01:00",
+        "old": "0d97db57bfebb8fb8f6ea0b37e1ecbcb518e6ee6",
+        "new": "ba4cb65ef4740c9d36d2d4bdba1b8c6cec8a65ed",
+        "status": "late"
+      }
+    ]
+  }
+}

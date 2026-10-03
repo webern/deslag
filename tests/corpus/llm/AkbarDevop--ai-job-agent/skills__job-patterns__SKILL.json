@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__job-patterns__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AkbarDevop/ai-job-agent",
+    "path": "skills/job-patterns/SKILL.md",
+    "commit": "9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305",
+    "commit_date": "2026-04-26T17:38:48-05:00",
+    "url": "https://github.com/AkbarDevop/ai-job-agent/blob/9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305/skills/job-patterns/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-25T00:31:47-05:00",
+    "stars": 58,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-26T13:52:58-05:00",
+    "last_commit_date": "2026-04-26T13:52:58-05:00",
+    "last_commit_author": "Akbar Kamoldinov",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-26T13:52:58-05:00",
+    "last_committer_date": "2026-04-26T13:52:58-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3be9287bc79a87625a021d98bebe18c396bd57b9",
+        "date": "2026-04-26T13:52:58-05:00",
+        "committed": "2026-04-26T13:52:58-05:00",
+        "old": null,
+        "new": "2955741e09bbbb07fe97302a54806df5e4e0ba12",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 10340,
+    "sha256": "fb5f6b5391f6d8b624fa57ae7e8cd7858a98f5247ec8dfc457fd99fcacb2992d",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 189,
+    "words": 1696,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AkbarDevop--ai-job-agent/skills/job-patterns/SKILL.md"
+}

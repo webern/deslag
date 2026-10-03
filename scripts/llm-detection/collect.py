@@ -113,8 +113,26 @@ LICENSE_FILE = re.compile(
 )
 
 
+# The MIT-0 grant as SPDX gives it, up to where MIT would add its condition. MIT-0 is this and
+# then the warranty disclaimer, with nothing between: a text that grants more, grants it
+# differently ("to deal with the Software", the NCSA licence) or adds terms is not MIT-0.
+MIT0_GRANT = (
+    "permission is hereby granted, free of charge, to any person obtaining a copy of this "
+    "software and associated documentation files (the \"software\"), to deal in the software "
+    "without restriction, including without limitation the rights to use, copy, modify, merge, "
+    "publish, distribute, sublicense, and/or sell copies of the software, and to permit persons "
+    "to whom the software is furnished to do so. the software is provided"
+)
+
+
 def classify_license_text(text: str) -> str | None:
-    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts."""
+    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts.
+    Only a positive match gives an identifier: a text that is none of them, or that merely
+    resembles MIT, is None."""
+    # A licence quoted in a Markdown blockquote is the same licence, and curly quotes the same
+    # quotes.
+    text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
     t = re.sub(r"\s+", " ", text).lower()
     if "apache license" in t and "version 2.0" in t:
         return "Apache-2.0"
@@ -132,7 +150,9 @@ def classify_license_text(text: str) -> str | None:
     if "permission is hereby granted, free of charge" in t:
         if "the above copyright notice and this permission notice shall be included" in t:
             return "MIT"
-        return "MIT-0"
+        if MIT0_GRANT in t:
+            return "MIT-0"
+        return None
     if "permission to use, copy, modify, and/or distribute this software for any purpose" in t:
         if "with or without fee is hereby granted, provided that the above copyright" in t:
             return "ISC"

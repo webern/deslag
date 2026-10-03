@@ -23,12 +23,12 @@
 //! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
 //! its tests, which run each case through the whole tagger.
 
-use super::{Confidence, Context, Features, Reading, Tag, TagSet, proper};
+use super::{Confidence, Context, Features, Reading, Tag, TagSet, infinitive, proper};
 use crate::document::{Token, TokenKind};
 
 /// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
 /// settled, and the order is part of the tagger: it is what the tag stream records.
-const PASSES: [fn(&mut View<'_, '_>); 1] = [proper::run];
+const PASSES: [fn(&mut View<'_, '_>); 2] = [proper::run, infinitive::run];
 
 /// Runs every pass, in order, over one sentence whose words the tables have read.
 pub(super) fn run(tokens: &mut [Token<'_>], context: Context) {

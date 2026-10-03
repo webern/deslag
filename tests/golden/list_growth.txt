@@ -2,7 +2,7 @@
 # fixture and of the earlier revision it names, the human fixture that is its base.
 # tests/blobs.rs writes this file, with the default settings.
 # `DESLAG_FIX_GOLDEN=1 make test-blobs` rewrites it; read the diff before committing it.
-# fails 281 of 474
+# fails 281 of 473
 
 batches/2026-09-27-02/mixed/AsBuiltReport--AsBuiltReport.Core/CHANGELOG.md items:128 base:46
 batches/2026-09-27-02/mixed/Azure--azure-sdk-for-net/sdk__dns__Azure.ResourceManager.Dns__CHANGELOG.md items:42 base:1
@@ -47,8 +47,6 @@ batches/2026-09-27-02/mixed/JeanMarcMbouma--urguide/README.md items:445 base:38
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__man__hosting.md items:21 base:10
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__man__syntax.md items:14 base:9
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__showcase.md items:35 base:20
-batches/2026-09-27-02/mixed/JuliaSymbolics--Symbolics.jl/NEWS.md items:7 base:5
-batches/2026-09-27-02/mixed/JuliaSymbolics--Symbolics.jl/docs__src__manual__arrays.md items:2 base:0
 batches/2026-09-27-02/mixed/JustinBeckwith--retry-axios/README.md items:32 base:0
 batches/2026-09-27-02/mixed/LambdaHack--LambdaHack/CHANGELOG.md items:2122 base:2098
 batches/2026-09-27-02/mixed/LeMyst--WikibaseIntegrator/README.md items:160 base:59
@@ -285,3 +283,5 @@ batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_primitives__CHANGELOG.md i
 batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_proofs__CHANGELOG.md items:86 base:27
 batches/2026-09-27-02/mixed/zcash--pasta_curves/CHANGELOG.md items:53 base:14
 batches/2026-09-27-02/mixed/zzfn--zzf/README.md items:53 base:38
+batches/2026-10-03-01/mixed/JuliaSymbolics--Symbolics.jl/NEWS.md items:7 base:5
+batches/2026-10-03-01/mixed/JuliaSymbolics--Symbolics.jl/docs__src__manual__arrays.md items:2 base:0

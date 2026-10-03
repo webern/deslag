@@ -113,9 +113,9 @@ clean: clean-blobs clean-ewt clean-harper
 clean-blobs:
 	rm -rf .blobs .tools
 
-# .ewt is what fetch-ewt downloads.
+# .ewt is what fetch-ewt downloads, and .ewt.new.* what a killed fetch leaves.
 clean-ewt:
-	rm -rf .ewt
+	rm -rf .ewt .ewt.new.*
 
 # .harper is what fetch-harper downloads.
 clean-harper:

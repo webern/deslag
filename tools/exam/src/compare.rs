@@ -3,13 +3,15 @@
 //! The runs must share the gold's SHA-256, the tally columns, the sentence order and the number of
 //! scored tokens in each sentence, or the exam cannot compare them. For `all` and each stratum it
 //! prints every metric's value in each run and the paired difference `after - before` with its
-//! interval, and `up`, `down` or `same` by whether the interval is wholly above zero, wholly below
-//! it, or spans it. It prints aggregates only, whatever the gold: a holdout run holds no word.
+//! interval, and a verdict by whether the interval is wholly above zero, wholly below it, or spans
+//! it (`same`). The verdict says `better` or `worse` by the metric's own sense, so a higher unknown
+//! rate is `worse`; a metric with no better direction, such as the share at `Sure`, says `higher`
+//! or `lower`. It prints aggregates only, whatever the gold: a holdout run holds no word.
 
 use std::fmt::Write;
 
 use crate::error::Error;
-use crate::metrics::{COLUMNS, METRICS, Metric, TOKENS, WIDTH, level_metrics};
+use crate::metrics::{COLUMNS, METRICS, Metric, Sense, TOKENS, WIDTH, level_metrics};
 use crate::report::{percent, points, points_interval};
 use crate::saved::SavedRun;
 use crate::stats::{Bootstrap, ratio};
@@ -111,12 +113,12 @@ pub fn render(
             let in_before = |sum: &[u64]| of(&sum[..WIDTH]);
             let in_after = |sum: &[u64]| of(&sum[WIDTH..]);
             let diff = boot.paired(&in_after, &in_before);
-            let verdict = match diff.point {
-                None => "n/a",
-                Some(_) if diff.above_zero() => "up",
-                Some(_) if diff.below_zero() => "down",
-                Some(_) => "same",
-            };
+            let verdict = verdict(
+                metric.sense,
+                diff.point.is_some(),
+                diff.above_zero(),
+                diff.below_zero(),
+            );
             let _ = writeln!(
                 out,
                 "  {:<22}{:>8}{:>8}{:>9}  {:<18}{verdict}",
@@ -129,4 +131,44 @@ pub fn render(
         }
     }
     Ok(out)
+}
+
+/// What the paired difference of a metric of sense `sense` says: `n/a` when it is undefined,
+/// `same` when its interval spans zero, else `better` or `worse`, or `higher` or `lower` for a
+/// metric that has no better direction.
+fn verdict(sense: Sense, defined: bool, above_zero: bool, below_zero: bool) -> &'static str {
+    match (defined, above_zero, below_zero, sense) {
+        (false, ..) => "n/a",
+        (_, true, _, Sense::HigherIsBetter) | (_, _, true, Sense::LowerIsBetter) => "better",
+        (_, true, _, Sense::LowerIsBetter) | (_, _, true, Sense::HigherIsBetter) => "worse",
+        (_, true, _, Sense::Neither) => "higher",
+        (_, _, true, Sense::Neither) => "lower",
+        _ => "same",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_move_is_better_or_worse_by_the_metric() {
+        // (above zero, below zero), as the interval says.
+        let up = (true, false);
+        let down = (false, true);
+        for (sense, above, below, want) in [
+            (Sense::HigherIsBetter, up.0, up.1, "better"),
+            (Sense::HigherIsBetter, down.0, down.1, "worse"),
+            (Sense::LowerIsBetter, up.0, up.1, "worse"),
+            (Sense::LowerIsBetter, down.0, down.1, "better"),
+            (Sense::Neither, up.0, up.1, "higher"),
+            (Sense::Neither, down.0, down.1, "lower"),
+            (Sense::HigherIsBetter, false, false, "same"),
+            (Sense::LowerIsBetter, false, false, "same"),
+            (Sense::Neither, false, false, "same"),
+        ] {
+            assert_eq!(verdict(sense, true, above, below), want);
+        }
+        assert_eq!(verdict(Sense::LowerIsBetter, false, false, false), "n/a");
+    }
 }

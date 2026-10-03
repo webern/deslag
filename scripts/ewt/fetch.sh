@@ -8,9 +8,10 @@
 #
 # .ewt/stamp is a copy of the lock .ewt was fetched from. A stamp equal to the lock is the whole
 # check, so a repeat fetch is free. A stamp that differs, or none, clears .ewt and fetches again.
-# Files are downloaded and verified in a scratch directory outside .ewt, and only then is .ewt
-# cleared and the files moved into place together, with the stamp written last. A failed download
-# leaves a good .ewt as it was, and nothing partial behind.
+# Files are downloaded and verified in a scratch directory beside .ewt, on the same file system, so
+# that the last step is one rename of the whole directory, stamp included. A failed download leaves
+# a good .ewt as it was. The scratch directory goes when the script exits; one left by a killed
+# run is named .ewt.new.*, and the next fetch and `make clean-ewt` remove it.
 
 set -euo pipefail
 
@@ -69,28 +70,31 @@ fetch() {
     commit="$(lock_value commit)"
     base="$(lock_value base)"
 
-    # Not local: the trap runs when the script exits, after this function has returned. The scratch
-    # directory goes whether this ends well or not.
-    scratch="$(mktemp -d "${TMPDIR:-/tmp}/ewt-fetch.XXXXXX")"
+    # Beside .ewt, never under $TMPDIR, which may be another file system: the rename at the end is
+    # atomic only within one. Not local: the trap runs when the script exits, after this function
+    # has returned. The scratch directory goes whether this ends well or not.
+    rm -rf "$ROOT"/.ewt.new.*
+    scratch="$(mktemp -d "$ROOT/.ewt.new.XXXXXX")"
     trap 'rm -rf "$scratch"' EXIT
+    mkdir "$scratch/$release"
 
     local sum name
     while read -r _ sum name; do
         echo "ewt: fetching $name"
         curl --fail --silent --show-error --location --retry 3 \
-            --output "$scratch/$name" "$base/$commit/$name" \
+            --output "$scratch/$release/$name" "$base/$commit/$name" \
             || fail "Could not download $base/$commit/$name"
         local got
-        got="$(sha256_of "$scratch/$name")"
+        got="$(sha256_of "$scratch/$release/$name")"
         if [ "$got" != "$sum" ]; then
             fail "$name has sha256 $got, and $LOCK_REL pins $sum."
         fi
     done < <(awk '$1 == "sha256"' "$LOCK")
 
+    cp "$LOCK" "$scratch/stamp"
+    chmod 755 "$scratch"
     rm -rf "$EWT"
-    mkdir -p "$EWT/$release"
-    mv "$scratch"/* "$EWT/$release/"
-    cp "$LOCK" "$STAMP"
+    mv "$scratch" "$EWT"
     echo "ewt: $release is in ${EWT#"$ROOT/"}/$release"
 }
 

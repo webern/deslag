@@ -51,7 +51,8 @@ CoNLL-U with `exam.` comments:
 An unknown or repeated key or value, or a file key later, is a load error, and so is a holdout
 with `trains` other than `no`. Every sentence has a unique `sent_id`. A `ud` file needs `# text`.
 A `deslag` file has one line per token, no range lines or empty nodes, and `Kind=` and `Prov=` in
-`MISC` on every line. Open disputes are the lines of `<stem>.disputes.tsv` or `--disputes`.
+`MISC` on every line. `Prov=` is `agree`, `adjudicated`, `corrected`, `owner`, or `kind`, for a
+token that is not a word, whose UPOS comes from its kind. Open disputes are the lines of `<stem>.disputes.tsv` or `--disputes`.
 
 ## The tag mapping
 

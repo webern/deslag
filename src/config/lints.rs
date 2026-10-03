@@ -593,6 +593,11 @@ impl Merge for BannedPhrases {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PhraseGroups {
+    /// The `signposts` group, which no longer exists: a config that still sets it is read, with a
+    /// warning, and the setting does nothing.
+    #[serde(default, skip_serializing)]
+    #[schemars(skip)]
+    pub signposts: Option<bool>,
     /// Phrases that insist on what a thing does not do, such as `not silently`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
@@ -611,6 +616,8 @@ impl Merge for PhraseGroups {
     fn merge(&mut self, over: &Self) {
         // Naming every field makes a new group a compile error until it is merged here too.
         let PhraseGroups {
+            // Removed, and ignored.
+            signposts: _,
             insistence,
             metaphors,
             precision,

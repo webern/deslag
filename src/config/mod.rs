@@ -99,6 +99,7 @@ pub struct Config {
     source: ConfigSource,
     schema_version: NonZeroU32,
     md: MdConfig,
+    warnings: Vec<String>,
 }
 
 impl Config {
@@ -135,6 +136,14 @@ impl Config {
             });
         }
 
+        let warnings = file
+            .md
+            .removed_settings()
+            .into_iter()
+            .map(|setting| {
+                format!("{path_string}: `{setting}` was removed, and the setting is ignored")
+            })
+            .collect();
         let md = MdConfig::compile(file.md, &path_string)?;
 
         Ok(Config {
@@ -142,6 +151,7 @@ impl Config {
             source,
             schema_version: file.schema_version,
             md,
+            warnings,
         })
     }
 
@@ -158,6 +168,12 @@ impl Config {
     /// The schema the file declared.
     pub fn schema_version(&self) -> NonZeroU32 {
         self.schema_version
+    }
+
+    /// What the file holds that deslag reads and ignores, one line each, for the command line to
+    /// print.
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
     }
 
     /// The `[md]` section.

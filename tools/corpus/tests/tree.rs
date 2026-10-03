@@ -59,6 +59,7 @@ fn ban(phrases: &[&str]) -> BannedPhrases {
             insistence: Some(false),
             metaphors: Some(false),
             precision: Some(false),
+            ..PhraseGroups::default()
         },
         allow: None,
         ban: Some(

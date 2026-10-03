@@ -607,6 +607,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                 insistence: Some(false),
                 metaphors: Some(false),
                 precision: Some(false),
+                ..PhraseGroups::default()
             },
             ban: Some([(entry.phrase.clone(), String::new())].into()),
             ..BannedPhrases::default()

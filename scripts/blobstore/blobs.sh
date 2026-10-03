@@ -119,6 +119,10 @@ install_hint() {
     esac
 }
 
+# Why the last login() did not take: none (no gh, or gh has no token) or
+# refused (gh has a token and the registry rejected it). The remedy differs.
+LOGIN_FAILURE=none
+
 # CI does not hold a person's login, it holds the workflow token, and the remedy
 # there is a package setting rather than a login. Same failure, different fix, so
 # say which one is in front of you.
@@ -133,18 +137,30 @@ deslag-blobs -> Package settings -> Manage Actions access -> add webern/deslag
 with the Write role. A package pushed by hand starts with no repository access,
 so that grant is the usual answer."
     fi
-    fail "Cannot authenticate to $IMAGE, which is private, so this needs a gh login
-with the $scope scope.
+    if [[ "$LOGIN_FAILURE" == refused ]]; then
+        fail "$IMAGE refused the token gh holds, so this run could not use it.
+The token may lack the $scope scope: run gh auth refresh -s $scope. Or it is not a
+GitHub token the registry knows: some hosted environments set GH_TOKEN to a stand-in
+that only their own proxy accepts. There, unset GH_TOKEN and GITHUB_TOKEN, or set one to
+a token with the $scope scope.
+A browser may open for the user to approve gh auth refresh. An agent can run it, then retry."
+    fi
+    fail "$IMAGE needs a login with the $scope scope for this, and gh has none.
 Run: gh auth login
 If gh is already logged in, run: gh auth refresh -s $scope
 A browser may open for the user to approve either command. An agent can run it, then retry."
+}
+
+# Whether the pinned image can be read with the login crane has now, if any.
+readable() {
+    "$CRANE" manifest "$(pinned)" >/dev/null 2>&1 < /dev/null
 }
 
 # The registry answers "manifest unknown" both when the digest is gone and when the
 # token may not see the package, so the error alone does not say which. The tag
 # separates them: if it resolves, the package is readable and the committed lock is
 # behind the registry.
-explain_export_failure() {
+explain_unreadable() {
     local ref tag live
     ref="$(pinned)"
     tag="${ref%@*}"
@@ -174,15 +190,28 @@ it happens again, the release has changed and the hash needs checking by hand."
 
 # Logs crane in with gh's token: a person's login, or in CI the workflow token
 # GH_TOKEN hands gh. Fails when there is none, which fetch lets pass, because a
-# public package needs no login.
+# public package needs no login. A token gh holds is not a token the registry
+# takes: a hosted environment may set GH_TOKEN to a stand-in its own proxy
+# accepts, and a person's token may lack the packages scope. So the login is
+# tried against the registry before anything relies on it, and dropped when the
+# registry refuses it, so a later anonymous request is not sent with bad
+# credentials. The check lists the package's tags, which any readable token
+# can do and the registry refuses with the same status as a push would.
 login() {
     local token user
+    LOGIN_FAILURE=none
     command -v gh >/dev/null || return 1
     token="$(gh auth token 2>/dev/null)" || return 1
+    [[ -n "$token" ]] || return 1
     user="${GITHUB_ACTOR:-}"
     [[ -n "$user" ]] || user="$(gh api user -q .login 2>/dev/null)" || return 1
     # Login only writes the config: nothing is checked until the first request.
-    printf '%s' "$token" | "$CRANE" auth login ghcr.io -u "$user" --password-stdin >/dev/null 2>&1
+    printf '%s' "$token" | "$CRANE" auth login ghcr.io -u "$user" --password-stdin >/dev/null 2>&1 || return 1
+    if ! "$CRANE" ls "$IMAGE" >/dev/null 2>&1 < /dev/null; then
+        "$CRANE" auth logout ghcr.io >/dev/null 2>&1 || true
+        LOGIN_FAILURE=refused
+        return 1
+    fi
 }
 
 # One line per entry under .blobs/unpacked, tab-separated and in bytewise path
@@ -400,12 +429,27 @@ make publish-blobs from a clone whose $UNPACKED_REL holds the image to write a n
     need fetch curl tar "${SHA256[0]}"
     refuse_to_discard_edits
     bootstrap_crane
-    login || echo "no gh login to use; fetching $IMAGE without one"
+    # The package is public, so no login is needed to read it, and a login is
+    # tried only when an anonymous read fails: a private package, or a fork of
+    # this repo whose package is.
+    if ! readable; then
+        if login; then
+            echo "reading $IMAGE with gh's login"
+        elif [[ "$LOGIN_FAILURE" == refused ]]; then
+            echo "$IMAGE refused the token gh holds; trying without one"
+        else
+            echo "no gh login to use; trying $IMAGE without one"
+        fi
+        readable || explain_unreadable
+    fi
     echo "unpacking $(pinned) into $UNPACKED_REL"
     # No stamp until the tree is complete, so an interrupted unpack is redone.
     rm -rf "$STAMP" "$UNPACKED"
     mkdir -p "$UNPACKED"
-    "$CRANE" export "$(pinned)" - | tar -xf - -C "$UNPACKED" --no-same-owner || explain_export_failure
+    "$CRANE" export "$(pinned)" - | tar -xf - -C "$UNPACKED" --no-same-owner ||
+        fail "Downloading $(pinned) failed part way, after the registry had agreed to serve it,
+so the network or the registry gave out. Nothing is left in $UNPACKED_REL; run
+make fetch-blobs again."
     inventory > "$INVENTORY"
     cp "$LOCK" "$STAMP"
 }

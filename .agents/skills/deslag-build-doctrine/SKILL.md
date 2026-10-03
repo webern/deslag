@@ -59,6 +59,7 @@ Target names start with a verb. The vocabulary:
 - build: compiles or constructs something
 - preflight: checks the environment for prerequisites before other targets run, with a clear
   user-facing error when the machine needs attention
+- install: installs what preflight reports missing, where cargo can; the rest stays by hand
 - check: runs a linter, formatter or other static analysis in check mode; what gates CI
 - fix: applies the automatic fixes for what `check` reports (rustfmt in place, clippy --fix), and
   rewrites expected test output from what the code prints now

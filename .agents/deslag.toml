@@ -44,7 +44,21 @@ lints.list_growth = {}
 [[md.overrides]]
 globs = ["/.agents/skills/**/*.md"]
 lints.max_size_bytes.value = 5000
+
+# An override can turn a lint on but not off, so list_growth names the skills it judges, and the
+# build doctrine is not among them: the owner authorized its verb list to grow by one on
+# 2026-10-03, and its budget is 5000 plus the 92 bytes that item added.
+[[md.overrides]]
+globs = [
+  "/.agents/skills/deslag-commit/SKILL.md",
+  "/.agents/skills/deslag-design-docs/SKILL.md",
+  "/.agents/skills/deslag-open-pr/SKILL.md",
+]
 lints.list_growth = {}
+
+[[md.overrides]]
+globs = ["/.agents/skills/deslag-build-doctrine/SKILL.md"]
+lints.max_size_bytes.value = 5092
 
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]

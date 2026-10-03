@@ -18,7 +18,7 @@ CARGO_FLAGS ?=
         clean clean-blobs \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
-        preflight \
+        preflight install \
         fetch-blobs publish-blobs
 
 help:
@@ -43,7 +43,8 @@ help:
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
 	@echo "                 tools/corpus/tests/golden from what deslag-corpus prints"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
-	@echo "preflight        report what must be installed by hand before a build can succeed"
+	@echo "preflight        report what must be installed before a build can succeed"
+	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
 
@@ -138,6 +139,12 @@ fix-test-output: preflight
 
 preflight:
 	@$(SCRIPTS)/preflight.sh
+
+# ---------------------------------------------------------------------------
+# install
+
+install:
+	@$(SCRIPTS)/install.sh
 
 # The corpus's big tier, from the OCI image $(BLOBSTORE)/blobs.lock pins; see
 # $(BLOBSTORE)/blobs.md. A stamp that matches the lock is the whole check.

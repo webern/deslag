@@ -46,19 +46,27 @@ take it past that waits for a way to fetch less.
 
 ## Access
 
-The package is private. A person reads it with their own `gh` login, which needs the
-`read:packages` scope (`gh auth login`, then `gh auth refresh -s read:packages`); publishing needs
-`write:packages`. `blobs.sh` takes the token from `gh` for each run and never stores a
-login. With no `gh` login it fetches anonymously, which is all a public package needs.
+The package is public, so fetching does not need a login: `make fetch-blobs` works on a fresh
+machine, in a hosted agent environment and in CI with nothing set up. Publishing needs a `gh`
+login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`).
+`blobs.sh` takes the token from `gh` for each run and never stores a login.
 
-CI has no `gh` login; it reads the package with the workflow token, which only works while the
-package grants this repository access: Packages -> `deslag-blobs` -> Package settings -> Manage
-Actions access -> `webern/deslag` with the Write role. Write, not Read, so that a workflow can one
-day publish. The grant is per package, not per tag, so publishing does not need it repeated.
+`blobs.sh` reads anonymously first and turns to `gh` only when that fails, which happens with a
+private package: this repo's was private until 2026-10-03, and a fork's may be.
 
-A package pushed by hand starts with no repository access, and the registry hides a package a
-token may not read, so a "manifest unknown" in CI means the grant is missing, not the manifest.
-While the package is private, a ghcr.io outage fails `make ci`, and with it every pull request.
+A token `gh` holds is not always one the registry takes. A person's may lack the packages scope,
+and a hosted environment may set `GH_TOKEN` to a stand-in that only its own proxy accepts. So every
+login is checked against the registry before it is relied on and dropped when refused, and the
+error says which of the two it was and what fixes it. Without the check, a stand-in token made
+every fetch fail with a message about a private package.
+
+CI has no `gh` login; it reads the package anonymously like everyone else, and a workflow that
+publishes would use the workflow token, which works only while the package grants this repository
+access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access -> `webern/deslag`
+with the Write role. The grant is per package, not per tag, so publishing does not need it
+repeated.
+
+A ghcr.io outage fails `make ci`, and with it every pull request.
 
 `crane` (https://github.com/google/go-containerregistry) does the registry work. The script
 installs the pinned version into `.tools/crane/`, checked against a hash, the first time it is

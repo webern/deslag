@@ -4,3 +4,7 @@
 
 [files]
 extend-exclude = ["tests/corpus", "tests/golden/*.txt"]
+
+# PN is the annotation guide's code for a proper noun, which deslag-gold reads and writes.
+[default.extend-words]
+pn = "pn"

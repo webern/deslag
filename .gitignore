@@ -13,6 +13,9 @@ test/output/
 .blobs/
 .tools/
 
+# the working files of deslag-gold, which makes the deslag gold set; see tools/exam
+.gold/
+
 # the UD English Web Treebank that make fetch-ewt downloads; see scripts/ewt/ewt.lock
 .ewt/
 

@@ -5,7 +5,7 @@
 # they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the version the entry
 # first ships in.
 
-measured_on = "ghcr.io/webern/deslag-blobs:v3@sha256:d7263b0d15c9b4229633d9eec73f0448e1165ca6eab1903fdc227ccada9c7350"
+measured_on = "ghcr.io/webern/deslag-blobs:v4@sha256:65c7bad78a430f79a74708a111095f10b90058d283f1bb7093fe716a3a03976d"
 
 [[entry]]
 phrase = "why this matters"

@@ -13,7 +13,7 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
-        test test-blobs \
+        test test-blobs test-scripts \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs \
         ci \
@@ -27,6 +27,7 @@ help:
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
+	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
 	@echo "check-deslag     run deslag on this repository's own Markdown"
@@ -68,13 +69,18 @@ build-release: preflight
 # ---------------------------------------------------------------------------
 # test
 
-test: preflight
+test: preflight test-scripts
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
 # offline and with no login.
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+
+# The scripts under scripts/blobstore, run against git repositories the tests
+# make: no network, no login.
+test-scripts: preflight
+	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 
 # ---------------------------------------------------------------------------
 # check

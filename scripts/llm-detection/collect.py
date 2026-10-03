@@ -23,6 +23,9 @@ why it is Python rather than bash.
                                               to what the manifest records; a seed manifest is
                                               first completed with what the network says, and
                                               built twice; the publish-blobs workflow runs this
+    collect.py complete SEED COMPLETED --corpus .blobs/unpacked/corpus
+                                              fail unless COMPLETED is SEED completed and its
+                                              batch is the one the corpus holds
     collect.py select   --corpus .blobs/unpacked/corpus --out tests/corpus [--check]
                                               sample the tree from the big tier
     collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
@@ -1737,6 +1740,7 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         "head": None, "cutoff_rev": None, "commits": None, "license": None,
         "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
         "qualified": {}, "unasked": {}, "kept": {}, "dropped": {}, "sizes": [], "files": [],
+        "pull_failures": 0,
     }
     clone = work / "clones" / digest(c.key)
     try:
@@ -1945,6 +1949,8 @@ def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
             target.write_bytes(p.data or b"")
         result["files"].append(pick_record(p))
     result["kept"] = {"human": len(kept_human), "llm": len(kept_llm), "mixed": len(kept_mixed)}
+    # Squash-merges GitHub could not be asked about were taken as unproven, and their files left out.
+    result["pull_failures"] = pulls.failed
 
 
 def change_record(commit: Commit, w: Walk) -> dict:
@@ -2154,6 +2160,7 @@ def stage(args: argparse.Namespace) -> None:
     work, out, corpus = Path(args.work), Path(args.out), Path(args.corpus)
     if out.exists():
         raise SystemExit(f"{out} exists: stage writes a new tree")
+    out.mkdir(parents=True)
     captured = args.captured or time.strftime("%Y-%m-%d", time.gmtime())
     published, live = live_fixtures(corpus)
     excluded = read_exclusions(args.exclude, live)
@@ -3166,7 +3173,10 @@ def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[d
             problems.append(f"{key}: could not be harvested; errors.jsonl in {work} says why")
         elif result["outcome"] != "harvested":
             problems.append(f"{key}: {result['outcome']}")
-        elif entry.get("kept") and result["kept"] != entry["kept"]:
+        elif result.get("pull_failures"):
+            problems.append(f"{key}: GitHub could not show {result['pull_failures']} squash-merges, "
+                            "so files may have been left out")
+        elif entry.get("kept") is not None and result["kept"] != entry["kept"]:
             problems.append(f"{key}: kept {result['kept']}, and the manifest says {entry['kept']}")
     if problems:
         raise SystemExit(f"batch {name} cannot be harvested as {path} has it:\n  "
@@ -3192,6 +3202,49 @@ def mismatch(manifest: dict, got: dict, path: Path, why: str) -> SystemExit:
         f"  expected {manifest.get('expect')}\n  built    {got}\n{why} Nothing was published.")
 
 
+def extends(seed: dict, done: dict) -> str | None:
+    """Why `done` is not `seed` completed, or None when it is: everything the seed says, `done`
+    says too, and `done` holds the same sources and no others."""
+    for key, value in seed.items():
+        if key != "sources" and done.get(key) != value:
+            return f"`{key}` is not what the seed has"
+    for key in done:
+        if key not in seed and key not in ("captured", "expect", "sources"):
+            return f"`{key}` is not in the seed, and completing adds only `captured` and `expect`"
+    done_by_key = {}
+    for entry in done.get("sources", []):
+        done_by_key[(entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry))] = entry
+    seed_sources = seed.get("sources", [])
+    if len(done_by_key) != len(seed_sources):
+        return "it does not hold the seed's sources, and only those"
+    for entry in seed_sources:
+        theirs = done_by_key.get((entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry)))
+        if theirs is None or any(theirs.get(k) != v for k, v in entry.items()):
+            return f"the source {entry.get('repo')} is not what the seed has"
+    return None
+
+
+def complete(args: argparse.Namespace) -> None:
+    """Fails unless the manifest --completed is the committed seed --seed, completed, and the batch
+    --corpus holds is the one it expects. What the build derived from the network, `expect` and
+    each source's `head`, `meta` and `kept`, is the word of whoever built it, which the seed
+    cannot confirm; everything else is the seed's."""
+    seed_path, done_path = Path(args.seed), Path(args.completed)
+    seed, done = read_manifest(seed_path), read_manifest(done_path)
+    if seed.get("expect") is not None:
+        raise SystemExit(f"{seed_path} is already completed, and a completed manifest is never replaced")
+    if done.get("expect") is None:
+        raise SystemExit(f"{done_path} is not completed")
+    if why := extends(seed, done):
+        raise SystemExit(f"{done_path} is not {seed_path} completed: {why}")
+    target = Path(args.corpus) / "batches" / done["batch"]
+    if not target.is_dir():
+        raise SystemExit(f"{target} does not exist")
+    got = batch_facts(target)
+    if done["expect"] != got:
+        raise mismatch(done, got, done_path, "The batch is not the one the manifest describes.")
+
+
 def batch(args: argparse.Namespace) -> None:
     """Builds the batch a manifest describes into --corpus, and fails unless it comes to what the
     manifest expects. The publish-blobs workflow runs this for each manifest.
@@ -3207,7 +3260,10 @@ def batch(args: argparse.Namespace) -> None:
     target = corpus / "batches" / name
     if target.exists():
         if manifest.get("expect") is None:
-            raise SystemExit(f"{target} exists, and {path} is a seed; remove one of them")
+            raise SystemExit(f"{target} exists, and {path} is a seed. Either an earlier run "
+                             "published the batch and could not commit its completed manifest, "
+                             "which is in that run's new-batches artifact, or the tree holds a "
+                             "batch built from another seed; remove it to build this one.")
         got = batch_facts(target)
         if manifest["expect"] != got:
             raise mismatch(manifest, got, path, "A published batch is never changed.")
@@ -3303,9 +3359,14 @@ def main() -> None:
     p.add_argument("manifest")
     p.add_argument("--corpus", required=True)
     p.add_argument("--work", required=True)
+    p = sub.add_parser("complete")
+    p.add_argument("seed")
+    p.add_argument("completed")
+    p.add_argument("--corpus", required=True)
     args = parser.parse_args()
     {"discover": discover, "harvest": harvest, "stage": stage, "select": select,
-     "describe": describe, "recheck": recheck, "pack": pack, "batch": batch}[args.command](args)
+     "describe": describe, "recheck": recheck, "pack": pack, "batch": batch,
+     "complete": complete}[args.command](args)
 
 
 if __name__ == "__main__":

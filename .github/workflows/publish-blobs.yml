@@ -85,7 +85,7 @@ jobs:
         with:
           name: new-batches
           path: ${{ runner.temp }}/new-batches.tar
-          retention-days: 1
+          retention-days: 7
           if-no-files-found: error
 
   # The one job that can write: it runs only for a push, only after harvest, and runs nothing from
@@ -98,6 +98,12 @@ jobs:
     permissions:
       contents: write
       packages: write
+    # Every ref shares this group, because blobs.sh takes the next vN from the registry and a
+    # second push at the same moment could take the same one. A publish that waits behind another
+    # can be replaced by a newer one waiting, and cancelled; run its workflow run again.
+    concurrency:
+      group: publish-blobs-registry
+      cancel-in-progress: false
     steps:
       # The commit harvest built against, so the image the batches are added to is the one they
       # were built for. The lock is committed back with the credentials checkout leaves in the

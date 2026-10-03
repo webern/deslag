@@ -83,7 +83,7 @@ build() {
         python3 "$COLLECT" batch "$manifest" --corpus "$UNPACKED/corpus" --work "$WORK/$name" ||
             fail "$name could not be built as ${manifest#"$ROOT/"} says. The lines above say why.
 Nothing was published and $LOCK_REL is as it was. A batch that cannot be harvested
-the same way twice is not published; pin it again with collect.py pin, or drop the manifest."
+the same way twice is not published; fix the seed, or drop the manifest."
         [[ "$held" -eq 1 ]] || echo "$name" >> "$NEW"
     done < <(find "$MANIFESTS" -maxdepth 1 -name '*.json' 2>/dev/null | LC_ALL=C sort)
     echo "new batches: $(tr '\n' ' ' < "$NEW")"
@@ -103,37 +103,60 @@ bundle() {
 }
 
 # The tar crossed from a job that read other people's repositories to the one
-# holding a token that can write the package, so it is trusted for nothing but
-# the files of new batches and their manifests, and each batch must be the one
-# its manifest says.
+# holding a token that can write the package, so it is trusted for as little as
+# can be. It may hold new batch directories, each absent from the fetched image,
+# and a completed manifest for a batch only where the committed one is a seed
+# that the completed one extends. A batch with no manifest in the tar must have
+# a completed manifest committed, which it is held to. Nothing in the tar names
+# a path outside those, and nothing existing is replaced. What the build derived
+# from the network, a manifest's `expect` and the heads it settled on, is the
+# word of the job that built it.
 unbundle() {
-    local file="${1:?usage: $0 unbundle FILE}" listing links name
+    local file="${1:?usage: $0 unbundle FILE}" listing types name incoming
+    local -a batches=() manifests=()
     [[ -f "$file" ]] || fail "$file does not exist."
     need python3
     listing="$(tar -tf "$file")" || fail "$file is not a tar."
-    links="$(tar -tvf "$file" | grep '^[lh]' || true)"
-    if grep -qvE "^(corpus/batches/$NAME_RE(/|\$)|$MANIFESTS_REL/$NAME_RE\.json\$)" <<<"$listing" ||
-        grep -qF '..' <<<"$listing" || [[ -n "$links" ]]; then
+    types="$(tar -tvf "$file" | cut -c1 | grep -v '[d-]' || true)"
+    if [[ -n "$types" ]] || grep -qE '(^|/)\.\.(/|$)|^/' <<<"$listing" ||
+        grep -qvE "^(corpus/batches/$NAME_RE(/|\$)|$MANIFESTS_REL/$NAME_RE\.json\$)" <<<"$listing"; then
         fail "$file holds more than batch directories under corpus/batches and their manifests,
-or a link or a '..'. It is not unpacked."
+or something that is not a file or a directory, or a path that climbs out. It is not unpacked."
     fi
-    mkdir -p "$UNPACKED"
-    : > "$NEW"
-    while IFS= read -r name; do
+    while IFS= read -r name; do batches+=("$name"); done \
+        < <(grep '^corpus/batches/' <<<"$listing" | cut -d/ -f3 | LC_ALL=C sort -u)
+    while IFS= read -r name; do manifests+=("$name"); done \
+        < <(grep "^$MANIFESTS_REL/" <<<"$listing" | sed "s|^$MANIFESTS_REL/||; s|\.json\$||" | LC_ALL=C sort -u)
+    for name in ${manifests[@]+"${manifests[@]}"}; do
+        [[ " ${batches[*]-} " == *" $name "* ]] || fail "$file holds a manifest for $name and no batch."
+    done
+    for name in ${batches[@]+"${batches[@]}"}; do
         [[ ! -e "$UNPACKED/corpus/batches/$name" ]] ||
             fail "$name is already in the fetched image, so the bundle has nothing new to add."
+        [[ -f "$MANIFESTS/$name.json" ]] || fail "$name has no manifest committed in $MANIFESTS_REL."
+    done
+    rm -rf "$BLOBS/incoming"
+    mkdir -p "$UNPACKED" "$BLOBS/incoming"
+    : > "$NEW"
+    for name in ${batches[@]+"${batches[@]}"}; do
         echo "$name" >> "$NEW"
-    done < <(grep '^corpus/batches/' <<<"$listing" | cut -d/ -f3 | LC_ALL=C sort -u)
-    tar -xf "$file" -C "$UNPACKED" --no-same-owner --wildcards 'corpus/*'
-    if grep -q "^$MANIFESTS_REL/" <<<"$listing"; then
-        tar -xf "$file" -C "$ROOT" --no-same-owner --wildcards "$MANIFESTS_REL/*"
-    fi
-    while IFS= read -r name; do
-        [[ -f "$MANIFESTS/$name.json" ]] || fail "$name has no manifest in $MANIFESTS_REL."
-        python3 "$COLLECT" batch "$MANIFESTS/$name.json" --corpus "$UNPACKED/corpus" --work "$WORK/verify-$name" ||
-            fail "$name is not what its manifest expects. It is not published."
-    done < "$NEW"
-    echo "unpacked: $(tr '\n' ' ' < "$NEW")"
+        tar -xf "$file" -C "$UNPACKED" --no-same-owner "corpus/batches/$name"
+    done
+    for name in ${manifests[@]+"${manifests[@]}"}; do
+        tar -xf "$file" -C "$BLOBS/incoming" --no-same-owner "$MANIFESTS_REL/$name.json"
+    done
+    for name in ${batches[@]+"${batches[@]}"}; do
+        incoming="$BLOBS/incoming/$MANIFESTS_REL/$name.json"
+        if [[ -f "$incoming" ]]; then
+            python3 "$COLLECT" complete "$MANIFESTS/$name.json" "$incoming" --corpus "$UNPACKED/corpus" ||
+                fail "The manifest for $name in the bundle is not its committed seed completed. It is not published."
+            cp "$incoming" "$MANIFESTS/$name.json"
+        else
+            python3 "$COLLECT" batch "$MANIFESTS/$name.json" --corpus "$UNPACKED/corpus" --work "$WORK/verify-$name" ||
+                fail "$name is not what its committed manifest expects. It is not published."
+        fi
+    done
+    echo "unpacked: ${batches[*]-}"
 }
 
 pin_lock() {
@@ -162,11 +185,14 @@ pin_lock() {
     lock_unpinned "$branch" "three pushes were refused"
 }
 
-# The image is in the registry and the lock does not say so, so say what the lock
-# should hold, which is the one thing a person needs to finish the job.
+# The image is in the registry and the branch does not pin it. Nothing on the
+# branch has changed, so another run can try again: it builds what the pinned
+# image lacks, which is the same batch.
 lock_unpinned() {
-    fail "$2. The image was published, but $LOCK_REL on $1 does not pin it.
-Run the workflow's jobs again, or commit this as $LOCK_REL by hand:
+    fail "$2. The image was published, but $LOCK_REL on $1 does not pin it, and the
+manifests are still seeds. Run all the jobs of this workflow run again, or push again.
+Do not commit the lock alone: the completed manifests are in this run's new-batches
+artifact, and must be committed with it. The lock would say:
 
 $(cat "$LOCK")"
 }

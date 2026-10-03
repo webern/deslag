@@ -16,7 +16,8 @@ Developers and agents should not have to read instructions to set up a machine.
 
 These terms are used consistently.
 
-Requirements outside the repo are "Build Prerequisites": Installed Software and External Assets.
+Requirements that live outside the repo are "Build Prerequisites". They fall into two categories:
+Installed Software and External Assets.
 
 The top-level `Makefile` drives every build, check, test and environment check. When Installed
 Software is missing or the wrong version, `make preflight`, which every build runs first, says what
@@ -46,7 +47,7 @@ is a script. Scripts are bash, open with a comment saying what they are for, use
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
 The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
-library only. Make and CI run only `batch`, from a manifest of sources; a person runs the rest.
+library only, run by hand; make, tests and CI run `batch`.
 
 Development is supported on macOS and Linux.
 

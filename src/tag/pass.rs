@@ -28,14 +28,20 @@
 //! its tests, which run each case through the whole tagger.
 
 use super::{
-    Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, nounverb, proper,
+    Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, nounverb, prior,
+    proper,
 };
 use crate::document::{Token, TokenKind};
 
 /// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
 /// settled, and the order is part of the tagger: it is what the tag stream records.
-const PASSES: [fn(&mut View<'_, '_>); 4] =
-    [proper::run, infinitive::run, function::run, nounverb::run];
+const PASSES: [fn(&mut View<'_, '_>); 5] = [
+    proper::run,
+    infinitive::run,
+    function::run,
+    nounverb::run,
+    prior::run,
+];
 
 /// Runs every pass, in order, over one sentence whose words the tables have read.
 pub(super) fn run(tokens: &mut [Token<'_>], context: Context) {

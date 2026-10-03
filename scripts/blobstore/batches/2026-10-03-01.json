@@ -1,0 +1,10 @@
+{
+  "batch": "2026-10-03-01",
+  "captured": "2026-10-03",
+  "sources": [
+    {"kind": "git", "host": "github.com", "repo": "18F/18f.gsa.gov", "head": "292605ab095af8e70e2087aca63c2319ce892a4c", "found_by": ["sg-register:government-writing"]},
+    {"kind": "git", "host": "github.com", "repo": "GSA/digitalgov.gov", "head": "4979583206d90ff1707b097454a9b169ca9e95e4", "found_by": ["sg-register:government-writing"]},
+    {"kind": "git", "host": "github.com", "repo": "18F/handbook", "head": "c220f93896b39e9e4ab0f486a1d5bf346ac06e3e", "found_by": ["sg-register:government-writing"]},
+    {"kind": "git", "host": "github.com", "repo": "GSA/plainlanguage.gov", "head": "fd7694740f19c0ed20ed71c2dd1dc92699e920fa", "found_by": ["sg-register:government-writing"]}
+  ]
+}

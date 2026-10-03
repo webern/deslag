@@ -27,7 +27,7 @@ use std::ops::Range;
 
 use deslag::document::{Token, TokenKind};
 
-use crate::gold::{GoldSentence, TokenMode};
+use crate::gold::{Gold, GoldSentence, TokenMode};
 use crate::tags::{Class, Features, Tag};
 
 /// Why a tagged gold word cannot be matched to a token.
@@ -132,6 +132,34 @@ impl Alignment {
                 .sum::<usize>()
             + self.not_word.len()
     }
+}
+
+/// A gold sentence with its deslag tokens and what alignment made of them. It is made once per
+/// gold file, and the Words section and every metric read it, so they cannot disagree.
+#[derive(Debug)]
+pub struct Aligned<'g> {
+    /// The gold sentence.
+    pub sentence: &'g GoldSentence,
+    /// Its tokens, as a tagger is given them.
+    pub tokens: Vec<Token<'g>>,
+    /// How its words align to them.
+    pub alignment: Alignment,
+}
+
+/// Aligns every sentence of `gold`, in order.
+pub fn align_all(gold: &Gold) -> Vec<Aligned<'_>> {
+    gold.sentences
+        .iter()
+        .map(|sentence| {
+            let tokens = sentence.tokens();
+            let alignment = sentence.align(&tokens);
+            Aligned {
+                sentence,
+                tokens,
+                alignment,
+            }
+        })
+        .collect()
 }
 
 impl GoldSentence {

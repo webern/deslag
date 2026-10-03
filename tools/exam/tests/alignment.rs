@@ -2,7 +2,8 @@
 
 mod common;
 
-use common::{alignments, case, scored_texts, texts};
+use common::{alignments, case, kinds, scored_texts, texts};
+use deslag::document::TokenKind;
 use deslag_exam::align::{Reason, Unalignable};
 use deslag_exam::tags::{Features, Tag};
 
@@ -124,6 +125,9 @@ fn a_tagged_word_on_a_number_or_a_symbol_is_not_a_word_token() {
         scored_texts(sentence, a),
         ["Tom", "Jerry", "paid", "dollars"]
     );
+    let kinds = kinds(sentence);
+    assert_eq!(kinds[1], TokenKind::Symbol, "the plus sign");
+    assert_eq!(kinds[4], TokenKind::Number, "the numeral");
     // The plus sign is a CCONJ here, and the numeral a NUM.
     assert_eq!(a.not_word, [1, 4]);
     assert!(a.unalignable.is_empty());

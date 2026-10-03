@@ -87,6 +87,11 @@ macro_rules! named {
                 match self { $($ty::$variant => $name),+ }
             }
 
+            /// Its place in [`Self::ALL`].
+            pub fn index(self) -> usize {
+                self as usize
+            }
+
             /// The value written `name`.
             pub fn from_name(name: &str) -> Option<$ty> {
                 match name { $($name => Some($ty::$variant),)+ _ => None }

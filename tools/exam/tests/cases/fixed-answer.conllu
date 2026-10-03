@@ -1,0 +1,23 @@
+# exam.source = hand-made
+# exam.split = dev
+# exam.trains = no
+# sent_id = f1
+# exam.tier = human
+# text = Dogs bark loudly
+1	Dogs	_	NOUN	_	Number=Plur	_	_	_	_
+2	bark	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	_
+3	loudly	_	ADV	_	_	_	_	_	_
+
+# sent_id = f2
+# exam.tier = human
+# text = The old cat slept
+1	The	_	DET	_	_	_	_	_	_
+2	old	_	ADJ	_	Degree=Pos	_	_	_	_
+3	cat	_	NOUN	_	Number=Sing	_	_	_	_
+4	slept	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	_
+
+# sent_id = f3
+# exam.tier = llm
+# text = Walking helps
+1	Walking	_	VERB	_	VerbForm=Ger	_	_	_	_
+2	helps	_	VERB	_	Person=3|Tense=Pres|VerbForm=Fin	_	_	_	_

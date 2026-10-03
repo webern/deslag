@@ -55,7 +55,7 @@ fn near(value: Option<f64>, want: f64) {
 }
 
 #[test]
-fn the_noun_tagger_on_the_done_when_gold_gives_the_designs_numbers() {
+fn the_noun_tagger_on_the_done_when_gold_gives_the_hand_worked_numbers() {
     let gold = case("done-when.conllu");
     let scoring = run(&gold, built_in("noun").unwrap().as_ref());
     assert_eq!(scoring.tagger, "noun");

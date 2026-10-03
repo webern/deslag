@@ -16,7 +16,7 @@ use crate::score::Scoring;
 use crate::tagger::Context;
 
 /// The format number a saved run carries.
-pub const FORMAT: u32 = 1;
+pub const FORMAT: u32 = 2;
 
 /// A run, as saved.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -217,7 +217,11 @@ mod tests {
         let good = run().to_json();
         let cases = [
             ("{".to_string(), "not a saved run"),
-            (good.replace("\"format\": 1", "\"format\": 2"), "format 2"),
+            (
+                good.replace("\"format\": 2", "\"format\": 1"),
+                "format 1 where this build reads 2",
+            ),
+            (good.replace("\"format\": 2", "\"format\": 3"), "format 3"),
             (
                 good.replace("\"tier\":\"llm\"", "\"tier\":\"robot\""),
                 "`robot` is not a tier",

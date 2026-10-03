@@ -109,7 +109,7 @@ fn a_holdout_gold_prints_aggregates_only_and_cannot_be_made_to_print_more() {
     assert!(report.contains("mode       aggregate"), "{report}");
     assert!(report.contains("split      holdout"));
     // The metrics are all still there.
-    assert!(report.contains("7/14") && report.contains("Tier gaps"));
+    assert!(report.contains("7/15") && report.contains("Tier gaps"));
     let saved = std::fs::read_to_string(&run).unwrap();
     // Its column names hold "likely", so look for the words but that one.
     for word in FORBIDDEN.iter().chain(&["send"]) {
@@ -192,7 +192,7 @@ fn a_skeleton_filled_in_round_trips_and_a_changed_form_exits_2() {
         .lines()
         .find(|l| l.trim_start().starts_with("Likely share"))
         .unwrap();
-    assert!(row.contains("100.0%") && row.contains("14/14"), "{row}");
+    assert!(row.contains("100.0%") && row.contains("15/15"), "{row}");
 
     // A changed FORM names the file and the line.
     let changed = fill(&text, "NOUN", "").replacen("\tcats\t", "\tkats\t", 1);
@@ -255,17 +255,17 @@ fn compare_prints_the_paired_difference_and_refuses_what_it_cannot_compare() {
         report.contains("after      import:verbs.conllu  (after.json)"),
         "{report}"
     );
-    assert!(report.contains("all (4 sentences, 14 tokens)"), "{report}");
-    // Nouns are right on 7 of 14, verbs on 3 of 14: down 28.6 points.
+    assert!(report.contains("all (4 sentences, 15 tokens)"), "{report}");
+    // Nouns are right on 7 of 15, verbs on 3 of 15: down 26.7 points.
     let accuracy = report
         .lines()
         .find(|l| l.trim_start().starts_with("Accuracy"))
         .unwrap();
     assert!(
-        accuracy.contains("50.0%") && accuracy.contains("21.4%"),
+        accuracy.contains("46.7%") && accuracy.contains("20.0%"),
         "{accuracy}"
     );
-    assert!(accuracy.contains("-28.6"), "{accuracy}");
+    assert!(accuracy.contains("-26.7"), "{accuracy}");
     assert!(accuracy.trim_end().ends_with("worse"), "{accuracy}");
     // A run against itself has nothing to say.
     let same = ok(&["compare", path(&before), path(&before)]);
@@ -304,8 +304,8 @@ fn compare_prints_the_paired_difference_and_refuses_what_it_cannot_compare() {
             "sentence 2 is not the same",
         ),
         (
-            text.replacen("\"tally\":[3,", "\"tally\":[4,", 1),
-            "sentence 1 has 3 scored tokens in one and 4 in the other",
+            text.replacen("\"tally\":[4,", "\"tally\":[5,", 1),
+            "sentence 1 has 4 scored tokens in one and 5 in the other",
         ),
     ];
     for (edit, expect) in edits {

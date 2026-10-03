@@ -16,8 +16,11 @@
 //!    scored, and never a reason a group fails. The rest are the group's tagged words, *G*; its
 //!    `Word` tokens are *W*. With *G* empty nothing happens. With *W* empty the words of *G* are
 //!    not word tokens. With two or more in *W* they are unalignable, *one word, several tokens*.
-//!    With one token in *W* and a single tag across *G* it is a scored token. With one token in
-//!    *W* and several tags across *G* they are unalignable, *one token, several tags*.
+//!    With one token in *W* and a single tag across *G* it is a scored token, left out of the
+//!    feature metrics when *G* has several words. With one token in *W* and several tags across
+//!    *G* it is a scored token whose gold tag and features are those of the *first* word of *G*
+//!    in gold order, as the annotation guide tags `don't` as `do`; this is a contraction, and
+//!    `cannot`, `I'm` and `Bob` with `'s` score the same way.
 //!
 //! For a `deslag` file each line is one group with the token of its own index; a tagged word on a
 //! line that is not a `Word` is not a word token, and one whose form no longer splits as its kind
@@ -39,17 +42,14 @@ pub enum Reason {
     TokenizerDrift,
     /// One gold word over several word tokens, as `e-mail` over `e`, `-` and `mail`.
     OneWordSeveralTokens,
-    /// One word token over words of different tags, as `don't` over `do` and `n't`.
-    OneTokenSeveralTags,
 }
 
 impl Reason {
     /// Every reason, in the order the report lists them.
-    pub const ALL: [Reason; 4] = [
+    pub const ALL: [Reason; 3] = [
         Reason::TextMismatch,
         Reason::TokenizerDrift,
         Reason::OneWordSeveralTokens,
-        Reason::OneTokenSeveralTags,
     ];
 
     /// What the report calls it.
@@ -58,7 +58,6 @@ impl Reason {
             Reason::TextMismatch => "text mismatch",
             Reason::TokenizerDrift => "tokenizer drift",
             Reason::OneWordSeveralTokens => "one word, several tokens",
-            Reason::OneTokenSeveralTags => "one token, several tags",
         }
     }
 
@@ -73,13 +72,16 @@ impl Reason {
 pub struct Scored {
     /// The token's index in the sentence's tokens.
     pub token: usize,
-    /// The gold tag.
+    /// The gold tag: the words' tag, or the first word's when they disagree.
     pub tag: Tag,
     /// The gold's features, or `None` when several agreeing words stand behind the token, which
-    /// leaves it out of the feature metrics.
+    /// leaves it out of the feature metrics. When the words disagree, the first word's.
     pub features: Option<Features>,
     /// How many gold words the token stands for.
     pub words: usize,
+    /// Whether the token is scored by its first word, because its words have different tags, as
+    /// `don't` has `do` and `n't`.
+    pub first_word: bool,
 }
 
 /// Tagged words that cannot be matched.
@@ -112,6 +114,23 @@ impl Alignment {
     /// The tagged words that were scored.
     pub fn scored_words(&self) -> usize {
         self.scored.iter().map(|scored| scored.words).sum()
+    }
+
+    /// The tagged words behind the tokens scored by their first word.
+    pub fn first_word_words(&self) -> usize {
+        self.scored
+            .iter()
+            .filter(|scored| scored.first_word)
+            .map(|scored| scored.words)
+            .sum()
+    }
+
+    /// The tokens scored by their first word.
+    pub fn first_word_tokens(&self) -> usize {
+        self.scored
+            .iter()
+            .filter(|scored| scored.first_word)
+            .count()
     }
 
     /// The tagged words that could not be matched, for `reason`.
@@ -221,6 +240,7 @@ fn by_line(sentence: &GoldSentence, tokens: &[Token<'_>], out: &mut Alignment) {
                 tag,
                 features: Some(sentence.words[index].features),
                 words: 1,
+                first_word: false,
             });
         }
     }
@@ -278,17 +298,17 @@ fn by_span(sentence: &GoldSentence, tokens: &[Token<'_>], out: &mut Alignment) {
             .collect();
         match word_tokens.as_slice() {
             [] => out.not_word.extend(words),
-            [token] if tags.iter().all(|tag| *tag == tags[0]) => out.scored.push(Scored {
-                token: *token,
-                tag: tags[0],
-                features: (words.len() == 1).then(|| sentence.words[words[0]].features),
-                words: words.len(),
-            }),
-            [token] => out.unalignable.push(Unalignable {
-                reason: Reason::OneTokenSeveralTags,
-                words,
-                tokens: vec![*token],
-            }),
+            [token] => {
+                let agree = tags.iter().all(|tag| *tag == tags[0]);
+                out.scored.push(Scored {
+                    token: *token,
+                    tag: tags[0],
+                    features: (!agree || words.len() == 1)
+                        .then(|| sentence.words[words[0]].features),
+                    words: words.len(),
+                    first_word: !agree,
+                });
+            }
             _ => out.unalignable.push(Unalignable {
                 reason: Reason::OneWordSeveralTokens,
                 words,

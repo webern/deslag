@@ -12,11 +12,11 @@ Words
     X                                 0
     tagged                            6
       scored                          2  as 2 tokens
+        by their first word           0  as 0 tokens
       unalignable                     4
         text mismatch                 4
         tokenizer drift               0
         one word, several tokens      0
-        one token, several tags       0
       not word tokens                 0
   provenance
     agree                             0

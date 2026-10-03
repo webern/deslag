@@ -9,7 +9,7 @@ max_size_bytes: 8192
 `deslag-exam` is a binary and a library in `tools/exam/`, never published; `deslag` does not depend
 on it. It grades part-of-speech taggers. A **gold set** is sentences with a person's tag for every
 word. The exam matches its words to deslag's own tokens, runs a tagger or
-reads another program's tags, and never guesses at a word it cannot match. `--help` lists commands.
+reads another program's tags, and never guesses at a word it cannot match.
 
 ## Commands
 
@@ -20,16 +20,16 @@ reads another program's tags, and never guesses at a word it cannot match. `--he
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
 - `words --gold G`: the header and Words section alone.
 
-Exit 0 when it did what was asked; 2 when it cannot run (a malformed file, a tagger
-breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr; for a
-holdout gold it names a sentence by position, never by `sent_id`.
+Exit 0 when it did what was asked, 2 when it cannot run (a malformed file, a broken tagger
+contract, runs that cannot be compared, bad arguments), with one line on stderr that names a
+holdout sentence by position, never by `sent_id`.
 
 ## Modules
 
 ```
 tools/exam/src/
   conllu.rs gold.rs   CoNLL-U read by hand; Gold and the conventions below
-  tags.rs             Tag, TagSet, Features, Confidence, Reading, the UD mapping
+  tags.rs             Reading, which adds a score to deslag::tag's; the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
   tagger.rs import.rs the Tagger trait, `noun`, run; the import reader
   most_common.rs      `mct`, from EWT train
@@ -80,24 +80,28 @@ its `Word` tokens are W:
 - None in W: not word tokens.
 - Several in W: unalignable, one word with several tokens.
 - One in W and one tag across G: a scored token, with features only when G is one word.
-- One in W and several tags: unalignable, one token with several tags.
+- One in W and several tags: a scored token with the first of G's tag and features (`don't` is
+  `do`, AUX).
 
 ## The taggers and import
 
 `Tagger::tag` gives one `Reading` per token, `Some` exactly on `Word` tokens, else exit 2 naming the
-tagger and sentence. `Sure` and `Likely` are committed.
+tagger and sentence, as does a `Sure` reading that keeps another tag. `Sure` and `Likely` are
+committed.
 
 `tokens` writes `sent_id`, `# text` and a line per token with `Kind=` and `SpaceAfter=No`. An
-import keeps the `sent_id`s and `FORM`s line for line, else exit 2 naming the first difference: by
-position, never a word, on holdout text or with `--aggregate`.
+import keeps the `sent_id`s and `FORM`s line for line, else exit 2 naming the first difference, by
+position and never a word on holdout text or with `--aggregate`.
 
 On `Word` lines an import reads `UPOS`, `FEATS` and the `MISC` keys `Conf=` (default `Likely`),
-`Score=` and `Kept=`. `PUNCT`, `SYM` and `X` become `Noun` at `Unknown`, counted in Words.
+`Score=` and `Kept=`; `Sure` with another tag kept is an error. `PUNCT`, `SYM` and `X` become `Noun`
+at `Unknown`, counted in Words.
 
 `noun` tags every word `Noun` at `Sure`. `mct` reads `.ewt/r2.18/en_ewt-ud-train.conllu` when it
-runs, keeping nothing: each tagged train word counts for its lowercased `FORM`. A known word gets
-its most common tag (ties by report order), `Sure` if train gave it one tag, else `Unsure`; an
-unknown word gets the commonest tag overall at `Unknown`. No features or score.
+runs, keeping nothing: each scored train token, aligned as any gold, counts for its lowercased
+text and gold tag. A known word gets its most common tag (ties by report order), `Sure`
+if train gave it one tag, else `Unsure`; an unknown word gets the commonest tag overall at
+`Unknown`. No features or score.
 
 `harper` is Harper's tagger, for study only: `harper.rs` adapts its engine (Apache-2.0,
 `LICENSES/`), reading the model in `.harper/` (`--harper-model` names another). Every token is
@@ -116,8 +120,8 @@ over another:
 - Unalignable rate is unalignable over tagged words. Clean sentences are those with a token and no
   committed miss.
 - Number, verb form and tense are scored on tokens whose tag is right, tense on finite gold only.
-- Calibration, printed when any token has a score, is the mean score and accuracy per level and in
-  ten score bins, and the expected calibration error.
+- Calibration, printed when any token has a score, is the mean score and accuracy per level and per
+  ten score bins, and the expected error.
 
 `stats` does not know tags. A population's bootstrap draws 1,000 replicates of its sentences with
 `deslag_corpus::stats::Rng`, seeded `SEED ^ fnv1a64(label)` (`all`, `tier=llm`, `context=heading`).
@@ -139,11 +143,10 @@ better (the share at `Sure`). `score --save` writes before the report prints.
 
 ## The fetched data
 
-`make fetch-ewt` (`scripts/ewt/fetch.sh fetch`) downloads the UD English Web Treebank that
-`scripts/ewt/ewt.lock` pins into a scratch directory beside `.ewt/`, checks each sha256, and only
-then renames it over `.ewt/` (`.ewt/r2.18/` and a stamp). A stamp equal to the lock makes a repeat
-free, and a failed fetch leaves a good `.ewt/` alone. `make fetch-harper` pins Harper's model alike
-(`scripts/harper/harper.lock`, `.harper/`).
+`make fetch-ewt` runs `scripts/ewt/fetch.sh`, which checks the UD English Web Treebank that
+`scripts/ewt/ewt.lock` pins in a scratch directory and then renames it over `.ewt/` with a
+stamp, and a stamp equal to the lock makes a repeat free; a failed fetch keeps a good `.ewt/`. `make fetch-harper` pins Harper's model alike (`scripts/harper/harper.lock`,
+`.harper/`).
 
 EWT is CC BY-SA 4.0 and Harper's model was trained on CC BY-NC-SA and CC BY-SA data. Both locks say
 `trains no`: they measure, and nothing derived ships. No test or CI job reads either.
@@ -152,6 +155,6 @@ EWT is CC BY-SA 4.0 and Harper's model was trained on CC BY-NC-SA and CC BY-SA d
 ## Tests
 
 `tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
-`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `harper.rs` the engine on tiny models; `golden.rs` the output
-against `tests/golden/`, which `make fix-golden` rewrites.
+`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics; `cli.rs` the
+commands; `harper.rs` the engine; `golden.rs` the output against `tests/golden/`, which
+`make fix-golden` rewrites.

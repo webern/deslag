@@ -1,0 +1,10 @@
+tagger	split	words	part_of_speech	part_of_speech_pct	with_features	with_features_pct
+blind	dev	3138	3097	98.7	3092	98.5
+blind	holdout	1520	1493	98.2	1492	98.2
+blind	all	4658	4590	98.5	4584	98.4
+harper	dev	3138	2497	79.6	2497	79.6
+harper	holdout	1520	1216	80.0	1216	80.0
+harper	all	4658	3713	79.7	3713	79.7
+spacy	dev	3138	2940	93.7	2849	90.8
+spacy	holdout	1520	1420	93.4	1376	90.5
+spacy	all	4658	4360	93.6	4225	90.7

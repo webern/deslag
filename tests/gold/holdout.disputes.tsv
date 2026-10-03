@@ -1,0 +1,2 @@
+# Open disputes against holdout.conllu, one per line, tab separated: sent_id, word ID, proposed UPOS, reason.
+# File a dispute by adding a line. Close it by removing the line in the change that accepts or rejects it.

@@ -58,7 +58,7 @@ lints.list_growth = {}
 
 [[md.overrides]]
 globs = ["/.agents/skills/deslag-build-doctrine/SKILL.md"]
-lints.max_size_bytes.value = 5092
+lints.max_size_bytes.value = 5294
 
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]

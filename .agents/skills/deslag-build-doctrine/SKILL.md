@@ -46,8 +46,10 @@ Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs 
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
-The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
-library only, run by hand and never by make, tests or CI.
+The exception is Python for what bash cannot do: run by hand, never by tests or CI, and by make only
+through a target outside `ci`. `scripts/llm-detection/collect.py`, which rebuilds the corpus, is
+standard library only. A tool that needs packages, `scripts/spacy/tag.py` for one, runs in a venv
+under `.spacy/` that a fetch target installs from hashed pins.
 
 Development is supported on macOS and Linux.
 

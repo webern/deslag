@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 244 of 1230: core 7, human 65, llm 60, mixed 112
+# fails 239 of 1230: core 6, human 65, llm 57, mixed 111
 
 [md.lints.banned_phrases]
 allow = ["please note that"]
@@ -20,11 +20,10 @@ metaphors = true
 precision = true
 signposts = true
 
-core/den-agents.md matches:1
 core/den-code-comments.md matches:1
-core/den-design-decisions.md matches:3
+core/den-design-decisions.md matches:2
 core/den-implementation-notes.md matches:3
-core/den-roadmap.md matches:3
+core/den-roadmap.md matches:2
 core/midi-readme.md matches:1
 core/midi-spec.md matches:2
 human/AcademySoftwareFoundation--OpenShadingLanguage/CONTRIBUTING.md matches:1
@@ -104,9 +103,10 @@ llm/Hack23--homepage/FINAL_IMPLEMENTATION_REPORT.md matches:3
 llm/JetBrains--kotlin-web-site/air__cloud__README.md matches:1
 llm/Lucent-Financial-Group--Zeta/docs__research__2026-09-08-mixed-message-epoch-independent-review.md matches:1
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md matches:1
+llm/OnlyTerp--openclaw-optimization-guide/part31-the-llm-wiki-pattern-in-openclaw.md matches:1
 llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md matches:1
 llm/RunanywhereAI--runanywhere-sdks/claude__commands__run_and_fix_lints.md matches:1
-llm/Shekyl-Foundation--shekyl-core/docs__design__BLOCK_TX_WIRE_FORMAT_PORT.md matches:5
+llm/Shekyl-Foundation--shekyl-core/docs__design__BLOCK_TX_WIRE_FORMAT_PORT.md matches:4
 llm/Sonophoto--sioo/cli__help__rete-net.md matches:1
 llm/YousefHadder--markdown-plus.nvim/docs__wiki__11.Treesitter.md matches:1
 llm/adamvangrover--craft/legal_analysis__key_terms_and_definitions__covenant_terminology.md matches:1
@@ -114,6 +114,7 @@ llm/alirezarezvani--claude-skills/docs__commands__cs-book-to-plugin.md matches:1
 llm/amberframework--amber/github__contributing__REVIEW_RUBRIC.md matches:1
 llm/anchapin--planar-nexus/claude__get-shit-done__references__questioning.md matches:1
 llm/baizhiheizi--quill/specs__010-editor-progressive-disclosure__tasks.md matches:1
+llm/bradygaster--Squad-IRL/contract-reviewer__README.md matches:1
 llm/cdiggins--plato/tracker__issues__plato-295.md matches:1
 llm/codeberg--jlmakiola--calendula/docs__fdroid-official__README.md matches:1
 llm/danikf--tik4net/Docs__findings-cli-history.md matches:1
@@ -121,14 +122,11 @@ llm/dofy--learn-vim/en__chapter10.md matches:1
 llm/dotnet--dotnet/src__sdk__documentation__TemplateEngine__design__proposed__interactive-mode.md matches:1
 llm/dylan-mccapes--2ndOpinionMD/server__test-plan.md matches:1
 llm/eggjs--egg/packages__koa__docs__api__request.md matches:4
-llm/elastic--elastic-transport-net/claude__skills__writing-style.md matches:1
 llm/evalstate--hf-mcp-server/GRADIO_DISCOVERY_OPTIMIZATION.md matches:2
 llm/gastownhall--gastown/docs__design__ledger-export-triggers.md matches:3
 llm/github--awesome-copilot/skills__dotnet-best-practices__SKILL.md matches:1
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:3
-llm/gitlab--cznic--ql/AUDIT.md matches:1
 llm/gitlab--gitlab-com--runbooks/docs__patroni__alerts__PatroniIsDown.md matches:1
-llm/groupthinking--EventRelay/docs__CAPABILITIES_AUDIT.md matches:1
 llm/hackiftekhar--IQKeyboardManager/github__copilot-instructions.md matches:2
 llm/jagreehal--autotel/apps__example-genai-metrics__README.md matches:1
 llm/kbennett2000--lan-games/server__games__life__help.md matches:2
@@ -139,7 +137,6 @@ llm/lostisland--faraday/github__copilot-instructions.md matches:1
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md matches:5
 llm/naomiaro--waveform-playlist/plans__waveform-service.md matches:1
 llm/philipdallen--PleaNP/docs__CREATIVE_PROTOCOL.md matches:3
-llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:1
 llm/plasma-umass--coz/java__README.md matches:1
 llm/pmaojo--kthulu-go/docs__guide__deployment.md matches:1
 llm/radixark--miles/scripts__sandbox_smoke__README.md matches:1
@@ -151,12 +148,10 @@ llm/vokako--tmux-mobile/docs__todo.md matches:3
 llm/wangbinquan--agent-workflow/design__RFC-056-clarify-cross-agent__patch-2026-06-22-designer-rerun-no-rollback.md matches:1
 llm/workglow-dev--libs/packages__triggers__README.md matches:1
 llm/wp-cli--handbook/guides__behat-tests.md matches:2
-llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md matches:1
 mixed/AsBuiltReport--AsBuiltReport.Core/CHANGELOG.md matches:3
 mixed/BabylonJS--Babylon.js/contributing.md matches:1
 mixed/BigDataBiology--macrel/README.md matches:1
 mixed/ColorlibHQ--gentelella/changelog.md matches:4
-mixed/GeniusesGroup--memar/README.md matches:1
 mixed/GladysAssistant--Gladys/server__services__example__README.md matches:1
 mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md matches:8
 mixed/JuliaDocs--Documenter.jl/docs__src__man__doctests.md matches:7
@@ -171,7 +166,7 @@ mixed/PrivateBin--PrivateBin/CHANGELOG.md matches:2
 mixed/SchemaStore--schemastore/CONTRIBUTING.md matches:4
 mixed/SciML--ModelingToolkit.jl/docs__src__tutorials__acausal_components.md matches:5
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md matches:2
-mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md matches:4
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md matches:3
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md matches:1
 mixed/Umplify--xunit-dependency-injection/README.md matches:2
 mixed/activeadmin--activeadmin/CONTRIBUTING.md matches:1

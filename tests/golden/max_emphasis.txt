@@ -137,6 +137,7 @@ llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.m
 llm/Nachobr--uefnaigen/agents__skills__turborepo__references__best-practices__structure.md spans:7 percent:13.31
 llm/NikiforovAll--claude-code-rules/plugins__handbook-nano-banana__skills__nano-banana__references__guide.md spans:5 percent:1.64
 llm/OnlyTerp--openclaw-optimization-guide/part25-architecture-overview.md spans:49 percent:8.55
+llm/OnlyTerp--openclaw-optimization-guide/part31-the-llm-wiki-pattern-in-openclaw.md spans:35 percent:9.99
 llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md spans:11 percent:3.91
 llm/OpenNHP--opennhp/docs__protocol__messages.md spans:58 percent:6.78
 llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md spans:35 percent:8.70
@@ -155,7 +156,6 @@ llm/SpyderMYK--fieldy-field-study/protocol__day1-checklist.md spans:5 percent:5.
 llm/TAJD--economist-style-guide-plugin/economist-style__skills__economist-style__reference__DIALECT-CONVENTIONS.md spans:22 percent:4.58
 llm/Tei1988--cderun/docs__features__interactive-terminal.md spans:3 percent:2.00
 llm/TencentCloud--CubeSandbox/docs__guide__agent-platform-freeze.md spans:25 percent:8.97
-llm/Token-Gremlin--natural-disasters/CONTRIBUTING.md spans:9 percent:7.05
 llm/TomBadash--Mouser/github__release-notes__v3.7.2.md spans:17 percent:9.01
 llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md spans:42 percent:7.88
 llm/Valian--mquickjs_ex/docs__API.md spans:7 percent:3.74
@@ -193,6 +193,7 @@ llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7
 llm/bojieli--ai-agent-book/chapter5__paper-to-ppt__paper__sample_paper.md spans:18 percent:4.91
 llm/bradhawkins85--chore-champion/CALENDAR_VIEW_VISUAL_GUIDE.md spans:13 percent:9.07
 llm/bradygaster--Squad-IRL/compliance-checker__README.md spans:11 percent:8.81
+llm/bradygaster--Squad-IRL/contract-reviewer__README.md spans:16 percent:11.62
 llm/brazilofmux--tinymux/CONTRIBUTING.md spans:28 percent:13.00
 llm/brendankowitz--ignixa-fhir/docs__features__validation__investigations__terminology-completeness.md spans:25 percent:7.67
 llm/briandenicola--password-vault/docs__adr__0005-entra-server-side-auth.md spans:6 percent:6.35
@@ -216,7 +217,6 @@ llm/dofy--learn-vim/en__chapter10.md spans:10 percent:23.61
 llm/dreamiurg--claude-mountaineering-skills/PRIVACY.md spans:8 percent:6.21
 llm/drewnoakes--metadata-extractor/RELEASING.md spans:17 percent:5.38
 llm/dwalleck--cyril/docs__plans__2026-04-02-subagent-support-design.md spans:13 percent:2.09
-llm/dweigend--vibe-kanban/dev__research__integration-strategies.md spans:36 percent:17.06
 llm/dylan-mccapes--2ndOpinionMD/server__test-plan.md spans:81 percent:11.29
 llm/elastic--elastic-transport-net/claude__skills__writing-style.md spans:15 percent:7.75
 llm/element-software--CasaBoard/github__copilot-instructions.md spans:113 percent:17.48

@@ -105,6 +105,11 @@ impl TagSet {
         TagSet(self.0 | tag.bit())
     }
 
+    /// The tags in both this set and `other`.
+    pub const fn intersection(self, other: TagSet) -> TagSet {
+        TagSet(self.0 & other.0)
+    }
+
     /// Whether `tag` is in the set.
     pub fn contains(self, tag: Tag) -> bool {
         self.0 & tag.bit() != 0
@@ -397,6 +402,15 @@ mod tests {
         assert_eq!(set.iter().collect::<Vec<_>>(), vec![Tag::Noun, Tag::Verb]);
         assert!(TagSet::EMPTY.is_empty());
         assert_eq!(TagSet::of(Tag::Noun).with(Tag::Verb), set);
+    }
+
+    #[test]
+    fn tag_sets_intersect() {
+        let a = TagSet::of(Tag::Noun).with(Tag::Verb);
+        let b = TagSet::of(Tag::Verb).with(Tag::Adverb);
+        assert_eq!(a.intersection(b), TagSet::of(Tag::Verb));
+        assert_eq!(a.intersection(TagSet::EMPTY), TagSet::EMPTY);
+        assert_eq!(a.intersection(a), a);
     }
 
     #[test]

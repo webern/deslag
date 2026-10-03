@@ -104,7 +104,7 @@ impl View<'_, '_> {
     pub(super) fn within(&self, at: usize, tags: TagSet) -> bool {
         self.reading(at).is_some_and(|reading| {
             let possible = reading.possible();
-            !possible.is_empty() && intersect(possible, tags) == possible
+            !possible.is_empty() && possible.intersection(tags) == possible
         })
     }
 
@@ -178,7 +178,7 @@ impl View<'_, '_> {
         if self.settled(at).is_some() {
             return false;
         }
-        let kept = intersect(old.possible(), keep);
+        let kept = old.possible().intersection(keep);
         if !kept.contains(prefer) {
             return false;
         }
@@ -195,11 +195,6 @@ impl View<'_, '_> {
         self.tokens[at].reading = Some(new);
         new != old
     }
-}
-
-/// The tags in both sets.
-fn intersect(a: TagSet, b: TagSet) -> TagSet {
-    a.iter().filter(|tag| b.contains(*tag)).collect()
 }
 
 /// The features of `old`'s word when `tag` is its best guess. The tables give features for the
@@ -507,7 +502,7 @@ mod tests {
                     assert!(!now.possible().is_empty());
                     assert!(now.kept.contains(now.tag));
                     assert!(
-                        intersect(now.possible(), was.possible()) == now.possible(),
+                        now.possible().intersection(was.possible()) == now.possible(),
                         "a pass added a tag to {}",
                         token.text
                     );

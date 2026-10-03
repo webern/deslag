@@ -9,6 +9,9 @@
 //!   the guide: where its code has a number or a verb form, a tagger that gives one must give the
 //!   same, and one that gives none abstains. Where the blind code has none (a pronoun with no
 //!   number) nothing is asked of the others. An agreed word stands, `Prov=agree`.
+//! - Harper's file holds a raw UPOS, `X` where Harper has no tag. An `X` from Harper is an
+//!   abstention, not an answer: Harper neither agrees nor disagrees on that word, and the word is
+//!   decided by the blind tagger and spaCy.
 //! - Every other word goes to the adjudication worklist, with the sentence, the three answers and
 //!   a place for one code and a reason of at most 15 words.
 //!
@@ -173,13 +176,24 @@ fn conflicts<T: PartialEq>(blind: Option<T>, other: Option<T>) -> bool {
     matches!((blind, other), (Some(b), Some(o)) if b != o)
 }
 
-/// What the three said of a word: `blind`, `harper` and `spacy`.
+/// Whether Harper abstains on a word: its file holds `X` where it has no tag.
+pub fn harper_abstains(harper: Code) -> bool {
+    harper.base == Base::X
+}
+
+/// What the three said of a word: `blind`, `harper` and `spacy`. Harper's `X` is an abstention:
+/// it is left out of the comparison.
 pub fn judge(blind: Code, harper: Code, spacy: Code) -> Verdict {
-    if blind.base != harper.base || blind.base != spacy.base {
+    let others: &[Code] = if harper_abstains(harper) {
+        &[spacy]
+    } else {
+        &[harper, spacy]
+    };
+    if others.iter().any(|other| blind.base != other.base) {
         return Verdict::Disputed { tags_differ: true };
     }
-    let clash = [harper, spacy]
-        .into_iter()
+    let clash = others
+        .iter()
         .any(|other| conflicts(blind.number, other.number) || conflicts(blind.form, other.form));
     if clash {
         Verdict::Disputed { tags_differ: false }
@@ -216,7 +230,12 @@ pub struct Stats {
     /// How many words each pair agrees on the base of: blind and Harper, blind and spaCy, Harper
     /// and spaCy.
     pub pairs: [usize; 3],
-    /// How many words all three agree on the base of.
+    /// The words each pair was compared on: every word, less those Harper abstained on for the
+    /// two pairs it is in.
+    pub pair_words: [usize; 3],
+    /// Words Harper abstained on, with `X`.
+    pub abstained: usize,
+    /// How many words all three agree on the base of, Harper's abstentions aside.
     pub tag3: usize,
     /// How many words all three agree on completely.
     pub full3: usize,
@@ -256,11 +275,16 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
                 continue;
             };
             stats.words += 1;
-            stats.pairs[0] += usize::from(blind.base == harper.base);
+            let abstains = harper_abstains(harper);
+            stats.abstained += usize::from(abstains);
+            stats.pair_words[0] += usize::from(!abstains);
+            stats.pair_words[1] += 1;
+            stats.pair_words[2] += usize::from(!abstains);
+            stats.pairs[0] += usize::from(!abstains && blind.base == harper.base);
             stats.pairs[1] += usize::from(blind.base == spacy.base);
-            stats.pairs[2] += usize::from(harper.base == spacy.base);
+            stats.pairs[2] += usize::from(!abstains && harper.base == spacy.base);
             let verdict = judge(blind, harper, spacy);
-            let all_tags = blind.base == harper.base && blind.base == spacy.base;
+            let all_tags = blind.base == spacy.base && (abstains || blind.base == harper.base);
             stats.tag3 += usize::from(all_tags);
             let full = matches!(verdict, Verdict::Agreed(_));
             stats.full3 += usize::from(full);
@@ -315,9 +339,20 @@ impl fmt::Display for Stats {
         };
         writeln!(f, "Agreement over {} word tokens", self.words)?;
         writeln!(f, "pairs, on the part of speech")?;
-        row(f, "blind and harper", self.pairs[0])?;
-        row(f, "blind and spacy", self.pairs[1])?;
-        row(f, "harper and spacy", self.pairs[2])?;
+        for (label, at) in [
+            ("blind and harper", 0),
+            ("blind and spacy", 1),
+            ("harper and spacy", 2),
+        ] {
+            writeln!(
+                f,
+                "  {label:<44}{:>6}  {:>6}  of {}",
+                self.pairs[at],
+                percent(self.pairs[at], self.pair_words[at]),
+                self.pair_words[at]
+            )?;
+        }
+        row(f, "words harper abstained on (X), left out", self.abstained)?;
         writeln!(f, "all three")?;
         row(f, "agree on the part of speech", self.tag3)?;
         row(f, "agree on it and every feature (these stand)", self.full3)?;
@@ -670,8 +705,178 @@ const LOG_COLUMNS: [&str; 9] = [
     "item", "sent_id", "token", "form", "blind", "harper", "spacy", "final", "reason",
 ];
 
-/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why.
-pub fn adjudicated_tsv(answers: &[Answer]) -> String {
+/// An agreed word that the revised guide changes: it is adjudicated after all, with a reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Override {
+    /// The sentence.
+    pub sent_id: String,
+    /// The token's number in the sentence, from 1.
+    pub token: usize,
+    /// The word.
+    pub form: String,
+    /// The code the three taggers agreed on.
+    pub old: Code,
+    /// The code decided now.
+    pub new: Code,
+    /// Why, in 15 words or fewer.
+    pub reason: String,
+}
+
+const OVERRIDE_COLUMNS: [&str; 6] = [
+    "sentence_id",
+    "token_index",
+    "form",
+    "old_code",
+    "new_code",
+    "reason",
+];
+
+/// Reads `overrides.tsv`, which came from `path`, against `agreed`, which came from
+/// `agreed_path`: each row must name a word of a sentence of the agreed file that the taggers
+/// agreed on (`Prov=agree`), with the code they agreed on as its `old_code`, once, and a new code
+/// of the guide that differs from it, with a reason of at most 15 words.
+pub fn read_overrides(
+    path: &str,
+    text: &str,
+    agreed_path: &str,
+    agreed: &str,
+) -> Result<Vec<Override>, Problems> {
+    let blocks = conllu::read(agreed_path, agreed)?;
+    let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
+    for block in &blocks {
+        if let Some(comment) = block.comment("sent_id") {
+            by_id.insert(comment.value.as_str(), block);
+        }
+    }
+    let mut lines = text.lines().enumerate();
+    match lines.next() {
+        Some((_, head)) if head.split('\t').eq(OVERRIDE_COLUMNS) => {}
+        _ => {
+            return Err(Error::at(
+                path,
+                1,
+                format!("the columns should be {}", OVERRIDE_COLUMNS.join(", ")),
+            )
+            .into());
+        }
+    }
+    let mut rows: Vec<Override> = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let cells: Vec<&str> = line.split('\t').collect();
+        if cells.len() != OVERRIDE_COLUMNS.len() {
+            problems.push(Error::at(
+                path,
+                at + 1,
+                format!(
+                    "expected {} columns, found {}",
+                    OVERRIDE_COLUMNS.len(),
+                    cells.len()
+                ),
+            ));
+            continue;
+        }
+        let (sent_id, form) = (cells[0], cells[2]);
+        let mut say = |why: String| {
+            problems.push(Problems::sentence(
+                path,
+                sent_id,
+                format!("line {}: {why}", at + 1),
+            ));
+        };
+        let Ok(token) = cells[1].parse::<usize>() else {
+            say(format!("bad token number `{}`", cells[1]));
+            continue;
+        };
+        let (old, new) = match (Code::parse(cells[3]), Code::parse(cells[4])) {
+            (Ok(old), Ok(new)) => (old, new),
+            (Err(why), _) | (_, Err(why)) => {
+                say(why);
+                continue;
+            }
+        };
+        let reason = cells[5].split_whitespace().collect::<Vec<_>>().join(" ");
+        let words = reason.split(' ').filter(|word| !word.is_empty()).count();
+        if words == 0 {
+            say(format!("token {token}: no reason"));
+            continue;
+        }
+        if words > REASON_WORDS {
+            say(format!(
+                "token {token}: the reason has {words} words, and {REASON_WORDS} is the most"
+            ));
+            continue;
+        }
+        let Some(block) = by_id.get(sent_id) else {
+            say("it is not in the agreed file".to_string());
+            continue;
+        };
+        let Some(read) = token
+            .checked_sub(1)
+            .and_then(|index| block.lines.get(index))
+        else {
+            say(format!("token {token} is not in the sentence"));
+            continue;
+        };
+        let prov = conllu::pairs(&read.misc)
+            .iter()
+            .find(|(key, _)| *key == "Prov")
+            .map(|(_, value)| *value);
+        if read.form != form {
+            say(format!("token {token} is `{}`, not `{form}`", read.form));
+            continue;
+        }
+        if prov != Some("agree") {
+            say(format!(
+                "token {token} `{form}` was not agreed by the taggers"
+            ));
+            continue;
+        }
+        match Code::from_conllu(&read.upos, &read.feats) {
+            Ok(agreed) if agreed == old => {}
+            Ok(agreed) => {
+                say(format!(
+                    "token {token} `{form}` was agreed as {agreed}, not {old}"
+                ));
+                continue;
+            }
+            Err(why) => {
+                say(format!("token {token} `{form}`: {why}"));
+                continue;
+            }
+        }
+        if new == old {
+            say(format!(
+                "token {token} `{form}`: the new code is the old one"
+            ));
+            continue;
+        }
+        if rows
+            .iter()
+            .any(|row| row.sent_id == sent_id && row.token == token)
+        {
+            say(format!("token {token} is overridden twice"));
+            continue;
+        }
+        rows.push(Override {
+            sent_id: sent_id.to_string(),
+            token,
+            form: form.to_string(),
+            old,
+            new,
+            reason,
+        });
+    }
+    Problems::check(problems, rows)
+}
+
+/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why,
+/// then each override. An override's item is `sentence.token`, and the three columns of what
+/// they said hold the code they agreed on, which is how `assemble` knows it from an answer.
+pub fn adjudicated_tsv(answers: &[Answer], overrides: &[Override]) -> String {
     let mut out = format!("{}\n", LOG_COLUMNS.join("\t"));
     for answer in answers {
         let item = &answer.item;
@@ -689,6 +894,18 @@ pub fn adjudicated_tsv(answers: &[Answer]) -> String {
             answer.reason
         );
     }
+    for row in overrides {
+        let _ = writeln!(
+            out,
+            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{old}\t{old}\t{}\t{}",
+            row.form,
+            row.new,
+            row.reason,
+            id = row.sent_id,
+            token = row.token,
+            old = row.old,
+        );
+    }
     out
 }
 
@@ -703,6 +920,8 @@ pub struct Logged {
     pub form: String,
     /// The code decided.
     pub code: Code,
+    /// For an override, the code the three taggers had agreed on.
+    pub agreed: Option<Code>,
 }
 
 /// Reads `adjudicated.tsv`, which came from `path`.
@@ -743,6 +962,12 @@ pub fn read_log(path: &str, text: &str) -> Result<Vec<Logged>, Error> {
                 .map_err(|_| bad("bad token number", cells[2]))?,
             form: cells[3].to_string(),
             code: Code::parse(cells[7]).map_err(|why| bad(&why, cells[7]))?,
+            // Three equal answers are no dispute: the row is an override of an agreed word.
+            agreed: if cells[4] == cells[5] && cells[5] == cells[6] {
+                Code::parse(cells[4]).ok()
+            } else {
+                None
+            },
         });
     }
     Ok(rows)
@@ -851,6 +1076,52 @@ mod tests {
             judge(code("V.pp"), code("V.pp"), code("V.pa")),
             Verdict::Disputed { tags_differ: false }
         );
+    }
+
+    #[test]
+    fn harper_x_abstains_and_the_other_two_decide() {
+        // Harper's `X` agrees with whatever the blind tagger and spaCy agree on.
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("N.p")),
+            Verdict::Agreed(code("N.p"))
+        );
+        assert_eq!(
+            judge(code("V.pp"), code("X"), code("V.pp")),
+            Verdict::Agreed(code("V.pp"))
+        );
+        // They still dispute when blind and spaCy differ, in a base or in a feature.
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("J")),
+            Verdict::Disputed { tags_differ: true }
+        );
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("N.s")),
+            Verdict::Disputed { tags_differ: false }
+        );
+        // Only Harper abstains: an `X` from spaCy against another base is a real answer.
+        assert_eq!(
+            judge(code("N.p"), code("N.p"), code("X")),
+            Verdict::Disputed { tags_differ: true }
+        );
+    }
+
+    #[test]
+    fn harper_abstentions_are_left_out_of_its_pairs() {
+        let mut harper = SAME;
+        harper[6] = ("X", "_"); // files
+        harper[3] = ("ADJ", "_"); // Why: a real disagreement
+        let (sample, merged) = merged(&blind(), &harper, &SAME);
+        let ids: Vec<String> = merged.items.iter().map(|i| i.id(&sample)).collect();
+        assert_eq!(ids, ["s2.1"]);
+        assert_eq!(merged.stats.words, 7);
+        assert_eq!(merged.stats.abstained, 1);
+        assert_eq!(merged.stats.pair_words, [6, 7, 6]);
+        assert_eq!(merged.stats.pairs, [5, 7, 5]);
+        assert_eq!(merged.stats.tag3, 6);
+        assert_eq!(merged.stats.full3, 6);
+        let report = merged.stats.to_string();
+        assert!(report.contains("harper abstained on"), "{report}");
+        assert!(report.contains("83.3%"), "{report}");
     }
 
     #[test]
@@ -1152,7 +1423,7 @@ mod tests {
     #[test]
     fn the_log_records_what_the_three_said_what_was_decided_and_why() {
         let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
-        let log = adjudicated_tsv(&got);
+        let log = adjudicated_tsv(&got, &[]);
         let mut lines = log.lines();
         assert_eq!(
             lines.next().unwrap(),

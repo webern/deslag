@@ -16,7 +16,9 @@ extend-exclude = [
 ]
 
 # PN is the annotation guide's code for a proper noun, which deslag-gold reads and writes.
+# mis is the prefix in the annotation guide's list of prefixes, which is copied unchanged.
 # Automattic is the company that holds Harper's copyright, which the licence notices name.
 [default.extend-words]
 pn = "pn"
+mis = "mis"
 Automattic = "Automattic"

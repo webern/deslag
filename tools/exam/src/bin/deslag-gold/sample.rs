@@ -85,6 +85,8 @@ pub struct File<'a> {
     pub repo: String,
     /// The licence it is quoted under.
     pub license: String,
+    /// The sha256 of its bytes, in lowercase hex, which its sidecar records.
+    pub sha256: String,
     /// Its text.
     pub text: &'a str,
 }
@@ -824,6 +826,7 @@ Ok.
                 tier: *tier,
                 repo: repo.clone(),
                 license: "MIT".to_string(),
+                sha256: crate::exclude::sha256_hex(text.as_bytes()),
                 text,
             })
             .collect()
@@ -884,6 +887,44 @@ Ok.
         reversed.reverse();
         let reversed = draw(&files(&reversed), "hand-made", &small()).unwrap();
         assert_eq!(first.sample.sents, reversed.sample.sents);
+    }
+
+    #[test]
+    fn a_draw_with_files_excluded_takes_nothing_from_them() {
+        use crate::exclude::Exclusion;
+        let owned = corpus(40);
+        let first = draw(&files(&owned), "hand-made", &small()).unwrap();
+        let used: BTreeSet<&str> = first
+            .sample
+            .manifest
+            .rows
+            .iter()
+            .map(|(_, meta)| meta.file.as_str())
+            .collect();
+        // Half the used files go by path and half by sha256, as a list may mix them.
+        let list: String = used
+            .iter()
+            .enumerate()
+            .map(|(at, path)| {
+                if at % 2 == 0 {
+                    format!("{path}\n")
+                } else {
+                    let text = &owned.iter().find(|row| row.0 == *path).unwrap().3;
+                    format!("{}\t{path}\n", crate::exclude::sha256_hex(text.as_bytes()))
+                }
+            })
+            .collect();
+        let list = Exclusion::parse("list", &list).unwrap();
+        let (kept, dropped) = list.apply("list", files(&owned)).unwrap();
+        assert_eq!(dropped, used.len());
+        let second = draw(&kept, "hand-made", &small()).unwrap();
+        assert_eq!(second.sample.manifest.rows.len(), 30);
+        for (_, meta) in &second.sample.manifest.rows {
+            assert!(!used.contains(meta.file.as_str()), "{}", meta.file);
+        }
+        // The draw over what is kept is itself repeatable.
+        let again = draw(&kept, "hand-made", &small()).unwrap();
+        assert_eq!(second.sample.manifest, again.sample.manifest);
     }
 
     #[test]

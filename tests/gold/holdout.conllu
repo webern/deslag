@@ -1,0 +1,2953 @@
+# Deslag gold set: part of speech tags on sentences quoted from the test corpus.
+# Holdout. Never training data, now or later, and never shown to anyone writing a tagger. The exam prints aggregate numbers only for it.
+# exam.tokens = deslag
+# exam.split = holdout
+# exam.trains = no
+# exam.source = deslag gold set, seed 0x6465736c6167, corpus big tier, image ghcr.io/webern/deslag-blobs:v3@sha256:d7263b0d15c9b4229633d9eec73f0448e1165ca6eab1903fdc227ccada9c7350
+# sent_id = g0002
+# exam.tier = human
+# exam.context = heading
+# source = batches/2026-09-27-02/human/JRebirth--JRebirth/org.jrebirth.af__src__site__markdown__doc___Component.md bytes 3771-3791
+# license = Apache-2.0
+# text = Manage Behavior Data
+1	Manage	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	Behavior	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	Data	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0006
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/dodyg--practical-aspnetcore/projects__endpoint-routing__new-routing-24__README.md bytes 152-279
+# license = MIT
+# text = In this example, GET / returns a different result depending whether you access it from localhost:8111 and localhost:8112.
+1	In	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+2	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	example	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+5	GET	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+6	/	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+7	returns	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+8	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	different	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	result	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	depending	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+12	whether	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+13	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+14	access	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+15	it	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+17	localhost:8111	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+18	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+19	localhost:8112	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0011
+# exam.tier = mixed
+# exam.context = table-cell
+# source = batches/2026-09-27-02/mixed/andfanilo--streamlit-echarts/README.md bytes 2073-2098
+# license = MIT
+# text = Any valid CSS width (e.g.
+1	Any	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	valid	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	CSS	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+4	width	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	e.g	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+7	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0012
+# exam.tier = llm
+# exam.context = heading
+# source = batches/2026-09-27-02/llm/FreddyCreates--Multi-Element-Spectral-Intelligence-Engine-MESIE/docs__MESIE_Charter_Research_Paper.md bytes 18247-18270
+# license = Apache-2.0
+# text = 8.4 Agent State Adapter
+1	8.4	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+2	Agent	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	State	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	Adapter	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0015
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/haxtheweb--haxcms-php/SECURITY.md bytes 157-270
+# license = Apache-2.0
+# text = To report a vulnerability, submit a private advisory: https://github.com/haxtheweb/issues/security/advisories/new
+1	To	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+2	report	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+3	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	vulnerability	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	submit	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+7	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	private	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	advisory	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+10	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	https://github.com/haxtheweb/issues/security/advisories/new	_	X	_	_	_	_	_	Kind=Url|Prov=kind
+
+# sent_id = g0024
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/influxdata--docs-v2/content__telegraf__v1__commands__service.md bytes 1603-1657
+# license = MIT
+# text = The install subcommand supports the following flags:
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	install	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+3	subcommand	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	supports	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	following	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+7	flags	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0030
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/JeanMarcMbouma--urguide/README.md bytes 22826-22900
+# license = CC0-1.0
+# text = The message queue implements automatic retry with the following intervals:
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	message	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	queue	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	implements	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+5	automatic	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	retry	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	following	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+10	intervals	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0035
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/phodal--routa/agents__skills__release__SKILL.md bytes 1644-1701
+# license = MIT
+# text = or the manual flow documented in docs/release-guide.md.
+1	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	manual	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	flow	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	documented	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	docs/release-guide.md	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+8	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0036
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/kptdev--kpt/site__book__05-developing-functions__03-developing-in-Typescript.md bytes 396-447
+# license = Apache-2.0
+# text = Robust community support and detailed documentation
+1	Robust	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	community	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	detailed	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0040
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/getsentry--sentry-javascript/packages__ember__README.md bytes 602-663
+# license = MIT
+# text = The official Sentry SDK for monitoring Ember.js applications.
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	official	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	Sentry	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+4	SDK	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	monitoring	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=adjudicated
+7	Ember.js	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	applications	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0043
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/airbytehq--airbyte-python-cdk/docs__concepts__basic-concepts.md bytes 1823-2070
+# license = MIT
+# text = Note that while this is the most flexible way to implement a source connector, it is also the most toilsome as you will be required to manually manage state, input validation, correctly conforming to the Airbyte Protocol message formats, and more.
+1	Note	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	while	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	this	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+6	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	most	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+8	flexible	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	way	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+11	implement	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+12	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	source	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	connector	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+15	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+16	it	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+17	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+18	also	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+19	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+20	most	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+21	toilsome	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+22	as	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+23	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+24	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+25	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+26	required	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+27	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+28	manually	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+29	manage	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+30	state	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+31	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+32	input	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+33	validation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+34	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+35	correctly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+36	conforming	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+37	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+38	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+39	Airbyte	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+40	Protocol	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+41	message	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+42	formats	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+43	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+44	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+45	more	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+46	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0045
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/AliAkhtari78--SpotifyScraper/claude__commands__opsx__archive.md bytes 3412-3454
+# license = MIT
+# text = Show archive completion summary including:
+1	Show	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	archive	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	completion	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	summary	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	including	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0046
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/zuwasi--anydoc-gui/bench__README.md bytes 311-366
+# license = MIT
+# text = The harness reads whatever documents are in samples/.
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	harness	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	reads	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	whatever	_	DET	_	_	_	_	_	Kind=Word|Prov=adjudicated
+5	documents	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	samples/	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0047
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/apache--airflow-client-python/airflow_client__docs__PluginApi.md bytes 3392-3418
+# license = Apache-2.0
+# text = Accept : application/json
+1	Accept	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	application	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	json	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0048
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/natemcmaster--CommandLineUtils/docs__api__index.md bytes 32-90
+# license = Apache-2.0
+# text = McMaster.Extensions.CommandLineUtils targets .NET 8.0 .
+1	McMaster.Extensions.CommandLineUtils	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	targets	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	NET	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	8.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+6	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0051
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/bobeff--programming-math-science/README.md bytes 15410-15512
+# license = CC0-1.0
+# text = Network Programming with Go by Jan Newmarch
+1	Network	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Programming	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	Go	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	Jan	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	Newmarch	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0054
+# exam.tier = llm
+# exam.context = table-cell
+# source = batches/2026-09-27-02/llm/wangbinquan--agent-workflow/design__arch-audit-2026-06-23__00-SYNTHESIS.md bytes 33822-33844
+# license = Apache-2.0
+# text = 15-frontend-data-layer
+1	15	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	frontend	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	data	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	layer	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0056
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/amannn--next-intl/README.md bytes 1450-1589
+# license = MIT
+# text = 🚀 Fast : By integrating with both static as well as server side rendering you always get the best possible performance from your app.
+1	🚀	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+2	Fast	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	By	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	integrating	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+6	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	both	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+8	static	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+9	as	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+10	well	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+11	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+12	server	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	side	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	rendering	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+15	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+16	always	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+17	get	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+18	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+19	best	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+20	possible	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+21	performance	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+22	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+23	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+24	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+25	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0057
+# exam.tier = llm
+# exam.context = table-cell
+# source = batches/2026-09-27-02/llm/influxdata--docs-v2/content__telegraf__v1__commands__service.md bytes 2202-2218
+# license = MIT
+# text = Default is 5m.
+1	Default	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	5m	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+4	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0058
+# exam.tier = mixed
+# exam.context = heading
+# source = batches/2026-09-27-02/mixed/apache--pinot/README.md bytes 7043-7067
+# license = Apache-2.0
+# text = When should I use Pinot?
+1	When	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	should	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	I	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	use	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+5	Pinot	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	?	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0062
+# exam.tier = llm
+# exam.context = heading
+# source = batches/2026-09-27-02/llm/jdylanmc--topo-code/agents__skills__squadron__SKILL.md bytes 1082-1109
+# license = MIT
+# text = Find truly independent work
+1	Find	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	truly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+3	independent	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	work	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0064
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/dodyg--practical-aspnetcore/projects__grpc__grpc-7__README.md bytes 35-134
+# license = MIT
+# text = This sample shows how to define Protocol Buffers format to support sending map values (dictionary).
+1	This	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	sample	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	shows	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	how	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+5	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+6	define	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+7	Protocol	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+8	Buffers	_	PROPN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+9	format	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+11	support	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+12	sending	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+13	map	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	values	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+15	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	dictionary	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+18	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0068
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/joemccann--dillinger/agent__skills__frontend-design__SKILL.md bytes 9774-9816
+# license = MIT
+# text = Default system fonts without consideration
+1	Default	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	system	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	fonts	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	without	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	consideration	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0072
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/Azure--azure-rest-api-specs/specification__cost-management__resource-manager__readme.python.md bytes 195-293
+# license = MIT
+# text = Use --python-mode=update if you already have a setup.py and just want to update the code itself.
+1	Use	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	--python-mode=update	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+3	if	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+5	already	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+6	have	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	setup.py	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+9	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	just	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+11	want	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+12	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+13	update	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+14	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+15	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	itself	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0073
+# exam.tier = human
+# exam.context = table-cell
+# source = batches/2026-09-27-02/human/ethereum-optimism--optimism/packages__data-transport-layer__README.md bytes 4595-4623
+# license = MIT
+# text = RPC endpoint for an L1 node.
+1	RPC	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	endpoint	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	L1	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	node	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0074
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/microsoft--msquic/docs__Release.md bytes 404-468
+# license = MIT
+# text = As this date nears, make sure to upgrade to a supported version.
+1	As	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	date	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	nears	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	make	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+7	sure	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+9	upgrade	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+10	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+12	supported	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+13	version	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+14	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0076
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/Sonophoto--sioo/cli__help__excise.md bytes 803-883
+# license = BSD-2-Clause
+# text = -all Remove all productions from memory and perform an init-soar command
+1	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+2	all	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+3	Remove	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+4	all	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	productions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	memory	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	perform	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+10	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+11	init	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+12	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	soar	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	command	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0077
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/Sonophoto--sioo/cli__help__excise.md bytes 73-161
+# license = BSD-2-Clause
+# text = excise production-name | -chunks | -default | -task | -user | -all
+1	excise	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	production	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	name	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	|	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	chunks	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+8	|	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+9	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	default	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+11	|	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+12	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	task	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	|	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+15	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	user	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+17	|	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+18	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+19	all	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0079
+# exam.tier = llm
+# exam.context = heading
+# source = batches/2026-09-27-02/llm/akunikkola--claude-for-legal-finland/yhtiooikeus__agents__aineistokartoittaja.md bytes 2256-2271
+# license = MIT
+# text = Tulosteen muoto
+1	Tulosteen	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	muoto	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0084
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/kasahart--wandas/docs__src__how-to__measurement-levels.md bytes 2356-2446
+# license = MIT
+# text = Only the explicit FS / reference 1 metadata set by SoundFile-backed reading uses dBFS.
+1	Only	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	explicit	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	FS	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+5	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	reference	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	1	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+8	metadata	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+9	set	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+10	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	SoundFile	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+12	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	backed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+14	reading	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+15	uses	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+16	dBFS	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+17	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0086
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/JRebirth--JRebirth/org.jrebirth.af__src__site__markdown__doc___Component.md bytes 896-1039
+# license = Apache-2.0
+# text = When a Wave is emitted from elsewhere in the application, the Notifier will call right handling method of the Component registered.
+1	When	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	Wave	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	emitted	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	elsewhere	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+8	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	application	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	Notifier	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+15	call	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+16	right	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+17	handling	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+18	method	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+20	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+21	Component	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+22	registered	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0089
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/square--workflow-kotlin/RELEASING.md bytes 6112-6251
+# license = Apache-2.0
+# text = You can verify the artifacts are available by visiting https://central.sonatype.org/content/repositories/snapshots/com/squareup/workflow1/.
+1	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	verify	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+4	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	artifacts	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	available	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+9	visiting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+10	https://central.sonatype.org/content/repositories/snapshots/com/squareup/workflow1/	_	X	_	_	_	_	_	Kind=Url|Prov=kind|SpaceAfter=No
+11	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0090
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-01/mixed/patternfly--patternfly-react/packages__react-core__src__demos__TextInputGroupDemo.md bytes 872-1038
+# license = MIT
+# text = hitting the up or down arrows (while focused on the text input) to switch focus to the menu, navigating the menu using the arrow keys, and hitting enter on an entry
+1	hitting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	up	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	down	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+6	arrows	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+7	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	while	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	focused	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+10	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+12	text	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	input	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+14	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+15	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+16	switch	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+17	focus	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+18	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+19	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+20	menu	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+21	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+22	navigating	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+23	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+24	menu	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+25	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+26	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+27	arrow	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+28	keys	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+29	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+30	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+31	hitting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+32	enter	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+33	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+34	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+35	entry	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0094
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/BigDataBiology--macrel/README.md bytes 1152-1251
+# license = MIT
+# text = The recommended method of installation is through bioconda :
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	recommended	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=adjudicated
+3	method	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	installation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	through	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	bioconda	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+9	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0095
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/bobeff--programming-math-science/README.md bytes 6114-6227
+# license = CC0-1.0
+# text = GPU Performance for Game Artists by Keith O’Conor
+1	GPU	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Performance	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	Game	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	Artists	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	Keith	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	O’Conor	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0097
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/bradhawkins85--chore-champion/STRIPE_METER_EVENTS.md bytes 4045-4089
+# license = MIT
+# text = Error: "No such meter event: [event_name]"
+1	Error	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	No	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	such	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	meter	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	event	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	[	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	event_name	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+11	]	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0101
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/kasahart--wandas/docs__src__how-to__measurement-levels.md bytes 520-599
+# license = MIT
+# text = reference_value and reference_unit describe the linear amplitude reference.
+1	reference_value	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+2	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	reference_unit	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+4	describe	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	linear	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	amplitude	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	reference	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0102
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/deepspeedai--DeepSpeed/docs___posts__2021-03-08-zero3-offload.md bytes 10363-10583
+# license = MIT
+# text = As a result, the CPU-GPU-CPU communication time as well as the optimizer update time decreases linearly with number of GPUs and nodes, respectively, allowing ZeRO-3 Offload to exhibit super-linear scaling (see Figure 4).
+1	As	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	result	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	CPU	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	GPU	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	CPU	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	communication	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	as	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+14	well	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+15	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+16	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+17	optimizer	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+18	update	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+20	decreases	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+21	linearly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+22	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+23	number	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+24	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+25	GPUs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+26	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+27	nodes	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+28	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+29	respectively	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+30	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+31	allowing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+32	ZeRO	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+33	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+34	3	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+35	Offload	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+36	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+37	exhibit	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+38	super	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+39	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+40	linear	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+41	scaling	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+42	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+43	see	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+44	Figure	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+45	4	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+46	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+47	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0104
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/PennyLaneAI--pennylane/github__PULL_REQUEST_TEMPLATE.md bytes 760-827
+# license = Apache-2.0
+# text = We check all of our code against Pylint .
+1	We	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+2	check	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	all	_	DET	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	our	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	against	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	Pylint	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0113
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/opral--lix/docs__development__history-review.md bytes 297-411
+# license = MIT
+# text = The related loading investigation is documented in opral/lixray#416 .
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	related	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	loading	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	investigation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+6	documented	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	opral	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+9	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	lixray	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+11	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	416	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+13	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0119
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/yomichi--SpinMonteCarlo.jl/docs__src__runmc.md bytes 4131-4250
+# license = MIT
+# text = NOTE: Restart will fail if the version or the system image of julia changes (see the doc of Serialization.serialize).
+1	NOTE	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Restart	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	fail	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+6	if	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	version	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+11	system	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	image	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+14	julia	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+15	changes	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+16	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	see	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+18	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+19	doc	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+20	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+21	Serialization.serialize	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+22	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0122
+# exam.tier = mixed
+# exam.context = table-cell
+# source = batches/2026-09-27-02/mixed/andfanilo--streamlit-echarts/README.md bytes 2269-2339
+# license = MIT
+# text = GeoJSON map to register, created via Map(map_name=..., geo_json=...)
+1	GeoJSON	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	map	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+4	register	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	created	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	via	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	Map(map_name=..., geo_json=...)	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+
+# sent_id = g0123
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/natemcmaster--CommandLineUtils/docs__api__index.md bytes 110-260
+# license = Apache-2.0
+# text = The main entry point for most command line applications is CommandLineApplication .
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	main	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	entry	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	point	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	most	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	command	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	line	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	applications	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+10	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+11	CommandLineApplication	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0126
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/tokio-rs--axum/axum__src__docs__routing__route.md bytes 3243-3331
+# license = MIT
+# text = To accept multiple methods for the same route you can add all handlers at the same time:
+1	To	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+2	accept	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+3	multiple	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	methods	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	same	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	route	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+10	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+11	add	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+12	all	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	handlers	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+14	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+15	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+16	same	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+17	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+18	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0127
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_proofs__README.md bytes 547-562
+# license = Apache-2.0 OR MIT
+# text = at your option.
+1	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+2	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	option	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0128
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/natemcmaster--CommandLineUtils/docs__index.md bytes 141-285
+# license = Apache-2.0
+# text = The primary goal of the library is to assist with parsing command line arguments and executing the correct commands related to those arguments.
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	primary	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	goal	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	library	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+8	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+9	assist	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+10	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	parsing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+12	command	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	line	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	arguments	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+15	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+16	executing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+17	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+18	correct	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+19	commands	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+20	related	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+21	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+22	those	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+23	arguments	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+24	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0131
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/PennyLaneAI--pennylane/github__PULL_REQUEST_TEMPLATE.md bytes 322-440
+# license = Apache-2.0
+# text = If you do make documentation changes, make sure that the docs build and render correctly by running make docs.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	do	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	make	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+5	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	changes	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	make	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+9	sure	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+11	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+12	docs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+13	build	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+14	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+15	render	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+16	correctly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+17	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+18	running	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+19	make docs	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0132
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/BigDataBiology--macrel/README.md bytes 3676-3742
+# license = MIT
+# text = If you only have single-end reads, you can omit the -2 argument.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	only	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+4	have	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	single	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	end	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	reads	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+11	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+12	omit	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+13	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+14	-2	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+15	argument	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+16	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0136
+# exam.tier = human
+# exam.context = table-cell
+# source = batches/2026-09-27-02/human/apache--airflow-client-python/airflow_client__docs__PluginApi.md bytes 1021-1049
+# license = Apache-2.0
+# text = Get a list of loaded plugins
+1	Get	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	list	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	loaded	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	plugins	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0143
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__fr__gramatiko__08.md bytes 405-425
+# license = CC-BY-4.0
+# text = mort__ig__ – tuer
+1	mort__ig__	_	X	_	_	_	_	_	Kind=Word|Prov=agree
+2	–	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	tuer	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0144
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/jaychempan--coding-with-beat/docs__superpowers__plans__2026-05-27-music-profile.md bytes 3608-3659
+# license = MIT
+# text = Append at the end of coding_with_beat/history.py:
+1	Append	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+3	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	end	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	coding_with_beat/history.py	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+7	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0152
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/transloadit--uppy/github__CONTRIBUTING.md bytes 1754-1806
+# license = MIT
+# text = This is not needed for changing existing components.
+1	This	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+4	needed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	changing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+7	existing	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+8	components	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0153
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/charly-vibes--paranoid/openspec__changes__add-screen-time-monitor-app__design.md bytes 2733-2902
+# license = MIT
+# text = Alternatives considered: AccessibilityService gives real-time events but requires a permission that is both scary to users and difficult to explain for this purpose.
+1	Alternatives	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+2	considered	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	AccessibilityService	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	gives	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+6	real	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	events	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+10	but	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+11	requires	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+12	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	permission	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	that	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+15	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+16	both	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+17	scary	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+19	users	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+20	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+21	difficult	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+22	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+23	explain	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+24	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+25	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+26	purpose	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+27	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0155
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-01/mixed/xtermjs--xterm.js/CONTRIBUTING.md bytes 1478-1555
+# license = MIT
+# text = Agree to license the contributed code under xterm.js' MIT license .
+1	Agree	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+3	license	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+4	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	contributed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	under	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	xterm.js	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	MIT	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	license	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0159
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/lightdash--lightdash/sandboxes__data-apps__template__references__pdf-downloads.md bytes 184-337
+# license = MIT
+# text = Every PDF or printable report app includes a visible Download PDF button — the app is incomplete without one, on first generation and after every edit.
+1	Every	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	PDF	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+3	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	printable	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	report	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	includes	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+8	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	visible	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	Download	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	PDF	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+12	button	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+14	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+15	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+17	incomplete	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+18	without	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+19	one	_	NUM	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+20	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+21	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+22	first	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+23	generation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+24	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+25	after	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+26	every	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+27	edit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+28	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0162
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-01/mixed/taskforcesh--bullmq/docs__gitbook__SUMMARY.md bytes 4380-4393
+# license = MIT
+# text = Throttle jobs
+1	Throttle	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	jobs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0163
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/JeanMarcMbouma--urguide/README.md bytes 21481-21619
+# license = CC0-1.0
+# text = The API implements asynchronous message processing using MassTransit 8.3.4 with RabbitMQ for improved scalability and reliability.
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	implements	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+4	asynchronous	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	message	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	processing	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+8	MassTransit	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	8.3.4	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+10	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	RabbitMQ	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+13	improved	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=adjudicated
+14	scalability	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+15	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+16	reliability	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0171
+# exam.tier = mixed
+# exam.context = heading
+# source = batches/2026-09-27-02/mixed/accordproject--techdocs/docs__tutorial-hyperledger.md bytes 470-492
+# license = Apache-2.0
+# text = Hyperledger Fabric 2.2
+1	Hyperledger	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Fabric	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+3	2.2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+
+# sent_id = g0173
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/dependabot--dependabot-core/nuget__README.md bytes 199-273
+# license = MIT
+# text = NuGet C# development is an exception to the repository's Docker-only rule.
+1	NuGet	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	C	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	development	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+6	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	exception	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	repository's	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	Docker	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	only	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+14	rule	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0176
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/ShieldBattery--ShieldBattery/common__policies__README.md bytes 201-360
+# license = MIT
+# text = Any updates to these policies should add an entry to the changelog at the beginning (or add a changelog if one is not yet there) and update the effective date.
+1	Any	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	updates	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+3	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	these	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	policies	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	should	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	add	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+8	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	entry	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+12	changelog	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+14	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+15	beginning	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	add	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+19	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+20	changelog	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+21	if	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+22	one	_	NUM	_	_	_	_	_	Kind=Word|Prov=adjudicated
+23	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+24	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+25	yet	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+26	there	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+27	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+28	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+29	update	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+30	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+31	effective	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+32	date	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+33	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0189
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/lepahc--kynetic-spec/docs__guides__starting-a-new-project.md bytes 660-772
+# license = MIT
+# text = If your repository already has a kspec-meta branch (for example, from a clone), kspec init reconnects to it.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	repository	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	already	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+5	has	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+6	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	kspec-meta	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+8	branch	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	example	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+14	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+15	clone	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+16	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+18	kspec init	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+19	reconnects	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+20	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+21	it	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+22	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0190
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/apache--pinot/README.md bytes 11016-11175
+# license = Apache-2.0
+# text = If you installed Homebrew to a non-default location, ensure the protoc-gen-grpc-java binary is available in either /opt/homebrew/bin/ or /usr/local/bin/.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	installed	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	Homebrew	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	non	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+8	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	default	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+10	location	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	ensure	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+13	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+14	protoc-gen-grpc-java	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+15	binary	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+17	available	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+19	either	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+20	/opt/homebrew/bin/	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+21	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+22	/usr/local/bin/	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0195
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/Azure--azure-rest-api-specs/specification__cost-management__resource-manager__readme.python.md bytes 87-194
+# license = MIT
+# text = Please also specify --python-sdks-folder=<path to the root directory of your azure-sdk-for-python clone>.
+1	Please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	also	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+3	specify	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+4	--python-sdks-folder=<path to the root directory of your azure-sdk-for-python clone>	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+5	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0198
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/emersonmde--talos/tasks__2026-06-20-phase12-network-process-local-ping-descriptor-core.md bytes 1952-2009
+# license = MIT
+# text = Source: src/syscall.rs ProcessLocalPingDescriptorControl.
+1	Source	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	src	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	syscall.rs	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+6	ProcessLocalPingDescriptorControl	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+7	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0199
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md bytes 22593-22693
+# license = MIT
+# text = search terms are now not highlighted if the match is in a http[s]://... URL or file:... filepath
+1	search	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	terms	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+3	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	now	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+5	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+6	highlighted	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	if	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	match	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+11	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+12	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	http[s]://...	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+14	URL	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+15	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+16	file:...	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+17	filepath	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0200
+# exam.tier = human
+# exam.context = heading
+# source = batches/2026-09-27-02/human/toa-io--toa/CONTRIBUTING.md bytes 184-200
+# license = MIT
+# text = What You'll Need
+1	What	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	You'll	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	Need	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0205
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/apptension--saas-boilerplate/README.md bytes 309-436
+# license = MIT
+# text = Until You will modify this project, You can use documentation from the source SaaS Boilerplate project which is available here
+1	Until	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	modify	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+5	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	project	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+9	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+10	use	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+11	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+13	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+14	source	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+15	SaaS	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	Boilerplate	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+17	project	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+18	which	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+19	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+20	available	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+21	here	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0207
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/OpenZeppelin--openzeppelin-upgrades/packages__plugin-defender-hardhat__README.md bytes 3294-3390
+# license = MIT
+# text = Also see the main documentation for more info.
+1	Also	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+2	see	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	main	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	more	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	info	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0208
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/haxtheweb--haxcms-php/SECURITY.md bytes 272-324
+# license = Apache-2.0
+# text = If you need to discuss first, contact the core team:
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	need	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+5	discuss	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+6	first	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+7	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	contact	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+9	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	core	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+11	team	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0210
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/kubernetes-sigs--headlamp/docs__platforms.md bytes 209-397
+# license = Apache-2.0
+# text = If you have tested Headlamp on a different flavor or Kubernetes, please file a PR or issue to add your remarks to the list.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	have	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	tested	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+5	Headlamp	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	different	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	flavor	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+11	Kubernetes	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=agree
+14	file	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+15	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+16	PR	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+17	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	issue	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+20	add	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+21	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+22	remarks	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+23	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+24	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+25	list	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+26	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0211
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/patternfly--patternfly-react/packages__react-core__src__demos__TextInputGroupDemo.md bytes 1148-1263
+# license = MIT
+# text = Additionally, attributes can be selected by typing the full (case sensitive) name of an attribute, then typing :.
+1	Additionally	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	attributes	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+6	selected	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	typing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+9	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	full	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+11	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	case	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+13	sensitive	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+14	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+15	name	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+17	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+18	attribute	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+19	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	then	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+21	typing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+22	:	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0218
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/guitarlum--VoLum/NeuralAmpModeler__design__pre-post-blocks__philosophy.md bytes 2392-2620
+# license = MIT
+# text = Type scale stays disciplined: effect labels at 9-10 px equivalent in Josefin SemiBold caps with generous tracking; section labels (PRE / POST) one step larger and held at the gold-dim register so they recede behind the artifact.
+1	Type	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	scale	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	stays	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+4	disciplined	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	effect	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	labels	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+8	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	9	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+10	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	10	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+12	px	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+13	equivalent	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+15	Josefin	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	SemiBold	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+17	caps	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+18	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+19	generous	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+20	tracking	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+21	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+22	section	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+23	labels	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+24	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+25	PRE	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+26	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+27	POST	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+28	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+29	one	_	NUM	_	_	_	_	_	Kind=Word|Prov=agree
+30	step	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+31	larger	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+32	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+33	held	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+34	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+35	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+36	gold	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+37	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+38	dim	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+39	register	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+40	so	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+41	they	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+42	recede	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+43	behind	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+44	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+45	artifact	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+46	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0220
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/dylan-mccapes--2ndOpinionMD/server__scripts__reports__snomed_schema_audit.md bytes 2923-3005
+# license = MIT
+# text = All primary keys are properly defined and compatible with RF2 format requirements.
+1	All	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	primary	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	keys	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	properly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+6	defined	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	compatible	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+10	RF2	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	format	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	requirements	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+13	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0224
+# exam.tier = llm
+# exam.context = heading
+# source = batches/2026-09-27-02/llm/RazzaBear--copilot-toolkit/skills__go-mcp-server-generator__SKILL.md bytes 1101-1116
+# license = MIT
+# text = go.mod Template
+1	go.mod	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	Template	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0225
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/dylan-mccapes--2ndOpinionMD/server__scripts__reports__snomed_schema_audit.md bytes 213-255
+# license = MIT
+# text = Generated: September 01, 2025 22:33:48 UTC
+1	Generated	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	September	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	01	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	2025	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+7	22	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+8	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	33	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+10	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	48	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+12	UTC	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0227
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/dodyg--practical-aspnetcore/projects__grpc__grpc-7__README.md bytes 274-406
+# license = MIT
+# text = More details can be found at this Protocol Buffers documentation .
+1	More	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	details	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+3	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+5	found	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	Protocol	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+9	Buffers	_	PROPN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+10	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0228
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/jaipandya--SublimeTutor/tutorial__chapter_3_2.md bytes 525-661
+# license = MIT
+# text = If you also want to do the same, go to Preferences -> Keyboard -> Shortcuts -> Mission Control and uncheck Mission Control shortcut.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	also	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+4	want	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+6	do	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+7	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	same	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	go	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+11	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+12	Preferences -> Keyboard -> Shortcuts -> Mission Control	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+13	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+14	uncheck	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+15	Mission Control	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+16	shortcut	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0229
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/airbytehq--airbyte-python-cdk/docs__concepts__basic-concepts.md bytes 2912-2992
+# license = MIT
+# text = check_connection uses this configuration to validate access and permissioning.
+1	check_connection	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+2	uses	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	configuration	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+6	validate	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+7	access	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	permissioning	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0230
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/lightdash--lightdash/sandboxes__data-apps__template__references__pdf-downloads.md bytes 398-462
+# license = MIT
+# text = Do not load PDF libraries from a CDN or ask to install packages.
+1	Do	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+3	load	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=adjudicated
+4	PDF	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	libraries	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	from	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	CDN	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	ask	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+11	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+12	install	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+13	packages	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+14	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0231
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_proofs__README.md bytes 322-346
+# license = Apache-2.0 OR MIT
+# text = Licensed under either of
+1	Licensed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+2	under	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+3	either	_	DET	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0239
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/hasura--graphql-engine/community__boilerplates__auth-webhooks__firebase-cloud-functions__README.md bytes 995-1058
+# license = Apache-2.0 OR MIT
+# text = Once deployed endpoint like this will be created and displayed:
+1	Once	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	deployed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+3	endpoint	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	like	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+5	this	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+8	created	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+9	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	displayed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0241
+# exam.tier = llm
+# exam.context = table-cell
+# source = batches/2026-09-27-02/llm/wangbinquan--agent-workflow/design__arch-audit-2026-06-23__00-SYNTHESIS.md bytes 32910-32930
+# license = Apache-2.0
+# text = 10-resource-acl-auth
+1	10	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	resource	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	acl	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	auth	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0245
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/scalameta--scalameta/RELEASING.md bytes 2104-2129
+# license = BSD-3-Clause
+# text = Release the repositories.
+1	Release	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	repositories	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0246
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/scalameta--scalameta/RELEASING.md bytes 2-34
+# license = BSD-3-Clause
+# text = Choose the right version number:
+1	Choose	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	right	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	version	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	number	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0247
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/babel--babel/packages__babel-helper-simple-access__README.md bytes 33-124
+# license = MIT
+# text = Babel helper for ensuring that access to a given value is performed through simple accesses
+1	Babel	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	helper	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	ensuring	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+5	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+6	access	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	given	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+10	value	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+12	performed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+13	through	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+14	simple	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+15	accesses	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0249
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/tokio-rs--axum/axum__src__docs__routing__route.md bytes 1662-1777
+# license = MIT
+# text = If multiple patterns match, static segment takes precedence, then the capture with longest static prefix or suffix.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	multiple	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	patterns	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	match	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	static	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+7	segment	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	takes	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+9	precedence	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	then	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+12	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	capture	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+15	longest	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+16	static	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+17	prefix	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+18	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+19	suffix	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0256
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/jaipandya--SublimeTutor/tutorial__chapter_3_2.md bytes 1227-1323
+# license = MIT
+# text = Once the first column of every item is selected, start typing * (asterisk followed by space).
+1	Once	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	first	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	column	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	every	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	item	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+9	selected	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	start	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+12	typing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+13	*	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+14	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	asterisk	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	followed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+17	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+18	space	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+19	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0261
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/knative--docs/docs__eventing__flows__sequence__sequence-with-broker-trigger__README.md bytes 5662-5707
+# license = Apache-2.0 OR CC-BY-4.0
+# text = View the logs for the sequence-display pod:
+1	View	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	logs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	sequence-display	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+7	pod	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0263
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/lepahc--kynetic-spec/docs__guides__starting-a-new-project.md bytes 1473-1491
+# license = MIT
+# text = List your modules:
+1	List	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+3	modules	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0264
+# exam.tier = mixed
+# exam.context = heading
+# source = batches/2026-09-27-01/mixed/transloadit--uppy/github__CONTRIBUTING.md bytes 4093-4109
+# license = MIT
+# text = I18n and locales
+1	I18n	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	locales	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0266
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/pnpm--pnpm/packages__write-project-manifest__README.md bytes 34-94
+# license = MIT
+# text = Write a project manifest (called package.json in most cases)
+1	Write	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	project	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	manifest	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	called	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	package.json	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+8	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	most	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	cases	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0267
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/AliAkhtari78--SpotifyScraper/claude__commands__opsx__archive.md bytes 3644-3661
+# license = MIT
+# text = Output On Success
+1	Output	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	On	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+3	Success	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0269
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/kptdev--kpt/site__book__05-developing-functions__03-developing-in-Typescript.md bytes 79-114
+# license = Apache-2.0
+# text = It provides the following features:
+1	It	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	provides	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	following	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+5	features	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0271
+# exam.tier = human
+# exam.context = heading
+# source = batches/2026-09-27-02/human/dodyg--practical-aspnetcore/projects__endpoint-routing__new-routing-24__README.md bytes 2-44
+# license = MIT
+# text = Host Matching on your middleware version 2
+1	Host	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Matching	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+3	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+5	middleware	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	version	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+
+# sent_id = g0272
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/accordproject--techdocs/docs__tutorial-hyperledger.md bytes 250-465
+# license = Apache-2.0
+# text = For modern integrations — including AI agent workflows — use the Agreement Protocol API (APAP) , which exposes contract templates over a REST interface with a Model Context Protocol (MCP) endpoint.
+1	For	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+2	modern	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	integrations	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+4	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+5	including	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+6	AI	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	agent	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	workflows	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+9	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	use	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+11	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+12	Agreement	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+13	Protocol	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	API	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+15	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	APAP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+18	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+19	which	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+20	exposes	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+21	contract	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+22	templates	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+23	over	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+24	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+25	REST	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+26	interface	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+27	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+28	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+29	Model	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+30	Context	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+31	Protocol	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+32	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+33	MCP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+34	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+35	endpoint	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+36	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0273
+# exam.tier = human
+# exam.context = table-cell
+# source = batches/2026-09-27-02/human/Accenture--mercury/docs__guides__CHAPTER-7.md bytes 2669-2686
+# license = Apache-2.0
+# text = Table of Contents
+1	Table	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+3	Contents	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0274
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/phodal--routa/agents__skills__release__SKILL.md bytes 1934-2050
+# license = MIT
+# text = If git status --porcelain is not clean and the task is a real publish, call that out before invoking publish.sh.
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	git status --porcelain	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+3	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+5	clean	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	task	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+10	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+11	real	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+12	publish	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+13	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+14	call	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+15	that	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+16	out	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+17	before	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+18	invoking	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+19	publish.sh	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0278
+# exam.tier = human
+# exam.context = heading
+# source = batches/2026-09-27-02/human/ShieldBattery--ShieldBattery/common__policies__README.md bytes 187-199
+# license = MIT
+# text = Update guide
+1	Update	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	guide	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0281
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/POps-Rox--terraform-az-overlays-costmanagement/github__agents__refactorer.agent.md bytes 604-678
+# license = MIT
+# text = You are disciplined about scope: you improve structure, not functionality.
+1	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	disciplined	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+4	about	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	scope	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+7	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+8	improve	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+9	structure	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+12	functionality	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+13	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0284
+# exam.tier = mixed
+# exam.context = table-cell
+# source = batches/2026-09-27-01/mixed/kubernetes-sigs--headlamp/docs__platforms.md bytes 14240-14260
+# license = Apache-2.0
+# text = Internet Explorer 11
+1	Internet	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Explorer	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	11	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+
+# sent_id = g0286
+# exam.tier = llm
+# exam.context = table-cell
+# source = batches/2026-09-27-02/llm/bitwize-music-studio--claude-ai-music-skills/genres__outlaw-country__README.md bytes 9787-9804
+# license = CC0-1.0
+# text = Jerry Jeff Walker
+1	Jerry	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	Jeff	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	Walker	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0288
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/guitarlum--VoLum/NeuralAmpModeler__design__pre-post-blocks__philosophy.md bytes 567-658
+# license = MIT
+# text = They tell the player that signal flows through them; they never tell what lives inside.
+1	They	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+2	tell	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	player	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+6	signal	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	flows	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+8	through	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	them	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	they	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+12	never	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+13	tell	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+14	what	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+15	lives	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+16	inside	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+17	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0289
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/amannn--next-intl/README.md bytes 115-224
+# license = MIT
+# text = A minimal, but complete solution for managing translations, date, time and number formatting in Next.js apps.
+1	A	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	minimal	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	but	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	complete	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	solution	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+8	managing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+9	translations	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+11	date	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+15	number	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+16	formatting	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+17	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+18	Next.js	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	apps	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0295
+# exam.tier = llm
+# exam.context = heading
+# source = batches/2026-09-27-02/llm/RazzaBear--copilot-toolkit/skills__go-mcp-server-generator__SKILL.md bytes 1252-1268
+# license = MIT
+# text = main.go Template
+1	main.go	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	Template	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0297
+# exam.tier = human
+# exam.context = heading
+# source = batches/2026-09-27-02/human/Accenture--mercury/docs__guides__CHAPTER-7.md bytes 2-17
+# license = Apache-2.0
+# text = Version control
+1	Version	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	control	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0298
+# exam.tier = human
+# exam.context = table-cell
+# source = batches/2026-09-27-02/human/yiisoft--yii2-apidoc/github__PULL_REQUEST_TEMPLATE.md bytes 102-112
+# license = BSD-3-Clause
+# text = Breaks BC?
+1	Breaks	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	BC	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+3	?	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0299
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/OpenZeppelin--openzeppelin-upgrades/packages__plugin-defender-hardhat__README.md bytes 571-631
+# license = MIT
+# text = Depends on @openzeppelin/hardhat-upgrades and ethers.js.
+1	Depends	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+3	@openzeppelin/hardhat-upgrades	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+4	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	ethers.js	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+6	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0301
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/zuwasi--anydoc-gui/bench__README.md bytes 1772-1901
+# license = MIT
+# text = Also needed on PATH: pandoc, node, and LibreOffice (soffice; set the SOFFICE env var if it's not in a standard location).
+1	Also	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+2	needed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+3	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	PATH	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+5	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	pandoc	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+7	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	node	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+11	LibreOffice	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+12	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	soffice	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+14	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+15	set	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+16	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+17	SOFFICE	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+18	env	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	var	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+20	if	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+21	it's	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+22	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+23	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+24	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+25	standard	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+26	location	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+27	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+28	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0303
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/emersonmde--talos/tasks__2026-06-20-phase12-network-process-local-ping-descriptor-core.md bytes 2122-2236
+# license = MIT
+# text = Unit/source evidence: process_local_ping_descriptor_control_maps_capacity_busy_closed_retry_timeout_and_io_errors.
+1	Unit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	source	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	evidence	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	process_local_ping_descriptor_control_maps_capacity_busy_closed_retry_timeout_and_io_errors	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+7	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0311
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/scaleway--scaleway-cli/github__CONTRIBUTING.md bytes 32-107
+# license = Apache-2.0
+# text = scaleway-cli is Apache 2.0 licensed and accepts contributions via GitHub.
+1	scaleway-cli	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+2	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	Apache	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	2.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+5	licensed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+6	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	accepts	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+8	contributions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+9	via	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+10	GitHub	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0313
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/everydaythingssoftware--citadel/ai-docs__GETTING_STARTED_NEW_ARCH.md bytes 3388-3446
+# license = MIT
+# text = If you're starting fresh or migrating, follow these steps:
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	you're	_	PRON	_	_	_	_	_	Kind=Word|Prov=adjudicated
+3	starting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+4	fresh	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+5	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	migrating	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+7	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	follow	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+9	these	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	steps	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0316
+# exam.tier = human
+# exam.context = list-item
+# source = batches/2026-09-27-02/human/scaleway--scaleway-cli/github__CONTRIBUTING.md bytes 1217-1265
+# license = Apache-2.0
+# text = What value does this feature bring to end users?
+1	What	_	DET	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	value	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	does	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	feature	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	bring	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+7	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+8	end	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+9	users	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	?	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0320
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/natemcmaster--CommandLineUtils/docs__index.md bytes 40-139
+# license = Apache-2.0
+# text = CommandLineUtils is a library which helps developers implement command line applications in .NET.
+1	CommandLineUtils	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	library	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	which	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+6	helps	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	developers	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+8	implement	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+9	command	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	line	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	applications	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+12	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+13	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+14	NET	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0322
+# exam.tier = human
+# exam.context = table-cell
+# source = batches/2026-09-27-02/human/yiisoft--yii2-apidoc/github__PULL_REQUEST_TEMPLATE.md bytes 44-54
+# license = BSD-3-Clause
+# text = Is bugfix?
+1	Is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	bugfix	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	?	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0329
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/knative--docs/docs__eventing__flows__sequence__sequence-with-broker-trigger__README.md bytes 265-416
+# license = Apache-2.0 OR CC-BY-4.0
+# text = Then we take the end of the Sequence and feed newly minted events back into the Broker and create another Trigger which will then display those events.
+1	Then	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+2	we	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+3	take	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	end	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	Sequence	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	feed	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+11	newly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+12	minted	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+13	events	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+14	back	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+15	into	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+16	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+17	Broker	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+18	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+19	create	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+20	another	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+21	Trigger	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+22	which	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+23	will	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+24	then	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+25	display	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+26	those	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+27	events	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+28	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0330
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/Sienna-Platform--PowerSimulationsDynamics.jl/README.md bytes 2223-2355
+# license = BSD-3-Clause
+# text = PowerSimulationsDynamics has been developed as part of the Scalable Integrated Infrastructure Planning (SIIP) initiative at the U.S.
+1	PowerSimulationsDynamics	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	has	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	been	_	AUX	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+4	developed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+5	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	part	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	Scalable	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	Integrated	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+11	Infrastructure	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+12	Planning	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+13	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+14	SIIP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+15	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+16	initiative	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+17	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+18	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+19	U.S	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0331
+# exam.tier = mixed
+# exam.context = heading
+# source = batches/2026-09-27-02/mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__pt__gramatiko__10.md bytes 561-576
+# license = CC-BY-4.0
+# text = O sufixo -uj
+1	O	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	sufixo	_	X	_	_	_	_	_	Kind=Word|Prov=agree
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	uj	_	X	_	_	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0334
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/runcat-dev--RunCat365/README.md bytes 2105-2168
+# license = Apache-2.0
+# text = For requests, please create an Issue according to the template.
+1	For	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+2	requests	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	create	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+6	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+7	Issue	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	according	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+9	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+10	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+11	template	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0337
+# exam.tier = mixed
+# exam.context = table-cell
+# source = batches/2026-09-27-02/mixed/yairchu--awesome-structure-editors/README.md bytes 8659-8679
+# license = CC0-1.0
+# text = Intentional software
+1	Intentional	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	software	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0340
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/everydaythingssoftware--citadel/ai-docs__GETTING_STARTED_NEW_ARCH.md bytes 197-219
+# license = MIT
+# text = Old way (4-5 files):
+1	Old	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	way	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	4	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	5	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+7	files	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0341
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/deepspeedai--DeepSpeed/docs___posts__2021-03-08-zero3-offload.md bytes 127-395
+# license = MIT
+# text = Today we are announcing the release of ZeRO-3 Offload, a highly efficient and easy to use implementation of ZeRO Stage 3 and ZeRO Offload combined, geared towards our continued goal of democratizing AI by making efficient large-scale DL training available to everyone.
+1	Today	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+2	we	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+3	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	announcing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+5	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+6	release	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	ZeRO	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+9	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	3	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+11	Offload	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+14	highly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+15	efficient	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+16	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+17	easy	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+19	use	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+20	implementation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+21	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+22	ZeRO	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+23	Stage	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+24	3	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+25	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+26	ZeRO	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+27	Offload	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+28	combined	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+29	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+30	geared	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+31	towards	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+32	our	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+33	continued	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+34	goal	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+35	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+36	democratizing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+37	AI	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+38	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+39	making	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+40	efficient	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+41	large	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+42	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+43	scale	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+44	DL	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+45	training	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+46	available	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+47	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+48	everyone	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+49	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0346
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/netbox-community--netbox/docs__installation__upgrading.md bytes 11418-11520
+# license = Apache-2.0
+# text = Never attempt to create new migrations unless you are intentionally modifying the database schema.
+1	Never	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+2	attempt	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+4	create	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+5	new	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	migrations	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+7	unless	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+9	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+10	intentionally	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+11	modifying	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+12	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+13	database	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	schema	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0347
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/netbox-community--netbox/docs__installation__upgrading.md bytes 6386-6469
+# license = Apache-2.0
+# text = Alternatively, a database administrator can install the extension before upgrading:
+1	Alternatively	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	database	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	administrator	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	install	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+8	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	extension	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	before	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+11	upgrading	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0348
+# exam.tier = mixed
+# exam.context = table-cell
+# source = batches/2026-09-27-02/mixed/microsoft--msquic/docs__Release.md bytes 4053-4068
+# license = MIT
+# text = x86_64, aarch64
+1	x86_64	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	aarch64	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0349
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/joemccann--dillinger/agent__skills__frontend-design__SKILL.md bytes 6475-6494
+# license = MIT
+# text = What's the emotion?
+1	What's	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	emotion	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	?	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0350
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/yairchu--awesome-structure-editors/README.md bytes 134-189
+# license = CC0-1.0
+# text = A list of structural/projectional code editor projects.
+1	A	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	list	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	structural	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	projectional	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+7	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+8	editor	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	projects	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+10	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0351
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__pt__gramatiko__10.md bytes 366-388
+# license = CC-BY-4.0
+# text = varmeco – calor
+1	varmeco	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	–	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	calor	_	X	_	_	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0355
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/dependabot--dependabot-core/nuget__README.md bytes 23-72
+# license = MIT
+# text = NuGet support for dependabot-core .
+1	NuGet	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+4	dependabot-core	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+5	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0356
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md bytes 15548-15653
+# license = MIT
+# text = Adds new '@mentions to average' and '@mentions to total' alongside existing '@mentions to count' setting.
+1	Adds	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	new	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+3	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	@	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	mentions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+6	to	_	PART	_	_	_	_	_	Kind=Word|Prov=adjudicated
+7	average	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+8	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	@	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	mentions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+13	to	_	PART	_	_	_	_	_	Kind=Word|Prov=adjudicated
+14	total	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+15	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+16	alongside	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+17	existing	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+18	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+19	@	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+20	mentions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=adjudicated
+21	to	_	PART	_	_	_	_	_	Kind=Word|Prov=adjudicated
+22	count	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+23	'	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+24	setting	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+25	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0364
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-02/mixed/square--workflow-kotlin/RELEASING.md bytes 5374-5463
+# license = Apache-2.0
+# text = If this is your first time for either, the following one time steps need to be performed:
+1	If	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	this	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+5	first	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	either	_	DET	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+11	following	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+12	one	_	NUM	_	_	_	_	_	Kind=Word|Prov=agree
+13	time	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+14	steps	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+15	need	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+16	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+17	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+18	performed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+19	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0370
+# exam.tier = mixed
+# exam.context = heading
+# source = batches/2026-09-27-02/mixed/yomichi--SpinMonteCarlo.jl/docs__src__runmc.md bytes 2-17
+# license = MIT
+# text = Run Monte Carlo
+1	Run	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	Monte	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	Carlo	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+
+# sent_id = g0375
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/sobolevbel--jdg/docs__infakt_migration.en.md bytes 1622-1749
+# license = CC0-1.0
+# text = For the first month in inFakt to be calculated correctly, you need to carry over for it (and for the elapsed part of the year):
+1	For	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	first	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	month	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	inFakt	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+8	be	_	AUX	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+9	calculated	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+10	correctly	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	you	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+13	need	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+14	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+15	carry	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+16	over	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+17	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+18	it	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+19	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+20	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+21	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+22	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+23	elapsed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=adjudicated
+24	part	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+25	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+26	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+27	year	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+28	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+29	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0379
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/charly-vibes--paranoid/openspec__changes__add-screen-time-monitor-app__design.md bytes 3921-4037
+# license = MIT
+# text = Why: Very short screen-off events (pocket unlock, glance at notification) should not reset the checkpoint clock.
+1	Why	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Very	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+4	short	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	screen	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	off	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	events	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+9	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	pocket	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	unlock	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	glance	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+15	notification	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+16	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	should	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+18	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+19	reset	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+20	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+21	checkpoint	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+22	clock	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0387
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/toa-io--toa/CONTRIBUTING.md bytes 18-111
+# license = MIT
+# text = Please note that this project is released with a Contributor Code of Conduct .
+1	Please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	note	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	this	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+5	project	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+7	released	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+8	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+9	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+10	Contributor	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+11	Code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+12	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+13	Conduct	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+14	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0392
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/apptension--saas-boilerplate/README.md bytes 227-283
+# license = MIT
+# text = This project uses docusaurus for documentation purposes.
+1	This	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+2	project	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	uses	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	docusaurus	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+6	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	purposes	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0393
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/bradhawkins85--chore-champion/STRIPE_METER_EVENTS.md bytes 370-463
+# license = MIT
+# text = When an invoice is paid, a meter event is automatically sent to Stripe to record the payment.
+1	When	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	an	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	invoice	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+5	paid	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+6	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+7	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+8	meter	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+9	event	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+10	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+11	automatically	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+12	sent	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+13	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+14	Stripe	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+15	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+16	record	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+17	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+18	payment	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+19	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0394
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/MatthewMih--crystal-rf-filter-optimizer/docs__DOCUMENTATION_en.md bytes 8638-8712
+# license = MIT
+# text = Same formula: w = w_peak · 10^(-(y_peak - level)/slope_db), then clamp.
+1	Same	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	formula	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+3	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	w = w_peak · 10^(-(y_peak - level)/slope_db)	_	X	_	_	_	_	_	Kind=Code|Prov=kind|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	then	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree
+7	clamp	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+8	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0397
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/jdylanmc--topo-code/agents__skills__squadron__SKILL.md bytes 590-640
+# license = MIT
+# text = Preserve scoped operator choices and required IDs.
+1	Preserve	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	scoped	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+3	operator	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	choices	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+5	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	required	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	IDs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0404
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/jaychempan--coding-with-beat/docs__superpowers__plans__2026-05-27-music-profile.md bytes 4932-4968
+# license = MIT
+# text = Expected: all history tests PASSED
+1	Expected	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	all	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	history	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+5	tests	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+6	PASSED	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+
+# sent_id = g0407
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/MyCometG3--recDL/README.md bytes 221-290
+# license = MIT
+# text = Restriction : Compressed/Synchronized/IP captures are not supported.
+1	Restriction	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Compressed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	Synchronized	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	IP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+8	captures	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+9	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+10	not	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+11	supported	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0414
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/MatthewMih--crystal-rf-filter-optimizer/docs__DOCUMENTATION_en.md bytes 9999-10074
+# license = MIT
+# text = Load resistance is arbitrary, set by the load_element resistor parameter.
+1	Load	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	resistance	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+3	is	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+4	arbitrary	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	set	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+7	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+9	load_element	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+10	resistor	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	parameter	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0415
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/babel--babel/packages__babel-helper-simple-access__README.md bytes 332-346
+# license = MIT
+# text = or using yarn:
+1	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+3	yarn	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0416
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/POps-Rox--terraform-az-overlays-costmanagement/github__agents__refactorer.agent.md bytes 300-323
+# license = MIT
+# text = You are the Refactorer.
+1	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	the	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+4	Refactorer	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+5	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0428
+# exam.tier = llm
+# exam.context = table-cell
+# source = batches/2026-09-27-02/llm/bitwize-music-studio--claude-ai-music-skills/genres__outlaw-country__README.md bytes 5206-5220
+# license = CC0-1.0
+# text = Classic Outlaw
+1	Classic	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+2	Outlaw	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+
+# sent_id = g0430
+# exam.tier = llm
+# exam.context = prose
+# source = batches/2026-09-27-02/llm/FreddyCreates--Multi-Element-Spectral-Intelligence-Engine-MESIE/docs__MESIE_Charter_Research_Paper.md bytes 5025-5081
+# license = Apache-2.0
+# text = MESIE introduces resonance-aware embeddings that encode:
+1	MESIE	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	introduces	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	resonance	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	aware	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+6	embeddings	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+7	that	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+8	encode	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0432
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/xtermjs--xterm.js/CONTRIBUTING.md bytes 202-494
+# license = MIT
+# text = You can find issues to work on by looking at issues labeled with help wanted or good first issue .
+1	You	_	PRON	_	_	_	_	_	Kind=Word|Prov=agree
+2	can	_	AUX	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+3	find	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+4	issues	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+5	to	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+6	work	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree
+7	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+8	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+9	looking	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+10	at	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+11	issues	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+12	labeled	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+13	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+14	help	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+15	wanted	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=agree
+16	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+17	good	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+18	first	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+19	issue	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+20	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0435
+# exam.tier = mixed
+# exam.context = prose
+# source = batches/2026-09-27-01/mixed/runcat-dev--RunCat365/README.md bytes 1953-2008
+# license = Apache-2.0
+# text = We welcome anyone interested in contributing to RunCat.
+1	We	_	PRON	_	Number=Plur	_	_	_	Kind=Word|Prov=agree
+2	welcome	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	anyone	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	interested	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+6	contributing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+7	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=adjudicated
+8	RunCat	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+9	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0438
+# exam.tier = human
+# exam.context = prose
+# source = batches/2026-09-27-02/human/Sienna-Platform--PowerSimulationsDynamics.jl/README.md bytes 1928-2076
+# license = BSD-3-Clause
+# text = Please see CONTRIBUTING.md for code contribution guidelines.
+1	Please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=agree
+2	see	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+3	CONTRIBUTING.md	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated
+4	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+5	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	contribution	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+7	guidelines	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+8	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0443
+# exam.tier = llm
+# exam.context = list-item
+# source = batches/2026-09-27-02/llm/opral--lix/docs__development__history-review.md bytes 1321-1491
+# license = MIT
+# text = Capture a fresh partial replica with dense and sparse file history, including more than 20 checkpoints, and compare authority, cold replica, and warm offline results.
+1	Capture	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=agree
+3	fresh	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+4	partial	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+5	replica	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+6	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+7	dense	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+8	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+9	sparse	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+10	file	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+11	history	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	including	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=agree
+14	more	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+15	than	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree
+16	20	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+17	checkpoints	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+18	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+19	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+20	compare	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=adjudicated
+21	authority	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+22	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+23	cold	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+24	replica	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+25	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+26	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=agree
+27	warm	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree
+28	offline	_	ADJ	_	_	_	_	_	Kind=Word|Prov=adjudicated
+29	results	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|SpaceAfter=No
+30	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = g0450
+# exam.tier = mixed
+# exam.context = list-item
+# source = batches/2026-09-27-02/mixed/MyCometG3--recDL/README.md bytes 295-401
+# license = MIT
+# text = Dependency : Blackmagic_Desktop_Video_Macintosh (11.4-11.7, 12.0-12.9, 14.0-14.2, 15.0-15.3.1, 16.0 ).
+1	Dependency	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Blackmagic_Desktop_Video_Macintosh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree
+4	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	11.4	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	11.7	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	12.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+10	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	12.9	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	14.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+14	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	14.2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+16	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	15.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+18	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+19	15.3.1	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+20	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+21	16.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+22	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+23	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+

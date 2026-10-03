@@ -5,7 +5,7 @@
 #
 # The inputs, one record per line, tab separated:
 #   scowl.tsv    form, size level, kind (w: a word, u: a name or other capitalised word)
-#   wordnet.tsv  lemma, pos (n v a r, or P for an instance name), tagged-sense count, sense count
+#   wordnet.tsv  lemma, pos (n v a r, or P for an instance name), SemCor count, sense count
 #   moby.tsv     word, Moby's tag letters in priority order, 1 if the entry is capitalised
 #   agid.tsv     form, lemma, pos (N V A), slot (pl past pp pastpp ing s cmp sup)
 #
@@ -16,8 +16,15 @@
 #   - a name, from a capitalised Moby entry, a WordNet instance, or SCOWL's list of capitalised words.
 #
 # Readings are ranked per tag, then the tags among themselves, by this key, most important first:
-#   1. the WordNet tagged-sense count of the lemma for that part of speech: how often its senses
-#      were met in a sense-tagged corpus, the only real frequency any source gives;
+#   1. the SemCor count of the lemma for that part of speech, spread over the forms the part of
+#      speech has: how often its senses were met in WordNet's sense-tagged corpus, the only real
+#      frequency any source gives. The count is the lemma's, summed over its senses and its forms
+#      (`use`, `uses`, `used`, `using` all add to the verb `use`), so it says how often the lemma is
+#      that part of speech, not how often one form is. A form can only be one of a part of speech's
+#      forms, so the count is divided by how many it has, as if the lemma met them equally often:
+#      2 for a noun (singular, plural), 4 for a verb (base, -s, past, -ing), 1 for the rest. Else a
+#      verb would outrank a noun for the count of its extra forms alone. The divisors come from
+#      the grammar, not from a corpus;
 #   2. where Moby puts that part of speech among the lemma's: Moby lists them in priority order,
 #      the principal usage first, and a part of speech it does not list comes last;
 #   3. the WordNet sense count;
@@ -73,6 +80,8 @@ BEGIN {
     sfeat["s"] = "Z"; sprio["s"] = 5
     sfeat["cmp"] = "C"; sprio["cmp"] = 6
     sfeat["sup"] = "T"; sprio["sup"] = 7
+    nslots["n"] = 2; nslots["v"] = 4; nslots["a"] = 1; nslots["r"] = 1
+    nslots["q"] = 1; nslots["d"] = 1; nslots["i"] = 1; nslots["c"] = 1; nslots["j"] = 1; nslots["p"] = 1
     wn2tag["n"] = "n"; wn2tag["v"] = "v"; wn2tag["a"] = "a"; wn2tag["r"] = "r"
     wn2feat["n"] = "S"; wn2feat["v"] = "I"; wn2feat["a"] = "O"; wn2feat["r"] = "O"
     nforms = 0
@@ -83,9 +92,10 @@ BEGIN {
 # 8 for the form listed as a lemma. Each tag of a form keeps the best key of its readings, which
 # ranks it, and the features of the reading with the best priority, an inflection before a lemma
 # entry: Moby lists `using` as a verb, but it is the -ing form of `use` that says which.
-function add(form, t, f, tagged, senses, mrank, prio,    k, key) {
+function add(form, t, f, count, senses, mrank, prio,    k, key) {
     if (!(form in gate)) return
-    key = (tagged > 9999 ? 9999 : tagged) * 100000000 + (9 - mrank) * 1000000 + \
+    count = count * (12 / nslots[t])
+    key = (count > 999999 ? 999999 : count) * 100000000 + (9 - mrank) * 1000000 + \
         (senses > 999 ? 999 : senses) * 1000 + (99 - rank[t])
     if (t == "p") key = 0
     k = form SUBSEP t
@@ -251,7 +261,7 @@ function inflect(form, lemma, p, t, slot) {
     add(form, t, sfeat[slot], tagged(lemma, p), senses(lemma, p), moby_rank(lemma, t), sprio[slot])
 }
 
-# WordNet's tagged-sense count and sense count of `lemma` as part of speech `p`, 0 when it has none.
+# WordNet's SemCor count and sense count of `lemma` as part of speech `p`, 0 when it has none.
 function tagged(lemma, p) {
     return ((lemma SUBSEP p) in wntagged) ? wntagged[lemma SUBSEP p] + 0 : 0
 }

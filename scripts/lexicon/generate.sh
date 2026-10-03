@@ -126,8 +126,11 @@ normalise() {
             print w, level, kind
         }' | sort -u >"$WORK/scowl.tsv"
 
-    # WordNet: each single word lemma with its part of speech, tagged-sense count and sense count,
-    # and the names among the nouns. The index files lower-case every lemma, so a name such as
+    # WordNet: each single word lemma with its part of speech, tag count and sense count, and the
+    # names among the nouns. The tag count is the sum, over the lemma's senses, of the count in
+    # index.sense of how often the sense was met in SemCor, the sense-tagged corpus; a lemma's
+    # `tagsense_cnt` in the index files only counts the senses that were met at least once, which
+    # says little of how often the lemma is used as that part of speech. The index files lower-case every lemma, so a name such as
     # `paris` looks like a common noun there; the data files keep the case. A noun lemma is a common
     # noun when some synset spells it in lower case, and a name when only capitalised forms are
     # there, or one is in a synset with an instance hypernym. An index line is: lemma pos synset_cnt p_cnt
@@ -164,19 +167,58 @@ normalise() {
             }
         }
     ' | sort >"$WORK/nouns.tsv"
+    # The offsets of the noun synsets that are instances: a name's senses are not the common noun's.
+    awk '
+        BEGIN { for (i = 0; i < 16; i++) hex[substr("0123456789abcdef", i + 1, 1)] = i }
+        $1 !~ /^[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$/ { next }
+        {
+            n = hex[substr($4, 1, 1)] * 16 + hex[substr($4, 2, 1)]
+            p = $(5 + 2 * n) + 0
+            for (j = 0; j < p; j++) if ($(6 + 2 * n + 4 * j) == "@i") { print $1; break }
+        }
+    ' "$dict/data.noun" | sort -u >"$WORK/instances.txt"
+    # SemCor counts: a sense key is lemma%ss_type:..., with ss_type 1 noun, 2 verb, 3 adjective, 4
+    # adverb and 5 adjective satellite; the line goes on with the synset offset, the sense number
+    # and the count. Each lemma's counts add up per part of speech, a noun's without its instances.
+    awk -v instances="$WORK/instances.txt" '
+        BEGIN {
+            OFS = "\t"
+            while ((getline line < instances) > 0) instance[line] = 1
+        }
+        {
+            split($1, key, "%")
+            lemma = key[1]
+            split(key[2], part, ":")
+            type = part[1] + 0
+            pos = (type == 1) ? "n" : (type == 2) ? "v" : (type == 3 || type == 5) ? "a" : (type == 4) ? "r" : ""
+            if (pos == "" || lemma !~ /^[a-z]([a-z'"'"']*[a-z])?$/) next
+            if (pos == "n" && ($2 in instance)) next
+            count[lemma SUBSEP pos] += $4
+        }
+        END {
+            for (k in count) {
+                split(k, f, SUBSEP)
+                print f[1], f[2], count[k]
+            }
+        }
+    ' "$dict/index.sense" | sort >"$WORK/counts.tsv"
     for pair in noun:n verb:v adj:a adv:r; do
-        awk -v pos="${pair#*:}" -v nouns="$WORK/nouns.tsv" '
+        awk -v pos="${pair#*:}" -v nouns="$WORK/nouns.tsv" -v counts="$WORK/counts.tsv" '
             BEGIN {
                 OFS = "\t"
                 while ((getline line < nouns) > 0) {
                     split(line, f, "\t")
                     kind[f[1] SUBSEP f[2]] = 1
                 }
+                while ((getline line < counts) > 0) {
+                    split(line, f, "\t")
+                    count[f[1] SUBSEP f[2]] = f[3]
+                }
             }
             /^ / { next }
             $1 !~ /^[a-z]([a-z'"'"']*[a-z])?$/ { next }
             pos == "n" && !(($1 SUBSEP "C") in kind) { next }
-            { print $1, pos, $(6 + $4), $3 }
+            { print $1, pos, (($1 SUBSEP pos) in count) ? count[$1 SUBSEP pos] : 0, $3 }
         ' "$dict/index.${pair%:*}"
     done >"$WORK/wordnet.tsv"
     awk -F '\t' 'BEGIN { OFS = "\t" } $2 == "P" { print $1, "P", 0, 0 }' "$WORK/nouns.tsv" >>"$WORK/wordnet.tsv"

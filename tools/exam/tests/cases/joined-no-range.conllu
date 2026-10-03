@@ -1,0 +1,7 @@
+# sent_id = a1
+# text = Bob's cat sat
+1	Bob	_	PROPN	_	Number=Sing	_	_	_	_
+2	's	_	PART	_	_	_	_	_	_
+3	cat	_	NOUN	_	Number=Sing	_	_	_	_
+4	sat	_	VERB	_	VerbForm=Fin|Tense=Past	_	_	_	_
+

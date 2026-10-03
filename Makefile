@@ -23,7 +23,7 @@ CARGO_FLAGS ?=
         fetch-blobs fetch-ewt publish-blobs
 
 help:
-	@echo "build            build deslag and tools/corpus with the debug profile"
+	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
@@ -43,7 +43,7 @@ help:
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
-	@echo "                 tools/corpus/tests/golden from what deslag-corpus prints"
+	@echo "                 tools/*/tests/golden from what deslag-corpus and deslag-exam print"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed before a build can succeed"
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
@@ -93,7 +93,7 @@ check-fmt: preflight
 
 # Builds from the packaged crate, which catches a file that `exclude` dropped
 # but the build needs. Too slow for `check`; the release workflow runs it.
-# deslag is the one package that publishes; tools/corpus never does.
+# deslag is the one package that publishes; the crates under tools/ never do.
 check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 

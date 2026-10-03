@@ -1,0 +1,36 @@
+# sent_id = s1
+# text = I don't like cats.
+1	I	_	_	_	_	_	_	_	Kind=Word
+2	don't	_	_	_	_	_	_	_	Kind=Word
+3	like	_	_	_	_	_	_	_	Kind=Word
+4	cats	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s2
+# text = Send 2 e-mail forms to U.S. staff
+1	Send	_	_	_	_	_	_	_	Kind=Word
+2	2	_	_	_	_	_	_	_	Kind=Number
+3	e	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	mail	_	_	_	_	_	_	_	Kind=Word
+6	forms	_	_	_	_	_	_	_	Kind=Word
+7	to	_	_	_	_	_	_	_	Kind=Word
+8	U.S	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	.	_	_	_	_	_	_	_	Kind=Punctuation
+10	staff	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = s3
+# text = See the docs:setup page, etc.
+1	See	_	_	_	_	_	_	_	Kind=Word
+2	the	_	_	_	_	_	_	_	Kind=Word
+3	docs:setup	_	_	_	_	_	_	_	Kind=Word
+4	page	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	etc	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s4
+# text = Error codes
+1	Error	_	_	_	_	_	_	_	Kind=Word
+2	codes	_	_	_	_	_	_	_	Kind=Word
+

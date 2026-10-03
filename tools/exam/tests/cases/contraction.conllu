@@ -1,0 +1,9 @@
+# sent_id = a1
+# text = She doesn't care.
+1	She	_	PRON	_	Number=Sing|Person=3	_	_	_	_
+2-3	doesn't	_	_	_	_	_	_	_	_
+2	does	_	AUX	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+3	n't	_	PART	_	_	_	_	_	_
+4	care	_	VERB	_	VerbForm=Inf	_	_	_	_
+5	.	_	PUNCT	_	_	_	_	_	_
+

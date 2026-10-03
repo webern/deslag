@@ -1,0 +1,9 @@
+# sent_id = a1
+# text = Tom + Jerry paid 5 dollars
+1	Tom	_	PROPN	_	Number=Sing	_	_	_	_
+2	+	_	CCONJ	_	_	_	_	_	_
+3	Jerry	_	PROPN	_	Number=Sing	_	_	_	_
+4	paid	_	VERB	_	VerbForm=Fin|Tense=Past	_	_	_	_
+5	5	_	NUM	_	NumType=Card	_	_	_	_
+6	dollars	_	NOUN	_	Number=Plur	_	_	_	_
+

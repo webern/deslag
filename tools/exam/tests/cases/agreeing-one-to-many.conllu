@@ -1,0 +1,14 @@
+# sent_id = a1
+# text = Read docs:setup now
+1	Read	_	VERB	_	Mood=Imp|VerbForm=Fin	_	_	_	_
+2	docs	_	NOUN	_	Number=Plur	_	_	_	SpaceAfter=No
+3	:	_	PUNCT	_	_	_	_	_	SpaceAfter=No
+4	setup	_	NOUN	_	Number=Sing	_	_	_	_
+5	now	_	ADV	_	_	_	_	_	_
+
+# sent_id = a2
+# text = An icecream
+1	An	_	DET	_	_	_	_	_	_
+2	ice	_	NOUN	_	Number=Sing	_	_	_	SpaceAfter=No
+3	cream	_	NOUN	_	Number=Sing	_	_	_	_
+

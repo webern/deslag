@@ -251,6 +251,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "deslag-exam"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "deslag",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
 name = "digest"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

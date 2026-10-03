@@ -1,0 +1,8 @@
+# exam.source = hand-made
+# sent_id = a1
+# text = Cats sleep here.
+1	Cats	_	NOUN	_	Number=Plur	_	_	_	_
+2	sleep	_	VERB	_	VerbForm=Fin|Tense=Pres	_	_	_	_
+3	here	_	ADV	_	_	_	_	_	_
+4	.	_	PUNCT	_	_	_	_	_	_
+

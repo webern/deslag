@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "strategist__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "lishix520/academic-paper-skills",
+    "path": "strategist/SKILL.md",
+    "commit": "c325557646e9418939ccc7b99171b149ad6314f1",
+    "commit_date": "2026-01-04T10:42:04+08:00",
+    "url": "https://github.com/lishix520/academic-paper-skills/blob/c325557646e9418939ccc7b99171b149ad6314f1/strategist/SKILL.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-04T10:22:46+08:00",
+    "stars": 1340,
+    "found_by": "sg-register:philosophy"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-01-04T10:22:46+08:00",
+    "last_commit_date": "2026-01-04T10:22:46+08:00",
+    "last_commit_author": "Li Shixiong",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-01-04T10:22:46+08:00",
+    "last_committer_date": "2026-01-04T10:22:46+08:00",
+    "marks": [
+      {
+        "text": "🤖 Generated with Claude Code",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0a05329281fd61314c8bb07b5a57c8e111c73d0d",
+        "date": "2026-01-04T10:22:46+08:00",
+        "committed": "2026-01-04T10:22:46+08:00",
+        "old": null,
+        "new": "fe2ba42b5951832c68af84723396e7ddffc2262f",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 21878,
+    "sha256": "a68c003ffdd64ee076d8918b97262c5654bf8ca995ba1c85de26ce42dfa20101",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 670,
+    "words": 2862,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/lishix520--academic-paper-skills/strategist/SKILL.md"
+}

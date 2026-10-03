@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "website__content__blog__deploy-preview-links.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "decaporg/decap-cms",
+    "path": "website/content/blog/deploy-preview-links.md",
+    "commit": "7d0c65c6120724db095e65789977fa48105c9c1f",
+    "commit_date": "2021-12-30T16:20:25+02:00",
+    "url": "https://github.com/decaporg/decap-cms/blob/7d0c65c6120724db095e65789977fa48105c9c1f/website/content/blog/deploy-preview-links.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-02-25T00:45:56-08:00",
+    "stars": 19403,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2019-02-08T12:26:59-05:00",
+    "last_commit_date": "2019-10-22T20:59:04-04:00",
+    "last_commit_author": "Shawn Erquhart",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2019-02-08T12:26:59-05:00",
+    "last_committer_date": "2019-10-22T20:59:04-04:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 4 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 3566,
+    "sha256": "b5eea4ed156d9181969af1225b1337d00de528bea9d3f4935824afe5644f223e",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 66,
+    "words": 530,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/decaporg--decap-cms/website/content/blog/deploy-preview-links.md"
+}

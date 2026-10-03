@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "reviews__task-50__377-spire-relation-plan-boundaries__feedback__2026-05-21-01-reviewer.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "agent-ix/ecaz",
+    "path": "reviews/task-50/377-spire-relation-plan-boundaries/feedback/2026-05-21-01-reviewer.md",
+    "commit": "d8c72f44d814e486b8cf718796aace6241279c9a",
+    "commit_date": "2026-09-20T15:57:26-07:00",
+    "url": "https://github.com/agent-ix/ecaz/blob/d8c72f44d814e486b8cf718796aace6241279c9a/reviews/task-50/377-spire-relation-plan-boundaries/feedback/2026-05-21-01-reviewer.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-03T22:07:10-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-21T19:36:36-07:00",
+    "last_commit_date": "2026-05-21T19:36:36-07:00",
+    "last_commit_author": "Agent IX",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-21T19:36:36-07:00",
+    "last_committer_date": "2026-05-21T19:36:36-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "fcd544d8eeab554988ca5d9bb838ff8e21645eaf",
+        "date": "2026-05-21T19:36:36-07:00",
+        "committed": "2026-05-21T19:36:36-07:00",
+        "old": null,
+        "new": "5339dc3a3c944243028e7957d880c0da4b2bac9d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 353,
+    "sha256": "6f8a05ceb176e6f10fb03387efd76697d3f90af6c503ab5df44507ec5ed84fed",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 13,
+    "words": 48,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/agent-ix--ecaz/reviews/task-50/377-spire-relation-plan-boundaries/feedback/2026-05-21-01-reviewer.md"
+}

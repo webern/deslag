@@ -4,7 +4,7 @@
 # `make fix-golden` rewrites it; read the diff before committing it.
 # In an empty directory every path a layout lists is missing, so each fixture with the
 # section fails. One without it is left out, and counted as passing.
-# fails 3 of 1230: core 1, human 0, llm 0, mixed 2
+# fails 3 of 1228: core 1, human 0, llm 0, mixed 2
 
 [md.lints.repo_layout]
 heading = "Repository layout"

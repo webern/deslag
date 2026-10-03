@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "MIGRATION.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "saraswatayu/swoop",
+    "path": "MIGRATION.md",
+    "commit": "59fbafc5b712435051d36d391045a0ca73392e21",
+    "commit_date": "2026-06-24T09:13:49-04:00",
+    "url": "https://github.com/saraswatayu/swoop/blob/59fbafc5b712435051d36d391045a0ca73392e21/MIGRATION.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-09T22:41:34-04:00",
+    "stars": 98,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-05-21T10:59:54-04:00",
+    "last_commit_date": "2026-06-23T22:20:33-04:00",
+    "last_commit_author": "Ayush Saraswat",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-21T10:59:54-04:00",
+    "last_committer_date": "2026-06-23T22:20:33-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8db6d0f79a45457048f09df4164aebde0d88ce99",
+        "date": "2026-06-23T22:20:33-04:00",
+        "committed": "2026-06-23T22:20:33-04:00",
+        "old": "d6a26d7ff903837feba42c070140dc9acd52c4ce",
+        "new": "36cdb22677ba1fd1b96db12eea2bedec7a62acf8",
+        "status": "agent"
+      },
+      {
+        "commit": "2f9eb849e5883f477591c3615d3a68898364b888",
+        "date": "2026-05-24T20:31:05-04:00",
+        "committed": "2026-05-24T20:31:05-04:00",
+        "old": "ee603cec05706a1fdd506fdc0760c3b5b79b6883",
+        "new": "d6a26d7ff903837feba42c070140dc9acd52c4ce",
+        "status": "agent"
+      },
+      {
+        "commit": "f210c90f99a1886352abb29416c4ce27e69b9a24",
+        "date": "2026-05-21T10:59:54-04:00",
+        "committed": "2026-05-21T10:59:54-04:00",
+        "old": null,
+        "new": "ee603cec05706a1fdd506fdc0760c3b5b79b6883",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8691,
+    "sha256": "1f5f0252ebceed0274084e5ab70a461136efb0c0bd212e00b9379b3f5eaa585c",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 226,
+    "words": 1106,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/saraswatayu--swoop/MIGRATION.md"
+}

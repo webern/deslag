@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__documentation__accessibility.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "alphagov/govuk-prototype-kit",
+    "path": "docs/documentation/accessibility.md",
+    "commit": "64daade11f894aa40c492e48064cd54280b22130",
+    "commit_date": "2021-12-22T10:57:49Z",
+    "url": "https://github.com/alphagov/govuk-prototype-kit/blob/64daade11f894aa40c492e48064cd54280b22130/docs/documentation/accessibility.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENCE.txt"
+    ],
+    "repo_first_commit_date": "2014-01-28T11:35:57Z",
+    "stars": 338,
+    "found_by": "sg-register:government"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-11-05T15:53:26Z",
+    "last_commit_date": "2021-11-05T15:53:26Z",
+    "last_commit_author": "NoraGDS",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-11-16T14:20:59Z",
+    "last_committer_date": "2021-11-16T14:20:59Z",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 4761,
+    "sha256": "f5548f8e73b24b0701dacd389cc778ee52b4783e9a568216450b55d90e23bbef",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 88,
+    "words": 704,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/alphagov--govuk-prototype-kit/docs/documentation/accessibility.md"
+}

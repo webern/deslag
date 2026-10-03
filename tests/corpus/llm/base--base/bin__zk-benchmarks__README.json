@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "bin__zk-benchmarks__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "base/base",
+    "path": "bin/zk-benchmarks/README.md",
+    "commit": "1937d845043be5c026424fd00b4f3875ba77b73a",
+    "commit_date": "2026-09-26T16:57:48Z",
+    "url": "https://github.com/base/base/blob/1937d845043be5c026424fd00b4f3875ba77b73a/bin/zk-benchmarks/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2024-01-20T11:44:13-07:00",
+    "stars": 900,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-18T18:02:21Z",
+    "last_commit_date": "2026-08-18T18:02:21Z",
+    "last_commit_author": "refcell",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-18T18:02:21Z",
+    "last_committer_date": "2026-08-18T18:02:21Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "84a7b747d04f66a9a87d5073cc1d842b559a1587",
+        "date": "2026-08-18T18:02:21Z",
+        "committed": "2026-08-18T18:02:21Z",
+        "old": null,
+        "new": "3bc3be4e624ad2cb25fc339e9f72a20256391fe7",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 227,
+    "sha256": "c2205559f32d2367c24a3177047e101720c89512ac298182bda8ef707777134f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 6,
+    "words": 29,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/base--base/bin/zk-benchmarks/README.md"
+}

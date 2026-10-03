@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__issues__2026-07-10--033--tanstack-query-cache-invalidation.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jm-sky/zbory-chwz",
+    "path": "docs/issues/2026-07-10--033--tanstack-query-cache-invalidation.md",
+    "commit": "3a09f8feb90c16602db9c200e91174f69816d134",
+    "commit_date": "2026-07-27T17:05:07+02:00",
+    "url": "https://github.com/jm-sky/zbory-chwz/blob/3a09f8feb90c16602db9c200e91174f69816d134/docs/issues/2026-07-10--033--tanstack-query-cache-invalidation.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-18T08:41:50+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-10T15:50:17+02:00",
+    "last_commit_date": "2026-07-10T15:50:17+02:00",
+    "last_commit_author": "Jan Madeyski",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-10T15:50:17+02:00",
+    "last_committer_date": "2026-07-10T15:50:17+02:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ef314a9cef53e925debbfd4b64fec61debd3d053",
+        "date": "2026-07-10T15:50:17+02:00",
+        "committed": "2026-07-10T15:50:17+02:00",
+        "old": null,
+        "new": "5a81e3127fc6704957507da040fb2d10d59dc315",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1038,
+    "sha256": "6673c9cb6bb8d73f9b592bf8065c3c0f58e360b0a08917d1df68b8eab05c4297",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 100,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jm-sky--zbory-chwz/docs/issues/2026-07-10--033--tanstack-query-cache-invalidation.md"
+}

@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "rusoto__services__sesv2__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "rusoto/rusoto",
+    "path": "rusoto/services/sesv2/README.md",
+    "commit": "df317924d260ef002a8596b303902eb8d9298e24",
+    "commit_date": "2021-12-24T09:43:20+01:00",
+    "url": "https://github.com/rusoto/rusoto/blob/df317924d260ef002a8596b303902eb8d9298e24/rusoto/services/sesv2/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-07-14T17:56:24-07:00",
+    "stars": 2720,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 10,
+    "first_commit_date": "2020-02-02T16:24:17+01:00",
+    "last_commit_date": "2021-06-29T19:19:22-04:00",
+    "last_commit_author": "Nikhil Benesch",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-02-03T16:38:18+01:00",
+    "last_committer_date": "2021-06-29T23:26:08-04:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 10 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 2399,
+    "sha256": "8c0b5ad9b83e20fb483bbf838111e85ac4ed0a89c55424b5f1e65f459c2dcb24",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 58,
+    "words": 223,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/rusoto--rusoto/rusoto/services/sesv2/README.md"
+}

@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "privacy.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dcroote/dcroote.github.io",
+    "path": "privacy.md",
+    "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+    "commit_date": "2026-09-07T10:53:08-07:00",
+    "url": "https://github.com/dcroote/dcroote.github.io/blob/d14729c561cc70b533859ad02b9f42b52a6f9e87/privacy.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-06-03T22:15:23-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2020-09-07T17:58:48-07:00",
+    "last_commit_date": "2026-09-07T10:53:08-07:00",
+    "last_commit_author": "Derek Croote",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-09-07T17:58:48-07:00",
+    "last_committer_date": "2026-09-07T10:53:08-07:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+        "date": "2026-09-07T10:53:08-07:00",
+        "committed": "2026-09-07T10:53:08-07:00",
+        "old": "7c7a29f815f2ae90eb01532bc6093584f7ea8ed8",
+        "new": "5f5ee200567e077efb68f6fd6890c8a3d7ab91b8",
+        "status": "agent"
+      },
+      {
+        "commit": "f1be56d0402deb8b7f1279e7c14a362ef4367e79",
+        "date": "2026-07-19T19:35:58Z",
+        "committed": "2026-07-20T17:51:28-07:00",
+        "old": "3ad51daddcd91cc1a88f5661bcd79823c92e8594",
+        "new": "7c7a29f815f2ae90eb01532bc6093584f7ea8ed8",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 5 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1191,
+    "sha256": "ad4244cd7d12a50e614f5b66d3df73ff08e6de4367fd4da4f6f0afb773b50754",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 146,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dcroote--dcroote.github.io/privacy.md",
+  "before": {
+    "sha256": "ab3358979010a50b87bf1abebaaf446fc0fcf669b9b947b26f5581245cd78237",
+    "commit": "e4734525cb4cc95cde0893d2c7d8d2cc6f68819a",
+    "date": "2021-12-25T13:14:03-08:00",
+    "between": [
+      {
+        "commit": "8c60a08e783618e644033a720960ab11c8c97ae6",
+        "date": "2026-06-23T10:51:01-07:00",
+        "committed": "2026-06-23T10:51:01-07:00",
+        "old": "074df0ccf43d78cf2305eb4ebe2865e57c52c907",
+        "new": "3ad51daddcd91cc1a88f5661bcd79823c92e8594",
+        "status": "late"
+      }
+    ]
+  }
+}

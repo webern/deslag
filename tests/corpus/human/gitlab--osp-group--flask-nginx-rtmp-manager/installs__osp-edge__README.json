@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "installs__osp-edge__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "gitlab.com",
+    "repo": "osp-group/flask-nginx-rtmp-manager",
+    "path": "installs/osp-edge/README.md",
+    "commit": "2d6e1e1b36c23509140cc4236e6a10a934062d4e",
+    "commit_date": "2021-12-30T16:49:57-05:00",
+    "url": "https://gitlab.com/osp-group/flask-nginx-rtmp-manager/-/blob/2d6e1e1b36c23509140cc4236e6a10a934062d4e/installs/osp-edge/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-03-25T19:54:10-04:00",
+    "stars": 481,
+    "found_by": "gitlab-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-12-12T11:10:28-05:00",
+    "last_commit_date": "2020-12-12T11:10:28-05:00",
+    "last_commit_author": "Deamos",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-12-12T11:12:26-05:00",
+    "last_committer_date": "2020-12-12T11:12:26-05:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 918,
+    "sha256": "1adbb13925b707d7a56f388235a80d316be480b8adc27bfa2f4ee1c3b2564eab",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 20,
+    "words": 150,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/gitlab--osp-group--flask-nginx-rtmp-manager/installs/osp-edge/README.md"
+}

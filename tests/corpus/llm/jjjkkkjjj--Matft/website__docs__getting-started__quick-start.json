@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "website__docs__getting-started__quick-start.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jjjkkkjjj/Matft",
+    "path": "website/docs/getting-started/quick-start.md",
+    "commit": "396c2fc8f380bbe5bd5b64119661bac922d9b694",
+    "commit_date": "2026-09-27T12:10:25+09:00",
+    "url": "https://github.com/jjjkkkjjj/Matft/blob/396c2fc8f380bbe5bd5b64119661bac922d9b694/website/docs/getting-started/quick-start.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-11-27T12:56:45+09:00",
+    "stars": 147,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-27T03:25:26+09:00",
+    "last_commit_date": "2026-09-27T03:25:26+09:00",
+    "last_commit_author": "jjjkkkjjj",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-27T07:24:44+09:00",
+    "last_committer_date": "2026-09-27T07:24:44+09:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e01303638c3c92dc1c953c1fef55bab9b7b47441",
+        "date": "2026-09-27T03:25:26+09:00",
+        "committed": "2026-09-27T07:24:44+09:00",
+        "old": null,
+        "new": "c270affb537d30145ea9724a224dd7b6d8909392",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1855,
+    "sha256": "46856b9a731d4ad9151dd8e6ffd8cb7f8c72405e4136aa56dbcb8cff631a72ae",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 85,
+    "words": 312,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jjjkkkjjj--Matft/website/docs/getting-started/quick-start.md"
+}

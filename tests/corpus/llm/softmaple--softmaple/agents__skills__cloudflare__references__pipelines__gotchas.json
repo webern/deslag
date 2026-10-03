@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__skills__cloudflare__references__pipelines__gotchas.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "softmaple/softmaple",
+    "path": ".agents/skills/cloudflare/references/pipelines/gotchas.md",
+    "commit": "b482b01754a9d98f31c3f982ee2fe78c60a86837",
+    "commit_date": "2026-09-27T08:09:34+08:00",
+    "url": "https://github.com/softmaple/softmaple/blob/b482b01754a9d98f31c3f982ee2fe78c60a86837/.agents/skills/cloudflare/references/pipelines/gotchas.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-12-20T10:31:15+08:00",
+    "stars": 159,
+    "found_by": "sg-agent:\\.claude/(commands|agents|skills)/.*\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-12T12:55:33+08:00",
+    "last_commit_date": "2026-08-12T12:55:33+08:00",
+    "last_commit_author": "Yadong (Adam) Zhang",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-12T12:55:33+08:00",
+    "last_committer_date": "2026-08-12T12:55:33+08:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "303ab18153b1ba7ac35cddffe3b998f4355ac430",
+        "date": "2026-08-12T12:55:33+08:00",
+        "committed": "2026-08-12T12:55:33+08:00",
+        "old": null,
+        "new": "9770c6393651ee2a5d9675466946c40ca84bd34d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 3029,
+    "sha256": "b0d85c6a6519bac88f9d08d5fd9449515c2ca6750cb220ffc1c2e1394e87e2f3",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 58,
+    "words": 401,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/softmaple--softmaple/.agents/skills/cloudflare/references/pipelines/gotchas.md"
+}

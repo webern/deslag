@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "guide__src__hello.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ubolonton/emacs-module-rs",
+    "path": "guide/src/hello.md",
+    "commit": "e362c0dd05dffbe6f23a8d8ab7c4a7fe48351169",
+    "commit_date": "2026-09-23T22:14:13+07:00",
+    "url": "https://github.com/ubolonton/emacs-module-rs/blob/e362c0dd05dffbe6f23a8d8ab7c4a7fe48351169/guide/src/hello.md",
+    "license": "BSD-3-Clause",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-05-21T17:16:50+02:00",
+    "stars": 373,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 28,
+    "first_commit_date": "2018-02-18T22:23:12+07:00",
+    "last_commit_date": "2026-03-19T19:52:50+07:00",
+    "last_commit_author": "Tuấn-Anh Nguyễn",
+    "authors": 2,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2018-02-18T23:02:18+07:00",
+    "last_committer_date": "2026-03-19T21:40:03+07:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "91ca5dc311c2f7fb8806c0fc5b929aae2b6521d5",
+        "date": "2026-03-19T19:52:50+07:00",
+        "committed": "2026-03-19T21:40:03+07:00",
+        "old": "1a92751af007e7009056f5cea519e825d32751b2",
+        "new": "e9d354ce5d412b353d1da6036f3a3611559fe173",
+        "status": "agent"
+      },
+      {
+        "commit": "c626ab4045998a0c8b683e27502a5c41c4a4eac1",
+        "date": "2026-03-18T18:57:20+07:00",
+        "committed": "2026-03-18T18:58:11+07:00",
+        "old": "2631fd649379a447439421431da7dc34fc983056",
+        "new": "1a92751af007e7009056f5cea519e825d32751b2",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "25 of its 28 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1173,
+    "sha256": "3a7a1d374ccc0c9c085b1adbc030b83d5697d7a2ade9027a203745568c7bfe52",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 61,
+    "words": 160,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/ubolonton--emacs-module-rs/guide/src/hello.md"
+}

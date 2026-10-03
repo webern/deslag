@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "src__timeline__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "primer/primer",
+    "path": "src/timeline/README.md",
+    "commit": "8f2e7534ecbdb3d0e773d60c725b55dc4bb263e2",
+    "commit_date": "2021-12-22T14:15:41+09:00",
+    "url": "https://github.com/primer/primer/blob/8f2e7534ecbdb3d0e773d60c725b55dc4bb263e2/src/timeline/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 13020,
+    "found_by": "npm"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2019-09-26T12:31:28-07:00",
+    "last_commit_date": "2021-03-21T22:34:44-07:00",
+    "last_commit_author": "Jon Rohan",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2019-09-26T12:31:28-07:00",
+    "last_committer_date": "2021-03-21T22:34:44-07:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 2 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 620,
+    "sha256": "4a78e6a39932fabd090d7c9208907bd106e49ffc39d703dfa7c8ce656ed29dd4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 74,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/primer--primer/src/timeline/README.md"
+}

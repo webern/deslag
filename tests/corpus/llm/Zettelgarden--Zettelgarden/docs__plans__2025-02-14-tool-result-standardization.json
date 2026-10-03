@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__plans__2025-02-14-tool-result-standardization.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Zettelgarden/Zettelgarden",
+    "path": "docs/plans/2025-02-14-tool-result-standardization.md",
+    "commit": "a7c8d05b1152a7839651cc94f8aaac5d4f2bdb61",
+    "commit_date": "2026-08-11T09:48:13-04:00",
+    "url": "https://github.com/Zettelgarden/Zettelgarden/blob/a7c8d05b1152a7839651cc94f8aaac5d4f2bdb61/docs/plans/2025-02-14-tool-result-standardization.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2023-09-24T10:13:49-04:00",
+    "stars": 168,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-02-14T17:34:48-05:00",
+    "last_commit_date": "2026-02-14T17:34:48-05:00",
+    "last_commit_author": "Nick Savage",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-02-14T17:34:48-05:00",
+    "last_committer_date": "2026-02-14T17:34:48-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "825d89d7f0947bae8f4b4d2dff92e10dc84e661b",
+        "date": "2026-02-14T17:34:48-05:00",
+        "committed": "2026-02-14T17:34:48-05:00",
+        "old": null,
+        "new": "b3f9217df7768d9d8d96d560f018b9d441c34efe",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 37127,
+    "sha256": "0d9205a141fbcabe86c809b3021f3b8c43fa584827794975f01aa99338be80c1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 1446,
+    "words": 4126,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Zettelgarden--Zettelgarden/docs/plans/2025-02-14-tool-result-standardization.md"
+}

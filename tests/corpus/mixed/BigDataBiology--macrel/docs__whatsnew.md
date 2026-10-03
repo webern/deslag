@@ -1,0 +1,176 @@
+# What's new? (History)
+
+## Version 1.6.1
+
+*Released 18 July 2026*
+
+- List the available commands when an unknown subcommand is given
+- Accept `--outtag` as an alias for `--tag`
+- Add `--file-output` support to the `query-ampsphere` command
+- Skip empty sequences and sequences containing non-standard amino acids during
+  feature computation (emitting a warning) instead of crashing
+- More robust AMPSphere querying and `get-examples` downloads: HTTP status is
+  checked on all API requests and downloads, and query sequences are URL-encoded
+- Several bugfixes (AMP-density on empty input, `get-smorfs --file-output`
+  README writing, programmatic `parse_args` invocation, local exact-match
+  accessions) and documentation corrections
+
+## Version 1.6.0
+
+*Released 24 November 2025*
+
+- Switch to ONNX for model storage. This makes the models more portable between
+  versions, and means Scikit-Learn is no longer required at runtime
+- Fix float counts in Paladin mapping ([#74](https://github.com/BigDataBiology/macrel/issues/74))
+- Fix some issues in MacOS
+- Move packaging to `pyproject.toml` (with a [pixi](https://pixi.sh) environment
+  for development) and support Python 3.10–3.14
+
+## Version 1.5.0
+
+*Released 20 September 2024*
+
+- Add support for local searching when querying the [AMPSphere database](https://ampsphere.big-data-biology.org/)
+- Slightly change output format for AMPSphere matching
+- Add --verbose and --quiet flags
+
+## Version 1.4.0
+
+*Released 27 June 2024*
+
+- Adds `query-ampsphere` command to query the [AMPsphere database](https://ampsphere.big-data-biology.org/) (described in [Santos-Júnior et al., 2024](https://doi.org/10.1016/j.cell.2024.05.013)).
+
+## Version 1.3.0
+
+*Released 5 December 2023*
+
+- Adds density estimates to output
+- Adds compatibility with Pyrodigal ≥3
+
+
+## Version 1.2.0
+
+*Released May 9 2022*
+
+- Adopt pyrodigal v.0.7.3 to predict genes
+- Implement a hybrid gene prediction system: training mode
+  for contigs &gt; 100kbp and use pre-trained models for smaller contigs
+
+### Bugfixes
+
+- Fix the README files generation by the output type
+
+## Version 1.1.0
+
+Released November 8 2021
+
+- Add support for bzip2 and xz compressed FASTA files
+- Eliminate R dependency
+- Include more extensive testing
+- New feature computation code (Python implementation) made **macrel** about
+  3.5 times faster than before:
+
+| **Time \ Code** | **version 1.0.1** | **version 1.1.0** |
+| :-----: | :-----: | :-----: |
+| Real | 60m 44.380s | 17m 15.313s |
+| User | 33m 37.604s | 9m 38.034s |
+| System | 0m 16.076s | 0m 6.270s |
+
+### Bugfixes
+
+- Fix abundance/reads modes when single-ended reads were used
+
+## Version 1.0.1
+
+Released September 2 2021
+
+### Bugfixes
+
+- No longer crash on very short peptides (1 or 2 amino acids)
+
+## Version 1.0.0
+
+Released December 21 2020
+
+### *User-visible improvements*
+
+- Add README.md files to the output directories documenting the output files
+
+## Version 0.6.1
+
+Released October 29 2020
+
+### *User-visible improvements*
+
+- Atomicwrites is now an optional dependency. This implies a loss of
+  functionality if not available (file writing is no longer atomic), but
+  the atomicwrites dependency caused issues (especially on Mac)
+
+## Version 0.6.0
+
+Released October 10 2020
+
+### *User-visible improvements*
+
+- Add `--log-file` and `--log-append` command line arguments
+- Add usage example in command line help message
+- Output is now written atomically (_i.e._, no partial files)
+
+## Version 0.5.0
+
+Released May 11 2020
+
+### User visible changes
+  
+- Fix bug with Prodigal by changing internal parameters. Although this is a
+  bugfix, it will also change the results in some cases.
+- Output table now includes the version on the header
+
+### *Bugfixes*
+  
+- Fix bug with using `--force` and existing directories
+
+## Version 0.4.0
+
+Released March 16 2020
+
+### *User-visible improvements*
+
+  - Add `--keep-negatives` flag
+  
+  - Add warning for longer sequences
+
+  - Remove Methionine from N-terminus
+  
+### *Bugfixes*
+  
+  - Fix for when no smORFs are present
+	
+## Version 0.3.1
+
+Released January 24th 2020
+
+### *Bugfixes*
+  
+- Fix for Python 2.7
+
+## Version 0.3.0
+
+Released January 24th 2020
+
+### *User-visible improvements*
+
+- Add `get-examples` command
+- Add `get-smorfs` command
+	  
+### *Internal improvements*
+  
+- Convert to scikit-learn
+- Updated training sets
+- Fix license (must be GPL because of Peptides)
+
+## Version 0.2.0
+
+Released January 14th 2020
+
+- Complete release

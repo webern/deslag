@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "ui__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ArthurKeen/arango-cypher-py",
+    "path": "ui/README.md",
+    "commit": "01b1b3e2feea341b870b396de6ae5496d183c839",
+    "commit_date": "2026-09-15T13:33:45-06:00",
+    "url": "https://github.com/ArthurKeen/arango-cypher-py/blob/01b1b3e2feea341b870b396de6ae5496d183c839/ui/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-27T15:52:47-06:00",
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-04-10T18:39:23-06:00",
+    "last_commit_date": "2026-04-10T18:39:23-06:00",
+    "last_commit_author": "Arthur Keen",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-10T18:39:23-06:00",
+    "last_committer_date": "2026-04-10T18:39:23-06:00",
+    "marks": [
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8eea34b9a4a08869ba90216206a0495d3d4d11df",
+        "date": "2026-04-10T18:39:23-06:00",
+        "committed": "2026-04-10T18:39:23-06:00",
+        "old": null,
+        "new": "7dbf7ebf3b2a3d84ad526bc47810d1d211331b8b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2425,
+    "sha256": "8dc9e0ee2281acb3324624fbe6eb7e1377cc626f616ea4dc90e3a90ae094374d",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 73,
+    "words": 212,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ArthurKeen--arango-cypher-py/ui/README.md"
+}

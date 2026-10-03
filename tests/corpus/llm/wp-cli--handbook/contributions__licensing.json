@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "contributions__licensing.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wp-cli/handbook",
+    "path": "contributions/licensing.md",
+    "commit": "823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2",
+    "commit_date": "2026-09-24T02:54:33+05:30",
+    "url": "https://github.com/wp-cli/handbook/blob/823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2/contributions/licensing.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-11-04T23:55:42+02:00",
+    "stars": 204,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2025-11-02T15:30:05Z",
+    "last_commit_date": "2026-01-20T15:06:21Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-11-02T15:30:05Z",
+    "last_committer_date": "2026-01-20T15:06:21Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0fe800e6393f65abcbe587f521dda0ab4884cad2",
+        "date": "2026-01-20T15:06:21Z",
+        "committed": "2026-01-20T15:06:21Z",
+        "old": "698d2afccb7c3560802e9f72364a950de699215c",
+        "new": "72d84391165e95a71387ead317be98c4f6a618de",
+        "status": "agent"
+      },
+      {
+        "commit": "cdeafa33dc78adca90a6dd366b2cbd4107085c9f",
+        "date": "2026-01-20T15:03:49Z",
+        "committed": "2026-01-20T15:03:49Z",
+        "old": "f8f7d68afe13000ccce84ac0556e4d4e149efcba",
+        "new": "698d2afccb7c3560802e9f72364a950de699215c",
+        "status": "agent"
+      },
+      {
+        "commit": "0eb027b89198246ab5ba9203cd35ac3b2371d132",
+        "date": "2025-11-02T15:31:04Z",
+        "committed": "2025-11-02T15:31:04Z",
+        "old": "1c281ccaaa2a5728b6b77e040eb67b32ef8bb8fa",
+        "new": "f8f7d68afe13000ccce84ac0556e4d4e149efcba",
+        "status": "agent"
+      },
+      {
+        "commit": "bee1aed22d6f8456e90a790cd59bb696cf329550",
+        "date": "2025-11-02T15:30:05Z",
+        "committed": "2025-11-02T15:30:05Z",
+        "old": null,
+        "new": "1c281ccaaa2a5728b6b77e040eb67b32ef8bb8fa",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2581,
+    "sha256": "deed7308991aefdd3c6cd82019b9f7d91454866ac1314dff4921ea896400ad43",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 46,
+    "words": 354,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/wp-cli--handbook/contributions/licensing.md"
+}

@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "memory__sessions__2026-07-26-012817.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Accenture/mercury",
+    "path": "memory/sessions/2026-07-26-012817.md",
+    "commit": "b2fe347ddab04a1ef152899fcd8ba6762af1d88c",
+    "commit_date": "2026-09-25T17:03:03-07:00",
+    "url": "https://github.com/Accenture/mercury/blob/b2fe347ddab04a1ef152899fcd8ba6762af1d88c/memory/sessions/2026-07-26-012817.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2018-12-18T15:10:02-08:00",
+    "stars": 91,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-25T18:29:18-07:00",
+    "last_commit_date": "2026-07-25T18:29:18-07:00",
+    "last_commit_author": "Eric Law",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-25T18:29:18-07:00",
+    "last_committer_date": "2026-07-25T18:29:18-07:00",
+    "marks": [
+      {
+        "text": "Claude Code <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d7778ae76e0bb5edd990f53a4d1d3e35c9120177",
+        "date": "2026-07-25T18:29:18-07:00",
+        "committed": "2026-07-25T18:29:18-07:00",
+        "old": null,
+        "new": "754a79ce0d58a93e96f615eb1e413d2df949f1d4",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3874,
+    "sha256": "00073611de469303b5c2dcdf8f497abf34f51f8ceeb37b56355f363d02d61d11",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 72,
+    "words": 511,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Accenture--mercury/memory/sessions/2026-07-26-012817.md"
+}

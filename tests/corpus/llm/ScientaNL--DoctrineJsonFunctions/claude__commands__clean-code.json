@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__commands__clean-code.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "ScientaNL/DoctrineJsonFunctions",
+    "path": ".claude/commands/clean-code.md",
+    "commit": "4ed98112357059fb5d92508035e0504e823f110f",
+    "commit_date": "2026-09-16T15:37:15+02:00",
+    "url": "https://github.com/ScientaNL/DoctrineJsonFunctions/blob/4ed98112357059fb5d92508035e0504e823f110f/.claude/commands/clean-code.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-01-22T13:48:24+01:00",
+    "stars": 591,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-15T15:34:52+02:00",
+    "last_commit_date": "2026-09-15T15:34:52+02:00",
+    "last_commit_author": "S. de Rooij",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-16T09:17:28+02:00",
+    "last_committer_date": "2026-09-16T09:17:28+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8ccd1cc7a157cb4694f8ef6f43d42903389a3a35",
+        "date": "2026-09-15T15:34:52+02:00",
+        "committed": "2026-09-16T09:17:28+02:00",
+        "old": null,
+        "new": "218226369b4a292b0982f2aa931e20e06d746c28",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5235,
+    "sha256": "a1fc3255cb3d69598334fa193e8bc14c2663eb40ee20f8a2c598ed11822fad21",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 101,
+    "words": 721,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/ScientaNL--DoctrineJsonFunctions/.claude/commands/clean-code.md"
+}

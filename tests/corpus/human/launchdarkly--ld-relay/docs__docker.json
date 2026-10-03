@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__docker.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "launchdarkly/ld-relay",
+    "path": "docs/docker.md",
+    "commit": "9a62764bb45d99fd933aa26155f831b5d92a99f3",
+    "commit_date": "2021-11-19T23:11:45Z",
+    "url": "https://github.com/launchdarkly/ld-relay/blob/9a62764bb45d99fd933aa26155f831b5d92a99f3/docs/docker.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2016-07-20T13:30:14-07:00",
+    "stars": 134,
+    "found_by": "gh-commits:devin"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-10-07T18:30:35+01:00",
+    "last_commit_date": "2020-10-07T18:30:35+01:00",
+    "last_commit_author": "LaunchDarklyCI",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-10-07T18:30:35+01:00",
+    "last_committer_date": "2020-10-07T18:30:35+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 1315,
+    "sha256": "035260f3a85d0319162db22d66d174862778b751e0df7c5cb8a26c29726f8525",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 36,
+    "words": 174,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/launchdarkly--ld-relay/docs/docker.md"
+}

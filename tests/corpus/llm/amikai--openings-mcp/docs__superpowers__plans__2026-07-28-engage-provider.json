@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__superpowers__plans__2026-07-28-engage-provider.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "amikai/openings-mcp",
+    "path": "docs/superpowers/plans/2026-07-28-engage-provider.md",
+    "commit": "f2f4b8572070564a537ab570152739b60d18a589",
+    "commit_date": "2026-09-22T15:00:12+08:00",
+    "url": "https://github.com/amikai/openings-mcp/blob/f2f4b8572070564a537ab570152739b60d18a589/docs/superpowers/plans/2026-07-28-engage-provider.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-27T15:28:17+08:00",
+    "stars": 92,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-28T12:27:39+08:00",
+    "last_commit_date": "2026-07-28T12:27:39+08:00",
+    "last_commit_author": "amikai",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-28T18:53:31+08:00",
+    "last_committer_date": "2026-07-28T18:53:31+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "85386fc00822830b6d6106e7196442503f511b0a",
+        "date": "2026-07-28T12:27:39+08:00",
+        "committed": "2026-07-28T18:53:31+08:00",
+        "old": null,
+        "new": "91648b078d36fdf5eae76ce0eaf3d6ae039b28da",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 17684,
+    "sha256": "b65c909868ad3180c12b3b077eb0cc4e21f974ee26a7b1da5ce83845051b9268",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 340,
+    "words": 2406,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/amikai--openings-mcp/docs/superpowers/plans/2026-07-28-engage-provider.md"
+}

@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "claude__skills__configuring-tls-1-3-for-secure-communications__SKILL.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "yanacuti1121/Yana-AI",
+    "path": ".claude/skills/configuring-tls-1-3-for-secure-communications/SKILL.md",
+    "commit": "f3e2f87110b47dbd6ef548fa03492839cdc02c87",
+    "commit_date": "2026-09-26T10:16:30+09:00",
+    "url": "https://github.com/yanacuti1121/Yana-AI/blob/f3e2f87110b47dbd6ef548fa03492839cdc02c87/.claude/skills/configuring-tls-1-3-for-secure-communications/SKILL.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE",
+      ".claude/skills/configuring-tls-1-3-for-secure-communications/LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-17T00:48:51Z",
+    "stars": 4,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-03T08:25:31+09:00",
+    "last_commit_date": "2026-07-03T08:25:31+09:00",
+    "last_commit_author": "Vũ Văn Tâm",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-03T08:25:31+09:00",
+    "last_committer_date": "2026-07-03T08:25:31+09:00",
+    "marks": [
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "cc405f32d0d1ae762d74e36e1e566e36802c6df3",
+        "date": "2026-07-03T08:25:31+09:00",
+        "committed": "2026-07-03T08:25:31+09:00",
+        "old": null,
+        "new": "c35d4565ede70c16b18b2a7569e949543e2e838a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 4338,
+    "sha256": "4207fa714c904e3a62d2356cdf4eabe29549af27449e3fbe495e86ab60f26917",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 113,
+    "words": 625,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/yanacuti1121--Yana-AI/.claude/skills/configuring-tls-1-3-for-secure-communications/SKILL.md"
+}

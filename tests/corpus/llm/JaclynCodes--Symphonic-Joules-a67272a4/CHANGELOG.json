@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JaclynCodes/Symphonic-Joules-a67272a4",
+    "path": "CHANGELOG.md",
+    "commit": "3b7263cead8337a0eff1ccb281a11d46d6857168",
+    "commit_date": "2026-09-22T12:33:00-06:00",
+    "url": "https://github.com/JaclynCodes/Symphonic-Joules-a67272a4/blob/3b7263cead8337a0eff1ccb281a11d46d6857168/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-23T18:34:55-04:00",
+    "stars": 4,
+    "found_by": "gh-commits:openhands"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2025-08-26T01:05:16Z",
+    "last_commit_date": "2025-08-26T01:05:16Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2025-08-26T01:05:16Z",
+    "last_committer_date": "2025-08-26T01:05:16Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "07d8c00927ff50f740a3a2d4d2b109517a3edaf6",
+        "date": "2025-08-26T01:05:16Z",
+        "committed": "2025-08-26T01:05:16Z",
+        "old": null,
+        "new": "722cd184d9c3f3c3261290485d1c6898ccae214d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 821,
+    "sha256": "b678a8cbddb656138ab2003db36e0b529b0dfbdd8818623822e5372e0db3a4ab",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 42,
+    "words": 119,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/JaclynCodes--Symphonic-Joules-a67272a4/CHANGELOG.md"
+}

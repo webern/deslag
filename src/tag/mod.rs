@@ -5,10 +5,12 @@
 //! [`Document`]'s `Word` tokens carry one in [`Token::reading`](crate::document::Token::reading).
 //!
 //! [`sentence`] reads the tokens of one sentence without the Markdown they came from, and
-//! [`document`] reads every sentence of a document in its [`Context`]. So far only the closed-class
-//! table reads: a word in it gets its tags, a word outside it is an unknown noun.
+//! [`document`] reads every sentence of a document in its [`Context`]. Two tables read so far: the
+//! closed-class table of function words, then the open-class lexicon of nouns, verbs, adjectives
+//! and adverbs. A word in neither is an unknown noun.
 
 mod closed;
+mod lexicon;
 mod types;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
@@ -17,7 +19,7 @@ pub use types::{Confidence, Context, Features, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]
@@ -26,11 +28,39 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// Reads one sentence's tokens, in order: sets `reading` on every `Word` token and clears it on
 /// every other. Reads only the tokens' kind and text, and the context.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
-    // Nothing reads the context yet: the table answers by the word alone.
+    // Nothing reads the context yet: the tables answer by the word alone.
     let _ = context;
     for token in tokens {
-        token.reading = (token.kind == TokenKind::Word).then(|| closed::read(&token.text));
+        token.reading = (token.kind == TokenKind::Word).then(|| read(&token.text));
     }
+}
+
+/// The longest word, in bytes, that either table can hold once folded: the lexicon's longest and a
+/// possessive `'s` after it.
+const LONGEST: usize = lexicon::LONGEST + 2;
+
+/// `text` folded into `buf` for a lookup: lower case, a curly apostrophe straight. `None` when it
+/// is too long or is not ASCII, so no table can hold it.
+fn fold<'b>(text: &str, buf: &'b mut [u8; LONGEST]) -> Option<&'b str> {
+    let mut used = 0;
+    for ch in text.chars() {
+        let ch = if ch == '\u{2019}' { '\'' } else { ch };
+        if !ch.is_ascii() || used == LONGEST {
+            return None;
+        }
+        buf[used] = ch.to_ascii_lowercase() as u8;
+        used += 1;
+    }
+    std::str::from_utf8(&buf[..used]).ok()
+}
+
+/// What the tables say of the word `text`. The closed-class table wins where both have the word;
+/// a word in neither is a noun at `Unknown`.
+fn read(text: &str) -> Reading {
+    let mut buf = [0; LONGEST];
+    fold(text, &mut buf)
+        .and_then(|word| closed::lookup(word).or_else(|| lexicon::lookup(word)))
+        .unwrap_or_else(|| closed::unknown(text))
 }
 
 /// Runs [`sentence`] over every sentence of `document`, with each one's context.
@@ -95,7 +125,7 @@ mod tests {
     }
 
     #[test]
-    fn sentence_reads_a_word_from_the_table_or_as_unknown() {
+    fn sentence_reads_a_word_from_a_table_or_as_unknown() {
         let mut tokens = Token::split("It can't run the frobnicator.");
         sentence(&mut tokens, Context::Prose);
         let read: Vec<(&str, Tag, Confidence)> = tokens
@@ -107,11 +137,50 @@ mod tests {
             vec![
                 ("It", Tag::Pronoun, Confidence::Sure),
                 ("can't", Tag::Auxiliary, Confidence::Sure),
-                ("run", Tag::Noun, Confidence::Unknown),
+                ("run", Tag::Verb, Confidence::Unsure),
                 ("the", Tag::Determiner, Confidence::Sure),
                 ("frobnicator", Tag::Noun, Confidence::Unknown),
             ]
         );
+    }
+
+    #[test]
+    fn a_possessive_is_read_from_its_stem_or_is_an_unknown_noun() {
+        let mut tokens = Token::split("The user's frobnicator's file.");
+        sentence(&mut tokens, Context::Prose);
+        let user = tokens[1].reading.unwrap();
+        assert_eq!(user.tag, Tag::Noun);
+        assert_eq!(user.confidence, Confidence::Unsure);
+        assert!(user.features.contains(Features::CONTRACTION));
+        let frobnicator = tokens[2].reading.unwrap();
+        assert_eq!(frobnicator.tag, Tag::Noun);
+        assert_eq!(frobnicator.confidence, Confidence::Unknown);
+        assert!(frobnicator.features.contains(Features::CONTRACTION));
+    }
+
+    #[test]
+    fn the_closed_class_wins_where_both_tables_have_a_word() {
+        let mut both = 0;
+        for text in closed::words() {
+            let Some(closed) = closed::lookup(text) else {
+                panic!("{text}");
+            };
+            if lexicon::lookup(text).is_some() {
+                both += 1;
+            }
+            assert_eq!(read(text), closed, "{text}");
+        }
+        assert!(both > 0, "the tables share no word, so nothing was tested");
+    }
+
+    #[test]
+    fn folding_reads_case_and_a_curly_apostrophe_the_same_in_both_tables() {
+        assert_eq!(read("Runs"), read("runs"));
+        assert_eq!(read("USER\u{2019}S"), read("user's"));
+        assert_eq!(read("Don\u{2019}t"), read("don't"));
+        assert_eq!(read("\u{fc}ber").confidence, Confidence::Unknown);
+        let long = "a".repeat(LONGEST + 1);
+        assert_eq!(read(&long).confidence, Confidence::Unknown);
     }
 
     #[test]

@@ -14,15 +14,15 @@ commands.
 
 ## Commands
 
-- `score --gold G (--tagger noun | --import F) [--aggregate] [--save RUN.json] [--disputes D]
+- `score --gold G (--tagger noun|mct | --import F) [--aggregate] [--save RUN.json] [--disputes D]
   [--words N]`: prints the report. `--save` writes the run for `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
 - `words --gold G`: the header and Words section alone, for any gold, with no tagger.
 
 Exit 0 when it printed or wrote what was asked; 2 when it cannot run (a malformed file, a tagger
-breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr. For a holdout gold the line
-names a sentence by its position, never by its `sent_id`.
+breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr. For a
+holdout gold the line names a sentence by its position, never by its `sent_id`.
 
 ## Modules
 
@@ -32,6 +32,7 @@ tools/exam/src/
   tags.rs             Tag, TagSet, Features, Confidence, Reading, the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
   tagger.rs import.rs the Tagger trait, `noun`, run; the import reader
+  most_common.rs      `mct`, built from EWT train at run time
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
@@ -133,6 +134,11 @@ repeat free, and a failed fetch leaves a good `.ewt/` alone.
 
 The licence is CC BY-SA 4.0 and the lock says `trains no`: it measures, and nothing derived from it
 ships. No test or CI job reads it. `make clean-ewt` removes it.
+
+`mct` reads `.ewt/r2.18/en_ewt-ud-train.conllu` when it runs and keeps nothing. Words are folded
+with `to_lowercase`; each tagged train word counts for its folded `FORM`. A known word gets its
+most common tag (ties by report order), `Sure` if train gave it one tag, else `Unsure`; an unknown
+word gets the commonest tag overall at `Unknown`. It does not give features or a score.
 
 ## Tests
 

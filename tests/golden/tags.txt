@@ -492,7 +492,7 @@ Rules/NOUN.p:U+PROPN+VERB :
 Implement/VERB.inf:U+NOUN mappings/NOUN.p:U as/ADP:U+ADV+CONJ [code] specializations/NOUN.p:U through/ADP:U+ADV [code] and/CONJ:S [code] .
 Include/VERB.inf:U [code] from/ADP:S the/DET:S exporter/NOUN.s:U enum/NOUN:? TU/NOUN:?+PROPN for/ADP:U+CONJ [code] , [code] , and/CONJ:S [code] .
 Expand/VERB.inf:U [code] and/CONJ:S the/DET:S conversion/NOUN.s:U macros/NOUN.p:U inside/ADP:U+NOUN+ADJ+ADV the/DET:S namespace/NOUN:? of/ADP:S the/DET:S exporter/NOUN.s:U converter/NOUN.s:U .
-Declare/VERB.inf:U the/DET:S [code] template/NOUN.s:U in/ADP:U+ADJ+ADV the/DET:S exporter/NOUN.s:U header/NOUN.s:U so/ADV:U+CONJ other/ADJ:U+NOUN+PRON exporter/NOUN.s:U TUs/PROPN.s:L+NOUN can/AUX.fin:U+NOUN+VERB call/VERB.inf:U+NOUN it/PRON.s.3:S .
+Declare/VERB.inf:U the/DET:S [code] template/NOUN.s:U in/ADP:U+ADJ+ADV the/DET:S exporter/NOUN.s:U header/NOUN.s:U so/ADV:U+CONJ other/ADJ:U+NOUN+PRON exporter/NOUN.s:U TUs/NOUN:?+PROPN can/AUX.fin:U+NOUN+VERB call/VERB.inf:U+NOUN it/PRON.s.3:S .
 Keep/VERB.inf:U+NOUN enum/NOUN:? class/NOUN.s:U+VERB - name/VERB.inf:U+NOUN blocks/NOUN.p:U+VERB alphabetized/VERB.fin.past:U+ADJ within/ADP:U+ADV each/DET:U+ADV+PRON [code] , ignoring/VERB.ing:U namespaces/NOUN:? .
 Do/AUX.fin.pres:U+VERB not/PART:S add/VERB.inf:U+PROPN one/NUM:U+NOUN+PRON - off/ADP:U+ADJ+ADV switch/VERB.inf:U+NOUN helpers/NOUN.p:U for/ADP:U+CONJ enum/NOUN:? conversion/NOUN.s:U when/ADV:U+CONJ an/DET:S [code] specialization/NOUN.s:U is/AUX.s.3.fin.pres:U+VERB appropriate/VERB.inf:U+ADJ .
 Include/VERB.inf:U the/DET:S target/NOUN.s:U+PROPN+VERB API/NOUN:?+PROPN header/NOUN.s:U in/ADP:U+ADJ+ADV the/DET:S enum/NOUN:? TU/NOUN:?+PROPN when/ADV:U+CONJ the/DET:S mapped/VERB.fin.past:U target/NOUN.s:U+PROPN+VERB enum/NOUN:? is/AUX.s.3.fin.pres:U+VERB not/PART:S already/ADV.pos:U visible/ADJ.pos:U+NOUN there/PRON:U+ADV .
@@ -916,7 +916,7 @@ Preserve/VERB.inf:U+NOUN the/DET:S effective/ADJ.pos:U written/VERB.pp:U+NOUN+AD
 Instruments/NOUN.p:U+VERB , transpositions/NOUN.p:U , and/CONJ:S instrument/NOUN.s:U+VERB changes/VERB.s.3.fin.pres:U+NOUN
 Treat/VERB.inf:U+NOUN a/DET:S part's/NOUN.s.c:U instrument/NOUN.s:U+VERB as/ADP:U+ADV+CONJ one/NUM:U+NOUN+PRON subject/NOUN.s:U+VERB+ADJ+ADV rather/ADV.pos:U+PROPN than/ADP:U+CONJ the/DET:S handful/NOUN.s:U of/ADP:S unrelated/ADJ.pos:U fields/NOUN.p:U+PROPN+VERB it/PRON.s.3:S is/AUX.s.3.fin.pres:U+VERB today/NOUN.s:U+ADV .
 [code] sets/VERB.s.3.fin.pres:U+NOUN [code] , its/PRON.s.3:S required/VERB.fin.past:U+ADJ name/VERB.inf:U+NOUN , and/CONJ:S , when/ADV:U+CONJ the/DET:S staff's/NOUN.s.c:U [code] is/AUX.s.3.fin.pres:U+VERB recognized/VERB.fin.past:U+ADJ , [code] .
-It/PRON.s.3:S emits/VERB.s.3.fin.pres:U [code] only/ADV.pos:U+ADJ when/ADV:U+CONJ both/DET:U+PRON+CONJ solo/NOUN.s:U+VERB+ADJ+ADV and/CONJ:S ensemble/NOUN.s:U+ADV UUIDs/PROPN.s:L+NOUN map/VERB.inf:U+NOUN to/PART:U+ADP that/CONJ:U+PRON+DET SoundID/PROPN.s:L+NOUN and/CONJ:S the/DET:S value/NOUN.s:U+VERB is/AUX.s.3.fin.pres:U+VERB needed/VERB.fin.past:U+ADJ to/PART:U+ADP disambiguate/VERB.inf:U them/PRON.p.3:S .
+It/PRON.s.3:S emits/VERB.s.3.fin.pres:U [code] only/ADV.pos:U+ADJ when/ADV:U+CONJ both/DET:U+PRON+CONJ solo/NOUN.s:U+VERB+ADJ+ADV and/CONJ:S ensemble/NOUN.s:U+ADV UUIDs/NOUN:?+PROPN map/VERB.inf:U+NOUN to/PART:U+ADP that/CONJ:U+PRON+DET SoundID/PROPN.s:L+NOUN and/CONJ:S the/DET:S value/NOUN.s:U+VERB is/AUX.s.3.fin.pres:U+VERB needed/VERB.fin.past:U+ADJ to/PART:U+ADP disambiguate/VERB.inf:U them/PRON.p.3:S .
 The/DET:S instrument/NOUN.s:U+VERB name/VERB.inf:U+NOUN uses/NOUN.p:U+PROPN+VERB Finale's/NOUN.s.c:U playback/NOUN.s:U+VERB route/NOUN.s:U+VERB name/VERB.inf:U+NOUN when/ADV:U+CONJ one/NUM:U+NOUN+PRON is/AUX.s.3.fin.pres:U+VERB available/ADJ.pos:U , matching/VERB.ing:U+ADJ Finale's/NOUN.s.c:U own/ADJ:U+VERB+PRON MusicXML/PROPN.s:L+NOUN export/NOUN.s:U+VERB .
 It/PRON.s.3:S falls/VERB.s.3.fin.pres:U+NOUN back/ADV.pos:U+NOUN+VERB+ADJ to/PART:U+ADP the/DET:S standardized/VERB.fin.past:U+ADJ SoundID/PROPN.s:L+NOUN string/NOUN.s:U+VERB and/CONJ:S then/ADV.pos:U+NOUN+ADJ to/PART:U+ADP the/DET:S raw/ADJ.pos:U+NOUN instrument/NOUN.s:U+VERB UUID/NOUN:?+PROPN .
 Part/NOUN.s:U+VERB+ADV and/CONJ:S instrument/NOUN.s:U+VERB display/NOUN.s:U+VERB names/VERB.s.3.fin.pres:U+NOUN are/AUX.fin.pres:U+VERB intentionally/ADV.pos:U excluded/VERB.fin.past:U from/ADP:S this/DET.s:U+PRON fallback/NOUN.s:U chain/NOUN.s:U+PROPN+VERB .
@@ -1065,7 +1065,7 @@ Rules/NOUN.p:U+PROPN+VERB :
 When/ADV:U+CONJ calling/VERB.ing:U+NOUN any/DET:U+ADV+PRON standard/ADJ.pos:U+NOUN - library/NOUN.s:U [code] or/CONJ:S [code] function/NOUN.s:U+VERB or/CONJ:S member/NOUN.s:U , wrap/VERB.inf:U+NOUN the/DET:S qualified/VERB.fin.past:U+ADJ function/NOUN.s:U+VERB name/VERB.inf:U+NOUN in/ADP:U+ADJ+ADV parentheses/NOUN.p:U .
 Use/NOUN.s:U+VERB [code] and/CONJ:S [code] , not/PART:S [code] or/CONJ:S [code] .
 Use/NOUN.s:U+VERB [code] and/CONJ:S [code] , not/PART:S [code] or/CONJ:S [code] .
-Prefer/VERB.inf:U the/DET:S same/ADJ:U+PRON protection/NOUN.s:U for/ADP:U+CONJ related/VERB.fin.past:U+ADJ standard/ADJ.pos:U+NOUN - library/NOUN.s:U APIs/PROPN.s:L+NOUN if/CONJ:S their/PRON.p.3:S names/VERB.s.3.fin.pres:U+NOUN can/AUX.fin:U+NOUN+VERB collide/VERB.inf:U with/ADP:S Windows/PROPN.p:L+NOUN macros/NOUN.p:U .
+Prefer/VERB.inf:U the/DET:S same/ADJ:U+PRON protection/NOUN.s:U for/ADP:U+CONJ related/VERB.fin.past:U+ADJ standard/ADJ.pos:U+NOUN - library/NOUN.s:U APIs/NOUN:?+PROPN if/CONJ:S their/PRON.p.3:S names/VERB.s.3.fin.pres:U+NOUN can/AUX.fin:U+NOUN+VERB collide/VERB.inf:U with/ADP:S Windows/PROPN.p:L+NOUN macros/NOUN.p:U .
 Do/AUX.fin.pres:U+VERB this/DET.s:U+PRON even/ADJ.pos:U+NOUN+VERB+ADV when/ADV:U+CONJ the/DET:S current/NOUN.s:U+ADJ file/VERB.inf:U+NOUN builds/VERB.s.3.fin.pres:U+NOUN on/ADP:U+ADJ+ADV non/ADV.pos:U - Windows/NOUN.p:U+PROPN+VERB platforms/NOUN.p:U , because/CONJ:S Denigma/PROPN.s:L+NOUN should/AUX.fin:S build/VERB.inf:U+NOUN when/ADV:U+CONJ [code] is/AUX.s.3.fin.pres:U+VERB not/PART:S defined/VERB.fin.past:U+ADJ .
 ## core/exile-changelog.md
 Changelog/NOUN:?+PROPN
@@ -3187,7 +3187,7 @@ Skills/NOUN.p:U
 [code] : opening/VERB.ing:U+NOUN+ADJ a/DET:S pull/VERB.inf:U+NOUN request/VERB.inf:U+NOUN .
 Rules/NOUN.p:U+PROPN+VERB
 Run/VERB.inf:U+NOUN git/NOUN.s:U as/ADP:U+ADV+CONJ [code] and/CONJ:S gh/NOUN:? with/ADP:S [code] .
-Commits/VERB.s.3.fin.pres:U , PRs/PROPN.s:L+NOUN , issues/VERB.s.3.fin.pres:U+NOUN and/CONJ:S comments/NOUN.p:U+VERB carry/VERB.inf:U+NOUN no/DET:U+ADV+INTJ AI/NOUN:?+PROPN attribution/NOUN.s:U .
+Commits/VERB.s.3.fin.pres:U , PRs/NOUN:?+PROPN , issues/VERB.s.3.fin.pres:U+NOUN and/CONJ:S comments/NOUN.p:U+VERB carry/VERB.inf:U+NOUN no/DET:U+ADV+INTJ AI/NOUN:?+PROPN attribution/NOUN.s:U .
 Human/ADJ.pos:U+NOUN writing/VERB.ing:U+NOUN and/CONJ:S AI/NOUN:?+PROPN writing/VERB.ing:U+NOUN must/AUX.fin:S be/AUX.inf:U+VERB visually/ADV.pos:U distinct/ADJ.pos:U from/ADP:S one/NUM:U+NOUN+PRON another/DET:U+PRON ( see/VERB.inf:U+NOUN [code] for/ADP:U+CONJ an/DET:S example/NOUN.s:U+VERB ) .
 [code] are/AUX.fin.pres:U+VERB human/ADJ.pos:U+NOUN - authored/VERB.fin.past:U .
 Do/AUX.fin.pres:U+VERB not/PART:S rewrite/VERB.inf:U+NOUN them/PRON.p.3:S .
@@ -3296,7 +3296,7 @@ Topic/NOUN.s:U docs/NOUN.p:U ( [code] )
 A/DET:S design/NOUN.s:U+VERB for/ADP:U+CONJ one/NUM:U+NOUN+PRON change/VERB.inf:U+NOUN or/CONJ:S one/NUM:U+NOUN+PRON decision/NOUN.s:U : a/DET:S plan/VERB.inf:U+NOUN , a/DET:S proposal/NOUN.s:U , a/DET:S post/VERB.inf:U+NOUN+PROPN+ADV - mortem/NOUN:? .
 Either/DET:U+ADV+PRON+CONJ party/NOUN.s:U+VERB+ADJ may/AUX.fin:S write/VERB.inf:U one/NUM:U+NOUN+PRON .
 The/DET:S first/ADJ.pos:U+NOUN+ADV line/NOUN.s:U+VERB after/ADP:U+ADV+CONJ the/DET:S title/NOUN.s:U+VERB is/AUX.s.3.fin.pres:U+VERB [code] , [code] , [code] or/CONJ:S [code] , then/ADV.pos:U+NOUN+ADJ what/PRON:U+DET the/DET:S doc/NOUN.s:U is/AUX.s.3.fin.pres:U+VERB , how/ADV:U+CONJ it/PRON.s.3:S was/AUX.s.fin.past:U+VERB produced/VERB.fin.past:U , and/CONJ:S what/PRON:U+DET it/PRON.s.3:S binds/VERB.s.3.fin.pres:U+NOUN .
-Number/NOUN.s:U+VERB+ADJ the/DET:S sections/NOUN.p:U+VERB so/ADV:U+CONJ other/ADJ:U+NOUN+PRON docs/NOUN.p:U and/CONJ:S PRs/PROPN.s:L+NOUN can/AUX.fin:U+NOUN+VERB cite/VERB.inf:U+NOUN them/PRON.p.3:S .
+Number/NOUN.s:U+VERB+ADJ the/DET:S sections/NOUN.p:U+VERB so/ADV:U+CONJ other/ADJ:U+NOUN+PRON docs/NOUN.p:U and/CONJ:S PRs/NOUN:?+PROPN can/AUX.fin:U+NOUN+VERB cite/VERB.inf:U+NOUN them/PRON.p.3:S .
 Once/CONJ:U+ADV a/DET:S doc's/NOUN.s.c:U state/NOUN.s:U+VERB is/AUX.s.3.fin.pres:U+VERB [code] or/CONJ:S [code] , it/PRON.s.3:S should/AUX.fin:S no/DET:U+ADV+INTJ longer/ADJ.cmp:U+NOUN+ADV be/AUX.inf:U+VERB updated/VERB.fin.past:U ( that's/PRON.s.c:S what/PRON:U+DET [code] docs/NOUN.p:U are/AUX.fin.pres:U+VERB for/ADP:U+CONJ ) .
 Tension/NOUN.s:U between/ADP:U+ADV desired/VERB.fin.past:U+ADJ and/CONJ:S as/ADP:U+ADV+CONJ - built/VERB.fin.past:U+ADJ
 They/PRON.p.3:S are/AUX.fin.pres:U+VERB expected/VERB.fin.past:U+ADJ not/PART:S to/PART:U+ADP match/VERB.inf:U+NOUN .
@@ -3319,7 +3319,7 @@ Use/NOUN.s:U+VERB [code] and/CONJ:S your/PRON.2:S context/NOUN.s:U to/PART:U+ADP
 Use/NOUN.s:U+VERB [code] for/ADP:U+CONJ GitHub/PROPN.s:U interactions/NOUN.p:U , always/ADV.pos:U with/ADP:S [code] , and/CONJ:S always/ADV.pos:U run/VERB.inf:U+NOUN local/ADJ.pos:U+NOUN git/NOUN.s:U as/ADP:U+ADV+CONJ [code] .
 Search/VERB.inf:U+NOUN the/DET:S open/ADJ.pos:U+NOUN+VERB issues/VERB.s.3.fin.pres:U+NOUN for/ADP:U+CONJ ones/NOUN.p:U that/CONJ:U+PRON+DET this/DET.s:U+PRON PR/NOUN:?+PROPN would/AUX.fin:S close/ADJ.pos:U+NOUN+VERB+ADV or/CONJ:S is/AUX.s.3.fin.pres:U+VERB related/VERB.fin.past:U+ADJ to/PART:U+ADP .
 Make/VERB.inf:U+NOUN a/DET:S list/NOUN.s:U+VERB of/ADP:S issues/VERB.s.3.fin.pres:U+NOUN it/PRON.s.3:S closes/VERB.s.3.fin.pres:U+NOUN and/CONJ:S related/VERB.fin.past:U+ADJ issues/VERB.s.3.fin.pres:U+NOUN .
-It/PRON.s.3:S might/AUX.fin:S also/ADV.pos:U be/AUX.inf:U+VERB related/VERB.fin.past:U+ADJ to/PART:U+ADP other/ADJ:U+NOUN+PRON PRs/PROPN.s:L+NOUN .
+It/PRON.s.3:S might/AUX.fin:S also/ADV.pos:U be/AUX.inf:U+VERB related/VERB.fin.past:U+ADJ to/PART:U+ADP other/ADJ:U+NOUN+PRON PRs/NOUN:?+PROPN .
 Before/ADP:U+ADV+CONJ opening/VERB.ing:U+NOUN+ADJ
 Have/AUX.fin.pres:U+VERB you/PRON.2:S followed/VERB.fin.past:U relevant/ADJ.pos:U repo/NOUN:? skills/NOUN.p:U in/ADP:U+ADJ+ADV your/PRON.2:S implementation/NOUN.s:U ?
 If/CONJ:S not/PART:S , you/PRON.2:S may/AUX.fin:S need/VERB.fin.pres:U+NOUN+AUX to/PART:U+ADP make/VERB.inf:U+NOUN changes/VERB.s.3.fin.pres:U+NOUN before/ADP:U+ADV+CONJ you/PRON.2:S are/AUX.fin.pres:U+VERB ready/ADJ.pos:U+NOUN+VERB to/PART:U+ADP open/ADJ.pos:U+NOUN+VERB the/DET:S PR/NOUN:?+PROPN .

@@ -19,7 +19,8 @@
 //!   not counted because titles lower them.
 //! - **Capitals that are not names.** A word in capitals, which is as likely an acronym of a thing
 //!   (`HTML`) as a name (`NASA`), and a lone capital letter, which is an initial, a grade or a
-//!   label. Neither says which. So a word needs a lower-case letter after its capital.
+//!   label. Neither says which. So a word needs a lower-case letter after its capital, and the
+//!   plural of an acronym (`APIs`) has none that counts.
 //! - **Words that are not nouns first.** A capitalised adjective is usually a nationality or a
 //!   title (`American`), and a capitalised verb is as often a word that opens a phrase as a name;
 //!   the lexicon ranked each first, and the capital alone is weak evidence against it.
@@ -92,10 +93,14 @@ fn starts_upper(text: &str) -> bool {
 }
 
 /// Whether the word starts with a capital and has a lower-case letter too, which a lone capital
-/// and a word in capitals lack.
+/// and a word in capitals lack. The plural of an acronym (`APIs`) is a word in capitals with an `s`,
+/// so it has none either.
 fn is_capitalised(text: &str) -> bool {
     let stem = stem(text);
-    starts_upper(stem) && stem.chars().any(char::is_lowercase)
+    let acronym_plural = stem
+        .strip_suffix('s')
+        .is_some_and(|body| body.chars().count() > 1 && !body.chars().any(char::is_lowercase));
+    starts_upper(stem) && stem.chars().any(char::is_lowercase) && !acronym_plural
 }
 
 /// Whether the token before the one at `at` is a word or a comma, the places where a capital is
@@ -287,7 +292,7 @@ mod tests {
     #[test]
     fn capitals_that_do_not_mark_a_name_are_left_alone() {
         let before = name_like();
-        for word in ["BUSH", "B", "BUSH's"] {
+        for word in ["BUSH", "B", "BUSH's", "APIs", "CDNs"] {
             assert_untouched(
                 &format!("We met {word} in town"),
                 Context::Prose,

@@ -127,9 +127,9 @@ neither is better, as for the share at `Sure`. `score --save` writes before the 
 ## The treebank
 
 `make fetch-ewt` runs `scripts/ewt/fetch.sh fetch`. It downloads the UD English Web Treebank that
-`scripts/ewt/ewt.lock` pins into a scratch directory, checks each sha256, and only then replaces
-`.ewt/` with `.ewt/r2.18/` and a stamp. A stamp equal to the lock makes a repeat free, and a failed
-fetch leaves a good `.ewt/` alone.
+`scripts/ewt/ewt.lock` pins into a scratch directory beside `.ewt/`, checks each sha256, and only
+then renames it over `.ewt/` (`.ewt/r2.18/` and a stamp). A stamp equal to the lock makes a
+repeat free, and a failed fetch leaves a good `.ewt/` alone.
 
 The licence is CC BY-SA 4.0 and the lock says `trains no`: it measures, and nothing derived from it
 ships. No test or CI job reads it. `make clean-ewt` removes it.

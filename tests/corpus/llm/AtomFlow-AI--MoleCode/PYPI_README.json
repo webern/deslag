@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "PYPI_README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "AtomFlow-AI/MoleCode",
+    "path": "PYPI_README.md",
+    "commit": "a4df3b04552b829ff816467b9620757a5dad765b",
+    "commit_date": "2026-06-04T00:23:56-07:00",
+    "url": "https://github.com/AtomFlow-AI/MoleCode/blob/a4df3b04552b829ff816467b9620757a5dad765b/PYPI_README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-31T07:24:36-07:00",
+    "stars": 305,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-03T11:07:33-07:00",
+    "last_commit_date": "2026-06-03T11:07:33-07:00",
+    "last_commit_author": "YZY-stack",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-03T11:07:33-07:00",
+    "last_committer_date": "2026-06-03T11:07:33-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "672e2e80150a27f0178fca807e03b89b945962dd",
+        "date": "2026-06-03T11:07:33-07:00",
+        "committed": "2026-06-03T11:07:33-07:00",
+        "old": null,
+        "new": "00af83c6c8cf138a12b0165d7a0c2ddeff394178",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3233,
+    "sha256": "3a6a95350eb1a91eb861a9cff2850136e51e0b219dc04009f6635c89724aaacd",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 83,
+    "words": 370,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/AtomFlow-AI--MoleCode/PYPI_README.md"
+}

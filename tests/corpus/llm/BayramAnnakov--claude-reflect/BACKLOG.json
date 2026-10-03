@@ -1,0 +1,98 @@
+{
+  "sidecar_version": 3,
+  "fixture": "BACKLOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "BayramAnnakov/claude-reflect",
+    "path": "BACKLOG.md",
+    "commit": "2c892cab8fe1285d8116216ec18b6b7b44bcd394",
+    "commit_date": "2026-09-19T23:13:35-07:00",
+    "url": "https://github.com/BayramAnnakov/claude-reflect/blob/2c892cab8fe1285d8116216ec18b6b7b44bcd394/BACKLOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-03T12:48:26-08:00",
+    "stars": 1702,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2026-09-19T22:23:27-07:00",
+    "last_commit_date": "2026-09-19T23:01:34-07:00",
+    "last_commit_author": "Bayram Annakov",
+    "authors": 1,
+    "ai_commits": 4,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-19T22:23:27-07:00",
+    "last_committer_date": "2026-09-19T23:01:34-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 4
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c259b9a6c26dafbe69a876cd06f9de0b4f71064c",
+        "date": "2026-09-19T23:01:34-07:00",
+        "committed": "2026-09-19T23:01:34-07:00",
+        "old": "c45921974a179c8f74f75bc395ab806d8c108ca0",
+        "new": "ecc554575b9fc9bb22f790abd468c0e9cd42d6c2",
+        "status": "agent"
+      },
+      {
+        "commit": "b67742c65ffa8fb926407d7cf241244141afafa9",
+        "date": "2026-09-19T22:46:56-07:00",
+        "committed": "2026-09-19T22:46:56-07:00",
+        "old": "3b5aad561a34421ba237a830ba5eb55b77e09872",
+        "new": "c45921974a179c8f74f75bc395ab806d8c108ca0",
+        "status": "agent"
+      },
+      {
+        "commit": "3b8b0f58c9facd441494a505bdaa858be2e0df71",
+        "date": "2026-09-19T22:25:44-07:00",
+        "committed": "2026-09-19T22:25:44-07:00",
+        "old": "2efa61920148544519fd6c7153c182a0b7bdd43d",
+        "new": "3b5aad561a34421ba237a830ba5eb55b77e09872",
+        "status": "agent"
+      },
+      {
+        "commit": "9a08017a456b621bfe71fb82a3f7e4cb1db2e696",
+        "date": "2026-09-19T22:23:27-07:00",
+        "committed": "2026-09-19T22:23:27-07:00",
+        "old": null,
+        "new": "2efa61920148544519fd6c7153c182a0b7bdd43d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 4 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 8804,
+    "sha256": "3cb3ef50d8fe0cde041123c930f04a14f5530b7ad13abe0f032912e65d0b51be",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 183,
+    "words": 1377,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/BayramAnnakov--claude-reflect/BACKLOG.md"
+}

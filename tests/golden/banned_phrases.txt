@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 241 of 1230: core 7, human 63, llm 61, mixed 110
+# fails 242 of 1230: core 7, human 63, llm 62, mixed 110
 
 [md.lints.banned_phrases]
 allow = ["please note that"]
@@ -91,7 +91,9 @@ human/tannerlinsley--react-table/docs__src__pages__docs__api__useGlobalFilter.md
 human/thepirat000--CachingFramework.Redis/COLLECTIONS.md matches:1
 human/xionluhnis--knitsketching/libs__codemirror__CONTRIBUTING.md matches:2
 llm/Accenture--mercury/memory__sessions__2026-09-18-220621.md matches:1
+llm/AtomFlow-AI--MoleCode/PYPI_README.md matches:1
 llm/Baukebrenninkmeijer--table-evaluator/custom_modes__plan_instructions.md matches:2
+llm/BayramAnnakov--claude-reflect/BACKLOG.md matches:7
 llm/BeehiveInnovations--pal-mcp-server/docs__vcr-testing.md matches:2
 llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md matches:1
 llm/CloudAI-X--claude-workflow-v2/commands__bootstrap-repo.md matches:1
@@ -131,7 +133,6 @@ llm/hackiftekhar--IQKeyboardManager/github__copilot-instructions.md matches:2
 llm/jagreehal--autotel/apps__example-genai-metrics__README.md matches:1
 llm/kbennett2000--lan-games/server__games__life__help.md matches:2
 llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcript.md matches:11
-llm/lishix520--academic-paper-skills/strategist__SKILL.md matches:2
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md matches:2
 llm/lostisland--faraday/github__copilot-instructions.md matches:1
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md matches:5

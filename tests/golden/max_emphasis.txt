@@ -100,7 +100,9 @@ llm/AkbarDevop--ai-job-agent/skills__job-patterns__SKILL.md spans:26 percent:8.1
 llm/AliAkhtari78--SpotifyScraper/extras__blog__spotifyscraper-v3.md spans:16 percent:14.63
 llm/AmintaCCCP--GithubStarsManager/cloudflare-worker__README.md spans:16 percent:9.26
 llm/Arthur-Ficial--apfel/docs__guides__python.md spans:5 percent:3.24
+llm/AtomFlow-AI--MoleCode/PYPI_README.md spans:11 percent:29.10
 llm/Bacon--BaconQrCode/CLAUDE.md spans:15 percent:8.84
+llm/BayramAnnakov--claude-reflect/BACKLOG.md spans:33 percent:12.20
 llm/BeehiveInnovations--pal-mcp-server/docs__vcr-testing.md spans:15 percent:9.38
 llm/BelimbingApp--belimbing/docs__plans__people__15_employees-event-decoupling.md spans:16 percent:7.09
 llm/BetterTyped--react-zoom-pan-pinch/docs__invalid-issues__558-vite-dev-dependency-cve.md spans:5 percent:7.03
@@ -261,8 +263,6 @@ llm/kennethreitz--kjvstudy.org/claude__agents__commentary-generator.md spans:22 
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md spans:48 percent:8.59
 llm/kzahel--web-server-chrome/docs__research__cli-servers-comparison.md spans:23 percent:7.01
 llm/lightdash--lightdash/skills__upgrade-preflight__resources__output-reference.md spans:3 percent:1.10
-llm/lishix520--academic-paper-skills/strategist__SKILL.md spans:159 percent:16.19
-llm/lishix520--academic-paper-skills/strategist__references__quality_standards.md spans:56 percent:14.62
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md spans:79 percent:12.53
 llm/logog782-cmyk--linkly-quote-cards/SKILL.md spans:34 percent:7.12
 llm/lostisland--faraday/github__copilot-instructions.md spans:7 percent:7.54

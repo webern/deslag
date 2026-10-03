@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 120 of 1230: core 5, human 17, llm 61, mixed 37
+# fails 121 of 1230: core 5, human 17, llm 62, mixed 37
 
 [md.lints.verbs_no_nouns]
 
@@ -28,6 +28,7 @@ human/latte-central--LaTTe/doc__102_Lambda_the_ultimate.md matches:1
 human/mongodb--mongo-go-driver/x__mongo__driver__topology__DESIGN.md matches:1
 human/morkro--happy-plants/packages__app__CHANGELOG.md matches:1
 human/urschrei--pyzotero/CONTRIBUTING.md matches:1
+llm/BayramAnnakov--claude-reflect/BACKLOG.md matches:2
 llm/BetterTyped--react-zoom-pan-pinch/docs__invalid-issues__558-vite-dev-dependency-cve.md matches:1
 llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md matches:1
 llm/ByteDance-Seed--VeOmni/docs__hardware_support__rocm__README.md matches:1

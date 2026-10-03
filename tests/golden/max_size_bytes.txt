@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 168 of 1230: core 4, human 30, llm 31, mixed 103
+# fails 167 of 1230: core 4, human 30, llm 30, mixed 103
 
 [md.lints.max_size_bytes]
 value = 16384
@@ -60,7 +60,6 @@ llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md size_bytes:20981 budg
 llm/gitlab--cznic--ql/AUDIT.md size_bytes:23810 budget:16384
 llm/joemccann--dillinger/agent__skills__frontend-design__decision-trees.md size_bytes:17265 budget:16384
 llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcript.md size_bytes:63687 budget:16384
-llm/lishix520--academic-paper-skills/strategist__SKILL.md size_bytes:21878 budget:16384
 llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md size_bytes:16668 budget:16384
 llm/mitchdenny--hex1b/docs__tape.md size_bytes:17743 budget:16384
 llm/mono--SkiaSharp/documentation__docfx__guides__curves__text-paths.md size_bytes:17112 budget:16384

@@ -83,6 +83,8 @@ llm/AkbarDevop--ai-job-agent/skills__job-patterns__SKILL.md count:50
 llm/AliAkhtari78--SpotifyScraper/extras__blog__spotifyscraper-v3.md count:12
 llm/AmintaCCCP--GithubStarsManager/cloudflare-worker__README.md count:8
 llm/Asymptote-Labs--agent-beacon/browser-extension__tools__integration-otelcol__README.md count:2
+llm/AtomFlow-AI--MoleCode/PYPI_README.md count:9
+llm/BayramAnnakov--claude-reflect/BACKLOG.md count:3
 llm/BelimbingApp--belimbing/docs__plans__people__15_employees-event-decoupling.md count:16
 llm/BetterTyped--react-zoom-pan-pinch/docs__invalid-issues__558-vite-dev-dependency-cve.md count:2
 llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md count:34
@@ -243,8 +245,6 @@ llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcrip
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md count:39
 llm/kevinhorek--bluepainter-studio/site__src__content__guides__best-figma-to-react-tools-for-docs-sites.md count:7
 llm/lightdash--lightdash/skills__upgrade-preflight__resources__output-reference.md count:9
-llm/lishix520--academic-paper-skills/strategist__SKILL.md count:43
-llm/lishix520--academic-paper-skills/strategist__references__quality_standards.md count:43
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md count:26
 llm/logog782-cmyk--linkly-quote-cards/SKILL.md count:79
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md count:8

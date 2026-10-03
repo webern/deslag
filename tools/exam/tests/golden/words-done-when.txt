@@ -23,5 +23,6 @@ Words
     adjudicated                       0
     corrected                         0
     owner                             0
+    kind                              0
     unmarked                         23
   open gold disputes                  0  (0 name a sent_id not in the file)

@@ -7,8 +7,8 @@ max_size_bytes: 8192
 # The exam: as built
 
 `deslag-exam` is a binary and a library in `tools/exam/`, never published; `deslag` does not depend
-on it. It grades part-of-speech taggers. A **gold set** is sentences in which a person has written
-the right tag for every word. The exam matches its words to deslag's own tokens, runs a tagger or
+on it. It grades part-of-speech taggers. A **gold set** is sentences with a person's tag for every
+word. The exam matches its words to deslag's own tokens, runs a tagger or
 reads another program's tags, and never guesses at a word it cannot match.
 
 ## Commands
@@ -18,10 +18,10 @@ reads another program's tags, and never guesses at a word it cannot match.
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
-- `words --gold G`: the header and Words alone, with no tagger.
+- `words --gold G`: the header and Words section alone.
 
-Exit 0 when it printed or wrote what was asked, 2 when it cannot run (a malformed file, a broken
-tagger contract, runs that cannot be compared, bad arguments), with one line on stderr that names a
+Exit 0 when it did what was asked, 2 when it cannot run (a malformed file, a broken tagger
+contract, runs that cannot be compared, bad arguments), with one line on stderr that names a
 holdout sentence by position, never by `sent_id`.
 
 ## Modules
@@ -52,7 +52,8 @@ CoNLL-U with `exam.` comments:
 An unknown or repeated key or value, or a file key later, is a load error, as is a holdout with
 `trains` other than `no`. Every sentence has a unique `sent_id`. A `ud` file needs `# text`. A
 `deslag` file has one line per token, no range lines or empty nodes, and `Kind=` and `Prov=` in
-`MISC` on every line. Open disputes are the lines of `<stem>.disputes.tsv` or `--disputes`.
+`MISC` on every line (`Prov=kind` marks a token that is not a word). Open disputes are the lines
+of `<stem>.disputes.tsv` or `--disputes`.
 
 ## The tag mapping
 

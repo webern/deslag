@@ -184,7 +184,7 @@ fix-golden: preflight
 # What the publish-blobs workflow runs after it publishes, so a new image leaves the branch green: the
 # catalogue's counts and measured_on, and the golden file of list_growth, which names the batch of each
 # fixture. One cargo run, so the image is read once per test. Accepts whatever the image says, so read
-# the diff before committing it. The two files it writes are listed in publish-blobs.yml too.
+# the diff before committing it. The two files it writes are listed in blobstore/remeasure.sh, which runs it.
 fix-blobs: preflight fetch-blobs
 	DESLAG_FIX_CATALOG=1 DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts list_growth
 

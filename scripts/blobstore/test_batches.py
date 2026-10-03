@@ -747,6 +747,45 @@ class ShellTests(Scratch):
         self.assertNotIn("stray.txt", changed)
         self.assertEqual(git(self.remote, "show", "main:derived.txt"), "measured on the new image")
 
+    def test_pin_lock_puts_the_report_in_the_commit_body(self):
+        self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
+        report = self.root / ".blobs" / "remeasure" / "report.txt"
+        report.parent.mkdir(parents=True)
+        report.write_text("catalogue counts that moved:\n  a phrase: llm_files 1 -> 2\n")
+        self.sh("pin-lock", "main")
+        body = git(self.remote, "log", "-1", "--format=%B", "main")
+        self.assertIn("a phrase: llm_files 1 -> 2", body)
+
+    def test_pin_lock_measures_again_on_a_tip_that_moved(self):
+        stub = self.root / "scripts" / "blobstore" / "remeasure.sh"
+        stub.write_text(
+            "#!/usr/bin/env bash\n"
+            "set -eu\n"
+            "mkdir -p .blobs/remeasure\n"
+            "echo \"measured on $(cat scripts/blobstore/code.txt)\" > derived.txt\n"
+            "echo \"report for $(cat scripts/blobstore/code.txt)\" > .blobs/remeasure/report.txt\n")
+        stub.chmod(0o755)
+        (self.root / "scripts" / "blobstore" / "code.txt").write_text("the old code\n")
+        git(self.root, "add", "-A")
+        git(self.root, "commit", "-q", "-m", "code")
+        git(self.root, "push", "-q", "origin", "main")
+        self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
+        other = self.dir / "other"
+        subprocess.run(["git", "clone", "-q", str(self.remote), str(other)], check=True,
+                       env=clean_env())
+        (other / "scripts" / "blobstore" / "code.txt").write_text("the new code\n")
+        (other / "derived.txt").write_text("measured on the old tip\n")
+        git(other, "add", "-A")
+        git(other, "commit", "-q", "-m", "other")
+        git(other, "push", "-q", "origin", "main")
+        result = subprocess.run(["bash", str(self.script), "pin-lock", "main", "derived.txt"],
+                                env=clean_env(PIN_LOCK_REMEASURE="1"), cwd=self.root,
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(git(self.remote, "show", "main:derived.txt"), "measured on the new code")
+        self.assertIn("report for the new code", git(self.remote, "log", "-1", "--format=%B", "main"))
+        self.assertEqual(git(self.remote, "log", "--format=%s", "main").splitlines()[1], "other")
+
     def test_pin_lock_goes_on_top_of_an_unrelated_commit(self):
         self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
         other = self.dir / "other"

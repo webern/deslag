@@ -14,7 +14,10 @@ name: publish-blobs
 # batch can be published from a branch long before it reaches main.
 #
 # A pull request builds the batches and publishes nothing, so a seed is shown to build, and to
-# build the same way twice, before it merges.
+# build the same way twice, before it merges. It also measures the new batches the way a publish
+# would: the catalogue and the golden file are rewritten on the tier with the batch in it and the
+# checks run, and the step summary shows the diff, so a batch that breaks a floor fails its pull
+# request.
 
 on:
   push:
@@ -81,6 +84,25 @@ jobs:
           scripts/blobstore/batches.sh bundle "$RUNNER_TEMP/new-batches.tar"
           if [ -f "$RUNNER_TEMP/new-batches.tar" ]; then echo "new=true" >> "$GITHUB_OUTPUT"; fi
 
+      # On a pull request, the rewrite a publish would make, on the tier as it is now, with the new
+      # batches in it and the lock as it is. Nothing is published or committed; the diff and any
+      # failure are in the step summary. remeasure.sh says what it does.
+      - name: Install Rust
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      - name: Install typos
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      - name: Measure the new batches
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        env:
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/remeasure.sh run
+
       - name: Keep the new batches for the publish job
         if: github.event_name == 'push' && steps.bundle.outputs.new == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, 2026-04-10
@@ -108,13 +130,27 @@ jobs:
       cancel-in-progress: false
     steps:
       # The commit harvest built against, so the image the batches are added to is the one they
-      # were built for. The lock is committed back with the credentials checkout leaves in the
-      # clone, and a push that finds the branch moved rebases onto it, which needs the history.
+      # were built for. A push that finds the branch moved puts the pin on the new tip, which needs
+      # the history.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
         with:
           ref: ${{ needs.harvest.outputs.sha }}
           fetch-depth: 0
+          # Only the pin step is given the token, so the code that measures the image never sees it.
+          persist-credentials: false
+
+      # Everything the job installs comes before the publish: nothing that can fail on the network
+      # may stand between the image reaching the registry and the lock pinning it.
+      # Installs what rust-toolchain.toml names and caches the registry and target dir.
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
+      - name: Install typos
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
+        with:
+          tool: typos
 
       # blobs.sh publish builds each new layer with bsdtar.
       - name: Install bsdtar
@@ -139,40 +175,36 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make publish-blobs
 
-      # Installs what rust-toolchain.toml names and caches the registry and target dir.
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
-
-      # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
-      - name: Install typos
-        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
-        with:
-          tool: typos
-
       # What the build holds to the pinned image would fail on the lock this run is about to commit:
       # the catalogue's counts and measured_on, and list_growth's golden file, which names the batch
-      # of every fixture. The tree publish left is the artifact's contents, so it is dropped and the
-      # image just published is fetched back from the registry, by its digest, as anyone else would.
-      # The code that reads it is the branch's own, with its locked dependencies, and reads the
-      # fixtures as data. No token is set in its environment. A failure here must not leave the image
-      # unpinned, so the next step commits whatever there is and the last one fails the job.
-      - name: Rewrite what is measured on the new image
+      # of every fixture. The tree publish left is the artifact's contents, so remeasure.sh drops it
+      # and fetches the image just published back from the registry, by its digest, as anyone else
+      # would. It then rewrites both files and runs make test-blobs and the phrases test on the
+      # result. The code that reads the image is the branch's own, with its locked dependencies; it
+      # reads the fixtures as data and has no token, in its environment or on disk. A failure here
+      # must not leave the image unpinned, so the next step commits whatever there is, and the last
+      # step fails the job.
+      - name: Measure the new image
         id: remeasure
         continue-on-error: true
-        run: |
-          rm -rf .blobs/unpacked .blobs/stamp .blobs/inventory
-          make fix-blobs CARGO_FLAGS=--locked
+        env:
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/remeasure.sh run --refetch
 
-      # The push is made with the workflow token, so it starts no workflow of its own. The paths are
-      # the two files make fix-blobs writes.
+      # The push is made with the workflow token, so it starts no workflow of its own. The token is
+      # for git's fetch and push alone. If the branch moved meanwhile, the pin goes on its new tip
+      # and the image is measured again there. The paths are the two files make fix-blobs writes.
       - name: Commit the lock, the completed manifests and what was rewritten
-        run: scripts/blobstore/batches.sh pin-lock "$GITHUB_REF_NAME" src/lint/banned_phrases.toml tests/golden/list_growth.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PIN_LOCK_REMEASURE: 1
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/batches.sh pin-lock "$GITHUB_REF_NAME" $(scripts/blobstore/remeasure.sh paths)
 
-      # The image is published and pinned, but nothing measured on it was rewritten, so CI on the
-      # branch fails until a person reads the log above and decides: usually a catalogue phrase the
-      # new batch breaks.
+      # The image is published and pinned. If what is measured on it does not pass, CI on the branch
+      # fails until a person reads the step summary and decides, and this job says so.
       - name: Fail when the branch is not left green
-        if: steps.remeasure.outcome == 'failure'
-        run: |
-          echo "::error::The image is published and pinned, but make fix-blobs failed, so the catalogue and the golden file may not match it. See scripts/blobstore/batches.md."
-          exit 1
+        if: always()
+        env:
+          REMEASURE_OUTCOME: ${{ steps.remeasure.outcome }}
+        run: scripts/blobstore/remeasure.sh verdict

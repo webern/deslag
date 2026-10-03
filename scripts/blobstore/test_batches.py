@@ -5,7 +5,6 @@ made here, with `make test-scripts`, which `make test` and `make ci` include. Py
 library only, like the script it tests."""
 
 import hashlib
-import importlib.util
 import json
 import os
 import shutil
@@ -20,10 +19,11 @@ HERE = Path(__file__).resolve().parent
 COLLECT = HERE.parent / "llm-detection" / "collect.py"
 BATCHES_SH = HERE / "batches.sh"
 
-spec = importlib.util.spec_from_file_location("collect", COLLECT)
-collect = importlib.util.module_from_spec(spec)
-sys.modules["collect"] = collect
-spec.loader.exec_module(collect)
+# collect.py is imported by name, on the path, because `harvest` runs its workers in processes that
+# start afresh on macOS and, from Python 3.14, on Linux too, and a worker unpickles its work by
+# importing the module it came from.
+sys.path.insert(0, str(COLLECT.parent))
+import collect  # noqa: E402
 
 MIT = """MIT License
 

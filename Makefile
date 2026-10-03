@@ -7,6 +7,10 @@
 SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
 EWT := $(SCRIPTS)/ewt
+SPACY := $(SCRIPTS)/spacy
+
+# The treebank's dev file, in the release ewt.lock pins, and where spaCy's files go.
+EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
 
 # Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails
 # there instead of being rewritten.
@@ -16,11 +20,11 @@ CARGO_FLAGS ?=
         build build-release \
         test test-blobs \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs clean-ewt \
+        clean clean-blobs clean-ewt clean-spacy \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt publish-blobs
+        fetch-blobs fetch-ewt fetch-spacy generate-spacy publish-blobs
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -37,6 +41,7 @@ help:
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "clean-ewt        remove the fetched treebank"
+	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
@@ -49,6 +54,9 @@ help:
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
+	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
+	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
+	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
 
 # ---------------------------------------------------------------------------
@@ -103,7 +111,7 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt
+clean: clean-blobs clean-ewt clean-spacy
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
@@ -113,6 +121,10 @@ clean-blobs:
 # .ewt is what fetch-ewt downloads.
 clean-ewt:
 	rm -rf .ewt
+
+# .spacy is the venv fetch-spacy installs, with the files generate-spacy writes beside it.
+clean-spacy:
+	rm -rf .spacy
 
 # ---------------------------------------------------------------------------
 # ci, fix, preflight, fetch, publish
@@ -162,6 +174,19 @@ fetch-blobs:
 # stamp that matches the lock is the whole check.
 fetch-ewt:
 	@$(EWT)/fetch.sh fetch
+
+# spaCy, the exam's ceiling candidate, in a venv under .spacy that only $(SPACY)/run.sh reads, from
+# the packages $(SPACY)/requirements.lock pins. A stamp that matches the lock is the whole check.
+fetch-spacy:
+	@$(SPACY)/run.sh fetch
+
+# The exam's file-import path, run on the treebank's dev set: deslag's own tokens go to spaCy, and
+# its tags come back as .spacy/ewt-dev.import.conllu, for `deslag-exam score --import`. Nothing in
+# ci reads or runs it, and the model takes minutes.
+generate-spacy: preflight fetch-ewt fetch-spacy
+	@mkdir -p .spacy
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- tokens --gold $(EWT_DEV) --out .spacy/ewt-dev.tokens.conllu
+	@$(SPACY)/run.sh tag .spacy/ewt-dev.tokens.conllu .spacy/ewt-dev.import.conllu $(EWT_DEV)
 
 publish-blobs:
 	@$(BLOBSTORE)/blobs.sh publish

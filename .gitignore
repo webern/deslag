@@ -16,6 +16,9 @@ test/output/
 # the UD English Web Treebank that make fetch-ewt downloads; see scripts/ewt/ewt.lock
 .ewt/
 
+# the spaCy venv and output that make fetch-spacy and generate-spacy write; see scripts/spacy/run.sh
+.spacy/
+
 # because llms love python
 __pycache__/
 

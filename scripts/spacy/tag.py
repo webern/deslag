@@ -5,6 +5,7 @@ installs, by hand, never by the build, the tests or CI. spaCy is a Python librar
 Python rather than bash; like collect.py it is a tool run by hand.
 
     tag.py --model NAME --tokens FILE --out FILE [--gold FILE]
+    tag.py --self-test
 
 The token file has one CoNLL-U sentence per gold sentence, one line per deslag token. spaCy does
 not tokenize: each sentence becomes a Doc built from the given words, with a space after a word
@@ -97,6 +98,30 @@ def misc_keys(misc):
     return keys
 
 
+def space_after(columns):
+    """Whether a space follows the token: yes, unless its MISC says SpaceAfter=No."""
+    return misc_keys(columns[9]).get("SpaceAfter") != "No"
+
+
+def self_test():
+    """The token file's spacing reaches the Doc. Runs first, on every run, and on its own with
+    --self-test; it needs no model."""
+    from spacy.tokens import Doc
+    from spacy.vocab import Vocab
+
+    block = [
+        ["1", "I", "_", "_", "_", "_", "_", "_", "_", "Kind=Word"],
+        ["2", "like", "_", "_", "_", "_", "_", "_", "_", "Kind=Word"],
+        ["3", "cats", "_", "_", "_", "_", "_", "_", "_", "Kind=Word|SpaceAfter=No"],
+        ["4", ".", "_", "_", "_", "_", "_", "_", "_", "Kind=Punctuation|SpaceAfter=No"],
+    ]
+    spaces = [space_after(columns) for columns in block]
+    assert spaces == [True, True, False, False], spaces
+    doc = Doc(Vocab(), words=[columns[1] for columns in block], spaces=spaces)
+    assert doc.text == "I like cats.", doc.text
+    assert [token.whitespace_ for token in doc] == [" ", " ", "", ""]
+
+
 def load_model(name):
     import spacy
 
@@ -117,7 +142,7 @@ def tag_blocks(nlp, blocks, tokens_path):
         if not lines:
             raise Failure(f"{tokens_path}: sentence {sent_id} has no tokens")
         words = [columns[1] for columns in lines]
-        spaces = ["SpaceAfter=No" not in misc_keys(columns[9]) for columns in lines]
+        spaces = [space_after(columns) for columns in lines]
         docs.append(Doc(nlp.vocab, words=words, spaces=spaces))
     return nlp.pipe(docs, batch_size=32)
 
@@ -307,15 +332,22 @@ def report_agreement(n, gold_path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--model", required=True, help="the installed spaCy model's package name")
-    parser.add_argument("--tokens", required=True, help="the file deslag-exam tokens wrote")
-    parser.add_argument("--out", required=True, help="the import file to write")
+    parser.add_argument("--self-test", action="store_true", help="check the spacing and stop")
+    parser.add_argument("--model", help="the installed spaCy model's package name")
+    parser.add_argument("--tokens", help="the file deslag-exam tokens wrote")
+    parser.add_argument("--out", help="the import file to write")
     parser.add_argument("--gold", help="the gold file the tokens came from, for the sanity number")
     args = parser.parse_args()
+    if not args.self_test and not (args.model and args.tokens and args.out):
+        parser.error("--model, --tokens and --out are required")
 
     try:
         import spacy
 
+        self_test()
+        if args.self_test:
+            print("self test passed")
+            return 0
         blocks = read_blocks(args.tokens)
         started = time.monotonic()
         nlp = load_model(args.model)

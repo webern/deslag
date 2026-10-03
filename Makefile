@@ -9,7 +9,7 @@ BLOBSTORE := $(SCRIPTS)/blobstore
 EWT := $(SCRIPTS)/ewt
 SPACY := $(SCRIPTS)/spacy
 
-# The treebank's dev file, in the release ewt.lock pins, and where spaCy's files go.
+# The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
 
 # Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails

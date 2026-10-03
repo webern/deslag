@@ -705,8 +705,178 @@ const LOG_COLUMNS: [&str; 9] = [
     "item", "sent_id", "token", "form", "blind", "harper", "spacy", "final", "reason",
 ];
 
-/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why.
-pub fn adjudicated_tsv(answers: &[Answer]) -> String {
+/// An agreed word that the revised guide changes: it is adjudicated after all, with a reason.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Override {
+    /// The sentence.
+    pub sent_id: String,
+    /// The token's number in the sentence, from 1.
+    pub token: usize,
+    /// The word.
+    pub form: String,
+    /// The code the three taggers agreed on.
+    pub old: Code,
+    /// The code decided now.
+    pub new: Code,
+    /// Why, in 15 words or fewer.
+    pub reason: String,
+}
+
+const OVERRIDE_COLUMNS: [&str; 6] = [
+    "sentence_id",
+    "token_index",
+    "form",
+    "old_code",
+    "new_code",
+    "reason",
+];
+
+/// Reads `overrides.tsv`, which came from `path`, against `agreed`, which came from
+/// `agreed_path`: each row must name a word of a sentence of the agreed file that the taggers
+/// agreed on (`Prov=agree`), with the code they agreed on as its `old_code`, once, and a new code
+/// of the guide that differs from it, with a reason of at most 15 words.
+pub fn read_overrides(
+    path: &str,
+    text: &str,
+    agreed_path: &str,
+    agreed: &str,
+) -> Result<Vec<Override>, Problems> {
+    let blocks = conllu::read(agreed_path, agreed)?;
+    let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
+    for block in &blocks {
+        if let Some(comment) = block.comment("sent_id") {
+            by_id.insert(comment.value.as_str(), block);
+        }
+    }
+    let mut lines = text.lines().enumerate();
+    match lines.next() {
+        Some((_, head)) if head.split('\t').eq(OVERRIDE_COLUMNS) => {}
+        _ => {
+            return Err(Error::at(
+                path,
+                1,
+                format!("the columns should be {}", OVERRIDE_COLUMNS.join(", ")),
+            )
+            .into());
+        }
+    }
+    let mut rows: Vec<Override> = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let cells: Vec<&str> = line.split('\t').collect();
+        if cells.len() != OVERRIDE_COLUMNS.len() {
+            problems.push(Error::at(
+                path,
+                at + 1,
+                format!(
+                    "expected {} columns, found {}",
+                    OVERRIDE_COLUMNS.len(),
+                    cells.len()
+                ),
+            ));
+            continue;
+        }
+        let (sent_id, form) = (cells[0], cells[2]);
+        let mut say = |why: String| {
+            problems.push(Problems::sentence(
+                path,
+                sent_id,
+                format!("line {}: {why}", at + 1),
+            ));
+        };
+        let Ok(token) = cells[1].parse::<usize>() else {
+            say(format!("bad token number `{}`", cells[1]));
+            continue;
+        };
+        let (old, new) = match (Code::parse(cells[3]), Code::parse(cells[4])) {
+            (Ok(old), Ok(new)) => (old, new),
+            (Err(why), _) | (_, Err(why)) => {
+                say(why);
+                continue;
+            }
+        };
+        let reason = cells[5].split_whitespace().collect::<Vec<_>>().join(" ");
+        let words = reason.split(' ').filter(|word| !word.is_empty()).count();
+        if words == 0 {
+            say(format!("token {token}: no reason"));
+            continue;
+        }
+        if words > REASON_WORDS {
+            say(format!(
+                "token {token}: the reason has {words} words, and {REASON_WORDS} is the most"
+            ));
+            continue;
+        }
+        let Some(block) = by_id.get(sent_id) else {
+            say("it is not in the agreed file".to_string());
+            continue;
+        };
+        let Some(read) = token
+            .checked_sub(1)
+            .and_then(|index| block.lines.get(index))
+        else {
+            say(format!("token {token} is not in the sentence"));
+            continue;
+        };
+        let prov = conllu::pairs(&read.misc)
+            .iter()
+            .find(|(key, _)| *key == "Prov")
+            .map(|(_, value)| *value);
+        if read.form != form {
+            say(format!("token {token} is `{}`, not `{form}`", read.form));
+            continue;
+        }
+        if prov != Some("agree") {
+            say(format!(
+                "token {token} `{form}` was not agreed by the taggers"
+            ));
+            continue;
+        }
+        match Code::from_conllu(&read.upos, &read.feats) {
+            Ok(agreed) if agreed == old => {}
+            Ok(agreed) => {
+                say(format!(
+                    "token {token} `{form}` was agreed as {agreed}, not {old}"
+                ));
+                continue;
+            }
+            Err(why) => {
+                say(format!("token {token} `{form}`: {why}"));
+                continue;
+            }
+        }
+        if new == old {
+            say(format!(
+                "token {token} `{form}`: the new code is the old one"
+            ));
+            continue;
+        }
+        if rows
+            .iter()
+            .any(|row| row.sent_id == sent_id && row.token == token)
+        {
+            say(format!("token {token} is overridden twice"));
+            continue;
+        }
+        rows.push(Override {
+            sent_id: sent_id.to_string(),
+            token,
+            form: form.to_string(),
+            old,
+            new,
+            reason,
+        });
+    }
+    Problems::check(problems, rows)
+}
+
+/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why,
+/// then each override. An override's item is `sentence.token`, and the three columns of what
+/// they said hold the code they agreed on, which is how `assemble` knows it from an answer.
+pub fn adjudicated_tsv(answers: &[Answer], overrides: &[Override]) -> String {
     let mut out = format!("{}\n", LOG_COLUMNS.join("\t"));
     for answer in answers {
         let item = &answer.item;
@@ -724,6 +894,18 @@ pub fn adjudicated_tsv(answers: &[Answer]) -> String {
             answer.reason
         );
     }
+    for row in overrides {
+        let _ = writeln!(
+            out,
+            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{old}\t{old}\t{}\t{}",
+            row.form,
+            row.new,
+            row.reason,
+            id = row.sent_id,
+            token = row.token,
+            old = row.old,
+        );
+    }
     out
 }
 
@@ -738,6 +920,8 @@ pub struct Logged {
     pub form: String,
     /// The code decided.
     pub code: Code,
+    /// For an override, the code the three taggers had agreed on.
+    pub agreed: Option<Code>,
 }
 
 /// Reads `adjudicated.tsv`, which came from `path`.
@@ -778,6 +962,12 @@ pub fn read_log(path: &str, text: &str) -> Result<Vec<Logged>, Error> {
                 .map_err(|_| bad("bad token number", cells[2]))?,
             form: cells[3].to_string(),
             code: Code::parse(cells[7]).map_err(|why| bad(&why, cells[7]))?,
+            // Three equal answers are no dispute: the row is an override of an agreed word.
+            agreed: if cells[4] == cells[5] && cells[5] == cells[6] {
+                Code::parse(cells[4]).ok()
+            } else {
+                None
+            },
         });
     }
     Ok(rows)
@@ -1233,7 +1423,7 @@ mod tests {
     #[test]
     fn the_log_records_what_the_three_said_what_was_decided_and_why() {
         let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
-        let log = adjudicated_tsv(&got);
+        let log = adjudicated_tsv(&got, &[]);
         let mut lines = log.lines();
         assert_eq!(
             lines.next().unwrap(),

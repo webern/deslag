@@ -152,6 +152,11 @@ enum Command {
         /// Accept a log that leaves some items unanswered.
         #[arg(long)]
         partial: bool,
+        /// A TSV of agreed words the guide has since changed (sentence_id, token_index, form,
+        /// old_code, new_code, reason), each turned into an adjudicated word with its reason in
+        /// the log.
+        #[arg(long)]
+        overrides: Option<PathBuf>,
     },
     /// Puts the agreed and the adjudicated words together and writes `dev.conllu`,
     /// `holdout.conllu`, their empty `.disputes.tsv` files, `adjudication.tsv` and `manifest.tsv`.
@@ -241,7 +246,11 @@ fn run(cli: Cli) -> Result<(), Problems> {
             spacy,
             per_part,
         } => merge_stage(&dir, [blind, harper, spacy], per_part),
-        Command::ReadAnswers { answers, partial } => read_answers_stage(&dir, &answers, partial),
+        Command::ReadAnswers {
+            answers,
+            partial,
+            overrides,
+        } => read_answers_stage(&dir, &answers, partial, overrides.as_deref()),
         Command::Assemble {
             out,
             blind,
@@ -480,20 +489,40 @@ fn merge_stage(dir: &Path, given: [Option<PathBuf>; 3], per_part: usize) -> Resu
     Ok(())
 }
 
-fn read_answers_stage(dir: &Path, answers: &[PathBuf], partial: bool) -> Result<(), Problems> {
+fn read_answers_stage(
+    dir: &Path,
+    answers: &[PathBuf],
+    partial: bool,
+    overrides: Option<&Path>,
+) -> Result<(), Problems> {
     let out = dir.join("merge");
     let work_path = out.join("worklist.tsv");
     let work = merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
     let files = read_all(answers)?;
     let decided = merge::read_answers(&work, &files, !partial)?;
+    let changed = match overrides {
+        Some(path) => {
+            let agreed_path = out.join("agreed.conllu");
+            merge::read_overrides(
+                &path.display().to_string(),
+                &read_text(path)?,
+                &agreed_path.display().to_string(),
+                &read_text(&agreed_path)?,
+            )?
+        }
+        None => Vec::new(),
+    };
     let log = out.join("adjudicated.tsv");
-    write_text(&log, &merge::adjudicated_tsv(&decided))?;
+    write_text(&log, &merge::adjudicated_tsv(&decided, &changed))?;
     println!(
         "read {} of {} answers into {}",
         decided.len(),
         work.len(),
         log.display()
     );
+    if overrides.is_some() {
+        println!("applied {} overrides of agreed words", changed.len());
+    }
     Ok(())
 }
 

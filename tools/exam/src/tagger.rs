@@ -209,7 +209,7 @@ mod tests {
             [
                 Tag::Pronoun,
                 Tag::Auxiliary,
-                Tag::Noun,
+                Tag::Verb,
                 Tag::Noun,
                 Tag::Determiner,
                 Tag::Noun
@@ -217,7 +217,9 @@ mod tests {
         );
         assert!(words.iter().all(|r| r.score.is_none()));
         assert_eq!(words[1].confidence, Confidence::Sure);
-        assert_eq!(words[2].confidence, Confidence::Unknown);
+        // `read` is in the lexicon, `frobs` is in no table.
+        assert_eq!(words[2].confidence, Confidence::Unsure);
+        assert_eq!(words[3].confidence, Confidence::Unknown);
     }
 
     #[test]

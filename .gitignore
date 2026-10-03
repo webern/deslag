@@ -28,6 +28,10 @@ test/output/
 # scripts/harper/harper.lock
 .harper/
 
+# the downloads and working files of scripts/lexicon/generate.sh, which is run by hand; see
+# scripts/lexicon/lexicon.lock
+.lexicon/
+
 # because llms love python
 __pycache__/
 

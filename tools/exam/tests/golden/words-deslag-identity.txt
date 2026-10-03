@@ -1,0 +1,27 @@
+gold       tests/cases/deslag-identity.conllu
+sha256     7e8ee605f633
+source     hand-made
+split      dev
+trains     no
+tokens     deslag
+
+Words
+  sentences                           2
+  gold words                          8
+    punctuation                       2
+    X                                 0
+    tagged                            6
+      scored                          4  as 4 tokens
+      unalignable                     0
+        text mismatch                 0
+        tokenizer drift               0
+        one word, several tokens      0
+        one token, several tags       0
+      not word tokens                 2
+  provenance
+    agree                             5
+    adjudicated                       1
+    corrected                         1
+    owner                             1
+    unmarked                          0
+  open gold disputes                  0  (0 name a sent_id not in the file)

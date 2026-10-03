@@ -1,0 +1,7 @@
+# sent_id = a1
+# text = Check your e-mail now
+1	Check	_	VERB	_	Mood=Imp|VerbForm=Fin	_	_	_	_
+2	your	_	PRON	_	Person=2	_	_	_	_
+3	e-mail	_	NOUN	_	Number=Sing	_	_	_	_
+4	now	_	ADV	_	_	_	_	_	_
+

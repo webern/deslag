@@ -1,0 +1,19 @@
+[package]
+name = "deslag-exam"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Grades part-of-speech taggers against gold sets. Never published."
+license = "MIT"
+publish = false
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+deslag = { path = "../.." }
+sha2 = "0.11.0"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[lints]
+workspace = true

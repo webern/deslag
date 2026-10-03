@@ -4,7 +4,7 @@
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
 # they drift; `make fix-catalog` rewrites them. `since` is the version the entry first ships in.
 
-measured_on = "ghcr.io/webern/deslag-blobs:v2@sha256:33d0d99e2d588f31d7d69563d62599486bcd1e89fe8efcfed6fcdf047d6fca00"
+measured_on = "ghcr.io/webern/deslag-blobs:v3@sha256:d7263b0d15c9b4229633d9eec73f0448e1165ca6eab1903fdc227ccada9c7350"
 
 [[entry]]
 phrase = "why it matters"

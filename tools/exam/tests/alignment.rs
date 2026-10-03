@@ -1,4 +1,5 @@
-//! Every alignment case of the design, each on a hand-made snippet under `tests/cases/`.
+//! Every alignment case that `docs/design/exam.asbuilt.md` describes, each on a hand-made snippet
+//! under `tests/cases/`.
 
 mod common;
 

@@ -99,8 +99,8 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
-                      blobstore/, which moves its big tier and builds its batches; ewt/, which
-                      fetches the treebank
+                      blobstore/, which moves its big tier and builds its batches; ewt/ and
+                      harper/, which fetch the treebank and Harper's model for the exam
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
 tools/exam/           deslag-exam, never published: grades taggers against gold sets
 ```
@@ -114,10 +114,11 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
 the next image. `make fetch-ewt` fetches the UD English Web Treebank that `scripts/ewt/ewt.lock`
-pins into `.ewt/`, for the exam to measure on.
+pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's tagger model into
+`.harper/`, which the exam grades and nothing ships.
 
 `make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
 completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
 or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
 
-`make clean` removes all three directories and runs `cargo clean`.
+`make clean` removes all four directories and runs `cargo clean`.

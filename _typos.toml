@@ -4,3 +4,7 @@
 
 [files]
 extend-exclude = ["tests/corpus", "tests/golden/*.txt"]
+
+# Automattic is the company that holds Harper's copyright, which the licence notices name.
+[default.extend-words]
+Automattic = "Automattic"

@@ -13,8 +13,14 @@ test/output/
 .blobs/
 .tools/
 
-# the UD English Web Treebank that make fetch-ewt downloads; see scripts/ewt/ewt.lock
+# the UD English Web Treebank that make fetch-ewt downloads, and the scratch directory it builds
+# it in; see scripts/ewt/ewt.lock
 .ewt/
+.ewt.new.*/
+
+# Harper's tagger model that make fetch-harper downloads, for measuring only and never shipped; see
+# scripts/harper/harper.lock
+.harper/
 
 # because llms love python
 __pycache__/

@@ -17,18 +17,19 @@
 //! - A word is `Sure` when one tag remains, `Likely` when the rule chose its best guess and others
 //!   remain. A pass never lowers a confidence, and never sets `Unsure` or `Unknown`.
 //! - A rule that needs a neighbour's tag asks [`View::settled`], which answers only when nothing
-//!   else is possible there. When it does not, the rule does nothing. Reading a neighbour's text
-//!   or kind is not leaning on its reading, and needs no such care.
+//!   else is possible there. When it does not, the rule does nothing. A rule that holds for every
+//!   tag the neighbour may have asks [`View::within`] instead. Reading a neighbour's text or kind
+//!   is not leaning on its reading, and needs no such care.
 //!
 //! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
 //! its tests, which run each case through the whole tagger.
 
-use super::{Confidence, Context, Features, Reading, Tag, TagSet, infinitive, proper};
+use super::{Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, proper};
 use crate::document::{Token, TokenKind};
 
 /// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
 /// settled, and the order is part of the tagger: it is what the tag stream records.
-const PASSES: [fn(&mut View<'_, '_>); 2] = [proper::run, infinitive::run];
+const PASSES: [fn(&mut View<'_, '_>); 3] = [proper::run, infinitive::run, function::run];
 
 /// Runs every pass, in order, over one sentence whose words the tables have read.
 pub(super) fn run(tokens: &mut [Token<'_>], context: Context) {
@@ -80,6 +81,34 @@ impl View<'_, '_> {
             .map(|reading| reading.tag)
     }
 
+    /// Whether the word at `at` is read and every tag possible there is in `tags`. A rule whose
+    /// decision is the same for each of those tags does not lean on which of them is right, so it
+    /// may use this where it may not use an ambiguous neighbour: a word that can be nothing but a
+    /// verb or an auxiliary settles that it is not a noun, though not which of the two it is.
+    pub(super) fn within(&self, at: usize, tags: TagSet) -> bool {
+        self.reading(at).is_some_and(|reading| {
+            let possible = reading.possible();
+            !possible.is_empty() && intersect(possible, tags) == possible
+        })
+    }
+
+    /// The index of the token after `at`, if there is one.
+    pub(super) fn token_after(&self, at: usize) -> Option<usize> {
+        (at + 1 < self.len()).then_some(at + 1)
+    }
+
+    /// The index of the word right after `at`: the next token, if it is a word.
+    pub(super) fn next_word(&self, at: usize) -> Option<usize> {
+        self.token_after(at)
+            .filter(|next| self.kind(*next) == TokenKind::Word)
+    }
+
+    /// Whether the word right after `at` is read and every tag possible there is in `tags`.
+    pub(super) fn next_within(&self, at: usize, tags: TagSet) -> bool {
+        self.next_word(at)
+            .is_some_and(|next| self.within(next, tags))
+    }
+
     /// Narrows the word at `at` to the tags of `keep` that are still possible, with `prefer` as the
     /// best guess, and returns whether the reading changed.
     ///
@@ -120,15 +149,19 @@ fn intersect(a: TagSet, b: TagSet) -> TagSet {
 
 /// The features of `old`'s word when `tag` is its best guess. The tables give features for the
 /// best guess alone, so a change of guess keeps only what stays true of the word: that a second
-/// word is fused on, and, between a noun and a proper noun, its number. A proper noun with no
-/// number known is singular, as names are but for the few that name a group.
+/// word is fused on; its number, between a noun and a proper noun or a determiner and a pronoun;
+/// and all of them between a verb and an auxiliary, which are one word with one inflection. A
+/// proper noun with no number known is singular, as names are but for the few that name a group.
 fn features_for(old: Reading, tag: Tag) -> Features {
     if tag == old.tag {
         return old.features;
     }
-    let is_noun = |tag| matches!(tag, Tag::Noun | Tag::ProperNoun);
+    let pair = |a: Tag, b: Tag| (old.tag == a && tag == b) || (old.tag == b && tag == a);
+    if pair(Tag::Verb, Tag::Auxiliary) {
+        return old.features;
+    }
     let mut keep = Features::CONTRACTION;
-    if is_noun(old.tag) && is_noun(tag) {
+    if pair(Tag::Noun, Tag::ProperNoun) || pair(Tag::Determiner, Tag::Pronoun) {
         keep = keep.union(Features::SINGULAR).union(Features::PLURAL);
     }
     let features = old.features.only(keep);
@@ -288,6 +321,23 @@ mod tests {
             features_for(verb, ProperNoun),
             Features::CONTRACTION.union(Features::SINGULAR)
         );
+        // A verb and an auxiliary are one word, so all its features carry; a determiner and a
+        // pronoun share a number.
+        assert_eq!(features_for(verb, Tag::Auxiliary), verb.features);
+        let aux = read(
+            Tag::Auxiliary,
+            Features::SINGULAR.union(Features::THIRD),
+            Confidence::Unsure,
+            &[Tag::Auxiliary, Verb],
+        );
+        assert_eq!(features_for(aux, Verb), aux.features);
+        let this = read(
+            Tag::Determiner,
+            Features::SINGULAR.union(Features::THIRD),
+            Confidence::Unsure,
+            &[Tag::Determiner, Tag::Pronoun],
+        );
+        assert_eq!(features_for(this, Tag::Pronoun), Features::SINGULAR);
     }
 
     #[test]

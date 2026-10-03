@@ -118,6 +118,6 @@ pins into `.ewt/`, for the exam to measure on.
 
 `make fetch-spacy` installs spaCy and its model, pinned by hash in `scripts/spacy/requirements.lock`,
 into a venv in `.spacy/`, and `make generate-spacy` writes the exam's import file for the
-treebank's dev set there. Neither is in `make ci`.
+treebank's dev set there. `make test-spacy` then scores it with `deslag-exam`. None is in `make ci`.
 
 `make clean` removes all four directories and runs `cargo clean`.

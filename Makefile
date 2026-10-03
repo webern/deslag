@@ -18,7 +18,7 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-release \
-        test test-blobs \
+        test test-blobs test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-spacy \
         ci \
@@ -31,6 +31,8 @@ help:
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
+	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
+	@echo "                 first, so minutes, and not in test or ci"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
 	@echo "check-deslag     run deslag on this repository's own Markdown"
@@ -79,6 +81,12 @@ test: preflight
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 
+# The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
+# scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
+# of test: it needs the network, a few GB and minutes.
+test-spacy: generate-spacy
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- score --gold $(EWT_DEV) --import .spacy/ewt-dev.import.conllu --save .spacy/ewt-dev.run.json
+
 # ---------------------------------------------------------------------------
 # check
 
@@ -122,7 +130,7 @@ clean-blobs:
 clean-ewt:
 	rm -rf .ewt
 
-# .spacy is the venv fetch-spacy installs, with the files generate-spacy writes beside it.
+# .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
 clean-spacy:
 	rm -rf .spacy
 

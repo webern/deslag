@@ -17,37 +17,34 @@
 //!
 //! 1. **A possessive** `x's` is a singular noun with a second word fused on, a proper noun when
 //!    `x` is written as a name.
-//! 2. **A hyphenated word** takes the reading of its last part, its head in English, from the
-//!    tables when they have it, else from that part's shape. The tokenizer breaks a word at a
-//!    hyphen, so a token it made never reaches this rule; one made elsewhere can.
-//! 3. **A version label**, `v` and digits (`v2`, `v1.2`), is a numeral.
-//! 4. **A dotted word.** Single letters between dots are an abbreviation: initials in capitals
+//! 2. **A version label**, `v` and digits (`v2`, `v1.2`), is a numeral.
+//! 3. **A dotted word.** Single letters between dots are an abbreviation: initials in capitals
 //!    (`U.S`), an adverb in lower case (`e.g`, `i.e`, `a.m`). A site (`www.adobe.com`) is a proper
 //!    noun. A file, a module or a newsgroup (`report.pdf`, `node.js`) may or may not be named,
 //!    which its shape does not say, so it is a noun that may be a name, as an acronym is.
-//! 5. **An identifier**, a word with an underscore or a colon in it (`foo_bar`, `docs:setup`), is
+//! 4. **An identifier**, a word with an underscore or a colon in it (`foo_bar`, `docs:setup`), is
 //!    the name of a thing: a proper noun.
-//! 6. **A word that starts with a digit.** An ordinal (`4th`) is an adjective. A decade (`1990s`)
+//! 5. **A word that starts with a digit.** An ordinal (`4th`) is an adjective. A decade (`1990s`)
 //!    is a plural noun. A digit and a capitalised word (`1Password`) is a product, a proper noun.
 //!    A number and a unit (`400k`, `8gb`) is a numeral.
-//! 7. **Camel case** (`userId`, `PowerShell`), a capital straight after a lower-case letter, and
+//! 6. **Camel case** (`userId`, `PowerShell`), a capital straight after a lower-case letter, and
 //!    **a digit after a letter** (`ESP32`, `x86`) are the names of things: proper nouns.
-//! 8. **A word in capitals** is an acronym and a noun, and its plural (`APIs`) a plural noun. An
+//! 7. **A word in capitals** is an acronym and a noun, and its plural (`APIs`) a plural noun. An
 //!    acronym may be a name (`NASA`) or a thing (`API`), which the shape does not say, so it is a
 //!    noun that may be a name.
-//! 9. **An ending.** `-ly` is an adverb, `-ing` a verb's present participle, `-ed` a verb's past,
+//! 8. **An ending.** `-ly` is an adverb, `-ing` a verb's present participle, `-ed` a verb's past,
 //!    `-ize`, `-ise` and `-ify` a verb, `-tion`, `-sion`, `-ment`, `-ness`, `-ity`, `-ism`,
 //!    `-ship` and `-hood` a noun, `-ous`, `-ible`, `-able`, `-less`, `-ful`, `-ive` and `-al` an
-//!    adjective, and a plain `-s` a plural noun that may be a verb's third person. Words in `-ss`,
-//!    `-us` and `-is` are singular nouns (`class`, `status`, `analysis`). The ending needs a stem of
-//!    three letters, and a plural a word of four.
-//! 10. **A capital** starts a name. A capitalised word is a proper noun, unless its ending makes
-//!     common nouns (`Reactivity`). The ending still adds the tags it allows, since a capital also
-//!     starts a sentence. Which of them a capital means is for the pass that sees where it stands.
-//! 11. **Nothing else** is a singular noun that may be a verb or an adjective: the open class is
+//!    adjective, and a plain `-s` a plural noun that may be a verb's third person. Words in
+//!    `-ss`, `-us` and `-is` are singular nouns (`class`, `status`, `analysis`). The ending needs
+//!    a stem of three letters, and a plural a word of four.
+//! 9. **A capital** starts a name. A capitalised word is a proper noun, unless its ending makes
+//!    common nouns (`Reactivity`). The ending still adds the tags it allows, since a capital also
+//!    starts a sentence. Which of them a capital means is for the pass that sees where it stands.
+//! 10. **Nothing else** is a singular noun that may be a verb or an adjective: the open class is
 //!     open, and a word that no table knows has no shape to say which.
 
-use super::{Confidence, Features, LONGEST, Reading, Tag, TagSet, closed, fold, lexicon};
+use super::{Confidence, Features, Reading, Tag, TagSet};
 
 /// What a rule says of a word: the best guess, its features, and the tags its shape allows, which
 /// include the best guess.
@@ -157,7 +154,7 @@ fn shape(text: &str) -> Shape {
     if let Some(stem) = possessive_stem(text) {
         return possessive(stem);
     }
-    if let Some(shape) = hyphenated(text).or_else(|| identifier(text)) {
+    if let Some(shape) = identifier(text) {
         return shape;
     }
     let ending = ending_of(text);
@@ -196,33 +193,7 @@ fn possessive(stem: &str) -> Shape {
     )
 }
 
-// ---- rule 2: a hyphenated word --------------------------------------------------------------
-
-/// A word with a hyphen takes the reading of its last part: from the tables if they have it, else
-/// from its shape.
-fn hyphenated(text: &str) -> Option<Shape> {
-    let (_, last) = text.rsplit_once('-')?;
-    if last.is_empty() {
-        return None;
-    }
-    Some(match table(last) {
-        Some(reading) => Shape {
-            tag: reading.tag,
-            features: reading.features,
-            kept: reading.possible(),
-        },
-        None => shape(last),
-    })
-}
-
-/// What the closed-class table or the lexicon says of `text`, if either has it.
-fn table(text: &str) -> Option<Reading> {
-    let mut buf = [0; LONGEST];
-    let word = fold(text, &mut buf)?;
-    closed::lookup(word).or_else(|| lexicon::lookup(word))
-}
-
-// ---- rules 3 to 7: versions, dots, identifiers and digits -----------------------------------
+// ---- rules 2 to 6: versions, dots, identifiers and digits -----------------------------------
 
 /// The shape of a version label, a dotted word, an identifier or a word with a digit in it, if
 /// `text` is one.
@@ -320,7 +291,7 @@ fn is_camel_case(text: &str) -> bool {
     false
 }
 
-// ---- rules 8 and 10: capitals ---------------------------------------------------------------
+// ---- rules 7 and 9: capitals ---------------------------------------------------------------
 
 /// Whether `text` starts with an upper-case letter.
 fn starts_upper(text: &str) -> bool {
@@ -373,7 +344,7 @@ fn intersect(a: TagSet, b: TagSet) -> TagSet {
     a.iter().filter(|tag| b.contains(*tag)).collect()
 }
 
-// ---- rule 9: endings ------------------------------------------------------------------------
+// ---- rule 8: endings ------------------------------------------------------------------------
 
 /// What an ending says of `text`, whatever its case.
 fn ending_of(text: &str) -> Option<Shape> {
@@ -404,10 +375,18 @@ fn plural(text: &str) -> Option<Shape> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tag::{closed, fold, lexicon};
     use Tag::{Adjective, Adverb, Noun, Numeral, ProperNoun, Verb};
 
     fn set(tags: &[Tag]) -> TagSet {
         tags.iter().copied().collect()
+    }
+
+    /// What the closed-class table or the lexicon says of `text`, if either has it.
+    fn table(text: &str) -> Option<Reading> {
+        let mut buf = [0; crate::tag::LONGEST];
+        let word = fold(text, &mut buf)?;
+        closed::lookup(word).or_else(|| lexicon::lookup(word))
     }
 
     /// What `text` is read as. It is a word that no table has, so its reading is the guess.
@@ -563,28 +542,6 @@ mod tests {
     }
 
     #[test]
-    fn a_hyphenated_word_takes_the_reading_of_its_last_part() {
-        // `running` is in the lexicon.
-        let compound = read("frobnitz-running");
-        let last = table("running").unwrap();
-        assert_eq!(compound.tag, last.tag);
-        assert_eq!(compound.features, last.features);
-        assert_eq!(compound.kept, last.possible());
-        assert_eq!(compound.confidence, Confidence::Unknown);
-        // A capital at the start keeps a name possible.
-        assert!(read("Frobnitz-running").kept.contains(ProperNoun));
-        // A last part that no table has is read by its shape.
-        assert_guess(
-            "frobnitz-frobnicately",
-            Adverb,
-            POSITIVE,
-            &[Adverb, Adjective],
-        );
-        // No last part, no rule.
-        assert_guess("frobnitz-", Noun, SINGULAR, &OPEN);
-    }
-
-    #[test]
     fn a_version_label_is_a_numeral() {
         for word in ["v2", "v58", "v1.2", "v1.2.3"] {
             assert_guess(word, Numeral, Features::NONE, &[Numeral, Noun]);
@@ -704,7 +661,6 @@ mod tests {
             "foo_bar",
             "e.g",
             "x86",
-            "frobnitz-running",
             "frobnitz's",
             "frobnitzes",
             "recomputed",
@@ -735,7 +691,6 @@ mod tests {
             "FROBZs",
             "Über",
             "Q",
-            "Frobnitz-running",
             "V1.2",
             "Frobnitz.pdf",
             "Frobnitz's",

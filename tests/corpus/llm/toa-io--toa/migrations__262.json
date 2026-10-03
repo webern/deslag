@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "migrations__262.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "toa-io/toa",
+    "path": "migrations/262.md",
+    "commit": "a771f8303e7a1b09e79dc6842e8e96e21f57d8c5",
+    "commit_date": "2026-09-27T01:07:40+04:00",
+    "url": "https://github.com/toa-io/toa/blob/a771f8303e7a1b09e79dc6842e8e96e21f57d8c5/migrations/262.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-10T16:47:20+03:00",
+    "stars": 3,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-08-27T23:03:15+04:00",
+    "last_commit_date": "2026-09-05T20:16:20Z",
+    "last_commit_author": "temich",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-27T23:03:15+04:00",
+    "last_committer_date": "2026-09-05T21:31:39Z",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b8c28610603ad7e0337b528b7128daf3a9db2066",
+        "date": "2026-09-05T20:16:20Z",
+        "committed": "2026-09-05T21:31:39Z",
+        "old": "1e85b5932ce61ae2fdc1e779ea09f6abca25bc5e",
+        "new": "65c07402a435568b29e6869bf862fb089a5d75f0",
+        "status": "agent"
+      },
+      {
+        "commit": "21a35f67fc92f628049ee6966ac76361e34adeca",
+        "date": "2026-08-28T17:04:34+04:00",
+        "committed": "2026-08-28T17:04:34+04:00",
+        "old": "34b9ee7b1ca2b28b22bf7ee25f6be2c377702423",
+        "new": "1e85b5932ce61ae2fdc1e779ea09f6abca25bc5e",
+        "status": "agent"
+      },
+      {
+        "commit": "af44745f08030eeb7bef7e6e9c9826928977bb01",
+        "date": "2026-08-27T23:03:15+04:00",
+        "committed": "2026-08-27T23:03:15+04:00",
+        "old": null,
+        "new": "34b9ee7b1ca2b28b22bf7ee25f6be2c377702423",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2641,
+    "sha256": "1c74bb5ba12ac54724f67e4135d0fc0505741f4bcca8a5298b441ae72b11e105",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 80,
+    "words": 440,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/toa-io--toa/migrations/262.md"
+}

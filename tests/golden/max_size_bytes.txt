@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 173 of 1230: core 4, human 31, llm 31, mixed 107
+# fails 167 of 1230: core 4, human 30, llm 30, mixed 103
 
 [md.lints.max_size_bytes]
 value = 16384
@@ -16,8 +16,7 @@ human/ICLRandD--Blackstone/README.md size_bytes:23328 budget:16384
 human/ROCm--hipfort/lib__hipfort__SUPPORTED_API_HIP.md size_bytes:41822 budget:16384
 human/Squidex--squidex/CHANGELOG.md size_bytes:51104 budget:16384
 human/agitter--single-cell-pseudotime/README.md size_bytes:36138 budget:16384
-human/chronotope--chrono/CHANGELOG.md size_bytes:24720 budget:16384
-human/codeberg--Starfish--TinyWeatherForecastGermany/README.md size_bytes:23562 budget:16384
+human/arkworks-rs--algebra/CHANGELOG.md size_bytes:16666 budget:16384
 human/codeberg--curl--curl-mirror/docs__INSTALL.md size_bytes:22742 budget:16384
 human/codeberg--dnkl--foot/CHANGELOG.md size_bytes:64154 budget:16384
 human/codeberg--jbruchon--jdupes/README.md size_bytes:30642 budget:16384
@@ -42,26 +41,25 @@ human/rust-itertools--itertools/CHANGELOG.md size_bytes:20299 budget:16384
 human/thepirat000--CachingFramework.Redis/COLLECTIONS.md size_bytes:20093 budget:16384
 human/yarnpkg--yarn/CHANGELOG.md size_bytes:23084 budget:16384
 human/yozorajs--yozora/README.md size_bytes:27712 budget:16384
-llm/Dicklesworthstone--beads_viewer/docs__labels-view-feature-plan.md size_bytes:25911 budget:16384
 llm/Galaxy-Dawn--claude-scholar/skills__ml-paper-writing__references__knowledge__rethinking-papers-kaiming-he.md size_bytes:33598 budget:16384
 llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md size_bytes:20247 budget:16384
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md size_bytes:20448 budget:16384
 llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md size_bytes:27455 budget:16384
-llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md size_bytes:18950 budget:16384
 llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md size_bytes:17064 budget:16384
 llm/asosteam--asos-devprod-git-ai-old/docs__superpowers__plans__2026-05-03-checkpoint-rewrite.md size_bytes:51488 budget:16384
 llm/baizhiheizi--quill/specs__010-editor-progressive-disclosure__tasks.md size_bytes:23062 budget:16384
 llm/beekeeper-studio--queryleaf/docs__blog__posts__mongodb-time-series-data-management.md size_bytes:19064 budget:16384
 llm/bitwize-music-studio--claude-ai-music-skills/genres__j-pop__README.md size_bytes:21578 budget:16384
 llm/crestalnetwork--intentkit/docs__plans__2026-03-26-rich-media-messaging-plan.md size_bytes:43100 budget:16384
+llm/danikf--tik4net/Docs__findings-routeros-6.md size_bytes:24639 budget:16384
 llm/everydaythingssoftware--citadel/ai-docs__MIGRATION_EXAMPLE.md size_bytes:18565 budget:16384
+llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md size_bytes:18346 budget:16384
 llm/gastownhall--gastown/docs__design__ledger-export-triggers.md size_bytes:22540 budget:16384
 llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md size_bytes:24605 budget:16384
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md size_bytes:20981 budget:16384
 llm/gitlab--cznic--ql/AUDIT.md size_bytes:23810 budget:16384
 llm/joemccann--dillinger/agent__skills__frontend-design__decision-trees.md size_bytes:17265 budget:16384
 llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcript.md size_bytes:63687 budget:16384
-llm/lewiseinstein15-Tech--jexi-os/skills__library__claude-ecosystem__n8n-skills__n8n-subworkflows__SKILL.md size_bytes:22432 budget:16384
 llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md size_bytes:16668 budget:16384
 llm/mitchdenny--hex1b/docs__tape.md size_bytes:17743 budget:16384
 llm/mono--SkiaSharp/documentation__docfx__guides__curves__text-paths.md size_bytes:17112 budget:16384
@@ -74,6 +72,7 @@ llm/vokako--tmux-mobile/docs__todo.md size_bytes:19913 budget:16384
 llm/withkynam--vibecode-pro-max-kit/claude__skills__vc-agent-browser__references__puppeteer-reference.md size_bytes:19065 budget:16384
 llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md size_bytes:27203 budget:16384
 mixed/AsBuiltReport--AsBuiltReport.Veeam.VBR/CHANGELOG.md size_bytes:33813 budget:16384
+mixed/Azure--azure-sdk-for-net/sdk__identity__Azure.Identity__CHANGELOG.md size_bytes:64228 budget:16384
 mixed/Azure--azure-sdk-for-net/sdk__keyvault__Azure.Security.KeyVault.Certificates__CHANGELOG.md size_bytes:18012 budget:16384
 mixed/BYVoid--OpenCC/NEWS.md size_bytes:55230 budget:16384
 mixed/Bee-Mar--mmpm/CHANGELOG.md size_bytes:25091 budget:16384
@@ -83,15 +82,14 @@ mixed/Correia-jpv--fucking-magictools/README.md size_bytes:62065 budget:16384
 mixed/GitTools--GitVersion/BREAKING_CHANGES.md size_bytes:24908 budget:16384
 mixed/HumanSignal--label-studio/docs__source__guide__install_enterprise_k8s.md size_bytes:16940 budget:16384
 mixed/HumanSignal--label-studio/docs__source__guide__quality.md size_bytes:19213 budget:16384
-mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md size_bytes:16811 budget:16384
 mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md size_bytes:23471 budget:16384
+mixed/JuliaMath--Polynomials.jl/docs__src__index.md size_bytes:29584 budget:16384
 mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md size_bytes:31260 budget:16384
 mixed/LennartHennigs--Button2/CHANGELOG.md size_bytes:22891 budget:16384
 mixed/MarkMichaelis--ScoopBucket/README.md size_bytes:36099 budget:16384
 mixed/MichaelGrafnetter--DSInternals/Documentation__CHANGELOG.md size_bytes:52988 budget:16384
 mixed/NVIDIA--deepops/docs__pxe__maas.md size_bytes:18857 budget:16384
 mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md size_bytes:24735 budget:16384
-mixed/PrivateBin--PrivateBin/CHANGELOG.md size_bytes:34226 budget:16384
 mixed/SchemaStore--schemastore/CONTRIBUTING.md size_bytes:32916 budget:16384
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md size_bytes:20113 budget:16384
 mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md size_bytes:18684 budget:16384
@@ -104,7 +102,6 @@ mixed/authgear--authgear-server/docs__specs__oidc.md size_bytes:44869 budget:163
 mixed/bpmn-io--diagram-js/CHANGELOG.md size_bytes:58793 budget:16384
 mixed/buildkite--terraform-provider-buildkite/docs__resources__pipeline.md size_bytes:17358 budget:16384
 mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md size_bytes:22900 budget:16384
-mixed/cloudfoundry--uaa/docs__UAA-LDAP.md size_bytes:35813 budget:16384
 mixed/compiler-explorer--compiler-explorer/docs__API.md size_bytes:21918 budget:16384
 mixed/compiler-explorer--compiler-explorer/docs__AddingACompiler.md size_bytes:20864 budget:16384
 mixed/coverlet-coverage--coverlet/Documentation__Changelog.md size_bytes:26352 budget:16384
@@ -118,8 +115,8 @@ mixed/dotnet--ClangSharp/README.md size_bytes:38079 budget:16384
 mixed/dotnet--docs/docs__core__extensions__options.md size_bytes:26814 budget:16384
 mixed/dotnet--docs/docs__fundamentals__code-analysis__code-quality-rule-options.md size_bytes:34318 budget:16384
 mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md size_bytes:28725 budget:16384
-mixed/dragonflydb--dragonfly/README.md size_bytes:16856 budget:16384
 mixed/eshaham--israeli-bank-scrapers/README.md size_bytes:17027 budget:16384
+mixed/expo--expo/packages__babel-preset-expo__CHANGELOG.md size_bytes:38588 budget:16384
 mixed/expo--expo/packages__expo-task-manager__CHANGELOG.md size_bytes:19673 budget:16384
 mixed/fluentmigrator--fluentmigrator/CHANGELOG.md size_bytes:19924 budget:16384
 mixed/fsprojects--FSharp.Control.AsyncSeq/RELEASE_NOTES.md size_bytes:25114 budget:16384
@@ -148,7 +145,6 @@ mixed/natemcmaster--CommandLineUtils/CHANGELOG.md size_bytes:31030 budget:16384
 mixed/ncsa--NEAT/ChangeLog.md size_bytes:40778 budget:16384
 mixed/netbootxyz--netboot.xyz/CHANGELOG.md size_bytes:23003 budget:16384
 mixed/nicknisi--dotfiles/README.md size_bytes:19056 budget:16384
-mixed/nodejs--node/doc__api__debugger.md size_bytes:23268 budget:16384
 mixed/nteract--semiotic/README.md size_bytes:43553 budget:16384
 mixed/open-telemetry--opentelemetry-java-instrumentation/docs__contributing__writing-instrumentation-module.md size_bytes:25435 budget:16384
 mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp__CHANGELOG.md size_bytes:35097 budget:16384
@@ -162,10 +158,10 @@ mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md size_bytes:200
 mixed/rebasepro--rebase/README.md size_bytes:19942 budget:16384
 mixed/reidmorrison--semantic_logger/docs__appenders.md size_bytes:34299 budget:16384
 mixed/ruby-git--ruby-git/CONTRIBUTING.md size_bytes:58077 budget:16384
+mixed/sarub0b0--kubetui/README.md size_bytes:29877 budget:16384
 mixed/scalameta--scalafmt/docs__installation.md size_bytes:23591 budget:16384
 mixed/scalameta--scalameta/docs__semanticdb__guide.md size_bytes:20727 budget:16384
 mixed/sebastienros--parlot/docs__parsers.md size_bytes:27852 budget:16384
-mixed/shakacode--react_on_rails/CONTRIBUTING.md size_bytes:44492 budget:16384
 mixed/soutaro--steep/CHANGELOG.md size_bytes:62041 budget:16384
 mixed/spree--spree/github__CONTRIBUTING.md size_bytes:25451 budget:16384
 mixed/tamagui--tamagui/next.md size_bytes:20181 budget:16384
@@ -174,9 +170,7 @@ mixed/tmorin--plantuml-libs/CHANGELOG.md size_bytes:58252 budget:16384
 mixed/ttop32--MouseTooltipTranslator/doc__description.md size_bytes:48000 budget:16384
 mixed/ulisesbocchio--jasypt-spring-boot/README.md size_bytes:41723 budget:16384
 mixed/unseen1980--awesome-travel/README.md size_bytes:17657 budget:16384
-mixed/uswds--uswds/CONTRIBUTING.md size_bytes:29174 budget:16384
 mixed/voxel51--fiftyone/README.md size_bytes:19828 budget:16384
 mixed/waditu--czsc/README.md size_bytes:16700 budget:16384
-mixed/warmcat--libwebsockets/READMEs__README.lwsws.md size_bytes:33445 budget:16384
 mixed/zaproxy--zap-extensions/addOns__scripts__CHANGELOG.md size_bytes:17809 budget:16384
 mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md size_bytes:61889 budget:16384

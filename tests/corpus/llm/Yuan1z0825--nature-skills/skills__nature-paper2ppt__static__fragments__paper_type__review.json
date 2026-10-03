@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "skills__nature-paper2ppt__static__fragments__paper_type__review.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Yuan1z0825/nature-skills",
+    "path": "skills/nature-paper2ppt/static/fragments/paper_type/review.md",
+    "commit": "9e2d90e2171a61dc0ae072e43e8d16e3fc73572f",
+    "commit_date": "2026-09-25T14:21:09+08:00",
+    "url": "https://github.com/Yuan1z0825/nature-skills/blob/9e2d90e2171a61dc0ae072e43e8d16e3fc73572f/skills/nature-paper2ppt/static/fragments/paper_type/review.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-04-24T11:11:47+08:00",
+    "stars": 44708,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-29T15:47:17+08:00",
+    "last_commit_date": "2026-05-29T15:47:17+08:00",
+    "last_commit_author": "Xin rui",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-29T15:47:17+08:00",
+    "last_committer_date": "2026-05-29T15:47:17+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "e5bf544c680989cd45c0effdf42d54d1835f6924",
+        "date": "2026-05-29T15:47:17+08:00",
+        "committed": "2026-05-29T15:47:17+08:00",
+        "old": null,
+        "new": "e698678af62af652c1d7af51a3565e7e697b990a",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 1035,
+    "sha256": "55e34ef7858d73f753c5ea8aa72a627dbeccb9327b81de63691d8dbb6eb144c0",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 29,
+    "words": 150,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Yuan1z0825--nature-skills/skills/nature-paper2ppt/static/fragments/paper_type/review.md"
+}

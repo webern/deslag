@@ -1,0 +1,90 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__planning__context-curve-scheduler-spec.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "flexinfer/flexinfer",
+    "path": "docs/planning/context-curve-scheduler-spec.md",
+    "commit": "68fe8ed6cc0efd16d4e216133a56b53b6e9a02dc",
+    "commit_date": "2026-08-14T18:00:20-04:00",
+    "url": "https://github.com/flexinfer/flexinfer/blob/68fe8ed6cc0efd16d4e216133a56b53b6e9a02dc/docs/planning/context-curve-scheduler-spec.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-07-12T04:09:32-04:00",
+    "stars": 2,
+    "found_by": "gh-commits:codex"
+  },
+  "history": {
+    "commits": 3,
+    "first_commit_date": "2026-05-25T13:35:25-04:00",
+    "last_commit_date": "2026-05-25T14:29:04-04:00",
+    "last_commit_author": "Cody Blevins",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-25T13:35:25-04:00",
+    "last_committer_date": "2026-05-25T14:29:04-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      }
+    ],
+    "edits": [
+      {
+        "commit": "96c1455018652d6c130563a2c4a06cb8911f3d10",
+        "date": "2026-05-25T14:29:04-04:00",
+        "committed": "2026-05-25T14:29:04-04:00",
+        "old": "80f46dbf49fb8913ca2f5eaa47104b46af1c6523",
+        "new": "68761be33437600133d45a7a1271473c837de28a",
+        "status": "agent"
+      },
+      {
+        "commit": "2c4888b5385aa0e5e60746b04e41d1dc7466d627",
+        "date": "2026-05-25T13:59:36-04:00",
+        "committed": "2026-05-25T13:59:36-04:00",
+        "old": "e21c2e627f471e9080840a6f889ae1882a03eb62",
+        "new": "80f46dbf49fb8913ca2f5eaa47104b46af1c6523",
+        "status": "agent"
+      },
+      {
+        "commit": "4a304be61537f7e1a9b29f2470ee37e76a4cb9b2",
+        "date": "2026-05-25T13:35:25-04:00",
+        "committed": "2026-05-25T13:35:25-04:00",
+        "old": null,
+        "new": "e21c2e627f471e9080840a6f889ae1882a03eb62",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 3 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 18346,
+    "sha256": "e3c7da05b7af44cec61b5f615444af51468f8cdcc2bef844e4ed6b063a0b0a77",
+    "kind": "planning",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 356,
+    "words": 2307,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/flexinfer--flexinfer/docs/planning/context-curve-scheduler-spec.md"
+}

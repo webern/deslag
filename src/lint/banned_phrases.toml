@@ -5,68 +5,60 @@
 # they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the version the entry
 # first ships in.
 
-measured_on = "ghcr.io/webern/deslag-blobs:v4@sha256:65c7bad78a430f79a74708a111095f10b90058d283f1bb7093fe716a3a03976d"
-
-[[entry]]
-phrase = "why this matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 59
-llm_repos = 40
+measured_on = "ghcr.io/webern/deslag-blobs:v5@sha256:0fbbf6f291f5a6d88a5a0743150f92450c544873287046b0fe05d571074cdd38"
 
 [[entry]]
 phrase = "deliberately not"
 group = "insistence"
 advice = "say what it does; what it does not do rarely needs saying"
 since = "0.1.0"
-llm_files = 98
-llm_repos = 59
+llm_files = 92
+llm_repos = 56
 
 [[entry]]
 phrase = "not silently"
 group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.1.0"
-llm_files = 113
-llm_repos = 66
+llm_files = 112
+llm_repos = 65
 
 [[entry]]
 phrase = "never silently"
 group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.1.0"
-llm_files = 61
-llm_repos = 43
+llm_files = 57
+llm_repos = 40
 
 [[entry]]
 phrase = "load-bearing"
 group = "metaphors"
 advice = "say what depends on it"
 since = "0.1.0"
-llm_files = 204
-llm_repos = 75
+llm_files = 197
+llm_repos = 70
 
 [[entry]]
 phrase = "lands on"
 group = "metaphors"
 advice = "say what happens, such as \"is merged into\" or \"reaches\""
 since = "0.1.0"
-llm_files = 76
-llm_repos = 53
+llm_files = 73
+llm_repos = 51
 
 [[entry]]
 phrase = "it lands"
 group = "metaphors"
 advice = "say what happens, such as \"it is merged\" or \"it ships\""
 since = "0.1.0"
-llm_files = 50
-llm_repos = 43
+llm_files = 48
+llm_repos = 41
 
 [[entry]]
 phrase = "byte-identical"
 group = "precision"
 advice = "say \"identical\", or name the check that shows it"
 since = "0.1.0"
-llm_files = 189
-llm_repos = 72
+llm_files = 175
+llm_repos = 65

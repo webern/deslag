@@ -83,6 +83,83 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 """
 
 
+APACHE = """Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+"""
+
+BSD_3 = """Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice.
+2. Redistributions in binary form must reproduce the above copyright notice.
+3. Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+"""
+
+# BSD's fourth clause, which the three-clause licence does not have and which the corpus does
+# not accept. The text still has "neither the name", as BSD-3-Clause does.
+BSD_4 = BSD_3 + """4. All advertising materials mentioning features or use of this software
+   must display the following acknowledgement.
+"""
+
+UNLICENSE = """This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either
+in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and
+by any means.
+"""
+
+# The clause of the Apache licence's LLVM exception that is about the GPLv2, which is not a
+# licence the text holds.
+LLVM_EXCEPTION = """--- LLVM Exceptions to the Apache 2.0 License ----
+
+As an exception, if, as a result of your compiling your source code, portions of this Software
+are embedded into an Object form of such source code, you may redistribute such embedded
+portions in such Object form without complying with the conditions of Sections 4(a), 4(b) and
+4(d) of the License.
+
+In addition, if you combine or link compiled forms of this Software with software that is
+licensed under the GPLv2 ("Combined Software") and if a court of competent jurisdiction
+determines that the patent provision (Section 3), the indemnity provision (Section 9) or other
+Section of the License conflicts with the conditions of the GPLv2, you may retroactively and
+prospectively choose to deem waived or otherwise exclude such Section(s) of the License, but
+only in their entirety and only with respect to the Combined Software.
+"""
+
+# What the Functional Source License, with an Apache or MIT licence it turns into, looks like.
+FSL = """# Functional Source License, Version 1.1, ALv2 Future License
+
+## Abbreviation
+
+FSL-1.1-Apache-2.0
+
+## Grant of Future License
+
+We hereby irrevocably grant you an additional license to use the Software under the Apache
+License, Version 2.0 that is effective on the second anniversary of the date we make the
+Software available.
+"""
+
+FSL_MIT = FSL.replace("ALv2", "MIT").replace("Apache-2.0", "MIT").replace(
+    "Apache\nLicense, Version 2.0", "MIT license") + "\n" + MIT.split("\n\n", 2)[2]
+
+BUSL = """Business Source License 1.1
+
+Licensor: Example, Inc.
+Change Date: 4 years after release
+Change License: Apache License, Version 2.0
+
+The Business Source License (this document, or the "License") is not an Open Source license.
+"""
+
+ELASTIC = """ELASTIC LICENSE AGREEMENT
+
+PLEASE READ CAREFULLY THIS ELASTIC LICENSE AGREEMENT (THIS "AGREEMENT"), WHICH CONSTITUTES A
+LEGALLY BINDING AGREEMENT AND GOVERNS ALL OF YOUR USE OF ALL OF THE ELASTIC SOFTWARE.
+"""
+
+
 def quoted(text):
     return "".join(f"> {line}\n" if line else ">\n" for line in text.splitlines())
 
@@ -205,6 +282,474 @@ class ClassifierTests(unittest.TestCase):
             "Unlicense")
         self.assertEqual(collect.classify_license_text(
             "Apache License\nVersion 2.0, January 2004"), "Apache-2.0")
+
+
+class MultiLicenceTests(unittest.TestCase):
+    """A licence file may hold several licences. `classify_license_text` names every accepted one
+    it holds, and is None when it holds any the corpus does not accept, for the whole tree: each
+    case is a pattern the published fixtures' licence files have. `ScopeTests` is for what a text
+    says of the paths its terms are for."""
+
+    def none(self, text):
+        self.assertIsNone(collect.classify_license_text(text))
+
+    def test_a_dual_licence_is_both(self):
+        # "Licensed under either of Apache-2.0 or MIT, at your option", with both texts.
+        text = "Licensed under either of the Apache License, Version 2.0 or the MIT license.\n\n"
+        self.assertEqual(collect.classify_license_text(text + APACHE + "\n" + MIT),
+                         "Apache-2.0 OR MIT")
+        self.assertEqual(collect.classify_license_text(text + MIT + "\n" + APACHE),
+                         "Apache-2.0 OR MIT")
+
+    def test_a_licence_with_notices_for_other_accepted_licences_names_all_of_them(self):
+        # A project's own licence, and the licence of a part it took from another project.
+        text = APACHE + "\nThe protobuf library is licensed as follows:\n" + BSD_3
+        self.assertEqual(collect.classify_license_text(text), "Apache-2.0 OR BSD-3-Clause")
+
+    def test_a_licence_is_named_once_however_often_it_is_held(self):
+        self.assertEqual(collect.classify_license_text(MIT + "\n" + MIT + "\n" + quoted(MIT)),
+                         "MIT")
+
+    def test_the_licences_of_several_files_come_out_once_each(self):
+        self.assertEqual(collect.combine_licenses(["Apache-2.0 OR MIT", "MIT"]),
+                         "Apache-2.0 OR MIT")
+        self.assertEqual(collect.combine_licenses(["MIT", "CC-BY-4.0"]), "CC-BY-4.0 OR MIT")
+        self.assertIsNone(collect.combine_licenses(["Apache-2.0 OR MIT", None]))
+        self.assertIsNone(collect.combine_licenses([]))
+
+    def test_a_source_available_licence_that_turns_into_an_accepted_one_is_none(self):
+        # Its text names the licence it becomes after two years, which is the one a first match
+        # found: Apache-2.0 for dxos and han, MIT for GraphCode, pycaret and sentry-cli.
+        self.none(FSL)
+        self.none(FSL_MIT)
+        self.assertEqual(collect.classify_license_text(MIT), "MIT")
+        self.none("Fair Core License, Version 1.0, MIT Future License\n\n" + MIT)
+
+    def test_a_business_source_licence_is_none(self):
+        self.none(BUSL)
+        self.none(BUSL + "\n" + APACHE)
+
+    def test_the_elastic_licence_is_none_in_full_and_as_a_folder_s_licence(self):
+        self.none(ELASTIC)
+        self.none(
+            'Source code in this repository is variously licensed under the Apache License '
+            'Version 2.0, an Apache compatible license, or the Elastic License. Within the '
+            '"x-pack" folder, source code in a given file is licensed under the Elastic License.')
+
+    def test_a_licence_that_is_for_the_rest_of_the_tree_is_none(self):
+        # tinymux: Artistic, "both apply", with a BSD notice for the code it took from TinyMUD.
+        self.none("TinyMUX is distributed under the OSI-approved Artistic License (version 1.0). "
+                  "Portions derived from TinyMUD additionally carry the notice below. Both apply.\n\n"
+                  + BSD_3)
+        # GraphCode: two directories are MIT, everything else is not.
+        self.none("GraphCode is licensed under two licenses. Which one applies depends on the "
+                  "directory:\n  * GraphcodeKit/    MIT\n  * everything else  Functional Source "
+                  "License, Version 1.1, MIT Future License (FSL-1.1-MIT).\n\n" + MIT)
+
+    def test_split_licensing_that_puts_the_prose_outside_the_list_is_none(self):
+        # Software under Apache and documentation under CC BY-NC-SA: the fixtures are prose.
+        self.none("Software: Apache License 2.0. All software in this repository is licensed "
+                  "under the Apache License, Version 2.0.\n\nDocumentation, READMEs and figures: "
+                  "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International.")
+
+    def test_a_licence_for_some_files_leaves_the_whole_tree_without_one(self):
+        for why, text in {
+            "a GPL notice for a bundled module": MIT + "\nModule foo uses the bar framework, "
+                "which is licensed under LGPL.\n",
+            "the GPL as the project's own, with MIT for what it took": "Copyright 2013 by the "
+                "contributors, released under the GNU Public License, Version 2.\n"
+                "jQuery.Color is released under the MIT License.\n\n" + MIT,
+            "a choice of copyleft licences": "Licensed under the terms of any of the following "
+                "licenses at your choice: GNU General Public License Version 2 or later, GNU "
+                "Lesser General Public License Version 2.1 or later, Mozilla Public License "
+                "Version 1.1 or later.\n\n" + MIT,
+            "the Vim licence for part of the project": "Neovim is licensed under the terms of "
+                "the Apache 2.0 license, except for parts that were contributed under the Vim "
+                "license.\n\n" + APACHE,
+            "an Eclipse licence for the libraries it bundles": APACHE + "\nThe following "
+                "libraries are bundled under the Eclipse Public License (EPL) 1.0.\n",
+            "a licence for the fonts it bundles": MIT + "\nFont used under the SIL Open Font "
+                "License, Version 1.1.\n",
+            "an NCSA licence for a part": APACHE + "\nThe libc++ library is dual licensed under "
+                "the University of Illinois \"BSD-Like\" license and the MIT license.\n",
+            "the Commons Clause": "“Commons Clause” License Condition v1.0\n\n" + APACHE,
+            "the Server Side Public License for a package": APACHE + "\nCode in packages/engine "
+                "is under the Server Side Public License.\n",
+            "ShareAlike for the resources": APACHE + "\nResources are made available under the "
+                "Creative Commons Attribution-ShareAlike 4.0 International license.\n",
+            "the Artistic licence for a dependency": MIT + "\nThe Artistic License applies to "
+                "the bundled script.\n",
+            "a licence nobody can use": "WTFPL and the Beerware licence, then " + APACHE,
+            "Microsoft's terms for a bundled library": MIT + "\nMICROSOFT SOFTWARE LICENSE "
+                "TERMS apply to the library.\n",
+        }.items():
+            with self.subTest(why):
+                self.none(text)
+
+    def test_the_gplv2_clause_of_the_llvm_exception_is_not_the_gpl(self):
+        self.assertEqual(collect.classify_license_text(APACHE + "\n" + LLVM_EXCEPTION),
+                         "Apache-2.0")
+        self.none(APACHE + "\n" + LLVM_EXCEPTION + "\nPortions are under the GNU General "
+                  "Public License, version 2.")
+
+    def test_the_unlicense_saying_commercial_or_non_commercial_is_not_non_commercial(self):
+        self.assertEqual(collect.classify_license_text(UNLICENSE), "Unlicense")
+        self.none(UNLICENSE + "\nPlease note: for non-commercial use only.")
+
+    def test_bsd_with_the_advertising_clause_is_none_though_it_says_neither_the_name(self):
+        self.assertEqual(collect.classify_license_text(BSD_3), "BSD-3-Clause")
+        self.none(BSD_4)
+        self.none(BSD_3.replace("Redistribution and use", "The Clear BSD License\n\n"
+                                "Redistribution and use"))
+
+    def test_mit_that_takes_back_part_of_the_grant_is_none(self):
+        grant, rest = MIT.split("subject to the following conditions:\n\n")
+        for why, text in {
+            "a rider that names parties": grant + "subject to the following conditions:\n\n"
+                "ADDITIONAL RIDER / RESTRICTION: this rider is part of the \"conditions\" of "
+                "this License. No rights are granted to any Restricted Party.\n\n" + rest,
+            "a no-harm condition": grant + "subject to the following conditions:\n\n* No Harm: "
+                "The software may not be used by anyone for systems or activities that harm "
+                "others.\n* " + rest,
+            "the Do No Harm licence": "Do No Harm License\n\n" + MIT,
+            "an anti-capitalist licence": "ANTI-CAPITALIST SOFTWARE LICENSE (v 1.4)\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.none(text)
+
+    def test_terms_for_part_of_the_tree_that_are_commercial_or_restricted_are_none(self):
+        for why, text in {
+            "a proprietary directory": "The MIT License below applies to everything EXCEPT the "
+                "directory `plugins/gcloud/`, which is proprietary and licensed separately.\n\n"
+                + MIT,
+            "proprietary third-party terms": "Skills in skills/claude/pdf are governed by "
+                "proprietary terms and are not relicensed under the MIT License below.\n\n" + MIT,
+            "a commercial licence for the rest": "All other parts of this package remain under "
+                "the Acme commercial license. Components with the MIT license: a, b.\n\n" + MIT,
+            "an enterprise edition": "The Edition is licensed under the Example Enterprise "
+                "Edition License.\n\n" + APACHE,
+            "a pro licence for directories": "- Core: MIT License (applies to most files)\n"
+                "- Pro: Example Rails Pro License (applies to specific directories)\n\n" + MIT,
+            "an ee directory": "All content that resides under the \"ee/\" directory is "
+                "licensed under the license defined in \"ee/license\".\n"
+                "All other content is under the MIT License.\n\n" + MIT,
+            "a free grant for individuals and small organisations": "This free license grant "
+                "applies only to (a) individual persons using the Software for personal, "
+                "educational or non-commercial purposes; (b) small organizations. Any other "
+                "person must obtain a separate commercial license.\n\n" + APACHE,
+            "a request not to copy the site": "Please do not duplicate, copy, or use our website "
+                "for commercial or non-commercial use.\n\nFor the /contents/ folder:\n" + MIT,
+            "a community source licence": APACHE + "\nSome files in this repository are "
+                "licensed under the Internet Computer Community Source License, Version 1.0.\n",
+        }.items():
+            with self.subTest(why):
+                self.none(text)
+
+    def test_a_licence_that_leaves_part_of_the_tree_out_is_none(self):
+        for why, text in {
+            "the code but not the game": "This license covers the native port this repository "
+                "adds. It does not cover the upstream decompilation, which belongs to its "
+                "authors.\n\n" + MIT,
+            "a data carve-out": "DATA CARVE-OUT: data from external providers is NOT COVERED BY "
+                "THIS MIT LICENSE.\n\n" + MIT,
+            "texts the licence is not for": "Note: this MIT license covers the software only. "
+                "It does not extend to the texts, which carry their own licenses.\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.none(text)
+
+    def test_a_placeholder_is_not_a_licence(self):
+        self.none("License content to be determined. Please replace this placeholder text with "
+                  "the actual license. For example, the MIT License:\n\n" + MIT)
+
+    def test_creative_commons_by_is_accepted_and_the_variants_are_not(self):
+        self.assertEqual(collect.classify_license_text(
+            "Creative Commons Attribution 4.0 International Public License"), "CC-BY-4.0")
+        for variant in ("Attribution-ShareAlike 4.0 International",
+                        "Attribution-NonCommercial 4.0 International",
+                        "Attribution-NoDerivatives 4.0 International",
+                        "CC BY-NC-SA 4.0"):
+            with self.subTest(variant):
+                self.none(f"Creative Commons {variant} Public License")
+        # The text of CC BY 4.0 itself says "ShareAlike" nowhere, and CC0's says "commercial".
+        self.assertEqual(collect.classify_license_text(
+            "Creative Commons Legal Code\n\nCC0 1.0 Universal\n\n... for any purpose whatsoever, "
+            "including without limitation commercial, advertising or promotional purposes ..."),
+            "CC0-1.0")
+
+    def test_a_licence_that_resembles_mit_beside_an_accepted_one_is_none(self):
+        # A grant that is neither MIT nor MIT-0, here with Apache's notice, is not read as Apache.
+        self.none(APACHE + "\n" + STUDY_ONLY)
+
+
+class ScopeTests(unittest.TestCase):
+    """`license_for_path`: a term outside the accepted licences that the text puts on named
+    directories, or on what the project took from others, is only for those. A term the text does
+    not place, or that is for prose, or for everything the text does not name, is for the whole
+    tree. Every case is a pattern the published fixtures' licence files have."""
+
+    def at(self, text, path, source="LICENSE"):
+        return collect.license_for_path(collect.license_terms(text, source), path)
+
+    def test_a_directory_the_text_names_for_an_enterprise_licence_is_the_only_one_under_it(self):
+        text = ('Portions of this software are licensed as follows:\n\n'
+                '* All software that resides under an "ee/" directory is licensed under the '
+                'license defined in "ee/license".\n'
+                '* All software outside of the above-mentioned directories is available under '
+                'the MIT license.\n\n' + MIT)
+        self.assertEqual(self.at(text, "docs/guide.md"), "MIT")
+        self.assertEqual(self.at(text, "README.md"), "MIT")
+        self.assertIsNone(self.at(text, "ee/docs/guide.md"))
+        self.assertIsNone(self.at(text, "packages/api/ee/README.md"))
+        # The text alone, without a path, is for the whole tree.
+        self.assertIsNone(collect.classify_license_text(text))
+
+    def test_a_path_the_text_gives_in_full_is_matched_from_the_root(self):
+        text = ('Everything is MIT but the content under the "packages/backend/src/ee" directory, '
+                'which is licensed under the license defined in '
+                '"packages/backend/src/ee/license".\n\n' + MIT)
+        self.assertEqual(self.at(text, "packages/backend/README.md"), "MIT")
+        self.assertIsNone(self.at(text, "packages/backend/src/ee/README.md"))
+
+    def test_a_proprietary_directory_is_the_only_one_under_the_terms(self):
+        text = ("The MIT License below applies to everything EXCEPT the directory "
+                "`plugins/gcloud/`, which is proprietary and licensed separately.\n\n" + MIT)
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "plugins/gcloud/README.md"))
+
+    def test_paths_the_text_leaves_out_of_its_licence_are_the_only_ones_left_out(self):
+        text = ("This license (MIT) covers the code in this repository. It does not cover the "
+                "content under brain-b/knowledge/, which is licensed by others.\n\n" + MIT)
+        self.assertEqual(self.at(text, "README.md"), "MIT")
+        self.assertIsNone(self.at(text, "brain-b/knowledge/a.md"))
+
+    def test_a_section_of_notices_for_third_parties_is_for_what_was_taken(self):
+        text = (APACHE.replace("Licensed under", "The project is licensed under") + "\n"
+                "-----\n\nThird-party notices\n\n=====\n\n"
+                "Font used under the SIL Open Font License, Version 1.1.\n\n"
+                "Permission is hereby granted, free of charge, to any person obtaining a copy of "
+                "the Font Software, to use it with fonts. The Font Software is not for sale.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "Apache-2.0")
+        self.assertIsNone(self.at(text, "static/fonts/a.md"))
+        self.assertIsNone(self.at(text, "vendor/font/README.md"))
+
+    def test_notices_after_the_projects_own_licence_leave_its_label_alone(self):
+        # The label is the project's, not one of every licence in the notices after it.
+        text = (MIT + "\n-----\n\nripple-lib is included under the ISC License\n\nISC License\n\n"
+                "Permission to use, copy, modify, and/or distribute this software for any purpose "
+                "with or without fee is hereby granted, provided that the above copyright notice "
+                "and this permission notice appear in all copies.\n\n-----\n\n"
+                "Space Mono: font used under the SIL Open Font License, Version 1.1.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+
+    def test_a_section_of_notices_that_comes_first_does_not_hide_the_licence_after_it(self):
+        # The notices are for third parties, so the GPL is for part of the tree; the MIT text
+        # that follows is the project's, as no licence of its own came before.
+        text = ("The following files are from different authors and have their own licenses\n\n"
+                "Some files are under the GNU General Public License.\n\n" + MIT)
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "vendor/a/README.md"))
+
+    def test_a_notices_file_lists_the_licences_of_others_and_adds_none_of_its_own(self):
+        notices = ("Apache License, Version 2.0\n\nEclipse Public License (EPL) 1.0\n"
+                   "com.example:lib:1.0\n\nCommon Development and Distribution License (CDDL) 1.0\n")
+        terms = collect.license_terms(notices, "LICENSE-binary")
+        self.assertTrue(terms.notices)
+        self.assertEqual(collect.license_for_path(terms, "docs/a.md"), "")
+        self.assertIsNone(collect.license_for_path(terms, "vendor/lib/README.md"))
+        self.assertEqual(collect.combine_licenses(["Apache-2.0", ""]), "Apache-2.0")
+        self.assertIsNone(collect.combine_licenses([""]))
+
+    def test_directories_the_text_names_for_third_party_code_are_the_only_ones_under_it(self):
+        text = (MIT + "\nThird-party and vendored material is covered by its own licenses, which "
+                "are authoritative for those paths. In particular:\n"
+                "- `vendor/linux-framework/` is the Linux kernel, GPL-2.0.\n"
+                "- `vendor/libbpf/` is LGPL-2.1 or BSD-2-Clause.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "vendor/linux-framework/Documentation/a.md"))
+        self.assertIsNone(self.at(text, "vendor/libbpf/README.md"))
+
+    def test_a_term_for_everything_else_or_for_prose_is_for_the_whole_tree(self):
+        for why, text in {
+            "everything else": "Two directories are MIT: `GraphcodeKit/` and `graphcode-cli/`. "
+                "Everything else is under the Functional Source License.\n\n" + MIT,
+            "documentation and READMEs": "Software: Apache License 2.0, under `code/`. The "
+                "documentation (`docs/`, README files) is under Creative Commons "
+                "Attribution-NonCommercial-ShareAlike 4.0 International.\n\n" + APACHE,
+            "what the licence covers is what it names": "This license covers the port in "
+                "`src/pc/`. It does not cover the upstream decompilation, which belongs to its "
+                "authors.\n\n" + MIT,
+            "a licence for a module that the text does not place": MIT + "\nModule foo is "
+                "using the bar framework, which is licensed under LGPL.\n",
+            "the licence applies only to what it names": "The MIT License below applies only to "
+                "the tooling in `scripts/`. Nothing here relicenses third-party content.\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "somewhere/else/a.md"))
+                self.assertIsNone(self.at(text, "README.md"))
+
+    def test_a_term_for_the_whole_tree_beside_a_scoped_one_is_for_the_whole_tree(self):
+        text = ('Source code is variously licensed under the Apache License Version 2.0 or the '
+                'Elastic License. Within the "x-pack" folder it is under the Elastic License.\n')
+        self.assertIsNone(self.at(text, "docs/a.md"))
+
+
+class ScopeEdgeTests(unittest.TestCase):
+    """The edges of `ScopeTests`: terms for everything but a path, for data, and the wording that
+    must not be read as a path or as a third party."""
+
+    def at(self, text, path, source="LICENSE"):
+        return collect.license_for_path(collect.license_terms(text, source), path)
+
+    def test_a_heading_for_everything_but_a_folder_puts_the_terms_under_it_on_the_rest(self):
+        text = ("# For all content except the /contents/ folder\n\nCopyright (c) 2020 Person\n\n"
+                "Please do not duplicate, copy, or use our website for commercial use.\n\n"
+                "# For content in the /contents/ folder\n\n" + MIT)
+        self.assertEqual(self.at(text, "contents/handbook/a.md"), "MIT")
+        self.assertIsNone(self.at(text, ".github/a.md"))
+        self.assertIsNone(self.at(text, "README.md"))
+
+    def test_a_heading_for_the_rest_after_one_that_names_a_folder_is_for_all_but_that_folder(self):
+        text = ("# For content in the /contents/ folder\n\n" + MIT + "\n\n"
+                "# For the rest of this repository\n\n"
+                "Please do not duplicate, copy or use our website for commercial use.\n")
+        self.assertEqual(self.at(text, "contents/a.md"), "MIT")
+        self.assertIsNone(self.at(text, "src/a.md"))
+
+    def test_a_carve_out_for_data_leaves_documentation_under_the_grant(self):
+        text = (MIT + "\n-----\n\nThe MIT grant above applies to the source code of this repository "
+                "(the program files and documentation authored in this repository).\n\n"
+                "DATA CARVE-OUT: data obtained from external providers, including flight and "
+                "news data, is NOT covered by the MIT license above.\n")
+        self.assertEqual(self.at(text, "docs/a.md"), "MIT")
+
+    def test_a_carve_out_that_names_texts_or_what_the_licence_covers_is_for_the_whole_tree(self):
+        for why, text in {
+            "texts": "This MIT license covers the software only. It does not cover bible texts "
+                "or lexicon data, which are not ours.\n\n" + MIT,
+            "paths it covers": "This license covers the port in `src/pc/`. It does not cover "
+                "the game or its data.\n\n" + MIT,
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "docs/a.md"))
+
+    def test_a_term_for_the_rest_is_for_the_whole_tree_whatever_path_is_near(self):
+        for why, text in {
+            "the rest": MIT + "\nFiles in `lib/` are covered by the license above. The rest is "
+                "licensed under the GNU GPL v3.\n",
+            "except": MIT + "\nExcept for the files in tools/, this project is under the GNU "
+                "General Public License.\n",
+            "outside": MIT + "\nEverything outside of plugins/ is under the GNU Affero General "
+                "Public License.\n",
+        }.items():
+            with self.subTest(why):
+                self.assertIsNone(self.at(text, "docs/a.md"))
+                self.assertIsNone(self.at(text, "lib/a.md"))
+
+    def test_a_url_without_its_scheme_is_not_a_directory(self):
+        text = (MIT + "\nDocumentation is under CC BY-SA 4.0 "
+                "(creativecommons.org/licenses/by-sa/4.0/).\n")
+        self.assertIsNone(self.at(text, "docs/a.md"))
+        self.assertEqual(collect.named_paths("see creativecommons.org/licenses/by-sa/4.0/ and "
+                                              "`vendor/lib/`"), ("vendor/lib",))
+
+    def test_this_library_is_the_project_and_not_a_third_party(self):
+        text = MIT + "\nThis library is licensed under the GNU General Public License v3.\n"
+        self.assertIsNone(self.at(text, "docs/a.md"))
+        theirs = MIT + "\nThe bundled library zlib-ng is licensed under the GNU General Public License.\n"
+        self.assertEqual(self.at(theirs, "docs/a.md"), "MIT")
+
+    def test_bsd_needs_its_binary_clause_and_the_acknowledgement_clause_is_outside(self):
+        bsd_like = ("Redistribution and use in source and binary forms, with or without "
+                    "modification, are permitted provided that the following conditions are met:\n"
+                    "1. Redistributions of source code must retain the above copyright notice.\n"
+                    "2. The origin of this software must not be misrepresented.\n")
+        self.assertIsNone(collect.classify_license_text(bsd_like))
+        self.assertEqual(collect.classify_license_text(
+            bsd_like.replace("2. The origin of this software must not be misrepresented.",
+                             "2. Redistributions in binary form must reproduce the above "
+                             "copyright notice.")), "BSD-2-Clause")
+        acknowledgement = (BSD_3.replace("3. Neither the name of the copyright holder nor the "
+                                         "names of its contributors", "3. The name may not")
+                           + "4. The end-user documentation included with the redistribution, "
+                           "if any, must include the following acknowledgment.\n")
+        self.assertIsNone(collect.classify_license_text(acknowledgement))
+
+    def test_the_gnu_free_documentation_license_is_outside(self):
+        self.assertIsNone(collect.classify_license_text(
+            MIT + "\nThe manual is under the GNU Free Documentation License.\n"))
+
+
+class LicencesTests(Scratch):
+    """`Licences` reads a repository's licence files with `classify_license_text`: the root's
+    applies to every file, a nearer one to the files below it, and every one on the way must be
+    accepted."""
+
+    def licences(self, files: dict[str, str]):
+        path = Path(tempfile.mkdtemp(dir=self.tmp)) / "repo"
+        path.mkdir()
+        git(path, "init", "-q", "-b", "main")
+        for name, text in files.items():
+            (path / name).parent.mkdir(parents=True, exist_ok=True)
+            (path / name).write_text(text)
+        git(path, "add", "-A")
+        git(path, "commit", "-q", "-m", "files", date="2020-01-01T00:00:00Z")
+        return collect.Licences(path, collect.tree_files(path, "HEAD"), False)
+
+    def test_a_root_licence_with_several_licences_gives_each(self):
+        licences = self.licences({"LICENSE": APACHE + "\n" + MIT, "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md"), ("Apache-2.0 OR MIT", ["LICENSE"]))
+
+    def test_the_licences_of_two_root_files_come_out_once_each(self):
+        licences = self.licences({"LICENSE-MIT": MIT, "LICENSE-APACHE": APACHE + "\n" + MIT,
+                                  "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md")[0], "Apache-2.0 OR MIT")
+
+    def test_a_root_licence_outside_the_list_leaves_every_file_without_one(self):
+        licences = self.licences({"LICENSE": FSL, "docs/a.md": "x", "README.md": "x"})
+        self.assertIsNone(licences.of("docs/a.md"))
+        self.assertIsNone(licences.of("README.md"))
+
+    def test_a_root_licence_that_leaves_part_of_the_tree_out_leaves_all_of_it_out(self):
+        licences = self.licences({
+            "LICENSE": "This license covers the code. It does not cover the texts.\n\n" + MIT,
+            "docs/a.md": "x"})
+        self.assertIsNone(licences.of("docs/a.md"))
+
+    def test_a_root_licence_that_puts_terms_on_a_directory_leaves_the_other_files_a_licence(self):
+        text = ('All software under the "ee/" directory is licensed under the license defined '
+                'in "ee/license"; the rest is under the MIT license.\n\n' + MIT)
+        licences = self.licences({"LICENSE": text, "ee/a.md": "x", "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md"), ("MIT", ["LICENSE"]))
+        self.assertIsNone(licences.of("ee/a.md"))
+        self.assertEqual(licences.root, "MIT")
+
+    def test_a_notices_file_beside_the_licence_adds_nothing_to_it(self):
+        notices = "Eclipse Public License (EPL) 1.0\ncom.example:lib:1.0\n"
+        licences = self.licences({"LICENSE": APACHE, "LICENSE-binary": notices, "docs/a.md": "x"})
+        self.assertEqual(licences.of("docs/a.md"),
+                         ("Apache-2.0", ["LICENSE", "LICENSE-binary"]))
+
+    def test_a_path_a_nested_licence_names_is_from_its_own_directory(self):
+        nested = "The directory `src/pro/` is under the Commons Clause.\n\n" + MIT
+        licences = self.licences({"LICENSE": MIT, "packages/foo/LICENSE": nested,
+                                  "packages/foo/src/pro/x.md": "x", "packages/foo/docs/a.md": "x"})
+        self.assertIsNone(licences.of("packages/foo/src/pro/x.md"))
+        self.assertEqual(licences.of("packages/foo/docs/a.md"),
+                         ("MIT", ["LICENSE", "packages/foo/LICENSE"]))
+
+    def test_a_nearer_licence_is_the_files_own_when_every_one_on_the_way_is_accepted(self):
+        licences = self.licences({"LICENSE": MIT, "pkg/LICENSE": APACHE, "pkg/a.md": "x",
+                                  "docs/a.md": "x"})
+        self.assertEqual(licences.of("pkg/a.md"),
+                         ("Apache-2.0", ["LICENSE", "pkg/LICENSE"]))
+        self.assertEqual(licences.of("docs/a.md"), ("MIT", ["LICENSE"]))
+
+    def test_a_nearer_licence_outside_the_list_leaves_its_files_without_one(self):
+        licences = self.licences({"LICENSE": MIT, "pkg/LICENSE": MIT + "\nAlso GPL-2.0.\n",
+                                  "pkg/a.md": "x", "docs/a.md": "x"})
+        self.assertIsNone(licences.of("pkg/a.md"))
+        self.assertEqual(licences.of("docs/a.md"), ("MIT", ["LICENSE"]))
 
 
 class ManifestTests(Scratch):

@@ -1,0 +1,105 @@
+{
+  "sidecar_version": 3,
+  "fixture": "_posts__2019-07-18-github-pages-brave.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "dcroote/dcroote.github.io",
+    "path": "_posts/2019-07-18-github-pages-brave.md",
+    "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+    "commit_date": "2026-09-07T10:53:08-07:00",
+    "url": "https://github.com/dcroote/dcroote.github.io/blob/d14729c561cc70b533859ad02b9f42b52a6f9e87/_posts/2019-07-18-github-pages-brave.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2016-06-03T22:15:23-07:00",
+    "stars": 2,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 9,
+    "first_commit_date": "2019-07-19T10:17:28-07:00",
+    "last_commit_date": "2026-09-07T10:53:08-07:00",
+    "last_commit_author": "Derek Croote",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2019-07-19T10:17:28-07:00",
+    "last_committer_date": "2026-09-07T10:53:08-07:00",
+    "marks": [
+      {
+        "text": "Cursor Agent <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d14729c561cc70b533859ad02b9f42b52a6f9e87",
+        "date": "2026-09-07T10:53:08-07:00",
+        "committed": "2026-09-07T10:53:08-07:00",
+        "old": "9547ee59369aed430596ed21934bd7c69579d04e",
+        "new": "462a63c49affb15a5477e2e455bbeb0cc537de0c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 9 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 1639,
+    "sha256": "d95b13f80737b0f83bd7cb1e2a50def71e99b339e64cee5062d2a9ab35c918a0",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 23,
+    "words": 202,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/dcroote--dcroote.github.io/_posts/2019-07-18-github-pages-brave.md",
+  "before": {
+    "sha256": "f933067f8c6dddc3d792ef84fa22814ad61503c78ab8a93dd5590d9dcdc3c711",
+    "commit": "e4734525cb4cc95cde0893d2c7d8d2cc6f68819a",
+    "date": "2021-12-25T13:14:03-08:00",
+    "between": [
+      {
+        "commit": "accac2a4b83057888009bcd229945c2ea4db7fb1",
+        "date": "2026-07-08T13:35:32-07:00",
+        "committed": "2026-07-08T13:39:17-07:00",
+        "old": "f0ccba7279e8e478f44426fe416c2c8aab8a1c7b",
+        "new": "9547ee59369aed430596ed21934bd7c69579d04e",
+        "status": "late"
+      },
+      {
+        "commit": "6db46c6d63f251e3c450ee7bd02622e8699b7282",
+        "date": "2026-01-21T08:50:35-08:00",
+        "committed": "2026-01-21T08:50:35-08:00",
+        "old": "a6651cd5ad7901376b59dc7a2ed20e4d1f11d5db",
+        "new": "f0ccba7279e8e478f44426fe416c2c8aab8a1c7b",
+        "status": "late"
+      },
+      {
+        "commit": "e7a11aeefe2de4604c925a0379bdb05a301aeadb",
+        "date": "2024-04-18T22:04:48-07:00",
+        "committed": "2024-04-18T22:04:48-07:00",
+        "old": "8d1ba53f8b8350f79deb8bfbfff2c328baccc637",
+        "new": "a6651cd5ad7901376b59dc7a2ed20e4d1f11d5db",
+        "status": "late"
+      }
+    ]
+  }
+}

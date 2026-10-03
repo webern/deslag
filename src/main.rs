@@ -23,6 +23,18 @@ fn main() -> ExitCode {
     }
 }
 
+/// Loads the config, saying on stderr what in it deslag ignores.
+fn load_config(
+    root: &std::path::Path,
+    explicit: Option<&std::path::Path>,
+) -> anyhow::Result<deslag::Config> {
+    let config = deslag::Config::load(root, explicit)?;
+    for warning in config.warnings() {
+        eprintln!("deslag: warning: {warning}");
+    }
+    Ok(config)
+}
+
 /// Runs the command line, returning the exit code the process should use.
 fn run() -> anyhow::Result<ExitCode> {
     let cli = Cli::parse();
@@ -30,7 +42,7 @@ fn run() -> anyhow::Result<ExitCode> {
     match cli.command {
         Command::Check(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
+            let config = load_config(&root, args.report.config_path.as_deref())?;
             // clap refuses --diff with --base, so there is one base at most.
             let base = args.diff.as_deref().or(args.report.base.as_deref());
             let change = changed(&root, base)?;
@@ -45,7 +57,7 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Command::Fix(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = deslag::Config::load(&root, args.report.config_path.as_deref())?;
+            let config = load_config(&root, args.report.config_path.as_deref())?;
             let base = args.report.base.as_deref();
             // A base git cannot read stops the run before fix writes anything.
             let before = changed(&root, base)?;
@@ -60,7 +72,7 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Command::Explain(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = deslag::Config::load(&root, args.config_path.as_deref())?;
+            let config = load_config(&root, args.config_path.as_deref())?;
             write_stdout(&deslag::explain(&root, &config, &args.paths)?)?;
             Ok(ExitCode::SUCCESS)
         }

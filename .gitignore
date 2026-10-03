@@ -18,6 +18,10 @@ test/output/
 .ewt/
 .ewt.new.*/
 
+# Harper's tagger model that make fetch-harper downloads, for measuring only and never shipped; see
+# scripts/harper/harper.lock
+.harper/
+
 # because llms love python
 __pycache__/
 

@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 282 of 1230: core 8, human 49, llm 103, mixed 122
+# fails 283 of 1230: core 8, human 50, llm 103, mixed 122
 
 [md.lints.density]
 max_item_chars = 300
@@ -32,6 +32,7 @@ human/codeberg--Codeberg-Infrastructure--forgejo/docs__content__doc__installatio
 human/codeberg--curl--curl-mirror/docs__INSTALL.md paragraph:775
 human/codeberg--dnkl--fcft/CHANGELOG.md item:306
 human/codeberg--dnkl--foot/CHANGELOG.md item:313 item:353 item:312 item:382 item:514 item:324 item:379 item:338 item:321
+human/codeberg--fediverse--fep/feps__fep-a4ed.md item:649
 human/codeberg--jbruchon--jdupes/README.md paragraph:668 paragraph:973 paragraph:1169 paragraph:624 paragraph:714 paragraph:1180 paragraph:947 paragraph:1173 paragraph:650
 human/codeberg--privacyguides--privacyguides.org/collections___posts__2019-10-30-choosing-a-vpn.md item:339
 human/codeberg--redict--redict/TLS.md item:310

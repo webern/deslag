@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "feps__fep-a4ed.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "fediverse/fep",
+    "path": "feps/fep-a4ed.md",
+    "commit": "ad5916fc4b88943a41a120b7435b3f655e785fa5",
+    "commit_date": "2021-10-26T21:19:52Z",
+    "url": "https://codeberg.org/fediverse/fep/src/commit/ad5916fc4b88943a41a120b7435b3f655e785fa5/feps/fep-a4ed.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-05T19:37:20+02:00",
+    "stars": 277,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2020-11-25T17:39:53+01:00",
+    "last_commit_date": "2021-07-25T18:54:53Z",
+    "last_commit_author": "weex",
+    "authors": 2,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-11-25T18:02:50+01:00",
+    "last_committer_date": "2021-07-25T18:54:53Z",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 6 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 7657,
+    "sha256": "121f461e81ca90ca2c2df8ca52d29117924816702f5120d1f466294af9261a5e",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 139,
+    "words": 1099,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--fediverse--fep/feps/fep-a4ed.md"
+}

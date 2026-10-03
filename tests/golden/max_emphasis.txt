@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 496 of 1230: core 2, human 83, llm 244, mixed 167
+# fails 495 of 1230: core 2, human 83, llm 244, mixed 166
 
 [md.lints.max_emphasis]
 free_spans = 2
@@ -470,7 +470,6 @@ mixed/prometheus-community--helm-charts/charts__kube-prometheus-stack__README.md
 mixed/pubkey--rxdb/orga__before-next-major.md spans:4 percent:3.63
 mixed/quasarframework--quasar/docs__src__pages__options__rtl-support.md spans:6 percent:4.90
 mixed/quay--quay/github__CONTRIBUTING.md spans:12 percent:3.85
-mixed/quickfix--quickfix/README.md spans:21 percent:9.16
 mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md spans:15 percent:1.68
 mixed/rebasepro--rebase/README.md spans:65 percent:7.55
 mixed/reidmorrison--semantic_logger/docs__appenders.md spans:12 percent:1.26

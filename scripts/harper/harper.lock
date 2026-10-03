@@ -1,0 +1,15 @@
+# The pinned Harper part-of-speech model, which the exam grades as a study-only candidate.
+# fetch.sh reads this file, downloads each file named below from <base>/<commit>/<path>, checks its
+# sha256, and keeps a copy of this file as .harper/stamp. Change a line here and the next fetch
+# starts over.
+#
+# The code that reads the model is Apache-2.0 and is reimplemented in tools/exam/src/harper.rs. The
+# model is not ours to ship: Harper trained it on the train splits of UD English GUM, EWT and
+# LinES (CC BY-NC-SA 4.0 and CC BY-SA 4.0). It is for measuring only, so trains = no, and it is
+# never checked in, packaged or linked into deslag.
+release 2.12.0
+commit 88c53331ebb6c353d6c5168c3f2191983239a11a
+base https://raw.githubusercontent.com/Automattic/harper
+licence Apache-2.0 code; model trained on CC BY-NC-SA and CC BY-SA data
+trains no
+sha256 21b1d58967aaa40e6ab29444207de8e6f1ce3d2de335796b3ec9b90bafe3f0b4 harper-brill/trained_tagger_model.json

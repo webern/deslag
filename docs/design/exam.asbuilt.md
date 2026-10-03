@@ -14,8 +14,9 @@ commands.
 
 ## Commands
 
-- `score --gold G (--tagger noun | --import F) [--aggregate] [--save RUN.json] [--disputes D]
-  [--words N]`: prints the report. `--save` writes the run for `compare`.
+- `score --gold G (--tagger noun|harper | --import F) [--harper-model M] [--aggregate]
+  [--save RUN.json] [--disputes D] [--words N]`: prints the report. `--save` writes the run for
+  `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
 - `words --gold G`: the header and Words section alone, for any gold, with no tagger.
@@ -31,6 +32,7 @@ tools/exam/src/
   tags.rs             Tag, TagSet, Features, Confidence, Reading, the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
   tagger.rs import.rs the Tagger trait, `noun`, run; the import reader
+  harper.rs           Harper's tagging engine and model reader, the `harper` candidate
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
@@ -90,6 +92,18 @@ difference: by position, never a word, on holdout text or with `--aggregate`.
 On `Word` lines an import reads `UPOS`, `FEATS` and the `MISC` keys `Conf=` (default `Likely`),
 `Score=` and `Kept=`. `PUNCT`, `SYM` and `X` become `Noun` at `Unknown`, counted in Words.
 
+## The Harper candidate
+
+`--tagger harper` is Harper's Brill tagger, for study only. `harper.rs` adapts its engine under
+Apache-2.0: a table from lowercased word to one tag, and about 200 ordered patches, each "change
+tag A to B when a criterion holds". It reads the model `make fetch-harper` puts in `.harper/`
+(`--harper-model` names another). Harper's quirks are kept: `WordIs` compares only as far as the
+shorter word reaches, and `AnyWordIsTaggedWith` includes the word itself going forward.
+
+Every token is tagged, punctuation too, since patches read neighbours; only `Word` tokens get a
+reading. A tagged word is `Likely`. A word with no tag, or `PUNCT` or `SYM`, is `Noun` at
+`Unknown`. Kept is the guess alone; no features or score, so the feature metrics read 0.
+
 ## Metrics and statistics
 
 A sentence's tally is `metrics::COLUMNS`, counts of its scored tokens. Every metric is one column
@@ -131,9 +145,13 @@ fetch leaves a good `.ewt/` alone.
 The licence is CC BY-SA 4.0 and the lock says `trains no`: it measures, and nothing derived from it
 ships. No test or CI job reads it. `make clean-ewt` removes it.
 
+`make fetch-harper` does the same for Harper's model, pinned by `scripts/harper/harper.lock` to a
+commit and sha256, into `.harper/<release>/`. Harper trained it on UD data under CC BY-NC-SA and CC BY-SA, so
+the lock says `trains no`: never checked in or shipped. `make clean-harper` removes it.
+
 ## Tests
 
-`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
-`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `golden.rs` the output against `tests/golden/`, which
+`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and `skeleton.rs` assert alignment and counts; `score.rs` the metrics by hand; `cli.rs`
+holdout, import, compare and exits; `harper.rs` the engine on tiny hand-made models, with no Harper
+data; `golden.rs` the output against `tests/golden/`, which
 `make fix-golden` rewrites.

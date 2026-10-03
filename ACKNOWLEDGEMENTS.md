@@ -127,3 +127,16 @@ once it recurs across independent sources: prompts there, repositories in `desla
 
 Code was not ported. Like it, `deslag-corpus` measures a word's excess against text written before
 LLMs were in use, and counts the documents that hold a word beside how often it occurs.
+
+## Harper
+
+- URL: https://github.com/Automattic/harper
+- Licence: Apache-2.0
+- Studied at: 2.12.0, commit
+  [88c53331](https://github.com/Automattic/harper/tree/88c53331ebb6c353d6c5168c3f2191983239a11a)
+
+Code was ported, as an adaptation under Apache-2.0: the Brill tagging engine of `harper-pos-utils`
+(the word table, the ordered patches and their six criteria) is reimplemented in
+`tools/exam/src/harper.rs`, with the notice in that file, so the exam can grade Harper's tagger. Its
+trained model is not ours to ship: it is fetched on demand into an ignored directory, used only to
+measure, and never checked in.

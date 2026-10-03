@@ -217,8 +217,8 @@ mod tests {
         );
         assert!(words.iter().all(|r| r.score.is_none()));
         assert_eq!(words[1].confidence, Confidence::Sure);
-        // `read` is in the lexicon, `frobs` is in no table.
-        assert_eq!(words[2].confidence, Confidence::Unsure);
+        // `read` is in the lexicon and follows an auxiliary, `frobs` is in no table.
+        assert_eq!(words[2].confidence, Confidence::Likely);
         assert_eq!(words[3].confidence, Confidence::Unknown);
     }
 

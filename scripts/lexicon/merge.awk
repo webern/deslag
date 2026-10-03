@@ -236,8 +236,29 @@ END {
             line = line t
             if (j == 1) line = line best[form SUBSEP t]
         }
-        print form, line
+        # A tag letter `!` after the readings marks a word whose best guess its counts back: see
+        # `dominant` above.
+        mark = dominant(form, out, m) ? "!" : ""
+        print form, line mark
     }
+}
+
+# Whether the SemCor counts back the first tag of `form` (`out` is its `m` tags in rank order). The
+# best guess is a noun, verb, adjective or adverb, and no tag but those or a name is possible.
+# Counts are the per-form ones the ranking uses, in units where an adjective's count is 12 a count
+# of the lemma. The guess must have at least nine tenths of the form's counts, and the form must
+# have 60 of them, which is 5 counts of an adjective or an adverb. Both are the figures the
+# neighbour-backed prior was designed with, and a word that has them is `dominant` to the
+# tagger, which commits to it only where a neighbour agrees.
+function dominant(form, out, m,    t, j, top, total) {
+    t = substr(out, 1, 1)
+    if (t !~ /[nvar]/) return 0
+    for (j = 1; j <= m; j++) {
+        if (substr(out, j, 1) !~ /[npvar]/) return 0
+        if (substr(out, j, 1) ~ /[nvar]/) total += int(bestkey[form SUBSEP substr(out, j, 1)] / 100000000)
+    }
+    top = int(bestkey[form SUBSEP t] / 100000000)
+    return total >= 60 && top * 10 >= total * 9
 }
 
 # The WordNet part of speech a tag letter stands for, or "" when WordNet has none for it.

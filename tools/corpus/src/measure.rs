@@ -207,6 +207,29 @@ fn tree_commit(repo_root: &Path) -> String {
     }
 }
 
+/// What `tier` of the repository at `repo_root` was read from: the tree's last commit, or the
+/// image digest that `make fetch-blobs` stamped.
+pub fn measured_on(repo_root: &Path, tier: Tier) -> Result<String, Problem> {
+    match tier {
+        Tier::Tree => Ok(tree_commit(repo_root)),
+        Tier::Blobs => {
+            let stamp = repo_root.join(".blobs/stamp");
+            Ok(std::fs::read_to_string(&stamp)
+                .map_err(|error| {
+                    Problem(format!(
+                        "{}: {error}; make fetch-blobs writes it",
+                        stamp.display()
+                    ))
+                })?
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .trim()
+                .to_string())
+        }
+    }
+}
+
 impl Corpus {
     /// Reads and measures `tier` of the repository at `repo_root`. The big tier needs the tree
     /// too, to say which of its fixtures the tree holds.
@@ -215,7 +238,7 @@ impl Corpus {
         let tree = load::tree(&tree_root)?;
         match tier {
             Tier::Tree => {
-                let measured_on = tree_commit(repo_root);
+                let measured_on = measured_on(repo_root, tier)?;
                 Ok(Corpus::measure(
                     tier,
                     tree_root,
@@ -226,19 +249,7 @@ impl Corpus {
                 ))
             }
             Tier::Blobs => {
-                let stamp = repo_root.join(".blobs/stamp");
-                let measured_on = std::fs::read_to_string(&stamp)
-                    .map_err(|error| {
-                        Problem(format!(
-                            "{}: {error}; make fetch-blobs writes it",
-                            stamp.display()
-                        ))
-                    })?
-                    .lines()
-                    .next()
-                    .unwrap_or_default()
-                    .trim()
-                    .to_string();
+                let measured_on = measured_on(repo_root, tier)?;
                 let blobs_root = repo_root.join(".blobs/unpacked/corpus");
                 let blobs = load::blobs(&blobs_root)?;
                 let in_tree: BTreeSet<String> = tree

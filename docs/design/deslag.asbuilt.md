@@ -109,7 +109,7 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 ## Build
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
-`--locked`. `make check-deslag` runs deslag on this repo. The published crate is what `include` in
+`--locked`; `test-blobs` ends by printing `deslag-corpus time` on the big tier. `make check-deslag` runs deslag on this repo. The published crate is what `include` in
 `Cargo.toml` lists; `make check-publish` builds it, and every other cargo call covers the workspace.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins

@@ -26,7 +26,8 @@ help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
-	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
+	@echo "test-blobs       fetch the corpus's big tier, test it and time reading and tagging it; needs"
+	@echo "                 the network, so not in test"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
 	@echo "check-deslag     run deslag on this repository's own Markdown"
@@ -67,9 +68,11 @@ test: preflight
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
-# offline and with no login.
+# offline and with no login. The time that follows asserts nothing: it prints
+# how long reading and tagging the tier take into the CI log, for a budget.
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time
 
 # ---------------------------------------------------------------------------
 # check

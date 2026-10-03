@@ -16,6 +16,7 @@ use deslag_corpus::ngrams::{Counting, ngrams};
 use deslag_corpus::patterns::patterns;
 use deslag_corpus::report::{DEFAULT_CONFIG, report};
 use deslag_corpus::summary::summary;
+use deslag_corpus::time::time;
 
 /// Measures deslag's test corpus: what it holds, and what sets its llm files apart from its human
 /// ones.
@@ -109,6 +110,11 @@ enum Command {
         /// every one.
         names: Vec<String>,
     },
+    /// How long deslag takes to read every fixture of the tier, and how much of that is tagging:
+    /// the fastest of three passes over each, on one thread, in the profile this binary is built
+    /// in. It prints files, bytes, the two times and tagging's share of reading, and asserts
+    /// nothing.
+    Time,
     /// One Markdown page for a pull request that grows the corpus: the summary, the characters,
     /// the candidates with the catalog gate, and the lints, each from the command of that name at
     /// its defaults.
@@ -137,6 +143,10 @@ fn print<T: serde::Serialize>(json: bool, value: &T, render: impl Fn(&T) -> Stri
 }
 
 fn run(cli: Cli) -> Result<(), Problem> {
+    if let Command::Time = cli.command {
+        print(cli.json, &time(&cli.root, cli.tier)?, |t| t.render());
+        return Ok(());
+    }
     let corpus = Corpus::read(&cli.root, cli.tier)?;
     match cli.command {
         Command::Summary { filters } => {
@@ -181,6 +191,7 @@ fn run(cli: Cli) -> Result<(), Problem> {
             let found = patterns(&corpus, &filters, &names)?;
             print(cli.json, &found, |p| p.render());
         }
+        Command::Time => unreachable!("time is run before the corpus is read"),
         Command::Report {
             filters,
             config,

@@ -1,5 +1,5 @@
 {
-  "batch": "2026-10-03-01",
+  "batch": "2026-10-03-02",
   "captured": "2026-10-03",
   "sources": [
     {"kind": "git", "host": "github.com", "repo": "18F/18f.gsa.gov", "head": "292605ab095af8e70e2087aca63c2319ce892a4c", "found_by": ["sg-register:government-writing"]},

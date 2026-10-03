@@ -8,7 +8,8 @@
 //! A word the rule decides keeps every tag it had, so no reading is lost.
 //!
 //! - **`be` forms** (`be`, `is`, `are`, `was`, `were`, `been`): an auxiliary, except directly after
-//!   the expletive `there`, where the verb is a main verb (`there is a problem`).
+//!   the expletive `there`, where the verb is a main verb (`there is a problem`). Before `there`
+//!   (`is there a`) nothing is decided: the gold has a verb as often as an auxiliary.
 //! - **`have` and `do` forms** (`have`, `has`, `had`, `having`, `do`, `does`, `did`): an auxiliary
 //!   before a word that can only be a verb or an auxiliary, `not`, or an adverb (`have been`, `do
 //!   not`, `has always`); a main verb before a determiner (`have a`).
@@ -19,7 +20,8 @@
 //! - **`that`**: a pronoun before a word that can only be a verb or an auxiliary (`that is`).
 //! - **A preposition**: a word that can be a preposition, and not a conjunction, a verb or a noun,
 //!   is a preposition before a determiner, a pronoun or a name with one tag possible (`in the`,
-//!   `on it`). `to` has its own pass.
+//!   `on it`). `to` has its own pass, and `about` is left out: the cue was right 70% of the time
+//!   with it.
 //!
 //! A cue that leans on the next word's tags asks for them only when nothing else is possible there
 //! (`settled`), or when each tag it may have gives the same answer (`within`). Otherwise the rule
@@ -56,14 +58,17 @@ pub(super) fn run(view: &mut View<'_, '_>) {
         let text = view.text(at);
         let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
         let choice = if verbal && is(BE_FORMS) {
-            Some(be(view, at))
+            be(view, at)
         } else if verbal && is(HAVE_DO_FORMS) {
             have_do(view, at)
         } else if pronoun_or_determiner && is(DEMONSTRATIVES) {
             demonstrative(view, at)
         } else if pronoun_or_conjunction && text.eq_ignore_ascii_case("that") {
             view.next_within(at, AUX_VERB).then_some(Tag::Pronoun)
-        } else if preposition_like && !text.eq_ignore_ascii_case("to") {
+        } else if preposition_like
+            && !text.eq_ignore_ascii_case("to")
+            && !text.eq_ignore_ascii_case("about")
+        {
             preposition(view, at)
         } else {
             None
@@ -74,16 +79,23 @@ pub(super) fn run(view: &mut View<'_, '_>) {
     }
 }
 
-/// An auxiliary, or after `there` a main verb.
-fn be(view: &View<'_, '_>, at: usize) -> Tag {
+/// An auxiliary, or after `there` a main verb. `Some(Tag::Verb)` before `there` is no cue
+/// (`is there a`): it was a verb in four of seven cases on EWT dev, so the word is left alone.
+fn be(view: &View<'_, '_>, at: usize) -> Option<Tag> {
+    let before_there = view
+        .next_word(at)
+        .is_some_and(|next| view.text(next).eq_ignore_ascii_case("there"));
+    if before_there {
+        return None;
+    }
     let after_there = at > 0
         && view.kind(at - 1) == TokenKind::Word
         && view.text(at - 1).eq_ignore_ascii_case("there");
-    if after_there {
+    Some(if after_there {
         Tag::Verb
     } else {
         Tag::Auxiliary
-    }
+    })
 }
 
 fn have_do(view: &View<'_, '_>, at: usize) -> Option<Tag> {
@@ -116,7 +128,8 @@ fn ends_phrase(view: &View<'_, '_>, at: usize) -> bool {
 }
 
 /// Whether the tags allow a preposition and rule out the readings that make its next word's
-/// meaning matter more: a conjunction (`for`, `as`, `like`), a verb or a noun.
+/// meaning matter more: a conjunction (`for`, `as`, `like`), a verb or a noun. `about` is left out
+/// for another reason: `about 500` and `about the` are an adverb or a preposition as often as not.
 fn is_preposition(possible: TagSet) -> bool {
     possible.contains(Tag::Adposition)
         && !possible.contains(Tag::Conjunction)
@@ -206,6 +219,8 @@ mod tests {
             let text = format!("there {form} a file");
             decided(after(&text, form, be(), open), Verb, be());
         }
+        // Before `there` (`is there a`) nothing is decided.
+        assert_eq!(after("is there a file", "is", be(), open), be());
         // A be form the tables leave to one tag is left alone.
         let am = word(&[Auxiliary]);
         assert_eq!(after("I am here", "am", am, open), am);
@@ -330,6 +345,9 @@ mod tests {
         );
         let noun = word(&[Adposition, Noun]);
         assert_eq!(after("sat on the cat", "on", noun, next), noun);
+        // `about` is an adverb as often as a preposition before such a word.
+        let about = word(&[Adposition, Adverb]);
+        assert_eq!(after("talk about the cat", "about", about, next), about);
     }
 
     #[test]

@@ -586,7 +586,8 @@ fn list_growth_finds_what_its_golden_file_says() {
 }
 
 /// Each phrase of the `banned_phrases` catalogue matches no `human` file of the big tier, and the
-/// `llm` files and repositories the catalogue records. `make fix-catalog` rewrites the counts.
+/// `llm` files and repositories the catalogue records. `make fix-catalog` rewrites the counts and
+/// `measured_on`.
 ///
 /// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
 /// files hold it at least 3 times as often as `human` files, and at most 3% of `human` files do.
@@ -680,6 +681,15 @@ fn the_catalogue_counts_are_the_big_tiers() {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {
         let text = std::fs::read_to_string(&path).expect("the catalogue");
+        // The counts are for the image the lock pins, so the catalogue says which that is.
+        let lock = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/blobstore/blobs.lock"),
+        )
+        .expect("blobs.lock");
+        let image = lock
+            .lines()
+            .next()
+            .expect("the image on the lock's first line");
         let mut phrase = String::new();
         let mut fixed = String::new();
         for line in text.lines() {
@@ -688,6 +698,9 @@ fn the_catalogue_counts_are_the_big_tiers() {
             }
             let (files, repos) = counts.get(phrase.as_str()).copied().unwrap_or_default();
             match line {
+                _ if line.starts_with("measured_on = ") => {
+                    fixed += &format!("measured_on = \"{image}\"")
+                }
                 _ if line.starts_with("llm_files = ") => fixed += &format!("llm_files = {files}"),
                 _ if line.starts_with("llm_repos = ") => fixed += &format!("llm_repos = {repos}"),
                 _ => fixed += line,

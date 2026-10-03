@@ -24,8 +24,9 @@ missing one costs nothing.
 ## What CI checks
 
 - `make test-blobs` counts each entry's `llm` files and repositories on the image `blobs.lock`
-  pins, and fails when a count drifts or a `human` file holds the phrase. `make fix-catalog`
-  rewrites the counts; read the diff. The catalogue's `measured_on` must equal `blobs.lock`.
+  pins, and fails when a count drifts or a `human` file holds the phrase.
+- The catalogue's `measured_on` must equal `blobs.lock`. `make fix-catalog` rewrites the counts and
+  sets `measured_on`; read the diff.
 - `tests/corpus.rs` holds every group at zero `human/` fixtures of the tree and at least five
   `llm/` fixtures, so no group is dead weight.
 - `tests/phrases.rs` refuses an entry nested in another or repeated once folded, a group with no

@@ -20,7 +20,9 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
         |-- 2026-09-27-01/
         |-- 2026-09-27-02/
         |-- 2026-10-03-01/
-        `-- 2026-10-03-02/
+        |-- 2026-10-03-02/
+        |-- 2026-10-03-03/
+        `-- 2026-10-03-04/
 ```
 
 ## corpus/
@@ -39,6 +41,9 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   `source.license`. It drops those and 16 more whose licence the corpus does not accept or
   `collect.py` cannot name.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
+- `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
+- `2026-10-03-04`: 198 `llm` stories from one Hugging Face dataset whose publisher names each row's
+  model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 
 The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer
 proves. Its `repos.jsonl` lists the 3,232 repositories the harvest tried, 1,388 of which gave a
@@ -48,7 +53,7 @@ Every fixture is quoted from a public repository under a permissive licence, whi
 names with the commit.
 
 The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
-image, so anything added here is pulled by every target that reads the corpus, and by CI on a
+image, so anything added is pulled by every target that reads the corpus, and by CI on a
 cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
 that waits for a way to fetch less.
 
@@ -66,31 +71,28 @@ private package: this repo's was private until 2026-10-03, and a fork's may be.
 A token `gh` holds is not always one the registry takes. A person's may lack the packages scope,
 and a hosted environment may set `GH_TOKEN` to a stand-in that only its own proxy accepts. So every
 login is checked against the registry before it is relied on and dropped when refused, and the
-error says which of the two it was and what fixes it. Without the check, a stand-in token made
-every fetch fail with a message about a private package.
+error says which of the two it was and what fixes it.
 
 CI has no `gh` login; it reads the package anonymously like everyone else, and the `publish-blobs`
 workflow publishes with the workflow token, which works only while the package grants this
 repository access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access ->
-`webern/deslag` with the Write role. The grant is per package, not per tag, so publishing does not
-need it repeated.
+`webern/deslag` with the Write role. The grant is per package, not per tag.
 
-A ghcr.io outage fails `make ci`, and with it every pull request.
+A ghcr.io outage fails `make ci` and every pull request.
 
 `crane` (https://github.com/google/go-containerregistry) does the registry work. The script
-installs the pinned version into `.tools/crane/`, checked against a hash, the first time it is
-needed. There is no daemon, and the image never runs.
+installs the pinned version into `.tools/crane/`, checked against a hash.
 
 ## Layers
 
-The image is split into layers, so publishing a new batch uploads that batch and nothing else.
+The image is split into layers, so publishing a batch uploads that batch alone.
 Each version's manifest names the layers it is made of, and the registry keeps one copy of a layer
 however many versions share it.
 
 Every immediate child of `.blobs/unpacked/` is a layer, except a directory `layers.txt` lists,
 whose immediate children are layers instead; a listed child of a listed directory continues the
 rule. A file or symlink met that way is a layer of its own. `layers.txt` lists `corpus/` and
-`corpus/batches/`, so each batch is a layer. Its own comment gives the rules for a line.
+`corpus/batches/`, so each batch is a layer.
 
 A layer's identity is a fingerprint of its content: every path below it, whether each is a
 directory, file, executable or symlink, each file's hash and each symlink's target. Owner, times,
@@ -104,8 +106,8 @@ machines can give it a new digest. Only layers whose fingerprint moved are tarre
 format, and each tar's listing is checked against the tree before anything is pushed. The lock is
 machine-written; `fetch` reads its first line and nothing else.
 
-`scripts/blobstore/blobs.sh plan` says what a publish would do -- which layers are the same,
-changed, new or gone, and which files moved since the fetch -- and pushes nothing.
+`scripts/blobstore/blobs.sh plan` says which layers a publish would leave the same, change, add
+or drop, and which files moved since the fetch. It pushes nothing.
 
 ## Changing the image
 
@@ -123,7 +125,7 @@ A batch can also be a manifest that the `publish-blobs` workflow builds and publ
 login or machine; `batches.md` says how.
 
 Publishing needs `bsdtar`, which macOS ships; on Linux it is the `libarchive-tools` package.
-Fetching works with any `tar`. Each command checks for what it needs, all of it in one pass.
+Fetching works with any `tar`.
 
 ## Unpublished edits
 

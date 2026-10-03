@@ -20,12 +20,15 @@
 //!   auxiliary (`be`, `have`), an adverb (`still`) or a function word is left alone.
 //!
 //! A word with a single tag the lexicon lists (`file` as only a noun, `go` as only a verb) has
-//! nothing to narrow; if the cue agrees with it, it is raised from `Unsure` to `Likely`
-//! ([`View::confirm`]). `you` and `it` before a word, and a determiner before any word that may be
+//! nothing to narrow; if the cue agrees with it, one reading remains and the context settles it,
+//! so it is `Sure` ([`View::confirm`]). A word with several tags is `Likely`. `you` and `it` before a word, and a determiner before any word that may be
 //! an adjective, were measured and are not cues: each was under the floor or too few.
 //!
-//! The word before is a closed-class word read by its text, or a determiner with one tag possible,
-//! or a `to` whose own reading is `Likely`; no rule leans on a neighbour with several tags open.
+//! The word before is a determiner with one tag possible, a possessive, a subject pronoun, or a
+//! modal or `to` that is already `Likely` or `Sure` (`can` and `will` are decided by the function
+//! pass; the other modals have one tag). The possessives and pronouns are read by their text, which
+//! is the same whichever tag they turn out to have. No rule leans on a neighbour with several
+//! tags open.
 
 use super::pass::View;
 use super::{Confidence, Features, Reading, Tag, TagSet};
@@ -104,8 +107,9 @@ enum Form {
 fn verb_before(view: &View<'_, '_>, at: usize) -> Option<Form> {
     let text = view.text_of_word(at - 1)?;
     let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
-    if is(MODALS)
-        || (text.eq_ignore_ascii_case("to") && view.decided(at - 1) == Some(Tag::Particle))
+    let decided = view.decided(at - 1);
+    if (is(MODALS) && decided == Some(Tag::Auxiliary))
+        || (text.eq_ignore_ascii_case("to") && decided == Some(Tag::Particle))
     {
         Some(Form::Base)
     } else if is(SUBJECTS) {
@@ -199,7 +203,12 @@ mod tests {
                 confidence: Confidence::Likely,
                 ..word(&[Particle, Tag::Adposition], Features::NONE)
             },
-            "my" | "I" | "we" | "can" => word(&[Pronoun], Features::NONE),
+            // A modal the earlier passes have decided is an auxiliary at Likely.
+            "can" | "will" | "must" | "could" => Reading {
+                confidence: Confidence::Likely,
+                ..word(&[Auxiliary, Noun, Verb], Features::NONE)
+            },
+            "my" | "I" | "we" | "they" | "he" | "she" => word(&[Pronoun], Features::NONE),
             _ => word(&[Noun, Verb], Features::NONE),
         }
     }
@@ -233,15 +242,63 @@ mod tests {
         assert_eq!(read.features, Features::PLURAL);
     }
 
+    /// The pronoun, determiner and possessive words each list holds are read here by their text.
+    #[test]
+    fn every_word_of_each_list_is_a_cue() {
+        let files = word(&[Noun, Verb], Features::SINGULAR);
+        for subject in ["I", "we", "they", "he", "she"] {
+            let read = after(&format!("{subject} file it"), "file", files, others);
+            assert_decided(read, Verb, &[Noun, Verb]);
+            assert_eq!(read.features, Features::FINITE.union(Features::PRESENT));
+        }
+        for modal in [
+            "can", "could", "will", "would", "shall", "should", "may", "might", "must",
+        ] {
+            let read = after(&format!("we {modal} file it"), "file", files, |t| {
+                if t == modal {
+                    Reading {
+                        confidence: Confidence::Sure,
+                        ..word(&[Auxiliary], Features::FINITE)
+                    }
+                } else {
+                    others(t)
+                }
+            });
+            assert_decided(read, Verb, &[Noun, Verb]);
+            assert_eq!(read.features, Features::INFINITIVE, "{modal}");
+        }
+        for possessive in ["my", "your", "his", "her", "its", "our", "their"] {
+            let read = after(&format!("see {possessive} file now"), "file", files, others);
+            assert_decided(read, Noun, &[Noun, Verb]);
+        }
+    }
+
+    #[test]
+    fn a_modal_that_is_not_decided_is_no_cue() {
+        let files = word(&[Noun, Verb], Features::SINGULAR);
+        // `can` and `will` as the tables leave them: three readings, `Unsure`. After a determiner
+        // the function pass leaves them alone, and then they are no cue.
+        let unsure = word(&[Auxiliary, Noun, Verb], Features::FINITE);
+        for modal in ["can", "will"] {
+            let read = after(&format!("see the {modal} file it"), "file", files, |t| {
+                if t == modal { unsure } else { others(t) }
+            });
+            assert_eq!(read, files, "{modal}");
+        }
+        // After a pronoun the function pass decides them, and then they are cues.
+        for modal in ["can", "will"] {
+            let read = after(&format!("we {modal} file it"), "file", files, |t| {
+                if t == modal { unsure } else { others(t) }
+            });
+            assert_decided(read, Verb, &[Noun, Verb]);
+        }
+    }
+
     #[test]
     fn a_modal_to_or_subject_makes_a_verb() {
         let noun_first = word(&[Noun, Verb], Features::SINGULAR);
         for text in ["we can file it", "I file it", "see to file it"] {
-            let (target, line) = ("file", text);
-            let read = after(line, target, noun_first, |t| match t {
-                "can" => word(&[Auxiliary], Features::NONE),
-                _ => others(t),
-            });
+            let read = after(text, "file", noun_first, others);
             assert_decided(read, Verb, &[Noun, Verb]);
         }
         // The form follows the word before: a base form after a modal, finite after a subject.
@@ -251,25 +308,32 @@ mod tests {
         assert_eq!(present.features, Features::FINITE.union(Features::PRESENT));
         // A plural noun-first word is a third person singular verb.
         let files = word(&[Noun, Verb], Features::PLURAL);
-        let read = after("he files it", "files", files, |t| match t {
-            "he" => word(&[Pronoun], Features::NONE),
-            _ => others(t),
-        });
+        let read = after("he files it", "files", files, others);
         assert_eq!(read.tag, Verb);
+        assert_eq!(
+            read.features,
+            Features::FINITE
+                .union(Features::PRESENT)
+                .union(Features::SINGULAR)
+                .union(Features::THIRD)
+        );
     }
 
     #[test]
-    fn a_word_with_one_tag_the_cue_agrees_with_is_raised_to_likely() {
+    fn a_word_with_one_tag_the_cue_agrees_with_is_sure() {
         let noun = word(&[Noun], Features::SINGULAR);
         let read = after("see the file now", "file", noun, others);
-        assert_eq!((read.tag, read.confidence), (Noun, Confidence::Likely));
+        assert_eq!((read.tag, read.confidence), (Noun, Confidence::Sure));
         assert_eq!(read.kept, TagSet::of(Noun));
         let verb = word(&[Verb], Features::INFINITIVE);
         let read = after("I go now", "go", verb, others);
-        assert_eq!((read.tag, read.confidence), (Verb, Confidence::Likely));
+        assert_eq!((read.tag, read.confidence), (Verb, Confidence::Sure));
         // Not when the cue asks for the other tag.
         let read = after("see the go now", "go", verb, others);
         assert_eq!(read, verb);
+        // A word with several tags is `Likely`, never `Sure`.
+        let read = after("see the file now", "file", noun_verb(), others);
+        assert_eq!(read.confidence, Confidence::Likely);
     }
 
     #[test]

@@ -10,6 +10,10 @@
 //! - **`be` forms** (`be`, `is`, `are`, `was`, `were`, `been`): an auxiliary, except directly after
 //!   the expletive `there`, where the verb is a main verb (`there is a problem`). Before `there`
 //!   (`is there a`) nothing is decided: the gold has a verb as often as an auxiliary.
+//! - **`can`, `will`**: an auxiliary, unless the word before is a determiner, a possessive or an
+//!   adjective (`the can`, `my will`, `free will`), where it is a noun. They are modals that the
+//!   tables also give a noun and a verb reading, so they were `Unsure`; deciding them lets the
+//!   noun-or-verb pass lean on them.
 //! - **`have` and `do` forms** (`have`, `has`, `had`, `having`, `do`, `does`, `did`): an auxiliary
 //!   before a word that can only be a verb or an auxiliary, `not`, or an adverb (`have been`, `do
 //!   not`, `has always`); a main verb before a determiner (`have a`).
@@ -37,6 +41,8 @@ const AFTER_PRONOUN: TagSet = AUX_VERB.with(Tag::Adposition).with(Tag::Particle)
 
 const BE_FORMS: &[&str] = &["be", "is", "are", "was", "were", "been"];
 const HAVE_DO_FORMS: &[&str] = &["have", "has", "had", "having", "do", "does", "did"];
+const AMBIGUOUS_MODALS: &[&str] = &["can", "will"];
+const POSSESSIVES: &[&str] = &["my", "your", "his", "her", "its", "our", "their"];
 const DEMONSTRATIVES: &[&str] = &["this", "these", "those", "which", "what"];
 
 /// Runs the pass over one sentence.
@@ -52,13 +58,21 @@ pub(super) fn run(view: &mut View<'_, '_>) {
         let pronoun_or_determiner = has(&[Tag::Pronoun, Tag::Determiner]);
         let pronoun_or_conjunction = has(&[Tag::Pronoun, Tag::Conjunction]);
         let preposition_like = is_preposition(possible);
-        if !(verbal || pronoun_or_determiner || pronoun_or_conjunction || preposition_like) {
+        let modal_like = possible.contains(Tag::Auxiliary) && possible.len() > 1;
+        if !(verbal
+            || modal_like
+            || pronoun_or_determiner
+            || pronoun_or_conjunction
+            || preposition_like)
+        {
             continue;
         }
         let text = view.text(at);
         let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
         let choice = if verbal && is(BE_FORMS) {
             be(view, at)
+        } else if possible.contains(Tag::Auxiliary) && is(AMBIGUOUS_MODALS) {
+            modal(view, at)
         } else if verbal && is(HAVE_DO_FORMS) {
             have_do(view, at)
         } else if pronoun_or_determiner && is(DEMONSTRATIVES) {
@@ -96,6 +110,20 @@ fn be(view: &View<'_, '_>, at: usize) -> Option<Tag> {
     } else {
         Tag::Auxiliary
     })
+}
+
+/// An auxiliary, unless a determiner, a possessive or an adjective comes before.
+fn modal(view: &View<'_, '_>, at: usize) -> Option<Tag> {
+    let before = at
+        .checked_sub(1)
+        .filter(|before| view.kind(*before) == TokenKind::Word);
+    let noun_context = before.is_some_and(|before| {
+        view.within(before, TagSet::of(Tag::Determiner).with(Tag::Adjective))
+            || POSSESSIVES
+                .iter()
+                .any(|word| view.text(before).eq_ignore_ascii_case(word))
+    });
+    (!noun_context).then_some(Tag::Auxiliary)
 }
 
 fn have_do(view: &View<'_, '_>, at: usize) -> Option<Tag> {
@@ -224,6 +252,33 @@ mod tests {
         // A be form the tables leave to one tag is left alone.
         let am = word(&[Auxiliary]);
         assert_eq!(after("I am here", "am", am, open), am);
+    }
+
+    #[test]
+    fn can_and_will_are_auxiliaries_unless_a_noun_context_comes_before() {
+        let modal = word(&[Auxiliary, Noun, Verb]);
+        let next = |t: &str| match t {
+            "the" | "a" => word(&[Determiner]),
+            "my" | "your" | "his" | "her" | "its" | "our" | "their" => word(&[Pronoun]),
+            "free" => word(&[Adjective]),
+            "we" => word(&[Pronoun]),
+            _ => open(t),
+        };
+        for form in ["can", "will"] {
+            for text in [
+                format!("we {form} go"),
+                format!("{form} we go"),
+                format!("users {form} go"),
+            ] {
+                decided(after(&text, form, modal, next), Auxiliary, modal);
+            }
+            for before in [
+                "the", "my", "your", "his", "her", "its", "our", "their", "free",
+            ] {
+                let text = format!("see {before} {form} now");
+                assert_eq!(after(&text, form, modal, next), modal, "{text}");
+            }
+        }
     }
 
     #[test]

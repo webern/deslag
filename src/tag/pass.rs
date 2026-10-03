@@ -13,8 +13,8 @@
 //!   pass, says which tags a word may have.
 //! - It never removes the last tag. A request that would is refused whole.
 //! - A word with a single tag possible is settled and is left alone, so a `Sure` reading never
-//!   changes. The one exception is [`View::confirm`]: a lexicon word with one tag, `Unsure`, may be
-//!   raised to `Likely` when the context agrees with that tag. Nothing is removed.
+//!   changes. The one exception is [`View::confirm`]: a lexicon word with one tag, `Unsure`, is
+//!   made `Sure` when the rule's context agrees with that tag. Nothing is removed.
 //! - A word is `Sure` when one tag remains, `Likely` when the rule chose its best guess and others
 //!   remain. A pass never lowers a confidence, and never sets `Unsure` or `Unknown`.
 //! - A rule that needs a neighbour's tag asks [`View::settled`], which answers only when nothing
@@ -130,9 +130,10 @@ impl View<'_, '_> {
             .is_some_and(|next| self.within(next, tags))
     }
 
-    /// Raises the word at `at` to `Likely` when `tag` is the one tag the tables give it, and it is
-    /// `Unsure`: the context agrees with the only reading the lexicon lists. The lexicon keeps such
-    /// a word `Unsure` because the open class is open, so it is not `Sure`, and nothing is removed.
+    /// Makes the word at `at` `Sure` when `tag` is the one tag the tables give it, it is `Unsure`,
+    /// and the rule's context agrees: one reading remains and the context settles it, which is what
+    /// step 4 means by `Sure`. The lexicon keeps such a word `Unsure` for want of context, because
+    /// the open class is open; a rule that supplies the context may close it. Nothing is removed.
     /// Returns whether the reading changed. Nothing happens for any other word.
     pub(super) fn confirm(&mut self, at: usize, tag: Tag) -> bool {
         match self.reading(at) {
@@ -142,7 +143,7 @@ impl View<'_, '_> {
                     && old.possible() == TagSet::of(tag) =>
             {
                 self.tokens[at].reading = Some(Reading {
-                    confidence: Confidence::Likely,
+                    confidence: Confidence::Sure,
                     ..old
                 });
                 true
@@ -452,22 +453,35 @@ mod tests {
 
     #[test]
     fn every_pass_keeps_the_rules_on_a_range_of_readings() {
-        // Whatever a pass does to a sentence of words in any state, no word loses its last tag,
-        // keeps a best guess that is not possible, or is Sure with another tag possible.
+        // Whatever the passes do to a sentence of words in any state, no word loses its last tag,
+        // keeps a best guess that is not possible, gains a tag or loses confidence; a `Sure` word
+        // has one tag possible; and a `Likely` word has more than one, unless it had one tag from
+        // the tables and a pass confirmed it, which makes it `Sure` and not `Likely`. The sentences
+        // hold a word of every cue the passes read: a determiner, a possessive, a modal, `to`, a
+        // subject pronoun, a function word, a preposition and a capital.
         let states = [
             read(Noun, Features::NONE, Confidence::Unknown, &[Noun]),
+            read(
+                Noun,
+                Features::NONE,
+                Confidence::Unknown,
+                &[Noun, ProperNoun],
+            ),
             read(
                 Noun,
                 Features::PLURAL,
                 Confidence::Unsure,
                 &[Noun, ProperNoun],
             ),
+            read(Noun, Features::SINGULAR, Confidence::Unsure, &[Noun]),
+            read(Verb, Features::INFINITIVE, Confidence::Unsure, &[Verb]),
             read(
                 Verb,
                 Features::NONE,
                 Confidence::Unsure,
                 &[Verb, Noun, Adjective],
             ),
+            read(Noun, Features::NONE, Confidence::Unsure, &[Noun, Verb]),
             read(
                 Adjective,
                 Features::POSITIVE,
@@ -486,30 +500,89 @@ mod tests {
                 Confidence::Sure,
                 &[Tag::Adverb],
             ),
+            read(
+                Tag::Auxiliary,
+                Features::FINITE,
+                Confidence::Unsure,
+                &[Tag::Auxiliary, Verb, Noun],
+            ),
+            read(
+                Tag::Auxiliary,
+                Features::FINITE,
+                Confidence::Unsure,
+                &[Tag::Auxiliary, Verb],
+            ),
+            read(
+                Tag::Determiner,
+                Features::SINGULAR,
+                Confidence::Unsure,
+                &[Tag::Determiner, Tag::Pronoun],
+            ),
+            read(
+                Tag::Adposition,
+                Features::NONE,
+                Confidence::Unsure,
+                &[Tag::Adposition, Tag::Adverb],
+            ),
+            read(
+                Tag::Particle,
+                Features::NONE,
+                Confidence::Unsure,
+                &[Tag::Particle, Tag::Adposition],
+            ),
+            read(
+                Tag::Pronoun,
+                Features::NONE,
+                Confidence::Sure,
+                &[Tag::Pronoun],
+            ),
+        ];
+        let texts = [
+            "see Alpha , Beta and Gamma Delta now",
+            "see the file and my file and a Frobnitz now",
+            "we can file it , I will go to file them , they have the work",
+            "he files the list on the file in it , this is that of those",
+            "what to do about it , is there a way to file this",
         ];
         for context in Context::ALL {
-            for state in states {
-                let text = "see Alpha , Beta and Gamma Delta now";
-                let mut tokens = sentence_of(text, |_| state);
-                let before: Vec<Option<Reading>> = tokens.iter().map(|t| t.reading).collect();
-                run(&mut tokens, context);
-                for (token, was) in tokens.iter().zip(before) {
-                    let Some(now) = token.reading else {
-                        assert!(was.is_none());
-                        continue;
-                    };
-                    let was = was.unwrap();
-                    assert!(!now.possible().is_empty());
-                    assert!(now.kept.contains(now.tag));
-                    assert!(
-                        now.possible().intersection(was.possible()) == now.possible(),
-                        "a pass added a tag to {}",
-                        token.text
-                    );
-                    if now.confidence == Confidence::Sure {
-                        assert_eq!(now.possible().len(), 1, "{}", token.text);
+            for text in texts {
+                // Every word the same state, then each state in turn at each word.
+                for (offset, _) in states.iter().enumerate() {
+                    let mut tokens = sentence_of(text, |w| {
+                        let n = w.len() + offset;
+                        states[n % states.len()]
+                    });
+                    let before: Vec<Option<Reading>> = tokens.iter().map(|t| t.reading).collect();
+                    run(&mut tokens, context);
+                    for (token, was) in tokens.iter().zip(before) {
+                        let Some(now) = token.reading else {
+                            assert!(was.is_none());
+                            continue;
+                        };
+                        let was = was.unwrap();
+                        assert!(!now.possible().is_empty());
+                        assert!(now.kept.contains(now.tag), "{}", token.text);
+                        assert!(
+                            now.possible().intersection(was.possible()) == now.possible(),
+                            "a pass added a tag to {}",
+                            token.text
+                        );
+                        assert!(now.confidence.at_least(was.confidence), "{}", token.text);
+                        match now.confidence {
+                            Confidence::Sure => {
+                                assert_eq!(now.possible().len(), 1, "{}", token.text);
+                            }
+                            Confidence::Likely if was.confidence != Confidence::Likely => {
+                                assert!(now.possible().len() > 1, "{}", token.text);
+                            }
+                            _ => {}
+                        }
+                        // A word one tag possible at the start is only ever confirmed, to `Sure`.
+                        if was.possible().len() == 1 && now != was {
+                            assert_eq!(now.confidence, Confidence::Sure, "{}", token.text);
+                            assert_eq!(now.tag, was.tag, "{}", token.text);
+                        }
                     }
-                    assert!(now.confidence.at_least(was.confidence), "{}", token.text);
                 }
             }
         }

@@ -9,6 +9,9 @@
 //!   the guide: where its code has a number or a verb form, a tagger that gives one must give the
 //!   same, and one that gives none abstains. Where the blind code has none (a pronoun with no
 //!   number) nothing is asked of the others. An agreed word stands, `Prov=agree`.
+//! - Harper's file holds a raw UPOS, `X` where Harper has no tag. An `X` from Harper is an
+//!   abstention, not an answer: Harper neither agrees nor disagrees on that word, and the word is
+//!   decided by the blind tagger and spaCy.
 //! - Every other word goes to the adjudication worklist, with the sentence, the three answers and
 //!   a place for one code and a reason of at most 15 words.
 //!
@@ -173,13 +176,24 @@ fn conflicts<T: PartialEq>(blind: Option<T>, other: Option<T>) -> bool {
     matches!((blind, other), (Some(b), Some(o)) if b != o)
 }
 
-/// What the three said of a word: `blind`, `harper` and `spacy`.
+/// Whether Harper abstains on a word: its file holds `X` where it has no tag.
+pub fn harper_abstains(harper: Code) -> bool {
+    harper.base == Base::X
+}
+
+/// What the three said of a word: `blind`, `harper` and `spacy`. Harper's `X` is an abstention:
+/// it is left out of the comparison.
 pub fn judge(blind: Code, harper: Code, spacy: Code) -> Verdict {
-    if blind.base != harper.base || blind.base != spacy.base {
+    let others: &[Code] = if harper_abstains(harper) {
+        &[spacy]
+    } else {
+        &[harper, spacy]
+    };
+    if others.iter().any(|other| blind.base != other.base) {
         return Verdict::Disputed { tags_differ: true };
     }
-    let clash = [harper, spacy]
-        .into_iter()
+    let clash = others
+        .iter()
         .any(|other| conflicts(blind.number, other.number) || conflicts(blind.form, other.form));
     if clash {
         Verdict::Disputed { tags_differ: false }
@@ -216,7 +230,12 @@ pub struct Stats {
     /// How many words each pair agrees on the base of: blind and Harper, blind and spaCy, Harper
     /// and spaCy.
     pub pairs: [usize; 3],
-    /// How many words all three agree on the base of.
+    /// The words each pair was compared on: every word, less those Harper abstained on for the
+    /// two pairs it is in.
+    pub pair_words: [usize; 3],
+    /// Words Harper abstained on, with `X`.
+    pub abstained: usize,
+    /// How many words all three agree on the base of, Harper's abstentions aside.
     pub tag3: usize,
     /// How many words all three agree on completely.
     pub full3: usize,
@@ -256,11 +275,16 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
                 continue;
             };
             stats.words += 1;
-            stats.pairs[0] += usize::from(blind.base == harper.base);
+            let abstains = harper_abstains(harper);
+            stats.abstained += usize::from(abstains);
+            stats.pair_words[0] += usize::from(!abstains);
+            stats.pair_words[1] += 1;
+            stats.pair_words[2] += usize::from(!abstains);
+            stats.pairs[0] += usize::from(!abstains && blind.base == harper.base);
             stats.pairs[1] += usize::from(blind.base == spacy.base);
-            stats.pairs[2] += usize::from(harper.base == spacy.base);
+            stats.pairs[2] += usize::from(!abstains && harper.base == spacy.base);
             let verdict = judge(blind, harper, spacy);
-            let all_tags = blind.base == harper.base && blind.base == spacy.base;
+            let all_tags = blind.base == spacy.base && (abstains || blind.base == harper.base);
             stats.tag3 += usize::from(all_tags);
             let full = matches!(verdict, Verdict::Agreed(_));
             stats.full3 += usize::from(full);
@@ -315,9 +339,20 @@ impl fmt::Display for Stats {
         };
         writeln!(f, "Agreement over {} word tokens", self.words)?;
         writeln!(f, "pairs, on the part of speech")?;
-        row(f, "blind and harper", self.pairs[0])?;
-        row(f, "blind and spacy", self.pairs[1])?;
-        row(f, "harper and spacy", self.pairs[2])?;
+        for (label, at) in [
+            ("blind and harper", 0),
+            ("blind and spacy", 1),
+            ("harper and spacy", 2),
+        ] {
+            writeln!(
+                f,
+                "  {label:<44}{:>6}  {:>6}  of {}",
+                self.pairs[at],
+                percent(self.pairs[at], self.pair_words[at]),
+                self.pair_words[at]
+            )?;
+        }
+        row(f, "words harper abstained on (X), left out", self.abstained)?;
         writeln!(f, "all three")?;
         row(f, "agree on the part of speech", self.tag3)?;
         row(f, "agree on it and every feature (these stand)", self.full3)?;
@@ -851,6 +886,52 @@ mod tests {
             judge(code("V.pp"), code("V.pp"), code("V.pa")),
             Verdict::Disputed { tags_differ: false }
         );
+    }
+
+    #[test]
+    fn harper_x_abstains_and_the_other_two_decide() {
+        // Harper's `X` agrees with whatever the blind tagger and spaCy agree on.
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("N.p")),
+            Verdict::Agreed(code("N.p"))
+        );
+        assert_eq!(
+            judge(code("V.pp"), code("X"), code("V.pp")),
+            Verdict::Agreed(code("V.pp"))
+        );
+        // They still dispute when blind and spaCy differ, in a base or in a feature.
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("J")),
+            Verdict::Disputed { tags_differ: true }
+        );
+        assert_eq!(
+            judge(code("N.p"), code("X"), code("N.s")),
+            Verdict::Disputed { tags_differ: false }
+        );
+        // Only Harper abstains: an `X` from spaCy against another base is a real answer.
+        assert_eq!(
+            judge(code("N.p"), code("N.p"), code("X")),
+            Verdict::Disputed { tags_differ: true }
+        );
+    }
+
+    #[test]
+    fn harper_abstentions_are_left_out_of_its_pairs() {
+        let mut harper = SAME;
+        harper[6] = ("X", "_"); // files
+        harper[3] = ("ADJ", "_"); // Why: a real disagreement
+        let (sample, merged) = merged(&blind(), &harper, &SAME);
+        let ids: Vec<String> = merged.items.iter().map(|i| i.id(&sample)).collect();
+        assert_eq!(ids, ["s2.1"]);
+        assert_eq!(merged.stats.words, 7);
+        assert_eq!(merged.stats.abstained, 1);
+        assert_eq!(merged.stats.pair_words, [6, 7, 6]);
+        assert_eq!(merged.stats.pairs, [5, 7, 5]);
+        assert_eq!(merged.stats.tag3, 6);
+        assert_eq!(merged.stats.full3, 6);
+        let report = merged.stats.to_string();
+        assert!(report.contains("harper abstained on"), "{report}");
+        assert!(report.contains("83.3%"), "{report}");
     }
 
     #[test]

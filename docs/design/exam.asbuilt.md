@@ -21,7 +21,8 @@ commands.
 - `words --gold G`: the header and Words section alone, for any gold, with no tagger.
 
 Exit 0 when it printed or wrote what was asked; 2 when it cannot run (a malformed file, a tagger
-breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr.
+breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr. For a holdout gold the line
+names a sentence by its position, never by its `sent_id`.
 
 ## Modules
 

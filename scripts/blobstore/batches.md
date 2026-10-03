@@ -121,7 +121,7 @@ say. The manifest's `per_repo` is the number of texts, shared out evenly among `
 `revision` is the commit to read at, the tip if the seed leaves it out. The workflow completes the
 seed with that, its date, the `sha256` of the file, and `model_licenses`: each model's licence, or
 its base model's, which must be one the corpus accepts. A model whose licence is not accepted, or
-that has none, fails the seed, so no model's terms restrict the use. `harvest` reads the file at
+that has none, fails the seed. The check reads one `license:` on a card, not a model's lineage. `harvest` reads the file at
 the revision again and fails unless it has the `sha256`. Each model's texts are the first of its
 rows in the order a hash of the row number gives, so building twice gives one batch. A fixture's
 path is `FILE/row-N.md` and its text is the cell as it is.

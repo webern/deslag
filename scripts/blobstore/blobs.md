@@ -42,7 +42,7 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   `collect.py` cannot name.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
 - `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
-- `2026-10-03-04`: 198 `llm` stories from one Hugging Face dataset whose publisher names each row's
+- `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
   model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 
 The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer

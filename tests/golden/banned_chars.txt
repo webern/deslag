@@ -117,6 +117,7 @@ llm/MaxGramser--homeassistant_espscreen/docs__TEST_RESULTS_0239.md count:7
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md count:25
 llm/Nanako0129--sepia/evals__deaify-release-note__prompt.md count:2
 llm/OnlyTerp--openclaw-optimization-guide/part25-architecture-overview.md count:32
+llm/OnlyTerp--openclaw-optimization-guide/part31-the-llm-wiki-pattern-in-openclaw.md count:25
 llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md count:44
 llm/OpenNHP--opennhp/docs__protocol__messages.md count:115
 llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md count:73
@@ -132,7 +133,6 @@ llm/SpyderMYK--fieldy-field-study/protocol__day1-checklist.md count:10
 llm/TAJD--economist-style-guide-plugin/economist-style__skills__economist-style__reference__DIALECT-CONVENTIONS.md count:8
 llm/TairuFramework--mokei/docs__agents__plans__completed__2026-06-19-anthropic-test-known-models.complete.md count:4
 llm/TencentCloud--CubeSandbox/docs__guide__agent-platform-freeze.md count:7
-llm/Token-Gremlin--natural-disasters/CONTRIBUTING.md count:6
 llm/TomBadash--Mouser/github__release-notes__v3.7.2.md count:10
 llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md count:2
 llm/WikipediaBrown--napkin/Sources__napkin__napkin.docc__Articles__AddingANetworkedService.md count:8
@@ -168,6 +168,7 @@ llm/block--builderbot/apps__differ__src-tauri__resources__CUSTOM-THEMES.md count
 llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md count:28
 llm/bojieli--ai-agent-book/chapter5__paper-to-ppt__paper__sample_paper.md count:2
 llm/bradygaster--Squad-IRL/compliance-checker__README.md count:7
+llm/bradygaster--Squad-IRL/contract-reviewer__README.md count:15
 llm/brazilofmux--tinymux/CONTRIBUTING.md count:14
 llm/brendankowitz--ignixa-fhir/docs__features__validation__investigations__terminology-completeness.md count:20
 llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md count:46
@@ -194,7 +195,6 @@ llm/dofy--learn-vim/en__chapter10.md count:6
 llm/dosco--graphjin/website__content__environment__worlds.md count:4
 llm/drewnoakes--metadata-extractor/RELEASING.md count:15
 llm/dwalleck--cyril/docs__plans__2026-04-02-subagent-support-design.md count:25
-llm/dweigend--vibe-kanban/dev__research__integration-strategies.md count:4
 llm/dxos--dxos/changeset__browser-cli-terminal.md count:3
 llm/edwardkim--rhwp/mydocs__working__task_m100_1595_stage1.md count:3
 llm/elastic--elastic-transport-net/claude__skills__writing-style.md count:19

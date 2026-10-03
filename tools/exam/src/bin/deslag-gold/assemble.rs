@@ -141,7 +141,28 @@ pub fn build(
                 (Some("agree"), true) | (Some("kind"), false)
             );
             let logged = decided.get_mut(&(sent.id.as_str(), at));
+            // An agreed word may be in the log as an override: the log row says what the three
+            // agreed on, and that is the word's agreed code, which it now changes.
+            let agreed_code = if agreed_here && tok.is_word() {
+                Code::from_conllu(&read.upos, &read.feats).ok()
+            } else {
+                None
+            };
             match (agreed_here, logged) {
+                (true, Some((row, used)))
+                    if agreed_code.is_some()
+                        && row.agreed == agreed_code
+                        && Some(row.code) != agreed_code
+                        && row.form == tok.form =>
+                {
+                    *used = true;
+                    lines.push(Filled {
+                        upos: row.code.upos(&tok.form).to_string(),
+                        feats: row.code.feats(),
+                        prov: Prov::Adjudicated,
+                        code: Some(row.code),
+                    });
+                }
                 (true, Some(_)) => problems.push(Problems::sentence(
                     "the adjudication log",
                     &sent.id,
@@ -416,7 +437,7 @@ mod tests {
     use super::*;
     use crate::compact::{read_tags, tests::sample};
     use crate::merge::{
-        adjudicated_tsv, load_tagger, merge, read_answers, read_log, read_worklist,
+        adjudicated_tsv, load_tagger, merge, read_answers, read_log, read_overrides, read_worklist,
     };
     use crate::merge::{agreed_conllu, worklist_tsv};
 
@@ -493,7 +514,7 @@ mod tests {
             true,
         )
         .unwrap();
-        let log = adjudicated_tsv(&decided);
+        let log = adjudicated_tsv(&decided, &[]);
         let rows = read_log("log", &log).unwrap();
         let built = build(&sample, "agreed.conllu", &agreed, &rows).unwrap();
         let [blind_answers, ..] = answers;
@@ -607,6 +628,7 @@ mod tests {
             token,
             form: form.to_string(),
             code: Code::parse("N.p").unwrap(),
+            agreed: None,
         };
         let files = row("s2", 5, "files");
         let says = |rows: &[Logged], expect: &str| {
@@ -628,6 +650,81 @@ mod tests {
             "token 1 is not a token of the sample",
         );
         says(&[row("s2", 5, "file")], "token 5 is `files`, not `file`");
+    }
+
+    const OVERRIDE_HEAD: &str = "sentence_id\ttoken_index\tform\told_code\tnew_code\treason\n";
+
+    #[test]
+    fn an_override_turns_an_agreed_word_into_an_adjudicated_one_with_its_reason() {
+        let (sample, _, agreed, log, _) = pipeline();
+        let text = format!("{OVERRIDE_HEAD}s1\t3\tto\tT\tP\tthe guide now says to here is P\n");
+        let overrides = read_overrides("o.tsv", &text, "agreed.conllu", &agreed).unwrap();
+        assert_eq!(overrides.len(), 1);
+        // The log of the answers, then the override.
+        let mut text = log.clone();
+        for line in adjudicated_tsv(&[], &overrides).lines().skip(1) {
+            text.push_str(line);
+            text.push('\n');
+        }
+        assert!(
+            text.contains("s1.3\ts1\t3\tto\tT\tT\tT\tP\tthe guide now says to here is P\n"),
+            "{text}"
+        );
+        let rows = read_log("log", &text).unwrap();
+        let built = build(&sample, "agreed.conllu", &agreed, &rows).unwrap();
+        let to = &built.sentences[0][2];
+        assert_eq!(to.prov, Prov::Adjudicated);
+        assert_eq!(to.code, Some(Code::parse("P").unwrap()));
+        assert_eq!(to.upos, "ADP");
+        assert_eq!(built.sentences[0][0].prov, Prov::Agree);
+        let dev = gold_file(&sample, &built, Split::Dev);
+        assert!(dev.contains("Prov=adjudicated"), "{dev}");
+        let gold = reread("dev.conllu", &dev).unwrap();
+        let words = Words::of(&gold, &align_all(&gold), &Disputes::default());
+        assert_eq!(words.provenance[1], 1, "one adjudicated word in dev");
+    }
+
+    #[test]
+    fn a_bad_override_is_rejected_and_an_answer_for_an_agreed_word_still_is() {
+        let (sample, _, agreed, log, _) = pipeline();
+        let says = |row: &str, expect: &str| {
+            let error = read_overrides(
+                "o.tsv",
+                &format!("{OVERRIDE_HEAD}{row}\n"),
+                "agreed.conllu",
+                &agreed,
+            )
+            .unwrap_err()
+            .to_string();
+            assert!(error.contains(expect), "{error} should say {expect}");
+        };
+        says("s1\t3\tto\tT\tP\t", "no reason");
+        says("s1\t3\tto\tT\tT\tsame", "the new code is the old one");
+        says("s1\t3\tto\tP\tT\tx", "was agreed as T, not P");
+        says("s1\t3\tat\tT\tP\tx", "token 3 is `to`, not `at`");
+        says("s2\t5\tfiles\tN.p\tN.s\tx", "was not agreed by the taggers");
+        says("s1\t9\tto\tT\tP\tx", "token 9 is not in the sentence");
+        says("s7\t1\tto\tT\tP\tx", "it is not in the agreed file");
+        says("s1\t3\tto\tT\tQ.s\tx", "`Q.s` is not a code of the guide");
+        let long = vec!["word"; 16].join(" ");
+        says(
+            &format!("s1\t3\tto\tT\tP\t{long}"),
+            "the reason has 16 words",
+        );
+        assert!(read_overrides("o.tsv", "sentence_id\tform\n", "agreed.conllu", &agreed).is_err());
+        // A row whose three answers differ is an answer, not an override, and an agreed word
+        // may not have one.
+        let rows = read_log("log", &format!("{log}s1.3\ts1\t3\tto\tT\tP\tT\tP\tx\n")).unwrap();
+        let error = build(&sample, "agreed.conllu", &agreed, &rows)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.contains("token 3 `to` was agreed, and is in the log"),
+            "{error}"
+        );
+        // An override whose old code is not the agreed one is refused too.
+        let rows = read_log("log", &format!("{log}s1.3\ts1\t3\tto\tP\tP\tP\tP\tx\n")).unwrap();
+        assert!(build(&sample, "agreed.conllu", &agreed, &rows).is_err());
     }
 
     #[test]

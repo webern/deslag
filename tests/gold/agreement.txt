@@ -1,0 +1,21 @@
+Agreement over 4658 word tokens
+pairs, on the part of speech
+  blind and harper                              3683   89.5%  of 4114
+  blind and spacy                               4355   93.5%  of 4658
+  harper and spacy                              3670   89.2%  of 4114
+  words harper abstained on (X), left out        544   11.7%
+all three
+  agree on the part of speech                   4022   86.3%
+  agree on it and every feature (these stand)   3906   83.9%
+  to adjudicate                                  752   16.1%
+    of which the part of speech differs          636   13.7%
+    of which only a feature differs              116    2.5%
+by tier, all three agree on every word
+  human           1404 of 1658     84.7%
+  llm             1235 of 1488     83.0%
+  mixed           1267 of 1512     83.8%
+by context, all three agree on every word
+  heading          105 of 146      71.9%
+  list-item        606 of 756      80.2%
+  prose           3018 of 3527     85.6%
+  table-cell       177 of 229      77.3%

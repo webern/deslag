@@ -225,9 +225,8 @@ pub struct Token<'a> {
     pub range: Range<usize>,
     /// What it renders.
     pub text: Cow<'a, str>,
-    /// What part of speech it is, for a word.
-    // TODO: nothing tags words yet, so this is always `None`.
-    pub word_type: Option<WordType>,
+    /// What the tagger read of it: `Some` on a word the tagger has read, `None` on any other token.
+    pub reading: Option<crate::tag::Reading>,
 }
 
 /// What kind of token a token is.
@@ -251,28 +250,6 @@ pub enum TokenKind {
     Url,
     /// A reference to a footnote.
     Footnote,
-}
-
-/// What part of speech a word is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
-pub enum WordType {
-    /// A noun.
-    Noun,
-    /// A verb.
-    Verb,
-    /// An adjective.
-    Adjective,
-    /// An adverb.
-    Adverb,
-    /// A pronoun.
-    Pronoun,
-    /// A determiner, such as `the` or `no`.
-    Determiner,
-    /// A preposition.
-    Preposition,
-    /// A conjunction.
-    Conjunction,
 }
 
 /// Where a stretch of the source is: its bytes, and the lines and columns a report shows.
@@ -313,6 +290,7 @@ impl<'a> Document<'a> {
         let mut document = markdown::read(source);
         tokens::split(&mut document);
         sentences::split(&mut document);
+        crate::tag::document(&mut document);
         document
     }
 

@@ -485,7 +485,7 @@ mod tests {
             "N.s", "PN.p", "PR.s", "V.pr", "V.pa", "V.fi", "V.in", "V.ing", "V.pp",
         ] {
             let code = Code::parse(text).unwrap();
-            let feats = deslag_exam::tags::Features::from_ud(&code.feats()).unwrap();
+            let feats = deslag_exam::tags::from_ud(&code.feats()).unwrap();
             let expect = match text {
                 "N.s" | "PR.s" => deslag_exam::tags::Features::SINGULAR,
                 "PN.p" => deslag_exam::tags::Features::PLURAL,

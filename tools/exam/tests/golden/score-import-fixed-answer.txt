@@ -14,11 +14,11 @@ Words
     X                                 0
     tagged                            9
       scored                          9  as 9 tokens
+        by their first word           0  as 0 tokens
       unalignable                     0
         text mismatch                 0
         tokenizer drift               0
         one word, several tokens      0
-        one token, several tags       0
       not word tokens                 0
   imported lines outside the 13       0
   provenance

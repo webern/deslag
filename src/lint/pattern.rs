@@ -3,8 +3,9 @@
 //!
 //! A [`Pattern`] is a row of [`Item`]s, written as Rust data; there is no parser and no pattern
 //! comes from the config. Each item matches one token by its kind, its folded text, the end of its
-//! folded text, or its folded text being or not being in a listed set. An item may be optional,
-//! and a gap skips a bounded number of tokens. A match never leaves its sentence.
+//! folded text, its folded text being or not being in a listed set, or the part of speech the
+//! tagger read for it. An item may be optional, and a gap skips a bounded number of tokens. A match
+//! never leaves its sentence.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
 //! the longest match from there, then resumes after it: leftmost first, then longest, and no two
@@ -13,6 +14,7 @@
 use std::ops::Range;
 
 use crate::document::{Document, Token, TokenKind};
+use crate::tag::{Confidence, TagSet};
 
 /// One place in a [`Pattern`].
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +31,11 @@ pub enum Item {
     NotIn(&'static [&'static [&'static str]]),
     /// A word whose folded text holds none of these characters.
     Without(&'static [char]),
+    /// A word whose best guess is in this set, at this confidence or above.
+    ///
+    /// It reads the token's `reading`, and only its best guess: `kept` and the features are not
+    /// consulted. A token with no reading matches at no level, `Unknown` included.
+    Tag(TagSet, Confidence),
     /// Every one of these items matches the one token.
     All(&'static [Item]),
     /// This item, or nothing.
@@ -117,6 +124,9 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         Item::In(set) => word && set.contains(&text.as_str()),
         Item::NotIn(sets) => word && !sets.iter().any(|set| set.contains(&text.as_str())),
         Item::Without(chars) => word && !text.contains(*chars),
+        Item::Tag(set, least) => token.reading.is_some_and(|reading| {
+            set.contains(reading.tag) && reading.confidence.at_least(*least)
+        }),
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
         Item::Optional(_) | Item::Gap(_) => false,
     }
@@ -125,6 +135,7 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tag::{Features, Reading, Tag};
 
     /// The quoted text of each match of `pattern` in `markdown`.
     fn found(pattern: &Pattern, markdown: &str) -> Vec<String> {
@@ -242,5 +253,146 @@ mod tests {
         let ranges: Vec<_> = S_NO.find(&document).collect();
         assert_eq!(ranges.len(), 1);
         assert_eq!(document.tokens[ranges[0].start].text, "ships");
+    }
+
+    /// A document of `markdown` whose words have the readings `set` names, each the best guess of
+    /// the word with that text, at that level, with the tag alone kept.
+    fn read<'a>(markdown: &'a str, set: &[(&str, Tag, Confidence)]) -> Document<'a> {
+        let mut document = Document::markdown(markdown);
+        for token in &mut document.tokens {
+            if let Some((_, tag, confidence)) = set.iter().find(|(text, ..)| *text == token.text) {
+                token.reading = Some(Reading {
+                    tag: *tag,
+                    features: Features::NONE,
+                    confidence: *confidence,
+                    kept: TagSet::of(*tag),
+                });
+            }
+        }
+        document
+    }
+
+    /// A pattern of the one `item`, whose row outlives the test.
+    fn pattern(item: Item) -> Pattern {
+        Pattern {
+            items: Box::leak(Box::new([item])),
+        }
+    }
+
+    fn texts(pattern: &Pattern, document: &Document<'_>) -> Vec<String> {
+        pattern
+            .find(document)
+            .map(|range| {
+                let tokens = &document.tokens[range];
+                document.source[tokens[0].range.start..tokens[tokens.len() - 1].range.end]
+                    .to_string()
+            })
+            .collect()
+    }
+
+    const VERB_LIKELY: Pattern = Pattern {
+        items: &[Item::Tag(TagSet::of(Tag::Verb), Confidence::Likely)],
+    };
+
+    #[test]
+    fn a_tag_item_needs_the_confidence_to_be_at_least_the_level() {
+        let readings = |level| [("ships", Tag::Verb, level)];
+        for level in [Confidence::Sure, Confidence::Likely] {
+            let document = read("It ships fast.", &readings(level));
+            assert_eq!(texts(&VERB_LIKELY, &document), ["ships"], "{level:?}");
+        }
+        for level in [Confidence::Unsure, Confidence::Unknown] {
+            let document = read("It ships fast.", &readings(level));
+            assert!(texts(&VERB_LIKELY, &document).is_empty(), "{level:?}");
+        }
+    }
+
+    #[test]
+    fn a_tag_outside_the_set_fails() {
+        let document = read("It ships fast.", &[("ships", Tag::Noun, Confidence::Sure)]);
+        assert!(texts(&VERB_LIKELY, &document).is_empty());
+    }
+
+    #[test]
+    fn a_token_with_no_reading_matches_no_tag_item_at_any_level() {
+        let document = Document::markdown("It ships fast.");
+        for level in Confidence::ALL {
+            let any = pattern(Item::Tag(TagSet::of(Tag::Verb).with(Tag::Noun), level));
+            assert!(texts(&any, &document).is_empty(), "{level:?}");
+        }
+    }
+
+    #[test]
+    fn unknown_takes_any_best_guess_and_sure_only_the_sure_ones() {
+        let document = read(
+            "It ships fast.",
+            &[
+                ("ships", Tag::Verb, Confidence::Unknown),
+                ("fast", Tag::Verb, Confidence::Sure),
+            ],
+        );
+        let at = |level| pattern(Item::Tag(TagSet::of(Tag::Verb), level));
+        let unknown = at(Confidence::Unknown);
+        let sure = at(Confidence::Sure);
+        assert_eq!(texts(&unknown, &document), ["ships", "fast"]);
+        assert_eq!(texts(&sure, &document), ["fast"]);
+    }
+
+    #[test]
+    fn a_set_of_two_tags_takes_either() {
+        const NOUNISH: Pattern = Pattern {
+            items: &[Item::Tag(
+                TagSet::of(Tag::Noun).with(Tag::ProperNoun),
+                Confidence::Unsure,
+            )],
+        };
+        let document = read(
+            "Ada ships code.",
+            &[
+                ("Ada", Tag::ProperNoun, Confidence::Unsure),
+                ("ships", Tag::Verb, Confidence::Sure),
+                ("code", Tag::Noun, Confidence::Likely),
+            ],
+        );
+        assert_eq!(texts(&NOUNISH, &document), ["Ada", "code"]);
+    }
+
+    #[test]
+    fn a_tag_item_inside_all_works_with_a_literal() {
+        const P: Pattern = Pattern {
+            items: &[Item::All(&[
+                Item::Literal("ships"),
+                Item::Tag(TagSet::of(Tag::Verb), Confidence::Likely),
+            ])],
+        };
+        let document = read("It ships fast.", &[("ships", Tag::Verb, Confidence::Sure)]);
+        assert_eq!(texts(&P, &document), ["ships"]);
+        let document = read("It runs fast.", &[("runs", Tag::Verb, Confidence::Sure)]);
+        assert!(texts(&P, &document).is_empty(), "the literal fails");
+        let document = read("It ships fast.", &[("ships", Tag::Noun, Confidence::Sure)]);
+        assert!(texts(&P, &document).is_empty());
+        let document = Document::markdown("It ships fast.");
+        assert!(texts(&P, &document).is_empty());
+    }
+
+    #[test]
+    fn a_tag_item_reads_only_the_best_guess() {
+        // The word keeps NOUN too, and has no features: neither is consulted.
+        let mut document = Document::markdown("It ships fast.");
+        for token in &mut document.tokens {
+            if token.text == "ships" {
+                token.reading = Some(Reading {
+                    tag: Tag::Verb,
+                    features: Features::NONE,
+                    confidence: Confidence::Likely,
+                    kept: TagSet::of(Tag::Noun),
+                });
+            }
+        }
+        assert_eq!(texts(&VERB_LIKELY, &document), ["ships"]);
+        const NOUN: Pattern = Pattern {
+            items: &[Item::Tag(TagSet::of(Tag::Noun), Confidence::Unknown)],
+        };
+        assert!(texts(&NOUN, &document).is_empty());
     }
 }

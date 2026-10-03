@@ -61,18 +61,18 @@ fn the_noun_tagger_on_the_done_when_gold_gives_the_hand_worked_numbers() {
     assert_eq!(scoring.tagger, "noun");
 
     let cases: [(&str, Option<f64>, &str); 13] = [
-        ("Accuracy", Some(0.5), "7/14"),
-        ("Best-guess accuracy", Some(0.5), "7/14"),
-        ("Committed share", Some(1.0), "14/14"),
-        ("Gold retained", Some(0.5), "7/14"),
-        ("Sure share", Some(1.0), "14/14"),
-        ("Sure accuracy", Some(0.5), "7/14"),
-        ("Likely share", Some(0.0), "0/14"),
+        ("Accuracy", Some(7.0 / 15.0), "7/15"),
+        ("Best-guess accuracy", Some(7.0 / 15.0), "7/15"),
+        ("Committed share", Some(1.0), "15/15"),
+        ("Gold retained", Some(7.0 / 15.0), "7/15"),
+        ("Sure share", Some(1.0), "15/15"),
+        ("Sure accuracy", Some(7.0 / 15.0), "7/15"),
+        ("Likely share", Some(0.0), "0/15"),
         ("Likely accuracy", None, "0/0"),
         ("Unsure accuracy", None, "0/0"),
         ("Unknown accuracy", None, "0/0"),
-        ("Unknown rate", Some(0.0), "0/14"),
-        ("Unalignable rate", Some(3.0 / 19.0), "3/19"),
+        ("Unknown rate", Some(0.0), "0/15"),
+        ("Unalignable rate", Some(1.0 / 19.0), "1/19"),
         ("Clean sentences", Some(0.25), "1/4"),
     ];
     for (name, want, fraction) in cases {
@@ -105,10 +105,10 @@ fn the_strata_of_the_done_when_gold() {
     );
     let accuracy = |label: &str| on(&scoring, label, "Accuracy");
     for (label, want, fraction) in [
-        ("tier=human", 0.6, "3/5"),
+        ("tier=human", 0.5, "3/6"),
         ("tier=llm", 0.4, "2/5"),
         ("tier=mixed", 0.5, "2/4"),
-        ("context=prose", 1.0 / 3.0, "1/3"),
+        ("context=prose", 0.25, "1/4"),
         ("context=heading", 0.4, "2/5"),
         ("context=list-item", 0.5, "2/4"),
         ("context=table-cell", 1.0, "2/2"),
@@ -126,20 +126,17 @@ fn the_strata_of_the_done_when_gold() {
     }
     let (_, human, _) = accuracy("tier=human");
     let [low, high] = human.interval.unwrap();
-    assert!(
-        (low - 1.0 / 3.0).abs() < 1e-9 && high == 1.0,
-        "{low} {high}"
-    );
+    assert!((low - 0.25).abs() < 1e-9 && high == 1.0, "{low} {high}");
     let clean = |label: &str| on(&scoring, label, "Clean sentences").2;
     assert_eq!(clean("tier=human"), "1/2");
     assert_eq!(clean("tier=llm"), "0/1");
     assert_eq!(clean("tier=mixed"), "0/1");
 
-    // Overall accuracy's interval lies within the smallest and largest sentence's, and holds 0.5.
+    // Overall accuracy's interval lies within the smallest and largest sentence's, and holds 7/15.
     let (_, all, _) = accuracy("all");
     let [low, high] = all.interval.unwrap();
     assert!(
-        (1.0 / 3.0..=0.5).contains(&low) && (0.5..=1.0).contains(&high),
+        (0.25..=7.0 / 15.0).contains(&low) && (7.0 / 15.0..=1.0).contains(&high),
         "{low} {high}"
     );
 }
@@ -155,14 +152,11 @@ fn the_tier_gap_of_the_done_when_gold_is_not_a_finding() {
     let (human, _, _) = on(&scoring, "tier=human", "Accuracy");
     let (llm, _, _) = on(&scoring, "tier=llm", "Accuracy");
     let gap = unpaired(&llm, &stat, &human, &stat);
-    near(gap.point, -0.2);
-    // The human replicates can only be 2/6, 3/5 or 4/4, and the llm one is always 2/5.
+    near(gap.point, -0.1);
+    // The human replicates can only be 2/8, 3/6 or 4/4, and the llm one is always 2/5.
     let [low, high] = gap.interval.unwrap();
     assert!((low - (0.4 - 1.0)).abs() < 1e-9, "{low}");
-    assert!(
-        (high - (0.4 - 1.0 / 3.0)).abs() < 1e-9,
-        "{high} is +6.7 points"
-    );
+    assert!((high - (0.4 - 0.25)).abs() < 1e-9, "{high} is +15 points");
     assert!(!gap.above_zero() && !gap.below_zero());
 }
 
@@ -184,15 +178,19 @@ fn the_noun_tagger_confusion_and_misses() {
             (Tag::Noun, 7),
             (Tag::ProperNoun, 1),
             (Tag::Verb, 3),
+            (Tag::Auxiliary, 1),
             (Tag::Pronoun, 1),
             (Tag::Determiner, 1),
             (Tag::Adposition, 1)
         ]
     );
     let total: u64 = scoring.confusion.iter().flatten().sum();
-    assert_eq!(total, 14, "every guess was a noun");
+    assert_eq!(total, 15, "every guess was a noun");
     let words: Vec<&str> = scoring.misses.keys().map(|k| k.0.as_str()).collect();
-    assert_eq!(words, ["i", "like", "see", "send", "the", "to", "u.s"]);
+    assert_eq!(
+        words,
+        ["don't", "i", "like", "see", "send", "the", "to", "u.s"]
+    );
     assert!(scoring.misses.values().all(|n| *n == 1));
 }
 

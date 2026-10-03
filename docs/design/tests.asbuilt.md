@@ -18,7 +18,7 @@ tests/
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
   golden.rs           runs the golden set
-  golden/             its config, and what each lint finds in the corpus
+  golden/             its config, what each lint finds in the corpus, and tags.txt
 ```
 
 ## Small trees
@@ -66,3 +66,6 @@ path missing; a fixture with no section is left out, as is a lint that judges a 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
 a lint failing no fixture or all. `make fix-golden` rewrites the files.
+
+`tests/golden/tags.txt` is the tag stream of `tests/corpus/core/`, written by a second test in
+`tests/golden.rs`; `tag.asbuilt.md` describes it.

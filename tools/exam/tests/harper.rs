@@ -387,15 +387,15 @@ fn exam(args: &[&str]) -> std::process::Output {
 /// The done-when gold, scored by Harper's engine with the tiny model of `harper-tiny-model.json`.
 ///
 /// Its table knows `I`, `like`, `cats`, `to`, `See`, `the`, `docs:setup` and `page`, which is a VERB
-/// there, and one patch turns a VERB after a NOUN into a NOUN. The rest of the 14 scored tokens
-/// are not in the table, so they are `Noun` at `Unknown`: `Send`, `forms`, `U.S`, `staff`, `Error`
-/// and `codes`. `don't` is no scored token.
+/// there, and one patch turns a VERB after a NOUN into a NOUN. The rest of the 15 scored tokens
+/// are not in the table, so they are `Noun` at `Unknown`: `Send`, `don't`, `forms`, `U.S`, `staff`,
+/// `Error` and `codes`. `don't` is one token scored by its first word, `do`, an AUX.
 ///
-/// - Committed (`Likely`): `I`, `like`, `cats`, `to`, `See`, `the`, `docs:setup` and `page`, 8 of 14,
+/// - Committed (`Likely`): `I`, `like`, `cats`, `to`, `See`, `the`, `docs:setup` and `page`, 8 of 15,
 ///   and all right, `page` thanks to the patch: accuracy 8/8.
 /// - Right as a best guess: those 8, and `forms`, `staff`, `Error` and `codes`, which are nouns:
-///   12/14. Wrong: `Send`, a VERB, and `U.S`, a PROPN.
-/// - `Unknown`: 6/14, of which 4 are right.
+///   12/15. Wrong: `Send`, a VERB, `don't`, an AUX, and `U.S`, a PROPN.
+/// - `Unknown`: 7/15, of which 4 are right.
 /// - Every sentence has only right committed tags: 4/4 clean.
 #[test]
 fn harper_on_the_done_when_gold_scores_as_arithmetic_says() {
@@ -416,15 +416,15 @@ fn harper_on_the_done_when_gold_scores_as_arithmetic_says() {
         "tagger     harper",
         "Accuracy                100.0%",
         "8/8",
-        "12/14",
-        "Committed share          57.1%",
-        "8/14",
-        "Unknown rate             42.9%",
-        "6/14",
+        "12/15",
+        "Committed share          53.3%",
+        "8/15",
+        "Unknown rate             46.7%",
+        "7/15",
         "Clean sentences         100.0%",
         "4/4",
-        "Unknown accuracy         66.7%",
-        "4/6",
+        "Unknown accuracy         57.1%",
+        "4/7",
     ] {
         assert!(report.contains(expect), "no `{expect}` in\n{report}");
     }

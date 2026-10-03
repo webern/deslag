@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-03
 subsystems:
   - analysis
 max_size_bytes: 8192
@@ -26,6 +26,7 @@ bytes.
   catalogue's phrases and those `rejected.toml` refused; see `catalog.md`.
 - `lints`: what a config's lints fail, per label and per compared tool.
 - `report`: the four above as one Markdown page, the lints at `tools/corpus/report.toml`.
+- `time`: how long reading and tagging every fixture take.
 - `patterns`: the English files that hold each construction in `CANDIDATES`, which no lint ships,
   or a shipped lint's pattern named by its id, per label and per compared tool, with examples.
 
@@ -49,6 +50,7 @@ tools/corpus/src/
   lints.rs        lints
   report.rs       report
   patterns.rs     patterns: the candidate constructions and the shipped ones
+  time.rs         time
   table.rs        plain text and Markdown tables
   work.rs         in_chunks: work over threads, in a fixed order
 ```
@@ -68,6 +70,12 @@ other tokens become `SEP`, and a block's first token carries `BLOCK`, so no n-gr
 span or a block. Characters are counted in English files alone, and both sides of a comparison
 hold English files alone. Files are read 64 to a chunk over every thread, and the chunks'
 vocabularies merge in order, so the ids are those of one thread.
+
+## Timing
+
+On each fixture of the tier, `core/` too, `time` times `Document::markdown`, then `tag::document`
+alone, on one thread, the fastest of three passes. It prints files, bytes, both sums,
+tagging's share of reading and the profile; `test-blobs` runs it.
 
 ## Statistics
 

@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-03
 subsystems:
   - document
   - parse
@@ -40,7 +40,8 @@ as written.
 The second layer splits each block of prose into tokens by the Unicode word rules; a code span,
 an image, a URL and the like are one token each. A sentence ends with its block, at a hard
 break, or after a `.`, `!`, `?` or ellipsis (U+2026) that whitespace and a word not in lower case
-follow.
+follow. `Token::reading` is `Some` on a word `tag::document` has read, else `None`; see
+`tag.asbuilt.md`.
 
 Every position is a byte offset into the source. `Document::locate` alone turns a range into a
 `Location`: bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1,

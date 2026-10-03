@@ -118,7 +118,7 @@ impl<'a> Rows<'_, 'a> {
                 kind,
                 range: piece.range.clone(),
                 text: piece.text.clone(),
-                word_type: None,
+                reading: None,
             });
         }
         run.flush(self.source, out);
@@ -272,7 +272,7 @@ fn token<'a>(source: &'a str, kind: TokenKind, range: Range<usize>, text: &str) 
         kind,
         range,
         text,
-        word_type: None,
+        reading: None,
     }
 }
 

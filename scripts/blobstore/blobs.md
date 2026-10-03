@@ -19,6 +19,7 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
     `-- batches/             each batch a layer of its own (layers.txt)
         |-- 2026-09-27-01/
         |-- 2026-09-27-02/
+        |-- 2026-10-03-01/
         `-- 2026-10-03-02/
 ```
 
@@ -33,6 +34,10 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   Markdown, 12,034,975 in all.
 - `2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599
   `mixed`, 474 of those with their twin. 142,677,577 bytes of Markdown, 203,442,958 in all.
+- `2026-10-03-01`: corrects licence labels, from `batches/2026-10-03-01.json`. It adds back 49
+  fixtures labelled MIT-0 that are MIT, byte for byte, with sidecars that differ in
+  `source.license`. It drops those and 16 more whose licence the corpus does not accept or
+  `collect.py` cannot name.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, 50 each from `18F/18f.gsa.gov`,
   `GSA/digitalgov.gov`, `18F/handbook` and `GSA/plainlanguage.gov`, all CC0-1.0. A manifest
   pins each source's `head`, and `publish-blobs` built the batch. Each source is tagged

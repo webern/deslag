@@ -21,4 +21,5 @@ pub mod sidecar;
 pub mod stats;
 pub mod summary;
 pub mod table;
+pub mod time;
 pub mod work;

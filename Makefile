@@ -32,7 +32,8 @@ help:
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
-	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
+	@echo "test-blobs       fetch the corpus's big tier, test it and time reading and tagging it; needs"
+	@echo "                 the network, so not in test"
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
@@ -89,9 +90,11 @@ test: preflight test-scripts
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
-# offline and with no login.
+# offline and with no login. The time that follows asserts nothing: it prints
+# how long reading and tagging the tier take into the CI log, for a budget.
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time
 
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make: no network, no login.

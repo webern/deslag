@@ -17,7 +17,7 @@ use sha2::{Digest, Sha256};
 use crate::conllu::{self, Block, Id};
 use crate::error::{Error, Place};
 use crate::tagger::Context;
-use crate::tags::{Class, Features, map_upos};
+use crate::tags::{Class, Features, from_ud, map_upos};
 
 /// Whose tokens a gold file's lines are.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -292,7 +292,7 @@ impl GoldSentence {
                     kind: word.kind.unwrap_or(TokenKind::Word),
                     range: span.clone(),
                     text: self.text[span.clone()].into(),
-                    word_type: None,
+                    reading: None,
                 })
                 .collect(),
         }
@@ -465,8 +465,9 @@ impl Word {
             Error::at(path, line.number, what)
         })?;
         let features = match class {
-            Class::Tagged(_) => Features::from_ud(&line.feats)
-                .map_err(|message| Error::at(path, line.number, message))?,
+            Class::Tagged(_) => {
+                from_ud(&line.feats).map_err(|message| Error::at(path, line.number, message))?
+            }
             _ => Features::NONE,
         };
         let mut kind = None;

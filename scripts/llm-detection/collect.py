@@ -113,8 +113,26 @@ LICENSE_FILE = re.compile(
 )
 
 
+# The MIT-0 grant as SPDX gives it, up to where MIT would add its condition. MIT-0 is this and
+# then the warranty disclaimer, with nothing between: a text that grants more, grants it
+# differently ("to deal with the Software", the NCSA licence) or adds terms is not MIT-0.
+MIT0_GRANT = (
+    "permission is hereby granted, free of charge, to any person obtaining a copy of this "
+    "software and associated documentation files (the \"software\"), to deal in the software "
+    "without restriction, including without limitation the rights to use, copy, modify, merge, "
+    "publish, distribute, sublicense, and/or sell copies of the software, and to permit persons "
+    "to whom the software is furnished to do so. the software is provided"
+)
+
+
 def classify_license_text(text: str) -> str | None:
-    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts."""
+    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts.
+    Only a positive match gives an identifier: a text that is none of them, or that merely
+    resembles MIT, is None."""
+    # A licence quoted in a Markdown blockquote is the same licence, and curly quotes the same
+    # quotes.
+    text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
     t = re.sub(r"\s+", " ", text).lower()
     if "apache license" in t and "version 2.0" in t:
         return "Apache-2.0"
@@ -132,7 +150,9 @@ def classify_license_text(text: str) -> str | None:
     if "permission is hereby granted, free of charge" in t:
         if "the above copyright notice and this permission notice shall be included" in t:
             return "MIT"
-        return "MIT-0"
+        if MIT0_GRANT in t:
+            return "MIT-0"
+        return None
     if "permission to use, copy, modify, and/or distribute this software for any purpose" in t:
         if "with or without fee is hereby granted, provided that the above copyright" in t:
             return "ISC"
@@ -3057,15 +3077,18 @@ class GitSource(Source):
 
 SOURCE_KINDS: dict[str, Source] = {s.kind: s for s in (GitSource(),)}
 
-MANIFEST_KEYS = ("batch", "captured", "per_repo", "max_bytes", "sources", "exclude", "expect")
+MANIFEST_KEYS = ("batch", "captured", "per_repo", "max_bytes", "sources", "exclude", "relicense",
+                 "expect")
 
 
 def read_manifest(path: Path) -> dict:
     """A batch manifest, checked. It is JSON: `batch`, the batch's name, which is the file's stem;
     `captured`, the date its sidecars carry; `per_repo` and `max_bytes`, which override how many
     files one source may give and the largest file kept; `sources`, each with a `kind`; `exclude`,
-    rows of `{"sha256", "reason"}` as `recheck` writes them; and `expect`, what the batch must
-    come to.
+    rows of `{"sha256", "reason"}` as `recheck` writes them; `relicense`, rows of
+    `{"sha256", "license"}` that supersede a live fixture with its own bytes and its own sidecar
+    but for the licence, which a sidecar never has rewritten in place; and `expect`, what the
+    batch must come to.
 
     A manifest without `expect` is a seed: `batch` completes it, in place. One with `expect` is
     pinned, which needs `captured` and every source resolved, so that nothing is asked of the
@@ -3098,8 +3121,25 @@ def read_manifest(path: Path) -> dict:
         if key in seen:
             bad(f"{key[1]} is listed twice")
         seen.add(key)
-    if not manifest.get("sources") and not manifest.get("exclude"):
-        bad("a batch with no sources and no exclusions adds nothing")
+    excluded = set()
+    for row in manifest.get("exclude", []):
+        if not (isinstance(row, dict) and set(row) == {"sha256", "reason"}
+                and all(isinstance(v, str) and v for v in row.values())):
+            bad(f"each `exclude` row is a sha256 and a reason: {row}")
+        excluded.add(row["sha256"])
+    relicensed = set()
+    for row in manifest.get("relicense", []):
+        if not (isinstance(row, dict) and set(row) == {"sha256", "license"}
+                and all(isinstance(v, str) and v for v in row.values())):
+            bad(f"each `relicense` row is a sha256 and a license: {row}")
+        if not all(part in ALLOWED_LICENSES for part in row["license"].split(" OR ")):
+            bad(f"{row['sha256']}: {row['license']} is not a licence the corpus accepts")
+        if row["sha256"] in relicensed or row["sha256"] in excluded:
+            bad(f"{row['sha256']} is relicensed twice, or excluded as well: `relicense` already "
+                "excludes the fixture it supersedes")
+        relicensed.add(row["sha256"])
+    if not manifest.get("sources") and not manifest.get("exclude") and not relicensed:
+        bad("a batch with no sources, exclusions or relicensing adds nothing")
     expect = manifest.get("expect")
     if expect is not None:
         if not isinstance(expect, dict) or set(expect) != {"fixtures", "tree_sha256"}:
@@ -3114,7 +3154,7 @@ def read_manifest(path: Path) -> dict:
 
 
 def write_manifest(path: Path, manifest: dict) -> None:
-    """The manifest as JSON, one source or exclusion to a line, so a diff reads."""
+    """The manifest as JSON, one source, exclusion or relicensing to a line, so a diff reads."""
     def one(value) -> str:
         return json.dumps(value, ensure_ascii=False)
 
@@ -3123,7 +3163,7 @@ def write_manifest(path: Path, manifest: dict) -> None:
         if manifest.get(key) is None:
             continue
         value = manifest[key]
-        if key in ("sources", "exclude"):
+        if key in ("sources", "exclude", "relicense"):
             rows = ",\n".join("    " + one(row) for row in value)
             parts.append(f'  "{key}": [\n{rows}\n  ]' if value else f'  "{key}": []')
         else:
@@ -3142,6 +3182,40 @@ def tree_digest(batch: Path) -> str:
 
 def batch_facts(batch: Path) -> dict:
     return {"fixtures": len(jsonl(batch / "manifest.jsonl")), "tree_sha256": tree_digest(batch)}
+
+
+def relicense_exclusions(corpus: Path, relicense: list[dict]) -> list[dict]:
+    """The exclusions that make room for the fixtures `relicense` supersedes, one for each."""
+    _, live = live_fixtures(corpus)
+    rows = []
+    for row in relicense:
+        if row["sha256"] not in live:
+            raise SystemExit(f"relicense: {row['sha256']} is not a live fixture of {corpus}")
+        old = json.loads(sidecar_path(corpus, live[row["sha256"]]).read_text())["source"]["license"]
+        if old == row["license"]:
+            raise SystemExit(f"relicense: {row['sha256']} is already {old}")
+        rows.append({"sha256": row["sha256"],
+                     "reason": f"the licence is {row['license']}, not {old}"})
+    return rows
+
+
+def sidecar_path(corpus: Path, row: dict) -> Path:
+    return corpus / "batches" / row["batch"] / Path(row["file"]).with_suffix(".json")
+
+
+def stage_relicensed(corpus: Path, relicense: list[dict], staged: Path) -> None:
+    """Writes into the tree `pack` reads each fixture `relicense` names, byte for byte and at the
+    path it has, with its sidecar byte for byte but for `source.license`."""
+    _, live = live_fixtures(corpus)
+    for row in relicense:
+        live_row = live[row["sha256"]]
+        old = sidecar_path(corpus, live_row)
+        sidecar = json.loads(old.read_text())
+        sidecar["source"]["license"] = row["license"]
+        target = staged / live_row["file"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(old.with_suffix(".md"), target)
+        target.with_suffix(".json").write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n")
 
 
 def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[dict, Path]:
@@ -3181,9 +3255,10 @@ def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[d
     if problems:
         raise SystemExit(f"batch {name} cannot be harvested as {path} has it:\n  "
                          + "\n  ".join(problems) + "\nNothing was packed.")
+    relicense = manifest.get("relicense", [])
     exclude = work / "exclude.jsonl"
-    exclude.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n"
-                               for row in manifest.get("exclude", [])))
+    exclude.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in
+                               manifest.get("exclude", []) + relicense_exclusions(corpus, relicense)))
     staged = work / "stage"
     if sources:
         stage(argparse.Namespace(work=str(work), corpus=str(corpus), out=str(staged),
@@ -3191,6 +3266,7 @@ def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[d
                                  captured=manifest["captured"]))
     else:
         staged.mkdir()
+    stage_relicensed(corpus, relicense, staged)
     pack(argparse.Namespace(source=str(staged), corpus=str(corpus), work=str(work),
                             exclude=str(exclude), name=name))
     return results, work / "batches" / name

@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "APPSERVICES.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "continuwuity/continuwuity",
+    "path": "APPSERVICES.md",
+    "commit": "8d51359668199585175e7e0095de66e96bc1a3e1",
+    "commit_date": "2021-12-26T20:49:19+01:00",
+    "url": "https://codeberg.org/continuwuity/continuwuity/src/commit/8d51359668199585175e7e0095de66e96bc1a3e1/APPSERVICES.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-02-15T22:42:21+01:00",
+    "stars": 81,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-05-22T13:39:31+02:00",
+    "last_commit_date": "2021-09-15T20:16:59Z",
+    "last_commit_author": "Greg Sutcliffe",
+    "authors": 3,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-05-22T13:55:28+02:00",
+    "last_committer_date": "2021-09-15T21:16:25+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 4 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 3917,
+    "sha256": "ad68b72e92773f53643903ee398921baad436b65ece52cc89f0a4e4a5dcdf27d",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 86,
+    "words": 453,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--continuwuity--continuwuity/APPSERVICES.md"
+}

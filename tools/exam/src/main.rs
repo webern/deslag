@@ -9,6 +9,7 @@ use deslag_exam::align::align_all;
 use deslag_exam::compare;
 use deslag_exam::disputes::Disputes;
 use deslag_exam::gold::Gold;
+use deslag_exam::harper::{DEFAULT_MODEL, Harper};
 use deslag_exam::import::Imported;
 use deslag_exam::most_common::{self, MostCommonTag};
 use deslag_exam::report;
@@ -47,9 +48,14 @@ enum Command {
         #[arg(long)]
         gold: PathBuf,
         /// A built-in tagger: `noun` tags every word a noun; `mct` gives each word the tag it most
-        /// often has in EWT train (run `make fetch-ewt` first), and is never shipped.
+        /// often has in EWT train (run `make fetch-ewt` first), and is never shipped. `harper` is
+        /// Harper's tagger, for study only, which reads the model `make fetch-harper` downloads.
         #[arg(long, required_unless_present = "import", conflicts_with = "import")]
         tagger: Option<String>,
+        /// The model file `--tagger harper` reads, by default `.harper/2.12.0/` in the directory
+        /// the exam runs in.
+        #[arg(long, value_name = "FILE", requires = "tagger")]
+        harper_model: Option<PathBuf>,
         /// A file another program filled: the output of `tokens` with `UPOS` on every `Word`
         /// line, and optionally `FEATS` and the `MISC` keys `Conf=`, `Score=` and `Kept=`.
         #[arg(long)]
@@ -130,6 +136,7 @@ fn run(cli: Cli) -> Result<(), Error> {
         Command::Score {
             gold,
             tagger,
+            harper_model,
             import,
             aggregate,
             save,
@@ -145,9 +152,14 @@ fn run(cli: Cli) -> Result<(), Error> {
                 (Some(name), _) => {
                     let tagger: Box<dyn Tagger> = match name.as_str() {
                         most_common::NAME => Box::new(MostCommonTag::from_cache()?),
+                        "harper" => {
+                            let model =
+                                harper_model.unwrap_or_else(|| PathBuf::from(DEFAULT_MODEL));
+                            Box::new(Harper::read(&model)?)
+                        }
                         _ => built_in(name).ok_or_else(|| {
                             Error::Cannot(format!(
-                                "no built-in tagger `{name}`; the built-in taggers are {}, {}",
+                                "no built-in tagger `{name}`; the taggers are {}, {}, harper",
                                 BUILT_IN.join(", "),
                                 most_common::NAME
                             ))

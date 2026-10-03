@@ -183,3 +183,21 @@ fn the_saved_run_of_the_done_when_gold() {
         &std::fs::read_to_string(saved).unwrap(),
     );
 }
+
+#[test]
+fn score_the_harper_tagger_on_the_done_when_gold() {
+    let gold = case_path("done-when.conllu");
+    let model = case_path("harper-tiny-model.json");
+    let args = [
+        "score",
+        "--gold",
+        gold.to_str().unwrap(),
+        "--tagger",
+        "harper",
+        "--harper-model",
+        model.to_str().unwrap(),
+    ];
+    let first = run(&args);
+    check("score-harper-done-when.txt", &first);
+    assert_eq!(first, run(&args), "two runs print the same bytes");
+}

@@ -7,6 +7,7 @@
 SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
 EWT := $(SCRIPTS)/ewt
+HARPER := $(SCRIPTS)/harper
 SPACY := $(SCRIPTS)/spacy
 
 # The treebank's dev file, in the release ewt.lock pins.
@@ -20,11 +21,11 @@ CARGO_FLAGS ?=
         build build-release \
         test test-blobs test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs clean-ewt clean-spacy \
+        clean clean-blobs clean-ewt clean-harper clean-spacy \
         ci \
         fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt fetch-spacy generate-spacy publish-blobs
+        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-spacy publish-blobs
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -43,6 +44,7 @@ help:
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "clean-ewt        remove the fetched treebank"
+	@echo "clean-harper     remove the fetched Harper model"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
@@ -56,6 +58,7 @@ help:
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
+	@echo "fetch-harper     fetch the Harper tagger model that $(HARPER)/harper.lock pins into .harper"
 	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
 	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
@@ -119,7 +122,7 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt clean-spacy
+clean: clean-blobs clean-ewt clean-harper clean-spacy
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
@@ -129,6 +132,10 @@ clean-blobs:
 # .ewt is what fetch-ewt downloads, and .ewt.new.* what a killed fetch leaves.
 clean-ewt:
 	rm -rf .ewt .ewt.new.*
+
+# .harper is what fetch-harper downloads.
+clean-harper:
+	rm -rf .harper
 
 # .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
 clean-spacy:
@@ -182,6 +189,12 @@ fetch-blobs:
 # stamp that matches the lock is the whole check.
 fetch-ewt:
 	@$(EWT)/fetch.sh fetch
+
+# Harper's tagger model, from the commit $(HARPER)/harper.lock pins. It is for measuring only and is
+# never checked in or shipped. Nothing in ci reads it. A stamp that matches the lock is the whole
+# check.
+fetch-harper:
+	@$(HARPER)/fetch.sh fetch
 
 # spaCy, the exam's ceiling candidate, in a venv under .spacy that only $(SPACY)/run.sh reads, from
 # the packages $(SPACY)/requirements.lock pins. A stamp that matches the lock is the whole check.

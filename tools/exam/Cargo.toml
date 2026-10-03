@@ -4,7 +4,7 @@ version = "0.0.0"
 edition.workspace = true
 rust-version.workspace = true
 description = "Grades part-of-speech taggers against gold sets. Never published."
-license = "MIT"
+license = "MIT AND Apache-2.0"
 publish = false
 
 [dependencies]

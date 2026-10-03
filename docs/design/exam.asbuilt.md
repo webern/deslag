@@ -32,7 +32,7 @@ tools/exam/src/
   tags.rs             Tag, TagSet, Features, Confidence, Reading, the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
   tagger.rs import.rs the Tagger trait, `noun`, run; the import reader
-  harper.rs           Harper's tagging engine and model reader, the `harper` candidate
+  harper.rs           Harper's tagging engine and model reader
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
@@ -95,14 +95,15 @@ On `Word` lines an import reads `UPOS`, `FEATS` and the `MISC` keys `Conf=` (def
 ## The Harper candidate
 
 `--tagger harper` is Harper's Brill tagger, for study only. `harper.rs` adapts its engine under
-Apache-2.0: a table from lowercased word to one tag, and about 200 ordered patches, each "change
-tag A to B when a criterion holds". It reads the model `make fetch-harper` puts in `.harper/`
-(`--harper-model` names another). Harper's quirks are kept: `WordIs` compares only as far as the
-shorter word reaches, and `AnyWordIsTaggedWith` includes the word itself going forward.
+Apache-2.0 (`LICENSES/`): a table from lowercased word to one tag, and about 200 ordered patches,
+each "change tag A to B where a criterion holds". It reads the model `make fetch-harper` puts in
+`.harper/` (`--harper-model` names one). Its quirks are kept: `WordIs` compares only as far as
+the shorter word reaches, and `AnyWordIsTaggedWith` includes the word itself going forward.
 
-Every token is tagged, punctuation too, since patches read neighbours; only `Word` tokens get a
-reading. A tagged word is `Likely`. A word with no tag, or `PUNCT` or `SYM`, is `Noun` at
-`Unknown`. Kept is the guess alone; no features or score, so the feature metrics read 0.
+Every token is tagged, as deslag splits it (`don't` whole), as patches read neighbours; only `Word`
+tokens get a reading. A tagged word is `Likely`. A word with no tag is `Noun` at `Unknown`,
+and so is one tagged `PUNCT` or `SYM` (1 of EWT dev's 21,000 words). Kept is the guess alone; no
+features or score, so the feature metrics read 0.
 
 ## Metrics and statistics
 
@@ -145,13 +146,13 @@ fetch leaves a good `.ewt/` alone.
 The licence is CC BY-SA 4.0 and the lock says `trains no`: it measures, and nothing derived from it
 ships. No test or CI job reads it. `make clean-ewt` removes it.
 
-`make fetch-harper` does the same for Harper's model, pinned by `scripts/harper/harper.lock` to a
-commit and sha256, into `.harper/<release>/`. Harper trained it on UD data under CC BY-NC-SA and CC BY-SA, so
-the lock says `trains no`: never checked in or shipped. `make clean-harper` removes it.
+`make fetch-harper` does the same for Harper's model, pinned by `scripts/harper/harper.lock`, into
+`.harper/<release>/`. Harper trained it on UD data under CC BY-NC-SA and CC BY-SA, so the lock says
+`trains no`: never shipped. `make clean-harper` removes it.
 
 ## Tests
 
-`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and `skeleton.rs` assert alignment and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `harper.rs` the engine on tiny hand-made models, with no Harper
-data; `golden.rs` the output against `tests/golden/`, which
-`make fix-golden` rewrites.
+`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
+`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
+holdout, import, compare and exits; `harper.rs` the engine on tiny models; `golden.rs` the
+output against `tests/golden/`, which `make fix-golden` rewrites.

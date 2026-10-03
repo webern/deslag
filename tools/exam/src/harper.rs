@@ -1,7 +1,11 @@
 //! Harper's part-of-speech tagger, as a study-only candidate for the exam.
 //!
-//! NOTICE: this file is adapted from Harper, <https://github.com/Automattic/harper>, which is
-//! licensed under the Apache License, Version 2.0 (<http://www.apache.org/licenses/LICENSE-2.0>).
+//! NOTICE: this file is adapted from Harper, <https://github.com/Automattic/harper>,
+//! Copyright 2024 Automattic Inc., which is licensed under the Apache License, Version 2.0
+//! (<http://www.apache.org/licenses/LICENSE-2.0>). A copy of the licence, as Harper ships it, is
+//! `LICENSES/Apache-2.0-Harper.txt` at the root of this repository. Harper has no NOTICE file. This
+//! file is a modified version of Harper's code, and the changes are listed here.
+//!
 //! It reimplements the tagging engine of Harper's `harper-pos-utils`
 //! crate (`tagger/brill_tagger/mod.rs`, `tagger/brill_tagger/patch.rs`, `tagger/freq_dict.rs`,
 //! `patch_criteria.rs` and `upos.rs`, at commit 88c53331ebb6c353d6c5168c3f2191983239a11a, release

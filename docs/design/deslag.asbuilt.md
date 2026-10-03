@@ -114,5 +114,6 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
 the next image. `make fetch-ewt` fetches the UD English Web Treebank that `scripts/ewt/ewt.lock`
-pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's tagger model into `.harper/`, which
-the exam grades and nothing ships; `make clean` removes all four directories and runs `cargo clean`.
+pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's tagger model into
+`.harper/`, which the exam grades and nothing ships; `make clean` removes all four directories and
+runs `cargo clean`.

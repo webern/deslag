@@ -29,7 +29,7 @@ holdout gold the line names a sentence by its position, never by its `sent_id`.
 ```
 tools/exam/src/
   conllu.rs gold.rs   CoNLL-U read by hand; Gold and the conventions below
-  tags.rs             Tag, TagSet, Features, Confidence, Reading, the UD mapping
+  tags.rs             deslag::tag's types re-exported; Reading with a score; the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
   tagger.rs import.rs the Tagger trait, `noun`, run; the import reader
   most_common.rs      `mct`, built from EWT train at run time
@@ -62,8 +62,9 @@ A `deslag` file has one line per token, no range lines or empty nodes, and `Kind
 - PUNCT and SYM count as punctuation and X as X, never scored.
 - Any other UPOS, or `_`, is a load error.
 
-`Features` is 14 flags from `Number`, `Person`, `VerbForm`, `Tense` (only on finite or unmarked
-verbs) and `Degree`. A feature's value is the one flag of its group that is set, or none.
+`Tag`, `TagSet`, `Features` and `Confidence` are `deslag::tag`'s. Gold sets 14 flags, from `Number`,
+`Person`, `VerbForm`, `Tense` (only on finite or unmarked verbs) and `Degree`; `Contraction` is
+never in gold and never scored. A feature's value is the one flag of its group that is set, or none.
 
 ## Alignment
 
@@ -78,19 +79,22 @@ its `Word` tokens are W:
 - None in W: not word tokens.
 - Several in W: unalignable, one word with several tokens.
 - One in W and one tag across G: a scored token, with features only when G is one word.
-- One in W and several tags: unalignable, one token with several tags.
+- One in W and several tags: a scored token whose gold tag and features are those of the first of
+  G in gold order, as `don't` is `do`, AUX. Words counts these apart, as scored by the first word.
 
 ## The tagger contract and import
 
 `Tagger::tag` gives one `Reading` per token, `Some` exactly on `Word` tokens, else exit 2 naming
-the tagger and sentence. `Sure` and `Likely` are committed. `noun` tags every word `Noun` at `Sure`.
+the tagger and sentence; so is a `Sure` reading whose `possible()` holds another tag. `Sure` and
+`Likely` are committed. `noun` tags every word `Noun` at `Sure`.
 
 `tokens` writes `sent_id`, `# text` and a line per token with `Kind=`, and `SpaceAfter=No` between
 tokens. An import keeps the `sent_id`s and `FORM`s line for line, else exit 2 naming the first
 difference: by position, never a word, on holdout text or with `--aggregate`.
 
 On `Word` lines an import reads `UPOS`, `FEATS` and the `MISC` keys `Conf=` (default `Likely`),
-`Score=` and `Kept=`. `PUNCT`, `SYM` and `X` become `Noun` at `Unknown`, counted in Words.
+`Score=` and `Kept=`; `Conf=Sure` with another tag in `Kept=` is an error. `PUNCT`, `SYM` and `X`
+become `Noun` at `Unknown`, counted in Words.
 
 ## Metrics and statistics
 
@@ -119,7 +123,7 @@ zero), Calibration and, in full mode only, the confusion table, the largest conf
 most-missed words and unalignable examples. A holdout gold, or `--aggregate`, stops after
 Calibration.
 
-A saved run is JSON: format, tagger, gold path, SHA-256 and split, the columns, and per sentence
+A saved run is JSON: format (2), tagger, gold path, SHA-256 and split, the columns, and per sentence
 `sent_id` (its position for holdout), tier, context and tally. `compare` needs the same SHA-256,
 columns, sentences and token counts, and prints `better`, `worse` or `same` by the paired
 interval and the metric's sense (a higher unknown rate is `worse`); `higher` or `lower` where
@@ -136,7 +140,8 @@ The licence is CC BY-SA 4.0 and the lock says `trains no`: it measures, and noth
 ships. No test or CI job reads it. `make clean-ewt` removes it.
 
 `mct` reads `.ewt/r2.18/en_ewt-ud-train.conllu` when it runs and keeps nothing. Words are folded
-with `to_lowercase`; each tagged train word counts for its folded `FORM`. A known word gets its
+with `to_lowercase`; train is aligned like any gold, and each scored token counts for its folded
+text and gold tag, so `don't` is one AUX token. A known word gets its
 most common tag (ties by report order), `Sure` if train gave it one tag, else `Unsure`; an unknown
 word gets the commonest tag overall at `Unknown`. It does not give features or a score.
 

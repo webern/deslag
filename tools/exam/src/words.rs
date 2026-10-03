@@ -24,6 +24,11 @@ pub struct Words {
     pub scored_words: usize,
     /// The scored tokens they stand for.
     pub scored_tokens: usize,
+    /// Of the scored words, those behind a token scored by its first word, as `do` and `n't` are
+    /// behind `don't`.
+    pub first_word_words: usize,
+    /// The tokens scored by their first word.
+    pub first_word_tokens: usize,
     /// The unalignable words, by [`Reason`] in the order of [`Reason::ALL`].
     pub unalignable: Vec<usize>,
     /// The tagged words on no word token.
@@ -53,6 +58,8 @@ impl Words {
             tagged: 0,
             scored_words: 0,
             scored_tokens: 0,
+            first_word_words: 0,
+            first_word_tokens: 0,
             unalignable: vec![0; Reason::ALL.len()],
             not_word: 0,
             provenance: vec![0; Prov::ALL.len()],
@@ -73,6 +80,8 @@ impl Words {
             words.tagged += alignment.tagged_words();
             words.scored_words += alignment.scored_words();
             words.scored_tokens += alignment.scored.len();
+            words.first_word_words += alignment.first_word_words();
+            words.first_word_tokens += alignment.first_word_tokens();
             for reason in Reason::ALL {
                 words.unalignable[reason.index()] += alignment.unalignable_words(reason);
             }
@@ -145,6 +154,22 @@ impl fmt::Display for Words {
         row(f, 4, "tagged", self.tagged, "")?;
         let scored = format!("  as {} tokens", self.scored_tokens);
         row(f, 6, "scored", self.scored_words, &scored)?;
+        let by_first = format!(
+            "  as {} {}",
+            self.first_word_tokens,
+            if self.first_word_tokens == 1 {
+                "token"
+            } else {
+                "tokens"
+            }
+        );
+        row(
+            f,
+            8,
+            "by their first word",
+            self.first_word_words,
+            &by_first,
+        )?;
         row(f, 6, "unalignable", self.unalignable_total(), "")?;
         for reason in Reason::ALL {
             row(f, 8, reason.label(), self.unalignable[reason.index()], "")?;

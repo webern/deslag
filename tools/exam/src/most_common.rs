@@ -8,13 +8,15 @@
 //! - **Folding.** Words are matched by their text in Unicode lower case (`str::to_lowercase`),
 //!   in train and in the sentence graded, and by nothing else: no stemming, no stripping of
 //!   punctuation or digits.
-//! - **Counting.** Every train word line whose UPOS maps to one of the 13 tags counts once for its
-//!   folded `FORM`, so `don't` counts as `do` and `n't`. `PUNCT`, `SYM` and `X` words are not
-//!   counted, and neither are empty nodes or range lines.
+//! - **Counting.** Train goes through the same alignment as the gold it is graded on, and every
+//!   scored token counts once, for its folded text and its gold tag. So it meets `don't` as deslag
+//!   splits it, one token, AUX by its first word, and never sees `do` and `n't`. `PUNCT`, `SYM` and
+//!   `X` words, words that cannot be aligned and words on no word token are not counted, and
+//!   neither are empty nodes or range lines.
 //! - **Known word.** Its best guess is the tag it has most often; a tie goes to the tag that comes
 //!   first in the report's order. `Sure` when train gave it one tag, else `Unsure`. `kept` is every
 //!   tag train gave it.
-//! - **Unknown word** (never a word line of train): the most common tag over all of train, at
+//! - **Unknown word** (never a scored token of train): the most common tag over all of train, at
 //!   `Unknown`, with `kept` holding only that tag.
 //! - No features and no score: the baseline has neither to give, so the feature metrics read 0%
 //!   and calibration is not printed.
@@ -24,10 +26,11 @@ use std::path::{Path, PathBuf};
 
 use deslag::document::TokenKind;
 
+use crate::align::align_all;
 use crate::error::Error;
 use crate::gold::Gold;
 use crate::tagger::{Sentence, Tagger};
-use crate::tags::{Class, Confidence, Features, Reading, Tag, TagSet};
+use crate::tags::{Confidence, Features, Reading, Tag, TagSet};
 
 /// The name `--tagger` and the report use.
 pub const NAME: &str = "mct";
@@ -65,20 +68,21 @@ impl MostCommonTag {
         MostCommonTag::from_gold(&Gold::read(path)?)
     }
 
-    /// Built from the words of `train`.
+    /// Built from the scored tokens of `train`, aligned as any gold is.
     pub fn from_gold(train: &Gold) -> Result<MostCommonTag, Error> {
         let mut words: BTreeMap<String, Counts> = BTreeMap::new();
         let mut total = Counts::default();
-        for word in train.sentences.iter().flat_map(|s| &s.words) {
-            if let Class::Tagged(tag) = word.class {
-                words.entry(word.form.to_lowercase()).or_default()[tag.index()] += 1;
-                total[tag.index()] += 1;
+        for aligned in align_all(train) {
+            for scored in &aligned.alignment.scored {
+                let text = aligned.tokens[scored.token].text.to_lowercase();
+                words.entry(text).or_default()[scored.tag.index()] += 1;
+                total[scored.tag.index()] += 1;
             }
         }
         match most_common(&total) {
             Some(overall) => Ok(MostCommonTag { words, overall }),
             None => Err(Error::Cannot(format!(
-                "{NAME} needs a train file with at least one tagged word, and {} has none",
+                "{NAME} needs a train file with at least one scored token, and {} has none",
                 train.path
             ))),
         }
@@ -158,8 +162,9 @@ mod tests {
     use deslag::document::Token;
 
     /// A train file of three sentences. Folded, `run` is VERB once and NOUN twice, `the` is DET
-    /// twice, `cats` is NOUN once and PROPN once, `do` is AUX, `n't` is PART, and punctuation is
-    /// not counted. Over all, NOUN is seen 3 times, DET 2, and the rest once.
+    /// twice, `cats` is NOUN once and PROPN once, `don't` is one token and AUX, as its first word
+    /// `do` is, and punctuation is not counted. Over all, NOUN is seen 3 times, DET 2, and the rest
+    /// once.
     const TRAIN_TEXT: &str = "\
 # sent_id = t1
 # text = Run the Cats.
@@ -238,14 +243,35 @@ mod tests {
     }
 
     #[test]
-    fn range_lines_and_punctuation_are_not_counted() {
+    fn a_contraction_counts_as_one_token_tagged_by_its_first_word() {
         let tagger = tagger();
-        // `don't` is a range line; its words `do` and `n't` count, the whole does not.
-        assert_eq!(tagger.read("do").tag, Tag::Auxiliary);
-        assert_eq!(tagger.read("n't").tag, Tag::Particle);
-        assert_eq!(tagger.read("don't").confidence, Confidence::Unknown);
+        let contraction = tagger.read("don't");
+        assert_eq!(contraction.tag, Tag::Auxiliary);
+        assert_eq!(contraction.confidence, Confidence::Sure);
+        assert_eq!(contraction.kept, TagSet::of(Tag::Auxiliary));
+        // Its parts were never tokens, so deslag never meets them apart.
+        assert_eq!(tagger.read("do").confidence, Confidence::Unknown);
+        assert_eq!(tagger.read("n't").confidence, Confidence::Unknown);
+    }
+
+    #[test]
+    fn punctuation_is_not_counted() {
         // PUNCT is never counted, so `,` would be an unknown word, if it were ever asked.
-        assert_eq!(tagger.read(",").confidence, Confidence::Unknown);
+        assert_eq!(tagger().read(",").confidence, Confidence::Unknown);
+    }
+
+    #[test]
+    fn a_word_that_cannot_be_aligned_is_not_counted() {
+        // `e-mail` is one gold word over three tokens, so neither it nor its parts are learned.
+        let text = "# sent_id = u1\n# text = Send e-mail\n\
+            1\tSend\t_\tVERB\t_\t_\t_\t_\t_\t_\n\
+            2\te-mail\t_\tNOUN\t_\t_\t_\t_\t_\t_\n";
+        let gold = Gold::parse("u.conllu", "u.conllu", text).unwrap();
+        let tagger = MostCommonTag::from_gold(&gold).unwrap();
+        assert_eq!(tagger.read("send").confidence, Confidence::Sure);
+        for part in ["e-mail", "e", "mail"] {
+            assert_eq!(tagger.read(part).confidence, Confidence::Unknown, "{part}");
+        }
     }
 
     #[test]
@@ -271,6 +297,7 @@ mod tests {
         let text = "# sent_id = a\n# text = .\n1\t.\t_\tPUNCT\t_\t_\t_\t_\t_\t_\n";
         let gold = Gold::parse("p.conllu", "p.conllu", text).unwrap();
         let error = MostCommonTag::from_gold(&gold).err().unwrap().to_string();
+        assert!(error.contains("scored token"), "{error}");
         assert!(error.contains("p.conllu has none"), "{error}");
     }
 

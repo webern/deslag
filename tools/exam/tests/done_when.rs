@@ -76,7 +76,7 @@ fn alignment_gives_the_hand_worked_counts() {
         .zip(&all)
         .map(|(sentence, a)| scored_texts(sentence, a))
         .collect();
-    assert_eq!(scored[0], ["I", "like", "cats"]);
+    assert_eq!(scored[0], ["I", "don't", "like", "cats"]);
     assert_eq!(scored[1], ["Send", "forms", "to", "U.S", "staff"]);
     assert_eq!(scored[2], ["See", "the", "docs:setup", "page"]);
     assert_eq!(scored[3], ["Error", "codes"]);
@@ -88,13 +88,10 @@ fn alignment_gives_the_hand_worked_counts() {
     assert_eq!(total(&|a| a.punctuation), 3);
     assert_eq!(total(&|a| a.x), 1);
     assert_eq!(total(&|a| a.tagged_words()), 19);
-    assert_eq!(total(&|a| a.scored_words()), 15);
-    assert_eq!(total(&|a| a.scored.len()), 14);
-    assert_eq!(
-        total(&|a| a.unalignable_words(Reason::OneTokenSeveralTags)),
-        2,
-        "do and n't"
-    );
+    assert_eq!(total(&|a| a.scored_words()), 17);
+    assert_eq!(total(&|a| a.scored.len()), 15);
+    assert_eq!(total(&|a| a.first_word_words()), 2, "do and n't");
+    assert_eq!(total(&|a| a.first_word_tokens()), 1, "don't");
     assert_eq!(
         total(&|a| a.unalignable_words(Reason::OneWordSeveralTokens)),
         1,
@@ -113,12 +110,18 @@ fn the_agreeing_one_to_many_is_out_of_the_feature_metrics_and_the_rest_are_in() 
         (joined.tag, joined.words, joined.features),
         (Tag::Noun, 2, None)
     );
-    let cats = &all[0].scored[2];
+    let cats = &all[0].scored[3];
     assert_eq!(cats.features, Some(Features::PLURAL));
     let i = &all[0].scored[0];
     assert_eq!(i.tag, Tag::Pronoun);
     assert_eq!(i.features, Some(Features::SINGULAR.union(Features::FIRST)));
-    let like = &all[0].scored[1];
+    let dont = &all[0].scored[1];
+    assert_eq!(dont.tag, Tag::Auxiliary, "do, the first word");
+    assert_eq!(
+        dont.features,
+        Some(Features::FINITE.union(Features::PRESENT))
+    );
+    let like = &all[0].scored[2];
     assert_eq!(like.features, Some(Features::INFINITIVE));
 }
 
@@ -129,9 +132,9 @@ fn the_words_section_counts_the_same() {
     assert_eq!(words.sentences, 4);
     assert_eq!(words.words, 23);
     assert_eq!((words.punctuation, words.x, words.tagged), (3, 1, 19));
-    assert_eq!((words.scored_words, words.scored_tokens), (15, 14));
-    assert_eq!(words.unalignable_total(), 3);
-    assert_eq!(words.unalignable[Reason::OneTokenSeveralTags.index()], 2);
+    assert_eq!((words.scored_words, words.scored_tokens), (17, 15));
+    assert_eq!((words.first_word_words, words.first_word_tokens), (2, 1));
+    assert_eq!(words.unalignable_total(), 1);
     assert_eq!(words.unalignable[Reason::OneWordSeveralTokens.index()], 1);
     assert_eq!(words.not_word, 1);
     assert_eq!(

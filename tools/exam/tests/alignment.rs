@@ -25,33 +25,40 @@ fn one_gold_word_per_token() {
 }
 
 #[test]
-fn a_multiword_token_whose_words_disagree_is_unalignable() {
+fn a_multiword_token_whose_words_disagree_is_scored_by_its_first_word() {
     let gold = case("contraction.conllu");
     let sentence = &gold.sentences[0];
     assert_eq!(texts(sentence), ["She", "doesn't", "care", "."]);
     let a = &alignments(&gold)[0];
-    assert_eq!(scored_texts(sentence, a), ["She", "care"]);
+    assert_eq!(scored_texts(sentence, a), ["She", "doesn't", "care"]);
+    let contraction = &a.scored[1];
+    assert_eq!(contraction.token, 1);
+    assert_eq!(contraction.tag, Tag::Auxiliary, "does, not n't");
     assert_eq!(
-        a.unalignable,
-        [Unalignable {
-            reason: Reason::OneTokenSeveralTags,
-            words: vec![1, 2],
-            tokens: vec![1]
-        }]
+        contraction.features,
+        Some(Features::FINITE.union(Features::PRESENT)),
+        "the features of does, which a lone word's would be"
     );
+    assert_eq!((contraction.words, contraction.first_word), (2, true));
+    assert!(a.scored.iter().filter(|s| s.first_word).count() == 1);
+    assert!(a.unalignable.is_empty());
+    assert_eq!((a.first_word_words(), a.first_word_tokens()), (2, 1));
+    assert_eq!(a.scored_words(), 4);
     assert_eq!(a.tagged_words(), 4);
 }
 
 #[test]
-fn separate_gold_tokens_that_deslag_joins_are_unalignable_when_they_disagree() {
+fn separate_gold_tokens_that_deslag_joins_are_scored_by_the_first_when_they_disagree() {
     let gold = case("joined-no-range.conllu");
     let sentence = &gold.sentences[0];
     assert_eq!(texts(sentence), ["Bob's", "cat", "sat"]);
     let a = &alignments(&gold)[0];
-    assert_eq!(scored_texts(sentence, a), ["cat", "sat"]);
-    assert_eq!(a.unalignable.len(), 1);
-    assert_eq!(a.unalignable[0].reason, Reason::OneTokenSeveralTags);
-    assert_eq!(a.unalignable[0].words, [0, 1]);
+    assert_eq!(scored_texts(sentence, a), ["Bob's", "cat", "sat"]);
+    let possessive = &a.scored[0];
+    assert_eq!(possessive.tag, Tag::ProperNoun, "Bob, not 's");
+    assert_eq!(possessive.features, Some(Features::SINGULAR));
+    assert_eq!((possessive.words, possessive.first_word), (2, true));
+    assert!(a.unalignable.is_empty());
 }
 
 #[test]
@@ -228,6 +235,10 @@ fn alignment_reads_curly_quotes_and_multibyte_text_by_bytes() {
     .concat();
     let gold = deslag_exam::gold::Gold::parse("u.conllu", "u.conllu", &text).unwrap();
     let a = &alignments(&gold)[0];
-    assert_eq!(scored_texts(&gold.sentences[0], a), ["cat", "sat"]);
-    assert_eq!(a.unalignable[0].reason, Reason::OneTokenSeveralTags);
+    assert_eq!(
+        scored_texts(&gold.sentences[0], a),
+        ["Zoë\u{2019}s", "cat", "sat"]
+    );
+    assert_eq!(a.scored[0].tag, Tag::ProperNoun);
+    assert!(a.unalignable.is_empty());
 }

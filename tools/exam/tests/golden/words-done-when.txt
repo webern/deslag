@@ -11,12 +11,12 @@ Words
     punctuation                       3
     X                                 1
     tagged                           19
-      scored                         15  as 14 tokens
-      unalignable                     3
+      scored                         17  as 15 tokens
+        by their first word           2  as 1 token
+      unalignable                     1
         text mismatch                 0
         tokenizer drift               0
         one word, several tokens      1
-        one token, several tags       2
       not word tokens                 1
   provenance
     agree                             0

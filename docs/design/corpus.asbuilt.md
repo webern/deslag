@@ -83,7 +83,8 @@ commits.
 
 A manifest source of `kind: dataset`, `DatasetSource`, reads a pinned file of a Hugging Face
 dataset, `datasets/OWNER/NAME`, checks the card's licence and each model's, and makes a fixture of
-each text, `FILE/row-N.md`, with a version 4 sidecar. `recheck` and `select` skip it.
+each text, `FILE/row-N.md`, with a version 4 sidecar. `recheck` and `select` skip it, and the measures and `deslag-gold
+sample` do unless given `--with-declared`.
 
 `discover --work DIR` appends what each of `SAMPLERS` finds to `DIR/candidates.jsonl`, tagged with
 the query that found it: Sourcegraph searches for agent files and for topics, some outside
@@ -151,7 +152,6 @@ fixtures, in the order they were added, and every ledger line.
 `load_blobs` on small batches built from tree fixtures: exclusions alone, version 3 and 4
 sidecars, a `before`, a ledger.
 
-Its ignored tests, which `make test-blobs` fetches the image for, check that every batch keeps the
-rules, that the tree's fixtures are in the big tier with the same sidecar, that none is a `core/`
-fixture, and that `list_growth` fails the pairs `tests/golden/list_growth.txt` lists. The
-catalogue's counts leave out declared files.
+Its ignored tests, run by `make test-blobs`, check that every batch keeps the rules, that the
+tree's fixtures are in the big tier with the same sidecar, that none is a `core/` fixture, and
+that `list_growth` fails the pairs `tests/golden/list_growth.txt` lists.

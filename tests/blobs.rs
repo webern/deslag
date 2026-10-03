@@ -604,7 +604,6 @@ fn the_catalogue_counts_are_the_big_tiers() {
         .iter()
         .map(|entry| BannedPhrases {
             groups: PhraseGroups {
-                signposts: Some(false),
                 insistence: Some(false),
                 metaphors: Some(false),
                 precision: Some(false),

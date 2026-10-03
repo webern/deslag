@@ -24,7 +24,6 @@ fn banning(phrases: &[&str]) -> BannedPhrases {
                 .collect(),
         ),
         groups: PhraseGroups {
-            signposts: Some(false),
             insistence: Some(false),
             metaphors: Some(false),
             precision: Some(false),

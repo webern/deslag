@@ -1,0 +1,52 @@
+{
+  "sidecar_version": 2,
+  "fixture": "CONTRIBUTING.md",
+  "captured": "2026-09-23",
+  "source": {
+    "host": "github.com",
+    "repo": "Token-Gremlin/natural-disasters",
+    "path": "CONTRIBUTING.md",
+    "commit": "d2bae38301ff43bc1d43bfdfd9477a552ca5420b",
+    "commit_date": "2026-08-31T22:05:05-03:00",
+    "url": "https://github.com/Token-Gremlin/natural-disasters/blob/d2bae38301ff43bc1d43bfdfd9477a552ca5420b/CONTRIBUTING.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-08-28T00:40:08-03:00",
+    "stars": null,
+    "found_by": "github-topic:demoscene"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-08-28T00:40:08-03:00",
+    "last_commit_date": "2026-08-28T01:13:24-03:00",
+    "last_commit_author": "DaveTheRobott",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "cursor"
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every one of the 2 commits that touched it is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 4868,
+    "sha256": "cab95f840c765768ccee64005ef661ccfa95efa34efada876870d5019de43068",
+    "kind": "contributing",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 118,
+    "words": 791,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Token-Gremlin--natural-disasters/CONTRIBUTING.md"
+}

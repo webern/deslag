@@ -250,6 +250,57 @@ fn holdout_load_errors_name_sentences_by_position() {
     assert!(error(&dev).contains("sent_id `secret-1` is used twice"));
 }
 
+/// A holdout file's errors name the line and no value on it, which a shifted column could make a
+/// word of the text. The ID error is the same in every file, since it is found before the split.
+#[test]
+fn holdout_load_errors_echo_no_field_value() {
+    let head = "# exam.split = holdout\n# exam.trains = no\n# sent_id = a\n# text = secret\n";
+    let deslag =
+        "# exam.split = holdout\n# exam.trains = no\n# exam.tokens = deslag\n# sent_id = a\n";
+    let cases = [
+        (
+            format!("{head}{}", line("secret", "x", "NOUN", "_", "_")),
+            "f.conllu:5: bad ID",
+        ),
+        (
+            format!("{head}{}", line("1", "x", "secret", "_", "_")),
+            "f.conllu:5: UPOS is not one of the 17 UD tags",
+        ),
+        (
+            format!("{head}{}", line("1", "x", "NOUN", "secret", "_")),
+            "f.conllu:5: a FEATS entry has no value",
+        ),
+        (
+            format!(
+                "{deslag}{}",
+                line("1", "x", "NOUN", "_", "Kind=secret|Prov=agree")
+            ),
+            "f.conllu:5: Kind is unknown",
+        ),
+        (
+            format!(
+                "{deslag}{}",
+                line("1", "x", "NOUN", "_", "Kind=Word|Prov=secret")
+            ),
+            "f.conllu:5: Prov is unknown; it is one of",
+        ),
+    ];
+    for (text, expect) in cases {
+        let got = error(&text);
+        assert!(got.contains(expect), "\n got: {got}\nwant: {expect}");
+        assert!(
+            !got.contains("secret"),
+            "a holdout error echoes no value: {got}"
+        );
+    }
+    // The same UPOS in a file that is not holdout is still named.
+    let dev = format!(
+        "# sent_id = a\n# text = x\n{}",
+        line("1", "x", "secret", "_", "_")
+    );
+    assert!(error(&dev).contains("UPOS `secret` is not one of the 17 UD tags"));
+}
+
 #[test]
 fn the_load_errors_of_the_case_files() {
     let cases = [

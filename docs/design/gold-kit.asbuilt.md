@@ -59,9 +59,9 @@ A third of each context is holdout, so both splits have the tier's mix. A file i
 never both: the first time it gives a sentence it goes to the split that needs more, and all it
 gives goes there. The splits share no source file.
 
-The 450 are shuffled and numbered `g0001`; the id says nothing of tier or split. The same seed over the same corpus gives
-the same files. `manifest.tsv` has the seed and corpus image in its header, and per sentence the
-split, tier, context, fixture, repository, licence and byte range.
+The 450 are shuffled and numbered `g0001`; the id says nothing of tier or split. The same seed over
+the same corpus gives the same files. `manifest.tsv` has the seed and corpus image in its header,
+and per sentence the split, tier, context, fixture, repository, licence and byte range.
 
 ## Batches and compact lines
 
@@ -83,9 +83,9 @@ bases are equal and no feature conflicts. The blind code decides which features 
 it has a number or verb form, another tagger that gives one must match, and one that gives none
 abstains. Agreed words are written `Prov=agree`.
 
-Tokens that are not words are written `Prov=kind`, since no tagger decided them. Every other word is on the worklist, with its
-sentence, the three answers (`N.?` for a missing feature) and a slot. `agreed.conllu` leaves them
-without a UPOS.
+Tokens that are not words are written `Prov=kind`, since no tagger decided them. Every other word is
+on the worklist, with its sentence, the three answers (`N.?` for a missing feature) and a slot.
+`agreed.conllu` leaves them without a UPOS.
 
 `agreement.txt` counts pairs, the three together, and disputes, by tier and context. An answer is
 `g0007.5: N.p | reason`, with a code of the guide and a reason of at most 15 words, for an item of

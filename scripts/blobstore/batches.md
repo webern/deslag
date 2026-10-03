@@ -51,9 +51,25 @@ publishes the tip at push time, which may be newer than the pull request run saw
 publishes exactly what that run proved.
 
 On a push, `publish` follows, with `packages: write` and `contents: write`. It unpacks the tar
-`harvest` made, runs `make publish-blobs`, and commits the completed manifests and `blobs.lock` to
-the branch, as `github-actions[bot]`. That commit starts no workflow. The branch must let the
-workflow push, which a protected `main` does not.
+`harvest` made, runs `make publish-blobs`, and then makes the branch's checks agree with the new
+image. Some of what `make ci` holds the branch to is measured on the image: the phrase catalogue's
+counts and its `measured_on`, which must equal `blobs.lock`, and the golden file of `list_growth`,
+which names the batch of each fixture. A new lock leaves them stale, so every publish would turn the
+branch red. The job drops the tree it published, fetches the new image back from the registry, runs
+`make fix-blobs`, which rewrites those two files from it, and commits them with the completed
+manifests and `blobs.lock`, as one commit by `github-actions[bot]`. That commit starts no workflow.
+The branch must let the workflow push, which a protected `main` does not.
+
+`make fix-blobs` is the whole of it, so a person who publishes by hand runs it too and commits what
+it writes. The files it writes are named in the workflow's last two steps; a new file that depends on
+the image gets added there and to that target. It adds about four minutes to the job: the toolchain
+and dependencies, a fetch of about 15 seconds, and a run of about a minute and a half.
+
+If `make fix-blobs` fails, most likely because a `human` fixture of the new batch holds a phrase of
+the catalogue, the job still commits `blobs.lock` and the manifests with whatever it wrote, so the
+registry never holds an image the branch does not pin, and then fails. The branch is red until a
+person reads the log and decides: drop the phrase from the catalogue or exclude the fixture in a
+later batch. Red is the right result there; the numbers are no longer true of the image.
 
 ## What `publish` trusts
 
@@ -65,13 +81,19 @@ which it is held to. Any other path, a link, or a `..` ends the job. `expect` an
 took from the network are the word of the job that built the batch; `publish` recomputes no
 harvest.
 
+The rewrite that follows the publish reads the image from the registry, not the tree the tar made,
+and runs the branch's own code with `--locked` dependencies. The fixtures are data to it, and no
+token is set in its environment. `pin-lock` commits only the paths the
+workflow names.
+
 ## Recovery
 
 If the push of the lock fails after the image is published, the registry holds an image the
 branch does not pin and the manifests are still seeds. Run all the jobs of that workflow run
 again, or push again: the next run builds what the pinned image lacks, which is the same batch.
 Do not commit the lock alone. The completed manifests are in the run's `new-batches` artifact for
-seven days. A publish waiting behind another run can be cancelled by a newer one; run it again.
+seven days, and the files `make fix-blobs` writes go in the same commit, or the branch is red. A
+publish waiting behind another run can be cancelled by a newer one; run it again.
 
 A seed that fails says why in the log. Fix the seed and push; a completed manifest is never edited.
 

@@ -133,8 +133,15 @@ impl Open {
                 format!("expected 10 tab-separated columns, found {}", columns.len()),
             ));
         }
-        let id = parse_id(columns[0])
-            .ok_or_else(|| Error::at(path, number, format!("bad ID `{}`", columns[0])))?;
+        // The error never echoes the column: this runs before the file's split is known, and a
+        // line whose columns are shifted would put a word of a holdout sentence in it.
+        let id = parse_id(columns[0]).ok_or_else(|| {
+            Error::at(
+                path,
+                number,
+                "bad ID, which is not a word, range or empty node number",
+            )
+        })?;
         match id {
             Id::Word(n) => {
                 if n != self.next {
@@ -280,7 +287,7 @@ mod tests {
                 "expected 10 tab-separated columns, found 3",
             ),
             (word("2", "x"), "word ID 2 where 1 was expected"),
-            (word("a", "x"), "bad ID `a`"),
+            (word("a", "x"), "bad ID, which is not"),
             (word("1-1", "x"), "range 1-1"),
             (
                 format!("{}{}", word("1-2", "ab"), word("1", "a")),

@@ -705,3 +705,142 @@ fn a_corpus_that_cannot_fill_a_quota_is_refused_naming_the_tier() {
     assert!(stderr.contains("tier has"), "{stderr}");
     assert!(!dir.path().join("sample.conllu").exists());
 }
+
+/// A big tier of one batch built from fixtures of the tree: a `human` file, a `mixed` one, an
+/// `llm` file a history proves when `with_proven`, and a second `llm` file turned into one whose
+/// label is its dataset publisher's statement of the model. Returns the tier's root and the
+/// paths of the proven file and the declared one in it.
+fn tier_with_a_declared_file(root: &Path, with_proven: bool) -> (PathBuf, String, String) {
+    let fixtures = deslag_corpus::load::tree(&tree()).unwrap();
+    let long = |category: &str| -> Vec<&deslag_corpus::load::Fixture> {
+        fixtures
+            .iter()
+            .filter(|f| {
+                f.category == category
+                    && f.sidecar.content.natural_language == "en"
+                    && f.sidecar.content.size_bytes > 3000
+                    && f.sidecar.before.is_none()
+            })
+            .collect()
+    };
+    let (human, mixed, llm) = (long("human")[0], long("mixed")[0], long("llm"));
+    let (proven, declared) = (llm[0], llm[1]);
+    let corpus = root.join("corpus");
+    let batch = corpus.join("batches/2026-01-01-01");
+    let mut held = vec![(human, false), (mixed, false), (declared, true)];
+    if with_proven {
+        held.push((proven, false));
+    }
+    let mut manifest = String::new();
+    for (fixture, as_declared) in held {
+        let mut sidecar: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(tree().join(&fixture.path).with_extension("json")).unwrap(),
+        )
+        .unwrap();
+        if as_declared {
+            let commit = "a".repeat(40);
+            let object = sidecar.as_object_mut().unwrap();
+            object.remove("history");
+            object.remove("before");
+            object.insert("sidecar_version".into(), 4.into());
+            object.insert(
+                "declared".into(),
+                serde_json::json!({
+                    "dataset": "owner/stories", "revision": commit, "file": "rows.csv",
+                    "file_sha256": "b".repeat(64), "row": 7, "row_id": "p7",
+                    "model": "a/model-awq", "model_license": "Apache-2.0",
+                    "model_license_card": "a/model", "statement": "the model_name column",
+                    "columns": {},
+                }),
+            );
+            sidecar["source"] = serde_json::json!({
+                "host": "huggingface.co", "repo": "datasets/owner/stories",
+                "path": "rows.csv/row-7.md", "commit": commit,
+                "commit_date": "2025-03-01T18:14:26.000Z",
+                "url": format!("https://huggingface.co/datasets/owner/stories/blob/{commit}/rows.csv"),
+                "license": "MIT", "license_files": ["README.md"],
+                "repo_first_commit_date": null, "stars": null, "found_by": "sg-register:fiction",
+            });
+        }
+        let parsed: deslag_corpus::sidecar::Sidecar =
+            serde_json::from_value(sidecar.clone()).unwrap();
+        let target = batch.join(&fixture.path);
+        fs::create_dir_all(target.parent().unwrap()).unwrap();
+        fs::write(&target, &fixture.bytes).unwrap();
+        fs::write(
+            target.with_extension("json"),
+            serde_json::to_vec_pretty(&sidecar).unwrap(),
+        )
+        .unwrap();
+        let entry = deslag_corpus::sidecar::Entry::describing(&fixture.path, &parsed);
+        manifest += &(serde_json::to_string(&entry).unwrap() + "\n");
+    }
+    fs::write(batch.join("manifest.jsonl"), manifest).unwrap();
+    fs::write(batch.join("exclude.jsonl"), "").unwrap();
+    (corpus, proven.path.clone(), declared.path.clone())
+}
+
+/// `deslag-gold sample` over `corpus`, a sentence to a tier, with `extra` arguments.
+fn sample_of(corpus: &Path, extra: &[&str]) -> Output {
+    let dir = tempfile::tempdir().unwrap();
+    let mut args = vec![
+        "sample",
+        "--corpus",
+        corpus.to_str().unwrap(),
+        "--mix",
+        "1,0,0,0",
+        "--holdout-per-tier",
+        "0",
+    ];
+    args.extend_from_slice(extra);
+    let run = gold(dir.path(), &args);
+    if run.status.success() {
+        let manifest = fs::read_to_string(dir.path().join("manifest.tsv")).unwrap();
+        return Output {
+            stdout: manifest.into_bytes(),
+            ..run
+        };
+    }
+    run
+}
+
+#[test]
+fn the_sample_leaves_out_files_a_publisher_declares_unless_asked() {
+    let work = tempfile::tempdir().unwrap();
+    let (corpus, proven, declared) = tier_with_a_declared_file(work.path(), true);
+    let default = sample_of(&corpus, &[]);
+    assert!(
+        default.status.success(),
+        "{}",
+        String::from_utf8_lossy(&default.stderr)
+    );
+    let manifest = String::from_utf8(default.stdout).unwrap();
+    assert!(manifest.contains(&proven), "{manifest}");
+    assert!(!manifest.contains(&declared), "{manifest}");
+    assert!(
+        !manifest.contains("with publisher-declared files"),
+        "{manifest}"
+    );
+}
+
+#[test]
+fn a_tier_of_declared_files_alone_is_drawn_from_only_when_asked() {
+    let work = tempfile::tempdir().unwrap();
+    let (corpus, _, declared) = tier_with_a_declared_file(work.path(), false);
+    let refused = sample_of(&corpus, &[]);
+    assert_eq!(refused.status.code(), Some(2));
+    let message = String::from_utf8_lossy(&refused.stderr);
+    assert!(message.contains("the llm tier has 0 eligible"), "{message}");
+    let asked = sample_of(&corpus, &["--with-declared"]);
+    assert!(
+        asked.status.success(),
+        "{}",
+        String::from_utf8_lossy(&asked.stderr)
+    );
+    let manifest = String::from_utf8(asked.stdout).unwrap();
+    assert!(manifest.contains(&declared), "{manifest}");
+    assert!(
+        manifest.contains("with publisher-declared files"),
+        "{manifest}"
+    );
+}

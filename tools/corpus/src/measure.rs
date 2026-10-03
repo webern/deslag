@@ -117,6 +117,8 @@ pub struct Doc {
     pub repo: u32,
     /// The agents whose marks its history carries.
     pub tools: Vec<String>,
+    /// Whether its label rests on its publisher's statement of the model, not on a history.
+    pub declared: bool,
     /// What kind of file it is, such as `readme`.
     pub kind: String,
     /// `en`, `other` or `none`.
@@ -331,7 +333,12 @@ impl Corpus {
                 path: fixture.path.clone(),
                 label,
                 repo: repo_index[repo.as_str()],
-                tools: sidecar.history.ai_tools.clone(),
+                tools: sidecar
+                    .history
+                    .as_ref()
+                    .map(|history| history.ai_tools.clone())
+                    .unwrap_or_default(),
+                declared: sidecar.is_declared(),
                 kind: sidecar.content.kind.clone(),
                 language: sidecar.content.natural_language.clone(),
                 batch,
@@ -513,6 +520,11 @@ pub struct Filters {
     /// Keep the human files, and only the llm and mixed files whose history names one tool.
     #[arg(long)]
     pub single_tool: bool,
+    /// Also keep the `llm` files whose label is their publisher's statement of the model, which
+    /// are left out unless asked for: `corpus.md` section 3 keeps them apart from the `llm` files
+    /// a history proves.
+    #[arg(long)]
+    pub with_declared: bool,
     /// Keep only the files from repositories a search for topics outside software found
     /// (`outside`), or only the others (`software`).
     #[arg(long, value_enum)]
@@ -544,6 +556,7 @@ impl Filters {
             && (self.languages.is_empty() || self.languages.contains(&doc.language))
             && (dated || self.quarters.is_empty() || self.quarters.contains(&doc.quarter))
             && (dated || !self.single_tool || doc.single_tool().is_some())
+            && (self.with_declared || !doc.declared)
             && match self.register {
                 None => true,
                 Some(Register::Outside) => doc.outside_software,

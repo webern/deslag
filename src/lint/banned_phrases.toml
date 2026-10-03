@@ -8,14 +8,6 @@
 measured_on = "ghcr.io/webern/deslag-blobs:v3@sha256:d7263b0d15c9b4229633d9eec73f0448e1165ca6eab1903fdc227ccada9c7350"
 
 [[entry]]
-phrase = "why it matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 63
-llm_repos = 50
-
-[[entry]]
 phrase = "why this matters"
 group = "signposts"
 advice = "give the reason itself; the lead-in adds nothing"
@@ -46,14 +38,6 @@ advice = "say what it does instead, such as the error it reports"
 since = "0.1.0"
 llm_files = 61
 llm_repos = 43
-
-[[entry]]
-phrase = "not merely"
-group = "insistence"
-advice = "say what it is; drop the contrast"
-since = "0.1.0"
-llm_files = 77
-llm_repos = 59
 
 [[entry]]
 phrase = "load-bearing"

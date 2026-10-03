@@ -2,19 +2,30 @@
 """Collects the deslag corpus: Markdown quoted from permissively licensed public repositories,
 sorted by who wrote it, as far as the history of each file can tell.
 
-This is a maintenance tool, run by hand when the corpus is rebuilt or grown; the build never runs
-it. It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill
-says why it is Python rather than bash.
+This is a maintenance tool, run by hand when the corpus is rebuilt or grown. The build never runs
+it, and CI runs only `batch`, which builds a batch from a manifest of sources.
+It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill says
+why it is Python rather than bash.
 
     collect.py discover --work DIR [--only RE] find candidate repositories, with each sampler
     collect.py harvest  --work DIR [--jobs N] [--limit N] [--deadline T]
                                               clone each one and keep the Markdown whose
                                               history proves a label
     collect.py stage    --work DIR --corpus .blobs/unpacked/corpus --out STAGE [--exclude FILE]
+                        [--captured DATE]
                                               write what harvest kept as fixtures with sidecars
     collect.py pack     --from STAGE --corpus .blobs/unpacked/corpus --work DIR
-                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
+                        [--exclude FILE] [--name NAME]
+                                              write the fixtures, and the exclusions, as a new
                                               batch of the big tier, for make publish-blobs
+    collect.py batch    MANIFEST --corpus .blobs/unpacked/corpus --work DIR
+                                              build a manifest's batch, and fail unless it comes
+                                              to what the manifest records; a seed manifest is
+                                              first completed with what the network says, and
+                                              built twice; the publish-blobs workflow runs this
+    collect.py complete SEED COMPLETED --corpus .blobs/unpacked/corpus
+                                              fail unless COMPLETED is SEED completed and its
+                                              batch is the one the corpus holds
     collect.py select   --corpus .blobs/unpacked/corpus --out tests/corpus [--check]
                                               sample the tree from the big tier
     collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
@@ -960,6 +971,8 @@ class Candidate:
     clone_url: str
     found_by: str
     stars: int | None = None
+    # A commit to harvest at instead of the default branch's tip: what a batch manifest pins.
+    head: str | None = None
 
     @property
     def key(self) -> str:
@@ -1727,6 +1740,7 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         "head": None, "cutoff_rev": None, "commits": None, "license": None,
         "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
         "qualified": {}, "unasked": {}, "kept": {}, "dropped": {}, "sizes": [], "files": [],
+        "pull_failures": 0,
     }
     clone = work / "clones" / digest(c.key)
     try:
@@ -1735,16 +1749,27 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         except Gone as error:
             result["outcome"] = f"gone: {error}"
         else:
-            harvest_clone(c, clone, work, result, cap, per_repo)
+            if c.head and not has_commit(clone, c.head):
+                result["outcome"] = f"gone: pinned commit {c.head} is not in the clone"
+            else:
+                harvest_clone(c, clone, work, result, cap, per_repo)
     finally:
         shutil.rmtree(clone, ignore_errors=True)
     result["seconds"] = round(time.time() - started, 1)
     return result
 
 
+def has_commit(repo: Path, sha: str) -> bool:
+    try:
+        git(repo, "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}")
+    except RuntimeError:
+        return False
+    return True
+
+
 def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
                   per_repo: int) -> None:
-    head = git(clone, "rev-parse", "HEAD").strip()
+    head = c.head or git(clone, "rev-parse", "HEAD").strip()
     result["head"] = head
     commits = read_commits(clone, head)
     result["commits"] = len(commits)
@@ -1924,6 +1949,8 @@ def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
             target.write_bytes(p.data or b"")
         result["files"].append(pick_record(p))
     result["kept"] = {"human": len(kept_human), "llm": len(kept_llm), "mixed": len(kept_mixed)}
+    # Squash-merges GitHub could not be asked about were taken as unproven, and their files left out.
+    result["pull_failures"] = pulls.failed
 
 
 def change_record(commit: Commit, w: Walk) -> dict:
@@ -2133,7 +2160,8 @@ def stage(args: argparse.Namespace) -> None:
     work, out, corpus = Path(args.work), Path(args.out), Path(args.corpus)
     if out.exists():
         raise SystemExit(f"{out} exists: stage writes a new tree")
-    captured = time.strftime("%Y-%m-%d", time.gmtime())
+    out.mkdir(parents=True)
+    captured = args.captured or time.strftime("%Y-%m-%d", time.gmtime())
     published, live = live_fixtures(corpus)
     excluded = read_exclusions(args.exclude, live)
     for sha in excluded:
@@ -2866,7 +2894,9 @@ def pack(args: argparse.Namespace) -> None:
     batch_names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
     sequence = 1 + max((int(m[2]) for n in batch_names
                         if (m := BATCH_NAME.match(n)) and m[1] == today), default=0)
-    name = f"{today}-{sequence:02d}"
+    name = args.name or f"{today}-{sequence:02d}"
+    if not BATCH_NAME.match(name):
+        raise SystemExit(f"{name} is not a batch name, YYYY-MM-DD-NN")
     if sequence > 99 or any(n >= name for n in batch_names):
         raise SystemExit(f"{name} would not sort after the batches already in {corpus} and {work}")
 
@@ -2888,6 +2918,393 @@ def pack(args: argparse.Namespace) -> None:
     shutil.copytree(staged, corpus / "batches" / name)
     log(f"pack {name}: {len(entries)} fixtures, {len(excluded)} excluded, {held} left out as "
         f"already in the big tier; staged in {staged} and copied into {corpus / 'batches' / name}")
+
+
+# ---------------------------------------------------------------------------------------------
+# batch manifests
+
+HEAD = re.compile(r"^[0-9a-f]{40}$")
+DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+REPO_NAME = re.compile(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)+$")
+
+
+class Source:
+    """A kind of source a manifest lists. Each of a manifest's `sources` names its `kind`, and the
+    kind owns everything about it, so another kind, such as the rows of a dataset turned into
+    files, is one more subclass in SOURCE_KINDS: the build, the workflow and the image do not
+    change.
+
+    An entry starts as a seed, naming only what a person or an agent knows. `resolve` completes
+    it with what only the network says, and from then on it stays fixed: the revision to harvest
+    and what the forge said of it. `harvest` turns completed entries into one JSON file each in
+    DIR/results/, shaped as `harvest_one` writes them (`key`, `outcome`, `kept`, `files`, and the
+    rest `stage` reads), with the bytes of every kept file in DIR/blobs/. `stage` and `pack` go on
+    from there and know nothing of kinds."""
+
+    kind = ""
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        """Calls `bad` if the seed is malformed; returns the entry's key, unique in its kind."""
+        raise NotImplementedError
+
+    def key(self, entry: dict) -> str:
+        """The `key` of the result `harvest` writes for the entry."""
+        raise NotImplementedError
+
+    def resolved(self, entry: dict) -> bool:
+        raise NotImplementedError
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        """Completes `entries` in place, asking the network what they lack."""
+        raise NotImplementedError
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        raise NotImplementedError
+
+
+class GitSource(Source):
+    """A repository on a forge: its `host` and `repo`, and optionally `clone_url`, `found_by`
+    and a `head` to harvest at. `resolve` takes the default branch's tip for a missing `head`
+    and, for GitHub, asks GraphQL for `meta` with the token `gh` holds, which a workflow's own
+    token is. `stars` and `kept` are filled in from what GitHub said and what the harvest kept."""
+
+    kind = "git"
+    KEYS = ("kind", "host", "repo", "clone_url", "found_by", "stars", "head", "meta", "kept")
+
+    def key(self, entry: dict) -> str:
+        return f"{entry['host']}/{entry['repo']}".lower()
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        if set(entry) - set(self.KEYS):
+            bad(f"a git source has keys among {', '.join(self.KEYS)}: {entry}")
+        if entry.get("host") not in HOSTS:
+            bad(f"`host` must be one of {', '.join(HOSTS)}: {entry}")
+        if not isinstance(entry.get("repo"), str) or not REPO_NAME.match(entry["repo"]):
+            bad(f"`repo` must be owner/name: {entry}")
+        if "clone_url" in entry and not isinstance(entry["clone_url"], str):
+            bad(f"{entry['repo']}: `clone_url` must be a string")
+        if "head" in entry and not (isinstance(entry["head"], str) and HEAD.match(entry["head"])):
+            bad(f"{entry['repo']}: `head` must be a full commit hash, not {entry['head']!r}")
+        found_by = entry.get("found_by", ["seed"])
+        if not (isinstance(found_by, list) and found_by and all(isinstance(x, str) for x in found_by)):
+            bad(f"{entry['repo']}: `found_by` must list what found it")
+        return self.key(entry)
+
+    def resolved(self, entry: dict) -> bool:
+        return (all(entry.get(k) for k in ("clone_url", "head", "found_by"))
+                and (entry["host"] != "github.com" or bool(entry.get("meta"))))
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        todo = [e for e in entries if not self.resolved(e)]
+        for entry in todo:
+            entry.setdefault("clone_url", clone_url(entry["host"], entry["repo"]))
+            entry.setdefault("found_by", ["seed"])
+            entry.setdefault("stars", None)
+            if not entry.get("head"):
+                entry["head"] = self.tip(entry["clone_url"])
+        need = [e for e in todo if e["host"] == "github.com" and not e.get("meta")]
+        if not need:
+            return
+        if not github_login():
+            raise SystemExit("resolving GitHub repositories needs a token: gh's login, or "
+                             "GH_TOKEN, which a workflow sets to its own")
+        candidates = [Candidate(e["host"], e["repo"], e["clone_url"], e["found_by"][0], None, e["head"])
+                      for e in need]
+        meta = github_meta(work, candidates)
+        for entry, c in zip(need, candidates):
+            row = meta.get(c.key)
+            if not row or not row.get("found"):
+                raise SystemExit(f"{c.key}: GitHub does not know it, or did not answer")
+            entry["meta"] = {k: v for k, v in row.items() if k != "key"}
+            entry["stars"] = row["stars"]
+
+    @staticmethod
+    def tip(url: str) -> str:
+        """The commit the remote's HEAD names, which is what a clone of it checks out."""
+        error = ""
+        for attempt in range(3):
+            result = subprocess.run(["git", "ls-remote", url, "HEAD"], capture_output=True,
+                                    timeout=120, env=git_env())
+            lines = result.stdout.decode().split()
+            if result.returncode == 0 and lines and HEAD.match(lines[0]):
+                return lines[0]
+            error = result.stderr.decode(errors="replace").strip()[:200]
+            time.sleep(3 * (attempt + 1))
+        raise SystemExit(f"{url}: git ls-remote HEAD found nothing: {error}")
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        # What `discover` and the metadata step would have left in DIR, from the manifest alone,
+        # so that nothing is asked of GitHub again and a clone's depth and a repository's stars
+        # are what they were.
+        with (work / "candidates.jsonl").open("w") as f:
+            for entry in entries:
+                for found_by in entry["found_by"]:
+                    f.write(json.dumps({"host": entry["host"], "repo": entry["repo"],
+                                        "clone_url": entry["clone_url"], "found_by": found_by,
+                                        "stars": entry.get("stars"), "head": entry["head"]}) + "\n")
+        with (work / "meta.jsonl").open("w") as f:
+            for entry in entries:
+                if entry.get("meta"):
+                    f.write(json.dumps(dict(entry["meta"], key=self.key(entry))) + "\n")
+        args = argparse.Namespace(
+            work=str(work), jobs=min(8, os.cpu_count() or 4), limit=0, deadline="", only="",
+            order="priority", seed=0, per_repo=per_repo, max_bytes=max_bytes)
+        for _ in range(MAX_ATTEMPTS):
+            harvest(args)
+            if all((work / "results" / f"{digest(self.key(e))}.json").exists() for e in entries):
+                break
+
+
+SOURCE_KINDS: dict[str, Source] = {s.kind: s for s in (GitSource(),)}
+
+MANIFEST_KEYS = ("batch", "captured", "per_repo", "max_bytes", "sources", "exclude", "expect")
+
+
+def read_manifest(path: Path) -> dict:
+    """A batch manifest, checked. It is JSON: `batch`, the batch's name, which is the file's stem;
+    `captured`, the date its sidecars carry; `per_repo` and `max_bytes`, which override how many
+    files one source may give and the largest file kept; `sources`, each with a `kind`; `exclude`,
+    rows of `{"sha256", "reason"}` as `recheck` writes them; and `expect`, what the batch must
+    come to.
+
+    A manifest without `expect` is a seed: `batch` completes it, in place. One with `expect` is
+    pinned, which needs `captured` and every source resolved, so that nothing is asked of the
+    network when it is built."""
+    try:
+        manifest = json.loads(path.read_text())
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"{path}: not readable as JSON: {error}") from None
+
+    def bad(why: str):
+        raise SystemExit(f"{path}: {why}")
+
+    if not isinstance(manifest, dict) or set(manifest) - set(MANIFEST_KEYS):
+        bad(f"a JSON object whose keys are among {', '.join(MANIFEST_KEYS)}")
+    name = manifest.get("batch")
+    if not isinstance(name, str) or not BATCH_NAME.match(name) or path.stem != name:
+        bad(f"`batch` must be the file's stem, a YYYY-MM-DD-NN name; it is {name!r}")
+    if "captured" in manifest and not (isinstance(manifest["captured"], str)
+                                       and DATE.match(manifest["captured"])):
+        bad("`captured` must be a YYYY-MM-DD date")
+    for key in ("per_repo", "max_bytes"):
+        if key in manifest and not (isinstance(manifest[key], int) and manifest[key] > 0):
+            bad(f"`{key}` must be a positive integer")
+    seen: set[tuple[str, str]] = set()
+    for entry in manifest.get("sources", []):
+        source = SOURCE_KINDS.get(entry.get("kind")) if isinstance(entry, dict) else None
+        if source is None:
+            bad(f"each source needs a `kind` among {', '.join(SOURCE_KINDS)}: {entry}")
+        key = (source.kind, source.check(entry, bad))
+        if key in seen:
+            bad(f"{key[1]} is listed twice")
+        seen.add(key)
+    if not manifest.get("sources") and not manifest.get("exclude"):
+        bad("a batch with no sources and no exclusions adds nothing")
+    expect = manifest.get("expect")
+    if expect is not None:
+        if not isinstance(expect, dict) or set(expect) != {"fixtures", "tree_sha256"}:
+            bad("`expect` is {fixtures, tree_sha256}")
+        if "captured" not in manifest:
+            bad("a manifest with `expect` needs `captured`")
+        for entry in manifest.get("sources", []):
+            if not SOURCE_KINDS[entry["kind"]].resolved(entry):
+                bad(f"has `expect`, but {entry.get('repo')} is not resolved; a pinned manifest "
+                    "holds everything the build would ask of the network")
+    return manifest
+
+
+def write_manifest(path: Path, manifest: dict) -> None:
+    """The manifest as JSON, one source or exclusion to a line, so a diff reads."""
+    def one(value) -> str:
+        return json.dumps(value, ensure_ascii=False)
+
+    parts = []
+    for key in MANIFEST_KEYS:
+        if manifest.get(key) is None:
+            continue
+        value = manifest[key]
+        if key in ("sources", "exclude"):
+            rows = ",\n".join("    " + one(row) for row in value)
+            parts.append(f'  "{key}": [\n{rows}\n  ]' if value else f'  "{key}": []')
+        else:
+            parts.append(f'  "{key}": {one(value)}')
+    path.write_text("{\n" + ",\n".join(parts) + "\n}\n")
+
+
+def tree_digest(batch: Path) -> str:
+    """The sha256 of a batch's files, each as its path and the sha256 of its bytes, in path
+    order: what a manifest's `expect` records, so that the same fixtures with the same sidecars
+    give the same digest on every machine."""
+    lines = sorted(f"{p.relative_to(batch).as_posix()}\t{hashlib.sha256(p.read_bytes()).hexdigest()}\n"
+                   for p in batch.rglob("*") if p.is_file())
+    return hashlib.sha256("".join(lines).encode()).hexdigest()
+
+
+def batch_facts(batch: Path) -> dict:
+    return {"fixtures": len(jsonl(batch / "manifest.jsonl")), "tree_sha256": tree_digest(batch)}
+
+
+def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[dict, Path]:
+    """Builds the batch of a manifest whose sources are resolved, from nothing, into
+    `corpus`/batches: harvests each source, stages and packs the results under the manifest's name
+    and capture date. Returns the results by key, and the batch as staged under `work`. A source
+    that cannot be harvested as the manifest has it, or whose `kept` differs from what the
+    manifest says, ends in SystemExit before anything is packed."""
+    if work.exists() and any(work.iterdir()):
+        raise SystemExit(f"{work} is not empty: a batch is built from nothing, or a result "
+                         "kept from another run would stand in for the harvest")
+    work.mkdir(parents=True, exist_ok=True)
+    name = manifest["batch"]
+    per_repo = manifest.get("per_repo", PER_REPO)
+    max_bytes = manifest.get("max_bytes", BIG_MAX_BYTES)
+    sources = manifest.get("sources", [])
+    for kind, source in SOURCE_KINDS.items():
+        mine = [e for e in sources if e["kind"] == kind]
+        if mine:
+            source.harvest(mine, work, per_repo, max_bytes)
+    results = {r["key"]: r for r in
+               (json.loads(p.read_text()) for p in (work / "results").glob("*.json"))} \
+        if (work / "results").is_dir() else {}
+    problems = []
+    for entry in sources:
+        key = SOURCE_KINDS[entry["kind"]].key(entry)
+        result = results.get(key)
+        if result is None:
+            problems.append(f"{key}: could not be harvested; errors.jsonl in {work} says why")
+        elif result["outcome"] != "harvested":
+            problems.append(f"{key}: {result['outcome']}")
+        elif result.get("pull_failures"):
+            problems.append(f"{key}: GitHub could not show {result['pull_failures']} squash-merges, "
+                            "so files may have been left out")
+        elif entry.get("kept") is not None and result["kept"] != entry["kept"]:
+            problems.append(f"{key}: kept {result['kept']}, and the manifest says {entry['kept']}")
+    if problems:
+        raise SystemExit(f"batch {name} cannot be harvested as {path} has it:\n  "
+                         + "\n  ".join(problems) + "\nNothing was packed.")
+    exclude = work / "exclude.jsonl"
+    exclude.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n"
+                               for row in manifest.get("exclude", [])))
+    staged = work / "stage"
+    if sources:
+        stage(argparse.Namespace(work=str(work), corpus=str(corpus), out=str(staged),
+                                 exclude=str(exclude), max_bytes=max_bytes,
+                                 captured=manifest["captured"]))
+    else:
+        staged.mkdir()
+    pack(argparse.Namespace(source=str(staged), corpus=str(corpus), work=str(work),
+                            exclude=str(exclude), name=name))
+    return results, work / "batches" / name
+
+
+def mismatch(manifest: dict, got: dict, path: Path, why: str) -> SystemExit:
+    return SystemExit(
+        f"batch {manifest['batch']} does not come to what {path} expects.\n"
+        f"  expected {manifest.get('expect')}\n  built    {got}\n{why} Nothing was published.")
+
+
+def extends(seed: dict, done: dict) -> str | None:
+    """Why `done` is not `seed` completed, or None when it is: everything the seed says, `done`
+    says too, and `done` holds the same sources and no others."""
+    for key, value in seed.items():
+        if key != "sources" and done.get(key) != value:
+            return f"`{key}` is not what the seed has"
+    for key in done:
+        if key not in seed and key not in ("captured", "expect", "sources"):
+            return f"`{key}` is not in the seed, and completing adds only `captured` and `expect`"
+    done_by_key = {}
+    for entry in done.get("sources", []):
+        done_by_key[(entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry))] = entry
+    seed_sources = seed.get("sources", [])
+    if len(done_by_key) != len(seed_sources):
+        return "it does not hold the seed's sources, and only those"
+    for entry in seed_sources:
+        theirs = done_by_key.get((entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry)))
+        if theirs is None or any(theirs.get(k) != v for k, v in entry.items()):
+            return f"the source {entry.get('repo')} is not what the seed has"
+    return None
+
+
+def complete(args: argparse.Namespace) -> None:
+    """Fails unless the manifest --completed is the committed seed --seed, completed, and the batch
+    --corpus holds is the one it expects. What the build derived from the network, `expect` and
+    each source's `head`, `meta` and `kept`, is the word of whoever built it, which the seed
+    cannot confirm; everything else is the seed's."""
+    seed_path, done_path = Path(args.seed), Path(args.completed)
+    seed, done = read_manifest(seed_path), read_manifest(done_path)
+    if seed.get("expect") is not None:
+        raise SystemExit(f"{seed_path} is already completed, and a completed manifest is never replaced")
+    if done.get("expect") is None:
+        raise SystemExit(f"{done_path} is not completed")
+    if why := extends(seed, done):
+        raise SystemExit(f"{done_path} is not {seed_path} completed: {why}")
+    target = Path(args.corpus) / "batches" / done["batch"]
+    if not target.is_dir():
+        raise SystemExit(f"{target} does not exist")
+    got = batch_facts(target)
+    if done["expect"] != got:
+        raise mismatch(done, got, done_path, "The batch is not the one the manifest describes.")
+
+
+def batch(args: argparse.Namespace) -> None:
+    """Builds the batch a manifest describes into --corpus, and fails unless it comes to what the
+    manifest expects. The publish-blobs workflow runs this for each manifest.
+
+    A pinned manifest is built as it stands. A seed is first resolved, then built, and what that
+    came to is recorded as `expect`; then the batch is built a second time from the completed
+    manifest alone, which is what the next run will do, and the two must agree. The completed
+    manifest is written over the seed only when they do. A batch the corpus already holds is
+    only checked against `expect`: a published batch is never changed."""
+    path, corpus, work = Path(args.manifest), Path(args.corpus), Path(args.work)
+    manifest = read_manifest(path)
+    name = manifest["batch"]
+    target = corpus / "batches" / name
+    if target.exists():
+        if manifest.get("expect") is None:
+            raise SystemExit(f"{target} exists, and {path} is a seed. Either an earlier run "
+                             "published the batch and could not commit its completed manifest, "
+                             "which is in that run's new-batches artifact, or the tree holds a "
+                             "batch built from another seed; remove it to build this one.")
+        got = batch_facts(target)
+        if manifest["expect"] != got:
+            raise mismatch(manifest, got, path, "A published batch is never changed.")
+        log(f"{name}: already in {corpus}, and as {path} expects")
+        return
+    if work.exists() and any(work.iterdir()):
+        raise SystemExit(f"{work} is not empty: a batch is built from nothing")
+
+    def built(manifest: dict, sub: str) -> tuple[dict, dict]:
+        results, staged = build_batch(manifest, path, corpus, work / sub)
+        return results, batch_facts(staged)
+
+    if manifest.get("expect") is not None:
+        _, got = built(manifest, "build")
+        if manifest["expect"] != got:
+            shutil.rmtree(target)
+            raise mismatch(manifest, got, path,
+                           "The same sources at the same revisions gave other fixtures: a change "
+                           "in what GitHub says of a pull request, a clone that fell back to "
+                           "another depth, or a fixture another batch now holds.")
+        return
+
+    for kind, source in SOURCE_KINDS.items():
+        mine = [e for e in manifest.get("sources", []) if e["kind"] == kind]
+        if mine:
+            source.resolve(mine, work / "resolve")
+    manifest.setdefault("captured", time.strftime("%Y-%m-%d", time.gmtime()))
+    results, first = built(manifest, "first")
+    for entry in manifest.get("sources", []):
+        entry["kept"] = results[SOURCE_KINDS[entry["kind"]].key(entry)]["kept"]
+    manifest["expect"] = first
+    shutil.rmtree(target)
+    _, second = built(manifest, "second")
+    if second != first:
+        shutil.rmtree(target)
+        raise mismatch(manifest, second, path,
+                       "Built twice from the same resolved sources, it came out two ways, so it "
+                       "cannot be pinned. A source may have changed between the two builds, or "
+                       "what GitHub says of a pull request did.")
+    write_manifest(path, manifest)
+    log(f"{path}: completed, {first['fixtures']} fixtures, tree {first['tree_sha256'][:16]}")
 
 
 def main() -> None:
@@ -2915,6 +3332,7 @@ def main() -> None:
     p.add_argument("--out", required=True)
     p.add_argument("--exclude", default="")
     p.add_argument("--max-bytes", type=int, default=BIG_MAX_BYTES)
+    p.add_argument("--captured", default="", help="the capture date of the sidecars; today by default")
     p = sub.add_parser("select")
     p.add_argument("--corpus", required=True)
     p.add_argument("--out", required=True)
@@ -2936,9 +3354,19 @@ def main() -> None:
     p.add_argument("--corpus", required=True)
     p.add_argument("--work", required=True)
     p.add_argument("--exclude", default="")
+    p.add_argument("--name", default="", help="the batch's name; today's next by default")
+    p = sub.add_parser("batch")
+    p.add_argument("manifest")
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--work", required=True)
+    p = sub.add_parser("complete")
+    p.add_argument("seed")
+    p.add_argument("completed")
+    p.add_argument("--corpus", required=True)
     args = parser.parse_args()
     {"discover": discover, "harvest": harvest, "stage": stage, "select": select,
-     "describe": describe, "recheck": recheck, "pack": pack}[args.command](args)
+     "describe": describe, "recheck": recheck, "pack": pack, "batch": batch,
+     "complete": complete}[args.command](args)
 
 
 if __name__ == "__main__":

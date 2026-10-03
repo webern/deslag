@@ -9,45 +9,7 @@ use deslag::document::{Token, TokenKind};
 use crate::error::Error;
 use crate::tags::{Confidence, Features, Reading, Tag, TagSet};
 
-/// The kind of block a sentence is in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Context {
-    /// Anything but the three below, quotes and footnotes included.
-    Prose,
-    /// Under a list item.
-    ListItem,
-    /// A heading.
-    Heading,
-    /// A table cell.
-    TableCell,
-}
-
-impl Context {
-    /// Every context, in the order the report lists them.
-    pub const ALL: [Context; 4] = [
-        Context::Prose,
-        Context::ListItem,
-        Context::Heading,
-        Context::TableCell,
-    ];
-
-    /// The name a gold file's `exam.context` uses.
-    pub fn name(self) -> &'static str {
-        match self {
-            Context::Prose => "prose",
-            Context::ListItem => "list-item",
-            Context::Heading => "heading",
-            Context::TableCell => "table-cell",
-        }
-    }
-
-    /// The context named `name`.
-    pub fn from_name(name: &str) -> Option<Context> {
-        Context::ALL
-            .into_iter()
-            .find(|context| context.name() == name)
-    }
-}
+pub use deslag::tag::Context;
 
 /// One sentence, as a tagger is given it.
 #[derive(Debug, Clone, Copy)]
@@ -108,7 +70,7 @@ impl Tagger for Noun {
 
 /// Runs `tagger` on `sentence`, named `sent_id` in the file it came from, and checks its answer
 /// against the contract: one entry per token, `Some` on a word and `None` on anything else, and a
-/// score, where there is one, in `0.0..=1.0`.
+/// score, where there is one, in `0.0..=1.0`, and no other tag possible beside a `Sure` best guess.
 pub fn run(
     tagger: &dyn Tagger,
     sent_id: &str,
@@ -144,6 +106,13 @@ pub fn run(
             ) if !(0.0..=1.0).contains(score) => {
                 return Err(breach(format!("a score of {score} on token {index}")));
             }
+            (_, Some(reading))
+                if reading.confidence == Confidence::Sure && reading.possible().len() > 1 =>
+            {
+                return Err(breach(format!(
+                    "a Sure reading on token {index} that keeps another tag"
+                )));
+            }
             _ => {}
         }
     }
@@ -174,6 +143,16 @@ mod tests {
             confidence: Confidence::Likely,
             kept: TagSet::EMPTY,
             score,
+        })
+    }
+
+    fn sure_keeping_another() -> Option<Reading> {
+        Some(Reading {
+            tag: Tag::Verb,
+            features: Features::NONE,
+            confidence: Confidence::Sure,
+            kept: TagSet::of(Tag::Noun),
+            score: None,
         })
     }
 
@@ -215,6 +194,23 @@ mod tests {
     }
 
     #[test]
+    fn a_sure_reading_that_keeps_only_its_own_tag_passes() {
+        let sure = |kept| {
+            Some(Reading {
+                tag: Tag::Verb,
+                features: Features::NONE,
+                confidence: Confidence::Sure,
+                kept,
+                score: None,
+            })
+        };
+        for kept in [TagSet::EMPTY, TagSet::of(Tag::Verb)] {
+            let ok = Fixed(vec![sure(kept), None, sure(kept)]);
+            assert!(run_on("a , b", &ok).is_ok());
+        }
+    }
+
+    #[test]
     fn a_breach_names_the_tagger_and_the_sentence() {
         let cases = [
             (Fixed(vec![reading(None)]), "1 readings for 3 tokens"),
@@ -237,6 +233,10 @@ mod tests {
             (
                 Fixed(vec![reading(Some(f32::NAN)), None, reading(None)]),
                 "a score of NaN",
+            ),
+            (
+                Fixed(vec![sure_keeping_another(), None, reading(None)]),
+                "a Sure reading on token 0 that keeps another tag",
             ),
         ];
         for (tagger, expect) in cases {

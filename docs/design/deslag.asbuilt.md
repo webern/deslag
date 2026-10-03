@@ -37,6 +37,7 @@ src/
     guide.md          the guide, with placeholders
     lints.md          the lints topic's intro; lints/ holds a file per lint
   document/           a file read once into blocks, tokens and sentences
+  tag/                the part of speech of each word: readings, and the tagger's entry point
   parse/              the keys a file declares in its frontmatter
   lint/               running the lints; one module per lint
   output/             --format json, sarif and github
@@ -44,7 +45,7 @@ src/
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
-`document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
+`document` and `parse`; `document` calls `tag` once it has the sentences; `output` reads a `Report`; `fix` makes the edits `lint` names that
 `document` proves. `lint` judges and narrows by what `change` reads. `instructions` reads `Lint`
 for the lints topic, which has a section per lint in `Lint::ALL` order, from an exhaustive `match`.
 
@@ -61,6 +62,7 @@ fails when a module is in no doc or in two.
   and `--format`.
 - [tests.asbuilt.md](tests.asbuilt.md): the tests, the cases, the corpus run and the golden set.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
+- [tag.asbuilt.md](tag.asbuilt.md): `tag`: readings, confidence, and the golden tag stream.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
 - [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.

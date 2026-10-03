@@ -4,8 +4,9 @@
 //! token. A program fills it, on every `Word` line: `UPOS` (UD codes, through the one mapping of
 //! [`crate::tags`]), and optionally `FEATS` (UD features) and the `MISC` keys `Conf=` (`Sure`,
 //! `Likely`, `Unsure` or `Unknown`, default `Likely`, since an outside tagger makes no claim to
-//! `Sure`'s meaning), `Score=` (0.0 to 1.0) and `Kept=` (deslag codes, comma-separated). Lines that
-//! are not `Word` tokens are not read, whatever they hold.
+//! `Sure`'s meaning), `Score=` (0.0 to 1.0) and `Kept=` (deslag codes, comma-separated). `Sure`
+//! with a `Kept=` tag other than the `UPOS` breaks the meaning of `Sure` and is an error. Lines
+//! that are not `Word` tokens are not read, whatever they hold.
 //!
 //! The file must have the gold's `sent_id`s in the gold's order and the skeleton's `FORM`s line for
 //! line; otherwise the exam cannot run, and says where the first difference is. A `Word` line
@@ -18,7 +19,7 @@ use deslag::document::TokenKind;
 use crate::conllu::{self, Block, Id, Line};
 use crate::error::Error;
 use crate::gold::Gold;
-use crate::tags::{Class, Confidence, Features, Reading, Tag, TagSet, map_upos};
+use crate::tags::{Class, Confidence, Features, Reading, Tag, TagSet, from_ud, map_upos};
 
 /// An imported file, checked against its gold and read into one reading per word token.
 #[derive(Debug, Clone)]
@@ -166,7 +167,7 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
             )));
         }
     };
-    let features = Features::from_ud(&line.feats).map_err(bad)?;
+    let features = from_ud(&line.feats).map_err(bad)?;
     let mut confidence = Confidence::Likely;
     let mut score = None;
     let mut kept = TagSet::EMPTY;
@@ -201,6 +202,12 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
             }
             _ => {}
         }
+    }
+    if confidence == Confidence::Sure && kept.iter().any(|kept| kept != tag) {
+        return Err(bad(
+            "Conf `Sure` with a Kept tag other than UPOS: `Sure` means no other tag is possible"
+                .into(),
+        ));
     }
     Ok(Reading {
         tag,
@@ -258,7 +265,7 @@ mod tests {
                     1,
                     "VERB",
                     "VerbForm=Inf",
-                    "Conf=Sure|Score=0.9|Kept=VERB,NOUN",
+                    "Conf=Likely|Score=0.9|Kept=VERB,NOUN",
                 ),
                 (2, "ADV", "_", ""),
                 (5, "NOUN", "Number=Plur", "Conf=Unsure"),
@@ -270,7 +277,7 @@ mod tests {
         let go = readings[0].unwrap();
         assert_eq!(go.tag, Tag::Verb);
         assert_eq!(go.features, Features::INFINITIVE);
-        assert_eq!(go.confidence, Confidence::Sure);
+        assert_eq!(go.confidence, Confidence::Likely);
         assert_eq!(go.score, Some(0.9));
         assert_eq!(go.kept, TagSet::of(Tag::Verb).with(Tag::Noun));
         let now = readings[1].unwrap();
@@ -304,6 +311,32 @@ mod tests {
             assert_eq!((reading.score, reading.kept), (None, TagSet::EMPTY));
         }
         assert_eq!(imported.outside, 2);
+    }
+
+    #[test]
+    fn a_sure_line_that_keeps_another_tag_is_refused() {
+        let gold = gold();
+        let fill_one = |misc: &str| {
+            fill(
+                &skeleton(&gold),
+                &[
+                    (1, "VERB", "_", misc),
+                    (2, "ADV", "_", ""),
+                    (5, "NOUN", "_", ""),
+                ],
+            )
+        };
+        let error = Imported::parse("f", &fill_one("Conf=Sure|Kept=VERB,NOUN"), &gold, false)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("Sure") && error.contains("Kept"), "{error}");
+        assert!(error.starts_with("f:"), "{error}");
+        for ok in ["Conf=Sure", "Conf=Sure|Kept=VERB", "Conf=Sure|Kept="] {
+            assert!(
+                Imported::parse("f", &fill_one(ok), &gold, false).is_ok(),
+                "{ok}"
+            );
+        }
     }
 
     fn error_of(text: &str, quiet: bool) -> String {

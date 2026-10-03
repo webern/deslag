@@ -16,8 +16,9 @@
 //! - **Known word.** Its best guess is the tag it has most often; a tie goes to the tag that comes
 //!   first in the report's order. `Sure` when train gave it one tag, else `Unsure`. `kept` is every
 //!   tag train gave it.
-//! - **Unknown word** (never a scored token of train): the most common tag over all of train, at
-//!   `Unknown`, with `kept` holding only that tag.
+//! - **Unknown word** (never a scored token of train, so also a word that train only ever has as
+//!   `PUNCT`, `SYM` or `X`, or where it cannot be aligned): the most common tag over all of train,
+//!   at `Unknown`, with `kept` holding only that tag.
 //! - No features and no score: the baseline has neither to give, so the feature metrics read 0%
 //!   and calibration is not printed.
 

@@ -403,7 +403,7 @@ impl GoldSentence {
                     });
                 }
                 Id::Word(_) => {
-                    let (word, space_after) = Word::read(path, mode, line)?;
+                    let (word, space_after) = Word::read(path, mode, holdout, line)?;
                     if inside > 0 {
                         inside -= 1;
                     } else {
@@ -455,19 +455,31 @@ impl GoldSentence {
 }
 
 impl Word {
-    /// The word on `line`, and whether a space follows it.
-    fn read(path: &str, mode: TokenMode, line: &conllu::Line) -> Result<(Word, bool), Error> {
+    /// The word on `line`, and whether a space follows it. On holdout text no error echoes a value
+    /// of the line: a line whose columns are shifted would put a word in one.
+    fn read(
+        path: &str,
+        mode: TokenMode,
+        holdout: bool,
+        line: &conllu::Line,
+    ) -> Result<(Word, bool), Error> {
         let class = map_upos(&line.upos).ok_or_else(|| {
             let what = match line.upos.as_str() {
                 "_" => "a word line with no UPOS".to_string(),
+                _ if holdout => "UPOS is not one of the 17 UD tags".to_string(),
                 other => format!("UPOS `{other}` is not one of the 17 UD tags"),
             };
             Error::at(path, line.number, what)
         })?;
         let features = match class {
-            Class::Tagged(_) => {
-                from_ud(&line.feats).map_err(|message| Error::at(path, line.number, message))?
-            }
+            Class::Tagged(_) => from_ud(&line.feats).map_err(|message| {
+                let message = if holdout {
+                    "a FEATS entry has no value".to_string()
+                } else {
+                    message
+                };
+                Error::at(path, line.number, message)
+            })?,
             _ => Features::NONE,
         };
         let mut kind = None;
@@ -479,16 +491,26 @@ impl Word {
                 "Prov" => {
                     prov = Some(Prov::from_name(value).ok_or_else(|| {
                         let names = Prov::ALL.iter().map(|p| p.name()).collect::<Vec<_>>();
+                        let shown = if holdout {
+                            "Prov is unknown".to_string()
+                        } else {
+                            format!("unknown Prov `{value}`")
+                        };
                         Error::at(
                             path,
                             line.number,
-                            format!("unknown Prov `{value}`; it is one of {}", names.join(", ")),
+                            format!("{shown}; it is one of {}", names.join(", ")),
                         )
                     })?)
                 }
                 "Kind" if mode == TokenMode::Deslag => {
                     kind = Some(kind_from_name(value).ok_or_else(|| {
-                        Error::at(path, line.number, format!("unknown Kind `{value}`"))
+                        let what = if holdout {
+                            "Kind is unknown".to_string()
+                        } else {
+                            format!("unknown Kind `{value}`")
+                        };
+                        Error::at(path, line.number, what)
                     })?)
                 }
                 _ => {}

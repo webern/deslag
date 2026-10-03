@@ -10,10 +10,11 @@
 //! with [`Features::CONTRACTION`], so `don't` is an auxiliary and `it's` a pronoun.
 //!
 //! - **Confidence.** A word with one tag is `Sure`. A word with several is `Unsure`: nothing here
-//!   reads the context. A word not in the table is `Unknown`, a noun, except that `'s` after a
-//!   word marks a possessive noun that a second word is fused on to.
+//!   reads the context. A word not in the table goes on to the open-class lexicon; a word that no
+//!   table has is `Unknown`, a noun, except that `'s` after a word marks a possessive noun that a
+//!   second word is fused on to.
 //! - **Folding.** The word is matched in lower case with a curly apostrophe read straight, and by
-//!   nothing else.
+//!   nothing else ([`super::fold`]).
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -468,7 +469,8 @@ const ENTRIES: &[Entry] = &[
     e("lol", &[Interjection], NO),
 ];
 
-/// The longest word of the table, in bytes. A longer token is not in it.
+/// The longest word of the table, in bytes.
+#[cfg(test)]
 const LONGEST: usize = 16;
 
 /// The table by word, built on first use.
@@ -483,43 +485,30 @@ fn len() -> usize {
     ENTRIES.len()
 }
 
-/// `text` folded into `buf` for a lookup: lower case, a curly apostrophe straight. `None` when it
-/// is too long or is not ASCII once folded, so no entry can match it.
-fn fold<'b>(text: &str, buf: &'b mut [u8; LONGEST]) -> Option<&'b str> {
-    let mut used = 0;
-    for ch in text.chars() {
-        let ch = if ch == '\u{2019}' { '\'' } else { ch };
-        if !ch.is_ascii() || used == LONGEST {
-            return None;
-        }
-        buf[used] = ch.to_ascii_lowercase() as u8;
-        used += 1;
-    }
-    std::str::from_utf8(&buf[..used]).ok()
+/// The words of the table.
+#[cfg(test)]
+pub fn words() -> impl Iterator<Item = &'static str> {
+    ENTRIES.iter().map(|entry| entry.word)
 }
 
-/// What the table says of the word `text`: its entry's reading, else a noun at `Unknown`.
-pub fn read(text: &str) -> Reading {
-    let mut buf = [0; LONGEST];
-    let found = fold(text, &mut buf).and_then(|word| index().get(word));
-    match found {
-        Some(entry) => Reading {
-            tag: entry.tags[0],
-            features: entry.features,
-            confidence: if entry.tags.len() == 1 {
-                Confidence::Sure
-            } else {
-                Confidence::Unsure
-            },
-            kept: entry.tags.iter().copied().collect(),
+/// What the table says of `word`, which must be folded as [`super::fold`] does: its entry's
+/// reading, or `None` when it has none.
+pub fn lookup(word: &str) -> Option<Reading> {
+    index().get(word).map(|entry| Reading {
+        tag: entry.tags[0],
+        features: entry.features,
+        confidence: if entry.tags.len() == 1 {
+            Confidence::Sure
+        } else {
+            Confidence::Unsure
         },
-        None => unknown(text),
-    }
+        kept: entry.tags.iter().copied().collect(),
+    })
 }
 
-/// A word the table lacks: a noun at `Unknown`. A word of more than a letter that ends in `'s`
-/// is a singular noun with a second word fused on, whatever its stem.
-fn unknown(text: &str) -> Reading {
+/// A word no table has: a noun at `Unknown`. A word of more than a letter that ends in `'s` is a
+/// singular noun with a second word fused on, whatever its stem.
+pub fn unknown(text: &str) -> Reading {
     let mut features = Features::NONE;
     let mut rest = text.chars().rev();
     if let (Some('s' | 'S'), Some('\'' | '\u{2019}'), Some(_)) =
@@ -541,8 +530,12 @@ mod tests {
 
     use super::*;
 
+    /// The table's reading of `text`, or an unknown noun, as the tagger reads with no lexicon.
     fn word(text: &str) -> Reading {
-        read(text)
+        let mut buf = [0; super::super::LONGEST];
+        super::super::fold(text, &mut buf)
+            .and_then(lookup)
+            .unwrap_or_else(|| unknown(text))
     }
 
     #[test]
@@ -660,7 +653,7 @@ mod tests {
         assert!(
             ENTRIES
                 .iter()
-                .all(|e| !matches!(read(e.word).confidence, Confidence::Likely))
+                .all(|e| !matches!(word(e.word).confidence, Confidence::Likely))
         );
     }
 

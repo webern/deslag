@@ -45,9 +45,10 @@ src/
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
-`document` and `parse`; `document` calls `tag` once it has the sentences; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves. `lint` judges and narrows by what `change` reads. `instructions` reads `Lint`
-for the lints topic, which has a section per lint in `Lint::ALL` order, from an exhaustive `match`.
+`document` and `parse`; `document` calls `tag` once it has the sentences; `output` reads a `Report`;
+`fix` makes the edits `lint` names that `document` proves. `lint` judges and narrows by what
+`change` reads. `instructions` reads `Lint` for the lints topic, which has a section per lint in
+`Lint::ALL` order, from an exhaustive `match`.
 
 ## The subsystem docs
 
@@ -66,6 +67,8 @@ fails when a module is in no doc or in two.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
 - [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.
+- [exam-candidates.asbuilt.md](exam-candidates.asbuilt.md): the taggers `deslag-exam` grades, its
+  import file and the data they read.
 - [gold-kit.asbuilt.md](gold-kit.asbuilt.md): `deslag-gold`, which makes deslag's own gold set.
 
 ## The command line
@@ -113,8 +116,9 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 ## Build
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
-`--locked`; `test-blobs` ends by printing `deslag-corpus time` on the big tier. `make check-deslag` runs deslag on this repo. The published crate is what `include` in
-`Cargo.toml` lists; `make check-publish` builds it, and every other cargo call covers the workspace.
+`--locked`; `test-blobs` ends by printing `deslag-corpus time` on the big tier. `make check-deslag`
+runs deslag on this repo. The published crate is what `include` in `Cargo.toml` lists;
+`make check-publish` builds it, and every other cargo call covers the workspace.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
@@ -128,8 +132,9 @@ or `m/deslag-exam`; `scripts/blobstore/batches.md` says how. After a publish it 
 which rewrites the phrase catalogue's counts and `measured_on` and the golden file of `list_growth`
 from the new image, and commits them with the lock so the branch stays green.
 
-`make fetch-spacy` installs spaCy and its model, pinned by hash in `scripts/spacy/requirements.lock`,
-into a venv in `.spacy/`, and `make generate-spacy` writes the exam's import file for the
-treebank's dev set there. `make test-spacy` then scores it with `deslag-exam`. None is in `make ci`.
+`make fetch-spacy` installs spaCy and its model, pinned by hash in
+`scripts/spacy/requirements.lock`, into a venv in `.spacy/`, and `make generate-spacy` writes the
+exam's import file for the treebank's dev set there. `make test-spacy` then scores it with
+`deslag-exam`. None is in `make ci`.
 
 `make clean` removes all six directories and runs `cargo clean`.

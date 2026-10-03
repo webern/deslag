@@ -2,12 +2,12 @@
 
 The big tier of the test corpus is too big for git. It is one OCI image, `FROM scratch`, which
 GitHub calls the package `ghcr.io/webern/deslag-blobs`. The files here manage it: `blobs.lock`
-pins the image by digest, the tag being for people; `blobs.sh` moves it; `layers.txt` says where
+pins the image by digest; `blobs.sh` moves it; `layers.txt` says where
 one layer ends and the next begins; `batches.sh` builds batches from the manifests in `batches/`,
 which `batches.md` describes; and this file says what is in it.
 
 `make fetch-blobs` unpacks the image into `.blobs/unpacked/` at the repo root, so that directory
-is the image's filesystem, exactly, and git ignores it. `blobs.sh` does not know what is in the
+is the image's filesystem, and git ignores it. `blobs.sh` does not know what is in the
 image; each consumer names the path it reads under `.blobs/unpacked/`.
 
 The build never fetches. `make build`, `make test` and `make check` run offline and with no login.
@@ -19,7 +19,8 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
     `-- batches/             each batch a layer of its own (layers.txt)
         |-- 2026-09-27-01/
         |-- 2026-09-27-02/
-        `-- 2026-10-03-01/
+        |-- 2026-10-03-01/
+        `-- 2026-10-03-02/
 ```
 
 ## corpus/
@@ -37,18 +38,19 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
   fixtures labelled MIT-0 that are MIT, byte for byte, with sidecars that differ in
   `source.license`. It drops those and 16 more whose licence the corpus does not accept or
   `collect.py` cannot name.
+- `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
 
 The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer
 proves. Its `repos.jsonl` lists the 3,232 repositories the harvest tried, 1,388 of which gave a
 fixture.
 
 Every fixture is quoted from a public repository under a permissive licence, which its sidecar
-names with the commit it was quoted at.
+names with the commit.
 
 The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
 image, so anything added here is pulled by every target that reads the corpus, and by CI on a
-cache miss. Its budget is 250MB unpacked, of which the two batches take 215MB; a batch that would
-take it past that waits for a way to fetch less.
+cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
+that waits for a way to fetch less.
 
 ## Access
 

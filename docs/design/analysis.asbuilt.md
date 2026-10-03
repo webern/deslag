@@ -88,10 +88,10 @@ and rate.
 ## N-grams
 
 `ngrams` counts runs of `--min-n` to `--max-n` prose tokens (1 to 4 by default, at most 6) that
-start and end with a word or number and hold no mark ending a sentence. The first pass goes length by length
-over the focus side, grouped by repository, and keeps a run in at least `--min-repos` focus
-repositories (10) whose two shorter runs it kept too. The second finds each kept run in every file
-of both sides, in parallel, which gives the rates and intervals.
+start and end with a word or number and hold no mark ending a sentence. The first pass goes length
+by length over the focus side, grouped by repository, and keeps a run in at least `--min-repos`
+focus repositories (10) whose two shorter runs it kept too. The second finds each kept run in every
+file of both sides, in parallel, which gives the rates and intervals.
 
 A phrase is its tokens joined with a space where the text had one, so `Token::split` gives the
 same tokens back.
@@ -144,9 +144,9 @@ config, runs the binary for each command, and compares what it prints with a fil
 `tools/corpus/tests/golden/`; `make fix-golden` rewrites them. A second run must print the same
 bytes.
 
-`tools/corpus/tests/tree.rs` runs each command on the tree. Its round trip bans each of 500
-n-grams and every candidate with `banned_phrases` and requires each to match in exactly the files
-the tool names. Unit tests pin the rate, the ratio, the percentile and the bootstrap on small hand-made
+`tools/corpus/tests/tree.rs` runs each command on the tree. Its round trip bans each of 500 n-grams
+and every candidate with `banned_phrases` and requires each to match in exactly the files the tool
+names. Unit tests pin the rate, the ratio, the percentile and the bootstrap on small hand-made
 inputs.
 
 `tests/corpus.rs` holds `sentence_lengths_by_label`, ignored: sentence length variation by label,

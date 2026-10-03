@@ -255,10 +255,19 @@ mod tests {
         assert_eq!(document.tokens[ranges[0].start].text, "ships");
     }
 
-    /// A document of `markdown` whose words have the readings `set` names, each the best guess of
-    /// the word with that text, at that level, with the tag alone kept.
-    fn read<'a>(markdown: &'a str, set: &[(&str, Tag, Confidence)]) -> Document<'a> {
+    /// A document of `markdown` with no reading on any token, whatever the tagging pass says.
+    fn unread(markdown: &str) -> Document<'_> {
         let mut document = Document::markdown(markdown);
+        for token in &mut document.tokens {
+            token.reading = None;
+        }
+        document
+    }
+
+    /// A document of `markdown` whose words have the readings `set` names, each the best guess of
+    /// the word with that text, at that level, with the tag alone kept, and no other word read.
+    fn read<'a>(markdown: &'a str, set: &[(&str, Tag, Confidence)]) -> Document<'a> {
+        let mut document = unread(markdown);
         for token in &mut document.tokens {
             if let Some((_, tag, confidence)) = set.iter().find(|(text, ..)| *text == token.text) {
                 token.reading = Some(Reading {
@@ -315,7 +324,7 @@ mod tests {
 
     #[test]
     fn a_token_with_no_reading_matches_no_tag_item_at_any_level() {
-        let document = Document::markdown("It ships fast.");
+        let document = unread("It ships fast.");
         for level in Confidence::ALL {
             let any = pattern(Item::Tag(TagSet::of(Tag::Verb).with(Tag::Noun), level));
             assert!(texts(&any, &document).is_empty(), "{level:?}");
@@ -371,14 +380,14 @@ mod tests {
         assert!(texts(&P, &document).is_empty(), "the literal fails");
         let document = read("It ships fast.", &[("ships", Tag::Noun, Confidence::Sure)]);
         assert!(texts(&P, &document).is_empty());
-        let document = Document::markdown("It ships fast.");
+        let document = unread("It ships fast.");
         assert!(texts(&P, &document).is_empty());
     }
 
     #[test]
     fn a_tag_item_reads_only_the_best_guess() {
         // The word keeps NOUN too, and has no features: neither is consulted.
-        let mut document = Document::markdown("It ships fast.");
+        let mut document = unread("It ships fast.");
         for token in &mut document.tokens {
             if token.text == "ships" {
                 token.reading = Some(Reading {

@@ -333,3 +333,11 @@ reason = "a character banned_chars covers"
 [[phrase]]
 phrase = "why this matters"
 reason = "fell below 40 llm repos after the licence correction removed fixtures outside the allow list"
+
+[[phrase]]
+phrase = "why it matters"
+reason = "used in human prose in batch 2026-10-03-02"
+
+[[phrase]]
+phrase = "not merely"
+reason = "used in human prose in batch 2026-10-03-02"

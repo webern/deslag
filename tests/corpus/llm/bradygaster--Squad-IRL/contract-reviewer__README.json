@@ -1,0 +1,82 @@
+{
+  "sidecar_version": 3,
+  "fixture": "contract-reviewer__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "bradygaster/Squad-IRL",
+    "path": "contract-reviewer/README.md",
+    "commit": "c6312546b912452e67d04382d73a83acf71b4f41",
+    "commit_date": "2026-03-12T15:45:50-07:00",
+    "url": "https://github.com/bradygaster/Squad-IRL/blob/c6312546b912452e67d04382d73a83acf71b4f41/contract-reviewer/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-02-05T23:11:30-08:00",
+    "stars": 47,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2026-03-07T08:36:58-08:00",
+    "last_commit_date": "2026-03-08T07:38:36-07:00",
+    "last_commit_author": "bradygaster",
+    "authors": 1,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-07T08:36:58-08:00",
+    "last_committer_date": "2026-03-08T07:38:36-07:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "8301a55071f04bd7937842f4422ca7b64f08645c",
+        "date": "2026-03-08T07:38:36-07:00",
+        "committed": "2026-03-08T07:38:36-07:00",
+        "old": "3c0aa03f71cb70612a4bd01dc58449edcf36772e",
+        "new": "9cd2813cbedb6f4a6992ca214705c5fd9c693f99",
+        "status": "agent"
+      },
+      {
+        "commit": "2c5169bffbc3b9b581e1fc83eadfacc08121127c",
+        "date": "2026-03-07T08:36:58-08:00",
+        "committed": "2026-03-07T08:36:58-08:00",
+        "old": null,
+        "new": "3c0aa03f71cb70612a4bd01dc58449edcf36772e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 2 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 3469,
+    "sha256": "13e62d69395a9738c1855a40e7e8eb965954d0f78b06e8ed35b64e3e94100b0f",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 83,
+    "words": 505,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/bradygaster--Squad-IRL/contract-reviewer/README.md"
+}

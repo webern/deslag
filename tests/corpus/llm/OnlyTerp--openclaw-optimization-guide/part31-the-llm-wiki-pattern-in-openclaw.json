@@ -1,0 +1,106 @@
+{
+  "sidecar_version": 3,
+  "fixture": "part31-the-llm-wiki-pattern-in-openclaw.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "OnlyTerp/openclaw-optimization-guide",
+    "path": "part31-the-llm-wiki-pattern-in-openclaw.md",
+    "commit": "75f483363bd1fbee3c406b4e9011a8715d0158ac",
+    "commit_date": "2026-07-01T18:30:18-04:00",
+    "url": "https://github.com/OnlyTerp/openclaw-optimization-guide/blob/75f483363bd1fbee3c406b4e9011a8715d0158ac/part31-the-llm-wiki-pattern-in-openclaw.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-13T18:03:11-04:00",
+    "stars": 388,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-04-17T06:15:12Z",
+    "last_commit_date": "2026-04-17T06:48:06Z",
+    "last_commit_author": "Devin AI",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "devin"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-04-17T06:15:12Z",
+    "last_committer_date": "2026-04-17T06:48:06Z",
+    "marks": [
+      {
+        "text": "Devin AI <158243242+devin-ai-integration[bot]@users.noreply.github.com>",
+        "tool": "devin",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      }
+    ],
+    "edits": [
+      {
+        "commit": "87e9e6b350ff0c48f9f280f16b25b2f0628e5e72",
+        "date": "2026-04-17T06:48:06Z",
+        "committed": "2026-04-17T06:48:06Z",
+        "old": "eaf42b4ad66d7394034fe61c06018d04ad21adff",
+        "new": "77e86b5fac99e8b2663ec9d11f2bdd8b1ef5a7da",
+        "status": "agent"
+      },
+      {
+        "commit": "2bcc07cf1c00add0bfd5411ee0cb596aafc46e2b",
+        "date": "2026-04-17T06:40:23Z",
+        "committed": "2026-04-17T06:40:23Z",
+        "old": "50ae41d6db66919c50aa3bb67c68d8062d07bc03",
+        "new": "eaf42b4ad66d7394034fe61c06018d04ad21adff",
+        "status": "agent"
+      },
+      {
+        "commit": "8011cadf8b11ec9417328d88a3fb155d83105e49",
+        "date": "2026-04-17T06:32:11Z",
+        "committed": "2026-04-17T06:32:11Z",
+        "old": "45247c4d4f3fdc8333c179ecb17d5c4df972da30",
+        "new": "50ae41d6db66919c50aa3bb67c68d8062d07bc03",
+        "status": "agent"
+      },
+      {
+        "commit": "ca2dab8ba008d5abf2c9d61e835e5e4067a4b4b0",
+        "date": "2026-04-17T06:22:55Z",
+        "committed": "2026-04-17T06:22:55Z",
+        "old": "f2a052a90c9a84377c4de6e87b51f65cb02039ca",
+        "new": "45247c4d4f3fdc8333c179ecb17d5c4df972da30",
+        "status": "agent"
+      },
+      {
+        "commit": "1c672fc305855278d8413cde4155be0874cf62bb",
+        "date": "2026-04-17T06:15:12Z",
+        "committed": "2026-04-17T06:15:12Z",
+        "old": null,
+        "new": "f2a052a90c9a84377c4de6e87b51f65cb02039ca",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 5 in all, is marked as an AI agent's (devin)"
+  },
+  "content": {
+    "size_bytes": 9336,
+    "sha256": "06abd0c2a290158065672dff5e33cf71985700acbe71371458a7fa6d2aaab323",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 137,
+    "words": 1318,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/OnlyTerp--openclaw-optimization-guide/part31-the-llm-wiki-pattern-in-openclaw.md"
+}

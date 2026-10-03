@@ -26,8 +26,9 @@ sent_ids, texts and FORMs, line for line, as the input, which the importer requi
 spaCy's pos_ can be SPACE, which UD has no UPOS for; it is written as X, which the exam counts.
 
 With --gold, prints how often spaCy's tag equals the gold's on the tokens the exam would score. It
-follows the alignment rules of the exam's design (docs/design/exam.asbuilt.md) on a UD gold file
-whose tokens are deslag's own. It is a sanity number, not the exam's report; `deslag-exam score
+follows the exam's alignment rules (docs/design/exam.asbuilt.md) on a UD gold file whose tokens
+are deslag's own. A token that covers several gold words with different tags, as `don't` covers
+`do` and `n't`, is scored against the first word's tag. It is a sanity number, not the exam's report; `deslag-exam score
 --import` is.
 """
 
@@ -252,8 +253,8 @@ def agreement(gold_path, blocks, tagged):
     if [comment_value(c, "sent_id") for c, _ in gold] != [comment_value(c, "sent_id") for c, _ in blocks]:
         raise Failure(f"{gold_path}: its sent_ids are not the token file's, in the same order")
 
-    n = dict(words=0, punct=0, x=0, tagged=0, scored=0, several_tokens=0, several_tags=0,
-             mismatch=0, not_word=0, agree=0, exact=0, exact_of=0, outside=0)
+    n = dict(words=0, punct=0, x=0, tagged=0, scored=0, several_tokens=0,
+             first_word=0, first_word_words=0, mismatch=0, not_word=0, agree=0, exact=0, exact_of=0, outside=0)
     for (g_comments, g_lines), (t_comments, t_lines), upos_of in zip(gold, blocks, tagged):
         sent_id = comment_value(g_comments, "sent_id")
         text = comment_value(g_comments, "text")
@@ -297,10 +298,12 @@ def agreement(gold_path, blocks, tagged):
                 n["not_word"] += len(gold_words)
             elif len(word_tokens) > 1:
                 n["several_tokens"] += len(gold_words)
-            elif len({TAG_OF_UPOS[upos] for upos in gold_words}) > 1:
-                n["several_tags"] += len(gold_words)
             else:
                 n["scored"] += 1
+                if len({TAG_OF_UPOS[upos] for upos in gold_words}) > 1:
+                    # The token is scored against the first of its words.
+                    n["first_word"] += 1
+                    n["first_word_words"] += len(gold_words)
                 guess = upos_of[word_tokens[0]]
                 # The exam counts a Word line tagged PUNCT, SYM or X as a Noun.
                 mapped = TAG_OF_UPOS.get(guess, "NOUN")
@@ -317,12 +320,13 @@ def report_agreement(n, gold_path):
     def share(num, den):
         return f"{num}/{den} = {100.0 * num / den:.1f}%" if den else "n/a"
 
-    unalignable = n["several_tokens"] + n["several_tags"] + n["mismatch"]
+    unalignable = n["several_tokens"] + n["mismatch"]
     print(f"sanity, against {gold_path}:")
     print(f"  gold words {n['words']}: punctuation {n['punct']}, X {n['x']}, tagged {n['tagged']}")
-    print(f"  tagged: scored tokens {n['scored']}, unalignable {unalignable} "
-          f"(one word several tokens {n['several_tokens']}, one token several tags "
-          f"{n['several_tags']}, text mismatch {n['mismatch']}), not word tokens {n['not_word']}")
+    print(f"  tagged: scored tokens {n['scored']}, of which {n['first_word']} cover "
+          f"{n['first_word_words']} words with different tags and count by their first word; "
+          f"unalignable {unalignable} (one word several tokens {n['several_tokens']}, "
+          f"text mismatch {n['mismatch']}), not word tokens {n['not_word']}")
     print(f"  spaCy agrees with the gold on the aligned tokens, in deslag's 13 tags: "
           f"{share(n['agree'], n['scored'])}")
     print(f"  the same in UD's own UPOS, on tokens of one gold word: "

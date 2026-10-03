@@ -32,12 +32,13 @@ pub trait Tagger {
 }
 
 /// The names of the built-in taggers.
-pub const BUILT_IN: [&str; 1] = ["noun"];
+pub const BUILT_IN: [&str; 2] = ["noun", "deslag"];
 
 /// The built-in tagger called `name`.
 pub fn built_in(name: &str) -> Option<Box<dyn Tagger>> {
     match name {
         "noun" => Some(Box::new(Noun)),
+        "deslag" => Some(Box::new(Deslag)),
         _ => None,
     }
 }
@@ -64,6 +65,25 @@ impl Tagger for Noun {
                     score: None,
                 })
             })
+            .collect()
+    }
+}
+
+/// deslag's own tagger, [`deslag::tag::sentence`], as the exam grades it: what the shipped pass
+/// reads from the sentence's tokens and context, with no score.
+pub struct Deslag;
+
+impl Tagger for Deslag {
+    fn name(&self) -> &str {
+        "deslag"
+    }
+
+    fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
+        let mut tokens = sentence.tokens.to_vec();
+        deslag::tag::sentence(&mut tokens, sentence.context);
+        tokens
+            .iter()
+            .map(|token| token.reading.map(Reading::from))
             .collect()
     }
 }
@@ -177,6 +197,29 @@ mod tests {
         assert_eq!(first.features, Features::NONE);
         assert_eq!(first.kept, TagSet::of(Tag::Noun));
         assert_eq!(first.score, None);
+    }
+
+    #[test]
+    fn deslag_reads_every_word_and_keeps_the_contract() {
+        let readings = run_on("It can't read 2 frobs, the end.", &Deslag).unwrap();
+        let words: Vec<_> = readings.iter().flatten().collect();
+        let tags: Vec<Tag> = words.iter().map(|r| r.tag).collect();
+        assert_eq!(
+            tags,
+            [
+                Tag::Pronoun,
+                Tag::Auxiliary,
+                Tag::Verb,
+                Tag::Noun,
+                Tag::Determiner,
+                Tag::Noun
+            ]
+        );
+        assert!(words.iter().all(|r| r.score.is_none()));
+        assert_eq!(words[1].confidence, Confidence::Sure);
+        // `read` is in the lexicon, `frobs` is in no table.
+        assert_eq!(words[2].confidence, Confidence::Unsure);
+        assert_eq!(words[3].confidence, Confidence::Unknown);
     }
 
     #[test]

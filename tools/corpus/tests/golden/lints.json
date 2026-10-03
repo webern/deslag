@@ -11,6 +11,7 @@
       "languages": [],
       "quarters": [],
       "single_tool": false,
+      "history_only": false,
       "register": null
     }
   },

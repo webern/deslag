@@ -160,6 +160,33 @@ fn to_version_2(sidecar: &mut Value) {
     sidecar["sidecar_version"] = json!(2);
 }
 
+/// A sidecar turned into version 4: no history, and a dataset row whose publisher names the model.
+fn to_declared(sidecar: &mut Value) {
+    let object = sidecar.as_object_mut().expect("a sidecar");
+    object.remove("history");
+    object.remove("before");
+    let commit = "a".repeat(40);
+    object.insert("sidecar_version".into(), json!(4));
+    object.insert(
+        "declared".into(),
+        json!({
+            "dataset": "owner/stories", "revision": commit, "file": "rows.csv",
+            "file_sha256": "b".repeat(64), "row": 7, "row_id": "p7", "model": "a/model-awq",
+            "model_license": "Apache-2.0", "model_license_card": "a/model",
+            "statement": "the `model_name` column of every row of rows.csv",
+            "columns": {"temperature": "0.5"},
+        }),
+    );
+    sidecar["source"] = json!({
+        "host": "huggingface.co", "repo": "datasets/owner/stories", "path": "rows.csv/row-7.md",
+        "commit": commit, "commit_date": "2025-03-01T18:14:26.000Z",
+        "url": format!("https://huggingface.co/datasets/owner/stories/blob/{commit}/rows.csv"),
+        "license": "MIT", "license_files": ["README.md"], "repo_first_commit_date": null,
+        "stars": null, "found_by": "sg-register:fiction",
+    });
+    sidecar["authorship"]["basis"] = json!("the publisher names the model");
+}
+
 /// A sidecar turned into version 3, with made-up evidence of the kind that version adds: an
 /// agent's commit for each AI commit the history counts.
 fn to_version_3(sidecar: &mut Value) {
@@ -361,6 +388,112 @@ fn a_version_2_sidecar_has_none_of_what_version_3_adds() {
     let held = Held::edited(&human, |sidecar| {
         to_version_3(sidecar);
         sidecar["sidecar_version"] = json!(2);
+    });
+    write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
+    load_blobs(repo.root());
+}
+
+#[test]
+fn a_declared_fixture_has_a_publishers_statement_in_place_of_a_history() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    write_batch_of(
+        &repo,
+        "2026-01-01-01",
+        &[],
+        &[Held::edited(&llm, to_declared)],
+        None,
+    );
+    let fixtures = load_blobs(repo.root());
+    assert_eq!(fixtures.len(), 1);
+    let sidecar = &fixtures[0].sidecar;
+    assert!(sidecar.history.is_none() && sidecar.is_declared());
+    assert_eq!(
+        sidecar.declared.as_ref().expect("declared").model,
+        "a/model-awq"
+    );
+    let manifest =
+        std::fs::read_to_string(repo.root().join("batches/2026-01-01-01/manifest.jsonl"))
+            .expect("a manifest");
+    assert!(
+        manifest.contains("\"basis\":\"publisher-declared\""),
+        "{manifest}"
+    );
+    assert!(manifest.contains("\"ai_tools\":[]"), "{manifest}");
+}
+
+#[test]
+fn a_fixture_a_history_proves_has_no_basis_in_its_manifest_line() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    write_batch_of(&repo, "2026-01-01-01", &[], &[Held::as_is(&llm)], None);
+    load_blobs(repo.root());
+    let manifest =
+        std::fs::read_to_string(repo.root().join("batches/2026-01-01-01/manifest.jsonl"))
+            .expect("a manifest");
+    assert!(!manifest.contains("basis"), "{manifest}");
+}
+
+#[test]
+#[should_panic(expected = "proves llm and no other label")]
+fn a_publishers_statement_proves_llm_and_no_other_label() {
+    let (human, _, _) = one_of_each();
+    let repo = Repo::new();
+    write_batch_of(
+        &repo,
+        "2026-01-01-01",
+        &[],
+        &[Held::edited(&human, to_declared)],
+        None,
+    );
+    load_blobs(repo.root());
+}
+
+#[test]
+#[should_panic(expected = "a history or a declared model, one of the two")]
+fn a_sidecar_has_a_history_or_a_declared_model_and_not_both() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let held = Held::edited(&llm, |sidecar| {
+        let history = sidecar["history"].clone();
+        to_declared(sidecar);
+        sidecar["history"] = history;
+    });
+    write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
+    load_blobs(repo.root());
+}
+
+#[test]
+#[should_panic(expected = "a version 4 sidecar names the model its publisher declares")]
+fn version_4_has_no_history_to_stand_on() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let held = Held::edited(&llm, |sidecar| sidecar["sidecar_version"] = json!(4));
+    write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
+    load_blobs(repo.root());
+}
+
+#[test]
+#[should_panic(expected = "the model's licence CC-BY-NC-4.0 is not one the corpus accepts")]
+fn a_declared_model_has_a_licence_the_corpus_accepts() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let held = Held::edited(&llm, |sidecar| {
+        to_declared(sidecar);
+        sidecar["declared"]["model_license"] = json!("CC-BY-NC-4.0");
+    });
+    write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
+    load_blobs(repo.root());
+}
+
+#[test]
+#[should_panic(expected = "declared does not match the source")]
+fn a_declared_revision_is_the_sources_commit() {
+    let (_, llm, _) = one_of_each();
+    let repo = Repo::new();
+    let held = Held::edited(&llm, |sidecar| {
+        to_declared(sidecar);
+        sidecar["declared"]["revision"] = json!("c".repeat(40));
     });
     write_batch_of(&repo, "2026-01-01-01", &[], &[held], None);
     load_blobs(repo.root());
@@ -589,6 +722,9 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// `llm` files and repositories the catalogue records. `make fix-catalog` rewrites the counts and
 /// `measured_on`.
 ///
+/// A file whose label is its publisher's statement of the model (`corpus.md` section 3) is not
+/// counted: the basis is the owner's to accept, and the catalogue stands on histories alone.
+///
 /// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
 /// files hold it at least 3 times as often as `human` files, and at most 3% of `human` files do.
 #[test]
@@ -598,6 +734,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
     let fixtures: Vec<&Fixture> = fixtures
         .iter()
         .filter(|fixture| fixture.category == "human" || fixture.category == "llm")
+        .filter(|fixture| !fixture.sidecar.is_declared())
         .collect();
     let settings: Vec<BannedPhrases> = CATALOGUE
         .entries

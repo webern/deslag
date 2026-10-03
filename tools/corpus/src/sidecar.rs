@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Sidecar {
-    /// Its version: 2 or 3.
+    /// Its version: 2, 3 or 4.
     pub sidecar_version: u32,
     /// The fixture's file name.
     pub fixture: String,
@@ -20,8 +20,11 @@ pub struct Sidecar {
     pub captured: String,
     /// Where it was quoted from.
     pub source: Source,
-    /// The commits that touched it.
-    pub history: History,
+    /// The commits that touched it. Versions 2 and 3 have it, and version 4 has `declared`.
+    pub history: Option<History>,
+    /// Version 4: the dataset row whose publisher names the model that wrote it. This is what
+    /// the `publisher-declared model` basis, `corpus.md` section 3, records in place of a history.
+    pub declared: Option<Declared>,
     /// Who wrote it, and why the history says so.
     pub authorship: Authorship,
     /// Facts about its bytes.
@@ -31,6 +34,14 @@ pub struct Sidecar {
     /// Version 3, and only a `mixed` fixture: the file's last revision before the cutoff, which
     /// is a live `human` fixture of the same file.
     pub before: Option<Before>,
+}
+
+impl Sidecar {
+    /// Whether its label rests on a publisher's statement and not on a history, which a measure
+    /// that only trusts histories leaves out.
+    pub fn is_declared(&self) -> bool {
+        self.declared.is_some()
+    }
 }
 
 /// Where the fixture was quoted from.
@@ -59,6 +70,37 @@ pub struct Source {
     pub stars: Option<u64>,
     /// What found the repository, such as `sg-agent:<query>`.
     pub found_by: String,
+}
+
+/// The basis a manifest line names for a fixture whose label rests on a publisher's statement.
+pub const PUBLISHER_DECLARED: &str = "publisher-declared";
+
+/// Version 4: where in a dataset a text is, and the model its publisher says wrote it.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Declared {
+    /// The dataset on Hugging Face, `owner/name`.
+    pub dataset: String,
+    /// The commit of the dataset's repository the file was read at.
+    pub revision: String,
+    /// The file in the dataset.
+    pub file: String,
+    /// The file's sha256, in lowercase hex.
+    pub file_sha256: String,
+    /// The row in the file, counted from 0 after the header.
+    pub row: u64,
+    /// The row's id in the dataset, if it has one.
+    pub row_id: String,
+    /// The model the publisher names for the row, as the dataset writes it.
+    pub model: String,
+    /// The licence of that model, or of the model it is a base of.
+    pub model_license: String,
+    /// The model whose card says so.
+    pub model_license_card: String,
+    /// Where the publisher names the model, in words.
+    pub statement: String,
+    /// Columns of the row that say how the text was made, such as `temperature`.
+    pub columns: BTreeMap<String, String>,
 }
 
 /// The commits that touched the file, up to the one it was quoted at.
@@ -208,8 +250,12 @@ pub struct Entry {
     pub natural_language: String,
     /// `content.kind`.
     pub kind: String,
-    /// `history.ai_tools`.
+    /// `history.ai_tools`, none for a version 4 fixture.
     pub ai_tools: Vec<String>,
+    /// `publisher-declared` for a version 4 fixture, and absent for the others, which a history
+    /// proves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub basis: Option<String>,
 }
 
 impl Entry {
@@ -227,7 +273,15 @@ impl Entry {
             sidecar_version: sidecar.sidecar_version,
             natural_language: sidecar.content.natural_language.clone(),
             kind: sidecar.content.kind.clone(),
-            ai_tools: sidecar.history.ai_tools.clone(),
+            ai_tools: sidecar
+                .history
+                .as_ref()
+                .map(|history| history.ai_tools.clone())
+                .unwrap_or_default(),
+            basis: sidecar
+                .declared
+                .as_ref()
+                .map(|_| PUBLISHER_DECLARED.to_string()),
         }
     }
 }

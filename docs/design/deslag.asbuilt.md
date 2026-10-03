@@ -124,7 +124,9 @@ pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's 
 
 `make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
 completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
-or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
+or `m/deslag-exam`; `scripts/blobstore/batches.md` says how. After a publish it runs `make fix-blobs`,
+which rewrites the phrase catalogue's counts and `measured_on` and the golden file of `list_growth`
+from the new image, and commits them with the lock so the branch stays green.
 
 `make fetch-spacy` installs spaCy and its model, pinned by hash in `scripts/spacy/requirements.lock`,
 into a venv in `.spacy/`, and `make generate-spacy` writes the exam's import file for the

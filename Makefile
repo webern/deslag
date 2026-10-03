@@ -23,7 +23,7 @@ CARGO_FLAGS ?=
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy \
         ci \
-        fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
+        fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
         fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-spacy publish-blobs
 
@@ -51,7 +51,9 @@ help:
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
-	@echo "fix-catalog      rewrite banned_phrases' catalogue counts from the big tier"
+	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
+	@echo "                 file of list_growth; fetches the image first, needs the network, so not in fix"
+	@echo "fix-catalog      rewrite banned_phrases' catalogue counts, and the image it names, from the big tier"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
@@ -179,8 +181,15 @@ fix-fmt: preflight
 fix-golden: preflight
 	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --workspace --all-features --test golden
 
-# Rewrites the counts of banned_phrases' catalogue from the big tier, so read
-# the diff before committing it.
+# What the publish-blobs workflow runs after it publishes, so a new image leaves the branch green: the
+# catalogue's counts and measured_on, and the golden file of list_growth, which names the batch of each
+# fixture. One cargo run, so the image is read once per test. Accepts whatever the image says, so read
+# the diff before committing it. The two files it writes are listed in publish-blobs.yml too.
+fix-blobs: preflight fetch-blobs
+	DESLAG_FIX_CATALOG=1 DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts list_growth
+
+# Rewrites the counts of banned_phrases' catalogue from the big tier, and its measured_on from
+# blobs.lock, so read the diff before committing it.
 fix-catalog: preflight fetch-blobs
 	DESLAG_FIX_CATALOG=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts
 

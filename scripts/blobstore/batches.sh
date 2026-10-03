@@ -18,9 +18,11 @@
 #   unbundle FILE     unpack such a tar, after checking that it holds batch
 #                     directories and manifests and nothing else, and that
 #                     each batch is what its manifest expects
-#   pin-lock BRANCH   commit blobs.lock, which publish rewrote, and the
-#                     completed manifests, and push them to BRANCH; only the
-#                     workflow does this
+#   pin-lock BRANCH [PATH...]
+#                     commit blobs.lock, which publish rewrote, the completed
+#                     manifests, and each PATH (repo-relative; one that is not
+#                     there or has not changed adds nothing), and push them to
+#                     BRANCH; only the workflow does this
 
 set -euo pipefail
 
@@ -160,17 +162,22 @@ or something that is not a file or a directory, or a path that climbs out. It is
 }
 
 pin_lock() {
-    local branch="${1:?usage: $0 pin-lock BRANCH}" names attempt
+    local branch="${1:?usage: $0 pin-lock BRANCH [PATH...]}" names attempt path
+    shift
     [[ -s "$NEW" ]] || fail "$NEW lists no batch, so there is nothing to say the lock pins."
     names="$(tr '\n' ' ' < "$NEW" | sed 's/ $//')"
     git -C "$ROOT" config user.name 'github-actions[bot]'
     git -C "$ROOT" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
     git -C "$ROOT" add "$LOCK_REL" "$MANIFESTS_REL"
+    # What the workflow derived from the new image, for the same commit.
+    for path in "$@"; do
+        if [[ -e "$ROOT/$path" ]]; then git -C "$ROOT" add -- "$path"; fi
+    done
     git -C "$ROOT" diff --cached --quiet && fail "publish left $LOCK_REL as it was."
     git -C "$ROOT" commit -q -m "build: pin $names in blobs.lock" \
-        -m "Published as $(head -n 1 "$LOCK") by the publish-blobs workflow, which also completed the manifests it was given as seeds."
+        -m "Published as $(head -n 1 "$LOCK") by the publish-blobs workflow, which also completed the manifests it was given as seeds and rewrote what is measured on the image."
     # The branch may have moved while the batch was built and pushed. Only a
-    # commit that leaves the lock alone can be put on top.
+    # commit that leaves what it commits alone can be put on top.
     for attempt in 1 2 3; do
         if git -C "$ROOT" push -q origin "HEAD:refs/heads/$branch"; then
             echo "pinned $names in $LOCK_REL on $branch"
@@ -179,7 +186,7 @@ pin_lock() {
         git -C "$ROOT" fetch -q origin "$branch"
         git -C "$ROOT" rebase -q "origin/$branch" || {
             git -C "$ROOT" rebase --abort || true
-            lock_unpinned "$branch" "$LOCK_REL changed on $branch while the batch was published"
+            lock_unpinned "$branch" "a file the pin commits changed on $branch while the batch was published"
         }
     done
     lock_unpinned "$branch" "three pushes were refused"
@@ -202,5 +209,5 @@ case "${1:-}" in
     bundle) shift; bundle "$@" ;;
     unbundle) shift; unbundle "$@" ;;
     pin-lock) shift; pin_lock "$@" ;;
-    *) echo "usage: $0 build | bundle FILE | unbundle FILE | pin-lock BRANCH" >&2; exit 2 ;;
+    *) echo "usage: $0 build | bundle FILE | unbundle FILE | pin-lock BRANCH [PATH...]" >&2; exit 2 ;;
 esac

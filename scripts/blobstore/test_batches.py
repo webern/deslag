@@ -731,6 +731,22 @@ class ShellTests(Scratch):
                                     f"main:scripts/blobstore/batches/{self.name}.json"))
         self.assertIn("build: pin " + self.name, git(self.remote, "log", "-1", "--format=%s", "main"))
 
+    def test_pin_lock_commits_the_paths_it_is_given_in_the_same_commit(self):
+        self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
+        derived = self.root / "derived.txt"
+        derived.write_text("measured on v2\n")
+        git(self.root, "add", "derived.txt")
+        git(self.root, "commit", "-q", "-m", "derived")
+        git(self.root, "push", "-q", "origin", "main")
+        derived.write_text("measured on the new image\n")
+        (self.root / "stray.txt").write_text("not named\n")
+        self.sh("pin-lock", "main", "derived.txt", "absent.txt")
+        changed = git(self.remote, "show", "--name-only", "--format=", "main").splitlines()
+        self.assertIn("derived.txt", changed)
+        self.assertIn("scripts/blobstore/blobs.lock", changed)
+        self.assertNotIn("stray.txt", changed)
+        self.assertEqual(git(self.remote, "show", "main:derived.txt"), "measured on the new image")
+
     def test_pin_lock_goes_on_top_of_an_unrelated_commit(self):
         self.pinned("ghcr.io/example/blobs:v2@sha256:" + "b" * 64 + "\n")
         other = self.dir / "other"

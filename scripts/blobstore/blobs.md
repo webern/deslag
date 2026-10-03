@@ -113,7 +113,9 @@ changed, new or gone, and which files moved since the fetch -- and pushes nothin
 3. `make test-blobs`, which tests the tree as it is, and say what changed in this file.
 4. `scripts/blobstore/blobs.sh plan` to see what will be pushed, then `make publish-blobs`. It
    pushes the next `vN`, reusing every layer that did not change, and rewrites `blobs.lock`.
-5. Commit `blobs.lock` with this file.
+5. `make fix-blobs`, which rewrites what the new image makes stale: the catalogue's counts and
+   `measured_on`, and `list_growth`'s golden file. Read the diff.
+6. Commit `blobs.lock` and those files with this file. The workflow commits them together too.
 
 A batch can also be a manifest that the `publish-blobs` workflow builds and publishes with no
 login or machine; `batches.md` says how.

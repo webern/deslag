@@ -64,6 +64,7 @@ fails when a module is in no doc or in two.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
 - [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.
+- [gold-kit.asbuilt.md](gold-kit.asbuilt.md): `deslag-gold`, which makes deslag's own gold set.
 
 ## The command line
 
@@ -101,7 +102,8 @@ docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
                       blobstore/, which moves its big tier; ewt/, which fetches the treebank
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
-tools/exam/           deslag-exam, never published: grades taggers against gold sets
+tools/exam/           deslag-exam, never published: grades taggers against gold sets;
+                      deslag-gold, which makes the gold set
 ```
 
 ## Build

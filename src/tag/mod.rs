@@ -15,6 +15,7 @@ mod closed;
 mod function;
 mod infinitive;
 mod lexicon;
+mod nounverb;
 mod pass;
 mod proper;
 mod shape;
@@ -155,7 +156,7 @@ mod tests {
 
     #[test]
     fn a_possessive_is_read_from_its_stem_or_is_an_unknown_noun() {
-        let mut tokens = Token::split("The user's frobnicator's file.");
+        let mut tokens = Token::split("Set user's frobnicator's file.");
         sentence(&mut tokens, Context::Prose);
         let user = tokens[1].reading.unwrap();
         assert_eq!(user.tag, Tag::Noun);

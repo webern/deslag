@@ -13,23 +13,29 @@
 //!   pass, says which tags a word may have.
 //! - It never removes the last tag. A request that would is refused whole.
 //! - A word with a single tag possible is settled and is left alone, so a `Sure` reading never
-//!   changes.
+//!   changes. The one exception is [`View::confirm`]: a lexicon word with one tag, `Unsure`, may be
+//!   raised to `Likely` when the context agrees with that tag. Nothing is removed.
 //! - A word is `Sure` when one tag remains, `Likely` when the rule chose its best guess and others
 //!   remain. A pass never lowers a confidence, and never sets `Unsure` or `Unknown`.
 //! - A rule that needs a neighbour's tag asks [`View::settled`], which answers only when nothing
 //!   else is possible there. When it does not, the rule does nothing. A rule that holds for every
-//!   tag the neighbour may have asks [`View::within`] instead. Reading a neighbour's text or kind
-//!   is not leaning on its reading, and needs no such care.
+//!   tag the neighbour may have asks [`View::within`] instead, and a rule that leans on a
+//!   neighbour's best guess asks [`View::decided`], which answers only if that guess is `Likely`
+//!   or `Sure`, as step 4 allows. Reading a neighbour's text or kind is not leaning on its
+//!   reading, and needs no such care.
 //!
 //! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
 //! its tests, which run each case through the whole tagger.
 
-use super::{Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, proper};
+use super::{
+    Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, nounverb, proper,
+};
 use crate::document::{Token, TokenKind};
 
 /// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
 /// settled, and the order is part of the tagger: it is what the tag stream records.
-const PASSES: [fn(&mut View<'_, '_>); 3] = [proper::run, infinitive::run, function::run];
+const PASSES: [fn(&mut View<'_, '_>); 4] =
+    [proper::run, infinitive::run, function::run, nounverb::run];
 
 /// Runs every pass, in order, over one sentence whose words the tables have read.
 pub(super) fn run(tokens: &mut [Token<'_>], context: Context) {
@@ -81,6 +87,16 @@ impl View<'_, '_> {
             .map(|reading| reading.tag)
     }
 
+    /// The best guess of the word at `at` when an earlier rule or a table committed to it: `Sure`
+    /// or `Likely`. This is what a rule may lean on in a neighbour at `Likely`, as step 4 allows:
+    /// the neighbour's own rule chose, so its guess does not wait on a tag still open. `None` for a
+    /// word at `Unsure` or `Unknown`, and for a token that is no word.
+    pub(super) fn decided(&self, at: usize) -> Option<Tag> {
+        self.reading(at)
+            .filter(|reading| reading.confidence.committed())
+            .map(|reading| reading.tag)
+    }
+
     /// Whether the word at `at` is read and every tag possible there is in `tags`. A rule whose
     /// decision is the same for each of those tags does not lean on which of them is right, so it
     /// may use this where it may not use an ambiguous neighbour: a word that can be nothing but a
@@ -90,6 +106,11 @@ impl View<'_, '_> {
             let possible = reading.possible();
             !possible.is_empty() && intersect(possible, tags) == possible
         })
+    }
+
+    /// The text of the token at `at` if it is a word.
+    pub(super) fn text_of_word(&self, at: usize) -> Option<&str> {
+        (self.kind(at) == TokenKind::Word).then(|| self.text(at))
     }
 
     /// The index of the token after `at`, if there is one.
@@ -109,6 +130,27 @@ impl View<'_, '_> {
             .is_some_and(|next| self.within(next, tags))
     }
 
+    /// Raises the word at `at` to `Likely` when `tag` is the one tag the tables give it, and it is
+    /// `Unsure`: the context agrees with the only reading the lexicon lists. The lexicon keeps such
+    /// a word `Unsure` because the open class is open, so it is not `Sure`, and nothing is removed.
+    /// Returns whether the reading changed. Nothing happens for any other word.
+    pub(super) fn confirm(&mut self, at: usize, tag: Tag) -> bool {
+        match self.reading(at) {
+            Some(old)
+                if old.confidence == Confidence::Unsure
+                    && old.tag == tag
+                    && old.possible() == TagSet::of(tag) =>
+            {
+                self.tokens[at].reading = Some(Reading {
+                    confidence: Confidence::Likely,
+                    ..old
+                });
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// Narrows the word at `at` to the tags of `keep` that are still possible, with `prefer` as the
     /// best guess, and returns whether the reading changed.
     ///
@@ -117,6 +159,19 @@ impl View<'_, '_> {
     /// last tag, and cannot choose a guess it removed. Otherwise the word is `Sure` if one tag
     /// remains and `Likely` if more do. Its features follow the guess as [`features_for`] says.
     pub(super) fn narrow(&mut self, at: usize, keep: TagSet, prefer: Tag) -> bool {
+        self.narrow_with(at, keep, prefer, None)
+    }
+
+    /// As [`View::narrow`], with the features of the new guess given by the rule when it knows them
+    /// better than the carry rules of [`features_for`] do, as a rule that turns a noun into a verb
+    /// does: it knows which form of the verb the context asks for.
+    pub(super) fn narrow_with(
+        &mut self,
+        at: usize,
+        keep: TagSet,
+        prefer: Tag,
+        features: Option<Features>,
+    ) -> bool {
         let Some(old) = self.reading(at) else {
             return false;
         };
@@ -129,7 +184,7 @@ impl View<'_, '_> {
         }
         let new = Reading {
             tag: prefer,
-            features: features_for(old, prefer),
+            features: features.unwrap_or_else(|| features_for(old, prefer)),
             confidence: if kept.len() == 1 {
                 Confidence::Sure
             } else {

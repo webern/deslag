@@ -1,0 +1,26 @@
+{
+	"base": {
+		"mapping": {
+			"i": "PRON",
+			"like": "VERB",
+			"cats": "NOUN",
+			"to": "ADP",
+			"see": "VERB",
+			"the": "DET",
+			"docs:setup": "NOUN",
+			"page": "VERB"
+		}
+	},
+	"patches": [
+		{
+			"from": "VERB",
+			"to": "NOUN",
+			"criteria": {
+				"WordIsTaggedWith": {
+					"relative": -1,
+					"is_tagged": "NOUN"
+				}
+			}
+		}
+	]
+}

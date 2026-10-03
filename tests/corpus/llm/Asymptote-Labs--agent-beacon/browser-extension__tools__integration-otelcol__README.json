@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "browser-extension__tools__integration-otelcol__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Asymptote-Labs/agent-beacon",
+    "path": "browser-extension/tools/integration-otelcol/README.md",
+    "commit": "7e47847cf18fc9383af19e20d624bbcd6bc3bd3d",
+    "commit_date": "2026-09-26T19:26:15-04:00",
+    "url": "https://github.com/Asymptote-Labs/agent-beacon/blob/7e47847cf18fc9383af19e20d624bbcd6bc3bd3d/browser-extension/tools/integration-otelcol/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-05-11T22:49:33-04:00",
+    "stars": 1585,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-07-23T17:01:01-04:00",
+    "last_commit_date": "2026-07-23T17:01:01-04:00",
+    "last_commit_author": "shukieshah",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-23T17:01:01-04:00",
+    "last_committer_date": "2026-07-23T17:01:01-04:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3b3859a91a4fe2e128c9d7ea96112fad02573e7b",
+        "date": "2026-07-23T17:01:01-04:00",
+        "committed": "2026-07-23T17:01:01-04:00",
+        "old": null,
+        "new": "c73699b513779c0b625fe32a48fb2a7e69941c07",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 873,
+    "sha256": "9b10886b86a485e39dca7842cf296d7441f68d0efb165f9c69265d9da70d3fd7",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 14,
+    "words": 115,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/Asymptote-Labs--agent-beacon/browser-extension/tools/integration-otelcol/README.md"
+}

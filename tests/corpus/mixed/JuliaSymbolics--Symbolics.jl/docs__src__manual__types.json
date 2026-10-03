@@ -1,0 +1,128 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__src__manual__types.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "JuliaSymbolics/Symbolics.jl",
+    "path": "docs/src/manual/types.md",
+    "commit": "c2775dfb659c48e0dffbdcf8f936fce30d4368db",
+    "commit_date": "2026-09-25T10:16:11-04:00",
+    "url": "https://github.com/JuliaSymbolics/Symbolics.jl/blob/c2775dfb659c48e0dffbdcf8f936fce30d4368db/docs/src/manual/types.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2020-08-16T12:39:49-04:00",
+    "stars": 1531,
+    "found_by": "gh-commits:opencode"
+  },
+  "history": {
+    "commits": 6,
+    "first_commit_date": "2021-07-20T15:30:15+05:30",
+    "last_commit_date": "2026-08-27T07:49:53Z",
+    "last_commit_author": "Chris Rackauckas - Beep Boop Edition",
+    "authors": 5,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-07-20T15:30:15+05:30",
+    "last_committer_date": "2026-08-27T07:49:53Z",
+    "marks": [
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "🤖 Generated with [Claude Code](https://claude.ai/code)",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "3138c94f49fa26c933050fe63c6da2de0766d728",
+        "new": "1465688a6819a3c2847c401e47dae965fac50aa1",
+        "status": "squash"
+      },
+      {
+        "commit": "c017adae9f43ae1c0d6e50d5c70c2cb0cc6e4d6c",
+        "date": "2025-08-11T09:12:57-04:00",
+        "committed": "2025-08-11T09:12:57-04:00",
+        "old": "0b2fcffd8d91432f228e2a5ac0b56bbf9c6f7942",
+        "new": "5a0219ab4ccacdeb53ca11d84dba35f997dc5f08",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 6 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 3148,
+    "sha256": "7a2bb07dfb18358e6b455564045af7a6b085ae76b19afd1ef6b000e3279929fb",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 490,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/JuliaSymbolics--Symbolics.jl/docs/src/manual/types.md",
+  "before": {
+    "sha256": "4eec0707e8139ce736cbf4fd3bba0bfdd6d1d6674a501c7e274d5d259c8c3338",
+    "commit": "2d809405ade0bc69ddc48d11eed86e7e51a82886",
+    "date": "2021-12-22T10:19:38-05:00",
+    "between": [
+      {
+        "commit": "de0731d6255be56bed82ebafa8d59243ea84e42f",
+        "date": "2026-08-27T07:49:53Z",
+        "committed": "2026-08-27T07:49:53Z",
+        "old": "3138c94f49fa26c933050fe63c6da2de0766d728",
+        "new": "1465688a6819a3c2847c401e47dae965fac50aa1",
+        "status": "squash"
+      },
+      {
+        "commit": "c5640214bf84cfeaf96a95cd767048abaffbbeb5",
+        "date": "2026-08-05T06:22:45-04:00",
+        "committed": "2026-08-05T06:22:45-04:00",
+        "old": "5a0219ab4ccacdeb53ca11d84dba35f997dc5f08",
+        "new": "3138c94f49fa26c933050fe63c6da2de0766d728",
+        "status": "late"
+      },
+      {
+        "commit": "474bad1ad645b878efd921d02698fa121dddc348",
+        "date": "2023-01-20T01:56:09+01:00",
+        "committed": "2023-01-20T01:56:09+01:00",
+        "old": "9fb76a142eb985fce18855ca0282f113546badf7",
+        "new": "0b2fcffd8d91432f228e2a5ac0b56bbf9c6f7942",
+        "status": "late"
+      },
+      {
+        "commit": "bd1e8b625b1621b624b9b98f24bfab7ab7ede617",
+        "date": "2022-10-30T10:13:52+01:00",
+        "committed": "2022-10-30T10:13:52+01:00",
+        "old": "94b3e37a0bdbc861e50a18d354ca889af995a29a",
+        "new": "9fb76a142eb985fce18855ca0282f113546badf7",
+        "status": "late"
+      }
+    ]
+  }
+}

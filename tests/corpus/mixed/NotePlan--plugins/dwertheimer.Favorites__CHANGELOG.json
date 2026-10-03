@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "dwertheimer.Favorites__CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "NotePlan/plugins",
+    "path": "dwertheimer.Favorites/CHANGELOG.md",
+    "commit": "f01f0de1114dc53b819bb8338003f473a096e005",
+    "commit_date": "2026-09-26T07:32:38+01:00",
+    "url": "https://github.com/NotePlan/plugins/blob/f01f0de1114dc53b819bb8338003f473a096e005/dwertheimer.Favorites/CHANGELOG.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2021-04-27T14:44:05-05:00",
+    "stars": 204,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 21,
+    "first_commit_date": "2021-12-09T21:16:04-08:00",
+    "last_commit_date": "2026-07-30T11:35:05-07:00",
+    "last_commit_author": "David Wertheimer",
+    "authors": 1,
+    "ai_commits": 3,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-12-09T21:16:04-08:00",
+    "last_committer_date": "2026-07-30T11:35:05-07:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Made-with: Cursor",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c80f2fb7bbc9c6398964293d58eb17c22fd93f36",
+        "date": "2026-07-30T11:35:05-07:00",
+        "committed": "2026-07-30T11:35:05-07:00",
+        "old": "051c730b1fa73d413f01d608451ca68206324c8f",
+        "new": "314876a4c3b0d243014e2b3480f326e0dc6740f6",
+        "status": "agent"
+      },
+      {
+        "commit": "14e113ffbe3764065d45684a810217bff44da0c4",
+        "date": "2026-07-30T11:32:24-07:00",
+        "committed": "2026-07-30T11:32:24-07:00",
+        "old": "25b3c440128bf991e1a8341ab9cbd7aa945fdd99",
+        "new": "051c730b1fa73d413f01d608451ca68206324c8f",
+        "status": "squash"
+      },
+      {
+        "commit": "2650ce8d566a33a74210af938e2fbe02f0e34eb1",
+        "date": "2026-07-21T13:24:35-07:00",
+        "committed": "2026-07-21T13:24:35-07:00",
+        "old": "5d1f85910dfd543419c214dabf436becd191d40e",
+        "new": "25b3c440128bf991e1a8341ab9cbd7aa945fdd99",
+        "status": "agent"
+      },
+      {
+        "commit": "5ff342ca44f0bdcc4116565c6f83eda43cea1c6a",
+        "date": "2026-04-13T21:38:20-07:00",
+        "committed": "2026-04-13T21:38:25-07:00",
+        "old": "7b923e33de18e3efc214f5e578dea3dd55a67fbc",
+        "new": "5d1f85910dfd543419c214dabf436becd191d40e",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 21 commits predates 2022-01-01 with no mark, and 3 are marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 5197,
+    "sha256": "5b3ec140f26e2e2978dabb1ca59a00c63eead7ae195557c8e39c9707214de867",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 105,
+    "words": 760,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/NotePlan--plugins/dwertheimer.Favorites/CHANGELOG.md"
+}

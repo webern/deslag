@@ -1,0 +1,177 @@
+{
+  "sidecar_version": 3,
+  "fixture": "Docs__findings-routeros-6.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "danikf/tik4net",
+    "path": "Docs/findings-routeros-6.md",
+    "commit": "0adf29b48ef156ef5e756ddbd6fa88dc4e1ccc9f",
+    "commit_date": "2026-09-25T20:58:29+02:00",
+    "url": "https://github.com/danikf/tik4net/blob/0adf29b48ef156ef5e756ddbd6fa88dc4e1ccc9f/Docs/findings-routeros-6.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2015-08-16T20:59:34+02:00",
+    "stars": 198,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 13,
+    "first_commit_date": "2026-09-21T22:10:19+02:00",
+    "last_commit_date": "2026-09-24T20:56:02+02:00",
+    "last_commit_author": "Daniel Frantík",
+    "authors": 1,
+    "ai_commits": 13,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-21T22:10:19+02:00",
+    "last_committer_date": "2026-09-24T20:56:02+02:00",
+    "marks": [
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 8
+      },
+      {
+        "text": "Claude Opus 5.5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      }
+    ],
+    "edits": [
+      {
+        "commit": "0f67c0cd8028dd567318185b27b7a15a3d24e29e",
+        "date": "2026-09-24T20:56:02+02:00",
+        "committed": "2026-09-24T20:56:02+02:00",
+        "old": "acdeb9decd5ff7520745b82e3d1c72c4e7c43ec4",
+        "new": "7c89ad55b0286defdeaf195bf6532b60dd84d81a",
+        "status": "agent"
+      },
+      {
+        "commit": "5096d0f4fba51df93117dc421594d6c8753f4a04",
+        "date": "2026-09-24T19:31:49+02:00",
+        "committed": "2026-09-24T19:31:49+02:00",
+        "old": "6027195cd9e7a52eb69fc50e924627072e9fdabd",
+        "new": "acdeb9decd5ff7520745b82e3d1c72c4e7c43ec4",
+        "status": "agent"
+      },
+      {
+        "commit": "eda732905d2875ccd464a07f13085c6203c176f6",
+        "date": "2026-09-23T01:40:54+02:00",
+        "committed": "2026-09-23T01:40:54+02:00",
+        "old": "7f76fb8f94f48871cd4f9fba45b365e0b9038071",
+        "new": "6027195cd9e7a52eb69fc50e924627072e9fdabd",
+        "status": "agent"
+      },
+      {
+        "commit": "a433b670dfc7f54b650fc1e58303d4ba66f4e91d",
+        "date": "2026-09-23T01:04:08+02:00",
+        "committed": "2026-09-23T01:04:08+02:00",
+        "old": "c8ceb536a23e20dc88bc7d42292ad12b966760b5",
+        "new": "7f76fb8f94f48871cd4f9fba45b365e0b9038071",
+        "status": "agent"
+      },
+      {
+        "commit": "cb306a753a4dc5be5521b9becfef758ff997531b",
+        "date": "2026-09-23T00:08:33+02:00",
+        "committed": "2026-09-23T00:08:33+02:00",
+        "old": "992352b4ef24553553e10116abe2cdd0b70b546b",
+        "new": "c8ceb536a23e20dc88bc7d42292ad12b966760b5",
+        "status": "agent"
+      },
+      {
+        "commit": "3354e23b9437c88c19ab3ce05ba10fbda3c424a5",
+        "date": "2026-09-22T23:33:19+02:00",
+        "committed": "2026-09-22T23:33:19+02:00",
+        "old": "1c8a3f4753e32e92c0b835003e401fa13a5b0402",
+        "new": "992352b4ef24553553e10116abe2cdd0b70b546b",
+        "status": "agent"
+      },
+      {
+        "commit": "f7a07c7b55aecb94570cd6cb08802835dacc82a2",
+        "date": "2026-09-22T01:39:07+02:00",
+        "committed": "2026-09-22T01:39:07+02:00",
+        "old": "8c4a6eaf77f2fc1fdfa75513863d0c0c8630fcc6",
+        "new": "1c8a3f4753e32e92c0b835003e401fa13a5b0402",
+        "status": "agent"
+      },
+      {
+        "commit": "4703fe0465df98d96c222d84fc72dfd20f85e779",
+        "date": "2026-09-22T00:07:06+02:00",
+        "committed": "2026-09-22T00:07:06+02:00",
+        "old": "8b1487ff8935e4c6f81e724b9c7e7e8018921a49",
+        "new": "8c4a6eaf77f2fc1fdfa75513863d0c0c8630fcc6",
+        "status": "agent"
+      },
+      {
+        "commit": "00abcbbffbc8211bde3af117a985d913c2f783ec",
+        "date": "2026-09-21T23:34:15+02:00",
+        "committed": "2026-09-21T23:34:15+02:00",
+        "old": "3b4f718ff4d8f8549ced8bb3b52b54efee8b108c",
+        "new": "8b1487ff8935e4c6f81e724b9c7e7e8018921a49",
+        "status": "agent"
+      },
+      {
+        "commit": "7d73ba955ac291904cb5a3a3b0f79f2f9041eb9b",
+        "date": "2026-09-21T23:18:20+02:00",
+        "committed": "2026-09-21T23:18:20+02:00",
+        "old": "dbabc5cb076913eb775a9a3ad299dc7008c00dc0",
+        "new": "3b4f718ff4d8f8549ced8bb3b52b54efee8b108c",
+        "status": "agent"
+      },
+      {
+        "commit": "996e8daddfbcca7c075a15bcd0c0a4438c476056",
+        "date": "2026-09-21T22:32:19+02:00",
+        "committed": "2026-09-21T22:32:19+02:00",
+        "old": "2645a7c7d8811e5eb0390ee19ecaef72d48088b8",
+        "new": "dbabc5cb076913eb775a9a3ad299dc7008c00dc0",
+        "status": "agent"
+      },
+      {
+        "commit": "a42a23ebb8d6107ecdb66b06834b5cdf77911a43",
+        "date": "2026-09-21T22:22:07+02:00",
+        "committed": "2026-09-21T22:22:07+02:00",
+        "old": "14b6db2e114b3286e0bdee96238878cd9fd3ba3b",
+        "new": "2645a7c7d8811e5eb0390ee19ecaef72d48088b8",
+        "status": "agent"
+      },
+      {
+        "commit": "32e4465cdedfbed319f47b2cd8a64128f2c8da26",
+        "date": "2026-09-21T22:10:19+02:00",
+        "committed": "2026-09-21T22:10:19+02:00",
+        "old": null,
+        "new": "14b6db2e114b3286e0bdee96238878cd9fd3ba3b",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 13 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 24639,
+    "sha256": "36bc1ac6e41e6814b5b00c0e34340a3c693ff0dec6f1e53ec3c76c510cddf47e",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 314,
+    "words": 3678,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/danikf--tik4net/Docs/findings-routeros-6.md"
+}

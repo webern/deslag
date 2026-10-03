@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__javascript__webpack.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "shakacode/react_on_rails",
+    "path": "docs/javascript/webpack.md",
+    "commit": "dad754c193d83d01d0027c890ce8740dc9979683",
+    "commit_date": "2021-12-30T00:02:59-03:00",
+    "url": "https://github.com/shakacode/react_on_rails/blob/dad754c193d83d01d0027c890ce8740dc9979683/docs/javascript/webpack.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md"
+    ],
+    "repo_first_commit_date": "2015-08-20T13:34:55-07:00",
+    "stars": 5190,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-02-13T02:18:31+02:00",
+    "last_commit_date": "2021-02-13T02:18:31+02:00",
+    "last_commit_author": "Anton",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-02-12T14:18:31-10:00",
+    "last_committer_date": "2021-02-12T14:18:31-10:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 1528,
+    "sha256": "8d91931e168474d94ce00c364bc05e93baa8397822d9f9b51bc0b40503a861b1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 22,
+    "words": 176,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/shakacode--react_on_rails/docs/javascript/webpack.md"
+}

@@ -1,0 +1,56 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CHANGELOG.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "arkworks-rs/algebra",
+    "path": "CHANGELOG.md",
+    "commit": "7657bcb7280ffb112056d59f2817c484ee4a6a6d",
+    "commit_date": "2021-12-24T00:36:11+03:00",
+    "url": "https://github.com/arkworks-rs/algebra/blob/7657bcb7280ffb112056d59f2817c484ee4a6a6d/CHANGELOG.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2019-04-02T15:19:36-07:00",
+    "stars": 889,
+    "found_by": "crates.io"
+  },
+  "history": {
+    "commits": 89,
+    "first_commit_date": "2020-11-19T12:18:55-06:00",
+    "last_commit_date": "2021-12-22T13:59:15-08:00",
+    "last_commit_author": "Alexander Wu",
+    "authors": 23,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-11-19T10:53:57-08:00",
+    "last_committer_date": "2021-12-22T13:59:15-08:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 89 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 16666,
+    "sha256": "ba42b04668abb1cd2c89f0cc96eba5a7c403d4ff521aa2d2e842126dbf2cb3af",
+    "kind": "changelog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 176,
+    "words": 1483,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/arkworks-rs--algebra/CHANGELOG.md"
+}

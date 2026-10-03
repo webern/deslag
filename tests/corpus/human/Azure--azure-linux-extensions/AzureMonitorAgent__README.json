@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "AzureMonitorAgent__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "Azure/azure-linux-extensions",
+    "path": "AzureMonitorAgent/README.md",
+    "commit": "783d6d614aea6562c761e5dda7accd3ba8d97868",
+    "commit_date": "2021-12-22T14:25:48-08:00",
+    "url": "https://github.com/Azure/azure-linux-extensions/blob/783d6d614aea6562c761e5dda7accd3ba8d97868/AzureMonitorAgent/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2014-05-16T13:53:32-07:00",
+    "stars": 333,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 2,
+    "first_commit_date": "2019-11-19T11:34:26-08:00",
+    "last_commit_date": "2021-02-23T15:18:39-08:00",
+    "last_commit_author": "Nikhil Dhanda",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2019-11-19T11:34:25-08:00",
+    "last_committer_date": "2021-02-23T15:18:39-08:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 2 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 2151,
+    "sha256": "94c7eb3155b65123da00d3c65b49a93875d4a46d61cffe757cbc8cf8826df656",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 53,
+    "words": 306,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/Azure--azure-linux-extensions/AzureMonitorAgent/README.md"
+}

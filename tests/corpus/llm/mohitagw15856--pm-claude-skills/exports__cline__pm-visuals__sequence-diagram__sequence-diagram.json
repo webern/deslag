@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "exports__cline__pm-visuals__sequence-diagram__sequence-diagram.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mohitagw15856/pm-claude-skills",
+    "path": "exports/cline/pm-visuals/sequence-diagram/sequence-diagram.md",
+    "commit": "f6ca79348c5518f1b0e8bcfd6da53b61251c0fa2",
+    "commit_date": "2026-09-22T22:05:03+01:00",
+    "url": "https://github.com/mohitagw15856/pm-claude-skills/blob/f6ca79348c5518f1b0e8bcfd6da53b61251c0fa2/exports/cline/pm-visuals/sequence-diagram/sequence-diagram.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-01-29T08:28:36Z",
+    "stars": 1405,
+    "found_by": "sg-agent:(^|/)AGENTS\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-29T23:15:15+01:00",
+    "last_commit_date": "2026-06-29T23:15:15+01:00",
+    "last_commit_author": "Mohit",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-29T23:15:15+01:00",
+    "last_committer_date": "2026-06-29T23:15:15+01:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.8 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "895e9f68d00611d7079d6c935d0d83168efc7d3b",
+        "date": "2026-06-29T23:15:15+01:00",
+        "committed": "2026-06-29T23:15:15+01:00",
+        "old": null,
+        "new": "e5343027bfb6c1c88f3972cec166a88e2c50d94c",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2532,
+    "sha256": "0e80d9486ba74e79ebc9913083c618b4751a208852c02a9546d21539b02c38e4",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 65,
+    "words": 416,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mohitagw15856--pm-claude-skills/exports/cline/pm-visuals/sequence-diagram/sequence-diagram.md"
+}

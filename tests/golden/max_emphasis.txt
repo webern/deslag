@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 500 of 1230: core 2, human 87, llm 244, mixed 167
+# fails 495 of 1230: core 2, human 83, llm 244, mixed 166
 
 [md.lints.max_emphasis]
 free_spans = 2
@@ -29,7 +29,6 @@ human/codeberg--DecaTec--Nextcloud-Backup-Restore/CHANGELOG.md spans:3 percent:1
 human/codeberg--ForgeFed--ForgeFed/html__index.md spans:5 percent:1.89
 human/codeberg--Lonami--grammers/README.md spans:11 percent:5.80
 human/codeberg--OpenTracksApp--OpenTracks/README_TESTED_SENSORS.md spans:3 percent:1.20
-human/codeberg--Starfish--TinyWeatherForecastGermany/README.md spans:26 percent:1.69
 human/codeberg--bookstack--bookstack/dev__docs__logical-theme-system.md spans:9 percent:4.87
 human/codeberg--continuwuity--continuwuity/APPSERVICES.md spans:6 percent:3.86
 human/codeberg--corona-contact-tracing-germany--cwa-android/github__SUPPORT.md spans:5 percent:17.45
@@ -41,7 +40,6 @@ human/codeberg--godotsteam--godotsteam/README.md spans:10 percent:2.82
 human/codeberg--iNPUTmice--lttrs-android/README.md spans:7 percent:9.35
 human/codeberg--jbruchon--jdupes/README.md spans:14 percent:1.78
 human/codeberg--kr1sp1n--awesome-gemini/README.md spans:14 percent:3.00
-human/codeberg--mc776--HideousDestructor/hd_lore_nonfree.md spans:4 percent:6.53
 human/codeberg--privacyguides--privacyguides.org/collections___posts__2019-10-30-choosing-a-vpn.md spans:15 percent:7.70
 human/codeberg--skyjake--lagrange/README.md spans:29 percent:2.89
 human/codeberg--xmobar--xmobar/changelog.md spans:76 percent:3.54
@@ -53,7 +51,6 @@ human/django-oauth--django-oauth-toolkit/CHANGELOG.md spans:34 percent:4.99
 human/eventflow--EventFlow/CONTRIBUTING.md spans:5 percent:6.69
 human/fmuecke--Ipponboard/CHANGELOG.md spans:7 percent:1.87
 human/fogfish--datalog/doc__syntax.md spans:6 percent:1.18
-human/gitlab--AOMediaCodec--SVT-AV1/Docs__Appendix-Adaptive-Prediction-Structure.md spans:8 percent:2.40
 human/gitlab--DarkElvenAngel--argononed/OS__alpine__README.md spans:7 percent:19.77
 human/gitlab--Mactroll--DEPNotify/CHANGELOG.md spans:12 percent:1.54
 human/gitlab--ajak--tuir/gitlab__issue_templates__feature_request.md spans:4 percent:30.14
@@ -78,7 +75,6 @@ human/kciter--react-barcode/README.md spans:7 percent:36.33
 human/kitten--reghex/README.md spans:32 percent:5.64
 human/lacymorrow--crossover/readme.md spans:33 percent:11.25
 human/latte-central--LaTTe/doc__102_Lambda_the_ultimate.md spans:98 percent:5.65
-human/lodash--lodash-cli/github__CONTRIBUTING.md spans:4 percent:2.14
 human/marko-js--htmljs-parser/README.md spans:21 percent:8.41
 human/martinus--nanobench/README.md spans:13 percent:5.09
 human/naptha--tesseract.js/docs__examples.md spans:4 percent:16.72
@@ -87,10 +83,10 @@ human/openjournals--joss/docs__submitting.md spans:8 percent:1.36
 human/raxysstudios--avzag/README.md spans:6 percent:19.75
 human/rust-itertools--itertools/CHANGELOG.md spans:12 percent:1.76
 human/softprops--dynomite/CONTRIBUTING.md spans:3 percent:3.08
+human/sonos--dinghy/docs__overlay.md spans:10 percent:1.79
 human/sslarch--sslarch.github.io/content__documents__caa_proposal.md spans:3 percent:2.11
 human/stefanzweifel--laravel-stats/CONTRIBUTING.md spans:9 percent:6.41
 human/tannerlinsley--react-table/docs__src__pages__docs__api__useGlobalFilter.md spans:10 percent:4.01
-human/ui5-community--ui5-ecosystem-showcase/packages__ui5-middleware-livetranspile__CHANGELOG.md spans:12 percent:4.43
 human/urschrei--pyzotero/CONTRIBUTING.md spans:4 percent:8.85
 human/veggiemonk--awesome-docker/github__ISSUE_TEMPLATE.md spans:3 percent:28.00
 human/vkbansal--react-contextmenu/docs__api.md spans:10 percent:2.38
@@ -100,6 +96,7 @@ human/yozorajs--yozora/README.md spans:11 percent:1.30
 llm/AI-Native-Ventures--Colony/docs__superpowers__plans__2026-08-22-2c-b-reachability-plan.md spans:3 percent:1.36
 llm/AIQ-Kitware--aiq-dkps-formalization/dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md spans:39 percent:12.43
 llm/AgriciDaniel--claude-seo/skills__seo-plan__assets__publisher.md spans:3 percent:2.26
+llm/AkbarDevop--ai-job-agent/skills__job-patterns__SKILL.md spans:26 percent:8.15
 llm/AliAkhtari78--SpotifyScraper/extras__blog__spotifyscraper-v3.md spans:16 percent:14.63
 llm/AmintaCCCP--GithubStarsManager/cloudflare-worker__README.md spans:16 percent:9.26
 llm/Arthur-Ficial--apfel/docs__guides__python.md spans:5 percent:3.24
@@ -114,8 +111,6 @@ llm/CloudAI-X--claude-workflow-v2/commands__bootstrap-repo.md spans:6 percent:5.
 llm/ContextLab--storytelling-with-data/data-stories__data-visualization-mcp__CLAUDE.md spans:5 percent:4.17
 llm/CoreBunch--Instatic/docs__reference__use-async-resource.md spans:7 percent:4.84
 llm/Data-Wise--atlas/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md spans:21 percent:7.30
-llm/Dicklesworthstone--beads_viewer/docs__labels-view-feature-plan.md spans:13 percent:5.66
-llm/Dicklesworthstone--pi_agent_rust/docs__security__policy-tuning-guide.md spans:23 percent:7.11
 llm/Exa-Networks--exabgp/claude__docs__archive__dual-transport__README.md spans:3 percent:4.01
 llm/FStarLang--FStar/doc__ref__bootstrapping.md spans:7 percent:3.33
 llm/FiveTechSoft--OpenADS/cookbook__fivewin__README.md spans:6 percent:3.85
@@ -129,8 +124,10 @@ llm/JaclynCodes--Symphonic-Joules-a67272a4/docs__performance-improvements.md spa
 llm/JetBrains--kotlin-web-site/air__cloud__README.md spans:8 percent:3.75
 llm/JordiRigau--hp-prime-kit/docs__commands__spreadsheet__ConfT1mean.md spans:4 percent:19.69
 llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md spans:12 percent:11.06
+llm/Killaret--knowledge-graph/devin__prompts__ANALYSIS_PROMPT.md spans:11 percent:7.41
 llm/Killaret--knowledge-graph/devin__prompts__README.md spans:5 percent:4.63
 llm/LukeAFullard--SIVO_dev/examples__maps__dot_density_map__README.md spans:3 percent:5.94
+llm/LukeAFullard--SIVO_dev/examples__mysite__title_page__subpage__water__science__fmu__puketoi-ki-tai__md__Sediment__trend_popup.md spans:15 percent:39.15
 llm/MacNite--HiveHub/tools__ble-throughput__README.md spans:4 percent:5.09
 llm/MarkMichaelis--ScoopBucket/bucket__ai__MarkMichaelisClaudeOutcomesNotCode.md spans:6 percent:2.65
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md spans:11 percent:1.45
@@ -144,8 +141,8 @@ llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.
 llm/Pimzino--claude-code-spec-workflow/claude__specs__ui-improvements__design.md spans:43 percent:18.32
 llm/PropertyTools--PropertyTools/docs__concepts.md spans:21 percent:7.04
 llm/RazzaBear--copilot-toolkit/skills__java-refactoring-extract-method__SKILL.md spans:4 percent:4.60
+llm/RazzaBear--copilot-toolkit/skills__memory-merger__SKILL.md spans:16 percent:9.52
 llm/Rinne414--sd-image-sorter/docs__RELEASE_NOTES_TEMPLATE.md spans:15 percent:12.11
-llm/RunanywhereAI--runanywhere-sdks/claude__commands__run_and_fix_lints.md spans:31 percent:19.12
 llm/SceneView--sceneview/samples__screenshots__qa_report.md spans:13 percent:4.00
 llm/SenteLabsAI--OpenExecutive/packages__core__openexecutive__knowledge__builtin__failures__strategy__peloton.md spans:7 percent:9.00
 llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md spans:59 percent:5.45
@@ -156,8 +153,8 @@ llm/SpyderMYK--fieldy-field-study/protocol__day1-checklist.md spans:5 percent:5.
 llm/TAJD--economist-style-guide-plugin/economist-style__skills__economist-style__reference__DIALECT-CONVENTIONS.md spans:22 percent:4.58
 llm/Tei1988--cderun/docs__features__interactive-terminal.md spans:3 percent:2.00
 llm/TencentCloud--CubeSandbox/docs__guide__agent-platform-freeze.md spans:25 percent:8.97
+llm/Token-Gremlin--natural-disasters/CONTRIBUTING.md spans:9 percent:7.05
 llm/TomBadash--Mouser/github__release-notes__v3.7.2.md spans:17 percent:9.01
-llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md spans:42 percent:7.88
 llm/Valian--mquickjs_ex/docs__API.md spans:7 percent:3.74
 llm/WikipediaBrown--napkin/Sources__napkin__napkin.docc__Articles__AddingANetworkedService.md spans:16 percent:3.98
 llm/WildGums--Orchestra/AGENTS.md spans:23 percent:16.09
@@ -194,8 +191,6 @@ llm/bojieli--ai-agent-book/chapter5__paper-to-ppt__paper__sample_paper.md spans:
 llm/bradhawkins85--chore-champion/CALENDAR_VIEW_VISUAL_GUIDE.md spans:13 percent:9.07
 llm/bradygaster--Squad-IRL/compliance-checker__README.md spans:11 percent:8.81
 llm/bradygaster--Squad-IRL/contract-reviewer__README.md spans:16 percent:11.62
-llm/brazilofmux--tinymux/CONTRIBUTING.md spans:28 percent:13.00
-llm/brendankowitz--ignixa-fhir/docs__features__validation__investigations__terminology-completeness.md spans:25 percent:7.67
 llm/briandenicola--password-vault/docs__adr__0005-entra-server-side-auth.md spans:6 percent:6.35
 llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md spans:36 percent:7.12
 llm/caliber-ai-org--ai-setup/LANDING_HERO.md spans:7 percent:9.41
@@ -210,6 +205,7 @@ llm/colton615-coder--life-in-sync/specs__finance_v3_design.md spans:69 percent:1
 llm/cozystack--cozystack/docs__changelogs__v1.2.2.md spans:49 percent:26.32
 llm/crestalnetwork--intentkit/docs__plans__2026-03-26-rich-media-messaging-plan.md spans:54 percent:16.42
 llm/danikf--tik4net/Docs__findings-cli-history.md spans:10 percent:1.54
+llm/danikf--tik4net/Docs__findings-routeros-6.md spans:43 percent:9.00
 llm/darkvolg--BeehiveScale-ESP32/memory__project_session_2026_09_11.md spans:38 percent:10.98
 llm/datopian--portaljs/site__content__docs__guides__theming.md spans:11 percent:10.88
 llm/david-priest--figtracer/examples__cytof__DATASETS.md spans:11 percent:34.25
@@ -227,6 +223,7 @@ llm/ether--etherpad/admin__tools__openapi-codegen__README.md spans:3 percent:3.3
 llm/evalstate--hf-mcp-server/GRADIO_DISCOVERY_OPTIMIZATION.md spans:47 percent:9.89
 llm/everydaythingssoftware--citadel/ai-docs__MIGRATION_EXAMPLE.md spans:21 percent:9.63
 llm/federicodeponte--opendraft/engine__prompts__tldr.md spans:10 percent:10.68
+llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md spans:32 percent:4.20
 llm/flyvercity--syntagmax/openwiki__testing.md spans:7 percent:5.90
 llm/gastownhall--gastown/docs__design__ledger-export-triggers.md spans:45 percent:4.76
 llm/geekjourneyx--agora/agents__agora-schumpeter.md spans:15 percent:14.24
@@ -234,7 +231,6 @@ llm/getbintana--bintana/docs__llm__qr.md spans:12 percent:6.27
 llm/getnuevetech--ZuriK/README.md spans:23 percent:10.27
 llm/getsentry--sentry-rust/agents__skills__docs-review__SKILL.md spans:3 percent:1.00
 llm/ggui-ai--ggui/misc__benchmark__src__baseline__CI.md spans:14 percent:3.69
-llm/gitbutlerapp--gitbutler/error-cleanup-checklist.md spans:26 percent:13.84
 llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md spans:108 percent:12.56
 llm/github--octocanvas/vscode__github__demo__prompt-3-readme-banner.md spans:67 percent:15.35
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md spans:44 percent:6.61
@@ -255,6 +251,7 @@ llm/jasonacox--tinytuya/DESIGN.md spans:21 percent:8.30
 llm/jaychempan--coding-with-beat/codex_skills__cwb-synthwave__SKILL.md spans:3 percent:8.22
 llm/jdylanmc--topo-code/agents__skills__domain-modeling__SKILL.md spans:4 percent:2.80
 llm/jjjkkkjjj--Matft/claude__skills__test-design__SKILL.md spans:4 percent:1.83
+llm/jm-sky--zbory-chwz/docs__issues__2026-07-09--010--church-governance-actions.md spans:21 percent:8.31
 llm/joemccann--dillinger/agent__skills__frontend-design__decision-trees.md spans:34 percent:20.37
 llm/joeynyc--hermes-hudui/CLAUDE.md spans:33 percent:3.40
 llm/jongio--thermoworks/github__extensions__thermoworks__README.md spans:32 percent:10.63
@@ -264,12 +261,9 @@ llm/kegouro--lablog/lablog-production-plan.md spans:27 percent:17.40
 llm/kennethreitz--kjvstudy.org/claude__agents__commentary-generator.md spans:22 percent:12.79
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md spans:48 percent:8.59
 llm/kzahel--web-server-chrome/docs__research__cli-servers-comparison.md spans:23 percent:7.01
-llm/lewiseinstein15-Tech--jexi-os/skills__library__claude-ecosystem__n8n-skills__n8n-subworkflows__SKILL.md spans:76 percent:8.74
 llm/lightdash--lightdash/skills__upgrade-preflight__resources__output-reference.md spans:3 percent:1.10
-llm/lishix520--academic-paper-skills/strategist__references__quality_standards.md spans:56 percent:14.62
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md spans:79 percent:12.53
 llm/logog782-cmyk--linkly-quote-cards/SKILL.md spans:34 percent:7.12
-llm/lokus-ai--lokus/docs__architecture__team-collaboration-roadmap.md spans:8 percent:2.39
 llm/lostisland--faraday/github__copilot-instructions.md spans:7 percent:7.54
 llm/lukstafi--ludics/docs__proposals__task-e2c7cef8-migrate-project-regex-reads.md spans:8 percent:5.96
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md spans:10 percent:6.91
@@ -279,8 +273,10 @@ llm/mehdiforoozandeh--crux/skills__crux__examples__sortlab_vault__tasks__t46_fin
 llm/microsoft--CoworkDashboard/archived__cowork-dashboard-team-dashboard-v1.3.0__README.md spans:31 percent:14.13
 llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md spans:32 percent:5.92
 llm/microsoft--microsoft-ui-reactor/docs__specs__047__phase4-results__LAPTOP-4MEP83VI__2026-05-30-arm64-postgate__RESULTS.md spans:19 percent:10.72
+llm/mohitagw15856--pm-claude-skills/exports__cline__pm-visuals__sequence-diagram__sequence-diagram.md spans:7 percent:6.89
 llm/mohitagw15856--pm-claude-skills/exports__obsidian__pm-creator__content-repurposer__content-repurposer.md spans:20 percent:5.36
 llm/mono--SkiaSharp/agents__skills__memory-leak-fixer__references__leaks__native-statics-singletons.md spans:10 percent:10.60
+llm/mono--SkiaSharp/documentation__docfx__guides__basics__pixels.md spans:11 percent:3.89
 llm/mono--SkiaSharp/documentation__docfx__guides__curves__text-paths.md spans:12 percent:3.38
 llm/mxschmitt--awesome-playwright/claude__skills__audit-entries__references__removal-criteria.md spans:5 percent:3.15
 llm/naomiaro--waveform-playlist/plans__waveform-service.md spans:17 percent:3.60
@@ -295,8 +291,8 @@ llm/phuryn--claude-usage/vscode-extension__README.md spans:34 percent:15.02
 llm/pinecone-io--examples/claude__agents__README.md spans:15 percent:7.95
 llm/plasma-umass--coz/java__README.md spans:18 percent:5.41
 llm/pockethost--pockethost/cursor__skills__check-push__SKILL.md spans:6 percent:6.93
+llm/poco-ai--TokenArena/SECURITY.md spans:9 percent:8.50
 llm/pulumi--kubespy/github__copilot-instructions.md spans:26 percent:8.14
-llm/pycaret--pycaret/docs__revamp__PLATFORM_QUICKSTART.md spans:8 percent:5.47
 llm/raia-live--amfs/docs__adapters__s3.md spans:7 percent:6.73
 llm/rbtkhn--strategy-codex/docs__seed-promotion-thresholds.md spans:12 percent:14.26
 llm/rebasepro--rebase/website__src__content__docs__docs__getting-started__headless.md spans:6 percent:2.81
@@ -308,6 +304,7 @@ llm/rlaope--oh-my-hermes/omh__README.md spans:10 percent:5.20
 llm/roznet--connectstats/designs__INDEX.md spans:4 percent:3.67
 llm/sampathmannam--nilamind/docs__wiki__Features.md spans:33 percent:19.59
 llm/sangrokjung--claude-forge/docs__distribution__awesome-prs__hesreallyhim.md spans:11 percent:9.63
+llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md spans:39 percent:10.90
 llm/sema-lisp--sema/crates__sema-core__README.md spans:5 percent:1.09
 llm/shanraisshan--claude-code-best-practice/tips__claude-boris-15-tips-30-mar-26.md spans:16 percent:6.74
 llm/sirixdb--sirix/SECURITY.md spans:9 percent:13.91
@@ -320,7 +317,6 @@ llm/stacksjs--stx/docs__guide__bun-advantage.md spans:7 percent:1.78
 llm/stenolabs--stenoai/skills__steno__README.md spans:20 percent:21.62
 llm/stephengpope--thepopebot/lib__cluster__CLAUDE.md spans:13 percent:1.70
 llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md spans:14 percent:12.36
-llm/superglue-ai--superglue/CLAUDE.md spans:10 percent:12.81
 llm/superplanehq--superplane/runner__docs__task-payload-kinds-mock.md spans:20 percent:4.91
 llm/tajiaoyezi--vibestation/docs__superpowers__plans__2026-06-05-language-settings-implementation-plan.md spans:53 percent:6.15
 llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md spans:38 percent:11.24
@@ -329,12 +325,12 @@ llm/tractorjuice--arc-kit/plugins__arckit-fr__references__interview-pattern.md s
 llm/twidi--twicc/src__twicc__agent__plugin__README.md spans:23 percent:4.68
 llm/useautumn--autumn/plans__stripe-price-reuse.md spans:18 percent:3.18
 llm/vamplabAI--sgr-agent-core/docs__en__framework__skills.md spans:18 percent:7.09
+llm/vercel--vercel/packages__kms__docs__interfaces__SignMessageOptions.md spans:6 percent:4.71
 llm/vokako--tmux-mobile/docs__todo.md spans:13 percent:1.31
 llm/wangbinquan--agent-workflow/design__RFC-056-clarify-cross-agent__patch-2026-06-22-designer-rerun-no-rollback.md spans:31 percent:10.93
-llm/warmcat--libwebsockets/plugins__protocol_lws_webrtc_mixer__README.md spans:4 percent:1.32
 llm/withkynam--vibecode-pro-max-kit/claude__skills__vc-agent-browser__references__puppeteer-reference.md spans:8 percent:6.93
 llm/workglow-dev--libs/packages__triggers__README.md spans:18 percent:5.26
-llm/worlyung--exegete/docs__DATA_SOURCES.md spans:28 percent:12.34
+llm/wp-cli--handbook/contributions__licensing.md spans:10 percent:12.23
 llm/wp-cli--handbook/guides__behat-tests.md spans:23 percent:6.38
 llm/xr843--fojin/docs__superpowers__specs__2026-06-03-cross-canon-parallel-reading-v1-design.md spans:19 percent:6.56
 llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md spans:63 percent:7.85
@@ -365,10 +361,12 @@ mixed/LianjiaTech--retrofit-spring-boot-starter/README.md spans:8 percent:15.51
 mixed/LibrePhotos--librephotos/apps__backend__README.md spans:32 percent:14.04
 mixed/Live-Charts--LiveCharts2/docs__cartesianChart__tooltips.md spans:14 percent:2.75
 mixed/MarkMichaelis--ScoopBucket/README.md spans:71 percent:5.72
+mixed/MicrosoftDocs--azure-dev-docs/articles__python__walkthrough-tutorial-authentication-05.md spans:3 percent:1.16
 mixed/MikBin--algorithmsts/README.md spans:12 percent:3.21
 mixed/MinaProtocol--mina/docs__block-producer.md spans:23 percent:3.88
 mixed/MyCometG3--recDL/README.md spans:7 percent:5.08
 mixed/NikolayS--postgres_dba/README.md spans:12 percent:7.22
+mixed/NotePlan--plugins/dwertheimer.Favorites__CHANGELOG.md spans:8 percent:2.20
 mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md spans:46 percent:5.19
 mixed/NuGet--NuGetGallery/src__Validation.PackageSigning.ProcessSignature__README.md spans:8 percent:1.71
 mixed/OpenCCU--OpenCCU/home-assistant-addon-dev__CHANGELOG.md spans:3 percent:7.97
@@ -376,6 +374,7 @@ mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md spans:38 percent:12.90
 mixed/Petterpx--FloatingX/README.md spans:23 percent:10.16
 mixed/PowerShell--vscode-powershell/docs__development.md spans:8 percent:2.17
 mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md spans:10 percent:2.34
+mixed/Rodsevich--arb_utils/README.md spans:5 percent:1.61
 mixed/SchemaStore--schemastore/CONTRIBUTING.md spans:39 percent:1.83
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md spans:49 percent:7.96
 mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md spans:16 percent:2.28
@@ -389,9 +388,9 @@ mixed/algolia--docsearch/packages__website__docs__record-extractor.md spans:14 p
 mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md spans:16 percent:2.59
 mixed/amberframework--amber/github__CONTRIBUTING.md spans:12 percent:4.29
 mixed/amir20--dozzle/README.md spans:5 percent:1.18
+mixed/baizhiheizi--quill/README.md spans:10 percent:3.77
 mixed/bluealloy--revm/README.md spans:5 percent:1.36
 mixed/bpmn-io--diagram-js/CHANGELOG.md spans:12 percent:2.04
-mixed/brendankowitz--ignixa-fhir/README.md spans:67 percent:20.79
 mixed/brsloan--warewoolf/README.md spans:6 percent:1.09
 mixed/cheat--cheat/doc__cheat.1.md spans:62 percent:11.53
 mixed/cksystemsteaching--selfie/assignments__compiler-assignments.md spans:46 percent:7.81
@@ -401,7 +400,6 @@ mixed/codeberg--httpxyz--httpxyz/docs__troubleshooting.md spans:7 percent:6.24
 mixed/compiler-explorer--compiler-explorer/docs__API.md spans:11 percent:1.85
 mixed/containers--tar-diff/file-format.md spans:6 percent:3.56
 mixed/crawlab-team--artipub/README.md spans:55 percent:11.84
-mixed/cybersemics--em/README.md spans:7 percent:1.01
 mixed/dadhi--DryIoc/README.md spans:6 percent:1.37
 mixed/dads2busy--dads2busy.github.io/README.md spans:6 percent:3.72
 mixed/datahub-project--datahub/docs__developers.md spans:40 percent:5.07
@@ -410,12 +408,12 @@ mixed/dependabot--dependabot-core/README.md spans:12 percent:1.44
 mixed/depot--cli/README.md spans:25 percent:1.69
 mixed/djezzzl--database_consistency/README.md spans:3 percent:5.73
 mixed/dolthub--doltlite/README.md spans:14 percent:2.75
-mixed/dragonflydb--dragonfly/README.md spans:7 percent:3.11
 mixed/dromara--liteflow/README.md spans:25 percent:9.56
 mixed/edmundmiller--dotfiles/README.md spans:14 percent:7.09
 mixed/electron--forge/CONTRIBUTING.md spans:3 percent:2.16
 mixed/envoyproxy--envoy/EXTENSION_POLICY.md spans:6 percent:2.17
 mixed/eventflow--EventFlow/Documentation__basics__sagas.md spans:8 percent:3.43
+mixed/expo--expo/packages__babel-preset-expo__CHANGELOG.md spans:72 percent:20.19
 mixed/expo--expo/packages__expo-screen-capture__CHANGELOG.md spans:38 percent:24.29
 mixed/expo--expo/packages__expo-task-manager__CHANGELOG.md spans:64 percent:30.34
 mixed/f-shake--RemoteFFmpegGUI/ReadMe.md spans:6 percent:2.07
@@ -470,21 +468,19 @@ mixed/pivotal-cf--kiln/README.md spans:24 percent:5.01
 mixed/pnpm--pnpm/CONTRIBUTING.md spans:30 percent:1.40
 mixed/prometheus-community--helm-charts/charts__kube-prometheus-stack__README.md spans:20 percent:4.57
 mixed/pubkey--rxdb/orga__before-next-major.md spans:4 percent:3.63
-mixed/pycaret--pycaret/CONTRIBUTING.md spans:33 percent:17.64
 mixed/quasarframework--quasar/docs__src__pages__options__rtl-support.md spans:6 percent:4.90
 mixed/quay--quay/github__CONTRIBUTING.md spans:12 percent:3.85
-mixed/quickfix--quickfix/README.md spans:21 percent:9.16
 mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md spans:15 percent:1.68
 mixed/rebasepro--rebase/README.md spans:65 percent:7.55
 mixed/reidmorrison--semantic_logger/docs__appenders.md spans:12 percent:1.26
+mixed/reidmorrison--semantic_logger/docs__metrics.md spans:14 percent:4.11
 mixed/rkttu--python-nanoserver/README.md spans:10 percent:5.92
 mixed/ruby-git--ruby-git/CONTRIBUTING.md spans:66 percent:4.03
+mixed/sarub0b0--kubetui/README.md spans:31 percent:4.39
 mixed/scalameta--scalafmt/docs__installation.md spans:8 percent:1.84
 mixed/scalameta--scalameta/CONTRIBUTING.md spans:9 percent:5.86
-mixed/shakacode--react_on_rails/CONTRIBUTING.md spans:106 percent:8.18
 mixed/siempredelao--Distance-From-Me-Android/README.md spans:14 percent:6.97
 mixed/sirixdb--sirix/ROADMAP.md spans:14 percent:15.26
-mixed/sky-map-team--stardroid/PRIVACY_POLICY.md spans:13 percent:5.97
 mixed/sobolevbel--jdg/README.md spans:5 percent:6.12
 mixed/sorenlouv--backport/CONTRIBUTING.md spans:24 percent:10.55
 mixed/spree--spree/github__CONTRIBUTING.md spans:28 percent:2.23
@@ -498,7 +494,6 @@ mixed/toshiki670--dotfiles/README.md spans:21 percent:2.67
 mixed/tui-cs--Terminal.Gui/CONTRIBUTING.md spans:92 percent:20.66
 mixed/ulisesbocchio--jasypt-spring-boot/README.md spans:8 percent:1.38
 mixed/useful-toys--slf4j-toys/README.md spans:32 percent:10.75
-mixed/uswds--uswds/CONTRIBUTING.md spans:38 percent:2.98
 mixed/veggiemonk--awesome-docker/github__PULL_REQUEST_TEMPLATE.md spans:4 percent:50.16
 mixed/voxel51--fiftyone/README.md spans:14 percent:4.97
 mixed/waditu--czsc/README.md spans:31 percent:7.23

@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "packages__kms__docs__interfaces__SignMessageOptions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "vercel/vercel",
+    "path": "packages/kms/docs/interfaces/SignMessageOptions.md",
+    "commit": "c628be7835e03a965b93e9cf9e2bd5ac2acbf5eb",
+    "commit_date": "2026-09-08T11:09:19-07:00",
+    "url": "https://github.com/vercel/vercel/blob/c628be7835e03a965b93e9cf9e2bd5ac2acbf5eb/packages/kms/docs/interfaces/SignMessageOptions.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 16306,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-09-08T11:09:19-07:00",
+    "last_commit_date": "2026-09-08T11:09:19-07:00",
+    "last_commit_author": "Jeff See",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-09-08T11:09:19-07:00",
+    "last_committer_date": "2026-09-08T11:09:19-07:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Made with [Cursor](https://cursor.com)",
+        "tool": "cursor",
+        "kind": "agent-session",
+        "place": "footer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "c628be7835e03a965b93e9cf9e2bd5ac2acbf5eb",
+        "date": "2026-09-08T11:09:19-07:00",
+        "committed": "2026-09-08T11:09:19-07:00",
+        "old": null,
+        "new": "9a68061d3944e633a2b139f6dfc05807902b18ae",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (cursor)"
+  },
+  "content": {
+    "size_bytes": 2075,
+    "sha256": "707354a1288d1cc1175e454f8f6e0b763d76db5db3ae3a0cf98270a34a01e684",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 71,
+    "words": 169,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/vercel--vercel/packages/kms/docs/interfaces/SignMessageOptions.md"
+}

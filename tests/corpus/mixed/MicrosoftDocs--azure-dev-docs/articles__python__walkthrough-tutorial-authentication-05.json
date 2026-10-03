@@ -1,0 +1,210 @@
+{
+  "sidecar_version": 3,
+  "fixture": "articles__python__walkthrough-tutorial-authentication-05.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "MicrosoftDocs/azure-dev-docs",
+    "path": "articles/python/walkthrough-tutorial-authentication-05.md",
+    "commit": "631613e0a4d2e1f84c3ef5c7e599aad19f6cd969",
+    "commit_date": "2026-09-25T23:04:14Z",
+    "url": "https://github.com/MicrosoftDocs/azure-dev-docs/blob/631613e0a4d2e1f84c3ef5c7e599aad19f6cd969/articles/python/walkthrough-tutorial-authentication-05.md",
+    "license": "CC-BY-4.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-CODE"
+    ],
+    "repo_first_commit_date": "2019-06-06T17:12:08Z",
+    "stars": 186,
+    "found_by": "sg-agent:\\.github/copilot-instructions\\.md$"
+  },
+  "history": {
+    "commits": 27,
+    "first_commit_date": "2020-08-24T15:49:05-07:00",
+    "last_commit_date": "2026-06-16T20:10:26Z",
+    "last_commit_author": "Pat Altimore",
+    "authors": 13,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-08-24T15:49:05-07:00",
+    "last_committer_date": "2026-06-16T16:10:26-04:00",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "1a74ce91f30fdc1e384157c3b0f8c7abafe4520d",
+        "date": "2026-01-22T20:42:12Z",
+        "committed": "2026-01-22T20:42:12Z",
+        "old": "23ca10f222a0a1125f98c8389ad4c1a9a535b883",
+        "new": "6c2f83702a253ad71c92be43ed33414cf4dc13ee",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "10 of its 27 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 4801,
+    "sha256": "02829c2aaa6e2df45e7f41bf9e1ab7a1c9e8d59fd851a35e06981ab536d922b2",
+    "kind": "blog",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 67,
+    "words": 633,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/MicrosoftDocs--azure-dev-docs/articles/python/walkthrough-tutorial-authentication-05.md",
+  "before": {
+    "sha256": "51ae0a3dbc677ecb9cf5287f68247d541c2ec96d1df62ce8b72cb3be017b9921",
+    "commit": "ad05444d4f5ce0809428924b9849e561ff262359",
+    "date": "2021-12-30T19:26:17-05:00",
+    "between": [
+      {
+        "commit": "335cfcf9269c48d7b009033df57e9dcdb8a8e177",
+        "date": "2026-06-16T20:10:26Z",
+        "committed": "2026-06-16T16:10:26-04:00",
+        "old": "2227731d1dd84535dae189def6addee62cd4d174",
+        "new": "6c03fcd58cf89859b0466870f7041f7b8f7a3b85",
+        "status": "late"
+      },
+      {
+        "commit": "1e11f7907a679eba85f9a0ee3940b7045f44dbc2",
+        "date": "2026-01-22T13:06:30-08:00",
+        "committed": "2026-01-22T13:06:30-08:00",
+        "old": "6c2f83702a253ad71c92be43ed33414cf4dc13ee",
+        "new": "2227731d1dd84535dae189def6addee62cd4d174",
+        "status": "late"
+      },
+      {
+        "commit": "e9d14bef33f3b12ee305c0703061fcba786f3232",
+        "date": "2025-06-05T13:51:00+08:00",
+        "committed": "2025-06-05T13:51:00+08:00",
+        "old": "96977d06fba83903ed06e33f86342727883a364b",
+        "new": "23ca10f222a0a1125f98c8389ad4c1a9a535b883",
+        "status": "late"
+      },
+      {
+        "commit": "2de7c93d59c1a2b12a1dd78551e8f7e22bc5733f",
+        "date": "2025-05-28T14:37:01-07:00",
+        "committed": "2025-05-28T14:37:01-07:00",
+        "old": "ae440479c21fd1b483529c4cce709d20e7c3300f",
+        "new": "d0aedff5dfa986550554a88b1d6644af297ca01a",
+        "status": "late"
+      },
+      {
+        "commit": "d245949c6de37f33201cfca390cfcf1ffbc34684",
+        "date": "2025-05-28T11:43:44-07:00",
+        "committed": "2025-05-28T11:43:44-07:00",
+        "old": "41757e5a8cdbfdda6be3bb02a1f8fb66e2648dfe",
+        "new": "1783baa85ea3b1bf2913cacf9d0e4cb6c0eb4ce0",
+        "status": "late"
+      },
+      {
+        "commit": "aa18062fc69b69567e663ca26e568b1f82149b43",
+        "date": "2025-05-28T11:38:42-07:00",
+        "committed": "2025-05-28T11:38:42-07:00",
+        "old": "283bd45d868725c9864bfd952da495297541ed09",
+        "new": "41757e5a8cdbfdda6be3bb02a1f8fb66e2648dfe",
+        "status": "late"
+      },
+      {
+        "commit": "e4bdc306e53c82a5231459cd296cf236b872d7a4",
+        "date": "2025-05-28T11:31:31-07:00",
+        "committed": "2025-05-28T11:31:31-07:00",
+        "old": "ae440479c21fd1b483529c4cce709d20e7c3300f",
+        "new": "283bd45d868725c9864bfd952da495297541ed09",
+        "status": "late"
+      },
+      {
+        "commit": "18a17c7c10b0db7d874a63026bddc0f3185a210e",
+        "date": "2024-03-04T10:19:49-08:00",
+        "committed": "2024-03-04T10:19:49-08:00",
+        "old": "90257ea1e02f836803518787b847d683421ea1e5",
+        "new": "ae440479c21fd1b483529c4cce709d20e7c3300f",
+        "status": "late"
+      },
+      {
+        "commit": "f1dfbeb62f4d09fd5c9231f5ee42288654334337",
+        "date": "2024-02-21T16:20:29-08:00",
+        "committed": "2024-02-21T16:20:29-08:00",
+        "old": "4f7fdbdfb554e3fbe7f6d5a59ef4a5c23638594f",
+        "new": "90257ea1e02f836803518787b847d683421ea1e5",
+        "status": "late"
+      },
+      {
+        "commit": "beb401f681113c4818742073e40599f015541094",
+        "date": "2023-10-13T13:55:23-04:00",
+        "committed": "2023-10-13T13:55:23-04:00",
+        "old": "ded94b816b7f27501326cc79c40c01a5893c7fce",
+        "new": "4f7fdbdfb554e3fbe7f6d5a59ef4a5c23638594f",
+        "status": "late"
+      },
+      {
+        "commit": "0350235af2ed635df779abd4eaa42058dc4d47b8",
+        "date": "2022-06-15T11:42:17-07:00",
+        "committed": "2022-06-15T11:42:17-07:00",
+        "old": "c6c10720839bf643c3515abde22ff4c7640a7e03",
+        "new": "ded94b816b7f27501326cc79c40c01a5893c7fce",
+        "status": "late"
+      },
+      {
+        "commit": "cd91aaf6216a6563d65712ff35372931a3072976",
+        "date": "2022-06-02T13:08:58+02:00",
+        "committed": "2022-06-02T13:08:58+02:00",
+        "old": "a4438cc74afd44822b698e5afb9e455b16a912ca",
+        "new": "c6c10720839bf643c3515abde22ff4c7640a7e03",
+        "status": "late"
+      },
+      {
+        "commit": "ac04e15c386cf958853e25ad852df05e34d4843b",
+        "date": "2022-06-02T12:54:03+02:00",
+        "committed": "2022-06-02T12:54:03+02:00",
+        "old": "c60085a772f9c5c21b42345eced4a0e19611608b",
+        "new": "a4438cc74afd44822b698e5afb9e455b16a912ca",
+        "status": "late"
+      },
+      {
+        "commit": "ae5af9424f94815fedd1010ab9bdc427ed819d21",
+        "date": "2022-06-01T16:41:36+02:00",
+        "committed": "2022-06-01T16:41:36+02:00",
+        "old": "09a21ff03beed974ab61ccb87faf130d9d361090",
+        "new": "c60085a772f9c5c21b42345eced4a0e19611608b",
+        "status": "late"
+      },
+      {
+        "commit": "c268996b734d9b392254846c661a72855535752a",
+        "date": "2022-06-01T16:00:03+02:00",
+        "committed": "2022-06-01T16:00:03+02:00",
+        "old": "7d42b31134c2256a052d7a7f9863415b354c1a23",
+        "new": "09a21ff03beed974ab61ccb87faf130d9d361090",
+        "status": "late"
+      },
+      {
+        "commit": "a545de9ce9dc342e5f56073b26d85d9e2f9d4e09",
+        "date": "2022-03-18T11:54:28-07:00",
+        "committed": "2022-03-18T11:54:28-07:00",
+        "old": "babc86e220b30f6d239fdc1570e5a9569293bc51",
+        "new": "7d42b31134c2256a052d7a7f9863415b354c1a23",
+        "status": "late"
+      }
+    ]
+  }
+}

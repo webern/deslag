@@ -1,0 +1,97 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__source__includes__deploy.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "HumanSignal/label-studio",
+    "path": "docs/source/includes/deploy.md",
+    "commit": "42e585fe287beda0f0f9b7a4c7a365cd6ce451da",
+    "commit_date": "2026-09-25T10:13:03+01:00",
+    "url": "https://github.com/HumanSignal/label-studio/blob/42e585fe287beda0f0f9b7a4c7a365cd6ce451da/docs/source/includes/deploy.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-06-18T19:00:45-07:00",
+    "stars": 28351,
+    "found_by": "sg-agent:(^|/)\\.cursor/rules/"
+  },
+  "history": {
+    "commits": 4,
+    "first_commit_date": "2021-06-07T08:32:02-07:00",
+    "last_commit_date": "2026-08-17T20:44:38+04:00",
+    "last_commit_author": "Nikita Belonogov",
+    "authors": 4,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2021-06-07T16:32:02+01:00",
+    "last_committer_date": "2026-08-17T20:44:38+04:00",
+    "marks": [
+      {
+        "text": "Claude Fable 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "35f72f0c835bf4995f76ca2b44aa3921fecc8696",
+        "date": "2026-08-17T20:44:38+04:00",
+        "committed": "2026-08-17T20:44:38+04:00",
+        "old": "9ec1b3bbacd43b69c8c1c2e85396e0ff07d580a9",
+        "new": "44282ec5528975fce6b6c6122edd44bbdd21c329",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "1 of its 4 commits predates 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 917,
+    "sha256": "1afdebd0ae5c6c6f439000de7128e3b67c0e1200a6b2d4bae1f4899c234cd5b1",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 15,
+    "words": 139,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/HumanSignal--label-studio/docs/source/includes/deploy.md",
+  "before": {
+    "sha256": "7d89531873708a3b0cf9b3b1c4ad9e8c163c30e811c85ab5b5e72a4fa1084db2",
+    "commit": "3a8fbb595f02766bdb73e2658dc4c9305512e4b7",
+    "date": "2021-12-29T17:24:13Z",
+    "between": [
+      {
+        "commit": "ec7f225d2c02cd95a9bc58b9a8e5a058689f36e3",
+        "date": "2025-12-02T12:26:18-06:00",
+        "committed": "2025-12-02T18:26:18Z",
+        "old": "51b4698788cc139e573239f67ba8a03f5cdc9678",
+        "new": "9ec1b3bbacd43b69c8c1c2e85396e0ff07d580a9",
+        "status": "late"
+      },
+      {
+        "commit": "216f581b6fde08d3d1e20c0d861e42e33e053baf",
+        "date": "2024-10-10T10:30:35-04:00",
+        "committed": "2024-10-10T10:30:35-04:00",
+        "old": "91c2cb9c26d2cdbc8a8b6c889487b2e674d75e45",
+        "new": "51b4698788cc139e573239f67ba8a03f5cdc9678",
+        "status": "late"
+      }
+    ]
+  }
+}

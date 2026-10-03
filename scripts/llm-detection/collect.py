@@ -125,59 +125,166 @@ MIT0_GRANT = (
 )
 
 
-def classify_license_text(text: str) -> str | None:
-    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts.
-    Only a positive match gives an identifier: a text that is none of them, or that merely
-    resembles MIT, is None."""
-    # A licence quoted in a Markdown blockquote is the same licence, and curly quotes the same
-    # quotes.
+# What a licence text says when it holds terms the corpus does not accept: the name of a licence
+# outside the list, or the words that add a condition to one on it. Each pattern is matched in the
+# text lower-cased, with white space collapsed and its harmless wording removed. A text with any
+# of them is not classified, whichever accepted licences it also holds and whichever part of the
+# tree the other terms are for: a licence file says in prose which paths a licence is for, and
+# prose is not read for that. A fixture that may be under terms the corpus does not accept is not
+# quoted (docs/design/corpus.md section 7), so a case that cannot be settled is left out.
+OUTSIDE_TERMS = {
+    # Copyleft, share-alike and weak copyleft.
+    "GNU GPL, LGPL or AGPL": (
+        r"\bgnu (?:affero |lesser |library )?(?:general )?public licen[sc]e"
+        r"|\b[al]?gpl\b|\b[al]?gplv?[123]\b"),
+    "Mozilla Public License": (
+        r"mozilla public licen[sc]e|netscape public licen[sc]e|\bmpl[- ]?[12]\b"),
+    "Eclipse Public License": r"eclipse public licen[sc]e|\bepl[- ]?[12]\b",
+    "CDDL": r"\bcddl\b|common development and distribution licen[sc]e",
+    "Common Public License": r"common public licen[sc]e",
+    "Open Software or Academic Free License": r"open software licen[sc]e|academic free licen[sc]e",
+    "EUPL": r"european union public licen[sc]e",
+    "Artistic License": r"artistic licen[sc]e",
+    "Vim License": r"\bvim licen[sc]e",
+    "Creative Commons NonCommercial, ShareAlike or NoDerivatives": (
+        r"attribution[- ]non-?commercial|attribution[- ]share-?alike|attribution[- ]no-?deriv"
+        r"|\bcc[- ]by[- ](?:nc|sa|nd)\b|\bby-(?:nc|sa|nd)\b|share-?alike|no-?derivatives"),
+    # Permissive in spirit, with conditions beyond attribution.
+    "SIL Open Font License": r"open font licen[sc]e",
+    "NCSA or LLVM licence": (
+        r"university of illinois|illinois open source licen[sc]e|\bncsa open source"
+        r"|legacy llvm licen[sc]e"),
+    "BSD 4-Clause": r"all advertising materials mentioning features",
+    "Clear BSD License": r"clear bsd licen[sc]e|bsd 3-clause clear",
+    "WTFPL or Beerware": r"\bwtfpl\b|beer-?ware",
+    "Microsoft Software License": r"microsoft software licen[sc]e",
+    # Source-available licences, and the ones that become open source on a date.
+    "Functional Source or Fair Core License": (
+        r"functional source licen[sc]e|\bfsl-1|fair core licen[sc]e"),
+    "a licence that turns into another on a date": (
+        r"future licen[sc]e|change licen[sc]e|change date"),
+    "Business Source License": r"business source licen[sc]e|\bbusl\b|\bbsl 1\.1",
+    "Elastic License": r"elastic licen[sc]e",
+    "Server Side Public License": r"server side public licen[sc]e|\bsspl\b",
+    "Commons Clause": r"commons clause",
+    "Internet Computer Community Source License": r"community source licen[sc]e",
+    "PolyForm or another source-available licence": (
+        r"polyform|sustainable use licen[sc]e|fair source|confluent community licen[sc]e"
+        r"|source[- ]available"),
+    # Terms for some of the tree that are commercial or restrict who may use it.
+    "an enterprise or commercial licence": (
+        r"enterprise edition licen[sc]e|\bee supplemental licen[sc]e|commercial licen[sc]e"
+        r"|\bproprietary\b|rails pro licen[sc]e"),
+    "a directory under an enterprise licence": r"\b(?:ee|enterprise)/license\b",
+    "terms for non-commercial use": r"non-?commercial",
+    "Hippocratic, Do No Harm or Anti-Capitalist licence": (
+        r"hippocratic licen[sc]e|do no harm licen[sc]e|anti-capitalist software licen[sc]e"
+        r"|\bno harm:"),
+    "a rider on the MIT licence": r"additional rider|\brider controls\b",
+    "a request not to copy": r"please do not (?:duplicate|copy)",
+    # A text that says part of the tree is not under it, or is not a licence at all.
+    "a part of the tree the licence does not cover": (
+        r"\b(?:does|do) not (?:cover|extend to)\b|\bnot covered by (?:this|the)\b"
+        r"|\bcarve-?out\b"),
+    "a placeholder for a licence": (
+        r"licen[sc]e content to be determined|replace this placeholder"
+        r"|licen[sc]e (?:goes|to be added) here"),
+}
+OUTSIDE_PATTERNS = {name: re.compile(pattern) for name, pattern in OUTSIDE_TERMS.items()}
+
+# Wording that matches one of those and is not another licence: Unlicense's "commercial or
+# non-commercial", an MIT notice saying it covers "commercial and noncommercial" use, and the
+# clause of the Apache licence's LLVM exception that waives its terms for the GPLv2.
+HARMLESS_TERMS = re.compile(
+    r"commercial or non-?commercial|commercial and non-?commercial|non-?commercial and commercial"
+    r"|in addition, if you combine or link compiled forms of this software with software that is "
+    r"licensed under the gplv2.{0,800}?only with respect to the combined software\.?"
+)
+
+MIT_NOTICE = "the above copyright notice and this permission notice shall be included"
+
+
+def normalise_license_text(text: str) -> str:
+    """A licence text as `classify_license_text` reads it: a licence quoted in a Markdown
+    blockquote is the same licence, curly quotes are the same quotes, and white space and case
+    carry nothing."""
     text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
-    text = text.replace("\u201c", '"').replace("\u201d", '"')
-    t = re.sub(r"\s+", " ", text).lower()
+    text = text.replace("“", '"').replace("”", '"').replace("’", "'")
+    return re.sub(r"\s+", " ", text).lower()
+
+
+def outside_licenses(text: str) -> list[str]:
+    """What a licence text holds that is outside the terms the corpus accepts: the names in
+    OUTSIDE_TERMS of what it says, in that order; none for a text that says nothing of the kind."""
+    t = HARMLESS_TERMS.sub(" ", normalise_license_text(text))
+    return [name for name, pattern in OUTSIDE_PATTERNS.items() if pattern.search(t)]
+
+
+def accepted_licenses(text: str) -> list[str] | None:
+    """Every licence the corpus accepts that a licence text holds, by SPDX identifier and sorted,
+    or None when it holds something that resembles one of them without being it: an MIT grant
+    that is neither MIT nor MIT-0. Only a positive match gives an identifier."""
+    t = normalise_license_text(text)
+    found = set()
     if "apache license" in t and "version 2.0" in t:
-        return "Apache-2.0"
+        found.add("Apache-2.0")
     if "this is free and unencumbered software released into the public domain" in t:
-        return "Unlicense"
-    if "creative commons legal code" in t and "cc0 1.0 universal" in t:
-        return "CC0-1.0"
+        found.add("Unlicense")
     if "cc0 1.0 universal" in t or "creativecommons.org/publicdomain/zero/1.0" in t:
-        return "CC0-1.0"
-    if "attribution 4.0 international" in t and "sharealike" not in t and "noderivatives" not in t:
-        if "noncommercial" not in t:
-            return "CC-BY-4.0"
+        found.add("CC0-1.0")
+    if "attribution 4.0 international" in t:
+        found.add("CC-BY-4.0")
     if "boost software license" in t and "version 1.0" in t:
-        return "BSL-1.0"
+        found.add("BSL-1.0")
     if "permission is hereby granted, free of charge" in t:
-        if "the above copyright notice and this permission notice shall be included" in t:
-            return "MIT"
-        if MIT0_GRANT in t:
-            return "MIT-0"
-        return None
+        if MIT_NOTICE in t:
+            found.add("MIT")
+        elif MIT0_GRANT in t:
+            found.add("MIT-0")
+        else:
+            return None
     if "permission to use, copy, modify, and/or distribute this software for any purpose" in t:
         if "with or without fee is hereby granted, provided that the above copyright" in t:
-            return "ISC"
-        return "0BSD"
+            found.add("ISC")
+        else:
+            found.add("0BSD")
     if "permission to use, copy, modify, and distribute this software for any purpose" in t:
-        return "ISC"
+        found.add("ISC")
     if "redistribution and use in source and binary forms" in t:
         if "neither the name" in t or "names of its contributors" in t:
-            return "BSD-3-Clause"
-        if "advertising materials" in t:
-            return None
-        return "BSD-2-Clause"
+            found.add("BSD-3-Clause")
+        else:
+            found.add("BSD-2-Clause")
     if "this software is provided 'as-is', without any express or implied" in t and (
         "altered source versions must be plainly marked" in t
     ):
-        return "Zlib"
-    return None
+        found.add("Zlib")
+    return sorted(found)
+
+
+def classify_license_text(text: str) -> str | None:
+    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts.
+
+    A text that holds several accepted licences, whether it offers a choice of them or is a
+    project's licence with notices for the parts it took from others, gets all of them, joined by
+    `OR` as `combine_licenses` joins the licences of several files. A text that holds any licence
+    outside the accepted ones is None, even when it also holds an accepted one: a file under
+    several licences, one of which is for some of the tree, does not say which of them a fixture
+    is under, and a fixture that might be under a licence the corpus does not accept is not
+    quoted. A text that is none of them, or merely resembles one, is None."""
+    if outside_licenses(text):
+        return None
+    found = accepted_licenses(text)
+    return " OR ".join(found) if found else None
 
 
 def combine_licenses(found: list[str | None]) -> str | None:
     """The licence of a repository from its licence files, or None if any is unacceptable: a
-    licence file that cannot be classified might restrict the others."""
+    licence file that cannot be classified might restrict the others. A file's own `A OR B` is
+    split, so that the licences of all the files come out once each."""
     if not found or any(f is None for f in found):
         return None
-    return " OR ".join(sorted(set(found)))
+    return " OR ".join(sorted({part for f in found for part in f.split(" OR ")}))
 
 
 # ---------------------------------------------------------------------------------------------

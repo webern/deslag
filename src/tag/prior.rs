@@ -220,6 +220,18 @@ mod tests {
     }
 
     #[test]
+    fn a_noun_is_committed_after_a_possessive() {
+        for possessive in POSSESSIVES {
+            let text = format!("{possessive} afternoons.");
+            assert_eq!(
+                tag_and_level(&text, "afternoons"),
+                (Tag::Noun, Confidence::Likely),
+                "{text}"
+            );
+        }
+    }
+
+    #[test]
     fn a_verb_is_committed_after_an_adverb_after_a_verb_and_before_a_determiner() {
         for text in ["quickly accepted.", "is accepted.", "accepted the."] {
             assert_eq!(

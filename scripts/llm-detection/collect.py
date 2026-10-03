@@ -2,19 +2,31 @@
 """Collects the deslag corpus: Markdown quoted from permissively licensed public repositories,
 sorted by who wrote it, as far as the history of each file can tell.
 
-This is a maintenance tool, run by hand when the corpus is rebuilt or grown; the build never runs
-it. It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill
-says why it is Python rather than bash.
+This is a maintenance tool, run by hand when the corpus is rebuilt or grown. The build never runs
+it, and CI runs only `batch`, which builds a batch from a manifest that pins everything it reads.
+It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill says
+why it is Python rather than bash.
 
     collect.py discover --work DIR [--only RE] find candidate repositories, with each sampler
     collect.py harvest  --work DIR [--jobs N] [--limit N] [--deadline T]
                                               clone each one and keep the Markdown whose
                                               history proves a label
     collect.py stage    --work DIR --corpus .blobs/unpacked/corpus --out STAGE [--exclude FILE]
+                        [--captured DATE]
                                               write what harvest kept as fixtures with sidecars
     collect.py pack     --from STAGE --corpus .blobs/unpacked/corpus --work DIR
-                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
+                        [--exclude FILE] [--name NAME]
+                                              write the fixtures, and the exclusions, as a new
                                               batch of the big tier, for make publish-blobs
+    collect.py pin      --work DIR --corpus .blobs/unpacked/corpus --name NAME --out FILE
+                        [--captured DATE] [--exclude FILE]
+                                              write the manifest of the batch that harvest's
+                                              results make, as scripts/blobstore/batches/NAME.json,
+                                              build the batch from it, and record what it came to
+    collect.py batch    MANIFEST --corpus .blobs/unpacked/corpus --work DIR
+                                              build a manifest's batch from nothing, and fail
+                                              unless it comes to what the manifest records; this
+                                              is what the publish-blobs workflow runs
     collect.py select   --corpus .blobs/unpacked/corpus --out tests/corpus [--check]
                                               sample the tree from the big tier
     collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
@@ -960,6 +972,8 @@ class Candidate:
     clone_url: str
     found_by: str
     stars: int | None = None
+    # A commit to harvest at instead of the default branch's tip: what a batch manifest pins.
+    head: str | None = None
 
     @property
     def key(self) -> str:
@@ -1735,16 +1749,27 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         except Gone as error:
             result["outcome"] = f"gone: {error}"
         else:
-            harvest_clone(c, clone, work, result, cap, per_repo)
+            if c.head and not has_commit(clone, c.head):
+                result["outcome"] = f"gone: pinned commit {c.head} is not in the clone"
+            else:
+                harvest_clone(c, clone, work, result, cap, per_repo)
     finally:
         shutil.rmtree(clone, ignore_errors=True)
     result["seconds"] = round(time.time() - started, 1)
     return result
 
 
+def has_commit(repo: Path, sha: str) -> bool:
+    try:
+        git(repo, "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}")
+    except RuntimeError:
+        return False
+    return True
+
+
 def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
                   per_repo: int) -> None:
-    head = git(clone, "rev-parse", "HEAD").strip()
+    head = c.head or git(clone, "rev-parse", "HEAD").strip()
     result["head"] = head
     commits = read_commits(clone, head)
     result["commits"] = len(commits)
@@ -2133,7 +2158,7 @@ def stage(args: argparse.Namespace) -> None:
     work, out, corpus = Path(args.work), Path(args.out), Path(args.corpus)
     if out.exists():
         raise SystemExit(f"{out} exists: stage writes a new tree")
-    captured = time.strftime("%Y-%m-%d", time.gmtime())
+    captured = args.captured or time.strftime("%Y-%m-%d", time.gmtime())
     published, live = live_fixtures(corpus)
     excluded = read_exclusions(args.exclude, live)
     for sha in excluded:
@@ -2866,7 +2891,9 @@ def pack(args: argparse.Namespace) -> None:
     batch_names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
     sequence = 1 + max((int(m[2]) for n in batch_names
                         if (m := BATCH_NAME.match(n)) and m[1] == today), default=0)
-    name = f"{today}-{sequence:02d}"
+    name = args.name or f"{today}-{sequence:02d}"
+    if not BATCH_NAME.match(name):
+        raise SystemExit(f"{name} is not a batch name, YYYY-MM-DD-NN")
     if sequence > 99 or any(n >= name for n in batch_names):
         raise SystemExit(f"{name} would not sort after the batches already in {corpus} and {work}")
 
@@ -2888,6 +2915,225 @@ def pack(args: argparse.Namespace) -> None:
     shutil.copytree(staged, corpus / "batches" / name)
     log(f"pack {name}: {len(entries)} fixtures, {len(excluded)} excluded, {held} left out as "
         f"already in the big tier; staged in {staged} and copied into {corpus / 'batches' / name}")
+
+
+# ---------------------------------------------------------------------------------------------
+# batch manifests
+
+MANIFEST_KEYS = ("batch", "captured", "repos", "exclude", "expect")
+REPO_KEYS = ("host", "repo", "clone_url", "found_by", "stars", "head", "meta", "kept")
+HEAD = re.compile(r"^[0-9a-f]{40}$")
+DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def tree_digest(batch: Path) -> str:
+    """The sha256 of a batch's files, each as its path and the sha256 of its bytes, in path
+    order: what a manifest's `expect` records, so that the same fixtures with the same sidecars
+    give the same digest on every machine."""
+    lines = sorted(f"{p.relative_to(batch).as_posix()}\t{hashlib.sha256(p.read_bytes()).hexdigest()}\n"
+                   for p in batch.rglob("*") if p.is_file())
+    return hashlib.sha256("".join(lines).encode()).hexdigest()
+
+
+def read_manifest(path: Path) -> dict:
+    """A batch manifest, checked. It is JSON with `batch`, the batch's name, which is the file's
+    stem; `captured`, the date its sidecars carry; `repos`, each repository to harvest with the
+    commit to harvest it at and what GitHub said of it then; `exclude`, rows of `{"sha256",
+    "reason"}` as `recheck` writes them; and `expect`, what the batch must come to."""
+    try:
+        manifest = json.loads(path.read_text())
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"{path}: not readable as JSON: {error}") from None
+
+    def bad(why: str):
+        raise SystemExit(f"{path}: {why}")
+
+    if not isinstance(manifest, dict) or set(manifest) - set(MANIFEST_KEYS):
+        bad(f"a JSON object whose keys are among {', '.join(MANIFEST_KEYS)}")
+    name = manifest.get("batch")
+    if not isinstance(name, str) or not BATCH_NAME.match(name) or path.stem != name:
+        bad(f"`batch` must be the file's stem, a YYYY-MM-DD-NN name; it is {name!r}")
+    if not isinstance(manifest.get("captured"), str) or not DATE.match(manifest["captured"]):
+        bad("`captured` must be a YYYY-MM-DD date")
+    keys: set[str] = set()
+    for row in manifest.get("repos", []):
+        if not isinstance(row, dict) or set(row) - set(REPO_KEYS):
+            bad(f"each repository is an object with keys among {', '.join(REPO_KEYS)}: {row}")
+        for key in ("host", "repo", "clone_url", "head"):
+            if not isinstance(row.get(key), str):
+                bad(f"a repository lacks `{key}`: {row}")
+        if row["host"] not in HOSTS:
+            bad(f"{row['host']} is not a host the corpus knows")
+        if not HEAD.match(row["head"]):
+            bad(f"{row['repo']}: `head` must be a full commit hash, not {row['head']!r}")
+        if not row.get("found_by") or not isinstance(row["found_by"], list):
+            bad(f"{row['repo']}: `found_by` must list what found it")
+        if row["host"] == "github.com" and not row.get("meta"):
+            bad(f"{row['repo']}: a GitHub repository needs the `meta` GitHub gave when it was "
+                "pinned, or the batch would depend on what GitHub says today")
+        key = f"{row['host']}/{row['repo']}".lower()
+        if key in keys:
+            bad(f"{key} is listed twice")
+        keys.add(key)
+    if not manifest.get("repos") and not manifest.get("exclude"):
+        bad("a batch with no repositories and no exclusions adds nothing")
+    expect = manifest.get("expect")
+    if expect is not None and (not isinstance(expect, dict) or set(expect) != {"fixtures", "tree_sha256"}):
+        bad("`expect` is {fixtures, tree_sha256}")
+    return manifest
+
+
+def write_manifest(path: Path, manifest: dict) -> None:
+    """The manifest as JSON, one repository or exclusion to a line, so a diff reads."""
+    def one(value) -> str:
+        return json.dumps(value, ensure_ascii=False)
+
+    parts = []
+    for key in MANIFEST_KEYS:
+        if manifest.get(key) is None:
+            continue
+        value = manifest[key]
+        if key in ("repos", "exclude"):
+            rows = ",\n".join("    " + one(row) for row in value)
+            parts.append(f'  "{key}": [\n{rows}\n  ]' if value else f'  "{key}": []')
+        else:
+            parts.append(f'  "{key}": {one(value)}')
+    path.write_text("{\n" + ",\n".join(parts) + "\n}\n")
+
+
+def check_expect(manifest: dict, batch: Path, record: bool, path: Path) -> None:
+    """Holds `batch`, a directory of files, to the manifest's `expect`; with `record`, writes
+    what it holds into the manifest instead."""
+    got = {"fixtures": len(jsonl(batch / "manifest.jsonl")), "tree_sha256": tree_digest(batch)}
+    if record:
+        manifest["expect"] = got
+        write_manifest(path, manifest)
+        log(f"{path}: recorded {got['fixtures']} fixtures, tree {got['tree_sha256'][:16]}")
+        return
+    if manifest.get("expect") != got:
+        raise SystemExit(
+            f"batch {manifest['batch']} does not come to what {path} expects.\n"
+            f"  expected {manifest.get('expect')}\n  built    {got}\n"
+            "The same repositories at the same commits gave other fixtures: a change in what "
+            "GitHub says of a pull request, a clone that fell back to another depth, or a "
+            "fixture another batch now holds. Nothing was published. Pin the batch again.")
+
+
+def build_batch(path: Path, corpus: Path, work: Path, record: bool = False) -> bool:
+    """Builds the batch a manifest describes, from nothing, into `corpus`/batches: harvests each
+    repository at its pinned commit, stages and packs the result under the manifest's name and
+    capture date, and holds it to `expect`. A repository that cannot be harvested as pinned, or
+    a result that differs, ends in SystemExit with `corpus` as it was. Returns False, building
+    nothing, when `corpus` already holds the batch, after checking that it is the one the
+    manifest expects: a published batch is never changed."""
+    manifest = read_manifest(path)
+    name = manifest["batch"]
+    target = corpus / "batches" / name
+    if target.exists() and not record:
+        check_expect(manifest, target, False, path)
+        log(f"{name}: already in {corpus}, and as {path} expects")
+        return False
+    if target.exists():
+        raise SystemExit(f"{target} exists: pinning a batch writes a new one")
+    if not record and manifest.get("expect") is None:
+        raise SystemExit(f"{path} has no `expect`: pin the batch with collect.py pin")
+    if work.exists() and any(work.iterdir()):
+        raise SystemExit(f"{work} is not empty: a batch is built from nothing, or a result "
+                         "kept from another run would stand in for the harvest")
+    work.mkdir(parents=True, exist_ok=True)
+
+    repos = manifest.get("repos", [])
+    keys = [f"{r['host']}/{r['repo']}".lower() for r in repos]
+    with (work / "candidates.jsonl").open("w") as f:
+        for row in repos:
+            for found_by in row["found_by"]:
+                f.write(json.dumps({"host": row["host"], "repo": row["repo"],
+                                    "clone_url": row["clone_url"], "found_by": found_by,
+                                    "stars": row.get("stars"), "head": row["head"]}) + "\n")
+    # The metadata is what GitHub said when the batch was pinned, so that nothing about it is
+    # asked again, and a clone's depth and a repository's stars are what they were.
+    with (work / "meta.jsonl").open("w") as f:
+        for key, row in zip(keys, repos):
+            if row.get("meta"):
+                f.write(json.dumps(dict(row["meta"], key=key)) + "\n")
+    harvest_args = argparse.Namespace(
+        work=str(work), jobs=min(8, os.cpu_count() or 4), limit=0, deadline="", only="",
+        order="priority", seed=0, per_repo=PER_REPO, max_bytes=BIG_MAX_BYTES)
+    results: dict[str, dict] = {}
+    for _ in range(MAX_ATTEMPTS):
+        harvest(harvest_args)
+        results = {r["key"]: r for r in
+                   (json.loads(p.read_text()) for p in (work / "results").glob("*.json"))}
+        if all(key in results for key in keys):
+            break
+    problems = []
+    for key, row in zip(keys, repos):
+        result = results.get(key)
+        if result is None:
+            problems.append(f"{key}: could not be harvested; errors.jsonl in {work} says why")
+        elif result["outcome"] != "harvested":
+            problems.append(f"{key}: {result['outcome']}")
+        elif row.get("kept") and result["kept"] != row["kept"]:
+            problems.append(f"{key}: kept {result['kept']}, and the manifest says {row['kept']}")
+    if problems:
+        raise SystemExit(f"batch {name} cannot be harvested as {path} pins it:\n  "
+                         + "\n  ".join(problems) + "\nNothing was packed.")
+
+    exclude = work / "exclude.jsonl"
+    exclude.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n"
+                               for row in manifest.get("exclude", [])))
+    staged = work / "stage"
+    if repos:
+        stage(argparse.Namespace(work=str(work), corpus=str(corpus), out=str(staged),
+                                 exclude=str(exclude), max_bytes=BIG_MAX_BYTES,
+                                 captured=manifest["captured"]))
+    else:
+        staged.mkdir()
+    pack(argparse.Namespace(source=str(staged), corpus=str(corpus), work=str(work),
+                            exclude=str(exclude), name=name))
+    try:
+        check_expect(manifest, work / "batches" / name, record, path)
+    except SystemExit:
+        shutil.rmtree(target)
+        raise
+    return True
+
+
+def batch(args: argparse.Namespace) -> None:
+    """Builds the batch a manifest describes into --corpus, and fails unless it comes to what the
+    manifest expects. The publish-blobs workflow runs this for each manifest."""
+    build_batch(Path(args.manifest), Path(args.corpus), Path(args.work))
+
+
+def pin(args: argparse.Namespace) -> None:
+    """Writes the manifest --out for the batch of the repositories --work's harvest kept
+    fixtures from, each at the commit it harvested, with what GitHub said of it. Then builds the
+    batch from that manifest into --corpus, as a workflow will, and records what it came to as
+    `expect`; a manifest that cannot be built is not left behind."""
+    work, out = Path(args.work), Path(args.out)
+    found, _ = load_candidates(work)
+    rows = []
+    for result in sorted((json.loads(p.read_text()) for p in (work / "results").glob("*.json")),
+                         key=lambda r: r["key"]):
+        if result["outcome"] != "harvested" or not sum(result["kept"].values()):
+            continue
+        c = found[result["key"]]
+        meta = {k: v for k, v in (result.get("meta") or {}).items() if k != "key"}
+        rows.append({"host": c.host, "repo": c.repo, "clone_url": c.clone_url,
+                     "found_by": result["found_by"], "stars": result.get("stars", c.stars),
+                     "head": result["head"], "meta": meta or None, "kept": result["kept"]})
+    manifest = {"batch": args.name, "captured": args.captured or time.strftime("%Y-%m-%d", time.gmtime()),
+                "repos": rows, "exclude": jsonl(Path(args.exclude)) if args.exclude else []}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    write_manifest(out, manifest)
+    scratch = work / f"pin-{args.name}"
+    shutil.rmtree(scratch, ignore_errors=True)
+    try:
+        read_manifest(out)
+        build_batch(out, Path(args.corpus), scratch, record=True)
+    except BaseException:
+        out.unlink(missing_ok=True)
+        raise
 
 
 def main() -> None:
@@ -2915,6 +3161,7 @@ def main() -> None:
     p.add_argument("--out", required=True)
     p.add_argument("--exclude", default="")
     p.add_argument("--max-bytes", type=int, default=BIG_MAX_BYTES)
+    p.add_argument("--captured", default="", help="the capture date of the sidecars; today by default")
     p = sub.add_parser("select")
     p.add_argument("--corpus", required=True)
     p.add_argument("--out", required=True)
@@ -2936,9 +3183,22 @@ def main() -> None:
     p.add_argument("--corpus", required=True)
     p.add_argument("--work", required=True)
     p.add_argument("--exclude", default="")
+    p.add_argument("--name", default="", help="the batch's name; today's next by default")
+    p = sub.add_parser("pin")
+    p.add_argument("--work", required=True)
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--name", required=True, help="the batch's name, YYYY-MM-DD-NN")
+    p.add_argument("--captured", default="", help="the sidecars' capture date; today by default")
+    p.add_argument("--exclude", default="")
+    p.add_argument("--out", required=True, help="the manifest to write, NAME.json")
+    p = sub.add_parser("batch")
+    p.add_argument("manifest")
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--work", required=True)
     args = parser.parse_args()
     {"discover": discover, "harvest": harvest, "stage": stage, "select": select,
-     "describe": describe, "recheck": recheck, "pack": pack}[args.command](args)
+     "describe": describe, "recheck": recheck, "pack": pack, "pin": pin,
+     "batch": batch}[args.command](args)
 
 
 if __name__ == "__main__":

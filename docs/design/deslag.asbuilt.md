@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-03
 subsystems:
   - cli
   - instructions
@@ -98,7 +98,7 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
-                      blobstore/, which moves its big tier
+                      blobstore/, which moves its big tier and builds its batches
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
 ```
 
@@ -110,4 +110,6 @@ tools/corpus/         deslag-corpus, never published: the corpus loaders and ana
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
-the next image. `make clean` removes both directories and runs `cargo clean`.
+the next image. `make build-batches` builds the batches that manifests in
+`scripts/blobstore/batches/` name, and the `publish-blobs` workflow does that and publishes them on
+a push to `main` or `m/deslag-exam`. `make clean` removes both directories and runs `cargo clean`.

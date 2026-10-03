@@ -1,9 +1,10 @@
 # The blob store
 
 The big tier of the test corpus is too big for git. It is one OCI image, `FROM scratch`, which
-GitHub calls the package `ghcr.io/webern/deslag-blobs`. The four files here manage it:
-`blobs.lock` pins the image by digest, the tag being for people; `blobs.sh` moves it; `layers.txt`
-says where one layer ends and the next begins; and this file says what is in it.
+GitHub calls the package `ghcr.io/webern/deslag-blobs`. The files here manage it: `blobs.lock`
+pins the image by digest, the tag being for people; `blobs.sh` moves it; `layers.txt` says where
+one layer ends and the next begins; `batches/` holds a manifest for each batch and `batches.sh`
+builds them; and this file says what is in it.
 
 `make fetch-blobs` unpacks the image into `.blobs/unpacked/` at the repo root, so that directory
 is the image's filesystem, exactly, and git ignores it. `blobs.sh` does not know what is in the
@@ -47,24 +48,23 @@ take it past that waits for a way to fetch less.
 ## Access
 
 The package is public, so fetching does not need a login: `make fetch-blobs` works on a fresh
-machine, in a hosted agent environment and in CI with nothing set up. Publishing needs a `gh`
-login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`).
-`blobs.sh` takes the token from `gh` for each run and never stores a login.
+machine, in a hosted agent environment and in CI. Publishing needs a `gh`
+login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`),
+or the workflow token below. `blobs.sh` takes the token from `gh` for each run and never stores a
+login.
 
 `blobs.sh` reads anonymously first and turns to `gh` only when that fails, which happens with a
-private package: this repo's was private until 2026-10-03, and a fork's may be.
+private package, as a fork's may be.
 
 A token `gh` holds is not always one the registry takes. A person's may lack the packages scope,
 and a hosted environment may set `GH_TOKEN` to a stand-in that only its own proxy accepts. So every
 login is checked against the registry before it is relied on and dropped when refused, and the
-error says which of the two it was and what fixes it. Without the check, a stand-in token made
-every fetch fail with a message about a private package.
+error says which of the two it was and what fixes it.
 
-CI has no `gh` login; it reads the package anonymously like everyone else, and a workflow that
-publishes would use the workflow token, which works only while the package grants this repository
-access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access -> `webern/deslag`
-with the Write role. The grant is per package, not per tag, so publishing does not need it
-repeated.
+CI has no `gh` login; it reads the package anonymously like everyone else. The `publish-blobs`
+workflow publishes with the workflow token, which works only while the package grants this
+repository access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access ->
+`webern/deslag` with the Write role. The grant is per package, not per tag.
 
 A ghcr.io outage fails `make ci`, and with it every pull request.
 
@@ -74,14 +74,13 @@ needed. There is no daemon, and the image never runs.
 
 ## Layers
 
-The image is split into layers, so publishing a new batch uploads that batch and nothing else.
-Each version's manifest names the layers it is made of, and the registry keeps one copy of a layer
-however many versions share it.
+The image is split into layers, so publishing a new batch uploads that batch and nothing else;
+the registry keeps one copy of a layer however many versions share it.
 
 Every immediate child of `.blobs/unpacked/` is a layer, except a directory `layers.txt` lists,
 whose immediate children are layers instead; a listed child of a listed directory continues the
 rule. A file or symlink met that way is a layer of its own. `layers.txt` lists `corpus/` and
-`corpus/batches/`, so each batch is a layer. Its own comment gives the rules for a line.
+`corpus/batches/`, so each batch is a layer.
 
 A layer's identity is a fingerprint of its content: every path below it, whether each is a
 directory, file, executable or symlink, each file's hash and each symlink's target. Owner, times,
@@ -100,16 +99,32 @@ changed, new or gone, and which files moved since the fetch -- and pushes nothin
 
 ## Changing the image
 
-1. `make fetch-blobs`, so `.blobs/unpacked/` is the pinned image.
-2. Add a batch: `collect.py pack` writes one and copies it into `.blobs/unpacked/corpus/`. A
-   published batch is never changed; a later batch drops a fixture instead.
-3. `make test-blobs`, which tests the tree as it is, and say what changed in this file.
-4. `scripts/blobstore/blobs.sh plan` to see what will be pushed, then `make publish-blobs`. It
-   pushes the next `vN`, reusing every layer that did not change, and rewrites `blobs.lock`.
-5. Commit `blobs.lock` with this file.
+A new batch is a manifest, `batches/NAME.json`, and the `publish-blobs` workflow does the rest.
+NAME is `YYYY-MM-DD-NN`, later than every earlier batch. The manifest lists each repository with
+the commit to harvest it at and what GitHub said of it then, the sidecars' date, any exclusions,
+and `expect`: the fixture count and a digest of the batch's files. None of it is asked of the
+network again.
 
-Publishing needs `bsdtar`, which macOS ships; on Linux it is the `libarchive-tools` package.
-Fetching works with any `tar`. Each command checks for what it needs, all of it in one pass.
+1. `make fetch-blobs`, then `collect.py discover` and `harvest` into a work directory. The
+   metadata the manifest keeps needs a `gh` login.
+2. `collect.py pin --work DIR --corpus .blobs/unpacked/corpus --name NAME --out
+   scripts/blobstore/batches/NAME.json` writes the manifest, builds the batch from it into the
+   tree and records `expect`. A published batch is never changed.
+3. `make test-blobs`. Open a pull request with the manifest and a line here on what the batch
+   holds. The workflow builds it again from the manifest alone,
+   and fails if it differs.
+4. Pushed to `main` or `m/deslag-exam`, the manifest is built once more, the next `vN` is
+   published, reusing every layer that did not change, and `blobs.lock` is committed to that
+   branch. The workflow token pushes that commit, so it does not start a workflow.
+
+A batch that cannot be built as pinned fails the workflow and leaves `blobs.lock` alone: a
+repository that went or lost the pinned commit, a pull request GitHub now describes another way,
+a fixture another batch now holds. Pin it again. A manifest whose batch the image holds is only
+checked against it, so a run can be repeated. `make build-batches` builds locally.
+
+By hand, edit `.blobs/unpacked/`, run `blobs.sh plan`, then `make publish-blobs`, and commit
+`blobs.lock` with this file. That needs `bsdtar`, which macOS ships; on Linux it is the
+`libarchive-tools` package; fetching works with any `tar`.
 
 ## Unpublished edits
 
@@ -119,8 +134,7 @@ equals the stamp, `fetch-blobs` is a file compare and nothing else, so an edited
 tested before it is published.
 
 Once the lock differs, after a branch switch, a pull or a merge, fetch replaces the tree. Before
-it does, and only then, it looks for anything newer than the stamp, and if an inventory confirms
-real edits, it stops and says what they are and what to do: publish them from the branch whose
+it does, it looks for edits, and if it finds any, stops and says what they are and what to do: publish them from the branch whose
 lock they belong to, move `.blobs/unpacked/` aside, or `make clean-blobs` to drop them. A tree
 without a stamp is a fetch that did not finish and is replaced. `make clean` removes the tree too,
 edits and all.

@@ -12,7 +12,7 @@ BLOBSTORE := $(SCRIPTS)/blobstore
 CARGO_FLAGS ?=
 
 .PHONY: help \
-        build build-release \
+        build build-batches build-release \
         test test-blobs \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs \
@@ -23,6 +23,7 @@ CARGO_FLAGS ?=
 
 help:
 	@echo "build            build deslag and tools/corpus with the debug profile"
+	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every test that needs no network, doctests included"
 	@echo "test-blobs       fetch the corpus's big tier and test it; needs the network, so not in test"
@@ -53,6 +54,12 @@ help:
 
 build: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features
+
+# Harvests, stages and packs each batch a manifest names into .blobs/unpacked,
+# and fails unless it comes to what the manifest expects. The publish-blobs
+# workflow runs this before it publishes; see $(BLOBSTORE)/blobs.md.
+build-batches: fetch-blobs
+	@$(BLOBSTORE)/batches.sh build
 
 build-release: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features --release

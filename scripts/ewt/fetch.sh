@@ -8,10 +8,12 @@
 #
 # .ewt/stamp is a copy of the lock .ewt was fetched from. A stamp equal to the lock is the whole
 # check, so a repeat fetch is free. A stamp that differs, or none, clears .ewt and fetches again.
-# Files are downloaded and verified in a scratch directory beside .ewt, on the same file system, so
-# that the last step is one rename of the whole directory, stamp included. A failed download leaves
-# a good .ewt as it was. The scratch directory goes when the script exits; one left by a killed
-# run is named .ewt.new.*, and the next fetch and `make clean-ewt` remove it.
+# Files are downloaded and verified in a scratch directory beside .ewt, so a failed download leaves
+# a good .ewt as it was. The last step removes .ewt and moves the scratch directory, stamp included,
+# into its place. Those are two commands, not one atomic swap, and that is safe: a run killed
+# between them leaves .ewt absent or part removed, with a stamp that differs from the lock or none,
+# and the next fetch sees that and fetches again. The scratch directory goes when the script exits;
+# one left by a killed run is named .ewt.new.*, and the next fetch and `make clean-ewt` remove it.
 
 set -euo pipefail
 
@@ -70,9 +72,10 @@ fetch() {
     commit="$(lock_value commit)"
     base="$(lock_value base)"
 
-    # Beside .ewt, never under $TMPDIR, which may be another file system: the rename at the end is
-    # atomic only within one. Not local: the trap runs when the script exits, after this function
-    # has returned. The scratch directory goes whether this ends well or not.
+    # Beside .ewt, never under $TMPDIR, which may be another file system, where the mv at the end
+    # would copy the files instead of renaming the directory. Not local: the trap runs when the
+    # script exits, after this function has returned. The scratch directory goes whether this ends
+    # well or not.
     rm -rf "$ROOT"/.ewt.new.*
     scratch="$(mktemp -d "$ROOT/.ewt.new.XXXXXX")"
     trap 'rm -rf "$scratch"' EXIT
@@ -93,6 +96,8 @@ fetch() {
 
     cp "$LOCK" "$scratch/stamp"
     chmod 755 "$scratch"
+    # Not atomic, and safe: if this is killed after the rm, the stamp is gone or differs from the
+    # lock, so the next fetch fetches again.
     rm -rf "$EWT"
     mv "$scratch" "$EWT"
     echo "ewt: $release is in ${EWT#"$ROOT/"}/$release"

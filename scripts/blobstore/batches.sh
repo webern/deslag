@@ -18,9 +18,16 @@
 #   unbundle FILE     unpack such a tar, after checking that it holds batch
 #                     directories and manifests and nothing else, and that
 #                     each batch is what its manifest expects
-#   pin-lock BRANCH   commit blobs.lock, which publish rewrote, and the
-#                     completed manifests, and push them to BRANCH; only the
-#                     workflow does this
+#   pin-lock BRANCH [PATH...]
+#                     commit blobs.lock, which publish rewrote, the completed
+#                     manifests, and each PATH (repo-relative; one that is not
+#                     there or has not changed adds nothing), and push them to
+#                     BRANCH; only the workflow does this. GH_TOKEN, if set, is
+#                     used for fetch and push only. If the branch moved, the pin
+#                     goes on the new tip: the lock and manifests as they were,
+#                     the PATHs measured again there when PIN_LOCK_REMEASURE=1
+#                     (remeasure.sh), and dropped otherwise. The commit body
+#                     carries .blobs/remeasure/report.txt, when there is one.
 
 set -euo pipefail
 
@@ -159,28 +166,98 @@ or something that is not a file or a directory, or a path that climbs out. It is
     echo "unpacked: ${batches[*]-}"
 }
 
+# git against the remote with the workflow's token, which only fetch and push
+# get: it is not left in the clone's config and is not in the environment of
+# anything else this script runs.
+remote() {
+    local auth
+    if [[ -n "${GH_TOKEN:-}" ]]; then
+        auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+        git -C "$ROOT" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" "$@"
+    else
+        git -C "$ROOT" "$@"
+    fi
+}
+
+# One commit: the lock, the manifests, and each path given that is there. The body
+# says what rewriting those paths changed, when the workflow wrote that down.
+commit_pin() {
+    local names="$1" path report="$BLOBS/remeasure/report.txt"
+    shift
+    git -C "$ROOT" add "$LOCK_REL" "$MANIFESTS_REL"
+    # What the workflow derived from the new image, for the same commit.
+    for path in "$@"; do
+        if [[ -e "$ROOT/$path" ]]; then git -C "$ROOT" add -- "$path"; fi
+    done
+    git -C "$ROOT" diff --cached --quiet && fail "publish left $LOCK_REL as it was."
+    if [[ -s "$report" ]]; then
+        git -C "$ROOT" commit -q -m "build: pin $names in blobs.lock" \
+            -m "Published as $(head -n 1 "$LOCK") by the publish-blobs workflow, which also completed the manifests it was given as seeds." \
+            -m "$(cat "$report")"
+    else
+        git -C "$ROOT" commit -q -m "build: pin $names in blobs.lock" \
+            -m "Published as $(head -n 1 "$LOCK") by the publish-blobs workflow, which also completed the manifests it was given as seeds."
+    fi
+}
+
+# The push was refused: the branch moved while the batch was built and published.
+# Put the pin on the new tip. The lock and the manifests are the batch's own, so
+# they go on as they are, and fail if the branch changed them. What was measured
+# on the image is not: it is measured on the code of the old tip, so it is
+# dropped and, when PIN_LOCK_REMEASURE is 1, measured again on the new one.
+move_pin() {
+    local branch="$1" names="$2" file saved="$BLOBS/pin"
+    shift 2
+    local -a ours=()
+    while IFS= read -r file; do ours+=("$file"); done \
+        < <(git -C "$ROOT" diff --name-only "$BASE" HEAD -- "$LOCK_REL" "$MANIFESTS_REL")
+    git -C "$ROOT" diff --quiet "$BASE" "origin/$branch" -- "${ours[@]}" ||
+        lock_unpinned "$branch" "$LOCK_REL or a manifest changed on $branch while the batch was published"
+    rm -rf "$saved"
+    for file in "${ours[@]}"; do
+        mkdir -p "$saved/$(dirname "$file")"
+        git -C "$ROOT" show "HEAD:$file" > "$saved/$file"
+    done
+    git -C "$ROOT" reset -q --hard "origin/$branch"
+    for file in "${ours[@]}"; do cp "$saved/$file" "$ROOT/$file"; done
+    BASE="$(git -C "$ROOT" rev-parse HEAD)"
+    rm -f "$BLOBS/remeasure/report.txt"
+    if [[ "${PIN_LOCK_REMEASURE:-}" == 1 ]]; then
+        # Without the token, which the code under test has no need of. A failure is in the
+        # report and the marker the last step of the job reads; the pin goes ahead.
+        # A hang must not keep the pin from the branch: the job's own timeout would skip it, so
+        # this one is shorter. The run's marker, or the one written here, is what the job's last
+        # step reads, in place of the outcome of the first measuring.
+        local rc=0
+        local -a limit=()
+        command -v timeout >/dev/null && limit=(timeout 20m)
+        env -u GH_TOKEN ${limit[@]+"${limit[@]}"} "$HERE/remeasure.sh" run || rc=$?
+        mkdir -p "$BLOBS/remeasure"
+        : > "$BLOBS/remeasure/ran"
+        if [[ "$rc" -ne 0 && ! -e "$BLOBS/remeasure/failed" ]]; then
+            echo "  measuring on the new tip did not finish (exit $rc)" > "$BLOBS/remeasure/failed"
+        fi
+        [[ "$rc" -eq 0 ]] || echo "remeasure.sh failed on the new tip; the pin goes ahead, and the job fails after it"
+    fi
+    commit_pin "$names" "$@"
+}
+
 pin_lock() {
-    local branch="${1:?usage: $0 pin-lock BRANCH}" names attempt
+    local branch="${1:?usage: $0 pin-lock BRANCH [PATH...]}" names attempt
+    shift
     [[ -s "$NEW" ]] || fail "$NEW lists no batch, so there is nothing to say the lock pins."
     names="$(tr '\n' ' ' < "$NEW" | sed 's/ $//')"
     git -C "$ROOT" config user.name 'github-actions[bot]'
     git -C "$ROOT" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-    git -C "$ROOT" add "$LOCK_REL" "$MANIFESTS_REL"
-    git -C "$ROOT" diff --cached --quiet && fail "publish left $LOCK_REL as it was."
-    git -C "$ROOT" commit -q -m "build: pin $names in blobs.lock" \
-        -m "Published as $(head -n 1 "$LOCK") by the publish-blobs workflow, which also completed the manifests it was given as seeds."
-    # The branch may have moved while the batch was built and pushed. Only a
-    # commit that leaves the lock alone can be put on top.
+    BASE="$(git -C "$ROOT" rev-parse HEAD)"
+    commit_pin "$names" "$@"
     for attempt in 1 2 3; do
-        if git -C "$ROOT" push -q origin "HEAD:refs/heads/$branch"; then
+        if remote push -q origin "HEAD:refs/heads/$branch"; then
             echo "pinned $names in $LOCK_REL on $branch"
             return 0
         fi
-        git -C "$ROOT" fetch -q origin "$branch"
-        git -C "$ROOT" rebase -q "origin/$branch" || {
-            git -C "$ROOT" rebase --abort || true
-            lock_unpinned "$branch" "$LOCK_REL changed on $branch while the batch was published"
-        }
+        remote fetch -q origin "$branch"
+        move_pin "$branch" "$names" "$@"
     done
     lock_unpinned "$branch" "three pushes were refused"
 }
@@ -202,5 +279,5 @@ case "${1:-}" in
     bundle) shift; bundle "$@" ;;
     unbundle) shift; unbundle "$@" ;;
     pin-lock) shift; pin_lock "$@" ;;
-    *) echo "usage: $0 build | bundle FILE | unbundle FILE | pin-lock BRANCH" >&2; exit 2 ;;
+    *) echo "usage: $0 build | bundle FILE | unbundle FILE | pin-lock BRANCH [PATH...]" >&2; exit 2 ;;
 esac

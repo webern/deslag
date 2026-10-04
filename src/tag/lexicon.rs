@@ -11,7 +11,8 @@
 //! person singular, that may also be a noun. The ranking comes from how often WordNet's
 //! senses of the lemma were met in SemCor, its sense-tagged corpus, for each part of speech (spread
 //! over the forms the part of speech has), then Moby's priority order and WordNet's sense counts,
-//! never from a treebank.
+//! never from a treebank. A `!` last on a line marks a word whose best guess has nine tenths of its
+//! counts and at least five of them (see [`dominant`]), which only the prior pass reads.
 //!
 //! - **Confidence.** Every word here is `Unsure`, whatever its tag count. The open class is open:
 //!   a word the lexicon gives as a noun can be a verb in the next sentence, so one tag in it does
@@ -136,6 +137,13 @@ fn find(word: &str) -> Option<&'static str> {
     None
 }
 
+/// Whether the lexicon's SemCor counts back the best guess of `word`, which must already be
+/// folded: it has nine tenths of the word's counts, and the word has at least five (in units of an
+/// adjective's). Only the generator says so, with a `!` after the readings.
+pub fn dominant(word: &str) -> bool {
+    find(word).is_some_and(|readings| readings.ends_with('!'))
+}
+
 /// The tag a letter stands for.
 fn tag_of(letter: char) -> Option<Tag> {
     TAGS.iter()
@@ -152,8 +160,10 @@ fn features_of(letter: char) -> Option<Features> {
 }
 
 /// The reading a `readings` field gives: its first tag is the best guess, its uppercase letter the
-/// features of that guess, and every tag is kept. `None` when the field is not well formed.
+/// features of that guess, and every tag is kept; a last `!` is the marker of [`dominant`] and is
+/// not read here. `None` when the field is not well formed.
 fn parse(readings: &str) -> Option<Reading> {
+    let readings = readings.strip_suffix('!').unwrap_or(readings);
     let mut best = None;
     let mut features = Features::NONE;
     let mut kept = TagSet::EMPTY;
@@ -382,6 +392,42 @@ mod tests {
         assert_eq!(word("uses").tag, Tag::Verb);
         // A name has no count of its own and ranks after the common readings.
         assert_eq!(word("march").kept.iter().next(), Some(Tag::Noun));
+    }
+
+    #[test]
+    fn a_marked_word_is_backed_by_its_counts_and_reads_as_unmarked() {
+        let mut marked = 0;
+        for (word, readings) in entries() {
+            if !readings.ends_with('!') {
+                continue;
+            }
+            marked += 1;
+            assert!(dominant(word), "{word}");
+            // The marker is not part of the reading, and only a noun, verb, adjective or adverb
+            // that has no function word among its tags carries it.
+            let reading = parse(readings).unwrap();
+            assert_eq!(
+                Some(reading),
+                parse(readings.trim_end_matches('!')),
+                "{word}"
+            );
+            let allowed = [
+                Tag::Noun,
+                Tag::Verb,
+                Tag::Adjective,
+                Tag::Adverb,
+                Tag::ProperNoun,
+            ]
+            .into_iter()
+            .collect::<TagSet>();
+            assert_eq!(reading.kept.intersection(allowed), reading.kept, "{word}");
+            assert!(
+                allowed.contains(reading.tag) && reading.tag != Tag::ProperNoun,
+                "{word}"
+            );
+        }
+        assert!(marked > 1_000, "{marked} words are marked");
+        assert!(dominant("accepted") && !dominant("work") && !dominant("frobnicator"));
     }
 
     #[test]

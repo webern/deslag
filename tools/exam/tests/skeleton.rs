@@ -112,7 +112,11 @@ fn the_command_writes_a_file_and_prints_no_word() {
         .output()
         .unwrap();
     assert!(run.status.success());
-    let stdout = String::from_utf8(run.stdout).unwrap();
+    // The command names the file it wrote, and a temp directory's random name can hold any short
+    // word (`s1`), so the path is taken out before the words are looked for.
+    let stdout = String::from_utf8(run.stdout)
+        .unwrap()
+        .replace(out.to_str().unwrap(), "");
     for word in [
         "cats",
         "forms",

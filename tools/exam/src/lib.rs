@@ -5,13 +5,15 @@
 //! given a [`tagger::Tagger`] or a file another program filled ([`import`]), scores what it says
 //! of each token ([`score`], [`metrics`]), with sentence-bootstrap intervals ([`stats`]), and
 //! prints a report ([`report`]), a saved run ([`saved`]) and a paired comparison of two
-//! ([`compare`]). `docs/design/exam.asbuilt.md` describes it.
+//! ([`compare`]), or judges a run against the gates a file sets ([`gate`]).
+//! `docs/design/exam.asbuilt.md` describes it.
 
 pub mod align;
 pub mod compare;
 pub mod conllu;
 pub mod disputes;
 pub mod error;
+pub mod gate;
 pub mod gold;
 pub mod harper;
 pub mod import;

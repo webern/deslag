@@ -1,0 +1,47 @@
+# The exam's gates on deslag's own tagger. `deslag-exam gate --gates tests/gold/gates.toml SET...`
+# judges each named set: `make test-exam` runs dev and holdout, `make test-ewt` runs ewt-dev.
+#
+# A rate gate is a whole number per mille: min_per_mille = 860 means at least 86.0%. It is judged
+# on integer counts, never on a printed percentage: a floor holds when
+# numerator * 1000 >= gate * denominator, a ceiling when numerator * 1000 <= gate * denominator.
+# A count gate judges the numerator itself. min_tokens leaves a gate unjudged when its denominator
+# is smaller. Keys are the report's metric names in lower case, with `_` for spaces and hyphens.
+#
+# Raise a gate in the change that earns it. Lowering one is a decision its PR must name.
+
+# Ratchets set just under tag VERSION 10 (2026-10-04): best guess 2702/3119, gold retained 2993,
+# committed 1494, accuracy 1482/1494, Sure 999/1008, Likely 483/486, unknown 203, clean 286/296.
+[dev]
+gold = "tests/gold/dev.conllu"
+best_guess_accuracy = { min_per_mille = 860 }
+gold_retained       = { min_per_mille = 955 }
+committed_share     = { min_per_mille = 460 }
+accuracy            = { min_per_mille = 980 }
+sure_accuracy       = { min_per_mille = 985 }
+likely_accuracy     = { min_per_mille = 970, min_tokens = 100 }
+unknown_rate        = { max_per_mille = 75 }
+clean_sentences     = { min_per_mille = 900 }
+unalignable_rate    = { max_count = 0 }
+
+# The targets the tagger was built to, never ratcheted: a holdout that moved with every change
+# would become a second dev set. Its output is pass or fail per metric, nothing more.
+[holdout]
+gold = "tests/gold/holdout.conllu"
+best_guess_accuracy = { min_per_mille = 850 }
+gold_retained       = { min_per_mille = 940 }
+committed_share     = { min_per_mille = 430 }
+accuracy            = { min_per_mille = 940 }
+sure_accuracy       = { min_per_mille = 980 }
+likely_accuracy     = { min_per_mille = 900, min_tokens = 100 }
+unknown_rate        = { max_per_mille = 85 }
+clean_sentences     = { min_per_mille = 700 }
+unalignable_rate    = { max_count = 0 }
+
+# The treebank's dev set, outside CI because `make test-ewt` needs the network. These are the
+# counts of tag VERSION 10, and any drop fails. `tokens` pins the scored tokens they are counts
+# of, so a new treebank release or a tokenizer change has to re-baseline them by hand.
+[ewt-dev]
+gold = ".ewt/r2.18/en_ewt-ud-dev.conllu"
+tokens = 21149
+best_guess_accuracy = { min_count = 18466 }
+gold_retained       = { min_count = 20394 }

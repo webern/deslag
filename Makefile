@@ -9,6 +9,7 @@ BLOBSTORE := $(SCRIPTS)/blobstore
 EWT := $(SCRIPTS)/ewt
 HARPER := $(SCRIPTS)/harper
 SPACY := $(SCRIPTS)/spacy
+TRAIN := $(SCRIPTS)/train
 
 # The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
@@ -19,13 +20,13 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
-        test test-blobs test-ewt test-exam test-scripts test-spacy \
+        test test-blobs test-ewt test-exam test-percept test-scripts test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
-        clean clean-blobs clean-ewt clean-harper clean-spacy \
+        clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-spacy publish-blobs
+        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-percept generate-spacy publish-blobs
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -38,6 +39,9 @@ help:
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
 	@echo "                 the dev or holdout gold; the holdout prints pass or fail per metric"
+	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
+	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in ci;"
+	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
@@ -53,6 +57,7 @@ help:
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
+	@echo "clean-train      remove what generate-percept and test-percept wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
@@ -69,6 +74,8 @@ help:
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "fetch-harper     fetch the Harper tagger model that $(HARPER)/harper.lock pins into .harper"
 	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
+	@echo "generate-percept train the perceptron on the treebank's train set and tag both dev sets into .train,"
+	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
 	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
@@ -116,6 +123,12 @@ test-exam: preflight
 	cargo test $(CARGO_FLAGS) -p deslag --all-features --test golden
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev holdout
 
+# The perceptron's unit tests, then the exam's full report on both dev sets for it, and `compare`
+# against deslag's tagger, from the import files generate-percept wrote. The runs are saved beside
+# them. Not part of test: it needs the treebank and minutes. The curve is run by hand.
+test-percept: generate-percept
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
+
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make: no network, no login.
 test-scripts: preflight
@@ -159,7 +172,7 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt clean-harper clean-spacy
+clean: clean-blobs clean-ewt clean-harper clean-spacy clean-train
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
@@ -177,6 +190,11 @@ clean-harper:
 # .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
 clean-spacy:
 	rm -rf .spacy
+
+# .train is what generate-percept and test-percept write: the baselines, the weights, the import
+# files and the saved runs. All of it derives from the treebank and none of it is committed.
+clean-train:
+	rm -rf .train
 
 # ---------------------------------------------------------------------------
 # ci, fix, preflight, fetch, publish
@@ -244,6 +262,14 @@ fetch-harper:
 # the packages $(SPACY)/requirements.lock pins. A stamp that matches the lock is the whole check.
 fetch-spacy:
 	@$(SPACY)/run.sh fetch
+
+# The baselines (deslag's tagger and the most-common tag, saved as runs), then the perceptron trained
+# on the treebank's train set, its confidence tuned on the treebank's dev set, tagging deslag's own
+# tokens of both dev sets into .train/*.percept.import.conllu, for `deslag-exam score --import`. The
+# weights are .train/percept.weights.json. Nothing in ci reads or runs it, and training takes a
+# minute or two.
+generate-percept: preflight fetch-ewt
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate
 
 # The exam's file-import path, run on the treebank's dev set: deslag's own tokens go to spaCy, and
 # its tags come back as .spacy/ewt-dev.import.conllu, for `deslag-exam score --import`. Nothing in

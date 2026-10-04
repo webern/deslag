@@ -134,7 +134,7 @@ fn agrees(view: &View<'_, '_>, at: usize, tag: Tag) -> bool {
 }
 
 /// Whether the word right before `at` is a possessive.
-fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
+pub(super) fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
     at.checked_sub(1)
         .and_then(|before| view.text_of_word(before))
         .is_some_and(|text| {
@@ -310,14 +310,15 @@ mod tests {
 
     #[test]
     fn a_commit_does_not_support_the_next_word() {
-        // `accepted` is `Likely` after the adverb. `quickly` leans on it only if it was committed
-        // before the pass began, and it was not.
+        // `accepted` is `Likely` after the adverb. `just` leans on it only if it was committed
+        // before the pass began, and it was not. (`just` has several tags, so the pass for a word
+        // with one reading, which runs after this one and does read `accepted`, leaves it alone.)
         assert_eq!(
-            read("They quickly accepted it.", "accepted").confidence,
+            read("They just accepted it.", "accepted").confidence,
             Confidence::Likely
         );
         assert_eq!(
-            read("They quickly accepted it.", "quickly").confidence,
+            read("They just accepted it.", "just").confidence,
             Confidence::Unsure
         );
     }

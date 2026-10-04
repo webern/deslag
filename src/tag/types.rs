@@ -246,17 +246,18 @@ impl Features {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum Confidence {
-    /// No other tag is possible here: [`Reading::possible`] is the best guess alone. The lexicon
-    /// gives the word one tag, or the tagger's rules removed every other.
+    /// No other tag is possible here: [`Reading::possible`] is the best guess alone. The
+    /// closed-class table gives the word one tag, or a pass removed every other or confirmed the
+    /// one tag a lexicon word has.
     Sure,
     /// Other tags are still possible, and the tagger chose the best guess from the context: a rule
     /// over the neighbours, or a model's judgement. A rule that leans on a neighbour below `Likely`
     /// does not raise a word to `Likely`.
     Likely,
-    /// The word is in the lexicon with several tags and nothing narrowed them. The best guess is
-    /// the tag the lexicon ranks first for the word, its most common.
+    /// The word is in a table with several tags, or in the lexicon with one, and no pass narrowed
+    /// or confirmed it. The best guess is the tag the table ranks first for the word.
     Unsure,
-    /// The word is not in the lexicon. The best guess comes from its shape (an `-ly` ending), else
+    /// The word is in neither table. The best guess comes from its shape (an `-ly` ending), else
     /// it is [`Tag::Noun`]; `kept` holds what the shape allows.
     Unknown,
 }

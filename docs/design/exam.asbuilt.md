@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - exam
 max_size_bytes: 8192
@@ -17,14 +17,17 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
 
 ## Commands
 
-- `score --gold G (--tagger noun|mct|harper | --import F) [--harper-model M] [--aggregate]
+- `score --gold G (--tagger noun|deslag|mct|harper | --import F) [--harper-model M] [--aggregate]
   [--save RUN.json] [--disputes D] [--words N]`: prints the report. `--save` writes the run for
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
 - `words --gold G`: the header and Words section alone, with no tagger.
+- `gate --gates F [--root D] [--tagger deslag|noun] SET...`: judges deslag's tagger against the
+  sets of a gates file, `tests/gold/gates.toml`; every named set runs, even after a failure.
 
-Exit 0 when it printed or wrote what was asked; 2 when it cannot run (a malformed file, a tagger
+Exit 0 when it printed or wrote what was asked, and for `gate` when every gate holds; 1 when a gate
+fails; 2 when it cannot run (a malformed file, a tagger
 breaking its contract, runs that cannot be compared, bad arguments), with one line on stderr; for a
 holdout gold it names a sentence by position, never by `sent_id`, and never echoes an ID, UPOS,
 FEATS, Prov or Kind value.
@@ -36,12 +39,13 @@ tools/exam/src/
   conllu.rs gold.rs   CoNLL-U read by hand; Gold and the conventions below
   tags.rs             Reading, which adds a score to deslag::tag's; the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
-  tagger.rs import.rs the Tagger trait, `noun`, run; the import reader (candidates doc)
+  tagger.rs import.rs the Tagger trait, `noun`, `deslag`, run; the import reader (candidates doc)
   most_common.rs      `mct`, from EWT train (candidates doc)
   harper.rs           Harper's engine and model reader (candidates doc)
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
+  gate.rs             `gate`: the gates file and the verdicts
   skeleton.rs disputes.rs error.rs
 ```
 
@@ -120,9 +124,23 @@ columns, sentences and token counts, and prints `better`, `worse` or `same` by t
 and the metric's sense (a higher unknown rate is `worse`), or `higher` or `lower` where neither is
 better (the share at `Sure`). `score --save` writes before the report prints.
 
+## Gates
+
+A set is a gold file and bounds on metrics, named as the report names them in lower case with `_`.
+A bound is a rate floor or ceiling in per mille (`min_per_mille`, `max_per_mille`) or a count
+(`min_count`, `max_count`), judged on integer counts with no rounding: a floor holds when
+`n * 1000 >= g * d`. `min_tokens` leaves a gate unjudged when its denominator is smaller, and
+`tokens` pins the scored tokens a set's counts are of. `gates.toml` has `dev`, `holdout` and
+`ewt-dev`.
+
+A set that may name words prints a table of counts, bound and slack in words, then up to 20 groups
+of words for each failed metric, each with up to 3 `sent_id`s. A holdout set prints pass or fail per
+metric and nothing else; a panic in the tagger is withheld, as its message may quote the text.
+
 ## Tests
 
 `tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
 `skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `harper.rs` the engine on tiny models; `golden.rs` the output
-against `tests/golden/`, which `make fix-golden` rewrites.
+holdout, import, compare and exits; `gate.rs` the verdicts and the holdout's output; `harper.rs` the
+engine on tiny models; `golden.rs` the output against `tests/golden/`, which `make fix-golden`
+rewrites.

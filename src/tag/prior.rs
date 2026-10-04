@@ -36,7 +36,9 @@
 //! such as `well` as an interjection: the counts say nothing of that reading.
 
 use super::pass::View;
-use super::{Confidence, LONGEST, Tag, TagSet, lexicon};
+use crate::document::TokenKind;
+
+use super::{Confidence, Tag, TagSet};
 
 const DETERMINER: TagSet = TagSet::of(Tag::Determiner);
 const ADJECTIVE: TagSet = TagSet::of(Tag::Adjective);
@@ -58,7 +60,7 @@ pub(super) fn run(view: &mut View<'_, '_>) {
             continue;
         };
         if reading.confidence != Confidence::Unsure
-            || view.text(at).chars().next().is_some_and(char::is_uppercase)
+            || super::starts_upper(view.text(at))
             || !agrees(view, at, reading.tag)
             || !is_dominant(view.text(at))
         {
@@ -77,61 +79,69 @@ pub(super) fn run(view: &mut View<'_, '_>) {
 
 /// Whether the lexicon marks `text` dominant.
 fn is_dominant(text: &str) -> bool {
-    let mut buf = [0; LONGEST];
-    super::fold(text, &mut buf).is_some_and(lexicon::dominant)
+    super::table::dominant(text)
 }
 
-/// Whether the word at `at` is read and settled as one of `tags`: every tag it may have is among
-/// them, or it is committed and its guess is.
-fn settled_as(view: &View<'_, '_>, at: usize, tags: TagSet) -> bool {
-    view.within(at, tags) || view.decided(at).is_some_and(|tag| tags.contains(tag))
+/// What a rule may lean on in a word next to the one it reads: the tags the word may have, and
+/// its best guess when it is committed. Whether it is settled as one of some tags is asked of it
+/// as often as the cues need.
+struct Near {
+    possible: TagSet,
+    decided: Option<Tag>,
 }
 
-/// The index of the word right before `at`, when that is a word.
-fn before(view: &View<'_, '_>, at: usize) -> Option<usize> {
-    at.checked_sub(1)
-        .filter(|before| view.text_of_word(*before).is_some())
-}
+impl Near {
+    /// The neighbour at `at`, when it is a word that is read.
+    fn of(view: &View<'_, '_>, at: usize) -> Option<Near> {
+        if view.kind(at) != TokenKind::Word {
+            return None;
+        }
+        view.reading(at).map(|reading| Near {
+            possible: reading.possible(),
+            decided: reading.confidence.committed().then_some(reading.tag),
+        })
+    }
 
-fn after_is(view: &View<'_, '_>, at: usize, tags: TagSet) -> bool {
-    view.next_word(at)
-        .is_some_and(|next| settled_as(view, next, tags))
-}
-
-fn before_is(view: &View<'_, '_>, at: usize, tags: TagSet) -> bool {
-    before(view, at).is_some_and(|before| settled_as(view, before, tags))
+    /// Whether it is read and settled as one of `tags`: every tag it may have is among them, or it
+    /// is committed and its guess is.
+    fn is(&self, tags: TagSet) -> bool {
+        (!self.possible.is_empty() && self.possible.intersection(tags) == self.possible)
+            || self.decided.is_some_and(|tag| tags.contains(tag))
+    }
 }
 
 /// Whether a neighbour of the word at `at` agrees with `tag` as the word's tag, by the table of
 /// the module's docs.
 fn agrees(view: &View<'_, '_>, at: usize, tag: Tag) -> bool {
+    let before = at.checked_sub(1).and_then(|before| Near::of(view, before));
+    let after = view.token_after(at).and_then(|after| Near::of(view, after));
+    let before_is = |tags: TagSet| before.as_ref().is_some_and(|near| near.is(tags));
+    let after_is = |tags: TagSet| after.as_ref().is_some_and(|near| near.is(tags));
     match tag {
         Tag::Noun => {
-            let possessive = before(view, at).is_some_and(|before| {
-                POSSESSIVES
-                    .iter()
-                    .any(|word| view.text(before).eq_ignore_ascii_case(word))
-            });
-            possessive
-                || before_is(view, at, DETERMINER)
-                || before_is(view, at, ADJECTIVE)
-                || before_is(view, at, ADPOSITION)
-                || after_is(view, at, VERBAL)
-                || after_is(view, at, ADPOSITION)
+            before_is(DETERMINER)
+                || before_is(ADJECTIVE)
+                || before_is(ADPOSITION)
+                || after_is(VERBAL)
+                || after_is(ADPOSITION)
+                || follows_a_possessive(view, at)
         }
-        Tag::Verb => {
-            before_is(view, at, ADVERB)
-                || before_is(view, at, VERBAL)
-                || after_is(view, at, DETERMINER_OR_PRONOUN)
-        }
-        Tag::Adjective => before_is(view, at, AUXILIARY) || after_is(view, at, NOUN),
-        Tag::Adverb => {
-            before_is(view, at, VERBAL)
-                || after_is(view, at, ADJECTIVE_OR_ADVERB)
-                || after_is(view, at, VERBAL)
-        }
+        Tag::Verb => before_is(ADVERB) || before_is(VERBAL) || after_is(DETERMINER_OR_PRONOUN),
+        Tag::Adjective => before_is(AUXILIARY) || after_is(NOUN),
+        Tag::Adverb => before_is(VERBAL) || after_is(ADJECTIVE_OR_ADVERB) || after_is(VERBAL),
         _ => false,
     }
+}
+
+/// Whether the word right before `at` is a possessive.
+fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
+    at.checked_sub(1)
+        .and_then(|before| view.text_of_word(before))
+        .is_some_and(|text| {
+            POSSESSIVES
+                .iter()
+                .any(|word| text.eq_ignore_ascii_case(word))
+        })
 }
 
 #[cfg(test)]

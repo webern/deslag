@@ -56,9 +56,7 @@ pub(super) fn run(view: &mut View<'_, '_>) {
         let Some(reading) = view.reading(at) else {
             continue;
         };
-        if reading.confidence != Confidence::Unsure
-            || view.text(at).chars().next().is_some_and(char::is_uppercase)
-        {
+        if reading.confidence != Confidence::Unsure || super::starts_upper(view.text(at)) {
             continue;
         }
         let possible = reading.possible();

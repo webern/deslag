@@ -213,3 +213,17 @@ rank the readings in the tagger's lexicon.
 
 Data was used, not code. It gives each word's parts of speech in priority order for the tagger's
 lexicon.
+
+## textblob-aptagger
+
+- URL: https://github.com/sloria/textblob-aptagger (Matthew Honnibal's averaged perceptron tagger,
+  as packaged for TextBlob)
+- Licence: MIT
+- Used at: the design described in Honnibal's 2013 post, "A good part-of-speech tagger in about 200
+  lines of Python"
+
+A design was borrowed, no code was ported. The perceptron trainer in `scripts/train/` follows its
+shape: one weight per feature and tag, a guess that feeds the next token's tag features, updates
+only on a wrong guess, and the final weights averaged over every step through running totals. The
+feature set is the common one of Collins (2002) with a few additions measured on the treebank's dev
+set.

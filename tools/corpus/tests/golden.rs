@@ -454,6 +454,22 @@ fn a_second_run_prints_the_same_bytes() {
 }
 
 #[test]
+fn a_filter_that_is_off_is_left_out_of_the_header_and_one_that_is_on_is_named() {
+    let corpus = corpus();
+    let by_default = run(corpus.path(), &["--tier", "blobs", "summary"]);
+    assert!(by_default.contains("filters: none\n"), "{by_default}");
+    assert!(!by_default.contains("without_declared"), "{by_default}");
+    let without = run(
+        corpus.path(),
+        &["--tier", "blobs", "summary", "--without-declared"],
+    );
+    assert!(
+        without.contains("filters: without_declared=true\n"),
+        "{without}"
+    );
+}
+
+#[test]
 fn a_comparison_needs_two_sides() {
     let corpus = corpus();
     let refused = |args: &[&str]| {

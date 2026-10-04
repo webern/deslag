@@ -805,7 +805,7 @@ fn sample_of(corpus: &Path, extra: &[&str]) -> Output {
 }
 
 #[test]
-fn the_sample_leaves_out_files_a_publisher_declares_when_told_to() {
+fn the_sample_draws_declared_files_by_default_and_leaves_them_out_when_told_to() {
     let work = tempfile::tempdir().unwrap();
     let (corpus, proven, declared) = tier_with_a_declared_file(work.path(), true);
     let default = sample_of(&corpus, &[]);
@@ -815,6 +815,8 @@ fn the_sample_leaves_out_files_a_publisher_declares_when_told_to() {
         String::from_utf8_lossy(&default.stderr)
     );
     let manifest = String::from_utf8(default.stdout).unwrap();
+    // One llm sentence is drawn, by the fixed default seed, from the two files eligible by default.
+    assert!(manifest.contains(&declared), "{manifest}");
     assert!(
         !manifest.contains("without publisher-declared files"),
         "{manifest}"

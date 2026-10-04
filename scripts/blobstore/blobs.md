@@ -10,7 +10,7 @@ which `batches.md` describes; and this file says what is in it.
 is the image's filesystem, and git ignores it. `blobs.sh` does not know what is in the
 image; each consumer names the path it reads under `.blobs/unpacked/`.
 
-The build never fetches. `make build`, `make test` and `make check` run offline and with no login.
+The build never fetches. `make build`, `make test` and `make check` run offline with no login.
 Only the targets that read the image fetch it first: today `make test-blobs`, which `make ci` runs.
 
 ```
@@ -28,8 +28,8 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
 ## corpus/
 
 The big tier of the corpus: quoted Markdown in batches, each fixture with its JSON sidecar.
-`docs/design/corpus.md` says what it is for and the rules it keeps;
-`docs/design/corpus.asbuilt.md` gives the layout. `tests/blobs.rs` reads it.
+`docs/design/corpus.md` says what it is for and its rules; `docs/design/corpus.asbuilt.md` gives
+the layout. `tests/blobs.rs` reads it.
 
 - `2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/`
   and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`. 9,694,980 bytes of
@@ -45,33 +45,34 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
 - `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
   model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 
-The second batch also excludes the 384 fixtures of the first whose label `recheck` no longer
-proves. Its `repos.jsonl` lists the 3,232 repositories the harvest tried, 1,388 of which gave a
-fixture.
+The second batch excludes the 384 fixtures of the first whose label `recheck` no longer
+proves; its `repos.jsonl` lists the 3,232 repositories tried, 1,388 of which gave a fixture.
 
-Every fixture is quoted from a public repository under a permissive licence, which its sidecar
-names with the commit.
+The `-04` stories have only 7 theme and period pairs, so file-weighted n-gram and phrase measures see
+repeats. Some hold repetition loops and a few stop mid-word at the limit; all are as written.
+
+Every fixture is quoted from a public repository or dataset under a permissive licence, which its
+sidecar names with the commit or revision.
 
 The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
-image, so anything added is pulled by every target that reads the corpus, and by CI on a
-cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
+image, so every target that reads the corpus pulls anything added, as does CI on a cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
 that waits for a way to fetch less.
 
 ## Access
 
 The package is public, so fetching does not need a login: `make fetch-blobs` works on a fresh
-machine, in a hosted agent environment and in CI with nothing set up. Publishing needs a `gh`
+machine, in a hosted agent environment and in CI. Publishing needs a `gh`
 login with the `write:packages` scope (`gh auth login`, then `gh auth refresh -s write:packages`),
 or the workflow token below. `blobs.sh` takes the token from `gh` for each run and never stores a
 login.
 
-`blobs.sh` reads anonymously first and turns to `gh` only when that fails, which happens with a
-private package: this repo's was private until 2026-10-03, and a fork's may be.
+`blobs.sh` reads anonymously first and turns to `gh` only when that fails, as it does for a private
+package, which a fork's may be.
 
-A token `gh` holds is not always one the registry takes. A person's may lack the packages scope,
+A token `gh` holds is not always one the registry takes: a person's may lack the packages scope,
 and a hosted environment may set `GH_TOKEN` to a stand-in that only its own proxy accepts. So every
 login is checked against the registry before it is relied on and dropped when refused, and the
-error says which of the two it was and what fixes it.
+error says which it was and what fixes it.
 
 CI has no `gh` login; it reads the package anonymously like everyone else, and the `publish-blobs`
 workflow publishes with the workflow token, which works only while the package grants this
@@ -96,18 +97,18 @@ rule. A file or symlink met that way is a layer of its own. `layers.txt` lists `
 
 A layer's identity is a fingerprint of its content: every path below it, whether each is a
 directory, file, executable or symlink, each file's hash and each symlink's target. Owner, times,
-xattrs and `.DS_Store` are not content. `blobs.lock` records, after the pinned image on its first
+xattrs and `.DS_Store` are not. `blobs.lock` records, after the pinned image on its first
 line, one line per layer: the fingerprint, the compressed blob the registry holds for it, and its
 path.
 
 On publish a layer whose fingerprint the lock already has is pushed as that same blob, downloaded
 from the registry and handed to `crane` as it is, so no tar, gzip or crane difference between
 machines can give it a new digest. Only layers whose fingerprint moved are tarred anew, in pax
-format, and each tar's listing is checked against the tree before anything is pushed. The lock is
-machine-written; `fetch` reads its first line and nothing else.
+format, each tar's listing checked against the tree before anything is pushed. The lock is
+machine-written; `fetch` reads only its first line.
 
-`scripts/blobstore/blobs.sh plan` says which layers a publish would leave the same, change, add
-or drop, and which files moved since the fetch. It pushes nothing.
+`scripts/blobstore/blobs.sh plan` says which layers a publish would leave the same, change, add or
+drop, and which files moved since the fetch, and pushes nothing.
 
 ## Changing the image
 
@@ -117,15 +118,14 @@ or drop, and which files moved since the fetch. It pushes nothing.
 3. `make test-blobs`, which tests the tree as it is, and say what changed in this file.
 4. `scripts/blobstore/blobs.sh plan` to see what will be pushed, then `make publish-blobs`. It
    pushes the next `vN`, reusing every layer that did not change, and rewrites `blobs.lock`.
-5. `make fix-blobs`, which rewrites what the new image makes stale: the catalogue's counts and
-   `measured_on`, and `list_growth`'s golden file. Read the diff.
-6. Commit `blobs.lock` and those files with this file. The workflow commits them together too.
+5. `scripts/blobstore/remeasure.sh run`: `make fix-blobs`, which rewrites what the new image makes
+   stale (the catalogue's counts and `measured_on`, and `list_growth`'s golden), then `make
+   test-blobs` and the phrases test. Read the diff.
+6. Commit `blobs.lock` and those files with this file. The workflow does the same for a batch it
+   builds; `batches.md` says how.
 
-A batch can also be a manifest that the `publish-blobs` workflow builds and publishes with no
-login or machine; `batches.md` says how.
-
-Publishing needs `bsdtar`, which macOS ships; on Linux it is the `libarchive-tools` package.
-Fetching works with any `tar`.
+Publishing needs `bsdtar` (macOS ships it; on Linux, `libarchive-tools`). Fetching works with any
+`tar`.
 
 ## Unpublished edits
 
@@ -135,8 +135,8 @@ equals the stamp, `fetch-blobs` is a file compare and nothing else, so an edited
 tested before it is published.
 
 Once the lock differs, after a branch switch, a pull or a merge, fetch replaces the tree. Before
-it does, and only then, it looks for anything newer than the stamp, and if an inventory confirms
-real edits, it stops and says what they are and what to do: publish them from the branch whose
+that, and only then, it looks for anything newer than the stamp; if an inventory confirms real
+edits, it stops and says what they are and what to do: publish them from the branch whose
 lock they belong to, move `.blobs/unpacked/` aside, or `make clean-blobs` to drop them. A tree
 without a stamp is a fetch that did not finish and is replaced. `make clean` removes the tree too,
 edits and all.

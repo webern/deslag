@@ -24,8 +24,11 @@ and `license`.
 A `relicense` row supersedes a live fixture whose licence its sidecar has wrong: the batch excludes
 the fixture and adds it again, with its bytes and its sidecar as they were except
 `source.license`, which is the row's. It asks nothing of the network, so a manifest of `exclude`
-and `relicense` rows alone has no source to resolve and is built from the fetched image. The new
-licence must be one the corpus accepts; a fixture that has none is an `exclude` row instead.
+and `relicense` rows alone has no source to resolve and is built from the fetched image. A row's
+`license` is one accepted licence or several joined by ` OR `. A row is refused unless every part
+is on `collect.py`'s accepted list, its `sha256` is a live fixture of the fetched image, and it
+differs from the licence the sidecar has. Nothing reads the fixture's licence files, so the row is
+its author's claim. A fixture with no accepted licence is an `exclude` row instead.
 
 The workflow completes a seed. Each `git` source gains `head`, the metadata GitHub gave for it, and
 `kept`, what the harvest kept by label; the manifest gains `expect`, the fixture count and a
@@ -47,29 +50,50 @@ A manifest whose batch the image holds is only checked against it. A source that
 harvested at its `head`, a squash-merge GitHub could not be asked about, a pull request GitHub now
 describes another way, a fixture another batch now holds, or two builds that differ, fail the job.
 
-A pull request stops there, so a seed is shown to build before it merges. A seed with no `head`
-publishes the tip at push time, which may be newer than the pull request run saw; naming `head`
-publishes exactly what that run proved.
+A pull request publishes nothing, so a seed is shown to build before it merges. A seed with no
+`head` publishes the tip at push time, which may be newer than the pull request run saw; naming
+`head` publishes exactly what that run proved.
 
-On a push, `publish` follows, with `packages: write` and `contents: write`. It unpacks the tar
-`harvest` made, runs `make publish-blobs`, and then makes the branch's checks agree with the new
-image. Some of what `make ci` holds the branch to is measured on the image: the phrase catalogue's
-counts and its `measured_on`, which must equal `blobs.lock`, and the golden file of `list_growth`,
-which names the batch of each fixture. A new lock leaves them stale, so every publish would turn the
-branch red. The job drops the tree it published, fetches the new image back from the registry, runs
-`make fix-blobs`, which rewrites those two files from it, and commits them with the completed
-manifests and `blobs.lock`, as one commit by `github-actions[bot]`. That commit starts no workflow.
-The branch must let the workflow push, which a protected `main` does not.
+A pull request that adds a batch also measures it. The `harvest` job installs Rust and typos and
+runs `scripts/blobstore/remeasure.sh run` on the tier with the batch in it, as a publish would, but
+commits nothing. The step summary shows the diff of the files it rewrites, and a batch that breaks
+a floor of the catalogue or puts a `human` hit on a catalogue phrase fails its pull request. The
+`measured_on` it writes is still the pinned image, since nothing is published. A change to
+`batches.sh`, `collect.py` or the workflow runs the job too, with no manifest to build and nothing
+to measure.
 
-`make fix-blobs` is the whole of it, so a person who publishes by hand runs it too and commits what
-it writes. The files it writes are named in the workflow's last two steps; a new file that depends on
-the image gets added there and to that target. It adds about four minutes to the job: the toolchain
-and dependencies, a fetch of about 15 seconds, and a run of about a minute and a half.
+On a push, `publish` follows, with `packages: write` and `contents: write`. It installs Rust,
+typos and `bsdtar` first, so nothing that can fail on the network stands between the image reaching
+the registry and the lock pinning it. It unpacks the tar `harvest` made, runs `make publish-blobs`,
+and then makes the branch's checks agree with the new image. Some of what `make ci` holds the
+branch to is measured on the image: the phrase catalogue's counts and its `measured_on`, which must
+equal `blobs.lock`, and the golden file of `list_growth`, which names the batch of each fixture. A
+new lock leaves them stale, so every publish would turn the branch red.
 
-If `make fix-blobs` fails, most likely because a `human` fixture of the new batch holds a phrase of
-the catalogue, the job still commits `blobs.lock` and the manifests with whatever it wrote, so the
-registry never holds an image the branch does not pin, and then fails. The branch is red until a
-person reads the log and decides: drop the phrase from the catalogue or exclude the fixture in a
+The job drops the tree it published, fetches the new image back from the registry by its digest,
+and runs `scripts/blobstore/remeasure.sh run --refetch`. That runs `make fix-blobs`, which rewrites
+the two files from the image, then `make test-blobs` and the phrases test, which holds every
+catalogue entry to its floor of 40 repositories, and writes what moved to the step summary. The
+step stops at 20 minutes, and a failure or a hang does not stop the job.
+
+`batches.sh pin-lock` then commits `blobs.lock`, the completed manifests and the files
+`remeasure.sh paths` names as one commit by `github-actions[bot]`. Its body lists the old and new
+counts of every catalogue entry that moved and the golden's `fails` line, or says none moved, or
+that measuring failed. If the branch moved during the publish, the pin goes on the new tip and the
+image is measured again there, so the files never describe the code of an old tip; the second
+measuring replaces the first one's outcome. The commit starts no workflow. The branch must let the
+workflow push, which a protected `main` does not.
+
+A person who publishes by hand runs `scripts/blobstore/remeasure.sh run` and commits what it
+writes. A new file that depends on the image gets added to `make fix-blobs` and so to
+`remeasure.sh paths`. Measuring takes about three minutes on a warm cache; with the toolchain and a
+cold build the publish job takes about seven more.
+
+If the measuring fails, most likely because a `human` fixture of the new batch holds a phrase of
+the catalogue or an entry falls under its floor, the job still pins `blobs.lock` and the manifests
+with whatever was written, so the registry never holds an image the branch does not pin, and then
+fails. The failing tests are in the step summary. The branch is red until a person decides: take
+the phrase out of the catalogue, into `tools/corpus/rejected.toml`, or exclude the fixture in a
 later batch. Red is the right result there; the numbers are no longer true of the image.
 
 ## What `publish` trusts
@@ -82,10 +106,10 @@ which it is held to. Any other path, a link, or a `..` ends the job. `expect` an
 took from the network are the word of the job that built the batch; `publish` recomputes no
 harvest.
 
-The rewrite that follows the publish reads the image from the registry, not the tree the tar made,
-and runs the branch's own code with `--locked` dependencies. The fixtures are data to it, and no
-token is set in its environment. `pin-lock` commits only the paths the
-workflow names.
+The measuring that follows the publish reads the image from the registry, not the tree the tar
+made, and runs the branch's own code with `--locked` dependencies. The fixtures are data to it. The
+checkout keeps no credential, so no token is on disk or in the environment of the measuring; only
+git's fetch and push in `pin-lock` get it, and it commits only the paths the workflow names.
 
 ## Recovery
 
@@ -119,12 +143,17 @@ to `record`, `document`, the sidecar's kind of file, and `license`, which the da
 say. The manifest's `per_repo` is the number of texts, shared out evenly among `models`.
 
 `revision` is the commit to read at, the tip if the seed leaves it out. The workflow completes the
-seed with that, its date, the `sha256` of the file, and `model_licenses`: each model's licence, or
-its base model's, which must be one the corpus accepts. A model whose licence is not accepted, or
-that has none, fails the seed. The check reads one `license:` on a card, not a model's lineage. `harvest` reads the file at
-the revision again and fails unless it has the `sha256`. Each model's texts are the first of its
-rows in the order a hash of the row number gives, so building twice gives one batch. A fixture's
-path is `FILE/row-N.md` and its text is the cell as it is.
+seed with that, its date, the `sha256` of the file, and `model_licenses`. It also fails the seed
+unless the `license:` on the dataset card at that revision is the seed's `license`. For each model
+in `models`, `model_licenses` holds the `license:` on the model's own card or, when that has none,
+on the card of the first `base_model` it names, up to three steps up. The value must be an
+accepted licence, else the seed fails; so it does for a model with no licence on the way up. That
+one field is all the check reads. It does not read a model's licence file, or what the model was
+trained or distilled from, so a model whose card says Apache-2.0 passes whatever its lineage.
+
+`harvest` reads the file at the revision again and fails unless it has the `sha256`. Each model's
+texts are the first of its rows in the order a hash of the row number gives, so building twice
+gives one batch. A fixture's path is `FILE/row-N.md` and its text is the cell as it is.
 
 ## Tests
 

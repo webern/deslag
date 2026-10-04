@@ -20,9 +20,11 @@
 //! - **Possessives.** A word `x's` that the lexicon lacks is read from the stem `x`: the stem's
 //!   noun or proper noun, with the stem's number and [`Features::CONTRACTION`]. The generator
 //!   leaves possessives out.
-//! - **Lookup.** The file stays as it is in the binary. The first lookup hashes each line's word
-//!   into a table of line offsets, a few milliseconds and half a megabyte, and a lookup after that
-//!   costs a hash and a probe or two, and allocates nothing.
+//! - **Lookup.** The file stays as it is in the binary. The tagger reads a word through
+//!   `table.rs`, which holds this lexicon and the closed-class table in one hash table built from
+//!   [`entries`]. [`lookup`] serves the rest, such as a possessive's stem. Its first call hashes each
+//!   line's word into a table of line offsets, a few milliseconds and half a megabyte, and a lookup
+//!   after that costs a hash and a probe or two, and allocates nothing.
 
 use std::sync::OnceLock;
 

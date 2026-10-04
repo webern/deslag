@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - deslag-gold
 max_size_bytes: 8192
@@ -63,6 +63,15 @@ The 450 are shuffled and numbered `g0001`; the id says nothing of tier or split.
 the same corpus gives the same files. `manifest.tsv` has the seed and corpus image in its header,
 and per sentence the split, tier, context, fixture, repository, licence and byte range.
 
+`--exclude FILE` leaves fixtures out of the draw. The list has a fixture to a line: its sha256 (the
+sidecar's `content.sha256`) or its path as the manifest's `file` column has it, then an optional
+note; blank lines and lines starting with `#` are skipped, and an entry that is no fixture is an
+error. The manifest header gains `exclude`, the list's sha256 and how many fixtures it dropped,
+so the draw can be repeated.
+
+`llm` files whose label is the publisher's word are drawn from unless
+`--without-declared` is given, which the manifest's note records.
+
 ## Batches and compact lines
 
 A batch line is the guide's input format with every token numbered:
@@ -90,6 +99,18 @@ on the worklist, with its sentence, the three answers (`N.?` for a missing featu
 `agreement.txt` counts pairs, the three together, and disputes, by tier and context. An answer is
 `g0007.5: N.p | reason`, with a code of the guide and a reason of at most 15 words, for an item of
 `worklist.tsv`. `adjudicated.tsv` is the log.
+
+## Overrides
+
+`read-answers --overrides FILE` reads a TSV with the columns `sentence_id`, `token_index`, `form`,
+`old_code`, `new_code` and `reason`, for agreed words that the guide has since changed. A row is
+refused unless the word is in `agreed.conllu` with `Prov=agree` and the code `old_code`, `new_code`
+is a code of the guide that differs from it, the reason has 1 to 15 words, and no word is
+overridden twice.
+
+Each row becomes a row of `adjudicated.tsv`, after the answers: its item is
+`sentence.token`, its three tagger columns hold the agreed code, which is how `assemble` tells an
+override from an answer, then the new code and the reason. The word is `Prov=adjudicated`.
 
 ## Assembly
 

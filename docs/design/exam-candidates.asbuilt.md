@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - exam-candidates
 max_size_bytes: 6144
@@ -15,7 +15,7 @@ reads none of it.
 
 `Tagger::tag` gives one `Reading` per token, `Some` exactly on `Word` tokens, else exit 2 naming the
 tagger and sentence, as does a `Sure` reading that keeps another tag. `Sure` and `Likely` are
-committed. `--tagger` names `noun`, `mct` or `harper`; `--import` names a file instead.
+committed. `--tagger` names `noun`, `deslag`, `mct` or `harper`; `--import` names a file instead.
 
 ## The skeleton and the import
 
@@ -30,6 +30,9 @@ at `Unknown`, counted in Words.
 ## The built-in taggers
 
 `noun` tags every word `Noun` at `Sure`.
+
+`deslag` is deslag's own tagger as it ships: it runs `deslag::tag::sentence` over each sentence's
+tokens and context, and reports the readings it sets, with no score, so a change to the tagger shows in the exam.
 
 `mct` reads `.ewt/r2.18/en_ewt-ud-train.conllu` when it runs, keeping nothing: each scored train
 token, aligned as any gold, counts for its lowercased text and gold tag. A known word gets its most

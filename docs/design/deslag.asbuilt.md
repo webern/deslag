@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - cli
   - instructions
@@ -37,7 +37,7 @@ src/
     guide.md          the guide, with placeholders
     lints.md          the lints topic's intro; lints/ holds a file per lint
   document/           a file read once into blocks, tokens and sentences
-  tag/                the part of speech of each word: readings, and the tagger's entry point
+  tag/                the part of speech of each word: the tables, the passes, the entry point
   parse/              the keys a file declares in its frontmatter
   lint/               running the lints; one module per lint
   output/             --format json, sarif and github
@@ -64,6 +64,8 @@ fails when a module is in no doc or in two.
 - [tests.asbuilt.md](tests.asbuilt.md): the tests, the cases, the corpus run and the golden set.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
 - [tag.asbuilt.md](tag.asbuilt.md): `tag`: readings, confidence, and the golden tag stream.
+  [tag-tables.asbuilt.md](tag-tables.asbuilt.md) has the tables and shape guesses;
+  [tag-passes.asbuilt.md](tag-passes.asbuilt.md) the passes.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
 - [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.
@@ -107,7 +109,9 @@ docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
                       blobstore/, which moves its big tier and builds its batches; ewt/ and
                       harper/, which fetch the treebank and Harper's model for the exam; spacy/,
-                      which runs spaCy on the exam's tokens
+                      which runs spaCy on the exam's tokens; lexicon/, which generates the
+                      tagger's word list by hand
+LICENSES/             the notices of the lexicon's sources and of Harper's engine
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
 tools/exam/           deslag-exam, never published: grades taggers against gold sets;
                       deslag-gold, which makes the gold set
@@ -128,9 +132,12 @@ pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's 
 
 `make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
 completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
-or `m/deslag-exam`; `scripts/blobstore/batches.md` says how. After a publish it runs `make fix-blobs`,
-which rewrites the phrase catalogue's counts and `measured_on` and the golden file of `list_growth`
-from the new image, and commits them with the lock so the branch stays green.
+or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
+
+After a publish it runs `scripts/blobstore/remeasure.sh`: `make fix-blobs`, which rewrites the phrase catalogue's counts and
+`measured_on` and the golden file of `list_growth` from the new image, then `make test-blobs` and
+the phrases test. It commits the files with the lock so the branch stays green. A pull request that
+adds a batch runs `remeasure.sh` on the tier with the batch in it and commits nothing.
 
 `make fetch-spacy` installs spaCy and its model, pinned by hash in
 `scripts/spacy/requirements.lock`, into a venv in `.spacy/`, and `make generate-spacy` writes the

@@ -172,3 +172,44 @@ with them.
 - Used at: v2.14.1, the CPU build
 
 The model above needs it. It is installed into the cache `.spacy/` and nothing links to it.
+
+## SCOWL
+
+- URL: https://sourceforge.net/projects/wordlist/
+- Licence: Atkinson's permission notice, MIT-like, with the notices of the lists it was built from,
+  copied to `LICENSES/SCOWL.txt`
+- Copyright: "Copyright 2000-2018 by Kevin Atkinson"
+- Used at: 2020.12.07
+
+Data was used, not code. It says which words the tagger's lexicon holds, by size level. The
+generated `src/tag/lexicon.txt` is checked in, and `scripts/lexicon/generate.sh` fetches the source
+at a pinned hash.
+
+## AGID
+
+- URL: https://sourceforge.net/projects/wordlist/
+- Licence: the same permission notice, copied to `LICENSES/AGID.txt`
+- Copyright: "Copyright 2000-2014 by Kevin Atkinson"
+- Used at: 2016.01.19
+
+Data was used, not code. It gives the inflected forms of a lemma for the tagger's lexicon.
+
+## WordNet
+
+- URL: https://wordnet.princeton.edu/
+- Licence: the WordNet licence, copied to `LICENSES/WordNet.txt`
+- Copyright: "Copyright 2006 by Princeton University"
+- Used at: 3.0
+
+Data was used, not code. It gives a lemma's parts of speech, its names and its sense counts, which
+rank the readings in the tagger's lexicon.
+
+## Moby Part-of-Speech II
+
+- URL: https://www.gutenberg.org/ebooks/3203
+- Licence: public domain by grant of the author, Grady Ward, in 2001; its notice is copied to
+  `LICENSES/Moby.txt`
+- Used at: the Project Gutenberg edition, ebook 3203
+
+Data was used, not code. It gives each word's parts of speech in priority order for the tagger's
+lexicon.

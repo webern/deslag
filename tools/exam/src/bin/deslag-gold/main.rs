@@ -104,11 +104,10 @@ enum Command {
         /// The most tokens in a sentence.
         #[arg(long, default_value_t = 60)]
         max_tokens: usize,
-        /// Also draw from the `llm` files whose label is their publisher's statement of the
-        /// model. They are left out unless asked for: `corpus.md` section 3 keeps them apart
-        /// from the `llm` files a history proves.
+        /// Do not draw from the `llm` files whose label is their publisher's statement of the
+        /// model. They are drawn from unless this is given.
         #[arg(long)]
-        with_declared: bool,
+        without_declared: bool,
     },
     /// Writes the batches the blind tagger reads to `batches/batch-NN.txt`: only numbered
     /// sentences in the annotation guide's input format, with no tier, split or file.
@@ -217,7 +216,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             per_repo,
             min_words,
             max_tokens,
-            with_declared,
+            without_declared,
         } => {
             if mix.len() != 4 {
                 return Err(Error::load(
@@ -242,7 +241,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 tree.as_deref(),
                 exclude.as_deref(),
                 &settings,
-                with_declared,
+                without_declared,
             )
         }
         Command::Batches { size } => batches_stage(&dir, size),
@@ -276,17 +275,17 @@ fn load_sample(dir: &Path) -> Result<Sample, Problems> {
 fn corpus_files(
     corpus: &Path,
     tree: Option<&Path>,
-    with_declared: bool,
+    without_declared: bool,
 ) -> Result<(Vec<deslag_corpus::load::Fixture>, String), Error> {
     let problem = |path: &Path, error: deslag_corpus::load::Problem| {
         Error::load(&path.display().to_string(), Place::File, error.to_string())
     };
-    // Files whose label is a publisher's statement are drawn from only when asked for.
+    // Files whose label is a publisher's statement are drawn from unless they are opted out.
     let kept = |fixtures: Vec<deslag_corpus::load::Fixture>| {
-        if with_declared {
-            fixtures
-        } else {
+        if without_declared {
             deslag_corpus::load::history_proven(fixtures)
+        } else {
+            fixtures
         }
     };
     match tree {
@@ -311,8 +310,8 @@ fn corpus_files(
                 Some(image) => format!("big tier, image {image}"),
                 None => "big tier".to_string(),
             };
-            if with_declared {
-                note += ", with publisher-declared files";
+            if without_declared {
+                note += ", without publisher-declared files";
             }
             Ok((fixtures, note))
         }
@@ -325,9 +324,9 @@ fn sample_stage(
     tree: Option<&Path>,
     exclude: Option<&Path>,
     settings: &Settings,
-    with_declared: bool,
+    without_declared: bool,
 ) -> Result<(), Problems> {
-    let (fixtures, note) = corpus_files(corpus, tree, with_declared)?;
+    let (fixtures, note) = corpus_files(corpus, tree, without_declared)?;
     let files: Vec<File<'_>> = fixtures
         .iter()
         .filter_map(|fixture| {

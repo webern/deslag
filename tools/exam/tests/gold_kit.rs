@@ -805,7 +805,7 @@ fn sample_of(corpus: &Path, extra: &[&str]) -> Output {
 }
 
 #[test]
-fn the_sample_leaves_out_files_a_publisher_declares_unless_asked() {
+fn the_sample_leaves_out_files_a_publisher_declares_when_told_to() {
     let work = tempfile::tempdir().unwrap();
     let (corpus, proven, declared) = tier_with_a_declared_file(work.path(), true);
     let default = sample_of(&corpus, &[]);
@@ -815,32 +815,43 @@ fn the_sample_leaves_out_files_a_publisher_declares_unless_asked() {
         String::from_utf8_lossy(&default.stderr)
     );
     let manifest = String::from_utf8(default.stdout).unwrap();
+    assert!(
+        !manifest.contains("without publisher-declared files"),
+        "{manifest}"
+    );
+    let told = sample_of(&corpus, &["--without-declared"]);
+    assert!(
+        told.status.success(),
+        "{}",
+        String::from_utf8_lossy(&told.stderr)
+    );
+    let manifest = String::from_utf8(told.stdout).unwrap();
     assert!(manifest.contains(&proven), "{manifest}");
     assert!(!manifest.contains(&declared), "{manifest}");
     assert!(
-        !manifest.contains("with publisher-declared files"),
+        manifest.contains("without publisher-declared files"),
         "{manifest}"
     );
 }
 
 #[test]
-fn a_tier_of_declared_files_alone_is_drawn_from_only_when_asked() {
+fn a_tier_of_declared_files_alone_is_drawn_from_unless_told_not_to() {
     let work = tempfile::tempdir().unwrap();
     let (corpus, _, declared) = tier_with_a_declared_file(work.path(), false);
-    let refused = sample_of(&corpus, &[]);
+    let by_default = sample_of(&corpus, &[]);
+    assert!(
+        by_default.status.success(),
+        "{}",
+        String::from_utf8_lossy(&by_default.stderr)
+    );
+    let manifest = String::from_utf8(by_default.stdout).unwrap();
+    assert!(manifest.contains(&declared), "{manifest}");
+    assert!(
+        !manifest.contains("without publisher-declared files"),
+        "{manifest}"
+    );
+    let refused = sample_of(&corpus, &["--without-declared"]);
     assert_eq!(refused.status.code(), Some(2));
     let message = String::from_utf8_lossy(&refused.stderr);
     assert!(message.contains("the llm tier has 0 eligible"), "{message}");
-    let asked = sample_of(&corpus, &["--with-declared"]);
-    assert!(
-        asked.status.success(),
-        "{}",
-        String::from_utf8_lossy(&asked.stderr)
-    );
-    let manifest = String::from_utf8(asked.stdout).unwrap();
-    assert!(manifest.contains(&declared), "{manifest}");
-    assert!(
-        manifest.contains("with publisher-declared files"),
-        "{manifest}"
-    );
 }

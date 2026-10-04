@@ -12,12 +12,10 @@ user-invocable: true
 ## Build Doctrine
 
 North Star: cloning the repository onto a new machine, or creating a new git worktree, "just works".
-Developers and agents should not have to read instructions to set up a machine.
+Nobody should have to read instructions to set up a machine.
 
-These terms are used consistently.
-
-Requirements that live outside the repo are "Build Prerequisites". They fall into two categories:
-Installed Software and External Assets.
+Requirements that live outside the repo are "Build Prerequisites", of two kinds: Installed Software
+and External Assets.
 
 The top-level `Makefile` drives every build, check, test and environment check. When Installed
 Software is missing or the wrong version, `make preflight`, which every build runs first, says what
@@ -46,12 +44,11 @@ Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs 
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
-The exception is `scripts/llm-detection/collect.py`, which rebuilds the corpus: Python 3, standard
-library only, run by hand; make, tests and CI run `batch`.
-
-One more, named: `scripts/spacy/tag.py`, the exam's spaCy tagger, with hash-pinned packages in the
-cache venv `.spacy/`. Only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never
-tests or CI.
+Python 3 is the exception, in three scripts. `scripts/llm-detection/collect.py` rebuilds the
+corpus, standard library only, by hand; make, tests and CI run its `batch`.
+`scripts/blobstore/test_batches.py` tests it offline under `make test-scripts`.
+`scripts/spacy/tag.py` is the exam's spaCy tagger, with hash-pinned packages in the cache venv
+`.spacy/`; only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never tests or CI.
 
 Development is supported on macOS and Linux.
 

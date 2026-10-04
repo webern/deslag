@@ -160,6 +160,10 @@ jobs:
           stem="$crate-v$VERSION-$TARGET"
           mkdir -p "dist/$stem"
           cp README.md LICENSE "dist/$stem/"
+          # The notices of the sources of src/tag/lexicon.txt, which is built into the binary and
+          # which each source requires on every copy. The same four as Cargo.toml's `include`.
+          mkdir "dist/$stem/LICENSES"
+          cp LICENSES/AGID.txt LICENSES/Moby.txt LICENSES/SCOWL.txt LICENSES/WordNet.txt "dist/$stem/LICENSES/"
           case "$TARGET" in
             *windows*)
               cp "target/$TARGET/release/$bin.exe" "dist/$stem/"

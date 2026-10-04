@@ -10,8 +10,9 @@ name: publish-blobs
 # new blobs.lock and those two files to the branch pushed, as one commit, so the branch stays green.
 # scripts/blobstore/batches.md has the whole story.
 #
-# main and m/deslag-exam both publish. A workflow file runs from the branch it is pushed to, so a
-# batch can be published from a branch long before it reaches main.
+# Only main publishes. A workflow file runs from the branch it is pushed to, so a long-lived
+# branch that must publish a batch before it reaches main has to be added to the push trigger, and
+# taken out again before it merges.
 #
 # A pull request builds the batches and publishes nothing, so a seed is shown to build, and to
 # build the same way twice, before it merges. It also measures the new batches the way a publish
@@ -21,7 +22,7 @@ name: publish-blobs
 
 on:
   push:
-    branches: [main, m/deslag-exam]
+    branches: [main]
     paths:
       - scripts/blobstore/batches/*.json
   pull_request:

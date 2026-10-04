@@ -373,4 +373,70 @@ mod tests {
         );
         assert_eq!(level("they giraffe zebra they", "zebra"), Confidence::Sure);
     }
+
+    #[test]
+    fn each_half_of_a_two_tag_cue_is_a_cue_alone() {
+        // A cue that names two tags, the adjective or the adverb, a verb or an auxiliary, is tried
+        // with each half on its own. The neighbour has exactly the one tag named, so the case
+        // tests that half.
+        let cases = [
+            (
+                "adverb before an adverb",
+                "they gladly quickly",
+                "they gladly they",
+                "gladly",
+                "quickly",
+                Tag::Adverb,
+            ),
+            (
+                "adverb after an auxiliary",
+                "would gladly they",
+                "they gladly they",
+                "gladly",
+                "would",
+                Tag::Auxiliary,
+            ),
+            (
+                "noun before an auxiliary",
+                "they zebra would",
+                "they zebra they",
+                "zebra",
+                "would",
+                Tag::Auxiliary,
+            ),
+        ];
+        for (cue, text, control, target, neighbour, tag) in cases {
+            assert_eq!(read(text, neighbour).possible(), TagSet::of(tag), "{cue}");
+            let before = read(control, target);
+            assert_eq!(before.confidence, Confidence::Unsure, "{cue}: {control}");
+            let after = read(text, target);
+            assert_eq!(
+                after,
+                Reading {
+                    confidence: Confidence::Sure,
+                    ..before
+                },
+                "{cue}: {text}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_one_tag_unknown_neighbour_is_settled() {
+        // The tables do not have `frobnicator's`, so it is `Unknown`, but the possessive leaves it
+        // one tag, a noun. `within` reads that kept set, so the word before the cue is confirmed.
+        let text = "they frobnicator's zebra they";
+        let unknown = read(text, "frobnicator's");
+        assert_eq!(unknown.confidence, Confidence::Unknown);
+        assert_eq!(unknown.possible(), TagSet::of(Tag::Noun));
+        let before = read("they they zebra they", "zebra");
+        assert_eq!(before.confidence, Confidence::Unsure);
+        assert_eq!(
+            read(text, "zebra"),
+            Reading {
+                confidence: Confidence::Sure,
+                ..before
+            }
+        );
+    }
 }

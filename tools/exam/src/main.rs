@@ -8,6 +8,7 @@ use deslag_exam::Error;
 use deslag_exam::align::align_all;
 use deslag_exam::compare;
 use deslag_exam::disputes::Disputes;
+use deslag_exam::gate::{self, Gates};
 use deslag_exam::gold::Gold;
 use deslag_exam::harper::{DEFAULT_MODEL, Harper};
 use deslag_exam::import::Imported;
@@ -26,7 +27,7 @@ use deslag_exam::words::{GoldHeader, Words};
 ///
 /// Exit 0 when it printed or wrote what was asked, 2 when it cannot run: an unreadable or
 /// malformed file, a tagger that breaks its contract, runs that cannot be compared, with one line
-/// on stderr naming the file and the line or the sentence. Exit 1 is left for thresholds.
+/// on stderr naming the file and the line or the sentence. Exit 1 when a gate fails.
 #[derive(Parser)]
 #[command(name = "deslag-exam", version)]
 struct Cli {
@@ -86,6 +87,26 @@ enum Command {
         /// The run after it.
         after: PathBuf,
     },
+    /// Judges deslag's own tagger, or `noun`, against the gates a file sets, one set of gold at a
+    /// time, and prints a table of counts for a set that may name words and a pass or fail for each
+    /// metric of a holdout set. Every named set is run, even after a failure.
+    ///
+    /// Exit 0 when every gate holds, 1 when one fails, 2 when it cannot run. A gate is a floor or a
+    /// ceiling on a rate in per mille or on a count, judged on integer counts with no rounding.
+    Gate {
+        /// The gates file, TOML; see tests/gold/gates.toml.
+        #[arg(long)]
+        gates: PathBuf,
+        /// The directory the gold paths in the gates file are relative to.
+        #[arg(long, default_value = ".")]
+        root: PathBuf,
+        /// A built-in tagger: `deslag` as it stands, or `noun`, which the tests use.
+        #[arg(long, default_value = "deslag")]
+        tagger: String,
+        /// The sets to run, by their name in the gates file.
+        #[arg(required = true)]
+        sets: Vec<String>,
+    },
     /// Reads a gold file and prints how alignment treats its words: how many are punctuation, X
     /// or tagged, how many tagged words are scored, and why the rest are not. No tagger runs.
     /// It names no word or sentence, so it is safe on holdout text.
@@ -113,7 +134,8 @@ enum Command {
 
 fn main() -> ExitCode {
     match run(Cli::parse()) {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::from(1),
         Err(error) => {
             eprintln!("deslag-exam: {error}");
             ExitCode::from(2)
@@ -121,7 +143,8 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(cli: Cli) -> Result<(), Error> {
+/// Whether every gate held, which only `gate` can say no to.
+fn run(cli: Cli) -> Result<bool, Error> {
     match cli.command {
         Command::Words { gold, disputes } => {
             let disputes = Disputes::read(&gold, disputes.as_deref())?;
@@ -132,7 +155,7 @@ fn run(cli: Cli) -> Result<(), Error> {
                 GoldHeader(&gold),
                 Words::of(&gold, &aligned, &disputes)
             );
-            Ok(())
+            Ok(true)
         }
         Command::Score {
             gold,
@@ -183,7 +206,24 @@ fn run(cli: Cli) -> Result<(), Error> {
                 "{}",
                 report::render(&gold, &aligned, &disputes, &scoring, full, words)
             );
-            Ok(())
+            Ok(true)
+        }
+        Command::Gate {
+            gates,
+            root,
+            tagger,
+            sets,
+        } => {
+            let gates = Gates::read(&gates)?;
+            let Some(tagger) = built_in(&tagger) else {
+                return Err(Error::Cannot(format!(
+                    "no built-in tagger `{tagger}`; gate runs {}",
+                    BUILT_IN.join(" or ")
+                )));
+            };
+            let outcome = gate::run(&gates, &root, tagger.as_ref(), &sets)?;
+            print!("{}", outcome.text);
+            Ok(outcome.passed)
         }
         Command::Compare { before, after } => {
             let name = |path: &PathBuf| {
@@ -197,7 +237,7 @@ fn run(cli: Cli) -> Result<(), Error> {
                 "{}",
                 compare::render(&a, &b, &name(&before), &name(&after))?
             );
-            Ok(())
+            Ok(true)
         }
         Command::Tokens { gold, out } => {
             let gold = Gold::read(&gold)?;
@@ -210,7 +250,7 @@ fn run(cli: Cli) -> Result<(), Error> {
                 gold.sentences.len(),
                 out.display()
             );
-            Ok(())
+            Ok(true)
         }
     }
 }

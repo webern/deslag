@@ -19,7 +19,7 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
-        test test-blobs test-scripts test-spacy \
+        test test-blobs test-ewt test-exam test-scripts test-spacy \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy \
         ci \
@@ -31,9 +31,13 @@ help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
-	@echo "test             run every test that needs no network, doctests included"
-	@echo "test-blobs       fetch the corpus's big tier, test it and time reading and tagging it; needs"
-	@echo "                 the network, so not in test"
+	@echo "test             run every test that needs no network, doctests included, and the exam's gates"
+	@echo "test-blobs       fetch the corpus's big tier, test it, and fail if tagging takes over its budget"
+	@echo "                 of the time to read it; needs the network, so not in test"
+	@echo "test-ewt         fail if deslag's tagger scores under the pinned counts on the treebank's dev"
+	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
+	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
+	@echo "                 the dev or holdout gold; the holdout prints pass or fail per metric"
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
@@ -88,15 +92,29 @@ build-release: preflight
 # ---------------------------------------------------------------------------
 # test
 
-test: preflight test-scripts
+test: preflight test-scripts test-exam
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
-# offline and with no login. The time that follows asserts nothing: it prints
-# how long reading and tagging the tier take into the CI log, for a budget.
+# offline and with no login. The time that follows prints how long reading and
+# tagging the tier take, and fails if tagging's share of reading is over the
+# budget of the profile built (40.0% in debug, which is what ci runs).
 test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
-	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time
+	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
+
+# The treebank's dev set against the counts tests/gold/gates.toml pins for deslag's tagger. Any
+# drop fails. Not part of test or ci: it needs the network to fetch the treebank.
+test-ewt: preflight fetch-ewt
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml ewt-dev
+
+# The whole golden binary, not a name filter: a filter that matches nothing passes silently. Then
+# the gates of tests/gold/gates.toml on the dev and holdout gold, which print a table of counts for
+# dev and a pass or fail per metric for holdout. A gate is raised by hand, in the change that earns
+# it; there is no fix- target.
+test-exam: preflight
+	cargo test $(CARGO_FLAGS) -p deslag --all-features --test golden
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev holdout
 
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make: no network, no login.

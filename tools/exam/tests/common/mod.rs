@@ -57,3 +57,32 @@ pub fn scored_texts(sentence: &GoldSentence, alignment: &Alignment) -> Vec<Strin
 pub fn line(id: &str, form: &str, upos: &str, feats: &str, misc: &str) -> String {
     format!("{id}\t{form}\t_\t{upos}\t_\t{feats}\t_\t_\t_\t{misc}\n")
 }
+
+/// Words of the done-when gold that no holdout output may contain, nor anything about sentences.
+pub const FORBIDDEN: [&str; 9] = [
+    "s1",
+    "s2",
+    "s3",
+    "s4",
+    "cats",
+    "forms",
+    "staff",
+    "docs:setup",
+    "page",
+];
+/// More of them, kept apart as they came later.
+pub const FORBIDDEN_MORE: [&str; 2] = ["like", "send"];
+
+/// Fails if `text`, which is `what`, names a word or a sentence of the done-when gold, or has a
+/// section of the full report.
+pub fn assert_no_words(text: &str, what: &str) {
+    for word in FORBIDDEN.iter().chain(&FORBIDDEN_MORE) {
+        assert!(!text.contains(word), "{what} names `{word}`:\n{text}");
+    }
+    assert!(!text.contains("Confusion"), "{what} has a confusion table");
+    assert!(!text.contains("Most missed"), "{what} lists missed words");
+    assert!(
+        !text.contains("Unalignable examples"),
+        "{what} lists examples"
+    );
+}

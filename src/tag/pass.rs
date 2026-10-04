@@ -598,13 +598,25 @@ mod tests {
     #[test]
     fn the_one_reading_pass_only_raises_unsure_words_to_sure() {
         // Every sentence of three words from a small vocabulary, read by the passes before the
-        // last, then by the last. Nothing but a confidence may differ, and only `Unsure` to
+        // one-reading pass, then by it. Nothing but a confidence may differ, and only `Unsure` to
         // `Sure`: no tag removed, no guess, feature or kept set changed.
         let words = [
             "the", "my", "elegant", "verbose", "of", "and", "two", "were", "they", "giraffe",
             "zebra", "enlist", "gladly", "very", "to", "well", "running", "work", "Zebra", ",",
         ];
-        let (last, before) = PASSES.split_last().unwrap();
+        let before = [
+            proper::run,
+            infinitive::run,
+            function::run,
+            nounverb::run,
+            prior::run,
+        ];
+        let pass = single::run;
+        assert_eq!(
+            PASSES.len(),
+            before.len() + 1,
+            "a pass was added: say here where it runs relative to single::run"
+        );
         let mut raised = 0;
         for a in words {
             for b in words {
@@ -615,15 +627,21 @@ mod tests {
                         token.reading =
                             (token.kind == TokenKind::Word).then(|| crate::tag::read(&token.text));
                     }
+                    let mut whole = tokens.clone();
                     let mut view = View {
                         tokens: &mut tokens,
                         context: Context::Prose,
                     };
-                    for pass in before {
-                        pass(&mut view);
+                    for earlier in before {
+                        earlier(&mut view);
                     }
                     let readings: Vec<_> = (0..view.len()).map(|at| view.reading(at)).collect();
-                    last(&mut view);
+                    pass(&mut view);
+                    // The named order is the real one, so a reorder of PASSES fails here.
+                    run(&mut whole, Context::Prose);
+                    for (at, token) in whole.iter().enumerate() {
+                        assert_eq!(token.reading, view.reading(at), "{text}");
+                    }
                     for (at, old) in readings.into_iter().enumerate() {
                         let new = view.reading(at);
                         let (Some(old), Some(new)) = (old, new) else {

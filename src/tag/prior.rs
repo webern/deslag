@@ -134,7 +134,7 @@ fn agrees(view: &View<'_, '_>, at: usize, tag: Tag) -> bool {
 }
 
 /// Whether the word right before `at` is a possessive.
-pub(super) fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
+fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
     at.checked_sub(1)
         .and_then(|before| view.text_of_word(before))
         .is_some_and(|text| {

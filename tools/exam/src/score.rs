@@ -60,6 +60,24 @@ pub struct Example {
     pub tokens: Vec<String>,
 }
 
+/// One scored token, kept for the gate's word lists. Only a run with `names` set keeps them, so a
+/// holdout run has none to print.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScoredToken {
+    /// The sentence.
+    pub sent_id: String,
+    /// The token's text folded to lower case.
+    pub text: String,
+    /// The gold tag.
+    pub gold: Tag,
+    /// The best guess.
+    pub guess: Tag,
+    /// How sure the tagger was.
+    pub confidence: Confidence,
+    /// Whether the gold tag is among the tags the tagger kept.
+    pub retained: bool,
+}
+
 /// Scores and accuracy of the tokens that carried a raw score.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Bin {
@@ -150,13 +168,16 @@ pub struct Scoring {
     pub examples: Vec<Vec<Example>>,
     /// Raw scores against accuracy.
     pub calibration: Calibration,
+    /// Every scored token, in order, when `names` was true; empty otherwise.
+    pub tokens: Vec<ScoredToken>,
     /// Imported lines tagged `PUNCT`, `SYM` or `X`; `None` for a built-in tagger.
     pub outside: Option<usize>,
 }
 
-/// Runs `source` over every sentence of `gold`, which `aligned` has aligned. Each sentence is known by its `sent_id`, or by its
-/// position counted from 1 for a holdout gold. A tagger that breaks the contract is an error
-/// naming it and the sentence, by position when `names` is false.
+/// Runs `source` over every sentence of `gold`, which `aligned` has aligned. Each sentence is known
+/// by its `sent_id`, or by its position counted from 1 for a holdout gold. A tagger that breaks the
+/// contract is an error naming it and the sentence, by position when `names` is false. `names`
+/// also keeps every scored token in [`Scoring::tokens`].
 pub fn score(
     gold: &Gold,
     aligned: &[Aligned<'_>],
@@ -170,6 +191,7 @@ pub fn score(
         misses: BTreeMap::new(),
         examples: vec![Vec::new(); Reason::ALL.len()],
         calibration: Calibration::default(),
+        tokens: Vec::new(),
         outside: match source {
             Source::Tagger(_) => None,
             Source::Import(imported) => Some(imported.outside),
@@ -212,6 +234,16 @@ pub fn score(
                     .misses
                     .entry((word, token.tag, reading.tag))
                     .or_default() += 1;
+            }
+            if names {
+                scoring.tokens.push(ScoredToken {
+                    sent_id: id.clone(),
+                    text: tokens[token.token].text.to_lowercase(),
+                    gold: token.tag,
+                    guess: reading.tag,
+                    confidence: reading.confidence,
+                    retained: reading.possible().contains(token.tag),
+                });
             }
             if let Some(value) = reading.score {
                 scoring.calibration.levels[reading.confidence.index()].add(value, right);

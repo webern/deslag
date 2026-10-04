@@ -29,18 +29,19 @@
 
 use super::{
     Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, nounverb, prior,
-    proper,
+    proper, single,
 };
 use crate::document::{Token, TokenKind};
 
 /// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
 /// settled, and the order is part of the tagger: it is what the tag stream records.
-const PASSES: [fn(&mut View<'_, '_>); 5] = [
+const PASSES: [fn(&mut View<'_, '_>); 6] = [
     proper::run,
     infinitive::run,
     function::run,
     nounverb::run,
     prior::run,
+    single::run,
 ];
 
 /// Runs every pass, in order, over one sentence whose words the tables have read.
@@ -592,5 +593,61 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn the_one_reading_pass_only_raises_unsure_words_to_sure() {
+        // Every sentence of three words from a small vocabulary, read by the passes before the
+        // last, then by the last. Nothing but a confidence may differ, and only `Unsure` to
+        // `Sure`: no tag removed, no guess, feature or kept set changed.
+        let words = [
+            "the", "my", "elegant", "verbose", "of", "and", "two", "were", "they", "giraffe",
+            "zebra", "enlist", "gladly", "very", "to", "well", "running", "work", "Zebra", ",",
+        ];
+        let (last, before) = PASSES.split_last().unwrap();
+        let mut raised = 0;
+        for a in words {
+            for b in words {
+                for c in words {
+                    let text = format!("{a} {b} {c}");
+                    let mut tokens = Token::split(&text);
+                    for token in &mut tokens {
+                        token.reading =
+                            (token.kind == TokenKind::Word).then(|| crate::tag::read(&token.text));
+                    }
+                    let mut view = View {
+                        tokens: &mut tokens,
+                        context: Context::Prose,
+                    };
+                    for pass in before {
+                        pass(&mut view);
+                    }
+                    let readings: Vec<_> = (0..view.len()).map(|at| view.reading(at)).collect();
+                    last(&mut view);
+                    for (at, old) in readings.into_iter().enumerate() {
+                        let new = view.reading(at);
+                        let (Some(old), Some(new)) = (old, new) else {
+                            assert_eq!(old, new, "{text}");
+                            continue;
+                        };
+                        assert_eq!(
+                            (new.tag, new.features, new.kept),
+                            (old.tag, old.features, old.kept),
+                            "{text}"
+                        );
+                        if new.confidence != old.confidence {
+                            assert_eq!(
+                                (old.confidence, new.confidence),
+                                (Confidence::Unsure, Confidence::Sure),
+                                "{text}"
+                            );
+                            assert_eq!(old.possible().len(), 1, "{text}");
+                            raised += 1;
+                        }
+                    }
+                }
+            }
+        }
+        assert!(raised > 100, "{raised}");
     }
 }

@@ -16,10 +16,12 @@ use deslag_corpus::candidates::{Sieve, candidates};
 use deslag_corpus::chars::chars;
 use deslag_corpus::compare::Sides;
 use deslag_corpus::lints::{lints, load_config};
+use deslag_corpus::load;
 use deslag_corpus::measure::{Corpus, Doc, Filters, Label, Tier};
 use deslag_corpus::ngrams::{Counting, Gram, ngrams};
 use deslag_corpus::report::{DEFAULT_CONFIG, report};
 use deslag_corpus::summary::summary;
+use deslag_corpus::time::time;
 
 /// The deslag repository.
 fn repo_root() -> &'static Path {
@@ -54,10 +56,10 @@ fn prose(document: &Document<'_>) -> Vec<String> {
 fn ban(phrases: &[&str]) -> BannedPhrases {
     BannedPhrases {
         groups: PhraseGroups {
-            signposts: Some(false),
             insistence: Some(false),
             metaphors: Some(false),
             precision: Some(false),
+            ..PhraseGroups::default()
         },
         allow: None,
         ban: Some(
@@ -365,4 +367,17 @@ fn the_report_checks_every_file_at_its_own_config() {
     for heading in ["## Summary", "## Characters", "## Candidates", "## Lints"] {
         assert!(markdown.contains(heading), "{heading}");
     }
+}
+
+#[test]
+fn time_covers_every_fixture_of_the_tree_core_included() {
+    let timing = time(repo_root(), Tier::Tree).unwrap_or_else(|problem| panic!("{problem}"));
+    let fixtures = load::tree(&repo_root().join("tests/corpus")).unwrap();
+    assert_eq!(timing.files, fixtures.len());
+    assert_eq!(
+        timing.bytes,
+        fixtures.iter().map(|f| f.bytes.len() as u64).sum::<u64>()
+    );
+    assert!(timing.reading_seconds > 0.0);
+    assert!(timing.tagging_seconds >= 0.0 && timing.share() >= 0.0);
 }

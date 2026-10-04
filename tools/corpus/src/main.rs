@@ -16,6 +16,7 @@ use deslag_corpus::ngrams::{Counting, ngrams};
 use deslag_corpus::patterns::patterns;
 use deslag_corpus::report::{DEFAULT_CONFIG, report};
 use deslag_corpus::summary::summary;
+use deslag_corpus::time::{check, time};
 
 /// Measures deslag's test corpus: what it holds, and what sets its llm files apart from its human
 /// ones.
@@ -109,6 +110,19 @@ enum Command {
         /// every one.
         names: Vec<String>,
     },
+    /// How long deslag takes to read every fixture of the tier, and how much of that is tagging:
+    /// the fastest of three passes over each, on one thread, in the profile this binary is built
+    /// in. It prints files, bytes, the two times and tagging's share of reading.
+    ///
+    /// With --check it also judges the share against the budget of the profile the binary is
+    /// built in, 40.0% in debug and 31.0% in release, and exits 1 when it is over. A share over
+    /// budget is measured again, each file keeping its fastest of six passes, and only that
+    /// second share is judged. The budget is set on the big tier, so --tier tree is refused.
+    Time {
+        /// Judge the share against the budget.
+        #[arg(long)]
+        check: bool,
+    },
     /// One Markdown page for a pull request that grows the corpus: the summary, the characters,
     /// the candidates with the catalog gate, and the lints, each from the command of that name at
     /// its defaults.
@@ -137,6 +151,17 @@ fn print<T: serde::Serialize>(json: bool, value: &T, render: impl Fn(&T) -> Stri
 }
 
 fn run(cli: Cli) -> Result<(), Problem> {
+    if let Command::Time { check: judged } = cli.command {
+        if !judged {
+            print(cli.json, &time(&cli.root, cli.tier)?, |t| t.render());
+            return Ok(());
+        }
+        let timing = check(&cli.root, cli.tier)?;
+        print(cli.json, &timing, |t| t.render());
+        return timing
+            .complaint()
+            .map_or(Ok(()), |message| Err(Problem(message)));
+    }
     let corpus = Corpus::read(&cli.root, cli.tier)?;
     match cli.command {
         Command::Summary { filters } => {
@@ -181,6 +206,7 @@ fn run(cli: Cli) -> Result<(), Problem> {
             let found = patterns(&corpus, &filters, &names)?;
             print(cli.json, &found, |p| p.render());
         }
+        Command::Time { .. } => unreachable!("time is run before the corpus is read"),
         Command::Report {
             filters,
             config,

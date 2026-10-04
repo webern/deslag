@@ -304,6 +304,36 @@ fn the_schema_refuses_what_deslag_refuses() {
 }
 
 #[test]
+fn a_config_that_still_sets_the_removed_signposts_group_is_read_with_a_warning() {
+    let schema_text = schema().to_string();
+    assert!(
+        !schema_text.contains("signposts"),
+        "the schema still names the group"
+    );
+    for text in [
+        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = false\n",
+        "schema_version = 1\n[[md.overrides]]\nglobs = [\"docs/*.md\"]\n\
+         [md.overrides.lints.banned_phrases.groups]\nsignposts = true\n",
+    ] {
+        let repo = Repo::new();
+        repo.write("deslag.toml", text);
+        repo.write("README.md", "A short readme.\n");
+        let output = repo.check();
+        assert_eq!(code(&output), 0, "{text:?}: {}", stderr(&output));
+        let said = stderr(&output);
+        assert!(
+            said.contains("warning") && said.contains("banned_phrases.groups.signposts"),
+            "{text:?}: {said}"
+        );
+    }
+    // A config without it says nothing.
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write("README.md", "A short readme.\n");
+    assert!(!stderr(&repo.check()).contains("warning"));
+}
+
+#[test]
 fn every_table_in_the_schema_refuses_unknown_keys() {
     fn walk(schema: &Value, at: &str) {
         match schema {

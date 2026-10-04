@@ -9,7 +9,7 @@
     "commit": "ad3b7a25ecb0081f61e8961ceaf7c86a5e2849b9",
     "commit_date": "2026-09-09T14:08:42-04:00",
     "url": "https://github.com/JuliaMath/Polynomials.jl/blob/ad3b7a25ecb0081f61e8961ceaf7c86a5e2849b9/docs/src/index.md",
-    "license": "MIT-0",
+    "license": "MIT",
     "license_files": [
       "LICENSE.md"
     ],

@@ -14,11 +14,11 @@ add to it until the corpus grows on its own; the corpus as it is today is `corpu
 
 deslag claims that every lint is proven on real files. The corpus is those files: Markdown quoted
 from public repositories, sorted by who wrote it. It is where a lint's rule and threshold are
-decided, and where the proof that they hold is kept, as tests.
+decided, and where the proof that they hold is kept as tests.
 
-That proof is only as strong as the corpus. A small one fits what one maintainer has seen. A big
-one that keeps growing can show which rules hold across thousands of repositories, which new ones
-the data suggests, and whether an old rule still holds as models change.
+That proof is only as strong as the corpus. A small one fits what one maintainer has seen; a big
+growing one shows which rules hold across thousands of repositories, which new ones the data
+suggests, and whether an old rule still holds as models change.
 
 ## 2. The two tiers
 
@@ -31,12 +31,13 @@ describes. `make fetch-blobs` unpacks it and `make test-blobs` checks it; the bu
 it.
 
 The big tier is a superset: every collected fixture of the tree is in it, with the same bytes and
-the same sidecar, so the tree is a sample of it. `core/` stays out, since it is hand-picked and
+sidecar, so the tree is a sample of it. `core/` stays out, since it is hand-picked and
 labelled `unknown`, and no fixture in the big tier may be one of `core/`'s.
 
 ## 3. Labels are proven
 
-A fixture's label comes from the git history of its file, up to the commit it is quoted at:
+A fixture's label comes from the git history of its file, up to the commit it is quoted at, or,
+for `llm` alone, from its publisher's word (below):
 
 - `human`: every commit that touched it is a person's from before 2022-01-01, by its author date
   and its committer date both, and none carries a mark.
@@ -46,10 +47,27 @@ A fixture's label comes from the git history of its file, up to the commit it is
 
 A commit by a bot rules out every label. The sidecar's `authorship.basis` says why a fixture has
 its label, and `history` holds the counts behind it. A file whose history proves no label stays
-out of the big tier. No classifier or detector model assigns a label.
+out of the big tier, unless a publisher's word labels it `llm`. No classifier or detector model
+assigns a label.
 
-The provable three-way split is what makes the corpus worth measuring, so every analysis of it
+The provable three-way split is what makes the corpus worth measuring, so every analysis
 keeps the split: it reports each label on its own and never pools `mixed` with `llm`.
+Publisher-declared `llm` counts as `llm`; `--without-declared` separates it.
+
+### Publisher-declared model
+
+A second basis for `llm`: a dataset whose publisher generated its texts with a named model and
+says which for each. A text is quoted unedited, at a pinned revision, under a licence of
+section 7, and only when the model's (or its base model's) licence is one too. The version 4
+sidecar holds `declared` in place of `history`, and its manifest line says
+`basis: publisher-declared`.
+
+It is the publisher's word, unchecked, so it never proves `human` or `mixed`. An
+analysis or a sample takes them in as `llm` unless given `--without-declared`; `recheck` and
+`select` skip them; and a batch may set `per_repo` above 50 for such a source, since its texts
+are one source's.
+
+The owner accepted the basis.
 
 ### Marks
 
@@ -122,10 +140,10 @@ Markdown file of the same name, or one git's rename detection pairs with it, the
 than its history, and the file is unlabelled; a merge that added a file is treated the same, since
 the history leaves merges out. A copy of older text is not caught.
 
-A shallow clone ends at a boundary. When the oldest commit that git shows for a file is that
-boundary, the history is truncated: a label's basis says so and claims nothing about when the file
-began, and `llm` is ruled out. A commit is before the cutoff only by both of its dates, since one
-can be authored long before it is committed.
+A shallow clone ends at a boundary. When the oldest commit git shows for a file is that boundary,
+the history is truncated: a label's basis says so and claims nothing about when the file began, and
+`llm` is ruled out. A commit is before the cutoff only by both of its dates, since one can be
+authored long before it is committed.
 
 ### The cutoff
 
@@ -142,10 +160,10 @@ tagged `sg-register:` in `repos.jsonl`, so an analysis can take that register ap
 
 ## 4. The layout and the sidecar
 
-Every fixture has a JSON sidecar beside it, which records its source and licence, its history and
-label, and facts about its bytes. A sidecar is a capture record: once its batch is published it is
+Every fixture has a JSON sidecar beside it, which records its source, licence, history,
+label and facts about its bytes. A sidecar is a capture record: once its batch is published it is
 never rewritten. Loaders accept every sidecar version they know. A sidecar in the tree is a byte
-copy of its twin in the big tier, so the tree may mix versions just as the big tier does.
+copy of its twin in the big tier, so the tree may mix versions as the big tier does.
 
 Version 3 adds the raw evidence, each mark as written and each marked commit's change to the file,
 so a label can be derived again.
@@ -185,7 +203,7 @@ outside `.blobs/`, which `make clean` deletes.
 When the rules of section 3 change, `collect.py recheck` derives every live label again from a
 fresh clone, and each fixture whose label no longer holds is excluded; the tree drops it too.
 Exclusions that would take a label under the tree's floors wait for their replacements and ship
-with them. One whose repository is gone is kept, since its label was proven when it was captured.
+with them. One whose repository is gone is kept: its label was proven when captured.
 
 The big tier holds files of 128KB at most, the tree 64KB. The harvest keeps up to 50 files of each
 label from a repository, at random, and every twin: past that, a file adds bytes, not evidence,
@@ -199,25 +217,28 @@ pairs. A fixture the big tier holds is not added again.
 
 An exclusion releases the fixture's identity. A later batch can supersede a fixture, to give it a
 newer sidecar or a companion file, by excluding it and adding it again. Every version of the image
-ends with some batch, so these rules hold after every batch, not only the last.
+ends with some batch, so these rules hold after each.
 
 ## 6. What reads the corpus, and what never does
 
-Nothing reads the corpus when deslag lints. A lint never consults it, and the published crate
-holds none of it. The corpus is where maintainers decide and prove a lint's rule and threshold,
-offline, with tests and tools; the loaders live outside the library.
+Nothing reads the corpus when deslag lints: a lint never consults it, and the published crate holds
+none of it. Maintainers decide and prove a lint's rule and threshold on it offline, with tests and
+tools; the loaders live outside the library.
 
 deslag never shows a metric to the agent it gates. docstats' evaluation (`docs/scoring-spec.md` at
-commit d958885a) found that live numeric targets during drafting did not improve the text over
-plain guidance, p = 0.7253, and led models to game the numbers. Issue #34 records the leniency and
-formulas deslag does not take for the same reason: an agent works to whatever signal it is shown.
+commit d958885a) found that live numeric targets did no better than plain guidance (p = 0.7253), and
+models gamed them. Issue #34 records the leniency and formulas deslag omits for the same reason: an
+agent works to whatever signal it is shown.
 
 ## 7. Licences and attribution
 
-A fixture is quoted only under a permissive licence whose one condition is attribution: MIT,
-MIT-0, Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, ISC, Unlicense, CC0-1.0, CC-BY-4.0, Zlib or
-BSL-1.0, the list `collect.py` and the loaders both hold. Nothing share-alike or copyleft is
-quoted.
+A fixture is quoted only under a permissive licence whose one condition is attribution: MIT, MIT-0,
+Apache-2.0, BSD-2-Clause, BSD-3-Clause, 0BSD, ISC, Unlicense, CC0-1.0, CC-BY-4.0, Zlib or BSL-1.0,
+the list `collect.py` and the loaders both hold. Nothing share-alike or copyleft is quoted.
+
+A licence file with several licences labels a fixture `A OR B`. A term outside the list, or one that
+adds a condition to an accepted licence, excludes the part of the tree the text places it on (named
+directories, third-party notices), or the whole tree when it places none.
 
 The sidecar carries the attribution: host, repository, path, commit, a permalink, the licence and
 the files it came from, and the date of capture. A fixture without one does not belong in the

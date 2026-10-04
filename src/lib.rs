@@ -14,12 +14,12 @@
 //! `docs/design/` for the design.
 //!
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
-//! sentences of its prose. [`instructions`] holds what an agent setting deslag up needs to read,
-//! [`config::schema`] the JSON schema of the config, and [`explain`](mod@explain) the settings a
-//! file gets. [`output`] prints a run in the formats a machine reads, and [`fix`](mod@fix)
-//! makes the edits to a file that the lints name and the document proves safe. [`change`] asks git
-//! what a change did, which the lints that judge a change read and [`Report::within`] narrows a run
-//! to.
+//! sentences of its prose. [`tag`] is where each word gets a part of speech. [`instructions`] holds
+//! what an agent setting deslag up needs to read, [`config::schema`] the JSON schema of the config,
+//! and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the formats a
+//! machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and the
+//! document proves safe. [`change`] asks git what a change did, which the lints that judge a change
+//! read and [`Report::within`] narrows a run to.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -35,6 +35,7 @@ pub mod instructions;
 pub mod lint;
 pub mod output;
 pub mod parse;
+pub mod tag;
 
 pub use change::Change;
 pub use config::{Config, ConfigSource};

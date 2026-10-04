@@ -1,0 +1,89 @@
+before     noun  (before.json)
+after      import:fixed-answer-import.conllu  (after.json)
+gold       tests/cases/fixed-answer.conllu
+sha256     aaec713bc1c6
+split      dev
+
+all (3 sentences, 9 tokens)
+                          before   after     diff
+  Accuracy                 22.2%   83.3%    +61.1  [+16.7, +100.0]   better
+  Best-guess accuracy      22.2%   77.8%    +55.6  [+33.3, +100.0]   better
+  Committed share         100.0%   66.7%    -33.3  [-50.0, -25.0]    worse
+  Gold retained            22.2%   88.9%    +66.7  [+50.0, +100.0]   better
+  Unknown rate              0.0%   11.1%    +11.1  [+0.0, +25.0]     same
+  Unalignable rate          0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Clean sentences           0.0%   66.7%    +66.7  [+0.0, +100.0]    same
+  Number                    0.0%   50.0%    +50.0  [+0.0, +100.0]    same
+  Verb form                  n/a  100.0%      n/a  n/a               n/a
+  Tense                      n/a   50.0%      n/a  n/a               n/a
+  Sure share              100.0%   44.4%    -55.6  [-66.7, -50.0]    lower
+  Sure accuracy            22.2%  100.0%    +77.8  [+66.7, +100.0]   better
+  Likely share              0.0%   22.2%    +22.2  [+0.0, +33.3]     same
+  Likely accuracy            n/a   50.0%      n/a  n/a               n/a
+  Unsure share              0.0%   22.2%    +22.2  [+0.0, +50.0]     same
+  Unsure accuracy            n/a  100.0%      n/a  n/a               n/a
+  Unknown share             0.0%   11.1%    +11.1  [+0.0, +25.0]     same
+  Unknown accuracy           n/a    0.0%      n/a  n/a               n/a
+
+tier human (2 sentences, 7 tokens)
+                          before   after     diff
+  Accuracy                 28.6%   80.0%    +51.4  [+16.7, +75.0]    better
+  Best-guess accuracy      28.6%   71.4%    +42.9  [+33.3, +50.0]    better
+  Committed share         100.0%   71.4%    -28.6  [-33.3, -25.0]    worse
+  Gold retained            28.6%   85.7%    +57.1  [+50.0, +66.7]    better
+  Unknown rate              0.0%   14.3%    +14.3  [+0.0, +25.0]     same
+  Unalignable rate          0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Clean sentences           0.0%   50.0%    +50.0  [+0.0, +100.0]    same
+  Number                    0.0%   50.0%    +50.0  [+0.0, +100.0]    same
+  Verb form                  n/a  100.0%      n/a  n/a               n/a
+  Tense                      n/a  100.0%      n/a  n/a               n/a
+  Sure share              100.0%   42.9%    -57.1  [-66.7, -50.0]    lower
+  Sure accuracy            28.6%  100.0%    +71.4  [+66.7, +75.0]    better
+  Likely share              0.0%   28.6%    +28.6  [+25.0, +33.3]    higher
+  Likely accuracy            n/a   50.0%      n/a  n/a               n/a
+  Unsure share              0.0%   14.3%    +14.3  [+0.0, +33.3]     same
+  Unsure accuracy            n/a  100.0%      n/a  n/a               n/a
+  Unknown share             0.0%   14.3%    +14.3  [+0.0, +25.0]     same
+  Unknown accuracy           n/a    0.0%      n/a  n/a               n/a
+
+tier llm (1 sentence, 2 tokens)
+                          before   after     diff
+  Accuracy                  0.0%  100.0%   +100.0  [+100.0, +100.0]  better
+  Best-guess accuracy       0.0%  100.0%   +100.0  [+100.0, +100.0]  better
+  Committed share         100.0%   50.0%    -50.0  [-50.0, -50.0]    worse
+  Gold retained             0.0%  100.0%   +100.0  [+100.0, +100.0]  better
+  Unknown rate              0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Unalignable rate          0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Clean sentences           0.0%  100.0%   +100.0  [+100.0, +100.0]  better
+  Number                     n/a     n/a      n/a  n/a               n/a
+  Verb form                  n/a  100.0%      n/a  n/a               n/a
+  Tense                      n/a    0.0%      n/a  n/a               n/a
+  Sure share              100.0%   50.0%    -50.0  [-50.0, -50.0]    lower
+  Sure accuracy             0.0%  100.0%   +100.0  [+100.0, +100.0]  better
+  Likely share              0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Likely accuracy            n/a     n/a      n/a  n/a               n/a
+  Unsure share              0.0%   50.0%    +50.0  [+50.0, +50.0]    higher
+  Unsure accuracy            n/a  100.0%      n/a  n/a               n/a
+  Unknown share             0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Unknown accuracy           n/a     n/a      n/a  n/a               n/a
+
+context prose (3 sentences, 9 tokens)
+                          before   after     diff
+  Accuracy                 22.2%   83.3%    +61.1  [+16.7, +100.0]   better
+  Best-guess accuracy      22.2%   77.8%    +55.6  [+33.3, +100.0]   better
+  Committed share         100.0%   66.7%    -33.3  [-50.0, -25.0]    worse
+  Gold retained            22.2%   88.9%    +66.7  [+50.0, +100.0]   better
+  Unknown rate              0.0%   11.1%    +11.1  [+0.0, +25.0]     same
+  Unalignable rate          0.0%    0.0%     +0.0  [+0.0, +0.0]      same
+  Clean sentences           0.0%   66.7%    +66.7  [+0.0, +100.0]    same
+  Number                    0.0%   50.0%    +50.0  [+0.0, +100.0]    same
+  Verb form                  n/a  100.0%      n/a  n/a               n/a
+  Tense                      n/a   50.0%      n/a  n/a               n/a
+  Sure share              100.0%   44.4%    -55.6  [-66.7, -50.0]    lower
+  Sure accuracy            22.2%  100.0%    +77.8  [+66.7, +100.0]   better
+  Likely share              0.0%   22.2%    +22.2  [+0.0, +33.3]     same
+  Likely accuracy            n/a   50.0%      n/a  n/a               n/a
+  Unsure share              0.0%   22.2%    +22.2  [+0.0, +50.0]     same
+  Unsure accuracy            n/a  100.0%      n/a  n/a               n/a
+  Unknown share             0.0%   11.1%    +11.1  [+0.0, +25.0]     same
+  Unknown accuracy           n/a    0.0%      n/a  n/a               n/a

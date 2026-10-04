@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 494 of 1230: core 6, human 57, llm 248, mixed 183
+# fails 486 of 1230: core 6, human 53, llm 248, mixed 179
 
 [md.lints.banned_chars.groups]
 arrows = true
@@ -34,15 +34,12 @@ human/angular-eslint--angular-eslint/packages__eslint-plugin__docs__rules__no-co
 human/barumau--pandunia/english__109_jumla_bina.md count:127
 human/bl00mber--react-phone-input-2/CHANGELOG.md count:2
 human/chenjj--Awesome-HTTPRequestSmuggling/README.md count:1
-human/chronotope--chrono/CHANGELOG.md count:6
-human/codeberg--Starfish--TinyWeatherForecastGermany/README.md count:3
 human/codeberg--cryinkfly--Autodesk-Fusion-360-on-Linux/github__PULL_REQUEST_TEMPLATE.md count:1
 human/codeberg--dnkl--fcft/CHANGELOG.md count:12
 human/codeberg--dnkl--foot/CHANGELOG.md count:52
 human/codeberg--dnkl--fuzzel/CHANGELOG.md count:4
 human/codeberg--dnkl--yambar/CHANGELOG.md count:22
 human/codeberg--iNPUTmice--lttrs-android/README.md count:4
-human/codeberg--mc776--HideousDestructor/hd_lore_nonfree.md count:2
 human/codeberg--poezio--slixmpp/github__pull_request_template.md count:1
 human/codeberg--privacyguides--privacyguides.org/collections___posts__2019-10-30-choosing-a-vpn.md count:8
 human/codeberg--rtcqs--rtcqs/README.md count:2
@@ -65,7 +62,6 @@ human/jasonnam--AStack/README.md count:3
 human/jenly1314--KingKeyboard/README.md count:2
 human/lacymorrow--crossover/readme.md count:40
 human/leonardomso--33-js-concepts/CONTRIBUTING.md count:1
-human/lodash--lodash-cli/github__CONTRIBUTING.md count:4
 human/openlayers--openlayers/changelog__v6.10.0.md count:2
 human/pmq20--node-packer/current__doc__api__dns.md count:2
 human/polyfillpolyfill--polyfill-service/github__ISSUE_TEMPLATE.md count:1
@@ -83,8 +79,10 @@ human/vercel--vercel/examples__hugo__themes__ananke__exampleSite__content__post_
 human/vkbansal--react-contextmenu/docs__api.md count:4
 llm/AIQ-Kitware--aiq-dkps-formalization/dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md count:31
 llm/Accenture--mercury/memory__sessions__2026-09-18-220621.md count:5
+llm/AkbarDevop--ai-job-agent/skills__job-patterns__SKILL.md count:50
 llm/AliAkhtari78--SpotifyScraper/extras__blog__spotifyscraper-v3.md count:12
 llm/AmintaCCCP--GithubStarsManager/cloudflare-worker__README.md count:8
+llm/Asymptote-Labs--agent-beacon/browser-extension__tools__integration-otelcol__README.md count:2
 llm/BelimbingApp--belimbing/docs__plans__people__15_employees-event-decoupling.md count:16
 llm/BetterTyped--react-zoom-pan-pinch/docs__invalid-issues__558-vite-dev-dependency-cve.md count:2
 llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md count:34
@@ -95,9 +93,6 @@ llm/CloudAI-X--claude-workflow-v2/commands__bootstrap-repo.md count:1
 llm/ContextLab--storytelling-with-data/data-stories__data-visualization-mcp__CLAUDE.md count:9
 llm/CoreBunch--Instatic/docs__reference__use-async-resource.md count:18
 llm/Data-Wise--atlas/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md count:51
-llm/Dicklesworthstone--annus-mirabilis.com/public__README.md count:2
-llm/Dicklesworthstone--beads_viewer/docs__labels-view-feature-plan.md count:1
-llm/Dicklesworthstone--pi_agent_rust/docs__security__policy-tuning-guide.md count:3
 llm/Eigenwise--atomic-agents/atomic-forge__tools__datetime_tool__README.md count:1
 llm/Exa-Networks--exabgp/claude__docs__archive__dual-transport__README.md count:1
 llm/FStarLang--FStar/doc__ref__bootstrapping.md count:1
@@ -110,18 +105,22 @@ llm/Hack23--homepage/FINAL_IMPLEMENTATION_REPORT.md count:18
 llm/JetBrains--kotlin-web-site/air__cloud__README.md count:10
 llm/JordiRigau--hp-prime-kit/docs__commands__spreadsheet__ConfT1mean.md count:2
 llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md count:23
+llm/Killaret--knowledge-graph/devin__prompts__ANALYSIS_PROMPT.md count:18
 llm/Killaret--knowledge-graph/devin__prompts__README.md count:4
+llm/LukeAFullard--SIVO_dev/examples__mysite__title_page__subpage__water__science__fmu__puketoi-ki-tai__md__Sediment__trend_popup.md count:1
 llm/MacNite--HiveHub/tools__ble-throughput__README.md count:7
 llm/MarkMichaelis--ScoopBucket/bucket__ai__MarkMichaelisClaudeOutcomesNotCode.md count:6
 llm/MaxGramser--homeassistant_espscreen/docs__TEST_RESULTS_0239.md count:7
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md count:25
 llm/Nanako0129--sepia/evals__deaify-release-note__prompt.md count:2
 llm/OnlyTerp--openclaw-optimization-guide/part25-architecture-overview.md count:32
+llm/OnlyTerp--openclaw-optimization-guide/part31-the-llm-wiki-pattern-in-openclaw.md count:25
 llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md count:44
 llm/OpenNHP--opennhp/docs__protocol__messages.md count:115
 llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md count:73
 llm/Pimzino--claude-code-spec-workflow/claude__specs__ui-improvements__design.md count:3
 llm/PropertyTools--PropertyTools/docs__concepts.md count:4
+llm/RazzaBear--copilot-toolkit/skills__memory-merger__SKILL.md count:2
 llm/Rinne414--sd-image-sorter/docs__RELEASE_NOTES_TEMPLATE.md count:5
 llm/SamuelIVX--interleave/docs__plans__library-api-mode.md count:9
 llm/SciML--ModelingToolkit.jl/AGENTS.md count:2
@@ -134,11 +133,11 @@ llm/TairuFramework--mokei/docs__agents__plans__completed__2026-06-19-anthropic-t
 llm/TencentCloud--CubeSandbox/docs__guide__agent-platform-freeze.md count:7
 llm/Token-Gremlin--natural-disasters/CONTRIBUTING.md count:6
 llm/TomBadash--Mouser/github__release-notes__v3.7.2.md count:10
-llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md count:2
 llm/WikipediaBrown--napkin/Sources__napkin__napkin.docc__Articles__AddingANetworkedService.md count:8
 llm/WildGums--Orchestra/AGENTS.md count:14
 llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md count:44
 llm/YousefHadder--markdown-plus.nvim/docs__wiki__11.Treesitter.md count:12
+llm/Yuan1z0825--nature-skills/skills__nature-paper2ppt__static__fragments__paper_type__review.md count:1
 llm/Zeecka--AperiSolve/aperisolve__wiki_content__en__tools__identify.md count:9
 llm/Zettelgarden--Zettelgarden/docs__plans__2025-02-01-mobile-viewpage-design.md count:19
 llm/abdul037--VibeTrading/agent__src__skills__bottleneck-hunter__SKILL.md count:42
@@ -168,8 +167,7 @@ llm/block--builderbot/apps__differ__src-tauri__resources__CUSTOM-THEMES.md count
 llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md count:28
 llm/bojieli--ai-agent-book/chapter5__paper-to-ppt__paper__sample_paper.md count:2
 llm/bradygaster--Squad-IRL/compliance-checker__README.md count:7
-llm/brazilofmux--tinymux/CONTRIBUTING.md count:14
-llm/brendankowitz--ignixa-fhir/docs__features__validation__investigations__terminology-completeness.md count:20
+llm/bradygaster--Squad-IRL/contract-reviewer__README.md count:15
 llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md count:46
 llm/caliber-ai-org--ai-setup/LANDING_HERO.md count:27
 llm/callstackincubator--rozenite/changeset__rozenite-init-detects-lynx.md count:2
@@ -183,6 +181,7 @@ llm/coleam00--context-engineering-intro/use-cases__ai-coding-wisc-framework__cla
 llm/cozystack--cozystack/docs__changelogs__v1.2.2.md count:1
 llm/crestalnetwork--intentkit/docs__plans__2026-03-26-rich-media-messaging-plan.md count:7
 llm/danikf--tik4net/Docs__findings-cli-history.md count:20
+llm/danikf--tik4net/Docs__findings-routeros-6.md count:60
 llm/darkvolg--BeehiveScale-ESP32/memory__project_session_2026_09_11.md count:55
 llm/datopian--portaljs/site__content__docs__guides__theming.md count:16
 llm/david-priest--figtracer/examples__cytof__DATASETS.md count:9
@@ -194,8 +193,6 @@ llm/dofy--learn-vim/en__chapter10.md count:6
 llm/dosco--graphjin/website__content__environment__worlds.md count:4
 llm/drewnoakes--metadata-extractor/RELEASING.md count:15
 llm/dwalleck--cyril/docs__plans__2026-04-02-subagent-support-design.md count:25
-llm/dweigend--vibe-kanban/dev__research__integration-strategies.md count:4
-llm/dxos--dxos/changeset__browser-cli-terminal.md count:3
 llm/edwardkim--rhwp/mydocs__working__task_m100_1595_stage1.md count:3
 llm/elastic--elastic-transport-net/claude__skills__writing-style.md count:19
 llm/element-software--CasaBoard/github__copilot-instructions.md count:8
@@ -207,6 +204,7 @@ llm/erf-model--ERF/Exec__CanonicalTests__Radiation__SW_Scattering_Cloud__README.
 llm/ether--etherpad/admin__tools__openapi-codegen__README.md count:2
 llm/evalstate--hf-mcp-server/GRADIO_DISCOVERY_OPTIMIZATION.md count:10
 llm/fitlab-ai--agent-infra/docs__en__benchmark.md count:2
+llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md count:20
 llm/flyvercity--syntagmax/openwiki__testing.md count:4
 llm/gastownhall--gastown/docs__design__ledger-export-triggers.md count:14
 llm/geekjourneyx--agora/agents__agora-schumpeter.md count:14
@@ -214,7 +212,6 @@ llm/getbintana--bintana/docs__llm__qr.md count:13
 llm/getnuevetech--ZuriK/README.md count:33
 llm/getsentry--sentry-rust/agents__skills__docs-review__SKILL.md count:2
 llm/ggui-ai--ggui/misc__benchmark__src__baseline__CI.md count:29
-llm/gitbutlerapp--gitbutler/error-cleanup-checklist.md count:58
 llm/github--codeql-action/github__instructions__release-merge.instructions.md count:3
 llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md count:21
 llm/github--octocanvas/vscode__github__demo__prompt-3-readme-banner.md count:25
@@ -236,6 +233,7 @@ llm/influxdata--docs-v2/agents__skills__issue-investigation__SKILL.md count:13
 llm/jasonacox--tinytuya/DESIGN.md count:31
 llm/jaychempan--coding-with-beat/codex_skills__cwb-synthwave__SKILL.md count:3
 llm/jjjkkkjjj--Matft/claude__skills__test-design__SKILL.md count:17
+llm/jm-sky--zbory-chwz/docs__issues__2026-07-09--010--church-governance-actions.md count:40
 llm/joemccann--dillinger/agent__skills__frontend-design__decision-trees.md count:5
 llm/joeynyc--hermes-hudui/CLAUDE.md count:30
 llm/jongio--thermoworks/github__extensions__thermoworks__README.md count:39
@@ -245,12 +243,9 @@ llm/kegouro--lablog/lablog-production-plan.md count:2
 llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcript.md count:4
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md count:39
 llm/kevinhorek--bluepainter-studio/site__src__content__guides__best-figma-to-react-tools-for-docs-sites.md count:7
-llm/lewiseinstein15-Tech--jexi-os/skills__library__claude-ecosystem__n8n-skills__n8n-subworkflows__SKILL.md count:65
 llm/lightdash--lightdash/skills__upgrade-preflight__resources__output-reference.md count:9
-llm/lishix520--academic-paper-skills/strategist__references__quality_standards.md count:43
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md count:26
 llm/logog782-cmyk--linkly-quote-cards/SKILL.md count:79
-llm/lokus-ai--lokus/docs__architecture__team-collaboration-roadmap.md count:6
 llm/mabel-dev--opteryx/IMPLEMENTATION_SUMMARY.md count:8
 llm/makerspet--oomwoo/contributions__health-monitor__README.md count:28
 llm/marko-js--vite/agent-feedback__items__2026-09-04-marko-ssr-entry-injects-nothing.md count:3
@@ -260,6 +255,7 @@ llm/microsoft--CoworkDashboard/archived__cowork-dashboard-team-dashboard-v1.3.0_
 llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md count:28
 llm/microsoft--microsoft-ui-reactor/docs__specs__047__phase4-results__LAPTOP-4MEP83VI__2026-05-30-arm64-postgate__RESULTS.md count:20
 llm/missingfaktor--akar/agents__skills__release__SKILL.md count:1
+llm/mohitagw15856--pm-claude-skills/exports__cline__pm-visuals__sequence-diagram__sequence-diagram.md count:14
 llm/mohitagw15856--pm-claude-skills/exports__obsidian__pm-creator__content-repurposer__content-repurposer.md count:25
 llm/mono--SkiaSharp/agents__skills__memory-leak-fixer__references__leaks__native-statics-singletons.md count:8
 llm/mrtcnbsk--northstar/templates__research-desk__README.md count:6
@@ -280,7 +276,6 @@ llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md count:13
 llm/plasma-umass--coz/java__README.md count:5
 llm/pmndrs--react-spring/changeset__remove-deprecated-targets.md count:2
 llm/pockethost--pockethost/cursor__skills__check-push__SKILL.md count:3
-llm/pycaret--pycaret/docs__revamp__PLATFORM_QUICKSTART.md count:22
 llm/radixark--miles/scripts__sandbox_smoke__README.md count:4
 llm/raia-live--amfs/docs__adapters__s3.md count:13
 llm/rebasepro--rebase/website__src__content__docs__docs__getting-started__headless.md count:21
@@ -291,6 +286,7 @@ llm/roznet--connectstats/designs__INDEX.md count:7
 llm/runcat-dev--RunCat365/docs__privacy_policy.md count:4
 llm/sampathmannam--nilamind/docs__wiki__Features.md count:31
 llm/sangrokjung--claude-forge/docs__distribution__awesome-prs__hesreallyhim.md count:12
+llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md count:61
 llm/sema-lisp--sema/crates__sema-core__README.md count:7
 llm/shanraisshan--claude-code-best-practice/tips__claude-boris-15-tips-30-mar-26.md count:12
 llm/sobolevbel--jdg/docs__zus_chorobowe.en.md count:23
@@ -308,6 +304,7 @@ llm/superplanehq--superplane/runner__docs__task-payload-kinds-mock.md count:19
 llm/synthetic-sciences--openscience/backend__cli__skills__biology__bionemo-nims__SKILL.md count:6
 llm/tajiaoyezi--vibestation/docs__superpowers__plans__2026-06-05-language-settings-implementation-plan.md count:3
 llm/toa-io--toa/extensions__introspection__ui__agents__skills__antcn__references__dropdown.md count:13
+llm/toa-io--toa/migrations__262.md count:8
 llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md count:30
 llm/toku345--dotfiles/docs__outer-loop__week0-v2__policy.md count:6
 llm/topoteretes--cognee/examples__integrations__docker-sandbox-kit__README.md count:13
@@ -322,13 +319,13 @@ llm/wangbinquan--agent-workflow/design__RFC-056-clarify-cross-agent__patch-2026-
 llm/webonyx--graphql-php/SECURITY.md count:3
 llm/withguuey--guuey-sdks/packages__config__README.md count:3
 llm/workglow-dev--libs/packages__triggers__README.md count:29
-llm/worlyung--exegete/docs__DATA_SOURCES.md count:39
 llm/x-motemen--ghq/github__copilot-instructions.md count:3
 llm/xr843--fojin/docs__superpowers__specs__2026-06-03-cross-canon-parallel-reading-v1-design.md count:54
 llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md count:66
 llm/yamadashy--repomix/github__releases__v1.x__v1.17.0.md count:3
 llm/zexuanw958-svg--travel-plan-viz/travel-plan-viz__references__porting-to-other-agents.md count:7
 llm/zwave-js--zwave-js-ui/docs__usage__configuration-templates.md count:15
+mixed/Azure--azure-sdk-for-net/sdk__identity__Azure.Identity__CHANGELOG.md count:1
 mixed/Azure--azure-sdk-for-net/sdk__keyvault__Azure.Security.KeyVault.Certificates__CHANGELOG.md count:1
 mixed/BYVoid--OpenCC/NEWS.md count:38
 mixed/Bee-Mar--mmpm/CHANGELOG.md count:9
@@ -347,7 +344,6 @@ mixed/GitTools--GitVersion/BREAKING_CHANGES.md count:1
 mixed/Hopetree--izone/README.md count:5
 mixed/HumanSignal--label-studio/docs__source__guide__install_enterprise_k8s.md count:6
 mixed/HumanSignal--label-studio/docs__source__guide__quality.md count:2
-mixed/IgniteUI--igniteui-angular/github__CONTRIBUTING.md count:1
 mixed/InvoicePlane--InvoicePlane/README.md count:14
 mixed/JeffSteinbok--jeffpardy/README.md count:8
 mixed/JetBrains--ideavim/CONTRIBUTING.md count:14
@@ -357,20 +353,21 @@ mixed/LennartHennigs--ESPTelnet/CHANGELOG.md count:6
 mixed/LibrePhotos--librephotos/apps__backend__README.md count:1
 mixed/MarkMichaelis--ScoopBucket/README.md count:49
 mixed/MichaelGrafnetter--DSInternals/Documentation__CHANGELOG.md count:1
+mixed/MicrosoftDocs--azure-dev-docs/articles__python__walkthrough-tutorial-authentication-05.md count:6
 mixed/MicrosoftDocs--azure-dev-docs/articles__python__walkthrough-tutorial-authentication-06.md count:5
 mixed/MinaProtocol--mina/docs__block-producer.md count:11
 mixed/NikolayS--postgres_dba/README.md count:11
+mixed/NotePlan--plugins/dwertheimer.Favorites__CHANGELOG.md count:1
 mixed/NotePlan--plugins/dwertheimer.TaskAutomations__changelog.md count:2
 mixed/NotePlan--plugins/jgclark.Summaries__CHANGELOG.md count:6
 mixed/NuGet--NuGetGallery/src__Validation.PackageSigning.ProcessSignature__README.md count:13
 mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md count:34
 mixed/Petterpx--FloatingX/README.md count:12
-mixed/PostHog--posthog.com/contents__handbook__product__product-team.md count:6
 mixed/PowerShell--vscode-powershell/docs__development.md count:9
-mixed/PrivateBin--PrivateBin/CHANGELOG.md count:3
 mixed/PyThaiNLP--pythainlp/CONTRIBUTING.md count:5
 mixed/SchemaStore--schemastore/CONTRIBUTING.md count:10
 mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md count:27
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md count:2
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md count:35
 mixed/ShieldBattery--ShieldBattery/docs__USEFUL_QUERIES.md count:1
 mixed/Umplify--xunit-dependency-injection/README.md count:12
@@ -385,19 +382,16 @@ mixed/amberframework--amber/github__CONTRIBUTING.md count:6
 mixed/amir20--dozzle/README.md count:7
 mixed/andfanilo--streamlit-echarts/CHANGELOG.md count:5
 mixed/apache--superset/INSTALL.md count:1
-mixed/apache--teaclave-trustzone-sdk/SECURITY.md count:2
 mixed/appleboy--gorush/README.md count:10
 mixed/augustohp--warwick-vim/README.md count:3
 mixed/authgear--authgear-server/docs__specs__oidc.md count:11
-mixed/brendankowitz--ignixa-fhir/README.md count:2
+mixed/baizhiheizi--quill/README.md count:4
 mixed/briandenicola--password-vault/README.md count:2
 mixed/brsloan--warewoolf/README.md count:5
 mixed/burhanrashid52--PhotoEditor/CHANGELOG.md count:1
 mixed/cheat--cheat/doc__cheat.1.md count:1
 mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md count:45
-mixed/cloudfoundry--uaa/docs__UAA-LDAP.md count:50
 mixed/compiler-explorer--compiler-explorer/docs__AddingACompiler.md count:15
-mixed/cybersemics--em/README.md count:4
 mixed/cypress-io--cypress-documentation/CONTRIBUTING.md count:2
 mixed/dadhi--DryIoc/README.md count:2
 mixed/dads2busy--dads2busy.github.io/README.md count:9
@@ -412,8 +406,8 @@ mixed/dosco--graphjin/SECURITY.md count:7
 mixed/dotnet--ClangSharp/README.md count:8
 mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md count:2
 mixed/dotnet--msbuild/documentation__wiki__Contributing-Code.md count:6
-mixed/dragonflydb--dragonfly/README.md count:11
 mixed/dromara--liteflow/README.md count:5
+mixed/expo--expo/packages__babel-preset-expo__CHANGELOG.md count:85
 mixed/expo--expo/packages__expo-screen-capture__CHANGELOG.md count:58
 mixed/expo--expo/packages__expo-task-manager__CHANGELOG.md count:79
 mixed/f-shake--RemoteFFmpegGUI/ReadMe.md count:5
@@ -457,6 +451,7 @@ mixed/metowolf--MetingJS/README.md count:3
 mixed/microcharts-dotnet--Microcharts/CONTRIBUTING.md count:1
 mixed/microsoft--CSS-Exchange/docs__Emerging-Issues.md count:18
 mixed/microsoft--FluidFramework/experimental__framework__data-objects__README.md count:1
+mixed/microsoft--FluidFramework/packages__utils__tool-utils__README.md count:1
 mixed/mlflow--mlflow/github__workflows__cross-version-testing.md count:8
 mixed/mokekuma-git--JLeague_Matches-Bar_Graph/README.md count:11
 mixed/mono--SkiaSharp/github__pull_request_template.md count:12
@@ -477,19 +472,17 @@ mixed/pamburus--hl/README.md count:5
 mixed/pivotal-cf--kiln/README.md count:1
 mixed/pnpm--pnpm/CONTRIBUTING.md count:15
 mixed/prometheus-community--helm-charts/charts__kube-prometheus-stack__README.md count:3
-mixed/pycaret--pycaret/CONTRIBUTING.md count:18
 mixed/quay--quay/github__CONTRIBUTING.md count:8
 mixed/rebasepro--rebase/README.md count:66
 mixed/ruby-git--ruby-git/CONTRIBUTING.md count:18
+mixed/sarub0b0--kubetui/README.md count:9
 mixed/scalameta--scalafmt/docs__installation.md count:7
 mixed/scalameta--scalameta/CONTRIBUTING.md count:2
-mixed/shakacode--react_on_rails/CONTRIBUTING.md count:19
-mixed/shakacode--react_on_rails/README.md count:4
 mixed/siempredelao--Distance-From-Me-Android/README.md count:10
 mixed/sirixdb--sirix/ROADMAP.md count:12
-mixed/sky-map-team--stardroid/PRIVACY_POLICY.md count:2
 mixed/sobolevbel--jdg/README.md count:9
 mixed/sorenlouv--backport/CONTRIBUTING.md count:10
+mixed/spider-rs--spider/README.md count:7
 mixed/spree--spree/github__CONTRIBUTING.md count:37
 mixed/square--leakcanary/docs__releasing.md count:7
 mixed/square--workflow-kotlin/CONTRIBUTING.md count:2
@@ -503,7 +496,6 @@ mixed/transloadit--uppy/github__CONTRIBUTING.md count:2
 mixed/ttop32--MouseTooltipTranslator/doc__description.md count:21
 mixed/tui-cs--Terminal.Gui/CONTRIBUTING.md count:22
 mixed/useful-toys--slf4j-toys/README.md count:10
-mixed/uswds--uswds/CONTRIBUTING.md count:17
 mixed/voxel51--fiftyone/README.md count:7
 mixed/waditu--czsc/README.md count:13
 mixed/webonyx--graphql-php/docs__complementary-tools.md count:14

@@ -1,0 +1,28 @@
+gold       tests/cases/done-when.conllu
+sha256     954739c4d813
+source     hand-made
+split      dev
+trains     no
+tokens     ud
+
+Words
+  sentences                           4
+  gold words                         23
+    punctuation                       3
+    X                                 1
+    tagged                           19
+      scored                         17  as 15 tokens
+        by their first word           2  as 1 token
+      unalignable                     1
+        text mismatch                 0
+        tokenizer drift               0
+        one word, several tokens      1
+      not word tokens                 1
+  provenance
+    agree                             0
+    adjudicated                       0
+    corrected                         0
+    owner                             0
+    kind                              0
+    unmarked                         23
+  open gold disputes                  0  (0 name a sent_id not in the file)

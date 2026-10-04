@@ -11,6 +11,7 @@
       "languages": [],
       "quarters": [],
       "single_tool": false,
+      "without_declared": false,
       "register": null
     }
   },

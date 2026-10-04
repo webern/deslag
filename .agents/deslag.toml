@@ -58,7 +58,7 @@ lints.list_growth = {}
 
 [[md.overrides]]
 globs = ["/.agents/skills/deslag-build-doctrine/SKILL.md"]
-lints.max_size_bytes.value = 5092
+lints.max_size_bytes.value = 5300
 
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]
@@ -71,7 +71,7 @@ lints.max_size_bytes.value = 800
 # corpus.asbuilt.md declares its own budget in its frontmatter.
 [[md.overrides]]
 globs = ["/docs/design/corpus.md"]
-lints.max_size_bytes.value = 16384
+lints.max_size_bytes.value = 17408
 
 [[md.overrides]]
 globs = ["/docs/design/catalog.md"]

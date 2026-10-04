@@ -1,0 +1,56 @@
+{
+  "sidecar_version": 3,
+  "fixture": "CONTENT_ZH.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "flame-engine/awesome-flame",
+    "path": "CONTENT_ZH.md",
+    "commit": "e4b781992cdec38ba75744ad4bb0020018ea24b8",
+    "commit_date": "2021-11-29T17:48:36Z",
+    "url": "https://github.com/flame-engine/awesome-flame/blob/e4b781992cdec38ba75744ad4bb0020018ea24b8/CONTENT_ZH.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-10-01T10:53:01-03:00",
+    "stars": 1385,
+    "found_by": "sg-register:awesome-list"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2020-07-13T13:58:47+02:00",
+    "last_commit_date": "2020-07-13T13:58:47+02:00",
+    "last_commit_author": "impulse",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2020-07-13T13:58:47+02:00",
+    "last_committer_date": "2020-07-13T13:58:47+02:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 700,
+    "sha256": "6b388fbb6ec21e6ad1e0b96183eb11062fb881f8a294d30c94bf8edc590a0f92",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 12,
+    "words": 39,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Han",
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/flame-engine--awesome-flame/CONTENT_ZH.md"
+}

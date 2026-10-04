@@ -1,0 +1,214 @@
+name: publish-blobs
+
+# A new batch of the corpus's big tier reaches the registry without anyone's machine or login. The
+# batch is a manifest, scripts/blobstore/batches/NAME.json, which may be a seed that only names
+# sources. This workflow builds every batch whose manifest the pinned image lacks: it completes a
+# seed with what GitHub says of each repository and the commit to harvest, builds the batch twice
+# and fails unless both come out the same, and fails unless a completed manifest builds to exactly
+# what it records. On a push it then publishes the batches, rewrites what is measured on the new image
+# (the phrase catalogue and the golden file of list_growth), and commits the completed manifests, the
+# new blobs.lock and those two files to the branch pushed, as one commit, so the branch stays green.
+# scripts/blobstore/batches.md has the whole story.
+#
+# Only main publishes. A workflow file runs from the branch it is pushed to, so a long-lived
+# branch that must publish a batch before it reaches main has to be added to the push trigger, and
+# taken out again before it merges.
+#
+# A pull request builds the batches and publishes nothing, so a seed is shown to build, and to
+# build the same way twice, before it merges. It also measures the new batches the way a publish
+# would: the catalogue and the golden file are rewritten on the tier with the batch in it and the
+# checks run, and the step summary shows the diff, so a batch that breaks a floor fails its pull
+# request.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/blobstore/batches/*.json
+  pull_request:
+    paths:
+      - scripts/blobstore/batches/*.json
+      # What the build is made of, so a change to it runs once, with no manifest to build.
+      - scripts/blobstore/batches.sh
+      - scripts/llm-detection/collect.py
+      - .github/workflows/publish-blobs.yml
+
+permissions:
+  contents: read
+
+# Runs on one ref go one at a time. A newer push to a pull request supersedes the run in progress.
+# A push to a branch that publishes does not: a run that has begun to publish must finish, and the
+# next run starts from the branch as that run left it. Every run builds every manifest the pinned
+# image lacks, so one that waited loses nothing.
+concurrency:
+  group: publish-blobs-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Read-only. It clones other people's repositories and reads their Markdown, so it holds no
+  # token that can write anything. A batch that cannot be harvested as its manifest pins it fails
+  # here, and the job after it never starts.
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      new: ${{ steps.bundle.outputs.new }}
+      sha: ${{ steps.checkout.outputs.commit }}
+    steps:
+      # The branch as it is now, which may be past the commit that started the run, if an earlier
+      # run has since committed the lock.
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+        with:
+          ref: ${{ github.ref }}
+          persist-credentials: false
+
+      # The pinned image: what a batch is compared with, and what already holds the batches
+      # published before. The package is public; nothing is logged in.
+      - name: Fetch the corpus's big tier
+        run: make fetch-blobs
+
+      # gh reads each repository's metadata and the pull requests behind squash-merges, public
+      # data, with the workflow token. That is all a seed needs of GitHub.
+      - name: Build the batches the manifests name
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make build-batches
+
+      - name: Bundle the new batches
+        id: bundle
+        run: |
+          scripts/blobstore/batches.sh bundle "$RUNNER_TEMP/new-batches.tar"
+          if [ -f "$RUNNER_TEMP/new-batches.tar" ]; then echo "new=true" >> "$GITHUB_OUTPUT"; fi
+
+      # On a pull request, the rewrite a publish would make, on the tier as it is now, with the new
+      # batches in it and the lock as it is. Nothing is published or committed; the diff and any
+      # failure are in the step summary. remeasure.sh says what it does.
+      - name: Install Rust
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      - name: Install typos
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      - name: Measure the new batches
+        if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
+        env:
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/remeasure.sh run
+
+      - name: Keep the new batches for the publish job
+        if: github.event_name == 'push' && steps.bundle.outputs.new == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, 2026-04-10
+        with:
+          name: new-batches
+          path: ${{ runner.temp }}/new-batches.tar
+          retention-days: 7
+          if-no-files-found: error
+
+  # The one job that can write: it runs only for a push, only after harvest, and runs nothing from
+  # the batches but the files themselves.
+  publish:
+    needs: harvest
+    if: github.event_name == 'push' && needs.harvest.outputs.new == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      packages: write
+    # Every ref shares this group, because blobs.sh takes the next vN from the registry and a
+    # second push at the same moment could take the same one. A publish that waits behind another
+    # can be replaced by a newer one waiting, and cancelled; run its workflow run again.
+    concurrency:
+      group: publish-blobs-registry
+      cancel-in-progress: false
+    steps:
+      # The commit harvest built against, so the image the batches are added to is the one they
+      # were built for. A push that finds the branch moved puts the pin on the new tip, which needs
+      # the history.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+        with:
+          ref: ${{ needs.harvest.outputs.sha }}
+          fetch-depth: 0
+          # Only the pin step is given the token, so the code that measures the image never sees it.
+          persist-credentials: false
+
+      # Everything the job installs comes before the publish: nothing that can fail on the network
+      # may stand between the image reaching the registry and the lock pinning it.
+      # Installs what rust-toolchain.toml names and caches the registry and target dir.
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
+      - name: Install typos
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      # blobs.sh publish builds each new layer with bsdtar.
+      - name: Install bsdtar
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libarchive-tools
+
+      - name: Fetch the corpus's big tier
+        run: make fetch-blobs
+
+      - name: Download the new batches
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, 2026-03-11
+        with:
+          name: new-batches
+          path: ${{ runner.temp }}
+
+      - name: Add the new batches and completed manifests to the tree
+        run: scripts/blobstore/batches.sh unbundle "$RUNNER_TEMP/new-batches.tar"
+
+      # blobs.sh logs crane in with this token. The package must grant this repository the Write
+      # role, which blobs.md says how to check.
+      - name: Publish the image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make publish-blobs
+
+      # What the build holds to the pinned image would fail on the lock this run is about to commit:
+      # the catalogue's counts and measured_on, and list_growth's golden file, which names the batch
+      # of every fixture. The tree publish left is the artifact's contents, so remeasure.sh drops it
+      # and fetches the image just published back from the registry, by its digest, as anyone else
+      # would. It then rewrites both files and runs make test-blobs and the phrases test on the
+      # result. The code that reads the image is the branch's own, with its locked dependencies; it
+      # reads the fixtures as data and has no token, in its environment or on disk. A failure here
+      # must not leave the image unpinned, so the next step commits whatever there is, and the last
+      # step fails the job.
+      - name: Measure the new image
+        id: remeasure
+        continue-on-error: true
+        # The job's limit is 60 minutes, and a hang that reached it would skip the pin. A step
+        # that times out fails, and continue-on-error lets the job go on to pin the lock.
+        timeout-minutes: 20
+        env:
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/remeasure.sh run --refetch
+
+      # The push is made with the workflow token, so it starts no workflow of its own. The token is
+      # for git's fetch and push alone. If the branch moved meanwhile, the pin goes on its new tip
+      # and the image is measured again there. The paths are the two files make fix-blobs writes.
+      - name: Commit the lock, the completed manifests and what was rewritten
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PIN_LOCK_REMEASURE: 1
+          CARGO_FLAGS: --locked
+        run: scripts/blobstore/batches.sh pin-lock "$GITHUB_REF_NAME" $(scripts/blobstore/remeasure.sh paths)
+
+      # The image is published and pinned. If what is measured on it does not pass, CI on the branch
+      # fails until a person reads the step summary and decides, and this job says so.
+      - name: Fail when the branch is not left green
+        if: always()
+        env:
+          REMEASURE_OUTCOME: ${{ steps.remeasure.outcome }}
+        run: scripts/blobstore/remeasure.sh verdict

@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "documentation__docfx__guides__basics__pixels.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "mono/SkiaSharp",
+    "path": "documentation/docfx/guides/basics/pixels.md",
+    "commit": "4af3a5006377eedf55f937e8c68aeaf99a149c8f",
+    "commit_date": "2026-09-25T17:14:45+02:00",
+    "url": "https://github.com/mono/SkiaSharp/blob/4af3a5006377eedf55f937e8c68aeaf99a149c8f/documentation/docfx/guides/basics/pixels.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE.md",
+      "LICENSE.txt"
+    ],
+    "repo_first_commit_date": "2015-11-13T10:21:00-05:00",
+    "stars": 5579,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-03-31T22:57:24+02:00",
+    "last_commit_date": "2026-03-31T22:57:24+02:00",
+    "last_commit_author": "Matthew Leibowitz",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-03-31T22:57:24+02:00",
+    "last_committer_date": "2026-03-31T22:57:24+02:00",
+    "marks": [
+      {
+        "text": "Copilot <223556219+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ab5c1ca095cb066687844d66503dde4a35bd6bee",
+        "date": "2026-03-31T22:57:24+02:00",
+        "committed": "2026-03-31T22:57:24+02:00",
+        "old": null,
+        "new": "1303dd618d5e2ef9c5808a55632d3b17a06136ea",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 10458,
+    "sha256": "b21f4b5773c92a8d8d0ec039451d4fe42221ad5b7ba37441ca94fbe96f5eba1b",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 164,
+    "words": 1384,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/mono--SkiaSharp/documentation/docfx/guides/basics/pixels.md"
+}

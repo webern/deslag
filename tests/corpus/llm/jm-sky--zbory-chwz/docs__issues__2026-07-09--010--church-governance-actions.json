@@ -1,0 +1,135 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__issues__2026-07-09--010--church-governance-actions.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "jm-sky/zbory-chwz",
+    "path": "docs/issues/2026-07-09--010--church-governance-actions.md",
+    "commit": "3a09f8feb90c16602db9c200e91174f69816d134",
+    "commit_date": "2026-07-27T17:05:07+02:00",
+    "url": "https://github.com/jm-sky/zbory-chwz/blob/3a09f8feb90c16602db9c200e91174f69816d134/docs/issues/2026-07-09--010--church-governance-actions.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2025-11-18T08:41:50+01:00",
+    "stars": 0,
+    "found_by": "gh-commits:cursor"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-07-09T10:13:28+02:00",
+    "last_commit_date": "2026-07-27T17:05:07+02:00",
+    "last_commit_author": "Jan Madeyski",
+    "authors": 2,
+    "ai_commits": 5,
+    "ai_tools": [
+      "claude-code",
+      "cursor"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-07-09T10:13:28+02:00",
+    "last_committer_date": "2026-07-27T17:05:07+02:00",
+    "marks": [
+      {
+        "text": "Cursor <cursoragent@cursor.com>",
+        "tool": "cursor",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 3
+      },
+      {
+        "text": "Claude <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Opus 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude Sonnet 5 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Claude-Session: https://claude.ai/code/session_01WhhZ8ZDbsf8URbunwmSZAB",
+        "tool": "claude-code",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "3a09f8feb90c16602db9c200e91174f69816d134",
+        "date": "2026-07-27T17:05:07+02:00",
+        "committed": "2026-07-27T17:05:07+02:00",
+        "old": "60f368e6bad8315f242fffd44ffba5d336533ad7",
+        "new": "b4479ea5d7280c2030be75f9ca0a5478db092aad",
+        "status": "agent"
+      },
+      {
+        "commit": "f548d28d4e9c22d3f2511dea1cbcb9931efb1faa",
+        "date": "2026-07-27T14:06:56+02:00",
+        "committed": "2026-07-27T14:06:56+02:00",
+        "old": "bee940182b39458be3e53d940a6816feeb644a6c",
+        "new": "60f368e6bad8315f242fffd44ffba5d336533ad7",
+        "status": "agent"
+      },
+      {
+        "commit": "53c38f787a60d9cc1726691c18f27453f26904fc",
+        "date": "2026-07-25T07:38:28Z",
+        "committed": "2026-07-25T07:38:28Z",
+        "old": "a8d70eb27f23e6abea6b5df503c3a9b20910e656",
+        "new": "bee940182b39458be3e53d940a6816feeb644a6c",
+        "status": "agent"
+      },
+      {
+        "commit": "fb0ae95f9ab4fb39dabcb32e9c26aa97efc0efbe",
+        "date": "2026-07-09T13:08:37+02:00",
+        "committed": "2026-07-09T13:08:37+02:00",
+        "old": "4b9552cd5bfa4144c4bc3a1b39086e2df93c7e87",
+        "new": "a8d70eb27f23e6abea6b5df503c3a9b20910e656",
+        "status": "agent"
+      },
+      {
+        "commit": "5f6993699ce0897fe7748d1d734bd3a8cac0c9e9",
+        "date": "2026-07-09T10:13:28+02:00",
+        "committed": "2026-07-09T10:13:28+02:00",
+        "old": null,
+        "new": "4b9552cd5bfa4144c4bc3a1b39086e2df93c7e87",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 5 in all, is marked as an AI agent's (claude-code, cursor)"
+  },
+  "content": {
+    "size_bytes": 6796,
+    "sha256": "473194dfe0b0a914fae0304cda2c2927d5ec4ac7659896065ada85e4bf367409",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 116,
+    "words": 723,
+    "frontmatter": false,
+    "natural_language": "other",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/jm-sky--zbory-chwz/docs/issues/2026-07-09--010--church-governance-actions.md"
+}

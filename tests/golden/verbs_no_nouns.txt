@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 128 of 1230: core 5, human 18, llm 63, mixed 42
+# fails 120 of 1230: core 5, human 17, llm 61, mixed 37
 
 [md.lints.verbs_no_nouns]
 
@@ -18,7 +18,6 @@ human/Squidex--squidex/CHANGELOG.md matches:1
 human/academicpages--academicpages.github.io/_pages__terms.md matches:1
 human/codeberg--dnkl--fcft/CHANGELOG.md matches:1
 human/codeberg--dnkl--fuzzel/CHANGELOG.md matches:1
-human/codeberg--mc776--HideousDestructor/hd_lore_nonfree.md matches:1
 human/codeberg--skyjake--lagrange/README.md matches:1
 human/daviddavo--jgmd/TRANSLATION_REFERENCE.md matches:1
 human/fmuecke--Ipponboard/CHANGELOG.md matches:1
@@ -32,7 +31,6 @@ human/urschrei--pyzotero/CONTRIBUTING.md matches:1
 llm/BetterTyped--react-zoom-pan-pinch/docs__invalid-issues__558-vite-dev-dependency-cve.md matches:1
 llm/Bitterbot-AI--bitterbot-desktop/docs__network__circle-gossip.md matches:1
 llm/ByteDance-Seed--VeOmni/docs__hardware_support__rocm__README.md matches:1
-llm/Dicklesworthstone--pi_agent_rust/docs__security__policy-tuning-guide.md matches:1
 llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md matches:6
 llm/MacNite--HiveHub/tools__ble-throughput__README.md matches:1
 llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md matches:1
@@ -42,7 +40,6 @@ llm/SamuelIVX--interleave/docs__plans__library-api-mode.md matches:1
 llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md matches:1
 llm/SpyderMYK--fieldy-field-study/protocol__day1-checklist.md matches:1
 llm/TomBadash--Mouser/github__release-notes__v3.7.2.md matches:1
-llm/Unchiga--Yu-Gi-Oh-Forbidden-Memories-Recompiled/notes__image-remaster.md matches:1
 llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md matches:1
 llm/adamvangrover--craft/legal_analysis__key_terms_and_definitions__covenant_terminology.md matches:1
 llm/aden-hive--hive/docs__releases__v0.10.5.md matches:1
@@ -53,23 +50,20 @@ llm/cksystemsteaching--selfie/docs__presentations__what-is-selfie__README.md mat
 llm/coleam00--context-engineering-intro/use-cases__ai-coding-wisc-framework__claude__rules-example__testing.md matches:1
 llm/commonfabric--labs/docs__common__capabilities__files.md matches:1
 llm/danikf--tik4net/Docs__findings-cli-history.md matches:1
+llm/danikf--tik4net/Docs__findings-routeros-6.md matches:10
 llm/defi-io--smarts/planning__todos__done__2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md matches:1
 llm/dreamiurg--claude-mountaineering-skills/PRIVACY.md matches:4
 llm/element-software--CasaBoard/github__copilot-instructions.md matches:1
 llm/emcd--agentmux/documentation__decisions__0004-the-mailbox-holds-the-delivered-artifact.md matches:1
 llm/fitlab-ai--agent-infra/docs__en__benchmark.md matches:2
 llm/getbintana--bintana/docs__llm__qr.md matches:2
-llm/gitbutlerapp--gitbutler/error-cleanup-checklist.md matches:1
 llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md matches:1
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:1
 llm/gitlab--gitlab-com--runbooks/docs__patroni__alerts__PatroniIsDown.md matches:1
 llm/jagreehal--autotel/apps__example-genai-metrics__README.md matches:1
 llm/jasonacox--tinytuya/DESIGN.md matches:1
-llm/kasahart--wandas/agents__skills__wandas-scalability-benchmark__SKILL.md matches:1
 llm/kegouro--lablog/lablog-production-plan.md matches:2
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md matches:1
-llm/lewiseinstein15-Tech--jexi-os/skills__library__claude-ecosystem__n8n-skills__n8n-subworkflows__SKILL.md matches:5
-llm/lokus-ai--lokus/docs__architecture__team-collaboration-roadmap.md matches:1
 llm/mono--SkiaSharp/documentation__docfx__guides__curves__text-paths.md matches:1
 llm/naomiaro--waveform-playlist/plans__waveform-service.md matches:1
 llm/ndycode--codex-multi-auth/docs__releases__v2.8.6.md matches:1
@@ -78,11 +72,14 @@ llm/philipdallen--PleaNP/docs__CREATIVE_PROTOCOL.md matches:1
 llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:1
 llm/pulumi--kubespy/github__copilot-instructions.md matches:1
 llm/rebasepro--rebase/website__src__content__docs__docs__getting-started__headless.md matches:3
+llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md matches:1
 llm/smithersai--smithers/apps__docs__run-store__src__content__docs__guides__record-step-attempts.md matches:1
 llm/sparq-org--sparq/research__gpt56-decomp-workbench-parity-2026-07.md matches:2
 llm/spec-kitty--spec-kitty/kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md matches:1
+llm/swornagent--sworn/contracts__2026-09-22-worker-observability__rev2__plan.md matches:1
 llm/swornagent--sworn/contracts__2026-09-23-launch-legibility__plan.md matches:2
 llm/tajiaoyezi--vibestation/docs__superpowers__plans__2026-06-05-language-settings-implementation-plan.md matches:1
+llm/toa-io--toa/migrations__262.md matches:1
 llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md matches:1
 llm/toku345--dotfiles/docs__outer-loop__week0-v2__policy.md matches:5
 llm/topoteretes--cognee/examples__integrations__docker-sandbox-kit__README.md matches:1
@@ -102,13 +99,10 @@ mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:1
 mixed/amir20--dozzle/README.md matches:1
 mixed/authgear--authgear-server/docs__specs__oidc.md matches:5
 mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md matches:2
-mixed/cloudfoundry--uaa/docs__UAA-LDAP.md matches:1
-mixed/cybersemics--em/README.md matches:1
 mixed/datahub-project--datahub/docs__developers.md matches:1
 mixed/dbt-labs--dbt/github__pull_request_template.md matches:1
 mixed/dosco--graphjin/SECURITY.md matches:2
 mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md matches:1
-mixed/dragonflydb--dragonfly/README.md matches:1
 mixed/fancy-regex--fancy-regex/PERFORMANCE.md matches:1
 mixed/fsprojects--FSharp.Control.AsyncSeq/RELEASE_NOTES.md matches:1
 mixed/gitlab--gitlab-org--gitlab-qa/docs__what_tests_can_be_run.md matches:1
@@ -117,7 +111,6 @@ mixed/jitsi--jitsi-videobridge/doc__svc.md matches:1
 mixed/keithrbennett--wifiwand/README.md matches:1
 mixed/mabel-dev--opteryx/README.md matches:1
 mixed/markshust--docker-magento/README.md matches:1
-mixed/microsoft--DirectXShaderCompiler/CONTRIBUTING.md matches:1
 mixed/missingfaktor--akar/FAQs.md matches:1
 mixed/ncsa--NEAT/ChangeLog.md matches:3
 mixed/niander--my-dotfiles/README.md matches:1
@@ -129,8 +122,7 @@ mixed/pubkey--rxdb/orga__before-next-major.md matches:1
 mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md matches:1
 mixed/rebasepro--rebase/README.md matches:2
 mixed/reidmorrison--semantic_logger/docs__api.md matches:1
+mixed/reidmorrison--semantic_logger/docs__metrics.md matches:1
 mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:6
 mixed/sebastienros--parlot/docs__parsers.md matches:2
-mixed/sky-map-team--stardroid/PRIVACY_POLICY.md matches:1
-mixed/warmcat--libwebsockets/READMEs__README.lwsws.md matches:4
 mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:3

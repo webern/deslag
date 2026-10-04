@@ -1,0 +1,10 @@
+# sent_id = a1
+# text = Bob's cat, etc. & more
+1	Bob	_	PROPN	_	Number=Sing	_	_	_	_
+2	's	_	X	_	_	_	_	_	_
+3	cat	_	NOUN	_	Number=Sing	_	_	_	SpaceAfter=No
+4	,	_	PUNCT	_	_	_	_	_	_
+5	etc.	_	X	_	_	_	_	_	_
+6	&	_	SYM	_	_	_	_	_	_
+7	more	_	ADJ	_	Degree=Cmp	_	_	_	_
+

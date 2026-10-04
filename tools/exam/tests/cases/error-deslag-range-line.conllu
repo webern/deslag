@@ -1,0 +1,9 @@
+# exam.tokens = deslag
+# exam.source = hand-made
+# exam.split = dev
+# exam.trains = no
+# sent_id = d1
+1-2	don't	_	_	_	_	_	_	_	Kind=Word|Prov=agree
+1	do	_	AUX	_	_	_	_	_	Kind=Word|Prov=agree
+2	n't	_	PART	_	_	_	_	_	Kind=Word|Prov=agree
+

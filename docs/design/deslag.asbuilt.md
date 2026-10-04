@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-04
 subsystems:
   - cli
   - instructions
@@ -37,6 +37,7 @@ src/
     guide.md          the guide, with placeholders
     lints.md          the lints topic's intro; lints/ holds a file per lint
   document/           a file read once into blocks, tokens and sentences
+  tag/                the part of speech of each word: the tables, the passes, the entry point
   parse/              the keys a file declares in its frontmatter
   lint/               running the lints; one module per lint
   output/             --format json, sarif and github
@@ -44,9 +45,10 @@ src/
 
 `glob` knows nothing about Markdown: it walks every file and matches patterns. `config` decides
 which settings apply to a file; `lint` runs the lints with them. `lint` calls `config`, `glob`,
-`document` and `parse`; `output` reads a `Report`; `fix` makes the edits `lint` names that
-`document` proves. `lint` judges and narrows by what `change` reads. `instructions` reads `Lint`
-for the lints topic, which has a section per lint in `Lint::ALL` order, from an exhaustive `match`.
+`document` and `parse`; `document` calls `tag` once it has the sentences; `output` reads a `Report`;
+`fix` makes the edits `lint` names that `document` proves. `lint` judges and narrows by what
+`change` reads. `instructions` reads `Lint` for the lints topic, which has a section per lint in
+`Lint::ALL` order, from an exhaustive `match`.
 
 ## The subsystem docs
 
@@ -61,8 +63,15 @@ fails when a module is in no doc or in two.
   and `--format`.
 - [tests.asbuilt.md](tests.asbuilt.md): the tests, the cases, the corpus run and the golden set.
 - [corpus.asbuilt.md](corpus.asbuilt.md): the test corpus, its tiers and its loaders.
+- [tag.asbuilt.md](tag.asbuilt.md): `tag`: readings, confidence, and the golden tag stream.
+  [tag-tables.asbuilt.md](tag-tables.asbuilt.md) has the tables and shape guesses;
+  [tag-passes.asbuilt.md](tag-passes.asbuilt.md) the passes.
 - [diff.asbuilt.md](diff.asbuilt.md): `change`: a base, asking git, and narrowing to a change.
 - [analysis.asbuilt.md](analysis.asbuilt.md): `deslag-corpus`, which measures the corpus.
+- [exam.asbuilt.md](exam.asbuilt.md): `deslag-exam`, which grades taggers against gold sets.
+- [exam-candidates.asbuilt.md](exam-candidates.asbuilt.md): the taggers `deslag-exam` grades, its
+  import file and the data they read.
+- [gold-kit.asbuilt.md](gold-kit.asbuilt.md): `deslag-gold`, which makes deslag's own gold set.
 
 ## The command line
 
@@ -98,16 +107,45 @@ _typos.toml           keeps the spell checker out of the corpus and golden files
 tests/                the tests; tests.asbuilt.md describes them
 docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
-                      blobstore/, which moves its big tier
+                      blobstore/, which moves its big tier and builds its batches; ewt/ and
+                      harper/, which fetch the treebank and Harper's model for the exam; spacy/,
+                      which runs spaCy on the exam's tokens; lexicon/, which generates the
+                      tagger's word list by hand
+LICENSES/             the notices of the lexicon's sources and of Harper's engine
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
+tools/exam/           deslag-exam, never published: grades taggers against gold sets;
+                      deslag-gold, which makes the gold set
 ```
 
 ## Build
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
-`--locked`. `make check-deslag` runs deslag on this repo. The published crate is what `include` in
-`Cargo.toml` lists; `make check-publish` builds it, and every other cargo call covers the workspace.
+`--locked`. `test` includes `test-exam`, the exam's gates on deslag's tagger, and `test-blobs` ends
+with `deslag-corpus time --check`, which fails when tagging takes over 40.0% of reading time in
+debug (31.0% in release).
+
+`make test-ewt` gates the treebank by hand. `make check-deslag` runs
+deslag on this repo. The published crate is what `include` in `Cargo.toml` lists;
+`make check-publish` builds it, and every other cargo call covers the workspace.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
 into `.blobs/unpacked/`, with crane from `.tools/`; `make publish-blobs` pushes a changed tree as
-the next image. `make clean` removes both directories and runs `cargo clean`.
+the next image. `make fetch-ewt` fetches the UD English Web Treebank that `scripts/ewt/ewt.lock`
+pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's tagger model into
+`.harper/`, which the exam grades and nothing ships.
+
+`make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
+completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`;
+`scripts/blobstore/batches.md` says how.
+
+After a publish `scripts/blobstore/remeasure.sh` runs `make fix-blobs`, which rewrites the
+catalogue's counts and `measured_on` and the golden file of `list_growth` from the new image, then
+`make test-blobs` and the phrases test; the workflow commits the files with the lock so the branch
+stays green. A batch pull request runs it too and commits nothing.
+
+`make fetch-spacy` installs spaCy and its model, pinned by hash in
+`scripts/spacy/requirements.lock`, into a venv in `.spacy/`, and `make generate-spacy` writes the
+exam's import file for the treebank's dev set there. `make test-spacy` then scores it with
+`deslag-exam`. None is in `make ci`.
+
+`make clean` removes all six directories and runs `cargo clean`.

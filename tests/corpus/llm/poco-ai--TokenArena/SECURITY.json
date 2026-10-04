@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "SECURITY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "poco-ai/TokenArena",
+    "path": "SECURITY.md",
+    "commit": "9e75fcfaf0bfb869c97cd16ff0a9882dab78c64f",
+    "commit_date": "2026-08-11T16:15:52+08:00",
+    "url": "https://github.com/poco-ai/TokenArena/blob/9e75fcfaf0bfb869c97cd16ff0a9882dab78c64f/SECURITY.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-24T20:28:51+08:00",
+    "stars": 133,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-05-15T18:27:56+08:00",
+    "last_commit_date": "2026-05-15T18:27:56+08:00",
+    "last_commit_author": "Phil-Fan",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-15T18:27:56+08:00",
+    "last_committer_date": "2026-05-15T18:27:56+08:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.7 <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "ea54c705abda525222fd5d3f43e98a1dc71202be",
+        "date": "2026-05-15T18:27:56+08:00",
+        "committed": "2026-05-15T18:27:56+08:00",
+        "old": null,
+        "new": "6e21412e868ff1956599bb5f9b62eaa941fe84ae",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 2541,
+    "sha256": "045911373c8290da85e154fe818e58512c8239423d8b3fe050d1275e62ce6f93",
+    "kind": "project-policy",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 56,
+    "words": 367,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/poco-ai--TokenArena/SECURITY.md"
+}

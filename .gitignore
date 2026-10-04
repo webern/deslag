@@ -13,6 +13,25 @@ test/output/
 .blobs/
 .tools/
 
+# the working files of deslag-gold, which makes the deslag gold set; see tools/exam
+.gold/
+
+# the UD English Web Treebank that make fetch-ewt downloads, and the scratch directory it builds
+# it in; see scripts/ewt/ewt.lock
+.ewt/
+.ewt.new.*/
+
+# the spaCy venv and output that make fetch-spacy and generate-spacy write; see scripts/spacy/run.sh
+.spacy/
+
+# Harper's tagger model that make fetch-harper downloads, for measuring only and never shipped; see
+# scripts/harper/harper.lock
+.harper/
+
+# the downloads and working files of scripts/lexicon/generate.sh, which is run by hand; see
+# scripts/lexicon/lexicon.lock
+.lexicon/
+
 # because llms love python
 __pycache__/
 

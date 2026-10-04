@@ -1,0 +1,57 @@
+{
+  "sidecar_version": 3,
+  "fixture": "docs__overlay.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "sonos/dinghy",
+    "path": "docs/overlay.md",
+    "commit": "839a7dbf8b4beab9f39afbb67a1e75396b7af5c4",
+    "commit_date": "2021-12-06T16:37:03+01:00",
+    "url": "https://github.com/sonos/dinghy/blob/839a7dbf8b4beab9f39afbb67a1e75396b7af5c4/docs/overlay.md",
+    "license": "Apache-2.0 OR MIT",
+    "license_files": [
+      "LICENSE",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "repo_first_commit_date": "2016-11-15T17:45:51+01:00",
+    "stars": 418,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2018-03-06T17:26:29+01:00",
+    "last_commit_date": "2018-03-06T17:26:29+01:00",
+    "last_commit_author": "Mathieu Poumeyrol",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2018-03-06T17:30:02+01:00",
+    "last_committer_date": "2018-03-06T17:30:02+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 2868,
+    "sha256": "8669afda13f7f406689d789b1bfb16837224b6c0063af0497f2233682fe4ff18",
+    "kind": "docs",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 84,
+    "words": 402,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/sonos--dinghy/docs/overlay.md"
+}

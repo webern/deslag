@@ -1,0 +1,81 @@
+{
+  "sidecar_version": 3,
+  "fixture": "agents__worklogs__herdr-hunk-worktree-path.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "edmundmiller/dotfiles",
+    "path": ".agents/worklogs/herdr-hunk-worktree-path.md",
+    "commit": "5157d263dd76efe88131e136df781f221f8c0d55",
+    "commit_date": "2026-09-26T22:40:24-05:00",
+    "url": "https://github.com/edmundmiller/dotfiles/blob/5157d263dd76efe88131e136df781f221f8c0d55/.agents/worklogs/herdr-hunk-worktree-path.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 80,
+    "found_by": "sg-topic:emacs"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-08-21T16:59:08Z",
+    "last_commit_date": "2026-08-21T16:59:08Z",
+    "last_commit_author": "Amp",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "amp"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-08-21T16:59:08Z",
+    "last_committer_date": "2026-08-21T16:59:08Z",
+    "marks": [
+      {
+        "text": "Amp <amp@ampcode.com>",
+        "tool": "amp",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      },
+      {
+        "text": "Amp-Thread-ID: https://ampcode.com/threads/T-01a024b8-15e1-7516-8b42-83106178f6ee",
+        "tool": "amp",
+        "kind": "agent-session",
+        "place": "trailer",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "54d423996aefcf1249e21db4f2ea81d47ed11429",
+        "date": "2026-08-21T16:59:08Z",
+        "committed": "2026-08-21T16:59:08Z",
+        "old": null,
+        "new": "bb5e4a18fc6ed1bd0c6004b4386f722de582448d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (amp)"
+  },
+  "content": {
+    "size_bytes": 2865,
+    "sha256": "3f702a011548782e8eb10bfed53ddabed8d704c696bb7fe0f539a079abf42ff8",
+    "kind": "agent-skill",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 68,
+    "words": 394,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/edmundmiller--dotfiles/.agents/worklogs/herdr-hunk-worktree-path.md"
+}

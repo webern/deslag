@@ -1,0 +1,113 @@
+{
+  "sidecar_version": 3,
+  "fixture": "commands__package.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "wp-cli/handbook",
+    "path": "commands/package.md",
+    "commit": "823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2",
+    "commit_date": "2026-09-24T02:54:33+05:30",
+    "url": "https://github.com/wp-cli/handbook/blob/823baff0e3278dd5d6e7a8926252ee7cb5cdd2d2/commands/package.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2012-11-04T23:55:42+02:00",
+    "stars": 204,
+    "found_by": "sg-topic:documentation"
+  },
+  "history": {
+    "commits": 18,
+    "first_commit_date": "2017-04-25T06:03:46-07:00",
+    "last_commit_date": "2026-01-20T15:13:50Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2017-04-25T06:03:46-07:00",
+    "last_committer_date": "2026-01-20T15:13:50Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "d9f7277bbeec094b7b626de033b789e84f8dd3cf",
+        "date": "2026-01-20T15:13:50Z",
+        "committed": "2026-01-20T15:13:50Z",
+        "old": "38fe18c92ac8446bd0487cbbfc43c9c9ba47fa60",
+        "new": "45bd52f55181669ca0807c64c1ce0981804a4429",
+        "status": "agent"
+      },
+      {
+        "commit": "f9da8c6e60bc86757f10ea9bf59c46cd57fdf394",
+        "date": "2025-11-04T11:32:13Z",
+        "committed": "2025-11-04T11:32:13Z",
+        "old": "45bd52f55181669ca0807c64c1ce0981804a4429",
+        "new": "38fe18c92ac8446bd0487cbbfc43c9c9ba47fa60",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "13 of its 18 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 2034,
+    "sha256": "e138f1c15b68a8c9461b04a7f451cc8053b0680552e03d0cd78958c541eef937",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 47,
+    "words": 199,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/wp-cli--handbook/commands/package.md",
+  "before": {
+    "sha256": "eaf0caab4a37e5ce0171c9901742d9c34505d127a26431727d6935885ef886df",
+    "commit": "5eeb0ee07f36e1bdf5266a1bd71ba26f44a234fa",
+    "date": "2021-12-17T15:03:21+01:00",
+    "between": [
+      {
+        "commit": "26baa5a960f90993b5d3bd5dcb83b4c7fa765a01",
+        "date": "2024-08-08T03:57:27+02:00",
+        "committed": "2024-08-08T03:57:27+02:00",
+        "old": "d31a3bcb35236d103f18e15560c92d3c4ab5634d",
+        "new": "45bd52f55181669ca0807c64c1ce0981804a4429",
+        "status": "late"
+      },
+      {
+        "commit": "c711efe969a762eab5fb1c1331988ceadb0082c2",
+        "date": "2022-01-26T09:58:42-06:00",
+        "committed": "2022-01-26T09:58:42-06:00",
+        "old": "025ad4686ea0a5d91d29a608e2d579ba5e23f234",
+        "new": "d31a3bcb35236d103f18e15560c92d3c4ab5634d",
+        "status": "late"
+      },
+      {
+        "commit": "8c98f2ba3e7b6742cabbea7cefdb792af20279cf",
+        "date": "2022-01-25T08:33:59-06:00",
+        "committed": "2022-01-25T08:33:59-06:00",
+        "old": "3b66613d8da388bd346af39dbc8ea6ff705bb227",
+        "new": "025ad4686ea0a5d91d29a608e2d579ba5e23f234",
+        "status": "late"
+      }
+    ]
+  }
+}

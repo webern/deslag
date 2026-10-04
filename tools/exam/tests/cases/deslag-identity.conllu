@@ -1,0 +1,16 @@
+# exam.tokens = deslag
+# exam.source = hand-made
+# exam.split = dev
+# exam.trains = no
+# sent_id = d1
+1	Run	_	VERB	_	Mood=Imp|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	make ci	_	NOUN	_	_	_	_	_	Kind=Code|Prov=agree
+3	now	_	ADV	_	_	_	_	_	Kind=Word|Prov=adjudicated|SpaceAfter=No
+4	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=agree
+
+# sent_id = d2
+1	Buy	_	VERB	_	Mood=Imp|VerbForm=Fin	_	_	_	Kind=Word|Prov=agree
+2	2	_	NUM	_	NumType=Card	_	_	_	Kind=Number|Prov=agree
+3	cats	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=corrected|SpaceAfter=No
+4	!	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=owner
+

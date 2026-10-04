@@ -1,0 +1,129 @@
+{
+  "sidecar_version": 3,
+  "fixture": "workshop__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "perftool-incubator/crucible",
+    "path": "workshop/README.md",
+    "commit": "4f90e356c69acc39dd34420094cda1af4b5c6eab",
+    "commit_date": "2026-09-23T08:35:12-05:00",
+    "url": "https://github.com/perftool-incubator/crucible/blob/4f90e356c69acc39dd34420094cda1af4b5c6eab/workshop/README.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2019-09-18T12:48:04-05:00",
+    "stars": 16,
+    "found_by": "gh-commits:claude-code"
+  },
+  "history": {
+    "commits": 12,
+    "first_commit_date": "2020-06-26T08:00:43-04:00",
+    "last_commit_date": "2026-04-10T15:29:40-05:00",
+    "last_commit_author": "Karl Rister",
+    "authors": 3,
+    "ai_commits": 2,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-06-26T08:00:43-04:00",
+    "last_committer_date": "2026-04-10T15:29:40-05:00",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 2
+      }
+    ],
+    "edits": [
+      {
+        "commit": "b6a239394946d533accea2091ba971d678d0f1dc",
+        "date": "2026-04-10T15:29:40-05:00",
+        "committed": "2026-04-10T15:29:40-05:00",
+        "old": "ff564872234fba399dc49f9d357996fd9e5319ee",
+        "new": "e68f02278790a1e7e90efbec0a3089f734c6b7e8",
+        "status": "agent"
+      },
+      {
+        "commit": "86edefdff1f864f91e9ef83918e08f99748efefe",
+        "date": "2026-04-09T07:35:02-05:00",
+        "committed": "2026-04-09T07:35:02-05:00",
+        "old": "c60624bb3492306ba09c9197ab62f9f2364173c6",
+        "new": "ff564872234fba399dc49f9d357996fd9e5319ee",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "5 of its 12 commits predate 2022-01-01 with no mark, and 2 are marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 5481,
+    "sha256": "3b1d527ad9638bdd6b84836b19bbc36ecdce9c6fda8ab541b37b75ab72d6b4cc",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 49,
+    "words": 779,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/perftool-incubator--crucible/workshop/README.md",
+  "before": {
+    "sha256": "c6787f39d5b169481fa3a6b79b987dd08db8a224809cc734f7c6878971038701",
+    "commit": "a4f320f05cbd9ad41c7f44babbb7cf8631ac4978",
+    "date": "2021-12-02T16:36:09-06:00",
+    "between": [
+      {
+        "commit": "0d1fde0db166be725592658e87851f59f15ec128",
+        "date": "2025-07-17T17:24:47+10:00",
+        "committed": "2025-07-17T17:24:47+10:00",
+        "old": "e5a7d1b50f14b09d5bb783dfcc164d3a4fbaab6c",
+        "new": "c60624bb3492306ba09c9197ab62f9f2364173c6",
+        "status": "late"
+      },
+      {
+        "commit": "0cf5101c819699da2da6e84590c25a3916b0457f",
+        "date": "2025-01-21T17:15:23-06:00",
+        "committed": "2025-02-11T09:32:12-06:00",
+        "old": "e4e094bf59cc5ee583943bd06dee4f52b151cc1b",
+        "new": "e5a7d1b50f14b09d5bb783dfcc164d3a4fbaab6c",
+        "status": "late"
+      },
+      {
+        "commit": "a64c331e00b42454b9ba0c81b02fc87191d340b1",
+        "date": "2024-01-31T09:29:57-06:00",
+        "committed": "2024-01-31T09:29:57-06:00",
+        "old": "ab4524e9eb452cff0cede8c0fa0b3cd554ca7946",
+        "new": "e4e094bf59cc5ee583943bd06dee4f52b151cc1b",
+        "status": "late"
+      },
+      {
+        "commit": "29c06d1c45f77daefea75a0241bdde4bbe6eb762",
+        "date": "2023-10-26T16:36:59-05:00",
+        "committed": "2023-10-26T16:41:20-05:00",
+        "old": "a249dbf909637625615fd9d5f5b476ee9290088a",
+        "new": "ab4524e9eb452cff0cede8c0fa0b3cd554ca7946",
+        "status": "late"
+      },
+      {
+        "commit": "4c34f3169a8e0a908a55a660c3bc34e56f78e3c1",
+        "date": "2022-08-26T11:02:07-05:00",
+        "committed": "2022-08-26T11:02:07-05:00",
+        "old": "4dfcd6e8deccfba28d7846192c4076002b0030b0",
+        "new": "a249dbf909637625615fd9d5f5b476ee9290088a",
+        "status": "late"
+      }
+    ]
+  }
+}

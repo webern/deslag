@@ -1,0 +1,8 @@
+# exam.tokens = deslag
+# exam.source = hand-made
+# exam.split = dev
+# exam.trains = no
+# sent_id = d1
+1	Run	_	VERB	_	_	_	_	_	Kind=Word|Prov=agree
+2	now	_	ADV	_	_	_	_	_	Kind=Word
+

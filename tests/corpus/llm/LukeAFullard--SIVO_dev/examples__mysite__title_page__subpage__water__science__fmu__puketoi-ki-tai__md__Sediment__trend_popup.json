@@ -1,0 +1,106 @@
+{
+  "sidecar_version": 3,
+  "fixture": "examples__mysite__title_page__subpage__water__science__fmu__puketoi-ki-tai__md__Sediment__trend_popup.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "LukeAFullard/SIVO_dev",
+    "path": "examples/mysite/title_page/subpage/water/science/fmu/puketoi-ki-tai/md/Sediment/trend_popup.md",
+    "commit": "6b0f9f36b82aab93df30ab1e0c3de8c2c86b5099",
+    "commit_date": "2026-09-23T12:56:51+12:00",
+    "url": "https://github.com/LukeAFullard/SIVO_dev/blob/6b0f9f36b82aab93df30ab1e0c3de8c2c86b5099/examples/mysite/title_page/subpage/water/science/fmu/puketoi-ki-tai/md/Sediment/trend_popup.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-03-05T08:49:43Z",
+    "stars": 1,
+    "found_by": "gh-commits:jules"
+  },
+  "history": {
+    "commits": 5,
+    "first_commit_date": "2026-05-21T03:35:48Z",
+    "last_commit_date": "2026-06-18T18:10:17Z",
+    "last_commit_author": "google-labs-jules[bot]",
+    "authors": 1,
+    "ai_commits": 5,
+    "ai_tools": [
+      "jules"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-05-21T03:35:48Z",
+    "last_committer_date": "2026-06-18T18:10:17Z",
+    "marks": [
+      {
+        "text": "google-labs-jules[bot] <161369871+google-labs-jules[bot]@users.noreply.github.com>",
+        "tool": "jules",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 5
+      }
+    ],
+    "edits": [
+      {
+        "commit": "a11ba778d9af95a14d5fc700b0452089277a602e",
+        "date": "2026-06-18T18:10:17Z",
+        "committed": "2026-06-18T18:10:17Z",
+        "old": "3566a6d6eab31eead2d463eb7a5b211d97436cb0",
+        "new": "02c5e7ad8faef126c698cf7100413ddf8fb1d4bf",
+        "status": "agent"
+      },
+      {
+        "commit": "5c6c3876f27e82b283eb4c7475e00aef9f34f3d3",
+        "date": "2026-06-18T11:26:47Z",
+        "committed": "2026-06-18T11:26:47Z",
+        "old": "0cd3b03346c3d8d861b66b7b22f03b86e98d22fb",
+        "new": "3566a6d6eab31eead2d463eb7a5b211d97436cb0",
+        "status": "agent"
+      },
+      {
+        "commit": "570fdaab90a9fdee795d2eca98c5a5e35b32d653",
+        "date": "2026-06-18T04:12:17Z",
+        "committed": "2026-06-18T04:12:17Z",
+        "old": "f7bbda8675d9849f7a143322ad1c524ba5125ce6",
+        "new": "0cd3b03346c3d8d861b66b7b22f03b86e98d22fb",
+        "status": "agent"
+      },
+      {
+        "commit": "cec0732f39501d90f2a14936461c0997129715a3",
+        "date": "2026-06-03T12:11:03Z",
+        "committed": "2026-06-03T12:11:03Z",
+        "old": "76bcd3f796f86b9cfa3bc3ed5700d29b83a28409",
+        "new": "f7bbda8675d9849f7a143322ad1c524ba5125ce6",
+        "status": "agent"
+      },
+      {
+        "commit": "dc96a85a5bc3006eebf3bb56fdaa2f18167e11ab",
+        "date": "2026-05-21T03:35:48Z",
+        "committed": "2026-05-21T03:35:48Z",
+        "old": null,
+        "new": "76bcd3f796f86b9cfa3bc3ed5700d29b83a28409",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 5 in all, is marked as an AI agent's (jules)"
+  },
+  "content": {
+    "size_bytes": 1786,
+    "sha256": "1c38d095b0566a56466ea09400669f0ecfe05d02f426ee17028a3b63ebe11f4c",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 25,
+    "words": 231,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/LukeAFullard--SIVO_dev/examples/mysite/title_page/subpage/water/science/fmu/puketoi-ki-tai/md/Sediment/trend_popup.md"
+}

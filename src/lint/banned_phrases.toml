@@ -2,86 +2,63 @@
 #
 # An entry has no `human` file on the corpus's big tier and `llm` files in at least 40
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
-# they drift; `make fix-catalog` rewrites them. `since` is the version the entry first ships in.
+# they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the version the entry
+# first ships in.
 
-measured_on = "ghcr.io/webern/deslag-blobs:v2@sha256:33d0d99e2d588f31d7d69563d62599486bcd1e89fe8efcfed6fcdf047d6fca00"
-
-[[entry]]
-phrase = "why it matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 63
-llm_repos = 50
-
-[[entry]]
-phrase = "why this matters"
-group = "signposts"
-advice = "give the reason itself; the lead-in adds nothing"
-since = "0.1.0"
-llm_files = 59
-llm_repos = 40
+measured_on = "ghcr.io/webern/deslag-blobs:v6@sha256:d075cbb39f05adb38eedef319a1bd57a1726c0f7d1ae168c75caea65cc16472a"
 
 [[entry]]
 phrase = "deliberately not"
 group = "insistence"
 advice = "say what it does; what it does not do rarely needs saying"
 since = "0.1.0"
-llm_files = 98
-llm_repos = 59
+llm_files = 92
+llm_repos = 56
 
 [[entry]]
 phrase = "not silently"
 group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.1.0"
-llm_files = 113
-llm_repos = 66
+llm_files = 112
+llm_repos = 65
 
 [[entry]]
 phrase = "never silently"
 group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.1.0"
-llm_files = 61
-llm_repos = 43
-
-[[entry]]
-phrase = "not merely"
-group = "insistence"
-advice = "say what it is; drop the contrast"
-since = "0.1.0"
-llm_files = 77
-llm_repos = 59
+llm_files = 57
+llm_repos = 40
 
 [[entry]]
 phrase = "load-bearing"
 group = "metaphors"
 advice = "say what depends on it"
 since = "0.1.0"
-llm_files = 204
-llm_repos = 75
+llm_files = 197
+llm_repos = 70
 
 [[entry]]
 phrase = "lands on"
 group = "metaphors"
 advice = "say what happens, such as \"is merged into\" or \"reaches\""
 since = "0.1.0"
-llm_files = 76
-llm_repos = 53
+llm_files = 73
+llm_repos = 51
 
 [[entry]]
 phrase = "it lands"
 group = "metaphors"
 advice = "say what happens, such as \"it is merged\" or \"it ships\""
 since = "0.1.0"
-llm_files = 50
-llm_repos = 43
+llm_files = 48
+llm_repos = 41
 
 [[entry]]
 phrase = "byte-identical"
 group = "precision"
 advice = "say \"identical\", or name the check that shows it"
 since = "0.1.0"
-llm_files = 189
-llm_repos = 72
+llm_files = 175
+llm_repos = 65

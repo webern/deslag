@@ -1,0 +1,75 @@
+{
+  "sidecar_version": 3,
+  "fixture": "packages__utils__tool-utils__README.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "microsoft/FluidFramework",
+    "path": "packages/utils/tool-utils/README.md",
+    "commit": "cb6d5e66d01ac019b5e27d9d26ca5995c0b856ed",
+    "commit_date": "2026-09-25T17:01:29-07:00",
+    "url": "https://github.com/microsoft/FluidFramework/blob/cb6d5e66d01ac019b5e27d9d26ca5995c0b856ed/packages/utils/tool-utils/README.md",
+    "license": "MIT",
+    "license_files": [
+      "LICENSE",
+      "packages/utils/tool-utils/LICENSE"
+    ],
+    "repo_first_commit_date": null,
+    "stars": 4946,
+    "found_by": "sg-agent:(^|/)CLAUDE\\.md$"
+  },
+  "history": {
+    "commits": 23,
+    "first_commit_date": "2020-06-18T14:52:01-07:00",
+    "last_commit_date": "2026-09-09T16:32:44-07:00",
+    "last_commit_author": "Joshua Smithrud",
+    "authors": 8,
+    "ai_commits": 1,
+    "ai_tools": [
+      "claude-code"
+    ],
+    "truncated": false,
+    "first_committer_date": "2020-06-18T14:52:01-07:00",
+    "last_committer_date": "2026-09-09T23:32:44Z",
+    "marks": [
+      {
+        "text": "Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+        "tool": "claude-code",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "25cdc598aaca4233da92ee8b7f9c17d09b356bd4",
+        "date": "2026-04-14T14:00:48-07:00",
+        "committed": "2026-04-14T21:00:48Z",
+        "old": "9ab301ca093a8dd72d5f315e5f8ee75d36e146d4",
+        "new": "5ce81a2d2dce1c52b9bae5fca29cefe5df417ded",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "mixed",
+    "basis": "2 of its 23 commits predate 2022-01-01 with no mark, and 1 is marked as an AI agent's (claude-code)"
+  },
+  "content": {
+    "size_bytes": 6247,
+    "sha256": "8564986a3e3ca9789a1cdc2bb4b09f51ca52c7c057a646459b20637a63eb11e4",
+    "kind": "readme",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 121,
+    "words": 678,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "mixed/microsoft--FluidFramework/packages/utils/tool-utils/README.md"
+}

@@ -1,0 +1,55 @@
+{
+  "sidecar_version": 3,
+  "fixture": "ISSUE_TEMPLATE__tracking_issue.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "codeberg.org",
+    "repo": "fediverse/fep",
+    "path": "ISSUE_TEMPLATE/tracking_issue.md",
+    "commit": "ad5916fc4b88943a41a120b7435b3f655e785fa5",
+    "commit_date": "2021-10-26T21:19:52Z",
+    "url": "https://codeberg.org/fediverse/fep/src/commit/ad5916fc4b88943a41a120b7435b3f655e785fa5/ISSUE_TEMPLATE/tracking_issue.md",
+    "license": "CC0-1.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2020-10-05T19:37:20+02:00",
+    "stars": 277,
+    "found_by": "codeberg-stars"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2021-01-04T09:04:49+01:00",
+    "last_commit_date": "2021-01-04T09:04:49+01:00",
+    "last_commit_author": "pukkamustard",
+    "authors": 1,
+    "ai_commits": 0,
+    "ai_tools": [],
+    "truncated": false,
+    "first_committer_date": "2021-01-04T09:04:49+01:00",
+    "last_committer_date": "2021-01-04T09:04:49+01:00",
+    "marks": [],
+    "edits": []
+  },
+  "authorship": {
+    "label": "human",
+    "basis": "every commit that touched it, 1 in all, predates 2022-01-01 by author and committer date and carries no AI tool's mark"
+  },
+  "content": {
+    "size_bytes": 516,
+    "sha256": "a5c02ac3ababc29cfb6690d9cc0f2f28f1935b848f18ad9fd62deb69cdb6319a",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 77,
+    "frontmatter": true,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "human/codeberg--fediverse--fep/ISSUE_TEMPLATE/tracking_issue.md"
+}

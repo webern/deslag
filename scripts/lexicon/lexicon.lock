@@ -1,0 +1,24 @@
+# The pinned sources of the open-class lexicon, src/tag/lexicon.txt. generate.sh reads this file,
+# downloads each `file` below into .lexicon/dl, checks its sha256, and builds the lexicon from them.
+# Nothing in the build, the tests or CI reads .lexicon or runs the generator: the lexicon is checked
+# in, and the generator is run by hand when a pin or the size changes.
+#
+# Every source is shippable, and each one's notice is copied from the download into LICENSES/:
+#   SCOWL, version 2020.12.07, Kevin Atkinson: permission notice, MIT-like, with the notices of the
+#     lists it was built from (LICENSES/SCOWL.txt). Gives which words are in the lexicon.
+#   AGID, version 2016.01.19, Kevin Atkinson: the same permission notice (LICENSES/AGID.txt). Gives
+#     the inflected forms of a lemma.
+#   WordNet 3.0, Princeton University: the WordNet licence (LICENSES/WordNet.txt). Gives each
+#     lemma's parts of speech, its sense counts and the names.
+#   Moby Part-of-Speech II, Grady Ward: public domain by the author's grant (LICENSES/Moby.txt).
+#     Gives each word's parts of speech in priority order.
+# Nothing from a treebank is read: the order of readings comes from these alone.
+#
+# `size` is SCOWL's size level, the cut of which words go in; generate.sh takes another as its
+# argument. Every word of SCOWL at that level or below is in, if a source gives it a reading.
+size 55
+file scowl-2020.12.07.tar.gz 5587667caa20c4891390c2d42dbb4d5c4c3f41bee77af1457ece3ba23fb859cc https://sourceforge.net/projects/wordlist/files/SCOWL/2020.12.07/scowl-2020.12.07.tar.gz/download
+file agid-2016.01.19.tar.gz 15d2d792d309d2dc838bf75d8abcd3feb36708c219dc5158d4fff70b89e601d1 https://sourceforge.net/projects/wordlist/files/AGID/2016.01.19/agid-2016.01.19.tar.gz/download
+file WNdb-3.0.tar.gz 658b1ba191f5f98c2e9bae3e25c186013158f30ef779f191d2a44e5d25046dc8 https://wordnetcode.princeton.edu/3.0/WNdb-3.0.tar.gz
+file mobypos.txt cc81458b820a36253fbeb8106045166a345209d0fbf4cbfc20be2b189f24af82 https://www.gutenberg.org/files/3203/files/mobypos.txt
+file moby-readme.txt d9257faf18659cf6a748499fd657bdb02edf089de21ddb96c36bed9c0c988400 https://www.gutenberg.org/files/3203/3203-0.txt

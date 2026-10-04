@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-04
 subsystems:
   - tests
 max_size_bytes: 4096
@@ -18,7 +18,7 @@ tests/
   corpus.rs           the corpus checks and matrix
   corpus/             quoted fixtures, each with a JSON sidecar
   golden.rs           runs the golden set
-  golden/             its config, and what each lint finds in the corpus
+  golden/             its config, what each lint finds in the corpus, and tags.txt
 ```
 
 ## Small trees
@@ -54,6 +54,9 @@ and the default density, and the binary must report what the library finds. Toke
 must keep to their blocks, and each location found under the golden config must hold what it
 names.
 
+`make test-scripts` runs `scripts/blobstore/test_batches.py`, which tests how batches are built and
+published against local git repositories.
+
 ## The golden set
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
@@ -63,3 +66,17 @@ path missing; a fixture with no section is left out, as is a lint that judges a 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
 a lint failing no fixture or all. `make fix-golden` rewrites the files.
+
+`tests/golden/tags.txt` is the tag stream of `tests/corpus/core/`, written by a second test in
+`tests/golden.rs`; `tag.asbuilt.md` describes it.
+
+## The gates
+
+`make test` runs `make test-exam` first: the whole `golden` binary, so a change to the tag stream
+fails, then `deslag-exam gate` on the `dev` and `holdout` sets of `tests/gold/gates.toml`, which
+`exam.asbuilt.md` describes. A gate is raised by hand, in the change that earns it.
+`make test-ewt` judges the `ewt-dev` set the same way; it fetches the treebank, so it is not in
+`test` or `ci`.
+
+`make test-blobs` ends with `deslag-corpus --tier blobs time --check`. Over the budget of the
+profile built, it measures again, each file keeping its fastest of six passes, and judges only that.

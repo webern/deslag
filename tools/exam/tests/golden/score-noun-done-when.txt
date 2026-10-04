@@ -1,0 +1,208 @@
+tagger     noun
+gold       tests/cases/done-when.conllu
+sha256     954739c4d813
+source     hand-made
+split      dev
+trains     no
+tokens     ud
+mode       full
+
+Words
+  sentences                           4
+  gold words                         23
+    punctuation                       3
+    X                                 1
+    tagged                           19
+      scored                         17  as 15 tokens
+        by their first word           2  as 1 token
+      unalignable                     1
+        text mismatch                 0
+        tokenizer drift               0
+        one word, several tokens      1
+      not word tokens                 1
+  provenance
+    agree                             0
+    adjudicated                       0
+    corrected                         0
+    owner                             0
+    kind                              0
+    unmarked                         23
+  open gold disputes                  0  (0 name a sent_id not in the file)
+
+Metrics
+  Accuracy                 46.7%  [31.2, 72.7]      7/15
+  Best-guess accuracy      46.7%  [31.2, 72.7]      7/15
+  Committed share         100.0%  [100.0, 100.0]    15/15
+  Gold retained            46.7%  [31.2, 72.7]      7/15
+  Unknown rate              0.0%  [0.0, 0.0]        0/15
+  Unalignable rate          5.3%  [0.0, 11.5]       1/19
+  Clean sentences          25.0%  [0.0, 75.0]       1/4
+  Number                    0.0%  [0.0, 0.0]        0/6
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+By confidence
+  Sure share              100.0%  [100.0, 100.0]    15/15
+  Sure accuracy            46.7%  [31.2, 72.7]      7/15
+  Likely share              0.0%  [0.0, 0.0]        0/15
+  Likely accuracy            n/a  n/a               0/0
+  Unsure share              0.0%  [0.0, 0.0]        0/15
+  Unsure accuracy            n/a  n/a               0/0
+  Unknown share             0.0%  [0.0, 0.0]        0/15
+  Unknown accuracy           n/a  n/a               0/0
+
+Strata
+
+tier human (2 sentences, 6 tokens)
+  Accuracy                 50.0%  [25.0, 100.0]     3/6
+  Best-guess accuracy      50.0%  [25.0, 100.0]     3/6
+  Committed share         100.0%  [100.0, 100.0]    6/6
+  Gold retained            50.0%  [25.0, 100.0]     3/6
+  Unknown rate              0.0%  [0.0, 0.0]        0/6
+  Unalignable rate          0.0%  [0.0, 0.0]        0/7
+  Clean sentences          50.0%  [0.0, 100.0]      1/2
+  Number                    0.0%  [0.0, 0.0]        0/3
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+tier llm (1 sentence, 5 tokens)
+  Accuracy                 40.0%  [40.0, 40.0]      2/5
+  Best-guess accuracy      40.0%  [40.0, 40.0]      2/5
+  Committed share         100.0%  [100.0, 100.0]    5/5
+  Gold retained            40.0%  [40.0, 40.0]      2/5
+  Unknown rate              0.0%  [0.0, 0.0]        0/5
+  Unalignable rate         14.3%  [14.3, 14.3]      1/7
+  Clean sentences           0.0%  [0.0, 0.0]        0/1
+  Number                    0.0%  [0.0, 0.0]        0/2
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+tier mixed (1 sentence, 4 tokens)
+  Accuracy                 50.0%  [50.0, 50.0]      2/4
+  Best-guess accuracy      50.0%  [50.0, 50.0]      2/4
+  Committed share         100.0%  [100.0, 100.0]    4/4
+  Gold retained            50.0%  [50.0, 50.0]      2/4
+  Unknown rate              0.0%  [0.0, 0.0]        0/4
+  Unalignable rate          0.0%  [0.0, 0.0]        0/5
+  Clean sentences           0.0%  [0.0, 0.0]        0/1
+  Number                    0.0%  [0.0, 0.0]        0/1
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+context prose (1 sentence, 4 tokens)
+  Accuracy                 25.0%  [25.0, 25.0]      1/4
+  Best-guess accuracy      25.0%  [25.0, 25.0]      1/4
+  Committed share         100.0%  [100.0, 100.0]    4/4
+  Gold retained            25.0%  [25.0, 25.0]      1/4
+  Unknown rate              0.0%  [0.0, 0.0]        0/4
+  Unalignable rate          0.0%  [0.0, 0.0]        0/5
+  Clean sentences           0.0%  [0.0, 0.0]        0/1
+  Number                    0.0%  [0.0, 0.0]        0/1
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+context list-item (1 sentence, 4 tokens)
+  Accuracy                 50.0%  [50.0, 50.0]      2/4
+  Best-guess accuracy      50.0%  [50.0, 50.0]      2/4
+  Committed share         100.0%  [100.0, 100.0]    4/4
+  Gold retained            50.0%  [50.0, 50.0]      2/4
+  Unknown rate              0.0%  [0.0, 0.0]        0/4
+  Unalignable rate          0.0%  [0.0, 0.0]        0/5
+  Clean sentences           0.0%  [0.0, 0.0]        0/1
+  Number                    0.0%  [0.0, 0.0]        0/1
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+context heading (1 sentence, 5 tokens)
+  Accuracy                 40.0%  [40.0, 40.0]      2/5
+  Best-guess accuracy      40.0%  [40.0, 40.0]      2/5
+  Committed share         100.0%  [100.0, 100.0]    5/5
+  Gold retained            40.0%  [40.0, 40.0]      2/5
+  Unknown rate              0.0%  [0.0, 0.0]        0/5
+  Unalignable rate         14.3%  [14.3, 14.3]      1/7
+  Clean sentences           0.0%  [0.0, 0.0]        0/1
+  Number                    0.0%  [0.0, 0.0]        0/2
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+context table-cell (1 sentence, 2 tokens)
+  Accuracy                100.0%  [100.0, 100.0]    2/2
+  Best-guess accuracy     100.0%  [100.0, 100.0]    2/2
+  Committed share         100.0%  [100.0, 100.0]    2/2
+  Gold retained           100.0%  [100.0, 100.0]    2/2
+  Unknown rate              0.0%  [0.0, 0.0]        0/2
+  Unalignable rate          0.0%  [0.0, 0.0]        0/2
+  Clean sentences         100.0%  [100.0, 100.0]    1/1
+  Number                    0.0%  [0.0, 0.0]        0/2
+  Verb form                  n/a  n/a               0/0
+  Tense                      n/a  n/a               0/0
+
+Tier gaps (unpaired, in points; a finding excludes zero)
+  Accuracy
+    llm - human      -10.0  [-60.0, +15.0]
+    mixed - human     +0.0  [-50.0, +25.0]
+  Best-guess accuracy
+    llm - human      -10.0  [-60.0, +15.0]
+    mixed - human     +0.0  [-50.0, +25.0]
+  Committed share
+    llm - human       +0.0  [+0.0, +0.0]
+    mixed - human     +0.0  [+0.0, +0.0]
+  Gold retained
+    llm - human      -10.0  [-60.0, +15.0]
+    mixed - human     +0.0  [-50.0, +25.0]
+  Unknown rate
+    llm - human       +0.0  [+0.0, +0.0]
+    mixed - human     +0.0  [+0.0, +0.0]
+  Unalignable rate
+    llm - human      +14.3  [+14.3, +14.3]    finding
+    mixed - human     +0.0  [+0.0, +0.0]
+  Clean sentences
+    llm - human      -50.0  [-100.0, +0.0]
+    mixed - human    -50.0  [-100.0, +0.0]
+  Number
+    llm - human       +0.0  [+0.0, +0.0]
+    mixed - human     +0.0  [+0.0, +0.0]
+  Verb form
+    llm - human        n/a  n/a
+    mixed - human      n/a  n/a
+  Tense
+    llm - human        n/a  n/a
+    mixed - human      n/a  n/a
+
+Confusion (rows gold, columns best guess)
+          NOUN PROPN  VERB   AUX   ADJ   ADV  PRON   DET   ADP  CONJ  PART   NUM  INTJ   total  accuracy
+  NOUN       7     .     .     .     .     .     .     .     .     .     .     .     .       7    100.0%
+  PROPN      1     .     .     .     .     .     .     .     .     .     .     .     .       1      0.0%
+  VERB       3     .     .     .     .     .     .     .     .     .     .     .     .       3      0.0%
+  AUX        1     .     .     .     .     .     .     .     .     .     .     .     .       1      0.0%
+  ADJ        .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+  ADV        .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+  PRON       1     .     .     .     .     .     .     .     .     .     .     .     .       1      0.0%
+  DET        1     .     .     .     .     .     .     .     .     .     .     .     .       1      0.0%
+  ADP        1     .     .     .     .     .     .     .     .     .     .     .     .       1      0.0%
+  CONJ       .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+  PART       .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+  NUM        .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+  INTJ       .     .     .     .     .     .     .     .     .     .     .     .     .       0       n/a
+
+Largest confusions
+  VERB -> NOUN       3
+  ADP -> NOUN        1
+  AUX -> NOUN        1
+  DET -> NOUN        1
+  PRON -> NOUN       1
+  PROPN -> NOUN      1
+
+Most missed words
+  don't               AUX -> NOUN        1
+  i                   PRON -> NOUN       1
+  like                VERB -> NOUN       1
+  see                 VERB -> NOUN       1
+  send                VERB -> NOUN       1
+  the                 DET -> NOUN        1
+  to                  ADP -> NOUN        1
+  u.s                 PROPN -> NOUN      1
+
+Unalignable examples
+  one word, several tokens (1 word)
+    s2  gold: e-mail  tokens: e mail

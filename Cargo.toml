@@ -10,7 +10,11 @@ license = "MIT"
 readme = "README.md"
 keywords = ["markdown", "lint", "linter", "prose", "cli"]
 categories = ["development-tools", "command-line-utilities"]
-include = ["/src/**/*.rs", "/src/**/*.md", "/src/**/*.toml", "/Cargo.toml", "/Cargo.lock", "/LICENSE", "/README.md"]
+include = [
+    "/src/**/*.rs", "/src/**/*.md", "/src/**/*.toml", "/src/**/*.txt", "/Cargo.toml", "/Cargo.lock", "/LICENSE", "/README.md",
+    # The notices of the sources of src/tag/lexicon.txt, which each source requires on every copy.
+    "/LICENSES/AGID.txt", "/LICENSES/Moby.txt", "/LICENSES/SCOWL.txt", "/LICENSES/WordNet.txt",
+]
 
 [dependencies]
 anyhow = "1.0.104"
@@ -33,10 +37,11 @@ tempfile = "3.27.0"
 [lints]
 workspace = true
 
-# tools/corpus measures the test corpus. It is never published, and a path-only dev-dependency is
-# dropped from the package, so `cargo publish` sees deslag alone.
+# tools/corpus measures the test corpus and tools/exam grades taggers. Neither is published, and
+# deslag depends on neither, so `cargo publish` sees deslag alone. (tools/corpus is a path-only
+# dev-dependency, which the package drops.)
 [workspace]
-members = ["tools/corpus"]
+members = ["tools/corpus", "tools/exam"]
 
 [workspace.package]
 edition = "2024"

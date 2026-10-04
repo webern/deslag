@@ -1,0 +1,14 @@
+{
+"format": 2,
+"tagger": "noun",
+"gold": "tests/cases/done-when.conllu",
+"sha256": "954739c4d813d7a02c3e9f9030bdd53c7f3ccde9e978a9e3334752659ba87882",
+"split": "dev",
+"columns": ["tokens","right","committed","committed_right","retained","sure","likely","unsure","unknown","sure_right","likely_right","unsure_right","unknown_right","sentences","clean","tagged","unalignable","number","number_right","verb_form","verb_form_right","tense","tense_right"],
+"sentences": [
+{"sent_id":"s1","tier":"human","context":"prose","tally":[4,1,4,1,1,4,0,0,0,1,0,0,0,1,0,5,0,1,0,0,0,0,0]},
+{"sent_id":"s2","tier":"llm","context":"heading","tally":[5,2,5,2,2,5,0,0,0,2,0,0,0,1,0,7,1,2,0,0,0,0,0]},
+{"sent_id":"s3","tier":"mixed","context":"list-item","tally":[4,2,4,2,2,4,0,0,0,2,0,0,0,1,0,5,0,1,0,0,0,0,0]},
+{"sent_id":"s4","tier":"human","context":"table-cell","tally":[2,2,2,2,2,2,0,0,0,2,0,0,0,1,1,2,0,2,0,0,0,0,0]}
+]
+}

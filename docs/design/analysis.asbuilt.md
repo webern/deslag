@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-04
 subsystems:
   - analysis
 max_size_bytes: 8192
@@ -23,9 +23,10 @@ bytes.
 - `chars`: the characters outside ASCII in English prose, by `banned_chars` group and one by one.
 - `ngrams`: runs of prose tokens, ranked by the lower bound of their ratio's interval.
 - `candidates`: the n-grams that pass the sieve, with the catalog gate's count. It leaves out the
-  catalogue's phrases and those `rejected.toml` refused; see `catalog.md`.
+  catalogue's phrases and the refused ones (`catalog.md`).
 - `lints`: what a config's lints fail, per label and per compared tool.
 - `report`: the four above as one Markdown page, the lints at `tools/corpus/report.toml`.
+- `time`: how long reading and tagging each fixture take.
 - `patterns`: the English files that hold each construction in `CANDIDATES`, which no lint ships,
   or a shipped lint's pattern named by its id, per label and per compared tool, with examples.
 
@@ -49,6 +50,7 @@ tools/corpus/src/
   lints.rs        lints
   report.rs       report
   patterns.rs     patterns: the candidate constructions and the shipped ones
+  time.rs         time
   table.rs        plain text and Markdown tables
   work.rs         in_chunks: work over threads, in a fixed order
 ```
@@ -59,15 +61,23 @@ tools/corpus/src/
 
 ## Reading a tier
 
-`Corpus::read` loads the tier through `load`, drops the tree's `core/`, which is not labelled, and
+`Corpus::read` loads the tier through `load`, drops the tree's unlabelled `core/`, and
 reads each fixture with `Document::markdown`. Each file becomes a `Doc`: its facets from the
 sidecar, its path in the tier and in its source repository, and its tokens as `u32` ids.
 
 A `Vocab` interns each folded prose token (a word, number, punctuation or other mark) once. The
 other tokens become `SEP`, and a block's first token carries `BLOCK`, so no n-gram crosses a code
-span or a block. Characters are counted in English files alone, and both sides of a comparison
-hold English files alone. Files are read 64 to a chunk over every thread, and the chunks'
+span or a block. Characters are counted in English files alone, and so are both sides of a
+comparison. Files are read 64 to a chunk over every thread, and the chunks'
 vocabularies merge in order, so the ids are those of one thread.
+
+## Timing
+
+On each fixture of the tier, `core/` too, `time` times `Document::markdown`, then `tag::document`
+alone, on one thread, the fastest of three passes. It prints files, bytes, both sums,
+tagging's share of reading and the profile. `time --check` judges the share against the budget of
+the profile built (debug 40.0%, release 31.0%) and exits 1 over it; the tree is refused.
+`test-blobs` runs it.
 
 ## Statistics
 
@@ -80,17 +90,17 @@ and rate.
 ## N-grams
 
 `ngrams` counts runs of `--min-n` to `--max-n` prose tokens (1 to 4 by default, at most 6) that
-start and end with a word or number and hold no mark ending a sentence. The first pass goes length by length
-over the focus side, grouped by repository, and keeps a run in at least `--min-repos` focus
-repositories (10) whose two shorter runs it kept too. The second finds each kept run in every file
-of both sides, in parallel, which gives the rates and intervals.
+start and end with a word or number and hold no mark ending a sentence. The first pass goes length
+by length over the focus side, grouped by repository, and keeps a run in at least `--min-repos`
+focus repositories (10) whose two shorter runs it kept too. The second finds each kept run in every
+file of both sides, in parallel, which gives the rates and intervals.
 
 A phrase is its tokens joined with a space where the text had one, so `Token::split` gives the
 same tokens back.
 
 ## Candidates
 
-The sieve, each step counted in the funnel it prints:
+The sieve, each step counted in its funnel:
 
 1. the focus repositories' floor, as in `ngrams`;
 2. no one repository holds more than `--max-share` of its focus files (0.25);
@@ -131,15 +141,14 @@ rate but in a table of its own; one with no language is left out. Examples are m
 
 ## Tests
 
-`tools/corpus/tests/golden.rs` builds a small big tier in a temporary directory, with a tree and a
-config, runs the binary for each command, and compares what it prints with a file in
-`tools/corpus/tests/golden/`; `make fix-golden` rewrites them. A second run must print the same
-bytes.
+`tools/corpus/tests/golden.rs` builds a small big tier in a temp directory, with a tree and a
+config, runs each command and compares its output with a file in
+`tools/corpus/tests/golden/`; `make fix-golden` rewrites them.
 
-`tools/corpus/tests/tree.rs` runs each command on the tree. Its round trip bans each of 500
-n-grams and every candidate with `banned_phrases` and requires each to match in exactly the files
-the tool names. Unit tests pin the rate, the ratio, the percentile and the bootstrap on small hand-made
+`tools/corpus/tests/tree.rs` runs each command on the tree. Its round trip bans each of 500 n-grams
+and every candidate with `banned_phrases` and requires each to match in exactly the files the tool
+names. Unit tests pin the rate, the ratio, the percentile and the bootstrap on hand-made
 inputs.
 
-`tests/corpus.rs` holds `sentence_lengths_by_label`, ignored: sentence length variation by label,
-on the tree and on the big tier when it is fetched, printed rather than checked.
+`tests/corpus.rs` holds `sentence_lengths_by_label`, ignored: it prints sentence length variation by
+label, on the tree and, when fetched, the big tier.

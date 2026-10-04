@@ -1,6 +1,28 @@
 # The slop corpus is Markdown quoted from other people's repositories. Its typos are the subject
 # matter, not mistakes to fix, and no fixture may be edited to suit a tool. The golden files list
-# its fixtures by path, and so quote the names of those repositories and their files.
+# its fixtures by path, and so quote the names of those repositories and their files. The tagger's
+# lexicon is generated from word lists, which hold misspellings and rare words by design, and the
+# notices of its sources are copied unchanged.
 
 [files]
-extend-exclude = ["tests/corpus", "tests/golden/*.txt"]
+extend-exclude = [
+    "tests/corpus",
+    "tests/golden/*.txt",
+    "src/tag/lexicon.txt",
+    "LICENSES/AGID.txt",
+    "LICENSES/Moby.txt",
+    "LICENSES/SCOWL.txt",
+    "LICENSES/WordNet.txt",
+]
+
+# PN is the annotation guide's code for a proper noun, which deslag-gold reads and writes.
+# mis is the prefix in the annotation guide's list of prefixes, which is copied unchanged.
+# Automattic is the company that holds Harper's copyright, which the licence notices name.
+# ment, ful and nd are word endings, the ones src/tag/shape.rs reads a word's kind from.
+[default.extend-words]
+pn = "pn"
+mis = "mis"
+Automattic = "Automattic"
+ment = "ment"
+ful = "ful"
+nd = "nd"

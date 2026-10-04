@@ -1,0 +1,249 @@
+item	sent_id	token	form	blind	harper	spacy	final	reason
+g0002.1	g0002	1	Manage	V.fi	V.?	V.in	V.fi	Imperative heading.
+g0002.3	g0002	3	Data	N.s	N.?	N.p	N.p	Data is plural unless a singular verb agrees; none here.
+g0006.5	g0006	5	GET	PN.s	V.?	V.in	PN.s	HTTP method name used as an identifier subject.
+g0006.14	g0006	14	access	V.pr	N.?	V.pr	V.pr	Finite present verb with subject you.
+g0011.3	g0011	3	CSS	PN.s	PN.?	N.s	PN.s	Acronym for a named language.
+g0011.6	g0011	6	e.g	R	X	X	R	Guide lists e.g. as R.
+g0015.6	g0015	6	submit	V.fi	V.?	V.in	V.fi	Imperative main verb.
+g0015.9	g0015	9	advisory	N.s	J	N.s	N.s	Noun head after adjective private.
+g0024.6	g0024	6	following	J	V.?	J	J	Following is listed as J.
+g0030.4	g0030	4	implements	V.pr	N.?	V.pr	V.pr	Finite present main verb.
+g0030.9	g0030	9	following	J	V.?	V.ing	J	Following is listed as J.
+g0035.3	g0035	3	manual	J	N.?	J	J	Normally an adjective, describing flow.
+g0040.3	g0040	3	Sentry	PN.s	N.?	PN.s	PN.s	Product name.
+g0040.6	g0040	6	monitoring	V.ing	N.?	V.ing	V.ing	After a preposition, with object.
+g0043.1	g0043	1	Note	V.fi	N.?	V.in	V.fi	Imperative note that.
+g0043.40	g0043	40	Protocol	PN.s	N.?	PN.s	PN.s	Inside name Airbyte Protocol.
+g0043.45	g0043	45	more	J	R	J	J	Quantity word used nominally; EWT tags it ADJ.
+g0045.1	g0045	1	Show	V.fi	V.?	V.in	V.fi	Imperative list item.
+g0046.4	g0046	4	whatever	D	PR	D	D	Whatever before its noun.
+g0047.1	g0047	1	Accept	PN.s	V.?	V.in	PN.s	HTTP header name, an identifier.
+g0047.3	g0047	3	application	PN.s	N.?	N.s	PN.s	Part of MIME type identifier.
+g0047.5	g0047	5	json	PN.s	X	N.s	PN.s	Part of MIME type identifier.
+g0048.2	g0048	2	targets	V.pr	N.?	V.pr	V.pr	Finite present main verb.
+g0048.4	g0048	4	NET	PN.s	N.?	PN.s	PN.s	Framework name .NET.
+g0051.3	g0051	3	with	P	C	P	P	Links a noun phrase.
+g0051.4	g0051	4	Go	PN.s	V.?	PN.s	PN.s	Language name.
+g0054.5	g0054	5	data	N.p	N.?	N.s	PN.s	Piece of a numbered slug identifier.
+g0056.7	g0056	7	both	D	C	C	C	Paired correlative both, not before its noun.
+g0056.8	g0056	8	static	J	N.?	J	J	Adjective describing rendering.
+g0057.1	g0057	1	Default	N.s	N.?	J	N.s	Default is a noun subject here.
+g0058.1	g0058	1	When	R	R	C	R	When is always R.
+g0062.1	g0062	1	Find	V.fi	V.?	V.in	V.fi	Imperative heading verb.
+g0064.4	g0064	4	how	R	R	C	R	How is always R.
+g0064.7	g0064	7	Protocol	PN.s	N.?	PN.s	PN.s	Inside format name Protocol Buffers.
+g0068.1	g0068	1	Default	N.s	N.?	J	N.s	Default as noun modifier is N per guide.
+g0072.1	g0072	1	Use	V.fi	V.?	V.in	V.fi	Imperative verb.
+g0072.8	g0072	8	setup.py	PN.s	X	N.s	PN.s	File name outside a code span.
+g0074.1	g0074	1	As	C	P	C	C	Before a clause.
+g0074.6	g0074	6	make	V.fi	V.?	V.in	V.fi	Imperative verb.
+g0076.2	g0076	2	all	D	D	PR	PN.s	Flag name -all, an identifier.
+g0076.3	g0076	3	Remove	V.fi	V.?	V.in	V.fi	Imperative description verb.
+g0076.9	g0076	9	perform	V.fi	V.?	V.in	V.fi	Coordinated imperative verb.
+g0076.11	g0076	11	init	PN.s	X	N.s	PN.s	Piece of command name init-soar.
+g0076.13	g0076	13	soar	PN.s	X	N.s	PN.s	Piece of command name init-soar.
+g0077.1	g0077	1	excise	PN.s	X	J	PN.s	Command name in a usage synopsis.
+g0077.2	g0077	2	production	PN.s	N.?	N.s	PN.s	Piece of placeholder argument identifier.
+g0077.4	g0077	4	name	PN.s	N.?	N.s	PN.s	Piece of placeholder argument identifier.
+g0077.7	g0077	7	chunks	PN.s	X	N.p	PN.s	Flag name, an identifier.
+g0077.10	g0077	10	default	PN.s	N.?	N.s	PN.s	Flag name, an identifier.
+g0077.13	g0077	13	task	PN.s	N.?	N.s	PN.s	Flag name, an identifier.
+g0077.16	g0077	16	user	PN.s	N.?	N.s	PN.s	Flag name, an identifier.
+g0077.19	g0077	19	all	PN.s	D	PR	PN.s	Flag name, an identifier.
+g0079.1	g0079	1	Tulosteen	X	X	PN.s	X	Finnish stretch, not English.
+g0079.2	g0079	2	muoto	X	X	N.s	X	Finnish stretch, not English.
+g0084.8	g0084	8	metadata	N.s	X	N.p	N.s	Singular verb uses agrees.
+g0084.11	g0084	11	SoundFile	PN.s	X	N.s	PN.s	Library name.
+g0084.14	g0084	14	reading	N.s	V.?	N.s	N.s	Noun with adjectival modifier, no object.
+g0086.1	g0086	1	When	R	R	C	R	When is always R.
+g0086.17	g0086	17	handling	N.s	V.?	N.s	N.s	Before noun meaning method for handling.
+g0089.8	g0089	8	by	P	C	P	P	By before -ing clause stays P.
+g0090.3	g0090	3	up	J	P	J	J	Adverb-like word modifying a noun is J.
+g0090.5	g0090	5	down	J	R	N.s	J	Adverb-like word modifying a noun is J.
+g0090.27	g0090	27	arrow	N.s	PN.?	N.s	N.s	Noun modifying a noun.
+g0094.2	g0094	2	recommended	J	V.?	V.pp	V.pp	Very does not fit; participle.
+g0094.8	g0094	8	bioconda	PN.s	X	N.s	PN.s	Tool or channel name; lower case does not stop it.
+g0097.10	g0097	10	event_name	PN.s	X	X	PN.s	Placeholder variable identifier.
+g0102.32	g0102	32	ZeRO	PN.s	NM	PN.s	PN.s	Product name ZeRO-3 Offload.
+g0102.35	g0102	35	Offload	PN.s	X	N.s	PN.s	Inside product name ZeRO-3 Offload.
+g0102.38	g0102	38	super	X	R	J	X	Bound prefix split off by a hyphen.
+g0102.43	g0102	43	see	V.fi	V.?	V.in	V.fi	Imperative see.
+g0102.44	g0102	44	Figure	N.s	PN.?	PN.s	N.s	Common noun label; N over PN when unsure.
+g0104.3	g0104	3	all	D	D	PR	D	all before of-phrase is D, like 'some of them'.
+g0113.8	g0113	8	opral	PN.s	X	N.s	PN.s	Repository owner in a path identifier.
+g0113.10	g0113	10	lixray	PN.s	X	N.s	PN.s	Repository name in a path identifier.
+g0119.15	g0119	15	changes	V.pr	N.?	V.pr	V.pr	Finite present verb of the if-clause.
+g0119.17	g0119	17	see	V.fi	V.?	V.in	V.fi	Imperative in parenthetical.
+g0122.1	g0122	1	GeoJSON	PN.s	X	N.s	PN.s	GeoJSON is a format name.
+g0128.20	g0128	20	related	J	J	V.pp	J	related is a listed adjective; 'more related to' fits.
+g0131.8	g0131	8	make	V.fi	V.?	V.in	V.fi	Imperative 'make sure'.
+g0131.17	g0131	17	by	P	C	P	P	by before -ing clause stays P.
+g0132.8	g0132	8	reads	N.p	V.?	N.p	N.p	Plural noun: sequencing reads, modified by 'single-end'.
+g0136.1	g0136	1	Get	V.fi	V.?	V.in	V.fi	Imperative in table cell.
+g0143.3	g0143	3	tuer	X	X	PN.s	X	French word, not English.
+g0144.1	g0144	1	Append	V.fi	X	V.in	V.fi	Imperative instruction.
+g0152.7	g0152	7	existing	J	V.?	V.ing	J	existing is a listed J word.
+g0153.18	g0153	18	to	P	T	P	P	to before a noun is P.
+g0153.19	g0153	19	users	N.p	V.?	N.p	N.p	Plural noun object of 'to'.
+g0155.1	g0155	1	Agree	V.fi	V.?	V.pr	V.fi	Imperative list item.
+g0159.2	g0159	2	PDF	PN.s	N.?	N.s	PN.s	PDF is a format name, like JSON.
+g0159.11	g0159	11	PDF	PN.s	N.?	N.s	PN.s	Format name inside button label.
+g0159.17	g0159	17	incomplete	J	R	J	J	Predicate adjective after 'is'.
+g0159.19	g0159	19	one	N.s	NM	NM	NM	one defaults to NM; cannot be plural here.
+g0162.1	g0162	1	Throttle	V.fi	X	J	V.fi	Imperative list item.
+g0163.3	g0163	3	implements	V.pr	N.?	V.pr	V.pr	Finite present main verb.
+g0163.12	g0163	12	for	P	C	P	P	for before a noun phrase.
+g0163.13	g0163	13	improved	J	V.?	J	V.pp	'very improved' does not fit; unsure J/participle choose V.
+g0171.2	g0171	2	Fabric	PN.s	N.?	PN.s	PN.s	Part of product name Hyperledger Fabric.
+g0173.13	g0173	13	only	R	R	J	R	only is listed R; compound piece limiting Docker.
+g0176.22	g0176	22	one	NM	PR	PR	NM	one defaults to NM; not generic person, not pluralizable.
+g0190.7	g0190	7	non	X	N.?	J	X	Bound prefix split by hyphen.
+g0190.9	g0190	9	default	J	N.?	J	N.s	Guide: default as modifier is N.
+g0190.12	g0190	12	ensure	V.fi	V.?	V.in	V.fi	Imperative main clause.
+g0195.3	g0195	3	specify	V.fi	V.?	V.in	V.fi	Imperative after please.
+g0198.3	g0198	3	src	PN.s	X	X	PN.s	Path piece, identifier.
+g0198.5	g0198	5	syscall.rs	PN.s	X	X	PN.s	File name, identifier.
+g0198.6	g0198	6	ProcessLocalPingDescriptorControl	PN.s	X	X	PN.s	Identifier outside code span.
+g0205.16	g0205	16	Boilerplate	PN.s	X	N.s	PN.s	Part of project name SaaS Boilerplate.
+g0207.2	g0207	2	see	V.fi	V.?	V.in	V.fi	Imperative instruction.
+g0208.6	g0208	6	first	R	J	R	R	Modifies verb 'discuss'.
+g0208.8	g0208	8	contact	V.fi	N.?	V.in	V.fi	Imperative main clause.
+g0208.10	g0208	10	core	J	N.?	N.s	N.s	core is normally a noun; noun modifier.
+g0210.11	g0210	11	Kubernetes	PN.s	X	PN.p	PN.s	Kubernetes is a name, singular.
+g0210.14	g0210	14	file	V.fi	V.?	V.in	V.fi	Imperative after please.
+g0218.3	g0218	3	stays	V.pr	N.?	V.pr	V.pr	Finite present main verb.
+g0218.12	g0218	12	px	N.p	PN.?	N.s	N.p	Unit abbreviation for pixels; number above 1.
+g0218.13	g0218	13	equivalent	J	J	N.s	N.s	Head of 'at ... equivalent', i.e. the equivalent of.
+g0218.25	g0218	25	PRE	N.s	R	J	N.s	Section label name; guide silent, default N.s.
+g0218.36	g0218	36	gold	N.s	N.?	J	N.s	Color noun piece in compound gold-dim.
+g0218.39	g0218	39	register	N.s	V.?	N.s	N.s	Noun with article.
+g0218.40	g0218	40	so	C	R	C	C	so joining two clauses mid-sentence.
+g0224.1	g0224	1	go.mod	PN.s	X	N.s	PN.s	file name identifier outside code span
+g0225.12	g0225	12	UTC	PN.s	PN.?	N.s	PN.s	acronym of a named time standard
+g0227.8	g0227	8	Protocol	PN.s	N.?	PN.s	PN.s	inside product name Protocol Buffers
+g0228.10	g0228	10	go	V.fi	V.?	V.in	V.fi	imperative
+g0228.11	g0228	11	to	P	T	P	P	before a noun phrase (menu path), not a verb
+g0228.14	g0228	14	uncheck	V.fi	X	V.in	V.fi	imperative coordinated with go
+g0230.1	g0230	1	Do	AX.fi	AX.?	AX.in	AX.fi	do in a negated command
+g0230.3	g0230	3	load	V.in	N.?	V.in	V.in	bare verb after do
+g0230.4	g0230	4	PDF	PN.s	N.?	N.s	PN.s	acronym of a file format name
+g0231.3	g0231	3	either	D	C	PR	D	either alone before of, like some of
+g0239.1	g0239	1	Once	C	R	C	C	subordinator heading reduced clause once deployed
+g0239.4	g0239	4	like	P	C	P	P	like as in tools like X
+g0245.1	g0245	1	Release	V.fi	N.?	V.in	V.fi	imperative list item
+g0246.1	g0246	1	Choose	V.fi	V.?	V.in	V.fi	imperative list item
+g0247.1	g0247	1	Babel	PN.s	X	N.s	PN.s	product name
+g0247.3	g0247	3	for	P	C	P	P	for before an -ing clause stays P
+g0247.5	g0247	5	that	C	D	C	C	introduces a content clause
+g0249.4	g0249	4	match	V.pr	N.?	V.pr	V.pr	finite present verb with subject patterns
+g0249.6	g0249	6	static	J	N.?	J	J	normally an adjective
+g0249.16	g0249	16	static	J	N.?	J	J	normally an adjective
+g0256.1	g0256	1	Once	C	R	C	C	subordinator before a clause
+g0256.11	g0256	11	start	V.fi	V.?	V.in	V.fi	imperative main clause
+g0261.1	g0261	1	View	V.fi	N.?	V.in	V.fi	imperative
+g0263.1	g0263	1	List	V.fi	N.?	V.in	V.fi	imperative
+g0266.1	g0266	1	Write	V.fi	V.?	V.in	V.fi	imperative
+g0266.4	g0266	4	manifest	N.s	J	N.s	N.s	noun head after project
+g0266.7	g0266	7	package.json	PN.s	X	N.s	PN.s	file name identifier
+g0267.1	g0267	1	Output	N.s	N.?	PN.s	N.s	common noun in heading, Title Case irrelevant
+g0269.4	g0269	4	following	J	V.?	J	J	following is on the J list
+g0271.2	g0271	2	Matching	N.s	V.?	N.s	N.s	noun-phrase heading; matching named as a thing
+g0272.10	g0272	10	use	V.fi	V.?	V.in	V.fi	imperative main verb
+g0272.12	g0272	12	Agreement	PN.s	N.?	PN.s	PN.s	noun inside product name APAP
+g0272.13	g0272	13	Protocol	PN.s	N.?	PN.s	PN.s	noun inside product name APAP
+g0272.14	g0272	14	API	PN.s	N.?	PN.s	PN.s	noun inside multiword product name
+g0272.25	g0272	25	REST	PN.s	N.?	N.s	PN.s	acronym of a named architectural style, like HTTP
+g0272.29	g0272	29	Model	PN.s	N.?	PN.s	PN.s	noun inside protocol name MCP
+g0272.30	g0272	30	Context	PN.s	N.?	PN.s	PN.s	noun inside protocol name MCP
+g0272.31	g0272	31	Protocol	PN.s	N.?	PN.s	PN.s	noun inside protocol name MCP
+g0273.1	g0273	1	Table	N.s	N.?	PN.s	N.s	Title Case does not make a name
+g0273.3	g0273	3	Contents	N.p	N.?	PN.p	N.p	plural common noun
+g0274.14	g0274	14	call	V.fi	V.?	V.in	V.fi	imperative
+g0274.15	g0274	15	that	PR.s	C	PR.s	PR.s	that standing alone
+g0274.17	g0274	17	before	C	C	P	C	before an -ing clause
+g0278.1	g0278	1	Update	V.fi	N.?	N.s	N.s	noun compound heading, like installation guide
+g0281.3	g0281	3	disciplined	J	J	V.pp	J	very disciplined fits
+g0288.5	g0288	5	that	C	PR	C	C	introduces a content clause after tell
+g0288.15	g0288	15	lives	V.pr	N.?	V.pr	V.pr	finite verb with subject what
+g0289.7	g0289	7	for	P	C	P	P	for before an -ing clause stays P
+g0295.1	g0295	1	main.go	PN.s	X	N.s	PN.s	file name identifier
+g0298.1	g0298	1	Breaks	V.pr	N.?	V.pr	V.pr	finite present verb in fragment
+g0298.2	g0298	2	BC	N.s	PN.?	PN.s	N.s	acronym of common thing, backward compatibility
+g0301.4	g0301	4	PATH	PN.s	N.?	PN.s	PN.s	environment variable identifier
+g0301.15	g0301	15	set	V.fi	V.?	V.in	V.fi	imperative
+g0303.6	g0303	6	process_local_ping_descriptor_control_maps_capacity_busy_closed_retry_timeout_and_io_errors	PN.s	X	N.s	PN.s	identifier outside code span
+g0313.2	g0313	2	you're	PR	PR	AX.?	PR	guide tags you're as PR
+g0313.4	g0313	4	fresh	R	J	J	R	adverb without -ly modifying verb starting
+g0313.8	g0313	8	follow	V.fi	V.?	V.in	V.fi	imperative main clause
+g0316.1	g0316	1	What	D	PR	PR	D	what before its noun
+g0316.7	g0316	7	to	P	T	P	P	to before a noun phrase
+g0316.8	g0316	8	end	N.s	V.?	N.s	N.s	noun modifier of users
+g0320.14	g0320	14	NET	PN.s	N.?	PN.s	PN.s	product name .NET
+g0329.21	g0329	21	Trigger	N.s	V.?	N.s	N.s	common noun after another; Title Case irrelevant
+g0330.10	g0330	10	Integrated	PN.s	V.?	PN.s	PN.s	adjective inside multiword initiative name
+g0330.11	g0330	11	Infrastructure	PN.s	N.?	PN.s	PN.s	noun inside multiword initiative name
+g0330.12	g0330	12	Planning	PN.s	V.?	PN.s	PN.s	noun inside multiword initiative name
+g0331.1	g0331	1	O	X	P	X	X	word in a non-English stretch
+g0334.5	g0334	5	create	V.fi	V.?	V.in	V.fi	imperative after please
+g0341.1	g0341	1	Today	R	N.?	N.s	N.s	temporal today is a noun in EWT; guide silent
+g0341.8	g0341	8	ZeRO	PN.s	NM	PN.s	PN.s	product name ZeRO
+g0341.22	g0341	22	ZeRO	PN.s	NM	PN.s	PN.s	product name ZeRO
+g0341.23	g0341	23	Stage	PN.s	N.?	PN.s	PN.s	noun inside multiword name ZeRO Stage 3
+g0341.26	g0341	26	ZeRO	PN.s	NM	PN.s	PN.s	product name ZeRO
+g0341.38	g0341	38	by	P	C	P	P	by before an -ing clause stays P
+g0346.2	g0346	2	attempt	V.fi	N.?	V.in	V.fi	imperative after never
+g0347.10	g0347	10	before	C	C	P	C	before an -ing clause is C
+g0351.1	g0351	1	varmeco	X	X	PN.s	X	Esperanto word, non-English stretch
+g0351.3	g0351	3	calor	X	X	PN.s	X	Spanish word, non-English stretch
+g0356.5	g0356	5	mentions	N.p	V.?	N.p	N.p	plural noun
+g0356.6	g0356	6	to	P	P	T	T	infinitive to before verb average
+g0356.7	g0356	7	average	N.s	J	V.in	V.in	infinitive after to: mentions to average
+g0356.12	g0356	12	mentions	N.p	V.?	N.p	N.p	plural noun
+g0356.13	g0356	13	to	P	P	T	T	infinitive to before verb total
+g0356.14	g0356	14	total	N.s	J	V.in	V.in	infinitive after to: mentions to total
+g0356.16	g0356	16	alongside	P	C	P	P	preposition before a noun phrase
+g0356.17	g0356	17	existing	J	V.?	V.ing	J	existing is listed as J
+g0356.20	g0356	20	mentions	N.p	V.?	N.p	N.p	plural noun
+g0356.21	g0356	21	to	P	T	T	T	infinitive to before verb count
+g0356.22	g0356	22	count	N.s	V.?	V.in	V.in	infinitive after to: mentions to count
+g0364.8	g0364	8	either	D	C	PR	D	either standing alone is D
+g0364.11	g0364	11	following	J	V.?	V.ing	J	following is listed as J
+g0370.1	g0370	1	Run	V.fi	V.?	V.in	V.fi	imperative heading
+g0375.1	g0375	1	For	P	P	C	C	for introducing a for-to clause with subject; clause follows
+g0375.23	g0375	23	elapsed	V.pp	V.?	J	V.pp	very does not fit; participle before noun
+g0379.1	g0379	1	Why	R	R	C	R	label Why is R
+g0379.13	g0379	13	glance	N.s	N.?	V.in	N.s	listed event, noun glance with at-phrase
+g0387.2	g0387	2	note	V.fi	N.?	V.in	V.fi	imperative after please
+g0387.10	g0387	10	Contributor	PN.s	N.?	PN.s	N.s	generic code of conduct after a; Title Case not a name
+g0387.11	g0387	11	Code	PN.s	N.?	PN.s	N.s	generic code of conduct after a; Title Case not a name
+g0387.13	g0387	13	Conduct	PN.s	N.?	PN.s	N.s	generic code of conduct after a; Title Case not a name
+g0392.4	g0392	4	docusaurus	PN.s	X	N.s	PN.s	tool name; lower case does not stop a name
+g0393.1	g0393	1	When	R	R	C	R	when is always R
+g0393.13	g0393	13	to	P	T	P	P	to before a noun phrase
+g0393.14	g0393	14	Stripe	PN.s	V.?	PN.s	PN.s	company name Stripe
+g0394.7	g0394	7	clamp	V.fi	X	N.s	V.fi	imperative instruction
+g0397.1	g0397	1	Preserve	V.fi	V.?	V.in	V.fi	imperative
+g0407.3	g0407	3	Compressed	V.pp	X	J	V.pp	very does not fit; participle modifier
+g0407.5	g0407	5	Synchronized	V.pp	X	J	V.pp	very does not fit; participle modifier
+g0407.7	g0407	7	IP	PN.s	N.?	N.s	PN.s	protocol name Internet Protocol
+g0415.3	g0415	3	yarn	PN.s	N.?	N.s	PN.s	tool name yarn; lower case does not stop a name
+g0428.1	g0428	1	Classic	J	J	PN.s	J	normally an adjective
+g0428.2	g0428	2	Outlaw	N.s	X	PN.s	N.s	common noun; N over PN when unsure
+g0432.8	g0432	8	by	P	C	P	P	by before an -ing clause stays P
+g0432.13	g0432	13	with	P	C	P	P	with before a noun phrase
+g0432.14	g0432	14	help	N.s	V.?	N.s	N.s	noun in label help wanted
+g0435.2	g0435	2	welcome	V.pr	I	V.pr	V.pr	finite present verb after we
+g0435.5	g0435	5	in	P	C	P	P	in before an -ing clause stays P
+g0435.7	g0435	7	to	P	T	P	P	to before a noun
+g0438.2	g0438	2	see	V.fi	V.?	V.in	V.fi	imperative after please
+g0438.3	g0438	3	CONTRIBUTING.md	PN.s	X	N.s	PN.s	file name
+g0443.1	g0443	1	Capture	V.fi	V.?	V.in	V.fi	imperative
+g0443.14	g0443	14	more	R	R	J	J	more than with a number; EWT tags more ADJ
+g0443.20	g0443	20	compare	V.fi	V.?	V.in	V.fi	coordinated imperative
+g0443.28	g0443	28	offline	J	R	J	J	adjective before noun
+g0054.3	g0054	3	frontend	N.s	N.s	N.s	PN.s	word piece of a numbered slug identifier
+g0054.7	g0054	7	layer	N.s	N.s	N.s	PN.s	word piece of a numbered slug identifier
+g0241.3	g0241	3	resource	N.s	N.s	N.s	PN.s	word piece of a numbered slug identifier
+g0241.5	g0241	5	acl	N.s	N.s	N.s	PN.s	word piece of a numbered slug identifier
+g0241.7	g0241	7	auth	N.s	N.s	N.s	PN.s	word piece of a numbered slug identifier

@@ -2,7 +2,7 @@
 # fixture and of the earlier revision it names, the human fixture that is its base.
 # tests/blobs.rs writes this file, with the default settings.
 # `DESLAG_FIX_GOLDEN=1 make test-blobs` rewrites it; read the diff before committing it.
-# fails 281 of 474
+# fails 275 of 466
 
 batches/2026-09-27-02/mixed/AsBuiltReport--AsBuiltReport.Core/CHANGELOG.md items:128 base:46
 batches/2026-09-27-02/mixed/Azure--azure-sdk-for-net/sdk__dns__Azure.ResourceManager.Dns__CHANGELOG.md items:42 base:1
@@ -47,8 +47,6 @@ batches/2026-09-27-02/mixed/JeanMarcMbouma--urguide/README.md items:445 base:38
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__man__hosting.md items:21 base:10
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__man__syntax.md items:14 base:9
 batches/2026-09-27-02/mixed/JuliaDocs--Documenter.jl/docs__src__showcase.md items:35 base:20
-batches/2026-09-27-02/mixed/JuliaSymbolics--Symbolics.jl/NEWS.md items:7 base:5
-batches/2026-09-27-02/mixed/JuliaSymbolics--Symbolics.jl/docs__src__manual__arrays.md items:2 base:0
 batches/2026-09-27-02/mixed/JustinBeckwith--retry-axios/README.md items:32 base:0
 batches/2026-09-27-02/mixed/LambdaHack--LambdaHack/CHANGELOG.md items:2122 base:2098
 batches/2026-09-27-02/mixed/LeMyst--WikibaseIntegrator/README.md items:160 base:59
@@ -65,7 +63,6 @@ batches/2026-09-27-02/mixed/MicrosoftDocs--azure-dev-docs/articles__python__walk
 batches/2026-09-27-02/mixed/MicrosoftDocs--azure-dev-docs/articles__python__walkthrough-tutorial-authentication-06.md items:2 base:0
 batches/2026-09-27-02/mixed/MyCometG3--recDL/README.md items:29 base:28
 batches/2026-09-27-02/mixed/OmniSharp--omnisharp-roslyn/CHANGELOG.md items:595 base:491
-batches/2026-09-27-02/mixed/OpenCTI-Platform--opencti/README.md items:6 base:4
 batches/2026-09-27-02/mixed/Rodsevich--arb_utils/CHANGELOG.md items:35 base:6
 batches/2026-09-27-02/mixed/SciML--NeuralPDE.jl/docs__src__index.md items:15 base:3
 batches/2026-09-27-02/mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md items:24 base:0
@@ -82,7 +79,6 @@ batches/2026-09-27-02/mixed/andfanilo--streamlit-echarts/CHANGELOG.md items:45 b
 batches/2026-09-27-02/mixed/andrewmmc--bookscompare/README.md items:43 base:16
 batches/2026-09-27-02/mixed/apache--pinot/README.md items:30 base:22
 batches/2026-09-27-02/mixed/apache--superset/docker__README.md items:10 base:7
-batches/2026-09-27-02/mixed/apache--teaclave-trustzone-sdk/docs__README.md items:14 base:3
 batches/2026-09-27-02/mixed/arecarn--dploy/CHANGELOG.md items:62 base:48
 batches/2026-09-27-02/mixed/arecarn--dploy/README.md items:10 base:9
 batches/2026-09-27-02/mixed/ayr-ton--kamu-oss/README.md items:3 base:2
@@ -100,7 +96,6 @@ batches/2026-09-27-02/mixed/compiler-explorer--compiler-explorer/docs__API.md it
 batches/2026-09-27-02/mixed/compiler-explorer--compiler-explorer/docs__AddingACompiler.md items:21 base:3
 batches/2026-09-27-02/mixed/containers--tar-diff/README.md items:4 base:0
 batches/2026-09-27-02/mixed/curiosity-ai--tesserae/README.md items:17 base:0
-batches/2026-09-27-02/mixed/cybersemics--em/README.md items:42 base:7
 batches/2026-09-27-02/mixed/dadhi--DryIoc/README.md items:49 base:48
 batches/2026-09-27-02/mixed/danikf--tik4net/README.md items:43 base:29
 batches/2026-09-27-02/mixed/davidpelayo--awesome-parenting/README.md items:68 base:37
@@ -146,7 +141,6 @@ batches/2026-09-27-02/mixed/fancy-regex--fancy-regex/README.md items:8 base:1
 batches/2026-09-27-02/mixed/fishi0x01--vsh/CHANGELOG.md items:64 base:39
 batches/2026-09-27-02/mixed/fsprojects--FSharp.Control.AsyncSeq/RELEASE_NOTES.md items:174 base:69
 batches/2026-09-27-02/mixed/geoff-maddock--events-tracker/docs__deployment_notes.md items:66 base:53
-batches/2026-09-27-02/mixed/getsentry--sentry-cli/CHANGELOG.md items:1151 base:418
 batches/2026-09-27-02/mixed/getsentry--sentry-javascript/packages__ember__README.md items:4 base:2
 batches/2026-09-27-02/mixed/getsentry--sentry-javascript/packages__nextjs__README.md items:4 base:2
 batches/2026-09-27-02/mixed/globeandmail--startr/README.md items:61 base:57
@@ -242,7 +236,6 @@ batches/2026-09-27-02/mixed/scalameta--scalameta/CONTRIBUTING.md items:35 base:3
 batches/2026-09-27-02/mixed/scalameta--scalameta/RELEASING.md items:59 base:53
 batches/2026-09-27-02/mixed/sebastienros--parlot/README.md items:40 base:15
 batches/2026-09-27-02/mixed/seladb--PcapPlusPlus/README.md items:99 base:58
-batches/2026-09-27-02/mixed/shakacode--react_on_rails/README.md items:28 base:20
 batches/2026-09-27-02/mixed/siempredelao--Distance-From-Me-Android/README.md items:34 base:20
 batches/2026-09-27-02/mixed/sneivandt--dotfiles/README.md items:5 base:0
 batches/2026-09-27-02/mixed/sobolevbel--jdg/docs__index.md items:32 base:16
@@ -268,7 +261,6 @@ batches/2026-09-27-02/mixed/ttop32--MouseTooltipTranslator/doc__description.md i
 batches/2026-09-27-02/mixed/tui-cs--Terminal.Gui/docfx__README.md items:26 base:4
 batches/2026-09-27-02/mixed/ulises-jeremias--dotfiles/README.md items:7 base:0
 batches/2026-09-27-02/mixed/useful-toys--slf4j-toys/README.md items:32 base:2
-batches/2026-09-27-02/mixed/uswds--uswds/CONTRIBUTING.md items:78 base:8
 batches/2026-09-27-02/mixed/vercel--vercel/README.md items:13 base:5
 batches/2026-09-27-02/mixed/vivid-planet--dextinity/README.md items:10 base:3
 batches/2026-09-27-02/mixed/vlang--v/vlib__orm__README.md items:28 base:7
@@ -285,3 +277,5 @@ batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_primitives__CHANGELOG.md i
 batches/2026-09-27-02/mixed/zcash--librustzcash/zcash_proofs__CHANGELOG.md items:86 base:27
 batches/2026-09-27-02/mixed/zcash--pasta_curves/CHANGELOG.md items:53 base:14
 batches/2026-09-27-02/mixed/zzfn--zzf/README.md items:53 base:38
+batches/2026-10-03-01/mixed/JuliaSymbolics--Symbolics.jl/NEWS.md items:7 base:5
+batches/2026-10-03-01/mixed/JuliaSymbolics--Symbolics.jl/docs__src__manual__arrays.md items:2 base:0

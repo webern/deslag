@@ -117,6 +117,8 @@ pub struct Doc {
     pub repo: u32,
     /// The agents whose marks its history carries.
     pub tools: Vec<String>,
+    /// Whether its label rests on its publisher's statement of the model, not on a history.
+    pub declared: bool,
     /// What kind of file it is, such as `readme`.
     pub kind: String,
     /// `en`, `other` or `none`.
@@ -207,6 +209,29 @@ fn tree_commit(repo_root: &Path) -> String {
     }
 }
 
+/// What `tier` of the repository at `repo_root` was read from: the tree's last commit, or the
+/// image digest that `make fetch-blobs` stamped.
+pub fn measured_on(repo_root: &Path, tier: Tier) -> Result<String, Problem> {
+    match tier {
+        Tier::Tree => Ok(tree_commit(repo_root)),
+        Tier::Blobs => {
+            let stamp = repo_root.join(".blobs/stamp");
+            Ok(std::fs::read_to_string(&stamp)
+                .map_err(|error| {
+                    Problem(format!(
+                        "{}: {error}; make fetch-blobs writes it",
+                        stamp.display()
+                    ))
+                })?
+                .lines()
+                .next()
+                .unwrap_or_default()
+                .trim()
+                .to_string())
+        }
+    }
+}
+
 impl Corpus {
     /// Reads and measures `tier` of the repository at `repo_root`. The big tier needs the tree
     /// too, to say which of its fixtures the tree holds.
@@ -215,7 +240,7 @@ impl Corpus {
         let tree = load::tree(&tree_root)?;
         match tier {
             Tier::Tree => {
-                let measured_on = tree_commit(repo_root);
+                let measured_on = measured_on(repo_root, tier)?;
                 Ok(Corpus::measure(
                     tier,
                     tree_root,
@@ -226,19 +251,7 @@ impl Corpus {
                 ))
             }
             Tier::Blobs => {
-                let stamp = repo_root.join(".blobs/stamp");
-                let measured_on = std::fs::read_to_string(&stamp)
-                    .map_err(|error| {
-                        Problem(format!(
-                            "{}: {error}; make fetch-blobs writes it",
-                            stamp.display()
-                        ))
-                    })?
-                    .lines()
-                    .next()
-                    .unwrap_or_default()
-                    .trim()
-                    .to_string();
+                let measured_on = measured_on(repo_root, tier)?;
                 let blobs_root = repo_root.join(".blobs/unpacked/corpus");
                 let blobs = load::blobs(&blobs_root)?;
                 let in_tree: BTreeSet<String> = tree
@@ -320,7 +333,12 @@ impl Corpus {
                 path: fixture.path.clone(),
                 label,
                 repo: repo_index[repo.as_str()],
-                tools: sidecar.history.ai_tools.clone(),
+                tools: sidecar
+                    .history
+                    .as_ref()
+                    .map(|history| history.ai_tools.clone())
+                    .unwrap_or_default(),
+                declared: sidecar.is_declared(),
                 kind: sidecar.content.kind.clone(),
                 language: sidecar.content.natural_language.clone(),
                 batch,
@@ -502,6 +520,10 @@ pub struct Filters {
     /// Keep the human files, and only the llm and mixed files whose history names one tool.
     #[arg(long)]
     pub single_tool: bool,
+    /// Leave out the `llm` files whose label is their publisher's statement of the model. They
+    /// count as `llm` unless this is given; each file's sidecar keeps its basis either way.
+    #[arg(long)]
+    pub without_declared: bool,
     /// Keep only the files from repositories a search for topics outside software found
     /// (`outside`), or only the others (`software`).
     #[arg(long, value_enum)]
@@ -533,6 +555,7 @@ impl Filters {
             && (self.languages.is_empty() || self.languages.contains(&doc.language))
             && (dated || self.quarters.is_empty() || self.quarters.contains(&doc.quarter))
             && (dated || !self.single_tool || doc.single_tool().is_some())
+            && (!self.without_declared || !doc.declared)
             && match self.register {
                 None => true,
                 Some(Register::Outside) => doc.outside_software,

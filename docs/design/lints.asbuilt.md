@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-03
 subsystems:
   - lint
   - output
@@ -22,7 +22,7 @@ src/
     banned_phrases.toml the groups' phrases; see catalog.md
     density.rs        the density lint
     list_growth.rs    the list growth lint
-    pattern.rs        a closed token pattern, as Rust data
+    pattern.rs        a closed token pattern, as Rust data; `Item::Tag` matches a reading
     verbs_no_nouns.rs the taste lint for a verb negated through its object
   output/             --format json, sarif and github
 ```

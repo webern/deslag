@@ -1,0 +1,671 @@
+//! The pruning passes: small rules that run after the tables have read a sentence, each narrowing
+//! what the tables left open.
+//!
+//! The tables read every word on its own. A pass reads a word in its context: it may remove tags
+//! from what a word can be, choose its best guess among the tags left, and so raise it to `Likely`
+//! or `Sure`. The passes run in the fixed order of [`PASSES`], each seeing what the ones before it
+//! made, and every pass is a function over a [`View`] of one sentence.
+//!
+//! The rules every pass keeps, which [`View::narrow`], the one way a pass changes a reading,
+//! enforces:
+//!
+//! - A pass only removes. It never adds a tag to what a word can be, and the table lookup, not a
+//!   pass, says which tags a word may have.
+//! - It never removes the last tag. A request that would is refused whole.
+//! - A word with a single tag possible is settled and is left alone, so a `Sure` reading never
+//!   changes. The one exception is [`View::confirm`]: a lexicon word with one tag, `Unsure`, is
+//!   made `Sure` when the rule's context agrees with that tag. Nothing is removed.
+//! - A word is `Sure` when one tag remains, `Likely` when the rule chose its best guess and others
+//!   remain. A pass never lowers a confidence, and never sets `Unsure` or `Unknown`.
+//! - A rule that needs a neighbour's tag asks [`View::settled`], which answers only when nothing
+//!   else is possible there. When it does not, the rule does nothing. A rule that holds for every
+//!   tag the neighbour may have asks [`View::within`] instead, and a rule that leans on a
+//!   neighbour's best guess asks [`View::decided`], which answers only if that guess is `Likely`
+//!   or `Sure`, as step 4 allows. Reading a neighbour's text or kind is not leaning on its
+//!   reading, and needs no such care.
+//!
+//! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
+//! its tests, which run each case through the whole tagger.
+
+use super::{
+    Confidence, Context, Features, Reading, Tag, TagSet, function, infinitive, nounverb, prior,
+    proper, single,
+};
+use crate::document::{Token, TokenKind};
+
+/// The passes, in the order they run. A new pass goes where its rule needs what the earlier ones
+/// settled, and the order is part of the tagger: it is what the tag stream records.
+const PASSES: [fn(&mut View<'_, '_>); 6] = [
+    proper::run,
+    infinitive::run,
+    function::run,
+    nounverb::run,
+    prior::run,
+    single::run,
+];
+
+/// Runs every pass, in order, over one sentence whose words the tables have read.
+pub(super) fn run(tokens: &mut [Token<'_>], context: Context) {
+    let mut view = View { tokens, context };
+    for pass in PASSES {
+        pass(&mut view);
+    }
+}
+
+/// One sentence as a pass sees it: its tokens, in order, each word with the reading the tables and
+/// the passes before gave it, and the context of its block.
+pub(super) struct View<'a, 't> {
+    tokens: &'a mut [Token<'t>],
+    context: Context,
+}
+
+impl View<'_, '_> {
+    /// The kind of block the sentence is in.
+    pub(super) fn context(&self) -> Context {
+        self.context
+    }
+
+    /// How many tokens the sentence has.
+    pub(super) fn len(&self) -> usize {
+        self.tokens.len()
+    }
+
+    /// What kind of token the token at `at` is.
+    pub(super) fn kind(&self, at: usize) -> TokenKind {
+        self.tokens[at].kind
+    }
+
+    /// The text of the token at `at`.
+    pub(super) fn text(&self, at: usize) -> &str {
+        &self.tokens[at].text
+    }
+
+    /// The reading of the word at `at`, `None` for any other token.
+    pub(super) fn reading(&self, at: usize) -> Option<Reading> {
+        self.tokens[at].reading
+    }
+
+    /// The tag of the word at `at` when it is the only one possible there, which is what a rule
+    /// may lean on in a neighbour. `None` for a word with more than one tag possible, and for a
+    /// token that is no word.
+    pub(super) fn settled(&self, at: usize) -> Option<Tag> {
+        self.reading(at)
+            .filter(|reading| reading.possible().len() == 1)
+            .map(|reading| reading.tag)
+    }
+
+    /// The best guess of the word at `at` when an earlier rule or a table committed to it: `Sure`
+    /// or `Likely`. This is what a rule may lean on in a neighbour at `Likely`, as step 4 allows:
+    /// the neighbour's own rule chose, so its guess does not wait on a tag still open. `None` for a
+    /// word at `Unsure` or `Unknown`, and for a token that is no word.
+    pub(super) fn decided(&self, at: usize) -> Option<Tag> {
+        self.reading(at)
+            .filter(|reading| reading.confidence.committed())
+            .map(|reading| reading.tag)
+    }
+
+    /// Whether the word at `at` is read and every tag possible there is in `tags`. A rule whose
+    /// decision is the same for each of those tags does not lean on which of them is right, so it
+    /// may use this where it may not use an ambiguous neighbour: a word that can be nothing but a
+    /// verb or an auxiliary settles that it is not a noun, though not which of the two it is.
+    pub(super) fn within(&self, at: usize, tags: TagSet) -> bool {
+        self.reading(at).is_some_and(|reading| {
+            let possible = reading.possible();
+            !possible.is_empty() && possible.intersection(tags) == possible
+        })
+    }
+
+    /// The text of the token at `at` if it is a word.
+    pub(super) fn text_of_word(&self, at: usize) -> Option<&str> {
+        (self.kind(at) == TokenKind::Word).then(|| self.text(at))
+    }
+
+    /// The index of the token after `at`, if there is one.
+    pub(super) fn token_after(&self, at: usize) -> Option<usize> {
+        (at + 1 < self.len()).then_some(at + 1)
+    }
+
+    /// The index of the word right after `at`: the next token, if it is a word.
+    pub(super) fn next_word(&self, at: usize) -> Option<usize> {
+        self.token_after(at)
+            .filter(|next| self.kind(*next) == TokenKind::Word)
+    }
+
+    /// Whether the word right after `at` is read and every tag possible there is in `tags`.
+    pub(super) fn next_within(&self, at: usize, tags: TagSet) -> bool {
+        self.next_word(at)
+            .is_some_and(|next| self.within(next, tags))
+    }
+
+    /// Makes the word at `at` `Sure` when `tag` is the one tag the tables give it, it is `Unsure`,
+    /// and the rule's context agrees: one reading remains and the context settles it, which is what
+    /// step 4 means by `Sure`. The lexicon keeps such a word `Unsure` for want of context, because
+    /// the open class is open; a rule that supplies the context may close it. Nothing is removed.
+    /// Returns whether the reading changed. Nothing happens for any other word.
+    pub(super) fn confirm(&mut self, at: usize, tag: Tag) -> bool {
+        match self.reading(at) {
+            Some(old)
+                if old.confidence == Confidence::Unsure
+                    && old.tag == tag
+                    && old.possible() == TagSet::of(tag) =>
+            {
+                self.tokens[at].reading = Some(Reading {
+                    confidence: Confidence::Sure,
+                    ..old
+                });
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Narrows the word at `at` to the tags of `keep` that are still possible, with `prefer` as the
+    /// best guess, and returns whether the reading changed.
+    ///
+    /// Nothing happens when the word is not read, when it is settled, when no tag of `keep` is
+    /// possible, or when `prefer` is not among those that would remain: a pass cannot remove the
+    /// last tag, and cannot choose a guess it removed. Otherwise the word is `Sure` if one tag
+    /// remains and `Likely` if more do. Its features follow the guess as [`features_for`] says.
+    pub(super) fn narrow(&mut self, at: usize, keep: TagSet, prefer: Tag) -> bool {
+        self.narrow_with(at, keep, prefer, None)
+    }
+
+    /// As [`View::narrow`], with the features of the new guess given by the rule when it knows them
+    /// better than the carry rules of [`features_for`] do, as a rule that turns a noun into a verb
+    /// does: it knows which form of the verb the context asks for.
+    pub(super) fn narrow_with(
+        &mut self,
+        at: usize,
+        keep: TagSet,
+        prefer: Tag,
+        features: Option<Features>,
+    ) -> bool {
+        let Some(old) = self.reading(at) else {
+            return false;
+        };
+        if self.settled(at).is_some() {
+            return false;
+        }
+        let kept = old.possible().intersection(keep);
+        if !kept.contains(prefer) {
+            return false;
+        }
+        let new = Reading {
+            tag: prefer,
+            features: features.unwrap_or_else(|| features_for(old, prefer)),
+            confidence: if kept.len() == 1 {
+                Confidence::Sure
+            } else {
+                Confidence::Likely
+            },
+            kept,
+        };
+        self.tokens[at].reading = Some(new);
+        new != old
+    }
+}
+
+/// The features of `old`'s word when `tag` is its best guess. The tables give features for the
+/// best guess alone, so a change of guess keeps only what stays true of the word: that a second
+/// word is fused on; its number, between a noun and a proper noun or a determiner and a pronoun;
+/// and all of them between a verb and an auxiliary, which are one word with one inflection. A
+/// proper noun with no number known is singular, as names are but for the few that name a group.
+fn features_for(old: Reading, tag: Tag) -> Features {
+    if tag == old.tag {
+        return old.features;
+    }
+    let pair = |a: Tag, b: Tag| (old.tag == a && tag == b) || (old.tag == b && tag == a);
+    if pair(Tag::Verb, Tag::Auxiliary) {
+        return old.features;
+    }
+    let mut keep = Features::CONTRACTION;
+    if pair(Tag::Noun, Tag::ProperNoun) || pair(Tag::Determiner, Tag::Pronoun) {
+        keep = keep.union(Features::SINGULAR).union(Features::PLURAL);
+    }
+    let features = old.features.only(keep);
+    if tag == Tag::ProperNoun && features.number().is_none() {
+        features.union(Features::SINGULAR)
+    } else {
+        features
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use Tag::{Adjective, Noun, ProperNoun, Verb};
+
+    fn read(tag: Tag, features: Features, confidence: Confidence, kept: &[Tag]) -> Reading {
+        Reading {
+            tag,
+            features,
+            confidence,
+            kept: kept.iter().copied().collect(),
+        }
+    }
+
+    /// Tokens for `text`, each word given the reading `reading(word)` says.
+    fn sentence_of<'a>(text: &'a str, reading: impl Fn(&str) -> Reading) -> Vec<Token<'a>> {
+        let mut tokens = Token::split(text);
+        for token in &mut tokens {
+            token.reading = (token.kind == TokenKind::Word).then(|| reading(&token.text));
+        }
+        tokens
+    }
+
+    fn open() -> Reading {
+        read(
+            Noun,
+            Features::PLURAL,
+            Confidence::Unsure,
+            &[Noun, ProperNoun, Verb, Adjective],
+        )
+    }
+
+    #[test]
+    fn narrow_removes_tags_chooses_the_guess_and_raises_to_likely() {
+        let mut tokens = sentence_of("Bush", |_| open());
+        let mut view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        let keep = TagSet::of(Noun).with(ProperNoun);
+        assert!(view.narrow(0, keep, ProperNoun));
+        let reading = view.reading(0).unwrap();
+        assert_eq!(reading.tag, ProperNoun);
+        assert_eq!(reading.kept, keep);
+        assert_eq!(reading.confidence, Confidence::Likely);
+        // A noun's number stays true of a proper noun.
+        assert_eq!(reading.features, Features::PLURAL);
+        // Doing it again changes nothing.
+        assert!(!view.narrow(0, keep, ProperNoun));
+    }
+
+    #[test]
+    fn narrow_to_one_tag_is_sure() {
+        let mut tokens = sentence_of("Bush", |_| open());
+        let mut view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        assert!(view.narrow(0, TagSet::of(ProperNoun), ProperNoun));
+        let reading = view.reading(0).unwrap();
+        assert_eq!(reading.confidence, Confidence::Sure);
+        assert_eq!(reading.possible(), TagSet::of(ProperNoun));
+    }
+
+    #[test]
+    fn narrow_never_removes_the_last_tag_or_the_chosen_guess() {
+        let mut tokens = sentence_of("Bush", |_| open());
+        let mut view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        let before = view.reading(0);
+        // No tag asked for is possible: the last of them would go.
+        assert!(!view.narrow(0, TagSet::of(Tag::Adverb), Tag::Adverb));
+        // The guess asked for is not among those that remain.
+        assert!(!view.narrow(0, TagSet::of(Noun), ProperNoun));
+        assert!(!view.narrow(0, TagSet::EMPTY, Noun));
+        assert_eq!(view.reading(0), before);
+    }
+
+    #[test]
+    fn narrow_leaves_a_settled_word_and_a_word_with_no_reading() {
+        let sure = read(Verb, Features::NONE, Confidence::Sure, &[Verb]);
+        let mut tokens = sentence_of(
+            "Run now ,",
+            |text| if text == "Run" { sure } else { open() },
+        );
+        let mut view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        assert!(!view.narrow(0, TagSet::of(Verb), Verb));
+        assert_eq!(view.reading(0), Some(sure));
+        assert!(!view.narrow(2, TagSet::of(Noun), Noun));
+        assert_eq!(view.reading(2), None);
+    }
+
+    #[test]
+    fn narrow_raises_a_likely_word_to_sure() {
+        let likely = read(Noun, Features::NONE, Confidence::Likely, &[Noun, Verb]);
+        let mut tokens = sentence_of("Bush", |_| likely);
+        let mut view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        // Narrowing to one tag raises a Likely word to Sure.
+        assert!(view.narrow(0, TagSet::of(Noun), Noun));
+        assert_eq!(view.reading(0).unwrap().confidence, Confidence::Sure);
+    }
+
+    #[test]
+    fn a_change_of_guess_drops_features_that_no_longer_hold() {
+        let verb = read(
+            Verb,
+            Features::FINITE
+                .union(Features::PRESENT)
+                .union(Features::CONTRACTION),
+            Confidence::Unsure,
+            &[Verb, Noun],
+        );
+        assert_eq!(features_for(verb, Noun), Features::CONTRACTION);
+        let noun = read(
+            Noun,
+            Features::SINGULAR,
+            Confidence::Unsure,
+            &[Noun, ProperNoun],
+        );
+        assert_eq!(features_for(noun, ProperNoun), Features::SINGULAR);
+        assert_eq!(features_for(noun, Noun), Features::SINGULAR);
+        assert_eq!(features_for(noun, Verb), Features::NONE);
+        // A proper noun with no number known is singular; one with a number keeps it.
+        let unknown = read(
+            Noun,
+            Features::NONE,
+            Confidence::Unknown,
+            &[Noun, ProperNoun],
+        );
+        assert_eq!(features_for(unknown, ProperNoun), Features::SINGULAR);
+        let plural = read(
+            Noun,
+            Features::PLURAL,
+            Confidence::Unsure,
+            &[Noun, ProperNoun],
+        );
+        assert_eq!(features_for(plural, ProperNoun), Features::PLURAL);
+        assert_eq!(
+            features_for(verb, ProperNoun),
+            Features::CONTRACTION.union(Features::SINGULAR)
+        );
+        // A verb and an auxiliary are one word, so all its features carry; a determiner and a
+        // pronoun share a number.
+        assert_eq!(features_for(verb, Tag::Auxiliary), verb.features);
+        let aux = read(
+            Tag::Auxiliary,
+            Features::SINGULAR.union(Features::THIRD),
+            Confidence::Unsure,
+            &[Tag::Auxiliary, Verb],
+        );
+        assert_eq!(features_for(aux, Verb), aux.features);
+        let this = read(
+            Tag::Determiner,
+            Features::SINGULAR.union(Features::THIRD),
+            Confidence::Unsure,
+            &[Tag::Determiner, Tag::Pronoun],
+        );
+        assert_eq!(features_for(this, Tag::Pronoun), Features::SINGULAR);
+    }
+
+    #[test]
+    fn settled_answers_only_when_one_tag_is_possible() {
+        let sure = read(
+            Tag::Determiner,
+            Features::NONE,
+            Confidence::Sure,
+            &[Tag::Determiner],
+        );
+        let mut tokens = sentence_of(
+            "the Bush .",
+            |text| if text == "the" { sure } else { open() },
+        );
+        let view = View {
+            tokens: &mut tokens,
+            context: Context::Prose,
+        };
+        assert_eq!(view.settled(0), Some(Tag::Determiner));
+        assert_eq!(view.settled(1), None);
+        assert_eq!(view.settled(2), None);
+    }
+
+    /// A rule that leans on its left neighbour, as a pass must: it acts only when the neighbour is
+    /// settled, and the tags it needs are the neighbour's.
+    fn after_a_settled_determiner_the_word_is_no_verb(view: &mut View<'_, '_>) {
+        for at in 1..view.len() {
+            if view.settled(at - 1) == Some(Tag::Determiner) {
+                let keep = TagSet::of(Noun).with(ProperNoun).with(Adjective);
+                view.narrow(at, keep, Noun);
+            }
+        }
+    }
+
+    #[test]
+    fn a_rule_over_an_ambiguous_neighbour_does_nothing() {
+        let sure = read(
+            Tag::Determiner,
+            Features::NONE,
+            Confidence::Sure,
+            &[Tag::Determiner],
+        );
+        let unsure = read(
+            Tag::Determiner,
+            Features::NONE,
+            Confidence::Unsure,
+            &[Tag::Determiner, Tag::Pronoun],
+        );
+        for (determiner, changes) in [(sure, true), (unsure, false)] {
+            let mut tokens = sentence_of("this Bush", |text| {
+                if text == "this" { determiner } else { open() }
+            });
+            let before = tokens[1].reading;
+            let mut view = View {
+                tokens: &mut tokens,
+                context: Context::Prose,
+            };
+            after_a_settled_determiner_the_word_is_no_verb(&mut view);
+            assert_eq!(view.reading(1) != before, changes);
+        }
+    }
+
+    #[test]
+    fn every_pass_keeps_the_rules_on_a_range_of_readings() {
+        // Whatever the passes do to a sentence of words in any state, no word loses its last tag,
+        // keeps a best guess that is not possible, gains a tag or loses confidence; a `Sure` word
+        // has one tag possible; and a `Likely` word has more than one, unless it had one tag from
+        // the tables and a pass confirmed it, which makes it `Sure` and not `Likely`. The sentences
+        // hold a word of every cue the passes read: a determiner, a possessive, a modal, `to`, a
+        // subject pronoun, a function word, a preposition and a capital.
+        let states = [
+            read(Noun, Features::NONE, Confidence::Unknown, &[Noun]),
+            read(
+                Noun,
+                Features::NONE,
+                Confidence::Unknown,
+                &[Noun, ProperNoun],
+            ),
+            read(
+                Noun,
+                Features::PLURAL,
+                Confidence::Unsure,
+                &[Noun, ProperNoun],
+            ),
+            read(Noun, Features::SINGULAR, Confidence::Unsure, &[Noun]),
+            read(Verb, Features::INFINITIVE, Confidence::Unsure, &[Verb]),
+            read(
+                Verb,
+                Features::NONE,
+                Confidence::Unsure,
+                &[Verb, Noun, Adjective],
+            ),
+            read(Noun, Features::NONE, Confidence::Unsure, &[Noun, Verb]),
+            read(
+                Adjective,
+                Features::POSITIVE,
+                Confidence::Unsure,
+                &[Adjective, ProperNoun],
+            ),
+            read(
+                ProperNoun,
+                Features::NONE,
+                Confidence::Unsure,
+                &[ProperNoun],
+            ),
+            read(
+                Tag::Adverb,
+                Features::NONE,
+                Confidence::Sure,
+                &[Tag::Adverb],
+            ),
+            read(
+                Tag::Auxiliary,
+                Features::FINITE,
+                Confidence::Unsure,
+                &[Tag::Auxiliary, Verb, Noun],
+            ),
+            read(
+                Tag::Auxiliary,
+                Features::FINITE,
+                Confidence::Unsure,
+                &[Tag::Auxiliary, Verb],
+            ),
+            read(
+                Tag::Determiner,
+                Features::SINGULAR,
+                Confidence::Unsure,
+                &[Tag::Determiner, Tag::Pronoun],
+            ),
+            read(
+                Tag::Adposition,
+                Features::NONE,
+                Confidence::Unsure,
+                &[Tag::Adposition, Tag::Adverb],
+            ),
+            read(
+                Tag::Particle,
+                Features::NONE,
+                Confidence::Unsure,
+                &[Tag::Particle, Tag::Adposition],
+            ),
+            read(
+                Tag::Pronoun,
+                Features::NONE,
+                Confidence::Sure,
+                &[Tag::Pronoun],
+            ),
+        ];
+        let texts = [
+            "see Alpha , Beta and Gamma Delta now",
+            "see the file and my file and a Frobnitz now",
+            "we can file it , I will go to file them , they have the work",
+            "he files the list on the file in it , this is that of those",
+            "what to do about it , is there a way to file this",
+        ];
+        for context in Context::ALL {
+            for text in texts {
+                // Every word the same state, then each state in turn at each word.
+                for (offset, _) in states.iter().enumerate() {
+                    let mut tokens = sentence_of(text, |w| {
+                        let n = w.len() + offset;
+                        states[n % states.len()]
+                    });
+                    let before: Vec<Option<Reading>> = tokens.iter().map(|t| t.reading).collect();
+                    run(&mut tokens, context);
+                    for (token, was) in tokens.iter().zip(before) {
+                        let Some(now) = token.reading else {
+                            assert!(was.is_none());
+                            continue;
+                        };
+                        let was = was.unwrap();
+                        assert!(!now.possible().is_empty());
+                        assert!(now.kept.contains(now.tag), "{}", token.text);
+                        assert!(
+                            now.possible().intersection(was.possible()) == now.possible(),
+                            "a pass added a tag to {}",
+                            token.text
+                        );
+                        assert!(now.confidence.at_least(was.confidence), "{}", token.text);
+                        match now.confidence {
+                            Confidence::Sure => {
+                                assert_eq!(now.possible().len(), 1, "{}", token.text);
+                            }
+                            Confidence::Likely if was.confidence != Confidence::Likely => {
+                                assert!(now.possible().len() > 1, "{}", token.text);
+                            }
+                            _ => {}
+                        }
+                        // A word one tag possible at the start is only ever confirmed, to `Sure`.
+                        if was.possible().len() == 1 && now != was {
+                            assert_eq!(now.confidence, Confidence::Sure, "{}", token.text);
+                            assert_eq!(now.tag, was.tag, "{}", token.text);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_one_reading_pass_only_raises_unsure_words_to_sure() {
+        // Every sentence of three words from a small vocabulary, read by the passes before the
+        // one-reading pass, then by it. Nothing but a confidence may differ, and only `Unsure` to
+        // `Sure`: no tag removed, no guess, feature or kept set changed.
+        let words = [
+            "the", "my", "elegant", "verbose", "of", "and", "two", "were", "they", "giraffe",
+            "zebra", "enlist", "gladly", "very", "to", "well", "running", "work", "Zebra", ",",
+        ];
+        let before = [
+            proper::run,
+            infinitive::run,
+            function::run,
+            nounverb::run,
+            prior::run,
+        ];
+        let pass = single::run;
+        assert_eq!(
+            PASSES.len(),
+            before.len() + 1,
+            "a pass was added: say here where it runs relative to single::run"
+        );
+        let mut raised = 0;
+        for a in words {
+            for b in words {
+                for c in words {
+                    let text = format!("{a} {b} {c}");
+                    let mut tokens = Token::split(&text);
+                    for token in &mut tokens {
+                        token.reading =
+                            (token.kind == TokenKind::Word).then(|| crate::tag::read(&token.text));
+                    }
+                    let mut whole = tokens.clone();
+                    let mut view = View {
+                        tokens: &mut tokens,
+                        context: Context::Prose,
+                    };
+                    for earlier in before {
+                        earlier(&mut view);
+                    }
+                    let readings: Vec<_> = (0..view.len()).map(|at| view.reading(at)).collect();
+                    pass(&mut view);
+                    // The named order is the real one, so a reorder of PASSES fails here.
+                    run(&mut whole, Context::Prose);
+                    for (at, token) in whole.iter().enumerate() {
+                        assert_eq!(token.reading, view.reading(at), "{text}");
+                    }
+                    for (at, old) in readings.into_iter().enumerate() {
+                        let new = view.reading(at);
+                        let (Some(old), Some(new)) = (old, new) else {
+                            assert_eq!(old, new, "{text}");
+                            continue;
+                        };
+                        assert_eq!(
+                            (new.tag, new.features, new.kept),
+                            (old.tag, old.features, old.kept),
+                            "{text}"
+                        );
+                        if new.confidence != old.confidence {
+                            assert_eq!(
+                                (old.confidence, new.confidence),
+                                (Confidence::Unsure, Confidence::Sure),
+                                "{text}"
+                            );
+                            assert_eq!(old.possible().len(), 1, "{text}");
+                            raised += 1;
+                        }
+                    }
+                }
+            }
+        }
+        assert!(raised > 100, "{raised}");
+    }
+}

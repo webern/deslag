@@ -2,19 +2,30 @@
 """Collects the deslag corpus: Markdown quoted from permissively licensed public repositories,
 sorted by who wrote it, as far as the history of each file can tell.
 
-This is a maintenance tool, run by hand when the corpus is rebuilt or grown; the build never runs
-it. It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill
-says why it is Python rather than bash.
+This is a maintenance tool, run by hand when the corpus is rebuilt or grown. The build never runs
+it, and CI runs only `batch`, which builds a batch from a manifest of sources.
+It uses nothing outside the Python standard library and git. The /deslag-build-doctrine skill says
+why it is Python rather than bash.
 
     collect.py discover --work DIR [--only RE] find candidate repositories, with each sampler
     collect.py harvest  --work DIR [--jobs N] [--limit N] [--deadline T]
                                               clone each one and keep the Markdown whose
                                               history proves a label
     collect.py stage    --work DIR --corpus .blobs/unpacked/corpus --out STAGE [--exclude FILE]
+                        [--captured DATE]
                                               write what harvest kept as fixtures with sidecars
     collect.py pack     --from STAGE --corpus .blobs/unpacked/corpus --work DIR
-                        [--exclude FILE]      write the fixtures, and the exclusions, as a new
+                        [--exclude FILE] [--name NAME]
+                                              write the fixtures, and the exclusions, as a new
                                               batch of the big tier, for make publish-blobs
+    collect.py batch    MANIFEST --corpus .blobs/unpacked/corpus --work DIR
+                                              build a manifest's batch, and fail unless it comes
+                                              to what the manifest records; a seed manifest is
+                                              first completed with what the network says, and
+                                              built twice; the publish-blobs workflow runs this
+    collect.py complete SEED COMPLETED --corpus .blobs/unpacked/corpus
+                                              fail unless COMPLETED is SEED completed and its
+                                              batch is the one the corpus holds
     collect.py select   --corpus .blobs/unpacked/corpus --out tests/corpus [--check]
                                               sample the tree from the big tier
     collect.py recheck  --corpus .blobs/unpacked/corpus --work DIR [--jobs N]
@@ -33,6 +44,9 @@ How a file is classified, from the history of the file up to the commit it is qu
   not moved from an older file, and not cut off by a shallow clone.
 - mixed: at least one commit is a person's from before CUTOFF, and at least one an agent's.
 
+A dataset source (`kind: dataset` in a manifest) has no history to read: its texts are `llm` on the
+"publisher-declared model" basis, which `DatasetSource` explains and sidecar version 4 records.
+
 A commit is an agent's when it carries a mark in MARKS that counts, in the place the tool writes
 it, and is not a squash. A GitHub squash-merge, whose subject ends in "(#N)", is one only when
 every commit of pull request N carries such a mark; `harvest`, `recheck` and `describe` ask
@@ -46,8 +60,10 @@ from __future__ import annotations
 import argparse
 import codecs
 import concurrent.futures
+import csv
 import fcntl
 import hashlib
+import io
 import json
 import os
 import random
@@ -97,56 +113,376 @@ ALLOWED_LICENSES = {
     "BSL-1.0",
 }
 
+# What Hugging Face's `license:` metadata calls each of them.
+HF_LICENSES = {
+    "mit": "MIT", "mit-0": "MIT-0", "apache-2.0": "Apache-2.0", "bsd-2-clause": "BSD-2-Clause",
+    "bsd-3-clause": "BSD-3-Clause", "isc": "ISC", "0bsd": "0BSD", "unlicense": "Unlicense",
+    "cc0-1.0": "CC0-1.0", "cc-by-4.0": "CC-BY-4.0", "zlib": "Zlib", "bsl-1.0": "BSL-1.0",
+}
+
 LICENSE_FILE = re.compile(
     r"^(LICEN[SC]E|COPYING|UNLICENSE)([-._][A-Za-z0-9.-]+)?(\.md|\.txt|\.rst)?$", re.I
 )
 
 
-def classify_license_text(text: str) -> str | None:
-    """The SPDX identifier of a licence text, or None when it is not one the corpus accepts."""
-    t = re.sub(r"\s+", " ", text).lower()
+# The MIT-0 grant as SPDX gives it, up to where MIT would add its condition. MIT-0 is this and
+# then the warranty disclaimer, with nothing between: a text that grants more, grants it
+# differently ("to deal with the Software", the NCSA licence) or adds terms is not MIT-0.
+MIT0_GRANT = (
+    "permission is hereby granted, free of charge, to any person obtaining a copy of this "
+    "software and associated documentation files (the \"software\"), to deal in the software "
+    "without restriction, including without limitation the rights to use, copy, modify, merge, "
+    "publish, distribute, sublicense, and/or sell copies of the software, and to permit persons "
+    "to whom the software is furnished to do so. the software is provided"
+)
+
+
+# What a licence text says when it holds terms the corpus does not accept: the name of a licence
+# outside the list, or the words that add a condition to one on it. Each pattern is matched in a
+# sentence of the text, lower-cased, with white space collapsed and its harmless wording removed.
+# `license_terms` says which part of the tree each is for, when the text says; if it does not, the
+# term is for the whole tree and nothing under it is quoted (docs/design/corpus.md section 7).
+CARVE_OUT = "a part of the tree the licence does not cover"
+OUTSIDE_TERMS = {
+    # Copyleft, share-alike and weak copyleft.
+    "GNU GPL, LGPL or AGPL": (
+        r"\bgnu (?:affero |lesser |library )?(?:general )?public licen[sc]e"
+        r"|\b[al]?gpl\b|\b[al]?gplv?[123]\b"),
+    "Mozilla Public License": (
+        r"mozilla public licen[sc]e|netscape public licen[sc]e|\bmpl[- ]?[12]\b"),
+    "Eclipse Public License": r"eclipse public licen[sc]e|\bepl[- ]?[12]\b",
+    "CDDL": r"\bcddl\b|common development and distribution licen[sc]e",
+    "Common Public License": r"common public licen[sc]e",
+    "Open Software or Academic Free License": r"open software licen[sc]e|academic free licen[sc]e",
+    "EUPL": r"european union public licen[sc]e",
+    "Artistic License": r"artistic licen[sc]e",
+    "Vim License": r"\bvim licen[sc]e",
+    "Creative Commons NonCommercial, ShareAlike or NoDerivatives": (
+        r"attribution[- ]non-?commercial|attribution[- ]share-?alike|attribution[- ]no-?deriv"
+        r"|\bcc[- ]by[- ](?:nc|sa|n[d])\b|\bby-(?:nc|sa|n[d])\b|share-?alike|no-?derivatives"),
+    # Permissive in spirit, with conditions beyond attribution.
+    "SIL Open Font License": r"open font licen[sc]e",
+    "NCSA or LLVM licence": (
+        r"university of illinois|illinois open source licen[sc]e|\bncsa open source"
+        r"|legacy llvm licen[sc]e"),
+    "BSD 4-Clause": r"all advertising materials mentioning features",
+    "Apache 1.1 or a BSD with an acknowledgement clause": (
+        r"end-user documentation included with the redistribution"),
+    "GNU Free Documentation License": r"gnu free documentation licen[sc]e|\bgfdl\b",
+    "Clear BSD License": r"clear bsd licen[sc]e|bsd 3-clause clear",
+    "WTFPL or Beerware": r"\bwtfpl\b|beer-?ware",
+    "Microsoft Software License": r"microsoft software licen[sc]e",
+    # Source-available licences, and the ones that become open source on a date.
+    "Functional Source or Fair Core License": (
+        r"functional source licen[sc]e|\bfsl-1|fair core licen[sc]e"),
+    "a licence that turns into another on a date": (
+        r"future licen[sc]e|change licen[sc]e|change date"),
+    "Business Source License": r"business source licen[sc]e|\bbusl\b|\bbsl 1\.1",
+    "Elastic License": r"elastic licen[sc]e",
+    "Server Side Public License": r"server side public licen[sc]e|\bsspl\b",
+    "Commons Clause": r"commons clause",
+    "Internet Computer Community Source License": r"community source licen[sc]e",
+    "PolyForm or another source-available licence": (
+        r"polyform|sustainable use licen[sc]e|fair source|confluent community licen[sc]e"
+        r"|source[- ]available"),
+    # Terms for some of the tree that are commercial or restrict who may use it.
+    "an enterprise or commercial licence": (
+        r"enterprise edition licen[sc]e|\bee supplemental licen[sc]e|commercial licen[sc]e"
+        r"|\bproprietary\b|rails pro licen[sc]e"),
+    "a directory under an enterprise licence": r"\b(?:ee|enterprise)/license\b",
+    "terms for non-commercial use": r"non-?commercial",
+    "Hippocratic, Do No Harm or Anti-Capitalist licence": (
+        r"hippocratic licen[sc]e|do no harm licen[sc]e|anti-capitalist software licen[sc]e"
+        r"|\bno harm:"),
+    "a rider on the MIT licence": r"additional rider|\brider controls\b",
+    "a request not to copy": r"please do not (?:duplicate|copy)",
+    # A text that says part of the tree is not under it, or is not a licence at all.
+    CARVE_OUT: (
+        r"\b(?:does|do) not (?:cover|extend to)\b|\bnot covered by (?:this|the)\b"
+        r"|\bcarve-?out\b|\b(?:mit|bsd|isc|apache|this) licen[sc]e (?:below |above )?applies only to\b"
+        r"|\bnot relicensed\b"),
+    "a placeholder for a licence": (
+        r"licen[sc]e content to be determined|replace this placeholder"
+        r"|licen[sc]e (?:goes|to be added) here"),
+}
+OUTSIDE_PATTERNS = {name: re.compile(pattern) for name, pattern in OUTSIDE_TERMS.items()}
+
+# Wording that matches one of those and is not another licence: Unlicense's "commercial or
+# non-commercial", an MIT notice saying it covers "commercial and noncommercial" use, and the
+# clause of the Apache licence's LLVM exception that waives its terms for the GPLv2.
+HARMLESS_TERMS = re.compile(
+    r"commercial or non-?commercial|commercial and non-?commercial|non-?commercial and commercial"
+    r"|in addition, if you combine or link compiled forms of this software with software that is "
+    r"licensed under the gplv2.{0,800}?only with respect to the combined software\.?"
+)
+
+MIT_NOTICE = "the above copyright notice and this permission notice shall be included"
+
+
+def normalise_license_text(text: str) -> str:
+    """A licence text as `classify_license_text` reads it: a licence quoted in a Markdown
+    blockquote is the same licence, curly quotes are the same quotes, and white space and case
+    carry nothing."""
+    text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
+    text = text.replace("“", '"').replace("”", '"').replace("’", "'")
+    return re.sub(r"\s+", " ", text).lower()
+
+
+def accepted_licenses(text: str) -> list[str] | None:
+    """Every licence the corpus accepts that a licence text holds, by SPDX identifier and sorted,
+    or None when it holds something that resembles one of them without being it: an MIT grant
+    that is neither MIT nor MIT-0. Only a positive match gives an identifier."""
+    t = normalise_license_text(text)
+    found = set()
     if "apache license" in t and "version 2.0" in t:
-        return "Apache-2.0"
+        found.add("Apache-2.0")
     if "this is free and unencumbered software released into the public domain" in t:
-        return "Unlicense"
-    if "creative commons legal code" in t and "cc0 1.0 universal" in t:
-        return "CC0-1.0"
+        found.add("Unlicense")
     if "cc0 1.0 universal" in t or "creativecommons.org/publicdomain/zero/1.0" in t:
-        return "CC0-1.0"
-    if "attribution 4.0 international" in t and "sharealike" not in t and "noderivatives" not in t:
-        if "noncommercial" not in t:
-            return "CC-BY-4.0"
+        found.add("CC0-1.0")
+    if "attribution 4.0 international" in t:
+        found.add("CC-BY-4.0")
     if "boost software license" in t and "version 1.0" in t:
-        return "BSL-1.0"
+        found.add("BSL-1.0")
     if "permission is hereby granted, free of charge" in t:
-        if "the above copyright notice and this permission notice shall be included" in t:
-            return "MIT"
-        return "MIT-0"
+        if MIT_NOTICE in t:
+            found.add("MIT")
+        elif MIT0_GRANT in t:
+            found.add("MIT-0")
+        else:
+            return None
     if "permission to use, copy, modify, and/or distribute this software for any purpose" in t:
         if "with or without fee is hereby granted, provided that the above copyright" in t:
-            return "ISC"
-        return "0BSD"
+            found.add("ISC")
+        else:
+            found.add("0BSD")
     if "permission to use, copy, modify, and distribute this software for any purpose" in t:
-        return "ISC"
+        found.add("ISC")
     if "redistribution and use in source and binary forms" in t:
         if "neither the name" in t or "names of its contributors" in t:
-            return "BSD-3-Clause"
-        if "advertising materials" in t:
-            return None
-        return "BSD-2-Clause"
+            found.add("BSD-3-Clause")
+        elif "redistributions in binary form must reproduce" in t:
+            found.add("BSD-2-Clause")
     if "this software is provided 'as-is', without any express or implied" in t and (
         "altered source versions must be plainly marked" in t
     ):
-        return "Zlib"
-    return None
+        found.add("Zlib")
+    return sorted(found)
+
+
+# Where a licence file says a term is for part of the tree. A sentence that names an outside term
+# is for the whole tree unless one of these places it. THIRD_PARTY says the term is for something
+# the project took from others; a SECTION_HEAD, a short block that opens a section of such notices,
+# makes every term after it so; and a notices file, LICENSE-THIRD-PARTY or LICENSE-binary, is only
+# that. PATHS are the directories the text names, which the term is for.
+THIRD_PARTY = re.compile(
+    r"third[- ]party|bundled|vendored|externally[- ]maintained|their own licen[sc]es?"
+    r"|\bfonts?\b|\bicons?\b|librar(?:y|ies)|dependenc(?:y|ies)|incorporated|\bjars?\b"
+)
+SECTION_HEAD = re.compile(
+    r"third[- ]party|bundled|vendored|externally[- ]maintained|their own licen[sc]es?"
+    r"|\bdependencies\b|following (?:libraries|components|packages|software)"
+    r"|(?:is|are) included under"
+)
+NOTICES_FILE = re.compile(
+    r"third[-_.]?party|3rd[-_.]?party|notice|binary|bundled|vendor|dependenc|credits"
+    r"|attribution|acknowledg"
+)
+# A term that is for everything the text does not name, or for prose, or that says what the
+# licence covers is only what it names: not for part of the tree, whatever paths are near.
+WHOLE_TREE = re.compile(
+    r"everything else|all other|the rest (?:of|is|are)|all remaining|other than"
+    r"|^\s*(?:except|outside|everything outside)\b|applies only to|only applies to|not relicensed"
+    r"|\b(?:documentation|docs?|readme|prose|papers?|books?|essays?|non-software)\b"
+)
+# Directories of vendored code, which a term for third-party material is for.
+VENDORED_DIRS = {
+    "third_party", "third-party", "thirdparty", "3rdparty", "vendor", "vendors", "vendored",
+    "deps", "dependencies", "external", "externals", "extern", "node_modules", "bundled",
+    "contrib", "fonts", "font",
+}
+# A carve-out for a kind of content that is not prose, such as data from providers.
+DATA_KINDS = re.compile(
+    r"\b(?:data|datasets?|images?|logos?|icons?|artwork|trademarks?|binaries|audio|video)\b"
+)
+PROSE_KINDS = re.compile(
+    r"\b(?:documentation|docs?|readme|prose|papers?|books?|essays?|texts?|writings?|articles?"
+    r"|content)\b"
+)
+# What a project says of itself, which is not a third party's.
+OWN_LIBRARY = re.compile(r"\b(?:this|our)\s+(?:\w+\s+)?library\b")
+# The first line of a block that is for everything but named paths: "For all content except the
+# /contents/ folder".
+EXCEPT_HEADING = re.compile(r"\s*#*\s*for (?:all|any)\b[^\n]*?\bexcept(?: for)?(?: the)?\s+(.*)", re.I)
+REST_HEADING = re.compile(r"\s*#*\s*for (?:the rest|everything else|all other)\b", re.I)
+PATH_TOKENS = (
+    # A quoted or backticked path, or a quoted name that the text calls a folder or directory.
+    re.compile(r"[`\"“'‘]([^\s`\"”'’]*/[^\s`\"”'’]*)[`\"”'’]"),
+    re.compile(r"[`\"“]([\w.\-]+)[`\"”]\s+(?:folder|directory|directories|dir)\b"),
+    # A directory written with its slash, as `ext/mbedtls/` is, and not part of a URL.
+    re.compile(r"(?<![\w/:.\-])((?:[\w.\-]+/)+)(?![\w])"),
+    # The same with a leading slash, as `/contents/` is.
+    re.compile(r"(?<![\w:.\-/])/((?:[\w.\-]+/)+)(?![\w])"),
+)
+# The first part of a URL written without its scheme, which is not a directory.
+DOMAIN = re.compile(r"^[\w\-]+(?:\.[\w\-]+)*\.(?:com|org|net|io|dev|edu|gov|info|co|me|app)$")
+
+
+@dataclass(frozen=True)
+class Scope:
+    """Outside terms a licence text puts on part of the tree: a fixture whose path is in one of
+    `paths`, or in a vendored directory when `vendored`, is under them; or, when `inverse`, one
+    whose path is in none of `paths`."""
+
+    names: tuple[str, ...]
+    paths: tuple[str, ...]
+    vendored: bool
+    # The terms are for every path but `paths`.
+    inverse: bool = False
+
+    def holds(self, path: str) -> bool:
+        path = path.lower()
+        parents = path.split("/")[:-1]
+        if self.vendored and any(part in VENDORED_DIRS for part in parents):
+            return True
+        named = any(path.startswith(t + "/") if "/" in t else t in parents for t in self.paths)
+        return not named if self.inverse else named
+
+
+@dataclass(frozen=True)
+class LicenseTerms:
+    """What a licence file says: `accepted`, the accepted licences of the project's own text;
+    `whole`, outside terms for the whole tree, or for a part the text does not place; `scoped`,
+    outside terms the text places; `unrecognised`, an MIT-like grant that is neither MIT nor
+    MIT-0; and `notices`, a file that only lists the licences of others."""
+
+    accepted: tuple[str, ...]
+    whole: tuple[str, ...] = ()
+    scoped: tuple[Scope, ...] = ()
+    unrecognised: bool = False
+    notices: bool = False
+
+
+def named_paths(text: str) -> tuple[str, ...]:
+    """The directories a licence text names, lower-cased, without their slashes."""
+    found: list[str] = []
+    for pattern in PATH_TOKENS:
+        for token in pattern.findall(text):
+            token = token.lower().removeprefix("./").strip("/")
+            domain = DOMAIN.match(token.split("/")[0].lower())
+            if token and "://" not in token and "www." not in token and not domain \
+                    and token not in found:
+                found.append(token)
+    return tuple(found)
+
+
+def license_terms(text: str, source: str = "") -> LicenseTerms:
+    """Reads a licence text: `source` is the file's name, which says a notices file. See
+    `license_for_path` for what the terms come to."""
+    text = re.sub(r"(?m)^[ \t]*(?:>[ \t]*)+", "", text)
+    blocks = [b for b in re.split(r"\n[ \t]*\n", text) if b.strip()]
+    normal = [HARMLESS_TERMS.sub(" ", normalise_license_text(b)) for b in blocks]
+    notices = bool(NOTICES_FILE.search(source.rsplit("/", 1)[-1].lower()))
+    # The own text ends where a section of notices for third parties begins.
+    own_until = 0 if notices else len(blocks)
+    whole: list[str] = []
+    scoped: list[Scope] = []
+    left_out: tuple[str, ...] = ()
+    headed: tuple[str, ...] = ()
+    for i, (raw, block) in enumerate(zip(blocks, normal)):
+        heading = len(block) <= 160 and raw.strip().count("\n") <= 3 and (
+            raw.lstrip().startswith("#") or not re.search(r"[.!?]\s*$", block)
+        )
+        # A section of notices follows the project's own licence, which must come first.
+        if (own_until == len(blocks) and heading and SECTION_HEAD.search(block)
+                and accepted_licenses("\n\n".join(blocks[:i]))):
+            own_until = i
+        sentences = re.split(r"(?<=[.;!?])\s+|\s[*\u2022]\s", block)
+        # A heading "For all content except the /contents/ folder" makes the blocks under it, up
+        # to the next heading, for the rest.
+        first_line = raw.strip().split("\n", 1)[0]
+        opening = EXCEPT_HEADING.match(first_line)
+        if opening:
+            left_out = named_paths(opening.group(1))
+        elif REST_HEADING.match(first_line):
+            # "For the rest of this repository", after a heading that named paths: the rest.
+            left_out = headed
+        elif raw.lstrip().startswith("#"):
+            left_out, headed = (), named_paths(first_line)
+        for j, sentence in enumerate(sentences):
+            names = [n for n, pattern in OUTSIDE_PATTERNS.items() if pattern.search(sentence)]
+            if not names:
+                continue
+            if left_out:
+                scoped.append(Scope(tuple(names), left_out, False, inverse=True))
+                continue
+            before = sentences[j - 1] if j else (
+                normal[i - 1] if i and len(normal[i - 1]) <= 300 else "")
+            third = notices or i >= own_until or THIRD_PARTY.search(
+                OWN_LIBRARY.sub(" ", sentence + " " + before))
+            # The directories the sentence names, or else those the sentence before it does; when
+            # that one says what the licence covers, they are what it covers, not what it leaves.
+            paths = named_paths(sentence) or named_paths(before)
+            if named_paths(before) and re.search(r"\bcovers\b", before):
+                whole += names
+            elif (names == [CARVE_OUT] and DATA_KINDS.search(sentence)
+                  and not PROSE_KINDS.search(sentence)):
+                # Data is not prose, so a fixture is not under a term for data: it names no path.
+                scoped.append(Scope(tuple(names), (), False))
+            elif WHOLE_TREE.search(sentence + " " + before):
+                whole += names
+            elif third:
+                scoped.append(Scope(tuple(names), paths, True))
+            elif paths:
+                scoped.append(Scope(tuple(names), paths, False))
+            else:
+                whole += names
+    if notices:
+        return LicenseTerms((), tuple(dict.fromkeys(whole)), tuple(scoped), notices=True)
+    own = accepted_licenses("\n\n".join(blocks[:own_until]))
+    return LicenseTerms(tuple(own or ()), tuple(dict.fromkeys(whole)), tuple(scoped),
+                        unrecognised=own is None)
+
+
+def license_for_path(terms: LicenseTerms, path: str | None) -> str | None:
+    """The licence a fixture at `path` is under, by what a licence file says: its accepted
+    licences, joined by `OR`; "" from a file that only lists the licences of others, and so says
+    nothing of the project's own, for a path it does not put under one; None when the file puts
+    the path under terms the corpus does not accept, or says nothing the corpus accepts. A
+    `path` of None asks for the whole tree, which any term for part of it is under."""
+    if terms.whole or terms.unrecognised:
+        return None
+    if any(path is None or scope.holds(path) for scope in terms.scoped):
+        return None
+    if terms.notices:
+        return ""
+    return " OR ".join(terms.accepted) or None
+
+
+def classify_license_text(text: str) -> str | None:
+    """The SPDX identifier of a licence text for the whole tree, or None when it is not one the
+    corpus accepts.
+
+    A text that holds several accepted licences, whether it offers a choice of them or is a
+    project's licence with notices for the parts it took from others, gets all of them, joined by
+    `OR` as `combine_licenses` joins the licences of several files. A text that holds any
+    licence outside the accepted ones, or a term that adds a condition to an accepted one, is
+    None, even when it also holds an accepted one: a fixture that may be under terms the corpus
+    does not accept is not quoted. `license_for_path` is for a fixture's own path, which a text
+    may put outside the terms that are for part of the tree. A text that is none of them, or
+    merely resembles one, is None."""
+    return license_for_path(license_terms(text), None) or None
 
 
 def combine_licenses(found: list[str | None]) -> str | None:
     """The licence of a repository from its licence files, or None if any is unacceptable: a
-    licence file that cannot be classified might restrict the others."""
+    licence file that cannot be classified might restrict the others. A file's own `A OR B` is
+    split, so that the licences of all the files come out once each, and a file that says
+    nothing of the project's own, "", adds none."""
     if not found or any(f is None for f in found):
         return None
-    return " OR ".join(sorted(set(found)))
+    parts = {part for f in found for part in f.split(" OR ") if part}
+    return " OR ".join(sorted(parts)) or None
 
 
 # ---------------------------------------------------------------------------------------------
@@ -960,6 +1296,8 @@ class Candidate:
     clone_url: str
     found_by: str
     stars: int | None = None
+    # A commit to harvest at instead of the default branch's tip: what a batch manifest pins.
+    head: str | None = None
 
     @property
     def key(self) -> str:
@@ -1548,14 +1886,34 @@ def read_blobs(repo: Path, oids: list[str]) -> dict[str, bytes | None]:
     return found
 
 
-def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | None) -> tuple[str | None, list[str]]:
-    names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+def license_files_terms(repo: Path, files: dict[str, str], names: list[str]) -> list[tuple[str, LicenseTerms]]:
+    """What each of the licence files `names` says."""
     prefetch(repo, [files[name] for name in names])
-    found = []
-    for name in names:
-        data = git_bytes(repo, "cat-file", "blob", files[name])
-        found.append(classify_license_text(data[:200_000].decode("utf-8", "replace")))
-    license_id = combine_licenses(found) if names else None
+    return [(name, license_terms(git_bytes(repo, "cat-file", "blob", files[name])[:200_000]
+                                 .decode("utf-8", "replace"), name)) for name in names]
+
+
+def license_at(found: list[tuple[str, LicenseTerms]], path: str) -> str | None:
+    """The licence of a fixture at `path` by the licence files `found` in one directory: those
+    of each file for that path, combined; "" is a path outside everything a file puts a
+    licence on."""
+    return combine_licenses([license_for_path(terms, path) for _, terms in found])
+
+
+def accepted_license(license_id: str | None) -> bool:
+    return bool(license_id) and all(part in ALLOWED_LICENSES for part in license_id.split(" OR "))
+
+
+def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | None) -> tuple[str | None, list[str]]:
+    """The licence of the tree outside everything its root licence files put under terms for part
+    of it, and the files it comes from."""
+    names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+    return root_license(license_files_terms(repo, files, names), names, hf, readme)
+
+
+def root_license(found: list[tuple[str, LicenseTerms]], names: list[str], hf: bool,
+                 readme: bytes | None) -> tuple[str | None, list[str]]:
+    license_id = license_at(found, "") if names else None
     if license_id is None and hf and not names and readme is not None:
         m = re.search(r"^license:\s*([A-Za-z0-9.-]+)\s*$", readme.decode("utf-8", "replace")[:3000], re.M)
         if m:
@@ -1570,48 +1928,49 @@ def repo_license(repo: Path, files: dict[str, str], hf: bool, readme: bytes | No
             }.get(m.group(1).lower())
             if spdx:
                 return spdx, ["README.md (license: in the card metadata)"]
-    if license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR ")):
+    if accepted_license(license_id):
         return license_id, names
     return None, names
 
 
 class Licences:
     """The licences of a tree: the root's, and any nearer one on the way to a file. Each must be
-    one the corpus accepts, and the nearest is the file's."""
+    one the corpus accepts for the file's path, and the nearest is the file's."""
 
     def __init__(self, repo: Path, files: dict[str, str], hf: bool):
         self.repo = repo
         self.files = files
         readme = git_bytes(repo, "cat-file", "blob", files["README.md"]) if (
             hf and "README.md" in files) else None
-        self.root, self.root_files = repo_license(repo, files, hf, readme)
+        names = [p for p in files if "/" not in p and LICENSE_FILE.match(p)]
+        self.root_terms = license_files_terms(repo, files, names)
+        self.root, self.root_files = root_license(self.root_terms, names, hf, readme)
         self.by_dir: dict[str, list[str]] = {}
         for path in files:
             directory, _, name = path.rpartition("/")
             if directory and LICENSE_FILE.match(name) and not EXCLUDED_DIRS.search(directory):
                 self.by_dir.setdefault(directory, []).append(path)
-        self.known: dict[str, str | None] = {}
+        self.known: dict[str, list[tuple[str, LicenseTerms]]] = {}
 
     def of(self, path: str) -> tuple[str, list[str]] | None:
         """The licence `path` is under and every licence file on its way; None when one of
-        those is not a licence the corpus accepts."""
+        those is not a licence the corpus accepts for it."""
         parts = path.split("/")[:-1]
         nearer = [d for d in ("/".join(parts[:i]) for i in range(1, len(parts) + 1))
                   if d in self.by_dir]
-        if not nearer or self.root is None:
-            return (self.root, self.root_files) if self.root else None
-        todo = [d for d in nearer if d not in self.known]
-        prefetch(self.repo, [self.files[f] for d in todo for f in self.by_dir[d]])
-        for d in todo:
-            found = [classify_license_text(git_bytes(self.repo, "cat-file", "blob", self.files[f])
-                                           [:200_000].decode("utf-8", "replace"))
-                     for f in self.by_dir[d]]
-            license_id = combine_licenses(found)
-            ok = license_id and all(part in ALLOWED_LICENSES for part in license_id.split(" OR "))
-            self.known[d] = license_id if ok else None
-        if any(self.known[d] is None for d in nearer):
+        root = license_at(self.root_terms, path) if self.root_terms else self.root
+        if not accepted_license(root):
             return None
-        return self.known[nearer[-1]], self.root_files + [f for d in nearer for f in self.by_dir[d]]
+        if not nearer:
+            return root, self.root_files
+        for d in nearer:
+            if d not in self.known:
+                self.known[d] = license_files_terms(self.repo, self.files, self.by_dir[d])
+        # A path a nested licence file names is from the file's own directory.
+        found = [license_at(self.known[d], path[len(d) + 1:]) for d in nearer]
+        if not all(accepted_license(license_id) for license_id in found):
+            return None
+        return found[-1], self.root_files + [f for d in nearer for f in self.by_dir[d]]
 
 
 @dataclass
@@ -1727,6 +2086,7 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         "head": None, "cutoff_rev": None, "commits": None, "license": None,
         "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
         "qualified": {}, "unasked": {}, "kept": {}, "dropped": {}, "sizes": [], "files": [],
+        "pull_failures": 0,
     }
     clone = work / "clones" / digest(c.key)
     try:
@@ -1735,16 +2095,27 @@ def harvest_one(c: Candidate, sources: list[str], meta: dict | None, work: Path,
         except Gone as error:
             result["outcome"] = f"gone: {error}"
         else:
-            harvest_clone(c, clone, work, result, cap, per_repo)
+            if c.head and not has_commit(clone, c.head):
+                result["outcome"] = f"gone: pinned commit {c.head} is not in the clone"
+            else:
+                harvest_clone(c, clone, work, result, cap, per_repo)
     finally:
         shutil.rmtree(clone, ignore_errors=True)
     result["seconds"] = round(time.time() - started, 1)
     return result
 
 
+def has_commit(repo: Path, sha: str) -> bool:
+    try:
+        git(repo, "rev-parse", "--verify", "--quiet", f"{sha}^{{commit}}")
+    except RuntimeError:
+        return False
+    return True
+
+
 def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
                   per_repo: int) -> None:
-    head = git(clone, "rev-parse", "HEAD").strip()
+    head = c.head or git(clone, "rev-parse", "HEAD").strip()
     result["head"] = head
     commits = read_commits(clone, head)
     result["commits"] = len(commits)
@@ -1924,6 +2295,8 @@ def harvest_clone(c: Candidate, clone: Path, work: Path, result: dict, cap: int,
             target.write_bytes(p.data or b"")
         result["files"].append(pick_record(p))
     result["kept"] = {"human": len(kept_human), "llm": len(kept_llm), "mixed": len(kept_mixed)}
+    # Squash-merges GitHub could not be asked about were taken as unproven, and their files left out.
+    result["pull_failures"] = pulls.failed
 
 
 def change_record(commit: Commit, w: Walk) -> dict:
@@ -2133,7 +2506,8 @@ def stage(args: argparse.Namespace) -> None:
     work, out, corpus = Path(args.work), Path(args.out), Path(args.corpus)
     if out.exists():
         raise SystemExit(f"{out} exists: stage writes a new tree")
-    captured = time.strftime("%Y-%m-%d", time.gmtime())
+    out.mkdir(parents=True)
+    captured = args.captured or time.strftime("%Y-%m-%d", time.gmtime())
     published, live = live_fixtures(corpus)
     excluded = read_exclusions(args.exclude, live)
     for sha in excluded:
@@ -2207,9 +2581,13 @@ def stage(args: argparse.Namespace) -> None:
         record = dict(f, host=result["host"], repo=result["repo"], stars=result.get("stars"),
                       found_by=result["found_by"][0],
                       repo_first_commit=result.get("repo_first_commit"),
-                      facts=dict(content_facts(data), kind=kind_of(f["path"])))
-        sidecar = build_sidecar(record, label, name, f"{label}/{directory}/{f['path']}", captured)
-        sidecar["sidecar_version"] = 3
+                      facts=dict(content_facts(data), kind=f.get("kind") or kind_of(f["path"])))
+        layout_path = f"{label}/{directory}/{f['path']}"
+        if f.get("declared"):
+            sidecar = build_declared_sidecar(record, label, name, layout_path, captured)
+        else:
+            sidecar = build_sidecar(record, label, name, layout_path, captured)
+            sidecar["sidecar_version"] = 3
         if f["before"]:
             sidecar["before"] = f["before"]
         target = out / file
@@ -2288,7 +2666,9 @@ def select(args: argparse.Namespace) -> None:
             kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
             other_language += r["natural_language"] != "en"
 
+        # The tree holds only what a history proves, so a publisher-declared file is left out.
         pool = sorted((r for r in live.values() if r["label"] == label
+                       and r.get("basis") != DECLARED
                        and r["size_bytes"] <= MAX_BYTES and r["sha256"] not in core
                        and r["file"].lower() not in paths
                        and r["sha256"] not in {h["sha256"] for h in held}),
@@ -2387,6 +2767,39 @@ def build_sidecar(f: dict, label: str, name: str, layout_path: str, captured: st
             {"size_bytes": f["size_bytes"], "sha256": f["sha256"], "kind": kind},
             **facts,
             frontmatter_max_size_bytes=frontmatter_budget,
+        ),
+        "layout_path": layout_path,
+    }
+
+
+def build_declared_sidecar(f: dict, label: str, name: str, layout_path: str, captured: str) -> dict:
+    """The sidecar, version 4, of a text a dataset's publisher says a named model wrote. It has
+    `declared`, the dataset's revision, file, row and model, where a git file has `history`."""
+    facts = dict(f["facts"])
+    kind = facts.pop("kind")
+    return {
+        "sidecar_version": 4,
+        "fixture": name,
+        "captured": captured,
+        "source": {
+            "host": f["host"],
+            "repo": f["repo"],
+            "path": f["path"],
+            "commit": f["commit"],
+            "commit_date": f["commit_date"],
+            "url": permalink(f["host"], f["repo"], f["commit"], f["declared"]["file"]),
+            "license": f["license"],
+            "license_files": f["license_files"],
+            "repo_first_commit_date": None,
+            "stars": None,
+            "found_by": f["found_by"],
+        },
+        "declared": f["declared"],
+        "authorship": {"label": label, "basis": f["basis"]},
+        "content": dict(
+            {"size_bytes": f["size_bytes"], "sha256": f["sha256"], "kind": kind},
+            **facts,
+            frontmatter_max_size_bytes=None,
         ),
         "layout_path": layout_path,
     }
@@ -2655,7 +3068,9 @@ def recheck(args: argparse.Namespace) -> None:
     _, live = live_fixtures(corpus)
     by_repo: dict[tuple[str, str], list[dict]] = {}
     for row in live.values():
-        by_repo.setdefault((row["host"], row["repo"]), []).append(row)
+        # A declared fixture has no history to derive its label from again.
+        if row.get("basis") != DECLARED:
+            by_repo.setdefault((row["host"], row["repo"]), []).append(row)
     repos = sorted(by_repo)
     random.Random(0).shuffle(repos)
     if args.only:
@@ -2841,7 +3256,8 @@ def pack(args: argparse.Namespace) -> None:
                 "sidecar_version": sidecar["sidecar_version"],
                 "natural_language": content["natural_language"],
                 "kind": content["kind"],
-                "ai_tools": sidecar["history"]["ai_tools"],
+                "ai_tools": sidecar["history"]["ai_tools"] if "history" in sidecar else [],
+                **({"basis": DECLARED} if "declared" in sidecar else {}),
             })
     if not entries and not excluded:
         raise SystemExit(f"nothing to pack: the big tier already holds all {held} fixtures")
@@ -2866,7 +3282,9 @@ def pack(args: argparse.Namespace) -> None:
     batch_names = [p.name for p in published] + [p.name for p in (work / "batches").glob("*")]
     sequence = 1 + max((int(m[2]) for n in batch_names
                         if (m := BATCH_NAME.match(n)) and m[1] == today), default=0)
-    name = f"{today}-{sequence:02d}"
+    name = args.name or f"{today}-{sequence:02d}"
+    if not BATCH_NAME.match(name):
+        raise SystemExit(f"{name} is not a batch name, YYYY-MM-DD-NN")
     if sequence > 99 or any(n >= name for n in batch_names):
         raise SystemExit(f"{name} would not sort after the batches already in {corpus} and {work}")
 
@@ -2888,6 +3306,710 @@ def pack(args: argparse.Namespace) -> None:
     shutil.copytree(staged, corpus / "batches" / name)
     log(f"pack {name}: {len(entries)} fixtures, {len(excluded)} excluded, {held} left out as "
         f"already in the big tier; staged in {staged} and copied into {corpus / 'batches' / name}")
+
+
+# ---------------------------------------------------------------------------------------------
+# batch manifests
+
+HEAD = re.compile(r"^[0-9a-f]{40}$")
+DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+REPO_NAME = re.compile(r"^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)+$")
+
+
+class Source:
+    """A kind of source a manifest lists. Each of a manifest's `sources` names its `kind`, and the
+    kind owns everything about it, so another kind, such as the rows of a dataset turned into
+    files, is one more subclass in SOURCE_KINDS: the build, the workflow and the image do not
+    change.
+
+    An entry starts as a seed, naming only what a person or an agent knows. `resolve` completes
+    it with what only the network says, and from then on it stays fixed: the revision to harvest
+    and what the forge said of it. `harvest` turns completed entries into one JSON file each in
+    DIR/results/, shaped as `harvest_one` writes them (`key`, `outcome`, `kept`, `files`, and the
+    rest `stage` reads), with the bytes of every kept file in DIR/blobs/. `stage` and `pack` go on
+    from there and know nothing of kinds."""
+
+    kind = ""
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        """Calls `bad` if the seed is malformed; returns the entry's key, unique in its kind."""
+        raise NotImplementedError
+
+    def key(self, entry: dict) -> str:
+        """The `key` of the result `harvest` writes for the entry."""
+        raise NotImplementedError
+
+    def resolved(self, entry: dict) -> bool:
+        raise NotImplementedError
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        """Completes `entries` in place, asking the network what they lack."""
+        raise NotImplementedError
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        raise NotImplementedError
+
+
+class GitSource(Source):
+    """A repository on a forge: its `host` and `repo`, and optionally `clone_url`, `found_by`
+    and a `head` to harvest at. `resolve` takes the default branch's tip for a missing `head`
+    and, for GitHub, asks GraphQL for `meta` with the token `gh` holds, which a workflow's own
+    token is. `stars` and `kept` are filled in from what GitHub said and what the harvest kept."""
+
+    kind = "git"
+    KEYS = ("kind", "host", "repo", "clone_url", "found_by", "stars", "head", "meta", "kept")
+
+    def key(self, entry: dict) -> str:
+        return f"{entry['host']}/{entry['repo']}".lower()
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        if set(entry) - set(self.KEYS):
+            bad(f"a git source has keys among {', '.join(self.KEYS)}: {entry}")
+        if entry.get("host") not in HOSTS:
+            bad(f"`host` must be one of {', '.join(HOSTS)}: {entry}")
+        if not isinstance(entry.get("repo"), str) or not REPO_NAME.match(entry["repo"]):
+            bad(f"`repo` must be owner/name: {entry}")
+        if "clone_url" in entry and not isinstance(entry["clone_url"], str):
+            bad(f"{entry['repo']}: `clone_url` must be a string")
+        if "head" in entry and not (isinstance(entry["head"], str) and HEAD.match(entry["head"])):
+            bad(f"{entry['repo']}: `head` must be a full commit hash, not {entry['head']!r}")
+        found_by = entry.get("found_by", ["seed"])
+        if not (isinstance(found_by, list) and found_by and all(isinstance(x, str) for x in found_by)):
+            bad(f"{entry['repo']}: `found_by` must list what found it")
+        return self.key(entry)
+
+    def resolved(self, entry: dict) -> bool:
+        return (all(entry.get(k) for k in ("clone_url", "head", "found_by"))
+                and (entry["host"] != "github.com" or bool(entry.get("meta"))))
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        todo = [e for e in entries if not self.resolved(e)]
+        for entry in todo:
+            entry.setdefault("clone_url", clone_url(entry["host"], entry["repo"]))
+            entry.setdefault("found_by", ["seed"])
+            entry.setdefault("stars", None)
+            if not entry.get("head"):
+                entry["head"] = self.tip(entry["clone_url"])
+        need = [e for e in todo if e["host"] == "github.com" and not e.get("meta")]
+        if not need:
+            return
+        if not github_login():
+            raise SystemExit("resolving GitHub repositories needs a token: gh's login, or "
+                             "GH_TOKEN, which a workflow sets to its own")
+        candidates = [Candidate(e["host"], e["repo"], e["clone_url"], e["found_by"][0], None, e["head"])
+                      for e in need]
+        meta = github_meta(work, candidates)
+        for entry, c in zip(need, candidates):
+            row = meta.get(c.key)
+            if not row or not row.get("found"):
+                raise SystemExit(f"{c.key}: GitHub does not know it, or did not answer")
+            entry["meta"] = {k: v for k, v in row.items() if k != "key"}
+            entry["stars"] = row["stars"]
+
+    @staticmethod
+    def tip(url: str) -> str:
+        """The commit the remote's HEAD names, which is what a clone of it checks out."""
+        error = ""
+        for attempt in range(3):
+            result = subprocess.run(["git", "ls-remote", url, "HEAD"], capture_output=True,
+                                    timeout=120, env=git_env())
+            lines = result.stdout.decode().split()
+            if result.returncode == 0 and lines and HEAD.match(lines[0]):
+                return lines[0]
+            error = result.stderr.decode(errors="replace").strip()[:200]
+            time.sleep(3 * (attempt + 1))
+        raise SystemExit(f"{url}: git ls-remote HEAD found nothing: {error}")
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        # What `discover` and the metadata step would have left in DIR, from the manifest alone,
+        # so that nothing is asked of GitHub again and a clone's depth and a repository's stars
+        # are what they were.
+        with (work / "candidates.jsonl").open("w") as f:
+            for entry in entries:
+                for found_by in entry["found_by"]:
+                    f.write(json.dumps({"host": entry["host"], "repo": entry["repo"],
+                                        "clone_url": entry["clone_url"], "found_by": found_by,
+                                        "stars": entry.get("stars"), "head": entry["head"]}) + "\n")
+        with (work / "meta.jsonl").open("w") as f:
+            for entry in entries:
+                if entry.get("meta"):
+                    f.write(json.dumps(dict(entry["meta"], key=self.key(entry))) + "\n")
+        args = argparse.Namespace(
+            work=str(work), jobs=min(8, os.cpu_count() or 4), limit=0, deadline="", only="",
+            order="priority", seed=0, per_repo=per_repo, max_bytes=max_bytes)
+        for _ in range(MAX_ATTEMPTS):
+            harvest(args)
+            if all((work / "results" / f"{digest(self.key(e))}.json").exists() for e in entries):
+                break
+
+
+DECLARED = "publisher-declared"
+HF_DATASETS = "datasets/"
+
+
+class Hub:
+    """What a dataset source asks of Hugging Face: the tip of a dataset repository, the date of a
+    revision, one file at a revision, and a model's metadata. The tests put a fake in `HUB`."""
+
+    base = "https://huggingface.co"
+
+    def tip(self, name: str) -> str:
+        return GitSource.tip(f"{self.base}/datasets/{name}")
+
+    def commit_date(self, name: str, revision: str) -> str:
+        url = f"{self.base}/api/datasets/{name}/commits/{revision}"
+        for commit in json.loads(http_get(url)):
+            if commit["id"] == revision:
+                return commit["date"]
+        raise SystemExit(f"{name}: Hugging Face lists no commit {revision}")
+
+    def read(self, name: str, revision: str, path: str) -> bytes:
+        quoted = urllib.parse.quote(path)
+        return http_get(f"{self.base}/datasets/{name}/resolve/{revision}/{quoted}",
+                        accept="*/*", timeout=900)
+
+    def model(self, name: str) -> dict:
+        return json.loads(http_get(f"{self.base}/api/models/{name}"))
+
+
+HUB = Hub()
+
+
+def card_license(card: str) -> str | None:
+    """The `license:` of a dataset card's frontmatter, as Hugging Face writes it."""
+    head = card.lstrip("\ufeff")
+    if not head.startswith("---"):
+        return None
+    end = head.find("\n---", 3)
+    match = re.search(r"^license:\s*['\"]?([A-Za-z0-9._-]+)['\"]?\s*$",
+                      head[3: end if end >= 0 else 0], re.M)
+    return match[1].lower() if match else None
+
+
+def model_license(name: str, hops: int = 3) -> tuple[str, str]:
+    """The SPDX licence of a model, and the model whose card says it: its own, or the one it is
+    `base_model` of. A model with no licence the corpus accepts, or none on the way up, is
+    refused. Only a card's `license:` is read, not a model's lineage."""
+    seen = []
+    while name not in seen and len(seen) <= hops:
+        seen.append(name)
+        card = HUB.model(name).get("cardData") or {}
+        licence = card.get("license")
+        if licence is not None:
+            if HF_LICENSES.get(str(licence).lower()) is None:
+                raise SystemExit(f"model {name}: licence {licence} is not one the corpus accepts")
+            return HF_LICENSES[str(licence).lower()], name
+        base = card.get("base_model")
+        base = base[0] if isinstance(base, list) and base else base
+        if not isinstance(base, str):
+            break
+        name = base
+    raise SystemExit(f"model {seen[0]}: no licence on its card or on its base models'")
+
+
+class DatasetSource(Source):
+    """The rows of a dataset that names the model which wrote each text, at a pinned revision.
+
+    The label basis is "publisher-declared model" (docs/design/corpus.md section 3): the label is
+    `llm` because the dataset's publisher says a model wrote the text, not because a history
+    proves it, and each fixture's version 4 sidecar says so, in `declared`. Only a dataset on
+    Hugging Face, whose repository is `datasets/OWNER/NAME`, is read.
+
+    A seed names `repo`, `file`, its `format` (`csv` or `jsonl`), the column of each of `fields`
+    (`text`, `model`, `id`), `where`, the columns a row must hold a value of, `models`, the models
+    to take texts of, `record`, columns to copy into the sidecar, `document`, the sidecar's
+    kind of file, and `license`, the dataset's licence, which must be what its card says. A model
+    is taken only when its own licence, or its base model's, is one the corpus accepts; the check
+    reads one `license:` on a card, not the lineage of a model. The manifest's `per_repo` is the number of texts, shared
+    out evenly among `models`, and each model's texts are the first of its rows in the order
+    the hash of the row number gives.
+
+    `resolve` pins the rest: the `revision` (the tip, unless the seed names one), its date, the
+    `sha256` of the file, and `model_licenses`. `harvest` reads the file again and fails unless
+    it has that sha256; a text is a file named for its row, `FILE/row-N.md`, quoted as it is
+    in the cell."""
+
+    kind = "dataset"
+    KEYS = ("kind", "host", "repo", "revision", "revision_date", "file", "sha256", "format", "fields",
+            "where", "models", "record", "document", "license", "found_by", "model_licenses", "kept")
+    FIELDS = ("text", "model", "id")
+    FORMATS = ("csv", "jsonl")
+
+    @staticmethod
+    def name(entry: dict) -> str:
+        return entry["repo"].removeprefix(HF_DATASETS)
+
+    def key(self, entry: dict) -> str:
+        return f"{entry['host']}/{entry['repo']}".lower()
+
+    def check(self, entry: dict, bad: Callable[[str], None]) -> str:
+        if set(entry) - set(self.KEYS):
+            bad(f"a dataset source has keys among {', '.join(self.KEYS)}: {entry}")
+        repo = entry.get("repo")
+        if entry.get("host") != "huggingface.co":
+            bad(f"a dataset's `host` is huggingface.co: {entry}")
+        if not (isinstance(repo, str) and repo.startswith(HF_DATASETS)
+                and re.match(r"^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$", repo[len(HF_DATASETS):])):
+            bad(f"`repo` must be datasets/owner/name: {entry}")
+        if "revision" in entry and not (isinstance(entry["revision"], str)
+                                        and HEAD.match(entry["revision"])):
+            bad(f"{repo}: `revision` must be a full commit hash")
+        if "sha256" in entry and not (isinstance(entry["sha256"], str)
+                                      and re.match(r"^[0-9a-f]{64}$", entry["sha256"])):
+            bad(f"{repo}: `sha256` must be 64 lowercase hex digits")
+        path = entry.get("file")
+        if not (isinstance(path, str) and SAFE_PATH.match(path) and ".." not in path.split("/")
+                and not path.startswith("/")):
+            bad(f"{repo}: `file` must be a path in the dataset")
+        if entry.get("format") not in self.FORMATS:
+            bad(f"{repo}: `format` must be one of {', '.join(self.FORMATS)}")
+        fields = entry.get("fields")
+        if not (isinstance(fields, dict) and set(fields) == set(self.FIELDS)
+                and all(isinstance(v, str) and v for v in fields.values())):
+            bad(f"{repo}: `fields` names a column for each of {', '.join(self.FIELDS)}")
+        where = entry.get("where", {})
+        if not (isinstance(where, dict) and all(isinstance(k, str) and isinstance(v, str)
+                                                for k, v in where.items())):
+            bad(f"{repo}: `where` maps columns to the values a row must have")
+        record = entry.get("record", [])
+        if not (isinstance(record, list) and all(isinstance(c, str) and c for c in record)):
+            bad(f"{repo}: `record` lists columns")
+        models = entry.get("models")
+        if not (isinstance(models, list) and models and len(set(models)) == len(models)
+                and all(isinstance(m, str) and m for m in models)):
+            bad(f"{repo}: `models` lists each model to take texts of, once")
+        if not (isinstance(entry.get("document"), str) and re.match(r"^[a-z][a-z-]*$", entry["document"])):
+            bad(f"{repo}: `document` is the kind of file, such as story")
+        if not (isinstance(entry.get("license"), str) and entry["license"] in ALLOWED_LICENSES):
+            bad(f"{repo}: `license` must be one the corpus accepts, as the dataset's card says it")
+        found_by = entry.get("found_by", ["seed"])
+        if not (isinstance(found_by, list) and found_by and all(isinstance(x, str) for x in found_by)):
+            bad(f"{repo}: `found_by` must list what found it")
+        return self.key(entry)
+
+    def resolved(self, entry: dict) -> bool:
+        return all(entry.get(k) for k in ("revision", "revision_date", "sha256", "found_by",
+                                          "model_licenses"))
+
+    def resolve(self, entries: list[dict], work: Path) -> None:
+        for entry in entries:
+            if self.resolved(entry):
+                continue
+            name = self.name(entry)
+            entry.setdefault("found_by", ["seed"])
+            if not entry.get("revision"):
+                entry["revision"] = HUB.tip(name)
+            entry["revision_date"] = HUB.commit_date(name, entry["revision"])
+            card = HUB.read(name, entry["revision"], "README.md").decode("utf-8", "replace")
+            says = HF_LICENSES.get(card_license(card) or "")
+            if says != entry["license"]:
+                raise SystemExit(f"{entry['repo']}: the card at {entry['revision']} says the licence is "
+                                 f"{card_license(card)}, and the seed says {entry['license']}")
+            entry["model_licenses"] = {}
+            for model in entry["models"]:
+                licence, source = model_license(model)
+                entry["model_licenses"][model] = {"license": licence, "card": source}
+            entry["sha256"] = hashlib.sha256(
+                HUB.read(name, entry["revision"], entry["file"])).hexdigest()
+
+    @staticmethod
+    def rows(entry: dict, data: bytes) -> tuple[list[str], list[dict]]:
+        text = data.decode("utf-8")
+        if entry["format"] == "csv":
+            csv.field_size_limit(2 ** 31 - 1)
+            reader = csv.DictReader(io.StringIO(text, newline=""))
+            return list(reader.fieldnames or []), list(reader)
+        rows = [json.loads(line) for line in text.splitlines() if line.strip()]
+        return sorted({k for r in rows for k in r}), rows
+
+    def harvest(self, entries: list[dict], work: Path, per_repo: int, max_bytes: int) -> None:
+        for entry in entries:
+            result = self.harvest_one(entry, work, per_repo, max_bytes)
+            (work / "results").mkdir(parents=True, exist_ok=True)
+            (work / "results" / f"{digest(self.key(entry))}.json").write_text(json.dumps(result))
+
+    def harvest_one(self, entry: dict, work: Path, per_repo: int, max_bytes: int) -> dict:
+        name, revision, key = self.name(entry), entry["revision"], self.key(entry)
+        data = HUB.read(name, revision, entry["file"])
+        if hashlib.sha256(data).hexdigest() != entry["sha256"]:
+            raise SystemExit(f"{entry['repo']}: {entry['file']} at {revision} is not the file "
+                             f"the manifest pins, sha256 {entry['sha256']}")
+        header, rows = self.rows(entry, data)
+        fields = entry["fields"]
+        wanted = [*fields.values(), *entry.get("where", {}), *entry.get("record", [])]
+        if missing := [c for c in wanted if c not in header]:
+            raise SystemExit(f"{entry['repo']}: {entry['file']} has no column {', '.join(missing)}")
+        result = {
+            "key": key, "host": entry["host"], "repo": entry["repo"], "found_by": entry["found_by"],
+            "meta": None, "stars": None, "outcome": "harvested", "depth": None, "head": revision,
+            "cutoff_rev": None, "commits": None, "license": entry["license"],
+            "license_at_cutoff": None, "repo_first_commit": None, "questions": 0,
+            "qualified": {}, "unasked": {}, "kept": {"human": 0, "llm": 0, "mixed": 0},
+            "dropped": {}, "sizes": [], "files": [], "pull_failures": 0,
+        }
+        models = entry["models"]
+        share = [per_repo // len(models) + (i < per_repo % len(models)) for i in range(len(models))]
+        taken: set[str] = set()
+        qualified = 0
+        for model, want in zip(models, share):
+            mine = [i for i, row in enumerate(rows)
+                    if row.get(fields["model"]) == model and row.get(fields["text"])
+                    and all(row.get(c) == v for c, v in entry.get("where", {}).items())]
+            qualified += len(mine)
+            mine.sort(key=lambda i: hashlib.sha256(f"{key}\0{i}".encode()).hexdigest())
+            kept = 0
+            for i in mine:
+                if kept >= want:
+                    break
+                text = rows[i][fields["text"]].encode("utf-8")
+                refused = refusal(text, max_bytes)
+                digest_ = hashlib.sha256(text).hexdigest()
+                if refused is None and digest_ in taken:
+                    refused = "duplicate"
+                result["sizes"].append(["llm", len(text), refused or "kept"])
+                if refused:
+                    result["dropped"][refused] = result["dropped"].get(refused, 0) + 1
+                    continue
+                taken.add(digest_)
+                kept += 1
+                target = work / "blobs" / digest_[:2] / digest_
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(text)
+                result["files"].append(self.pick(entry, rows[i], i, model, digest_, len(text)))
+            if kept < want:
+                raise SystemExit(f"{entry['repo']}: {model} has {kept} usable texts, and the "
+                                 f"manifest asks for {want}")
+        result["qualified"] = {"llm": qualified}
+        result["kept"] = {"human": 0, "llm": len(result["files"]), "mixed": 0}
+        return result
+
+    def pick(self, entry: dict, row: dict, index: int, model: str, sha256: str, size: int) -> dict:
+        name, fields = self.name(entry), entry["fields"]
+        info = entry["model_licenses"][model]
+        declared = {
+            "dataset": name, "revision": entry["revision"], "file": entry["file"],
+            "file_sha256": entry["sha256"], "row": index, "row_id": row.get(fields["id"]) or "",
+            "model": model, "model_license": info["license"], "model_license_card": info["card"],
+            "statement": f"the `{fields['model']}` column of every row of {entry['file']}",
+            "columns": {c: row.get(c, "") for c in sorted(entry.get("record", []))},
+        }
+        return {
+            "label": "llm", "path": f"{entry['file']}/row-{index}.md", "commit": entry["revision"],
+            "commit_date": entry["revision_date"], "sha256": sha256, "size_bytes": size,
+            "license": entry["license"], "license_files": ["README.md"], "kind": entry["document"],
+            "basis": (f"the publisher of {name} names the model that wrote it, {model} "
+                      f"({info['license']}), in the {fields['model']} column of row {index} of "
+                      f"{entry['file']} at revision {entry['revision'][:12]}"),
+            "history": None, "before": None, "declared": declared,
+        }
+
+
+SOURCE_KINDS: dict[str, Source] = {s.kind: s for s in (GitSource(), DatasetSource())}
+
+MANIFEST_KEYS = ("batch", "captured", "per_repo", "max_bytes", "sources", "exclude", "relicense",
+                 "expect")
+
+
+def read_manifest(path: Path) -> dict:
+    """A batch manifest, checked. It is JSON: `batch`, the batch's name, which is the file's stem;
+    `captured`, the date its sidecars carry; `per_repo` and `max_bytes`, which override how many
+    files one source may give and the largest file kept; `sources`, each with a `kind`; `exclude`,
+    rows of `{"sha256", "reason"}` as `recheck` writes them; `relicense`, rows of
+    `{"sha256", "license"}` that supersede a live fixture with its own bytes and its own sidecar
+    but for the licence, which a sidecar never has rewritten in place; and `expect`, what the
+    batch must come to.
+
+    A manifest without `expect` is a seed: `batch` completes it, in place. One with `expect` is
+    pinned, which needs `captured` and every source resolved, so that nothing is asked of the
+    network when it is built."""
+    try:
+        manifest = json.loads(path.read_text())
+    except (OSError, ValueError) as error:
+        raise SystemExit(f"{path}: not readable as JSON: {error}") from None
+
+    def bad(why: str):
+        raise SystemExit(f"{path}: {why}")
+
+    if not isinstance(manifest, dict) or set(manifest) - set(MANIFEST_KEYS):
+        bad(f"a JSON object whose keys are among {', '.join(MANIFEST_KEYS)}")
+    name = manifest.get("batch")
+    if not isinstance(name, str) or not BATCH_NAME.match(name) or path.stem != name:
+        bad(f"`batch` must be the file's stem, a YYYY-MM-DD-NN name; it is {name!r}")
+    if "captured" in manifest and not (isinstance(manifest["captured"], str)
+                                       and DATE.match(manifest["captured"])):
+        bad("`captured` must be a YYYY-MM-DD date")
+    for key in ("per_repo", "max_bytes"):
+        if key in manifest and not (isinstance(manifest[key], int) and manifest[key] > 0):
+            bad(f"`{key}` must be a positive integer")
+    seen: set[tuple[str, str]] = set()
+    for entry in manifest.get("sources", []):
+        source = SOURCE_KINDS.get(entry.get("kind")) if isinstance(entry, dict) else None
+        if source is None:
+            bad(f"each source needs a `kind` among {', '.join(SOURCE_KINDS)}: {entry}")
+        key = (source.kind, source.check(entry, bad))
+        if key in seen:
+            bad(f"{key[1]} is listed twice")
+        seen.add(key)
+    excluded = set()
+    for row in manifest.get("exclude", []):
+        if not (isinstance(row, dict) and set(row) == {"sha256", "reason"}
+                and all(isinstance(v, str) and v for v in row.values())):
+            bad(f"each `exclude` row is a sha256 and a reason: {row}")
+        excluded.add(row["sha256"])
+    relicensed = set()
+    for row in manifest.get("relicense", []):
+        if not (isinstance(row, dict) and set(row) == {"sha256", "license"}
+                and all(isinstance(v, str) and v for v in row.values())):
+            bad(f"each `relicense` row is a sha256 and a license: {row}")
+        if not all(part in ALLOWED_LICENSES for part in row["license"].split(" OR ")):
+            bad(f"{row['sha256']}: {row['license']} is not a licence the corpus accepts")
+        if row["sha256"] in relicensed or row["sha256"] in excluded:
+            bad(f"{row['sha256']} is relicensed twice, or excluded as well: `relicense` already "
+                "excludes the fixture it supersedes")
+        relicensed.add(row["sha256"])
+    if not manifest.get("sources") and not manifest.get("exclude") and not relicensed:
+        bad("a batch with no sources, exclusions or relicensing adds nothing")
+    expect = manifest.get("expect")
+    if expect is not None:
+        if not isinstance(expect, dict) or set(expect) != {"fixtures", "tree_sha256"}:
+            bad("`expect` is {fixtures, tree_sha256}")
+        if "captured" not in manifest:
+            bad("a manifest with `expect` needs `captured`")
+        for entry in manifest.get("sources", []):
+            if not SOURCE_KINDS[entry["kind"]].resolved(entry):
+                bad(f"has `expect`, but {entry.get('repo')} is not resolved; a pinned manifest "
+                    "holds everything the build would ask of the network")
+    return manifest
+
+
+def write_manifest(path: Path, manifest: dict) -> None:
+    """The manifest as JSON, one source, exclusion or relicensing to a line, so a diff reads."""
+    def one(value) -> str:
+        return json.dumps(value, ensure_ascii=False)
+
+    parts = []
+    for key in MANIFEST_KEYS:
+        if manifest.get(key) is None:
+            continue
+        value = manifest[key]
+        if key in ("sources", "exclude", "relicense"):
+            rows = ",\n".join("    " + one(row) for row in value)
+            parts.append(f'  "{key}": [\n{rows}\n  ]' if value else f'  "{key}": []')
+        else:
+            parts.append(f'  "{key}": {one(value)}')
+    path.write_text("{\n" + ",\n".join(parts) + "\n}\n")
+
+
+def tree_digest(batch: Path) -> str:
+    """The sha256 of a batch's files, each as its path and the sha256 of its bytes, in path
+    order: what a manifest's `expect` records, so that the same fixtures with the same sidecars
+    give the same digest on every machine."""
+    lines = sorted(f"{p.relative_to(batch).as_posix()}\t{hashlib.sha256(p.read_bytes()).hexdigest()}\n"
+                   for p in batch.rglob("*") if p.is_file())
+    return hashlib.sha256("".join(lines).encode()).hexdigest()
+
+
+def batch_facts(batch: Path) -> dict:
+    return {"fixtures": len(jsonl(batch / "manifest.jsonl")), "tree_sha256": tree_digest(batch)}
+
+
+def relicense_exclusions(corpus: Path, relicense: list[dict]) -> list[dict]:
+    """The exclusions that make room for the fixtures `relicense` supersedes, one for each."""
+    _, live = live_fixtures(corpus)
+    rows = []
+    for row in relicense:
+        if row["sha256"] not in live:
+            raise SystemExit(f"relicense: {row['sha256']} is not a live fixture of {corpus}")
+        old = json.loads(sidecar_path(corpus, live[row["sha256"]]).read_text())["source"]["license"]
+        if old == row["license"]:
+            raise SystemExit(f"relicense: {row['sha256']} is already {old}")
+        rows.append({"sha256": row["sha256"],
+                     "reason": f"the licence is {row['license']}, not {old}"})
+    return rows
+
+
+def sidecar_path(corpus: Path, row: dict) -> Path:
+    return corpus / "batches" / row["batch"] / Path(row["file"]).with_suffix(".json")
+
+
+def stage_relicensed(corpus: Path, relicense: list[dict], staged: Path) -> None:
+    """Writes into the tree `pack` reads each fixture `relicense` names, byte for byte and at the
+    path it has, with its sidecar byte for byte but for `source.license`."""
+    _, live = live_fixtures(corpus)
+    for row in relicense:
+        live_row = live[row["sha256"]]
+        old = sidecar_path(corpus, live_row)
+        sidecar = json.loads(old.read_text())
+        sidecar["source"]["license"] = row["license"]
+        target = staged / live_row["file"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(old.with_suffix(".md"), target)
+        target.with_suffix(".json").write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n")
+
+
+def build_batch(manifest: dict, path: Path, corpus: Path, work: Path) -> tuple[dict, Path]:
+    """Builds the batch of a manifest whose sources are resolved, from nothing, into
+    `corpus`/batches: harvests each source, stages and packs the results under the manifest's name
+    and capture date. Returns the results by key, and the batch as staged under `work`. A source
+    that cannot be harvested as the manifest has it, or whose `kept` differs from what the
+    manifest says, ends in SystemExit before anything is packed."""
+    if work.exists() and any(work.iterdir()):
+        raise SystemExit(f"{work} is not empty: a batch is built from nothing, or a result "
+                         "kept from another run would stand in for the harvest")
+    work.mkdir(parents=True, exist_ok=True)
+    name = manifest["batch"]
+    per_repo = manifest.get("per_repo", PER_REPO)
+    max_bytes = manifest.get("max_bytes", BIG_MAX_BYTES)
+    sources = manifest.get("sources", [])
+    for kind, source in SOURCE_KINDS.items():
+        mine = [e for e in sources if e["kind"] == kind]
+        if mine:
+            source.harvest(mine, work, per_repo, max_bytes)
+    results = {r["key"]: r for r in
+               (json.loads(p.read_text()) for p in (work / "results").glob("*.json"))} \
+        if (work / "results").is_dir() else {}
+    problems = []
+    for entry in sources:
+        key = SOURCE_KINDS[entry["kind"]].key(entry)
+        result = results.get(key)
+        if result is None:
+            problems.append(f"{key}: could not be harvested; errors.jsonl in {work} says why")
+        elif result["outcome"] != "harvested":
+            problems.append(f"{key}: {result['outcome']}")
+        elif result.get("pull_failures"):
+            problems.append(f"{key}: GitHub could not show {result['pull_failures']} squash-merges, "
+                            "so files may have been left out")
+        elif entry.get("kept") is not None and result["kept"] != entry["kept"]:
+            problems.append(f"{key}: kept {result['kept']}, and the manifest says {entry['kept']}")
+    if problems:
+        raise SystemExit(f"batch {name} cannot be harvested as {path} has it:\n  "
+                         + "\n  ".join(problems) + "\nNothing was packed.")
+    relicense = manifest.get("relicense", [])
+    exclude = work / "exclude.jsonl"
+    exclude.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in
+                               manifest.get("exclude", []) + relicense_exclusions(corpus, relicense)))
+    staged = work / "stage"
+    if sources:
+        stage(argparse.Namespace(work=str(work), corpus=str(corpus), out=str(staged),
+                                 exclude=str(exclude), max_bytes=max_bytes,
+                                 captured=manifest["captured"]))
+    else:
+        staged.mkdir()
+    stage_relicensed(corpus, relicense, staged)
+    pack(argparse.Namespace(source=str(staged), corpus=str(corpus), work=str(work),
+                            exclude=str(exclude), name=name))
+    return results, work / "batches" / name
+
+
+def mismatch(manifest: dict, got: dict, path: Path, why: str) -> SystemExit:
+    return SystemExit(
+        f"batch {manifest['batch']} does not come to what {path} expects.\n"
+        f"  expected {manifest.get('expect')}\n  built    {got}\n{why} Nothing was published.")
+
+
+def extends(seed: dict, done: dict) -> str | None:
+    """Why `done` is not `seed` completed, or None when it is: everything the seed says, `done`
+    says too, and `done` holds the same sources and no others."""
+    for key, value in seed.items():
+        if key != "sources" and done.get(key) != value:
+            return f"`{key}` is not what the seed has"
+    for key in done:
+        if key not in seed and key not in ("captured", "expect", "sources"):
+            return f"`{key}` is not in the seed, and completing adds only `captured` and `expect`"
+    done_by_key = {}
+    for entry in done.get("sources", []):
+        done_by_key[(entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry))] = entry
+    seed_sources = seed.get("sources", [])
+    if len(done_by_key) != len(seed_sources):
+        return "it does not hold the seed's sources, and only those"
+    for entry in seed_sources:
+        theirs = done_by_key.get((entry["kind"], SOURCE_KINDS[entry["kind"]].key(entry)))
+        if theirs is None or any(theirs.get(k) != v for k, v in entry.items()):
+            return f"the source {entry.get('repo')} is not what the seed has"
+    return None
+
+
+def complete(args: argparse.Namespace) -> None:
+    """Fails unless the manifest --completed is the committed seed --seed, completed, and the batch
+    --corpus holds is the one it expects. What the build derived from the network, `expect` and
+    each source's `head`, `meta` and `kept`, is the word of whoever built it, which the seed
+    cannot confirm; everything else is the seed's."""
+    seed_path, done_path = Path(args.seed), Path(args.completed)
+    seed, done = read_manifest(seed_path), read_manifest(done_path)
+    if seed.get("expect") is not None:
+        raise SystemExit(f"{seed_path} is already completed, and a completed manifest is never replaced")
+    if done.get("expect") is None:
+        raise SystemExit(f"{done_path} is not completed")
+    if why := extends(seed, done):
+        raise SystemExit(f"{done_path} is not {seed_path} completed: {why}")
+    target = Path(args.corpus) / "batches" / done["batch"]
+    if not target.is_dir():
+        raise SystemExit(f"{target} does not exist")
+    got = batch_facts(target)
+    if done["expect"] != got:
+        raise mismatch(done, got, done_path, "The batch is not the one the manifest describes.")
+
+
+def batch(args: argparse.Namespace) -> None:
+    """Builds the batch a manifest describes into --corpus, and fails unless it comes to what the
+    manifest expects. The publish-blobs workflow runs this for each manifest.
+
+    A pinned manifest is built as it stands. A seed is first resolved, then built, and what that
+    came to is recorded as `expect`; then the batch is built a second time from the completed
+    manifest alone, which is what the next run will do, and the two must agree. The completed
+    manifest is written over the seed only when they do. A batch the corpus already holds is
+    only checked against `expect`: a published batch is never changed."""
+    path, corpus, work = Path(args.manifest), Path(args.corpus), Path(args.work)
+    manifest = read_manifest(path)
+    name = manifest["batch"]
+    target = corpus / "batches" / name
+    if target.exists():
+        if manifest.get("expect") is None:
+            raise SystemExit(f"{target} exists, and {path} is a seed. Either an earlier run "
+                             "published the batch and could not commit its completed manifest, "
+                             "which is in that run's new-batches artifact, or the tree holds a "
+                             "batch built from another seed; remove it to build this one.")
+        got = batch_facts(target)
+        if manifest["expect"] != got:
+            raise mismatch(manifest, got, path, "A published batch is never changed.")
+        log(f"{name}: already in {corpus}, and as {path} expects")
+        return
+    if work.exists() and any(work.iterdir()):
+        raise SystemExit(f"{work} is not empty: a batch is built from nothing")
+
+    def built(manifest: dict, sub: str) -> tuple[dict, dict]:
+        results, staged = build_batch(manifest, path, corpus, work / sub)
+        return results, batch_facts(staged)
+
+    if manifest.get("expect") is not None:
+        _, got = built(manifest, "build")
+        if manifest["expect"] != got:
+            shutil.rmtree(target)
+            raise mismatch(manifest, got, path,
+                           "The same sources at the same revisions gave other fixtures: a change "
+                           "in what GitHub says of a pull request, a clone that fell back to "
+                           "another depth, or a fixture another batch now holds.")
+        return
+
+    for kind, source in SOURCE_KINDS.items():
+        mine = [e for e in manifest.get("sources", []) if e["kind"] == kind]
+        if mine:
+            source.resolve(mine, work / "resolve")
+    manifest.setdefault("captured", time.strftime("%Y-%m-%d", time.gmtime()))
+    results, first = built(manifest, "first")
+    for entry in manifest.get("sources", []):
+        entry["kept"] = results[SOURCE_KINDS[entry["kind"]].key(entry)]["kept"]
+    manifest["expect"] = first
+    shutil.rmtree(target)
+    _, second = built(manifest, "second")
+    if second != first:
+        shutil.rmtree(target)
+        raise mismatch(manifest, second, path,
+                       "Built twice from the same resolved sources, it came out two ways, so it "
+                       "cannot be pinned. A source may have changed between the two builds, or "
+                       "what GitHub says of a pull request did.")
+    write_manifest(path, manifest)
+    log(f"{path}: completed, {first['fixtures']} fixtures, tree {first['tree_sha256'][:16]}")
 
 
 def main() -> None:
@@ -2915,6 +4037,7 @@ def main() -> None:
     p.add_argument("--out", required=True)
     p.add_argument("--exclude", default="")
     p.add_argument("--max-bytes", type=int, default=BIG_MAX_BYTES)
+    p.add_argument("--captured", default="", help="the capture date of the sidecars; today by default")
     p = sub.add_parser("select")
     p.add_argument("--corpus", required=True)
     p.add_argument("--out", required=True)
@@ -2936,9 +4059,19 @@ def main() -> None:
     p.add_argument("--corpus", required=True)
     p.add_argument("--work", required=True)
     p.add_argument("--exclude", default="")
+    p.add_argument("--name", default="", help="the batch's name; today's next by default")
+    p = sub.add_parser("batch")
+    p.add_argument("manifest")
+    p.add_argument("--corpus", required=True)
+    p.add_argument("--work", required=True)
+    p = sub.add_parser("complete")
+    p.add_argument("seed")
+    p.add_argument("completed")
+    p.add_argument("--corpus", required=True)
     args = parser.parse_args()
     {"discover": discover, "harvest": harvest, "stage": stage, "select": select,
-     "describe": describe, "recheck": recheck, "pack": pack}[args.command](args)
+     "describe": describe, "recheck": recheck, "pack": pack, "batch": batch,
+     "complete": complete}[args.command](args)
 
 
 if __name__ == "__main__":

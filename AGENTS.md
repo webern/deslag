@@ -22,10 +22,12 @@ deslag/
                           golden/ what each lint finds in the corpus, and corpus/ quoted Markdown,
                           each fixture with a JSON sidecar: core/ hand-picked, human/, llm/ and
                           mixed/ collected, one directory per source repo
-  tools/corpus/        <- deslag-corpus, never published: the corpus's one loader, which the
-                          tests read it through, and commands that measure it; see its --help
+  tools/               <- never published: corpus/, the corpus's one loader, which the tests read
+                          it through, and commands that measure it; exam/, which grades taggers
+                          against gold sets and makes deslag's own (deslag-gold); see each --help
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
-                          blobstore/ fetches and publishes its big tier
+                          blobstore/ fetches its big tier, ewt/ and harper/ what the exam uses,
+                          spacy/ runs spaCy on its tokens, lexicon/ makes the tagger's word list
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
   .agents/skills/      <- agent skills, each named deslag-*; .claude/skills is a symlink to it
 ```
@@ -34,9 +36,8 @@ deslag/
 
 `make help` lists the targets. `make ci` is the gate CI runs: preflight, check, build, test,
 test-blobs. `make preflight` reports what must be installed by hand. `make test-blobs` fetches the
-corpus's big tier first, which needs a `gh` login while its package is private; see
-`scripts/blobstore/blobs.md`. The `/deslag-build-doctrine` skill governs
-the Makefile, `scripts/`, CI and dependencies; read it before changing any of them.
+corpus's big tier first; see `scripts/blobstore/blobs.md`. The `/deslag-build-doctrine` skill
+governs the Makefile, `scripts/`, CI and dependencies; read it before changing any of them.
 
 ## Skills
 

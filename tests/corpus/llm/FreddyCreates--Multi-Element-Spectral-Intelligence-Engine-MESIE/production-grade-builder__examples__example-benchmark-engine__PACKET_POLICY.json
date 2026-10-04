@@ -1,0 +1,74 @@
+{
+  "sidecar_version": 3,
+  "fixture": "production-grade-builder__examples__example-benchmark-engine__PACKET_POLICY.md",
+  "captured": "2026-09-27",
+  "source": {
+    "host": "github.com",
+    "repo": "FreddyCreates/Multi-Element-Spectral-Intelligence-Engine-MESIE-",
+    "path": "production-grade-builder/examples/example-benchmark-engine/PACKET_POLICY.md",
+    "commit": "309a92943a46acbf7061edc1c4b25e69b1be460f",
+    "commit_date": "2026-08-09T22:35:22-05:00",
+    "url": "https://github.com/FreddyCreates/Multi-Element-Spectral-Intelligence-Engine-MESIE-/blob/309a92943a46acbf7061edc1c4b25e69b1be460f/production-grade-builder/examples/example-benchmark-engine/PACKET_POLICY.md",
+    "license": "Apache-2.0",
+    "license_files": [
+      "LICENSE"
+    ],
+    "repo_first_commit_date": "2026-06-02T23:32:44-05:00",
+    "stars": 2,
+    "found_by": "gh-commits:copilot"
+  },
+  "history": {
+    "commits": 1,
+    "first_commit_date": "2026-06-11T08:34:05Z",
+    "last_commit_date": "2026-06-11T08:34:05Z",
+    "last_commit_author": "copilot-swe-agent[bot]",
+    "authors": 1,
+    "ai_commits": 1,
+    "ai_tools": [
+      "copilot"
+    ],
+    "truncated": false,
+    "first_committer_date": "2026-06-11T08:34:05Z",
+    "last_committer_date": "2026-06-11T08:34:05Z",
+    "marks": [
+      {
+        "text": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+        "tool": "copilot",
+        "kind": "agent-identity",
+        "place": "identity",
+        "commits": 1
+      }
+    ],
+    "edits": [
+      {
+        "commit": "37b32df251b2ad5435beebaca7fddd7c928816fc",
+        "date": "2026-06-11T08:34:05Z",
+        "committed": "2026-06-11T08:34:05Z",
+        "old": null,
+        "new": "a7b145e445e341c9e710555523b4bed78e915b4d",
+        "status": "agent"
+      }
+    ]
+  },
+  "authorship": {
+    "label": "llm",
+    "basis": "every commit that touched it, 1 in all, is marked as an AI agent's (copilot)"
+  },
+  "content": {
+    "size_bytes": 540,
+    "sha256": "157fa84585697cd9b79f4b8bd04c42132b6562bf3a34495f45b15f1a96a662ee",
+    "kind": "other",
+    "utf8": true,
+    "bom": false,
+    "line_endings": "lf",
+    "lines": 16,
+    "words": 67,
+    "frontmatter": false,
+    "natural_language": "en",
+    "scripts": [
+      "Latin"
+    ],
+    "frontmatter_max_size_bytes": null
+  },
+  "layout_path": "llm/FreddyCreates--Multi-Element-Spectral-Intelligence-Engine-MESIE/production-grade-builder/examples/example-benchmark-engine/PACKET_POLICY.md"
+}

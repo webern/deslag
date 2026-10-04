@@ -1,0 +1,9 @@
+{
+  "batch": "2026-10-03-04",
+  "captured": "2026-10-03",
+  "per_repo": 200,
+  "sources": [
+    {"kind": "dataset", "host": "huggingface.co", "repo": "datasets/lars1234/story_writing_benchmark", "revision": "0aab83bf0fbc716db74ee3ff895fd2087c5bebdd", "file": "average.csv", "format": "csv", "fields": {"text": "story_text", "model": "model_name", "id": "prompt_id"}, "where": {"language": "en", "generation_type": "complete"}, "models": ["Qwen/Qwen2.5-14B-Instruct-AWQ", "casperhansen/mistral-nemo-instruct-2407-awq", "stelterlab/Mistral-Small-24B-Instruct-2501-AWQ", "stelterlab/phi-4-AWQ"], "record": ["generation_type", "language", "seed", "temperature", "theme", "time_period"], "document": "story", "license": "MIT", "found_by": ["sg-register:fiction"], "revision_date": "2025-03-01T18:14:26.000Z", "model_licenses": {"Qwen/Qwen2.5-14B-Instruct-AWQ": {"license": "Apache-2.0", "card": "Qwen/Qwen2.5-14B-Instruct-AWQ"}, "casperhansen/mistral-nemo-instruct-2407-awq": {"license": "Apache-2.0", "card": "mistralai/Mistral-Nemo-Instruct-2407"}, "stelterlab/Mistral-Small-24B-Instruct-2501-AWQ": {"license": "Apache-2.0", "card": "stelterlab/Mistral-Small-24B-Instruct-2501-AWQ"}, "stelterlab/phi-4-AWQ": {"license": "MIT", "card": "stelterlab/phi-4-AWQ"}}, "sha256": "277319e18012b3580c9c6093b4148babe42ab279c3fb9f5f493db047b9aca835", "kept": {"human": 0, "llm": 200, "mixed": 0}}
+  ],
+  "expect": {"fixtures": 200, "tree_sha256": "cffacad11da5bcdeae0d963172accf9ca988e95e5262f8417f341214cae2cb34"}
+}

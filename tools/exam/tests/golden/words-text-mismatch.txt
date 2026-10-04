@@ -1,0 +1,28 @@
+gold       tests/cases/text-mismatch.conllu
+sha256     01ed0ad7879e
+source     text-mismatch.conllu
+split      none
+trains     undecided
+tokens     ud
+
+Words
+  sentences                           3
+  gold words                          7
+    punctuation                       1
+    X                                 0
+    tagged                            6
+      scored                          2  as 2 tokens
+        by their first word           0  as 0 tokens
+      unalignable                     4
+        text mismatch                 4
+        tokenizer drift               0
+        one word, several tokens      0
+      not word tokens                 0
+  provenance
+    agree                             0
+    adjudicated                       0
+    corrected                         0
+    owner                             0
+    kind                              0
+    unmarked                          7
+  open gold disputes                  0  (0 name a sent_id not in the file)

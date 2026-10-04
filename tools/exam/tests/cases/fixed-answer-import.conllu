@@ -1,0 +1,18 @@
+# sent_id = f1
+# text = Dogs bark loudly
+1	Dogs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Conf=Sure|Score=0.9|Kept=NOUN
+2	bark	_	NOUN	_	_	_	_	_	Kind=Word|Conf=Likely|Score=0.6|Kept=NOUN,VERB
+3	loudly	_	ADV	_	_	_	_	_	Kind=Word|Conf=Unsure|Score=0.4
+
+# sent_id = f2
+# text = The old cat slept
+1	The	_	PRON	_	_	_	_	_	Kind=Word|Conf=Unknown|Score=0.2
+2	old	_	ADJ	_	Degree=Pos	_	_	_	Kind=Word|Conf=Sure|Score=0.95|Kept=ADJ
+3	cat	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Conf=Likely
+4	slept	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	Kind=Word|Conf=Sure
+
+# sent_id = f3
+# text = Walking helps
+1	Walking	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Conf=Sure
+2	helps	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Conf=Unsure
+

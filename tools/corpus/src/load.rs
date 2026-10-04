@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use serde::de::DeserializeOwned;
 use sha2::{Digest, Sha256};
 
-use crate::sidecar::{Change, Entry, Exclusion, Sidecar, Tried};
+use crate::sidecar::{Change, Declared, Entry, Exclusion, Sidecar, Tried};
 
 /// The first rule a tier of the corpus breaks, in words that name the file.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -47,7 +47,7 @@ pub const LABELS: &[&str] = &["human", "llm", "mixed"];
 
 /// The sidecar versions the loaders read. A sidecar is never rewritten once its batch is
 /// published, so a version stays here for as long as any batch holds it.
-const SIDECAR_VERSIONS: &[u32] = &[2, 3];
+const SIDECAR_VERSIONS: &[u32] = &[2, 3, 4];
 
 /// The authorship labels a sidecar may carry. `unknown` is only for `core`.
 const SIDECAR_LABELS: &[&str] = &["human", "llm", "mixed", "unknown"];
@@ -180,6 +180,16 @@ pub fn tree(root: &Path) -> Result<Vec<Fixture>, Problem> {
             .map(|fixture| fixture.sidecar.content.sha256.as_str()),
     )?;
     Ok(fixtures)
+}
+
+/// `fixtures` without the ones whose label is a publisher's statement of the model, leaving the
+/// labels a history proves. Whatever groups fixtures by label counts both bases, and calls this
+/// only when it is asked to leave the declared ones out.
+pub fn history_proven(fixtures: Vec<Fixture>) -> Vec<Fixture> {
+    fixtures
+        .into_iter()
+        .filter(|fixture| !fixture.sidecar.is_declared())
+        .collect()
 }
 
 /// The lines of a JSON Lines file, each read as a `T`.
@@ -474,10 +484,13 @@ fn check_sidecar(
         source.url.contains(&source.commit),
         "{name}: source.url does not carry the commit"
     );
-    ensure!(
-        source.url.contains(&source.path),
-        "{name}: source.url does not carry the path"
-    );
+    // A version 4 path names a row, which a permalink to the dataset's file cannot carry.
+    if sidecar.declared.is_none() {
+        ensure!(
+            source.url.contains(&source.path),
+            "{name}: source.url does not carry the path"
+        );
+    }
     ensure!(
         source
             .license
@@ -508,26 +521,35 @@ fn check_sidecar(
             "{name}: label and directory disagree: {label} in {category}"
         );
     }
-    let history = &sidecar.history;
-    match label {
-        "human" => ensure!(
-            history.ai_commits == 0,
-            "{name}: a human file with AI commits"
-        ),
-        "llm" => ensure!(
-            history.ai_commits == history.commits,
-            "{name}: an llm file with unmarked commits"
-        ),
-        "mixed" => ensure!(
-            history.ai_commits > 0 && history.ai_commits < history.commits,
-            "{name}: a mixed file without both kinds of commit"
-        ),
-        _ => {}
+    match (&sidecar.history, &sidecar.declared) {
+        (Some(history), None) => {
+            match label {
+                "human" => ensure!(
+                    history.ai_commits == 0,
+                    "{name}: a human file with AI commits"
+                ),
+                "llm" => ensure!(
+                    history.ai_commits == history.commits,
+                    "{name}: an llm file with unmarked commits"
+                ),
+                "mixed" => ensure!(
+                    history.ai_commits > 0 && history.ai_commits < history.commits,
+                    "{name}: a mixed file without both kinds of commit"
+                ),
+                _ => {}
+            }
+            ensure!(
+                history.ai_tools.is_empty() == (history.ai_commits == 0),
+                "{name}: ai_tools and ai_commits disagree"
+            );
+        }
+        (None, Some(_)) => {}
+        _ => {
+            return Err(Problem(format!(
+                "{name}: a sidecar has a history or a declared model, one of the two"
+            )));
+        }
     }
-    ensure!(
-        history.ai_tools.is_empty() == (history.ai_commits == 0),
-        "{name}: ai_tools and ai_commits disagree"
-    );
     check_evidence(name, sidecar)?;
 
     // A fixture is quoted, never edited: its bytes are the bytes that were captured.
@@ -567,8 +589,17 @@ fn check_sidecar(
 /// Checks what version 3 adds: the raw evidence behind the label, present in every version 3
 /// sidecar and in no earlier one.
 fn check_evidence(name: &str, sidecar: &Sidecar) -> Result<(), Problem> {
-    let history = &sidecar.history;
-    let v3 = sidecar.sidecar_version >= 3;
+    if let Some(declared) = &sidecar.declared {
+        return check_declared(name, sidecar, declared);
+    }
+    ensure!(
+        sidecar.sidecar_version < 4,
+        "{name}: a version 4 sidecar names the model its publisher declares"
+    );
+    let Some(history) = &sidecar.history else {
+        return Err(Problem(format!("{name}: no history")));
+    };
+    let v3 = sidecar.sidecar_version == 3;
     for (field, present) in [
         ("history.truncated", history.truncated.is_some()),
         (
@@ -641,6 +672,51 @@ fn check_evidence(name: &str, sidecar: &Sidecar) -> Result<(), Problem> {
             "{name}: an llm file whose history a shallow clone cut short"
         );
     }
+    Ok(())
+}
+
+/// Checks what version 4 has in place of a history: the publisher's statement of the model, for
+/// an `llm` text, at a revision of the dataset that the sidecar's source names.
+fn check_declared(name: &str, sidecar: &Sidecar, declared: &Declared) -> Result<(), Problem> {
+    ensure!(
+        sidecar.sidecar_version == 4,
+        "{name}: only a version 4 sidecar names a declared model"
+    );
+    ensure!(
+        sidecar.authorship.label == "llm",
+        "{name}: a publisher's statement of the model proves llm and no other label"
+    );
+    ensure!(
+        sidecar.before.is_none(),
+        "{name}: a declared fixture has no earlier revision"
+    );
+    let source = &sidecar.source;
+    ensure!(
+        is_hex(&declared.revision, 40)
+            && declared.revision == source.commit
+            && is_hex(&declared.file_sha256, 64)
+            && source.url.contains(&declared.file),
+        "{name}: declared does not match the source"
+    );
+    ensure!(
+        source.repo.strip_prefix("datasets/") == Some(declared.dataset.as_str()),
+        "{name}: declared names another dataset than the source"
+    );
+    for (field, value) in [
+        ("declared.model", &declared.model),
+        ("declared.model_license_card", &declared.model_license_card),
+        ("declared.statement", &declared.statement),
+    ] {
+        ensure!(!value.is_empty(), "{name}: {field} is empty");
+    }
+    ensure!(
+        declared
+            .model_license
+            .split(" OR ")
+            .all(|license| LICENSES.contains(&license)),
+        "{name}: the model's licence {} is not one the corpus accepts",
+        declared.model_license
+    );
     Ok(())
 }
 

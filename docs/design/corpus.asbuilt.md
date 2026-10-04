@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - corpus
 max_size_bytes: 8192
@@ -83,8 +83,8 @@ commits.
 
 A manifest source of `kind: dataset`, `DatasetSource`, reads a pinned file of a Hugging Face
 dataset, `datasets/OWNER/NAME`, checks the card's licence and each model's, and makes a fixture of
-each text, `FILE/row-N.md`, with a version 4 sidecar. `recheck` and `select` skip it, and the measures and `deslag-gold
-sample` do unless given `--with-declared`.
+each text, `FILE/row-N.md`, with a version 4 sidecar. `recheck` and `select` skip it; the measures
+and `deslag-gold sample` include it unless given `--without-declared`.
 
 `discover --work DIR` appends what each of `SAMPLERS` finds to `DIR/candidates.jsonl`, tagged with
 the query that found it: Sourcegraph searches for agent files and for topics, some outside

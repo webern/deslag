@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-04
 subsystems:
   - config
   - glob
@@ -50,6 +50,10 @@ globs = ["AGENTS.md", "/docs/**/*.md"]
 lints.max_size_bytes.value = 8000
 lints.repo_layout = {}           # a lint's table alone turns it on
 ```
+
+One setting the schema no longer names is read and ignored: `banned_phrases.groups.signposts`, in
+`[md.lints]` or an override. `MdFile::removed_settings` finds it, `Config::load` keeps a warning
+for it, and `main.rs` prints each as a `deslag: warning:` line on stderr. The exit code is the same.
 
 `schema_version`, a `NonZeroU32`, goes up only when configs need migrating; one above
 `SCHEMA_VERSION` is an error.

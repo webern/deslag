@@ -135,8 +135,8 @@ pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's 
 `.harper/`, which the exam grades and nothing ships.
 
 `make build-batches` builds the batches that manifests in `scripts/blobstore/batches/` name,
-completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
-or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
+completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`;
+`scripts/blobstore/batches.md` says how.
 
 After a publish `scripts/blobstore/remeasure.sh` runs `make fix-blobs`, which rewrites the
 catalogue's counts and `measured_on` and the golden file of `list_growth` from the new image, then

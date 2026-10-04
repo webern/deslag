@@ -37,8 +37,8 @@ it again gives the same batch or fails.
 
 ## What the workflow does
 
-`publish-blobs` runs on a push to `main` or `m/deslag-exam` that touches a manifest, and on a pull
-request that does. Its `harvest` job is read-only. It fetches the pinned image and runs
+`publish-blobs` runs on a push to `main` that touches a manifest, and on a pull request that does.
+Its `harvest` job is read-only. It fetches the pinned image and runs
 `make build-batches`, which for each manifest whose batch the image lacks:
 
 - completes a seed: reads GitHub's metadata with the workflow token, takes the default branch's

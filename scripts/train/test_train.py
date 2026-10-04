@@ -8,6 +8,7 @@ import unittest
 import calibrate
 import conllu
 import curve
+import learner
 import perceptron
 from conllu import Sentence
 
@@ -69,6 +70,21 @@ class ReadTests(unittest.TestCase):
         self.assertIn("\tVERB\t", lines[3])
         self.assertTrue(lines[3].endswith("SpaceAfter=No|Conf=Unsure|Score=0.5000|Kept=VERB,NOUN"))
         self.assertEqual(lines[4], "3\t.\t_\t_\t_\t_\t_\t_\t_\tKind=Punctuation")
+
+    def test_a_learner_with_no_score_writes_no_score_key(self):
+        class NoScore:
+            def tag(self, model, sentence):
+                return [learner.Tagged("PRON", "Sure", None, ["PRON"]),
+                        learner.Tagged("VERB", "Likely", 0.25, ["VERB"]), None]
+
+        with tempfile.TemporaryDirectory() as d:
+            skeleton = write(d, "s.conllu", SKELETON)
+            out = os.path.join(d, "o.conllu")
+            learner.tag_file(NoScore(), None, skeleton, out)
+            lines = open(out, encoding="utf-8").read().split("\n")
+        self.assertTrue(lines[2].endswith("Kind=Word|Conf=Sure|Kept=PRON"))
+        self.assertNotIn("Score", lines[2])
+        self.assertTrue(lines[3].endswith("SpaceAfter=No|Conf=Likely|Score=0.2500|Kept=VERB"))
 
 
 class PerceptronTests(unittest.TestCase):

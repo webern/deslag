@@ -158,7 +158,9 @@ def write_import(skeleton_path, out_path, predictions):
     """Copies the skeleton and fills its `Word` lines.
 
     `predictions` has one list per sentence and one entry per token: None, or a tuple (upos, conf,
-    score, kept) with `kept` a list of deslag codes. A `Word` line with no prediction is an error.
+    score, kept) with `kept` a list of deslag codes and `score` a float or None. A None score
+    writes no `Score=`, which the exam reads as no score. A `Word` line with no prediction is an
+    error.
     Every other line and every comment is copied as it came.
     """
     blocks = read_blocks(skeleton_path)
@@ -175,9 +177,8 @@ def write_import(skeleton_path, out_path, predictions):
                 upos, conf, score, kept = prediction
                 columns = list(columns)
                 columns[3] = upos
-                columns[9] = (
-                    f"{columns[9]}|Conf={conf}|Score={score:.4f}|Kept={kept_field(kept)}"
-                )
+                score_key = "" if score is None else f"|Score={score:.4f}"
+                columns[9] = f"{columns[9]}|Conf={conf}{score_key}|Kept={kept_field(kept)}"
             out.append("\t".join(columns))
         out.append("")
     with open(out_path, "w", encoding="utf-8", newline="") as f:

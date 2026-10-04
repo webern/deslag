@@ -4,6 +4,8 @@ tagger or a silver-data learner later.
 A learner is an object with these methods:
 
     train(sentences, seed)  -> model
+        The only arguments the curve driver passes. Anything else (passes, an initial tagger) is a
+        default of the learner's own, or a keyword the learner's own command line sets.
         `sentences` are `conllu.Sentence`s with `forms` and `tags` (UD UPOS), in any order the
         learner must not depend on; `seed` fixes every random choice it makes.
     tag(model, sentence)    -> list of Tagged or None, one per token of a skeleton sentence
@@ -16,7 +18,7 @@ A learner is an object with these methods:
     name                    -> a short name for file names and reports
 
 `Tagged` is what the import file says of a word. `upos` is a UD tag; `conf` is `Sure`, `Likely`,
-`Unsure` or `Unknown`; `score` is 0.0 to 1.0, or None; `kept` is a list of deslag codes, the tags
+`Unsure` or `Unknown`; `score` is 0.0 to 1.0, or None, and a None writes no `Score=` to the import; `kept` is a list of deslag codes, the tags
 still possible, and for a `Sure` word only its own.
 """
 
@@ -34,7 +36,7 @@ def tag_file(learner, model, tokens_path, out_path):
     for sentence in sentences:
         tagged = learner.tag(model, sentence)
         predictions.append(
-            [None if t is None else (t.upos, t.conf, t.score if t.score is not None else 0.0, t.kept)
+            [None if t is None else (t.upos, t.conf, t.score, t.kept)
              for t in tagged]
         )
     write_import(tokens_path, out_path, predictions)

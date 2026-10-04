@@ -40,7 +40,7 @@ help:
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
 	@echo "                 the dev or holdout gold; the holdout prints pass or fail per metric"
 	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
-	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in ci;"
+	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"

@@ -44,13 +44,11 @@ Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs 
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
-Python 3 is the exception, stdlib only but spaCy's:
-
-- `scripts/llm-detection/collect.py` rebuilds the corpus; make, tests and CI run its `batch`.
-- `scripts/blobstore/test_batches.py` tests it under `make test-scripts`.
-- `scripts/spacy/tag.py` and `scripts/train/` sit the exam, spaCy in the venv `.spacy/`;
-  only `make fetch-spacy`, `generate-spacy`, `test-spacy`, `generate-percept` and `test-percept`
-  run them, never tests or CI.
+Python 3 is the exception, in three scripts. `scripts/llm-detection/collect.py` rebuilds the
+corpus, standard library only, by hand; make, tests and CI run its `batch`.
+`scripts/blobstore/test_batches.py` tests it offline under `make test-scripts`.
+`scripts/spacy/tag.py` is the exam's spaCy tagger, with hash-pinned packages in the cache venv
+`.spacy/`; only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never tests or CI.
 
 Development is supported on macOS and Linux.
 

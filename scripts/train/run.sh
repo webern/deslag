@@ -67,7 +67,7 @@ case "$cmd" in
     done
     ;;
   curve)
-    python3 scripts/train/curve.py --learner percept --train "$ewt/en_ewt-ud-train.conllu" \
+    python3 scripts/train/curve.py --learner perceptron --train "$ewt/en_ewt-ud-train.conllu" \
       --out .train --exam "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --" \
       --set "ewt-dev:.train/ewt-dev.tokens.conllu:$(gold_of ewt-dev):.train/ewt-dev.deslag.run.json" \
       --set "deslag-dev:.train/deslag-dev.tokens.conllu:$(gold_of deslag-dev):.train/deslag-dev.deslag.run.json"

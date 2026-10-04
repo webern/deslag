@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """The learning curve: trains a learner on the first 1k, 2k, 5k and all sentences of the shuffled
 training files, grades each point on the dev sets through the exam, paired against a saved
-baseline run, and prints one table. Takes any learner of learner.py by module name. Run by hand,
+baseline run, and prints one table. Takes any learner of learner.py by module name, and calls it
+only as learner.py documents: `train(sentences, seed)`, then `tune` if it has one, then
+`tag(model, sentence)`. Reading the training files is this driver's job, through conllu.py. Run by hand,
 never by the build, the tests or CI. Standard library only; run it with PYTHONHASHSEED=0.
 
-    curve.py --learner percept --train FILE [FILE ...] --seed S --out DIR \\
+    curve.py --learner perceptron --train FILE [FILE ...] --seed S --out DIR \\
              --set NAME:TOKENS:GOLD:BASELINE.run.json ... [--exam "cargo run --quiet -p deslag-exam --"]
 
 The first --set is the one the learner tunes its confidence on (the treebank's dev set); each
@@ -76,16 +78,14 @@ def paired(compare_output):
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--learner", default="percept")
+    parser.add_argument("--learner", default="perceptron")
     parser.add_argument("--train", nargs="+", required=True)
     parser.add_argument("--seed", type=int, default=CURVE_SEED)
     parser.add_argument("--out", required=True)
     parser.add_argument("--set", dest="sets", action="append", required=True)
     parser.add_argument("--exam", default="cargo run --quiet -p deslag-exam --")
     args = parser.parse_args(argv)
-    module = importlib.import_module(
-        {"percept": "perceptron"}.get(args.learner, args.learner)
-    )
+    module = importlib.import_module(args.learner)
     exam = shlex.split(args.exam)
     sets = []
     for spec in args.sets:
@@ -99,9 +99,9 @@ def main(argv):
     table = []
     for size, prefix in points(sentences):
         started = time.time()
-        model = module.train(prefix, args.seed, files=args.train)
+        model = module.train(prefix, args.seed)
         if hasattr(module, "tune"):
-            module.tune(model, sets[0][1], sets[0][2])
+            model = module.tune(model, sets[0][1], sets[0][2])
         seconds = time.time() - started
         for name, tokens, gold, baseline in sets:
             stem = os.path.join(directory, f"{args.learner}-{size}.{name}")

@@ -2666,7 +2666,7 @@ def select(args: argparse.Namespace) -> None:
             kinds[r["kind"]] = kinds.get(r["kind"], 0) + 1
             other_language += r["natural_language"] != "en"
 
-        # The tree holds only what a history proves; the publisher-declared basis is provisional.
+        # The tree holds only what a history proves, so a publisher-declared file is left out.
         pool = sorted((r for r in live.values() if r["label"] == label
                        and r.get("basis") != DECLARED
                        and r["size_bytes"] <= MAX_BYTES and r["sha256"] not in core

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-04
 subsystems:
   - exam
 max_size_bytes: 8192
@@ -17,7 +17,7 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
 
 ## Commands
 
-- `score --gold G (--tagger noun|mct|harper | --import F) [--harper-model M] [--aggregate]
+- `score --gold G (--tagger noun|deslag|mct|harper | --import F) [--harper-model M] [--aggregate]
   [--save RUN.json] [--disputes D] [--words N]`: prints the report. `--save` writes the run for
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
@@ -36,7 +36,7 @@ tools/exam/src/
   conllu.rs gold.rs   CoNLL-U read by hand; Gold and the conventions below
   tags.rs             Reading, which adds a score to deslag::tag's; the UD mapping
   align.rs            alignment; Aligned, made once per gold by align_all
-  tagger.rs import.rs the Tagger trait, `noun`, run; the import reader (candidates doc)
+  tagger.rs import.rs the Tagger trait, `noun`, `deslag`, run; the import reader (candidates doc)
   most_common.rs      `mct`, from EWT train (candidates doc)
   harper.rs           Harper's engine and model reader (candidates doc)
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration

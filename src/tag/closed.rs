@@ -486,7 +486,6 @@ fn len() -> usize {
 }
 
 /// The words of the table.
-#[cfg(test)]
 pub fn words() -> impl Iterator<Item = &'static str> {
     ENTRIES.iter().map(|entry| entry.word)
 }

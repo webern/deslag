@@ -41,7 +41,7 @@
 //! so the word is `Likely` and its other tags stay in `kept`.
 
 use super::pass::View;
-use super::{Confidence, Context, Tag, TagSet};
+use super::{Confidence, Context, Tag, TagSet, starts_upper};
 use crate::document::TokenKind;
 
 /// The tags a capitalised word keeps: those of a word that is a noun, a name or the adjective
@@ -91,15 +91,14 @@ fn letters(text: &str) -> usize {
     text.chars().filter(|c| c.is_alphabetic()).count()
 }
 
-/// Whether `text` starts with an upper-case letter.
-fn starts_upper(text: &str) -> bool {
-    text.chars().next().is_some_and(char::is_uppercase)
-}
-
 /// Whether the word starts with a capital and has a lower-case letter too, which a lone capital
 /// and a word in capitals lack. The plural of an acronym (`APIs`) is a word in capitals with an `s`,
 /// so it has none either.
 fn is_capitalised(text: &str) -> bool {
+    // The stem starts as the word does, so this settles most words without reading them.
+    if !starts_upper(text) {
+        return false;
+    }
     let stem = stem(text);
     let acronym_plural = stem
         .strip_suffix('s')

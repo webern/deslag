@@ -20,6 +20,7 @@ mod pass;
 mod prior;
 mod proper;
 mod shape;
+mod table;
 mod types;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
@@ -65,13 +66,21 @@ fn fold<'b>(text: &str, buf: &'b mut [u8; LONGEST]) -> Option<&'b str> {
     std::str::from_utf8(&buf[..used]).ok()
 }
 
-/// What the tables say of the word `text`. The closed-class table wins where both have the word;
-/// a word in neither is a noun at `Unknown`.
+/// Whether `text` starts with an upper-case letter. A first byte that is ASCII is the whole answer,
+/// which saves decoding it in the passes that ask of every word.
+fn starts_upper(text: &str) -> bool {
+    match text.as_bytes().first() {
+        Some(byte) if byte.is_ascii() => byte.is_ascii_uppercase(),
+        Some(_) => text.chars().next().is_some_and(char::is_uppercase),
+        None => false,
+    }
+}
+
+/// What the tables say of the word `text`, from the one table of both that [`table`] holds. The
+/// closed-class table wins where both have the word; a word in neither is read by its shape, at
+/// `Unknown`.
 fn read(text: &str) -> Reading {
-    let mut buf = [0; LONGEST];
-    fold(text, &mut buf)
-        .and_then(|word| closed::lookup(word).or_else(|| lexicon::lookup(word)))
-        .unwrap_or_else(|| closed::unknown(text))
+    table::read(text)
 }
 
 /// Runs [`sentence`] over every sentence of `document`, with each one's context.

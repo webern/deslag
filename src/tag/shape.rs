@@ -44,7 +44,7 @@
 //! 10. **Nothing else** is a singular noun that may be a verb or an adjective: the open class is
 //!     open, and a word that no table knows has no shape to say which.
 
-use super::{Confidence, Features, Reading, Tag, TagSet};
+use super::{Confidence, Features, Reading, Tag, TagSet, starts_upper};
 
 /// What a rule says of a word: the best guess, its features, and the tags its shape allows, which
 /// include the best guess.
@@ -151,6 +151,11 @@ pub(super) fn guess(text: &str) -> Reading {
 
 /// What the rules make of `text`.
 fn shape(text: &str) -> Shape {
+    // Lower-case letters alone make no possessive, no version, no dotted word, no identifier and no
+    // capital, which the rules below would each find out, so only its ending is left to read.
+    if text.bytes().all(|byte| byte.is_ascii_lowercase()) {
+        return ending_of(text).unwrap_or(NO_SHAPE);
+    }
     if let Some(stem) = possessive_stem(text) {
         return possessive(stem);
     }
@@ -158,12 +163,11 @@ fn shape(text: &str) -> Shape {
         return shape;
     }
     let ending = ending_of(text);
-    capitalised(text, ending).or(ending).unwrap_or(Shape::new(
-        Tag::Noun,
-        SINGULAR,
-        VERB.with(Tag::Adjective),
-    ))
+    capitalised(text, ending).or(ending).unwrap_or(NO_SHAPE)
 }
+
+/// The shape of a word of no shape: a singular noun that may be a verb or an adjective.
+const NO_SHAPE: Shape = Shape::new(Tag::Noun, SINGULAR, VERB.with(Tag::Adjective));
 
 // ---- rule 1: a possessive -------------------------------------------------------------------
 
@@ -293,11 +297,6 @@ fn is_camel_case(text: &str) -> bool {
 
 // ---- rules 7 and 9: capitals ---------------------------------------------------------------
 
-/// Whether `text` starts with an upper-case letter.
-fn starts_upper(text: &str) -> bool {
-    text.chars().next().is_some_and(char::is_uppercase)
-}
-
 /// Whether `text` is a capital and then letters with a lower-case one among them: `Frobnitz`.
 fn is_capitalised_word(text: &str) -> bool {
     starts_upper(text) && text.chars().any(char::is_lowercase)
@@ -349,8 +348,12 @@ fn intersect(a: TagSet, b: TagSet) -> TagSet {
 /// What an ending says of `text`, whatever its case.
 fn ending_of(text: &str) -> Option<Shape> {
     let letters = text.chars().count();
+    // Every ending is ASCII, so a word whose last byte is not an ending's last letter, whatever
+    // its case, has none of them.
+    let last = text.as_bytes().last()?.to_ascii_lowercase();
     ENDINGS
         .iter()
+        .filter(|ending| ending.suffix.as_bytes().last() == Some(&last))
         .find(|ending| {
             letters >= ending.suffix.len() + STEM && ends_with_ignore_case(text, ending.suffix)
         })

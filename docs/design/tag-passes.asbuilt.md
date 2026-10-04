@@ -117,7 +117,7 @@ confidence moves. "No word" is a next token that is not a word, or the end of th
 
 ## Time
 
-`deslag-corpus --tier blobs time` reads each big-tier file three times, keeps the fastest and
-asserts nothing; `make test-blobs` runs it. Tagging is 26% of reading time in release and 35% in
-the debug profile of `make ci`. The table read is the largest part, about a tenth of reading; each
-pass costs 2 to 5%, `single` 3.4.
+`deslag-corpus --tier blobs time` reads each big-tier file three times, keeps the fastest; `make
+test-blobs` runs it with `--check`, which fails over a budget (`analysis.asbuilt.md`). Tagging is
+26% of reading time in release and 35% in the debug profile of `make ci`. The table read is the
+largest part, about a tenth of reading; each pass costs 2 to 5%, `single` 3.4.

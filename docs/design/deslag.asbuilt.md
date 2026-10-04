@@ -120,8 +120,12 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 ## Build
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
-`--locked`; `test-blobs` ends by printing `deslag-corpus time` on the big tier. `make check-deslag`
-runs deslag on this repo. The published crate is what `include` in `Cargo.toml` lists;
+`--locked`. `test` includes `test-exam`, the exam's gates on deslag's tagger, and `test-blobs` ends
+with `deslag-corpus time --check`, which fails when tagging takes over 40.0% of reading time in
+debug (31.0% in release).
+
+`make test-ewt` gates the treebank by hand. `make check-deslag` runs
+deslag on this repo. The published crate is what `include` in `Cargo.toml` lists;
 `make check-publish` builds it, and every other cargo call covers the workspace.
 
 The build never fetches. `make fetch-blobs` unpacks the image `scripts/blobstore/blobs.lock` pins
@@ -134,10 +138,10 @@ pins into `.ewt/`, for the exam to measure on, and `make fetch-harper` Harper's 
 completing seeds, and the `publish-blobs` workflow does that and publishes them on a push to `main`
 or `m/deslag-exam`; `scripts/blobstore/batches.md` says how.
 
-After a publish it runs `scripts/blobstore/remeasure.sh`: `make fix-blobs`, which rewrites the phrase catalogue's counts and
-`measured_on` and the golden file of `list_growth` from the new image, then `make test-blobs` and
-the phrases test. It commits the files with the lock so the branch stays green. A pull request that
-adds a batch runs `remeasure.sh` on the tier with the batch in it and commits nothing.
+After a publish `scripts/blobstore/remeasure.sh` runs `make fix-blobs`, which rewrites the
+catalogue's counts and `measured_on` and the golden file of `list_growth` from the new image, then
+`make test-blobs` and the phrases test; the workflow commits the files with the lock so the branch
+stays green. A batch pull request runs it too and commits nothing.
 
 `make fetch-spacy` installs spaCy and its model, pinned by hash in
 `scripts/spacy/requirements.lock`, into a venv in `.spacy/`, and `make generate-spacy` writes the

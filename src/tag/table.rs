@@ -11,10 +11,11 @@
 //! word, and a word in neither is read by [`lexicon::lookup`] as a possessive, or by its shape.
 //! The dominance mark is the lexicon's alone, whatever the reading comes from.
 //!
-//! **Layout.** Words of up to eight bytes, most of any text, have a table of 16-byte slots, each
-//! holding the word as one `u64` and its length. Longer words, up to [`KEY`] bytes, have one of
-//! 32-byte slots with three `u64`. A probe folds the case of the word's bytes eight at a time and
-//! compares the key and length whole, so no byte of a word is copied or looked at twice.
+//! **Layout.** Words of up to eight bytes, most of any text, have a table of 16-byte slots, four
+//! to a 64-byte bucket, each holding the word as one `u64` and its length. Longer words, up to
+//! [`KEY`] bytes, have one of 32-byte slots with three `u64`. A probe folds the case of the word's
+//! bytes eight at a time and compares the key and length whole, so no byte of a word is copied or
+//! looked at twice. Together the two tables are about 4 MB, and building them takes about 9 ms.
 
 use std::sync::OnceLock;
 
@@ -77,9 +78,10 @@ const _: () = assert!(size_of::<Short>() == 16);
 const _: () = assert!(size_of::<Bucket>() == 64);
 const _: () = assert!(size_of::<Long>() == 32);
 
-/// The two tables: the words of up to [`SHORT`] bytes, which most of any text is and which a
-/// megabyte holds, and the longer ones. Each is a power of two of slots, open addressing with
-/// linear probing, and a slot with no length is empty.
+/// The two tables: the words of up to [`SHORT`] bytes, which most of any text is, and the longer
+/// ones. Each is a power of two of buckets or slots, open addressing with linear probing from the
+/// one the hash names, and a slot with no length is empty. A bucket of short words fills from its
+/// first slot, so it is full when its last is used, and only then does a word go to the next.
 struct Table {
     short: Vec<Bucket>,
     long: Vec<Long>,

@@ -158,7 +158,7 @@ fn the_llm_row_of_a_summary_holds_declared_files_unless_told_not_to() {
 }
 
 #[test]
-fn the_loaders_keep_the_files_a_history_proves() {
+fn history_proven_drops_the_declared_files_and_keeps_the_ones_a_history_proves() {
     let dir = corpus();
     let blobs = load::blobs(&dir.path().join(".blobs/unpacked/corpus")).expect("the big tier");
     assert_eq!(blobs.fixtures.len(), 2);

@@ -37,8 +37,8 @@ pub struct Sidecar {
 }
 
 impl Sidecar {
-    /// Whether its label rests on a publisher's statement and not on a history, which a measure
-    /// leaves out unless it is asked to take such files in.
+    /// Whether its label rests on a publisher's statement and not on a history. A measure takes
+    /// such files in by default, and leaves them out with `--without-declared`.
     pub fn is_declared(&self) -> bool {
         self.declared.is_some()
     }

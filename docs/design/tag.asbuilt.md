@@ -14,17 +14,17 @@ all of it, so every lint that reads a file pays for tagging.
 src/tag/
   mod.rs      sentence, document, the context of a block, VERSION
   types.rs    Tag, TagSet, Features, Confidence, Reading, Context
-  table.rs    one hash table over the closed-class table and the lexicon
-  closed.rs   the closed-class table: function words, written by hand
-  lexicon.rs  the open-class lexicon, read from lexicon.txt (generated)
+  table.rs    one hash table over the two tables below
+  closed.rs   the closed-class table: function words, by hand
+  lexicon.rs  the open-class lexicon, from lexicon.txt (generated)
   shape.rs    a guess for a word neither table has
-  pass.rs     the View a pass reads and changes, and the order of PASSES
+  pass.rs     the View a pass reads and changes, PASSES
   proper.rs infinitive.rs function.rs nounverb.rs prior.rs single.rs
               the passes, in the order they run
 ```
 
-`tag-tables.asbuilt.md` describes the tables and `shape.rs`; `tag-passes.asbuilt.md` the passes,
-and what tagging costs.
+`tag-tables.asbuilt.md` describes the tables and `shape.rs`; `tag-passes.asbuilt.md` the passes and
+their cost.
 
 ## A reading
 
@@ -63,13 +63,14 @@ a `Document`. The context of a sentence is `Heading` if its block is a heading, 
 a table cell, else `ListItem` if any block above it is a list item, else `Prose`.
 
 `Item::Tag(set, level)` in `lint/pattern.rs` matches a token whose best guess is in `set` at
-`level` or above. A token without a reading never matches it.
+`level` or above; `kept` and features are not read. A token without a reading never matches it.
 
 ## The golden stream
 
 `tests/golden/tags.txt` (about 517 KB) is written by `tests/golden.rs`, and `make fix-golden`
-rewrites it. It reads each fixture of `tests/corpus/core/`; its header gives `VERSION`, the token
-and word counts and the legend. `VERSION`, 10 now, is raised by every change to any reading.
+rewrites it. It reads each fixture of `tests/corpus/core/`; its header gives `VERSION`, the token,
+word and read-word counts and the legend. `VERSION`, 10 now, is raised by every change to any
+reading.
 
 Each fixture is a `## <path>` line, then a line a sentence. A word is `text/READING`; other tokens
 are their text, or `[code]`, `[html]`, `[image]`, `[url]` or `[footnote]`. A `READING` is the tag

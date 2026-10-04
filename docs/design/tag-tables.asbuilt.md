@@ -8,8 +8,8 @@ max_size_bytes: 5200
 
 `tag.asbuilt.md` says what tagging is. This says how a word is read on its own, before any pass
 reads it in its sentence. Two tables do it, `closed.rs` and `lexicon.rs`, held together in
-`table.rs`; a word in neither goes to `shape.rs`. Nothing in any of them is counted from a corpus
-or taken from a treebank.
+`table.rs`; a word in neither goes to `shape.rs`. None of it is counted by deslag from a corpus or
+a treebank; the ranking uses WordNet's counts, below.
 
 A word is folded first: lower case, ASCII only, a curly apostrophe read straight. A word that is
 not ASCII, or is over 24 bytes (the lexicon's longest), is in no table.
@@ -59,8 +59,8 @@ its number and `Contraction`, at `Unsure`; an `x` that is no noun there leaves t
 ## The word table
 
 `table.rs` builds one hash table of both on first use, about 9 ms and 4 MB. Each word is held with
-its `Reading` already made and its dominance mark, so a lookup folds and hashes the word once and
-one probe answers. Words of up to eight bytes are in a table of 16-byte slots, four to a 64-byte
+its `Reading` already made and its dominance mark, so a lookup folds and hashes once and one
+probe answers. Words of up to eight bytes are in a table of 16-byte slots, four to a 64-byte
 bucket; longer words are in a table of 32-byte slots. The closed-class reading wins where both
 tables have a word.
 

@@ -36,17 +36,16 @@ missing one costs nothing.
   version. `tests/instructions.rs` holds the schema's groups
   to `GROUPS`.
 
-A pull request that adds a batch, and a publish, run these on the result, so a batch that breaks a
-floor fails before the branch goes red. The sieve's counts are read from a `candidates` run, not
-stored.
+`remeasure.sh` runs `make fix-blobs`, `make test-blobs` and `tests/phrases.rs` on a batch pull
+request and on a publish, so a bad batch fails before the branch goes red. The sieve's counts are
+read from a `candidates` run, not stored.
 
 ## Refused phrases
 
 `tools/corpus/rejected.toml` lists each phrase considered and refused, with the reason. `candidates`
 leaves out the catalogue's phrases and the refused ones, so a proposal needs new evidence. An entry
-that stops qualifying moves here with its reason: `why this matters` fell under 40 repositories when
-a licence correction dropped fixtures, and `why it matters` and `not merely` turned up in human
-prose.
+that stops qualifying moves here: `why this matters` fell under 40 repositories after a licence
+correction, `why it matters` and `not merely` turned up in human prose.
 
 ## Matching
 

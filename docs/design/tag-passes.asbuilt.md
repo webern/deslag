@@ -71,7 +71,8 @@ both readings kept:
 
 Each cue decides at `Likely` and keeps every tag the word had.
 
-- `be` forms are auxiliaries, and main verbs right after `there`.
+- `be` forms are auxiliaries, and main verbs right after `there`; before `there` (`is there a`)
+  nothing is decided.
 - `can` and `will` are auxiliaries, unless a determiner, a possessive or an adjective comes before.
 - `have` and `do` forms are auxiliaries before a word that can only be a verb or auxiliary, `not`
   or an adverb, and main verbs before a determiner.
@@ -79,7 +80,7 @@ Each cue decides at `Likely` and keeps every tag the word had.
   auxiliary, preposition or particle, or at the end of a phrase.
 - `that` is a pronoun before a word that can only be a verb or auxiliary.
 - A word that can be a preposition and no conjunction, verb or noun (`in`, `on`) is one before a
-  determiner, pronoun or name.
+  determiner, pronoun or name. `about` is left out.
 
 ### 4. nounverb.rs: noun or verb from the word before
 
@@ -117,7 +118,9 @@ confidence moves. "No word" is a next token that is not a word, or the end of th
 
 ## Time
 
-`deslag-corpus --tier blobs time` reads each big-tier file three times, keeps the fastest; `make
-test-blobs` runs it with `--check`, which fails over a budget (`analysis.asbuilt.md`). Tagging is
-26% of reading time in release and 35% in the debug profile of `make ci`. The table read is the
-largest part, about a tenth of reading; each pass costs 2 to 5%, `single` 3.4.
+`deslag-corpus --tier blobs time` reads each big-tier file three times and keeps the fastest; `make
+test-blobs` runs it with `--check` (`analysis.asbuilt.md`). Tagging is 26.0% of reading time in
+release and about 35% in the debug profile of `make ci`.
+
+The stages, measured on the big tier in release as each landed, in runs that do not sum: the
+table read 9.7% of reading, the first five passes 2.0 to 4.3% each, and `single` 3.4%.

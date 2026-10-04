@@ -423,7 +423,7 @@ fn a_declared_fixture_has_a_publishers_statement_in_place_of_a_history() {
 }
 
 #[test]
-fn what_groups_files_by_label_takes_the_ones_a_history_proves() {
+fn history_proven_drops_the_declared_files_and_keeps_the_ones_a_history_proves() {
     let (human, llm, _) = one_of_each();
     let (_, other_llm) = two_fixtures();
     let repo = Repo::new();

@@ -3,8 +3,8 @@
 //!
 //! A [`Pattern`] is a row of [`Item`]s, written as Rust data; there is no parser and no pattern
 //! comes from the config. Each item matches one token by its kind, its folded text, the end of its
-//! folded text, its folded text being or not being in a listed set, or the part of speech the
-//! tagger read for it. An item may be optional, and a gap skips a bounded number of tokens. A match
+//! folded text, its folded text being or not being in a listed set, the part of speech the
+//! tagger read for it, or its origin, where the word comes from. An item may be optional, and a gap skips a bounded number of tokens. A match
 //! never leaves its sentence.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
@@ -14,7 +14,7 @@
 use std::ops::Range;
 
 use crate::document::{Document, Token, TokenKind};
-use crate::tag::{Confidence, TagSet};
+use crate::tag::{Confidence, Origin, TagSet};
 
 /// One place in a [`Pattern`].
 #[derive(Debug, Clone, Copy)]
@@ -36,6 +36,13 @@ pub enum Item {
     /// It reads the token's `reading`, and only its best guess: `kept` and the features are not
     /// consulted. A token with no reading matches at no level, `Unknown` included.
     Tag(TagSet, Confidence),
+    /// A word whose origin is this: `Item::Origin(Origin::Symbol)` is a bare identifier, and
+    /// `Origin::English` a word no cue marks as code. A token the tagger has not read is
+    /// `English`, so it matches only that.
+    ///
+    /// It reads the token's `origin`, which is not a confidence on a set of tags: a lint that
+    /// skips code, or asks for a name to be in a code span, wants this and not [`Item::Tag`].
+    Origin(Origin),
     /// Every one of these items matches the one token.
     All(&'static [Item]),
     /// This item, or nothing.
@@ -127,6 +134,7 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         Item::Tag(set, least) => token.reading.is_some_and(|reading| {
             set.contains(reading.tag) && reading.confidence.at_least(*least)
         }),
+        Item::Origin(origin) => word && token.origin == *origin,
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
         Item::Optional(_) | Item::Gap(_) => false,
     }
@@ -314,6 +322,21 @@ mod tests {
             let document = read("It ships fast.", &readings(level));
             assert!(texts(&VERB_LIKELY, &document).is_empty(), "{level:?}");
         }
+    }
+
+    #[test]
+    fn an_origin_item_matches_a_word_of_that_origin() {
+        let document = Document::markdown("Edit `main.rs`, main.rs and foo_bar --locked, not it.");
+        let of = |origin| texts(&pattern(Item::Origin(origin)), &document);
+        assert_eq!(of(Origin::Path), ["main.rs"]);
+        assert_eq!(of(Origin::Symbol), ["foo_bar"]);
+        assert_eq!(of(Origin::Flag), ["locked"]);
+        assert!(of(Origin::Command).is_empty());
+        let english = of(Origin::English);
+        assert!(english.contains(&"Edit".to_string()) && english.contains(&"it".to_string()));
+        assert!(!english.contains(&"main.rs".to_string()), "{english:?}");
+        // A code span is a `Code` token, no word, whatever its text.
+        assert!(!english.contains(&"`main.rs`".to_string()), "{english:?}");
     }
 
     #[test]

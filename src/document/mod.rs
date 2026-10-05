@@ -227,6 +227,9 @@ pub struct Token<'a> {
     pub text: Cow<'a, str>,
     /// What the tagger read of it: `Some` on a word the tagger has read, `None` on any other token.
     pub reading: Option<crate::tag::Reading>,
+    /// Where the word comes from, which the tagger sets from the token and its neighbours:
+    /// `English` on every token the tagger has not read, and on any that is no word.
+    pub origin: crate::tag::Origin,
 }
 
 /// What kind of token a token is.

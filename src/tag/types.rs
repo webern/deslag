@@ -1,5 +1,5 @@
 //! The types a tagger speaks in: a [`Tag`], a [`TagSet`], [`Features`], a [`Confidence`] and the
-//! [`Reading`] that holds them, and the [`Context`] a sentence is read in.
+//! [`Reading`] that holds them, the [`Context`] a sentence is read in, and an [`Origin`].
 
 /// A part of speech, as deslag tags it. The order of [`Tag::ALL`] is the order every table of the
 /// exam's report uses.
@@ -370,6 +370,57 @@ impl Context {
     }
 }
 
+/// Where a word comes from, which is not what it does in its sentence: `grep` is a command in
+/// *grep the logs* and in *run grep*. It is not a tag; the tags and the mapping to UD stay as they
+/// are. A tagger reads it from the token and its neighbours, and every tagger and import shares it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[repr(u8)]
+pub enum Origin {
+    /// Ordinary English, which is every word until a cue says otherwise.
+    #[default]
+    English,
+    /// A name from code, written as one: `foo_bar`, `FrobulatorFactory`, `userId`.
+    Symbol,
+    /// The name of a program: `grep`, or a git subcommand right after `git`.
+    Command,
+    /// A file name with an extension: `main.rs`.
+    Path,
+    /// A word joined to a leading `-` or `--`: `--locked`.
+    Flag,
+}
+
+impl Origin {
+    /// Every origin, in the order the exam's report lists them.
+    pub const ALL: [Origin; 5] = [
+        Origin::English,
+        Origin::Symbol,
+        Origin::Command,
+        Origin::Path,
+        Origin::Flag,
+    ];
+
+    /// The name an `Origin=` in the exam's token skeleton uses.
+    pub fn name(self) -> &'static str {
+        match self {
+            Origin::English => "English",
+            Origin::Symbol => "Symbol",
+            Origin::Command => "Command",
+            Origin::Path => "Path",
+            Origin::Flag => "Flag",
+        }
+    }
+
+    /// The origin named `name`.
+    pub fn from_name(name: &str) -> Option<Origin> {
+        Origin::ALL.into_iter().find(|origin| origin.name() == name)
+    }
+
+    /// Its place in [`Origin::ALL`].
+    pub fn index(self) -> usize {
+        self as usize
+    }
+}
+
 // A reading is six bytes and `Option<Reading>` no more, so `Token` does not grow.
 const _: () = assert!(size_of::<Reading>() == 6);
 const _: () = assert!(size_of::<Option<Reading>>() == 6);
@@ -485,6 +536,16 @@ mod tests {
         };
         assert_eq!(reading.possible().len(), 2);
         assert!(reading.possible().contains(Tag::Verb));
+    }
+
+    #[test]
+    fn origins_have_names_and_english_is_the_default() {
+        for (i, origin) in Origin::ALL.into_iter().enumerate() {
+            assert_eq!(Origin::from_name(origin.name()), Some(origin));
+            assert_eq!(origin.index(), i);
+        }
+        assert_eq!(Origin::from_name("english"), None);
+        assert_eq!(Origin::default(), Origin::English);
     }
 
     #[test]

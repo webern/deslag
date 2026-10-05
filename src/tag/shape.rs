@@ -284,7 +284,7 @@ fn starting_with_a_digit(text: &str) -> Option<Shape> {
 
 /// Whether a lower-case letter is followed straight away by a capital: `userId`, `PowerShell`,
 /// `xDS`. A word in capitals, or with only its first letter a capital, has no such pair.
-fn is_camel_case(text: &str) -> bool {
+pub(super) fn is_camel_case(text: &str) -> bool {
     let mut after_lower = false;
     for ch in text.chars() {
         if after_lower && ch.is_uppercase() {

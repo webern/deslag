@@ -16,6 +16,7 @@ mod function;
 mod infinitive;
 mod lexicon;
 mod nounverb;
+mod origin;
 mod pass;
 mod prior;
 mod proper;
@@ -26,24 +27,31 @@ mod types;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
 
-pub use types::{Confidence, Context, Features, Reading, Tag, TagSet};
+pub use origin::origins;
+pub use types::{Confidence, Context, Features, Origin, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 10;
+pub const VERSION: u32 = 11;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]
 const _: () = assert!(size_of::<Token<'static>>() == 48);
 
-/// Reads one sentence's tokens, in order: sets `reading` on every `Word` token and clears it on
-/// every other. Reads only the tokens' kind and text, and the context.
+/// Reads one sentence's tokens, in order: sets `origin` and `reading` on every `Word` token and
+/// clears them on every other. Reads only the tokens' kind, text and place, and the context.
 ///
 /// Each word is looked up on its own, then the passes narrow the readings in the sentence's
 /// context, in a fixed order.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
-    for token in tokens.iter_mut() {
+    let mut commands = false;
+    for at in 0..tokens.len() {
+        let token = &mut tokens[at];
         token.reading = (token.kind == TokenKind::Word).then(|| read(&token.text));
+        commands |= origin::mark(tokens, at);
+    }
+    if commands {
+        origin::verbs(tokens);
     }
     pass::run(tokens, context);
 }

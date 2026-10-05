@@ -128,6 +128,23 @@ fn a_word_line_carries_the_reading_and_the_gold_the_exam_aligned() {
 }
 
 #[test]
+fn the_first_line_names_the_tag_version_the_readings_are_of() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("readings.conllu");
+    let gold = case("contraction.conllu");
+    ok(&["readings", "--gold", &gold, "--out", path(&file)]);
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert_eq!(
+        text.lines().next().unwrap(),
+        format!("# deslag_tag_version = {}", deslag::tag::VERSION)
+    );
+    // The header is a comment of the first sentence, so the file still reads as sentences.
+    let blocks = conllu::read("readings", &text).unwrap();
+    assert!(blocks[0].comment("sent_id").is_some());
+    assert!(blocks[0].comment("deslag_tag_version").is_some());
+}
+
+#[test]
 fn a_token_with_no_aligned_gold_word_has_no_gold_key() {
     let dir = tempfile::tempdir().unwrap();
     let file = dir.path().join("readings.conllu");
@@ -178,6 +195,8 @@ fn the_corpus_readings_are_the_corpus_skeleton_with_deslag_s_reading_and_no_gold
     ok(&["tokens", "--corpus", "--out", path(&tokens)]);
     let readings = std::fs::read_to_string(&readings).unwrap();
     let tokens = std::fs::read_to_string(&tokens).unwrap();
+    let header = format!("# deslag_tag_version = {}\n", deslag::tag::VERSION);
+    let readings = readings.strip_prefix(&header).expect("the version header");
     assert!(!readings.contains("Gold="));
     let (mut words, mut read) = (0, 0);
     for (a, b) in readings.lines().zip(tokens.lines()) {
@@ -198,7 +217,7 @@ fn the_corpus_readings_are_the_corpus_skeleton_with_deslag_s_reading_and_no_gold
     // The tic list reads the same from the file as from the tagger.
     let list = "tests/gold/ticlist.tsv";
     let file = dir.path().join("r.conllu");
-    std::fs::write(&file, &readings).unwrap();
+    std::fs::write(&file, format!("{header}{readings}")).unwrap();
     let imported = ok(&["ticlist", "score", "--list", list, "--import", path(&file)]);
     let tagged = ok(&["ticlist", "score", "--list", list, "--tagger", "deslag"]);
     let body = |text: &str| text.lines().skip(1).collect::<Vec<_>>().join("\n");

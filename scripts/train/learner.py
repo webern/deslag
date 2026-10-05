@@ -42,6 +42,9 @@ def tag_file(learner, model, tokens_path, out_path, readings_path=None):
     sentences = read_skeleton(tokens_path)
     readings = [None] * len(sentences)
     if readings_path:
+        check = getattr(learner, "check_version", None)
+        if check:
+            check(model, readings_path)
         readings = read_readings(readings_path)
         if len(readings) != len(sentences):
             raise Failure(f"{readings_path} and {tokens_path} differ in sentences")

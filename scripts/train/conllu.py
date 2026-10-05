@@ -201,6 +201,21 @@ def read_readings(path):
     return sentences
 
 
+VERSION_KEY = "deslag_tag_version"
+
+
+def readings_version(path):
+    """The deslag tag VERSION a readings file says it is of, from its first line,
+    `# deslag_tag_version = N`; a Failure if it has none."""
+    with open(path, encoding="utf-8", newline="") as f:
+        first = f.readline().rstrip("\r\n")
+    prefix = f"# {VERSION_KEY} = "
+    if first.startswith(prefix) and first[len(prefix):].isdecimal():
+        return int(first[len(prefix):])
+    raise Failure(f"{path}: no `# {VERSION_KEY} = N` first line; write it again with "
+                  "`deslag-exam readings`")
+
+
 def kept_field(codes):
     """The `Kept=` value for deslag codes: comma-separated in the order given."""
     return ",".join(codes)

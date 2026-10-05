@@ -451,8 +451,13 @@ def verb_data():
     return [reading(f"a{n}", one) for n in range(4)] + [reading(f"b{n}", two) for n in range(4)]
 
 
+VERSION_LINE = "# deslag_tag_version = 10\n"
+
+
 def deslag_model(data=None):
-    return brill.train(data or verb_data(), 1, cap=5, start=starts.DeslagStart())
+    model = brill.train(data or verb_data(), 1, cap=5, start=starts.DeslagStart())
+    model.meta["deslag_version"] = 10
+    return model
 
 
 class StartTests(unittest.TestCase):
@@ -541,14 +546,34 @@ class StartTests(unittest.TestCase):
                            [1 << noun | 1 << verb, 0, 1 << noun | 1 << adj])
         self.assertEqual(tags, [verb, noun, noun])
 
-    def test_a_rate_is_judged_at_the_floors_on_integers(self):
-        self.assertTrue(brill.rated([200, 199], brill.SURE_PER_MILLE))
-        self.assertFalse(brill.rated([201, 199], brill.SURE_PER_MILLE))
+    def test_a_rate_is_judged_at_the_likely_floor_on_integers(self):
         self.assertTrue(brill.rated([100, 97], brill.LIKELY_PER_MILLE))
         self.assertFalse(brill.rated([100, 96], brill.LIKELY_PER_MILLE))
         self.assertFalse(brill.rated([0, 0], brill.LIKELY_PER_MILLE))
         self.assertFalse(brill.rated(None, brill.LIKELY_PER_MILLE))
+        self.assertTrue(brill.rated([200, 199], brill.SURE_PER_MILLE))
+        self.assertFalse(brill.rated([201, 199], brill.SURE_PER_MILLE))
         self.assertEqual((brill.SURE_PER_MILLE, brill.LIKELY_PER_MILLE), (995, 970))
+
+    def test_sure_needs_a_wilson_lower_bound_of_97_percent_as_well_as_the_rate(self):
+        # At a perfect record the bound is n / (n + z^2): 125 tokens reach 0.97, 124 do not.
+        self.assertTrue(brill.surely([125, 125]))
+        self.assertFalse(brill.surely([124, 124]))
+        # Short runs of right answers are not enough, however clean.
+        self.assertFalse(brill.surely([37, 37]))
+        self.assertFalse(brill.surely([10, 10]))
+        # A rate of 99.5% needs the tokens for the bound: 100 are not enough, 200 are.
+        self.assertFalse(brill.surely([100, 100]))
+        self.assertTrue(brill.surely([200, 199]))
+        # The bound alone is not enough: 98% of 5000 has a bound over 0.97 and a rate under 99.5%.
+        self.assertGreaterEqual(brill.wilson([5000, 4900])[0], 0.97)
+        self.assertFalse(brill.surely([5000, 4900]))
+        self.assertFalse(brill.surely([0, 0]))
+        self.assertFalse(brill.surely(None))
+        low, high = brill.wilson([100, 90])
+        self.assertAlmostEqual(low, 0.8256, places=3)
+        self.assertAlmostEqual(high, 0.9448, places=3)
+        self.assertEqual(brill.wilson([0, 0]), (0.0, 1.0))
 
     def tagged_with(self, model, forms, kinds_, readings):
         return brill.tag(model, skeleton_of(forms, kinds_), readings)
@@ -557,9 +582,9 @@ class StartTests(unittest.TestCase):
         model = deslag_model()
         self.assertTrue(model.by_evidence)
         model.evidence = {
-            "rules": {"0": [200, 199]},  # right at the Sure floor
-            "cells": {"Unsure/NOUN": [100, 97], "Likely/ADV": [100, 96], "Unknown/NOUN": [10, 10],
-                      "Unsure/VERB": [200, 199]},
+            "rules": {"0": [200, 200]},  # a Wilson lower bound of 0.981
+            "cells": {"Unsure/NOUN": [100, 97], "Likely/ADV": [100, 96],
+                      "Unknown/NOUN": [200, 200], "Unsure/VERB": [100, 100]},
             "edges": [],
         }
         words = [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"], None),
@@ -569,17 +594,17 @@ class StartTests(unittest.TestCase):
                  open_word("eat", "VERB", ["VERB", "NOUN"], None)]
         got = self.tagged_with(model, [w[0] for w in words], None, reading("x", words))
         by = [(t.upos, t.conf, t.kept) for t in got]
-        # `to` is deslag's Sure; `run` after `to` is changed by rule 1, which is right 199/200;
+        # `to` is deslag's Sure; `run` after `to` is changed by rule 1, which is right 200/200;
         # `the` is left alone and its cell is at 97 of 100, Likely, keeping both; `so`, a deslag
         # Likely, falls to Unsure with a cell under the floor; `zzz`, Unknown, is Sure with a cell
-        # at the floor and stays Unknown under it; `eat` is left alone and its cell is at the Sure
-        # floor.
+        # of 200 right of 200 and stays Unknown under it; `eat` is left alone and its cell is 199
+        # of 100, at the Sure floor but with a Wilson lower bound under 0.97, so it is Likely, not Sure.
         self.assertEqual(by[0], ("PART", "Sure", ["PART"]))
         self.assertEqual(by[1], ("VERB", "Sure", ["VERB"]))
         self.assertEqual(by[2], ("NOUN", "Likely", ["NOUN", "ADJ"]))
         self.assertEqual(by[3], ("ADV", "Unsure", ["ADV", "ADJ"]))
         self.assertEqual(by[4], ("NOUN", "Sure", ["NOUN"]))
-        self.assertEqual(by[5], ("VERB", "Sure", ["VERB"]))
+        self.assertEqual(by[5], ("VERB", "Likely", ["VERB", "NOUN"]))
         model.evidence["cells"]["Unknown/NOUN"] = [10, 9]
         self.assertEqual(self.tagged_with(model, [w[0] for w in words], None,
                                           reading("x", words))[4].conf, "Unknown")
@@ -596,6 +621,7 @@ class StartTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "dev.readings.conllu")
             with open(path, "w", encoding="utf-8") as f:
+                f.write(VERSION_LINE)
                 for s in dev:
                     f.write(f"# sent_id = {s.sent_id}\n")
                     for n, (form, kind, tag_, conf, kept, gold) in enumerate(zip(
@@ -634,7 +660,7 @@ class StartTests(unittest.TestCase):
                            "1\tto\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n"
                            "2\trun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
             readings = write(d, "r.conllu",
-                             "# sent_id = x\n# text = to run\n"
+                             VERSION_LINE + "# sent_id = x\n# text = to run\n"
                              "1\tto\t_\tPART\t_\t_\t_\t_\t_\tKind=Word|Conf=Sure|Kept=PART\n"
                              "2\trun\t_\tNOUN\t_\t_\t_\t_\t_\t"
                              "Kind=Word|Conf=Unsure|Kept=NOUN,VERB\n\n")
@@ -643,6 +669,47 @@ class StartTests(unittest.TestCase):
             text = open(out, encoding="utf-8").read()
         self.assertIn("\trun\t_\tVERB\t", text)
         self.assertIn("Conf=Unsure|Kept=VERB,NOUN", text)  # no evidence was counted
+
+    def test_a_version_mismatch_between_readings_and_model_is_refused(self):
+        model = deslag_model()
+        model.meta["deslag_version"] = 11
+        with tempfile.TemporaryDirectory() as d:
+            tokens = write(d, "t.conllu",
+                           "# sent_id = x\n# text = to run\n"
+                           "1\tto\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n"
+                           "2\trun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+            body = ("# sent_id = x\n# text = to run\n"
+                    "1\tto\t_\tPART\t_\t_\t_\t_\t_\tKind=Word|Conf=Sure|Kept=PART\n"
+                    "2\trun\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Conf=Unsure|Kept=NOUN,VERB\n\n")
+            old = write(d, "old.conllu", VERSION_LINE + body)
+            bare = write(d, "bare.conllu", body)
+            self.assertEqual(conllu.readings_version(old), 10)
+            for path in (old, bare):
+                with self.assertRaises(conllu.Failure):
+                    learner.tag_file(brill, model, tokens, os.path.join(d, "o.conllu"), path)
+            with self.assertRaisesRegex(conllu.Failure, "VERSION 10.*VERSION 11"):
+                brill.check_version(model, old)
+            with self.assertRaises(conllu.Failure):
+                brill.tune(model, None, None, old)
+            model.meta["deslag_version"] = 10
+            brill.check_version(model, old)  # the same version passes
+            learner.tag_file(brill, model, tokens, os.path.join(d, "o.conllu"), old)
+            # A model with another start has no version to keep.
+            brill.check_version(brill.train(toy(), 1, cap=2), old)
+
+    def test_the_trainer_records_the_version_the_readings_are_of(self):
+        with tempfile.TemporaryDirectory() as d:
+            for version, count in ((10, 1), (11, 1)):
+                write(d, f"r{version}.conllu",
+                      f"# deslag_tag_version = {version}\n" + READINGS)
+            out = os.path.join(d, "m.json")
+            files = [os.path.join(d, "r10.conllu")]
+            self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *files,
+                                         "--out", out, "--cap", "2"]), 0)
+            self.assertEqual(brill.load(out).meta["deslag_version"], 10)
+            mixed = files + [os.path.join(d, "r11.conllu")]
+            self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *mixed,
+                                         "--out", out, "--cap", "2"]), 2)
 
     def test_the_perceptron_start_learns_from_perceptrons_that_never_saw_the_document(self):
         seen = []

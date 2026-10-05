@@ -265,7 +265,12 @@ fn form(token: &Token<'_>) -> String {
 /// With `tagged`, every `Word` line carries the reading deslag's tagger gave it as the document
 /// was read, as `deslag-exam readings` writes it; there is no gold, so no `Gold=`.
 pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize), Error> {
-    let mut out = String::new();
+    // A tagged skeleton is a readings file, and says which tag VERSION read it.
+    let mut out = if tagged {
+        crate::readings::header()
+    } else {
+        String::new()
+    };
     let mut count = 0;
     for entry in entries {
         let document = Document::markdown(&entry.text);

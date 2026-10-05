@@ -15,7 +15,9 @@ build, the tests or CI. Python 3, standard library only; run it with PYTHONHASHS
 Starts. `most-common` is #109's: each word begins at its commonest training tag, in UD's 17 tags.
 `deslag` begins at deslag's own readings, from `deslag-exam readings` files (`--train` and `--tune-
 readings` take them, `tag` takes `--readings`): the rules speak in deslag's 13 codes, a `Sure` word
-is frozen, and a rule may give another word only a tag deslag keeps for it. `perceptron` begins at
+is frozen, and a rule may give another word only a tag deslag keeps for it. A readings file's
+first line names the deslag tag VERSION it is of; the model records the one it trained on, and
+`train` (its files), `tune` and `tag` fail, exit 2, on a file of another. `perceptron` begins at
 the averaged perceptron's tags (`--weights`), a diagnostic since it ships weights; the training
 sentences are tagged by perceptrons trained on the other 4 of 5 folds, split by document.
 
@@ -36,9 +38,11 @@ every tag the initial tagger or a rule gave it, in deslag codes, the best guess 
 None.
 The other starts: by evidence. A word a rule changed takes the right-over-fired rate, on the dev set,
 of the rule that last changed it; one left as it started, the right rate of its start reading
-(`deslag`: its level and tag; `perceptron`: its margin bucket). A rate of 99.5% makes the word
-`Sure` and cuts `Kept=` to its one tag, 97% `Likely`, the floors of tests/gold/gates.toml, with no
-headroom; below that it is `Unsure`, or `Unknown` if it started so. A `Sure` word of deslag's stays
+(`deslag`: its level and tag; `perceptron`: its margin bucket). A rate of 99.5% makes the word `Sure`,
+with `Kept=` cut to its one tag, only if the Wilson 95% lower bound of that rate is also at least
+0.97, so a short clean run cannot buy it; at 99.5% without that bound, or at 97%, it is `Likely`.
+These are the floors of tests/gold/gates.toml, with no headroom; below them the word is `Unsure`, or
+`Unknown` if it started so. A `Sure` word of deslag's stays
 `Sure`. `Kept=` is the start's, and the best guess. `Score` is None.
 
 The model file is generated, derives from the treebank, and lives in `.train/`; it is never committed.
@@ -49,6 +53,7 @@ import argparse
 import bisect
 import hashlib
 import json
+import math
 import sys
 import time
 
@@ -56,7 +61,7 @@ import calibrate
 import start as starts
 import tbl
 from conllu import (DESLAG_CODE, UD_TAGS, UNSCORED, UPOS_OF_CODE, Failure, read_readings,
-                    read_skeleton, read_training)
+                    read_skeleton, read_training, readings_version)
 from features import normalize
 from initial import MostCommon
 from learner import Tagged
@@ -72,6 +77,10 @@ BUCKETS = 20  # the perceptron start's margin buckets, of equal numbers of dev t
 # The gate floors in per mille: a rate at or above one is `Sure` or `Likely`, never a hair under it.
 SURE_PER_MILLE = round(calibrate.SURE_FLOOR * 1000)
 LIKELY_PER_MILLE = round(calibrate.LIKELY_FLOOR * 1000)
+# A word is `Sure` on evidence only if, besides a rate at the Sure floor, the Wilson lower bound of
+# its right rate, at this z (95% two-sided), is at least `SURE_BOUND`: a short clean run is not enough.
+WILSON_Z = 1.96
+SURE_BOUND = calibrate.LIKELY_FLOOR
 
 
 class Model:
@@ -208,6 +217,24 @@ def rated(row, floor):
     return row is not None and row[0] > 0 and row[1] * 1000 >= floor * row[0]
 
 
+def wilson(row):
+    """(lower, upper): the Wilson score interval of the right rate of `row`, [tokens, right], at
+    `WILSON_Z`; (0, 1) for no tokens."""
+    if row is None or row[0] == 0:
+        return 0.0, 1.0
+    n, right = row
+    p, z2 = right / n, WILSON_Z * WILSON_Z
+    centre = p + z2 / (2 * n)
+    spread = WILSON_Z * math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))
+    return (centre - spread) / (1 + z2 / n), (centre + spread) / (1 + z2 / n)
+
+
+def surely(row):
+    """Whether `row` has enough evidence for `Sure`: a rate at the Sure floor, and a Wilson lower
+    bound of at least 0.97. A word with a rate at the floor and a lower bound under it is `Likely`."""
+    return rated(row, SURE_PER_MILLE) and wilson(row)[0] >= SURE_BOUND
+
+
 def decide_by_evidence(model, begin, i, tags, last):
     """The `Tagged` of word i, when the confidence is the evidence's."""
     name = model.tags[tags[i]]
@@ -220,11 +247,11 @@ def decide_by_evidence(model, begin, i, tags, last):
         row = model.evidence["rules"].get(str(last[i]))
     else:
         row = model.evidence["cells"].get(cell_key(model, begin, i))
-    if rated(row, SURE_PER_MILLE):
+    if surely(row):
         return Tagged(upos, "Sure", None, [model.code_of[tags[i]]])
     code = model.code_of[tags[i]]
     kept = [code] + [k for k in begin.kept[i] if k != code]
-    if rated(row, LIKELY_PER_MILLE):
+    if rated(row, LIKELY_PER_MILLE):  # includes a rate at the Sure floor the bound turned away
         return Tagged(upos, "Likely", None, kept)
     started = "Unknown" if begin.level[i] == "Unknown" else "Unsure"
     return Tagged(upos, started, None, kept)
@@ -284,6 +311,21 @@ def tag_sentence(model, sentence, readings=None, stats=None):
     return out
 
 
+def check_version(model, path):
+    """A Failure unless the readings file at `path` is of the deslag tag VERSION `model` learned
+    from, as its `meta` records: rules written for one version's readings must not read another's.
+    A model with no deslag start has no version, and checks nothing."""
+    if model.start.kind != "deslag":
+        return
+    have = readings_version(path)
+    want = model.meta.get("deslag_version")
+    if want is None:
+        raise Failure("the model records no deslag tag version; train it again")
+    if have != want:
+        raise Failure(f"{path} is of deslag tag VERSION {have}, and the model was trained on "
+                      f"VERSION {want}; write the readings again, or train the model again")
+
+
 def tag(model, sentence, readings=None):
     return tag_sentence(model, sentence, readings)
 
@@ -318,6 +360,8 @@ def tune(model, tokens_path, gold_path, readings_path=None):
     the skeleton and its UD gold, or with `readings_path` the readings file of it, whose `Gold=` is
     the gold the exam aligned. A start that is not #109's then counts the evidence for its
     confidence."""
+    if readings_path:
+        check_version(model, readings_path)
     sets = _tuning_sets(model, tokens_path, gold_path, readings_path)
     ids = word_ids(model.rules)
     rules = compile_rules(model.rules, ids)
@@ -455,7 +499,7 @@ def write_evidence(model, path):
 
         def row(kind, ident, counts, text):
             n, right = counts
-            level = ("Sure" if rated(counts, SURE_PER_MILLE) else
+            level = ("Sure" if surely(counts) else
                      "Likely" if rated(counts, LIKELY_PER_MILLE) else "-")
             f.write(f"{kind}\t{ident}\t{n}\t{right}\t{right / n:.4f}\t{level}\t{text}\n")
 
@@ -504,6 +548,12 @@ def cmd_train(args):
 
     model = train(sentences, args.seed, folds=args.folds, cap=args.cap, min_gain=args.min_gain,
                   files=args.train, on_rule=progress, start=_start_of(args))
+    if args.start == "deslag":
+        versions = {readings_version(path) for path in args.train}
+        if len(versions) != 1:
+            raise Failure(f"the readings files are of different deslag tag versions: "
+                          f"{sorted(versions)}")
+        model.meta["deslag_version"] = versions.pop()
     print(f"trained {model.meta['sentences']} sentences, {len(model.rules)} rules "
           f"(cap {args.cap}, min gain {args.min_gain}, start {args.start}), "
           f"{time.time() - started:.0f}s", file=sys.stderr)
@@ -534,6 +584,8 @@ def cmd_tag(args):
     if args.firings:
         count = model.kept
         stats = {"rules": [0] * count, "outside": [0] * count, "unknown": [0] * count}
+    if args.readings:
+        check_version(model, args.readings)
     skeletons = read_skeleton(args.tokens)
     readings = read_readings(args.readings) if args.readings else [None] * len(skeletons)
     if len(readings) != len(skeletons):

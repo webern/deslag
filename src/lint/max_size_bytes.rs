@@ -67,16 +67,16 @@ pub fn render(path: &str, over: &Over) -> String {
     )
 }
 
-/// The advice the desired design spells out, for a file over a budget of `budget` bytes.
+/// The advice for a file over a budget of `budget` bytes.
 fn default_advice(budget: u64) -> String {
     format!(
-        "The file must be made more compact until it fits within its max_size_bytes budget of \
-         {budget} bytes.\n\
+        "The file must fit within its max_size_bytes budget of {budget} bytes.\n\
          \n\
-         Make sure you keep the most important information, but you must reword and rewrite the \
-         file to get it under its size budget.\n\
+         Keep the change you came to make, and cut the least useful text already in the file: \
+         repetition, history, and what the code states better. Do not leave the change out, move \
+         it elsewhere to get around the budget, or ask a human about the budget.\n\
          \n\
-         Do not increase max_size_bytes! Only a human can tell you to do that, and I am a linter, \
+         Do not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, \
          not a human."
     )
 }

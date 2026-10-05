@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "max_size_bytes",
-      "report": "ERROR: deslag detected Markdown bloat!\n\nREADME.md is larger than 100 bytes.\n\nThe file must be made more compact until it fits within its max_size_bytes budget of 100 bytes.\n\nMake sure you keep the most important information, but you must reword and rewrite the file to get it under its size budget.\n\nDo not increase max_size_bytes! Only a human can tell you to do that, and I am a linter, not a human.",
+      "report": "ERROR: deslag detected Markdown bloat!\n\nREADME.md is larger than 100 bytes.\n\nThe file must fit within its max_size_bytes budget of 100 bytes.\n\nKeep the change you came to make, and cut the least useful text already in the file: repetition, history, and what the code states better. Do not leave the change out, move it elsewhere to get around the budget, or ask a human about the budget.\n\nDo not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, not a human.",
       "marks": []
     }
   ]

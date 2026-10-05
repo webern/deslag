@@ -466,12 +466,13 @@ ERROR: deslag detected Markdown bloat!\n\
 \n\
 AGENTS.md is larger than 10 bytes.\n\
 \n\
-The file must be made more compact until it fits within its max_size_bytes budget of 10 bytes.\n\
+The file must fit within its max_size_bytes budget of 10 bytes.\n\
 \n\
-Make sure you keep the most important information, but you must reword and rewrite the file to \
-get it under its size budget.\n\
+Keep the change you came to make, and cut the least useful text already in the file: repetition, \
+history, and what the code states better. Do not leave the change out, move it elsewhere to get \
+around the budget, or ask a human about the budget.\n\
 \n\
-Do not increase max_size_bytes! Only a human can tell you to do that, and I am a linter, not a \
+Do not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, not a \
 human.";
 
     assert!(
@@ -503,7 +504,7 @@ fn a_config_message_replaces_the_advice() {
         "stderr: {stderr}"
     );
     assert!(
-        !stderr.contains("Do not increase max_size_bytes!"),
+        !stderr.contains("Do not raise max_size_bytes."),
         "the default advice should be gone, stderr: {stderr}"
     );
 }
@@ -531,7 +532,7 @@ fn an_override_sets_only_the_fields_it_names() {
         "stderr: {stderr}"
     );
     assert!(
-        stderr.contains("other.md is larger than 10 bytes.\n\nThe file must be made"),
+        stderr.contains("other.md is larger than 10 bytes.\n\nThe file must fit within"),
         "other.md keeps the default advice, stderr: {stderr}"
     );
 }

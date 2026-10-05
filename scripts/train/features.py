@@ -32,7 +32,7 @@ def normalize(form):
     """The form lower-cased, with numbers folded: every year to `!YEAR`, any other word that opens
     with a digit to `!DIGITS`, so the learner sees a number and not a particular one."""
     if form[0].isdigit():
-        if len(form) == 4 and form.isdigit() and 1800 <= int(form) <= 2100:
+        if len(form) == 4 and form.isdecimal() and 1800 <= int(form) <= 2100:
             return "!YEAR"
         return "!DIGITS"
     return form.lower()

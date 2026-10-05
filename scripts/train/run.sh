@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-# Runs the averaged perceptron through the exam: the baselines, the training, the import files, the
-# reports and the learning curve, all under .train. Run by `make generate-percept` and
-# `make test-percept`, and by hand for the curve; never by tests or CI. Needs the treebank, which
-# `make fetch-ewt` fetches.
+# Runs the averaged perceptron and the Brill tagger through the exam: the baselines, the training,
+# the import files, the reports and the learning curve, all under .train. Run by `make
+# generate-percept`, `make test-percept`, `make generate-brill` and `make test-brill`, and by hand
+# for the curve; never by tests or CI. Needs the treebank, which `make fetch-ewt` fetches.
 #
-#   run.sh baseline   tokens, and deslag's and the most-common-tag runs, on both dev sets
-#   run.sh generate   baseline, then train, tune and tag both dev sets into import files
-#   run.sh test       the unit tests, then the exam's report and `compare` for both dev sets
-#   run.sh curve      the learning curve; trains the perceptron four times
+#   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on both dev sets
+#   run.sh generate        baseline, then train, tune and tag both dev sets into import files
+#   run.sh test            the unit tests, then the exam's report and `compare` for both dev sets
+#   run.sh generate-brill  baseline, then the Brill tagger and its initial tagger alone, as above
+#   run.sh test-brill      the unit tests, then the reports and the `compare` runs of the Brill tagger
+#   run.sh curve [NAME..]  the learning curve of each named learner (perceptron, brill; default
+#                          both); trains each four times and writes .train/curve.NAME.txt
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-cmd=${1:?usage: run.sh baseline|generate|test|curve}
+cmd=${1:?usage: run.sh baseline|generate|test|generate-brill|test-brill|curve [NAME..]}
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
@@ -28,6 +31,7 @@ exam() {
 }
 export PYTHONHASHSEED=0
 python=scripts/train/percept.py
+brill=scripts/train/brill.py
 mkdir -p .train
 
 baseline() {
@@ -51,9 +55,54 @@ generate() {
   done
 }
 
+generate_brill() {
+  baseline
+  python3 $brill train --train "$ewt/en_ewt-ud-train.conllu" --out .train/brill.model.json \
+    --tune-tokens .train/ewt-dev.tokens.conllu --tune-gold "$(gold_of ewt-dev)" \
+    --log .train/brill.log.tsv
+  python3 $brill rules --model .train/brill.model.json --out .train/brill.rules.txt
+  for set in "${sets[@]}"; do
+    python3 $brill tag --model .train/brill.model.json --tokens ".train/$set.tokens.conllu" \
+      --out ".train/$set.brill.import.conllu" --firings ".train/$set.brill.firings.txt"
+    python3 $brill tag --model .train/brill.model.json --tokens ".train/$set.tokens.conllu" \
+      --out ".train/$set.brillinit.import.conllu" --initial-only
+  done
+}
+
+# One `compare` from the saved run BEFORE to the saved run AFTER, kept in .train/SET.NAME.compare.txt.
+compare() {
+  local set=$1 name=$2 before=$3 after=$4
+  echo "=== $set: $before to $after"
+  exam compare ".train/$set.$before.run.json" ".train/$set.$after.run.json" |
+    tee ".train/$set.$name.compare.txt"
+}
+
+test_brill() {
+  python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
+  for set in "${sets[@]}"; do
+    gold=$(gold_of "$set")
+    for tagger in brill brillinit; do
+      echo "=== $set: $tagger"
+      exam score --gold "$gold" --import ".train/$set.$tagger.import.conllu" \
+        --save ".train/$set.$tagger.run.json" | tee ".train/$set.$tagger.report.txt"
+    done
+    compare "$set" brill deslag brill
+    compare "$set" brillinit deslag brillinit
+    compare "$set" mct deslag mct
+    compare "$set" brillinit-brill brillinit brill
+    if [ -f ".train/$set.percept.run.json" ]; then
+      compare "$set" percept-brill percept brill
+    else
+      echo "=== $set: no perceptron run; make test-percept writes it"
+    fi
+  done
+}
+
 case "$cmd" in
   baseline) baseline ;;
   generate) generate ;;
+  generate-brill) generate_brill ;;
+  test-brill) test_brill ;;
   test)
     python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
     for set in "${sets[@]}"; do
@@ -67,10 +116,16 @@ case "$cmd" in
     done
     ;;
   curve)
-    python3 scripts/train/curve.py --learner perceptron --train "$ewt/en_ewt-ud-train.conllu" \
-      --out .train --exam "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --" \
-      --set "ewt-dev:.train/ewt-dev.tokens.conllu:$(gold_of ewt-dev):.train/ewt-dev.deslag.run.json" \
-      --set "deslag-dev:.train/deslag-dev.tokens.conllu:$(gold_of deslag-dev):.train/deslag-dev.deslag.run.json"
+    shift
+    learners=("$@")
+    [ ${#learners[@]} -gt 0 ] || learners=(perceptron brill)
+    for name in "${learners[@]}"; do
+      python3 scripts/train/curve.py --learner "$name" --train "$ewt/en_ewt-ud-train.conllu" \
+        --out .train --exam "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --" \
+        --set "ewt-dev:.train/ewt-dev.tokens.conllu:$(gold_of ewt-dev):.train/ewt-dev.deslag.run.json" \
+        --set "deslag-dev:.train/deslag-dev.tokens.conllu:$(gold_of deslag-dev):.train/deslag-dev.deslag.run.json"
+      mv .train/curve.txt ".train/curve.$name.txt"
+    done
     ;;
-  *) echo "usage: run.sh baseline|generate|test|curve" >&2; exit 2 ;;
+  *) echo "usage: run.sh baseline|generate|test|generate-brill|test-brill|curve [NAME..]" >&2; exit 2 ;;
 esac

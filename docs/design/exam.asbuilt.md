@@ -22,10 +22,10 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
-- `readings (--gold G | --corpus) --out F`: `tokens` with deslag's own `UPOS`, `Conf=` and `Kept=`
-  on each `Word` line, and `Gold=`, the tag `align_all` gives the token (none if unaligned), for
-  a learner to start from. `score --import` of it grades as `--tagger deslag`, but for the feature
-  metrics. Refuses holdout gold.
+- `readings (--gold G | --corpus) --out F`: `tokens` plus deslag's `UPOS`, `Conf=` and `Kept=` on each
+  `Word` line, and `Gold=`, the tag `align_all` gives it, for a learner to start from. The first
+  line is `# deslag_tag_version = N`. `score --import` of it grades as `--tagger deslag`, less
+  features. Refuses holdout gold.
 - `tokens --corpus`, `ticlist cut|score`: the tic list; `exam-candidates.asbuilt.md` has it.
 - `words --gold G`: the header and Words section alone, with no tagger.
 - `gate --gates F [--root D] [--tagger deslag|noun | --import F] SET...`: judges deslag's tagger,
@@ -114,8 +114,9 @@ over another:
   ten score bins, and the expected calibration error.
 
 A population's bootstrap draws 1,000 replicates of its sentences with
-`deslag_corpus::stats::Rng`, seeded `SEED ^ fnv1a64(label)` (`all`, `tier=llm`, `context=heading`).
-The interval is the 2.5th and 97.5th nearest-rank percentile of the defined values.
+`deslag_corpus::stats::Rng`, seeded `SEED ^ fnv1a64(label)`. The interval is the 2.5th and 97.5th
+nearest-rank percentile of the defined values. A paired difference uses one set of draws for both
+runs; an unpaired one (two strata), each population's own.
 
 ## Report, saved runs, compare
 
@@ -149,5 +150,4 @@ metric and nothing else; a panic in the tagger is withheld, as its message may q
 
 ## Tests
 
-`tests/cases/` holds a CoNLL-U file per case and `tests/golden/` the expected output, which `make
-fix-golden` rewrites; each module or command has a test file.
+`tests/cases/` holds a CoNLL-U file per case; `make fix-golden` rewrites `tests/golden/`.

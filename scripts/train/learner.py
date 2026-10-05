@@ -12,8 +12,11 @@ A learner is an object with these methods:
         `sentence` is a `conllu.Sentence` from `read_skeleton`. A token that is not a `Word` gets
         None; the learner may still read it as context. A `Word` gets a `Tagged`.
     tune(model, tokens_path, gold_path) -> model        (optional)
-        Fixes what the learner's confidence is made of, on the treebank's dev set only: the
-        skeleton `deslag-exam tokens` wrote for it and the gold it was written from.
+        Fits the learner to the treebank's dev set, and to nothing else: the skeleton
+        `deslag-exam tokens` wrote for it and the gold it was written from. What is fitted is the
+        learner's own: the perceptron fits its confidence thresholds and Score mapping; Brill
+        fits no confidence (that comes from its structure) and keeps the rule prefix with the best
+        dev accuracy.
     save(model, path), load(path) -> model
     name                    -> a short name for file names and reports
 

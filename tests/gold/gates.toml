@@ -24,13 +24,12 @@ clean_sentences     = { min_per_mille = 900 }
 unalignable_rate    = { max_count = 0 }
 
 # The words nobody doubts: `list` holds the dev words with Prov=agree that tag VERSION 10 tags right
-# at Sure, and a tagger fails the set by missing more than max_misses of them, whatever its scores.
+# at Sure, and a tagger fails the set by missing any of them, whatever its scores.
 # The list is frozen at VERSION 10 and never regenerated; the owner decides in the change that fails
 # a row whether the row goes. A word passes when the guess is the listed tag at Sure or Likely.
 [mustpass]
 gold = "tests/gold/dev.conllu"
 list = "tests/gold/mustpass.tsv"
-max_misses = 0
 
 # The targets the tagger was built to, never ratcheted: a holdout that moved with every change
 # would become a second dev set. Its output is pass or fail per metric, nothing more.

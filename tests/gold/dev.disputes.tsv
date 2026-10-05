@@ -1,3 +1,2 @@
 # Open disputes against dev.conllu, one per line, tab separated: sent_id, word ID, proposed UPOS, reason.
 # File a dispute by adding a line. Close it by removing the line in the change that accepts or rejects it.
-g0377	4	VERB	Tag VERSION 10 tags `commits` VERB where the gold says NOUN, so the word is left off tests/gold/mustpass.tsv. The owner decides whether the gold or the tagger is wrong; on a reading of "Agent-created commits must include", NOUN looks right.

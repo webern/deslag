@@ -67,13 +67,11 @@ pub struct Gate {
     pub min_tokens: Option<u64>,
 }
 
-/// What a `mustpass` set asks: a list of words, and how many of them a tagger may miss.
+/// What a `mustpass` set asks: a list of words, every one of which a tagger must get right.
 #[derive(Debug, Clone)]
 pub struct MustPassGate {
     /// The list, relative to the root.
     pub list: String,
-    /// How many words may be missed.
-    pub max_misses: u64,
 }
 
 /// A set: a gold file, the scored tokens it must come to, and its gates. A `mustpass` set has a
@@ -259,7 +257,6 @@ impl GateSet {
         let mut gold = None;
         let mut tokens = None;
         let mut list = None;
-        let mut max_misses = None;
         let mut gates = Vec::new();
         for (key_name, value) in body {
             match key_name.as_str() {
@@ -268,12 +265,6 @@ impl GateSet {
                         return Err(bad("list is not a string".to_string()));
                     };
                     list = Some(file.clone());
-                }
-                "max_misses" => {
-                    max_misses = Some(
-                        whole(value)
-                            .ok_or_else(|| bad("max_misses is not a whole number".to_string()))?,
-                    )
                 }
                 "gold" => {
                     let toml::Value::String(file) = value else {
@@ -291,7 +282,7 @@ impl GateSet {
                     let Some(metric) = known.iter().find(|metric| key(metric) == *key_name) else {
                         let valid: Vec<String> = known.iter().map(key).collect();
                         return Err(bad(format!(
-                            "unknown key `{key_name}`; the keys are gold, tokens, list, max_misses, {}",
+                            "unknown key `{key_name}`; the keys are gold, tokens, list, {}",
                             valid.join(", ")
                         )));
                     };
@@ -300,20 +291,15 @@ impl GateSet {
             }
         }
         let gold = gold.ok_or_else(|| bad("has no gold".to_string()))?;
-        let must_pass = match (list, max_misses) {
-            (None, None) => None,
-            (Some(list), Some(max_misses)) => {
+        let must_pass = match list {
+            None => None,
+            Some(list) => {
                 if tokens.is_some() || !gates.is_empty() {
                     return Err(bad(
-                        "is a mustpass set, which takes gold, list and max_misses only".to_string(),
+                        "is a mustpass set, which takes gold and list only".to_string()
                     ));
                 }
-                Some(MustPassGate { list, max_misses })
-            }
-            _ => {
-                return Err(bad(
-                    "a mustpass set needs both list and max_misses".to_string()
-                ));
+                Some(MustPassGate { list })
             }
         };
         // The report's order, so the table reads the same however the file is ordered.
@@ -479,7 +465,7 @@ fn run_input(
             let misses = list.misses(&gold, &scoring);
             text.push('\n');
             text.push_str(&render_must_pass(set, spec, &list, &misses));
-            if misses.len() as u64 > spec.max_misses {
+            if !misses.is_empty() {
                 failed.push((set.name.clone(), vec!["Misses"]));
             }
             continue;
@@ -592,21 +578,16 @@ fn render_must_pass(
     let count = misses.len() as u64;
     let _ = writeln!(
         out,
-        "  {:<19}  {count}/{}  <= {}  {}",
+        "  {:<19}  {count}/{}  = 0  {}",
         "Misses",
         list.rows.len(),
-        spec.max_misses,
-        if count <= spec.max_misses {
-            "pass"
-        } else {
-            "FAIL"
-        }
+        if count == 0 { "pass" } else { "FAIL" }
     );
-    if count > spec.max_misses {
+    if count > 0 {
         let _ = writeln!(
             out,
-            "\nFAIL {} Misses: {count}, allows at most {}. The words it missed, a word passes when the guess is the listed tag at Sure or Likely:",
-            set.name, spec.max_misses
+            "\nFAIL {} Misses: {count}, allows none. The words it missed, a word passes when the guess is the listed tag at Sure or Likely:",
+            set.name
         );
         out.push_str(&mustpass::miss_lines(misses));
     }

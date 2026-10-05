@@ -7,7 +7,6 @@ mod common;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use deslag_exam::disputes::Disputes;
 use deslag_exam::gate::{self, Gates};
 use deslag_exam::gold::{Gold, Prov};
 use deslag_exam::mustpass::MustPass;
@@ -65,7 +64,7 @@ impl Fixture {
         let dir = tempfile::tempdir().unwrap();
         std::fs::write(dir.path().join("gold.conllu"), GOLD).unwrap();
         std::fs::write(dir.path().join("list.tsv"), list).unwrap();
-        let gates = "[mustpass]\ngold = \"gold.conllu\"\nlist = \"list.tsv\"\nmax_misses = 0\n";
+        let gates = "[mustpass]\ngold = \"gold.conllu\"\nlist = \"list.tsv\"\n";
         std::fs::write(dir.path().join("gates.toml"), gates).unwrap();
         Fixture { dir }
     }
@@ -213,7 +212,7 @@ fn every_row_of_the_checked_in_list_still_names_its_gold_word() {
 }
 
 #[test]
-fn the_disputed_word_is_filed_and_is_not_on_the_list() {
+fn the_word_the_tagger_gets_wrong_is_not_on_the_list() {
     let root = Path::new(ROOT);
     let list = MustPass::read(&root.join("tests/gold/mustpass.tsv")).unwrap();
     assert!(
@@ -222,13 +221,6 @@ fn the_disputed_word_is_filed_and_is_not_on_the_list() {
             .iter()
             .any(|row| row.sent_id == "g0377" && row.word == 4)
     );
-    let disputes = Disputes::read(&root.join("tests/gold/dev.conllu"), None).unwrap();
-    let dispute = disputes
-        .open
-        .iter()
-        .find(|dispute| dispute.sent_id == "g0377" && dispute.word == "4")
-        .expect("g0377 word 4 is disputed");
-    assert_eq!(dispute.proposed, "VERB");
 }
 
 /// Deslag's tagger with `into` changed to `change`.
@@ -278,9 +270,7 @@ fn the_tree_tagger_passes_the_checked_in_set_and_a_changed_one_fails_it_by_name(
         sound.text
     );
     assert!(
-        sound
-            .text
-            .contains("Misses               0/982  <= 0  pass"),
+        sound.text.contains("Misses               0/982  = 0  pass"),
         "{}",
         sound.text
     );
@@ -348,7 +338,7 @@ fn a_row_whose_word_no_longer_aligns_or_whose_gold_changed_fails_with_its_own_me
         "m1 word 2  cat  listed VERB: the gold's word is now `cat`, NOUN",
         "m1 word 3  stood  listed VERB: the gold's word is now `sat`, VERB",
         "m1 word 99  x  listed NOUN: the gold has no such word now",
-        "Misses               5/5  <= 0  FAIL",
+        "Misses               5/5  = 0  FAIL",
     ] {
         assert!(out.contains(expect), "{expect}\n{out}");
     }
@@ -390,10 +380,7 @@ fn a_perceptron_style_import_passes_at_likely_and_fails_when_wrong_or_unsure() {
         out.starts_with("deslag-exam gate: gates.toml, tagger import:perceptron.conllu\n"),
         "{out}"
     );
-    assert!(
-        out.contains("Misses               0/5  <= 0  pass"),
-        "{out}"
-    );
+    assert!(out.contains("Misses               0/5  = 0  pass"), "{out}");
 
     // `cat` wrong, `the` right but `Unsure`.
     let bad = fixture.import("bad.conllu", |form| match form {
@@ -427,7 +414,7 @@ fn gate_import_refuses_a_set_whose_gold_is_not_the_files_skeleton() {
     let import = fixture.import("import.conllu", |_| ("NOUN", "Score=0.5"));
     // The same gates, but the set's gold is another file.
     let other = path(&common::case_path("done-when.conllu")).to_string();
-    let gates = format!("[mustpass]\ngold = \"{other}\"\nlist = \"list.tsv\"\nmax_misses = 0\n");
+    let gates = format!("[mustpass]\ngold = \"{other}\"\nlist = \"list.tsv\"\n");
     let gates_file = fixture.file("other.toml");
     std::fs::write(&gates_file, gates).unwrap();
     let output = Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
@@ -489,7 +476,7 @@ fn gate_import_refuses_a_holdout_set_and_a_tagger_beside_it() {
     std::fs::write(
         &gates_file,
         format!(
-            "[holdout]\ngold = \"{holdout}\"\nlist = \"{}\"\nmax_misses = 0\n",
+            "[holdout]\ngold = \"{holdout}\"\nlist = \"{}\"\n",
             path(&fixture.file("list.tsv"))
         ),
     )
@@ -505,27 +492,35 @@ fn gate_import_refuses_a_holdout_set_and_a_tagger_beside_it() {
 #[test]
 fn a_mustpass_set_takes_its_own_keys_only() {
     for (body, expect) in [
-        ("list = \"l.tsv\"\n", "needs both list and max_misses"),
-        ("max_misses = 0\n", "needs both list and max_misses"),
         (
-            "list = \"l.tsv\"\nmax_misses = 0\naccuracy = { min_per_mille = 1 }\n",
-            "takes gold, list and max_misses only",
+            "list = \"l.tsv\"\naccuracy = { min_per_mille = 1 }\n",
+            "takes gold and list only",
         ),
+        ("list = \"l.tsv\"\ntokens = 3\n", "takes gold and list only"),
+        ("list = 3\n", "list is not a string"),
         (
-            "list = \"l.tsv\"\nmax_misses = 0\ntokens = 3\n",
-            "takes gold, list and max_misses only",
-        ),
-        ("list = 3\nmax_misses = 0\n", "list is not a string"),
-        (
-            "list = \"l.tsv\"\nmax_misses = -1\n",
-            "max_misses is not a whole number",
+            "list = \"l.tsv\"\nmax_misses = 0\n",
+            "unknown key `max_misses`",
         ),
     ] {
         let text = format!("[mustpass]\ngold = \"g.conllu\"\n{body}");
         let error = Gates::parse("g.toml", &text).unwrap_err().to_string();
         assert!(error.contains(expect), "{error} should say {expect}");
     }
-    let ok = "[mustpass]\ngold = \"g.conllu\"\nlist = \"l.tsv\"\nmax_misses = 2\n";
+    let ok = "[mustpass]\ngold = \"g.conllu\"\nlist = \"l.tsv\"\n";
     let gates = Gates::parse("g.toml", ok).unwrap();
-    assert_eq!(gates.sets[0].must_pass.as_ref().unwrap().max_misses, 2);
+    assert_eq!(gates.sets[0].must_pass.as_ref().unwrap().list, "l.tsv");
+}
+
+#[test]
+fn the_lists_header_names_tag_version_10() {
+    let list = std::fs::read_to_string(Path::new(ROOT).join("tests/gold/mustpass.tsv")).unwrap();
+    let header: Vec<&str> = list
+        .lines()
+        .take_while(|line| line.starts_with('#'))
+        .collect();
+    assert!(
+        header.iter().any(|line| line.contains("tag VERSION 10")),
+        "the header comment names the tag VERSION the list was cut at: {header:?}"
+    );
 }

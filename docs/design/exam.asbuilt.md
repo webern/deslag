@@ -135,9 +135,9 @@ A bound is a rate floor or ceiling in per mille (`min_per_mille`, `max_per_mille
 `tokens` pins the scored tokens a set's counts are of. `gates.toml` has `dev`, `holdout` and
 `ewt-dev`.
 
-A `mustpass` set has `list` and `max_misses`: each row of `tests/gold/mustpass.tsv` (dev
-words with `Prov=agree` that VERSION 10 tags right at `Sure`) must be tagged right at `Sure` or
-`Likely`.
+A `mustpass` set has `list`: each row of `tests/gold/mustpass.tsv` (dev words with `Prov=agree`
+that VERSION 10 tags right at `Sure`) must be tagged right at `Sure` or `Likely`, and any miss
+fails the set. The list is frozen and never regenerated.
 
 A set that may name words prints a table of counts, bound and slack in words, then up to 20 groups
 of words for each failed metric, each with up to 3 `sent_id`s. A holdout set prints pass or fail per

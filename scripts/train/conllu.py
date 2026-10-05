@@ -7,7 +7,9 @@ multiword token (`1-2 don't`) is read as its surface form with the UPOS of its f
 how the exam aligns it (docs/design/exam.asbuilt.md); the lines of the words inside it, and empty
 nodes (`1.1`), are skipped. A skeleton has one line per deslag token, every column but FORM and
 MISC `_`. An import is a skeleton whose `Word` lines carry `UPOS` and the MISC keys `Conf=`,
-`Score=` and `Kept=`.
+`Score=` and `Kept=`. A readings file, which `deslag-exam readings` writes, is an import of
+deslag's own tagger, with `Gold=`, the gold tag as a deslag code, on the tokens the exam aligned
+a gold word to.
 """
 
 COLUMNS = 10
@@ -29,6 +31,17 @@ DESLAG_CODE = {
 }
 UNSCORED = ("PUNCT", "SYM", "X")
 
+# The tags a learner that works in deslag's codes has: the 13 codes, then the three tags a token
+# that is no word can hold, which are only ever context. `UPOS_OF_CODE` is the UD tag an import
+# writes for a code, where it is not the code itself.
+CODE_TAGS = (
+    "ADJ", "ADP", "ADV", "AUX", "CONJ", "DET", "INTJ", "NOUN", "NUM", "PART", "PRON", "PROPN",
+    "VERB", "PUNCT", "SYM", "X",
+)
+UPOS_OF_CODE = {"CONJ": "CCONJ"}
+# The tag a token of each `Kind=` that is not a `Word` stands as, for the words around it.
+KIND_TAG = {"Punctuation": "PUNCT", "Number": "NUM", "Symbol": "SYM"}
+
 
 class Failure(Exception):
     """A file that is not what this expects; the command line prints it as one line and exits 2."""
@@ -39,9 +52,12 @@ class Sentence:
 
     `tags` is the UPOS of each token, or None for a skeleton. `kinds` is each token's `Kind=` (a
     skeleton's), or None. `spaces` is whether a space follows each token. `text` is `# text`.
+    A readings file's sentence also has, per token, `conf`, `kept` (a list of deslag codes, the
+    best guess first) and `gold` (a code or None), all None on a token that is no `Word`; its
+    `tags` are deslag's codes.
     """
 
-    __slots__ = ("sent_id", "forms", "tags", "kinds", "spaces", "text")
+    __slots__ = ("sent_id", "forms", "tags", "kinds", "spaces", "text", "conf", "kept", "gold")
 
     def __init__(self, sent_id, forms, tags=None, kinds=None, spaces=None, text=None):
         self.sent_id = sent_id
@@ -50,6 +66,7 @@ class Sentence:
         self.kinds = kinds
         self.spaces = spaces
         self.text = text
+        self.conf = self.kept = self.gold = None
 
 
 def read_blocks(path):
@@ -146,6 +163,41 @@ def read_skeleton(path):
             Sentence(sent_id, [c[1] for c in lines], None, kinds, spaces,
                      comment_value(comments, "text"))
         )
+    return sentences
+
+
+def read_readings(path):
+    """The sentences of a readings file: a skeleton's, with `tags`, `conf`, `kept` and `gold` on
+    every `Word` token."""
+    sentences = []
+    for comments, lines in read_blocks(path):
+        sent_id = comment_value(comments, "sent_id")
+        if sent_id is None:
+            raise Failure(f"{path}: a sentence has no sent_id")
+        forms, tags, kinds, spaces, conf, kept, gold = [], [], [], [], [], [], []
+        for columns in lines:
+            pairs = misc_pairs(columns[9])
+            kind = pairs.get("Kind", "")
+            forms.append(columns[1])
+            kinds.append(kind)
+            spaces.append(pairs.get("SpaceAfter") != "No")
+            if kind != "Word":
+                tags.append(None)
+                conf.append(None)
+                kept.append(None)
+                gold.append(None)
+                continue
+            if columns[3] not in DESLAG_CODE:
+                raise Failure(f"{path}: sentence {sent_id}: a Word line has UPOS `{columns[3]}`")
+            tags.append(DESLAG_CODE[columns[3]])
+            conf.append(pairs.get("Conf"))
+            kept.append([code for code in pairs.get("Kept", "").split(",") if code])
+            gold.append(pairs.get("Gold"))
+            if conf[-1] is None or not kept[-1] or tags[-1] != kept[-1][0]:
+                raise Failure(f"{path}: sentence {sent_id}: a Word line lacks Conf= or Kept=")
+        sentence = Sentence(sent_id, forms, tags, kinds, spaces, comment_value(comments, "text"))
+        sentence.conf, sentence.kept, sentence.gold = conf, kept, gold
+        sentences.append(sentence)
     return sentences
 
 

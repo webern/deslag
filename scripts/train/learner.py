@@ -8,15 +8,19 @@ A learner is an object with these methods:
         default of the learner's own, or a keyword the learner's own command line sets.
         `sentences` are `conllu.Sentence`s with `forms` and `tags` (UD UPOS), in any order the
         learner must not depend on; `seed` fixes every random choice it makes.
-    tag(model, sentence)    -> list of Tagged or None, one per token of a skeleton sentence
+    tag(model, sentence, readings=None) -> list of Tagged or None, one per token of a skeleton sentence
         `sentence` is a `conllu.Sentence` from `read_skeleton`. A token that is not a `Word` gets
-        None; the learner may still read it as context. A `Word` gets a `Tagged`.
-    tune(model, tokens_path, gold_path) -> model        (optional)
+        None; the learner may still read it as context. A `Word` gets a `Tagged`. `readings` is
+        the same sentence from a readings file (`conllu.read_readings`: deslag's own reading of
+        each word, and the gold the exam aligned), which a learner that starts from deslag's
+        tagger reads and others ignore; it is passed only when a readings file is given.
+    tune(model, tokens_path, gold_path, readings_path=None) -> model        (optional)
         Fits the learner to the treebank's dev set, and to nothing else: the skeleton
-        `deslag-exam tokens` wrote for it and the gold it was written from. What is fitted is the
+        `deslag-exam tokens` wrote for it and the gold it was written from, or with
+        `readings_path` the readings file of it, whose `Gold=` is that gold. What is fitted is the
         learner's own: the perceptron fits its confidence thresholds and Score mapping; Brill
-        fits no confidence (that comes from its structure) and keeps the rule prefix with the best
-        dev accuracy.
+        keeps the rule prefix with the best dev accuracy, and when its confidence is from evidence
+        counts that too.
     save(model, path), load(path) -> model
     name                    -> a short name for file names and reports
 
@@ -30,14 +34,21 @@ from collections import namedtuple
 Tagged = namedtuple("Tagged", "upos conf score kept")
 
 
-def tag_file(learner, model, tokens_path, out_path):
-    """Tags every sentence of the skeleton at `tokens_path` and writes the import at `out_path`."""
-    from conllu import read_skeleton, write_import
+def tag_file(learner, model, tokens_path, out_path, readings_path=None):
+    """Tags every sentence of the skeleton at `tokens_path` and writes the import at `out_path`;
+    with `readings_path`, the learner is also given each sentence's readings."""
+    from conllu import Failure, read_readings, read_skeleton, write_import
 
     sentences = read_skeleton(tokens_path)
+    readings = [None] * len(sentences)
+    if readings_path:
+        readings = read_readings(readings_path)
+        if len(readings) != len(sentences):
+            raise Failure(f"{readings_path} and {tokens_path} differ in sentences")
     predictions = []
-    for sentence in sentences:
-        tagged = learner.tag(model, sentence)
+    for sentence, reading in zip(sentences, readings):
+        tagged = learner.tag(model, sentence) if reading is None else \
+            learner.tag(model, sentence, reading)
         predictions.append(
             [None if t is None else (t.upos, t.conf, t.score, t.kept)
              for t in tagged]

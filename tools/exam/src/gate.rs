@@ -5,6 +5,9 @@
 //! move with the rounding of a report. A set is run by the same code as `score`, so its counts are
 //! the report's counts, and no bootstrap is drawn because only point counts are judged.
 //!
+//! A `mustpass` set has no metric: it names a list of words (`crate::mustpass`) and how many it may
+//! miss. `gate --import` runs the same sets on a file another program filled, never on holdout.
+//!
 //! A holdout set's output is a verdict per metric and nothing else. It is rendered by a function
 //! that is never given the [`Scoring`], so it cannot hold a count, a word or a `sent_id`, and the
 //! tagger runs under `catch_unwind` with the panic hook silenced, because a panic message can
@@ -18,7 +21,9 @@ use std::path::Path;
 use crate::align::align_all;
 use crate::error::Error;
 use crate::gold::Gold;
+use crate::import::Imported;
 use crate::metrics::{METRICS, Metric, TOKENS, WIDTH, level_metrics};
+use crate::mustpass::{self, MustPass};
 use crate::score::{ScoredToken, Scoring, Source, score};
 use crate::tagger::Tagger;
 use crate::tags::Confidence;
@@ -62,7 +67,15 @@ pub struct Gate {
     pub min_tokens: Option<u64>,
 }
 
-/// A set: a gold file, the scored tokens it must come to, and its gates.
+/// What a `mustpass` set asks: a list of words, every one of which a tagger must get right.
+#[derive(Debug, Clone)]
+pub struct MustPassGate {
+    /// The list, relative to the root.
+    pub list: String,
+}
+
+/// A set: a gold file, the scored tokens it must come to, and its gates. A `mustpass` set has a
+/// list instead of gates.
 #[derive(Debug, Clone)]
 pub struct GateSet {
     /// The set's name in the file.
@@ -73,6 +86,8 @@ pub struct GateSet {
     pub tokens: Option<u64>,
     /// The gates, in the order of the report's metrics.
     pub gates: Vec<Gate>,
+    /// The list and the miss bound, for a `mustpass` set.
+    pub must_pass: Option<MustPassGate>,
 }
 
 /// A gates file.
@@ -241,9 +256,16 @@ impl GateSet {
         let known = metrics();
         let mut gold = None;
         let mut tokens = None;
+        let mut list = None;
         let mut gates = Vec::new();
         for (key_name, value) in body {
             match key_name.as_str() {
+                "list" => {
+                    let toml::Value::String(file) = value else {
+                        return Err(bad("list is not a string".to_string()));
+                    };
+                    list = Some(file.clone());
+                }
                 "gold" => {
                     let toml::Value::String(file) = value else {
                         return Err(bad("gold is not a string".to_string()));
@@ -260,7 +282,7 @@ impl GateSet {
                     let Some(metric) = known.iter().find(|metric| key(metric) == *key_name) else {
                         let valid: Vec<String> = known.iter().map(key).collect();
                         return Err(bad(format!(
-                            "unknown key `{key_name}`; the keys are gold, tokens, {}",
+                            "unknown key `{key_name}`; the keys are gold, tokens, list, {}",
                             valid.join(", ")
                         )));
                     };
@@ -269,6 +291,17 @@ impl GateSet {
             }
         }
         let gold = gold.ok_or_else(|| bad("has no gold".to_string()))?;
+        let must_pass = match list {
+            None => None,
+            Some(list) => {
+                if tokens.is_some() || !gates.is_empty() {
+                    return Err(bad(
+                        "is a mustpass set, which takes gold and list only".to_string()
+                    ));
+                }
+                Some(MustPassGate { list })
+            }
+        };
         // The report's order, so the table reads the same however the file is ordered.
         gates.sort_by_key(|gate| known.iter().position(|m| m.name == gate.metric.name));
         Ok(GateSet {
@@ -276,6 +309,7 @@ impl GateSet {
             gold,
             tokens,
             gates,
+            must_pass,
         })
     }
 }
@@ -357,6 +391,14 @@ struct Row {
     judged: Judged,
 }
 
+/// Where a gate's readings come from.
+enum Input<'a> {
+    /// A built-in tagger, run on every set.
+    Tagger(&'a dyn Tagger),
+    /// An import file, which fills the skeleton of one gold file.
+    Import(&'a Path),
+}
+
 /// Runs each of `names`, sets of `gates`, with `tagger`, reading gold files from under `root`.
 /// Every set runs, even after a failure.
 pub fn run(
@@ -365,26 +407,78 @@ pub fn run(
     tagger: &dyn Tagger,
     names: &[String],
 ) -> Result<Outcome, Error> {
+    run_input(gates, root, &Input::Tagger(tagger), names)
+}
+
+/// Like [`run`], with the readings of the import file `import` in place of a tagger's. The file
+/// fills the skeleton of its gold, so a set with another gold is an error (exit 2), and so is any
+/// holdout set: the holdout milestone is read with `score --import`, which prints aggregates only.
+pub fn run_import(
+    gates: &Gates,
+    root: &Path,
+    import: &Path,
+    names: &[String],
+) -> Result<Outcome, Error> {
+    run_input(gates, root, &Input::Import(import), names)
+}
+
+fn run_input(
+    gates: &Gates,
+    root: &Path,
+    input: &Input<'_>,
+    names: &[String],
+) -> Result<Outcome, Error> {
     let sets: Vec<&GateSet> = names
         .iter()
         .map(|name| gates.set(name))
         .collect::<Result<_, _>>()?;
-    let mut text = format!(
-        "deslag-exam gate: {}, tagger {}\n",
-        gates.path,
-        tagger.name()
-    );
+    let who = match input {
+        Input::Tagger(tagger) => tagger.name().to_string(),
+        Input::Import(path) => format!(
+            "import:{}",
+            path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into()
+            )
+        ),
+    };
+    let mut text = format!("deslag-exam gate: {}, tagger {who}\n", gates.path);
     let mut failed: Vec<(String, Vec<&'static str>)> = Vec::new();
     for set in sets {
         let gold = Gold::read(&root.join(&set.gold))?;
         let full = !gold.holdout();
+        if !full && matches!(input, Input::Import(_)) {
+            return Err(Error::Cannot(format!(
+                "{}: [{}] gate --import refuses a holdout set; read the holdout milestone with score --import",
+                gates.path, set.name
+            )));
+        }
+        if let Some(spec) = &set.must_pass {
+            if !full {
+                return Err(Error::Cannot(format!(
+                    "{}: [{}] a mustpass set names words, so it refuses a holdout gold",
+                    gates.path, set.name
+                )));
+            }
+            let scoring = score_set(&gold, input, true)?;
+            let list = MustPass::read(&root.join(&spec.list))?;
+            let misses = list.misses(&gold, &scoring);
+            text.push('\n');
+            text.push_str(&render_must_pass(set, spec, &list, &misses));
+            if !misses.is_empty() {
+                failed.push((set.name.clone(), vec!["Misses"]));
+            }
+            continue;
+        }
         let (scoring, sum) = if full {
-            let aligned = align_all(&gold);
-            let scoring = score(&gold, &aligned, &Source::Tagger(tagger), true)?;
+            let scoring = score_set(&gold, input, true)?;
             let sum = sum(&scoring);
             (scoring, sum)
         } else {
-            let scoring = withholding(&gold, tagger)?;
+            let Input::Tagger(tagger) = input else {
+                unreachable!("an import was refused on a holdout set above")
+            };
+            let scoring = withholding(&gold, *tagger)?;
             let sum = sum(&scoring);
             (scoring, sum)
         };
@@ -453,6 +547,51 @@ pub fn run(
         passed,
         failed,
     })
+}
+
+/// Scores `gold` from `input`, keeping the scored tokens when `names`.
+fn score_set(gold: &Gold, input: &Input<'_>, names: bool) -> Result<Scoring, Error> {
+    let aligned = align_all(gold);
+    match input {
+        Input::Tagger(tagger) => score(gold, &aligned, &Source::Tagger(*tagger), names),
+        Input::Import(path) => {
+            let imported = Imported::read(path, gold, !names)?;
+            score(gold, &aligned, &Source::Import(&imported), names)
+        }
+    }
+}
+
+/// A mustpass set: its count of misses against the bound, then the words missed.
+fn render_must_pass(
+    set: &GateSet,
+    spec: &MustPassGate,
+    list: &MustPass,
+    misses: &[mustpass::Miss],
+) -> String {
+    let mut out = format!(
+        "{}  {}  list {}, {} words\n",
+        set.name,
+        set.gold,
+        spec.list,
+        list.rows.len()
+    );
+    let count = misses.len() as u64;
+    let _ = writeln!(
+        out,
+        "  {:<19}  {count}/{}  = 0  {}",
+        "Misses",
+        list.rows.len(),
+        if count == 0 { "pass" } else { "FAIL" }
+    );
+    if count > 0 {
+        let _ = writeln!(
+            out,
+            "\nFAIL {} Misses: {count}, allows none. The words it missed, a word passes when the guess is the listed tag at Sure or Likely:",
+            set.name
+        );
+        out.push_str(&mustpass::miss_lines(misses));
+    }
+    out
 }
 
 /// The tallies of every sentence, summed.

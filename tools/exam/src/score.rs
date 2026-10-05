@@ -66,6 +66,8 @@ pub struct Example {
 pub struct ScoredToken {
     /// The sentence.
     pub sent_id: String,
+    /// The index of the token's gold word in the sentence's words; the word ID is this plus one.
+    pub word: usize,
     /// The token's text folded to lower case.
     pub text: String,
     /// The gold tag.
@@ -238,6 +240,7 @@ pub fn score(
             if names {
                 scoring.tokens.push(ScoredToken {
                     sent_id: id.clone(),
+                    word: token.word,
                     text: tokens[token.token].text.to_lowercase(),
                     gold: token.tag,
                     guess: reading.tag,

@@ -1,5 +1,5 @@
 # The exam's gates on deslag's own tagger. `deslag-exam gate --gates tests/gold/gates.toml SET...`
-# judges each named set: `make test-exam` runs dev and holdout, `make test-ewt` runs ewt-dev.
+# judges each named set: `make test-exam` runs dev, mustpass and holdout, `make test-ewt` runs ewt-dev.
 #
 # A rate gate is a whole number per mille: min_per_mille = 860 means at least 86.0%. It is judged
 # on integer counts, never on a printed percentage: a floor holds when
@@ -22,6 +22,14 @@ likely_accuracy     = { min_per_mille = 970, min_tokens = 100 }
 unknown_rate        = { max_per_mille = 75 }
 clean_sentences     = { min_per_mille = 900 }
 unalignable_rate    = { max_count = 0 }
+
+# The words nobody doubts: `list` holds the dev words with Prov=agree that tag VERSION 10 tags right
+# at Sure, and a tagger fails the set by missing any of them, whatever its scores.
+# The list is frozen at VERSION 10 and never regenerated; the owner decides in the change that fails
+# a row whether the row goes. A word passes when the guess is the listed tag at Sure or Likely.
+[mustpass]
+gold = "tests/gold/dev.conllu"
+list = "tests/gold/mustpass.tsv"
 
 # The targets the tagger was built to, never ratcheted: a holdout that moved with every change
 # would become a second dev set. Its output is pass or fail per metric, nothing more.

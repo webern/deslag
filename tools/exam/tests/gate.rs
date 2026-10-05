@@ -195,7 +195,7 @@ fn a_bad_gates_file_exits_2_with_one_line() {
         (
             "an unknown key",
             format!("[dev]\n{good}vibes = {{ min_count = 1 }}\n"),
-            "unknown key `vibes`; the keys are gold, tokens, accuracy, best_guess_accuracy",
+            "unknown key `vibes`; the keys are gold, tokens, list, accuracy, best_guess_accuracy",
         ),
         (
             "two bounds",

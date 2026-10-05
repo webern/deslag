@@ -38,7 +38,8 @@ help:
 	@echo "test-ewt         fail if deslag's tagger scores under the pinned counts on the treebank's dev"
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
-	@echo "                 the dev or holdout gold; the holdout prints pass or fail per metric"
+	@echo "                 the dev or holdout gold or misses a word of the must-pass list; the holdout"
+	@echo "                 prints pass or fail per metric"
 	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
@@ -116,12 +117,12 @@ test-ewt: preflight fetch-ewt
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml ewt-dev
 
 # The whole golden binary, not a name filter: a filter that matches nothing passes silently. Then
-# the gates of tests/gold/gates.toml on the dev and holdout gold, which print a table of counts for
-# dev and a pass or fail per metric for holdout. A gate is raised by hand, in the change that earns
-# it; there is no fix- target.
+# the gates of tests/gold/gates.toml on the dev gold, the must-pass list and the holdout gold, which
+# print a table of counts for dev, the words missed for mustpass and a pass or fail per metric for
+# holdout. A gate is raised by hand, in the change that earns it; there is no fix- target.
 test-exam: preflight
 	cargo test $(CARGO_FLAGS) -p deslag --all-features --test golden
-	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev holdout
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
 
 # The perceptron's unit tests, then the exam's full report on both dev sets for it, and `compare`
 # against deslag's tagger, from the import files generate-percept wrote. The runs are saved beside

@@ -13,11 +13,12 @@ use deslag_exam::gold::Gold;
 use deslag_exam::harper::{DEFAULT_MODEL, Harper};
 use deslag_exam::import::Imported;
 use deslag_exam::most_common::{self, MostCommonTag};
+use deslag_exam::mustpass::MustPass;
 use deslag_exam::report;
 use deslag_exam::saved::SavedRun;
 use deslag_exam::score::{Source, score};
 use deslag_exam::skeleton::skeleton;
-use deslag_exam::tagger::{BUILT_IN, Tagger, built_in};
+use deslag_exam::tagger::{BUILT_IN, Deslag, Tagger, built_in};
 use deslag_exam::words::{GoldHeader, Words};
 
 /// Grades part-of-speech taggers against gold sets.
@@ -87,7 +88,7 @@ enum Command {
         /// The run after it.
         after: PathBuf,
     },
-    /// Judges deslag's own tagger, or `noun`, against the gates a file sets, one set of gold at a
+    /// Judges deslag's own tagger, `noun` or an import file against the gates a file sets, one set of gold at a
     /// time, and prints a table of counts for a set that may name words and a pass or fail for each
     /// metric of a holdout set. Every named set is run, even after a failure.
     ///
@@ -101,11 +102,28 @@ enum Command {
         #[arg(long, default_value = ".")]
         root: PathBuf,
         /// A built-in tagger: `deslag` as it stands, or `noun`, which the tests use.
-        #[arg(long, default_value = "deslag")]
+        #[arg(long, default_value = "deslag", conflicts_with = "import")]
         tagger: String,
+        /// Judge an import file instead of a tagger: the skeleton `tokens` writes, filled the way
+        /// `score --import` reads it. Each set's gold must be the file's, and a holdout set is
+        /// refused; read the holdout milestone with `score --import`.
+        #[arg(long)]
+        import: Option<PathBuf>,
         /// The sets to run, by their name in the gates file.
         #[arg(required = true)]
         sets: Vec<String>,
+    },
+    /// Writes the must-pass list: the gold words with `Prov=agree` that deslag's tagger tags right
+    /// at `Sure`, one row each of `sent_id`, word ID, form and tag, sorted. A `mustpass` set of a
+    /// gates file then fails any tagger that misses one. It names words, so it refuses a holdout
+    /// gold (exit 2), and it writes to a file. The list is cut once and frozen, never regenerated.
+    Mustpass {
+        /// The gold file, CoNLL-U, with `Prov=` on every line.
+        #[arg(long)]
+        gold: PathBuf,
+        /// The file to write.
+        #[arg(long)]
+        out: PathBuf,
     },
     /// Reads a gold file and prints how alignment treats its words: how many are punctuation, X
     /// or tagged, how many tagged words are scored, and why the rest are not. No tagger runs.
@@ -212,9 +230,15 @@ fn run(cli: Cli) -> Result<bool, Error> {
             gates,
             root,
             tagger,
+            import,
             sets,
         } => {
             let gates = Gates::read(&gates)?;
+            if let Some(import) = import {
+                let outcome = gate::run_import(&gates, &root, &import, &sets)?;
+                print!("{}", outcome.text);
+                return Ok(outcome.passed);
+            }
             let Some(tagger) = built_in(&tagger) else {
                 return Err(Error::Cannot(format!(
                     "no built-in tagger `{tagger}`; gate runs {}",
@@ -224,6 +248,35 @@ fn run(cli: Cli) -> Result<bool, Error> {
             let outcome = gate::run(&gates, &root, tagger.as_ref(), &sets)?;
             print!("{}", outcome.text);
             Ok(outcome.passed)
+        }
+        Command::Mustpass { gold, out } => {
+            let gold = Gold::read(&gold)?;
+            if gold.holdout() {
+                return Err(Error::Cannot(
+                    "mustpass refuses a holdout gold: its list names words".to_string(),
+                ));
+            }
+            let aligned = align_all(&gold);
+            let scoring = score(&gold, &aligned, &Source::Tagger(&Deslag), true)?;
+            let list = MustPass::cut(&gold, &scoring);
+            std::fs::write(&out, list.render(deslag::tag::VERSION)).map_err(|source| {
+                Error::Io {
+                    path: out.display().to_string(),
+                    source,
+                }
+            })?;
+            let per_tag: Vec<String> = list
+                .per_tag()
+                .iter()
+                .map(|(tag, count)| format!("{} {count}", tag.code()))
+                .collect();
+            println!(
+                "wrote {} words to {} ({})",
+                list.rows.len(),
+                out.display(),
+                per_tag.join(", ")
+            );
+            Ok(true)
         }
         Command::Compare { before, after } => {
             let name = |path: &PathBuf| {

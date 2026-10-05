@@ -227,3 +227,20 @@ shape: one weight per feature and tag, a guess that feeds the next token's tag f
 only on a wrong guess, and the final weights averaged over every step through running totals. The
 feature set is the common one of Collins (2002) with a few additions measured on the treebank's dev
 set.
+
+## NLTK
+
+- URL: https://github.com/nltk/nltk
+- Licence: Apache-2.0, copied as NLTK ships it to `LICENSES/Apache-2.0-NLTK.txt`
+- Copyright: "Copyright (C) 2001-2026 NLTK Project"
+- Studied at: `develop`, commit
+  [350c1c70](https://github.com/nltk/nltk/tree/350c1c70948fda15ba8db1bea973513d33b2c187), read
+  2026-10-04 (`nltk/tag/brill.py`, `nltk/tag/brill_trainer.py`, `nltk/tbl/`)
+
+Code was ported in part, as a modified adaptation under Apache-2.0: the 37 templates of `fntbl37`,
+which `scripts/train/tbl.py` lists with the notice in its docs, and the meaning of a rule and a
+template (a feature with several positions holds when any of them has the value).
+
+The trainer is written afresh in the same indexed shape, with counts in place of NLTK's
+per-position tables, and applies each rule left to right where NLTK applies it everywhere at once
+while training. NLTK's code is not in the repository beyond the template list.

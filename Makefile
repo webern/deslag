@@ -21,6 +21,7 @@ CARGO_FLAGS ?=
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-ewt test-exam test-percept test-scripts test-spacy \
+        test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci \
@@ -49,6 +50,9 @@ help:
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
+	@echo "                 first, so minutes, and not in test or ci"
+	@echo "test-ticlist-percept"
+	@echo "                 score the perceptron on the tic list, tests/gold/ticlist.tsv, with deslag-exam; generates"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
@@ -153,6 +157,13 @@ test-scripts: preflight
 # of test: it needs the network, a few GB and minutes.
 test-spacy: generate-spacy
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- score --gold $(EWT_DEV) --import .spacy/ewt-dev.import.conllu --save .spacy/ewt-dev.run.json
+
+# The tic list, tests/gold/ticlist.tsv, read by the perceptron: the token skeleton of the English
+# fixtures goes through the perceptron generate-percept trained, and `deslag-exam ticlist score` reads
+# the import it writes, beside the saved run and report in .train. Not part of test or ci: it needs the
+# treebank and minutes.
+test-ticlist-percept: generate-percept
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh ticlist
 
 # ---------------------------------------------------------------------------
 # check

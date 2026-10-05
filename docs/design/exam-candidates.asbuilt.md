@@ -57,7 +57,7 @@ any gold, counts for its lowercased text and gold tag. A known word gets its mos
 `Sure` if train gave it one tag, else `Unsure`; any other word gets the commonest tag overall at
 `Unknown`. No features or score.
 
-`harper` is Harper's tagger, for study only: `harper.rs` adapts its engine (Apache-2.0,
+`harper` is Harper's tagger, for study: `harper.rs` adapts its engine (Apache-2.0,
 `LICENSES/`), reading the model in `.harper/` (`--harper-model` names another). A `Word` token
 gets `Likely` if tagged, else `Noun` at `Unknown`. No kept set, features or score.
 
@@ -65,7 +65,7 @@ gets `Likely` if tagged, else `Noun` at `Unknown`. No kept set, features or scor
 
 Python, standard library only, run by `run.sh` through the `generate-*`, `test-*` and
 `test-ticlist-*` targets, never by tests or CI. They write under `.train/`, which derives from EWT
-and is never committed: models, rules and an import file per dev set.
+and is never committed: models, rules, imports.
 
 - `percept.py`: an averaged perceptron on EWT train, its confidence fitted to EWT dev.
 - `brill.py`: up to 300 rules (NLTK's `fntbl37`) over a start, cut at the best prefix on EWT dev.
@@ -78,8 +78,8 @@ and is never committed: models, rules and an import file per dev set.
 
 The last two label confidence by evidence from EWT dev. A changed word takes the right rate of the
 rule that last changed it; an unchanged one, that of its start reading (deslag's level and tag, or
-the perceptron's margin bucket). At 97% it is `Likely`, else `Unsure` or `Unknown`: the gate floor,
-with no headroom. At 99.5% it is `Sure`, `Kept=` cut to its tag, only if the Wilson 95% lower bound
+the perceptron's margin bucket). At 97% it is `Likely`, as is a start `Likely` left alone, else `Unsure` or
+`Unknown`: the gate floor, no headroom. At 99.5% it is `Sure`, `Kept=` cut to its tag, only if the Wilson 95% lower bound
 of the rate is also 0.97, else `Likely`.
 
 A readings file starts with `# deslag_tag_version = N`, the tag VERSION. `brilldeslag` records it,

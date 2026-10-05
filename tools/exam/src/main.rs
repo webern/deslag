@@ -19,6 +19,7 @@ use deslag_exam::saved::SavedRun;
 use deslag_exam::score::{Source, score};
 use deslag_exam::skeleton::skeleton;
 use deslag_exam::tagger::{BUILT_IN, Deslag, Tagger, built_in};
+use deslag_exam::ticlist;
 use deslag_exam::words::{GoldHeader, Words};
 
 /// Grades part-of-speech taggers against gold sets.
@@ -140,13 +141,67 @@ enum Command {
     /// Writes the token skeleton an outside tagger fills: one CoNLL-U sentence per gold sentence,
     /// one line per deslag token, every column but FORM and MISC `_`. It writes to a file and never
     /// to stdout, so holdout text never lands in a terminal transcript.
+    ///
+    /// With `--corpus`, the sentences are those of the English fixtures of `tests/corpus` outside
+    /// `core`, and `sent_id` is `<layout_path>@<sentence start byte>`.
     Tokens {
         /// The gold file, CoNLL-U.
+        #[arg(long, required_unless_present = "corpus", conflicts_with = "corpus")]
+        gold: Option<PathBuf>,
+        /// Write the skeleton of the corpus's English fixtures outside `core` instead of a gold's.
         #[arg(long)]
-        gold: PathBuf,
+        corpus: bool,
+        /// The repository root, whose `tests/corpus` `--corpus` reads.
+        #[arg(long, default_value = ".", requires = "corpus")]
+        root: PathBuf,
         /// The file to write.
         #[arg(long)]
         out: PathBuf,
+    },
+    /// The tic list: the places the shipped `verbs_no_nouns` lint matches, which a tagger must read
+    /// as verbs at `Likely` or above for a lint that trusts it to work.
+    Ticlist {
+        #[command(subcommand)]
+        command: TiclistCommand,
+    },
+}
+
+#[derive(Subcommand)]
+enum TiclistCommand {
+    /// Writes the list: a row per match of the shipped pattern in the English fixtures of
+    /// `tests/corpus` outside `core`, sorted by path and offset, under a header naming the commit.
+    Cut {
+        /// The file to write.
+        #[arg(long)]
+        out: PathBuf,
+        /// The commit of the lint the list is cut at, named in the header.
+        #[arg(long)]
+        commit: String,
+        /// The repository root, whose `tests/corpus` is read.
+        #[arg(long, default_value = ".")]
+        root: PathBuf,
+    },
+    /// Prints how a tagger reads the list: rows right at `Likely` or above, out of all rows, with a
+    /// 95% interval from a bootstrap over sentences; rows right below `Likely`; rows read as
+    /// another tag; and the reverse check, the places a variant of the lint that trusts the tagger
+    /// matches that are not rows, with examples. It is a report, and exits 0 when it ran.
+    Score {
+        /// The list, `tests/gold/ticlist.tsv`.
+        #[arg(long)]
+        list: PathBuf,
+        /// The built-in tagger `deslag`, as it stands.
+        #[arg(long, required_unless_present = "import", conflicts_with = "import")]
+        tagger: Option<String>,
+        /// A file another program filled: the output of `tokens --corpus` with `UPOS` on every
+        /// `Word` line, as `score --import` reads.
+        #[arg(long)]
+        import: Option<PathBuf>,
+        /// Write every row's read and every reverse match to this JSON file.
+        #[arg(long, value_name = "RUN.json")]
+        save: Option<PathBuf>,
+        /// The repository root, whose `tests/corpus` is read.
+        #[arg(long, default_value = ".")]
+        root: PathBuf,
     },
 }
 
@@ -292,18 +347,65 @@ fn run(cli: Cli) -> Result<bool, Error> {
             );
             Ok(true)
         }
-        Command::Tokens { gold, out } => {
-            let gold = Gold::read(&gold)?;
-            std::fs::write(&out, skeleton(&gold)).map_err(|source| Error::Io {
-                path: out.display().to_string(),
-                source,
-            })?;
-            println!(
-                "wrote {} sentences to {}",
-                gold.sentences.len(),
-                out.display()
-            );
+        Command::Tokens {
+            gold,
+            corpus,
+            root,
+            out,
+        } => {
+            let (text, sentences) = match gold {
+                Some(gold) => {
+                    let gold = Gold::read(&gold)?;
+                    (skeleton(&gold), gold.sentences.len())
+                }
+                None => {
+                    debug_assert!(corpus, "clap needs one of --gold and --corpus");
+                    ticlist::corpus_skeleton(&ticlist::corpus(&root)?)?
+                }
+            };
+            write(&out, &text)?;
+            println!("wrote {sentences} sentences to {}", out.display());
+            Ok(true)
+        }
+        Command::Ticlist { command } => ticlist_command(command),
+    }
+}
+
+fn ticlist_command(command: TiclistCommand) -> Result<bool, Error> {
+    match command {
+        TiclistCommand::Cut { out, commit, root } => {
+            let rows = ticlist::cut(&ticlist::corpus(&root)?);
+            write(&out, &ticlist::List::render(&rows, &commit))?;
+            println!("wrote {} rows to {}", rows.len(), out.display());
+            Ok(true)
+        }
+        TiclistCommand::Score {
+            list,
+            tagger,
+            import,
+            save,
+            root,
+        } => {
+            let rows = ticlist::List::read(&list)?;
+            let entries = ticlist::corpus(&root)?;
+            let source = match (&tagger, &import) {
+                (Some(name), _) => ticlist::source_of(name)?,
+                (None, Some(path)) => ticlist::Source::Import(path),
+                (None, None) => unreachable!("clap needs one of --tagger and --import"),
+            };
+            let scored = ticlist::score(&rows, &entries, &source)?;
+            if let Some(path) = save {
+                write(&path, &scored.saved())?;
+            }
+            print!("{}", scored.render(&list.display().to_string()));
             Ok(true)
         }
     }
+}
+
+fn write(path: &std::path::Path, text: &str) -> Result<(), Error> {
+    std::fs::write(path, text).map_err(|source| Error::Io {
+        path: path.display().to_string(),
+        source,
+    })
 }

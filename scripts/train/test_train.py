@@ -596,13 +596,14 @@ class StartTests(unittest.TestCase):
         by = [(t.upos, t.conf, t.kept) for t in got]
         # `to` is deslag's Sure; `run` after `to` is changed by rule 1, which is right 200/200;
         # `the` is left alone and its cell is at 97 of 100, Likely, keeping both; `so`, a deslag
-        # Likely, falls to Unsure with a cell under the floor; `zzz`, Unknown, is Sure with a cell
-        # of 200 right of 200 and stays Unknown under it; `eat` is left alone and its cell is 199
-        # of 100, at the Sure floor but with a Wilson lower bound under 0.97, so it is Likely, not Sure.
+        # Likely, stays Likely though its cell is under the floor, never below its start's level;
+        # `zzz`, Unknown, is Sure with a cell of 200 right of 200 and stays Unknown under it;
+        # `eat` is left alone and its cell is 100 of 100, at the Sure floor but with a Wilson lower
+        # bound under 0.97, so it is Likely, not Sure.
         self.assertEqual(by[0], ("PART", "Sure", ["PART"]))
         self.assertEqual(by[1], ("VERB", "Sure", ["VERB"]))
         self.assertEqual(by[2], ("NOUN", "Likely", ["NOUN", "ADJ"]))
-        self.assertEqual(by[3], ("ADV", "Unsure", ["ADV", "ADJ"]))
+        self.assertEqual(by[3], ("ADV", "Likely", ["ADV", "ADJ"]))
         self.assertEqual(by[4], ("NOUN", "Sure", ["NOUN"]))
         self.assertEqual(by[5], ("VERB", "Likely", ["VERB", "NOUN"]))
         model.evidence["cells"]["Unknown/NOUN"] = [10, 9]

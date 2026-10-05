@@ -42,7 +42,7 @@ of the rule that last changed it; one left as it started, the right rate of its 
 with `Kept=` cut to its one tag, only if the Wilson 95% lower bound of that rate is also at least
 0.97, so a short clean run cannot buy it; at 99.5% without that bound, or at 97%, it is `Likely`.
 These are the floors of tests/gold/gates.toml, with no headroom; below them the word is `Unsure`, or
-`Unknown` if it started so. A `Sure` word of deslag's stays
+`Unknown` if it started so; but a word the rules left alone is never below its start's `Likely`. A `Sure` word of deslag's stays
 `Sure`. `Kept=` is the start's, and the best guess. `Score` is None.
 
 The model file is generated, derives from the treebank, and lives in `.train/`; it is never committed.
@@ -253,6 +253,8 @@ def decide_by_evidence(model, begin, i, tags, last):
     kept = [code] + [k for k in begin.kept[i] if k != code]
     if rated(row, LIKELY_PER_MILLE):  # includes a rate at the Sure floor the bound turned away
         return Tagged(upos, "Likely", None, kept)
+    if tags[i] == begin.tags[i] and begin.level[i] == "Likely":
+        return Tagged(upos, "Likely", None, kept)  # never below the start's committed level
     started = "Unknown" if begin.level[i] == "Unknown" else "Unsure"
     return Tagged(upos, started, None, kept)
 

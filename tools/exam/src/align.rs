@@ -72,6 +72,9 @@ impl Reason {
 pub struct Scored {
     /// The token's index in the sentence's tokens.
     pub token: usize,
+    /// The index in the sentence's words of the token's gold word, or of the first when several
+    /// stand behind it. The gold's word ID is this plus one, since IDs count words from 1.
+    pub word: usize,
     /// The gold tag: the words' tag, or the first word's when they disagree.
     pub tag: Tag,
     /// The gold's features, or `None` when several agreeing words stand behind the token, which
@@ -237,6 +240,7 @@ fn by_line(sentence: &GoldSentence, tokens: &[Token<'_>], out: &mut Alignment) {
         } else {
             out.scored.push(Scored {
                 token: index,
+                word: index,
                 tag,
                 features: Some(sentence.words[index].features),
                 words: 1,
@@ -302,6 +306,7 @@ fn by_span(sentence: &GoldSentence, tokens: &[Token<'_>], out: &mut Alignment) {
                 let agree = tags.iter().all(|tag| *tag == tags[0]);
                 out.scored.push(Scored {
                     token: *token,
+                    word: words[0],
                     tag: tags[0],
                     features: (!agree || words.len() == 1)
                         .then(|| sentence.words[words[0]].features),

@@ -23,8 +23,10 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
 - `words --gold G`: the header and Words section alone, with no tagger.
-- `gate --gates F [--root D] [--tagger deslag|noun] SET...`: judges deslag's tagger against the
-  sets of a gates file, `tests/gold/gates.toml`; every named set runs, even after a failure.
+- `gate --gates F [--root D] [--tagger deslag|noun | --import F] SET...`: judges deslag's tagger,
+  or an import, against the sets of a gates file, `tests/gold/gates.toml`; every named set runs,
+  even after a failure. `--import` refuses a holdout set.
+- `mustpass --gold G --out F`: writes the must-pass list; refuses holdout gold.
 
 Exit 0 when it printed or wrote what was asked, and for `gate` when every gate holds; 1 when a gate
 fails; 2 when it cannot run (a malformed file, a tagger
@@ -45,7 +47,7 @@ tools/exam/src/
   score.rs metrics.rs a run: tallies per sentence, confusion, misses, calibration
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
-  gate.rs             `gate`: the gates file and the verdicts
+  gate.rs mustpass.rs `gate`: the gates file and the verdicts; the must-pass list
   skeleton.rs disputes.rs error.rs
 ```
 
@@ -132,6 +134,10 @@ A bound is a rate floor or ceiling in per mille (`min_per_mille`, `max_per_mille
 `n * 1000 >= g * d`. `min_tokens` leaves a gate unjudged when its denominator is smaller, and
 `tokens` pins the scored tokens a set's counts are of. `gates.toml` has `dev`, `holdout` and
 `ewt-dev`.
+
+A `mustpass` set has `list` and `max_misses`: each row of `tests/gold/mustpass.tsv` (dev
+words with `Prov=agree` that VERSION 10 tags right at `Sure`) must be tagged right at `Sure` or
+`Likely`.
 
 A set that may name words prints a table of counts, bound and slack in words, then up to 20 groups
 of words for each failed metric, each with up to 3 `sent_id`s. A holdout set prints pass or fail per

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-05
 subsystems:
   - exam-candidates
 max_size_bytes: 6144
@@ -26,6 +26,24 @@ naming the first difference, by position and never a word on holdout text or wit
 On `Word` lines an import reads `UPOS`, `FEATS` and the `MISC` keys `Conf=` (default `Likely`),
 `Score=` and `Kept=`; `Sure` with another tag kept is an error. `PUNCT`, `SYM` and `X` become `Noun`
 at `Unknown`, counted in Words.
+
+## The tic list
+
+`tests/gold/ticlist.tsv` lists where the shipped `verbs_no_nouns` pattern matches in the English
+fixtures of `tests/corpus` outside `core`: path, the byte where the `-s` token starts (the fixture
+read with `from_utf8_lossy`), the word and `VERB`. `ticlist cut --out F --commit C` writes it. A test
+holds every row to its word and the file to a fresh cut.
+
+`ticlist score --list L (--tagger deslag | --import F) [--save F]` prints the rows right (`VERB` at
+`Likely` or above, the lint's own test) with a bootstrap interval over sentences, the rows `VERB`
+below `Likely`, the rows another tag, and the reverse check: matches of a variant that trusts the
+tagger (the shipped pattern with `Item::Tag` for its function words) that are no row, 20 shown. It
+exits 0, and a test pins deslag's counts.
+
+`tokens --corpus --out F` skeletons the same fixtures: `sent_id` is `<layout_path>@<sentence start
+byte>`, `# text` is built from the FORMs, `MISC` has `Start=<byte>`, a form with no text is `_`, and
+a token with a newline or tab is an error. `make test-ticlist-percept` runs it through the
+perceptron into `.train/`.
 
 ## The built-in taggers
 

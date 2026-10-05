@@ -9,12 +9,13 @@
 //! that are not `Word` tokens are not read, whatever they hold.
 //!
 //! The file must have the gold's `sent_id`s in the gold's order and the skeleton's `FORM`s line for
-//! line; otherwise the exam cannot run, and says where the first difference is. A `Word` line
+//! line (a file with no gold, as `ticlist score` reads, has the `sent_id`s and tokens it is
+//! given); otherwise the exam cannot run, and says where the first difference is. A `Word` line
 //! tagged `PUNCT`, `SYM` or `X` becomes `Noun` at `Unknown`, and [`Imported::outside`] counts them.
 
 use std::path::Path;
 
-use deslag::document::TokenKind;
+use deslag::document::{Token, TokenKind};
 
 use crate::conllu::{self, Block, Id, Line};
 use crate::error::Error;
@@ -37,38 +38,86 @@ impl Imported {
     /// the sentence's position and the line but never a word or a `sent_id`, since the gold may be
     /// holdout text.
     pub fn read(path: &Path, gold: &Gold, quiet: bool) -> Result<Imported, Error> {
+        let (shown, text) = Imported::slurp(path)?;
+        let mut imported = Imported::of_gold(&shown, &text, gold, quiet)?;
+        imported.name = Imported::name_of(path, &shown);
+        Ok(imported)
+    }
+
+    /// Reads the file at `path`, which fills the skeleton `expected` says, one `(sent_id, tokens)`
+    /// pair per sentence, as `deslag-exam tokens --corpus` writes it. There is no gold, so an error
+    /// may name a word and a `sent_id`.
+    pub fn read_skeleton(
+        path: &Path,
+        expected: &[(&str, Vec<Token<'_>>)],
+    ) -> Result<Imported, Error> {
+        let (shown, text) = Imported::slurp(path)?;
+        let mut imported = Imported::parse(&shown, &text, expected, false)?;
+        imported.name = Imported::name_of(path, &shown);
+        Ok(imported)
+    }
+
+    fn slurp(path: &Path) -> Result<(String, String), Error> {
         let shown = path.display().to_string();
         let text = std::fs::read_to_string(path).map_err(|source| Error::Io {
             path: shown.clone(),
             source,
         })?;
-        let name = path.file_name().map_or_else(
-            || shown.clone(),
-            |name| format!("import:{}", name.to_string_lossy()),
-        );
-        let mut imported = Imported::parse(&shown, &text, gold, quiet)?;
-        imported.name = name;
-        Ok(imported)
+        Ok((shown, text))
     }
 
-    /// Reads `text`, the contents of the file `path`.
-    pub fn parse(path: &str, text: &str, gold: &Gold, quiet: bool) -> Result<Imported, Error> {
+    fn name_of(path: &Path, shown: &str) -> String {
+        path.file_name().map_or_else(
+            || shown.to_string(),
+            |name| format!("import:{}", name.to_string_lossy()),
+        )
+    }
+
+    /// Reads `text`, the contents of the file `path`, against the skeleton of `gold`.
+    pub fn of_gold(path: &str, text: &str, gold: &Gold, quiet: bool) -> Result<Imported, Error> {
+        let expected: Vec<(&str, Vec<Token<'_>>)> = gold
+            .sentences
+            .iter()
+            .map(|sentence| (sentence.sent_id.as_str(), sentence.tokens()))
+            .collect();
+        Imported::parse_for(path, text, &expected, quiet, "gold")
+    }
+
+    /// Reads `text`, the contents of the file `path`, against `expected`: each sentence's `sent_id`
+    /// and tokens, in order.
+    pub fn parse(
+        path: &str,
+        text: &str,
+        expected: &[(&str, Vec<Token<'_>>)],
+        quiet: bool,
+    ) -> Result<Imported, Error> {
+        Imported::parse_for(path, text, expected, quiet, "skeleton")
+    }
+
+    /// [`Imported::parse`], where an error calls the thing the file is checked against `owner`.
+    fn parse_for(
+        path: &str,
+        text: &str,
+        expected: &[(&str, Vec<Token<'_>>)],
+        quiet: bool,
+        owner: &str,
+    ) -> Result<Imported, Error> {
         let blocks = conllu::read(path, text)?;
         let fail = |line: usize, message: String| Err(Error::at(path, line, message));
-        if blocks.len() < gold.sentences.len() {
+        if blocks.len() < expected.len() {
             return fail(
                 blocks.last().map_or(1, last_line),
                 format!(
-                    "the file ends after {} sentences, and the gold has {}",
+                    "the file ends after {} sentences, and the {owner} has {}",
                     blocks.len(),
-                    gold.sentences.len()
+                    expected.len()
                 ),
             );
         }
-        if blocks.len() > gold.sentences.len() {
+        if blocks.len() > expected.len() {
             return fail(
-                blocks[gold.sentences.len()].first_line,
-                format!("more sentences than the gold's {}", gold.sentences.len()),
+                blocks[expected.len()].first_line,
+                format!("more sentences than the {owner}'s {}", expected.len()),
             );
         }
         let mut imported = Imported {
@@ -76,27 +125,25 @@ impl Imported {
             readings: Vec::with_capacity(blocks.len()),
             outside: 0,
         };
-        for (index, (block, sentence)) in blocks.iter().zip(&gold.sentences).enumerate() {
+        for (index, (block, (want_id, tokens))) in blocks.iter().zip(expected).enumerate() {
             let at = block.first_line;
             let position = index + 1;
             let sent_id = block
                 .comment("sent_id")
                 .map(|comment| comment.value.as_str());
-            if sent_id != Some(sentence.sent_id.as_str()) {
+            if sent_id != Some(*want_id) {
                 return fail(
                     block.comment("sent_id").map_or(at, |comment| comment.line),
                     if quiet {
-                        format!("sentence {position}: the sent_id differs from the gold's")
+                        format!("sentence {position}: the sent_id differs from the {owner}'s")
                     } else {
                         format!(
-                            "sentence {position} is `{}` where the gold's is `{}`",
+                            "sentence {position} is `{}` where the {owner}'s is `{want_id}`",
                             sent_id.unwrap_or(""),
-                            sentence.sent_id
                         )
                     },
                 );
             }
-            let tokens = sentence.tokens();
             if block.lines.len() != tokens.len() {
                 return fail(
                     at,
@@ -108,7 +155,7 @@ impl Imported {
                 );
             }
             let mut readings = Vec::with_capacity(tokens.len());
-            for (line, token) in block.lines.iter().zip(&tokens) {
+            for (line, token) in block.lines.iter().zip(tokens) {
                 if !matches!(line.id, Id::Word(_)) {
                     return fail(
                         line.number,
@@ -271,7 +318,7 @@ mod tests {
                 (5, "NOUN", "Number=Plur", "Conf=Unsure"),
             ],
         );
-        let imported = Imported::parse("f", &text, &gold, false).unwrap();
+        let imported = Imported::of_gold("f", &text, &gold, false).unwrap();
         let readings = &imported.readings[0];
         assert_eq!(readings.len(), 5);
         let go = readings[0].unwrap();
@@ -303,7 +350,7 @@ mod tests {
                 (5, "X", "_", ""),
             ],
         );
-        let imported = Imported::parse("f", &text, &gold, false).unwrap();
+        let imported = Imported::of_gold("f", &text, &gold, false).unwrap();
         for index in [1, 4] {
             let reading = imported.readings[0][index].unwrap();
             assert_eq!(reading.tag, Tag::Noun);
@@ -326,21 +373,21 @@ mod tests {
                 ],
             )
         };
-        let error = Imported::parse("f", &fill_one("Conf=Sure|Kept=VERB,NOUN"), &gold, false)
+        let error = Imported::of_gold("f", &fill_one("Conf=Sure|Kept=VERB,NOUN"), &gold, false)
             .unwrap_err()
             .to_string();
         assert!(error.contains("Sure") && error.contains("Kept"), "{error}");
         assert!(error.starts_with("f:"), "{error}");
         for ok in ["Conf=Sure", "Conf=Sure|Kept=VERB", "Conf=Sure|Kept="] {
             assert!(
-                Imported::parse("f", &fill_one(ok), &gold, false).is_ok(),
+                Imported::of_gold("f", &fill_one(ok), &gold, false).is_ok(),
                 "{ok}"
             );
         }
     }
 
     fn error_of(text: &str, quiet: bool) -> String {
-        Imported::parse("f", text, &gold(), quiet)
+        Imported::of_gold("f", text, &gold(), quiet)
             .unwrap_err()
             .to_string()
     }
@@ -435,6 +482,37 @@ mod tests {
             assert!(error.starts_with("f:"), "{error}");
             assert!(error.contains(expect), "{error} should say {expect}");
         }
+    }
+
+    #[test]
+    fn a_skeleton_with_no_gold_is_read_against_sent_ids_and_tokens() {
+        let gold = gold();
+        let text = fill(
+            &skeleton(&gold),
+            &[
+                (1, "VERB", "_", ""),
+                (2, "ADV", "_", ""),
+                (5, "NOUN", "_", ""),
+            ],
+        );
+        let tokens = gold.sentences[0].tokens();
+        let expected = [("a", tokens.clone())];
+        let imported = Imported::parse("f", &text, &expected, false).unwrap();
+        assert_eq!(imported.readings[0][0].unwrap().tag, Tag::Verb);
+        let other = [("b", tokens)];
+        let error = Imported::parse("f", &text, &other, false)
+            .unwrap_err()
+            .to_string();
+        assert!(
+            error.contains("sentence 1 is `a` where the skeleton's is `b`"),
+            "{error}"
+        );
+        assert!(
+            Imported::parse("f", &text, &[], false)
+                .unwrap_err()
+                .to_string()
+                .contains("more sentences than the skeleton's 0")
+        );
     }
 
     #[test]

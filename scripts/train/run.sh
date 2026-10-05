@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 # Runs the averaged perceptron and the Brill tagger through the exam: the baselines, the training,
 # the import files, the reports and the learning curve, all under .train. Run by `make
-# generate-percept`, `make test-percept`, `make generate-brill` and `make test-brill`, and by hand
-# for the curve; never by tests or CI. Needs the treebank, which `make fetch-ewt` fetches.
+# generate-percept`, `make test-percept`, `make generate-brill`, `make test-brill` and `make
+# test-ticlist-percept`, and by hand for the curve; never by tests or CI. Needs the treebank, which
+# `make fetch-ewt` fetches.
 #
 #   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on both dev sets
 #   run.sh generate        baseline, then train, tune and tag both dev sets into import files
 #   run.sh test            the unit tests, then the exam's report and `compare` for both dev sets
 #   run.sh generate-brill  baseline, then the Brill tagger and its initial tagger alone, as above
 #   run.sh test-brill      the unit tests, then the reports and the `compare` runs of the Brill tagger
+#   run.sh ticlist         the perceptron's reading of the tic list (run `generate` first)
 #   run.sh curve [NAME..]  the learning curve of each named learner (perceptron, brill; default
 #                          both); trains each four times and writes .train/curve.NAME.txt
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-cmd=${1:?usage: run.sh baseline|generate|test|generate-brill|test-brill|curve [NAME..]}
+cmd=${1:?usage: run.sh baseline|generate|test|generate-brill|test-brill|ticlist|curve [NAME..]}
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
@@ -115,6 +117,13 @@ case "$cmd" in
         tee ".train/$set.percept.compare.txt"
     done
     ;;
+  ticlist)
+    exam tokens --corpus --out .train/corpus.tokens.conllu
+    python3 $python tag --weights .train/percept.weights.json --tokens .train/corpus.tokens.conllu \
+      --out .train/corpus.percept.import.conllu
+    exam ticlist score --list tests/gold/ticlist.tsv --import .train/corpus.percept.import.conllu \
+      --save .train/ticlist.percept.run.json | tee .train/ticlist.percept.report.txt
+    ;;
   curve)
     shift
     learners=("$@")
@@ -127,5 +136,5 @@ case "$cmd" in
       mv .train/curve.txt ".train/curve.$name.txt"
     done
     ;;
-  *) echo "usage: run.sh baseline|generate|test|generate-brill|test-brill|curve [NAME..]" >&2; exit 2 ;;
+  *) echo "usage: run.sh baseline|generate|test|generate-brill|test-brill|ticlist|curve [NAME..]" >&2; exit 2 ;;
 esac

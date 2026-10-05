@@ -5,8 +5,9 @@
 //! given a [`tagger::Tagger`] or a file another program filled ([`import`]), scores what it says
 //! of each token ([`score`], [`metrics`]), with sentence-bootstrap intervals ([`stats`]), and
 //! prints a report ([`report`]), a saved run ([`saved`]) and a paired comparison of two
-//! ([`compare`]), or judges a run against the gates a file sets ([`gate`]), among them a list of words that must
-//! stay right ([`mustpass`]).
+//! ([`compare`]), or judges a run against the gates a file sets ([`gate`]), among them a list of
+//! words that must stay right ([`mustpass`]), or reads how a tagger does on the places a lint
+//! needs read as verbs ([`ticlist`]).
 //! `docs/design/exam.asbuilt.md` describes it.
 
 pub mod align;
@@ -29,6 +30,7 @@ pub mod stats;
 pub mod strata;
 pub mod tagger;
 pub mod tags;
+pub mod ticlist;
 pub mod words;
 
 pub use error::Error;

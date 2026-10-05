@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-05
 subsystems:
   - exam
 max_size_bytes: 8192
@@ -22,6 +22,7 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
+- `tokens --corpus`, `ticlist cut|score`: the tic list; `exam-candidates.asbuilt.md` has it.
 - `words --gold G`: the header and Words section alone, with no tagger.
 - `gate --gates F [--root D] [--tagger deslag|noun | --import F] SET...`: judges deslag's tagger,
   or an import, against the sets of a gates file, `tests/gold/gates.toml`; every named set runs,
@@ -48,7 +49,7 @@ tools/exam/src/
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
   gate.rs mustpass.rs `gate`: the gates file and the verdicts; the must-pass list
-  skeleton.rs disputes.rs error.rs
+  skeleton.rs disputes.rs error.rs ticlist.rs
 ```
 
 ## Gold files

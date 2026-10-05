@@ -1,0 +1,14 @@
+# exam.source = hand-made
+# sent_id = o1
+# text = Run grep on main.rs with --locked and foo_bar.
+1	Run	_	VERB	_	_	_	_	_	_
+2	grep	_	PROPN	_	_	_	_	_	_
+3	on	_	ADP	_	_	_	_	_	_
+4	main.rs	_	PROPN	_	_	_	_	_	_
+5	with	_	ADP	_	_	_	_	_	_
+6	-	_	PUNCT	_	_	_	_	_	_
+7	-	_	PUNCT	_	_	_	_	_	_
+8	locked	_	PROPN	_	_	_	_	_	_
+9	and	_	CCONJ	_	_	_	_	_	_
+10	foo_bar	_	PROPN	_	_	_	_	_	_
+11	.	_	PUNCT	_	_	_	_	_	_

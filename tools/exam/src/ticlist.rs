@@ -30,6 +30,7 @@ use crate::error::Error;
 use crate::gold::kind_name;
 use crate::import::Imported;
 use crate::report::interval;
+use crate::skeleton::origin_misc;
 use crate::stats::{Bootstrap, ratio};
 use crate::tagger::BUILT_IN;
 use crate::tags::{Confidence, Tag, TagSet};
@@ -285,9 +286,10 @@ pub fn corpus_skeleton(entries: &[Entry]) -> Result<(String, usize), Error> {
                 }
                 let _ = writeln!(
                     lines,
-                    "{}\t{form}\t_\t_\t_\t_\t_\t_\t_\tKind={}|Start={}{}",
+                    "{}\t{form}\t_\t_\t_\t_\t_\t_\t_\tKind={}{}|Start={}{}",
                     index + 1,
                     kind_name(token.kind),
+                    origin_misc(token, token.origin),
                     token.range.start,
                     if next.is_some() && !space {
                         "|SpaceAfter=No"

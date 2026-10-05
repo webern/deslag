@@ -1,6 +1,7 @@
 //! The plain-text report `score` prints, and the cells it and `compare` share.
 //!
-//! In order: the header; Words; Metrics; By confidence; Strata; Tier gaps; Calibration when
+//! In order: the header; Words; Metrics; By confidence; Strata (a block per tier, context and, when
+//! a word is not English, origin); Tier gaps; Calibration when
 //! scores exist; and, in full mode only, the confusion table, the largest confusions, the words
 //! most missed and examples of the unalignable. Holdout mode, and `--aggregate`, print the first
 //! seven and nothing that names a word, a sentence or a `sent_id`. Percentages are `{:.1}` of the
@@ -15,7 +16,7 @@ use crate::gold::{Gold, Tier};
 use crate::metrics::{METRICS, Metric, level_metrics};
 use crate::score::{Bin, Scoring};
 use crate::stats::{Bootstrap, Estimate, ratio, unpaired};
-use crate::strata::{Population, populations};
+use crate::strata::{Population, origin_populations, populations};
 use crate::tags::{Confidence, Tag};
 use crate::words::{GoldHeader, Words};
 
@@ -110,7 +111,8 @@ pub fn render(
     counted.imported_outside = scoring.outside;
     let _ = write!(out, "\n{counted}");
 
-    let pops = populations(&scoring.sentences);
+    let mut pops = populations(&scoring.sentences);
+    pops.extend(origin_populations(&scoring.by_origin));
     let boots: Vec<Bootstrap> = pops.iter().map(Population::bootstrap).collect();
 
     let _ = writeln!(out, "\nMetrics");

@@ -59,6 +59,39 @@ fn the_skeleton_reads_back_as_the_gold_s_own_tokens() {
 }
 
 #[test]
+fn the_skeleton_marks_each_word_that_is_not_english_and_no_other() {
+    let gold = case("origins.conllu");
+    let blocks = conllu::read("skeleton", &skeleton(&gold)).unwrap();
+    let marked: Vec<(&str, Option<&str>)> = blocks[0]
+        .lines
+        .iter()
+        .map(|line| {
+            let origin = conllu::pairs(&line.misc)
+                .into_iter()
+                .find(|(key, _)| *key == "Origin")
+                .map(|(_, value)| value);
+            (line.form.as_str(), origin)
+        })
+        .collect();
+    assert_eq!(
+        marked,
+        [
+            ("Run", None),
+            ("grep", Some("Command")),
+            ("on", None),
+            ("main.rs", Some("Path")),
+            ("with", None),
+            ("-", None),
+            ("-", None),
+            ("locked", Some("Flag")),
+            ("and", None),
+            ("foo_bar", Some("Symbol")),
+            (".", None),
+        ]
+    );
+}
+
+#[test]
 fn kind_names_round_trip() {
     for kind in [
         TokenKind::Word,

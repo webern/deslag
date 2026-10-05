@@ -398,3 +398,33 @@ fn a_save_path_that_cannot_be_written_exits_2_with_nothing_printed() {
     ]);
     assert!(error.contains("run.json"), "{error}");
 }
+
+#[test]
+fn the_report_adds_a_block_per_origin_only_when_a_word_is_not_english() {
+    let origins = ok(&[
+        "score",
+        "--gold",
+        &case("origins.conllu"),
+        "--tagger",
+        "deslag",
+        "--aggregate",
+    ]);
+    for block in [
+        "origin english (1 sentence, 4 tokens)",
+        "origin symbol (1 sentence, 1 token)",
+    ] {
+        assert!(origins.contains(block), "{block} in {origins}");
+    }
+    let plain = ok(&[
+        "score",
+        "--gold",
+        &case("one-to-one.conllu"),
+        "--tagger",
+        "deslag",
+        "--aggregate",
+    ]);
+    assert!(
+        !plain.contains("origin "),
+        "an all-English run has no origin block"
+    );
+}

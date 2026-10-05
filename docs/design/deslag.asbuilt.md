@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-05
 subsystems:
   - cli
   - instructions
@@ -109,12 +109,12 @@ docs/design/          design docs
 scripts/              preflight; llm-detection/collect.py, which rebuilds the corpus;
                       blobstore/, which moves its big tier and builds its batches; ewt/ and
                       harper/, which fetch the treebank and Harper's model for the exam; spacy/,
-                      which runs spaCy on the exam's tokens; lexicon/, which generates the
-                      tagger's word list by hand
+                      which runs spaCy on the exam's tokens; train/, which trains a perceptron
+                      and a Brill tagger; lexicon/, which makes the tagger's word list
 LICENSES/             the notices of the lexicon's sources and of Harper's engine
 tools/corpus/         deslag-corpus, never published: the corpus loaders and analysis
-tools/exam/           deslag-exam, never published: grades taggers against gold sets;
-                      deslag-gold, which makes the gold set
+tools/exam/           deslag-exam, never published: grades taggers against gold sets and the
+                      tic list; deslag-gold, which makes the gold set
 ```
 
 ## Build
@@ -141,7 +141,7 @@ completing seeds, and the `publish-blobs` workflow does that and publishes them 
 After a publish `scripts/blobstore/remeasure.sh` runs `make fix-blobs`, which rewrites the
 catalogue's counts and `measured_on` and the golden file of `list_growth` from the new image, then
 `make test-blobs` and the phrases test; the workflow commits the files with the lock so the branch
-stays green. A batch pull request runs it too and commits nothing.
+stays green.
 
 `make fetch-spacy` installs spaCy and its model, pinned by hash in
 `scripts/spacy/requirements.lock`, into a venv in `.spacy/`, and `make generate-spacy` writes the

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-05
+updated: 2026-10-03
 subsystems:
   - lint
   - output
@@ -22,8 +22,7 @@ src/
     banned_phrases.toml the groups' phrases; see catalog.md
     density.rs        the density lint
     list_growth.rs    the list growth lint
-    pattern.rs        a closed token pattern, as Rust data; `Item::Tag` matches a reading and
-                      `Item::Origin` an origin
+    pattern.rs        a closed token pattern, as Rust data; `Item::Tag` matches a reading
     verbs_no_nouns.rs the taste lint for a verb negated through its object
   output/             --format json, sarif and github
 ```
@@ -42,11 +41,6 @@ lints` is a file under `src/instructions/lints/`, without which `instructions` d
 
 A lint whose `Lint::reads_change` holds judges a change: `check_text` reads each file it selects
 at the base, by `Change::base_text`, into a `Before`, or with no base returns `Error::NoBase`.
-
-`pattern::Item::Tag(set, level)` matches a word whose best guess is in `set` at `level` or above;
-`kept` and the features are not read, and a token with no reading never matches. `Item::Origin(o)`
-matches a word of origin `o` (`tag.asbuilt.md`): what a lint needs to skip code, or to find a bare
-identifier that belongs in a code span. It is not a confidence on a set of tags.
 
 A lint keeps what it decides from the file alone in a function of the `Document`, such as
 `repo_layout::read`; what needs the settings or the disk is a thin layer over it.

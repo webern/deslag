@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-05
+updated: 2026-10-04
 subsystems:
   - tag-tables
 max_size_bytes: 5200
@@ -85,5 +85,7 @@ fits decides:
    tags are kept too.
 10. Anything else: a singular noun that may be a verb or an adjective.
 
-The endings of rule 8 are the table in `shape.rs`. `origin.rs` then overrides a `Symbol` or `Path`
-word (PROPN, `Likely`) and a `Command` or `Flag` (PROPN, `Unknown`), whatever the rules guessed.
+The endings of rule 8: `-ly` adverb; `-ing` present participle; `-ed` past; `-ize`, `-ise`, `-ify`
+verb; `-tion`, `-sion`, `-ment`, `-ness`, `-ity`, `-ism`, `-ship`, `-hood` noun; `-ous`, `-ible`,
+`-able`, `-less`, `-ful`, `-ive`, `-al` adjective; plain `-s` a plural noun that may be a verb, in
+a word of four letters not ending `-ss`, `-us` or `-is`.

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-05
 subsystems:
   - tag-passes
 max_size_bytes: 6400
@@ -123,4 +123,4 @@ test-blobs` runs it with `--check` (`analysis.asbuilt.md`). Tagging is 26.0% of 
 release and about 35% in the debug profile of `make ci`.
 
 The stages, measured on the big tier in release as each landed, in runs that do not sum: the
-table read 9.7% of reading, the first five passes 2.0 to 4.3% each, and `single` 3.4%.
+table read 9.7% of reading, origin 7%, the first five passes 2.0 to 4.3% each, and `single` 3.4%.

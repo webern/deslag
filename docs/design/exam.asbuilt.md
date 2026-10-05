@@ -11,7 +11,6 @@ on it. It grades part-of-speech taggers. A **gold set** is sentences in which a 
 the right tag for every word. The exam matches its words to deslag's own tokens, runs a tagger or
 reads another program's tags, and never guesses at a word it cannot match.
 
-`--help` lists commands.
 The taggers it grades, the import file and the data they read are in `exam-candidates.asbuilt.md`;
 the gold-set kit is in `gold-kit.asbuilt.md`.
 
@@ -21,7 +20,8 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
   [--save RUN.json] [--disputes D] [--words N]`: prints the report. `--save` writes the run for
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
-- `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
+- `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout);
+  `Origin=` in `MISC` marks a word that is not English, and `import` ignores it.
 - `tokens --corpus`, `ticlist cut|score`: the tic list; `exam-candidates.asbuilt.md` has it.
 - `words --gold G`: the header and Words section alone, with no tagger.
 - `gate --gates F [--root D] [--tagger deslag|noun | --import F] SET...`: judges deslag's tagger,
@@ -116,10 +116,13 @@ difference uses one set of draws; an unpaired one, each population's own.
 
 ## Report, saved runs, compare
 
-The report is the header, Words, Metrics, By confidence, Strata (a block per tier and context), Tier
-gaps (`llm - human` and `mixed - human`, a `finding` when the interval excludes zero), Calibration
-and, in full mode only, the confusion table, the largest confusions, the most-missed words and
-unalignable examples. A holdout gold or `--aggregate` stops at Calibration.
+The report is the header, Words, Metrics, By confidence, Strata (a block per tier and context, and
+when a word is not English per origin: each sentence tallies only its words of that origin, and a
+block holds the sentences that have one), Tier gaps (`llm - human` and `mixed - human`, a `finding`
+when the interval excludes zero), Calibration and, in full mode only, the confusion table, the
+largest confusions, the most-missed words and unalignable examples.
+
+A holdout gold or `--aggregate` stops at Calibration.
 
 A saved run is JSON: format, tagger, gold path, SHA-256 and split, the columns, and per sentence
 `sent_id` (its position for holdout), tier, context and tally. `compare` needs the same SHA-256,
@@ -146,8 +149,6 @@ metric and nothing else; a panic in the tagger is withheld, as its message may q
 
 ## Tests
 
-`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
-`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `gate.rs` the verdicts and the holdout's output; `harper.rs` the
-engine on tiny models; `golden.rs` the output against `tests/golden/`, which `make fix-golden`
-rewrites.
+`tests/cases/` holds a CoNLL-U file per case. Each test file is named for what it asserts
+(`alignment.rs`, `gold.rs`, `score.rs`, `cli.rs`, `gate.rs`, `harper.rs`); `golden.rs` compares the
+output with `tests/golden/`, which `make fix-golden` rewrites.

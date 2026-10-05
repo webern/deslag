@@ -5,29 +5,36 @@
 //! [`origins`] before the tables read it, so every tagger and every import shares it, and the exam
 //! finds it from a gold file's own text.
 //!
-//! The cues, in the order they are tried, and nothing else:
+//! Origin is a fact about the word, whatever the tables hold of it and whatever the tagger commits
+//! to. The cues, in the order they are tried, and nothing else:
 //!
-//! 1. **Path**: a file name with an extension from [`EXTENSIONS`] (`main.rs`), after a stem.
-//! 2. **Symbol**: a word with an underscore in it, or a lower-case letter straight before a capital
-//!    (`foo_bar`, `FrobulatorFactory`, `userId`), and `foo::bar`, which the tokenizer splits in
-//!    three. A word with a dot is never a symbol: `report_final.doc` is no source file's name.
-//!    Version labels and digit shapes (`v2`, `ESP32`) are left to `shape.rs`.
+//! 1. **Path**: a file name with an extension from [`EXTENSIONS`] or [`DOCUMENTS`], after a stem
+//!    (`main.rs`, `report.pdf`).
+//! 2. **Symbol**: a word with an underscore in it, or two lower-case letters straight before a
+//!    capital (`foo_bar`, `FrobulatorFactory`, `userId`), `foo::bar`, which the tokenizer splits in
+//!    three, and a dotted identifier (`os.path`, `this.setState`). One lower-case letter before a
+//!    capital is no cue (`PhD`, `eBook`, `mRNA`, `kHz`). Version labels and digit shapes (`v2`,
+//!    `ESP32`) are left to `shape.rs`.
 //! 3. **Flag**: a word right after a leading `-` or `--`, and the words a hyphen then joins to it
 //!    (`--no-verify`). A dash that follows a word or a number is no leading dash (`pre-commit`).
-//! 4. **Command**: a name in [`PROGRAMS`], in lower case or capitalised first in its sentence, and a
-//!    git subcommand in [`GIT`] right after `git`.
+//! 4. **Command**: a name in [`PROGRAMS`], in lower case or capitalised first in its sentence; a
+//!    name in [`HELD`], in lower case; a name in [`SHARED`], which is also an ordinary English word
+//!    (`make`, `find`), when it is in the place of a command (after *run*, before a flag); and a git
+//!    subcommand in [`GIT`] right after `git`.
 //!
 //! A word with an apostrophe is English. The names are facts, not a work of anyone's, so no licence
 //! travels with the lists; they are written by hand from git's own command list, the GNU
 //! coreutils manual and what tools are called in everyday use. They are Rust data, sorted and
 //! unique, and nothing reads them from a config or the environment. [`PROGRAMS`] holds no name that
-//! a table holds (`make`, `docker`, `yarn`): those keep the readings the tables give them, and a
-//! test fails when one is listed.
+//! a table holds, and [`HELD`] and [`SHARED`] hold only such names (tests check both).
 //!
-//! **What the tagger does with it,** for a word neither table has, which is `Unknown`:
+//! **What the tagger commits to** is narrower than the origin, and is set for a word neither table
+//! has, which is `Unknown`:
 //!
-//! - `Symbol` and `Path` read as a proper noun at `Likely`, keeping a noun: the guide tags such
-//!   names `PN.s`, and dev holds 20 of 20.
+//! - A `Symbol` without a dot, and a `Path` with a source, data or build extension, read as a proper
+//!   noun at `Likely`, keeping a noun: the guide tags such names `PN.s`, and dev holds 20 of 20.
+//!   A dotted identifier and a document or an image keep the reading `shape.rs` gives them: the
+//!   treebank tags an attachment such as *report.pdf* as a noun.
 //! - `Command` and `Flag` stay `Unknown`, best guess a proper noun, keeping a noun, and a verb
 //!   too for a program that is also an English verb ([`VERBS`]).
 //! - A command of that kind that opens an instruction with an object after it (*grep the logs*)
@@ -37,14 +44,12 @@
 //! A word a table has keeps its table reading whatever its origin, and `Unsure` stays reserved for
 //! table words, since the passes treat it as the tables' own.
 
-use super::{Confidence, Features, Origin, Reading, Tag, TagSet, shape};
+use super::{Confidence, Features, Origin, Reading, Tag, TagSet};
 use crate::document::{Token, TokenKind};
 
-/// The extensions that make a word a file name, lower case, sorted and unique: those of source,
-/// configuration, data and build files. None that a site ends in (`io`, `co`, `uk`), no single
-/// letter, which an abbreviation (`e.g`) ends in, and no document or image (`pdf`, `doc`, `jpg`):
-/// the treebank tags an attachment such as *report.pdf* as a noun, never a name, so such a word
-/// stays with `shape.rs`.
+/// The extensions of source, configuration, data and build files, lower case, sorted and unique.
+/// None that a site ends in (`io`, `co`, `uk`), and no single letter, which an abbreviation (`e.g`)
+/// ends in. A file with one is a `Path` the tagger commits to as a name.
 const EXTENSIONS: [&str; 55] = [
     "adoc", "bash", "bat", "bin", "cfg", "conf", "cpp", "css", "csv", "dll", "dylib", "env", "exe",
     "gradle", "hpp", "html", "ini", "ipynb", "jar", "java", "js", "json", "jsx", "lock", "log",
@@ -53,35 +58,45 @@ const EXTENSIONS: [&str; 55] = [
     "yaml", "yml", "zsh",
 ];
 
-/// The most bytes of an extension in [`EXTENSIONS`].
+/// The extensions of documents and images, lower case, sorted and unique. A file with one is a
+/// `Path` too, but the treebank tags *report.pdf* as a noun, so the tagger keeps its shape reading.
+const DOCUMENTS: [&str; 24] = [
+    "bmp", "doc", "docx", "epub", "gif", "heic", "ico", "jpeg", "jpg", "odp", "ods", "odt", "pdf",
+    "png", "ppt", "pptx", "psd", "rtf", "svg", "tif", "tiff", "webp", "xls", "xlsx",
+];
+
+/// The most bytes of an extension in [`EXTENSIONS`] or [`DOCUMENTS`].
 const EXTENSION: usize = 6;
 
-/// Where a name lands in [`FILTER`]: its first and last bytes and its length, mixed.
-const fn slot(first: u8, last: u8, len: usize) -> usize {
-    (first as usize * 31 + last as usize * 7 + len) & 1023
+/// The last part of a name that is a site, not an identifier (`example.com`), sorted.
+const SITES: [&str; 16] = [
+    "ai", "app", "ca", "co", "com", "de", "dev", "edu", "fr", "gov", "info", "io", "net", "org",
+    "uk", "us",
+];
+
+/// Where a name lands in [`FILTER`]: its first, second and last bytes and its length, mixed.
+const fn slot(first: u8, second: u8, last: u8, len: usize) -> usize {
+    let mixed = (first as usize * 0x9E37) ^ (second as usize * 0x85EB) ^ (last as usize * 0xC2B3);
+    let mixed = mixed ^ (len * 0x27D5);
+    (mixed ^ (mixed >> 7)) & 8191
 }
 
-/// One bit for each [`slot`] a name of [`PROGRAMS`] lands in. A name that lands in none is no
-/// program, so most words never reach the binary search.
-const FILTER: [u64; 16] = {
-    let mut filter = [0; 16];
+/// One bit for each [`slot`] a name of [`PROGRAMS`], [`HELD`], [`SHARED`] or [`GIT`] lands in. A
+/// word that lands in none is no program and no subcommand, so most words stop here, at a few
+/// instructions, before any other test.
+const FILTER: [u64; 128] = add(add(add(add([0; 128], &PROGRAMS), &HELD), &SHARED), &GIT);
+
+/// `filter` with a bit set for each of `names`.
+const fn add(mut filter: [u64; 128], names: &[&str]) -> [u64; 128] {
     let mut at = 0;
-    while at < PROGRAMS.len() {
-        let name = PROGRAMS[at].as_bytes();
-        let slot = slot(name[0], name[name.len() - 1], name.len());
+    while at < names.len() {
+        let name = names[at].as_bytes();
+        let slot = slot(name[0], name[1], name[name.len() - 1], name.len());
         filter[slot / 64] |= 1 << (slot % 64);
         at += 1;
     }
     filter
-};
-
-/// Units written with a capital after a lower-case letter, sorted: `KiB`, `kHz`, `mAh`. They look
-/// like camel case and are nouns, as the annotation guide says of a unit (*3.4 GiB*), so they are
-/// no symbols.
-const UNITS: [&str; 24] = [
-    "EiB", "GiB", "KiB", "MiB", "PiB", "TiB", "YiB", "ZiB", "dB", "kB", "kHz", "kPa", "kV", "kW",
-    "kWh", "mA", "mAh", "mL", "mV", "mW", "nF", "pF", "uA", "uF",
-];
+}
 
 /// The most bytes of a program's name in [`PROGRAMS`], and the fewest.
 const NAME: std::ops::RangeInclusive<usize> = 2..=13;
@@ -315,6 +330,24 @@ const PROGRAMS: [&str; 220] = [
     "zstd",
 ];
 
+/// The programs a table holds, and that no one reads as anything else (`git`, `cargo`, `ls`),
+/// sorted. A name of one, in lower case, is a `Command`; its reading stays the table's.
+const HELD: [&str; 20] = [
+    "apt", "bash", "cargo", "cd", "curl", "cvs", "docker", "emacs", "git", "hg", "ls", "lynx",
+    "php", "pip", "sh", "svn", "unzip", "vagrant", "vim", "yarn",
+];
+
+/// The programs a table holds as ordinary English words (`make`, `find`), sorted. One is a `Command`
+/// only in the place of one: after a word of [`RUN`] or a `$`, or right before a flag.
+const SHARED: [&str; 25] = [
+    "alias", "brew", "cat", "clear", "cut", "dig", "echo", "find", "head", "kill", "locate",
+    "make", "mount", "paste", "ping", "rev", "sleep", "sort", "strings", "sync", "tail", "tar",
+    "touch", "tree", "zip",
+];
+
+/// The words that put a [`SHARED`] name in the place of a command: *run make*.
+const RUN: [&str; 6] = ["execute", "invoke", "ran", "run", "running", "runs"];
+
 /// The programs that are also English verbs, sorted: `grep the logs`.
 const VERBS: [&str; 23] = [
     "awk", "chgrp", "chmod", "chown", "cp", "fgrep", "fsck", "grep", "gunzip", "gzip", "killall",
@@ -394,7 +427,7 @@ pub fn origins(tokens: &[Token<'_>]) -> Vec<Origin> {
     let mut work = tokens.to_vec();
     for at in 0..work.len() {
         work[at].origin = if work[at].kind == TokenKind::Word {
-            origin_of(&work, at, true)
+            origin_of(&work, at)
         } else {
             Origin::English
         };
@@ -404,8 +437,7 @@ pub fn origins(tokens: &[Token<'_>]) -> Vec<Origin> {
 
 /// Sets the origin of the token at `at` of a sentence, whose word the tables have read, and reads a
 /// word they lack by its origin (see the module docs). The origins before `at` are set already.
-/// A name from [`PROGRAMS`] is looked up only for such a word, as no table holds one, which is what
-/// [`origins`] would find too. Returns whether the origin is `Command`.
+/// The origin does not depend on what the tables hold. Returns whether it is `Command`.
 ///
 /// Debug builds run this on every word, so it keeps to plain loops and tests with no closure.
 pub(super) fn mark(tokens: &mut [Token<'_>], at: usize) -> bool {
@@ -413,25 +445,26 @@ pub(super) fn mark(tokens: &mut [Token<'_>], at: usize) -> bool {
         tokens[at].origin = Origin::English;
         return false;
     }
-    let lacks = match tokens[at].reading {
-        Some(reading) => reading.confidence == Confidence::Unknown,
-        None => false,
-    };
-    let origin = origin_of(tokens, at, lacks);
+    let origin = origin_of(tokens, at);
     let token = &mut tokens[at];
     token.origin = origin;
-    if lacks && let Some(reading) = token.reading {
+    if origin == Origin::English {
+        return false;
+    }
+    if let Some(reading) = token.reading
+        && reading.confidence == Confidence::Unknown
+    {
         token.reading = Some(read(origin, &token.text, reading));
     }
     origin == Origin::Command
 }
 
-/// The origin of the word at `at`, given the origins `tokens` already hold for the words before it,
-/// and whether a name in [`PROGRAMS`] counts, which it does for a word no table has.
+/// The origin of the word at `at`, given the origins `tokens` already hold for the words before it.
 ///
-/// It runs on every word of every document, so it reads a word's bytes once, and looks at a
+/// It runs on every word of every document, so a plain lower-case word, which most are, is read
+/// once as bytes and goes no further than the neighbour and name checks, and it looks at a
 /// neighbour's kind, which lives in the token, before its text, which does not.
-fn origin_of(tokens: &[Token<'_>], at: usize, programs: bool) -> Origin {
+fn origin_of(tokens: &[Token<'_>], at: usize) -> Origin {
     let text: &str = &tokens[at].text;
     if !is_plain(text.as_bytes())
         && let Some(origin) = by_marks(text)
@@ -454,16 +487,14 @@ fn origin_of(tokens: &[Token<'_>], at: usize, programs: bool) -> Origin {
             return Origin::Flag;
         }
     }
-    // A name of PROGRAMS, which only a word the tables lack can be, or a git subcommand.
-    let after_git = at > 0 && is_git(&tokens[at - 1]);
-    if (programs || after_git) && is_command(tokens, at, programs) {
+    if in_filter(text.as_bytes()) && is_command(tokens, at) {
         Origin::Command
     } else {
         Origin::English
     }
 }
 
-/// Whether `token` is the word `git`.
+/// Whether the token is the word `git`.
 fn is_git(token: &Token<'_>) -> bool {
     token.kind == TokenKind::Word && token.text.len() == 3 && token.text.eq_ignore_ascii_case("git")
 }
@@ -492,8 +523,14 @@ fn by_marks(text: &str) -> Option<Origin> {
     } else if marks.apostrophe {
         return Some(Origin::English);
     }
-    if marks.dot && is_path(text) {
-        Some(Origin::Path)
+    if marks.dot {
+        if is_path(text, &EXTENSIONS) || is_path(text, &DOCUMENTS) {
+            Some(Origin::Path)
+        } else if is_dotted_identifier(text) {
+            Some(Origin::Symbol)
+        } else {
+            None
+        }
     } else if marks.is_symbol(text) {
         Some(Origin::Symbol)
     } else {
@@ -511,21 +548,21 @@ struct Marks {
     apostrophe: bool,
     dot: bool,
     underscore: bool,
-    /// An ASCII lower-case letter straight before an ASCII capital.
+    /// An ASCII capital after at least two ASCII lower-case letters.
     camel: bool,
 }
 
 impl Marks {
     fn of(text: &str) -> Marks {
         let mut marks = Marks::default();
-        let mut after_lower = false;
+        let mut lower = 0;
         for byte in text.bytes() {
             match byte {
                 b'a'..=b'z' => {
-                    after_lower = true;
+                    lower += 1;
                     continue;
                 }
-                b'A'..=b'Z' => marks.camel |= after_lower,
+                b'A'..=b'Z' => marks.camel |= lower >= 2,
                 b'\'' => marks.apostrophe = true,
                 b'.' => marks.dot = true,
                 b'_' => marks.underscore = true,
@@ -533,26 +570,74 @@ impl Marks {
                 _ => {}
             }
             marks.other = true;
-            after_lower = false;
+            lower = 0;
         }
         marks
     }
 
-    /// Whether `text`, whose marks these are, is written as a name from code: an underscore among
-    /// its letters (`0001_initial` too), or camel or Pascal case. A word of lower-case letters
-    /// alone has no such cue, one with a dot is no symbol, and a camel shape that starts with a
-    /// digit (`1Password`) is left to `shape.rs`.
+    /// Whether `text`, whose marks these are and which has no dot, is written as a name from code:
+    /// an underscore among its letters (`0001_initial` too), or camel or Pascal case. A word of
+    /// lower-case letters alone has no such cue, and a camel shape that starts with a digit
+    /// (`1Password`) is left to `shape.rs`.
     fn is_symbol(&self, text: &str) -> bool {
-        if !self.other || self.dot || UNITS.binary_search(&text).is_ok() {
+        if !self.other {
             return false;
         }
         if self.non_ascii {
             return (text.contains('_') && text.chars().any(char::is_alphabetic))
-                || (!text.starts_with(|c: char| c.is_ascii_digit()) && shape::is_camel_case(text));
+                || (!text.starts_with(|c: char| c.is_ascii_digit()) && has_camel(text));
         }
         (self.underscore && text.bytes().any(|byte| byte.is_ascii_alphabetic()))
             || (self.camel && !text.starts_with(|c: char| c.is_ascii_digit()))
     }
+}
+
+/// Whether a capital stands after two or more lower-case letters: `userId`, `PowerShell`,
+/// `macOS`. One letter before it is no cue: `PhD`, `eBook`, `mRNA`, `iPhone`, `kHz` are English.
+fn has_camel(text: &str) -> bool {
+    let mut lower = 0;
+    for ch in text.chars() {
+        if ch.is_uppercase() && lower >= 2 {
+            return true;
+        }
+        lower = if ch.is_lowercase() { lower + 1 } else { 0 };
+    }
+    false
+}
+
+/// Whether `text`, which has a dot, is a dotted identifier (`os.path`, `foo.bar`,
+/// `user.first_name`): two or more parts of two or more letters, digits or underscores, each with
+/// a letter, the first starting with one; the last is no site's ending (`example.com`), and none
+/// after the first is a capitalised word (`works.Then`, `St.Louis`), so a missing space after a
+/// full stop is no identifier.
+fn is_dotted_identifier(text: &str) -> bool {
+    let first = text.as_bytes()[0];
+    if !(first.is_ascii_alphabetic() || first == b'_') {
+        return false;
+    }
+    let mut parts = 0;
+    let mut last = "";
+    for part in text.split('.') {
+        let bytes = part.as_bytes();
+        let capitalised = bytes.first().is_some_and(u8::is_ascii_uppercase)
+            && bytes[1..].iter().all(u8::is_ascii_lowercase);
+        if bytes.len() < 2
+            || !bytes
+                .iter()
+                .all(|b| b.is_ascii_alphanumeric() || *b == b'_')
+            || !bytes.iter().any(u8::is_ascii_alphabetic)
+            || (parts > 0 && capitalised)
+        {
+            return false;
+        }
+        parts += 1;
+        last = part;
+    }
+    parts >= 2
+        && !text.starts_with("www.")
+        && SITES
+            .binary_search(&last.to_ascii_lowercase().as_str())
+            .is_err()
 }
 
 /// Whether the word at `at` is an emoji shortcode, `:rocket:`: a single colon straight before and
@@ -602,8 +687,8 @@ fn joins_double_colon(tokens: &[Token<'_>], at: usize) -> bool {
     before || after
 }
 
-/// Whether `text` is a file name with an extension of [`EXTENSIONS`] after a stem.
-fn is_path(text: &str) -> bool {
+/// Whether `text` is a file name after a stem, whose extension is in `list`.
+fn is_path(text: &str, list: &[&str]) -> bool {
     let Some((stem, extension)) = text.rsplit_once('.') else {
         return false;
     };
@@ -620,7 +705,7 @@ fn is_path(text: &str) -> bool {
     lower[..bytes.len()].copy_from_slice(bytes);
     lower[..bytes.len()].make_ascii_lowercase();
     std::str::from_utf8(&lower[..bytes.len()])
-        .is_ok_and(|extension| EXTENSIONS.binary_search(&extension).is_ok())
+        .is_ok_and(|extension| list.binary_search(&extension).is_ok())
 }
 
 /// Whether the token is a hyphen, `-`.
@@ -650,43 +735,69 @@ fn is_flag(tokens: &[Token<'_>], at: usize) -> bool {
     }
 }
 
-/// Whether the word at `at` names a program: a git subcommand right after `git`, or, if `programs`
-/// holds, a name in [`PROGRAMS`] in lower case, or capitalised when no word comes before it in the
-/// sentence.
-fn is_command(tokens: &[Token<'_>], at: usize, programs: bool) -> bool {
+/// Whether [`FILTER`] holds the slot of this word, which any name of the lists must.
+fn in_filter(bytes: &[u8]) -> bool {
+    if bytes.len() < 2 {
+        return false;
+    }
+    let slot = slot(
+        bytes[0].to_ascii_lowercase(),
+        bytes[1].to_ascii_lowercase(),
+        bytes[bytes.len() - 1],
+        bytes.len(),
+    );
+    FILTER[slot / 64] >> (slot % 64) & 1 != 0
+}
+
+/// Whether the word at `at` names a program: a git subcommand right after `git`, a name in
+/// [`PROGRAMS`] in lower case, or capitalised when no word comes before it in the sentence, a name
+/// in [`HELD`] in lower case, or one in [`SHARED`] in the place of a command.
+fn is_command(tokens: &[Token<'_>], at: usize) -> bool {
     let text: &str = &tokens[at].text;
     if at > 0 && is_git(&tokens[at - 1]) && GIT.binary_search(&text).is_ok() {
         return true;
     }
-    if !programs || !NAME.contains(&text.len()) || !text.is_ascii() {
+    if !NAME.contains(&text.len()) || !text.is_ascii() {
         return false;
     }
     let bytes = text.as_bytes();
-    let slot = slot(
-        bytes[0].to_ascii_lowercase(),
-        bytes[bytes.len() - 1],
-        bytes.len(),
-    );
-    if FILTER[slot / 64] >> (slot % 64) & 1 == 0 {
-        return false;
-    }
-    if text
-        .bytes()
+    if bytes
+        .iter()
         .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
     {
-        return PROGRAMS.binary_search(&text).is_ok();
+        return PROGRAMS.binary_search(&text).is_ok()
+            || HELD.binary_search(&text).is_ok()
+            || (SHARED.binary_search(&text).is_ok() && is_in_command_place(tokens, at));
     }
     let first = !tokens[..at]
         .iter()
         .any(|token| token.kind == TokenKind::Word);
     first
-        && text.starts_with(|c: char| c.is_ascii_uppercase())
-        && text[1..]
-            .bytes()
+        && bytes[0].is_ascii_uppercase()
+        && bytes[1..]
+            .iter()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
         && PROGRAMS
             .binary_search(&text.to_ascii_lowercase().as_str())
             .is_ok()
+}
+
+/// Whether the word at `at` stands where a command does: after a word of [`RUN`] or a `$`, or
+/// before a flag that a space parts from it (`make -j`).
+fn is_in_command_place(tokens: &[Token<'_>], at: usize) -> bool {
+    if at > 0 {
+        let before = &tokens[at - 1];
+        if (before.kind == TokenKind::Word && RUN.contains(&before.folded().as_str()))
+            || (before.kind == TokenKind::Symbol && before.text == "$")
+        {
+            return true;
+        }
+    }
+    at + 2 < tokens.len()
+        && is_dash(&tokens[at + 1])
+        && tokens[at].range.end < tokens[at + 1].range.start
+        && tokens[at + 1].range.end == tokens[at + 2].range.start
+        && tokens[at + 2].kind == TokenKind::Word
 }
 
 /// Whether `text` names a program that is also an English verb.
@@ -696,12 +807,24 @@ fn is_verb(text: &str) -> bool {
         .is_ok()
 }
 
+/// Whether the tagger commits to a word of this origin as a name, which is narrower than the
+/// origin. A dotted identifier is no name the guide's rule covers, and a document or an image is
+/// tagged as the noun it is; see the module docs.
+fn commits(origin: Origin, text: &str) -> bool {
+    match origin {
+        Origin::Symbol => !text.contains('.'),
+        Origin::Path => is_path(text, &EXTENSIONS),
+        _ => false,
+    }
+}
+
 /// The reading of a word that no table has and whose origin is `origin`, given its reading by
 /// shape, which stands for `English`. See the module docs.
 pub(super) fn read(origin: Origin, text: &str, by_shape: Reading) -> Reading {
     let names = TagSet::of(Tag::Noun).with(Tag::ProperNoun);
     let (confidence, kept) = match origin {
         Origin::English => return by_shape,
+        Origin::Symbol | Origin::Path if !commits(origin, text) => return by_shape,
         Origin::Symbol | Origin::Path => (Confidence::Likely, names),
         Origin::Command if is_verb(text) => (Confidence::Unknown, names.with(Tag::Verb)),
         Origin::Command | Origin::Flag => (Confidence::Unknown, names),
@@ -787,23 +910,36 @@ mod tests {
     fn the_lists_are_sorted_and_unique() {
         for (name, list) in [
             ("EXTENSIONS", &EXTENSIONS[..]),
+            ("DOCUMENTS", &DOCUMENTS[..]),
+            ("SITES", &SITES[..]),
             ("PROGRAMS", &PROGRAMS[..]),
+            ("HELD", &HELD[..]),
+            ("SHARED", &SHARED[..]),
+            ("RUN", &RUN[..]),
             ("VERBS", &VERBS[..]),
             ("GIT", &GIT[..]),
-            ("UNITS", &UNITS[..]),
         ] {
             assert!(
                 list.windows(2).all(|pair| pair[0] < pair[1]),
                 "{name} is not sorted and unique"
             );
             assert!(
-                list.iter().all(|word| word.is_ascii()
-                    && (name == "UNITS" || **word == word.to_ascii_lowercase())),
+                list.iter()
+                    .all(|word| word.is_ascii() && **word == word.to_ascii_lowercase()),
                 "{name} holds a word that is not lower case ASCII"
             );
         }
-        for name in PROGRAMS {
+        for name in PROGRAMS.iter().chain(&HELD).chain(&SHARED) {
             assert!(NAME.contains(&name.len()), "{name} is outside NAME");
+        }
+        for name in HELD.iter().chain(&SHARED) {
+            assert!(
+                PROGRAMS.binary_search(name).is_err(),
+                "{name} is in two lists"
+            );
+        }
+        for name in SHARED {
+            assert!(HELD.binary_search(&name).is_err(), "{name} is in two lists");
         }
         for verb in VERBS {
             assert!(
@@ -814,7 +950,14 @@ mod tests {
         assert!(
             EXTENSIONS
                 .iter()
+                .chain(&DOCUMENTS)
                 .all(|e| e.len() <= EXTENSION && e.len() > 1)
+        );
+        assert!(
+            DOCUMENTS
+                .iter()
+                .all(|e| EXTENSIONS.binary_search(e).is_err()),
+            "a document extension is also a source one"
         );
     }
 
@@ -828,6 +971,20 @@ mod tests {
         assert!(
             held.is_empty(),
             "the tables hold these programs, which keep their table readings, so drop them: {held:?}"
+        );
+    }
+
+    #[test]
+    fn the_programs_the_tables_hold_are_listed_apart() {
+        let lacking: Vec<&str> = HELD
+            .iter()
+            .chain(&SHARED)
+            .copied()
+            .filter(|name| !in_a_table(name))
+            .collect();
+        assert!(
+            lacking.is_empty(),
+            "the tables lack these, so they belong in PROGRAMS: {lacking:?}"
         );
     }
 
@@ -849,11 +1006,22 @@ mod tests {
                 "{text}"
             );
         }
-        let mut tokens = Token::split("Run make now.");
-        sentence(&mut tokens, Context::Prose);
-        assert_eq!(tokens[1].origin, Origin::English);
-        let make = crate::tag::read("make");
-        assert_eq!(tokens[1].reading.unwrap().possible(), make.possible());
+        for (words, at, word) in [
+            ("Run make now.", 1, "make"),
+            ("Run cargo build.", 1, "cargo"),
+        ] {
+            let mut tokens = Token::split(words);
+            sentence(&mut tokens, Context::Prose);
+            assert_eq!(tokens[at].origin, Origin::Command, "{words}");
+            let by_table = crate::tag::read(word);
+            let reading = tokens[at].reading.unwrap();
+            assert_ne!(reading.confidence, Confidence::Unknown, "{words}");
+            assert_eq!(
+                reading.possible().intersection(by_table.possible()),
+                reading.possible(),
+                "{words}"
+            );
+        }
     }
 
     #[test]
@@ -882,6 +1050,68 @@ mod tests {
     }
 
     #[test]
+    fn two_lower_case_letters_before_a_capital_make_camel_case() {
+        for text in [
+            "userId",
+            "macOS",
+            "GitHub",
+            "fooBar",
+            "xmlHTTPRequest",
+            "naïveFoo",
+        ] {
+            assert_eq!(
+                only(&format!("Use {text} here.")),
+                marked(text, Origin::Symbol),
+                "{text}"
+            );
+        }
+        for text in [
+            "Ph", "PhD", "eBook", "mRNA", "iOS", "xDS", "pH", "AbC", "éD",
+        ] {
+            assert!(only(&format!("Use {text} here.")).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_dotted_identifier_is_a_symbol_the_tagger_does_not_commit_to() {
+        for text in [
+            "os.path",
+            "foo.bar",
+            "user.first_name",
+            "this.setState",
+            "react.useState",
+        ] {
+            assert_eq!(
+                only(&format!("Call {text} now.")),
+                marked(text, Origin::Symbol),
+                "{text}"
+            );
+            let words = format!("Call {text} now.");
+            let mut tokens = Token::split(&words);
+            sentence(&mut tokens, Context::Prose);
+            let reading = tokens[1].reading.unwrap();
+            let by_shape = crate::tag::read(text);
+            assert_eq!(reading, by_shape, "the tag is the shape's: {text}");
+        }
+        for text in [
+            "example.com",
+            "node.io",
+            "www.foo.bar",
+            "works.Then",
+            "St.Louis",
+            "e.g",
+            "U.S",
+            "p.m",
+            "v1.2",
+            "3.14",
+            "1.2.3",
+            "x.y",
+        ] {
+            assert!(only(&format!("See {text} now.")).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
     fn a_shortcode_is_no_symbol_but_a_path_of_colons_is() {
         assert!(only("Added :arrows_clockwise: here.").is_empty());
         assert_eq!(
@@ -901,6 +1131,14 @@ mod tests {
             "400k",
             "NASA",
             "APIs",
+            "PhD",
+            "eBook",
+            "mRNA",
+            "iPhone",
+            "pH",
+            "kHz",
+            "KiB",
+            "mAh",
             "Frobnitz",
             "e.g",
             "U.S",
@@ -921,6 +1159,11 @@ mod tests {
             "config.toml",
             "FooBar.rs",
             "foo.test.js",
+            "report.pdf",
+            "Lisa_resume.doc",
+            "UnleadedStocks.pdf",
+            "logo.PNG",
+            "photo.jpeg",
         ] {
             assert_eq!(
                 only(&format!("Edit {text} now.")),
@@ -935,15 +1178,31 @@ mod tests {
             "works.Then",
             "node.io",
             "p.m",
-            "report.pdf",
-            "Lisa_resume.doc",
-            "UnleadedStocks.pdf",
-            "logo.jpg",
-            "KiB",
-            "kHz",
-            "mAh",
+            "www.adobe.pdf",
         ] {
             assert!(only(&format!("See {text} now.")).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn the_tagger_commits_to_a_source_file_but_keeps_the_shape_of_a_document() {
+        for text in ["main.rs", "AGENTS.md", "foo.test.js"] {
+            let words = format!("Edit {text} now.");
+            let mut tokens = Token::split(&words);
+            sentence(&mut tokens, Context::Prose);
+            let reading = tokens[1].reading.unwrap();
+            assert_eq!(
+                (reading.tag, reading.confidence),
+                (Tag::ProperNoun, Confidence::Likely),
+                "{text}"
+            );
+        }
+        for text in ["report.pdf", "lisa_resume.doc", "logo.png", "photo.jpeg"] {
+            let words = format!("See {text} now.");
+            let mut tokens = Token::split(&words);
+            sentence(&mut tokens, Context::Prose);
+            assert_eq!(tokens[1].origin, Origin::Path, "{text}");
+            assert_eq!(tokens[1].reading.unwrap(), crate::tag::read(text), "{text}");
         }
     }
 
@@ -992,6 +1251,34 @@ mod tests {
             only("A stash of money.").is_empty(),
             "a subcommand needs git before it"
         );
+    }
+
+    #[test]
+    fn a_program_a_table_holds_is_a_command() {
+        for (text, word) in [
+            ("Run cargo build now.", "cargo"),
+            ("Use git now.", "git"),
+            ("Run ls now.", "ls"),
+            ("Run make now.", "make"),
+            ("Then run make -j4.", "make"),
+            ("Pipe it to sort -u.", "sort"),
+            ("Type $ cat now.", "cat"),
+        ] {
+            let found: Vec<_> = only(text).into_iter().filter(|(w, _)| w == word).collect();
+            assert_eq!(found, marked(word, Origin::Command), "{text}");
+        }
+        for text in [
+            "Git is a tool.",
+            "Cargo ships today.",
+            "We make it.",
+            "Find the file.",
+            "They sort of agree.",
+            "A cat sat.",
+            "A pre-make step.",
+            "Make-believe worlds.",
+        ] {
+            assert!(only(text).is_empty(), "{text}: {:?}", only(text));
+        }
     }
 
     #[test]
@@ -1104,6 +1391,37 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn origins_and_the_tagger_agree_over_the_core_corpus() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/core");
+        let (mut files, mut sentences, mut others) = (0, 0, 0);
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            if path.extension().is_none_or(|e| e != "md") {
+                continue;
+            }
+            let source = std::fs::read_to_string(&path).unwrap();
+            let document = crate::document::Document::markdown(&source);
+            files += 1;
+            for (block, _) in document.walk() {
+                for found in document.sentences_of(block) {
+                    let tokens = &document.tokens_in(found.range.clone());
+                    // Origins from the kind, text and place alone, on tokens the tagger has set.
+                    let found = origins(tokens);
+                    for (token, origin) in tokens.iter().zip(found) {
+                        assert_eq!(token.origin, origin, "{}: {}", path.display(), token.text);
+                        sentences += 1;
+                        others += usize::from(origin != Origin::English);
+                    }
+                }
+            }
+        }
+        assert!(
+            files > 20 && sentences > 1000 && others > 20,
+            "{files} {sentences} {others}"
+        );
     }
 
     #[test]

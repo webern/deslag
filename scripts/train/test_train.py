@@ -91,6 +91,17 @@ class ReadTests(unittest.TestCase):
         self.assertTrue(lines[3].endswith("SpaceAfter=No|Conf=Likely|Score=0.2500|Kept=VERB"))
 
 
+class NormalizeTests(unittest.TestCase):
+    def test_years_and_other_digit_words_fold_and_a_non_decimal_digit_does_not_crash(self):
+        from features import normalize
+        self.assertEqual(normalize("1999"), "!YEAR")
+        self.assertEqual(normalize("1799"), "!DIGITS")
+        self.assertEqual(normalize("3rd"), "!DIGITS")
+        self.assertEqual(normalize("Dog"), "dog")
+        # `isdigit` is true for superscripts, `int` fails on them
+        self.assertEqual(normalize("\u00b2\u00b2\u00b2\u00b2"), "!DIGITS")
+
+
 class PerceptronTests(unittest.TestCase):
     def setUp(self):
         self.model = perceptron.train(toy(), 1, passes=3)

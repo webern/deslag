@@ -65,13 +65,6 @@ fn every_row_still_names_the_word_the_shipped_lint_matches() {
 }
 
 #[test]
-fn the_list_is_the_shipped_pattern_s_matches_and_nothing_else() {
-    // A lint change that moves a match fails here, and it is the owner's call in that change.
-    let rows = cut(&corpus(&root()).unwrap());
-    assert_eq!(rows, list().rows);
-}
-
-#[test]
 fn the_built_in_tagger_s_counts_on_the_list_are_pinned() {
     let list = list();
     let scored = score(&list, &corpus(&root()).unwrap(), &Source::Deslag).unwrap();

@@ -9,7 +9,8 @@
 //! that are not `Word` tokens are not read, whatever they hold.
 //!
 //! The file must have the gold's `sent_id`s in the gold's order and the skeleton's `FORM`s line for
-//! line (a file with no gold, as `ticlist score` reads, has the `sent_id`s and tokens it is given); otherwise the exam cannot run, and says where the first difference is. A `Word` line
+//! line (a file with no gold, as `ticlist score` reads, has the `sent_id`s and tokens it is
+//! given); otherwise the exam cannot run, and says where the first difference is. A `Word` line
 //! tagged `PUNCT`, `SYM` or `X` becomes `Noun` at `Unknown`, and [`Imported::outside`] counts them.
 
 use std::path::Path;

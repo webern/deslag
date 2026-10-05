@@ -24,11 +24,12 @@ deslag/
                           mixed/ collected, one directory per source repo
   tools/               <- never published: corpus/, the corpus's one loader, which the tests read
                           it through, and commands that measure it; exam/, which grades taggers
-                          on gold sets and the tic list; deslag-gold makes the gold; see --help
+                          on gold sets and the tic list; deslag-gold makes the gold
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
                           blobstore/ fetches its big tier, ewt/ and harper/ what the exam uses,
                           spacy/ runs spaCy on its tokens, lexicon/ makes the tagger's word list,
-                          train/ a perceptron and a Brill tagger on EWT, and on the tic list
+                          train/ a perceptron and a Brill tagger on EWT; the perceptron also
+                          reads the tic list
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which
   .agents/skills/      <- agent skills, each named deslag-*; .claude/skills is a symlink to it
 ```

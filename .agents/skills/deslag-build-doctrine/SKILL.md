@@ -30,8 +30,9 @@ When a layout change makes caches or local state unusable, the build system must
 clean or migrate. Switching branches, or restoring a CI cache, must never produce a broken build.
 
 External Assets are files unfit for the git tree because they would bloat it: binaries over 256KB,
-text data over 1MB, or large collections of non-first-party files. First-party source is never one. A `fetch` target pulls them, pinned under source control, and a cheap local-state
-test makes a repeat fetch free.
+text data over 1MB, or large collections of non-first-party files. Rules of thumb, not law;
+first-party source is never one. A `fetch` target pulls them, pinned under source control, and a
+cheap local-state test makes a repeat fetch free.
 
 The exception is `tests/corpus/`: tests need its bytes offline, and a fixture must outlive its
 source. It is bounded to about 400 fixtures of at most 64KB per collected category. Only a human
@@ -46,7 +47,7 @@ Python 3 is the exception, in four places. `scripts/llm-detection/collect.py` re
 standard library only, by hand; make, tests and CI run its `batch`.
 `scripts/blobstore/test_batches.py` tests it offline under `make test-scripts`.
 
-`scripts/spacy/tag.py` is the exam's spaCy tagger, with hash-pinned packages in the cache venv `.spacy/`, run by `make
+`scripts/spacy/tag.py` is the exam's spaCy tagger, pinned by hash in `.spacy/`, run by `make
 fetch-spacy`, `generate-spacy` and `test-spacy`. `scripts/train/` is the exam's perceptron and Brill
 tagger, standard library only and offline after `make fetch-ewt`. Neither is in `test` or `ci`.
 

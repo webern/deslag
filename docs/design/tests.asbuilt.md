@@ -23,9 +23,9 @@ tests/
 
 ## Small trees
 
-`tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each. `tests/fix.rs` pins each refusal and the bytes fix writes.
-`tests/instructions.rs` holds the guide's example and each lint's table to the schema, and runs
-them: each table turns on its lint alone, and all of them together turn on every lint.
+`tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each. `tests/fix.rs` pins
+each refusal and the bytes fix writes. `tests/instructions.rs` holds the guide's example and each
+lint's table to the schema, and runs them.
 
 ## Cases
 
@@ -47,7 +47,7 @@ expects from the bytes it placed.
 
 The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
 and density, and the binary must report what the library finds. Tokens and sentences must keep to
-their blocks.
+their blocks, and each location found under the golden config must hold what it names.
 
 `make test-scripts` runs `scripts/blobstore/test_batches.py` against local git repositories.
 
@@ -68,7 +68,8 @@ a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 `make test` runs `make test-exam` first: the whole `golden` binary, so a change to the tag stream
 fails, then `deslag-exam gate` on the `dev`, `mustpass` and `holdout` sets of
-`tests/gold/gates.toml`, which `exam.asbuilt.md` describes.
+`tests/gold/gates.toml`, which `exam.asbuilt.md` describes. A gate is raised by hand, in the change
+that earns it.
 `make test-ewt` judges the `ewt-dev` set the same way; it fetches the treebank, so it is not in
 `test` or `ci`.
 
@@ -80,4 +81,4 @@ profile built, it measures again, each file keeping its fastest of six passes, a
 `tests/gold/mustpass.tsv` holds 982 dev words that deslag tags right at `Sure`; `ticlist.tsv`, 172
 places the `verbs_no_nouns` pattern matches in the corpus. Each is cut once by `deslag-exam` and
 frozen, never regenerated. `cargo test --workspace` holds each row to `dev.conllu`, or to the
-corpus and the lint, so a changed word, fixture or lint makes a list stale and fails.
+corpus and the lint.

@@ -65,9 +65,7 @@ The Brill tagger (`brill.py`) gives each word its commonest train tag, then appl
 changed; else `Sure` for one train tag, `Unsure` for several. `Kept=` is its train tags and any a
 rule gave. It writes no `Score=`.
 
-Both write UPOS in UD tags, deslag codes in `Kept=`, and no FEATS. `test-ticlist-percept` runs the
-perceptron on `tests/gold/ticlist.tsv` through `tokens --corpus`.
-
+Both write UPOS in UD tags, deslag codes in `Kept=`, and no FEATS.
 ## The built-in taggers
 
 `noun` tags every word `Noun` at `Sure`.
@@ -82,8 +80,9 @@ one that is never a scored token of train, gets the commonest tag overall at `Un
 or score.
 
 `harper` is Harper's tagger, for study only: `harper.rs` adapts its engine (Apache-2.0,
-`LICENSES/`), reading the model in `.harper/` (`--harper-model` names another). `Word` tokens get a reading: `Likely` if tagged, else `Noun` at
-`Unknown`, as for `PUNCT` or `SYM`. No kept set, features or score.
+`LICENSES/`), reading the model in `.harper/` (`--harper-model` names another). `Word` tokens get a
+reading: `Likely` if tagged, else `Noun` at `Unknown`, as for `PUNCT` or `SYM`. No kept set,
+features or score.
 
 ## spaCy, by import
 
@@ -102,8 +101,10 @@ spaCy `Doc` from each sentence's tokens, since spaCy does not tokenize, and fill
 removes `.ewt/` and moves the scratch directory into its place (`.ewt/r2.18/` and a stamp). A stamp
 equal to the lock makes a repeat free, and a failed download leaves a good `.ewt/` alone.
 
+The swap is safe: a killed run leaves a stale stamp, so the next fetch redoes it.
+
 `make fetch-harper` pins Harper's model alike (`scripts/harper/harper.lock`, `.harper/`).
 
-EWT is CC BY-SA 4.0, Harper's model CC BY-NC-SA and CC BY-SA data. Both locks say `trains no`:
-they measure, and nothing derived ships. No test or CI job reads either.
+EWT is CC BY-SA 4.0 and Harper's model was trained on CC BY-NC-SA and CC BY-SA data. Both locks
+say `trains no`: they measure, and nothing derived ships. No test or CI job reads either.
 `make clean-ewt` and `clean-harper` remove them.

@@ -189,8 +189,8 @@ fn interact(session: &mut Session, store: &mut FileStore) -> std::io::Result<()>
 /// A file saved by writing beside it and renaming over it. A link is followed, so the file it
 /// points to is the one replaced and the link stays a link. The new file has the mode of the old,
 /// and the directory is synced after the rename, so a saved sentence survives a power cut.
-struct FileStore {
-    path: PathBuf,
+pub struct FileStore {
+    pub path: PathBuf,
 }
 
 impl Store for FileStore {
@@ -226,15 +226,24 @@ fn write_beside_with(
     text: &str,
     sync: impl Fn(&Path) -> std::io::Result<()>,
 ) -> std::io::Result<Written> {
-    let target = std::fs::canonicalize(path)?;
-    let mode = std::fs::metadata(&target)?.permissions();
+    // A file that is not there yet is made, in a directory that is.
+    let target = match std::fs::canonicalize(path) {
+        Ok(target) => target,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => path.to_path_buf(),
+        Err(error) => return Err(error),
+    };
+    let mode = std::fs::metadata(&target)
+        .ok()
+        .map(|meta| meta.permissions());
     let name = target
         .file_name()
         .map_or("review".into(), |name| name.to_string_lossy().into_owned());
     let temporary = target.with_file_name(format!(".{name}.review"));
     let write = || -> std::io::Result<()> {
         let mut file = create_new(&temporary)?;
-        file.set_permissions(mode)?;
+        if let Some(mode) = &mode {
+            file.set_permissions(mode.clone())?;
+        }
         file.write_all(text.as_bytes())?;
         file.sync_all()?;
         std::fs::rename(&temporary, &target)
@@ -320,6 +329,15 @@ mod tests {
         store.save("new").unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "new");
         assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+        // A file that is not there yet is made whole, with no temporary left.
+        let fresh = dir.path().join("fresh.conllu");
+        FileStore {
+            path: fresh.clone(),
+        }
+        .save("made")
+        .unwrap();
+        assert_eq!(std::fs::read_to_string(&fresh).unwrap(), "made");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 2);
         let mut gone = FileStore {
             path: dir.path().join("missing/owner.conllu"),
         };

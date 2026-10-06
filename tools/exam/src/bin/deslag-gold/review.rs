@@ -13,6 +13,11 @@
 //! `Was=`, gives its other lines their UPOS and `Prov=kind`, adds `# owner_reviewed = <date>`, and
 //! saves the file through a [`Store`] before anything else changes.
 //!
+//! A pick that should not be tagged (personal data, not English) is rejected with `x`, asked for
+//! twice: it adds `# owner_rejected = <date>` and saves, with no tags needed. A rejected sentence
+//! counts as done, is left as it is when the owner moves on, and is left out by
+//! `deslag-gold own`. To take a rejection back, delete that comment line by hand.
+//!
 //! A pre-filled word the owner leaves as it is has no `Prov=` to keep, so it is saved
 //! `Prov=owner|Was=prefill`: the exam can tell how much of deslag's score on owner words rests on
 //! its own guesses. A word he typed has no `Was=`. `Gold::read` takes `Was=` as a free note (it
@@ -191,12 +196,19 @@ pub struct Sentence {
     pub context: Context,
     /// The date of its `# owner_reviewed`, once the owner has left it.
     pub reviewed: Option<String>,
+    /// The date of its `# owner_rejected`: the pick is not to be tagged or moved.
+    pub rejected: Option<String>,
     first_line: usize,
     /// Its lines, in order.
     pub rows: Vec<Row>,
 }
 
 impl Sentence {
+    /// Whether the owner is done with it: reviewed or rejected.
+    pub fn done(&self) -> bool {
+        self.reviewed.is_some() || self.rejected.is_some()
+    }
+
     /// How many words have no tag.
     pub fn blanks(&self) -> usize {
         self.rows
@@ -277,6 +289,7 @@ pub struct Session {
     pub notice: String,
     /// Whether the last key asked to quit with unsaved tags, which the next quit confirms.
     quit_asked: bool,
+    reject_asked: bool,
 }
 
 /// The splits and names of files that are never opened.
@@ -332,10 +345,10 @@ impl Session {
             .collect::<Result<Vec<_>, _>>()?;
         let at = sentences
             .iter()
-            .position(|sentence| sentence.reviewed.is_none())
+            .position(|sentence| !sentence.done())
             .unwrap_or(0);
         let cursor = sentences[at].first_to_do();
-        let notice = if sentences.iter().all(|s| s.reviewed.is_some()) {
+        let notice = if sentences.iter().all(Sentence::done) {
             "every sentence is reviewed; opened at the first".to_string()
         } else {
             String::new()
@@ -349,6 +362,7 @@ impl Session {
             mode: Mode::Browse,
             notice,
             quit_asked: false,
+            reject_asked: false,
         })
     }
 
@@ -362,11 +376,11 @@ impl Session {
         self.sentence().rows.get(self.cursor).and_then(Row::word)
     }
 
-    /// How many sentences the owner has left.
+    /// How many sentences the owner has left: reviewed, or rejected.
     pub fn reviewed(&self) -> usize {
         self.sentences
             .iter()
-            .filter(|sentence| sentence.reviewed.is_some())
+            .filter(|sentence| sentence.done())
             .count()
     }
 
@@ -389,6 +403,7 @@ impl Session {
     /// when the key leaves it.
     pub fn press(&mut self, key: Key, store: &mut dyn Store) -> Outcome {
         let asked = std::mem::take(&mut self.quit_asked);
+        let reject_asked = std::mem::take(&mut self.reject_asked);
         if key == Key::Interrupt {
             return self.quit(asked);
         }
@@ -401,7 +416,7 @@ impl Session {
                 self.prompt(typed, key);
                 Outcome::Continue
             }
-            Mode::Browse => self.browse(key, store, asked),
+            Mode::Browse => self.browse(key, store, asked, reject_asked),
         }
     }
 
@@ -417,7 +432,13 @@ impl Session {
         Outcome::Quit
     }
 
-    fn browse(&mut self, key: Key, store: &mut dyn Store, asked: bool) -> Outcome {
+    fn browse(
+        &mut self,
+        key: Key,
+        store: &mut dyn Store,
+        asked: bool,
+        reject_asked: bool,
+    ) -> Outcome {
         self.notice.clear();
         match key {
             Key::Down | Key::Char('j') => self.step(true),
@@ -431,6 +452,7 @@ impl Session {
             Key::Char('?') | Key::Char('g') => self.show_guide(),
             Key::Char('n') => self.leave(true, store),
             Key::Char('p') => self.leave(false, store),
+            Key::Char('x') => self.reject(store, reject_asked),
             Key::Esc | Key::Char('q') => return self.quit(asked),
             _ => {}
         }
@@ -529,8 +551,62 @@ impl Session {
         }
     }
 
-    /// Leaves the sentence for the next or the previous one, saving it.
+    /// Marks the sentence rejected, on the second `x`, and goes on to the next.
+    fn reject(&mut self, store: &mut dyn Store, asked: bool) {
+        if self.sentence().rejected.is_some() {
+            self.notice = "already rejected; delete its `# owner_rejected` line to undo".into();
+            return;
+        }
+        if !asked {
+            self.reject_asked = true;
+            self.notice = "x again rejects this pick: it is not tagged and `own` leaves it out; \
+                           any other key cancels"
+                .into();
+            return;
+        }
+        let patch = Patch {
+            comments: vec![Comment {
+                block_first_line: self.sentence().first_line,
+                key: "owner_rejected".into(),
+                value: self.today.clone(),
+            }],
+            ..Patch::default()
+        };
+        let saved = patch::apply(&self.source, &patch)
+            .and_then(|text| self.read_back(&text).map(|blocks| (text, blocks)))
+            .and_then(|(text, blocks)| store.save(&text).map(|warning| (text, blocks, warning)));
+        match saved {
+            Ok((text, blocks, warning)) => {
+                self.source = text;
+                self.refresh(&blocks);
+                let at_edge = self.at + 1 == self.sentences.len();
+                let warning =
+                    warning.map_or(String::new(), |warning| format!(" (warning: {warning})"));
+                self.notice = format!("rejected and saved{warning}");
+                if !at_edge {
+                    self.at += 1;
+                    self.cursor = self.sentence().first_to_do();
+                }
+            }
+            Err(message) => self.notice = format!("not saved: {message}"),
+        }
+    }
+
+    /// Leaves the sentence for the next or the previous one, saving it. A rejected sentence is
+    /// left as it is.
     fn leave(&mut self, forward: bool, store: &mut dyn Store) {
+        if self.sentence().rejected.is_some() {
+            let at_edge = if forward {
+                self.at + 1 == self.sentences.len()
+            } else {
+                self.at == 0
+            };
+            if !at_edge {
+                self.at = if forward { self.at + 1 } else { self.at - 1 };
+                self.cursor = self.sentence().first_to_do();
+            }
+            return;
+        }
         let blanks = self.sentence().blanks();
         if blanks > 0 {
             let first = self
@@ -646,6 +722,7 @@ impl Session {
         for (index, (sentence, block)) in self.sentences.iter_mut().zip(blocks).enumerate() {
             sentence.first_line = block.first_line;
             sentence.reviewed = reviewed_on(block);
+            sentence.rejected = rejected_on(block);
             for (row, line) in sentence.rows.iter_mut().zip(&block.lines) {
                 match row {
                     Row::Word(word) => {
@@ -745,6 +822,12 @@ fn prov_of(misc: &str) -> Option<String> {
         .into_iter()
         .find(|(key, _)| *key == "Prov")
         .map(|(_, value)| value.to_string())
+}
+
+fn rejected_on(block: &Block) -> Option<String> {
+    block
+        .comment("owner_rejected")
+        .map(|comment| comment.value.clone())
 }
 
 fn reviewed_on(block: &Block) -> Option<String> {
@@ -872,6 +955,7 @@ fn read_sentence(path: &str, block: &Block) -> Result<Sentence, Error> {
         text,
         context,
         reviewed: reviewed_on(block),
+        rejected: rejected_on(block),
         first_line: block.first_line,
         rows,
     })

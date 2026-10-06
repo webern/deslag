@@ -17,8 +17,7 @@ use crate::guide;
 use crate::review::{Mode, Row, Session};
 
 /// The keys, as the footer lists them.
-const KEYS: &str =
-    "j/k move, t tag, ? guide, a accept, n/p save and go to the next or previous sentence, q quit";
+const KEYS: &str = "j/k move, t tag, ? guide, a accept, n/p save and go to the next or previous sentence, x x reject the pick, q quit";
 
 /// The least screen the review draws; under it a message says so.
 const MIN_WIDTH: usize = 30;
@@ -241,12 +240,11 @@ pub fn lines(session: &Session, width: u16, height: u16) -> Vec<Line> {
     let sentence = session.sentence();
     let mut out = Vec::new();
 
-    let reviewed = sentence
-        .reviewed
-        .as_deref()
-        .map_or("not reviewed".to_string(), |date| {
-            format!("reviewed {date}")
-        });
+    let reviewed = match (&sentence.rejected, &sentence.reviewed) {
+        (Some(date), _) => format!("rejected {date}"),
+        (None, Some(date)) => format!("reviewed {date}"),
+        (None, None) => "not reviewed".to_string(),
+    };
     out.push(line(
         clip(
             &format!(

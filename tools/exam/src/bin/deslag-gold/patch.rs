@@ -5,8 +5,8 @@
 //! read would change bytes nobody meant to touch. The patcher does not read a file into anything.
 //! It takes the text, the numbers of the lines to change and what to put in their UPOS, FEATS and
 //! MISC columns, and adds or replaces `# key = value` comments in a sentence. Each line keeps its
-//! own line ending, a file with no final newline keeps having none, and a patch that changes
-//! nothing returns the text it was given.
+//! own line ending, a file with no final newline keeps having none, a leading byte order mark stays
+//! first, and a patch that changes nothing returns the text it was given.
 
 use std::collections::BTreeMap;
 
@@ -44,6 +44,11 @@ pub struct Patch {
 /// `text` with `patch` applied. `Err` names the line a patch cannot apply to, and never echoes its
 /// content.
 pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
+    // The reader skips a leading byte order mark; so does the patcher, and puts it back first.
+    let (bom, text) = match text.strip_prefix('\u{feff}') {
+        Some(rest) => ("\u{feff}", rest),
+        None => ("", text),
+    };
     let lines: Vec<(&str, &str)> = text.split_inclusive('\n').map(split_eol).collect();
     // A comment edit is a replacement of the sentence's own line for that key, or a new line put
     // before the first line of the sentence that is no comment.
@@ -72,9 +77,14 @@ pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
         }
     }
     let mut out = String::with_capacity(text.len() + 64);
+    out.push_str(bom);
     for (index, (body, eol)) in lines.iter().enumerate() {
         let number = index + 1;
-        let eol = if eol.is_empty() { "\n" } else { eol };
+        let eol = if eol.is_empty() {
+            inserted_eol(&lines[..index])
+        } else {
+            eol
+        };
         for new in insert.get(&index).into_iter().flatten() {
             out.push_str(new);
             out.push_str(eol);
@@ -91,12 +101,13 @@ pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
     }
     // A sentence that ends the file has its new comments after its last line, which has none.
     if let Some(new) = insert.get(&lines.len()) {
+        let eol = inserted_eol(&lines);
         if !text.is_empty() && !text.ends_with('\n') {
-            out.push('\n');
+            out.push_str(eol);
         }
         for line in new {
             out.push_str(line);
-            out.push('\n');
+            out.push_str(eol);
         }
     }
     for number in patch.lines.keys() {
@@ -105,6 +116,17 @@ pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
         }
     }
     Ok(out)
+}
+
+/// The ending for a line the patcher adds after `before`: that of the last line with one, `\n` if
+/// none has.
+fn inserted_eol<'a>(before: &[(&'a str, &'a str)]) -> &'a str {
+    before
+        .iter()
+        .rev()
+        .map(|(_, eol)| *eol)
+        .find(|eol| !eol.is_empty())
+        .unwrap_or("\n")
 }
 
 /// A line without its ending, and the ending: `\n`, `\r\n` or none.
@@ -283,5 +305,50 @@ mod tests {
         let mut patch = Patch::default();
         patch.lines.insert(9, Columns::default());
         assert!(apply(text, &patch).unwrap_err().contains("line 9"));
+    }
+
+    fn reviewed(block_first_line: usize) -> Patch {
+        let mut patch = Patch::default();
+        patch.comments.push(Comment {
+            block_first_line,
+            key: "owner_reviewed".into(),
+            value: "2026-10-06".into(),
+        });
+        patch
+    }
+
+    #[test]
+    fn a_byte_order_mark_stays_first_and_the_first_line_is_still_a_comment() {
+        let text = "\u{feff}# sent_id = a\n1\tx\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n";
+        let mut patch = reviewed(1);
+        patch.lines.insert(
+            2,
+            Columns {
+                upos: Some("NOUN".into()),
+                ..Columns::default()
+            },
+        );
+        let out = apply(text, &patch).unwrap();
+        assert_eq!(
+            out,
+            "\u{feff}# sent_id = a\n# owner_reviewed = 2026-10-06\n\
+             1\tx\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word\n"
+        );
+        assert!(conllu::read("bom", &out).is_ok(), "the reader takes it");
+        assert_eq!(apply(text, &Patch::default()).unwrap(), text);
+    }
+
+    #[test]
+    fn an_added_comment_takes_the_ending_of_the_lines_before_it() {
+        let crlf = "# sent_id = b\r\n1\ty\t_\t_\t_\t_\t_\t_\t_\t_";
+        assert_eq!(
+            apply(crlf, &reviewed(1)).unwrap(),
+            "# sent_id = b\r\n# owner_reviewed = 2026-10-06\r\n1\ty\t_\t_\t_\t_\t_\t_\t_\t_"
+        );
+        // A sentence of comments only ends the file.
+        assert_eq!(
+            apply("# sent_id = b\r\n# note", &reviewed(1)).unwrap(),
+            "# sent_id = b\r\n# note\r\n# owner_reviewed = 2026-10-06\r\n"
+        );
     }
 }

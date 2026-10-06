@@ -574,20 +574,34 @@ impl Session {
             value: self.today.clone(),
         });
         let text = patch::apply(&self.source, &patch)?;
+        // The new text is read before it is stored, so text that does not load never replaces
+        // the file.
+        let blocks = self.read_back(&text)?;
         store.save(&text)?;
         self.source = text;
-        self.refresh()
+        self.refresh(&blocks);
+        Ok(())
     }
 
-    /// Reads the sentences back from the file as saved, so every line number and column is the
-    /// file's own.
-    fn refresh(&mut self) -> Result<(), String> {
-        let blocks = conllu::read("the saved file", &self.source).map_err(|e| e.to_string())?;
-        if blocks.len() != self.sentences.len() {
-            return Err("the saved file has a different number of sentences".into());
+    /// `text` read as the file the session would hold, or why it is not.
+    fn read_back(&self, text: &str) -> Result<Vec<Block>, String> {
+        let blocks = conllu::read("the saved file", text).map_err(|e| e.to_string())?;
+        let same = blocks.len() == self.sentences.len()
+            && blocks
+                .iter()
+                .zip(&self.sentences)
+                .all(|(block, sentence)| block.lines.len() == sentence.rows.len());
+        if !same {
+            return Err("the saved file has different sentences".into());
         }
+        Ok(blocks)
+    }
+
+    /// Takes line numbers and columns from `blocks`, the file as saved, so they are the file's
+    /// own.
+    fn refresh(&mut self, blocks: &[Block]) {
         let (at, cursor) = (self.at, self.cursor);
-        for (index, (sentence, block)) in self.sentences.iter_mut().zip(&blocks).enumerate() {
+        for (index, (sentence, block)) in self.sentences.iter_mut().zip(blocks).enumerate() {
             sentence.first_line = block.first_line;
             sentence.reviewed = reviewed_on(block);
             for (row, line) in sentence.rows.iter_mut().zip(&block.lines) {
@@ -613,7 +627,6 @@ impl Session {
         }
         self.at = at;
         self.cursor = cursor;
-        Ok(())
     }
 }
 
@@ -1220,5 +1233,32 @@ pub mod tests {
             assert!(keys < 10);
         }
         assert_eq!(store.saved.len(), 2);
+    }
+
+    #[test]
+    fn a_file_with_a_byte_order_mark_is_saved_whole_and_still_loads() {
+        let mut session = open(&format!("\u{feff}{SKELETON}"));
+        let mut store = Memory::default();
+        fill(&mut session, &mut store);
+        session.press(Key::Char('n'), &mut store);
+        assert_eq!(session.notice, "saved");
+        let saved = store.saved.last().unwrap();
+        assert!(saved.starts_with("\u{feff}# sent_id = s1\n"), "{saved:?}");
+        assert_eq!(saved.matches('\u{feff}').count(), 1);
+        assert!(conllu::read("saved", saved).is_ok());
+        assert_eq!(open(saved).reviewed(), 1);
+    }
+
+    #[test]
+    fn text_that_does_not_load_is_never_handed_to_the_store() {
+        let mut session = open(SKELETON);
+        let mut store = Memory::default();
+        fill(&mut session, &mut store);
+        // A session that has lost track of a row writes a file it cannot read back.
+        session.sentences[0].rows.pop();
+        session.press(Key::Char('n'), &mut store);
+        assert!(session.notice.contains("not saved"), "{}", session.notice);
+        assert!(store.saved.is_empty(), "nothing reached the file");
+        assert_eq!(session.source(), SKELETON);
     }
 }

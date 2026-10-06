@@ -1,4 +1,6 @@
+# exam.tokens = deslag
 # sent_id = s1
+# exam.context = prose
 # text = I don't like cats.
 1	I	_	_	_	_	_	_	_	Kind=Word
 2	don't	_	_	_	_	_	_	_	Kind=Word
@@ -7,6 +9,7 @@
 5	.	_	_	_	_	_	_	_	Kind=Punctuation
 
 # sent_id = s2
+# exam.context = heading
 # text = Send 2 e-mail forms to U.S. staff
 1	Send	_	_	_	_	_	_	_	Kind=Word
 2	2	_	_	_	_	_	_	_	Kind=Number
@@ -20,6 +23,7 @@
 10	staff	_	_	_	_	_	_	_	Kind=Word
 
 # sent_id = s3
+# exam.context = list-item
 # text = See the docs:setup page, etc.
 1	See	_	_	_	_	_	_	_	Kind=Word
 2	the	_	_	_	_	_	_	_	Kind=Word
@@ -30,6 +34,7 @@
 7	.	_	_	_	_	_	_	_	Kind=Punctuation
 
 # sent_id = s4
+# exam.context = table-cell
 # text = Error codes
 1	Error	_	_	_	_	_	_	_	Kind=Word
 2	codes	_	_	_	_	_	_	_	Kind=Word

@@ -25,6 +25,7 @@ mod sample;
 mod screen;
 mod terminal;
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
@@ -33,6 +34,7 @@ use deslag_exam::align::align_all;
 use deslag_exam::disputes::Disputes;
 use deslag_exam::error::{Error, Place};
 use deslag_exam::gold::{Split, Tier};
+use deslag_exam::tagger::Context;
 use deslag_exam::words::Words;
 
 use crate::data::{Sample, read_text, write_text};
@@ -385,7 +387,17 @@ fn sample_stage(
     sample::check_with_exam(&outcome.sample.sents)?;
     let sample_path = dir.join("sample.conllu");
     let manifest_path = dir.join("manifest.tsv");
-    write_text(&sample_path, &data::skeleton(&outcome.sample.sents))?;
+    let contexts: BTreeMap<&str, Context> = outcome
+        .sample
+        .manifest
+        .rows
+        .iter()
+        .map(|(id, meta)| (id.as_str(), meta.context))
+        .collect();
+    write_text(
+        &sample_path,
+        &data::skeleton(&outcome.sample.sents, |id| contexts.get(id).copied()),
+    )?;
     write_text(&manifest_path, &outcome.sample.manifest.render())?;
     println!("{}", Counts(&outcome));
     println!(

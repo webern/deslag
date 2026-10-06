@@ -316,6 +316,15 @@ impl Session {
         if blocks.is_empty() {
             return Err(load("the file has no sentences".into()));
         }
+        if blocks[0].comment("exam.tokens").map(|c| c.value.as_str()) != Some("deslag") {
+            return Err(Error::at(
+                path,
+                blocks[0].first_line,
+                "no `# exam.tokens = deslag` in the first sentence, so the saved file would not \
+                 be read as deslag's tokens; make the file with `deslag-exam tokens` or \
+                 `deslag-gold sample`",
+            ));
+        }
         let sentences = blocks
             .iter()
             .map(|block| read_sentence(path, block))
@@ -745,10 +754,27 @@ fn read_sentence(path: &str, block: &Block) -> Result<Sentence, Error> {
         .map(|comment| comment.value.clone())
         .filter(|id| !id.is_empty())
         .ok_or_else(|| Error::at(path, block.first_line, "no `# sent_id = ` comment"))?;
+    // Deslag reads a sentence by the block it is in, so a sentence with no context, or one this
+    // does not know, is not read as prose: there is no reading to show.
     let context = block
         .comment("exam.context")
-        .and_then(|comment| Context::from_name(&comment.value))
-        .unwrap_or(Context::Prose);
+        .ok_or_else(|| {
+            Error::at(
+                path,
+                block.first_line,
+                "no `# exam.context = ` comment, which deslag needs to read the sentence; make the \
+                 file with `deslag-exam tokens` or `deslag-gold sample`",
+            )
+        })
+        .and_then(|comment| {
+            Context::from_name(&comment.value).ok_or_else(|| {
+                Error::at(
+                    path,
+                    comment.line,
+                    format!("unknown exam.context `{}`", comment.value),
+                )
+            })
+        })?;
     // The tokens deslag reads are the file's lines, laid out as the exam lays out a `deslag`
     // file: forms in order, one space between them but where `SpaceAfter=No` says none.
     let mut joined = String::new();
@@ -869,6 +895,7 @@ pub mod tests {
     /// Two sentences of corpus-style text as a skeleton: `Run cargo build, then stop.` and
     /// `See README.md for details.`
     pub const SKELETON: &str = "\
+# exam.tokens = deslag
 # sent_id = s1
 # exam.context = prose
 # text = Run `cargo` now, then stop.
@@ -881,6 +908,7 @@ pub mod tests {
 7\t.\t_\t_\t_\t_\t_\t_\t_\tKind=Punctuation
 
 # sent_id = s2
+# exam.context = list-item
 # text = See README.md for details.
 1\tSee\t_\t_\t_\t_\t_\t_\t_\tKind=Word
 2\tREADME.md\t_\t_\t_\t_\t_\t_\t_\tKind=Word|Origin=Path
@@ -1085,8 +1113,8 @@ pub mod tests {
         let saved = store.saved.last().unwrap();
         assert_eq!(saved, session.source());
         let lines: Vec<&str> = saved.lines().collect();
-        assert_eq!(lines[3], "# owner_reviewed = 2026-10-06");
-        for line in &lines[4..11] {
+        assert_eq!(lines[4], "# owner_reviewed = 2026-10-06");
+        for line in &lines[5..12] {
             let cells: Vec<&str> = line.split('\t').collect();
             let misc = cells[9];
             if misc.contains("Kind=Word") {
@@ -1097,10 +1125,10 @@ pub mod tests {
                 assert!(misc.contains("Prov=kind"), "{line}");
             }
         }
-        assert!(lines[5].contains("\tX\t") && lines[5].contains("Kind=Code|Prov=kind"));
-        assert!(lines[7].contains("\tPUNCT\t"));
+        assert!(lines[6].contains("\tX\t") && lines[6].contains("Kind=Code|Prov=kind"));
+        assert!(lines[8].contains("\tPUNCT\t"));
         assert!(
-            lines[8..].join("\n").contains("# sent_id = s2"),
+            lines[9..].join("\n").contains("# sent_id = s2"),
             "the second sentence is untouched"
         );
         let rest = saved.split("# sent_id = s2").nth(1).unwrap();
@@ -1121,7 +1149,7 @@ pub mod tests {
         let text = store.saved.last().unwrap().clone();
         let dir = tempfile::tempdir().unwrap();
         let file = dir.path().join("owner.conllu");
-        std::fs::write(&file, format!("# exam.tokens = deslag\n{text}")).unwrap();
+        std::fs::write(&file, &text).unwrap();
         let gold = deslag_exam::gold::Gold::read(&file).expect("gold reads it");
         assert_eq!(gold.sentences.len(), 2);
         let owned = gold.sentences[0]
@@ -1146,7 +1174,9 @@ pub mod tests {
     #[test]
     fn a_label_already_in_the_file_is_kept_as_was_and_unchanged_bytes_stay() {
         let source = "\
+# exam.tokens = deslag
 # sent_id = a
+# exam.context = prose
 # free comment
 1\tRun\tRun\tVERB\tx\tVerbForm=Fin\t0\troot\t_\tKind=Word|Prov=agree
 2\tit\t_\tPRON\t_\tMood=Imp\t_\t_\t_\tKind=Word|Prov=adjudicated|SpaceAfter=No
@@ -1161,7 +1191,9 @@ pub mod tests {
         assert_eq!(
             saved,
             "\
+# exam.tokens = deslag
 # sent_id = a
+# exam.context = prose
 # free comment
 # owner_reviewed = 2026-10-06
 1\tRun\tRun\tVERB\tx\tVerbForm=Inf\t0\troot\t_\tKind=Word|Prov=owner|Was=agree
@@ -1345,17 +1377,20 @@ pub mod tests {
 
     #[test]
     fn files_the_review_cannot_read_are_errors_that_name_a_line() {
-        let ud = "# sent_id = a\n1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\t_\t_\t_\t_\t_\t_\t_\t_\n2\tb\t_\t_\t_\t_\t_\t_\t_\t_\n";
+        let head = "# exam.tokens = deslag\n# sent_id = a\n# exam.context = prose\n";
+        let ud = &format!(
+            "{head}1-2\tab\t_\t_\t_\t_\t_\t_\t_\t_\n1\ta\t_\t_\t_\t_\t_\t_\t_\t_\n2\tb\t_\t_\t_\t_\t_\t_\t_\t_\n"
+        );
         let error = Session::open("f.conllu", ud.into(), "d")
             .unwrap_err()
             .to_string();
-        assert!(error.starts_with("f.conllu:2:"), "{error}");
-        let no_kind = "# sent_id = a\n1\ta\t_\t_\t_\t_\t_\t_\t_\t_\n";
+        assert!(error.starts_with("f.conllu:4:"), "{error}");
+        let no_kind = &format!("{head}1\ta\t_\t_\t_\t_\t_\t_\t_\t_\n");
         let error = Session::open("f.conllu", no_kind.into(), "d")
             .unwrap_err()
             .to_string();
         assert!(error.contains("no Kind="), "{error}");
-        let bad = "# sent_id = a\n1\ta\t_\tWORD\t_\t_\t_\t_\t_\tKind=Word\n";
+        let bad = &format!("{head}1\ta\t_\tWORD\t_\t_\t_\t_\t_\tKind=Word\n");
         assert!(Session::open("f.conllu", bad.into(), "d").is_err());
         assert!(Session::open("f.conllu", String::new(), "d").is_err());
     }
@@ -1382,7 +1417,10 @@ pub mod tests {
         session.press(Key::Char('n'), &mut store);
         assert_eq!(session.notice, "saved");
         let saved = store.saved.last().unwrap();
-        assert!(saved.starts_with("\u{feff}# sent_id = s1\n"), "{saved:?}");
+        assert!(
+            saved.starts_with("\u{feff}# exam.tokens = deslag\n# sent_id = s1\n"),
+            "{saved:?}"
+        );
         assert_eq!(saved.matches('\u{feff}').count(), 1);
         assert!(conllu::read("saved", saved).is_ok());
         assert_eq!(open(saved).reviewed(), 1);
@@ -1399,5 +1437,80 @@ pub mod tests {
         assert!(session.notice.contains("not saved"), "{}", session.notice);
         assert!(store.saved.is_empty(), "nothing reached the file");
         assert_eq!(session.source(), SKELETON);
+    }
+
+    #[test]
+    fn a_file_without_the_token_mode_or_a_context_is_refused_not_read_as_prose() {
+        let word = "1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n";
+        let refused = |text: String| {
+            Session::open("f.conllu", text, "d")
+                .unwrap_err()
+                .to_string()
+        };
+        let no_mode = refused(format!("# sent_id = a\n# exam.context = prose\n{word}"));
+        assert!(
+            no_mode.starts_with("f.conllu:1:") && no_mode.contains("exam.tokens = deslag"),
+            "{no_mode}"
+        );
+        let ud = refused(format!(
+            "# exam.tokens = ud\n# sent_id = a\n# exam.context = prose\n{word}"
+        ));
+        assert!(ud.contains("exam.tokens = deslag"), "{ud}");
+        let head = "# exam.tokens = deslag\n# sent_id = a\n";
+        let no_context = refused(format!("{head}{word}"));
+        assert!(
+            no_context.starts_with("f.conllu:1:") && no_context.contains("exam.context"),
+            "{no_context}"
+        );
+        let unknown = refused(format!("{head}# exam.context = footer\n{word}"));
+        assert!(
+            unknown.starts_with("f.conllu:3:") && unknown.contains("unknown exam.context"),
+            "{unknown}"
+        );
+        // The second sentence is held to it too.
+        let second = refused(format!(
+            "{head}# exam.context = prose\n{word}\n# sent_id = b\n{word}"
+        ));
+        assert!(second.starts_with("f.conllu:6:"), "{second}");
+    }
+
+    #[test]
+    fn each_sentence_is_read_in_the_context_the_file_gives_it() {
+        let session = open(SKELETON);
+        assert_eq!(session.sentences[0].context, Context::Prose);
+        assert_eq!(session.sentences[1].context, Context::ListItem);
+        // The same words in another context are read by the same rules in that context.
+        let heading = SKELETON.replace("exam.context = prose", "exam.context = heading");
+        let session = open(&heading);
+        assert_eq!(session.sentences[0].context, Context::Heading);
+        let head = session.sentences[0].clone();
+        let words: Vec<_> = head.rows.iter().filter_map(Row::word).collect();
+        let mut tokens: Vec<Token<'_>> = head
+            .rows
+            .iter()
+            .map(|row| match row {
+                Row::Word(w) => (w.form.clone(), TokenKind::Word),
+                Row::Other(o) => (o.form.clone(), o.kind),
+            })
+            .map(|(form, kind)| Token {
+                kind,
+                range: 0..form.len(),
+                text: Cow::Owned(form),
+                reading: None,
+                origin: Origin::English,
+            })
+            .collect();
+        deslag::tag::sentence(&mut tokens, Context::Heading);
+        for (word, token) in words
+            .iter()
+            .zip(tokens.iter().filter(|t| t.kind == TokenKind::Word))
+        {
+            assert_eq!(
+                word.guess,
+                token.reading.as_ref().map(Guess::of),
+                "{}",
+                word.form
+            );
+        }
     }
 }

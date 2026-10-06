@@ -1,859 +1,10 @@
 # exam.tokens = deslag
-# sent_id = rb646f0fd55
-# exam.context = prose
-# tier = human
-# source = patternfly/patternfly batches/2026-09-27-02/human/patternfly--patternfly/src__patternfly__utilities__Alignment__examples__Alignment.md
-# license = MIT
-# text = Breakpoints: base (no breakpoint value), -on-sm, -on-md, -on-lg, -on-xl.
-1	Breakpoints	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	:	_	_	_	_	_	_	_	Kind=Punctuation
-3	base	_	_	_	_	_	_	_	Kind=Word
-4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	no	_	_	_	_	_	_	_	Kind=Word
-6	breakpoint	_	_	_	_	_	_	_	Kind=Word
-7	value	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-12	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-13	sm	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-14	,	_	_	_	_	_	_	_	Kind=Punctuation
-15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-16	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-17	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-18	md	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-19	,	_	_	_	_	_	_	_	Kind=Punctuation
-20	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-21	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-23	lg	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-24	,	_	_	_	_	_	_	_	Kind=Punctuation
-25	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-26	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-27	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-28	xl	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-29	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = rb9253a51b4
-# exam.context = prose
-# tier = human
-# source = rfabbri/minus batches/2026-09-27-02/human/rfabbri--minus/README.md
-# license = BSD-2-Clause
-# text = For SSE/VMX use, good examples include: Eigen/src/LU/arch/Inverse_SSE.h As well as VXL's VNL
-1	For	_	_	_	_	_	_	_	Kind=Word
-2	SSE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	VMX	_	_	_	_	_	_	_	Kind=Word
-5	use	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-6	,	_	_	_	_	_	_	_	Kind=Punctuation
-7	good	_	_	_	_	_	_	_	Kind=Word
-8	examples	_	_	_	_	_	_	_	Kind=Word
-9	include	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	:	_	_	_	_	_	_	_	Kind=Punctuation
-11	Eigen	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-12	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-13	src	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-14	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-15	LU	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-16	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-17	arch	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-18	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-19	Inverse_SSE.h	_	_	_	_	_	_	_	Kind=Word
-20	As	_	_	_	_	_	_	_	Kind=Word
-21	well	_	_	_	_	_	_	_	Kind=Word
-22	as	_	_	_	_	_	_	_	Kind=Word
-23	VXL's	_	_	_	_	_	_	_	Kind=Word
-24	VNL	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r3b94d9853a
-# exam.context = prose
-# tier = human
-# source = storybookjs/react-native batches/2026-09-27-02/human/storybookjs--react-native/app__react-native__docs__manual-setup.md
-# license = MIT
-# text = Other ondevice supported addons are addon-ondevice-backgrounds and addon-ondevice-notes.
-1	Other	_	_	_	_	_	_	_	Kind=Word
-2	ondevice	_	_	_	_	_	_	_	Kind=Word
-3	supported	_	_	_	_	_	_	_	Kind=Word
-4	addons	_	_	_	_	_	_	_	Kind=Word
-5	are	_	_	_	_	_	_	_	Kind=Word
-6	addon	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	ondevice	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	backgrounds	_	_	_	_	_	_	_	Kind=Word
-11	and	_	_	_	_	_	_	_	Kind=Word
-12	addon	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-14	ondevice	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-16	notes	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-17	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r336bc8b407
-# exam.context = prose
-# tier = human
-# source = blakeblackshear/frigate batches/2026-09-27-02/human/blakeblackshear--frigate/docs__docs__configuration__nvdec.md
-# license = MIT
-# text = nVidia closed source driver required to access NVDEC. nvidia-docker required to pass NVDEC to docker.
-1	nVidia	_	_	_	_	_	_	_	Kind=Word
-2	closed	_	_	_	_	_	_	_	Kind=Word
-3	source	_	_	_	_	_	_	_	Kind=Word
-4	driver	_	_	_	_	_	_	_	Kind=Word
-5	required	_	_	_	_	_	_	_	Kind=Word
-6	to	_	_	_	_	_	_	_	Kind=Word
-7	access	_	_	_	_	_	_	_	Kind=Word
-8	NVDEC	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	.	_	_	_	_	_	_	_	Kind=Punctuation
-10	nvidia	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-11	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-12	docker	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-13	required	_	_	_	_	_	_	_	Kind=Word
-14	to	_	_	_	_	_	_	_	Kind=Word
-15	pass	_	_	_	_	_	_	_	Kind=Word
-16	NVDEC	_	_	_	_	_	_	_	Kind=Word
-17	to	_	_	_	_	_	_	_	Kind=Word
-18	docker	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-19	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r103f636263
-# exam.context = prose
-# tier = human
-# source = getwud/wud batches/2026-09-27-02/human/getwud--wud/docs__api__app.md
-# license = MIT
-# text = This API allows to get app informations.
-1	This	_	_	_	_	_	_	_	Kind=Word
-2	API	_	_	_	_	_	_	_	Kind=Word
-3	allows	_	_	_	_	_	_	_	Kind=Word
-4	to	_	_	_	_	_	_	_	Kind=Word
-5	get	_	_	_	_	_	_	_	Kind=Word
-6	app	_	_	_	_	_	_	_	Kind=Word
-7	informations	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r7afbeb253e
-# exam.context = prose
-# tier = human
-# source = cihai/unihan-etl batches/2026-09-27-02/human/cihai--unihan-etl/README.md
-# license = MIT
-# text = To make this possible, unihan-etl exports to JSON, YAML, and python list/dicts.
-1	To	_	_	_	_	_	_	_	Kind=Word
-2	make	_	_	_	_	_	_	_	Kind=Word
-3	this	_	_	_	_	_	_	_	Kind=Word
-4	possible	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	,	_	_	_	_	_	_	_	Kind=Punctuation
-6	unihan	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	etl	_	_	_	_	_	_	_	Kind=Word
-9	exports	_	_	_	_	_	_	_	Kind=Word
-10	to	_	_	_	_	_	_	_	Kind=Word
-11	JSON	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-12	,	_	_	_	_	_	_	_	Kind=Punctuation
-13	YAML	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-14	,	_	_	_	_	_	_	_	Kind=Punctuation
-15	and	_	_	_	_	_	_	_	Kind=Word
-16	python	_	_	_	_	_	_	_	Kind=Word
-17	list	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-18	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-19	dicts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-20	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r77b1aac497
-# exam.context = list-item
-# tier = human
-# source = subquery/subql batches/2026-09-27-01/human/subquery--subql/packages__node__CHANGELOG.md
-# license = Apache-2.0
-# text = Refactor api.query...multi(), api.queryMulti() to use rpc.queryStorageAt() (#244)
-1	Refactor	_	_	_	_	_	_	_	Kind=Word
-2	api.query	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
-3	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-6	multi	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	api.queryMulti	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
-11	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-12	)	_	_	_	_	_	_	_	Kind=Punctuation
-13	to	_	_	_	_	_	_	_	Kind=Word
-14	use	_	_	_	_	_	_	_	Kind=Word
-15	rpc.queryStorageAt	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
-16	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-17	)	_	_	_	_	_	_	_	Kind=Punctuation
-18	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-19	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-20	244	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-21	)	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r1d18660c9c
-# exam.context = list-item
-# tier = human
-# source = TryGhost/Ghost-CLI batches/2026-09-27-02/human/TryGhost--Ghost-CLI/CHANGELOG.md
-# license = MIT
-# text = :art: switch to using sudo for systemctl commands @acburdine
-1	:	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-2	art	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	:	_	_	_	_	_	_	_	Kind=Punctuation
-4	switch	_	_	_	_	_	_	_	Kind=Word
-5	to	_	_	_	_	_	_	_	Kind=Word
-6	using	_	_	_	_	_	_	_	Kind=Word
-7	sudo	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-8	for	_	_	_	_	_	_	_	Kind=Word
-9	systemctl	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-10	commands	_	_	_	_	_	_	_	Kind=Word
-11	@	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-12	acburdine	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r59b2558435
-# exam.context = list-item
-# tier = human
-# source = OpenOLAT/OpenOLAT batches/2026-09-27-02/human/OpenOLAT--OpenOLAT/src__main__webapp__static__movie__mediaelementjs__README.md
-# license = Apache-2.0
-# text = By default, MediaElement has bundled native renderers, such as HLS, M(PEG)-DASH and FLV, as well as YouTube and Flash shims.
-1	By	_	_	_	_	_	_	_	Kind=Word
-2	default	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	,	_	_	_	_	_	_	_	Kind=Punctuation
-4	MediaElement	_	_	_	_	_	_	_	Kind=Code
-5	has	_	_	_	_	_	_	_	Kind=Word
-6	bundled	_	_	_	_	_	_	_	Kind=Word
-7	native	_	_	_	_	_	_	_	Kind=Word
-8	renderers	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	such	_	_	_	_	_	_	_	Kind=Word
-11	as	_	_	_	_	_	_	_	Kind=Word
-12	HLS	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	,	_	_	_	_	_	_	_	Kind=Punctuation
-14	M	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-16	PEG	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-17	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-18	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-19	DASH	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
-20	and	_	_	_	_	_	_	_	Kind=Word
-21	FLV	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-22	,	_	_	_	_	_	_	_	Kind=Punctuation
-23	as	_	_	_	_	_	_	_	Kind=Word
-24	well	_	_	_	_	_	_	_	Kind=Word
-25	as	_	_	_	_	_	_	_	Kind=Word
-26	YouTube	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-27	and	_	_	_	_	_	_	_	Kind=Word
-28	Flash	_	_	_	_	_	_	_	Kind=Word
-29	shims	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-30	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r3f056297a5
-# exam.context = list-item
-# tier = human
-# source = pantsbuild/pants batches/2026-09-27-02/human/pantsbuild--pants/src__python__pants__notes__2.9.x.md
-# license = Apache-2.0
-# text = Fix dup 3rdparty dists introduced by local dists.
-1	Fix	_	_	_	_	_	_	_	Kind=Word
-2	dup	_	_	_	_	_	_	_	Kind=Word
-3	3rdparty	_	_	_	_	_	_	_	Kind=Word
-4	dists	_	_	_	_	_	_	_	Kind=Word
-5	introduced	_	_	_	_	_	_	_	Kind=Word
-6	by	_	_	_	_	_	_	_	Kind=Word
-7	local	_	_	_	_	_	_	_	Kind=Word
-8	dists	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r53b3ce2cb9
-# exam.context = list-item
-# tier = human
-# source = oppia/oppia batches/2026-09-27-02/human/oppia--oppia/extensions__README.md
-# license = Apache-2.0
-# text = objects: The frontend & backend code for various typed editors like boolean editor, filepath editor etc.
-1	objects	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	:	_	_	_	_	_	_	_	Kind=Punctuation
-3	The	_	_	_	_	_	_	_	Kind=Word
-4	frontend	_	_	_	_	_	_	_	Kind=Word
-5	&	_	_	_	_	_	_	_	Kind=Punctuation
-6	backend	_	_	_	_	_	_	_	Kind=Word
-7	code	_	_	_	_	_	_	_	Kind=Word
-8	for	_	_	_	_	_	_	_	Kind=Word
-9	various	_	_	_	_	_	_	_	Kind=Word
-10	typed	_	_	_	_	_	_	_	Kind=Word
-11	editors	_	_	_	_	_	_	_	Kind=Word
-12	like	_	_	_	_	_	_	_	Kind=Word
-13	boolean	_	_	_	_	_	_	_	Kind=Word
-14	editor	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	,	_	_	_	_	_	_	_	Kind=Punctuation
-16	filepath	_	_	_	_	_	_	_	Kind=Word
-17	editor	_	_	_	_	_	_	_	Kind=Word
-18	etc	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-19	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r6c308db76a
-# exam.context = heading
-# tier = human
-# source = rohit-gohri/redocusaurus batches/2026-09-27-02/human/rohit-gohri--redocusaurus/website__docs__guides__server-side-rendering.md
-# license = MIT
-# text = Use yaml files rather than urls to load OpenAPI files
-1	Use	_	_	_	_	_	_	_	Kind=Word
-2	yaml	_	_	_	_	_	_	_	Kind=Word
-3	files	_	_	_	_	_	_	_	Kind=Word
-4	rather	_	_	_	_	_	_	_	Kind=Word
-5	than	_	_	_	_	_	_	_	Kind=Word
-6	urls	_	_	_	_	_	_	_	Kind=Word
-7	to	_	_	_	_	_	_	_	Kind=Word
-8	load	_	_	_	_	_	_	_	Kind=Word
-9	OpenAPI	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-10	files	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = re468e9034d
-# exam.context = heading
-# tier = human
-# source = CodeverDotDev/codever batches/2026-09-27-02/human/CodeverDotDev--codever/backend__docs__release-notes__2020-03-29-user-profile-release.md
-# license = MIT
-# text = set AWS env variables in pm2 for prod - DONE
-1	set	_	_	_	_	_	_	_	Kind=Word
-2	AWS	_	_	_	_	_	_	_	Kind=Word
-3	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-4	variables	_	_	_	_	_	_	_	Kind=Word
-5	in	_	_	_	_	_	_	_	Kind=Word
-6	pm2	_	_	_	_	_	_	_	Kind=Word
-7	for	_	_	_	_	_	_	_	Kind=Word
-8	prod	_	_	_	_	_	_	_	Kind=Word
-9	-	_	_	_	_	_	_	_	Kind=Punctuation
-10	DONE	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r768282a7c3
-# exam.context = heading
-# tier = human
-# source = fsprojects/Rezoom.SQL batches/2026-09-27-02/human/fsprojects--Rezoom.SQL/doc__Language__DynamicSQL.md
-# license = MIT
-# text = Adding dynamic SQL expressions to static SQL queries
-1	Adding	_	_	_	_	_	_	_	Kind=Word
-2	dynamic	_	_	_	_	_	_	_	Kind=Word
-3	SQL	_	_	_	_	_	_	_	Kind=Word
-4	expressions	_	_	_	_	_	_	_	Kind=Word
-5	to	_	_	_	_	_	_	_	Kind=Word
-6	static	_	_	_	_	_	_	_	Kind=Word
-7	SQL	_	_	_	_	_	_	_	Kind=Word
-8	queries	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r352ab66394
-# exam.context = heading
-# tier = human
-# source = keithrbennett/wifiwand batches/2026-09-27-02/human/keithrbennett--wifiwand/logo__logo.md
-# license = Apache-2.0
-# text = wifiwand-logomark-color.png
-1	wifiwand	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	logomark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	color.png	_	_	_	_	_	_	_	Kind=Word|Origin=Path
-
-# sent_id = r1d459cf455
-# exam.context = table-cell
-# tier = human
-# source = facebook/docusaurus batches/2026-09-27-02/human/facebook--docusaurus/website__docs__api__plugins__plugin-content-pages.md
-# license = CC-BY-4.0 OR MIT
-# text = Custom Rehype plugins passed to MDX before the default Docusaurus Rehype plugins.
-1	Custom	_	_	_	_	_	_	_	Kind=Word
-2	Rehype	_	_	_	_	_	_	_	Kind=Word
-3	plugins	_	_	_	_	_	_	_	Kind=Word
-4	passed	_	_	_	_	_	_	_	Kind=Word
-5	to	_	_	_	_	_	_	_	Kind=Word
-6	MDX	_	_	_	_	_	_	_	Kind=Word
-7	before	_	_	_	_	_	_	_	Kind=Word
-8	the	_	_	_	_	_	_	_	Kind=Word
-9	default	_	_	_	_	_	_	_	Kind=Word
-10	Docusaurus	_	_	_	_	_	_	_	Kind=Word
-11	Rehype	_	_	_	_	_	_	_	Kind=Word
-12	plugins	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = rd933a0c7fc
-# exam.context = table-cell
-# tier = human
-# source = FabMo/FabMo-Engine batches/2026-09-27-02/human/FabMo--FabMo-Engine/dashboard__apps__video.fma__README.md
-# license = Apache-2.0
-# text = -a IP, --addr IP
-1	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-2	a	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
-3	IP	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-4	,	_	_	_	_	_	_	_	Kind=Punctuation
-5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-7	addr	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
-8	IP	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = rcecb7848b9
-# exam.context = table-cell
-# tier = human
-# source = MaxLeiter/maxleiter.com batches/2026-09-27-02/human/MaxLeiter--maxleiter.com/posts__X11.md
-# license = MIT
-# text = Also symlink m4 to /opt/local/bin/gm4.
-1	Also	_	_	_	_	_	_	_	Kind=Word
-2	symlink	_	_	_	_	_	_	_	Kind=Word
-3	m4	_	_	_	_	_	_	_	Kind=Word
-4	to	_	_	_	_	_	_	_	Kind=Word
-5	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-6	opt	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	local	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	bin	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-11	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-12	gm4	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r023c0274cb
-# exam.context = prose
-# tier = llm
-# source = ahrefs/ocannl batches/2026-09-27-02/llm/ahrefs--ocannl/docs__proposals__gh-ocannl-575-narrow-register-tiling.md
-# license = BSD-2-Clause
-# text = Re-scoped out of gh-ocannl-530 (originally gh-ocannl-516 task 3, gh-ocannl-517's packing remark, and gh-ocannl-516 task 4).
-1	Re	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	scoped	_	_	_	_	_	_	_	Kind=Word
-4	out	_	_	_	_	_	_	_	Kind=Word
-5	of	_	_	_	_	_	_	_	Kind=Word
-6	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	530	_	_	_	_	_	_	_	Kind=Number
-11	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-12	originally	_	_	_	_	_	_	_	Kind=Word
-13	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-14	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-15	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-16	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-17	516	_	_	_	_	_	_	_	Kind=Number
-18	task	_	_	_	_	_	_	_	Kind=Word
-19	3	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-20	,	_	_	_	_	_	_	_	Kind=Punctuation
-21	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-23	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-25	517	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-26	'	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-27	s	_	_	_	_	_	_	_	Kind=Word
-28	packing	_	_	_	_	_	_	_	Kind=Word
-29	remark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-30	,	_	_	_	_	_	_	_	Kind=Punctuation
-31	and	_	_	_	_	_	_	_	Kind=Word
-32	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-33	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-34	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-35	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-36	516	_	_	_	_	_	_	_	Kind=Number
-37	task	_	_	_	_	_	_	_	Kind=Word
-38	4	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-39	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-40	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = raaacd5b8b4
-# exam.context = prose
-# tier = llm
-# source = asosteam/asos-devprod-git-ai-old batches/2026-09-27-02/llm/asosteam--asos-devprod-git-ai-old/docs__superpowers__plans__2026-04-30-ai-helper-script-improvements.md
-# license = Apache-2.0
-# text = Tech Stack: Python 3, subprocess for git/gh CLI, argparse for command parsing
-1	Tech	_	_	_	_	_	_	_	Kind=Word
-2	Stack	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	:	_	_	_	_	_	_	_	Kind=Punctuation
-4	Python	_	_	_	_	_	_	_	Kind=Word
-5	3	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-6	,	_	_	_	_	_	_	_	Kind=Punctuation
-7	subprocess	_	_	_	_	_	_	_	Kind=Word
-8	for	_	_	_	_	_	_	_	Kind=Word
-9	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-10	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-12	CLI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	,	_	_	_	_	_	_	_	Kind=Punctuation
-14	argparse	_	_	_	_	_	_	_	Kind=Word
-15	for	_	_	_	_	_	_	_	Kind=Word
-16	command	_	_	_	_	_	_	_	Kind=Word
-17	parsing	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r4ab67b637b
-# exam.context = prose
-# tier = llm
-# source = gowtham0992/jawbreaker batches/2026-09-27-02/llm/gowtham0992--jawbreaker/HONEST_SUBMISSION.md
-# license = MIT
-# text = The repo shows evals, safety fallbacks, Modal training, Codex traces, field notes, and no-external-LLM-API runtime evidence.
-1	The	_	_	_	_	_	_	_	Kind=Word
-2	repo	_	_	_	_	_	_	_	Kind=Word
-3	shows	_	_	_	_	_	_	_	Kind=Word
-4	evals	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	,	_	_	_	_	_	_	_	Kind=Punctuation
-6	safety	_	_	_	_	_	_	_	Kind=Word
-7	fallbacks	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	,	_	_	_	_	_	_	_	Kind=Punctuation
-9	Modal	_	_	_	_	_	_	_	Kind=Word
-10	training	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-11	,	_	_	_	_	_	_	_	Kind=Punctuation
-12	Codex	_	_	_	_	_	_	_	Kind=Word
-13	traces	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-14	,	_	_	_	_	_	_	_	Kind=Punctuation
-15	field	_	_	_	_	_	_	_	Kind=Word
-16	notes	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-17	,	_	_	_	_	_	_	_	Kind=Punctuation
-18	and	_	_	_	_	_	_	_	Kind=Word
-19	no	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-20	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-21	external	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-23	LLM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-25	API	_	_	_	_	_	_	_	Kind=Word
-26	runtime	_	_	_	_	_	_	_	Kind=Word
-27	evidence	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-28	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r55e26457f7
-# exam.context = prose
-# tier = llm
-# source = Lucent-Financial-Group/Zeta batches/2026-09-27-02/llm/Lucent-Financial-Group--Zeta/docs__hygiene-history__ticks__2026__05__01__0033Z.md
-# license = Apache-2.0
-# text = Batch-fixed all 4 shards to use cron-id 98fc7424 (the live cron throughout this session); resolved 4 threads.
-1	Batch	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	fixed	_	_	_	_	_	_	_	Kind=Word
-4	all	_	_	_	_	_	_	_	Kind=Word
-5	4	_	_	_	_	_	_	_	Kind=Number
-6	shards	_	_	_	_	_	_	_	Kind=Word
-7	to	_	_	_	_	_	_	_	Kind=Word
-8	use	_	_	_	_	_	_	_	Kind=Word
-9	cron	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	id	_	_	_	_	_	_	_	Kind=Word
-12	98fc7424	_	_	_	_	_	_	_	Kind=Word
-13	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-14	the	_	_	_	_	_	_	_	Kind=Word
-15	live	_	_	_	_	_	_	_	Kind=Word
-16	cron	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-17	throughout	_	_	_	_	_	_	_	Kind=Word
-18	this	_	_	_	_	_	_	_	Kind=Word
-19	session	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-20	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-21	;	_	_	_	_	_	_	_	Kind=Punctuation
-22	resolved	_	_	_	_	_	_	_	Kind=Word
-23	4	_	_	_	_	_	_	_	Kind=Number
-24	threads	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-25	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r4f0e3825e2
-# exam.context = prose
-# tier = llm
-# source = getsentry/junior batches/2026-09-27-02/llm/getsentry--junior/agents__skills__nitro__references__api-surface.md
-# license = Apache-2.0
-# text = Define defaults in config, override with NITRO_-prefixed env vars at runtime:
-1	Define	_	_	_	_	_	_	_	Kind=Word
-2	defaults	_	_	_	_	_	_	_	Kind=Word
-3	in	_	_	_	_	_	_	_	Kind=Word
-4	config	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	,	_	_	_	_	_	_	_	Kind=Punctuation
-6	override	_	_	_	_	_	_	_	Kind=Word
-7	with	_	_	_	_	_	_	_	Kind=Word
-8	NITRO_	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
-9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	prefixed	_	_	_	_	_	_	_	Kind=Word
-11	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-12	vars	_	_	_	_	_	_	_	Kind=Word
-13	at	_	_	_	_	_	_	_	Kind=Word
-14	runtime	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	:	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = rec5a1b2ddd
-# exam.context = prose
-# tier = llm
-# source = ubolonton/emacs-module-rs batches/2026-09-27-02/llm/ubolonton--emacs-module-rs/vm__windows__INSTALL.md
-# license = BSD-3-Clause
-# text = --boot uefi forces libvirt to use OVMF (UEFI).
-1	--boot uefi	_	_	_	_	_	_	_	Kind=Code
-2	forces	_	_	_	_	_	_	_	Kind=Word
-3	libvirt	_	_	_	_	_	_	_	Kind=Word
-4	to	_	_	_	_	_	_	_	Kind=Word
-5	use	_	_	_	_	_	_	_	Kind=Word
-6	OVMF	_	_	_	_	_	_	_	Kind=Word
-7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	UEFI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r47a7a1aaca
-# exam.context = list-item
-# tier = llm
-# source = cozystack/cozystack batches/2026-09-27-02/llm/cozystack--cozystack/docs__changelogs__v1.2.2.md
-# license = Apache-2.0
-# text = [ci] Use cozystack org noreply email for bot commits : Updates CI workflows to use the cozystack organization noreply email for bot commits ( @kvaps in #2392, #2393).
-1	[	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-2	ci	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	]	_	_	_	_	_	_	_	Kind=Punctuation
-4	Use	_	_	_	_	_	_	_	Kind=Word
-5	cozystack	_	_	_	_	_	_	_	Kind=Word
-6	org	_	_	_	_	_	_	_	Kind=Word
-7	noreply	_	_	_	_	_	_	_	Kind=Word
-8	email	_	_	_	_	_	_	_	Kind=Word
-9	for	_	_	_	_	_	_	_	Kind=Word
-10	bot	_	_	_	_	_	_	_	Kind=Word
-11	commits	_	_	_	_	_	_	_	Kind=Word
-12	:	_	_	_	_	_	_	_	Kind=Punctuation
-13	Updates	_	_	_	_	_	_	_	Kind=Word
-14	CI	_	_	_	_	_	_	_	Kind=Word
-15	workflows	_	_	_	_	_	_	_	Kind=Word
-16	to	_	_	_	_	_	_	_	Kind=Word
-17	use	_	_	_	_	_	_	_	Kind=Word
-18	the	_	_	_	_	_	_	_	Kind=Word
-19	cozystack	_	_	_	_	_	_	_	Kind=Word
-20	organization	_	_	_	_	_	_	_	Kind=Word
-21	noreply	_	_	_	_	_	_	_	Kind=Word
-22	email	_	_	_	_	_	_	_	Kind=Word
-23	for	_	_	_	_	_	_	_	Kind=Word
-24	bot	_	_	_	_	_	_	_	Kind=Word
-25	commits	_	_	_	_	_	_	_	Kind=Word
-26	(	_	_	_	_	_	_	_	Kind=Punctuation
-27	@	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-28	kvaps	_	_	_	_	_	_	_	Kind=Word
-29	in	_	_	_	_	_	_	_	Kind=Word
-30	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-31	2392	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-32	,	_	_	_	_	_	_	_	Kind=Punctuation
-33	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-34	2393	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-35	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-36	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r2b97f667ee
-# exam.context = list-item
-# tier = llm
-# source = SamuelIVX/interleave batches/2026-09-27-02/llm/SamuelIVX--interleave/docs__plans__library-api-mode.md
-# license = MIT
-# text = CLI (Main) prints to stdout; no structured return type for programmatic use.
-1	CLI	_	_	_	_	_	_	_	Kind=Word
-2	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	Main	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
-4	)	_	_	_	_	_	_	_	Kind=Punctuation
-5	prints	_	_	_	_	_	_	_	Kind=Word
-6	to	_	_	_	_	_	_	_	Kind=Word
-7	stdout	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	;	_	_	_	_	_	_	_	Kind=Punctuation
-9	no	_	_	_	_	_	_	_	Kind=Word
-10	structured	_	_	_	_	_	_	_	Kind=Word
-11	return	_	_	_	_	_	_	_	Kind=Word
-12	type	_	_	_	_	_	_	_	Kind=Word
-13	for	_	_	_	_	_	_	_	Kind=Word
-14	programmatic	_	_	_	_	_	_	_	Kind=Word
-15	use	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-16	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r935bf50e00
-# exam.context = list-item
-# tier = llm
-# source = github/gh-aw-firewall batches/2026-09-27-02/llm/github--gh-aw-firewall/claude__skills__awf-debug-tools__SKILL.md
-# license = MIT
-# text = Use --suggest-fix to get ready-to-use awf commands
-1	Use	_	_	_	_	_	_	_	Kind=Word
-2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	suggest	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-6	fix	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
-7	to	_	_	_	_	_	_	_	Kind=Word
-8	get	_	_	_	_	_	_	_	Kind=Word
-9	ready	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	to	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-12	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-13	use	_	_	_	_	_	_	_	Kind=Word
-14	awf	_	_	_	_	_	_	_	Kind=Word
-15	commands	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r9c37abfb29
-# exam.context = list-item
-# tier = llm
-# source = jihoyoo99/drools-rules-manager batches/2026-09-27-02/llm/jihoyoo99--drools-rules-manager/docs__system-architecture.md
-# license = MIT
-# text = API Security : JWT tokens for API access
-1	API	_	_	_	_	_	_	_	Kind=Word
-2	Security	_	_	_	_	_	_	_	Kind=Word
-3	:	_	_	_	_	_	_	_	Kind=Punctuation
-4	JWT	_	_	_	_	_	_	_	Kind=Word
-5	tokens	_	_	_	_	_	_	_	Kind=Word
-6	for	_	_	_	_	_	_	_	Kind=Word
-7	API	_	_	_	_	_	_	_	Kind=Word
-8	access	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r06df9e9ede
-# exam.context = list-item
-# tier = llm
-# source = Wafflesthecat101/slop-game batches/2026-09-27-02/llm/Wafflesthecat101--slop-game/github__PULL_REQUEST_TEMPLATE.md
-# license = CC0-1.0
-# text = Upholds P1 (calm, no combat/fail-state), P2 (world reacts), P3 (legible from afar), P4 (cheap by construction)
-1	Upholds	_	_	_	_	_	_	_	Kind=Word
-2	P1	_	_	_	_	_	_	_	Kind=Word
-3	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	calm	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	,	_	_	_	_	_	_	_	Kind=Punctuation
-6	no	_	_	_	_	_	_	_	Kind=Word
-7	combat	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-9	fail	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	state	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-12	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-13	,	_	_	_	_	_	_	_	Kind=Punctuation
-14	P2	_	_	_	_	_	_	_	Kind=Word
-15	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-16	world	_	_	_	_	_	_	_	Kind=Word
-17	reacts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-18	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-19	,	_	_	_	_	_	_	_	Kind=Punctuation
-20	P3	_	_	_	_	_	_	_	Kind=Word
-21	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-22	legible	_	_	_	_	_	_	_	Kind=Word
-23	from	_	_	_	_	_	_	_	Kind=Word
-24	afar	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-25	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-26	,	_	_	_	_	_	_	_	Kind=Punctuation
-27	P4	_	_	_	_	_	_	_	Kind=Word
-28	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-29	cheap	_	_	_	_	_	_	_	Kind=Word
-30	by	_	_	_	_	_	_	_	Kind=Word
-31	construction	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-32	)	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r232f88243a
-# exam.context = heading
-# tier = llm
-# source = TerrenoLabs/terreno batches/2026-09-27-02/llm/TerrenoLabs--terreno/docs__how-to__add-github-oauth.md
-# license = MIT
-# text = Unlink GitHub Account (Requires Auth)
-1	Unlink	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-2	GitHub	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-3	Account	_	_	_	_	_	_	_	Kind=Word
-4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	Requires	_	_	_	_	_	_	_	Kind=Word
-6	Auth	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	)	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r971a3b8e7a
-# exam.context = heading
-# tier = llm
-# source = linkedin/venice batches/2026-09-27-02/llm/linkedin--venice/docs__operations__advanced__degraded-mode.md
-# license = BSD-2-Clause
-# text = Step 1: Controller API to Mark/Unmark DC as Degraded
-1	Step	_	_	_	_	_	_	_	Kind=Word
-2	1	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-3	:	_	_	_	_	_	_	_	Kind=Punctuation
-4	Controller	_	_	_	_	_	_	_	Kind=Word
-5	API	_	_	_	_	_	_	_	Kind=Word
-6	to	_	_	_	_	_	_	_	Kind=Word
-7	Mark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-9	Unmark	_	_	_	_	_	_	_	Kind=Word
-10	DC	_	_	_	_	_	_	_	Kind=Word
-11	as	_	_	_	_	_	_	_	Kind=Word
-12	Degraded	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r7d7ce573e7
-# exam.context = heading
-# tier = llm
-# source = abatn/meeting-automation batches/2026-09-27-02/llm/abatn--meeting-automation/docs__PR_SUMMARY.md
-# license = MIT
-# text = PR Summary: P1 Critical Fixes for Production Readiness
-1	PR	_	_	_	_	_	_	_	Kind=Word
-2	Summary	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	:	_	_	_	_	_	_	_	Kind=Punctuation
-4	P1	_	_	_	_	_	_	_	Kind=Word
-5	Critical	_	_	_	_	_	_	_	Kind=Word
-6	Fixes	_	_	_	_	_	_	_	Kind=Word
-7	for	_	_	_	_	_	_	_	Kind=Word
-8	Production	_	_	_	_	_	_	_	Kind=Word
-9	Readiness	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r77eb393677
-# exam.context = table-cell
-# tier = llm
-# source = Hack23/homepage batches/2026-09-27-02/llm/Hack23--homepage/DATA_MODEL.md
-# license = Apache-2.0
-# text = Localised variants for sv, ko, ar, zh, de, fi, fr, es, ja, he, nl, da, no
-1	Localised	_	_	_	_	_	_	_	Kind=Word
-2	variants	_	_	_	_	_	_	_	Kind=Word
-3	for	_	_	_	_	_	_	_	Kind=Word
-4	sv	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	,	_	_	_	_	_	_	_	Kind=Punctuation
-6	ko	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	,	_	_	_	_	_	_	_	Kind=Punctuation
-8	ar	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	zh	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-11	,	_	_	_	_	_	_	_	Kind=Punctuation
-12	de	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-13	,	_	_	_	_	_	_	_	Kind=Punctuation
-14	fi	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	,	_	_	_	_	_	_	_	Kind=Punctuation
-16	fr	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-17	,	_	_	_	_	_	_	_	Kind=Punctuation
-18	es	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-19	,	_	_	_	_	_	_	_	Kind=Punctuation
-20	ja	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-21	,	_	_	_	_	_	_	_	Kind=Punctuation
-22	he	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-23	,	_	_	_	_	_	_	_	Kind=Punctuation
-24	nl	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-25	,	_	_	_	_	_	_	_	Kind=Punctuation
-26	da	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-27	,	_	_	_	_	_	_	_	Kind=Punctuation
-28	no	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r703ebb5194
-# exam.context = table-cell
-# tier = llm
-# source = OnlyTerp/openclaw-optimization-guide batches/2026-09-27-02/llm/OnlyTerp--openclaw-optimization-guide/benchmarks__METHODOLOGY.md
-# license = MIT
-# text = Linux VM, 8 GB RAM, no GPU, cloud embedding
-1	Linux	_	_	_	_	_	_	_	Kind=Word
-2	VM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	,	_	_	_	_	_	_	_	Kind=Punctuation
-4	8	_	_	_	_	_	_	_	Kind=Number
-5	GB	_	_	_	_	_	_	_	Kind=Word
-6	RAM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	,	_	_	_	_	_	_	_	Kind=Punctuation
-8	no	_	_	_	_	_	_	_	Kind=Word
-9	GPU	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	,	_	_	_	_	_	_	_	Kind=Punctuation
-11	cloud	_	_	_	_	_	_	_	Kind=Word
-12	embedding	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = rc16c35506a
-# exam.context = table-cell
-# tier = llm
-# source = willvieira/forestIPM batches/2026-09-27-02/llm/willvieira--forestIPM/planning__phases__07-add-github-actions-ci-with-code-coverage-and-pkgdown-site-with-readme-pointing-to-book-vignettes__07-RESEARCH.md
-# license = MIT
-# text = Required by covr for Cobertura XML output
-1	Required	_	_	_	_	_	_	_	Kind=Word
-2	by	_	_	_	_	_	_	_	Kind=Word
-3	covr	_	_	_	_	_	_	_	Kind=Word
-4	for	_	_	_	_	_	_	_	Kind=Word
-5	Cobertura	_	_	_	_	_	_	_	Kind=Word
-6	XML	_	_	_	_	_	_	_	Kind=Word
-7	output	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r90a832dd63
-# exam.context = table-cell
-# tier = llm
-# source = rbtkhn/strategy-codex batches/2026-09-27-02/llm/rbtkhn--strategy-codex/docs__session-observability.md
-# license = MIT
-# text = git diff --name-only
-1	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-2	diff	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	name	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
-6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-7	only	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
-
-# sent_id = rc87bfb791f
+# sent_id = rc87bfb791f9ffb7e
 # exam.context = prose
 # tier = mixed
-# source = nicknisi/dotfiles batches/2026-09-27-02/mixed/nicknisi--dotfiles/README.md
+# source = batches/2026-09-27-02/mixed/nicknisi--dotfiles/README.md bytes 7407-7533
+# repo = nicknisi/dotfiles
+# pick_id = rc87bfb791f9ffb7e
 # license = MIT
 # text = The configured plugins are zsh-async, zsh-syntax-highlighting, zsh-autosuggestions, zsh-npm-scripts-autocomplete, and fzf-tab.
 1	The	_	_	_	_	_	_	_	Kind=Word
@@ -888,220 +39,37 @@
 30	tab	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
 31	.	_	_	_	_	_	_	_	Kind=Punctuation
 
-# sent_id = r8f1834960b
-# exam.context = prose
-# tier = mixed
-# source = Umplify/xunit-dependency-injection batches/2026-09-27-02/mixed/Umplify--xunit-dependency-injection/README.md
-# license = MIT
-# text = xunit.v3 4.x runs on Microsoft Testing Platform (MTP) v2 , and the .NET 10 SDK no longer bridges MTP test projects through VSTest.
-1	xunit.v3	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-2	4	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
-3	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	x	_	_	_	_	_	_	_	Kind=Word
-5	runs	_	_	_	_	_	_	_	Kind=Word
-6	on	_	_	_	_	_	_	_	Kind=Word
-7	Microsoft	_	_	_	_	_	_	_	Kind=Word
-8	Testing	_	_	_	_	_	_	_	Kind=Word
-9	Platform	_	_	_	_	_	_	_	Kind=Word
-10	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	MTP	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-12	)	_	_	_	_	_	_	_	Kind=Punctuation
-13	v2	_	_	_	_	_	_	_	Kind=Word
-14	,	_	_	_	_	_	_	_	Kind=Punctuation
-15	and	_	_	_	_	_	_	_	Kind=Word
-16	the	_	_	_	_	_	_	_	Kind=Word
-17	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-18	NET	_	_	_	_	_	_	_	Kind=Word
-19	10	_	_	_	_	_	_	_	Kind=Number
-20	SDK	_	_	_	_	_	_	_	Kind=Word
-21	no	_	_	_	_	_	_	_	Kind=Word
-22	longer	_	_	_	_	_	_	_	Kind=Word
-23	bridges	_	_	_	_	_	_	_	Kind=Word
-24	MTP	_	_	_	_	_	_	_	Kind=Word
-25	test	_	_	_	_	_	_	_	Kind=Word
-26	projects	_	_	_	_	_	_	_	Kind=Word
-27	through	_	_	_	_	_	_	_	Kind=Word
-28	VSTest	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-29	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r0624c4fa0b
-# exam.context = prose
-# tier = mixed
-# source = Wilfred/tree-sitter-elisp batches/2026-09-27-01/mixed/Wilfred--tree-sitter-elisp/README.md
-# license = MIT
-# text = Some elisp packages also offer custom highlighting logic, such as dash-fontify-mode in dash.el .
-1	Some	_	_	_	_	_	_	_	Kind=Word
-2	elisp	_	_	_	_	_	_	_	Kind=Word
-3	packages	_	_	_	_	_	_	_	Kind=Word
-4	also	_	_	_	_	_	_	_	Kind=Word
-5	offer	_	_	_	_	_	_	_	Kind=Word
-6	custom	_	_	_	_	_	_	_	Kind=Word
-7	highlighting	_	_	_	_	_	_	_	Kind=Word
-8	logic	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	such	_	_	_	_	_	_	_	Kind=Word
-11	as	_	_	_	_	_	_	_	Kind=Word
-12	dash-fontify-mode	_	_	_	_	_	_	_	Kind=Code
-13	in	_	_	_	_	_	_	_	Kind=Word
-14	dash.el	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-15	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r98be87b02f
-# exam.context = prose
-# tier = mixed
-# source = dotnet/ClangSharp batches/2026-09-27-01/mixed/dotnet--ClangSharp/README.md
-# license = MIT
-# text = NOTE: libclang and libClangSharp are meta-packages which point to the platform-specific runtime packages ( e.g. ; see others owned by tannergooding ).
-1	NOTE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-2	:	_	_	_	_	_	_	_	Kind=Punctuation
-3	libclang	_	_	_	_	_	_	_	Kind=Word
-4	and	_	_	_	_	_	_	_	Kind=Word
-5	libClangSharp	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-6	are	_	_	_	_	_	_	_	Kind=Word
-7	meta	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-9	packages	_	_	_	_	_	_	_	Kind=Word
-10	which	_	_	_	_	_	_	_	Kind=Word
-11	point	_	_	_	_	_	_	_	Kind=Word
-12	to	_	_	_	_	_	_	_	Kind=Word
-13	the	_	_	_	_	_	_	_	Kind=Word
-14	platform	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-16	specific	_	_	_	_	_	_	_	Kind=Word
-17	runtime	_	_	_	_	_	_	_	Kind=Word
-18	packages	_	_	_	_	_	_	_	Kind=Word
-19	(	_	_	_	_	_	_	_	Kind=Punctuation
-20	e.g	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-21	.	_	_	_	_	_	_	_	Kind=Punctuation
-22	;	_	_	_	_	_	_	_	Kind=Punctuation
-23	see	_	_	_	_	_	_	_	Kind=Word
-24	others	_	_	_	_	_	_	_	Kind=Word
-25	owned	_	_	_	_	_	_	_	Kind=Word
-26	by	_	_	_	_	_	_	_	Kind=Word
-27	tannergooding	_	_	_	_	_	_	_	Kind=Word
-28	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-29	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r6df5d88f18
-# exam.context = prose
-# tier = mixed
-# source = PetoiCamp/OpenCat-Quadruped-Robot batches/2026-09-27-01/mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md
-# license = MIT
-# text = For ESP32/BiBoard (current-gen hardware), see OpenCatESP32 .
-1	For	_	_	_	_	_	_	_	Kind=Word
-2	ESP32	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-3	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-4	BiBoard	_	_	_	_	_	_	_	Kind=Word
-5	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-6	current	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	gen	_	_	_	_	_	_	_	Kind=Word
-9	hardware	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-11	,	_	_	_	_	_	_	_	Kind=Punctuation
-12	see	_	_	_	_	_	_	_	Kind=Word
-13	OpenCatESP32	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-14	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r9ded797490
+# sent_id = r3996565d4acf32e0
 # exam.context = list-item
 # tier = mixed
-# source = MichaelGrafnetter/DSInternals batches/2026-09-27-01/mixed/MichaelGrafnetter--DSInternals/Documentation__CHANGELOG.md
-# license = MIT
-# text = Cmdlets for ntds.dit manipulation now work on Windows 7 / Windows Server 2008 R2.
-1	Cmdlets	_	_	_	_	_	_	_	Kind=Word
-2	for	_	_	_	_	_	_	_	Kind=Word
-3	ntds.dit	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
-4	manipulation	_	_	_	_	_	_	_	Kind=Word
-5	now	_	_	_	_	_	_	_	Kind=Word
-6	work	_	_	_	_	_	_	_	Kind=Word
-7	on	_	_	_	_	_	_	_	Kind=Word
-8	Windows	_	_	_	_	_	_	_	Kind=Word
-9	7	_	_	_	_	_	_	_	Kind=Number
-10	/	_	_	_	_	_	_	_	Kind=Punctuation
-11	Windows	_	_	_	_	_	_	_	Kind=Word
-12	Server	_	_	_	_	_	_	_	Kind=Word
-13	2008	_	_	_	_	_	_	_	Kind=Number
-14	R2	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-15	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r2b1b943f28
-# exam.context = list-item
-# tier = mixed
-# source = motiondivision/motion batches/2026-09-27-02/mixed/motiondivision--motion/CHANGELOG.md
-# license = MIT
-# text = Removed ScrollTimeline support for JS callbacks as benchmarked no improvement over scrollInfo.
-1	Removed	_	_	_	_	_	_	_	Kind=Word
-2	ScrollTimeline	_	_	_	_	_	_	_	Kind=Code
-3	support	_	_	_	_	_	_	_	Kind=Word
-4	for	_	_	_	_	_	_	_	Kind=Word
-5	JS	_	_	_	_	_	_	_	Kind=Word
-6	callbacks	_	_	_	_	_	_	_	Kind=Word
-7	as	_	_	_	_	_	_	_	Kind=Word
-8	benchmarked	_	_	_	_	_	_	_	Kind=Word
-9	no	_	_	_	_	_	_	_	Kind=Word
-10	improvement	_	_	_	_	_	_	_	Kind=Word
-11	over	_	_	_	_	_	_	_	Kind=Word
-12	scrollInfo	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
-13	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r7a0d644197
-# exam.context = list-item
-# tier = mixed
-# source = gookit/validate batches/2026-09-27-01/mixed/gookit--validate/CHANGELOG.md
-# license = MIT
-# text = inner validators always use reflect.Value as param.
-1	inner	_	_	_	_	_	_	_	Kind=Word
-2	validators	_	_	_	_	_	_	_	Kind=Word
-3	always	_	_	_	_	_	_	_	Kind=Word
-4	use	_	_	_	_	_	_	_	Kind=Word
-5	reflect.Value	_	_	_	_	_	_	_	Kind=Word
-6	as	_	_	_	_	_	_	_	Kind=Word
-7	param	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-8	.	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = rb67f436c1b
-# exam.context = list-item
-# tier = mixed
-# source = open-telemetry/opentelemetry-rust batches/2026-09-27-01/mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp__CHANGELOG.md
+# source = batches/2026-09-27-02/mixed/caffeinelabs--motoko/Changelog.md bytes 28595-28702
+# repo = caffeinelabs/motoko
+# pick_id = r3996565d4acf32e0
 # license = Apache-2.0
-# text = Allow specifying OTLP Tonic metadata from env variable #1377
-1	Allow	_	_	_	_	_	_	_	Kind=Word
-2	specifying	_	_	_	_	_	_	_	Kind=Word
-3	OTLP	_	_	_	_	_	_	_	Kind=Word
-4	Tonic	_	_	_	_	_	_	_	Kind=Word
-5	metadata	_	_	_	_	_	_	_	Kind=Word
-6	from	_	_	_	_	_	_	_	Kind=Word
-7	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-8	variable	_	_	_	_	_	_	_	Kind=Word
-9	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-10	1377	_	_	_	_	_	_	_	Kind=Number
+# text = bugfix: Fix type inference for return expressions inside unannotated lambdas passed to generic functions.
+1	bugfix	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	Fix	_	_	_	_	_	_	_	Kind=Word
+4	type	_	_	_	_	_	_	_	Kind=Word
+5	inference	_	_	_	_	_	_	_	Kind=Word
+6	for	_	_	_	_	_	_	_	Kind=Word
+7	return	_	_	_	_	_	_	_	Kind=Code
+8	expressions	_	_	_	_	_	_	_	Kind=Word
+9	inside	_	_	_	_	_	_	_	Kind=Word
+10	unannotated	_	_	_	_	_	_	_	Kind=Word
+11	lambdas	_	_	_	_	_	_	_	Kind=Word
+12	passed	_	_	_	_	_	_	_	Kind=Word
+13	to	_	_	_	_	_	_	_	Kind=Word
+14	generic	_	_	_	_	_	_	_	Kind=Word
+15	functions	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	.	_	_	_	_	_	_	_	Kind=Punctuation
 
-# sent_id = r3574b3fb06
-# exam.context = list-item
-# tier = mixed
-# source = toshiki670/dotfiles batches/2026-09-27-02/mixed/toshiki670--dotfiles/README.md
-# license = MIT
-# text = git-delta - Syntax-highlighting pager for git, diff, and grep output
-1	git-delta	_	_	_	_	_	_	_	Kind=Code
-2	-	_	_	_	_	_	_	_	Kind=Punctuation
-3	Syntax	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-5	highlighting	_	_	_	_	_	_	_	Kind=Word
-6	pager	_	_	_	_	_	_	_	Kind=Word
-7	for	_	_	_	_	_	_	_	Kind=Word
-8	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
-9	,	_	_	_	_	_	_	_	Kind=Punctuation
-10	diff	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-11	,	_	_	_	_	_	_	_	Kind=Punctuation
-12	and	_	_	_	_	_	_	_	Kind=Word
-13	grep	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-14	output	_	_	_	_	_	_	_	Kind=Word
-
-# sent_id = r4c8f1609bb
+# sent_id = r4c8f1609bba34fbd
 # exam.context = heading
 # tier = mixed
-# source = authgear/authgear-server batches/2026-09-27-01/mixed/authgear--authgear-server/docs__specs__oidc.md
+# source = batches/2026-09-27-01/mixed/authgear--authgear-server/docs__specs__oidc.md bytes 17841-17902
+# repo = authgear/authgear-server
+# pick_id = r4c8f1609bba34fbd
 # license = Apache-2.0
 # text = External application acting as RP while Authgear acting as OP
 1	External	_	_	_	_	_	_	_	Kind=Word
@@ -1115,46 +83,1165 @@
 9	as	_	_	_	_	_	_	_	Kind=Word
 10	OP	_	_	_	_	_	_	_	Kind=Word
 
-# sent_id = r38e6275248
+# sent_id = r7d937937c11f0d48
 # exam.context = heading
 # tier = mixed
-# source = zrepl/zrepl batches/2026-09-27-01/mixed/zrepl--zrepl/README.md
+# source = batches/2026-09-27-01/mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md bytes 1513-1577
+# repo = PetoiCamp/OpenCat-Quadruped-Robot
+# pick_id = r7d937937c11f0d48
 # license = MIT
-# text = Notes to Distro Package Maintainers
-1	Notes	_	_	_	_	_	_	_	Kind=Word
-2	to	_	_	_	_	_	_	_	Kind=Word
-3	Distro	_	_	_	_	_	_	_	Kind=Word
-4	Package	_	_	_	_	_	_	_	Kind=Word
-5	Maintainers	_	_	_	_	_	_	_	Kind=Word
+# text = Quaddle mini robot dog — launching on Kickstarter Sept 2, 2026
+1	Quaddle	_	_	_	_	_	_	_	Kind=Word
+2	mini	_	_	_	_	_	_	_	Kind=Word
+3	robot	_	_	_	_	_	_	_	Kind=Word
+4	dog	_	_	_	_	_	_	_	Kind=Word
+5	—	_	_	_	_	_	_	_	Kind=Punctuation
+6	launching	_	_	_	_	_	_	_	Kind=Word
+7	on	_	_	_	_	_	_	_	Kind=Word
+8	Kickstarter	_	_	_	_	_	_	_	Kind=Word
+9	Sept	_	_	_	_	_	_	_	Kind=Word
+10	2	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	2026	_	_	_	_	_	_	_	Kind=Number
 
-# sent_id = rcecdbea5e7
-# exam.context = heading
-# tier = mixed
-# source = pubkey/rxdb batches/2026-09-27-01/mixed/pubkey--rxdb/orga__before-next-major.md
-# license = Apache-2.0
-# text = Rename "RxDB Premium" to "RxDB Enterprise"
-1	Rename	_	_	_	_	_	_	_	Kind=Word
-2	"	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-3	RxDB	_	_	_	_	_	_	_	Kind=Word
-4	Premium	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-5	"	_	_	_	_	_	_	_	Kind=Punctuation
-6	to	_	_	_	_	_	_	_	Kind=Word
-7	"	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
-8	RxDB	_	_	_	_	_	_	_	Kind=Word
-9	Enterprise	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-10	"	_	_	_	_	_	_	_	Kind=Punctuation
-
-# sent_id = r3e9b6aae50
+# sent_id = r405e4047c32d2b2e
 # exam.context = table-cell
 # tier = mixed
-# source = sarub0b0/kubetui batches/2026-09-27-02/mixed/sarub0b0--kubetui/README.md
+# source = batches/2026-09-27-01/mixed/gitlab--GoogleDriveIndex--Google-Drive-Index/README.md bytes 13731-13802
+# repo = GoogleDriveIndex/Google-Drive-Index
+# pick_id = r405e4047c32d2b2e
 # license = MIT
-# text = Apply jq filter to JSON logs.
-1	Apply	_	_	_	_	_	_	_	Kind=Word
-2	jq	_	_	_	_	_	_	_	Kind=Word|Origin=Command
-3	filter	_	_	_	_	_	_	_	Kind=Word
+# text = Set automatically by build script — used for npm CDN asset versioning
+1	Set	_	_	_	_	_	_	_	Kind=Word
+2	automatically	_	_	_	_	_	_	_	Kind=Word
+3	by	_	_	_	_	_	_	_	Kind=Word
+4	build	_	_	_	_	_	_	_	Kind=Word
+5	script	_	_	_	_	_	_	_	Kind=Word
+6	—	_	_	_	_	_	_	_	Kind=Punctuation
+7	used	_	_	_	_	_	_	_	Kind=Word
+8	for	_	_	_	_	_	_	_	Kind=Word
+9	npm	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+10	CDN	_	_	_	_	_	_	_	Kind=Word
+11	asset	_	_	_	_	_	_	_	Kind=Word
+12	versioning	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r1a246410de7512a2
+# exam.context = table-cell
+# tier = mixed
+# source = batches/2026-09-27-02/mixed/netbootxyz--netboot.xyz/README.md bytes 3208-3244
+# repo = netbootxyz/netboot.xyz
+# pick_id = r1a246410de7512a2
+# license = Apache-2.0
+# text = Legacy USB combined IMG for USB Keys
+1	Legacy	_	_	_	_	_	_	_	Kind=Word
+2	USB	_	_	_	_	_	_	_	Kind=Word
+3	combined	_	_	_	_	_	_	_	Kind=Word
+4	IMG	_	_	_	_	_	_	_	Kind=Word
+5	for	_	_	_	_	_	_	_	Kind=Word
+6	USB	_	_	_	_	_	_	_	Kind=Word
+7	Keys	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r0b36cd5fe27523ac
+# exam.context = prose
+# tier = mixed
+# source = batches/2026-09-27-01/mixed/vitest-dev--vitest/docs__guide__features.md bytes 4588-4739
+# repo = vitest-dev/vitest
+# pick_id = r0b36cd5fe27523ac
+# license = MIT
+# text = Vitest supports both happy-dom or jsdom for mocking DOM and browser APIs.
+1	Vitest	_	_	_	_	_	_	_	Kind=Word
+2	supports	_	_	_	_	_	_	_	Kind=Word
+3	both	_	_	_	_	_	_	_	Kind=Word
+4	happy	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	dom	_	_	_	_	_	_	_	Kind=Word
+7	or	_	_	_	_	_	_	_	Kind=Word
+8	jsdom	_	_	_	_	_	_	_	Kind=Word
+9	for	_	_	_	_	_	_	_	Kind=Word
+10	mocking	_	_	_	_	_	_	_	Kind=Word
+11	DOM	_	_	_	_	_	_	_	Kind=Word
+12	and	_	_	_	_	_	_	_	Kind=Word
+13	browser	_	_	_	_	_	_	_	Kind=Word
+14	APIs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = raa22c6fffe3ef51a
+# exam.context = prose
+# tier = mixed
+# source = batches/2026-09-27-01/mixed/SchemaStore--schemastore/CONTRIBUTING.md bytes 10403-10546
+# repo = SchemaStore/schemastore
+# pick_id = raa22c6fffe3ef51a
+# license = Apache-2.0
+# text = Many tools, such as validate-pyproject , accept passing in subpaths for validation like so:
+1	Many	_	_	_	_	_	_	_	Kind=Word
+2	tools	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	,	_	_	_	_	_	_	_	Kind=Punctuation
+4	such	_	_	_	_	_	_	_	Kind=Word
+5	as	_	_	_	_	_	_	_	Kind=Word
+6	validate	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	pyproject	_	_	_	_	_	_	_	Kind=Word
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	accept	_	_	_	_	_	_	_	Kind=Word
+11	passing	_	_	_	_	_	_	_	Kind=Word
+12	in	_	_	_	_	_	_	_	Kind=Word
+13	subpaths	_	_	_	_	_	_	_	Kind=Word
+14	for	_	_	_	_	_	_	_	Kind=Word
+15	validation	_	_	_	_	_	_	_	Kind=Word
+16	like	_	_	_	_	_	_	_	Kind=Word
+17	so	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	:	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r15a2f2c792eba0c6
+# exam.context = prose
+# tier = mixed
+# source = batches/2026-09-27-01/mixed/nltk--nltk/CONTRIBUTING.md bytes 3554-3647
+# repo = nltk/nltk
+# pick_id = r15a2f2c792eba0c6
+# license = Apache-2.0
+# text = NLTK uses pre-commit to run code quality checks before each commit.
+1	NLTK	_	_	_	_	_	_	_	Kind=Word
+2	uses	_	_	_	_	_	_	_	Kind=Word
+3	pre	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	commit	_	_	_	_	_	_	_	Kind=Word
+6	to	_	_	_	_	_	_	_	Kind=Word
+7	run	_	_	_	_	_	_	_	Kind=Word
+8	code	_	_	_	_	_	_	_	Kind=Word
+9	quality	_	_	_	_	_	_	_	Kind=Word
+10	checks	_	_	_	_	_	_	_	Kind=Word
+11	before	_	_	_	_	_	_	_	Kind=Word
+12	each	_	_	_	_	_	_	_	Kind=Word
+13	commit	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r1fec9dd459ba8636
+# exam.context = list-item
+# tier = mixed
+# source = batches/2026-09-27-01/mixed/coverlet-coverage--coverlet/Documentation__Changelog.md bytes 7079-7183
+# repo = coverlet-coverage/coverlet
+# pick_id = r1fec9dd459ba8636
+# license = MIT
+# text = Upgraded minimum required .NET SDK and runtime to .NET 8.0 LTS (Long Term Support) ( Breaking Change )
+1	Upgraded	_	_	_	_	_	_	_	Kind=Word
+2	minimum	_	_	_	_	_	_	_	Kind=Word
+3	required	_	_	_	_	_	_	_	Kind=Word
+4	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	NET	_	_	_	_	_	_	_	Kind=Word
+6	SDK	_	_	_	_	_	_	_	Kind=Word
+7	and	_	_	_	_	_	_	_	Kind=Word
+8	runtime	_	_	_	_	_	_	_	Kind=Word
+9	to	_	_	_	_	_	_	_	Kind=Word
+10	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	NET	_	_	_	_	_	_	_	Kind=Word
+12	8.0	_	_	_	_	_	_	_	Kind=Number
+13	LTS	_	_	_	_	_	_	_	Kind=Word
+14	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	Long	_	_	_	_	_	_	_	Kind=Word
+16	Term	_	_	_	_	_	_	_	Kind=Word
+17	Support	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	)	_	_	_	_	_	_	_	Kind=Punctuation
+19	(	_	_	_	_	_	_	_	Kind=Punctuation
+20	Breaking	_	_	_	_	_	_	_	Kind=Word
+21	Change	_	_	_	_	_	_	_	Kind=Word
+22	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r23d5c46a95569825
+# exam.context = list-item
+# tier = mixed
+# source = batches/2026-09-27-02/mixed/markshust--docker-magento/CHANGELOG.md bytes 31651-31754
+# repo = markshust/docker-magento
+# pick_id = r23d5c46a95569825
+# license = MIT
+# text = Checksum flag to rsync in bin/update PR #707 .
+1	Checksum	_	_	_	_	_	_	_	Kind=Word
+2	flag	_	_	_	_	_	_	_	Kind=Word
+3	to	_	_	_	_	_	_	_	Kind=Word
+4	rsync	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+5	in	_	_	_	_	_	_	_	Kind=Word
+6	bin/update	_	_	_	_	_	_	_	Kind=Code
+7	PR	_	_	_	_	_	_	_	Kind=Word
+8	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	707	_	_	_	_	_	_	_	Kind=Number
+10	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r0ba76bf1fa8d15fe
+# exam.context = heading
+# tier = llm
+# source = batches/2026-09-27-02/llm/mrtcnbsk--northstar/docs__superpowers__plans__2026-07-11-epic-1-rebrand.md bytes 3628-3715
+# repo = mrtcnbsk/northstar
+# pick_id = r0ba76bf1fa8d15fe
+# license = MIT
+# text = Task 1.2 — Config dir + file names + env vars (back-compat) — THE delicate one, TDD
+1	Task	_	_	_	_	_	_	_	Kind=Word
+2	1.2	_	_	_	_	_	_	_	Kind=Number
+3	—	_	_	_	_	_	_	_	Kind=Punctuation
+4	Config	_	_	_	_	_	_	_	Kind=Word
+5	dir	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+6	+	_	_	_	_	_	_	_	Kind=Symbol
+7	file	_	_	_	_	_	_	_	Kind=Word
+8	names	_	_	_	_	_	_	_	Kind=Word
+9	+	_	_	_	_	_	_	_	Kind=Symbol
+10	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+11	vars	_	_	_	_	_	_	_	Kind=Word
+12	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	back	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	compat	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	)	_	_	_	_	_	_	_	Kind=Punctuation
+17	—	_	_	_	_	_	_	_	Kind=Punctuation
+18	THE	_	_	_	_	_	_	_	Kind=Word
+19	delicate	_	_	_	_	_	_	_	Kind=Word
+20	one	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+21	,	_	_	_	_	_	_	_	Kind=Punctuation
+22	TDD	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r21ed6d2d9e08823f
+# exam.context = heading
+# tier = human
+# source = batches/2026-09-27-02/human/nerds-odd-e--doughnut/README.md bytes 5965-6067
+# repo = nerds-odd-e/doughnut
+# pick_id = r21ed6d2d9e08823f
+# license = MIT
+# text = Build & Bundle Vue3 frontend web-app assets and startup backend app (backend app started on port 8081)
+1	Build	_	_	_	_	_	_	_	Kind=Word
+2	&	_	_	_	_	_	_	_	Kind=Punctuation
+3	Bundle	_	_	_	_	_	_	_	Kind=Word
+4	Vue3	_	_	_	_	_	_	_	Kind=Word
+5	frontend	_	_	_	_	_	_	_	Kind=Word
+6	web	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	app	_	_	_	_	_	_	_	Kind=Word
+9	assets	_	_	_	_	_	_	_	Kind=Word
+10	and	_	_	_	_	_	_	_	Kind=Word
+11	startup	_	_	_	_	_	_	_	Kind=Word
+12	backend	_	_	_	_	_	_	_	Kind=Word
+13	app	_	_	_	_	_	_	_	Kind=Word
+14	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	backend	_	_	_	_	_	_	_	Kind=Word
+16	app	_	_	_	_	_	_	_	Kind=Word
+17	started	_	_	_	_	_	_	_	Kind=Word
+18	on	_	_	_	_	_	_	_	Kind=Word
+19	port	_	_	_	_	_	_	_	Kind=Word
+20	8081	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+21	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r389246e8cd2a40b6
+# exam.context = heading
+# tier = human
+# source = batches/2026-09-27-02/human/shiguredo--momo/README.en.md bytes 1090-1123
+# repo = shiguredo/momo
+# pick_id = r389246e8cd2a40b6
+# license = Apache-2.0
+# text = Binary for Jetson Xavier NX / AGX
+1	Binary	_	_	_	_	_	_	_	Kind=Word
+2	for	_	_	_	_	_	_	_	Kind=Word
+3	Jetson	_	_	_	_	_	_	_	Kind=Word
+4	Xavier	_	_	_	_	_	_	_	Kind=Word
+5	NX	_	_	_	_	_	_	_	Kind=Word
+6	/	_	_	_	_	_	_	_	Kind=Punctuation
+7	AGX	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = re30b050872f14694
+# exam.context = heading
+# tier = human
+# source = batches/2026-09-27-02/human/mulle-concurrent--mulle-concurrent/dox__BUILD.md bytes 1944-1983
+# repo = mulle-concurrent/mulle-concurrent
+# pick_id = re30b050872f14694
+# license = BSD-3-Clause
+# text = OSX: Install mulle-build using homebrew
+1	OSX	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	Install	_	_	_	_	_	_	_	Kind=Word
+4	mulle	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	build	_	_	_	_	_	_	_	Kind=Word
+7	using	_	_	_	_	_	_	_	Kind=Word
+8	homebrew	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r24202a507e84c011
+# exam.context = heading
+# tier = llm
+# source = batches/2026-09-27-02/llm/mitchdenny--hex1b/docs__experimental__unix-pty-startup.md bytes 2-39
+# repo = mitchdenny/hex1b
+# pick_id = r24202a507e84c011
+# license = MIT
+# text = Experimental Unix PTY startup timeout
+1	Experimental	_	_	_	_	_	_	_	Kind=Word
+2	Unix	_	_	_	_	_	_	_	Kind=Word
+3	PTY	_	_	_	_	_	_	_	Kind=Word
+4	startup	_	_	_	_	_	_	_	Kind=Word
+5	timeout	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+
+# sent_id = rca954030f52ea06e
+# exam.context = heading
+# tier = llm
+# source = batches/2026-09-27-02/llm/useful-toys--slf4j-toys/doc__TDR-0039-accept-scaled-integer-rounding-in-json5-serialization.md bytes 2-65
+# repo = useful-toys/slf4j-toys
+# pick_id = rca954030f52ea06e
+# license = Apache-2.0
+# text = TDR-0039: Accept Scaled-Integer Rounding in JSON5 Serialization
+1	TDR	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	0039	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+4	:	_	_	_	_	_	_	_	Kind=Punctuation
+5	Accept	_	_	_	_	_	_	_	Kind=Word
+6	Scaled	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	Integer	_	_	_	_	_	_	_	Kind=Word
+9	Rounding	_	_	_	_	_	_	_	Kind=Word
+10	in	_	_	_	_	_	_	_	Kind=Word
+11	JSON5	_	_	_	_	_	_	_	Kind=Word
+12	Serialization	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rf5a05f24c5dede1e
+# exam.context = heading
+# tier = llm
+# source = batches/2026-09-27-01/llm/shanraisshan--claude-code-best-practice/tips__claude-boris-15-tips-30-mar-26.md bytes 7824-7879
+# repo = shanraisshan/claude-code-best-practice
+# pick_id = rf5a05f24c5dede1e
+# license = MIT
+# text = 13/ Use --add-dir to Give Claude Access to More Folders
+1	13	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+2	/	_	_	_	_	_	_	_	Kind=Punctuation
+3	Use	_	_	_	_	_	_	_	Kind=Word
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	add	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	dir	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+9	to	_	_	_	_	_	_	_	Kind=Word
+10	Give	_	_	_	_	_	_	_	Kind=Word
+11	Claude	_	_	_	_	_	_	_	Kind=Word
+12	Access	_	_	_	_	_	_	_	Kind=Word
+13	to	_	_	_	_	_	_	_	Kind=Word
+14	More	_	_	_	_	_	_	_	Kind=Word
+15	Folders	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r071059eea9a249f6
+# exam.context = heading
+# tier = human
+# source = batches/2026-09-27-02/human/Sobeston--zig.guide/chapter-4.md bytes 11627-11642
+# repo = Sobeston/zig.guide
+# pick_id = r071059eea9a249f6
+# license = MIT
+# text = Zig cc, Zig c++
+1	Zig	_	_	_	_	_	_	_	Kind=Word
+2	cc	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	,	_	_	_	_	_	_	_	Kind=Punctuation
+4	Zig	_	_	_	_	_	_	_	Kind=Word
+5	c	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+6	+	_	_	_	_	_	_	_	Kind=Symbol|SpaceAfter=No
+7	+	_	_	_	_	_	_	_	Kind=Symbol
+
+# sent_id = r53dc3ef450e0e530
+# exam.context = table-cell
+# tier = llm
+# source = batches/2026-09-27-01/llm/xr843--fojin/docs__superpowers__specs__2026-06-03-cross-canon-parallel-reading-v1-design.md bytes 9693-9789
+# repo = xr843/fojin
+# pick_id = r53dc3ef450e0e530
+# license = Apache-2.0
+# text = Throttle observer to 16ms; loop guard 80ms; test on T0251 (longest juan ~10k chars) before merge
+1	Throttle	_	_	_	_	_	_	_	Kind=Word
+2	observer	_	_	_	_	_	_	_	Kind=Word
+3	to	_	_	_	_	_	_	_	Kind=Word
+4	16ms	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	;	_	_	_	_	_	_	_	Kind=Punctuation
+6	loop	_	_	_	_	_	_	_	Kind=Word
+7	guard	_	_	_	_	_	_	_	Kind=Word
+8	80ms	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	;	_	_	_	_	_	_	_	Kind=Punctuation
+10	test	_	_	_	_	_	_	_	Kind=Word
+11	on	_	_	_	_	_	_	_	Kind=Word
+12	T0251	_	_	_	_	_	_	_	Kind=Word
+13	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+14	longest	_	_	_	_	_	_	_	Kind=Word
+15	juan	_	_	_	_	_	_	_	Kind=Word
+16	~	_	_	_	_	_	_	_	Kind=Symbol|SpaceAfter=No
+17	10k	_	_	_	_	_	_	_	Kind=Word
+18	chars	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+19	)	_	_	_	_	_	_	_	Kind=Punctuation
+20	before	_	_	_	_	_	_	_	Kind=Word
+21	merge	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r8bee7de7d192863d
+# exam.context = table-cell
+# tier = human
+# source = batches/2026-09-27-02/human/MaxLeiter--maxleiter.com/posts__X11.md bytes 5476-5534
+# repo = MaxLeiter/maxleiter.com
+# pick_id = r8bee7de7d192863d
+# license = MIT
+# text = Add a fake Xplugin.h to fool /unix/xserver/miext/rootless.
+1	Add	_	_	_	_	_	_	_	Kind=Word
+2	a	_	_	_	_	_	_	_	Kind=Word
+3	fake	_	_	_	_	_	_	_	Kind=Word
+4	Xplugin.h	_	_	_	_	_	_	_	Kind=Word
+5	to	_	_	_	_	_	_	_	Kind=Word
+6	fool	_	_	_	_	_	_	_	Kind=Word
+7	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	unix	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	xserver	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	miext	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+14	rootless	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rbaf2641bfeaa0113
+# exam.context = table-cell
+# tier = llm
+# source = batches/2026-09-27-02/llm/yanacuti1121--Yana-AI/claude__skills__hook-block-commands__SKILL.md bytes 693-744
+# repo = yanacuti1121/Yana-AI
+# pick_id = rbaf2641bfeaa0113
+# license = Apache-2.0
+# text = Catastrophic only: rm -rf ~, dd to disk, fork bombs
+1	Catastrophic	_	_	_	_	_	_	_	Kind=Word
+2	only	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	rm	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	rf	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+7	~	_	_	_	_	_	_	_	Kind=Symbol|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	dd	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+10	to	_	_	_	_	_	_	_	Kind=Word
+11	disk	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	,	_	_	_	_	_	_	_	Kind=Punctuation
+13	fork	_	_	_	_	_	_	_	Kind=Word
+14	bombs	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r76666363dfc8ba9f
+# exam.context = table-cell
+# tier = llm
+# source = batches/2026-09-27-02/llm/saraswatayu--swoop/claude__docs__google-flights-protobuf-schema.md bytes 18935-18969
+# repo = saraswatayu/swoop
+# pick_id = r76666363dfc8ba9f
+# license = MIT
+# text = In-seat power, Live TV, Free Wi-Fi
+1	In	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	seat	_	_	_	_	_	_	_	Kind=Word
+4	power	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	Live	_	_	_	_	_	_	_	Kind=Word
+7	TV	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	Free	_	_	_	_	_	_	_	Kind=Word
+10	Wi	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	Fi	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rc5a4d4e1611ff22e
+# exam.context = table-cell
+# tier = human
+# source = batches/2026-09-27-02/human/hahwul--WebHackersWeapons/README.md bytes 65665-65709
+# repo = hahwul/WebHackersWeapons
+# pick_id = rc5a4d4e1611ff22e
+# license = MIT
+# text = declutters url lists for crawling/pentesting
+1	declutters	_	_	_	_	_	_	_	Kind=Word
+2	url	_	_	_	_	_	_	_	Kind=Word
+3	lists	_	_	_	_	_	_	_	Kind=Word
+4	for	_	_	_	_	_	_	_	Kind=Word
+5	crawling	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+6	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	pentesting	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r0256cd05f27ed9f5
+# exam.context = table-cell
+# tier = llm
+# source = batches/2026-09-27-01/llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md bytes 8232-8251
+# repo = pipeshub-ai/pipeshub-ai
+# pick_id = r0256cd05f27ed9f5
+# license = Apache-2.0
+# text = Latency p50/p95/p99
+1	Latency	_	_	_	_	_	_	_	Kind=Word
+2	p50	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	p95	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	p99	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rfab4a2293bda2d8c
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/ondata--ckan-mcp-server/skills__ckan-mcp__references__hvd.md bytes 6424-6532
+# repo = ondata/ckan-mcp-server
+# pick_id = rfab4a2293bda2d8c
+# license = MIT
+# text = National CKAN portals that implement DCAT-AP (e.g. dati.gov.it) store HVD metadata as standard extra fields.
+1	National	_	_	_	_	_	_	_	Kind=Word
+2	CKAN	_	_	_	_	_	_	_	Kind=Word
+3	portals	_	_	_	_	_	_	_	Kind=Word
+4	that	_	_	_	_	_	_	_	Kind=Word
+5	implement	_	_	_	_	_	_	_	Kind=Word
+6	DCAT	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	AP	_	_	_	_	_	_	_	Kind=Word
+9	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	e.g	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	.	_	_	_	_	_	_	_	Kind=Punctuation
+12	dati.gov.it	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+13	)	_	_	_	_	_	_	_	Kind=Punctuation
+14	store	_	_	_	_	_	_	_	Kind=Word
+15	HVD	_	_	_	_	_	_	_	Kind=Word
+16	metadata	_	_	_	_	_	_	_	Kind=Word
+17	as	_	_	_	_	_	_	_	Kind=Word
+18	standard	_	_	_	_	_	_	_	Kind=Word
+19	extra	_	_	_	_	_	_	_	Kind=Word
+20	fields	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+21	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r333f79804647392b
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/rmartin16--qbittorrent-api/README.md bytes 1180-1339
+# repo = rmartin16/qbittorrent-api
+# pick_id = r333f79804647392b
+# license = MIT
+# text = Currently supports up to qBittorrent v4.3.9 (Web API v2.8.2) released on Oct 31, 2021.
+1	Currently	_	_	_	_	_	_	_	Kind=Word
+2	supports	_	_	_	_	_	_	_	Kind=Word
+3	up	_	_	_	_	_	_	_	Kind=Word
 4	to	_	_	_	_	_	_	_	Kind=Word
-5	JSON	_	_	_	_	_	_	_	Kind=Word
-6	logs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
-7	.	_	_	_	_	_	_	_	Kind=Punctuation
+5	qBittorrent	_	_	_	_	_	_	_	Kind=Word
+6	v4.3.9	_	_	_	_	_	_	_	Kind=Word
+7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	Web	_	_	_	_	_	_	_	Kind=Word
+9	API	_	_	_	_	_	_	_	Kind=Word
+10	v2.8.2	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	)	_	_	_	_	_	_	_	Kind=Punctuation
+12	released	_	_	_	_	_	_	_	Kind=Word
+13	on	_	_	_	_	_	_	_	Kind=Word
+14	Oct	_	_	_	_	_	_	_	Kind=Word
+15	31	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+16	,	_	_	_	_	_	_	_	Kind=Punctuation
+17	2021	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+18	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r4d174d3e6de60ce0
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/markshust--docker-magento/CHANGELOG.md bytes 4327-4453
+# repo = markshust/docker-magento
+# pick_id = r4d174d3e6de60ce0
+# license = MIT
+# text = This major update includes support for Apple Silicon (M1/M1X) chips, as well as SSH support for fully native filesystem speed.
+1	This	_	_	_	_	_	_	_	Kind=Word
+2	major	_	_	_	_	_	_	_	Kind=Word
+3	update	_	_	_	_	_	_	_	Kind=Word
+4	includes	_	_	_	_	_	_	_	Kind=Word
+5	support	_	_	_	_	_	_	_	Kind=Word
+6	for	_	_	_	_	_	_	_	Kind=Word
+7	Apple	_	_	_	_	_	_	_	Kind=Word
+8	Silicon	_	_	_	_	_	_	_	Kind=Word
+9	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	M1	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	M1X	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	)	_	_	_	_	_	_	_	Kind=Punctuation
+14	chips	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	,	_	_	_	_	_	_	_	Kind=Punctuation
+16	as	_	_	_	_	_	_	_	Kind=Word
+17	well	_	_	_	_	_	_	_	Kind=Word
+18	as	_	_	_	_	_	_	_	Kind=Word
+19	SSH	_	_	_	_	_	_	_	Kind=Word
+20	support	_	_	_	_	_	_	_	Kind=Word
+21	for	_	_	_	_	_	_	_	Kind=Word
+22	fully	_	_	_	_	_	_	_	Kind=Word
+23	native	_	_	_	_	_	_	_	Kind=Word
+24	filesystem	_	_	_	_	_	_	_	Kind=Word
+25	speed	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+26	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r9bb88b2b1c8d0904
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/nomadkaraoke--karaoke-gen/docs__archive__2026-01-09-lessons-learned-archive.md bytes 47371-47467
+# repo = nomadkaraoke/karaoke-gen
+# pick_id = r9bb88b2b1c8d0904
+# license = MIT
+# text = This package supports BOTH Vertex AI (service account auth) and Google AI Studio (API key auth):
+1	This	_	_	_	_	_	_	_	Kind=Word
+2	package	_	_	_	_	_	_	_	Kind=Word
+3	supports	_	_	_	_	_	_	_	Kind=Word
+4	BOTH	_	_	_	_	_	_	_	Kind=Word
+5	Vertex	_	_	_	_	_	_	_	Kind=Word
+6	AI	_	_	_	_	_	_	_	Kind=Word
+7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	service	_	_	_	_	_	_	_	Kind=Word
+9	account	_	_	_	_	_	_	_	Kind=Word
+10	auth	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	)	_	_	_	_	_	_	_	Kind=Punctuation
+12	and	_	_	_	_	_	_	_	Kind=Word
+13	Google	_	_	_	_	_	_	_	Kind=Word
+14	AI	_	_	_	_	_	_	_	Kind=Word
+15	Studio	_	_	_	_	_	_	_	Kind=Word
+16	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	API	_	_	_	_	_	_	_	Kind=Word
+18	key	_	_	_	_	_	_	_	Kind=Word
+19	auth	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+20	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+21	:	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = raaacd5b8b422599d
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/asosteam--asos-devprod-git-ai-old/docs__superpowers__plans__2026-04-30-ai-helper-script-improvements.md bytes 661-740
+# repo = asosteam/asos-devprod-git-ai-old
+# pick_id = raaacd5b8b422599d
+# license = Apache-2.0
+# text = Tech Stack: Python 3, subprocess for git/gh CLI, argparse for command parsing
+1	Tech	_	_	_	_	_	_	_	Kind=Word
+2	Stack	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	Python	_	_	_	_	_	_	_	Kind=Word
+5	3	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+6	,	_	_	_	_	_	_	_	Kind=Punctuation
+7	subprocess	_	_	_	_	_	_	_	Kind=Word
+8	for	_	_	_	_	_	_	_	Kind=Word
+9	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+10	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+12	CLI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	,	_	_	_	_	_	_	_	Kind=Punctuation
+14	argparse	_	_	_	_	_	_	_	Kind=Word
+15	for	_	_	_	_	_	_	_	Kind=Word
+16	command	_	_	_	_	_	_	_	Kind=Word
+17	parsing	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rb0f3e7e5c5e646da
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/In-Time-Tec--rika/amp__in__artifacts__e2b-orb-acceptance__report.md bytes 3509-3617
+# repo = In-Time-Tec/rika
+# pick_id = rb0f3e7e5c5e646da
+# license = MIT
+# text = E2B's current documentation says hostname filtering inspects HTTP Host on port 80 and TLS SNI on port 443.
+1	E2B's	_	_	_	_	_	_	_	Kind=Word
+2	current	_	_	_	_	_	_	_	Kind=Word
+3	documentation	_	_	_	_	_	_	_	Kind=Word
+4	says	_	_	_	_	_	_	_	Kind=Word
+5	hostname	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+6	filtering	_	_	_	_	_	_	_	Kind=Word
+7	inspects	_	_	_	_	_	_	_	Kind=Word
+8	HTTP	_	_	_	_	_	_	_	Kind=Word
+9	Host	_	_	_	_	_	_	_	Kind=Code
+10	on	_	_	_	_	_	_	_	Kind=Word
+11	port	_	_	_	_	_	_	_	Kind=Word
+12	80	_	_	_	_	_	_	_	Kind=Number
+13	and	_	_	_	_	_	_	_	Kind=Word
+14	TLS	_	_	_	_	_	_	_	Kind=Word
+15	SNI	_	_	_	_	_	_	_	Kind=Word
+16	on	_	_	_	_	_	_	_	Kind=Word
+17	port	_	_	_	_	_	_	_	Kind=Word
+18	443	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+19	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rba8b35308f1b6185
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/AzureAD--microsoft-authentication-library-for-js/lib__msal-node__docs__faq.md bytes 5906-5968
+# repo = AzureAD/microsoft-authentication-library-for-js
+# pick_id = rba8b35308f1b6185
+# license = MIT
+# text = See this in action: MSAL Node B2C web app sample (using PKCE)
+1	See	_	_	_	_	_	_	_	Kind=Word
+2	this	_	_	_	_	_	_	_	Kind=Word
+3	in	_	_	_	_	_	_	_	Kind=Word
+4	action	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	:	_	_	_	_	_	_	_	Kind=Punctuation
+6	MSAL	_	_	_	_	_	_	_	Kind=Word
+7	Node	_	_	_	_	_	_	_	Kind=Word
+8	B2C	_	_	_	_	_	_	_	Kind=Word
+9	web	_	_	_	_	_	_	_	Kind=Word
+10	app	_	_	_	_	_	_	_	Kind=Word
+11	sample	_	_	_	_	_	_	_	Kind=Word
+12	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	using	_	_	_	_	_	_	_	Kind=Word
+14	PKCE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rdbcb3c638e71800f
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/microsoft--cpp_client_telemetry/docs__building-with-vcpkg.md bytes 563-708
+# repo = microsoft/cpp_client_telemetry
+# pick_id = rdbcb3c638e71800f
+# license = Apache-2.0
+# text = However, local port / CONTROL file included in 1DS C++ SDK git repo allows to build SDK with additional Microsoft-proprietary private submodules.
+1	However	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	,	_	_	_	_	_	_	_	Kind=Punctuation
+3	local	_	_	_	_	_	_	_	Kind=Word
+4	port	_	_	_	_	_	_	_	Kind=Word
+5	/	_	_	_	_	_	_	_	Kind=Punctuation
+6	CONTROL	_	_	_	_	_	_	_	Kind=Word
+7	file	_	_	_	_	_	_	_	Kind=Word
+8	included	_	_	_	_	_	_	_	Kind=Word
+9	in	_	_	_	_	_	_	_	Kind=Word
+10	1DS	_	_	_	_	_	_	_	Kind=Word
+11	C	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	+	_	_	_	_	_	_	_	Kind=Symbol|SpaceAfter=No
+13	+	_	_	_	_	_	_	_	Kind=Symbol
+14	SDK	_	_	_	_	_	_	_	Kind=Word
+15	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+16	repo	_	_	_	_	_	_	_	Kind=Word
+17	allows	_	_	_	_	_	_	_	Kind=Word
+18	to	_	_	_	_	_	_	_	Kind=Word
+19	build	_	_	_	_	_	_	_	Kind=Word
+20	SDK	_	_	_	_	_	_	_	Kind=Word
+21	with	_	_	_	_	_	_	_	Kind=Word
+22	additional	_	_	_	_	_	_	_	Kind=Word
+23	Microsoft	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+25	proprietary	_	_	_	_	_	_	_	Kind=Word
+26	private	_	_	_	_	_	_	_	Kind=Word
+27	submodules	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+28	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r590cbc9adb306c8e
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/gastownhall--gastown/plugins__submodule-commit__plugin.md bytes 797-922
+# repo = gastownhall/gastown
+# pick_id = r590cbc9adb306c8e
+# license = MIT
+# text = Polecats only operate on parent repo worktrees and have no commit mandate for submodule repos — this plugin fills that gap.
+1	Polecats	_	_	_	_	_	_	_	Kind=Word
+2	only	_	_	_	_	_	_	_	Kind=Word
+3	operate	_	_	_	_	_	_	_	Kind=Word
+4	on	_	_	_	_	_	_	_	Kind=Word
+5	parent	_	_	_	_	_	_	_	Kind=Word
+6	repo	_	_	_	_	_	_	_	Kind=Word
+7	worktrees	_	_	_	_	_	_	_	Kind=Word
+8	and	_	_	_	_	_	_	_	Kind=Word
+9	have	_	_	_	_	_	_	_	Kind=Word
+10	no	_	_	_	_	_	_	_	Kind=Word
+11	commit	_	_	_	_	_	_	_	Kind=Word
+12	mandate	_	_	_	_	_	_	_	Kind=Word
+13	for	_	_	_	_	_	_	_	Kind=Word
+14	submodule	_	_	_	_	_	_	_	Kind=Word
+15	repos	_	_	_	_	_	_	_	Kind=Word
+16	—	_	_	_	_	_	_	_	Kind=Punctuation
+17	this	_	_	_	_	_	_	_	Kind=Word
+18	plugin	_	_	_	_	_	_	_	Kind=Word
+19	fills	_	_	_	_	_	_	_	Kind=Word
+20	that	_	_	_	_	_	_	_	Kind=Word
+21	gap	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+22	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r3699dbaf42663f2c
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/annProg--PanBook/styles__slide__material__README.md bytes 352-468
+# repo = annProg/PanBook
+# pick_id = r3699dbaf42663f2c
+# license = MIT
+# text = For demonstration please see materialDesignExample.pdf which doubles as a quick manual.
+1	For	_	_	_	_	_	_	_	Kind=Word
+2	demonstration	_	_	_	_	_	_	_	Kind=Word
+3	please	_	_	_	_	_	_	_	Kind=Word
+4	see	_	_	_	_	_	_	_	Kind=Word
+5	materialDesignExample.pdf	_	_	_	_	_	_	_	Kind=Word|Origin=Path
+6	which	_	_	_	_	_	_	_	Kind=Word
+7	doubles	_	_	_	_	_	_	_	Kind=Word
+8	as	_	_	_	_	_	_	_	Kind=Word
+9	a	_	_	_	_	_	_	_	Kind=Word
+10	quick	_	_	_	_	_	_	_	Kind=Word
+11	manual	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rbdbeb55be1a1ceb3
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/evgeshniyzik-dev--nextjs/examples__with-mdx__README.md bytes 24-126
+# repo = evgeshniyzik-dev/nextjs
+# pick_id = rbdbeb55be1a1ceb3
+# license = MIT
+# text = This example shows using MDX as top level pages for your next.js app.
+1	This	_	_	_	_	_	_	_	Kind=Word
+2	example	_	_	_	_	_	_	_	Kind=Word
+3	shows	_	_	_	_	_	_	_	Kind=Word
+4	using	_	_	_	_	_	_	_	Kind=Word
+5	MDX	_	_	_	_	_	_	_	Kind=Word
+6	as	_	_	_	_	_	_	_	Kind=Word
+7	top	_	_	_	_	_	_	_	Kind=Word
+8	level	_	_	_	_	_	_	_	Kind=Word
+9	pages	_	_	_	_	_	_	_	Kind=Word
+10	for	_	_	_	_	_	_	_	Kind=Word
+11	your	_	_	_	_	_	_	_	Kind=Word
+12	next.js	_	_	_	_	_	_	_	Kind=Word|Origin=Path
+13	app	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r12ed02a6abe91821
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/thiagowfx--thiagowfx.github.io/content__posts__2013-10-30-openbox-challenge-day-4.md bytes 1761-1853
+# repo = thiagowfx/thiagowfx.github.io
+# pick_id = r12ed02a6abe91821
+# license = BSD-3-Clause
+# text = But this -obconf suffix adds more functionality to it, exposing some of the openbox configs.
+1	But	_	_	_	_	_	_	_	Kind=Word
+2	this	_	_	_	_	_	_	_	Kind=Word
+3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	obconf	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+5	suffix	_	_	_	_	_	_	_	Kind=Word
+6	adds	_	_	_	_	_	_	_	Kind=Word
+7	more	_	_	_	_	_	_	_	Kind=Word
+8	functionality	_	_	_	_	_	_	_	Kind=Word
+9	to	_	_	_	_	_	_	_	Kind=Word
+10	it	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	exposing	_	_	_	_	_	_	_	Kind=Word
+13	some	_	_	_	_	_	_	_	Kind=Word
+14	of	_	_	_	_	_	_	_	Kind=Word
+15	the	_	_	_	_	_	_	_	Kind=Word
+16	openbox	_	_	_	_	_	_	_	Kind=Word
+17	configs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r215eda6d323798ee
+# exam.context = prose
+# tier = human
+# source = batches/2026-09-27-02/human/cheat--cheat/doc__cheat.1.md bytes 1752-1816
+# repo = cheat/cheat
+# pick_id = r215eda6d323798ee
+# license = MIT
+# text = To remove (delete) the foo/bar cheatsheet: : cheat --rm foo/bar
+1	To	_	_	_	_	_	_	_	Kind=Word
+2	remove	_	_	_	_	_	_	_	Kind=Word
+3	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	delete	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	)	_	_	_	_	_	_	_	Kind=Punctuation
+6	the	_	_	_	_	_	_	_	Kind=Word
+7	foo	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	bar	_	_	_	_	_	_	_	Kind=Word
+10	cheatsheet	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	:	_	_	_	_	_	_	_	Kind=Punctuation
+12	:	_	_	_	_	_	_	_	Kind=Punctuation
+13	cheat	_	_	_	_	_	_	_	Kind=Word
+14	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	rm	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+17	foo	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	bar	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r2c39319fe3e00d52
+# exam.context = prose
+# tier = llm
+# source = batches/2026-09-27-02/llm/swornagent--sworn/docs__captures__2026-08-25-in-engine-learning-spec.md bytes 10596-10788
+# repo = swornagent/sworn
+# pick_id = r2c39319fe3e00d52
+# license = MIT
+# text = The overnight's slices (S3/S4/S5/S7) all edit the same core files (turn_recovery.go, dispatch.go, service.go); parallel tracks over overlapping touchpoints buy merge conflicts, not throughput.
+1	The	_	_	_	_	_	_	_	Kind=Word
+2	overnight's	_	_	_	_	_	_	_	Kind=Word
+3	slices	_	_	_	_	_	_	_	Kind=Word
+4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	S3	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+6	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	S4	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	S5	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	S7	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	)	_	_	_	_	_	_	_	Kind=Punctuation
+13	all	_	_	_	_	_	_	_	Kind=Word
+14	edit	_	_	_	_	_	_	_	Kind=Word
+15	the	_	_	_	_	_	_	_	Kind=Word
+16	same	_	_	_	_	_	_	_	Kind=Word
+17	core	_	_	_	_	_	_	_	Kind=Word
+18	files	_	_	_	_	_	_	_	Kind=Word
+19	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+20	turn_recovery.go	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+21	,	_	_	_	_	_	_	_	Kind=Punctuation
+22	dispatch.go	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+23	,	_	_	_	_	_	_	_	Kind=Punctuation
+24	service.go	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+25	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+26	;	_	_	_	_	_	_	_	Kind=Punctuation
+27	parallel	_	_	_	_	_	_	_	Kind=Word
+28	tracks	_	_	_	_	_	_	_	Kind=Word
+29	over	_	_	_	_	_	_	_	Kind=Word
+30	overlapping	_	_	_	_	_	_	_	Kind=Word
+31	touchpoints	_	_	_	_	_	_	_	Kind=Word
+32	buy	_	_	_	_	_	_	_	Kind=Word
+33	merge	_	_	_	_	_	_	_	Kind=Word
+34	conflicts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+35	,	_	_	_	_	_	_	_	Kind=Punctuation
+36	not	_	_	_	_	_	_	_	Kind=Word
+37	throughput	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+38	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rcde04c5c46d72213
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-02/human/ossrs--srs/trunk__doc__CHANGELOG.md bytes 78182-78261
+# repo = ossrs/srs
+# pick_id = rcde04c5c46d72213
+# license = MIT
+# text = v1.0, 2014-03-30, fix bug for st detecting epoll failed, force st to use epoll.
+1	v1.0	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	,	_	_	_	_	_	_	_	Kind=Punctuation
+3	2014	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	03	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	30	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	fix	_	_	_	_	_	_	_	Kind=Word
+10	bug	_	_	_	_	_	_	_	Kind=Word
+11	for	_	_	_	_	_	_	_	Kind=Word
+12	st	_	_	_	_	_	_	_	Kind=Word
+13	detecting	_	_	_	_	_	_	_	Kind=Word
+14	epoll	_	_	_	_	_	_	_	Kind=Word
+15	failed	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	,	_	_	_	_	_	_	_	Kind=Punctuation
+17	force	_	_	_	_	_	_	_	Kind=Word
+18	st	_	_	_	_	_	_	_	Kind=Word
+19	to	_	_	_	_	_	_	_	Kind=Word
+20	use	_	_	_	_	_	_	_	Kind=Word
+21	epoll	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+22	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r7ea865e944962358
+# exam.context = list-item
+# tier = llm
+# source = batches/2026-09-27-02/llm/RyanYCT--bdo-market-insights/kiro__specs__v3__design.md bytes 8095-8184
+# repo = RyanYCT/bdo-market-insights
+# pick_id = r7ea865e944962358
+# license = MIT
+# text = Alarms: ETL failure (any ABORTED in 24 h), API 5xx > 1% over 5 min, p95 latency breach.
+1	Alarms	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	ETL	_	_	_	_	_	_	_	Kind=Word
+4	failure	_	_	_	_	_	_	_	Kind=Word
+5	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	any	_	_	_	_	_	_	_	Kind=Word
+7	ABORTED	_	_	_	_	_	_	_	Kind=Word
+8	in	_	_	_	_	_	_	_	Kind=Word
+9	24	_	_	_	_	_	_	_	Kind=Number
+10	h	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	,	_	_	_	_	_	_	_	Kind=Punctuation
+13	API	_	_	_	_	_	_	_	Kind=Word
+14	5xx	_	_	_	_	_	_	_	Kind=Word
+15	>	_	_	_	_	_	_	_	Kind=Symbol
+16	1	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+17	%	_	_	_	_	_	_	_	Kind=Punctuation
+18	over	_	_	_	_	_	_	_	Kind=Word
+19	5	_	_	_	_	_	_	_	Kind=Number
+20	min	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+21	,	_	_	_	_	_	_	_	Kind=Punctuation
+22	p95	_	_	_	_	_	_	_	Kind=Word
+23	latency	_	_	_	_	_	_	_	Kind=Word
+24	breach	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+25	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r52665b208717fd10
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-02/human/mindspore-ai--akg/RELEASE.md bytes 2020-2081
+# repo = mindspore-ai/akg
+# pick_id = r52665b208717fd10
+# license = Apache-2.0
+# text = [STABLE] Support transdata + matmul prefusion pattern in akg.
+1	[	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	STABLE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	]	_	_	_	_	_	_	_	Kind=Punctuation
+4	Support	_	_	_	_	_	_	_	Kind=Word
+5	transdata	_	_	_	_	_	_	_	Kind=Word
+6	+	_	_	_	_	_	_	_	Kind=Symbol
+7	matmul	_	_	_	_	_	_	_	Kind=Word
+8	prefusion	_	_	_	_	_	_	_	Kind=Word
+9	pattern	_	_	_	_	_	_	_	Kind=Word
+10	in	_	_	_	_	_	_	_	Kind=Word
+11	akg	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rfe7cc14d659a99cb
+# exam.context = list-item
+# tier = llm
+# source = batches/2026-09-27-02/llm/jamditis--claude-skills-journalism/research__web-capture-tools-research.md bytes 16447-16504
+# repo = jamditis/claude-skills-journalism
+# pick_id = rfe7cc14d659a99cb
+# license = MIT
+# text = AI-Enhanced Search for content in PDFs, blogs, subdomains
+1	AI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	Enhanced	_	_	_	_	_	_	_	Kind=Word
+4	Search	_	_	_	_	_	_	_	Kind=Word
+5	for	_	_	_	_	_	_	_	Kind=Word
+6	content	_	_	_	_	_	_	_	Kind=Word
+7	in	_	_	_	_	_	_	_	Kind=Word
+8	PDFs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	blogs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	subdomains	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r42ebbfe903064871
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-02/human/material-components--material-web/CHANGELOG.md bytes 16434-16478
+# repo = material-components/material-web
+# pick_id = r42ebbfe903064871
+# license = Apache-2.0
+# text = mwc-select's button role changed to combobox
+1	mwc	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	select's	_	_	_	_	_	_	_	Kind=Word
+4	button	_	_	_	_	_	_	_	Kind=Word
+5	role	_	_	_	_	_	_	_	Kind=Word
+6	changed	_	_	_	_	_	_	_	Kind=Word
+7	to	_	_	_	_	_	_	_	Kind=Word
+8	combobox	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r084e6fa5fbcd9cb1
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-01/human/rust-lang--pkg-config-rs/CHANGELOG.md bytes 3400-3469
+# repo = rust-lang/pkg-config-rs
+# pick_id = r084e6fa5fbcd9cb1
+# license = Apache-2.0 OR MIT
+# text = Respect pkg-config escaping rules used with --cflags and --libs (#61)
+1	Respect	_	_	_	_	_	_	_	Kind=Word
+2	pkg	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	config	_	_	_	_	_	_	_	Kind=Word
+5	escaping	_	_	_	_	_	_	_	Kind=Word
+6	rules	_	_	_	_	_	_	_	Kind=Word
+7	used	_	_	_	_	_	_	_	Kind=Word
+8	with	_	_	_	_	_	_	_	Kind=Word
+9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	cflags	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+12	and	_	_	_	_	_	_	_	Kind=Word
+13	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+14	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	libs	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+16	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+18	61	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+19	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rc500127cc6d6c029
+# exam.context = list-item
+# tier = llm
+# source = batches/2026-09-27-02/llm/element-software--CasaBoard/github__copilot-instructions.md bytes 3312-3370
+# repo = element-software/CasaBoard
+# pick_id = rc500127cc6d6c029
+# license = MIT
+# text = Uses : Turbopack (--turbopack flag) for faster dev builds
+1	Uses	_	_	_	_	_	_	_	Kind=Word
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	Turbopack	_	_	_	_	_	_	_	Kind=Word
+4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	turbopack	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+8	flag	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	)	_	_	_	_	_	_	_	Kind=Punctuation
+10	for	_	_	_	_	_	_	_	Kind=Word
+11	faster	_	_	_	_	_	_	_	Kind=Word
+12	dev	_	_	_	_	_	_	_	Kind=Word
+13	builds	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r13c8d6c4f903e9c2
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-01/human/gitlab--serebit--wraith-master/CHANGELOG.md bytes 3212-3341
+# repo = serebit/wraith-master
+# pick_id = r13c8d6c4f903e9c2
+# license = Apache-2.0
+# text = #10 - Remove "plugdev" group requirement to resolve udev error on Fedora
+1	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	10	_	_	_	_	_	_	_	Kind=Number
+3	-	_	_	_	_	_	_	_	Kind=Punctuation
+4	Remove	_	_	_	_	_	_	_	Kind=Word
+5	"	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	plugdev	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	"	_	_	_	_	_	_	_	Kind=Punctuation
+8	group	_	_	_	_	_	_	_	Kind=Word
+9	requirement	_	_	_	_	_	_	_	Kind=Word
+10	to	_	_	_	_	_	_	_	Kind=Word
+11	resolve	_	_	_	_	_	_	_	Kind=Word
+12	udev	_	_	_	_	_	_	_	Kind=Word
+13	error	_	_	_	_	_	_	_	Kind=Word
+14	on	_	_	_	_	_	_	_	Kind=Word
+15	Fedora	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = ree75ab9b930e9130
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-01/human/django-oauth--django-oauth-toolkit/CHANGELOG.md bytes 877-1027
+# repo = django-oauth/django-oauth-toolkit
+# pick_id = ree75ab9b930e9130
+# license = BSD-2-Clause
+# text = #953 Allow loopback redirect URIs using random ports as described in RFC8252 section 7.3 .
+1	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	953	_	_	_	_	_	_	_	Kind=Number
+3	Allow	_	_	_	_	_	_	_	Kind=Word
+4	loopback	_	_	_	_	_	_	_	Kind=Word
+5	redirect	_	_	_	_	_	_	_	Kind=Word
+6	URIs	_	_	_	_	_	_	_	Kind=Word
+7	using	_	_	_	_	_	_	_	Kind=Word
+8	random	_	_	_	_	_	_	_	Kind=Word
+9	ports	_	_	_	_	_	_	_	Kind=Word
+10	as	_	_	_	_	_	_	_	Kind=Word
+11	described	_	_	_	_	_	_	_	Kind=Word
+12	in	_	_	_	_	_	_	_	Kind=Word
+13	RFC8252	_	_	_	_	_	_	_	Kind=Word
+14	section	_	_	_	_	_	_	_	Kind=Word
+15	7.3	_	_	_	_	_	_	_	Kind=Number
+16	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rf0878fd956ef9232
+# exam.context = list-item
+# tier = human
+# source = batches/2026-09-27-02/human/aquova--chip8-book/src__intro.md bytes 2177-2244
+# repo = aquova/chip8-book
+# pick_id = rf0878fd956ef9232
+# license = CC0-1.0
+# text = Sixteen 8-bit general purpose registers, referred to as V0 thru VF.
+1	Sixteen	_	_	_	_	_	_	_	Kind=Word
+2	8	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	bit	_	_	_	_	_	_	_	Kind=Word
+5	general	_	_	_	_	_	_	_	Kind=Word
+6	purpose	_	_	_	_	_	_	_	Kind=Word
+7	registers	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	referred	_	_	_	_	_	_	_	Kind=Word
+10	to	_	_	_	_	_	_	_	Kind=Word
+11	as	_	_	_	_	_	_	_	Kind=Word
+12	V0	_	_	_	_	_	_	_	Kind=Word
+13	thru	_	_	_	_	_	_	_	Kind=Word
+14	VF	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = raf1e6d738063e280
+# exam.context = list-item
+# tier = llm
+# source = batches/2026-09-27-02/llm/microsoft--prompty/runtime__IMPLEMENTATION_GUIDE.md bytes 3729-3796
+# repo = microsoft/prompty
+# pick_id = raf1e6d738063e280
+# license = MIT
+# text = Check that README and API reference examples use current API names.
+1	Check	_	_	_	_	_	_	_	Kind=Word
+2	that	_	_	_	_	_	_	_	Kind=Word
+3	README	_	_	_	_	_	_	_	Kind=Word
+4	and	_	_	_	_	_	_	_	Kind=Word
+5	API	_	_	_	_	_	_	_	Kind=Word
+6	reference	_	_	_	_	_	_	_	Kind=Word
+7	examples	_	_	_	_	_	_	_	Kind=Word
+8	use	_	_	_	_	_	_	_	Kind=Word
+9	current	_	_	_	_	_	_	_	Kind=Word
+10	API	_	_	_	_	_	_	_	Kind=Word
+11	names	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	.	_	_	_	_	_	_	_	Kind=Punctuation
 

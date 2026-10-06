@@ -53,7 +53,7 @@ pub fn check(
 pub fn render(path: &str, over: &Over) -> String {
     let budget = over.budget;
     let size_bytes = over.size_bytes;
-    let over_amount = over.budget - over.size_bytes;
+    let over_amount = over.size_bytes - over.budget;
     let advice = match &over.message {
         Some(message) => message
             .replace("{path}", path)
@@ -79,13 +79,13 @@ fn default_advice(budget: u64) -> String {
          frequently are usually less important that cross-cutting concerns and high level concepts \
          that cannot as easily be ascertained by reading the code. You must decide; and if your edit \
          is truly important, then you must remove something less important from the doc to make \
-         room for it.
+         room for it.\n\
          \n\
-         You must not:
-         - defer editing the doc based solely on its byte budget
-         - throw up your hands and whine to the user about the byte budget
-         - ask the user to increase the budget
-         - increase the budget yourself
+         You must not:\n\
+         - defer editing the doc based solely on its byte budget\n\
+         - throw up your hands and whine to the user about the byte budget\n\
+         - ask the user to increase the budget\n\
+         - increase the budget yourself\n\
          \n\
          You are responsible for maintaining the integrity of the doc. Do not puke garbage from \
          your context into the doc. The byte budget is here to stop you from doing that."

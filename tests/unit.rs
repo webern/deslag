@@ -6,7 +6,7 @@
 
 mod common;
 
-use common::{Repo, code, config_text, stderr};
+use common::{Repo, code, config_text, over_budget, stderr};
 use deslag::lint::max_size_bytes::HEADING;
 
 /// A config that gives every Markdown file the same budget.
@@ -37,10 +37,7 @@ fn over_budget_reports_and_exits_nonzero() {
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(stderr.contains(HEADING), "stderr: {stderr}");
-    assert!(
-        stderr.contains("AGENTS.md is larger than 10 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "AGENTS.md", 10), "stderr: {stderr}");
     assert!(
         stderr.contains("deslag: 1 of 1 Markdown files over budget."),
         "stderr: {stderr}"
@@ -97,12 +94,9 @@ fn a_glob_rule_beats_the_global_budget() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(over_budget(&stderr, "notes.md", 10), "stderr: {stderr}");
     assert!(
-        stderr.contains("notes.md is larger than 10 bytes."),
-        "stderr: {stderr}"
-    );
-    assert!(
-        !stderr.contains("SKILL.md is larger than"),
+        !stderr.contains("SKILL.md"),
         "the override should have saved SKILL.md, stderr: {stderr}"
     );
 }
@@ -121,10 +115,7 @@ fn an_anchored_globs_only_matches_the_root() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("README.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "README.md", 5), "stderr: {stderr}");
     assert!(
         !stderr.contains("vendor/README.md"),
         "the anchored rule must not reach into a directory, stderr: {stderr}"
@@ -145,12 +136,9 @@ fn an_anchored_glob_beats_a_basename_glob() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
     assert!(
-        stderr.contains("AGENTS.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
-    assert!(
-        !stderr.contains("vendor/AGENTS.md is larger"),
+        !stderr.contains("vendor/AGENTS.md"),
         "the basename rule gave the vendored copy a thousand bytes, stderr: {stderr}"
     );
 }
@@ -169,12 +157,9 @@ fn the_longer_of_two_basename_globs_wins() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(over_budget(&stderr, "other.md", 5), "stderr: {stderr}");
     assert!(
-        stderr.contains("other.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
-    assert!(
-        !stderr.contains("NOTES.md is larger than"),
+        !stderr.contains("NOTES.md"),
         "the longer pattern should have won, stderr: {stderr}"
     );
 }
@@ -210,10 +195,7 @@ fn frontmatter_can_be_the_thing_that_fails() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("AGENTS.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
 }
 
 #[test]
@@ -272,10 +254,7 @@ fn the_earlier_canonical_location_wins() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("AGENTS.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
 }
 
 #[test]
@@ -315,10 +294,7 @@ fn config_path_flag_is_used_instead_of_the_canonical_locations() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("AGENTS.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
 }
 
 #[test]
@@ -461,22 +437,32 @@ fn the_report_is_the_whole_message_or_none_of_it() {
 
     let output = repo.check();
 
-    let expected = "\
-ERROR: deslag detected Markdown bloat!\n\
-\n\
-AGENTS.md is larger than 10 bytes.\n\
-\n\
-The file must fit within its max_size_bytes budget of 10 bytes.\n\
-\n\
-Keep the change you came to make, and cut the least useful text already in the file: repetition, \
-history, and what the code states better. Do not leave the change out, move it elsewhere to get \
-around the budget, or ask a human about the budget.\n\
-\n\
-Do not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, not a \
-human.";
+    let expected = format!(
+        "{HEADING}\n\
+         \n\
+         AGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\
+         \n\
+         The file must fit within its max_size_bytes budget of 10 bytes.\n\
+         \n\
+         Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within \
+         its budget. Is what you are adding important? Hint: lists and counts of things that \
+         churn frequently are usually less important that cross-cutting concerns and high level \
+         concepts that cannot as easily be ascertained by reading the code. You must decide; and \
+         if your edit is truly important, then you must remove something less important from the \
+         doc to make room for it.\n\
+         \n\
+         You must not:\n\
+         - defer editing the doc based solely on its byte budget\n\
+         - throw up your hands and whine to the user about the byte budget\n\
+         - ask the user to increase the budget\n\
+         - increase the budget yourself\n\
+         \n\
+         You are responsible for maintaining the integrity of the doc. Do not puke garbage from \
+         your context into the doc. The byte budget is here to stop you from doing that."
+    );
 
     assert!(
-        stderr(&output).contains(expected),
+        stderr(&output).contains(&expected),
         "stderr: {}",
         stderr(&output)
     );
@@ -499,7 +485,8 @@ fn a_config_message_replaces_the_advice() {
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
         stderr.contains(&format!(
-            "{HEADING}\n\nAGENTS.md is larger than 10 bytes.\n\nCut AGENTS.md to 10 bytes.\n"
+            "{HEADING}\n\nAGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\nCut \
+             AGENTS.md to 10 bytes.\n"
         )),
         "stderr: {stderr}"
     );
@@ -528,11 +515,16 @@ fn an_override_sets_only_the_fields_it_names() {
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
-        stderr.contains("AGENTS.md is larger than 10 bytes.\n\nOnly a human may edit AGENTS.md.\n"),
+        stderr.contains(
+            "AGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\nOnly a human may edit \
+             AGENTS.md.\n"
+        ),
         "stderr: {stderr}"
     );
     assert!(
-        stderr.contains("other.md is larger than 10 bytes.\n\nThe file must fit within"),
+        stderr.contains(
+            "other.md is 34, which larger than 10 bytes (by 24 bytes).\n\nThe file must fit within"
+        ),
         "other.md keeps the default advice, stderr: {stderr}"
     );
 }
@@ -555,11 +547,11 @@ fn md_globs_choose_which_files_are_markdown() {
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
-        stderr.contains("docs/a/notes.md is larger than 5 bytes."),
+        over_budget(&stderr, "docs/a/notes.md", 5),
         "stderr: {stderr}"
     );
     assert!(
-        stderr.contains("guide.markdown is larger than 5 bytes."),
+        over_budget(&stderr, "guide.markdown", 5),
         "stderr: {stderr}"
     );
     assert!(!stderr.contains("AGENTS.md"), "stderr: {stderr}");

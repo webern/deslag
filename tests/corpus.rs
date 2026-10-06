@@ -21,7 +21,7 @@ use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::document::Location;
 use deslag::fix::{self, Outcome};
-use deslag::lint::max_size_bytes::HEADING;
+use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
 use deslag::{Config, ConfigSource, Document, Violation, check_file};
@@ -376,14 +376,17 @@ fn body_after_frontmatter(text: &str) -> &str {
     text
 }
 
-/// The `path is larger than N bytes.` lines of a run, sorted, as (path, budget) pairs.
-fn reported(stderr: &str) -> Vec<(String, u64)> {
-    let mut found: Vec<(String, u64)> = stderr
+/// The `path is N, which larger than B bytes (by M bytes).` lines of a run, sorted, as (path,
+/// size, budget) triples.
+fn reported(stderr: &str) -> Vec<(String, u64, u64)> {
+    let mut found: Vec<(String, u64, u64)> = stderr
         .lines()
         .filter_map(|line| {
-            let (path, rest) = line.split_once(" is larger than ")?;
-            let budget = rest.strip_suffix(" bytes.")?.parse::<u64>().ok()?;
-            Some((path.to_string(), budget))
+            let (left, rest) = line.split_once(", which larger than ")?;
+            let (path, size) = left.rsplit_once(" is ")?;
+            let (budget, rest) = rest.split_once(" bytes (by ")?;
+            rest.strip_suffix(" bytes).")?;
+            Some((path.to_string(), size.parse().ok()?, budget.parse().ok()?))
         })
         .collect();
     found.sort();
@@ -391,20 +394,14 @@ fn reported(stderr: &str) -> Vec<(String, u64)> {
 }
 
 /// The whole message the run must print for one over-budget file.
-fn expected_report(path: &str, budget: u64) -> String {
-    format!(
-        "{HEADING}\n\
-         \n\
-         {path} is larger than {budget} bytes.\n\
-         \n\
-         The file must fit within its max_size_bytes budget of {budget} bytes.\n\
-         \n\
-         Keep the change you came to make, and cut the least useful text already in the file: \
-         repetition, history, and what the code states better. Do not leave the change out, move \
-         it elsewhere to get around the budget, or ask a human about the budget.\n\
-         \n\
-         Do not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, \
-         not a human."
+fn expected_report(path: &str, size_bytes: u64, budget: u64) -> String {
+    max_size_bytes::render(
+        path,
+        &max_size_bytes::Over {
+            size_bytes,
+            budget,
+            message: None,
+        },
     )
 }
 
@@ -463,17 +460,17 @@ fn run_case(case: &Case, fixtures: &[Fixture]) {
     let stderr = stderr(&output);
     let stdout = stdout(&output);
 
-    let mut expected: Vec<(String, u64)> = placed
+    let mut expected: Vec<(String, u64, u64)> = placed
         .iter()
         .filter(|(_, size, budget)| budget.is_some_and(|budget| *size > budget))
-        .map(|(path, _, budget)| (path.clone(), budget.expect("a budget")))
+        .map(|(path, size, budget)| (path.clone(), *size, budget.expect("a budget")))
         .collect();
     expected.sort();
 
     // Every over-budget file gets the whole message, and nothing else does.
-    for (path, budget) in &expected {
+    for (path, size, budget) in &expected {
         assert!(
-            stderr.contains(&expected_report(path, *budget)),
+            stderr.contains(&expected_report(path, *size, *budget)),
             "{}: missing or wrong report for {path} at {budget} bytes\nstderr:\n{stderr}",
             case.name
         );
@@ -599,10 +596,11 @@ fn the_whole_corpus_is_held_to_its_budgets() {
         &config_text(Some(GLOBAL), &[("README.md", README)]),
     );
 
-    let mut expected: Vec<(String, u64)> = fixtures
+    let mut expected: Vec<(String, u64, u64)> = fixtures
         .iter()
         .zip(&paths)
         .filter_map(|(fixture, path)| {
+            let size = fixture.bytes.len() as u64;
             let budget = fixture
                 .sidecar
                 .content
@@ -612,7 +610,7 @@ fn the_whole_corpus_is_held_to_its_budgets() {
                 } else {
                     GLOBAL
                 });
-            (fixture.bytes.len() as u64 > budget).then(|| (path.clone(), budget))
+            (size > budget).then(|| (path.clone(), size, budget))
         })
         .collect();
     expected.sort();

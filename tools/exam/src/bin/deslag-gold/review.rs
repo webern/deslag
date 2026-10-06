@@ -8,10 +8,20 @@
 //! The file is read as one line per deslag token (`Kind=` in MISC), tagged or not. A word with no
 //! tag starts blank unless deslag reads it at Likely or Sure; a blank word is never filled from a
 //! reading below that, since a guess shown as the answer anchors the owner and flatters deslag
-//! against him. A sentence cannot be left until every word has a tag. Leaving it sets `Prov=owner`
-//! on its words, keeps what `Prov=` said as `Was=`, gives its other lines their UPOS and
-//! `Prov=kind`, adds `# owner_reviewed = <date>`, and saves the file through a [`Store`] before
-//! anything else changes.
+//! against him. A sentence cannot be left until every word has a tag. Leaving it (`n` or `p`; the
+//! arrow keys only move between words) sets `Prov=owner` on its words, keeps what `Prov=` said as
+//! `Was=`, gives its other lines their UPOS and `Prov=kind`, adds `# owner_reviewed = <date>`, and
+//! saves the file through a [`Store`] before anything else changes.
+//!
+//! A pre-filled word the owner leaves as it is has no `Prov=` to keep, so it is saved
+//! `Prov=owner|Was=prefill`: the exam can tell how much of deslag's score on owner words rests on
+//! its own guesses. A word he typed has no `Was=`. `Gold::read` takes `Was=` as a free note (it
+//! reads the value, as `Word::was`, and grades nothing by it), so such a file loads as gold.
+//!
+//! The file must be a `deslag`-token file: `# exam.tokens = deslag` in its first sentence and an
+//! `# exam.context` in every sentence, which the skeleton writers add, since deslag reads each
+//! sentence in its context and the exam reads the saved file by its tokens. A file without them
+//! is refused, not read as prose and as UD tokens.
 
 use std::borrow::Cow;
 use std::path::Path;
@@ -219,16 +229,14 @@ pub enum Key {
     Down,
     /// Arrow up.
     Up,
-    /// Arrow right.
-    Right,
-    /// Arrow left.
-    Left,
     /// Return.
     Enter,
     /// Escape.
     Esc,
     /// Backspace.
     Backspace,
+    /// Ctrl-C: quit, from any mode.
+    Interrupt,
 }
 
 /// What the owner is doing.
@@ -266,6 +274,8 @@ pub struct Session {
     pub mode: Mode,
     /// One line for the owner: what the last key did, or why it did nothing.
     pub notice: String,
+    /// Whether the last key asked to quit with unsaved tags, which the next quit confirms.
+    quit_asked: bool,
 }
 
 /// The splits and names of files that are never opened.
@@ -328,6 +338,7 @@ impl Session {
             cursor,
             mode: Mode::Browse,
             notice,
+            quit_asked: false,
         })
     }
 
@@ -367,6 +378,10 @@ impl Session {
     /// Does what `key` asks in the mode the session is in. `store` is where a sentence is saved
     /// when the key leaves it.
     pub fn press(&mut self, key: Key, store: &mut dyn Store) -> Outcome {
+        let asked = std::mem::take(&mut self.quit_asked);
+        if key == Key::Interrupt {
+            return self.quit(asked);
+        }
         match self.mode.clone() {
             Mode::Guide(_) => {
                 self.mode = Mode::Browse;
@@ -376,11 +391,23 @@ impl Session {
                 self.prompt(typed, key);
                 Outcome::Continue
             }
-            Mode::Browse => self.browse(key, store),
+            Mode::Browse => self.browse(key, store, asked),
         }
     }
 
-    fn browse(&mut self, key: Key, store: &mut dyn Store) -> Outcome {
+    /// Quits, unless the sentence on screen holds tags not yet saved and this is the first ask.
+    fn quit(&mut self, asked: bool) -> Outcome {
+        if self.unsaved() && !asked {
+            self.quit_asked = true;
+            self.notice = "this sentence has tags that are not saved; q again quits and loses \
+                           them, n saves them"
+                .into();
+            return Outcome::Continue;
+        }
+        Outcome::Quit
+    }
+
+    fn browse(&mut self, key: Key, store: &mut dyn Store, asked: bool) -> Outcome {
         self.notice.clear();
         match key {
             Key::Down | Key::Char('j') => self.step(true),
@@ -392,9 +419,9 @@ impl Session {
                 }
             }
             Key::Char('?') | Key::Char('g') => self.show_guide(),
-            Key::Right | Key::Char('n') => self.leave(true, store),
-            Key::Left | Key::Char('p') => self.leave(false, store),
-            Key::Esc | Key::Char('q') => return Outcome::Quit,
+            Key::Char('n') => self.leave(true, store),
+            Key::Char('p') => self.leave(false, store),
+            Key::Esc | Key::Char('q') => return self.quit(asked),
             _ => {}
         }
         Outcome::Continue
@@ -541,7 +568,7 @@ impl Session {
                 Row::Word(word) => {
                     let tag = word.tag.ok_or("a word has no tag")?;
                     let mut columns = Columns {
-                        misc: Some(owner_misc(&word.misc)),
+                        misc: Some(owner_misc(&word.misc, word.prefilled, word.set)),
                         ..Columns::default()
                     };
                     let before = Code::from_conllu(&word.upos, &word.feats).ok();
@@ -646,8 +673,13 @@ fn parse_typed(typed: &str) -> Result<Code, String> {
     Code::parse(&text)
 }
 
-/// A MISC column with `Prov=owner`, the old `Prov=` kept as `Was=`.
-pub fn owner_misc(misc: &str) -> String {
+/// The `Was=` of a word the owner left as deslag's reading filled it in.
+pub const PREFILL: &str = "prefill";
+
+/// A MISC column with `Prov=owner`, the old `Prov=` kept as `Was=`. A word that had no `Prov=`
+/// and was filled in from deslag's reading (`prefilled`) gets `Was=prefill`, so the file tells a
+/// word the owner accepted from one he typed; a word he typed (`set`) never keeps that mark.
+pub fn owner_misc(misc: &str, prefilled: bool, set: bool) -> String {
     let mut pairs: Vec<(&str, &str)> = conllu::pairs(misc);
     let old = pairs
         .iter()
@@ -655,6 +687,11 @@ pub fn owner_misc(misc: &str) -> String {
         .map(|(_, value)| *value);
     let was = match old {
         Some("owner") => pairs.iter().find(|(key, _)| *key == "Was").map(|(_, v)| *v),
+        other => other,
+    };
+    let was = match was {
+        None if prefilled => Some(PREFILL),
+        Some(PREFILL) if set => None,
         other => other,
     };
     pairs.retain(|(key, _)| !matches!(*key, "Prov" | "Was"));
@@ -1076,9 +1113,9 @@ pub mod tests {
         let mut session = open(SKELETON);
         let mut store = Memory::default();
         fill(&mut session, &mut store);
-        session.press(Key::Right, &mut store);
+        session.press(Key::Char('n'), &mut store);
         fill(&mut session, &mut store);
-        session.press(Key::Right, &mut store);
+        session.press(Key::Char('n'), &mut store);
         assert!(session.notice.contains("2 of 2 sentences reviewed"));
         assert_eq!(session.at, 1, "the last sentence stays on screen");
         let text = store.saved.last().unwrap().clone();
@@ -1138,15 +1175,29 @@ pub mod tests {
     #[test]
     fn reviewing_again_keeps_the_first_was() {
         assert_eq!(
-            owner_misc("Kind=Word|Prov=agree|SpaceAfter=No"),
+            owner_misc("Kind=Word|Prov=agree|SpaceAfter=No", false, true),
             "Kind=Word|Prov=owner|SpaceAfter=No|Was=agree"
         );
         assert_eq!(
-            owner_misc("Kind=Word|Prov=owner|Was=agree"),
+            owner_misc("Kind=Word|Prov=owner|Was=agree", false, false),
             "Kind=Word|Prov=owner|Was=agree"
         );
-        assert_eq!(owner_misc("Kind=Word"), "Kind=Word|Prov=owner");
-        assert_eq!(owner_misc("_"), "Prov=owner");
+        assert_eq!(owner_misc("Kind=Word", false, true), "Kind=Word|Prov=owner");
+        assert_eq!(owner_misc("_", false, true), "Prov=owner");
+        // A word deslag filled in is marked; typing over it removes the mark, and a mark that
+        // is there stays through a second review.
+        assert_eq!(
+            owner_misc("Kind=Word", true, false),
+            "Kind=Word|Prov=owner|Was=prefill"
+        );
+        assert_eq!(
+            owner_misc("Kind=Word|Prov=owner|Was=prefill", false, false),
+            "Kind=Word|Prov=owner|Was=prefill"
+        );
+        assert_eq!(
+            owner_misc("Kind=Word|Prov=owner|Was=prefill", false, true),
+            "Kind=Word|Prov=owner"
+        );
     }
 
     #[test]
@@ -1166,15 +1217,103 @@ pub mod tests {
     }
 
     #[test]
-    fn quitting_is_a_quit_and_unsaved_work_is_known() {
+    fn quitting_with_unsaved_tags_asks_first_and_any_other_key_cancels_the_ask() {
         let mut session = open(SKELETON);
         let mut store = Memory::default();
         assert!(!session.unsaved());
+        assert_eq!(session.press(Key::Char('q'), &mut store), Outcome::Quit);
+        let mut session = open(SKELETON);
         session.cursor = 0;
         type_code(&mut session, &mut store, "v.fi");
         assert!(session.unsaved());
+        for quit in [Key::Char('q'), Key::Esc, Key::Interrupt] {
+            assert_eq!(session.press(quit, &mut store), Outcome::Continue);
+            assert!(session.notice.contains("not saved"), "{}", session.notice);
+            assert!(session.unsaved(), "the tags are still there");
+            session.press(Key::Char('k'), &mut store);
+        }
+        // The ask is for the next quit only.
+        session.press(Key::Char('q'), &mut store);
+        session.press(Key::Char('j'), &mut store);
+        assert_eq!(session.press(Key::Char('q'), &mut store), Outcome::Continue);
         assert_eq!(session.press(Key::Char('q'), &mut store), Outcome::Quit);
         assert!(store.saved.is_empty());
+        // Ctrl-C asks in a prompt too, and confirms the same way.
+        let mut session = open(SKELETON);
+        session.cursor = 0;
+        type_code(&mut session, &mut store, "v.fi");
+        session.press(Key::Char('t'), &mut store);
+        assert_eq!(session.press(Key::Interrupt, &mut store), Outcome::Continue);
+        assert_eq!(session.press(Key::Interrupt, &mut store), Outcome::Quit);
+    }
+
+    #[test]
+    fn the_arrow_keys_move_between_words_and_never_save() {
+        let mut session = open(SKELETON);
+        let mut store = Memory::default();
+        fill(&mut session, &mut store);
+        for key in [Key::Down, Key::Down, Key::Down, Key::Down, Key::Down] {
+            session.press(key, &mut store);
+        }
+        assert_eq!(session.at, 0);
+        assert!(
+            store.saved.is_empty(),
+            "no arrow saved or left the sentence"
+        );
+        assert!(session.sentence().reviewed.is_none());
+    }
+
+    #[test]
+    fn a_word_the_owner_leaves_as_deslag_filled_it_is_marked_and_one_he_typed_is_not() {
+        let source = "\
+# exam.tokens = deslag
+# sent_id = a
+# exam.context = prose
+# text = The cat
+1\tThe\t_\t_\t_\t_\t_\t_\t_\tKind=Word
+2\tcat\t_\t_\t_\t_\t_\t_\t_\tKind=Word
+";
+        let mut session = open(source);
+        let mut store = Memory::default();
+        let the = session.sentence().rows[0].word().unwrap().clone();
+        assert!(the.prefilled, "deslag is sure of `The`");
+        // He types over the second word and leaves the first.
+        session.cursor = 1;
+        type_code(&mut session, &mut store, "n.s");
+        session.press(Key::Char('n'), &mut store);
+        let lines: Vec<&str> = store.saved.last().unwrap().lines().collect();
+        assert!(
+            lines[5].ends_with("Kind=Word|Prov=owner|Was=prefill"),
+            "{}",
+            lines[5]
+        );
+        assert!(lines[6].ends_with("Kind=Word|Prov=owner"), "{}", lines[6]);
+        // The file still loads as gold, and the exam can read both marks.
+        let dir = tempfile::tempdir().unwrap();
+        let file = dir.path().join("owner.conllu");
+        std::fs::write(&file, store.saved.last().unwrap()).unwrap();
+        let gold = deslag_exam::gold::Gold::read(&file).expect("gold reads it");
+        let words = &gold.sentences[0].words;
+        assert_eq!(words[0].was.as_deref(), Some("prefill"));
+        assert_eq!(words[1].was, None);
+        assert!(
+            words
+                .iter()
+                .all(|w| w.prov == Some(deslag_exam::gold::Prov::Owner))
+        );
+        // A second review keeps the mark.
+        let mut again = open(store.saved.last().unwrap());
+        again.press(Key::Char('n'), &mut store);
+        assert!(
+            store
+                .saved
+                .last()
+                .unwrap()
+                .lines()
+                .nth(5)
+                .unwrap()
+                .ends_with("Was=prefill")
+        );
     }
 
     #[test]

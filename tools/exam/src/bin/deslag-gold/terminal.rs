@@ -102,15 +102,13 @@ fn interact(session: &mut Session, store: &mut FileStore) -> std::io::Result<()>
             if key.kind != KeyEventKind::Press {
                 continue;
             }
-            if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
-                return Ok(());
-            }
+            let interrupt =
+                key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c');
             let key = match key.code {
+                _ if interrupt => Key::Interrupt,
                 KeyCode::Char(c) => Key::Char(c),
                 KeyCode::Down => Key::Down,
                 KeyCode::Up => Key::Up,
-                KeyCode::Right => Key::Right,
-                KeyCode::Left => Key::Left,
                 KeyCode::Enter => Key::Enter,
                 KeyCode::Esc => Key::Esc,
                 KeyCode::Backspace => Key::Backspace,

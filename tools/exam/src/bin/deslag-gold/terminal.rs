@@ -123,29 +123,52 @@ fn interact(session: &mut Session, store: &mut FileStore) -> std::io::Result<()>
     result
 }
 
-/// A file saved by writing beside it and renaming over it.
+/// A file saved by writing beside it and renaming over it. A link is followed, so the file it
+/// points to is the one replaced and the link stays a link. The new file has the mode of the old,
+/// and the directory is synced after the rename, so a saved sentence survives a power cut.
 struct FileStore {
     path: PathBuf,
 }
 
 impl Store for FileStore {
     fn save(&mut self, text: &str) -> Result<(), String> {
-        let name = self
-            .path
-            .file_name()
-            .map_or("review".into(), |name| name.to_string_lossy().into_owned());
-        let temporary = self.path.with_file_name(format!(".{name}.review"));
-        let write = || -> std::io::Result<()> {
-            let mut file = std::fs::File::create(&temporary)?;
-            file.write_all(text.as_bytes())?;
-            file.sync_all()?;
-            std::fs::rename(&temporary, &self.path)
-        };
-        write().map_err(|error| {
-            let _ = std::fs::remove_file(&temporary);
-            error.to_string()
-        })
+        write_beside(&self.path, text).map_err(|error| error.to_string())
     }
+}
+
+/// Replaces the file `path` names (the target of a link) with `text`, all or nothing.
+fn write_beside(path: &Path, text: &str) -> std::io::Result<()> {
+    let target = std::fs::canonicalize(path)?;
+    let mode = std::fs::metadata(&target)?.permissions();
+    let name = target
+        .file_name()
+        .map_or("review".into(), |name| name.to_string_lossy().into_owned());
+    let temporary = target.with_file_name(format!(".{name}.review"));
+    let write = || -> std::io::Result<()> {
+        let mut file = std::fs::File::create(&temporary)?;
+        file.set_permissions(mode)?;
+        file.write_all(text.as_bytes())?;
+        file.sync_all()?;
+        std::fs::rename(&temporary, &target)
+    };
+    write().inspect_err(|_| {
+        let _ = std::fs::remove_file(&temporary);
+    })?;
+    sync_directory(&target)
+}
+
+/// Makes the rename of `file` durable, where a directory can be opened and synced.
+#[cfg(unix)]
+fn sync_directory(file: &Path) -> std::io::Result<()> {
+    match file.parent() {
+        Some(parent) => std::fs::File::open(parent)?.sync_all(),
+        None => Ok(()),
+    }
+}
+
+#[cfg(not(unix))]
+fn sync_directory(_file: &Path) -> std::io::Result<()> {
+    Ok(())
 }
 
 /// Today's date in UTC, `YYYY-MM-DD`.
@@ -196,6 +219,42 @@ mod tests {
             path: dir.path().join("missing/owner.conllu"),
         };
         assert!(gone.save("x").is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn saving_keeps_the_mode_and_writes_through_a_link_to_its_target() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        let real = dir.path().join("real");
+        std::fs::create_dir(&real).unwrap();
+        let target = real.join("owner.conllu");
+        std::fs::write(&target, "old").unwrap();
+        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o750)).unwrap();
+        let link = dir.path().join("link.conllu");
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        let mut store = FileStore { path: link.clone() };
+        store.save("new").unwrap();
+        assert!(
+            std::fs::symlink_metadata(&link).unwrap().is_symlink(),
+            "the link is still a link"
+        );
+        assert_eq!(std::fs::read_to_string(&target).unwrap(), "new");
+        let mode = std::fs::metadata(&target).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o750);
+        let left: Vec<_> = std::fs::read_dir(&real).unwrap().collect();
+        assert_eq!(left.len(), 1, "no temporary is left");
+        // A plain file keeps a restrictive mode too.
+        let plain = dir.path().join("plain.conllu");
+        std::fs::write(&plain, "old").unwrap();
+        std::fs::set_permissions(&plain, std::fs::Permissions::from_mode(0o600)).unwrap();
+        FileStore {
+            path: plain.clone(),
+        }
+        .save("new")
+        .unwrap();
+        let mode = std::fs::metadata(&plain).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
     }
 
     #[test]

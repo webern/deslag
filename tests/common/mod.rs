@@ -115,3 +115,18 @@ pub fn stderr(output: &Output) -> String {
 pub fn code(output: &Output) -> i32 {
     output.status.code().unwrap_or(-1)
 }
+
+/// Whether `stderr` reports the file at `path` as over a budget of `budget` bytes, as deslag's
+/// over-budget line does: `path is N, which larger than {budget} bytes (by M bytes).`
+pub fn over_budget(stderr: &str, path: &str, budget: u64) -> bool {
+    stderr.lines().any(|line| {
+        let Some((left, right)) = line.split_once(", which larger than ") else {
+            return false;
+        };
+        left.strip_prefix(path)
+            .and_then(|rest| rest.strip_prefix(" is "))
+            .is_some_and(|size| size.parse::<u64>().is_ok())
+            && right.starts_with(&format!("{budget} bytes (by "))
+            && right.ends_with(" bytes).")
+    })
+}

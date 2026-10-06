@@ -56,13 +56,15 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
             .collect();
         let _ = writeln!(out, "# sent_id = {}", sentence.sent_id);
         let _ = writeln!(out, "# text = {}", sentence.text);
+        let origins = deslag::tag::origins(&tokens);
         for (index, token) in tokens.iter().enumerate() {
             let joined = tokens
                 .get(index + 1)
                 .is_some_and(|next| next.range.start == token.range.end);
             let misc = format!(
-                "Kind={}{}",
+                "Kind={}{}{}",
                 kind_name(token.kind),
+                skeleton::origin_misc(token, origins[index]),
                 if joined { "|SpaceAfter=No" } else { "" }
             );
             let filled = readings[index]

@@ -13,7 +13,8 @@ A start has `kind`, `tags` (the names of the tags its tag indices stand for), an
 A `Begin` has one entry per token. `tags` are tag indices. `allowed` is None, or per token the
 bitmask of tags a rule may change it to, 0 for a token no rule may touch. `level`, `kept`, `known`,
 `margin` and `trained` are what the confidence reads, each None where a start has none, and on a
-token that is no `Word` always None.
+token that is no `Word` always None. `origin` is a deslag start's only: the word's origin, which
+keeps its evidence cells apart from English words of the same level and tag.
 
 Three are here. `MostCommonStart` is #109's: each word's commonest training tag, a rule may give
 any tag. `DeslagStart` is deslag's own tagger, from a readings file: a `Sure` word is frozen, and a
@@ -28,7 +29,7 @@ import perceptron
 from conllu import CODE_TAGS, DESLAG_CODE, KIND_TAG, UD_TAGS, Failure
 from initial import MostCommon
 
-Begin = namedtuple("Begin", "tags allowed level kept known margin trained")
+Begin = namedtuple("Begin", "tags allowed level kept known margin trained origin", defaults=(None,))
 
 PERCEPTRON_FOLDS = 5
 MOST_COMMON_FOLDS = 10
@@ -125,7 +126,7 @@ class DeslagStart:
                     mask |= 1 << index[code]
             allowed.append(mask)
         known = [None if lv is None else lv != "Unknown" for lv in level]
-        return Begin(tags, allowed, level, kept, known, None, None)
+        return Begin(tags, allowed, level, kept, known, None, None, None if readings.origin is None else list(readings.origin))
 
     def to_json(self):
         return {"kind": self.kind}

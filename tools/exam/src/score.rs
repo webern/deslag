@@ -8,6 +8,8 @@
 
 use std::collections::BTreeMap;
 
+use deslag::tag::Origin;
+
 use crate::align::{Aligned, Reason};
 use crate::error::Error;
 use crate::gold::Gold;
@@ -162,6 +164,9 @@ pub struct Scoring {
     pub tagger: String,
     /// One tally per sentence, in the gold's order.
     pub sentences: Vec<SentenceTally>,
+    /// For each [`Origin`], in the order of [`Origin::ALL`], a tally per sentence, in the gold's
+    /// order, of the scored tokens of that origin alone. A sentence with none has an empty tally.
+    pub by_origin: Vec<Vec<SentenceTally>>,
     /// Scored tokens by gold tag (row) and best guess (column), in the order of [`Tag::ALL`].
     pub confusion: [[u64; 13]; 13],
     /// Wrong best guesses by the token's text folded to lower case, its gold tag and its guess.
@@ -189,6 +194,7 @@ pub fn score(
     let mut scoring = Scoring {
         tagger: source.name(),
         sentences: Vec::with_capacity(aligned.len()),
+        by_origin: vec![Vec::with_capacity(aligned.len()); Origin::ALL.len()],
         confusion: [[0; 13]; 13],
         misses: BTreeMap::new(),
         examples: vec![Vec::new(); Reason::ALL.len()],
@@ -218,12 +224,20 @@ pub fn score(
             context: sentence.context,
         };
         let readings = source.readings(index, &label, &view)?;
+        let origins = deslag::tag::origins(tokens);
         let mut scored = Vec::with_capacity(alignment.scored.len());
+        let mut of_origin: Vec<Vec<TokenScore<'_>>> =
+            Origin::ALL.iter().map(|_| Vec::new()).collect();
         for token in &alignment.scored {
             let reading = readings[token.token]
                 .as_ref()
                 .expect("alignment scores word tokens, and the contract gives each a reading");
             scored.push(TokenScore {
+                gold: token.tag,
+                features: token.features,
+                reading,
+            });
+            of_origin[origins[token.token].index()].push(TokenScore {
                 gold: token.tag,
                 features: token.features,
                 reading,
@@ -274,6 +288,14 @@ pub fn score(
                         .collect(),
                 });
             }
+        }
+        for (origin, group) in Origin::ALL.into_iter().zip(&of_origin) {
+            scoring.by_origin[origin.index()].push(SentenceTally {
+                sent_id: id.clone(),
+                tier: sentence.tier,
+                context: sentence.context,
+                tally: tally(group, 0, 0),
+            });
         }
         scoring.sentences.push(SentenceTally {
             sent_id: id,

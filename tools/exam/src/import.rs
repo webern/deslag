@@ -247,6 +247,8 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
                     })
                     .collect::<Result<TagSet, Error>>()?;
             }
+            // The skeleton's `Origin=` is for whoever fills it; a reading does not carry it.
+            "Origin" => {}
             _ => {}
         }
     }

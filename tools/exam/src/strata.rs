@@ -1,10 +1,14 @@
 //! The populations a run is reported on: all its sentences, then the sentences of each tier and
 //! of each context present. The tier populations are left out when no sentence has a tier.
+//!
+//! The origin populations come after, from [`origin_populations`]: each holds the sentences with a
+//! scored word of that origin, and each sentence tallies only its words of that origin.
 
 use crate::gold::Tier;
 use crate::metrics::{SentenceTally, TOKENS, WIDTH};
 use crate::stats::Bootstrap;
 use crate::tagger::Context;
+use deslag::tag::Origin;
 
 /// A population of sentences.
 #[derive(Debug, Clone)]
@@ -74,6 +78,34 @@ pub fn populations(sentences: &[SentenceTally]) -> Vec<Population<'_>> {
     out
 }
 
+/// A population for each origin that has a scored token, in the order of [`Origin::ALL`], labelled
+/// `origin=symbol`, from `by_origin`, a tally per sentence for each origin. None at all when every
+/// scored token is English, since the split then says nothing.
+pub fn origin_populations(by_origin: &[Vec<SentenceTally>]) -> Vec<Population<'_>> {
+    let has = |origin: Origin| {
+        by_origin[origin.index()]
+            .iter()
+            .any(|s| s.tally[TOKENS] > 0)
+    };
+    if !Origin::ALL
+        .into_iter()
+        .any(|origin| origin != Origin::English && has(origin))
+    {
+        return Vec::new();
+    }
+    Origin::ALL
+        .into_iter()
+        .filter(|origin| has(*origin))
+        .map(|origin| Population {
+            label: format!("origin={}", origin.name().to_lowercase()),
+            sentences: by_origin[origin.index()]
+                .iter()
+                .filter(|s| s.tally[TOKENS] > 0)
+                .collect(),
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,6 +141,35 @@ mod tests {
             ]
         );
         assert_eq!(pops[2].title(), "tier llm (2 sentences, 6 tokens)");
+        assert_eq!(pops[0].tokens(), 9);
+    }
+
+    #[test]
+    fn an_origin_population_holds_the_sentences_with_a_word_of_that_origin() {
+        let tally = |tokens: u64| {
+            let mut t = vec![0; WIDTH];
+            t[TOKENS] = tokens;
+            SentenceTally {
+                sent_id: "s".to_string(),
+                tier: None,
+                context: Context::Prose,
+                tally: t,
+            }
+        };
+        let mut by_origin: Vec<Vec<SentenceTally>> = Origin::ALL
+            .iter()
+            .map(|_| vec![tally(0), tally(0)])
+            .collect();
+        by_origin[Origin::English.index()] = vec![tally(4), tally(5)];
+        assert!(
+            origin_populations(&by_origin).is_empty(),
+            "all English says nothing"
+        );
+        by_origin[Origin::Path.index()][1] = tally(2);
+        let pops = origin_populations(&by_origin);
+        let labels: Vec<&str> = pops.iter().map(|p| p.label.as_str()).collect();
+        assert_eq!(labels, ["origin=english", "origin=path"]);
+        assert_eq!(pops[1].title(), "origin path (1 sentence, 2 tokens)");
         assert_eq!(pops[0].tokens(), 9);
     }
 

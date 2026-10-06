@@ -13,7 +13,7 @@ use deslag_exam::metrics::{METRICS, Metric, level_metrics};
 use deslag_exam::report::estimate;
 use deslag_exam::score::{Scoring, Source, score};
 use deslag_exam::stats::{Bootstrap, Estimate, ratio, unpaired};
-use deslag_exam::strata::{Population, populations};
+use deslag_exam::strata::{Population, origin_populations, populations};
 use deslag_exam::tagger::{Sentence, Tagger, built_in};
 use deslag_exam::tags::{Confidence, Features, Reading, Tag, TagSet};
 
@@ -409,4 +409,60 @@ fn a_holdout_run_is_known_by_position() {
         .map(|s| s.sent_id.as_str())
         .collect();
     assert_eq!(ids, ["1", "2", "3", "4"]);
+}
+
+#[test]
+fn the_origin_strata_tally_only_the_words_of_each_origin() {
+    let gold = case("origins.conllu");
+    let scoring = run(&gold, built_in("noun").unwrap().as_ref());
+    let pops = origin_populations(&scoring.by_origin);
+    let labels: Vec<&str> = pops.iter().map(|p| p.label.as_str()).collect();
+    assert_eq!(
+        labels,
+        [
+            "origin=english",
+            "origin=symbol",
+            "origin=command",
+            "origin=path",
+            "origin=flag"
+        ]
+    );
+    // The noun tagger calls every word a noun, so it is right on none of these.
+    let right = |label: &str| {
+        let pop = pops.iter().find(|p| p.label == label).unwrap();
+        let sum: Vec<u64> = (0..deslag_exam::metrics::WIDTH)
+            .map(|column| pop.sentences.iter().map(|s| s.tally[column]).sum())
+            .collect();
+        (
+            sum[deslag_exam::metrics::RIGHT],
+            sum[deslag_exam::metrics::TOKENS],
+        )
+    };
+    // Run, on, with, and: four English words, none a noun; the dash and the stop are no words.
+    assert_eq!(right("origin=english"), (0, 4));
+    for label in [
+        "origin=symbol",
+        "origin=command",
+        "origin=path",
+        "origin=flag",
+    ] {
+        assert_eq!(
+            right(label),
+            (0, 1),
+            "{label}: gold says PROPN, the tagger NOUN"
+        );
+    }
+    // Every sentence of the run is in the whole population, and the origins add up to it.
+    let total: u64 = scoring
+        .by_origin
+        .iter()
+        .flatten()
+        .map(|s| s.tally[deslag_exam::metrics::TOKENS])
+        .sum();
+    let all: u64 = scoring
+        .sentences
+        .iter()
+        .map(|s| s.tally[deslag_exam::metrics::TOKENS])
+        .sum();
+    assert_eq!(total, all);
 }

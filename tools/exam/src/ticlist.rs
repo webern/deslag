@@ -30,7 +30,7 @@ use crate::error::Error;
 use crate::gold::kind_name;
 use crate::import::Imported;
 use crate::report::interval;
-use crate::skeleton::{self, Filled};
+use crate::skeleton::{self, Filled, origin_misc};
 use crate::stats::{Bootstrap, ratio};
 use crate::tagger::BUILT_IN;
 use crate::tags::{Confidence, Tag, TagSet};
@@ -293,8 +293,9 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
                     text.push(' ');
                 }
                 let misc = format!(
-                    "Kind={}|Start={}{}",
+                    "Kind={}{}|Start={}{}",
                     kind_name(token.kind),
+                    origin_misc(token, token.origin),
                     token.range.start,
                     if next.is_some() && !space {
                         "|SpaceAfter=No"

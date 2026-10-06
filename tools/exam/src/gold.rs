@@ -12,6 +12,7 @@ use std::ops::Range;
 use std::path::Path;
 
 use deslag::document::{Token, TokenKind};
+use deslag::tag::Origin;
 use sha2::{Digest, Sha256};
 
 use crate::conllu::{self, Block, Id};
@@ -293,6 +294,7 @@ impl GoldSentence {
                     range: span.clone(),
                     text: self.text[span.clone()].into(),
                     reading: None,
+                    origin: Origin::English,
                 })
                 .collect(),
         }

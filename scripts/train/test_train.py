@@ -487,6 +487,17 @@ class StartTests(unittest.TestCase):
         with self.assertRaises(conllu.Failure):
             starts.DeslagStart().begin(one)
 
+    def test_a_deslag_start_keeps_the_origin_and_cells_apart_by_it(self):
+        text = READINGS.replace("Kind=Word|Conf=Likely|Kept=CONJ,ADV", "Kind=Word|Origin=Command|Conf=Likely|Kept=CONJ,ADV")
+        with tempfile.TemporaryDirectory() as d:
+            (one,) = conllu.read_readings(write(d, "r.conllu", text))
+        self.assertEqual(one.origin, ["English", "English", None, "Command"])
+        begin = starts.DeslagStart().begin(one, one)
+        model = brill.train(toy(), 1, cap=2)
+        model.start = starts.DeslagStart()
+        self.assertEqual(brill.cell_key(model, begin, 1), "Unsure/NOUN")
+        self.assertEqual(brill.cell_key(model, begin, 3), "Command/Likely/CCONJ")
+
     def test_a_rule_never_changes_a_frozen_word_or_gives_a_tag_deslag_does_not_keep(self):
         # `to` is wrong (gold ADP) but frozen: the tag PART stays. `run` may only be NOUN or VERB.
         data = verb_data() + [reading(f"c{n}", [open_word("fun", "NOUN", ["NOUN"], "ADJ")])

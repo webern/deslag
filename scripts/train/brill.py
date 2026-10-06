@@ -38,7 +38,7 @@ every tag the initial tagger or a rule gave it, in deslag codes, the best guess 
 None.
 The other starts: by evidence. A word a rule changed takes the right-over-fired rate, on the dev set,
 of the rule that last changed it; one left as it started, the right rate of its start reading
-(`deslag`: its level and tag; `perceptron`: its margin bucket). A rate of 99.5% makes the word `Sure`,
+(`deslag`: its origin if not English, level and tag; `perceptron`: its margin bucket). A rate of 99.5% makes the word `Sure`,
 with `Kept=` cut to its one tag, only if the Wilson 95% lower bound of that rate is also at least
 0.97, so a short clean run cannot buy it; at 99.5% without that bound, or at 97%, it is `Likely`.
 These are the floors of tests/gold/gates.toml, with no headroom; below them the word is `Unsure`, or
@@ -205,9 +205,11 @@ def _kept(best, others):
 
 def cell_key(model, begin, i):
     """The cell of the start's reading of token i whose right rate the evidence holds: for deslag
-    its level and tag, for the perceptron its margin bucket and whether it knows the word."""
+    its level and tag, led by its origin unless English, for the perceptron its margin bucket and whether it knows the word."""
     if model.start.kind == "deslag":
-        return f"{begin.level[i]}/{model.tags[begin.tags[i]]}"
+        cell = f"{begin.level[i]}/{model.tags[begin.tags[i]]}"
+        origin = None if begin.origin is None else begin.origin[i]
+        return cell if origin in (None, "English") else f"{origin}/{cell}"
     bucket = bisect.bisect_right(model.evidence["edges"], begin.margin[i])
     return f"{'k' if begin.known[i] else 'u'}{bucket}"
 

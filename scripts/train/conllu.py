@@ -52,12 +52,13 @@ class Sentence:
 
     `tags` is the UPOS of each token, or None for a skeleton. `kinds` is each token's `Kind=` (a
     skeleton's), or None. `spaces` is whether a space follows each token. `text` is `# text`.
-    A readings file's sentence also has, per token, `conf`, `kept` (a list of deslag codes, the
+    A readings file's sentence also has, per token, `conf`, `origin` (`English` unless the line says `Origin=`), `kept` (a list of deslag codes, the
     best guess first) and `gold` (a code or None), all None on a token that is no `Word`; its
     `tags` are deslag's codes.
     """
 
-    __slots__ = ("sent_id", "forms", "tags", "kinds", "spaces", "text", "conf", "kept", "gold")
+    __slots__ = ("sent_id", "forms", "tags", "kinds", "spaces", "text", "conf", "kept", "gold",
+                 "origin")
 
     def __init__(self, sent_id, forms, tags=None, kinds=None, spaces=None, text=None):
         self.sent_id = sent_id
@@ -66,7 +67,7 @@ class Sentence:
         self.kinds = kinds
         self.spaces = spaces
         self.text = text
-        self.conf = self.kept = self.gold = None
+        self.conf = self.kept = self.gold = self.origin = None
 
 
 def read_blocks(path):
@@ -174,7 +175,7 @@ def read_readings(path):
         sent_id = comment_value(comments, "sent_id")
         if sent_id is None:
             raise Failure(f"{path}: a sentence has no sent_id")
-        forms, tags, kinds, spaces, conf, kept, gold = [], [], [], [], [], [], []
+        forms, tags, kinds, spaces, conf, kept, gold, origin = [], [], [], [], [], [], [], []
         for columns in lines:
             pairs = misc_pairs(columns[9])
             kind = pairs.get("Kind", "")
@@ -186,6 +187,7 @@ def read_readings(path):
                 conf.append(None)
                 kept.append(None)
                 gold.append(None)
+                origin.append(None)
                 continue
             if columns[3] not in DESLAG_CODE:
                 raise Failure(f"{path}: sentence {sent_id}: a Word line has UPOS `{columns[3]}`")
@@ -193,10 +195,12 @@ def read_readings(path):
             conf.append(pairs.get("Conf"))
             kept.append([code for code in pairs.get("Kept", "").split(",") if code])
             gold.append(pairs.get("Gold"))
+            origin.append(pairs.get("Origin", "English"))
             if conf[-1] is None or not kept[-1] or tags[-1] != kept[-1][0]:
                 raise Failure(f"{path}: sentence {sent_id}: a Word line lacks Conf= or Kept=")
         sentence = Sentence(sent_id, forms, tags, kinds, spaces, comment_value(comments, "text"))
         sentence.conf, sentence.kept, sentence.gold = conf, kept, gold
+        sentence.origin = origin
         sentences.append(sentence)
     return sentences
 

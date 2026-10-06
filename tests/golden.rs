@@ -33,7 +33,7 @@ use common::fixture::Fixture;
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
-use deslag::tag::{Confidence, Features, Reading, Tag, VERSION};
+use deslag::tag::{Confidence, Features, Origin, Reading, Tag, VERSION};
 use deslag::{Config, ConfigSource, Lint, Violation, check_file};
 
 /// Set to 1 to rewrite the golden files instead of comparing with them.
@@ -320,11 +320,27 @@ fn reading_text(reading: &Reading) -> String {
     out
 }
 
+/// The mark an origin other than English gets after a reading: `@sym`, `@cmd`, `@path`, `@flag`.
+fn origin_text(origin: Origin) -> &'static str {
+    match origin {
+        Origin::English => "",
+        Origin::Symbol => "@sym",
+        Origin::Command => "@cmd",
+        Origin::Path => "@path",
+        Origin::Flag => "@flag",
+    }
+}
+
 /// A token as the tag stream writes it.
 fn token_text(token: &Token<'_>) -> String {
     match token.kind {
         TokenKind::Word => match &token.reading {
-            Some(reading) => format!("{}/{}", token.text, reading_text(reading)),
+            Some(reading) => format!(
+                "{}/{}{}",
+                token.text,
+                reading_text(reading),
+                origin_text(token.origin)
+            ),
             None => token.text.to_string(),
         },
         TokenKind::Number | TokenKind::Punctuation | TokenKind::Symbol => token.text.to_string(),
@@ -365,7 +381,8 @@ fn tag_stream(fixtures: &[&Fixture]) -> String {
          # text, or [code], [html], [image], [url] or [footnote].\n\
          # READING is the tag code, then each feature set, from {}\n\
          # {}, then `:S`, `:L`, `:U` or `:?` for Sure, Likely,\n\
-         # Unsure or Unknown, then `+CODE` for each other tag kept, as in runs/VERB.s.3.fin.pres:L+NOUN\n\
+         # Unsure or Unknown, then `+CODE` for each other tag kept, as in runs/VERB.s.3.fin.pres:L+NOUN,\n\
+         # then `@sym`, `@cmd`, `@path` or `@flag` if the word's origin is not English: foo_bar/PROPN.s:L+NOUN@sym\n\
          # deslag::tag::VERSION {VERSION}\n\
          # {tokens} tokens, {words} words, {read} words with a reading\n\
          \n\
@@ -373,6 +390,18 @@ fn tag_stream(fixtures: &[&Fixture]) -> String {
         FEATURE_CODES[..10].join(" "),
         FEATURE_CODES[10..].join(" "),
     )
+}
+
+#[test]
+fn an_origin_is_written_after_the_reading() {
+    let mut tokens = deslag::document::Token::split("Edit foo_bar.");
+    deslag::tag::sentence(&mut tokens, deslag::tag::Context::Prose);
+    assert_eq!(token_text(&tokens[1]), "foo_bar/PROPN.s:L+NOUN@sym");
+    assert!(!token_text(&tokens[0]).contains('@'));
+    assert_eq!(
+        Origin::ALL.map(origin_text),
+        ["", "@sym", "@cmd", "@path", "@flag"]
+    );
 }
 
 #[test]

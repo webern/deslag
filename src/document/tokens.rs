@@ -15,6 +15,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 use super::{Block, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind};
 use super::{Token, TokenKind};
+use crate::tag::Origin;
 
 /// Fills in the tokens of every block of prose in `document`.
 pub(super) fn split(document: &mut Document<'_>) {
@@ -119,6 +120,7 @@ impl<'a> Rows<'_, 'a> {
                 range: piece.range.clone(),
                 text: piece.text.clone(),
                 reading: None,
+                origin: Origin::English,
             });
         }
         run.flush(self.source, out);
@@ -273,6 +275,7 @@ fn token<'a>(source: &'a str, kind: TokenKind, range: Range<usize>, text: &str) 
         range,
         text,
         reading: None,
+        origin: Origin::English,
     }
 }
 

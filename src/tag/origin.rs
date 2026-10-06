@@ -87,7 +87,7 @@ const fn slot(first: u8, second: u8, last: u8, len: usize) -> usize {
 /// One bit for each [`slot`] a name of [`PROGRAMS`], [`HELD`] or [`SHARED`] lands in. A word that
 /// lands in none is no program, so most words stop here, at a few instructions, before any other
 /// test. A git subcommand is no part of it: it is looked up only right after `git`.
-const FILTER: [u64; 128] = add(add(add([0; 128], &PROGRAMS), &HELD), &SHARED);
+static FILTER: [u64; 128] = add(add(add([0; 128], &PROGRAMS), &HELD), &SHARED);
 
 /// Where the key of a short name lands in [`NAME_FILTER`].
 #[inline(always)]
@@ -98,7 +98,7 @@ const fn name_slot(key: u64) -> usize {
 /// One bit for each [`name_slot`] of the table key of a name of [`PROGRAMS`], [`HELD`] or [`SHARED`]
 /// of up to [`table::SHORT`] bytes. The tables find that key of every word they read anyway, so a
 /// word that lands in no bit is no name, for the price of one multiply.
-const NAME_FILTER: [u64; 1024] = {
+static NAME_FILTER: [u64; 1024] = {
     let mut filter = [0; 1024];
     let lists: [&[&str]; 3] = [&PROGRAMS, &HELD, &SHARED];
     let mut list = 0;

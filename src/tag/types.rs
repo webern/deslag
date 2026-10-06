@@ -82,6 +82,7 @@ impl Tag {
         self as usize
     }
 
+    #[inline(always)]
     const fn bit(self) -> u16 {
         1 << (self as u8)
     }
@@ -101,6 +102,7 @@ impl TagSet {
     }
 
     /// This set and `tag`.
+    #[inline(always)]
     pub const fn with(self, tag: Tag) -> TagSet {
         TagSet(self.0 | tag.bit())
     }
@@ -111,6 +113,7 @@ impl TagSet {
     }
 
     /// Whether `tag` is in the set.
+    #[inline(always)]
     pub fn contains(self, tag: Tag) -> bool {
         self.0 & tag.bit() != 0
     }

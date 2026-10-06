@@ -30,9 +30,9 @@ use crate::error::Error;
 use crate::gold::kind_name;
 use crate::import::Imported;
 use crate::report::interval;
-use crate::skeleton::{self, Filled, origin_misc};
+use crate::skeleton::{self, Filled, HEADER, context_of, origin_misc};
 use crate::stats::{Bootstrap, ratio};
-use crate::tagger::BUILT_IN;
+use crate::tagger::{BUILT_IN, Context};
 use crate::tags::{Confidence, Tag, TagSet};
 
 /// What every row expects.
@@ -222,11 +222,20 @@ pub fn cut(entries: &[Entry]) -> Vec<Row> {
 /// The sentences of `document` that have a token, as the range of each one's tokens in the
 /// document's row and the byte where it starts, in the order of the file.
 fn sentences(document: &Document<'_>) -> Vec<(Range<usize>, usize)> {
+    in_context(document)
+        .into_iter()
+        .map(|(range, start, _)| (range, start))
+        .collect()
+}
+
+/// [`sentences`], each with the context of the block it is in.
+fn in_context(document: &Document<'_>) -> Vec<(Range<usize>, usize, Context)> {
     let mut found = Vec::new();
-    for (block, _) in document.walk() {
+    for (block, ancestors) in document.walk() {
+        let context = context_of(block, &ancestors);
         for sentence in document.sentences_of(block) {
             if !sentence.tokens.is_empty() {
-                found.push((sentence.tokens.clone(), sentence.range.start));
+                found.push((sentence.tokens.clone(), sentence.range.start, context));
             }
         }
     }
@@ -271,10 +280,11 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
     } else {
         String::new()
     };
+    out.push_str(HEADER);
     let mut count = 0;
     for entry in entries {
         let document = Document::markdown(&entry.text);
-        for (range, start) in sentences(&document) {
+        for (range, start, context) in in_context(&document) {
             let tokens = &document.tokens[range];
             let mut text = String::new();
             let mut lines = String::new();
@@ -311,6 +321,7 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
                 lines.push_str(&skeleton::line(index + 1, &form, &misc, filled.as_ref()));
             }
             let _ = writeln!(out, "# sent_id = {}", sent_id(entry, start));
+            let _ = writeln!(out, "# exam.context = {}", context.name());
             let _ = writeln!(out, "# text = {text}");
             out.push_str(&lines);
             out.push('\n');

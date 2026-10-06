@@ -26,13 +26,23 @@ fn the_skeleton_reads_back_as_the_gold_s_own_tokens() {
         let text = skeleton(&gold);
         let blocks = conllu::read("skeleton", &text).unwrap();
         assert_eq!(blocks.len(), gold.sentences.len(), "{name}");
-        for (block, sentence) in blocks.iter().zip(&gold.sentences) {
+        for (at, (block, sentence)) in blocks.iter().zip(&gold.sentences).enumerate() {
             assert_eq!(block.comment("sent_id").unwrap().value, sentence.sent_id);
             assert_eq!(block.comment("text").unwrap().value, sentence.text);
             assert_eq!(
+                block.comment("exam.context").unwrap().value,
+                sentence.context.name(),
+                "{name}"
+            );
+            assert_eq!(
+                block.comment("exam.tokens").map(|c| c.value.as_str()),
+                (at == 0).then_some("deslag"),
+                "the first sentence says whose tokens these are: {name}"
+            );
+            assert_eq!(
                 block.comments.len(),
-                2,
-                "no tier, context or gold label: {name}"
+                if at == 0 { 4 } else { 3 },
+                "no tier or gold label: {name}"
             );
             let tokens = sentence.tokens();
             assert_eq!(block.lines.len(), tokens.len());

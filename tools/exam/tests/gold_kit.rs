@@ -230,9 +230,17 @@ fn the_sample_file_is_what_the_exam_s_tokens_command_writes_and_carries_no_label
     let dir = tempfile::tempdir().unwrap();
     sample(dir.path());
     let text = fs::read_to_string(dir.path().join("sample.conllu")).unwrap();
-    assert!(!text.contains("exam."), "no tier, context or split");
-    for block in conllu::read("sample", &text).unwrap() {
-        assert_eq!(block.comments.len(), 2, "a sent_id and a text, no more");
+    assert!(!text.contains("exam.tier"), "no tier");
+    assert!(!text.contains("exam.split"), "no split");
+    for (at, block) in conllu::read("sample", &text).unwrap().iter().enumerate() {
+        // A sent_id, a context and a text; the first sentence also says the tokens are deslag's.
+        let keys: Vec<&str> = block.comments.iter().map(|c| c.key.as_str()).collect();
+        let expected: &[&str] = if at == 0 {
+            &["exam.tokens", "sent_id", "exam.context", "text"]
+        } else {
+            &["sent_id", "exam.context", "text"]
+        };
+        assert_eq!(keys, expected, "sentence {at}");
         assert!(block.lines.iter().all(|l| l.upos == "_" && l.feats == "_"));
     }
 }

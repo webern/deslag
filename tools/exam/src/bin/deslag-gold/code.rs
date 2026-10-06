@@ -119,7 +119,7 @@ impl Base {
     }
 
     /// The base for an exam tag.
-    fn from_tag(tag: Tag) -> Base {
+    pub fn from_tag(tag: Tag) -> Base {
         Base::ALL
             .into_iter()
             .find(|base| base.tag() == Some(tag))

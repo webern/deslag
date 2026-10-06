@@ -7,7 +7,8 @@
 //! reads `Gold=` as the label to learn. `score --import` of the file grades the same as
 //! `score --tagger deslag`, but for the feature metrics, which it carries no `FEATS` for.
 //! A gold file with `exam.split = holdout` is refused: the file names words and their tags.
-//! The first line is the comment `# deslag_tag_version = N`, the tag VERSION the readings are of.
+//! The first line is the comment `# deslag_tag_version = N`, the tag VERSION the readings are of,
+//! then `# exam.tokens = deslag` and each sentence's `# exam.context`, as a skeleton has them.
 //! With `--corpus` the sentences are the tic list's, and there is no gold.
 
 use std::collections::BTreeMap;
@@ -37,6 +38,7 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
         ));
     }
     let mut out = header();
+    out.push_str(skeleton::HEADER);
     for Aligned {
         sentence,
         tokens,
@@ -55,6 +57,7 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
             .map(|scored| (scored.token, scored.tag))
             .collect();
         let _ = writeln!(out, "# sent_id = {}", sentence.sent_id);
+        let _ = writeln!(out, "# exam.context = {}", sentence.context.name());
         let _ = writeln!(out, "# text = {}", sentence.text);
         let origins = deslag::tag::origins(&tokens);
         for (index, token) in tokens.iter().enumerate() {

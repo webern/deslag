@@ -24,7 +24,7 @@ deslag/
                           mixed/ collected, one directory per source repo
   tools/               <- never published: corpus/, the corpus's one loader, which the tests read
                           it through, and commands that measure it; exam/, which grades taggers
-                          on gold sets and the tic list; deslag-gold makes the gold
+                          on gold sets and the tic list; deslag-gold makes and reviews the gold
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
                           blobstore/ fetches its big tier, ewt/ and harper/ what the exam uses,
                           spacy/ runs spaCy on its tokens, lexicon/ makes the tagger's word list,

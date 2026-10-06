@@ -1,9 +1,10 @@
 //! The sample as the later stages read it: sentences of deslag tokens, and what the manifest says
 //! about where each came from.
 //!
-//! `sample.conllu` is the token skeleton `deslag-exam tokens` writes for a gold file: a `sent_id`,
-//! a `# text` and one line per token, `FORM` and `MISC` filled (`Kind=`, `SpaceAfter=No`) and every
-//! other column `_`. It carries no tier, context or label, so it is what Harper and spaCy are run
+//! `sample.conllu` is the token skeleton `deslag-exam tokens` writes for a gold file: `# exam.tokens
+//! = deslag` first, then for each sentence a `sent_id`, its `# exam.context`, a `# text` and one
+//! line per token, `FORM` and `MISC` filled (`Kind=`, `SpaceAfter=No`) and every other column `_`.
+//! It carries no tier or label, so it is what Harper and spaCy are run
 //! over. `manifest.tsv` is the rest: split, tier, context and source file of each sentence.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -99,10 +100,15 @@ pub fn line(index: usize, form: &str, upos: &str, feats: &str, misc: &str) -> St
 }
 
 /// The skeleton of `sents`, byte for byte what `deslag-exam tokens` writes for the same tokens.
-pub fn skeleton(sents: &[Sent]) -> String {
-    let mut out = String::new();
+/// `context` gives each sentence's context by its `sent_id`; a sentence it names none for has no
+/// `# exam.context`, which a reader takes as prose.
+pub fn skeleton(sents: &[Sent], context: impl Fn(&str) -> Option<Context>) -> String {
+    let mut out = String::from(deslag_exam::skeleton::HEADER);
     for sent in sents {
         let _ = writeln!(out, "# sent_id = {}", sent.id);
+        if let Some(context) = context(&sent.id) {
+            let _ = writeln!(out, "# exam.context = {}", context.name());
+        }
         let _ = writeln!(out, "# text = {}", sent.text());
         for (index, tok) in sent.toks.iter().enumerate() {
             out.push_str(&line(index, &tok.form, "_", "_", &misc(tok, None)));
@@ -434,14 +440,14 @@ pub mod tests {
             other.toks.pop();
             other
         }];
-        let text = skeleton(&sents);
+        let text = skeleton(&sents, |_| None);
         assert!(text.contains("\tKind=Word|SpaceAfter=No\n"));
         assert_eq!(parse_skeleton("f", &text).unwrap(), sents);
     }
 
     #[test]
     fn a_skeleton_with_a_duplicate_or_a_missing_kind_is_rejected() {
-        let text = skeleton(&[run_now(), run_now()]);
+        let text = skeleton(&[run_now(), run_now()], |_| None);
         let error = parse_skeleton("f", &text).unwrap_err().to_string();
         assert!(error.contains("sent_id `g0001` is used twice"), "{error}");
         let text = "# sent_id = a\n1\tx\t_\t_\t_\t_\t_\t_\t_\t_\n";

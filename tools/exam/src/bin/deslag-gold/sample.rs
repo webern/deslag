@@ -29,7 +29,7 @@ use std::fmt;
 use std::ops::Range;
 
 use deslag::Document;
-use deslag::document::{Block, BlockKind, Body, Token, TokenKind};
+use deslag::document::{Body, Token, TokenKind};
 use deslag_corpus::stats::Rng;
 use deslag_exam::error::Error;
 use deslag_exam::gold::{Gold, Split, Tier};
@@ -117,22 +117,7 @@ pub struct Skipped {
     pub duplicate: usize,
 }
 
-/// The context of a block of prose with `ancestors` around it: `heading` if it is a heading, else
-/// `table-cell` if it is a table cell, else `list-item` if any block around it is a list item,
-/// else `prose`. This is the rule the exam's gold files follow.
-pub fn context_of(block: &Block<'_>, ancestors: &[&Block<'_>]) -> Context {
-    match block.kind {
-        BlockKind::Heading { .. } => Context::Heading,
-        BlockKind::TableCell => Context::TableCell,
-        _ if ancestors
-            .iter()
-            .any(|ancestor| matches!(ancestor.kind, BlockKind::Item { .. })) =>
-        {
-            Context::ListItem
-        }
-        _ => Context::Prose,
-    }
-}
+pub use deslag_exam::skeleton::context_of;
 
 /// Whitespace runs as one space, the ends trimmed. A form with a line break in it would break
 /// the CoNLL-U line it is written on.

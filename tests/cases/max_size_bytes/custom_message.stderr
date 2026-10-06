@@ -1,6 +1,6 @@
 ERROR: deslag detected Markdown bloat!
 
-README.md is larger than 40 bytes.
+README.md is 54, which larger than 40 bytes (by 14 bytes).
 
 Cut README.md to 40 bytes or fewer.
 

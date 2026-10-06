@@ -42,7 +42,7 @@ use crate::problems::Problems;
 use crate::sample::{File, Settings, Skipped, candidates};
 
 /// The header of the ranking's TSV.
-const COLUMNS: [&str; 12] = [
+const COLUMNS: [&str; 13] = [
     "id",
     "score",
     "file",
@@ -53,6 +53,7 @@ const COLUMNS: [&str; 12] = [
     "below_likely",
     "unknown",
     "non_english",
+    "origins",
     "hesitates",
     "text",
 ];
@@ -82,6 +83,8 @@ pub struct Ranked {
     pub unknown: usize,
     /// Words of an origin other than English.
     pub non_english: usize,
+    /// The kinds of those origins, as `Command:2 Path:1`.
+    pub origins: String,
     /// The tag pairs of the words below Likely, most common first, as `N/V:2`.
     pub hesitates: String,
     /// Its tokens.
@@ -140,12 +143,16 @@ fn rank_one(file: &File<'_>, cand: crate::sample::Candidate) -> Ranked {
     let tokens = read(&text, &cand.toks, cand.context);
     let (mut words, mut below, mut unknown, mut foreign) = (0, 0, 0, 0);
     let mut pairs: BTreeMap<String, usize> = BTreeMap::new();
+    let mut kinds: BTreeMap<&str, usize> = BTreeMap::new();
     for token in &tokens {
         let Some(reading) = token.reading.as_ref() else {
             continue;
         };
         words += 1;
-        foreign += usize::from(token.origin != Origin::English);
+        if token.origin != Origin::English {
+            foreign += 1;
+            *kinds.entry(token.origin.name()).or_default() += 1;
+        }
         if reading.confidence.committed() {
             continue;
         }
@@ -163,6 +170,11 @@ fn rank_one(file: &File<'_>, cand: crate::sample::Candidate) -> Ranked {
         .map(|(pair, count)| format!("{pair}:{count}"))
         .collect::<Vec<_>>()
         .join(" ");
+    let origins = kinds
+        .iter()
+        .map(|(kind, count)| format!("{kind}:{count}"))
+        .collect::<Vec<_>>()
+        .join(" ");
     let points = below + unknown + foreign;
     let digest =
         sha256_hex(format!("{}:{}-{}", file.sha256, cand.range.start, cand.range.end).as_bytes());
@@ -178,6 +190,7 @@ fn rank_one(file: &File<'_>, cand: crate::sample::Candidate) -> Ranked {
         below_likely: below,
         unknown,
         non_english: foreign,
+        origins,
         hesitates,
         toks: cand.toks,
     }
@@ -242,7 +255,7 @@ pub fn tsv(ranked: &[Ranked]) -> String {
     for row in ranked {
         let _ = writeln!(
             out,
-            "{}\t{:.3}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{:.3}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             row.id,
             row.score,
             row.file,
@@ -253,6 +266,7 @@ pub fn tsv(ranked: &[Ranked]) -> String {
             row.below_likely,
             row.unknown,
             row.non_english,
+            row.origins,
             row.hesitates,
             row.text()
         );
@@ -617,5 +631,34 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(error.contains("not reviewed"), "{error}");
+    }
+
+    #[test]
+    fn each_committed_queue_opens_in_the_review_and_has_a_reason_for_every_sentence() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/gold/queue");
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            return;
+        };
+        for entry in entries.map(|entry| entry.unwrap().path()) {
+            if entry.extension().is_none_or(|ext| ext != "conllu") {
+                continue;
+            }
+            let shown = entry.display().to_string();
+            let text = std::fs::read_to_string(&entry).unwrap();
+            crate::review::Session::open(&shown, text.clone(), "2026-10-06").unwrap();
+            let blocks = conllu::read(&shown, &text).unwrap();
+            for block in &blocks {
+                for key in ["source", "license", "tier", "exam.context"] {
+                    assert!(block.comment(key).is_some(), "{shown}: no {key}");
+                }
+            }
+            let reasons = entry.with_extension("reasons.tsv");
+            let picks = read_picks("reasons", &std::fs::read_to_string(&reasons).unwrap()).unwrap();
+            let ids: Vec<&str> = blocks
+                .iter()
+                .map(|block| block.comment("sent_id").unwrap().value.as_str())
+                .collect();
+            assert_eq!(ids, picks, "{shown}");
+        }
     }
 }

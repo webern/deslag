@@ -26,16 +26,19 @@ You pick the sentences; he reviews them with `deslag-gold review`.
    repository. It leaves out every repository dev or holdout drew from and every fixture of
    `tests/gold/exclude.tsv`.
 
-   Columns: `id score file repo tier context words below_likely unknown non_english hesitates
-   text`. The score is `(below_likely + unknown + non_english) / (words + 4)`.
+   Columns: `id score file repo tier context words below_likely unknown non_english origins
+   hesitates text`. The score is `(below_likely + unknown + non_english) / (words + 4)`.
 3. Read it in slices (`awk -F'\t'`), not only the head. The head is runs of one failure: command
-   lines, version lists, prose in other languages, lorem ipsum. Skip those, sentences with
-   personal data, and a sentence that is not English.
+   lines, version lists, prose in other languages, lorem ipsum.
+
+   Skip those, sentences with personal data, and any that is not English. This drops most other
+   languages: `awk -F'\t' '!($10==0 && $9/$7>0.5 && $7>=5)'`.
 4. Pick about 50. Spread them:
    - contexts: prose, list-item, heading, table-cell, and some fragments (5 words or fewer);
    - tiers: human, llm and mixed, at least 10 of each;
    - origins: at least 10 with `non_english` above 0, from more than one kind;
-   - `hesitates`: at least 8 different pairs, each pair at most 8 times;
+   - `hesitates`: at least 8 different pairs, and at least 10 picks that list a pair other than
+     N/V and N/PN, which most sentences have;
    - at most 3 from one repository, and no near-duplicates (the same line with other numbers).
 5. Write `tests/gold/queue/<name>.reasons.tsv`: one line per pick, `id`, a tab, one line of why
    (what makes it hard, and what it adds to the spread).

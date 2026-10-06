@@ -6,8 +6,18 @@
 //! after the first whitespace is a note, blank lines and lines starting with `#` are skipped. The
 //! sha256 of the file itself goes in the manifest header, so a reader can tell which list a draw
 //! was made with.
+//!
+//! [`Repos`] is the same cut by repository: every file of a repository a manifest or an owner file
+//! names is left out. A repository that gave dev or holdout a sentence gives the owner none, and a
+//! repository the owner reviewed gives later draws and silver none. [`Repos::reserved`] is the one
+//! set of repositories nothing may draw from: the dev and holdout manifests, `owner.conllu` and
+//! every queue. `rank`, `queue` and `sample --reserved` all use it; `--exclude-repos` adds to it.
 
-use deslag_exam::error::Error;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+use deslag_exam::conllu;
+use deslag_exam::error::{Error, Place};
 use sha2::{Digest, Sha256};
 
 use crate::problems::Problems;
@@ -76,6 +86,18 @@ impl Exclusion {
     }
 
     /// `files` without the listed ones, and how many were removed. An entry that names no file
+    /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
+    pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
+        let before = files.len();
+        let kept: Vec<File<'a>> = files
+            .into_iter()
+            .filter(|file| !self.keys.iter().any(|(key, _)| Self::names(key, file)))
+            .collect();
+        let dropped = before - kept.len();
+        (kept, dropped)
+    }
+
+    /// `files` without the listed ones, and how many were removed. An entry that names no file
     /// is a problem: the list was made for another corpus, and a draw that quietly keeps what it
     /// meant to drop is the worse failure.
     pub fn apply<'a>(
@@ -101,6 +123,170 @@ impl Exclusion {
             .collect();
         debug_assert_eq!(dropped.len() + kept.len(), before);
         Problems::check(missing, (kept, dropped.len()))
+    }
+}
+
+/// A set of repositories, `owner/name` in lower case, whose files a draw leaves out.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Repos {
+    names: BTreeSet<String>,
+}
+
+/// The manifests of the reserved set, in `tests/gold`. Both must exist and name a repository.
+const RESERVED_MANIFESTS: [&str; 2] = ["dev.manifest.tsv", "holdout.manifest.tsv"];
+
+/// `repo` as it is compared: trimmed and in lower case. It must be `owner/name`, with more
+/// segments allowed (`gitlab-org/charts/gitlab`): no space, no empty segment, and not a file.
+fn normal(repo: &str) -> Result<String, &'static str> {
+    let repo = repo.trim().to_lowercase();
+    let parts: Vec<&str> = repo.split('/').collect();
+    if parts.len() < 2 || parts.iter().any(|part| part.is_empty()) {
+        return Err("a repository is `owner/name`");
+    }
+    if repo.chars().any(char::is_whitespace) || repo.ends_with(".md") {
+        return Err("a repository is `owner/name`, with no space and not a file");
+    }
+    Ok(repo)
+}
+
+impl Repos {
+    /// The repositories the `repo` column of the manifest `text` names. A manifest that names
+    /// none is an error, since it would exclude nothing. An error names the file and never a
+    /// line of it.
+    pub fn manifest(path: &str, text: &str) -> Result<Repos, Error> {
+        let bad = |message: &str| Error::load(path, Place::File, message);
+        let mut rows = text
+            .lines()
+            .filter(|line| !line.trim().is_empty() && !line.starts_with('#'));
+        let column = rows
+            .next()
+            .and_then(|head| head.split('\t').position(|name| name == "repo"))
+            .ok_or_else(|| bad("not a manifest: it has no `repo` column"))?;
+        let mut names = BTreeSet::new();
+        for row in rows {
+            let repo = row
+                .split('\t')
+                .nth(column)
+                .ok_or_else(|| bad("a row has no `repo` column"))?;
+            names.insert(normal(repo).map_err(|why| bad(&format!("a row's repo: {why}")))?);
+        }
+        if names.is_empty() {
+            return Err(bad(
+                "the manifest names no repository, so it would exclude nothing",
+            ));
+        }
+        Ok(Repos { names })
+    }
+
+    /// The repositories the `# repo = owner/name` comments of the gold or queue `text` name. A
+    /// sentence with no `repo`, such as one of `dev.conllu`, whose `source` names a file, is an
+    /// error: that file names no repository, and excluding nothing is never the answer.
+    pub fn gold(path: &str, text: &str) -> Result<Repos, Error> {
+        let bad = |message: &str| Error::load(path, Place::File, message);
+        let mut names = BTreeSet::new();
+        for block in conllu::read(path, text)? {
+            let repo = block.comment("repo").ok_or_else(|| {
+                bad("a sentence has no `# repo = owner/name`; a `source` names a file, not a repository")
+            })?;
+            names.insert(normal(&repo.value).map_err(|why| bad(&format!("a `repo`: {why}")))?);
+        }
+        if names.is_empty() {
+            return Err(bad(
+                "the file has no sentences, so it would exclude nothing",
+            ));
+        }
+        Ok(Repos { names })
+    }
+
+    /// The union of the repositories `paths` name: a `.conllu` file by its `repo` comments, any
+    /// other file as a manifest.
+    pub fn read(paths: &[PathBuf]) -> Result<Repos, Error> {
+        let mut all = Repos::default();
+        for path in paths {
+            let shown = path.display().to_string();
+            let text = crate::data::read_text(path)?;
+            let found = if path.extension().is_some_and(|ext| ext == "conllu") {
+                Repos::gold(&shown, &text)?
+            } else {
+                Repos::manifest(&shown, &text)?
+            };
+            all.names.extend(found.names);
+        }
+        Ok(all)
+    }
+
+    /// Every repository that must never be offered for review or drawn into a later set: the
+    /// repositories of the dev and holdout manifests, of `owner.conllu` when it exists and of
+    /// every `queue/*.conllu` in `gold_dir`, except the queue files in `except` (the one being
+    /// rebuilt). The first two must be there and name a repository. This set is fixed: a flag
+    /// can add to it and never replaces any of it.
+    pub fn reserved(gold_dir: &Path, except: &[&Path]) -> Result<Repos, Error> {
+        let mut all = Repos::default();
+        for name in RESERVED_MANIFESTS {
+            all.names.extend(Repos::read(&[gold_dir.join(name)])?.names);
+        }
+        let owner = gold_dir.join("owner.conllu");
+        if owner.exists() {
+            all.names.extend(Repos::read(&[owner])?.names);
+        }
+        let queue = gold_dir.join("queue");
+        if queue.is_dir() {
+            let io = |source| Error::Io {
+                path: queue.display().to_string(),
+                source,
+            };
+            let mut found = Vec::new();
+            for entry in std::fs::read_dir(&queue).map_err(io)? {
+                let path = entry.map_err(io)?.path();
+                if path.extension().is_some_and(|ext| ext == "conllu")
+                    && !except.iter().any(|skip| same_file(skip, &path))
+                {
+                    found.push(path);
+                }
+            }
+            found.sort();
+            for path in found {
+                all.names.extend(Repos::read(&[path])?.names);
+            }
+        }
+        Ok(all)
+    }
+
+    /// This set and `other`'s repositories.
+    pub fn with(mut self, other: Repos) -> Repos {
+        self.names.extend(other.names);
+        self
+    }
+
+    /// How many repositories.
+    pub fn len(&self) -> usize {
+        self.names.len()
+    }
+
+    /// Whether `repo`, a sidecar's `source.repo`, is in the set. Trimmed and lower case, as the
+    /// manifests are read.
+    pub fn has(&self, repo: &str) -> bool {
+        self.names.contains(repo.trim().to_lowercase().as_str())
+    }
+
+    /// `files` without those of the repositories, and how many were removed. A repository is
+    /// matched by each sidecar's `source.repo`, never by a path.
+    pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
+        let before = files.len();
+        let kept: Vec<File<'a>> = files
+            .into_iter()
+            .filter(|file| !self.has(&file.repo))
+            .collect();
+        let dropped = before - kept.len();
+        (kept, dropped)
+    }
+}
+
+/// Whether `a` and `b` are the same path, the one that may not exist yet compared by its name.
+fn same_file(a: &Path, b: &Path) -> bool {
+    match (std::fs::canonicalize(a), std::fs::canonicalize(b)) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => a == b,
     }
 }
 
@@ -163,6 +349,93 @@ mod tests {
     fn an_empty_list_is_an_error() {
         let error = Exclusion::parse("x.tsv", "# nothing\n\n").unwrap_err();
         assert!(error.to_string().contains("names no fixture"), "{error}");
+    }
+
+    #[test]
+    fn repositories_come_from_a_manifest_or_source_comments_in_lower_case_and_match_by_repo() {
+        let manifest = "# seed = 1\nsent_id\tsplit\trepo\nx\tdev\tO/R\n";
+        let repos = Repos::manifest("m.tsv", manifest).unwrap();
+        let gold = "# sent_id = o1\n# source = human/a/one.md bytes 0-2\n# repo = A/b\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n";
+        let owner = Repos::gold("o.conllu", gold).unwrap();
+        // A path never names a repository: only the sidecar's repo does.
+        let mut files = corpus();
+        files[0].repo = " o/R ".to_string();
+        files[1].repo = "A/B ".to_string();
+        files[2].repo = "z/z".to_string();
+        let (kept, dropped) = repos.drop(files.clone());
+        assert_eq!((kept.len(), dropped), (2, 1));
+        assert_eq!(kept[0].path, "human/b/two.md");
+        assert_eq!(owner.len(), 1);
+        let (kept, dropped) = owner.drop(files);
+        assert_eq!((kept.len(), dropped), (2, 1));
+        assert_eq!(kept[0].path, "human/a/one.md");
+    }
+
+    #[test]
+    fn a_manifest_that_names_no_repository_or_a_bad_one_is_an_error() {
+        let empty = Repos::manifest("m.tsv", "# seed\nsent_id\tsplit\trepo\n").unwrap_err();
+        assert!(empty.to_string().contains("exclude nothing"), "{empty}");
+        let bad = "sent_id\trepo\nx\tsecret.md\n";
+        let error = Repos::manifest("m.tsv", bad).unwrap_err().to_string();
+        assert!(!error.contains("secret"), "{error}");
+        for repo in ["a", "a/", "/b", "a b/c", "x/y.md"] {
+            assert!(normal(repo).is_err(), "{repo}");
+        }
+        assert_eq!(
+            normal(" Gitlab-Org/Charts/GitLab ").unwrap(),
+            "gitlab-org/charts/gitlab"
+        );
+    }
+
+    #[test]
+    fn a_dev_style_source_never_silently_names_nothing() {
+        let dev = "# sent_id = g1\n# source = batches/x/human/a/one.md bytes 0-4\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n";
+        let error = Repos::gold("dev.conllu", dev).unwrap_err().to_string();
+        assert!(error.contains("no `# repo = owner/name`"), "{error}");
+        let wrong = "# sent_id = g1\n# repo = human/a/one.md\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n";
+        assert!(Repos::gold("x.conllu", wrong).is_err());
+    }
+
+    #[test]
+    fn the_reserved_set_is_both_manifests_the_owner_file_and_every_queue_but_the_one_rebuilt() {
+        let dir = tempfile::tempdir().unwrap();
+        let gold = dir.path();
+        let manifest = |repo: &str| format!("sent_id\trepo\nx\t{repo}\n");
+        let conllu = |repo: &str| {
+            format!(
+                "# sent_id = q\n# source = f.md bytes 0-1\n# repo = {repo}\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n"
+            )
+        };
+        // Missing or empty manifests are errors, not an empty set.
+        assert!(Repos::reserved(gold, &[]).is_err());
+        std::fs::write(gold.join("dev.manifest.tsv"), manifest("d/ev")).unwrap();
+        std::fs::write(gold.join("holdout.manifest.tsv"), "sent_id\trepo\n").unwrap();
+        assert!(Repos::reserved(gold, &[]).is_err());
+        std::fs::write(gold.join("holdout.manifest.tsv"), manifest("h/old")).unwrap();
+        assert_eq!(Repos::reserved(gold, &[]).unwrap().len(), 2);
+        std::fs::write(gold.join("owner.conllu"), conllu("o/wner")).unwrap();
+        std::fs::create_dir(gold.join("queue")).unwrap();
+        std::fs::write(gold.join("queue/q1.conllu"), conllu("q/one")).unwrap();
+        std::fs::write(gold.join("queue/q2.conllu"), conllu("q/two")).unwrap();
+        std::fs::write(gold.join("queue/q2.reasons.tsv"), "r1\twhy\n").unwrap();
+        let all = Repos::reserved(gold, &[]).unwrap();
+        for repo in ["d/ev", "h/old", "o/wner", "q/one", "q/two"] {
+            assert!(all.has(repo), "{repo}");
+        }
+        // The queue being rebuilt does not reserve its own repositories.
+        let queue = gold.join("queue/q2.conllu");
+        let rebuilt = Repos::reserved(gold, &[queue.as_path()]).unwrap();
+        assert!(!rebuilt.has("q/two") && rebuilt.has("q/one"));
+        // A queue that names nothing is an error too.
+        std::fs::write(gold.join("queue/q3.conllu"), "").unwrap();
+        assert!(Repos::reserved(gold, &[]).is_err());
+    }
+
+    #[test]
+    fn a_manifest_with_no_repo_column_is_refused_without_quoting_it() {
+        let error = Repos::manifest("m.tsv", "a\tb\nsecret\tvalue\n").unwrap_err();
+        assert!(!error.to_string().contains("secret"), "{error}");
+        assert!(error.to_string().contains("m.tsv"), "{error}");
     }
 
     #[test]

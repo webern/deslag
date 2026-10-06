@@ -1,0 +1,50 @@
+rc87bfb791f9ffb7e	mixed prose with six command names in a comma list ("zsh-async, zsh-syntax-highlighting"); hyphenated tool names read as nouns or adjectives
+r3996565d4acf32e0	mixed list item, conventional-commit prefix then a long noun phrase ("type inference for return expressions"); noun/verb readings for "return" and "passed"
+r4c8f1609bba34fbd	mixed heading in acronym speak ("acting as RP while Authgear acting as OP"); bare participles with no auxiliary
+r7d937937c11f0d48	mixed heading with a product name and a date ("launching on Kickstarter Sept 2, 2026"); proper nouns beside a participle
+r405e4047c32d2b2e	mixed table cell, a passive fragment ("Set automatically by build script"); "npm CDN" runs of capitalised nouns
+r1a246410de7512a2	mixed table cell, a noun stack with no verb ("Legacy USB combined IMG for USB Keys"); adjective or noun for "combined"
+r0b36cd5fe27523ac	mixed prose, plain statement full of tool names ("happy-dom or jsdom"); proper noun versus noun for unseen library names
+raa22c6fffe3ef51a	mixed prose ending in a colon ("accept passing in subpaths ... like so:"); "passing" as noun, verb or adjective, "like" as preposition or verb
+r15a2f2c792eba0c6	mixed prose, "pre-commit" used as a noun and "run" as an infinitive after "uses ... to"; a hyphenated tool name
+r1fec9dd459ba8636	mixed list item, changelog "Upgraded minimum required .NET SDK" with a parenthetical expansion; participle chains and "Breaking Change" in capitals
+r23d5c46a95569825	mixed list item, short imperative fragment with a command name ("Checksum flag to rsync in bin/update PR #707"); noun or verb for "checksum"
+r0ba76bf1fa8d15fe	llm heading, dash-separated clauses with a command and "TDD" ("THE delicate one"); capitalised emphasis inside a heading
+r21ed6d2d9e08823f	human heading, long "Build & Bundle ... and startup ..." with a nested parenthesis; "startup" as noun or verb, "&" as a conjunction
+r389246e8cd2a40b6	human heading, noun phrase with slash-separated model names ("Jetson Xavier NX / AGX"); proper nouns versus nouns
+re30b050872f14694	human heading with a platform prefix and an imperative ("OSX: Install mulle-build using homebrew"); lower-case product names
+r24202a507e84c011	llm heading with a Unix command name ("Experimental Unix PTY startup timeout"); noun stack, "startup" noun or verb
+rca954030f52ea06e	llm heading, ID prefix and a title-case imperative ("TDR-0039: Accept Scaled-Integer Rounding in JSON5 Serialization"); hyphenated compound adjective
+rf5a05f24c5dede1e	llm heading with a numbered prefix and a flag in the sentence ("Use --add-dir to Give Claude Access to More Folders"); title-case function words
+r071059eea9a249f6	human heading, fragment of tool names ("Zig cc, Zig c++"); proper noun versus command
+r53dc3ef450e0e530	llm table cell of semicolon-joined clauses with units and an ID ("Throttle observer to 16ms; loop guard 80ms"); imperative with no subject
+r8bee7de7d192863d	human table cell, an imperative with a file path ("Add a fake Xplugin.h to fool /unix/xserver/miext/rootless."); "fake" adjective, "fool" verb
+rbaf2641bfeaa0113	llm table cell mixing English and shell ("Catastrophic only: rm -rf ~, dd to disk, fork bombs"); command words and flags inside a fragment
+r76666363dfc8ba9f	llm table cell, three title-case items ("In-seat power, Live TV, Free Wi-Fi"); hyphen compound modifier and capitalised nouns
+rc5a4d4e1611ff22e	human table cell, a verb-first descriptor with no subject ("declutters url lists for crawling/pentesting"); lower-case verb, slash coordination
+r0256cd05f27ed9f5	llm table cell, a metric fragment ("Latency p50/p95/p99"); slash coordination of identifiers
+rfab4a2293bda2d8c	llm prose with an e.g. in parentheses and a domain ("DCAT-AP (e.g. dati.gov.it) store HVD metadata as standard extra fields"); "store" noun or verb, acronym noun phrases
+r333f79804647392b	human prose with version numbers and a date ("up to qBittorrent v4.3.9 (Web API v2.8.2) released on Oct 31, 2021"); participle after a nested parenthesis
+r4d174d3e6de60ce0	human prose with two parentheses and "as well as" ("Apple Silicon (M1/M1X) chips, as well as SSH support"); chip names as proper nouns
+r9bb88b2b1c8d0904	llm prose ending in a colon, capitalised emphasis ("supports BOTH Vertex AI ... and Google AI Studio"); product names as proper nouns
+raaacd5b8b422599d	llm prose, a label then a comma list ("Tech Stack: Python 3, subprocess for git/gh CLI, argparse for command parsing"); command names beside plain nouns
+rb0f3e7e5c5e646da	llm prose, protocol terms in a long coordination ("inspects HTTP Host on port 80 and TLS SNI on port 443"); "Host" and "SNI" noun or proper noun
+rba8b35308f1b6185	human prose, an imperative then a title ("See this in action: MSAL Node B2C web app sample (using PKCE)"); acronyms in a noun stack
+rdbcb3c638e71800f	human prose with a slash coordination and a long subject ("local port / CONTROL file included in ... allows to build SDK"); participle or finite verb for "included"
+r590cbc9adb306c8e	llm prose, invented noun "Polecats" and an em dash ("have no commit mandate for submodule repos — this plugin"); "commit" noun or verb
+r3699dbaf42663f2c	human prose with a file name ("please see materialDesignExample.pdf which doubles as a quick manual"); "doubles" verb or noun, a camel-case path
+rbdbeb55be1a1ceb3	human prose with a lower-case dotted product name ("top level pages for your next.js app"); "using" as participle or preposition
+r12ed02a6abe91821	llm prose with a suffix written like a flag ("this -obconf suffix adds more functionality"); a hyphenated unknown, "adds" verb or noun
+r215eda6d323798ee	human prose with a shell command after a colon ("To remove (delete) the foo/bar cheatsheet: : cheat --rm foo/bar"); doubled colon, command flag
+r2c39319fe3e00d52	llm prose with a possessive of a time word and many file names ("The overnight's slices (S3/S4/S5/S7) all edit the same core files"); "overnight" as noun or adjective
+rcde04c5c46d72213	human list item, changelog line with a version and a date ("v1.0, 2014-03-30, fix bug for st detecting epoll failed"); a bare imperative and ungrammatical "failed"
+r7ea865e944962358	llm list item, a label and clipped alarm conditions ("API 5xx > 1% over 5 min, p95 latency breach"); symbols and units in a noun list
+r52665b208717fd10	human list item with a bracketed tag and a compound imperative ("[STABLE] Support transdata + matmul prefusion pattern in akg."); unseen coined words
+rfe7cc14d659a99cb	llm list item, a title-case noun phrase fragment ("AI-Enhanced Search for content in PDFs, blogs, subdomains"); hyphenated adjective, interjection-like "AI"
+r42ebbfe903064871	human list item with a possessive of a hyphenated name ("mwc-select's button role changed to combobox"); "changed" participle or past tense, "role" noun
+r084e6fa5fbcd9cb1	human list item, imperative with two flags ("Respect pkg-config escaping rules used with --cflags and --libs"); participle "used" and flag words
+rc500127cc6d6c029	llm list item, label then a flag in parentheses ("Uses : Turbopack (--turbopack flag) for faster dev builds"); detached colon, "dev" adjective or noun
+r13c8d6c4f903e9c2	human list item, issue number and a quoted group name ("Remove "plugdev" group requirement to resolve udev error on Fedora"); quoted unseen word, noun stack
+ree75ab9b930e9130	human list item with an issue number and an RFC ("Allow loopback redirect URIs using random ports as described in RFC8252 section 7.3 ."); "redirect" as noun, verb or adjective
+rf0878fd956ef9232	human list item, a counted noun phrase ("Sixteen 8-bit general purpose registers, referred to as V0 thru VF"); hyphenated number adjective, register names
+raf1e6d738063e280	llm list item, imperative with a coordinated subject ("Check that README and API reference examples use current API names."); "reference" and "use" noun or verb

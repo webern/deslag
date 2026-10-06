@@ -2,11 +2,14 @@
 # matter, not mistakes to fix, and no fixture may be edited to suit a tool. The golden files list
 # its fixtures by path, and so quote the names of those repositories and their files. The tagger's
 # lexicon is generated from word lists, which hold misspellings and rare words by design, and the
-# notices of its sources are copied unchanged.
+# notices of its sources are copied unchanged. A review queue quotes corpus sentences, and so does
+# the owner's file once they are moved there.
 
 [files]
 extend-exclude = [
     "tests/corpus",
+    "tests/gold/queue",
+    "tests/gold/owner.conllu",
     "tests/golden/*.txt",
     "src/tag/lexicon.txt",
     "LICENSES/AGID.txt",

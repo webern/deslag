@@ -24,7 +24,7 @@ deslag/
                           mixed/ collected, one directory per source repo
   tools/               <- never published: corpus/, the corpus's one loader, which the tests read
                           it through, and commands that measure it; exam/, which grades taggers
-                          on gold sets and the tic list; deslag-gold makes and reviews the gold
+                          on gold sets and the tic list; deslag-gold makes and reviews gold
   scripts/             <- build, lint and utility scripts; llm-detection/ rebuilds the corpus,
                           blobstore/ fetches its big tier, ewt/ and harper/ what the exam uses,
                           spacy/ runs spaCy on its tokens, lexicon/ makes the tagger's word list,
@@ -44,8 +44,8 @@ governs the Makefile, `scripts/`, CI and dependencies; read it before changing a
 
 - `/deslag-build-doctrine`: the build system, Makefile, scripts, CI, dependencies.
 - `/deslag-design-docs`: the docs in `docs/design/` and who owns which.
-- `/deslag-open-pr`: opening a pull request.
-- `/deslag-commit`: rules for git commits.
+- `/deslag-open-pr`, `/deslag-commit`: opening a pull request, rules for git commits.
+- `/deslag-review-pick`: sentences for the owner to review.
 
 ## Rules
 

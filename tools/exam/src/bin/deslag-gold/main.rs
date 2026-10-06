@@ -19,6 +19,7 @@ mod exclude;
 mod guide;
 mod merge;
 mod patch;
+mod pick;
 mod problems;
 mod review;
 mod sample;
@@ -38,7 +39,7 @@ use deslag_exam::tagger::Context;
 use deslag_exam::words::Words;
 
 use crate::data::{Sample, read_text, write_text};
-use crate::exclude::Exclusion;
+use crate::exclude::{Exclusion, Repos};
 use crate::merge::{Answers, NAMES};
 use crate::problems::Problems;
 use crate::sample::{Counts, File, Settings};
@@ -90,6 +91,20 @@ enum Command {
         /// draw can be repeated. An entry that names no fixture is an error.
         #[arg(long)]
         exclude: Option<PathBuf>,
+        /// Files naming repositories to draw nothing from: a manifest (its `repo` column) or a
+        /// `.conllu` file (its `# repo = owner/name` comments), such as `owner.conllu`. Every file
+        /// of such a repository is left out, however it is named. With `--reserved` these add to
+        /// the reserved set.
+        #[arg(long, num_args = 1..)]
+        exclude_repos: Vec<PathBuf>,
+        /// Also leave out the reserved repositories: those of the dev and holdout manifests,
+        /// `owner.conllu` and every queue, read from `--gold-dir`. Give it for any draw that is
+        /// not the dev or holdout draw itself.
+        #[arg(long)]
+        reserved: bool,
+        /// Where the reserved set is read from.
+        #[arg(long, default_value = "tests/gold")]
+        gold_dir: PathBuf,
         /// The seed, decimal or `0x` hex. The default is the bytes of `deslag`.
         #[arg(long, default_value = "0x6465736c6167", value_parser = parse_seed)]
         seed: u64,
@@ -186,6 +201,43 @@ enum Command {
         #[arg(long)]
         spacy: Option<PathBuf>,
     },
+    /// Ranks the corpus's sentences by how unsure deslag is, as the review will show them, and
+    /// writes `rank.tsv` to the working directory. Reads the big tier, or `tests/corpus` when it
+    /// is absent. Leaves out every repository the manifests name and every fixture of the
+    /// exclusion list, and prints counts of what it left out, nothing else about them.
+    Rank {
+        #[command(flatten)]
+        from: Pool,
+        /// The most sentences from one repository in the list.
+        #[arg(long, default_value_t = 3)]
+        per_repo: usize,
+        /// The most sentences in the list. Give 0 for every one: a very large file.
+        #[arg(long, default_value_t = 4000)]
+        top: usize,
+    },
+    /// Writes the queue the review opens from a picks file: one sentence id per line, then a tab
+    /// and the reason, as the ranking's `id` column has them.
+    Queue {
+        #[command(flatten)]
+        from: Pool,
+        /// The picks.
+        #[arg(long)]
+        picks: PathBuf,
+        /// Where the queue goes.
+        #[arg(long)]
+        out: PathBuf,
+    },
+    /// Moves the sentences of a queue the owner has reviewed into `owner.conllu`, with ids
+    /// `o0001` on, leaving out those marked `# owner_rejected` in the review. Refuses a queue with
+    /// a sentence that has a blank word or no `owner_reviewed`, and changes nothing then. The file
+    /// is replaced whole or not at all.
+    Own {
+        /// The queue, as the review saved it.
+        queue: PathBuf,
+        /// The owner's file, made if it is not there.
+        #[arg(long, default_value = "tests/gold/owner.conllu")]
+        into: PathBuf,
+    },
     /// Opens a CoNLL-U file of deslag tokens in a terminal UI, one sentence at a time, for the
     /// owner to read and correct its tags. Untagged input (a skeleton) is fine.
     ///
@@ -194,7 +246,10 @@ enum Command {
     /// the first sentence not yet reviewed. It never opens holdout, `en_ewt*` or `.ewt/` files.
     ///
     /// Keys: j/k move, t type a tag (n.s, v.pp), ? the guide's entry, a accept and move on,
-    /// n/p save and go to the next/previous sentence, q quit.
+    /// n/p save and go to the next/previous sentence, x x (twice) reject the pick, q quit.
+    ///
+    /// A rejected pick (personal data, not English) is saved as `# owner_rejected = <date>`,
+    /// needs no tags and is left out by `own`. Delete that line to undo it.
     Review {
         /// The file to review, edited in place.
         file: PathBuf,
@@ -202,6 +257,30 @@ enum Command {
         #[arg(long)]
         screen: bool,
     },
+}
+
+/// Where `rank` and `queue` read from and what they leave out.
+#[derive(clap::Args)]
+struct Pool {
+    /// The big tier, unpacked by `make fetch-blobs`.
+    #[arg(long, default_value = ".blobs/unpacked/corpus")]
+    corpus: PathBuf,
+    /// Read the small tier at this path, `tests/corpus`, instead; also the fallback when the big
+    /// tier is not there.
+    #[arg(long)]
+    tree: Option<PathBuf>,
+    /// The fixtures to leave out, as for `sample --exclude`.
+    #[arg(long, default_value = "tests/gold/exclude.tsv")]
+    exclude: PathBuf,
+    /// The directory whose dev and holdout manifests, `owner.conllu` and `queue/*.conllu` name
+    /// the reserved repositories, which are always left out. A manifest that is missing or
+    /// names no repository is an error.
+    #[arg(long, default_value = "tests/gold")]
+    gold_dir: PathBuf,
+    /// More files naming repositories to leave out, as for `sample --exclude-repos`. They add
+    /// to the reserved set and never replace any of it.
+    #[arg(long, num_args = 1..)]
+    exclude_repos: Vec<PathBuf>,
 }
 
 /// A seed written in decimal or as `0x` and hex.
@@ -232,6 +311,9 @@ fn run(cli: Cli) -> Result<(), Problems> {
             corpus,
             tree,
             exclude,
+            exclude_repos,
+            reserved,
+            gold_dir,
             seed,
             mix,
             holdout_per_tier,
@@ -263,10 +345,21 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 &corpus,
                 tree.as_deref(),
                 exclude.as_deref(),
+                &RepoCut {
+                    files: &exclude_repos,
+                    reserved: reserved.then_some(gold_dir.as_path()),
+                },
                 &settings,
                 without_declared,
             )
         }
+        Command::Rank {
+            from,
+            per_repo,
+            top,
+        } => rank_stage(&dir, &from, per_repo, top),
+        Command::Queue { from, picks, out } => queue_stage(&from, &picks, &out),
+        Command::Own { queue, into } => own_stage(&queue, &into),
         Command::Batches { size } => batches_stage(&dir, size),
         Command::ReadTags { lines, prov, all } => read_tags_stage(&dir, &lines, &prov, all),
         Command::Merge {
@@ -300,9 +393,19 @@ fn corpus_files(
     corpus: &Path,
     tree: Option<&Path>,
     without_declared: bool,
+    hide: bool,
 ) -> Result<(Vec<deslag_corpus::load::Fixture>, String), Error> {
+    // The loader's error names the fixture it could not read. Which repository that fixture
+    // belongs to is not known, so with `hide` the error says only that one failed.
     let problem = |path: &Path, error: deslag_corpus::load::Problem| {
-        Error::load(&path.display().to_string(), Place::File, error.to_string())
+        let message = if hide {
+            "a fixture does not load; it is not named, since it may belong to a reserved \
+             repository. Check the corpus with `deslag-corpus`"
+                .to_string()
+        } else {
+            error.to_string()
+        };
+        Error::load(&path.display().to_string(), Place::File, message)
     };
     // Files whose label is a publisher's statement are drawn from unless they are opted out.
     let kept = |fixtures: Vec<deslag_corpus::load::Fixture>| {
@@ -342,15 +445,31 @@ fn corpus_files(
     }
 }
 
+/// The repositories a draw leaves out: those the files name, and the reserved ones when a gold
+/// directory is given.
+#[derive(Clone, Copy)]
+struct RepoCut<'a> {
+    files: &'a [PathBuf],
+    reserved: Option<&'a Path>,
+}
+
 fn sample_stage(
     dir: &Path,
     corpus: &Path,
     tree: Option<&Path>,
     exclude: Option<&Path>,
+    cut: &RepoCut<'_>,
     settings: &Settings,
     without_declared: bool,
 ) -> Result<(), Problems> {
-    let (fixtures, note) = corpus_files(corpus, tree, without_declared)?;
+    let RepoCut {
+        files: exclude_repos,
+        reserved,
+    } = *cut;
+    // A fixture that does not load is not named when repositories are being left out, since it
+    // may belong to one of them.
+    let hide = reserved.is_some() || !exclude_repos.is_empty();
+    let (fixtures, note) = corpus_files(corpus, tree, without_declared, hide)?;
     let files: Vec<File<'_>> = fixtures
         .iter()
         .filter_map(|fixture| {
@@ -377,7 +496,25 @@ fn sample_stage(
         }
         None => files,
     };
+    let mut repos_dropped = None;
+    let files = if exclude_repos.is_empty() && reserved.is_none() {
+        files
+    } else {
+        let mut repos = Repos::read(exclude_repos)?;
+        if let Some(gold_dir) = reserved {
+            repos = repos.with(Repos::reserved(gold_dir, &[])?);
+        }
+        let (kept, dropped) = repos.drop(files);
+        repos_dropped = Some((repos.len(), dropped));
+        kept
+    };
     let mut outcome = sample::draw(&files, &note, settings).map_err(Error::from)?;
+    if let Some((repos, dropped)) = repos_dropped {
+        outcome.sample.manifest.header.push((
+            "exclude repos".to_string(),
+            format!("{repos} repositories, {dropped} fixtures"),
+        ));
+    }
     if let Some((list, dropped)) = &excluded {
         outcome.sample.manifest.header.push((
             "exclude".to_string(),
@@ -405,6 +542,117 @@ fn sample_stage(
         sample_path.display(),
         manifest_path.display()
     );
+    Ok(())
+}
+
+/// The files `rank` and `queue` may offer, and what was left out, as counts.
+fn pool(from: &Pool) -> Result<Vec<deslag_corpus::load::Fixture>, Problems> {
+    let big = from.tree.is_none() && from.corpus.is_dir();
+    let tree = from
+        .tree
+        .clone()
+        .unwrap_or_else(|| PathBuf::from("tests/corpus"));
+    if !big && from.tree.is_none() {
+        println!(
+            "no big tier at {}; reading {}",
+            from.corpus.display(),
+            tree.display()
+        );
+    }
+    let (fixtures, _) = corpus_files(&from.corpus, (!big).then_some(tree.as_path()), false, true)?;
+    Ok(fixtures)
+}
+
+/// The sentences of `fixtures` that may be offered, ranked. `except` is a queue file being
+/// rebuilt, which does not reserve its own repositories.
+fn offer(
+    from: &Pool,
+    fixtures: &[deslag_corpus::load::Fixture],
+    except: &[&Path],
+) -> Result<pick::Offer, Problems> {
+    let files: Vec<File<'_>> = fixtures
+        .iter()
+        .filter_map(|fixture| {
+            Some(File {
+                path: fixture.path.clone(),
+                tier: Tier::from_name(&fixture.category)?,
+                repo: fixture.sidecar.source.repo.clone(),
+                license: fixture.sidecar.source.license.clone(),
+                sha256: fixture.sidecar.content.sha256.clone(),
+                text: std::str::from_utf8(&fixture.bytes).ok()?,
+            })
+        })
+        .collect();
+    let (files, listed, repos, by_repo) = leave_out(from, files, except)?;
+    println!(
+        "left out {listed} fixtures of the exclusion list and {by_repo} files of {repos} repositories"
+    );
+    let offer = pick::rank(&files)?;
+    println!("{}", offer.dropped);
+    Ok(offer)
+}
+
+/// `files` without the fixtures of the list and the files of the reserved repositories and of
+/// those `--exclude-repos` adds: what is left, and how many of each were dropped.
+fn leave_out<'a>(
+    from: &Pool,
+    files: Vec<File<'a>>,
+    except: &[&Path],
+) -> Result<(Vec<File<'a>>, usize, usize, usize), Error> {
+    let shown = from.exclude.display().to_string();
+    let list = Exclusion::parse(&shown, &read_text(&from.exclude)?)?;
+    let (files, listed) = list.drop(files);
+    let repos = Repos::reserved(&from.gold_dir, except)?.with(Repos::read(&from.exclude_repos)?);
+    let (files, by_repo) = repos.drop(files);
+    Ok((files, listed, repos.len(), by_repo))
+}
+
+fn rank_stage(dir: &Path, from: &Pool, per_repo: usize, top: usize) -> Result<(), Problems> {
+    let fixtures = pool(from)?;
+    let all = offer(from, &fixtures, &[])?.rows;
+    let found = all.len();
+    let ranked = pick::spread(all, per_repo, if top == 0 { usize::MAX } else { top });
+    let out = dir.join("rank.tsv");
+    write_text(&out, &pick::tsv(&ranked))?;
+    println!(
+        "ranked {found} sentences, wrote the best {} to {}",
+        ranked.len(),
+        out.display()
+    );
+    Ok(())
+}
+
+fn queue_stage(from: &Pool, picks: &Path, out: &Path) -> Result<(), Problems> {
+    let shown = picks.display().to_string();
+    let ids = pick::read_picks(&shown, &read_text(picks)?)?;
+    let fixtures = pool(from)?;
+    let ranked = offer(from, &fixtures, &[out])?.rows;
+    let text = pick::queue(&shown, &ids, &ranked)?;
+    write_text(out, &text)?;
+    println!("wrote {} sentences to {}", ids.len(), out.display());
+    Ok(())
+}
+
+fn own_stage(queue: &Path, into: &Path) -> Result<(), Problems> {
+    let shown = queue.display().to_string();
+    let target = into.display().to_string();
+    let held = if into.exists() {
+        Some(read_text(into)?)
+    } else {
+        None
+    };
+    let (text, moved, rejected) = pick::own(&shown, &read_text(queue)?, &target, held.as_deref())?;
+    // Written beside the file and renamed over it, as the review saves, so a crash leaves the
+    // old file whole.
+    let mut store = terminal::FileStore {
+        path: into.to_path_buf(),
+    };
+    let warning = review::Store::save(&mut store, &text)
+        .map_err(|message| Error::load(&target, Place::File, message))?;
+    if let Some(warning) = warning {
+        eprintln!("deslag-gold: {target}: {warning}");
+    }
+    println!("moved {moved} sentences into {target}, left out {rejected} rejected");
     Ok(())
 }
 

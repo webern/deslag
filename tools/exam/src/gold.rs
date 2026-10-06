@@ -3,9 +3,10 @@
 //! The conventions are comments prefixed `exam.`, so they never collide with UD's own. Some are
 //! about the file and may appear in the first sentence only (`tokens`, `split`, `trains`,
 //! `source`); `tier` and `context` may appear in any sentence. In `MISC`, `Kind=` and
-//! `SpaceAfter=No` describe a `deslag` file's tokens and `Prov=` says who vouches for a label. Any
-//! key or value outside the lists below is a load error, and so is every other way a file can
-//! disagree with the conventions: the exam never guesses at a gold file.
+//! `SpaceAfter=No` describe a `deslag` file's tokens, `Prov=` says who vouches for a label and
+//! `Was=` notes what it was before the owner reviewed it. Any key or value outside the lists below
+//! is a load error, and so is every other way a file can disagree with the conventions: the exam
+//! never guesses at a gold file.
 
 use std::collections::BTreeSet;
 use std::ops::Range;
@@ -201,6 +202,10 @@ pub struct Word {
     pub kind: Option<TokenKind>,
     /// `Prov=`, if the line says.
     pub prov: Option<Prov>,
+    /// `Was=`, if the line says: what the line's `Prov=` was before the owner reviewed it, or
+    /// `prefill` for a word he accepted as deslag's reading filled it in. A note; nothing is
+    /// graded by it.
+    pub was: Option<String>,
     /// The line it is on.
     pub line: usize,
 }
@@ -486,10 +491,12 @@ impl Word {
         };
         let mut kind = None;
         let mut prov = None;
+        let mut was = None;
         let mut space_after = true;
         for (key, value) in conllu::pairs(&line.misc) {
             match key {
                 "SpaceAfter" => space_after = value != "No",
+                "Was" => was = Some(value.to_string()),
                 "Prov" => {
                     prov = Some(Prov::from_name(value).ok_or_else(|| {
                         let names = Prov::ALL.iter().map(|p| p.name()).collect::<Vec<_>>();
@@ -540,6 +547,7 @@ impl Word {
             features,
             kind,
             prov,
+            was,
             line: line.number,
         };
         Ok((word, space_after))

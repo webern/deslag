@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use deslag_exam::gate::{self, Gates};
-use deslag_exam::gold::{Gold, Prov};
+use deslag_exam::gold::{Gold, Prov, Word};
 use deslag_exam::mustpass::MustPass;
 use deslag_exam::tagger::{Deslag, Sentence, Tagger};
 use deslag_exam::tags::{Class, Confidence, Reading, Tag, TagSet};
@@ -201,13 +201,25 @@ fn every_row_of_the_checked_in_list_still_names_its_gold_word() {
             row.sent_id,
             row.word
         );
-        assert_eq!(
-            word.prov,
-            Some(Prov::Agree),
-            "{} word {}",
+        assert!(
+            agreed(word),
+            "{} word {}: Prov {:?}, Was {:?}",
             row.sent_id,
-            row.word
+            row.word,
+            word.prov,
+            word.was
         );
+    }
+}
+
+/// Whether the taggers agreed on `word`: `Prov=agree`, or the owner reviewed it (`Prov=owner`)
+/// and the line says `Was=agree`. The form and tag checks stay the caller's, so a word whose tag
+/// the owner changed still fails them.
+fn agreed(word: &Word) -> bool {
+    match word.prov {
+        Some(Prov::Agree) => true,
+        Some(Prov::Owner) => word.was.as_deref() == Some("agree"),
+        _ => false,
     }
 }
 
@@ -523,4 +535,39 @@ fn the_lists_header_names_tag_version_10() {
         header.iter().any(|line| line.contains("tag VERSION 10")),
         "the header comment names the tag VERSION the list was cut at: {header:?}"
     );
+}
+
+#[test]
+fn a_word_the_owner_reviewed_is_agreed_only_if_it_was() {
+    let dir = tempfile::tempdir().unwrap();
+    let file = dir.path().join("gold.conllu");
+    let read = |misc: &str| -> Word {
+        let text = format!(
+            "# exam.tokens = deslag\n# sent_id = o1\n1\tThe\t_\tDET\t_\t_\t_\t_\t_\t{misc}\n"
+        );
+        std::fs::write(&file, text).unwrap();
+        Gold::read(&file).unwrap().sentences[0].words[0].clone()
+    };
+    assert!(agreed(&read("Kind=Word|Prov=agree")));
+    let reviewed = read("Kind=Word|Prov=owner|Was=agree");
+    assert!(agreed(&reviewed));
+    assert_eq!(
+        reviewed.class,
+        Class::Tagged(Tag::Determiner),
+        "the tag check still runs"
+    );
+    assert_eq!(reviewed.form, "The", "and so does the form check");
+    assert!(!agreed(&read("Kind=Word|Prov=owner")), "typed by the owner");
+    assert!(!agreed(&read("Kind=Word|Prov=owner|Was=prefill")));
+    assert!(!agreed(&read("Kind=Word|Prov=owner|Was=adjudicated")));
+    assert!(!agreed(&read("Kind=Word|Prov=adjudicated|Was=agree")));
+    // A word the owner retagged keeps Was=agree but no longer has the listed tag.
+    let retagged = {
+        let text = "# exam.tokens = deslag\n# sent_id = o1\n\
+                    1\tThe\t_\tADV\t_\t_\t_\t_\t_\tKind=Word|Prov=owner|Was=agree\n";
+        std::fs::write(&file, text).unwrap();
+        Gold::read(&file).unwrap().sentences[0].words[0].clone()
+    };
+    assert!(agreed(&retagged));
+    assert_ne!(retagged.class, Class::Tagged(Tag::Determiner));
 }

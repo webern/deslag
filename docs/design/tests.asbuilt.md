@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-05
 subsystems:
   - tests
 max_size_bytes: 4096
@@ -23,10 +23,9 @@ tests/
 
 ## Small trees
 
-`tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each, every canonical
-config path in every language included. `tests/fix.rs` pins each refusal and the bytes fix writes.
-`tests/instructions.rs` holds the guide's example and each lint's table to the schema, and runs
-them: each table turns on its lint alone, and all of them together turn on every lint.
+`tests/unit.rs` and `tests/formats.rs` build small trees and pin one rule each. `tests/fix.rs` pins
+each refusal and the bytes fix writes. `tests/instructions.rs` holds the guide's example and each
+lint's table to the schema, and runs them.
 
 ## Cases
 
@@ -40,9 +39,6 @@ replaces `check` with other arguments. A `.base` directory is the repo before a 
 runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-test-output` rewrites
 `.stderr` and `.json` files.
 
-`tests/output.rs` runs every format on a repo every lint fails, and derives the SARIF and GitHub
-output from the JSON by hand.
-
 ## The corpus
 
 `tests/corpus.rs` is end-to-end, and `tests/blobs.rs` checks the big tier under `make test-blobs`. A
@@ -50,12 +46,10 @@ matrix on `core/` crosses configs, canonical locations, layouts and budgets, der
 expects from the bytes it placed.
 
 The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
-and the default density, and the binary must report what the library finds. Tokens and sentences
-must keep to their blocks, and each location found under the golden config must hold what it
-names.
+and density, and the binary must report what the library finds. Tokens and sentences must keep to
+their blocks, and each location found under the golden config must hold what it names.
 
-`make test-scripts` runs `scripts/blobstore/test_batches.py`, which tests how batches are built and
-published against local git repositories.
+`make test-scripts` runs `scripts/blobstore/test_batches.py` against local git repositories.
 
 ## The golden set
 
@@ -73,10 +67,18 @@ a lint failing no fixture or all. `make fix-golden` rewrites the files.
 ## The gates
 
 `make test` runs `make test-exam` first: the whole `golden` binary, so a change to the tag stream
-fails, then `deslag-exam gate` on the `dev` and `holdout` sets of `tests/gold/gates.toml`, which
-`exam.asbuilt.md` describes. A gate is raised by hand, in the change that earns it.
+fails, then `deslag-exam gate` on the `dev`, `mustpass` and `holdout` sets of
+`tests/gold/gates.toml`, which `exam.asbuilt.md` describes. A gate is raised by hand, in the change
+that earns it.
 `make test-ewt` judges the `ewt-dev` set the same way; it fetches the treebank, so it is not in
 `test` or `ci`.
 
 `make test-blobs` ends with `deslag-corpus --tier blobs time --check`. Over the budget of the
 profile built, it measures again, each file keeping its fastest of six passes, and judges only that.
+
+## The frozen gold lists
+
+`tests/gold/mustpass.tsv` holds 982 dev words that deslag tags right at `Sure`; `ticlist.tsv`, 172
+places the `verbs_no_nouns` pattern matches in the corpus. Each is cut once by `deslag-exam` and
+frozen, never regenerated. `cargo test --workspace` holds each row to `dev.conllu`, or to the
+corpus and the lint.

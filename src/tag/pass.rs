@@ -66,21 +66,25 @@ impl View<'_, '_> {
     }
 
     /// How many tokens the sentence has.
+    #[inline(always)]
     pub(super) fn len(&self) -> usize {
         self.tokens.len()
     }
 
     /// What kind of token the token at `at` is.
+    #[inline(always)]
     pub(super) fn kind(&self, at: usize) -> TokenKind {
         self.tokens[at].kind
     }
 
     /// The text of the token at `at`.
+    #[inline(always)]
     pub(super) fn text(&self, at: usize) -> &str {
         &self.tokens[at].text
     }
 
     /// The reading of the word at `at`, `None` for any other token.
+    #[inline(always)]
     pub(super) fn reading(&self, at: usize) -> Option<Reading> {
         self.tokens[at].reading
     }

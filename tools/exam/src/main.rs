@@ -14,6 +14,7 @@ use deslag_exam::harper::{DEFAULT_MODEL, Harper};
 use deslag_exam::import::Imported;
 use deslag_exam::most_common::{self, MostCommonTag};
 use deslag_exam::mustpass::MustPass;
+use deslag_exam::readings;
 use deslag_exam::report;
 use deslag_exam::saved::SavedRun;
 use deslag_exam::score::{Source, score};
@@ -149,6 +150,27 @@ enum Command {
         #[arg(long, required_unless_present = "corpus", conflicts_with = "corpus")]
         gold: Option<PathBuf>,
         /// Write the skeleton of the corpus's English fixtures outside `core` instead of a gold's.
+        #[arg(long)]
+        corpus: bool,
+        /// The repository root, whose `tests/corpus` `--corpus` reads.
+        #[arg(long, default_value = ".", requires = "corpus")]
+        root: PathBuf,
+        /// The file to write.
+        #[arg(long)]
+        out: PathBuf,
+    },
+    /// Writes deslag's own readings in the skeleton's format, for a learner that starts from them:
+    /// `tokens`, with `UPOS`, `Conf=` and `Kept=` on every `Word` line, and with `--gold` the key
+    /// `Gold=`, the gold tag the exam aligned to the token, left out where none is. `score --import`
+    /// of the file grades as `score --tagger deslag` does, but for the feature metrics. It writes
+    /// to a file, and refuses a holdout gold (exit 2): the file names words and their tags.
+    ///
+    /// With `--corpus`, the sentences are those of `tokens --corpus`, and there is no gold.
+    Readings {
+        /// The gold file, CoNLL-U.
+        #[arg(long, required_unless_present = "corpus", conflicts_with = "corpus")]
+        gold: Option<PathBuf>,
+        /// Write the readings of the corpus's English fixtures outside `core` instead.
         #[arg(long)]
         corpus: bool,
         /// The repository root, whose `tests/corpus` `--corpus` reads.
@@ -360,7 +382,24 @@ fn run(cli: Cli) -> Result<bool, Error> {
                 }
                 None => {
                     debug_assert!(corpus, "clap needs one of --gold and --corpus");
-                    ticlist::corpus_skeleton(&ticlist::corpus(&root)?)?
+                    ticlist::corpus_skeleton(&ticlist::corpus(&root)?, false)?
+                }
+            };
+            write(&out, &text)?;
+            println!("wrote {sentences} sentences to {}", out.display());
+            Ok(true)
+        }
+        Command::Readings {
+            gold,
+            corpus,
+            root,
+            out,
+        } => {
+            let (text, sentences) = match gold {
+                Some(gold) => readings::of_gold(&Gold::read(&gold)?)?,
+                None => {
+                    debug_assert!(corpus, "clap needs one of --gold and --corpus");
+                    ticlist::corpus_skeleton(&ticlist::corpus(&root)?, true)?
                 }
             };
             write(&out, &text)?;

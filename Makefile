@@ -20,14 +20,16 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
-        test test-blobs test-brill test-ewt test-exam test-percept test-scripts test-spacy \
+        test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
+        test-percept test-scripts test-spacy test-ticlist-brill-deslag test-ticlist-brill-percept \
         test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-brill generate-percept generate-spacy publish-blobs
+        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
+        generate-brill-percept generate-percept generate-spacy publish-blobs
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -40,6 +42,13 @@ help:
 	@echo "                 deslag-exam and compare it with deslag, its initial tagger and the perceptron;"
 	@echo "                 generates first, so minutes, not in test or ci; run test-percept first for the"
 	@echo "                 perceptron's comparison"
+	@echo "test-brill-deslag"
+	@echo "                 train the Brill tagger that starts from deslag's own readings, grade it on both dev"
+	@echo "                 sets with deslag-exam, judge it against the dev gates and compare it with deslag, the"
+	@echo "                 perceptron and the first Brill tagger; generates first, so minutes, not in test or ci"
+	@echo "test-brill-percept"
+	@echo "                 the same for the Brill tagger that starts from the perceptron, a diagnostic; trains"
+	@echo "                 the perceptron first, then five more for the folds, so about five minutes"
 	@echo "test-ewt         fail if deslag's tagger scores under the pinned counts on the treebank's dev"
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
@@ -51,6 +60,11 @@ help:
 	@echo "test-scripts     test how batches are built and published; offline, local repositories"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
+	@echo "test-ticlist-brill-deslag"
+	@echo "                 score the Brill tagger that starts from deslag's readings on the tic list; generates"
+	@echo "                 first, so minutes, and not in test or ci"
+	@echo "test-ticlist-brill-percept"
+	@echo "                 the same for the Brill tagger that starts from the perceptron"
 	@echo "test-ticlist-percept"
 	@echo "                 score the perceptron on the tic list, tests/gold/ticlist.tsv, with deslag-exam; generates"
 	@echo "                 first, so minutes, and not in test or ci"
@@ -66,7 +80,7 @@ help:
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
-	@echo "clean-train      remove what generate-brill, generate-percept and their tests wrote"
+	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
 	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
@@ -85,6 +99,12 @@ help:
 	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
 	@echo "generate-brill   train the Brill tagger on the treebank's train set and tag both dev sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
+	@echo "generate-brill-deslag"
+	@echo "                 train the Brill tagger on the treebank's train set from deslag's own readings and tag"
+	@echo "                 both dev sets into .train; fetches the treebank first; a minute, so not in ci"
+	@echo "generate-brill-percept"
+	@echo "                 the same from the perceptron's tags, cross-fitted over five folds by document; a few"
+	@echo "                 minutes, so not in ci"
 	@echo "generate-percept train the perceptron on the treebank's train set and tag both dev sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
@@ -128,6 +148,17 @@ test-blobs: preflight fetch-blobs
 test-brill: generate-brill
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill
 
+# The same for the Brill tagger that starts from deslag's readings and the one that starts from the
+# perceptron: the unit tests, then the exam's full report on both dev sets, `compare` against deslag,
+# the perceptron and the first Brill tagger as far as their runs exist, and for deslag's dev set the
+# gates of tests/gold/gates.toml and the must-pass list, whose misses are printed and do not stop
+# the target. Not part of test: it needs the treebank and minutes.
+test-brill-deslag: generate-brill-deslag
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill-deslag
+
+test-brill-percept: generate-brill-percept
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill-percept
+
 # The treebank's dev set against the counts tests/gold/gates.toml pins for deslag's tagger. Any
 # drop fails. Not part of test or ci: it needs the network to fetch the treebank.
 test-ewt: preflight fetch-ewt
@@ -157,6 +188,17 @@ test-scripts: preflight
 # of test: it needs the network, a few GB and minutes.
 test-spacy: generate-spacy
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- score --gold $(EWT_DEV) --import .spacy/ewt-dev.import.conllu --save .spacy/ewt-dev.run.json
+
+# The tic list read by each Brill tagger: the token skeleton of the English fixtures, with deslag's
+# readings of it for the tagger that starts from them, goes through the tagger generate-brill-deslag
+# or generate-brill-percept trained, and `deslag-exam ticlist score` reads the import it writes,
+# beside the saved run and report in .train. Not part of test or ci: it needs the treebank and
+# minutes.
+test-ticlist-brill-deslag: generate-brill-deslag
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh ticlist-brill-deslag
+
+test-ticlist-brill-percept: generate-brill-percept
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh ticlist-brill-percept
 
 # The tic list, tests/gold/ticlist.tsv, read by the perceptron: the token skeleton of the English
 # fixtures goes through the perceptron generate-percept trained, and `deslag-exam ticlist score` reads
@@ -216,7 +258,7 @@ clean-harper:
 clean-spacy:
 	rm -rf .spacy
 
-# .train is what generate-percept, generate-brill and their tests write: the baselines, the weights,
+# .train is what the generate-* targets for the learners and their tests write: the baselines, the weights,
 # the rules, the import files and the saved runs. All of it derives from the treebank and none of it is committed.
 clean-train:
 	rm -rf .train
@@ -295,6 +337,23 @@ fetch-spacy:
 # .train/brill.model.json and the rules .train/brill.rules.txt. Nothing in ci reads or runs it.
 generate-brill: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-brill
+
+# The baselines, then deslag's own readings of the treebank's train set and both dev sets, from
+# `deslag-exam readings`, and the Brill tagger trained on them: deslag's `Sure` words frozen, a rule
+# picking only among the tags deslag keeps, its rules cut and its confidence counted on the
+# treebank's dev set. It tags both dev sets into .train/*.brilldeslag.import.conllu; the model is
+# .train/brilldeslag.model.json, its rules .train/brilldeslag.rules.txt and what its confidence
+# rests on .train/brilldeslag.evidence.tsv. Nothing in ci reads or runs it.
+generate-brill-deslag: preflight fetch-ewt
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-brill-deslag
+
+# The perceptron generate-percept trains, then the Brill tagger that starts from its tags: each
+# training sentence is tagged by a perceptron trained on the other four of five folds, split by
+# document, and the rules are cut and the confidence counted on the treebank's dev set. The files
+# are .train/*.brillpercept.*. A diagnostic only, since the perceptron ships weights. Nothing in ci
+# reads or runs it.
+generate-brill-percept: preflight fetch-ewt
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-brill-percept
 
 # The baselines (deslag's tagger and the most-common tag, saved as runs), then the perceptron trained
 # on the treebank's train set, its confidence tuned on the treebank's dev set, tagging deslag's own

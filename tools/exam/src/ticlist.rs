@@ -30,7 +30,7 @@ use crate::error::Error;
 use crate::gold::kind_name;
 use crate::import::Imported;
 use crate::report::interval;
-use crate::skeleton::{HEADER, context_of, origin_misc};
+use crate::skeleton::{self, Filled, HEADER, context_of, origin_misc};
 use crate::stats::{Bootstrap, ratio};
 use crate::tagger::{BUILT_IN, Context};
 use crate::tags::{Confidence, Tag, TagSet};
@@ -270,8 +270,17 @@ fn form(token: &Token<'_>) -> String {
 /// never sliced from the source, `SpaceAfter=No` is decided from the source bytes between tokens,
 /// and `Start=<byte>` in each token's `MISC` is where the token starts. A token that holds a
 /// newline or a tab cannot be a CoNLL-U FORM, and is an error; one with no text is written `_`.
-pub fn corpus_skeleton(entries: &[Entry]) -> Result<(String, usize), Error> {
-    let mut out = String::from(HEADER);
+///
+/// With `tagged`, every `Word` line carries the reading deslag's tagger gave it as the document
+/// was read, as `deslag-exam readings` writes it; there is no gold, so no `Gold=`.
+pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize), Error> {
+    // A tagged skeleton is a readings file, and says which tag VERSION read it.
+    let mut out = if tagged {
+        crate::readings::header()
+    } else {
+        String::new()
+    };
+    out.push_str(HEADER);
     let mut count = 0;
     for entry in entries {
         let document = Document::markdown(&entry.text);
@@ -293,10 +302,8 @@ pub fn corpus_skeleton(entries: &[Entry]) -> Result<(String, usize), Error> {
                 if space {
                     text.push(' ');
                 }
-                let _ = writeln!(
-                    lines,
-                    "{}\t{form}\t_\t_\t_\t_\t_\t_\t_\tKind={}{}|Start={}{}",
-                    index + 1,
+                let misc = format!(
+                    "Kind={}{}|Start={}{}",
                     kind_name(token.kind),
                     origin_misc(token, token.origin),
                     token.range.start,
@@ -306,6 +313,12 @@ pub fn corpus_skeleton(entries: &[Entry]) -> Result<(String, usize), Error> {
                         ""
                     }
                 );
+                let filled = token
+                    .reading
+                    .as_ref()
+                    .filter(|_| tagged)
+                    .map(|reading| Filled::new(reading, None));
+                lines.push_str(&skeleton::line(index + 1, &form, &misc, filled.as_ref()));
             }
             let _ = writeln!(out, "# sent_id = {}", sent_id(entry, start));
             let _ = writeln!(out, "# exam.context = {}", context.name());

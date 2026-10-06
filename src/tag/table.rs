@@ -202,16 +202,26 @@ impl Table {
 /// overlap in a word of fewer than eight, so that the key and the length say the word whole.
 pub(super) fn short_key(bytes: &[u8]) -> u64 {
     let len = bytes.len();
-    if len == 0 {
-        return 0;
+    // Two loads of four bytes, which overlap in a word of fewer than eight.
+    if len >= 4 {
+        let first = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
+        let end = u32::from_le_bytes([
+            bytes[len - 4],
+            bytes[len - 3],
+            bytes[len - 2],
+            bytes[len - 1],
+        ]);
+        return u64::from(first) | u64::from(end) << 32;
     }
-    // No branch on the length, which a text makes unpredictable: a short word repeats its bytes
-    // where it has too few, so the key still says the word whole.
-    let last = len - 1;
-    let byte = |at: usize| u64::from(bytes[at.min(last)]);
-    let first = byte(0) | byte(1) << 8 | byte(2) << 16 | byte(3) << 24;
-    let end = |back: usize| byte((len + back).saturating_sub(4));
-    first | (end(0) | end(1) << 8 | end(2) << 16 | end(3) << 24) << 32
+    // A shorter word repeats its bytes where it has too few, so the key still says the word whole.
+    let (first, end) = match *bytes {
+        [] => return 0,
+        [a] => ([a, a, a, a], [a, a, a, a]),
+        [a, b] => ([a, b, b, b], [a, a, a, b]),
+        [a, b, c] => ([a, b, c, c], [a, a, b, c]),
+        _ => unreachable!(),
+    };
+    u64::from(u32::from_le_bytes(first)) | u64::from(u32::from_le_bytes(end)) << 32
 }
 
 /// The byte at `at` of `bytes`, or its last if there is none, as [`short_key`] takes it.
@@ -343,7 +353,7 @@ fn find(text: &str) -> Option<Entry> {
 /// For a word of `len` bytes up to [`SHORT`], the bit `0x20` of each byte of its [`short_key`] that
 /// holds the word's first byte, where a capital is allowed: the first byte, and the bytes of a short
 /// word that repeat it.
-const FIRST: [u64; SHORT + 1] = {
+static FIRST: [u64; SHORT + 1] = {
     let mut first = [0; SHORT + 1];
     let mut len = 1;
     while len <= SHORT {

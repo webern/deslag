@@ -13,6 +13,7 @@ import conllu
 import curve
 import learner
 import perceptron
+import start as starts
 import tbl
 from conllu import Sentence
 
@@ -259,7 +260,7 @@ class BrillTests(unittest.TestCase):
         self.assertFalse(test([0, 0, 0], tags, 0, 0, 3))
         self.assertFalse(test([0, 0, 0], tags, 1, 1, 3))
 
-    def test_the_incremental_index_equals_a_recount_from_scratch_after_every_rule(self):
+    def check_the_incremental_index(self, restricted):
         rng = random.Random(7)
         tags = ("DET", "NOUN", "VERB", "ADJ")
         words = ("a", "b", "c", "d", "e")
@@ -267,20 +268,38 @@ class BrillTests(unittest.TestCase):
                              for _ in range(rng.randint(2, 7))]) for n in range(60)]
         vocab = sorted({w for s in data for w in s.forms})
         ids = {w: i for i, w in enumerate(vocab)}
-        start = [["NOUN"] * len(s.forms) for s in data]
-        corpus = tbl.Corpus([([ids[w] for w in s.forms], [brill.INDEX[t] for t in t0])
-                             for s, t0 in zip(data, start)], brill.NTAGS)
         gold = [brill.INDEX[t] for s in data for t in s.tags]
+        masks = None
+        if restricted:
+            # Every token may become its start tag and up to two others, a fifth are frozen, and a
+            # fifth have no gold tag.
+            masks = []
+            for g in range(len(gold)):
+                mask = 1 << brill.INDEX["NOUN"]
+                for t in rng.sample(tags, rng.randint(0, 2)):
+                    mask |= 1 << brill.INDEX[t]
+                masks.append(0 if rng.random() < 0.2 else mask)
+                if rng.random() < 0.2:
+                    gold[g] = tbl.NO_GOLD
+        sentences, at = [], 0
+        for s in data:
+            n = len(s.forms)
+            sentences.append(([ids[w] for w in s.forms], [brill.INDEX["NOUN"]] * n,
+                              None if masks is None else masks[at:at + n]))
+            at += n
+        corpus = tbl.Corpus(sentences, brill.NTAGS)
         trainer = tbl.Trainer(corpus, gold, len(vocab), brill.NTAGS)
         checked = []
 
         def recount(number, step):
             fresh_corpus = tbl.Corpus([([0], [0])], brill.NTAGS)
             fresh_corpus.words, fresh_corpus.tags = list(corpus.words), list(corpus.tags)
+            fresh_corpus.allowed = corpus.allowed
             fresh_corpus.lo, fresh_corpus.hi = corpus.lo, corpus.hi
             fresh = tbl.Trainer(fresh_corpus, gold, len(vocab), brill.NTAGS)
             self.assertEqual(trainer.fixed, fresh.fixed)
             self.assertEqual(trainer.right, fresh.right)
+            self.assertEqual(trainer.right_all, fresh.right_all)
             checked.append(number)
 
         steps = trainer.learn(12, 1, recount)
@@ -293,11 +312,25 @@ class BrillTests(unittest.TestCase):
             test = tbl.matcher(rule)
             fixed = broken = 0
             for g in range(len(corpus.tags)):
-                if corpus.tags[g] == rule.orig and test(corpus.words, corpus.tags, g,
-                                                       corpus.lo[g], corpus.hi[g]):
+                if (corpus.tags[g] == rule.orig and gold[g] != tbl.NO_GOLD
+                        and corpus.allowed[g] >> rule.repl & 1
+                        and test(corpus.words, corpus.tags, g, corpus.lo[g], corpus.hi[g])):
                     fixed += gold[g] == rule.repl
                     broken += gold[g] == rule.orig
-            self.assertEqual(count - trainer.right.get(key // brill.NTAGS, 0), fixed - broken)
+            score = (count - trainer.right_all.get(key // brill.NTAGS, 0)
+                     - trainer.right.get(key, 0))
+            self.assertEqual(score, fixed - broken)
+        return corpus, masks
+
+    def test_the_incremental_index_equals_a_recount_from_scratch_after_every_rule(self):
+        self.check_the_incremental_index(False)
+
+    def test_the_index_holds_with_frozen_limited_and_gold_less_tokens(self):
+        corpus, masks = self.check_the_incremental_index(True)
+        # No rule changed a frozen token, or gave one a tag it does not allow.
+        for g, mask in enumerate(masks):
+            self.assertTrue(mask >> corpus.tags[g] & 1 or mask == 0 and
+                            corpus.tags[g] == brill.INDEX["NOUN"])
 
     def test_confidence_and_kept_follow_the_training_tags_and_the_rules(self):
         data = run_example() + [sentence(30, [("hello", "INTJ")]),
@@ -326,8 +359,8 @@ class BrillTests(unittest.TestCase):
         model.rules.append(tbl.Rule(14, ("to",), brill.INDEX["PART"], brill.INDEX["ADP"]))
         model.kept = len(model.rules)
         stats = {"rules": [0, 0], "outside": [0, 0], "unknown": [0, 0]}
-        brill.tag_sentence(model, skeleton_of(["to", "run"]), stats)
-        brill.tag_sentence(model, skeleton_of(["the", "run"]), stats)
+        brill.tag_sentence(model, skeleton_of(["to", "run"]), stats=stats)
+        brill.tag_sentence(model, skeleton_of(["the", "run"]), stats=stats)
         self.assertEqual(stats, {"rules": [1, 1], "outside": [0, 1], "unknown": [0, 0]})
 
     def test_the_model_is_the_same_in_any_order_and_survives_a_save(self):
@@ -381,6 +414,369 @@ class BrillTests(unittest.TestCase):
         self.assertIn("\tDET\t", text)
         self.assertIn("Conf=Sure", text)
         self.assertNotIn("Score=", text)
+
+
+def reading(sent_id, tokens):
+    """A readings sentence from (form, kind, start code, conf, kept codes, gold code) tuples."""
+    forms = [t[0] for t in tokens]
+    out = Sentence(sent_id, forms, [t[2] for t in tokens], [t[1] for t in tokens],
+                   [True] * len(forms), " ".join(forms))
+    out.conf = [t[3] for t in tokens]
+    out.kept = [t[4] for t in tokens]
+    out.gold = [t[5] for t in tokens]
+    return out
+
+
+def sure(form, tag):
+    return (form, "Word", tag, "Sure", [tag], tag)
+
+
+def open_word(form, start, kept, gold, conf="Unsure"):
+    return (form, "Word", start, conf, kept, gold)
+
+
+READINGS = (
+    "# sent_id = r1\n# text = to run, now\n"
+    "1\tto\t_\tPART\t_\t_\t_\t_\t_\tKind=Word|Conf=Sure|Kept=PART|Gold=ADP\n"
+    "2\trun\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Conf=Unsure|Kept=NOUN,VERB|Gold=VERB\n"
+    "3\t,\t_\t_\t_\t_\t_\t_\t_\tKind=Punctuation|SpaceAfter=No\n"
+    "4\tand\t_\tCCONJ\t_\t_\t_\t_\t_\tKind=Word|Conf=Likely|Kept=CONJ,ADV\n\n"
+)
+
+
+def verb_data():
+    """`run` after `to` is a verb (frozen `to`), and `run` after `the` is a noun; `run` keeps both."""
+    one = [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"], "VERB")]
+    two = [sure("the", "DET"), open_word("run", "NOUN", ["NOUN", "VERB"], "NOUN")]
+    return [reading(f"a{n}", one) for n in range(4)] + [reading(f"b{n}", two) for n in range(4)]
+
+
+VERSION_LINE = "# deslag_tag_version = 10\n"
+
+
+def deslag_model(data=None):
+    model = brill.train(data or verb_data(), 1, cap=5, start=starts.DeslagStart())
+    model.meta["deslag_version"] = 10
+    return model
+
+
+class StartTests(unittest.TestCase):
+    def test_a_readings_file_reads_into_codes_confidence_kept_and_gold(self):
+        with tempfile.TemporaryDirectory() as d:
+            (one,) = conllu.read_readings(write(d, "r.conllu", READINGS))
+        self.assertEqual(one.tags, ["PART", "NOUN", None, "CONJ"])
+        self.assertEqual(one.conf, ["Sure", "Unsure", None, "Likely"])
+        self.assertEqual(one.kept, [["PART"], ["NOUN", "VERB"], None, ["CONJ", "ADV"]])
+        self.assertEqual(one.gold, ["ADP", "VERB", None, None])
+
+    def test_a_deslag_start_freezes_sure_words_and_limits_the_rest_to_what_deslag_keeps(self):
+        index = {t: i for i, t in enumerate(conllu.CODE_TAGS)}
+        with tempfile.TemporaryDirectory() as d:
+            (one,) = conllu.read_readings(write(d, "r.conllu", READINGS))
+        begin = starts.DeslagStart().begin(one, one)
+        self.assertEqual(begin.allowed[0], 0)
+        self.assertEqual(begin.allowed[1], 1 << index["NOUN"] | 1 << index["VERB"])
+        self.assertEqual(begin.allowed[2], 0)
+        self.assertEqual(begin.allowed[3], 1 << index["CONJ"] | 1 << index["ADV"])
+        # A token that is no word stands as its kind's tag, for the words around it.
+        self.assertEqual(begin.tags[2], index["PUNCT"])
+        self.assertEqual(begin.level, ["Sure", "Unsure", None, "Likely"])
+        other = skeleton_of(["to", "walk", ",", "and"], ["Word", "Word", "Punctuation", "Word"])
+        with self.assertRaises(conllu.Failure):
+            starts.DeslagStart().begin(other, one)
+        with self.assertRaises(conllu.Failure):
+            starts.DeslagStart().begin(one)
+
+    def test_a_deslag_start_keeps_the_origin_and_cells_apart_by_it(self):
+        text = READINGS.replace("Kind=Word|Conf=Likely|Kept=CONJ,ADV", "Kind=Word|Origin=Command|Conf=Likely|Kept=CONJ,ADV")
+        with tempfile.TemporaryDirectory() as d:
+            (one,) = conllu.read_readings(write(d, "r.conllu", text))
+        self.assertEqual(one.origin, ["English", "English", None, "Command"])
+        begin = starts.DeslagStart().begin(one, one)
+        model = brill.train(toy(), 1, cap=2)
+        model.start = starts.DeslagStart()
+        self.assertEqual(brill.cell_key(model, begin, 1), "Unsure/NOUN")
+        self.assertEqual(brill.cell_key(model, begin, 3), "Command/Likely/CCONJ")
+
+    def test_a_rule_never_changes_a_frozen_word_or_gives_a_tag_deslag_does_not_keep(self):
+        # `to` is wrong (gold ADP) but frozen: the tag PART stays. `run` may only be NOUN or VERB.
+        data = verb_data() + [reading(f"c{n}", [open_word("fun", "NOUN", ["NOUN"], "ADJ")])
+                              for n in range(6)]
+        model = deslag_model(data)
+        self.assertEqual([brill.format_rule(r, model.tags) for r in model.rules],
+                         ['NOUN -> VERB if word@0="run" & word@-1="to"'])
+        for sentence_ in data:
+            tagged = brill.tag(model, skeleton_of(sentence_.forms), sentence_)
+            for tag_, kept, frozen in zip(tagged, sentence_.kept, sentence_.conf):
+                if frozen == "Sure":
+                    self.assertEqual((tag_.upos, tag_.conf), (kept[0], "Sure"))
+                else:
+                    self.assertIn(tag_.upos, kept)
+
+    def test_a_token_with_no_gold_is_context_for_a_rule_and_never_counted(self):
+        # The same rule is learned from the same words, with `run` after `to` left without a gold
+        # in two of the four sentences: the gain counts two tokens, and those two still fire.
+        data = verb_data()
+        for sentence_ in data[:2]:
+            sentence_.gold[1] = None
+        model = deslag_model(data)
+        (rule,) = model.rules
+        self.assertEqual(brill.format_rule(rule, model.tags),
+                         'NOUN -> VERB if word@0="run" & word@-1="to"')
+        self.assertEqual((model.log[0]["gain"], model.log[0]["fired"]), (2, 4))
+        self.assertEqual(model.meta["no_gold"], 2)
+        self.assertEqual(model.meta["fixed_tokens"], 8)  # the `to` and the `the` of every sentence
+
+    def test_a_rule_breaks_only_the_right_tokens_that_allow_its_new_tag(self):
+        noun, adj, verb = (brill.INDEX[t] for t in ("NOUN", "ADJ", "VERB"))
+        # Three tokens of the one word, all NOUN; gold ADJ, NOUN, NOUN. The second may only be
+        # NOUN or VERB, so NOUN -> ADJ cannot break it.
+        corpus = tbl.Corpus([([0, 0, 0], [noun] * 3, [1 << noun | 1 << adj, 1 << noun | 1 << verb,
+                                                      1 << noun | 1 << adj])], brill.NTAGS)
+        trainer = tbl.Trainer(corpus, [adj, noun, noun], 1, brill.NTAGS)
+        key = next(k for k in trainer.fixed if trainer.decode(k).template == 14)
+        rule = trainer.decode(key)
+        self.assertEqual((rule.orig, rule.repl), (noun, adj))
+        broken = trainer.right_all.get(key // brill.NTAGS, 0) + trainer.right.get(key, 0)
+        self.assertEqual((trainer.fixed[key], broken), (1, 1))
+
+    def test_tokens_that_may_become_any_tag_are_counted_once_per_condition(self):
+        noun, adj = brill.INDEX["NOUN"], brill.INDEX["ADJ"]
+        corpus = tbl.Corpus([([0, 0], [noun, noun])], brill.NTAGS)
+        trainer = tbl.Trainer(corpus, [adj, noun], 1, brill.NTAGS)
+        self.assertEqual(trainer.right, {})
+        self.assertTrue(trainer.right_all)
+        self.assertEqual(set(trainer.right_all.values()), {1})
+
+    def test_apply_sentence_obeys_the_masks(self):
+        noun, verb, adj = (brill.INDEX[t] for t in ("NOUN", "VERB", "ADJ"))
+        rule = tbl.Rule(14, (0,), noun, verb)
+        compiled = brill.compile_rules([rule], {0: 0})
+        tags = [noun, noun, noun]
+        tbl.apply_sentence(compiled, [0, 0, 0], tags, None,
+                           [1 << noun | 1 << verb, 0, 1 << noun | 1 << adj])
+        self.assertEqual(tags, [verb, noun, noun])
+
+    def test_a_rate_is_judged_at_the_likely_floor_on_integers(self):
+        self.assertTrue(brill.rated([100, 97], brill.LIKELY_PER_MILLE))
+        self.assertFalse(brill.rated([100, 96], brill.LIKELY_PER_MILLE))
+        self.assertFalse(brill.rated([0, 0], brill.LIKELY_PER_MILLE))
+        self.assertFalse(brill.rated(None, brill.LIKELY_PER_MILLE))
+        self.assertTrue(brill.rated([200, 199], brill.SURE_PER_MILLE))
+        self.assertFalse(brill.rated([201, 199], brill.SURE_PER_MILLE))
+        self.assertEqual((brill.SURE_PER_MILLE, brill.LIKELY_PER_MILLE), (995, 970))
+
+    def test_sure_needs_a_wilson_lower_bound_of_97_percent_as_well_as_the_rate(self):
+        # At a perfect record the bound is n / (n + z^2): 125 tokens reach 0.97, 124 do not.
+        self.assertTrue(brill.surely([125, 125]))
+        self.assertFalse(brill.surely([124, 124]))
+        # Short runs of right answers are not enough, however clean.
+        self.assertFalse(brill.surely([37, 37]))
+        self.assertFalse(brill.surely([10, 10]))
+        # A rate of 99.5% needs the tokens for the bound: 100 are not enough, 200 are.
+        self.assertFalse(brill.surely([100, 100]))
+        self.assertTrue(brill.surely([200, 199]))
+        # The bound alone is not enough: 98% of 5000 has a bound over 0.97 and a rate under 99.5%.
+        self.assertGreaterEqual(brill.wilson([5000, 4900])[0], 0.97)
+        self.assertFalse(brill.surely([5000, 4900]))
+        self.assertFalse(brill.surely([0, 0]))
+        self.assertFalse(brill.surely(None))
+        low, high = brill.wilson([100, 90])
+        self.assertAlmostEqual(low, 0.8256, places=3)
+        self.assertAlmostEqual(high, 0.9448, places=3)
+        self.assertEqual(brill.wilson([0, 0]), (0.0, 1.0))
+
+    def tagged_with(self, model, forms, kinds_, readings):
+        return brill.tag(model, skeleton_of(forms, kinds_), readings)
+
+    def test_confidence_comes_from_the_evidence_and_sure_cuts_kept_to_one_tag(self):
+        model = deslag_model()
+        self.assertTrue(model.by_evidence)
+        model.evidence = {
+            "rules": {"0": [200, 200]},  # a Wilson lower bound of 0.981
+            "cells": {"Unsure/NOUN": [100, 97], "Likely/ADV": [100, 96],
+                      "Unknown/NOUN": [200, 200], "Unsure/VERB": [100, 100]},
+            "edges": [],
+        }
+        words = [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"], None),
+                 open_word("the", "NOUN", ["NOUN", "ADJ"], None),
+                 open_word("so", "ADV", ["ADV", "ADJ"], None, "Likely"),
+                 open_word("zzz", "NOUN", ["NOUN", "PROPN"], None, "Unknown"),
+                 open_word("eat", "VERB", ["VERB", "NOUN"], None)]
+        got = self.tagged_with(model, [w[0] for w in words], None, reading("x", words))
+        by = [(t.upos, t.conf, t.kept) for t in got]
+        # `to` is deslag's Sure; `run` after `to` is changed by rule 1, which is right 200/200;
+        # `the` is left alone and its cell is at 97 of 100, Likely, keeping both; `so`, a deslag
+        # Likely, stays Likely though its cell is under the floor, never below its start's level;
+        # `zzz`, Unknown, is Sure with a cell of 200 right of 200 and stays Unknown under it;
+        # `eat` is left alone and its cell is 100 of 100, at the Sure floor but with a Wilson lower
+        # bound under 0.97, so it is Likely, not Sure.
+        self.assertEqual(by[0], ("PART", "Sure", ["PART"]))
+        self.assertEqual(by[1], ("VERB", "Sure", ["VERB"]))
+        self.assertEqual(by[2], ("NOUN", "Likely", ["NOUN", "ADJ"]))
+        self.assertEqual(by[3], ("ADV", "Likely", ["ADV", "ADJ"]))
+        self.assertEqual(by[4], ("NOUN", "Sure", ["NOUN"]))
+        self.assertEqual(by[5], ("VERB", "Likely", ["VERB", "NOUN"]))
+        model.evidence["cells"]["Unknown/NOUN"] = [10, 9]
+        self.assertEqual(self.tagged_with(model, [w[0] for w in words], None,
+                                          reading("x", words))[4].conf, "Unknown")
+        for t in got:
+            self.assertIsNone(t.score)
+
+    def test_tuning_counts_the_evidence_for_the_rules_kept_and_for_each_cell(self):
+        model = deslag_model()
+        dev = [reading(f"d{n}", [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"],
+                                                               "VERB")]) for n in range(3)]
+        dev += [reading("e", [sure("the", "DET"), open_word("run", "NOUN", ["NOUN", "VERB"], "VERB")]),
+                reading("f", [sure("the", "DET"), open_word("walk", "VERB", ["VERB", "NOUN"],
+                                                            "VERB")])]
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "dev.readings.conllu")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(VERSION_LINE)
+                for s in dev:
+                    f.write(f"# sent_id = {s.sent_id}\n")
+                    for n, (form, kind, tag_, conf, kept, gold) in enumerate(zip(
+                            s.forms, s.kinds, s.tags, s.conf, s.kept, s.gold), 1):
+                        upos = {"CONJ": "CCONJ"}.get(tag_, tag_)
+                        misc = f"Kind={kind}|Conf={conf}|Kept={','.join(kept)}"
+                        misc += f"|Gold={gold}" if gold else ""
+                        f.write(f"{n}\t{form}\t_\t{upos}\t_\t_\t_\t_\t_\t{misc}\n")
+                    f.write("\n")
+            brill.tune(model, None, None, path)
+        # Ten scored tokens: the five frozen are right, `walk` is right, the four `run` are not.
+        self.assertEqual(model.devlog[0], 6 / 10)
+        self.assertEqual(model.kept, 1)
+        # The rule changes the three after `to`, right; only open words are counted.
+        self.assertEqual(model.evidence["rules"], {"0": [3, 3]})
+        self.assertEqual(model.evidence["cells"], {"Unsure/NOUN": [1, 0], "Unsure/VERB": [1, 1]})
+
+    def test_a_deslag_model_survives_a_save_and_is_found_by_its_start(self):
+        model = deslag_model()
+        model.evidence = {"rules": {"0": [10, 10]}, "cells": {"Unsure/NOUN": [3, 3]}, "edges": []}
+        probe = reading("p", [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"], None)])
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "m.json")
+            brill.save(model, path)
+            loaded = brill.load(path)
+        self.assertEqual(loaded.start.kind, "deslag")
+        self.assertEqual(loaded.evidence, model.evidence)
+        self.assertEqual(self.tagged_with(model, probe.forms, None, probe),
+                         self.tagged_with(loaded, probe.forms, None, probe))
+
+    def test_the_tag_file_driver_passes_a_deslag_start_its_readings(self):
+        model = deslag_model()
+        with tempfile.TemporaryDirectory() as d:
+            tokens = write(d, "t.conllu",
+                           "# sent_id = x\n# text = to run\n"
+                           "1\tto\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n"
+                           "2\trun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+            readings = write(d, "r.conllu",
+                             VERSION_LINE + "# sent_id = x\n# text = to run\n"
+                             "1\tto\t_\tPART\t_\t_\t_\t_\t_\tKind=Word|Conf=Sure|Kept=PART\n"
+                             "2\trun\t_\tNOUN\t_\t_\t_\t_\t_\t"
+                             "Kind=Word|Conf=Unsure|Kept=NOUN,VERB\n\n")
+            out = os.path.join(d, "i.conllu")
+            learner.tag_file(brill, model, tokens, out, readings)
+            text = open(out, encoding="utf-8").read()
+        self.assertIn("\trun\t_\tVERB\t", text)
+        self.assertIn("Conf=Unsure|Kept=VERB,NOUN", text)  # no evidence was counted
+
+    def test_a_version_mismatch_between_readings_and_model_is_refused(self):
+        model = deslag_model()
+        model.meta["deslag_version"] = 11
+        with tempfile.TemporaryDirectory() as d:
+            tokens = write(d, "t.conllu",
+                           "# sent_id = x\n# text = to run\n"
+                           "1\tto\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n"
+                           "2\trun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+            body = ("# sent_id = x\n# text = to run\n"
+                    "1\tto\t_\tPART\t_\t_\t_\t_\t_\tKind=Word|Conf=Sure|Kept=PART\n"
+                    "2\trun\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Conf=Unsure|Kept=NOUN,VERB\n\n")
+            old = write(d, "old.conllu", VERSION_LINE + body)
+            bare = write(d, "bare.conllu", body)
+            self.assertEqual(conllu.readings_version(old), 10)
+            for path in (old, bare):
+                with self.assertRaises(conllu.Failure):
+                    learner.tag_file(brill, model, tokens, os.path.join(d, "o.conllu"), path)
+            with self.assertRaisesRegex(conllu.Failure, "VERSION 10.*VERSION 11"):
+                brill.check_version(model, old)
+            with self.assertRaises(conllu.Failure):
+                brill.tune(model, None, None, old)
+            model.meta["deslag_version"] = 10
+            brill.check_version(model, old)  # the same version passes
+            learner.tag_file(brill, model, tokens, os.path.join(d, "o.conllu"), old)
+            # A model with another start has no version to keep.
+            brill.check_version(brill.train(toy(), 1, cap=2), old)
+
+    def test_the_trainer_records_the_version_the_readings_are_of(self):
+        with tempfile.TemporaryDirectory() as d:
+            for version, count in ((10, 1), (11, 1)):
+                write(d, f"r{version}.conllu",
+                      f"# deslag_tag_version = {version}\n" + READINGS)
+            out = os.path.join(d, "m.json")
+            files = [os.path.join(d, "r10.conllu")]
+            self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *files,
+                                         "--out", out, "--cap", "2"]), 0)
+            self.assertEqual(brill.load(out).meta["deslag_version"], 10)
+            mixed = files + [os.path.join(d, "r11.conllu")]
+            self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *mixed,
+                                         "--out", out, "--cap", "2"]), 2)
+
+    def test_the_perceptron_start_learns_from_perceptrons_that_never_saw_the_document(self):
+        seen = []
+        real = perceptron.fit
+
+        def spy(sentences, seed, passes=3, on_pass=None, files=()):
+            seen.append({starts.document_of(s.sent_id) for s in sentences})
+            return real(sentences, seed, 1)
+
+        sentences = [Sentence(f"doc{n // 4}-{n % 4:04d}", ["the", "dog"], ["DET", "NOUN"])
+                     for n in range(40)]
+        perceptron.fit = spy
+        try:
+            begins = starts.PerceptronStart(None, "", 1).fit(sentences)
+        finally:
+            perceptron.fit = real
+        self.assertEqual(len(seen), starts.PERCEPTRON_FOLDS)
+        held = [{f"doc{n}" for n in range(10)} - docs for docs in seen]
+        self.assertTrue(all(len(h) == 2 for h in held), held)
+        self.assertEqual(set().union(*held), {f"doc{n}" for n in range(10)})
+        self.assertEqual(sum(len(h) for h in held), 10)
+        self.assertEqual(len(begins), 40)
+
+    def test_a_perceptron_start_model_reads_its_weights_back_and_buckets_by_margin(self):
+        weights = perceptron.train(toy(), 1, passes=3)
+        sentences = [Sentence(f"d{n}", ["the", "dog", "runs"], ["DET", "NOUN", "VERB"])
+                     for n in range(5)]
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "w.json")
+            perceptron.save(weights, path)
+            start = starts.PerceptronStart(perceptron.load(path), path, 1, 2)
+            model = brill.train(sentences, 1, cap=3, start=start)
+            dev = reading("q", [open_word("the", "DET", ["DET"], "DET"),
+                                open_word("dog", "NOUN", ["NOUN"], "NOUN"),
+                                open_word("runs", "VERB", ["VERB"], "VERB"),
+                                open_word("zzz", "NOUN", ["NOUN"], "NOUN")])
+            devpath = os.path.join(d, "dev.conllu")
+            with open(devpath, "w", encoding="utf-8") as f:
+                f.write("# sent_id = q\n")
+                for n, (form, _k, tag_, conf, kept, gold) in enumerate(
+                        zip(dev.forms, dev.kinds, dev.tags, dev.conf, dev.kept, dev.gold), 1):
+                    f.write(f"{n}\t{form}\t_\t{tag_}\t_\t_\t_\t_\t_\t"
+                            f"Kind=Word|Conf={conf}|Kept={','.join(kept)}|Gold={gold}\n")
+                f.write("\n")
+            brill.tune(model, None, None, devpath)
+            saved = os.path.join(d, "m.json")
+            brill.save(model, saved)
+            loaded = brill.load(saved)
+        self.assertEqual(loaded.start.kind, "perceptron")
+        self.assertEqual(loaded.evidence, model.evidence)
+        probe = skeleton_of(["the", "dog", "zzz"])
+        self.assertEqual(brill.tag(model, probe), brill.tag(loaded, probe))
+        total = sum(n for n, _ in model.evidence["cells"].values())
+        self.assertEqual(total, 4)  # every scored word is left as it started: no rule was learned
+        self.assertTrue(all(k[0] in "ku" for k in model.evidence["cells"]))
 
 
 def ud_text(sentences):

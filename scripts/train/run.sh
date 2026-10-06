@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
-# Runs the averaged perceptron and the Brill tagger through the exam: the baselines, the training,
-# the import files, the reports and the learning curve, all under .train. Run by `make
-# generate-percept`, `make test-percept`, `make generate-brill`, `make test-brill` and `make
-# test-ticlist-percept`, and by hand for the curve; never by tests or CI. Needs the treebank, which
-# `make fetch-ewt` fetches.
+# Runs the averaged perceptron and the Brill taggers through the exam: the baselines, the training,
+# the import files, the reports and the learning curve, all under .train. Run by the `make
+# generate-*`, `make test-percept`, `make test-brill*` and `make test-ticlist-*` targets, and by
+# hand for the curve; never by tests or CI. Needs the treebank, which `make fetch-ewt` fetches.
 #
 #   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on both dev sets
 #   run.sh generate        baseline, then train, tune and tag both dev sets into import files
 #   run.sh test            the unit tests, then the exam's report and `compare` for both dev sets
 #   run.sh generate-brill  baseline, then the Brill tagger and its initial tagger alone, as above
 #   run.sh test-brill      the unit tests, then the reports and the `compare` runs of the Brill tagger
-#   run.sh ticlist         the perceptron's reading of the tic list (run `generate` first)
+#   run.sh generate-brill-deslag, generate-brill-percept
+#                          the same for the Brill tagger that starts from deslag's readings, and the
+#                          one that starts from the perceptron (which `generate` trains first)
+#   run.sh test-brill-deslag, test-brill-percept
+#                          the unit tests, then the reports, the dev gates and the `compare` runs
+#   run.sh ticlist        the perceptron's reading of the tic list (run `generate` first)
+#   run.sh ticlist-brill-deslag, ticlist-brill-percept
+#                          the same for each Brill tagger (run its `generate-brill-*` first)
 #   run.sh curve [NAME..]  the learning curve of each named learner (perceptron, brill; default
 #                          both); trains each four times and writes .train/curve.NAME.txt
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-cmd=${1:?usage: run.sh baseline|generate|test|generate-brill|test-brill|ticlist|curve [NAME..]}
+cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]}
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
@@ -71,6 +77,44 @@ generate_brill() {
   done
 }
 
+# The exam's readings of deslag's own tagger: the dev sets, and the treebank's train set, which a
+# learner that starts from deslag's tagger trains on. Each file has the gold the exam aligned.
+readings() {
+  exam readings --gold "$ewt/en_ewt-ud-train.conllu" --out .train/ewt-train.readings.conllu
+  for set in "${sets[@]}"; do
+    exam readings --gold "$(gold_of "$set")" --out ".train/$set.readings.conllu"
+  done
+}
+
+generate_brill_deslag() {
+  baseline
+  readings
+  python3 $brill train --start deslag --train .train/ewt-train.readings.conllu \
+    --out .train/brilldeslag.model.json --tune-readings .train/ewt-dev.readings.conllu \
+    --log .train/brilldeslag.log.tsv
+  python3 $brill rules --model .train/brilldeslag.model.json --out .train/brilldeslag.rules.txt \
+    --evidence .train/brilldeslag.evidence.tsv
+  for set in "${sets[@]}"; do
+    python3 $brill tag --model .train/brilldeslag.model.json --tokens ".train/$set.tokens.conllu" \
+      --readings ".train/$set.readings.conllu" --out ".train/$set.brilldeslag.import.conllu" \
+      --firings ".train/$set.brilldeslag.firings.txt"
+  done
+}
+
+generate_brill_percept() {
+  generate
+  readings
+  python3 $brill train --start perceptron --weights .train/percept.weights.json \
+    --train "$ewt/en_ewt-ud-train.conllu" --out .train/brillpercept.model.json \
+    --tune-readings .train/ewt-dev.readings.conllu --log .train/brillpercept.log.tsv
+  python3 $brill rules --model .train/brillpercept.model.json --out .train/brillpercept.rules.txt \
+    --evidence .train/brillpercept.evidence.tsv
+  for set in "${sets[@]}"; do
+    python3 $brill tag --model .train/brillpercept.model.json --tokens ".train/$set.tokens.conllu" \
+      --out ".train/$set.brillpercept.import.conllu" --firings ".train/$set.brillpercept.firings.txt"
+  done
+}
+
 # One `compare` from the saved run BEFORE to the saved run AFTER, kept in .train/SET.NAME.compare.txt.
 compare() {
   local set=$1 name=$2 before=$3 after=$4
@@ -100,8 +144,55 @@ test_brill() {
   done
 }
 
+# Scores NAME on both dev sets, then judges it against the dev gates, which exit 1 on a miss; a
+# miss is a finding, so it is printed and the run goes on. Then the `compare` runs against deslag,
+# the perceptron and #109's Brill tagger, as far as their runs exist.
+test_brill_start() {
+  local name=$1
+  python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
+  for set in "${sets[@]}"; do
+    echo "=== $set: $name"
+    exam score --gold "$(gold_of "$set")" --import ".train/$set.$name.import.conllu" \
+      --save ".train/$set.$name.run.json" | tee ".train/$set.$name.report.txt"
+    compare "$set" "$name" deslag "$name"
+    for other in percept brill; do
+      if [ -f ".train/$set.$other.run.json" ]; then
+        compare "$set" "$other-$name" "$other" "$name"
+      else
+        echo "=== $set: no $other run; make test-$other writes it"
+      fi
+    done
+  done
+  echo "=== deslag-dev: the dev gates and the must-pass list, on $name"
+  exam gate --gates tests/gold/gates.toml --import ".train/deslag-dev.$name.import.conllu" dev mustpass |
+    tee ".train/deslag-dev.$name.gates.txt" || echo "(a gate failed: a finding, not an error)"
+}
+
+# The tic list, read by NAME: the corpus's token skeleton, deslag's readings of it, and the import
+# the Brill tagger makes from them, scored by `ticlist score`.
+ticlist_brill() {
+  local name=$1 model=$2 readings_flag=$3
+  exam tokens --corpus --out .train/corpus.tokens.conllu
+  if [ -n "$readings_flag" ]; then
+    exam readings --corpus --out .train/corpus.readings.conllu
+    python3 $brill tag --model "$model" --tokens .train/corpus.tokens.conllu \
+      --readings .train/corpus.readings.conllu --out ".train/corpus.$name.import.conllu"
+  else
+    python3 $brill tag --model "$model" --tokens .train/corpus.tokens.conllu \
+      --out ".train/corpus.$name.import.conllu"
+  fi
+  exam ticlist score --list tests/gold/ticlist.tsv --import ".train/corpus.$name.import.conllu" \
+    --save ".train/ticlist.$name.run.json" | tee ".train/ticlist.$name.report.txt"
+}
+
 case "$cmd" in
   baseline) baseline ;;
+  generate-brill-deslag) generate_brill_deslag ;;
+  generate-brill-percept) generate_brill_percept ;;
+  test-brill-deslag) test_brill_start brilldeslag ;;
+  test-brill-percept) test_brill_start brillpercept ;;
+  ticlist-brill-deslag) ticlist_brill brilldeslag .train/brilldeslag.model.json yes ;;
+  ticlist-brill-percept) ticlist_brill brillpercept .train/brillpercept.model.json "" ;;
   generate) generate ;;
   generate-brill) generate_brill ;;
   test-brill) test_brill ;;
@@ -136,5 +227,5 @@ case "$cmd" in
       mv .train/curve.txt ".train/curve.$name.txt"
     done
     ;;
-  *) echo "usage: run.sh baseline|generate|test|generate-brill|test-brill|ticlist|curve [NAME..]" >&2; exit 2 ;;
+  *) echo "usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]" >&2; exit 2 ;;
 esac

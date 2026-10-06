@@ -6,8 +6,17 @@
 //! after the first whitespace is a note, blank lines and lines starting with `#` are skipped. The
 //! sha256 of the file itself goes in the manifest header, so a reader can tell which list a draw
 //! was made with.
+//!
+//! [`Repos`] is the same cut by repository: every file of a repository a manifest or an owner file
+//! names is left out. A repository that gave dev or holdout a sentence gives the owner none, and a
+//! repository the owner reviewed gives later draws and silver none, so a draw passes the list of
+//! files that name them.
 
-use deslag_exam::error::Error;
+use std::collections::BTreeSet;
+use std::path::PathBuf;
+
+use deslag_exam::conllu;
+use deslag_exam::error::{Error, Place};
 use sha2::{Digest, Sha256};
 
 use crate::problems::Problems;
@@ -76,6 +85,18 @@ impl Exclusion {
     }
 
     /// `files` without the listed ones, and how many were removed. An entry that names no file
+    /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
+    pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
+        let before = files.len();
+        let kept: Vec<File<'a>> = files
+            .into_iter()
+            .filter(|file| !self.keys.iter().any(|(key, _)| Self::names(key, file)))
+            .collect();
+        let dropped = before - kept.len();
+        (kept, dropped)
+    }
+
+    /// `files` without the listed ones, and how many were removed. An entry that names no file
     /// is a problem: the list was made for another corpus, and a draw that quietly keeps what it
     /// meant to drop is the worse failure.
     pub fn apply<'a>(
@@ -101,6 +122,83 @@ impl Exclusion {
             .collect();
         debug_assert_eq!(dropped.len() + kept.len(), before);
         Problems::check(missing, (kept, dropped.len()))
+    }
+}
+
+/// A set of repositories, `owner/name` in lower case, whose files a draw leaves out.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Repos {
+    names: BTreeSet<String>,
+}
+
+impl Repos {
+    /// The repositories the `repo` column of the manifest `text` names. An error names the file
+    /// and never a line of it.
+    pub fn manifest(path: &str, text: &str) -> Result<Repos, Error> {
+        let bad = |message: &str| Error::load(path, Place::File, message);
+        let mut rows = text
+            .lines()
+            .filter(|line| !line.trim().is_empty() && !line.starts_with('#'));
+        let column = rows
+            .next()
+            .and_then(|head| head.split('\t').position(|name| name == "repo"))
+            .ok_or_else(|| bad("not a manifest: it has no `repo` column"))?;
+        let mut names = BTreeSet::new();
+        for row in rows {
+            let repo = row
+                .split('\t')
+                .nth(column)
+                .ok_or_else(|| bad("a row has no `repo` column"))?;
+            names.insert(repo.trim().to_lowercase());
+        }
+        Ok(Repos { names })
+    }
+
+    /// The repositories the `# source = <repo> <file>` comments of the gold or queue `text` name.
+    pub fn gold(path: &str, text: &str) -> Result<Repos, Error> {
+        let mut names = BTreeSet::new();
+        for block in conllu::read(path, text)? {
+            let repo = block
+                .comment("source")
+                .and_then(|comment| comment.value.split_whitespace().next())
+                .ok_or_else(|| Error::load(path, Place::File, "a sentence has no `source`"))?;
+            names.insert(repo.to_lowercase());
+        }
+        Ok(Repos { names })
+    }
+
+    /// The union of the repositories `paths` name: a `.conllu` file by its `source` comments,
+    /// any other file as a manifest.
+    pub fn read(paths: &[PathBuf]) -> Result<Repos, Error> {
+        let mut all = Repos::default();
+        for path in paths {
+            let shown = path.display().to_string();
+            let text = crate::data::read_text(path)?;
+            let found = if path.extension().is_some_and(|ext| ext == "conllu") {
+                Repos::gold(&shown, &text)?
+            } else {
+                Repos::manifest(&shown, &text)?
+            };
+            all.names.extend(found.names);
+        }
+        Ok(all)
+    }
+
+    /// How many repositories.
+    pub fn len(&self) -> usize {
+        self.names.len()
+    }
+
+    /// `files` without those of the repositories, and how many were removed. A repository is
+    /// matched by each sidecar's `source.repo`, lower case, never by a path.
+    pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
+        let before = files.len();
+        let kept: Vec<File<'a>> = files
+            .into_iter()
+            .filter(|file| !self.names.contains(&file.repo.to_lowercase()))
+            .collect();
+        let dropped = before - kept.len();
+        (kept, dropped)
     }
 }
 
@@ -163,6 +261,33 @@ mod tests {
     fn an_empty_list_is_an_error() {
         let error = Exclusion::parse("x.tsv", "# nothing\n\n").unwrap_err();
         assert!(error.to_string().contains("names no fixture"), "{error}");
+    }
+
+    #[test]
+    fn repositories_come_from_a_manifest_or_source_comments_in_lower_case_and_match_by_repo() {
+        let manifest = "# seed = 1\nsent_id\tsplit\trepo\nx\tdev\tO/R\n";
+        let repos = Repos::manifest("m.tsv", manifest).unwrap();
+        let gold = "# sent_id = o1\n# source = a/b human/a/one.md\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n";
+        let owner = Repos::gold("o.conllu", gold).unwrap();
+        // A path never names a repository: only the sidecar's repo does.
+        let mut files = corpus();
+        files[0].repo = "o/R".to_string();
+        files[1].repo = "A/B".to_string();
+        files[2].repo = "z/z".to_string();
+        let (kept, dropped) = repos.drop(files.clone());
+        assert_eq!((kept.len(), dropped), (2, 1));
+        assert_eq!(kept[0].path, "human/b/two.md");
+        assert_eq!(owner.len(), 1);
+        let (kept, dropped) = owner.drop(files);
+        assert_eq!((kept.len(), dropped), (2, 1));
+        assert_eq!(kept[0].path, "human/a/one.md");
+    }
+
+    #[test]
+    fn a_manifest_with_no_repo_column_is_refused_without_quoting_it() {
+        let error = Repos::manifest("m.tsv", "a\tb\nsecret\tvalue\n").unwrap_err();
+        assert!(!error.to_string().contains("secret"), "{error}");
+        assert!(error.to_string().contains("m.tsv"), "{error}");
     }
 
     #[test]

@@ -8,8 +8,13 @@ use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crossterm::cursor::{Hide, Show};
+use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::execute;
+use crossterm::terminal::{
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode, size,
+};
 use deslag_exam::error::{Error, Place};
-use ratatui::crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 
 use crate::data::read_text;
 use crate::problems::Problems;
@@ -60,36 +65,63 @@ pub fn run(file: &Path, screen_only: bool) -> Result<(), Problems> {
     })
 }
 
+/// Raw mode and the alternate screen on, until [`leave`] puts the terminal back.
+fn enter() -> std::io::Result<()> {
+    enable_raw_mode()?;
+    if let Err(error) = execute!(std::io::stdout(), EnterAlternateScreen, Hide) {
+        leave();
+        return Err(error);
+    }
+    // A panic prints on the screen the review is drawn on, which is then lost, so the terminal
+    // goes back before the message is printed.
+    let hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        leave();
+        hook(info);
+    }));
+    Ok(())
+}
+
+/// Puts the terminal back as it was. It may be called twice.
+fn leave() {
+    let _ = execute!(std::io::stdout(), Show, LeaveAlternateScreen);
+    let _ = disable_raw_mode();
+}
+
 /// The keys in, the screen out, until the owner quits.
 fn interact(session: &mut Session, store: &mut FileStore) -> std::io::Result<()> {
-    let mut terminal = ratatui::init();
-    let result = (|| loop {
-        terminal.draw(|frame| screen::draw(frame, session))?;
-        let Event::Key(key) = event::read()? else {
-            continue;
-        };
-        if key.kind != KeyEventKind::Press {
-            continue;
-        }
-        if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
-            return Ok(());
-        }
-        let key = match key.code {
-            KeyCode::Char(c) => Key::Char(c),
-            KeyCode::Down => Key::Down,
-            KeyCode::Up => Key::Up,
-            KeyCode::Right => Key::Right,
-            KeyCode::Left => Key::Left,
-            KeyCode::Enter => Key::Enter,
-            KeyCode::Esc => Key::Esc,
-            KeyCode::Backspace => Key::Backspace,
-            _ => continue,
-        };
-        if session.press(key, store) == Outcome::Quit {
-            return Ok(());
+    enter()?;
+    let result = (|| {
+        let mut out = std::io::stdout();
+        loop {
+            let (width, height) = size()?;
+            screen::draw(&mut out, session, width, height)?;
+            let Event::Key(key) = event::read()? else {
+                continue;
+            };
+            if key.kind != KeyEventKind::Press {
+                continue;
+            }
+            if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
+                return Ok(());
+            }
+            let key = match key.code {
+                KeyCode::Char(c) => Key::Char(c),
+                KeyCode::Down => Key::Down,
+                KeyCode::Up => Key::Up,
+                KeyCode::Right => Key::Right,
+                KeyCode::Left => Key::Left,
+                KeyCode::Enter => Key::Enter,
+                KeyCode::Esc => Key::Esc,
+                KeyCode::Backspace => Key::Backspace,
+                _ => continue,
+            };
+            if session.press(key, store) == Outcome::Quit {
+                return Ok(());
+            }
         }
     })();
-    ratatui::restore();
+    leave();
     result
 }
 

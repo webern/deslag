@@ -12,7 +12,7 @@ default-run = "deslag-exam"
 clap = { version = "4.6.7", features = ["derive"] }
 deslag = { path = "../.." }
 deslag-corpus = { path = "../corpus" }
-ratatui = { version = "0.29.0", default-features = false, features = ["crossterm"] }
+crossterm = { version = "0.29.0", default-features = false, features = ["events", "windows"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 sha2 = "0.11.0"

@@ -17,6 +17,7 @@ mod compact;
 mod data;
 mod exclude;
 mod merge;
+mod patch;
 mod problems;
 mod sample;
 

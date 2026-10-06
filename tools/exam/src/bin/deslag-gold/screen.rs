@@ -11,6 +11,7 @@ use crossterm::queue;
 use crossterm::style::{Attribute, Print, SetAttribute};
 use crossterm::terminal::{Clear, ClearType};
 use deslag_exam::gold::kind_name;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::guide;
 use crate::review::{Mode, Row, Session};
@@ -18,6 +19,11 @@ use crate::review::{Mode, Row, Session};
 /// The keys, as the footer lists them.
 const KEYS: &str =
     "j/k move, t tag, ? guide, a accept, n/p save and go to the next or previous sentence, q quit";
+
+/// The least screen the review draws; under it a message says so.
+const MIN_WIDTH: usize = 30;
+/// See [`MIN_WIDTH`].
+const MIN_HEIGHT: usize = 8;
 
 /// How a line is drawn.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,40 +56,69 @@ fn line(text: impl Into<String>, look: Look) -> Line {
     }
 }
 
-/// `text` cut to `width` characters.
-fn clip(text: &str, width: usize) -> String {
-    text.chars().take(width).collect()
+/// `text` with every control character, ESC among them, shown as U+FFFD, so what a file holds
+/// can never move the cursor or recolour the screen.
+fn clean(text: &str) -> String {
+    text.chars()
+        .map(|c| if c.is_control() { '\u{FFFD}' } else { c })
+        .collect()
 }
 
-/// `text` cut or padded with spaces to exactly `width` characters.
+/// How many bytes of `text` fit in `width` terminal cells. A mark that combines with the
+/// character before it stays with it, and a joiner is never left at the end.
+fn fit(text: &str, width: usize) -> usize {
+    let mut used = 0;
+    let mut end = text.len();
+    for (at, c) in text.char_indices() {
+        let cells = c.width().unwrap_or(0);
+        if used + cells > width {
+            end = at;
+            break;
+        }
+        used += cells;
+    }
+    let mut kept = &text[..end];
+    while end < text.len() && kept.ends_with('\u{200D}') {
+        kept = &kept[..kept.len() - '\u{200D}'.len_utf8()];
+    }
+    kept.len()
+}
+
+/// `text`, cleaned of control characters, cut to `width` terminal cells.
+fn clip(text: &str, width: usize) -> String {
+    let text = clean(text);
+    text[..fit(&text, width)].to_string()
+}
+
+/// `text` cut or padded with spaces to exactly `width` terminal cells.
 fn cell(text: &str, width: usize) -> String {
     let mut cell = clip(text, width);
-    let short = width - cell.chars().count();
+    let short = width.saturating_sub(cell.width());
     cell.extend(std::iter::repeat_n(' ', short));
     cell
 }
 
-/// `text` broken at spaces into lines of at most `width` characters; a word longer than that is
-/// cut.
+/// `text` broken at spaces into lines of at most `width` terminal cells; a word longer than that
+/// is cut.
 fn wrap(text: &str, width: usize) -> Vec<String> {
     let width = width.max(1);
     let mut out = Vec::new();
     for paragraph in text.lines() {
         let mut current = String::new();
         for word in paragraph.split_whitespace() {
-            let mut word = word;
-            while word.chars().count() > width {
+            let word = clean(word);
+            let mut word = word.as_str();
+            while word.width() > width {
                 if !current.is_empty() {
                     out.push(std::mem::take(&mut current));
                 }
-                out.push(clip(word, width));
-                word = &word[word
-                    .char_indices()
-                    .nth(width)
-                    .map_or(word.len(), |(at, _)| at)..];
+                let first = word.chars().next().map_or(0, char::len_utf8);
+                let cut = fit(word, width).max(first);
+                out.push(clip(&word[..cut], width));
+                word = &word[cut..];
             }
-            let joined = current.chars().count() + usize::from(!current.is_empty());
-            if !current.is_empty() && joined + word.chars().count() > width {
+            let joined = current.width() + usize::from(!current.is_empty());
+            if !current.is_empty() && joined + word.width() > width {
                 out.push(std::mem::take(&mut current));
             }
             if !current.is_empty() {
@@ -192,6 +227,17 @@ fn table(session: &Session, width: usize, height: usize) -> Vec<Line> {
 /// The screen for `session`, `width` columns by `height` lines: exactly `height` lines.
 pub fn lines(session: &Session, width: u16, height: u16) -> Vec<Line> {
     let (width, height) = (usize::from(width.max(1)), usize::from(height));
+    if width < MIN_WIDTH || height < MIN_HEIGHT {
+        let mut out = vec![line(
+            clip(
+                &format!("terminal too small, needs {MIN_WIDTH}x{MIN_HEIGHT}"),
+                width,
+            ),
+            Look::Plain,
+        )];
+        out.resize(height, line("", Look::Plain));
+        return out;
+    }
     let sentence = session.sentence();
     let mut out = Vec::new();
 
@@ -216,16 +262,38 @@ pub fn lines(session: &Session, width: u16, height: u16) -> Vec<Line> {
         ),
         Look::Bold,
     ));
+    let keys = wrap(KEYS, width);
+    let keys_max = if height >= 16 { 4 } else { 2 };
     let mut text = wrap(&sentence.text, width);
-    text.truncate(4);
+    // The table needs its header and two words; the text and the keys give way, the text down to
+    // one line and the keys down to one.
+    let spare = height.saturating_sub(2);
+    let mut text_lines = text.len().min(4).min((height / 4).max(1));
+    let mut key_lines = keys.len().min(keys_max);
+    while key_lines + text_lines + 3 > spare {
+        if text_lines > 1 {
+            text_lines -= 1;
+        } else if key_lines > 1 {
+            key_lines -= 1;
+        } else {
+            break;
+        }
+    }
+    if text.len() > text_lines {
+        // A sentence that does not fit ends in an ellipsis.
+        text.truncate(text_lines);
+        if let Some(last) = text.last_mut() {
+            *last = format!("{}\u{2026}", clip(last, width.saturating_sub(1)));
+        }
+    }
     out.extend(text.into_iter().map(|text| line(text, Look::Plain)));
+    let keys: Vec<Line> = keys
+        .into_iter()
+        .take(key_lines)
+        .map(|text| line(text, Look::Dim))
+        .collect();
 
-    let keys: Vec<Line> = {
-        let mut keys = wrap(KEYS, width);
-        keys.truncate(2);
-        keys.into_iter().map(|text| line(text, Look::Dim)).collect()
-    };
-    let body = height.saturating_sub(out.len() + 1 + keys.len()).max(3);
+    let body = height.saturating_sub(out.len() + 1 + keys.len());
     if let Mode::Guide(base) = &session.mode {
         let entry = guide::entry(*base).unwrap_or_else(|| "the guide has no entry".into());
         let title = "guide; any key returns";
@@ -234,7 +302,7 @@ pub fn lines(session: &Session, width: u16, height: u16) -> Vec<Line> {
             Look::Plain,
         ));
         let mut entry = wrap(&entry, width);
-        entry.truncate(body - 1);
+        entry.truncate(body.saturating_sub(1));
         out.extend(entry.into_iter().map(|text| line(text, Look::Plain)));
     } else {
         out.extend(table(session, width, body));
@@ -274,7 +342,9 @@ pub fn draw(
     height: u16,
 ) -> std::io::Result<()> {
     for (row, line) in lines(session, width, height).iter().enumerate() {
-        queue!(out, MoveTo(0, row as u16))?;
+        // The line is cleared first: one as wide as the screen leaves the cursor pending a wrap,
+        // where some terminals erase the last cell.
+        queue!(out, MoveTo(0, row as u16), Clear(ClearType::UntilNewLine))?;
         match line.look {
             Look::Plain => {}
             Look::Bold => queue!(out, SetAttribute(Attribute::Bold))?,
@@ -282,12 +352,7 @@ pub fn draw(
             Look::Underlined => queue!(out, SetAttribute(Attribute::Underlined))?,
             Look::Reversed => queue!(out, SetAttribute(Attribute::Reverse))?,
         }
-        queue!(
-            out,
-            Print(&line.text),
-            SetAttribute(Attribute::Reset),
-            Clear(ClearType::UntilNewLine)
-        )?;
+        queue!(out, Print(&line.text), SetAttribute(Attribute::Reset))?;
     }
     out.flush()
 }
@@ -345,6 +410,93 @@ mod tests {
         session.press(Key::Esc, &mut store);
         type_code(&mut session, &mut store, "d");
         assert!(text(&session, 100, 20).contains("owner*"));
+    }
+
+    /// A skeleton of one sentence of `words` words, `w1 w2 ...`.
+    fn long(words: usize) -> String {
+        let text: Vec<String> = (1..=words).map(|n| format!("w{n}")).collect();
+        let mut out = format!(
+            "# exam.tokens = deslag\n# sent_id = s1\n# exam.context = prose\n# text = {}\n",
+            text.join(" ")
+        );
+        for (at, word) in text.iter().enumerate() {
+            out.push_str(&format!(
+                "{}\t{word}\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n",
+                at + 1
+            ));
+        }
+        out
+    }
+
+    #[test]
+    fn control_characters_are_shown_as_replacements_never_written() {
+        let mut source = SKELETON.replace("Run `cargo` now", "Run \u{1b}]0;PWNED\u{7} now");
+        source = source.replace("\t`cargo`\t", "\t`ca\u{1b}[2Jrgo`\t");
+        let mut session = open(&source);
+        let mut store = Memory::default();
+        session.press(Key::Char('t'), &mut store);
+        session.press(Key::Char('\u{1b}'), &mut store);
+        for height in [12, 24] {
+            let lines = lines(&session, 100, height);
+            for line in &lines {
+                assert!(!line.text.chars().any(char::is_control), "{:?}", line.text);
+            }
+        }
+        let screen = text(&session, 100, 24);
+        assert!(screen.contains("\u{FFFD}]0;PWNED\u{FFFD}"), "{screen}");
+        assert!(screen.contains("`ca\u{FFFD}[2Jrgo`"), "{screen}");
+        let mut raw = Vec::new();
+        draw(&mut raw, &session, 100, 24).unwrap();
+        let raw = String::from_utf8(raw).unwrap();
+        assert!(!raw.contains('\u{7}'), "{raw:?}");
+        assert!(
+            !raw.contains("\u{1b}[2J") && !raw.contains("\u{1b}]"),
+            "{raw:?}"
+        );
+    }
+
+    #[test]
+    fn columns_count_terminal_cells() {
+        assert_eq!(cell("日本", 6), "日本  ");
+        assert_eq!(cell("日本語", 5), "日本 ");
+        assert_eq!(cell("e\u{301}\u{301}", 3).width(), 3);
+        assert_eq!(clip("e\u{301}x", 1), "e\u{301}");
+        assert_eq!(clip("a\u{1F468}\u{200D}\u{1F469}", 3), "a\u{1F468}");
+        for line in wrap("日本語のテスト 日本語のテスト ab", 7) {
+            assert!(line.width() <= 7, "{line:?}");
+        }
+        assert!(wrap("日", 1).iter().all(|line| line.width() <= 1));
+        let row = table_row('>', &[("日本語", 6), ("x", 2)], 40);
+        assert_eq!(row, ">日本語 x");
+    }
+
+    #[test]
+    fn a_small_terminal_keeps_the_cursor_row_in_view() {
+        let mut session = open(&long(40));
+        let mut store = Memory::default();
+        for _ in 0..25 {
+            session.press(Key::Down, &mut store);
+        }
+        assert_eq!(session.cursor, 25);
+        for (width, height) in [(60, 8), (60, 10), (60, 12), (30, 9), (100, 24), (45, 40)] {
+            let screen = text(&session, width, height);
+            assert_eq!(screen.lines().count(), usize::from(height), "{screen}");
+            let marked: Vec<&str> = screen.lines().filter(|l| l.starts_with('>')).collect();
+            assert_eq!(marked.len(), 1, "{width}x{height}\n{screen}");
+            assert!(marked[0].contains("26"), "{width}x{height}\n{screen}");
+            assert!(
+                screen.lines().next().unwrap().starts_with("sentence 1"),
+                "{screen}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_terminal_under_the_least_says_so() {
+        let session = open(SKELETON);
+        let screen = text(&session, 20, 6);
+        assert!(screen.contains("terminal too small"), "{screen}");
+        assert_eq!(screen.lines().count(), 6);
     }
 
     #[test]

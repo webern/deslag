@@ -52,6 +52,8 @@ pub fn check(
 /// The report for one over-budget file at `path`, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let budget = over.budget;
+    let size_bytes = over.size_bytes;
+    let over_amount = over.budget - over.size_bytes;
     let advice = match &over.message {
         Some(message) => message
             .replace("{path}", path)
@@ -61,7 +63,7 @@ pub fn render(path: &str, over: &Over) -> String {
     format!(
         "{HEADING}\n\
          \n\
-         {path} is larger than {budget} bytes.\n\
+         {path} is {size_bytes}, which larger than {budget} bytes (by {over_amount} bytes).\n\
          \n\
          {advice}"
     )
@@ -72,11 +74,20 @@ fn default_advice(budget: u64) -> String {
     format!(
         "The file must fit within its max_size_bytes budget of {budget} bytes.\n\
          \n\
-         Keep the change you came to make, and cut the least useful text already in the file: \
-         repetition, history, and what the code states better. Do not leave the change out, move \
-         it elsewhere to get around the budget, or ask a human about the budget.\n\
+         Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its \
+         budget. Is what you are adding important? Hint: lists and counts of things that churn \
+         frequently are usually less important that cross-cutting concerns and high level concepts \
+         that cannot as easily be ascertained by reading the code. You must decide; and if your edit \
+         is truly important, then you must remove something less important from the doc to make \
+         room for it.
          \n\
-         Do not raise max_size_bytes. Only a human can tell you to do that, and I am a linter, \
-         not a human."
+         You must not:
+         - defer editing the doc based solely on its byte budget
+         - throw up your hands and whine to the user about the byte budget
+         - ask the user to increase the budget
+         - increase the budget yourself
+         \n\
+         You are responsible for maintaining the integrity of the doc. Do not puke garbage from \
+         your context into the doc. The byte budget is here to stop you from doing that."
     )
 }

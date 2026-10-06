@@ -25,7 +25,7 @@ use super::{Reading, closed, lexicon};
 const KEY: usize = lexicon::LONGEST;
 
 /// The most bytes of a short word, which fits one `u64`.
-const SHORT: usize = 8;
+pub(super) const SHORT: usize = 8;
 
 const _: () = assert!(KEY > SHORT && KEY <= 3 * SHORT);
 
@@ -200,7 +200,7 @@ impl Table {
 
 /// A word of up to [`SHORT`] bytes as one `u64`: its first four bytes and its last four, which
 /// overlap in a word of fewer than eight, so that the key and the length say the word whole.
-fn short_key(bytes: &[u8]) -> u64 {
+pub(super) fn short_key(bytes: &[u8]) -> u64 {
     let len = bytes.len();
     if len == 0 {
         return 0;
@@ -212,6 +212,29 @@ fn short_key(bytes: &[u8]) -> u64 {
     let first = byte(0) | byte(1) << 8 | byte(2) << 16 | byte(3) << 24;
     let end = |back: usize| byte((len + back).saturating_sub(4));
     first | (end(0) | end(1) << 8 | end(2) << 16 | end(3) << 24) << 32
+}
+
+/// The byte at `at` of `bytes`, or its last if there is none, as [`short_key`] takes it.
+const fn clamped(bytes: &[u8], at: usize) -> u64 {
+    let last = bytes.len() - 1;
+    bytes[if at < last { at } else { last }] as u64
+}
+
+/// [`short_key`], for a constant.
+pub(super) const fn short_key_const(bytes: &[u8]) -> u64 {
+    let len = bytes.len();
+    if len == 0 {
+        return 0;
+    }
+    let first = clamped(bytes, 0)
+        | clamped(bytes, 1) << 8
+        | clamped(bytes, 2) << 16
+        | clamped(bytes, 3) << 24;
+    let end = clamped(bytes, len.saturating_sub(4))
+        | clamped(bytes, (len + 1).saturating_sub(4)) << 8
+        | clamped(bytes, (len + 2).saturating_sub(4)) << 16
+        | clamped(bytes, (len + 3).saturating_sub(4)) << 24;
+    first | end << 32
 }
 
 /// A word of [`SHORT`] to [`KEY`] bytes, longer than a short one, as three `u64`: its first eight
@@ -314,21 +337,114 @@ fn probe_long(key: &[u64; 3], len: usize) -> Option<Entry> {
 
 /// What the table has for the word `text`, folded as [`super::fold`] does.
 fn find(text: &str) -> Option<Entry> {
+    find_shaped(text).0
+}
+
+/// For a word of `len` bytes up to [`SHORT`], the bit `0x20` of each byte of its [`short_key`] that
+/// holds the word's first byte, where a capital is allowed: the first byte, and the bytes of a short
+/// word that repeat it.
+const FIRST: [u64; SHORT + 1] = {
+    let mut first = [0; SHORT + 1];
+    let mut len = 1;
+    while len <= SHORT {
+        let mut bytes = 1u64;
+        if len == 1 {
+            bytes |= 0b1110;
+        }
+        if len <= 4 {
+            let mut at = 4;
+            while at <= 8 - len {
+                bytes |= 1 << at;
+                at += 1;
+            }
+        }
+        let mut lane = 0;
+        let mut byte = 0;
+        while byte < 8 {
+            if bytes >> byte & 1 != 0 {
+                lane |= 0x20 << (8 * byte);
+            }
+            byte += 1;
+        }
+        first[len] = lane;
+        len += 1;
+    }
+    first
+};
+
+const ONES: u64 = 0x0101_0101_0101_0101;
+const CASE: u64 = 0x20 * ONES;
+
+/// The high bit of each byte of the ASCII lane that is at least `byte`.
+#[inline(always)]
+fn at_least(lane: u64, byte: u8) -> u64 {
+    (lane + (0x80 - u64::from(byte)) * ONES) & HIGH
+}
+
+/// Whether the ASCII lane holds letters alone, lower case, or with a capital where `first` has its
+/// `0x20` bits. Eight bytes at once: `| 0x20` makes a capital lower case and moves no other byte
+/// into `a` to `z`.
+#[inline(always)]
+fn is_letters(lane: u64, first: u64) -> bool {
+    let folded = lane | CASE;
+    at_least(folded, b'a') & !at_least(folded, b'z' + 1) == HIGH && (lane | first) & CASE == CASE
+}
+
+/// Whether a short word, whose [`short_key`] is the ASCII `key`, is letters alone with no capital
+/// after two lower-case letters, which is what `origin.rs` takes for a name from code. It says no
+/// of a word it cannot tell by the key.
+#[inline(always)]
+fn is_plain_short(key: u64, len: usize) -> bool {
+    let folded = key | CASE;
+    if at_least(folded, b'a') & !at_least(folded, b'z' + 1) != HIGH {
+        return false;
+    }
+    let lower = at_least(key, b'a') & !at_least(key, b'z' + 1);
+    // Capitals alone, or only a first capital, have no such pair.
+    if lower == 0 || (key | FIRST[len]) & CASE == CASE {
+        return true;
+    }
+    // The key says every neighbour of a word of up to four bytes in its first four, and of eight
+    // in all of it; a capital with two lower-case letters straight before it is a name from code.
+    if len <= 4 || len == SHORT {
+        let window = if len <= 4 { 0xFFFF_FFFF } else { u64::MAX };
+        let upper = HIGH & !lower;
+        return upper & (lower << 8) & (lower << 16) & window == 0;
+    }
+    false
+}
+
+/// What the table has for the word `text`, and whether it is ASCII letters alone, lower case or
+/// with a capital first, which the keys already say. A word it cannot say so of (it is too long, a
+/// short one with a capital first, too foreign) is not plain here, whatever it is.
+fn find_shaped(text: &str) -> (Option<Entry>, bool, bool) {
     let bytes = text.as_bytes();
     let len = bytes.len();
     // The keys hold every byte of a word of up to `KEY`, so one test of them says it is ASCII.
     if len <= SHORT {
         let key = short_key(bytes);
         if key & HIGH == 0 {
-            return probe_short(lower(key), len);
+            let lowered = lower(key);
+            return (
+                probe_short(lowered, len),
+                is_plain_short(key, len),
+                super::origin::maybe_name(lowered),
+            );
         }
     } else if len <= KEY {
         let key = long_key(bytes);
         if (key[0] | key[1] | key[2]) & HIGH == 0 {
-            return probe_long(&key.map(lower), len);
+            let plain = is_letters(key[0], 0x20)
+                && is_letters(key[1], 0)
+                && (len <= 2 * SHORT || is_letters(key[2], 0));
+            return (probe_long(&key.map(lower), len), plain, true);
         }
     }
-    // A curly apostrophe, which folds to a straight one, or a word too long or too foreign.
+    (find_folded(text), false, true)
+}
+
+/// What the table has for the word `text`, once folded by hand.
+fn find_folded(text: &str) -> Option<Entry> {
     let mut buf = [0; super::LONGEST];
     let word = super::fold(text, &mut buf)?.as_bytes();
     if word.len() <= SHORT {
@@ -343,8 +459,18 @@ fn find(text: &str) -> Option<Entry> {
 /// The high bit of every byte of a lane, which an ASCII byte lacks.
 const HIGH: u64 = 0x8080_8080_8080_8080;
 
+/// [`read`], whether the word is plain, and whether it may be the name of a program of
+/// `origin.rs`'s lists, which a word of over [`SHORT`] bytes always may: see [`find_shaped`].
+pub(super) fn read_shaped(text: &str) -> (Reading, bool, bool) {
+    match find_shaped(text) {
+        (Some(entry), plain, name) => (entry.reading, plain, name),
+        (None, plain, name) => (miss(text), plain, name),
+    }
+}
+
 /// What the tables say of the word `text`. The closed-class table wins where both have the word; a
 /// possessive `x's` the lexicon lacks is read from its stem; a word in none is read by its shape.
+#[cfg(test)]
 pub(super) fn read(text: &str) -> Reading {
     match find(text) {
         Some(entry) => entry.reading,

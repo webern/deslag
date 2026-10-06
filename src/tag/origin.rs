@@ -44,7 +44,7 @@
 //! A word a table has keeps its table reading whatever its origin, and `Unsure` stays reserved for
 //! table words, since the passes treat it as the tables' own.
 
-use super::{Confidence, Features, Origin, Reading, Tag, TagSet};
+use super::{Confidence, Features, Origin, Reading, Tag, TagSet, table};
 use crate::document::{Token, TokenKind};
 
 /// The extensions of source, configuration, data and build files, lower case, sorted and unique.
@@ -74,17 +74,56 @@ const SITES: [&str; 16] = [
     "uk", "us",
 ];
 
-/// Where a name lands in [`FILTER`]: its first, second and last bytes and its length, mixed.
+/// Where a name lands in [`FILTER`]: its first, second and last bytes and its length, mixed. A name
+/// is lower case or digits, which `| 0x20` leaves as they are, and it turns a capital to lower case.
 const fn slot(first: u8, second: u8, last: u8, len: usize) -> usize {
-    let mixed = (first as usize * 0x9E37) ^ (second as usize * 0x85EB) ^ (last as usize * 0xC2B3);
-    let mixed = mixed ^ (len * 0x27D5);
+    let mixed = ((first | 0x20) as usize * 0x9E37)
+        ^ ((second | 0x20) as usize * 0x85EB)
+        ^ (last as usize * 0xC2B3)
+        ^ (len * 0x27D5);
     (mixed ^ (mixed >> 7)) & 8191
 }
 
-/// One bit for each [`slot`] a name of [`PROGRAMS`], [`HELD`], [`SHARED`] or [`GIT`] lands in. A
-/// word that lands in none is no program and no subcommand, so most words stop here, at a few
-/// instructions, before any other test.
-const FILTER: [u64; 128] = add(add(add(add([0; 128], &PROGRAMS), &HELD), &SHARED), &GIT);
+/// One bit for each [`slot`] a name of [`PROGRAMS`], [`HELD`] or [`SHARED`] lands in. A word that
+/// lands in none is no program, so most words stop here, at a few instructions, before any other
+/// test. A git subcommand is no part of it: it is looked up only right after `git`.
+const FILTER: [u64; 128] = add(add(add([0; 128], &PROGRAMS), &HELD), &SHARED);
+
+/// Where the key of a short name lands in [`NAME_FILTER`].
+#[inline(always)]
+const fn name_slot(key: u64) -> usize {
+    (key.wrapping_mul(0x9E37_79B9_7F4A_7C15) >> 48) as usize
+}
+
+/// One bit for each [`name_slot`] of the table key of a name of [`PROGRAMS`], [`HELD`] or [`SHARED`]
+/// of up to [`table::SHORT`] bytes. The tables find that key of every word they read anyway, so a
+/// word that lands in no bit is no name, for the price of one multiply.
+const NAME_FILTER: [u64; 1024] = {
+    let mut filter = [0; 1024];
+    let lists: [&[&str]; 3] = [&PROGRAMS, &HELD, &SHARED];
+    let mut list = 0;
+    while list < 3 {
+        let mut at = 0;
+        while at < lists[list].len() {
+            let name = lists[list][at].as_bytes();
+            if name.len() <= table::SHORT {
+                let slot = name_slot(table::short_key_const(name));
+                filter[slot / 64] |= 1 << (slot % 64);
+            }
+            at += 1;
+        }
+        list += 1;
+    }
+    filter
+};
+
+/// Whether a word whose lower-cased table key is `key`, of up to [`table::SHORT`] bytes, may be the
+/// name of a program.
+#[inline(always)]
+pub(super) fn maybe_name(key: u64) -> bool {
+    let slot = name_slot(key);
+    NAME_FILTER[slot / 64] >> (slot % 64) & 1 != 0
+}
 
 /// `filter` with a bit set for each of `names`.
 const fn add(mut filter: [u64; 128], names: &[&str]) -> [u64; 128] {
@@ -427,7 +466,7 @@ pub fn origins(tokens: &[Token<'_>]) -> Vec<Origin> {
     let mut work = tokens.to_vec();
     for at in 0..work.len() {
         work[at].origin = if work[at].kind == TokenKind::Word {
-            origin_of(&work, at)
+            origin_of(&work, at, false)
         } else {
             Origin::English
         };
@@ -436,16 +475,37 @@ pub fn origins(tokens: &[Token<'_>]) -> Vec<Origin> {
 }
 
 /// Sets the origin of the token at `at` of a sentence, whose word the tables have read, and reads a
-/// word they lack by its origin (see the module docs). The origins before `at` are set already.
+/// word they lack by its origin (see the module docs). `name` says the word may be a program's name (see `table::read_shaped`). `after_git` holds whether the word before
+/// this one is `git`, and is set for the next. `plain` says the tables' keys found the word
+/// to be ASCII letters alone, lower case or with a capital first; false is no claim. The origins before `at` are set already.
 /// The origin does not depend on what the tables hold. Returns whether it is `Command`.
 ///
 /// Debug builds run this on every word, so it keeps to plain loops and tests with no closure.
-pub(super) fn mark(tokens: &mut [Token<'_>], at: usize) -> bool {
-    if tokens[at].kind != TokenKind::Word {
-        tokens[at].origin = Origin::English;
-        return false;
+#[inline(always)]
+pub(super) fn mark(
+    tokens: &mut [Token<'_>],
+    at: usize,
+    plain: bool,
+    name: bool,
+    after_git: &mut bool,
+) -> bool {
+    let bytes = tokens[at].text.as_bytes();
+    let git_before = *after_git;
+    *after_git = name && bytes.len() == 3 && bytes.eq_ignore_ascii_case(b"git");
+    // A plain word is English unless a dash or a colon is beside it, `git` is before it or its name
+    // is on a list. Only a punctuation token is looked into.
+    let mut near = git_before | (name && (bytes.len() <= table::SHORT || in_filter(bytes)));
+    if at > 0 && tokens[at - 1].kind == TokenKind::Punctuation {
+        near |= matches!(first_byte(&tokens[at - 1]), b'-' | b':');
     }
-    let origin = origin_of(tokens, at);
+    if at + 1 < tokens.len() && tokens[at + 1].kind == TokenKind::Punctuation {
+        near |= first_byte(&tokens[at + 1]) == b':';
+    }
+    let origin = if plain && !near {
+        Origin::English
+    } else {
+        origin_of(tokens, at, plain)
+    };
     let token = &mut tokens[at];
     token.origin = origin;
     if origin == Origin::English {
@@ -464,9 +524,11 @@ pub(super) fn mark(tokens: &mut [Token<'_>], at: usize) -> bool {
 /// It runs on every word of every document, so a plain lower-case word, which most are, is read
 /// once as bytes and goes no further than the neighbour and name checks, and it looks at a
 /// neighbour's kind, which lives in the token, before its text, which does not.
-fn origin_of(tokens: &[Token<'_>], at: usize) -> Origin {
+#[inline(never)]
+fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {
     let text: &str = &tokens[at].text;
-    if !is_plain(text.as_bytes())
+    let bytes = text.as_bytes();
+    if !(plain || is_plain(bytes))
         && let Some(origin) = by_marks(text)
     {
         // `:arrows_clockwise:` is an emoji, no name from code.
@@ -476,21 +538,41 @@ fn origin_of(tokens: &[Token<'_>], at: usize) -> Origin {
             origin
         };
     }
-    // Dashes and colons are punctuation, so a word with none beside it has neither cue.
-    let after_punctuation = at > 0 && tokens[at - 1].kind == TokenKind::Punctuation;
-    let before_punctuation = at + 1 < tokens.len() && tokens[at + 1].kind == TokenKind::Punctuation;
-    if after_punctuation || before_punctuation {
+    // A dash or a colon beside the word is where a flag or a `::` starts, and a word has none.
+    let before = if at > 0 {
+        first_byte(&tokens[at - 1])
+    } else {
+        0
+    };
+    let after = if at + 1 < tokens.len() {
+        first_byte(&tokens[at + 1])
+    } else {
+        0
+    };
+    if matches!(before, b'-' | b':') || after == b':' {
         if joins_double_colon(tokens, at) {
             return Origin::Symbol;
         }
-        if after_punctuation && is_flag(tokens, at) {
+        if before == b'-' && is_flag(tokens, at) {
             return Origin::Flag;
         }
     }
-    if in_filter(text.as_bytes()) && is_command(tokens, at) {
+    if at > 0 && is_git(&tokens[at - 1]) && GIT.binary_search(&text).is_ok() {
+        return Origin::Command;
+    }
+    if in_filter(bytes) && is_command(tokens, at) {
         Origin::Command
     } else {
         Origin::English
+    }
+}
+
+/// The first byte of the token's text, or 0 if it has none.
+#[inline(always)]
+fn first_byte(token: &Token<'_>) -> u8 {
+    match token.text.as_bytes().first() {
+        Some(byte) => *byte,
+        None => 0,
     }
 }
 
@@ -499,10 +581,18 @@ fn is_git(token: &Token<'_>) -> bool {
     token.kind == TokenKind::Word && token.text.len() == 3 && token.text.eq_ignore_ascii_case("git")
 }
 
-/// Whether every byte is a lower-case ASCII letter, which most words are.
+/// Whether the word is ASCII letters alone, all lower case or with a capital first, which most
+/// words are. No such word has a mark that makes it a symbol, a path or an English contraction.
+///
+/// The letters after the first are tested eight at a time as the tables' keys are, with no branch
+/// on the length, which a text makes unpredictable; a word of over nine bytes is rare.
 fn is_plain(bytes: &[u8]) -> bool {
-    let mut at = 0;
-    while at < bytes.len() {
+    let len = bytes.len();
+    if len == 0 || (bytes[0] | 0x20).wrapping_sub(b'a') >= 26 {
+        return false;
+    }
+    let mut at = 1;
+    while at < len {
         if bytes[at].wrapping_sub(b'a') >= 26 {
             return false;
         }
@@ -736,27 +826,20 @@ fn is_flag(tokens: &[Token<'_>], at: usize) -> bool {
 }
 
 /// Whether [`FILTER`] holds the slot of this word, which any name of the lists must.
+#[inline(always)]
 fn in_filter(bytes: &[u8]) -> bool {
     if bytes.len() < 2 {
         return false;
     }
-    let slot = slot(
-        bytes[0].to_ascii_lowercase(),
-        bytes[1].to_ascii_lowercase(),
-        bytes[bytes.len() - 1],
-        bytes.len(),
-    );
+    let slot = slot(bytes[0], bytes[1], bytes[bytes.len() - 1], bytes.len());
     FILTER[slot / 64] >> (slot % 64) & 1 != 0
 }
 
-/// Whether the word at `at` names a program: a git subcommand right after `git`, a name in
-/// [`PROGRAMS`] in lower case, or capitalised when no word comes before it in the sentence, a name
-/// in [`HELD`] in lower case, or one in [`SHARED`] in the place of a command.
+/// Whether the word at `at` names a program: a name in [`PROGRAMS`] in lower case, or capitalised
+/// when no word comes before it in the sentence, a name in [`HELD`] in lower case, or one in
+/// [`SHARED`] in the place of a command. A git subcommand is [`origin_of`]'s to find.
 fn is_command(tokens: &[Token<'_>], at: usize) -> bool {
     let text: &str = &tokens[at].text;
-    if at > 0 && is_git(&tokens[at - 1]) && GIT.binary_search(&text).is_ok() {
-        return true;
-    }
     if !NAME.contains(&text.len()) || !text.is_ascii() {
         return false;
     }
@@ -1422,6 +1505,67 @@ mod tests {
             files > 20 && sentences > 1000 && others > 20,
             "{files} {sentences} {others}"
         );
+    }
+
+    #[test]
+    fn the_name_filter_holds_every_short_name_in_any_case() {
+        for name in PROGRAMS.iter().chain(&HELD).chain(&SHARED) {
+            if name.len() > table::SHORT {
+                continue;
+            }
+            assert_eq!(
+                table::short_key(name.as_bytes()),
+                table::short_key_const(name.as_bytes()),
+                "{name}"
+            );
+            for text in [name.to_string(), name.to_uppercase(), {
+                let mut capital = name.to_string();
+                capital[..1].make_ascii_uppercase();
+                capital
+            }] {
+                assert!(table::read_shaped(&text).2, "{text}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_word_the_keys_call_plain_has_no_mark_of_a_name() {
+        // Every word of up to nine bytes over a few letters of both cases and some marks.
+        let alphabet = ['a', 'b', 'Z', 'Q', '\'', '_', '1'];
+        let (mut plain, mut checked) = (0, 0);
+        let mut words = vec![String::new()];
+        for _ in 0..9 {
+            let mut longer = Vec::new();
+            for word in &words {
+                for letter in alphabet {
+                    let mut next = word.clone();
+                    next.push(letter);
+                    let (_, said, _) = crate::tag::table::read_shaped(&next);
+                    checked += 1;
+                    if said {
+                        plain += 1;
+                        assert_eq!(by_marks(&next), None, "{next}");
+                    }
+                    longer.push(next);
+                }
+            }
+            words = if longer.len() > 300_000 {
+                longer.into_iter().step_by(7).collect()
+            } else {
+                longer
+            };
+        }
+        assert!(checked > 100_000 && plain > 1000, "{checked} {plain}");
+        for word in [
+            "API", "APIs", "PhD", "iOS", "NASA", "README", "Hello", "the", "The", "A", "I",
+        ] {
+            assert!(crate::tag::table::read_shaped(word).1, "{word}");
+        }
+        for word in [
+            "GitHub", "userId", "userIds", "macOS", "don't", "foo_bar", "abcdEfgh",
+        ] {
+            assert!(!crate::tag::table::read_shaped(word).1, "{word}");
+        }
     }
 
     #[test]

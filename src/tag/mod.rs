@@ -45,10 +45,18 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// context, in a fixed order.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
     let mut commands = false;
+    let mut after_git = false;
     for at in 0..tokens.len() {
         let token = &mut tokens[at];
-        token.reading = (token.kind == TokenKind::Word).then(|| read(&token.text));
-        commands |= origin::mark(tokens, at);
+        if token.kind == TokenKind::Word {
+            let (reading, plain, name) = table::read_shaped(&token.text);
+            token.reading = Some(reading);
+            commands |= origin::mark(tokens, at, plain, name, &mut after_git);
+        } else {
+            token.reading = None;
+            token.origin = Origin::English;
+            after_git = false;
+        }
     }
     if commands {
         origin::verbs(tokens);
@@ -87,7 +95,8 @@ fn starts_upper(text: &str) -> bool {
 
 /// What the tables say of the word `text`, from the one table of both that [`table`] holds. The
 /// closed-class table wins where both have the word; a word in neither is read by its shape, at
-/// `Unknown`.
+/// `Unknown`. The tagger reads with [`table::read_shaped`]; this is for the tests.
+#[cfg(test)]
 fn read(text: &str) -> Reading {
     table::read(text)
 }

@@ -7,7 +7,8 @@
 //! prints a report ([`report`]), a saved run ([`saved`]) and a paired comparison of two
 //! ([`compare`]), or judges a run against the gates a file sets ([`gate`]), among them a list of
 //! words that must stay right ([`mustpass`]), or reads how a tagger does on the places a lint
-//! needs read as verbs ([`ticlist`]).
+//! needs read as verbs ([`ticlist`]). A learner outside the exam starts from deslag's readings
+//! ([`readings`]).
 //! `docs/design/exam.asbuilt.md` describes it.
 
 pub mod align;
@@ -22,6 +23,7 @@ pub mod import;
 pub mod metrics;
 pub mod most_common;
 pub mod mustpass;
+pub mod readings;
 pub mod report;
 pub mod saved;
 pub mod score;

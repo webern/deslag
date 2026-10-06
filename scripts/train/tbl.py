@@ -30,11 +30,19 @@ so a tag change at one token only recounts the tokens near it, the neighbourhood
 reach. NLTK scores all of a rule's matches at once, as if the tags did not change while it is
 applied; the rule itself is applied left to right. So a chosen rule is applied for real, its true
 gain counted, and a rule whose true gain is under the minimum is put back and skipped.
+
+A token may be fixed, or limited in what it may become: a start tagger that stands behind a word
+freezes it, and one that has ruled tags out lists the rest. `allowed` is a bitmask of tags per
+token, 0 for a fixed token, and a rule only changes a token to a tag it allows. So a rule breaks
+only the right tokens that allow its new tag, and the trainer counts those per (condition, old tag,
+new tag). A token with no right tag (`NO_GOLD`) is context only: a rule changes it as it would
+at tagging time, but its gain is never counted. The masks never change, so the index stays valid.
 """
 
 from collections import namedtuple
 
 WORD, TAG = 0, 1
+NO_GOLD = -1  # the right tag of a token no gold word is aligned to
 
 # NLTK's fntbl37, in its order; a feature is (kind, positions). The list holds two templates twice
 # in other words, so `TEMPLATES` drops a template whose features are another's, keeping the first.
@@ -135,31 +143,38 @@ def matcher(rule, template_set=TEMPLATES):
 
 
 class Corpus:
-    """Sentences as flat arrays: `words` (ids), `tags` (indices), and for each index its
-    sentence's [lo, hi). `by_tag[t]` holds the indices tagged t."""
+    """Sentences as flat arrays: `words` (ids), `tags` (indices), `allowed` (a mask per index), and
+    for each index its sentence's [lo, hi). `by_tag[t]` holds the indices tagged t that a rule may
+    change; a token whose mask is 0 is in none."""
 
     def __init__(self, sentences, ntags):
-        """`sentences` is a list of (word ids, tag indices)."""
-        self.words, self.tags, self.lo, self.hi = [], [], [], []
+        """`sentences` is a list of (word ids, tag indices) or (word ids, tag indices, masks); with
+        no masks every token may become any tag."""
+        self.full = (1 << ntags) - 1
+        self.words, self.tags, self.allowed, self.lo, self.hi = [], [], [], [], []
         self.starts = []
-        for words, tags in sentences:
+        for sentence in sentences:
+            words, tags = sentence[0], sentence[1]
+            masks = sentence[2] if len(sentence) > 2 and sentence[2] is not None else None
             start = len(self.words)
             self.starts.append(start)
             self.words.extend(words)
             self.tags.extend(tags)
+            self.allowed.extend([self.full] * len(words) if masks is None else masks)
             self.lo.extend([start] * len(words))
             self.hi.extend([start + len(words)] * len(words))
         self.by_tag = [set() for _ in range(ntags)]
         for g, tag in enumerate(self.tags):
-            self.by_tag[tag].add(g)
+            if self.allowed[g]:
+                self.by_tag[tag].add(g)
 
     def apply(self, rule, test=None):
         """Applies `rule` left to right everywhere; returns the indices it changed, in order."""
         test = test or matcher(rule)
-        tags, words, lo, hi = self.tags, self.words, self.lo, self.hi
+        tags, words, lo, hi, allowed = self.tags, self.words, self.lo, self.hi, self.allowed
         fired = []
         for g in sorted(self.by_tag[rule.orig]):
-            if test(words, tags, g, lo[g], hi[g]):
+            if allowed[g] >> rule.repl & 1 and test(words, tags, g, lo[g], hi[g]):
                 tags[g] = rule.repl
                 fired.append(g)
         self.move(fired, rule.orig, rule.repl)
@@ -175,9 +190,10 @@ class Corpus:
         self.move(fired, rule.repl, rule.orig)
 
 
-def apply_sentence(rules, words, tags, notify=None):
+def apply_sentence(rules, words, tags, notify=None, allowed=None):
     """Applies compiled `rules`, [(orig, repl, fn)] in order, to one sentence's word ids and tag
-    indices, in place. `notify(rule number, i, orig, repl)` is called on each change."""
+    indices, in place. `allowed`, if given, is a mask per token of the tags it may become. `notify(
+    rule number, i, orig, repl)` is called on each change."""
     n = len(words)
     counts = {}
     for tag in tags:
@@ -186,7 +202,8 @@ def apply_sentence(rules, words, tags, notify=None):
         if not counts.get(orig):
             continue
         for i in range(n):
-            if tags[i] == orig and fn(words, tags, i, 0, n):
+            if tags[i] == orig and (allowed is None or allowed[i] >> repl & 1) and \
+                    fn(words, tags, i, 0, n):
                 tags[i] = repl
                 counts[orig] -= 1
                 counts[repl] = counts.get(repl, 0) + 1
@@ -198,7 +215,8 @@ def apply_sentence(rules, words, tags, notify=None):
 
 class Trainer:
     """The indexed trainer. `corpus` holds the tags as they are, which the trainer changes as it
-    keeps rules; `gold` is the right tag of each index; `vocab` is the number of word ids."""
+    keeps rules; `gold` is the right tag of each index, or NO_GOLD; `vocab` is the number of word
+    ids. Only a token with a gold tag and a rule that may change it is counted."""
 
     def __init__(self, corpus, gold, vocab, ntags):
         self.corpus = corpus
@@ -207,7 +225,11 @@ class Trainer:
         self.base = max(vocab, ntags) + 1
         self.cube = self.base**SLOTS
         self.fixed = {}  # (condition, orig, repl) -> count
-        self.right = {}  # (condition, orig) -> count of the tokens that are right already
+        # What a rule would break, per (condition, orig): the counted tokens that are right already
+        # and may become any tag, and per (condition, orig, repl): those that may become repl.
+        self.right_all = {}
+        self.right = {}
+        self.members = {}  # mask -> the tags it holds
         self.tag_templates = [
             n for n, features in enumerate(TEMPLATES) if any(k == TAG for k, _ in features)
         ]
@@ -240,24 +262,40 @@ class Trainer:
         return packed
 
     def index_all(self, indices, sign, templates):
-        tags, gold, fixed, right, ntags = (
-            self.corpus.tags, self.gold, self.fixed, self.right, self.ntags,
-        )
+        corpus = self.corpus
+        tags, gold, allowed, full = corpus.tags, self.gold, corpus.allowed, corpus.full
+        fixed, right_all, right, ntags = self.fixed, self.right_all, self.right, self.ntags
         for g in indices:
-            cur, truth = tags[g], gold[g]
+            cur, truth, mask = tags[g], gold[g], allowed[g]
+            if truth == NO_GOLD or not mask:
+                continue
+            if cur != truth:
+                if not mask >> truth & 1:
+                    continue  # no rule may give this token its right tag
+            elif mask != full:
+                members = self.members.get(mask)
+                if members is None:
+                    members = self.members[mask] = [t for t in range(ntags) if mask >> t & 1]
             for template in templates:
                 for condition in self.conditions(template, g):
-                    if cur == truth:
-                        key = condition * ntags + cur
-                        table = right
+                    base = condition * ntags + cur
+                    if cur != truth:
+                        key, table = base * ntags + truth, fixed
+                        self._add(table, key, sign)
+                    elif mask == full:
+                        self._add(right_all, base, sign)
                     else:
-                        key = (condition * ntags + cur) * ntags + truth
-                        table = fixed
-                    count = table.get(key, 0) + sign
-                    if count:
-                        table[key] = count
-                    else:
-                        table.pop(key, None)
+                        for repl in members:
+                            if repl != cur:
+                                self._add(right, base * ntags + repl, sign)
+
+    @staticmethod
+    def _add(table, key, sign):
+        count = table.get(key, 0) + sign
+        if count:
+            table[key] = count
+        else:
+            table.pop(key, None)
 
     def reindex(self, changed, change):
         """Recounts what the tokens near `changed` offer, around `change()`, which changes tags."""
@@ -300,10 +338,10 @@ class Trainer:
     def best(self, threshold, skip):
         """The candidates scoring at least `threshold` and not in `skip`, best first, as
         (score, key); the ones of equal score are in the fixed order."""
-        fixed, right, ntags = self.fixed, self.right, self.ntags
+        fixed, right_all, right, ntags = self.fixed, self.right_all, self.right, self.ntags
         found = []
         for key, count in [item for item in fixed.items() if item[1] >= threshold]:
-            score = count - right.get(key // ntags, 0)
+            score = count - right_all.get(key // ntags, 0) - right.get(key, 0)
             if score >= threshold and key not in skip:
                 found.append((score, key))
         found.sort(key=lambda item: -item[0])
@@ -321,7 +359,7 @@ class Trainer:
 
     def errors(self):
         tags, gold = self.corpus.tags, self.gold
-        return sum(1 for a, b in zip(tags, gold) if a != b)
+        return sum(1 for a, b in zip(tags, gold) if b != NO_GOLD and a != b)
 
     def learn(self, cap, min_gain, on_rule=None):
         """Keeps up to `cap` rules of true gain at least `min_gain`; returns the Steps."""

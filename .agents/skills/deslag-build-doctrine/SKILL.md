@@ -28,12 +28,11 @@ add. "The Build System Layout" is where outputs, caches and sentinel files live.
 
 When a layout change makes caches or local state unusable, the build system must detect it and
 clean or migrate. Switching branches, or restoring a CI cache, must never produce a broken build.
-Cargo handles its own `target/`; anything the Makefile adds beyond that must handle its own.
 
 External Assets are files unfit for the git tree because they would bloat it: binaries over 256KB,
 text data over 1MB, or large collections of non-first-party files. Rules of thumb, not law;
-first-party source is never an External Asset. A `fetch` target pulls them, pinned under source
-control, and a cheap local-state test makes a repeat fetch free.
+first-party source is never one. A `fetch` target pulls them, pinned under source control, and a
+cheap local-state test makes a repeat fetch free.
 
 The exception is `tests/corpus/`: tests need its bytes offline, and a fixture must outlive its
 source. It is bounded to about 400 fixtures of at most 64KB per collected category. Only a human
@@ -44,11 +43,13 @@ Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs 
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
-Python 3 is the exception, in three scripts. `scripts/llm-detection/collect.py` rebuilds the
-corpus, standard library only, by hand; make, tests and CI run its `batch`.
+Python 3 is the exception, in four places. `scripts/llm-detection/collect.py` rebuilds the corpus,
+standard library only, by hand; make, tests and CI run its `batch`.
 `scripts/blobstore/test_batches.py` tests it offline under `make test-scripts`.
-`scripts/spacy/tag.py` is the exam's spaCy tagger, with hash-pinned packages in the cache venv
-`.spacy/`; only `make fetch-spacy`, `generate-spacy` and `test-spacy` run it, never tests or CI.
+
+`scripts/spacy/tag.py` is the exam's spaCy tagger, pinned by hash in `.spacy/`, run by `make
+fetch-spacy`, `generate-spacy` and `test-spacy`. `scripts/train/` is the exam's perceptron and Brill
+tagger, standard library only and offline after `make fetch-ewt`. Neither is in `test` or `ci`.
 
 Development is supported on macOS and Linux.
 

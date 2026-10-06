@@ -45,6 +45,27 @@ an error. `readings --corpus` writes it with deslag's readings.
 `make test-ticlist-percept` runs it through the perceptron, and `test-ticlist-brill-deslag` and
 `-percept` through each Brill tagger.
 
+## The trained taggers
+
+`scripts/train/` holds two learners, standard library only, run by `make generate-percept` and
+`generate-brill` (and their `test-` targets) and never by `test` or `ci`. Each trains on EWT train,
+fits on EWT dev, and tags deslag's tokens of `ewt-dev` and `deslag-dev` into
+`.train/<set>.<name>.import.conllu`, which `score --import` grades; `run.sh curve` draws the
+learning curve by hand. Weights, rules and imports derive from the treebank and stay in `.train/`.
+
+The perceptron (`percept.py`, weights in `percept.weights.json`) is averaged. A word whose normal
+form is not in train is `Unknown`. Otherwise the margin of best over second best sets `Conf=`:
+`Sure` above a threshold, `Unsure` below another, `Likely` between, thresholds fitted on EWT dev
+(`calibrate.py`). `Score=` is a logistic curve of the margin; `Kept=` is the best tag, or the tags
+within the `Unsure` width.
+
+The Brill tagger (`brill.py`) gives each word its commonest train tag, then applies up to 300 rules
+(`brill.rules.txt`, `brill.model.json`, `<set>.brill.firings.txt`), kept as far as EWT dev improves;
+`brillinit` is the initial tagger alone. `Unknown` is a word absent from train; `Likely` one a rule
+changed; else `Sure` for one train tag, `Unsure` for several. `Kept=` is its train tags and any a
+rule gave. It writes no `Score=`.
+
+Both write UPOS in UD tags, deslag codes in `Kept=`, and no FEATS.
 ## The built-in taggers
 
 `noun` tags every word `Noun` at `Sure`.
@@ -56,10 +77,6 @@ tokens and context, and reports the readings it sets, with no score.
 any gold, counts for its lowercased text and gold tag. A known word gets its most common tag,
 `Sure` if train gave it one tag, else `Unsure`; any other word gets the commonest tag overall at
 `Unknown`. No features or score.
-
-`harper` is Harper's tagger, for study: `harper.rs` adapts its engine (Apache-2.0,
-`LICENSES/`), reading the model in `.harper/` (`--harper-model` names another). A `Word` token
-gets `Likely` if tagged, else `Noun` at `Unknown`. No kept set, features or score.
 
 ## Learners: `scripts/train/`
 
@@ -100,13 +117,14 @@ alignment rules (a token over several gold words with different tags counts agai
 ## The fetched data
 
 `make fetch-ewt` (`scripts/ewt/fetch.sh fetch`) downloads the UD English Web Treebank that
-`scripts/ewt/ewt.lock` pins into a scratch directory, checks each sha256, then swaps it in for
-`.ewt/`. A stamp equal to the lock makes a repeat free, and a failed
-download leaves a good `.ewt/` alone. The swap is not atomic but safe: a run killed mid-swap leaves
-a stamp unlike the lock, so the next fetch fetches again.
+`scripts/ewt/ewt.lock` pins into a scratch directory beside `.ewt/`, checks each sha256, then
+removes `.ewt/` and moves the scratch directory into its place (`.ewt/r2.18/` and a stamp). A stamp
+equal to the lock makes a repeat free, and a failed download leaves a good `.ewt/` alone.
+
+The swap is safe: a killed run leaves a stale stamp, so the next fetch redoes it.
 
 `make fetch-harper` pins Harper's model alike (`scripts/harper/harper.lock`, `.harper/`).
 
-EWT is CC BY-SA 4.0 and Harper's model was trained on CC BY-NC-SA and CC BY-SA data. Both locks say
-`trains no`: they measure, and nothing derived ships. No test or CI reads either.
+EWT is CC BY-SA 4.0 and Harper's model was trained on CC BY-NC-SA and CC BY-SA data. Both locks
+say `trains no`: they measure, and nothing derived ships. No test or CI job reads either.
 `make clean-ewt` and `clean-harper` remove them.

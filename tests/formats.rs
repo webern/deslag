@@ -2,7 +2,7 @@
 
 mod common;
 
-use common::{Repo, code, config_text, stderr};
+use common::{Repo, code, config_text, over_budget, stderr};
 
 /// A config that gives every Markdown file a budget of `global` bytes, in the language named by
 /// `extension`.
@@ -112,7 +112,7 @@ fn every_canonical_location_is_found_in_every_language() {
 
         assert_eq!(code(&output), 1, "config at {location}, stderr: {stderr}");
         assert!(
-            stderr.contains("AGENTS.md is larger than 5 bytes."),
+            over_budget(&stderr, "AGENTS.md", 5),
             "config at {location}, stderr: {stderr}"
         );
     }
@@ -130,11 +130,11 @@ fn the_three_languages_give_the_same_report() {
 
     let (toml_code, toml_stderr) = run("deslag.toml", FULL_TOML);
     assert_eq!(toml_code, 1, "stderr: {toml_stderr}");
-    for expected in [
-        "AGENTS.md is larger than 10 bytes.",
-        "Trim docs/guide.md to 20 bytes.",
-        "Calm notes.md down.",
-    ] {
+    assert!(
+        over_budget(&toml_stderr, "AGENTS.md", 10),
+        "stderr: {toml_stderr}"
+    );
+    for expected in ["Trim docs/guide.md to 20 bytes.", "Calm notes.md down."] {
         assert!(toml_stderr.contains(expected), "stderr: {toml_stderr}");
     }
     assert!(!toml_stderr.contains("short.md"), "stderr: {toml_stderr}");
@@ -182,10 +182,7 @@ fn an_earlier_location_in_any_language_wins() {
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains("AGENTS.md is larger than 5 bytes."),
-        "stderr: {stderr}"
-    );
+    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
 }
 
 #[test]
@@ -201,7 +198,7 @@ fn config_path_reads_the_language_its_extension_names() {
 
         assert_eq!(code(&output), 1, "{path}, stderr: {stderr}");
         assert!(
-            stderr.contains("AGENTS.md is larger than 5 bytes."),
+            over_budget(&stderr, "AGENTS.md", 5),
             "{path}, stderr: {stderr}"
         );
     }

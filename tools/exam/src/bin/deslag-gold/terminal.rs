@@ -88,31 +88,94 @@ fn leave() {
     let _ = disable_raw_mode();
 }
 
-/// The keys in, the screen out, until the owner quits.
+/// The signals that end the review from outside, which would leave the terminal raw.
+#[cfg(unix)]
+struct Signals(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+
+#[cfg(unix)]
+impl Signals {
+    fn watch() -> std::io::Result<Signals> {
+        use signal_hook::consts::{SIGHUP, SIGINT, SIGTERM};
+        let seen = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        for signal in [SIGTERM, SIGHUP, SIGINT] {
+            signal_hook::flag::register_usize(signal, seen.clone(), signal as usize)?;
+        }
+        Ok(Signals(seen))
+    }
+
+    /// The signal that arrived, if one did.
+    fn arrived(&self) -> Option<usize> {
+        match self.0.load(std::sync::atomic::Ordering::Relaxed) {
+            0 => None,
+            signal => Some(signal),
+        }
+    }
+}
+
+#[cfg(not(unix))]
+struct Signals;
+
+#[cfg(not(unix))]
+impl Signals {
+    fn watch() -> std::io::Result<Signals> {
+        Ok(Signals)
+    }
+
+    fn arrived(&self) -> Option<usize> {
+        None
+    }
+}
+
+fn stopped(signal: usize) -> std::io::Error {
+    std::io::Error::new(
+        std::io::ErrorKind::Interrupted,
+        format!("stopped by signal {signal}"),
+    )
+}
+
+/// What a key press asks of the session, or `None` for a key the review ignores. Control and
+/// Alt letters are not letters: Ctrl-N must not act as `n`. Ctrl-C asks to quit.
+fn key_of(code: KeyCode, modifiers: KeyModifiers) -> Option<Key> {
+    if modifiers.contains(KeyModifiers::CONTROL) && code == KeyCode::Char('c') {
+        return Some(Key::Interrupt);
+    }
+    match code {
+        KeyCode::Char(c) if (modifiers - KeyModifiers::SHIFT).is_empty() => Some(Key::Char(c)),
+        KeyCode::Down => Some(Key::Down),
+        KeyCode::Up => Some(Key::Up),
+        KeyCode::Enter => Some(Key::Enter),
+        KeyCode::Esc => Some(Key::Esc),
+        KeyCode::Backspace => Some(Key::Backspace),
+        _ => None,
+    }
+}
+
+/// The keys in, the screen out, until the owner quits or the process is told to stop.
 fn interact(session: &mut Session, store: &mut FileStore) -> std::io::Result<()> {
+    let signals = Signals::watch()?;
     enter()?;
     let result = (|| {
         let mut out = std::io::stdout();
         loop {
             let (width, height) = size()?;
             screen::draw(&mut out, session, width, height)?;
+            // The wait ends every so often, so a signal is noticed.
+            while !event::poll(std::time::Duration::from_millis(100))? {
+                if let Some(signal) = signals.arrived() {
+                    return Err(stopped(signal));
+                }
+            }
+            if let Some(signal) = signals.arrived() {
+                return Err(stopped(signal));
+            }
             let Event::Key(key) = event::read()? else {
                 continue;
             };
             if key.kind != KeyEventKind::Press {
                 continue;
             }
-            let interrupt =
-                key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c');
-            let key = match key.code {
-                _ if interrupt => Key::Interrupt,
-                KeyCode::Char(c) => Key::Char(c),
-                KeyCode::Down => Key::Down,
-                KeyCode::Up => Key::Up,
-                KeyCode::Enter => Key::Enter,
-                KeyCode::Esc => Key::Esc,
-                KeyCode::Backspace => Key::Backspace,
-                _ => continue,
+            let Some(key) = key_of(key.code, key.modifiers) else {
+                continue;
             };
             if session.press(key, store) == Outcome::Quit {
                 return Ok(());
@@ -131,13 +194,38 @@ struct FileStore {
 }
 
 impl Store for FileStore {
-    fn save(&mut self, text: &str) -> Result<(), String> {
-        write_beside(&self.path, text).map_err(|error| error.to_string())
+    fn save(&mut self, text: &str) -> Result<Option<String>, String> {
+        match write_beside(&self.path, text) {
+            Ok(Written::Synced) => Ok(None),
+            Ok(Written::NotSynced(error)) => Ok(Some(format!(
+                "the file is replaced, but syncing its directory failed: {error}"
+            ))),
+            Err(error) => Err(error.to_string()),
+        }
     }
 }
 
-/// Replaces the file `path` names (the target of a link) with `text`, all or nothing.
-fn write_beside(path: &Path, text: &str) -> std::io::Result<()> {
+/// How a write ended, once the file was replaced.
+enum Written {
+    /// The file and its directory are on disk.
+    Synced,
+    /// The file is replaced, but the directory could not be synced, so a power cut might undo it.
+    NotSynced(std::io::Error),
+}
+
+/// Replaces the file `path` names (the target of a link) with `text`, all or nothing. An error
+/// means the file is as it was; once the rename is done, a failed directory sync is only a
+/// warning.
+fn write_beside(path: &Path, text: &str) -> std::io::Result<Written> {
+    write_beside_with(path, text, sync_directory)
+}
+
+/// [`write_beside`], syncing the directory with `sync`.
+fn write_beside_with(
+    path: &Path,
+    text: &str,
+    sync: impl Fn(&Path) -> std::io::Result<()>,
+) -> std::io::Result<Written> {
     let target = std::fs::canonicalize(path)?;
     let mode = std::fs::metadata(&target)?.permissions();
     let name = target
@@ -145,7 +233,7 @@ fn write_beside(path: &Path, text: &str) -> std::io::Result<()> {
         .map_or("review".into(), |name| name.to_string_lossy().into_owned());
     let temporary = target.with_file_name(format!(".{name}.review"));
     let write = || -> std::io::Result<()> {
-        let mut file = std::fs::File::create(&temporary)?;
+        let mut file = create_new(&temporary)?;
         file.set_permissions(mode)?;
         file.write_all(text.as_bytes())?;
         file.sync_all()?;
@@ -154,7 +242,24 @@ fn write_beside(path: &Path, text: &str) -> std::io::Result<()> {
     write().inspect_err(|_| {
         let _ = std::fs::remove_file(&temporary);
     })?;
-    sync_directory(&target)
+    Ok(match sync(&target) {
+        Ok(()) => Written::Synced,
+        Err(error) => Written::NotSynced(error),
+    })
+}
+
+/// Creates `path`, which must not exist. A leftover of a crash, or a link planted under the name,
+/// is removed first (the link itself, never what it points to), so the file written is new.
+fn create_new(path: &Path) -> std::io::Result<std::fs::File> {
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    match options.open(path) {
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            std::fs::remove_file(path)?;
+            options.open(path)
+        }
+        other => other,
+    }
 }
 
 /// Makes the rename of `file` durable, where a directory can be opened and synced.
@@ -255,6 +360,50 @@ mod tests {
         .unwrap();
         let mode = std::fs::metadata(&plain).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o600);
+    }
+
+    #[test]
+    fn a_failed_directory_sync_after_the_rename_is_a_warning_not_an_error() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("owner.conllu");
+        std::fs::write(&path, "old").unwrap();
+        let written =
+            write_beside_with(&path, "new", |_| Err(std::io::Error::other("no sync here")))
+                .unwrap();
+        assert!(matches!(written, Written::NotSynced(_)));
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "new");
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 1);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_planted_link_under_the_temporary_name_is_not_followed() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("owner.conllu");
+        std::fs::write(&path, "old").unwrap();
+        let victim = dir.path().join("victim");
+        std::fs::write(&victim, "keep").unwrap();
+        std::os::unix::fs::symlink(&victim, dir.path().join(".owner.conllu.review")).unwrap();
+        FileStore { path: path.clone() }.save("new").unwrap();
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "new");
+        assert_eq!(std::fs::read_to_string(&victim).unwrap(), "keep");
+    }
+
+    #[test]
+    fn control_letters_are_not_letters() {
+        let none = KeyModifiers::NONE;
+        let ctrl = KeyModifiers::CONTROL;
+        assert_eq!(key_of(KeyCode::Char('n'), none), Some(Key::Char('n')));
+        assert_eq!(
+            key_of(KeyCode::Char('N'), KeyModifiers::SHIFT),
+            Some(Key::Char('N'))
+        );
+        assert_eq!(key_of(KeyCode::Char('n'), ctrl), None);
+        assert_eq!(key_of(KeyCode::Char('q'), ctrl), None);
+        assert_eq!(key_of(KeyCode::Char('p'), KeyModifiers::ALT), None);
+        assert_eq!(key_of(KeyCode::Char('c'), ctrl), Some(Key::Interrupt));
+        assert_eq!(key_of(KeyCode::Enter, none), Some(Key::Enter));
+        assert_eq!(key_of(KeyCode::Left, none), None);
     }
 
     #[test]

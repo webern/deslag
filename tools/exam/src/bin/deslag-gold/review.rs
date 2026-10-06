@@ -38,8 +38,9 @@ use crate::patch::{self, Columns, Comment, Patch};
 
 /// Where a session saves its file.
 pub trait Store {
-    /// Replaces the whole file with `text`, all or nothing.
-    fn save(&mut self, text: &str) -> Result<(), String>;
+    /// Replaces the whole file with `text`, all or nothing. `Ok(Some(warning))` means the file
+    /// was replaced but something after it failed, such as syncing the directory.
+    fn save(&mut self, text: &str) -> Result<Option<String>, String>;
 }
 
 /// What deslag reads of a word.
@@ -551,13 +552,18 @@ impl Session {
         } else {
             self.at == 0
         };
-        if let Err(message) = self.save(store) {
-            self.notice = format!("not saved: {message}");
-            return;
-        }
+        let warning = match self.save(store) {
+            Ok(warning) => {
+                warning.map_or(String::new(), |warning| format!(" (warning: {warning})"))
+            }
+            Err(message) => {
+                self.notice = format!("not saved: {message}");
+                return;
+            }
+        };
         if at_edge {
             self.notice = format!(
-                "saved; {} of {} sentences reviewed",
+                "saved; {} of {} sentences reviewed{warning}",
                 self.reviewed(),
                 self.sentences.len()
             );
@@ -565,11 +571,11 @@ impl Session {
         }
         self.at = if forward { self.at + 1 } else { self.at - 1 };
         self.cursor = self.sentence().first_to_do();
-        self.notice = "saved".into();
+        self.notice = format!("saved{warning}");
     }
 
     /// Writes the sentence on screen into the file. The session changes only if the store took it.
-    fn save(&mut self, store: &mut dyn Store) -> Result<(), String> {
+    fn save(&mut self, store: &mut dyn Store) -> Result<Option<String>, String> {
         let sentence = self.sentence();
         let mut patch = Patch::default();
         for row in &sentence.rows {
@@ -613,10 +619,10 @@ impl Session {
         // The new text is read before it is stored, so text that does not load never replaces
         // the file.
         let blocks = self.read_back(&text)?;
-        store.save(&text)?;
+        let warning = store.save(&text)?;
         self.source = text;
         self.refresh(&blocks);
-        Ok(())
+        Ok(warning)
     }
 
     /// `text` read as the file the session would hold, or why it is not.
@@ -880,15 +886,16 @@ pub mod tests {
     pub struct Memory {
         pub saved: Vec<String>,
         pub fail: bool,
+        pub warning: Option<String>,
     }
 
     impl Store for Memory {
-        fn save(&mut self, text: &str) -> Result<(), String> {
+        fn save(&mut self, text: &str) -> Result<Option<String>, String> {
             if self.fail {
                 return Err("disk full".into());
             }
             self.saved.push(text.to_string());
-            Ok(())
+            Ok(self.warning.clone())
         }
     }
 
@@ -1100,6 +1107,22 @@ pub mod tests {
             session.press(Key::Char(c), &mut store);
         }
         assert_eq!(session.mode, Mode::Guide(Base::Pn));
+    }
+
+    #[test]
+    fn a_save_with_a_warning_is_saved_and_the_session_moves_on() {
+        let mut session = open(SKELETON);
+        let mut store = Memory {
+            warning: Some("the directory was not synced".into()),
+            ..Memory::default()
+        };
+        fill(&mut session, &mut store);
+        session.press(Key::Char('n'), &mut store);
+        assert_eq!(session.at, 1);
+        assert!(session.notice.starts_with("saved"), "{}", session.notice);
+        assert!(session.notice.contains("not synced"), "{}", session.notice);
+        assert!(!session.notice.contains("not saved"), "{}", session.notice);
+        assert_eq!(store.saved.last().unwrap(), session.source());
     }
 
     #[test]

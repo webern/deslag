@@ -1,0 +1,51 @@
+# Picked from the ranking of the big tier (image v6) by the deslag-review-pick skill. id, a tab, why.
+rb646f0fd55	prose, human: a run of flags in a sentence; J/P and N/PN guesses on -on-sm style words
+rb9253a51b4	prose, human: file paths in the middle of a sentence; P/R after the paths
+r3b94d9853a	prose, human: hyphenated addon names as nouns inside a plain English sentence
+r336bc8b407	prose, human: telegraphic "required to access" with product names; J/V and P/T
+r103f636263	prose, human: "allows to get app informations", odd grammar; D/PR on This
+r7afbeb253e	prose, human: a list of file formats in a sentence; P/T on the exports clause
+r77b1aac497	list-item, human: a changelog line with method chains and an issue number (Symbol)
+r1d18660c9c	list-item, human: a gitmoji, a verb phrase and a handle; command words as verbs
+r59b2558435	list-item, human: long sentence with a flag and a symbol; P/R on "as well as"
+r3f056297a5	list-item, human: clipped changelog English with no origin cue; J/N and N/NM
+r53b3ce2cb9	list-item, human: "objects:" label then a description; D/J on "various typed"
+r6c308db76a	heading, human: an imperative heading; "files rather than urls", C/P and P/T
+re468e9034d	heading, human: a to-do heading that ends in a status word; command word in it
+r768282a7c3	heading, human: noun-phrase heading "dynamic SQL expressions"; J/N on dynamic
+r352ab66394	heading, human: a file name alone, a fragment with a Path origin
+r1d459cf455	table-cell, human: a long plugin description in a cell; N/PN on product names
+rd933a0c7fc	table-cell, human: a flag with a placeholder, "-a IP, --addr IP"; Flag origin fragment
+rcecb7848b9	table-cell, human: an imperative with a path; "Also symlink m4"
+r023c0274cb	prose, llm: task numbers and command-like ids inside a sentence; N/V on names
+raaacd5b8b4	prose, llm: a "Tech Stack:" label and a run of tools with a Command origin
+r4ab67b637b	prose, llm: a list of nouns, "no-external-LLM"; J/N and N/V
+r55e26457f7	prose, llm: log-style past tense with ids and a cron-id; J/V and N/PN
+r4f0e3825e2	prose, llm: an instruction ending in a colon, NITRO_-prefixed env vars
+rec5a1b2ddd	prose, llm: a flag as the subject of "forces libvirt to use"; Flag origin
+r47a7a1aaca	list-item, llm: a bracketed scope then an imperative; C/P and J/PN on "org noreply"
+r2b97f667ee	list-item, llm: two clauses split by a semicolon; D/R on "no structured return type"
+r935bf50e00	list-item, llm: a flag as the object of "Use"; P/T on "ready-to-use"
+r9c37abfb29	list-item, llm: "API Security : JWT tokens", a label with a space before the colon
+r06df9e9ede	list-item, llm: codes P1 to P4 in parentheses inside a sentence; J/N
+r232f88243a	heading, llm: an action heading with a parenthetical; command words as verbs
+r971a3b8e7a	heading, llm: "Mark/Unmark DC as Degraded", a slash between verbs and a participle
+r7d7ce573e7	heading, llm: "P1 Critical Fixes", a priority code before adjectives; C/P
+r77eb393677	table-cell, llm: a list of language codes; the codes read as words
+r703ebb5194	table-cell, llm: a hardware fragment, "no GPU, cloud embedding"; D/R
+rc16c35506a	table-cell, llm: a short purpose clause "Required by covr"; C/P
+r90a832dd63	table-cell, llm: a command line, "git diff --name-only"; Command and Flag origins
+rc87bfb791f	prose, mixed: plugin names after "are", with Command origins; N/V on hyphenated names
+r8f1834960b	prose, mixed: version numbers and acronyms in a technical sentence; N/PN
+r0624c4fa0b	prose, mixed: a file name ending the sentence after a space; D/R on "such as"
+r98be87b02f	prose, mixed: a NOTE with package names that read as words; D/PR
+r6df5d88f18	prose, mixed: a slash between product names and a trailing file name; C/P
+r9ded797490	list-item, mixed: product names and version words, "Windows 7 / Windows Server 2008 R2"
+r2b1b943f28	list-item, mixed: "as benchmarked no improvement", clipped English; J/V
+r7a0d644197	list-item, mixed: a code identifier, reflect.Value, as a noun phrase; J/N
+rb67f436c1b	list-item, mixed: "Allow specifying ... from env variable" with an issue number; Command
+r3574b3fb06	list-item, mixed: a tool name then a dash and a gloss; Command origins
+r4c8f1609bb	heading, mixed: acronyms RP and OP as nouns after "acting as"; P/R
+r38e6275248	heading, mixed: "Notes to Distro Package Maintainers", noun stack and P/T on to
+rcecdbea5e7	heading, mixed: quoted product names after "Rename"; J/N
+r3e9b6aae50	table-cell, mixed: "Apply jq filter to JSON logs." an imperative with a tool name

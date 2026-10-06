@@ -1,0 +1,1160 @@
+# exam.tokens = deslag
+# sent_id = rb646f0fd55
+# exam.context = prose
+# tier = human
+# source = patternfly/patternfly batches/2026-09-27-02/human/patternfly--patternfly/src__patternfly__utilities__Alignment__examples__Alignment.md
+# license = MIT
+# text = Breakpoints: base (no breakpoint value), -on-sm, -on-md, -on-lg, -on-xl.
+1	Breakpoints	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	base	_	_	_	_	_	_	_	Kind=Word
+4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	no	_	_	_	_	_	_	_	Kind=Word
+6	breakpoint	_	_	_	_	_	_	_	Kind=Word
+7	value	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+12	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	sm	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+14	,	_	_	_	_	_	_	_	Kind=Punctuation
+15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+17	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+18	md	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+19	,	_	_	_	_	_	_	_	Kind=Punctuation
+20	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+21	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+23	lg	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+24	,	_	_	_	_	_	_	_	Kind=Punctuation
+25	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+26	on	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+27	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+28	xl	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+29	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rb9253a51b4
+# exam.context = prose
+# tier = human
+# source = rfabbri/minus batches/2026-09-27-02/human/rfabbri--minus/README.md
+# license = BSD-2-Clause
+# text = For SSE/VMX use, good examples include: Eigen/src/LU/arch/Inverse_SSE.h As well as VXL's VNL
+1	For	_	_	_	_	_	_	_	Kind=Word
+2	SSE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	VMX	_	_	_	_	_	_	_	Kind=Word
+5	use	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+6	,	_	_	_	_	_	_	_	Kind=Punctuation
+7	good	_	_	_	_	_	_	_	Kind=Word
+8	examples	_	_	_	_	_	_	_	Kind=Word
+9	include	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	:	_	_	_	_	_	_	_	Kind=Punctuation
+11	Eigen	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	src	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	LU	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	arch	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	Inverse_SSE.h	_	_	_	_	_	_	_	Kind=Word
+20	As	_	_	_	_	_	_	_	Kind=Word
+21	well	_	_	_	_	_	_	_	Kind=Word
+22	as	_	_	_	_	_	_	_	Kind=Word
+23	VXL's	_	_	_	_	_	_	_	Kind=Word
+24	VNL	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r3b94d9853a
+# exam.context = prose
+# tier = human
+# source = storybookjs/react-native batches/2026-09-27-02/human/storybookjs--react-native/app__react-native__docs__manual-setup.md
+# license = MIT
+# text = Other ondevice supported addons are addon-ondevice-backgrounds and addon-ondevice-notes.
+1	Other	_	_	_	_	_	_	_	Kind=Word
+2	ondevice	_	_	_	_	_	_	_	Kind=Word
+3	supported	_	_	_	_	_	_	_	Kind=Word
+4	addons	_	_	_	_	_	_	_	Kind=Word
+5	are	_	_	_	_	_	_	_	Kind=Word
+6	addon	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	ondevice	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	backgrounds	_	_	_	_	_	_	_	Kind=Word
+11	and	_	_	_	_	_	_	_	Kind=Word
+12	addon	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+14	ondevice	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	notes	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+17	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r336bc8b407
+# exam.context = prose
+# tier = human
+# source = blakeblackshear/frigate batches/2026-09-27-02/human/blakeblackshear--frigate/docs__docs__configuration__nvdec.md
+# license = MIT
+# text = nVidia closed source driver required to access NVDEC. nvidia-docker required to pass NVDEC to docker.
+1	nVidia	_	_	_	_	_	_	_	Kind=Word
+2	closed	_	_	_	_	_	_	_	Kind=Word
+3	source	_	_	_	_	_	_	_	Kind=Word
+4	driver	_	_	_	_	_	_	_	Kind=Word
+5	required	_	_	_	_	_	_	_	Kind=Word
+6	to	_	_	_	_	_	_	_	Kind=Word
+7	access	_	_	_	_	_	_	_	Kind=Word
+8	NVDEC	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	.	_	_	_	_	_	_	_	Kind=Punctuation
+10	nvidia	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	docker	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+13	required	_	_	_	_	_	_	_	Kind=Word
+14	to	_	_	_	_	_	_	_	Kind=Word
+15	pass	_	_	_	_	_	_	_	Kind=Word
+16	NVDEC	_	_	_	_	_	_	_	Kind=Word
+17	to	_	_	_	_	_	_	_	Kind=Word
+18	docker	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+19	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r103f636263
+# exam.context = prose
+# tier = human
+# source = getwud/wud batches/2026-09-27-02/human/getwud--wud/docs__api__app.md
+# license = MIT
+# text = This API allows to get app informations.
+1	This	_	_	_	_	_	_	_	Kind=Word
+2	API	_	_	_	_	_	_	_	Kind=Word
+3	allows	_	_	_	_	_	_	_	Kind=Word
+4	to	_	_	_	_	_	_	_	Kind=Word
+5	get	_	_	_	_	_	_	_	Kind=Word
+6	app	_	_	_	_	_	_	_	Kind=Word
+7	informations	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r7afbeb253e
+# exam.context = prose
+# tier = human
+# source = cihai/unihan-etl batches/2026-09-27-02/human/cihai--unihan-etl/README.md
+# license = MIT
+# text = To make this possible, unihan-etl exports to JSON, YAML, and python list/dicts.
+1	To	_	_	_	_	_	_	_	Kind=Word
+2	make	_	_	_	_	_	_	_	Kind=Word
+3	this	_	_	_	_	_	_	_	Kind=Word
+4	possible	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	unihan	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	etl	_	_	_	_	_	_	_	Kind=Word
+9	exports	_	_	_	_	_	_	_	Kind=Word
+10	to	_	_	_	_	_	_	_	Kind=Word
+11	JSON	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	,	_	_	_	_	_	_	_	Kind=Punctuation
+13	YAML	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	,	_	_	_	_	_	_	_	Kind=Punctuation
+15	and	_	_	_	_	_	_	_	Kind=Word
+16	python	_	_	_	_	_	_	_	Kind=Word
+17	list	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	dicts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+20	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r77b1aac497
+# exam.context = list-item
+# tier = human
+# source = subquery/subql batches/2026-09-27-01/human/subquery--subql/packages__node__CHANGELOG.md
+# license = Apache-2.0
+# text = Refactor api.query...multi(), api.queryMulti() to use rpc.queryStorageAt() (#244)
+1	Refactor	_	_	_	_	_	_	_	Kind=Word
+2	api.query	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+3	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	multi	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	api.queryMulti	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+11	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	)	_	_	_	_	_	_	_	Kind=Punctuation
+13	to	_	_	_	_	_	_	_	Kind=Word
+14	use	_	_	_	_	_	_	_	Kind=Word
+15	rpc.queryStorageAt	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol|SpaceAfter=No
+16	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	)	_	_	_	_	_	_	_	Kind=Punctuation
+18	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+20	244	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+21	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r1d18660c9c
+# exam.context = list-item
+# tier = human
+# source = TryGhost/Ghost-CLI batches/2026-09-27-02/human/TryGhost--Ghost-CLI/CHANGELOG.md
+# license = MIT
+# text = :art: switch to using sudo for systemctl commands @acburdine
+1	:	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	art	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	switch	_	_	_	_	_	_	_	Kind=Word
+5	to	_	_	_	_	_	_	_	Kind=Word
+6	using	_	_	_	_	_	_	_	Kind=Word
+7	sudo	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+8	for	_	_	_	_	_	_	_	Kind=Word
+9	systemctl	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+10	commands	_	_	_	_	_	_	_	Kind=Word
+11	@	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	acburdine	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r59b2558435
+# exam.context = list-item
+# tier = human
+# source = OpenOLAT/OpenOLAT batches/2026-09-27-02/human/OpenOLAT--OpenOLAT/src__main__webapp__static__movie__mediaelementjs__README.md
+# license = Apache-2.0
+# text = By default, MediaElement has bundled native renderers, such as HLS, M(PEG)-DASH and FLV, as well as YouTube and Flash shims.
+1	By	_	_	_	_	_	_	_	Kind=Word
+2	default	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	,	_	_	_	_	_	_	_	Kind=Punctuation
+4	MediaElement	_	_	_	_	_	_	_	Kind=Code
+5	has	_	_	_	_	_	_	_	Kind=Word
+6	bundled	_	_	_	_	_	_	_	Kind=Word
+7	native	_	_	_	_	_	_	_	Kind=Word
+8	renderers	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	such	_	_	_	_	_	_	_	Kind=Word
+11	as	_	_	_	_	_	_	_	Kind=Word
+12	HLS	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	,	_	_	_	_	_	_	_	Kind=Punctuation
+14	M	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	PEG	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+17	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+18	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	DASH	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+20	and	_	_	_	_	_	_	_	Kind=Word
+21	FLV	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+22	,	_	_	_	_	_	_	_	Kind=Punctuation
+23	as	_	_	_	_	_	_	_	Kind=Word
+24	well	_	_	_	_	_	_	_	Kind=Word
+25	as	_	_	_	_	_	_	_	Kind=Word
+26	YouTube	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+27	and	_	_	_	_	_	_	_	Kind=Word
+28	Flash	_	_	_	_	_	_	_	Kind=Word
+29	shims	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+30	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r3f056297a5
+# exam.context = list-item
+# tier = human
+# source = pantsbuild/pants batches/2026-09-27-02/human/pantsbuild--pants/src__python__pants__notes__2.9.x.md
+# license = Apache-2.0
+# text = Fix dup 3rdparty dists introduced by local dists.
+1	Fix	_	_	_	_	_	_	_	Kind=Word
+2	dup	_	_	_	_	_	_	_	Kind=Word
+3	3rdparty	_	_	_	_	_	_	_	Kind=Word
+4	dists	_	_	_	_	_	_	_	Kind=Word
+5	introduced	_	_	_	_	_	_	_	Kind=Word
+6	by	_	_	_	_	_	_	_	Kind=Word
+7	local	_	_	_	_	_	_	_	Kind=Word
+8	dists	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r53b3ce2cb9
+# exam.context = list-item
+# tier = human
+# source = oppia/oppia batches/2026-09-27-02/human/oppia--oppia/extensions__README.md
+# license = Apache-2.0
+# text = objects: The frontend & backend code for various typed editors like boolean editor, filepath editor etc.
+1	objects	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	The	_	_	_	_	_	_	_	Kind=Word
+4	frontend	_	_	_	_	_	_	_	Kind=Word
+5	&	_	_	_	_	_	_	_	Kind=Punctuation
+6	backend	_	_	_	_	_	_	_	Kind=Word
+7	code	_	_	_	_	_	_	_	Kind=Word
+8	for	_	_	_	_	_	_	_	Kind=Word
+9	various	_	_	_	_	_	_	_	Kind=Word
+10	typed	_	_	_	_	_	_	_	Kind=Word
+11	editors	_	_	_	_	_	_	_	Kind=Word
+12	like	_	_	_	_	_	_	_	Kind=Word
+13	boolean	_	_	_	_	_	_	_	Kind=Word
+14	editor	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	,	_	_	_	_	_	_	_	Kind=Punctuation
+16	filepath	_	_	_	_	_	_	_	Kind=Word
+17	editor	_	_	_	_	_	_	_	Kind=Word
+18	etc	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+19	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r6c308db76a
+# exam.context = heading
+# tier = human
+# source = rohit-gohri/redocusaurus batches/2026-09-27-02/human/rohit-gohri--redocusaurus/website__docs__guides__server-side-rendering.md
+# license = MIT
+# text = Use yaml files rather than urls to load OpenAPI files
+1	Use	_	_	_	_	_	_	_	Kind=Word
+2	yaml	_	_	_	_	_	_	_	Kind=Word
+3	files	_	_	_	_	_	_	_	Kind=Word
+4	rather	_	_	_	_	_	_	_	Kind=Word
+5	than	_	_	_	_	_	_	_	Kind=Word
+6	urls	_	_	_	_	_	_	_	Kind=Word
+7	to	_	_	_	_	_	_	_	Kind=Word
+8	load	_	_	_	_	_	_	_	Kind=Word
+9	OpenAPI	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+10	files	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = re468e9034d
+# exam.context = heading
+# tier = human
+# source = CodeverDotDev/codever batches/2026-09-27-02/human/CodeverDotDev--codever/backend__docs__release-notes__2020-03-29-user-profile-release.md
+# license = MIT
+# text = set AWS env variables in pm2 for prod - DONE
+1	set	_	_	_	_	_	_	_	Kind=Word
+2	AWS	_	_	_	_	_	_	_	Kind=Word
+3	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+4	variables	_	_	_	_	_	_	_	Kind=Word
+5	in	_	_	_	_	_	_	_	Kind=Word
+6	pm2	_	_	_	_	_	_	_	Kind=Word
+7	for	_	_	_	_	_	_	_	Kind=Word
+8	prod	_	_	_	_	_	_	_	Kind=Word
+9	-	_	_	_	_	_	_	_	Kind=Punctuation
+10	DONE	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r768282a7c3
+# exam.context = heading
+# tier = human
+# source = fsprojects/Rezoom.SQL batches/2026-09-27-02/human/fsprojects--Rezoom.SQL/doc__Language__DynamicSQL.md
+# license = MIT
+# text = Adding dynamic SQL expressions to static SQL queries
+1	Adding	_	_	_	_	_	_	_	Kind=Word
+2	dynamic	_	_	_	_	_	_	_	Kind=Word
+3	SQL	_	_	_	_	_	_	_	Kind=Word
+4	expressions	_	_	_	_	_	_	_	Kind=Word
+5	to	_	_	_	_	_	_	_	Kind=Word
+6	static	_	_	_	_	_	_	_	Kind=Word
+7	SQL	_	_	_	_	_	_	_	Kind=Word
+8	queries	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r352ab66394
+# exam.context = heading
+# tier = human
+# source = keithrbennett/wifiwand batches/2026-09-27-02/human/keithrbennett--wifiwand/logo__logo.md
+# license = Apache-2.0
+# text = wifiwand-logomark-color.png
+1	wifiwand	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	logomark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	color.png	_	_	_	_	_	_	_	Kind=Word|Origin=Path
+
+# sent_id = r1d459cf455
+# exam.context = table-cell
+# tier = human
+# source = facebook/docusaurus batches/2026-09-27-02/human/facebook--docusaurus/website__docs__api__plugins__plugin-content-pages.md
+# license = CC-BY-4.0 OR MIT
+# text = Custom Rehype plugins passed to MDX before the default Docusaurus Rehype plugins.
+1	Custom	_	_	_	_	_	_	_	Kind=Word
+2	Rehype	_	_	_	_	_	_	_	Kind=Word
+3	plugins	_	_	_	_	_	_	_	Kind=Word
+4	passed	_	_	_	_	_	_	_	Kind=Word
+5	to	_	_	_	_	_	_	_	Kind=Word
+6	MDX	_	_	_	_	_	_	_	Kind=Word
+7	before	_	_	_	_	_	_	_	Kind=Word
+8	the	_	_	_	_	_	_	_	Kind=Word
+9	default	_	_	_	_	_	_	_	Kind=Word
+10	Docusaurus	_	_	_	_	_	_	_	Kind=Word
+11	Rehype	_	_	_	_	_	_	_	Kind=Word
+12	plugins	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rd933a0c7fc
+# exam.context = table-cell
+# tier = human
+# source = FabMo/FabMo-Engine batches/2026-09-27-02/human/FabMo--FabMo-Engine/dashboard__apps__video.fma__README.md
+# license = Apache-2.0
+# text = -a IP, --addr IP
+1	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	a	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+3	IP	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	,	_	_	_	_	_	_	_	Kind=Punctuation
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	addr	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+8	IP	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rcecb7848b9
+# exam.context = table-cell
+# tier = human
+# source = MaxLeiter/maxleiter.com batches/2026-09-27-02/human/MaxLeiter--maxleiter.com/posts__X11.md
+# license = MIT
+# text = Also symlink m4 to /opt/local/bin/gm4.
+1	Also	_	_	_	_	_	_	_	Kind=Word
+2	symlink	_	_	_	_	_	_	_	Kind=Word
+3	m4	_	_	_	_	_	_	_	Kind=Word
+4	to	_	_	_	_	_	_	_	Kind=Word
+5	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	opt	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	local	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	bin	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	gm4	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r023c0274cb
+# exam.context = prose
+# tier = llm
+# source = ahrefs/ocannl batches/2026-09-27-02/llm/ahrefs--ocannl/docs__proposals__gh-ocannl-575-narrow-register-tiling.md
+# license = BSD-2-Clause
+# text = Re-scoped out of gh-ocannl-530 (originally gh-ocannl-516 task 3, gh-ocannl-517's packing remark, and gh-ocannl-516 task 4).
+1	Re	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	scoped	_	_	_	_	_	_	_	Kind=Word
+4	out	_	_	_	_	_	_	_	Kind=Word
+5	of	_	_	_	_	_	_	_	Kind=Word
+6	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	530	_	_	_	_	_	_	_	Kind=Number
+11	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+12	originally	_	_	_	_	_	_	_	Kind=Word
+13	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+14	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+15	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	516	_	_	_	_	_	_	_	Kind=Number
+18	task	_	_	_	_	_	_	_	Kind=Word
+19	3	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+20	,	_	_	_	_	_	_	_	Kind=Punctuation
+21	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+23	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+25	517	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+26	'	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+27	s	_	_	_	_	_	_	_	Kind=Word
+28	packing	_	_	_	_	_	_	_	Kind=Word
+29	remark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+30	,	_	_	_	_	_	_	_	Kind=Punctuation
+31	and	_	_	_	_	_	_	_	Kind=Word
+32	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+33	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+34	ocannl	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+35	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+36	516	_	_	_	_	_	_	_	Kind=Number
+37	task	_	_	_	_	_	_	_	Kind=Word
+38	4	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+39	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+40	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = raaacd5b8b4
+# exam.context = prose
+# tier = llm
+# source = asosteam/asos-devprod-git-ai-old batches/2026-09-27-02/llm/asosteam--asos-devprod-git-ai-old/docs__superpowers__plans__2026-04-30-ai-helper-script-improvements.md
+# license = Apache-2.0
+# text = Tech Stack: Python 3, subprocess for git/gh CLI, argparse for command parsing
+1	Tech	_	_	_	_	_	_	_	Kind=Word
+2	Stack	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	Python	_	_	_	_	_	_	_	Kind=Word
+5	3	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+6	,	_	_	_	_	_	_	_	Kind=Punctuation
+7	subprocess	_	_	_	_	_	_	_	Kind=Word
+8	for	_	_	_	_	_	_	_	Kind=Word
+9	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+10	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	gh	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+12	CLI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	,	_	_	_	_	_	_	_	Kind=Punctuation
+14	argparse	_	_	_	_	_	_	_	Kind=Word
+15	for	_	_	_	_	_	_	_	Kind=Word
+16	command	_	_	_	_	_	_	_	Kind=Word
+17	parsing	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r4ab67b637b
+# exam.context = prose
+# tier = llm
+# source = gowtham0992/jawbreaker batches/2026-09-27-02/llm/gowtham0992--jawbreaker/HONEST_SUBMISSION.md
+# license = MIT
+# text = The repo shows evals, safety fallbacks, Modal training, Codex traces, field notes, and no-external-LLM-API runtime evidence.
+1	The	_	_	_	_	_	_	_	Kind=Word
+2	repo	_	_	_	_	_	_	_	Kind=Word
+3	shows	_	_	_	_	_	_	_	Kind=Word
+4	evals	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	safety	_	_	_	_	_	_	_	Kind=Word
+7	fallbacks	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	Modal	_	_	_	_	_	_	_	Kind=Word
+10	training	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	Codex	_	_	_	_	_	_	_	Kind=Word
+13	traces	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	,	_	_	_	_	_	_	_	Kind=Punctuation
+15	field	_	_	_	_	_	_	_	Kind=Word
+16	notes	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+17	,	_	_	_	_	_	_	_	Kind=Punctuation
+18	and	_	_	_	_	_	_	_	Kind=Word
+19	no	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+20	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+21	external	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+23	LLM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+25	API	_	_	_	_	_	_	_	Kind=Word
+26	runtime	_	_	_	_	_	_	_	Kind=Word
+27	evidence	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+28	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r55e26457f7
+# exam.context = prose
+# tier = llm
+# source = Lucent-Financial-Group/Zeta batches/2026-09-27-02/llm/Lucent-Financial-Group--Zeta/docs__hygiene-history__ticks__2026__05__01__0033Z.md
+# license = Apache-2.0
+# text = Batch-fixed all 4 shards to use cron-id 98fc7424 (the live cron throughout this session); resolved 4 threads.
+1	Batch	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	fixed	_	_	_	_	_	_	_	Kind=Word
+4	all	_	_	_	_	_	_	_	Kind=Word
+5	4	_	_	_	_	_	_	_	Kind=Number
+6	shards	_	_	_	_	_	_	_	Kind=Word
+7	to	_	_	_	_	_	_	_	Kind=Word
+8	use	_	_	_	_	_	_	_	Kind=Word
+9	cron	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	id	_	_	_	_	_	_	_	Kind=Word
+12	98fc7424	_	_	_	_	_	_	_	Kind=Word
+13	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+14	the	_	_	_	_	_	_	_	Kind=Word
+15	live	_	_	_	_	_	_	_	Kind=Word
+16	cron	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+17	throughout	_	_	_	_	_	_	_	Kind=Word
+18	this	_	_	_	_	_	_	_	Kind=Word
+19	session	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+20	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+21	;	_	_	_	_	_	_	_	Kind=Punctuation
+22	resolved	_	_	_	_	_	_	_	Kind=Word
+23	4	_	_	_	_	_	_	_	Kind=Number
+24	threads	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+25	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r4f0e3825e2
+# exam.context = prose
+# tier = llm
+# source = getsentry/junior batches/2026-09-27-02/llm/getsentry--junior/agents__skills__nitro__references__api-surface.md
+# license = Apache-2.0
+# text = Define defaults in config, override with NITRO_-prefixed env vars at runtime:
+1	Define	_	_	_	_	_	_	_	Kind=Word
+2	defaults	_	_	_	_	_	_	_	Kind=Word
+3	in	_	_	_	_	_	_	_	Kind=Word
+4	config	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	override	_	_	_	_	_	_	_	Kind=Word
+7	with	_	_	_	_	_	_	_	Kind=Word
+8	NITRO_	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
+9	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	prefixed	_	_	_	_	_	_	_	Kind=Word
+11	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+12	vars	_	_	_	_	_	_	_	Kind=Word
+13	at	_	_	_	_	_	_	_	Kind=Word
+14	runtime	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	:	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rec5a1b2ddd
+# exam.context = prose
+# tier = llm
+# source = ubolonton/emacs-module-rs batches/2026-09-27-02/llm/ubolonton--emacs-module-rs/vm__windows__INSTALL.md
+# license = BSD-3-Clause
+# text = --boot uefi forces libvirt to use OVMF (UEFI).
+1	--boot uefi	_	_	_	_	_	_	_	Kind=Code
+2	forces	_	_	_	_	_	_	_	Kind=Word
+3	libvirt	_	_	_	_	_	_	_	Kind=Word
+4	to	_	_	_	_	_	_	_	Kind=Word
+5	use	_	_	_	_	_	_	_	Kind=Word
+6	OVMF	_	_	_	_	_	_	_	Kind=Word
+7	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	UEFI	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r47a7a1aaca
+# exam.context = list-item
+# tier = llm
+# source = cozystack/cozystack batches/2026-09-27-02/llm/cozystack--cozystack/docs__changelogs__v1.2.2.md
+# license = Apache-2.0
+# text = [ci] Use cozystack org noreply email for bot commits : Updates CI workflows to use the cozystack organization noreply email for bot commits ( @kvaps in #2392, #2393).
+1	[	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+2	ci	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	]	_	_	_	_	_	_	_	Kind=Punctuation
+4	Use	_	_	_	_	_	_	_	Kind=Word
+5	cozystack	_	_	_	_	_	_	_	Kind=Word
+6	org	_	_	_	_	_	_	_	Kind=Word
+7	noreply	_	_	_	_	_	_	_	Kind=Word
+8	email	_	_	_	_	_	_	_	Kind=Word
+9	for	_	_	_	_	_	_	_	Kind=Word
+10	bot	_	_	_	_	_	_	_	Kind=Word
+11	commits	_	_	_	_	_	_	_	Kind=Word
+12	:	_	_	_	_	_	_	_	Kind=Punctuation
+13	Updates	_	_	_	_	_	_	_	Kind=Word
+14	CI	_	_	_	_	_	_	_	Kind=Word
+15	workflows	_	_	_	_	_	_	_	Kind=Word
+16	to	_	_	_	_	_	_	_	Kind=Word
+17	use	_	_	_	_	_	_	_	Kind=Word
+18	the	_	_	_	_	_	_	_	Kind=Word
+19	cozystack	_	_	_	_	_	_	_	Kind=Word
+20	organization	_	_	_	_	_	_	_	Kind=Word
+21	noreply	_	_	_	_	_	_	_	Kind=Word
+22	email	_	_	_	_	_	_	_	Kind=Word
+23	for	_	_	_	_	_	_	_	Kind=Word
+24	bot	_	_	_	_	_	_	_	Kind=Word
+25	commits	_	_	_	_	_	_	_	Kind=Word
+26	(	_	_	_	_	_	_	_	Kind=Punctuation
+27	@	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+28	kvaps	_	_	_	_	_	_	_	Kind=Word
+29	in	_	_	_	_	_	_	_	Kind=Word
+30	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+31	2392	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+32	,	_	_	_	_	_	_	_	Kind=Punctuation
+33	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+34	2393	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+35	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+36	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r2b97f667ee
+# exam.context = list-item
+# tier = llm
+# source = SamuelIVX/interleave batches/2026-09-27-02/llm/SamuelIVX--interleave/docs__plans__library-api-mode.md
+# license = MIT
+# text = CLI (Main) prints to stdout; no structured return type for programmatic use.
+1	CLI	_	_	_	_	_	_	_	Kind=Word
+2	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	Main	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
+4	)	_	_	_	_	_	_	_	Kind=Punctuation
+5	prints	_	_	_	_	_	_	_	Kind=Word
+6	to	_	_	_	_	_	_	_	Kind=Word
+7	stdout	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	;	_	_	_	_	_	_	_	Kind=Punctuation
+9	no	_	_	_	_	_	_	_	Kind=Word
+10	structured	_	_	_	_	_	_	_	Kind=Word
+11	return	_	_	_	_	_	_	_	Kind=Word
+12	type	_	_	_	_	_	_	_	Kind=Word
+13	for	_	_	_	_	_	_	_	Kind=Word
+14	programmatic	_	_	_	_	_	_	_	Kind=Word
+15	use	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+16	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r935bf50e00
+# exam.context = list-item
+# tier = llm
+# source = github/gh-aw-firewall batches/2026-09-27-02/llm/github--gh-aw-firewall/claude__skills__awf-debug-tools__SKILL.md
+# license = MIT
+# text = Use --suggest-fix to get ready-to-use awf commands
+1	Use	_	_	_	_	_	_	_	Kind=Word
+2	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	suggest	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+5	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	fix	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+7	to	_	_	_	_	_	_	_	Kind=Word
+8	get	_	_	_	_	_	_	_	Kind=Word
+9	ready	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	to	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	use	_	_	_	_	_	_	_	Kind=Word
+14	awf	_	_	_	_	_	_	_	Kind=Word
+15	commands	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r9c37abfb29
+# exam.context = list-item
+# tier = llm
+# source = jihoyoo99/drools-rules-manager batches/2026-09-27-02/llm/jihoyoo99--drools-rules-manager/docs__system-architecture.md
+# license = MIT
+# text = API Security : JWT tokens for API access
+1	API	_	_	_	_	_	_	_	Kind=Word
+2	Security	_	_	_	_	_	_	_	Kind=Word
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	JWT	_	_	_	_	_	_	_	Kind=Word
+5	tokens	_	_	_	_	_	_	_	Kind=Word
+6	for	_	_	_	_	_	_	_	Kind=Word
+7	API	_	_	_	_	_	_	_	Kind=Word
+8	access	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r06df9e9ede
+# exam.context = list-item
+# tier = llm
+# source = Wafflesthecat101/slop-game batches/2026-09-27-02/llm/Wafflesthecat101--slop-game/github__PULL_REQUEST_TEMPLATE.md
+# license = CC0-1.0
+# text = Upholds P1 (calm, no combat/fail-state), P2 (world reacts), P3 (legible from afar), P4 (cheap by construction)
+1	Upholds	_	_	_	_	_	_	_	Kind=Word
+2	P1	_	_	_	_	_	_	_	Kind=Word
+3	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	calm	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	no	_	_	_	_	_	_	_	Kind=Word
+7	combat	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	fail	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	state	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	,	_	_	_	_	_	_	_	Kind=Punctuation
+14	P2	_	_	_	_	_	_	_	Kind=Word
+15	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	world	_	_	_	_	_	_	_	Kind=Word
+17	reacts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+19	,	_	_	_	_	_	_	_	Kind=Punctuation
+20	P3	_	_	_	_	_	_	_	Kind=Word
+21	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+22	legible	_	_	_	_	_	_	_	Kind=Word
+23	from	_	_	_	_	_	_	_	Kind=Word
+24	afar	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+25	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+26	,	_	_	_	_	_	_	_	Kind=Punctuation
+27	P4	_	_	_	_	_	_	_	Kind=Word
+28	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+29	cheap	_	_	_	_	_	_	_	Kind=Word
+30	by	_	_	_	_	_	_	_	Kind=Word
+31	construction	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+32	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r232f88243a
+# exam.context = heading
+# tier = llm
+# source = TerrenoLabs/terreno batches/2026-09-27-02/llm/TerrenoLabs--terreno/docs__how-to__add-github-oauth.md
+# license = MIT
+# text = Unlink GitHub Account (Requires Auth)
+1	Unlink	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+2	GitHub	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+3	Account	_	_	_	_	_	_	_	Kind=Word
+4	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	Requires	_	_	_	_	_	_	_	Kind=Word
+6	Auth	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	)	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r971a3b8e7a
+# exam.context = heading
+# tier = llm
+# source = linkedin/venice batches/2026-09-27-02/llm/linkedin--venice/docs__operations__advanced__degraded-mode.md
+# license = BSD-2-Clause
+# text = Step 1: Controller API to Mark/Unmark DC as Degraded
+1	Step	_	_	_	_	_	_	_	Kind=Word
+2	1	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	Controller	_	_	_	_	_	_	_	Kind=Word
+5	API	_	_	_	_	_	_	_	Kind=Word
+6	to	_	_	_	_	_	_	_	Kind=Word
+7	Mark	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	Unmark	_	_	_	_	_	_	_	Kind=Word
+10	DC	_	_	_	_	_	_	_	Kind=Word
+11	as	_	_	_	_	_	_	_	Kind=Word
+12	Degraded	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r7d7ce573e7
+# exam.context = heading
+# tier = llm
+# source = abatn/meeting-automation batches/2026-09-27-02/llm/abatn--meeting-automation/docs__PR_SUMMARY.md
+# license = MIT
+# text = PR Summary: P1 Critical Fixes for Production Readiness
+1	PR	_	_	_	_	_	_	_	Kind=Word
+2	Summary	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	:	_	_	_	_	_	_	_	Kind=Punctuation
+4	P1	_	_	_	_	_	_	_	Kind=Word
+5	Critical	_	_	_	_	_	_	_	Kind=Word
+6	Fixes	_	_	_	_	_	_	_	Kind=Word
+7	for	_	_	_	_	_	_	_	Kind=Word
+8	Production	_	_	_	_	_	_	_	Kind=Word
+9	Readiness	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r77eb393677
+# exam.context = table-cell
+# tier = llm
+# source = Hack23/homepage batches/2026-09-27-02/llm/Hack23--homepage/DATA_MODEL.md
+# license = Apache-2.0
+# text = Localised variants for sv, ko, ar, zh, de, fi, fr, es, ja, he, nl, da, no
+1	Localised	_	_	_	_	_	_	_	Kind=Word
+2	variants	_	_	_	_	_	_	_	Kind=Word
+3	for	_	_	_	_	_	_	_	Kind=Word
+4	sv	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	,	_	_	_	_	_	_	_	Kind=Punctuation
+6	ko	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	,	_	_	_	_	_	_	_	Kind=Punctuation
+8	ar	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	zh	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	de	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+13	,	_	_	_	_	_	_	_	Kind=Punctuation
+14	fi	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	,	_	_	_	_	_	_	_	Kind=Punctuation
+16	fr	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+17	,	_	_	_	_	_	_	_	Kind=Punctuation
+18	es	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+19	,	_	_	_	_	_	_	_	Kind=Punctuation
+20	ja	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+21	,	_	_	_	_	_	_	_	Kind=Punctuation
+22	he	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+23	,	_	_	_	_	_	_	_	Kind=Punctuation
+24	nl	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+25	,	_	_	_	_	_	_	_	Kind=Punctuation
+26	da	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+27	,	_	_	_	_	_	_	_	Kind=Punctuation
+28	no	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r703ebb5194
+# exam.context = table-cell
+# tier = llm
+# source = OnlyTerp/openclaw-optimization-guide batches/2026-09-27-02/llm/OnlyTerp--openclaw-optimization-guide/benchmarks__METHODOLOGY.md
+# license = MIT
+# text = Linux VM, 8 GB RAM, no GPU, cloud embedding
+1	Linux	_	_	_	_	_	_	_	Kind=Word
+2	VM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	,	_	_	_	_	_	_	_	Kind=Punctuation
+4	8	_	_	_	_	_	_	_	Kind=Number
+5	GB	_	_	_	_	_	_	_	Kind=Word
+6	RAM	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	,	_	_	_	_	_	_	_	Kind=Punctuation
+8	no	_	_	_	_	_	_	_	Kind=Word
+9	GPU	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	,	_	_	_	_	_	_	_	Kind=Punctuation
+11	cloud	_	_	_	_	_	_	_	Kind=Word
+12	embedding	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rc16c35506a
+# exam.context = table-cell
+# tier = llm
+# source = willvieira/forestIPM batches/2026-09-27-02/llm/willvieira--forestIPM/planning__phases__07-add-github-actions-ci-with-code-coverage-and-pkgdown-site-with-readme-pointing-to-book-vignettes__07-RESEARCH.md
+# license = MIT
+# text = Required by covr for Cobertura XML output
+1	Required	_	_	_	_	_	_	_	Kind=Word
+2	by	_	_	_	_	_	_	_	Kind=Word
+3	covr	_	_	_	_	_	_	_	Kind=Word
+4	for	_	_	_	_	_	_	_	Kind=Word
+5	Cobertura	_	_	_	_	_	_	_	Kind=Word
+6	XML	_	_	_	_	_	_	_	Kind=Word
+7	output	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r90a832dd63
+# exam.context = table-cell
+# tier = llm
+# source = rbtkhn/strategy-codex batches/2026-09-27-02/llm/rbtkhn--strategy-codex/docs__session-observability.md
+# license = MIT
+# text = git diff --name-only
+1	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+2	diff	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+3	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	name	_	_	_	_	_	_	_	Kind=Word|Origin=Flag|SpaceAfter=No
+6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	only	_	_	_	_	_	_	_	Kind=Word|Origin=Flag
+
+# sent_id = rc87bfb791f
+# exam.context = prose
+# tier = mixed
+# source = nicknisi/dotfiles batches/2026-09-27-02/mixed/nicknisi--dotfiles/README.md
+# license = MIT
+# text = The configured plugins are zsh-async, zsh-syntax-highlighting, zsh-autosuggestions, zsh-npm-scripts-autocomplete, and fzf-tab.
+1	The	_	_	_	_	_	_	_	Kind=Word
+2	configured	_	_	_	_	_	_	_	Kind=Word
+3	plugins	_	_	_	_	_	_	_	Kind=Word
+4	are	_	_	_	_	_	_	_	Kind=Word
+5	zsh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+6	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+7	async	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	,	_	_	_	_	_	_	_	Kind=Punctuation
+9	zsh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+10	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	syntax	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+13	highlighting	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+14	,	_	_	_	_	_	_	_	Kind=Punctuation
+15	zsh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+16	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+17	autosuggestions	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+18	,	_	_	_	_	_	_	_	Kind=Punctuation
+19	zsh	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+20	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+21	npm	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+22	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+23	scripts	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+24	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+25	autocomplete	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+26	,	_	_	_	_	_	_	_	Kind=Punctuation
+27	and	_	_	_	_	_	_	_	Kind=Word
+28	fzf	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+29	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+30	tab	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+31	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r8f1834960b
+# exam.context = prose
+# tier = mixed
+# source = Umplify/xunit-dependency-injection batches/2026-09-27-02/mixed/Umplify--xunit-dependency-injection/README.md
+# license = MIT
+# text = xunit.v3 4.x runs on Microsoft Testing Platform (MTP) v2 , and the .NET 10 SDK no longer bridges MTP test projects through VSTest.
+1	xunit.v3	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+2	4	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+3	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	x	_	_	_	_	_	_	_	Kind=Word
+5	runs	_	_	_	_	_	_	_	Kind=Word
+6	on	_	_	_	_	_	_	_	Kind=Word
+7	Microsoft	_	_	_	_	_	_	_	Kind=Word
+8	Testing	_	_	_	_	_	_	_	Kind=Word
+9	Platform	_	_	_	_	_	_	_	Kind=Word
+10	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	MTP	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+12	)	_	_	_	_	_	_	_	Kind=Punctuation
+13	v2	_	_	_	_	_	_	_	Kind=Word
+14	,	_	_	_	_	_	_	_	Kind=Punctuation
+15	and	_	_	_	_	_	_	_	Kind=Word
+16	the	_	_	_	_	_	_	_	Kind=Word
+17	.	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+18	NET	_	_	_	_	_	_	_	Kind=Word
+19	10	_	_	_	_	_	_	_	Kind=Number
+20	SDK	_	_	_	_	_	_	_	Kind=Word
+21	no	_	_	_	_	_	_	_	Kind=Word
+22	longer	_	_	_	_	_	_	_	Kind=Word
+23	bridges	_	_	_	_	_	_	_	Kind=Word
+24	MTP	_	_	_	_	_	_	_	Kind=Word
+25	test	_	_	_	_	_	_	_	Kind=Word
+26	projects	_	_	_	_	_	_	_	Kind=Word
+27	through	_	_	_	_	_	_	_	Kind=Word
+28	VSTest	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+29	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r0624c4fa0b
+# exam.context = prose
+# tier = mixed
+# source = Wilfred/tree-sitter-elisp batches/2026-09-27-01/mixed/Wilfred--tree-sitter-elisp/README.md
+# license = MIT
+# text = Some elisp packages also offer custom highlighting logic, such as dash-fontify-mode in dash.el .
+1	Some	_	_	_	_	_	_	_	Kind=Word
+2	elisp	_	_	_	_	_	_	_	Kind=Word
+3	packages	_	_	_	_	_	_	_	Kind=Word
+4	also	_	_	_	_	_	_	_	Kind=Word
+5	offer	_	_	_	_	_	_	_	Kind=Word
+6	custom	_	_	_	_	_	_	_	Kind=Word
+7	highlighting	_	_	_	_	_	_	_	Kind=Word
+8	logic	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	such	_	_	_	_	_	_	_	Kind=Word
+11	as	_	_	_	_	_	_	_	Kind=Word
+12	dash-fontify-mode	_	_	_	_	_	_	_	Kind=Code
+13	in	_	_	_	_	_	_	_	Kind=Word
+14	dash.el	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+15	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r98be87b02f
+# exam.context = prose
+# tier = mixed
+# source = dotnet/ClangSharp batches/2026-09-27-01/mixed/dotnet--ClangSharp/README.md
+# license = MIT
+# text = NOTE: libclang and libClangSharp are meta-packages which point to the platform-specific runtime packages ( e.g. ; see others owned by tannergooding ).
+1	NOTE	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+2	:	_	_	_	_	_	_	_	Kind=Punctuation
+3	libclang	_	_	_	_	_	_	_	Kind=Word
+4	and	_	_	_	_	_	_	_	Kind=Word
+5	libClangSharp	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+6	are	_	_	_	_	_	_	_	Kind=Word
+7	meta	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+9	packages	_	_	_	_	_	_	_	Kind=Word
+10	which	_	_	_	_	_	_	_	Kind=Word
+11	point	_	_	_	_	_	_	_	Kind=Word
+12	to	_	_	_	_	_	_	_	Kind=Word
+13	the	_	_	_	_	_	_	_	Kind=Word
+14	platform	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+16	specific	_	_	_	_	_	_	_	Kind=Word
+17	runtime	_	_	_	_	_	_	_	Kind=Word
+18	packages	_	_	_	_	_	_	_	Kind=Word
+19	(	_	_	_	_	_	_	_	Kind=Punctuation
+20	e.g	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+21	.	_	_	_	_	_	_	_	Kind=Punctuation
+22	;	_	_	_	_	_	_	_	Kind=Punctuation
+23	see	_	_	_	_	_	_	_	Kind=Word
+24	others	_	_	_	_	_	_	_	Kind=Word
+25	owned	_	_	_	_	_	_	_	Kind=Word
+26	by	_	_	_	_	_	_	_	Kind=Word
+27	tannergooding	_	_	_	_	_	_	_	Kind=Word
+28	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+29	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r6df5d88f18
+# exam.context = prose
+# tier = mixed
+# source = PetoiCamp/OpenCat-Quadruped-Robot batches/2026-09-27-01/mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md
+# license = MIT
+# text = For ESP32/BiBoard (current-gen hardware), see OpenCatESP32 .
+1	For	_	_	_	_	_	_	_	Kind=Word
+2	ESP32	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+3	/	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+4	BiBoard	_	_	_	_	_	_	_	Kind=Word
+5	(	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+6	current	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	gen	_	_	_	_	_	_	_	Kind=Word
+9	hardware	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	)	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	see	_	_	_	_	_	_	_	Kind=Word
+13	OpenCatESP32	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+14	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r9ded797490
+# exam.context = list-item
+# tier = mixed
+# source = MichaelGrafnetter/DSInternals batches/2026-09-27-01/mixed/MichaelGrafnetter--DSInternals/Documentation__CHANGELOG.md
+# license = MIT
+# text = Cmdlets for ntds.dit manipulation now work on Windows 7 / Windows Server 2008 R2.
+1	Cmdlets	_	_	_	_	_	_	_	Kind=Word
+2	for	_	_	_	_	_	_	_	Kind=Word
+3	ntds.dit	_	_	_	_	_	_	_	Kind=Word|Origin=Symbol
+4	manipulation	_	_	_	_	_	_	_	Kind=Word
+5	now	_	_	_	_	_	_	_	Kind=Word
+6	work	_	_	_	_	_	_	_	Kind=Word
+7	on	_	_	_	_	_	_	_	Kind=Word
+8	Windows	_	_	_	_	_	_	_	Kind=Word
+9	7	_	_	_	_	_	_	_	Kind=Number
+10	/	_	_	_	_	_	_	_	Kind=Punctuation
+11	Windows	_	_	_	_	_	_	_	Kind=Word
+12	Server	_	_	_	_	_	_	_	Kind=Word
+13	2008	_	_	_	_	_	_	_	Kind=Number
+14	R2	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+15	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r2b1b943f28
+# exam.context = list-item
+# tier = mixed
+# source = motiondivision/motion batches/2026-09-27-02/mixed/motiondivision--motion/CHANGELOG.md
+# license = MIT
+# text = Removed ScrollTimeline support for JS callbacks as benchmarked no improvement over scrollInfo.
+1	Removed	_	_	_	_	_	_	_	Kind=Word
+2	ScrollTimeline	_	_	_	_	_	_	_	Kind=Code
+3	support	_	_	_	_	_	_	_	Kind=Word
+4	for	_	_	_	_	_	_	_	Kind=Word
+5	JS	_	_	_	_	_	_	_	Kind=Word
+6	callbacks	_	_	_	_	_	_	_	Kind=Word
+7	as	_	_	_	_	_	_	_	Kind=Word
+8	benchmarked	_	_	_	_	_	_	_	Kind=Word
+9	no	_	_	_	_	_	_	_	Kind=Word
+10	improvement	_	_	_	_	_	_	_	Kind=Word
+11	over	_	_	_	_	_	_	_	Kind=Word
+12	scrollInfo	_	_	_	_	_	_	_	Kind=Code|SpaceAfter=No
+13	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r7a0d644197
+# exam.context = list-item
+# tier = mixed
+# source = gookit/validate batches/2026-09-27-01/mixed/gookit--validate/CHANGELOG.md
+# license = MIT
+# text = inner validators always use reflect.Value as param.
+1	inner	_	_	_	_	_	_	_	Kind=Word
+2	validators	_	_	_	_	_	_	_	Kind=Word
+3	always	_	_	_	_	_	_	_	Kind=Word
+4	use	_	_	_	_	_	_	_	Kind=Word
+5	reflect.Value	_	_	_	_	_	_	_	Kind=Word
+6	as	_	_	_	_	_	_	_	Kind=Word
+7	param	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = rb67f436c1b
+# exam.context = list-item
+# tier = mixed
+# source = open-telemetry/opentelemetry-rust batches/2026-09-27-01/mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp__CHANGELOG.md
+# license = Apache-2.0
+# text = Allow specifying OTLP Tonic metadata from env variable #1377
+1	Allow	_	_	_	_	_	_	_	Kind=Word
+2	specifying	_	_	_	_	_	_	_	Kind=Word
+3	OTLP	_	_	_	_	_	_	_	Kind=Word
+4	Tonic	_	_	_	_	_	_	_	Kind=Word
+5	metadata	_	_	_	_	_	_	_	Kind=Word
+6	from	_	_	_	_	_	_	_	Kind=Word
+7	env	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+8	variable	_	_	_	_	_	_	_	Kind=Word
+9	#	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+10	1377	_	_	_	_	_	_	_	Kind=Number
+
+# sent_id = r3574b3fb06
+# exam.context = list-item
+# tier = mixed
+# source = toshiki670/dotfiles batches/2026-09-27-02/mixed/toshiki670--dotfiles/README.md
+# license = MIT
+# text = git-delta - Syntax-highlighting pager for git, diff, and grep output
+1	git-delta	_	_	_	_	_	_	_	Kind=Code
+2	-	_	_	_	_	_	_	_	Kind=Punctuation
+3	Syntax	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	-	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+5	highlighting	_	_	_	_	_	_	_	Kind=Word
+6	pager	_	_	_	_	_	_	_	Kind=Word
+7	for	_	_	_	_	_	_	_	Kind=Word
+8	git	_	_	_	_	_	_	_	Kind=Word|Origin=Command|SpaceAfter=No
+9	,	_	_	_	_	_	_	_	Kind=Punctuation
+10	diff	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+11	,	_	_	_	_	_	_	_	Kind=Punctuation
+12	and	_	_	_	_	_	_	_	Kind=Word
+13	grep	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+14	output	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r4c8f1609bb
+# exam.context = heading
+# tier = mixed
+# source = authgear/authgear-server batches/2026-09-27-01/mixed/authgear--authgear-server/docs__specs__oidc.md
+# license = Apache-2.0
+# text = External application acting as RP while Authgear acting as OP
+1	External	_	_	_	_	_	_	_	Kind=Word
+2	application	_	_	_	_	_	_	_	Kind=Word
+3	acting	_	_	_	_	_	_	_	Kind=Word
+4	as	_	_	_	_	_	_	_	Kind=Word
+5	RP	_	_	_	_	_	_	_	Kind=Word
+6	while	_	_	_	_	_	_	_	Kind=Word
+7	Authgear	_	_	_	_	_	_	_	Kind=Word
+8	acting	_	_	_	_	_	_	_	Kind=Word
+9	as	_	_	_	_	_	_	_	Kind=Word
+10	OP	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = r38e6275248
+# exam.context = heading
+# tier = mixed
+# source = zrepl/zrepl batches/2026-09-27-01/mixed/zrepl--zrepl/README.md
+# license = MIT
+# text = Notes to Distro Package Maintainers
+1	Notes	_	_	_	_	_	_	_	Kind=Word
+2	to	_	_	_	_	_	_	_	Kind=Word
+3	Distro	_	_	_	_	_	_	_	Kind=Word
+4	Package	_	_	_	_	_	_	_	Kind=Word
+5	Maintainers	_	_	_	_	_	_	_	Kind=Word
+
+# sent_id = rcecdbea5e7
+# exam.context = heading
+# tier = mixed
+# source = pubkey/rxdb batches/2026-09-27-01/mixed/pubkey--rxdb/orga__before-next-major.md
+# license = Apache-2.0
+# text = Rename "RxDB Premium" to "RxDB Enterprise"
+1	Rename	_	_	_	_	_	_	_	Kind=Word
+2	"	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+3	RxDB	_	_	_	_	_	_	_	Kind=Word
+4	Premium	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+5	"	_	_	_	_	_	_	_	Kind=Punctuation
+6	to	_	_	_	_	_	_	_	Kind=Word
+7	"	_	_	_	_	_	_	_	Kind=Punctuation|SpaceAfter=No
+8	RxDB	_	_	_	_	_	_	_	Kind=Word
+9	Enterprise	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	"	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = r3e9b6aae50
+# exam.context = table-cell
+# tier = mixed
+# source = sarub0b0/kubetui batches/2026-09-27-02/mixed/sarub0b0--kubetui/README.md
+# license = MIT
+# text = Apply jq filter to JSON logs.
+1	Apply	_	_	_	_	_	_	_	Kind=Word
+2	jq	_	_	_	_	_	_	_	Kind=Word|Origin=Command
+3	filter	_	_	_	_	_	_	_	Kind=Word
+4	to	_	_	_	_	_	_	_	Kind=Word
+5	JSON	_	_	_	_	_	_	_	Kind=Word
+6	logs	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	.	_	_	_	_	_	_	_	Kind=Punctuation
+

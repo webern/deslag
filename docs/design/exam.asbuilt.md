@@ -22,6 +22,10 @@ the gold-set kit is in `gold-kit.asbuilt.md`.
   `compare`.
 - `compare BEFORE.json AFTER.json`: the paired comparison of two saved runs. Aggregates only.
 - `tokens --gold G --out F`: writes the skeleton an outside tagger fills (a file, never stdout).
+- `readings (--gold G | --corpus) --out F`: `tokens` plus deslag's `UPOS`, `Conf=` and `Kept=` on each
+  `Word` line, and `Gold=`, the tag `align_all` gives it, for a learner to start from. The first
+  line is `# deslag_tag_version = N`. `score --import` of it grades as `--tagger deslag`, less
+  features. Refuses holdout gold.
 - `tokens --corpus`, `ticlist cut|score`: the tic list; `exam-candidates.asbuilt.md` has it.
 - `words --gold G`: the header and Words section alone, with no tagger.
 - `gate --gates F [--root D] [--tagger deslag|noun | --import F] SET...`: judges deslag's tagger,
@@ -49,7 +53,7 @@ tools/exam/src/
   stats.rs strata.rs  bootstrap and paired difference; the populations
   report.rs words.rs  the report and its Words section; saved.rs compare.rs
   gate.rs mustpass.rs `gate`: the gates file and the verdicts; the must-pass list
-  skeleton.rs disputes.rs error.rs ticlist.rs
+  skeleton.rs readings.rs disputes.rs error.rs ticlist.rs
 ```
 
 ## Gold files
@@ -109,10 +113,10 @@ over another:
 - Calibration, printed when any token has a score, is the mean score and accuracy per level and in
   ten score bins, and the expected calibration error.
 
-`stats` does not know tags. A population's bootstrap draws 1,000 replicates of its sentences with
-`deslag_corpus::stats::Rng`, seeded `SEED ^ fnv1a64(label)` (`all`, `tier=llm`, `context=heading`).
-The interval is the 2.5th and 97.5th nearest-rank percentile of the defined values. A paired
-difference uses one set of draws; an unpaired one, each population's own.
+A population's bootstrap draws 1,000 replicates of its sentences with
+`deslag_corpus::stats::Rng`, seeded `SEED ^ fnv1a64(label)`. The interval is the 2.5th and 97.5th
+nearest-rank percentile of the defined values. A paired difference uses one set of draws for both
+runs; an unpaired one (two strata), each population's own.
 
 ## Report, saved runs, compare
 
@@ -146,8 +150,4 @@ metric and nothing else; a panic in the tagger is withheld, as its message may q
 
 ## Tests
 
-`tests/cases/` holds a CoNLL-U file per case. `alignment.rs`, `gold.rs`, `done_when.rs` and
-`skeleton.rs` assert alignment, conventions and counts; `score.rs` the metrics by hand; `cli.rs`
-holdout, import, compare and exits; `gate.rs` the verdicts and the holdout's output; `harper.rs` the
-engine on tiny models; `golden.rs` the output against `tests/golden/`, which `make fix-golden`
-rewrites.
+`tests/cases/` holds a CoNLL-U file per case; `make fix-golden` rewrites `tests/golden/`.

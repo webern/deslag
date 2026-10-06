@@ -156,7 +156,7 @@ fn a_bad_list_names_its_line() {
 
 /// The skeleton of `text`, and its blocks.
 fn skeleton_of(text: &str) -> (String, Vec<conllu::Block>) {
-    let (skeleton, _) = corpus_skeleton(&[entry(text)]).unwrap();
+    let (skeleton, _) = corpus_skeleton(&[entry(text)], false).unwrap();
     let blocks = conllu::read("s", &skeleton).unwrap();
     (skeleton, blocks)
 }
@@ -203,7 +203,7 @@ fn a_token_with_no_text_is_written_as_an_underscore() {
 
 #[test]
 fn a_token_holding_a_tab_or_newline_is_refused() {
-    let error = corpus_skeleton(&[entry("It `a\tb` here.\n")])
+    let error = corpus_skeleton(&[entry("It `a\tb` here.\n")], false)
         .unwrap_err()
         .to_string();
     assert!(
@@ -241,7 +241,7 @@ fn an_import_s_readings_decide_the_rows_and_the_reverse_check() {
     let dir = tempfile::tempdir().unwrap();
     let file = dir.path().join("filled.conllu");
 
-    let (skeleton, _) = corpus_skeleton(&entries).unwrap();
+    let (skeleton, _) = corpus_skeleton(&entries, false).unwrap();
     // Every word a verb: both rows right, and `is no fix` is a place the variant adds.
     std::fs::write(&file, fill(&skeleton, "VERB")).unwrap();
     let all_verbs = score(&list, &entries, &Source::Import(&file)).unwrap();
@@ -273,7 +273,7 @@ fn an_import_that_is_not_the_skeleton_exits_with_the_first_difference() {
     let list = List::parse("l.tsv", &List::render(&rows, "c")).unwrap();
     let dir = tempfile::tempdir().unwrap();
     let file = dir.path().join("f.conllu");
-    let (skeleton, _) = corpus_skeleton(&entries).unwrap();
+    let (skeleton, _) = corpus_skeleton(&entries, false).unwrap();
     std::fs::write(&file, fill(&skeleton, "VERB").replace("\thas\t", "\thad\t")).unwrap();
     let error = score(&list, &entries, &Source::Import(&file))
         .unwrap_err()

@@ -44,6 +44,15 @@ pub fn map_upos(upos: &str) -> Option<Class> {
     Some(Class::Tagged(tag))
 }
 
+/// The UD UPOS an export writes for `tag`: its code, but `CCONJ` for the conjunction, which
+/// [`map_upos`] reads back as `Conjunction` as it does `SCONJ`.
+pub fn upos(tag: Tag) -> &'static str {
+    match tag {
+        Tag::Conjunction => "CCONJ",
+        other => other.code(),
+    }
+}
+
 /// The flags a UD `FEATS` column sets. `_` sets none. Keys outside the 14 flags are ignored;
 /// an entry with no `=` is an error, which the string names.
 pub fn from_ud(feats: &str) -> Result<Features, String> {
@@ -169,6 +178,13 @@ mod tests {
         }
         for bad in ["_", "", "noun", "CONJ", "ADJ|"] {
             assert_eq!(map_upos(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn the_upos_an_export_writes_reads_back_as_the_same_tag() {
+        for tag in Tag::ALL {
+            assert_eq!(map_upos(upos(tag)), Some(Class::Tagged(tag)), "{tag:?}");
         }
     }
 

@@ -16,10 +16,14 @@ mod code;
 mod compact;
 mod data;
 mod exclude;
+mod guide;
 mod merge;
 mod patch;
 mod problems;
+mod review;
 mod sample;
+mod screen;
+mod terminal;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -180,6 +184,22 @@ enum Command {
         #[arg(long)]
         spacy: Option<PathBuf>,
     },
+    /// Opens a CoNLL-U file of deslag tokens in a terminal UI, one sentence at a time, for the
+    /// owner to read and correct its tags. Untagged input (a skeleton) is fine.
+    ///
+    /// Leaving a sentence sets `Prov=owner` on its words (the old value goes to `Was=`), adds
+    /// `# owner_reviewed = <date>` and saves the file, changing no other byte. Reopening resumes at
+    /// the first sentence not yet reviewed. It never opens holdout, `en_ewt*` or `.ewt/` files.
+    ///
+    /// Keys: j/k move, t type a tag (n.s, v.pp), ? the guide's entry, a accept and move on,
+    /// n/p save and go to the next/previous sentence, q quit.
+    Review {
+        /// The file to review, edited in place.
+        file: PathBuf,
+        /// Print the first screen as text and exit, with no terminal and no change to the file.
+        #[arg(long)]
+        screen: bool,
+    },
 }
 
 /// A seed written in decimal or as `0x` and hex.
@@ -264,6 +284,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             harper,
             spacy,
         } => assemble_stage(&dir, &out, [blind, harper, spacy]),
+        Command::Review { file, screen } => terminal::run(&file, screen),
     }
 }
 

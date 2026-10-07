@@ -405,9 +405,104 @@ Licences. Every model of `voters.json`, and every outside tagger under `external
 of that name whose `model` is the `--model` given. A continued run is refused if any of the three would
 now differ.
 
-Assembly is `deslag-gold`'s: `silver build --name NAME --part DIR:MERGE ... [--audit DIR] --out DIR` builds a
-batch from the parts, `silver build --check-part DIR:MERGE` is the preflight of one part, `silver check` reads
-a batch's own record, and `silver standing` holds the batches in use to the rules that never lapse.
+### Silver, assembled
+
+Make targets. None is in `test` or `ci`, and none but `test-silver` and `test-confinement` is run by anything
+else. The draw and the build read their numbers from `SILVER_*` variables (`make help`, and the top of the
+Makefile), so the run can change them.
+
+- `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 9 --mix ... --per-file 3
+  --per-repo 12`. Reads the big tier and calls no model.
+- `make generate-silver-part PART=NN`: the voters of `voters.json` tag `part-NN` at once, each in a process of
+  its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so `LABEL_FLAGS="--limit 1"` is a smoke run. A
+  voter that fails is named, and spaCy does not run. The Opus round is steps 3 and 4 above, driven by hand.
+- `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
+  `.label/silver`, into `.label/silver/batch/NAME`. `SILVER_BUILD_FLAGS` reach it.
+- `make test-silver`, which `make test-blobs` runs: `silver check` and `silver standing` over the unpacked
+  image. Both pass when it has no `silver/`.
+- `make test-confinement`: the probe above.
+
+The assembler. `deslag-gold silver build --name NAME --part DIR:MERGE ... [--audit DIR --archive-sha256 SHA]
+--out DIR` puts the parts together and writes the batch to `--out` only when `silver check` passes on what it
+wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, with no output, and is what
+`label.py status` runs; run it after each part, so a fault shows after one part and not at assembly. It
+refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has no `part` and
+`tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id twice with
+different rows or under two `state_id`s, one that is not `complete`, or with no row; runs at more than one
+deslag commit, or one that is `-dirty`; two prompt or guide hashes for one model; a voter at an endpoint that
+`voters.json` does not list for its model, a labeller whose licence is not MIT or Apache-2.0, an adjudicator
+other than `opus` without its `agent.json`, an outside tagger other than spaCy; a merge with fewer than three
+model voters, `min_voters` under 3, no spaCy, or other voters than another part's; a fixture the image lacks
+or whose content, commit, URL or licence differs from the manifest's, that an exclusion names, or whose
+generator is banned; and an absolute path in any file it writes, in a JSON cell or a listing too. It drops
+and counts, and does not refuse, a sentence whose repository became reserved after the draw or whose text is
+now a gold sentence's, one that is a repeat, and one the owner rejected in the audit. The batch ships the
+runs that the words it kept name, with the voters', and the agent record of those, worked out after the
+drops.
+
+The batch, `silver/NAME/`:
+
+- `silver.conllu`: the kept sentences in id order, with `Prov=` and `Runs=` on every word; its header says
+  `exam.tokens = deslag`, `exam.trains = yes` and `silver.batch = NAME`.
+- `manifest.tsv`: the draw's columns, `split` as `train` or `tune` (the first byte of the sha256 of the
+  lower-cased `owner/name` is 0 mod 10 for `tune`, so no repository is in both), and `part`. `sources.tsv`: a
+  row per repository, with its licences and the permalinks of its licence files.
+- `runs.tsv` (31 columns) and `listings/<state_id>/<run>.json`.
+- `parts/NN/`: `voters.tsv` (with no `file` column), `worklist.tsv`, `adjudicated.tsv`, `agreement.txt`,
+  `adjudicator.json` and `unsettled.tsv`, which counts the unsettled words by tier and context and holds no
+  form. Each keeps the rows of the sentences kept, so every voter's code on every word is there and spaCy's
+  influence can be taken out.
+- `noise/*.tsv`: calibration reports, numbers only; `--noise NAME=FILE`.
+- `audit/`: `queue.conllu` as the owner answered it, `labels.conllu` (silver's labels of those sentences) and
+  `score.tsv`.
+- `record/`: what the batch is checked against forever: `kit.tsv` (deslag commit, tag VERSION, image digest,
+  the archive sha256, `check_version`), `voters.json` as it was at the run, `datasheet.tmpl.md`,
+  `datasheet.json`, `drops.tsv` (what was dropped and why, by sentence id), `agent.json`, and
+  `audit-accepted.txt` when the owner accepted a score under the bar (`--accept-below-bar`).
+- `DATASHEET.md`, rendered from `record/datasheet.tmpl.md` and `record/datasheet.json`. The template is
+  `scripts/label/silver-datasheet.md`, with `{{path}}`, `{{table path}}`, `{{#if}}`, `{{#unless}}` and
+  `{{#each}}`; a batch carries the one it was rendered with.
+
+The audit. The batch holds its own: the owner's answers are part of what it is checked against.
+
+1. `silver build` with no `--audit`: a draft in `.label/silver/batch/NAME`.
+2. `deslag-gold audit --blind --from .label/silver/batch/NAME/silver.conllu --out .label/silver/audit` draws 50
+   sentences at random and writes `queue.conllu` with no UPOS, FEATS, `Prov=` or `Runs=`, and `labels.conllu`
+   with silver's labels of them. The directory is never under `tests/gold/`, whose queues reserve their
+   repositories; `audit` refuses a path there.
+3. The owner reviews `queue.conllu` in `deslag-gold web`. The review pre-fills deslag's readings at Likely and
+   above, as for `owner.conllu`, and he may reject a sentence.
+4. `deslag-gold audit --score --queue Q --labels L --bar 95.0` refuses a queue that is not `exam.silver = yes`
+   or has a sentence neither reviewed nor rejected. It prints silver's accuracy on the part of speech and on
+   the whole code with sentence-bootstrap intervals, by agreed and adjudicated words and by context, the
+   words left at deslag's pre-fill, the rejected sentences, and met or not against the bar.
+5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA`, with `--accept-below-bar "HIS WORDS"`
+   only if the owner accepts a score under the bar: the rejected sentences leave `silver.conllu` and are counted
+   in `record/drops.tsv`, and the datasheet leads with the score.
+
+The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes each batch against what it
+recorded and never against the checkout: `Runs=` against `runs.tsv`; endpoints against `record/voters.json`
+(so a later change to `voters.json` does not fail a batch); licences against the `runs.tsv` columns;
+`agent.json`'s keys; one deslag commit; the manifest against the sentences; every `sent_id` of `parts/` and
+`audit/` against the manifest, and a word with no `Prov=`; the audit scored again and compared with
+`score.tsv`; `datasheet.json` computed again from the files, and `DATASHEET.md` rendered again byte for byte.
+`record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The
+rules are frozen once a batch is live: a changed rule is a new version, with the old rules kept beside it, so a
+batch that passes once passes forever.
+`tools/exam/tests/silver-fixture/` is a small batch, committed, that a unit test holds to them; regenerate it
+with `DESLAG_REGENERATE_SILVER_FIXTURE=1 cargo test -p deslag-exam --test silver_batch
+regenerate_the_committed_fixture_batch` only when a new version comes.
+
+`deslag-gold silver standing` holds each live batch to what changes outside it: no repository it names is
+reserved by today's `tests/gold` or `tests/corpus/`, no sentence of it is a gold sentence's text, no fixture
+it quotes is excluded now, and its audit met the bar or the owner accepted the score. A failure names the two
+ways out: undo the gold change (the gold-side tools leave silver out, so this means a hand edit), or retire
+the batch by adding a row (batch, date, reason) to `scripts/blobstore/silver-retired.tsv`. `standing` skips
+retired batches and `check` does not.
+
+`rank` and `queue` leave out the repositories of every live silver batch and of every `part-NN/manifest.tsv`
+under `.label/silver`, and `draw` the text of every live batch's sentences, so an owner's queue drawn while
+silver is made, or after, is clear of it.
 
 ## Money
 
@@ -478,3 +573,8 @@ outside its directory, a change to the checkout), in a temporary `HOME` and a te
 test runs the real `claude`, which only `probe-confinement` does. Three voters are tagged at once in
 processes of their own, against a stand-in for `deslag-gold batches` that fails if two processes are in it
 at once.
+
+The assembler and the checks are tested in Rust, by `make test`, with no key: `tools/exam/tests/silver_build.rs`
+builds from made-up parts (`tests/common/silver_parts.rs` draws them with `draw --parts` over a fixture tree and
+labels them as the pipeline does) and has a test for each refusal and each drop; `silver_batch.rs` holds a built
+batch to its layout, the checks, the audit and `silver standing`.

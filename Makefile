@@ -23,7 +23,8 @@ CARGO_FLAGS ?=
         test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
         test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
         test-ticlist-brill-percept test-ticlist-percept \
-        check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
+        check check-clippy check-deslag check-doc check-fmt check-publish check-release \
+        check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
@@ -81,6 +82,8 @@ help:
 	@echo "check-doc        build the docs with warnings denied"
 	@echo "check-fmt        rustfmt in check mode"
 	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
+	@echo "check-release    fail while src/changelog.toml has a next release; the release change renames it, so"
+	@echo "                 not part of check, and the release workflow runs it"
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
@@ -257,6 +260,12 @@ check-fmt: preflight
 # deslag is the one package that publishes; the crates under tools/ never do.
 check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
+
+# Fails while src/changelog.toml has a `next` release. The change that bumps the version in
+# Cargo.toml renames it, so `check` cannot run this. The whole binary, not a name filter: a filter
+# that matches nothing passes silently.
+check-release: preflight
+	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored
 
 check-typos: preflight
 	typos

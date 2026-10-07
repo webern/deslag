@@ -72,19 +72,57 @@ pub struct Filled {
     pub runs: Option<String>,
 }
 
+/// A word no voter agreed on and the adjudicator never settled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Open {
+    /// Its sentence.
+    pub sent_id: String,
+    /// Its token's number in the sentence, from 1.
+    pub token: usize,
+    /// The word.
+    pub form: String,
+}
+
 /// The gold sentences, in the order of the sample.
 #[derive(Debug, Clone)]
 pub struct Built {
-    /// One row of lines per sentence of the sample.
+    /// One row of lines per sentence of the sample. A sentence with a word left open has no lines.
     pub sentences: Vec<Vec<Filled>>,
+    /// The words left open, which only [`build_leaving`] allows.
+    pub open: Vec<Open>,
+}
+
+impl Built {
+    /// The sentences left out for a word left open in them.
+    pub fn left_out(&self) -> usize {
+        self.open
+            .iter()
+            .map(|word| word.sent_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+    }
 }
 
 /// Puts the adjudicated words of `log` into the blanks of `agreed`, which came from `agreed_path`.
+/// A word with no decision is an error.
 pub fn build(
     sample: &Sample,
     agreed_path: &str,
     agreed: &str,
     log: &[Logged],
+) -> Result<Built, Problems> {
+    build_leaving(sample, agreed_path, agreed, log, false)
+}
+
+/// [`build`], except that with `leave_open` a word with no decision is not an error: it is listed in
+/// [`Built::open`], and its sentence is given no lines, so that no file written from it has the
+/// sentence.
+pub fn build_leaving(
+    sample: &Sample,
+    agreed_path: &str,
+    agreed: &str,
+    log: &[Logged],
+    leave_open: bool,
 ) -> Result<Built, Problems> {
     let blocks = conllu::read(agreed_path, agreed)?;
     let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
@@ -106,7 +144,9 @@ pub fn build(
         }
     }
     let mut sentences = Vec::with_capacity(sample.sents.len());
+    let mut open = Vec::new();
     for sent in &sample.sents {
+        let open_before = open.len();
         let Some(block) = by_id.get(sent.id.as_str()) else {
             problems.push(Problems::sentence(
                 agreed_path,
@@ -222,6 +262,11 @@ pub fn build(
                         runs: row.run.clone(),
                     });
                 }
+                (false, None) if leave_open => open.push(Open {
+                    sent_id: sent.id.clone(),
+                    token: at,
+                    form: tok.form.clone(),
+                }),
                 (false, None) => problems.push(Problems::sentence(
                     agreed_path,
                     &sent.id,
@@ -232,7 +277,11 @@ pub fn build(
                 )),
             }
         }
-        sentences.push(lines);
+        sentences.push(if open.len() > open_before {
+            Vec::new()
+        } else {
+            lines
+        });
     }
     for ((sent_id, token), (_, used)) in &decided {
         if !used {
@@ -243,7 +292,7 @@ pub fn build(
             ));
         }
     }
-    Problems::check(problems, Built { sentences })
+    Problems::check(problems, Built { sentences, open })
 }
 
 /// What the files of one split say about it: its `exam.trains` and the sentence beside the
@@ -315,6 +364,9 @@ pub fn gold_file(sample: &Sample, built: &Built, split: Split) -> String {
     out
 }
 
+/// The comment of a labelled file that says how many sentences were left out for an unsettled word.
+pub const LEFT_OUT: &str = "left_out";
+
 /// The labelled sentences of `sample`, which is not the gold sample: `labelled.conllu`, every
 /// sentence of the sample with its final tags, `Prov=` and the `Runs=` of the runs that vouch for
 /// each word. `trains` is its `exam.trains`: `no` for a pilot run over gold sentences, which must
@@ -327,7 +379,17 @@ pub fn labelled_file(sample: &Sample, built: &Built, trains: &str) -> String {
          # exam.trains = {trains}\n\
          # exam.source = deslag labelling pipeline, {source}\n"
     );
+    if built.left_out() > 0 {
+        let _ = writeln!(
+            out,
+            "# {LEFT_OUT} = {}\n# Sentences with a word the adjudicator never settled are not in this file.",
+            built.left_out()
+        );
+    }
     for (sent, lines) in sample.sents.iter().zip(&built.sentences) {
+        if lines.is_empty() && !sent.toks.is_empty() {
+            continue;
+        }
         let _ = writeln!(out, "# sent_id = {}", sent.id);
         if let Some(meta) = sample.meta(&sent.id) {
             let _ = writeln!(out, "# exam.context = {}", meta.context.name());

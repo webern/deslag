@@ -10,7 +10,7 @@ in Rust. See README.md in this directory for the steps.
                       [--endpoint TAG]
     label.py register --dir .label/dev --name spacy --file PATH --model NAME [--version V]
     label.py judge    --dir .label/dev --max-usd 8 [--into merge] [--voter NAME ...] [--spacy]
-                      [--trains yes|no] [--resume rN] [--again] [--endpoint TAG] [--settle-from DIR]
+                      [--trains yes|no] [--resume rN] [--again] [--endpoint TAG] [--settle-from DIR] [--strict]
     label.py cost     --dir .label/draw500
     label.py spend
 
@@ -25,7 +25,9 @@ begin `id:`, has `deslag-gold read-tags --check` keep the good ones, and asks ag
 sentences that failed, quoting the validator's message, at most twice; a voter with no good line for
 a sentence after that abstains on it. Money: ledger.py, a reservation before every POST. Provenance:
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
-describes it. No error the runner prints shows the key.
+describes it. A reply cut off at max_tokens is asked again in halves; an endpoint that keeps failing is
+abandoned for the next one in voters.json's `provider_fallback`; an item the adjudicator never settles
+leaves its sentence out of the labels unless `--strict`. No error the runner prints shows the key.
 """
 
 import argparse
@@ -195,8 +197,11 @@ class GoldCli:
             "--per-part", str(per_part), "--answers", *files,
         )
 
-    def finish(self, directory, into, trains="no"):
-        return self._run(directory, "finish", "--into", into, "--trains", trains)
+    def finish(self, directory, into, trains="no", leave_open=False):
+        args = ["finish", "--into", into, "--trains", trains]
+        if leave_open:
+            args.append("--leave-open")
+        return self._run(directory, *args)
 
 
 def find_binary(name):
@@ -277,12 +282,15 @@ def write_atomic(path, text):
 
 
 class EndpointExhausted(openrouter.ApiError):
-    """A voter's or the adjudicator's pinned endpoint kept answering 429 or 5xx through every wait.
-    The run stays saved; `name`, `tag` and `role` say whose endpoint it was."""
+    """An endpoint kept failing (429, 5xx, a timeout) through every wait. The run stays saved; `name`,
+    `tag`, `role` and `run` say whose endpoint it was, `reason` how it failed. Once every endpoint of
+    the model has failed, `tried` lists them with their reasons and `skipped` those that did not pass
+    the listing's checks."""
 
-    def __init__(self, message, name, tag, role):
+    def __init__(self, message, name, tag, role, run, reason):
         super().__init__(message)
-        self.name, self.tag, self.role = name, tag, role
+        self.name, self.tag, self.role, self.run, self.reason = name, tag, role, run, reason
+        self.tried, self.skipped = [], []
 
 
 class Runner:
@@ -387,6 +395,10 @@ class Runner:
             if not os.path.isfile(self.raw(name, resume, "run.json")):
                 raise openrouter.ApiError(f"{resume} is not a run of {name} in {self.dir}; there is nothing to resume")
             saved = json.loads(read(self.raw(name, resume, "run.json")))
+            if saved.get("abandoned"):
+                raise openrouter.ApiError(
+                    f"{name} {resume} was abandoned ({saved.get('abandoned_because')}); it is never continued"
+                )
         config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
         run = resume or self.ledger.new_run()
         price_in, price_out = openrouter.prices(pinned)
@@ -430,7 +442,8 @@ class Runner:
                 if os.path.isfile(path):
                     meta = json.loads(read(path))
                     if (
-                        bool(meta.get("complete")) == complete and meta.get("role") == role
+                        not meta.get("abandoned")
+                        and bool(meta.get("complete")) == complete and meta.get("role") == role
                         and meta.get("limit") == limit and meta.get("scope") == scope
                         and endpoint in (None, meta.get("endpoint"))
                     ):
@@ -457,11 +470,36 @@ class Runner:
             return None
         return stopped
 
-    def mark_complete(self, meta):
-        path = self.raw(meta["name"], meta["run"], "run.json")
+    def update_run(self, name, run, **fields):
+        """Adds `fields` to the run's `run.json`, which is otherwise left as it was written."""
+        path = self.raw(name, run, "run.json")
         saved = json.loads(read(path))
-        saved["complete"] = True
+        saved.update(fields)
         write(path, json.dumps(saved, indent=2) + "\n")
+
+    def mark_complete(self, meta):
+        self.update_run(meta["name"], meta["run"], complete=True)
+
+    def abandon(self, name, run, why):
+        """Gives a run up: it stays on disk, but nothing continues it, and a merge never takes tags from
+        it (the tags file is checked against the run, which is not complete)."""
+        self.update_run(name, run, abandoned=True, abandoned_because=why)
+
+    def fall_back(self, error, tried):
+        """After an endpoint failed through every wait: abandons its run and returns the next endpoint of
+        the model that passes the listing's checks, saying so in one line. When there is none, raises
+        `error` with what was tried: that run stays as it is, for a rerun to continue."""
+        tried.append((error.tag, error.reason))
+        following, skipped = self.next_endpoint(error.name, error.tag)
+        if following is None:
+            error.tried, error.skipped = tried, skipped
+            raise error
+        self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}")
+        self.warn(
+            f"label: {error.name} {error.run}: {error.tag} kept failing ({error.reason}); the run is "
+            f"abandoned and a new run starts at {following}"
+        )
+        return following
 
     def recheck(self, meta, endpoint, config, kind, request_sha256):
         """Whether a reply saved by an earlier invocation is used. It is only if the record saved
@@ -492,7 +530,8 @@ class Runner:
         except ValueError:
             return
         if isinstance(saved, dict) and saved.get("request_sha256") == request_sha256 and saved.get("reason"):
-            error = openrouter.ProviderMismatch if saved.get("mismatch") else openrouter.ApiError
+            cut = saved.get("cutoff") or "cut off at max_tokens" in saved["reason"]
+            error = openrouter.CutOff if cut else openrouter.ProviderMismatch if saved.get("mismatch") else openrouter.ApiError
             raise error(f"{saved['reason']} (refused when it was paid for; it is not asked again for the same request)")
 
     def ask(self, meta, endpoint, config, system, user, kind):
@@ -536,11 +575,10 @@ class Runner:
                 attempt, **self.retrying(f"{name} {run} {kind}")
             )
         except openrouter.RetriesExhausted as error:
-            if error.busy:
-                raise EndpointExhausted(
-                    f"{name} {run} {kind}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"]
-                ) from None
-            raise
+            raise EndpointExhausted(
+                f"{name} {run} {kind}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"],
+                run, error.reason,
+            ) from None
         seconds = self.clock() - started
         reply = openrouter.parse_reply(response)
         # A reply that reports no cost, or a negative or odd one, never lowers the ledger: the
@@ -557,7 +595,7 @@ class Runner:
         try:
             openrouter.check_provider(reply, endpoint, config["model"])
             if reply.finish == "length":
-                raise openrouter.ApiError(
+                raise openrouter.CutOff(
                     f"{kind}: the reply was cut off at max_tokens ({config['max_tokens']}); it is not used"
                 )
             if reply.reasoning_tokens and config.get("reasoning") == {"enabled": False}:
@@ -568,6 +606,7 @@ class Runner:
         except openrouter.ApiError as error:
             write(self.raw(name, run, f"{kind}.rejected.json"), json.dumps({
                 "reason": str(error), "mismatch": isinstance(error, openrouter.ProviderMismatch),
+                "cutoff": isinstance(error, openrouter.CutOff),
                 "request_sha256": request_sha256, "response": response,
             }, indent=2) + "\n")
             raise
@@ -677,13 +716,54 @@ class Runner:
         retry = read(retry_path).splitlines() if os.path.isfile(retry_path) else []
         return [line for line in retry if line.strip()]
 
+    def ask_lines(self, meta, endpoint, config, make_user, lines, kind, user=None):
+        """Asks about `lines`, one sentence each, and writes the lines of the reply to `<kind>.lines.txt`.
+        A reply cut off at max_tokens is a bad reply, not a stop: its sentences are asked again in
+        halves, each a new call booked as any is, down to one sentence; one still cut off alone is
+        given up, and abstains. `user` is the text of the first ask, if it is not `make_user(lines)`."""
+        try:
+            reply = self.ask(meta, endpoint, config, self.prompts.system, user or make_user(lines), kind)
+        except openrouter.CutOff:
+            self.cut["calls"] += 1
+            if len(lines) <= 1:
+                self.cut["alone"].update(re.match(r"[^\s:]+", line).group(0) for line in lines)
+                return
+            middle = (len(lines) + 1) // 2
+            for suffix, part in (("a", lines[:middle]), ("b", lines[middle:])):
+                self.ask_lines(meta, endpoint, config, make_user, part, f"{kind}-{suffix}")
+            return
+        write(self.raw(meta["name"], meta["run"], f"{kind}.lines.txt"), id_lines(reply))
+
+    def report_cut_offs(self, meta, config):
+        if self.cut["calls"] or self.cut["alone"]:
+            alone = sorted(self.cut["alone"])
+            self.say(
+                f"{meta['name']} {meta['run']}: {self.cut['calls']} replies were cut off at max_tokens "
+                f"({config['max_tokens']}) and their sentences asked again in halves; "
+                f"{len(alone)} sentences were cut off even alone and abstain"
+            )
+            self.update_run(meta["name"], meta["run"], cut_off={"calls": self.cut["calls"], "alone": alone})
+
     def tag(self, name, limit=None, resume=None, again=False, endpoint=None):
         """One voter over every batch of the sample. Returns (run id, the sentences it abstains on:
         those with no good line after the retries). A run over every batch is marked complete.
         Unless `again`, it continues the voter's run that stopped before its end, whose saved
         replies are used again, so that a rerun never pays twice for a batch. A smoke run, with a
         `limit`, is never continued but by name, and never continues a full run. `endpoint` is a tag
-        among the voter's `provider_fallback` for a new run."""
+        among the voter's `provider_fallback` for a new run.
+
+        When the endpoint keeps failing (429, 5xx, a timeout) through every wait, its run is
+        abandoned and a new run starts at the next endpoint of `provider_fallback` that passes the
+        listing's checks; a run never changes endpoint. Only when every endpoint has failed does it
+        raise EndpointExhausted, the last run left as it is."""
+        tried = []
+        while True:
+            try:
+                return self.tag_run(name, limit, resume, again, endpoint)
+            except EndpointExhausted as error:
+                endpoint, resume, again = self.fall_back(error, tried), None, True
+
+    def tag_run(self, name, limit, resume, again, endpoint):
         if resume is None and not again and limit is None:
             resume = self.incomplete_run(name, endpoint=endpoint)
             if resume:
@@ -694,27 +774,38 @@ class Runner:
         batches = self.batch_files()
         if limit is not None:
             batches = batches[:limit]
+        self.cut = {"calls": 0, "alone": set()}
         self.say(f"{name} {run}: {len(batches)} batches to {config['model']} at {endpoint['tag']}")
         try:
             for number, path in enumerate(batches, 1):
-                user = self.prompts.fill("voter-task.md", batch=read(path))
-                reply = self.ask(meta, endpoint, config, self.prompts.system, user, f"batch-{number:02d}")
-                write(self.raw(name, run, f"batch-{number:02d}.lines.txt"), id_lines(reply))
+                text = read(path)
+                self.ask_lines(
+                    meta, endpoint, config,
+                    lambda part: self.prompts.fill("voter-task.md", batch="\n".join(part) + "\n"),
+                    [line for line in text.splitlines() if line.strip()], f"batch-{number:02d}",
+                    user=self.prompts.fill("voter-task.md", batch=text),
+                )
             open_lines = self.check_tags(name, meta)
             for attempt in range(1, self.settings["retries"] + 1):
-                if not open_lines or limit is not None:
+                # A sentence cut off alone is not asked again: it would be cut off again.
+                asking = [line for line in open_lines if re.match(r"[^\s:]+", line).group(0) not in self.cut["alone"]]
+                if not asking or limit is not None:
                     break
-                self.say(f"{name} {run}: {len(open_lines)} sentences to ask again, round {attempt}")
-                for number in range(0, len(open_lines), size):
-                    chunk = open_lines[number : number + size]
-                    ids = [re.match(r"[^\s:]+", line).group(0) for line in chunk]
-                    user = self.prompts.fill(
-                        "voter-retry.md", problems=self.problems(name, ids), batch="\n".join(chunk) + "\n"
-                    )
+                self.say(f"{name} {run}: {len(asking)} sentences to ask again, round {attempt}")
+                for number in range(0, len(asking), size):
+                    chunk = asking[number : number + size]
                     kind = f"retry-{attempt}-{number // size + 1:02d}"
-                    reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
-                    write(self.raw(name, run, f"{kind}.lines.txt"), id_lines(reply))
+                    self.ask_lines(
+                        meta, endpoint, config,
+                        lambda part: self.prompts.fill(
+                            "voter-retry.md",
+                            problems=self.problems(name, [re.match(r"[^\s:]+", line).group(0) for line in part]),
+                            batch="\n".join(part) + "\n",
+                        ),
+                        chunk, kind,
+                    )
                 open_lines = self.check_tags(name, meta)
+            self.report_cut_offs(meta, config)
             if limit is None:
                 self.mark_complete(meta)
         finally:
@@ -743,12 +834,32 @@ class Runner:
         )
         return said, parts
 
+    def ask_part(self, meta, endpoint, config, user, kind):
+        """One call of the adjudicator, whose answers go to `<kind>.lines.txt`. A reply cut off at
+        max_tokens is a bad reply: no line of it is kept, so its items stay open and are asked again."""
+        try:
+            reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
+        except openrouter.CutOff:
+            self.cut["calls"] += 1
+            return
+        write(self.raw(meta["name"], meta["run"], f"{kind}.lines.txt"), id_lines(reply))
+
     def adjudicate(self, into, resume=None, again=False, scope=None, endpoint=None):
         """The adjudicator over each part of the worklist. Returns (run id, items still open). Unless
         `again`, it continues the adjudicator's run that stopped before its end, if that was for the
         same `scope`: the merge directory, the voters, the spaCy mode. A run that ends with items
-        open is not complete, so a rerun continues it, with every saved reply used again."""
+        open is not complete, so a rerun continues it, with every saved reply used again. An endpoint
+        that keeps failing is fallen back from as `tag` does: its run is abandoned, and a new one
+        starts at the next endpoint."""
         scope = scope or {"into": into}
+        tried = []
+        while True:
+            try:
+                return self.adjudicate_run(into, resume, again, scope, endpoint)
+            except EndpointExhausted as error:
+                endpoint, resume, again = self.fall_back(error, tried), None, True
+
+    def adjudicate_run(self, into, resume, again, scope, endpoint):
         folder = os.path.join(self.dir, into)
         parts = sorted(
             os.path.join(folder, f) for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)
@@ -762,10 +873,10 @@ class Runner:
         run = meta["run"]
         self.say(f"{name} {run}: {len(parts)} parts to {config['model']} at {endpoint['tag']}")
         open_items = {}
+        self.cut = {"calls": 0, "alone": set()}
         try:
             for number, path in enumerate(parts, 1):
-                reply = self.ask(meta, endpoint, config, self.prompts.system, read(path), f"part-{number:02d}")
-                write(self.raw(name, run, f"part-{number:02d}.lines.txt"), id_lines(reply))
+                self.ask_part(meta, endpoint, config, read(path), f"part-{number:02d}")
             open_items, retry_parts = self.check_answers(meta, into)
             for attempt in range(1, self.settings["retries"] + 1):
                 if not open_items:
@@ -776,10 +887,14 @@ class Runner:
                     here = [item for item in open_items if re.search(rf"^{re.escape(item)}: $", text, re.M)]
                     problems = "\n".join(f"{item}: {open_items[item]}" for item in here)
                     user = self.prompts.fill("adjudicator-retry.md", problems=problems, worklist=text)
-                    kind = f"retry-{attempt}-{number:02d}"
-                    reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
-                    write(self.raw(name, run, f"{kind}.lines.txt"), id_lines(reply))
+                    self.ask_part(meta, endpoint, config, user, f"retry-{attempt}-{number:02d}")
                 open_items, retry_parts = self.check_answers(meta, into)
+            if self.cut["calls"]:
+                self.say(
+                    f"{name} {run}: {self.cut['calls']} replies were cut off at max_tokens "
+                    f"({config['max_tokens']}); their items are asked again, or stay open"
+                )
+                self.update_run(name, run, cut_off={"calls": self.cut["calls"]})
             if not open_items:
                 self.mark_complete(meta)
         finally:
@@ -803,7 +918,7 @@ class Runner:
                 )
 
     def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False, endpoint=None,
-              same_votes=False):
+              same_votes=False, strict=False):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
         `<into>/labelled.conllu`. Returns the items still open (none when it finished).
 
@@ -812,7 +927,11 @@ class Runner:
         a second time, so the two merges differ by their voting alone. With `same_votes`, only an
         answer to an item the earlier merge showed with the very same codes from every voter is
         settled so: for a merge with other voters, whose answers would otherwise carry the old voters'
-        evidence over, the adjudicator is asked again whenever what it would see has changed."""
+        evidence over, the adjudicator is asked again whenever what it would see has changed.
+
+        An item still open after the adjudicator's retries does not stop the finish, unless `strict`:
+        the word is left out of `labelled.conllu` with its whole sentence, `unsettled.tsv` lists it,
+        and the items are returned for the caller to count."""
         settled = None
         if settle_from:
             settled = os.path.join(self.dir, settle_from, "adjudicated.tsv")
@@ -842,10 +961,10 @@ class Runner:
             write(empty, "")
             self.gold.read_answers(self.dir, into, None, [empty], self.settings["per_part"])
         self.write_runs()
-        if open_items:
+        if open_items and strict:
             return open_items
-        self.say(self.gold.finish(self.dir, into, trains).rstrip())
-        return {}
+        self.say(self.gold.finish(self.dir, into, trains, leave_open=not strict).rstrip())
+        return open_items
 
 
 # ---------------------------------------------------------------------------------------------
@@ -925,24 +1044,20 @@ def make_runner(arguments, config, transport=None, gold=None):
     )
 
 
-def stop_for_endpoint(runner, error, command):
-    """Exit 2 for an endpoint that kept answering 429 or 5xx through every wait. The run is never moved
-    to another endpoint, since one run has one provider; what is printed is the command that starts a
-    new run at the next endpoint voters.json lists for the model, if one passes its checks now."""
+def stop_for_endpoint(error):
+    """Exit 2 for a model every endpoint of which kept failing (429, 5xx, a timeout) through every wait.
+    The runs of the earlier endpoints were abandoned as each failed; the last is kept as it is, for
+    the same command to continue it later, and `--again` starts afresh at the model's first endpoint."""
     print(redacted(f"label: {error}"), file=sys.stderr)
-    following, skipped = runner.next_endpoint(error.name, error.tag)
-    print(f"label: the run is saved; running without --again continues it at {error.tag}", file=sys.stderr)
-    for tag, why in skipped:
-        print(f"label: {tag} is not an alternative now: {why}", file=sys.stderr)
-    if following:
-        line = shlex.join(["python3", "scripts/label/label.py", *command, "--again", "--endpoint", following])
-        print(
-            f"label: the next endpoint for {error.name} is {following}; it is never switched to mid-run. "
-            f"A new run there:\n  {line}",
-            file=sys.stderr,
-        )
-    else:
-        print(f"label: no other endpoint is listed for {error.name} (provider_fallback in voters.json)", file=sys.stderr)
+    tried = "; ".join(f"{tag}: {why}" for tag, why in error.tried)
+    print(
+        f"label: every endpoint of {error.name} failed ({tried}); the earlier runs are abandoned and "
+        f"{error.run} at {error.tag} is kept: running the command again continues it, and --again "
+        f"starts a new run at the first endpoint",
+        file=sys.stderr,
+    )
+    for tag, why in error.skipped:
+        print(f"label: {tag} was not tried: {why}", file=sys.stderr)
     return 2
 
 
@@ -979,10 +1094,7 @@ def command_tag(arguments, config, transport=None, gold=None):
             print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
             return 4
         except EndpointExhausted as error:
-            command = ["tag", "--dir", arguments.dir, "--max-usd", f"{arguments.max_usd:g}", "--voter", name]
-            if arguments.limit is not None:
-                command += ["--limit", str(arguments.limit)]
-            return stop_for_endpoint(runner, error, command)
+            return stop_for_endpoint(error)
         note = f"; abstains on {len(left)} sentences with no good line" if left and arguments.limit is None else ""
         print(f"{name} {run}: done{note}; runs.tsv updated")
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
@@ -1003,25 +1115,23 @@ def command_judge(arguments, config, transport=None, gold=None):
     try:
         left = runner.judge(
             arguments.into, voters, arguments.resume, arguments.trains, settle_from, arguments.again,
-            arguments.endpoint, same_votes,
+            arguments.endpoint, same_votes, arguments.strict,
         )
     except ledger_module.CapExceeded as error:
         print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
         return 4
     except EndpointExhausted as error:
-        command = ["judge", "--dir", arguments.dir, "--max-usd", f"{arguments.max_usd:g}", "--into", arguments.into]
-        for name in arguments.voter or []:
-            command += ["--voter", name]
-        if arguments.spacy:
-            command.append("--spacy")
-        if arguments.settle_from:
-            command += ["--settle-from", arguments.settle_from]
-        command += ["--trains", arguments.trains]
-        return stop_for_endpoint(runner, error, command)
+        return stop_for_endpoint(error)
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
-    if left:
+    if left and arguments.strict:
         print(f"label: {len(left)} items are still open: {', '.join(sorted(left))}", file=sys.stderr)
         return 3
+    if left:
+        print(
+            f"label: {len(left)} items were never settled by the adjudicator: their sentences are left out of "
+            f"{arguments.into}/labelled.conllu, {arguments.into}/unsettled.tsv lists the words, and the report "
+            f"grades them as wrong; --strict makes this exit 3 instead of finishing"
+        )
     return 0
 
 
@@ -1076,6 +1186,11 @@ def parser():
     judge.add_argument("--voter", action="append", help="a voter of voters.json; default its `voters`")
     judge.add_argument("--spacy", action="store_true", help="add spaCy as a voter on the part of speech alone")
     judge.add_argument("--again", action="store_true", help="a new adjudicator run, not the one that stopped")
+    judge.add_argument(
+        "--strict", action="store_true",
+        help="exit 3 and finish nothing if an item is still open after the retries; by default the word's "
+        "sentence is left out of labelled.conllu and counted",
+    )
     judge.add_argument(
         "--settle-from", metavar="DIR",
         help="reuse the answers of the merge in this directory; --spacy means `merge`; without --spacy, "

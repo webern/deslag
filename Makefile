@@ -517,6 +517,9 @@ generate-label-dev: build-label
 # LABEL_INTO=merge-gemma LABEL_FLAGS="--settle-from merge" reuses the plain merge's answer only for an
 # item shown with the very same codes from every voter, since an answer given with another voter's
 # codes in view would carry that voter into the new merge; any other item goes to the adjudicator.
+# The spaCy variant of that merge: LABEL_INTO=merge-gemma-spacy LABEL_FLAGS="--spacy --settle-from merge-gemma".
+# An item the adjudicator never settles leaves its sentence out of labelled.conllu and is counted; add
+# --strict to LABEL_FLAGS to exit 3 instead.
 generate-label-judge-dev: build-label
 	python3 $(LABEL)/label.py judge --dir .label/dev --into $(LABEL_INTO) --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
 

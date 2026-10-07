@@ -39,6 +39,10 @@ class ProviderMismatch(ApiError):
     """A reply from a provider other than the one pinned."""
 
 
+class CutOff(ApiError):
+    """A reply cut off at max_tokens: a bad reply, which the caller asks again in smaller pieces."""
+
+
 def endpoints_url(model):
     return f"{API}/models/{model}/endpoints"
 
@@ -281,17 +285,14 @@ class Retryable(Exception):
 
 
 class RetriesExhausted(ApiError):
-    """A call still failing after every wait it was allowed. `status` is that of the last failure;
-    `busy` says the endpoint itself was rate limiting or failing (429 or 5xx), so another endpoint of
-    the same model may do better."""
+    """A call still failing after every wait it was allowed (a rate limit, a server error, a timeout, a
+    dropped connection). `status` is that of the last failure, if it had one; `reason` is its text, a
+    status or an exception type."""
 
-    def __init__(self, message, status=None):
+    def __init__(self, message, status=None, reason=""):
         super().__init__(message)
         self.status = status
-
-    @property
-    def busy(self):
-        return self.status is not None and (self.status == 429 or 500 <= self.status <= 599)
+        self.reason = reason
 
 
 def retry_after(headers, now=time.time):
@@ -334,7 +335,7 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
         except Retryable as error:
             if attempt + 1 == attempts:
                 raise RetriesExhausted(
-                    f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status
+                    f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status, str(error)
                 ) from None
             wait = min(longest, base * (2 ** attempt))
             wait = wait * (0.5 + 0.5 * rng())
@@ -344,6 +345,7 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
                 raise RetriesExhausted(
                     f"{error}, after {attempt + 1} attempts and {waited:.0f} s of waiting, the most allowed",
                     error.status,
+                    str(error),
                 ) from None
             if on_retry:
                 on_retry(attempt + 1, attempts, str(error), wait)

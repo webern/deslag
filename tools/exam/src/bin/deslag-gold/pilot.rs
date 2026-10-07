@@ -48,6 +48,8 @@ struct Series {
     label: String,
     base_only: bool,
     said: Answers,
+    /// Whether a word it gave no answer for counts as wrong, not as outside what it is graded on.
+    strict: bool,
 }
 
 /// A graded series, with its intervals.
@@ -111,6 +113,9 @@ pub struct Report {
     pub weighted: Option<Weighted>,
     /// The comparison with another merge, when one was given.
     pub versus: Option<Versus>,
+    /// The sentences left out of the labels for a word the adjudicator never settled, and their
+    /// words, which the pipeline line grades as wrong.
+    pub left_out: (usize, usize),
 }
 
 /// What the report grades, and against what.
@@ -151,6 +156,31 @@ fn tally(gold: &[Option<Code>], said: &[Option<Code>]) -> [u64; WIDTH] {
     counts
 }
 
+/// [`tally`] for labels that may leave a whole sentence out: a word the gold gives a code and the labels
+/// give none is graded, as wrong, so the sentences left out for an unsettled word are held against
+/// the pipeline and not dropped from what it is graded on.
+fn tally_strict(gold: &[Option<Code>], said: &[Option<Code>]) -> [u64; WIDTH] {
+    let mut counts = [0; WIDTH];
+    for (at, gold) in gold.iter().enumerate() {
+        let Some(gold) = gold else {
+            continue;
+        };
+        counts[WORDS] += 1;
+        if gold.number.is_some() || gold.form.is_some() {
+            counts[FEATURE_WORDS] += 1;
+        }
+        let Some(Some(said)) = said.get(at) else {
+            continue;
+        };
+        counts[BASE] += u64::from(gold.base == said.base);
+        if gold.number.is_some() || gold.form.is_some() {
+            counts[FEATURE] += u64::from(gold.number == said.number && gold.form == said.form);
+        }
+        counts[FULL] += u64::from(gold == said);
+    }
+    counts
+}
+
 /// Grades every stage of the pipeline. The sample, the gold and every answer must cover the same
 /// sentences and tokens, which loading them has checked.
 pub fn report(inputs: &Inputs<'_>) -> Report {
@@ -180,11 +210,13 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
             label: voter.name.clone(),
             base_only: voter.base_only,
             said: voter.answers.clone(),
+            strict: false,
         })
         .collect();
     series.push(Series {
         label: "agreed".to_string(),
         base_only: false,
+        strict: false,
         said: Answers(
             voted
                 .verdicts
@@ -203,6 +235,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
     series.push(Series {
         label: "adjudicated".to_string(),
         base_only: false,
+        strict: false,
         said: Answers(
             sample
                 .sents
@@ -221,6 +254,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
     series.push(Series {
         label: "pipeline".to_string(),
         base_only: false,
+        strict: true,
         said: labelled.clone(),
     });
     let pipeline_at = adjudicated_at + 1;
@@ -229,10 +263,11 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
         .map(|at| {
             let mut unit = Vec::with_capacity(WIDTH * (series.len() + 1));
             for one in &series {
-                unit.extend(tally(&gold.0[at], &one.said.0[at]));
+                let counted = if one.strict { tally_strict } else { tally };
+                unit.extend(counted(&gold.0[at], &one.said.0[at]));
             }
             if let Some(rival) = rival {
-                unit.extend(tally(&gold.0[at], &rival.0[at]));
+                unit.extend(tally_strict(&gold.0[at], &rival.0[at]));
             }
             unit
         })
@@ -317,6 +352,11 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
             unseen,
         }
     });
+    let left_out = (0..sample.sents.len())
+        .filter(|&at| labelled.0[at].is_empty() && !gold.0[at].is_empty())
+        .fold((0, 0), |(sents, words), at| {
+            (sents + 1, words + gold.0[at].iter().flatten().count())
+        });
     let versus = versus.map(|(name, _, other_adjudicated)| {
         let other = pipeline_at + 1;
         let accuracy = |at: usize, numerator: usize| {
@@ -344,6 +384,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
         agreed_share: whole.estimate(&share),
         weighted,
         versus,
+        left_out,
     }
 }
 
@@ -428,6 +469,14 @@ impl fmt::Display for Report {
             f,
             "pipeline is an upper bound on the silver set's accuracy: some disagreements are gold errors."
         )?;
+        if self.left_out.0 > 0 {
+            writeln!(
+                f,
+                "left out of the labels for a word the adjudicator never settled: {} sentences, {} words, \
+                 all graded as wrong in the pipeline line (and in a rival's, if it left out sentences too)",
+                self.left_out.0, self.left_out.1
+            )?;
+        }
         if let Some(weighted) = &self.weighted {
             let mix: Vec<String> = weighted
                 .weights
@@ -507,6 +556,13 @@ impl Report {
             self.words,
             cell(&Some(self.agreed_share))
         );
+        if self.left_out.0 > 0 {
+            let _ = writeln!(
+                out,
+                "left_out\t{}\t-\t-\t-\t-\t-\t-\t-\t-\t-",
+                self.left_out.1
+            );
+        }
         if let Some(weighted) = &self.weighted {
             let _ = writeln!(
                 out,

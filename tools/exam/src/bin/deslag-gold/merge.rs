@@ -65,6 +65,35 @@ pub fn load_tagger(
     read_answers_of(name, path, text, sample, false)
 }
 
+/// [`load_tagger`] for `labelled.conllu`, which may leave sentences out: only as many as its
+/// `# left_out` comment says it did, each of them an empty row of answers.
+pub fn load_labelled(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+) -> Result<Answers, Problems> {
+    let answers = read_answers_of(name, path, text, sample, true)?;
+    let declared: usize = text
+        .lines()
+        .take_while(|line| !line.starts_with("# sent_id"))
+        .find_map(|line| line.strip_prefix("# left_out = "))
+        .and_then(|count| count.trim().parse().ok())
+        .unwrap_or(0);
+    let missing = answers.0.iter().filter(|said| said.is_empty()).count();
+    if missing != declared {
+        return Err(Error::load(
+            path,
+            Place::File,
+            format!(
+                "{missing} sentences have no answer, and the file says {declared} were left out"
+            ),
+        )
+        .into());
+    }
+    Ok(answers)
+}
+
 /// [`load_tagger`] for a voter of the labelling flow: a sentence the file has no block for is not
 /// an error but an abstention, the voter's row for it left empty. `read-tags --check` keeps only
 /// the sentences with a good line, so a sentence a model never got right is missing, and that must

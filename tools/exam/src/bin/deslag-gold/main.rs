@@ -264,6 +264,11 @@ enum Command {
         /// The description of the runs.
         #[arg(long)]
         runs: Option<PathBuf>,
+        /// A word the adjudicator never settled is not an error: its sentence is left out of
+        /// `labelled.conllu`, which says how many in `# left_out`, and its words are listed in
+        /// `unsettled.tsv`. Without it, an open word stops the finish.
+        #[arg(long)]
+        leave_open: bool,
     },
     /// Grades a finished labelling merge against a gold file that is not holdout: each voter, the
     /// words they agreed on, the words the adjudicator decided and the pipeline, in part of speech
@@ -681,9 +686,12 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 per_part,
             },
         ),
-        Command::Finish { into, trains, runs } => {
-            finish_stage(&dir, &into, &trains, runs.as_deref())
-        }
+        Command::Finish {
+            into,
+            trains,
+            runs,
+            leave_open,
+        } => finish_stage(&dir, &into, &trains, runs.as_deref(), leave_open),
         Command::Report {
             gold,
             into,
@@ -1425,7 +1433,13 @@ fn runs_named(built: &assemble::Built) -> Vec<String> {
     seen
 }
 
-fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Result<(), Problems> {
+fn finish_stage(
+    dir: &Path,
+    into: &str,
+    trains: &str,
+    runs: Option<&Path>,
+    leave_open: bool,
+) -> Result<(), Problems> {
     let sample = load_sample(dir)?;
     // Only a draw of text that was never gold may be marked as training data; whatever was
     // labelled over dev or owner sentences is silver of a gold set and must not train a model.
@@ -1459,11 +1473,12 @@ fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Re
         )
         .into());
     };
-    let built = assemble::build(
+    let built = assemble::build_leaving(
         &sample,
         &agreed_path.display().to_string(),
         &read_text(&agreed_path)?,
         &log,
+        leave_open,
     )?;
     // Every word must say which runs vouch for it: a file that loses its provenance on the way is
     // an error, not a smaller set of runs.
@@ -1534,12 +1549,30 @@ fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Re
         .flatten()
         .filter(|filled| filled.prov == assemble::Prov::Adjudicated)
         .count();
+    let unsettled = out.join("unsettled.tsv");
+    let _ = std::fs::remove_file(&unsettled);
+    let left_out = built.left_out();
     println!(
         "wrote {} sentences, {words} words ({adjudicated} adjudicated), {} runs, to {}",
-        built.sentences.len(),
+        built.sentences.len() - left_out,
         named.len(),
         path.display()
     );
+    if leave_open {
+        let mut table = String::from("sent_id\ttoken\tform\n");
+        for word in &built.open {
+            table.push_str(&format!(
+                "{}\t{}\t{}\n",
+                word.sent_id, word.token, word.form
+            ));
+        }
+        write_text(&unsettled, &table)?;
+        println!(
+            "left out {left_out} sentences for {} words the adjudicator never settled, listed in {}",
+            built.open.len(),
+            unsettled.display()
+        );
+    }
     Ok(())
 }
 
@@ -1628,7 +1661,7 @@ fn report_stage(
         Vec::new()
     };
     let labelled_path = out.join("labelled.conllu");
-    let labelled = merge::load_tagger(
+    let labelled = merge::load_labelled(
         "pipeline",
         &labelled_path.display().to_string(),
         &read_text(&labelled_path)?,
@@ -1642,7 +1675,7 @@ fn report_stage(
         Some(name) => {
             let other = dir.join(name);
             let path = other.join("labelled.conllu");
-            let answers = merge::load_tagger(
+            let answers = merge::load_labelled(
                 name,
                 &path.display().to_string(),
                 &read_text(&path)?,

@@ -63,16 +63,33 @@ status or exception type, and the wait; never a header or a body.
 
 Endpoints. A model in `voters.json` may list `provider_fallback`: other pinned endpoints of the same
 model, in order, each at the quantisation of `provider`'s listing or a more precise one (checked from
-the listing when it is used; an endpoint below that is refused and skipped). The runner never switches
-mid-run, since one run has one provider. If the pinned endpoint is still answering 429 or 5xx after
-every wait, `tag` or `judge` stops with exit 2 and prints the command for a new run at the next
-endpoint of the list that passes its checks, for example
-`python3 scripts/label/label.py tag --dir .label/dev --max-usd 8 --voter deepseek --again --endpoint gmicloud/fp8`.
-The stopped run is saved, and running without `--again` continues it at its own endpoint. `--endpoint
-TAG` (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
-a run continued at another endpoint than it recorded is refused. A run at an alternative records its
-endpoint in `run.json` and `runs.tsv`. qwen's `parasail/fp8` is below its `bf16` pin, so it is skipped
-until the pin is relaxed.
+the listing when it is used; an endpoint below that is skipped). One run has one provider, and never
+changes it. If an endpoint is still failing (429, 5xx, a timeout, a dropped connection) after every
+wait, `tag` or `judge` marks that run abandoned in its `run.json` (it stays on disk; nothing continues
+it, and a merge takes no tags from it), says so in one line on stderr, and starts a new run of the
+voter or the adjudicator at the next endpoint of the list that passes the listing's checks; that run
+asks every batch afresh. Only if every endpoint fails does it stop with exit 2, naming each and why;
+the earlier runs stay abandoned and the last is kept, so the same command continues it later, and
+`--again` starts a new run at the first endpoint. `--endpoint TAG` (one voter for `tag`; the
+adjudicator for `judge`) starts a run at an endpoint the model lists, and falls back from there to
+the ones after it; a run continued at another endpoint than it recorded is refused. A run at an
+alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary is `gmicloud/fp8`
+(DeepInfra's DeepSeek loops until `max_tokens`), then `streamlake/fp8` and `deepinfra/fp8`. qwen's
+`parasail/fp8` is below its `bf16` pin, so it is skipped until the pin is relaxed.
+
+Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
+batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
+down to one sentence; one still cut off alone abstains and is not asked again by the retry rounds. A
+cut-off adjudicator part leaves its items open for the retry rounds. The count is said at the end of
+the run and kept in `run.json` as `cut_off`; a rerun pays for none of it again.
+
+Unsettled items. An item the adjudicator never settled after its retries does not stop `judge`: the
+word is left out of `labelled.conllu` with its whole sentence (a sentence with an unsettled word is
+dropped, the header says `# left_out = N`), `unsettled.tsv` lists the words, and `judge` says how many
+and exits 0. `--strict` exits 3 and finishes nothing instead. The report grades the pipeline on every
+word of the sample: the words of a sentence left out count as wrong in the pipeline line (and in a
+`--versus` rival's, if it left sentences out too), and the report says how many sentences and words.
+The voters' and the adjudicator's lines are graded on the words they answered, as before.
 
 Voters. After the pilot Mistral was swapped for Gemma (`voters` is deepseek, qwen, gemma; `mistral`
 stays in `models`, its pilot runs being on record). Only a model that is a voter now has a run that a
@@ -91,7 +108,8 @@ of it.
 Exit codes: 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter; a sentence fewer than two voters answered goes to the
 adjudicator whole); 1 an unexpected error, printed as its type and place only; 2 refused, bad config
-or an API error; 3 adjudicator items still open after the retries; 4 the cap stopped it.
+an API error, or every endpoint of a model failing; 3 adjudicator items still open after the retries,
+with `--strict` only; 4 the cap stopped it.
 
 The spaCy variant is a paired comparison: `merge-spacy` reuses the plain merge's adjudicated answer for
 every item both have, with the run that gave it, so the two differ by voting alone, and only items
@@ -129,7 +147,8 @@ an endpoint that lacks one refuse the call (Mistral lists no `reasoning`, the An
 endpoint exists, has the quantisation pinned and supports every parameter sent; the prices come from
 that listing. A reply whose `provider` is not the pinned endpoint's, or that names a model other than
 the pinned one (or a dated version of it), is an error, checked before the reply is saved. So is a
-reply cut off at `max_tokens`, and one with reasoning tokens when reasoning was switched off. Everything
+reply cut off at `max_tokens` (asked again in halves, as above), and one with reasoning tokens when
+reasoning was switched off. Everything
 up to the last `</think>` is dropped. Timeouts, 429, 5xx (the statuses above) and a dropped connection are asked again. The
 adjudicator thinks at `reasoning: {"effort": "low"}` with `max_tokens` 16000 (a token budget is refused by
 Sonnet 5.5); the API requires its default temperature then, so none is sent, and `runs.tsv` says so. A

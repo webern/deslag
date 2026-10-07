@@ -939,6 +939,90 @@ fn a_merge_of_other_voters_keeps_an_answer_only_for_the_same_evidence() {
 }
 
 #[test]
+fn a_word_nobody_settled_leaves_its_sentence_out_and_the_report_grades_it_wrong() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, gold) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    let none = write(&dir.join("none.txt"), "");
+    gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--answers",
+            path(&none),
+            "--run",
+            "r3",
+        ],
+    );
+    write(
+        &dir.join("runs.tsv"),
+        "run\tmodel\nr1\tone\nr2\ttwo\nr3\tadjudicator\n",
+    );
+    // Without the flag an open word stops the finish.
+    let error = gold_fails(&dir, &["finish"]);
+    assert!(
+        error.contains("neither an agreed tag nor an adjudicated one"),
+        "{error}"
+    );
+    assert!(!dir.join("merge/labelled.conllu").exists());
+    let said = gold_ok(&dir, &["finish", "--leave-open"]);
+    assert!(said.contains("left out 1 sentences for 1 words"), "{said}");
+    let labelled = fs::read_to_string(dir.join("merge/labelled.conllu")).unwrap();
+    assert!(labelled.contains("# left_out = 1\n"), "{labelled}");
+    assert!(!labelled.contains("sent_id = d1\n"), "{labelled}");
+    assert!(labelled.contains("sent_id = d2\n"), "{labelled}");
+    let unsettled = fs::read_to_string(dir.join("merge/unsettled.tsv")).unwrap();
+    assert!(
+        unsettled.starts_with("sent_id\ttoken\tform\nd1\t3\t"),
+        "{unsettled}"
+    );
+    // The exam reads it like any labelled file.
+    assert!(Gold::read(&dir.join("merge/labelled.conllu")).is_ok());
+    // The report counts the left-out sentence's words, as wrong: the pipeline is graded on every word.
+    let report = gold_ok(&dir, &["report", "--gold", path(&gold)]);
+    assert!(
+        report.contains(
+            "left out of the labels for a word the adjudicator never settled: 1 sentences"
+        ),
+        "{report}"
+    );
+    let tsv = fs::read_to_string(dir.join("merge/report.tsv")).unwrap();
+    let row = |name: &str| -> Vec<String> {
+        tsv.lines()
+            .find(|line| line.starts_with(&format!("{name}\t")))
+            .unwrap_or_else(|| panic!("no {name} in {tsv}"))
+            .split('\t')
+            .map(str::to_string)
+            .collect()
+    };
+    let pipeline = row("pipeline");
+    assert_eq!(
+        pipeline[1], "11",
+        "every word is graded, the left-out ones too: {tsv}"
+    );
+    assert!(pipeline[2].parse::<f64>().unwrap() < 1.0, "{tsv}");
+    assert!(row("left_out")[1].parse::<usize>().unwrap() >= 1, "{tsv}");
+    // A rival that left sentences out is read the same way, and graded strictly too.
+    let versus = gold_ok(
+        &dir,
+        &["report", "--gold", path(&gold), "--versus", "merge"],
+    );
+    assert!(
+        versus.contains("pipeline less merge (percentage points, paired)"),
+        "{versus}"
+    );
+    // A labelled file that has lost sentences it does not declare is refused.
+    let edited = labelled.replace("# left_out = 1\n", "");
+    fs::write(dir.join("merge/labelled.conllu"), edited).unwrap();
+    let error = gold_fails(&dir, &["report", "--gold", path(&gold)]);
+    assert!(error.contains("were left out"), "{error}");
+}
+
+#[test]
 fn a_header_on_text_the_target_did_not_write_is_refused_and_so_is_a_hard_link() {
     let root = tempfile::tempdir().unwrap();
     let (dir, _) = setup(root.path());

@@ -16,8 +16,8 @@
   "models": {
     "deepseek": {
       "model": "deepseek/deepseek-v4-flash",
-      "provider": "deepinfra/fp8",
-      "provider_fallback": ["gmicloud/fp8", "streamlake/fp8"],
+      "provider": "gmicloud/fp8",
+      "provider_fallback": ["streamlake/fp8", "deepinfra/fp8"],
       "quantizations": ["fp8"],
       "temperature": 0,
       "reasoning": {"enabled": false},

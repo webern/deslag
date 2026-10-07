@@ -588,6 +588,20 @@ class PromptTests(unittest.TestCase):
 
 
 DRAW_HEAD = "# draw = for labelling, 3 sentences\nsent_id\tsplit\ttier\tcontext\tfile\trepo\tlicense\tbytes\n"
+DRAW_ROWS = "".join(f"{sent_id}\tunlabelled\thuman\tprose\tf.md\to/r\tMIT\t0-1\n" for sent_id, _ in SENTENCES)
+
+
+def make_part(label_root, number, of, tag_version="0.0.1", folder=None, sample_says=None, manifest_says=None):
+    """A part of a draw by hand, as `deslag-gold draw --parts` writes one: `<label_root>/silver/part-NN`
+    (or `folder`) with a sample and a manifest whose headers add `part = k of N` and `tag_version`.
+    `sample_says` and `manifest_says` replace those two lines in one file; an empty string drops them."""
+    directory = folder or os.path.join(label_root, "silver", f"part-{number:02d}")
+    lines = f"# part = {number} of {of}\n# tag_version = {tag_version}\n"
+    sample = skeleton().replace("# exam.from = dev\n", lines if sample_says is None else sample_says)
+    label.write(os.path.join(directory, "sample.conllu"), sample)
+    label.write(os.path.join(directory, "manifest.tsv"),
+                (lines if manifest_says is None else manifest_says) + DRAW_HEAD + DRAW_ROWS)
+    return directory
 
 
 class GuardTests(Base):
@@ -673,6 +687,59 @@ class GuardTests(Base):
             label.write(os.path.join(self.dir, "manifest.tsv"), manifest)
             with self.assertRaisesRegex(guard.Refused, why):
                 guard.check_dir(self.dir)
+
+    def test_a_part_of_a_draw_is_a_draw_for_labelling_and_its_header_must_be_whole(self):
+        part = make_part(self.label_root, 3, 12)
+        self.assertEqual(guard.check_dir(part), part)
+        # The keys may be in the manifest alone, or the sample alone.
+        make_part(self.label_root, 3, 12, sample_says="")
+        guard.check_dir(part)
+        make_part(self.label_root, 3, 12, manifest_says="")
+        guard.check_dir(part)
+        # A draw not dealt into parts, in a directory of another name, needs neither.
+        plain = make_part(self.label_root, 1, 1, folder=os.path.join(self.label_root, "draw"), sample_says="", manifest_says="")
+        guard.check_dir(plain)
+        for says, why in (
+            ("", "does not say `# part = k of N`"),
+            ("# part = 2 of 12\n# tag_version = 0.0.1\n", "the directory is part 3"),
+            ("# part = 13 of 12\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = 0 of 12\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = third\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = 3 of 12\n", "tag VERSION"),
+            ("# part = 3 of 12\n# tag_version =\n", "tag VERSION"),
+        ):
+            make_part(self.label_root, 3, 12, sample_says="", manifest_says=says)
+            with self.assertRaisesRegex(guard.Refused, re.escape(why)):
+                guard.check_dir(part)
+        make_part(self.label_root, 3, 12, sample_says="# part = 3 of 12\n# tag_version = 0.0.2\n")
+        with self.assertRaisesRegex(guard.Refused, "different values of `tag_version`"):
+            guard.check_dir(part)
+        # A part is still a draw for labelling: a row that is not unlabelled is refused as before.
+        make_part(self.label_root, 3, 12)
+        label.write(os.path.join(part, "manifest.tsv"),
+                    "# part = 3 of 12\n# tag_version = 0.0.1\n" + DRAW_HEAD + DRAW_ROWS.replace("unlabelled", "dev", 1))
+        with self.assertRaisesRegex(guard.Refused, "only a draw for labelling"):
+            guard.check_dir(part)
+
+    def test_a_part_is_a_plain_dir_for_tag_judge_and_handoff(self):
+        part = make_part(self.label_root, 2, 4)
+        gold = FakeGold()
+        for name in ("one", "two"):
+            run, left = self.runner(FakeTransport(answer_all), gold=gold, directory=part).tag(name)
+            self.assertEqual(left, [])
+        self.assertTrue(os.path.isfile(os.path.join(part, "tags", "one.conllu")))
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        judged = self.runner(settles, gold=gold, directory=part)
+        self.assertEqual(judged.judge("merge", [("one", False), ("two", False)]), {})
+        self.assertTrue(os.path.isfile(os.path.join(part, "merge", "labelled.conllu")))
+        config = copy.deepcopy(HANDOFF_CONFIG)
+        with self.assertRaises(label.HandoffWait):
+            self.runner(None, gold=gold, config=config, directory=part).judge("merge-opus", [("one", False), ("two", False)])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff(label.parser().parse_args(["handoff", "--dir", part, "--into", "merge-opus"]), config)
+        self.assertEqual(len(out.getvalue().splitlines()), 1)
+        self.assertTrue(out.getvalue().startswith(os.path.join(part, "merge-opus", "handoff")))
 
     def test_a_symlinked_directory_or_file_is_judged_by_where_it_really_is(self):
         outside = os.path.join(self.root, "outside")

@@ -368,8 +368,10 @@ tried, so that a refusal is seen. The probe passes only when every assertion hol
 - `version_unchanged`: `claude --version` is the same after the call as before.
 
 It writes the stamp `.label/confinement.json`, pass or fail: `claude_code_version`, `args` (without the
-prompt), `date`, `time`, `verdict`, `assertions` (each name, true or false) and `skipped`. It prints each
-assertion and never what the process wrote, and exits 0 on a pass, 2 otherwise. Run it again whenever Claude
+prompt), `date`, `time`, `verdict`, `assertions` (each name, true or false), `skipped` and `models_seen`
+(the model the init event named and those the assistant messages named). It prints each assertion and the
+model ids, never what the process wrote, and exits 0 on a pass, 2 otherwise. With `--keep` the kept tree
+also holds the process's output, `stream.jsonl`. Run it again whenever Claude
 Code changes: handoff-run refuses a stamp for another version.
 
 Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids

@@ -340,7 +340,8 @@ PROBE_TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "promp
 def probe(claude, model, keep=False, say=print):
     """Runs one call as every handoff call is run, in a scratch tree of its own, and checks it was
     confined. Returns (the checks by name, true or false; the names of the checks it skipped, each
-    with why).
+    with why; the model ids the process named, in its init event and its assistant messages, which
+    say why `one_model_id` failed when it does).
 
     The tree, a new directory under the system temp directory: `CLAUDE.md` with a heading of random
     text, above `cwd/`, the working directory, which holds the request; decoys outside `cwd/`, each
@@ -352,10 +353,11 @@ def probe(claude, model, keep=False, say=print):
     heading, which must not appear either; it is not named in the request.
 
     The probe writes nothing outside the tree, removes the tree unless `keep`, and never writes to a
-    CLAUDE.md but the one it made."""
+    CLAUDE.md but the one it made. With `keep`, the tree also holds what the process wrote to stdout,
+    `stream.jsonl`, written after the checks."""
     scratch = workdir("deslag-probe-")
     try:
-        return probe_in(claude, model, scratch, say)
+        return probe_in(claude, model, scratch, say, keep)
     finally:
         if keep:
             say(f"the scratch tree is kept at {scratch}")
@@ -363,7 +365,7 @@ def probe(claude, model, keep=False, say=print):
             shutil.rmtree(scratch, ignore_errors=True)
 
 
-def probe_in(claude, model, scratch, say):
+def probe_in(claude, model, scratch, say, keep=False):
     cwd = os.path.join(scratch, "cwd")
     os.mkdir(cwd)
     heading = f"Scratch notes {token()}"
@@ -446,4 +448,11 @@ def probe_in(claude, model, scratch, say):
         results["user_claude_md_absent"] = not anywhere(user_heading)
     else:
         skipped["user_claude_md_absent"] = f"{user_claude_md()} has no heading or does not exist"
-    return results, skipped
+    seen = {
+        "init": (stream.init or {}).get("model"),
+        "assistant": sorted({str(found) for found in stream.models()}),
+    }
+    if keep:
+        with open(os.path.join(scratch, "stream.jsonl"), "w", encoding="utf-8") as handle:
+            handle.write(out)
+    return results, skipped, seen

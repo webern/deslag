@@ -4373,6 +4373,7 @@ class ConfinementTests(Base):
         self.assertEqual(stamp["args"], confine.arguments("claude-opus-5-5"))
         self.assertRegex(stamp["date"], r"^\d{4}-\d{2}-\d{2}$")
         self.assertEqual(stamp["skipped"], {})
+        self.assertEqual(stamp["models_seen"], {"init": "claude-opus-5-5", "assistant": ["claude-opus-5-5"]})
         expected = {
             "stream_json", "init_tools_read_write", "init_no_mcp_server", "one_model_id", "process_finished",
             "model_reported_matches", "only_read_write_used", "reply_written", "control_quoted",
@@ -4410,6 +4411,8 @@ class ConfinementTests(Base):
         self.assertNotIn("Scratch notes", request)
         self.assertNotIn("Home rules", request)
         self.assertTrue(label.read(os.path.join(scratch, "CLAUDE.md")).startswith("# Scratch notes "))
+        events = [json.loads(line) for line in label.read(os.path.join(scratch, "stream.jsonl")).splitlines()]
+        self.assertEqual([events[0]["type"], events[-1]["type"]], ["system", "result"], "--keep keeps the stream")
         shutil.rmtree(scratch)
 
     def test_a_process_that_reads_a_decoy_fails_the_probe(self):
@@ -4440,6 +4443,8 @@ class ConfinementTests(Base):
         self.assertFalse(self.stamp()["assertions"]["init_tools_read_write"])
         self.assertEqual(self.probe(model="claude-sonnet-5-5", final="claude-sonnet-5-5"), 2)
         self.assertFalse(self.stamp()["assertions"]["one_model_id"])
+        self.assertEqual(self.stamp()["models_seen"], {"init": "claude-sonnet-5-5", "assistant": ["claude-sonnet-5-5"]})
+        self.assertIn("  models named: init claude-sonnet-5-5; assistant messages claude-sonnet-5-5", self.out)
         self.assertEqual(self.probe(final="I am Claude"), 2)
         self.assertFalse(self.stamp()["assertions"]["model_reported_matches"])
 

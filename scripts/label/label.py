@@ -2294,22 +2294,24 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
 def command_probe_confinement(arguments, config, transport=None, gold=None, say=print):
     """`probe-confinement`: [confine.probe], with the model of the handoff adjudicator, and the
     stamp it writes in this checkout's `.label`, whether it passed or not. Prints each check and its
-    result, never what the process wrote. Exit 0 when it passed, 2 when it did not."""
+    result and the model ids the process named, never what the process wrote. Exit 0 when it passed,
+    2 when it did not."""
     claude = confine.find_claude(arguments.claude)
     model = handoff_model(config)
     version = confine.version(claude)
     args = confine.arguments(model)
     say(f"probe: claude {version}, {shlex.join(args)}")
-    results, skipped = confine.probe(claude, model, arguments.keep, say)
+    results, skipped, seen = confine.probe(claude, model, arguments.keep, say)
     results["version_unchanged"] = confine.version(claude) == version
     for name, ok in results.items():
         say(f"  {name}: {'true' if ok else 'false'}")
     for name, why in skipped.items():
         say(f"  {name}: skipped, {why}")
+    say(f"  models named: init {seen['init']}; assistant messages {', '.join(seen['assistant']) or 'none'}")
     verdict = "pass" if all(results.values()) else "fail"
     stamp = {
         "claude_code_version": version, "args": args, "date": now()[:10], "time": now(), "verdict": verdict,
-        "assertions": results, "skipped": skipped,
+        "assertions": results, "skipped": skipped, "models_seen": seen,
     }
     write_atomic(stamp_path(), json.dumps(stamp, indent=2) + "\n")
     say(f"verdict: {verdict}; {stamp_path()} written")

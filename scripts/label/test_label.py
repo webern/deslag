@@ -1854,7 +1854,7 @@ class RoundThreeTests(Base):
         models = label.load_config()["models"]
         self.assertEqual(models["deepseek"]["provider_fallback"], ["gmicloud/fp8", "streamlake/fp8"])
         self.assertEqual(models["qwen"]["provider_fallback"], ["parasail/fp8"])
-        self.assertNotIn("provider_fallback", models["mistral"])
+        self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
 
     def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):
         for bad in ("alt/fp8", [3], ["alt/fp8", "alt/fp8"], ["host/fp8"]):

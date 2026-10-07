@@ -135,6 +135,11 @@ fn an_older_stamp_loads_with_no_warning() {
             Some(OLDER),
             "{language}"
         );
+        assert_eq!(
+            config.deslag_version(),
+            Version::Release(semver::Version::parse(OLDER).expect("a version")),
+            "{language}"
+        );
         assert_eq!(config.warnings(), &[] as &[String], "{language}");
 
         let (code, stderr) = check(language, &text);
@@ -224,6 +229,41 @@ fn a_syntax_error_beside_a_stamp_is_a_parse_error() {
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
         assert!(
             stderr.contains("cannot parse"),
+            "{language}, stderr: {stderr}"
+        );
+    }
+}
+
+#[test]
+fn a_wrong_typed_schema_version_keeps_its_message() {
+    let (code, stderr) = check("toml", "schema_version = \"1\"\n");
+    assert_eq!(code, 2, "stderr: {stderr}");
+    assert!(
+        stderr.contains("expected a nonzero u32"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn a_stamp_under_md_is_an_unknown_field() {
+    for (language, text) in [
+        (
+            "toml",
+            "schema_version = 1\n[md]\ndeslag_version = \"0.1.0\"\n",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nmd:\n  deslag_version: \"0.1.0\"\n",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"md\": {\"deslag_version\": \"0.1.0\"}}",
+        ),
+    ] {
+        let (code, stderr) = check(language, text);
+        assert_eq!(code, 2, "{language}, stderr: {stderr}");
+        assert!(
+            stderr.contains("unknown field") && stderr.contains("deslag_version"),
             "{language}, stderr: {stderr}"
         );
     }

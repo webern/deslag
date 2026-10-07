@@ -247,6 +247,17 @@ fn no_release_is_left_as_next() {
 }
 
 #[test]
+#[ignore = "fails while the crate version has a pre-release or build part"]
+fn the_crate_version_is_a_release() {
+    let version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version");
+    assert!(
+        version.pre.is_empty() && version.build.is_empty(),
+        "Cargo.toml has the version {version}: a release writes its version as the config stamp, \
+         and a stamp may not have a pre-release or build part"
+    );
+}
+
+#[test]
 fn every_summary_is_one_short_line_and_every_onboarding_has_text() {
     for (_, entry) in entries() {
         let summary = entry.summary();

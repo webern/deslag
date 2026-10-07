@@ -7,6 +7,8 @@ schema_version = 1
 [md]
 globs = [
   "/AGENTS.md",
+  "/tests/AGENTS.md",
+  "/tools/AGENTS.md",
   "/ACKNOWLEDGEMENTS.md",
   "/.agents/skills/**/*.md",
   "/docs/design/analysis.md",
@@ -40,6 +42,20 @@ globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000
 lints.repo_layout = { min_entries = 5, max_entries = 12 }
 lints.list_growth = {}
+
+# The guides under tests/ and tools/ stay a page: a short layout, a few rules, no list that grows.
+[[md.overrides]]
+globs = ["/tests/AGENTS.md", "/tools/AGENTS.md"]
+lints.repo_layout = { min_entries = 5, max_entries = 10 }
+lints.list_growth = {}
+
+[[md.overrides]]
+globs = ["/tests/AGENTS.md"]
+lints.max_size_bytes.value = 1450
+
+[[md.overrides]]
+globs = ["/tools/AGENTS.md"]
+lints.max_size_bytes.value = 1300
 
 [[md.overrides]]
 globs = ["/.agents/skills/**/*.md"]

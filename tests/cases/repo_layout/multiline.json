@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nAGENTS.md has 1 problem in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  line 11: this continues the description above; an entry must fit on one line, so shorten the description",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 195,
+          "end": 248,
+          "line": 11,
+          "column": 1,
+          "end_line": 11,
+          "end_column": 54,
+          "note": "this continues the description above; an entry must fit on one line, so shorten the description"
+        }
+      ]
+    }
+  ]
+}

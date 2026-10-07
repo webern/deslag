@@ -13,7 +13,7 @@ repo/
   docs/      <- the design docs
 ```
 
-The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and no line is wider than 100 characters. Paths must exist, and one ending in `/` must be a directory.
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 100 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.
 
 Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 

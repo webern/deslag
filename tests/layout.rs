@@ -72,8 +72,7 @@ const GOOD: &str = "# Title\n\
     ```text\n\
     repo/\n\
     \x20 Makefile      <- every build\n\
-    \x20 src/lib.rs    <- the library, whose description is long enough\n\
-    \x20                  to go on to a second line\n\
+    \x20 src/lib.rs    <- the library\n\
     \n\
     \x20 docs/         <- the docs\n\
     ```\n\
@@ -255,17 +254,42 @@ fn entries_must_line_up() {
 }
 
 #[test]
-fn a_continuation_must_sit_under_the_description() {
+fn an_entry_is_one_line() {
     let repo = tree();
-    let text =
-        "## Repository layout\n\n```\n  Makefile  <- a long\n               description\n```\n";
-    assert_eq!(problems(&repo, text, &loose()), vec![]);
+    // Lines 5 and 6 sit under the description of line 4, and each is a problem.
+    let text = "## Repository layout\n\n```\n  Makefile  <- a long\n               description\n               and more\n  src/      <- b\n```\n";
+    assert_eq!(
+        problems(&repo, text, &loose()),
+        vec![
+            format(text, 5, Malformed::Continued),
+            format(text, 6, Malformed::Continued),
+        ]
+    );
+    let Ok(layout) = read(&Document::markdown(text), "Repository layout") else {
+        panic!("a layout");
+    };
+    assert_eq!(
+        layout.entries.len(),
+        2,
+        "a continued line is not an entry of its own"
+    );
+}
 
+#[test]
+fn a_line_not_under_the_description_is_stray() {
+    let repo = tree();
     let text =
         "## Repository layout\n\n```\n  Makefile  <- a long\n        description here\n```\n";
     assert_eq!(
         problems(&repo, text, &loose()),
         vec![format(text, 5, Malformed::Stray)]
+    );
+
+    // A blank line ends the description, so what follows it is not a continuation of it.
+    let text = "## Repository layout\n\n```\n  Makefile  <- a long\n\n               description here\n```\n";
+    assert_eq!(
+        problems(&repo, text, &loose()),
+        vec![format(text, 6, Malformed::Stray)]
     );
 }
 
@@ -276,20 +300,14 @@ fn no_line_is_wider_than_max_width() {
         max_width: Some(20),
         ..loose()
     };
-    // Line 4 is 20 wide before its trailing spaces, and line 7 continues line 6.
-    let text = "## Repository layout\n\n```\n  Makefile  <- abcde   \n  src/      <- abcdef\n  docs/     <- a\n               abcdef\n```\n";
+    // Line 4 is 20 wide before its trailing spaces.
+    let text = "## Repository layout\n\n```\n  Makefile  <- abcde   \n  src/      <- abcdef\n  docs/     <- a\n```\n";
     assert_eq!(
         problems(&repo, text, &narrow),
-        vec![
-            Problem::Wide {
-                location: row(text, 5),
-                width: 21
-            },
-            Problem::Wide {
-                location: row(text, 7),
-                width: 21
-            },
-        ]
+        vec![Problem::Wide {
+            location: row(text, 5),
+            width: 21
+        }]
     );
 }
 

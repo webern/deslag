@@ -1,6 +1,6 @@
 ERROR: deslag detected Markdown bloat!
 
-README.md is 163, which larger than 100 bytes (by 63 bytes).
+README.md is 163, which is larger than 100 bytes (by 63 bytes).
 
 The file must fit within its max_size_bytes budget of 100 bytes.
 

@@ -11,8 +11,7 @@ repo/
   Makefile      <- every build and test
   README.md     <- what the project is
   src/lib.rs    <- the library, which does all the work
-  src/main.rs   <- the binary, a thin command line over the library; it reads the arguments,
-                   calls the library and prints what it returns
+  src/main.rs   <- the binary, a thin command line over the library
 
   tests/        <- the integration tests
   docs/design/  <- the design docs

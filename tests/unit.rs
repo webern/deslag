@@ -440,7 +440,7 @@ fn the_report_is_the_whole_message_or_none_of_it() {
     let expected = format!(
         "{HEADING}\n\
          \n\
-         AGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\
+         AGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\
          \n\
          The file must fit within its max_size_bytes budget of 10 bytes.\n\
          \n\
@@ -485,7 +485,7 @@ fn a_config_message_replaces_the_advice() {
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
         stderr.contains(&format!(
-            "{HEADING}\n\nAGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\nCut \
+            "{HEADING}\n\nAGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nCut \
              AGENTS.md to 10 bytes.\n"
         )),
         "stderr: {stderr}"
@@ -516,14 +516,14 @@ fn an_override_sets_only_the_fields_it_names() {
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
         stderr.contains(
-            "AGENTS.md is 34, which larger than 10 bytes (by 24 bytes).\n\nOnly a human may edit \
+            "AGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nOnly a human may edit \
              AGENTS.md.\n"
         ),
         "stderr: {stderr}"
     );
     assert!(
         stderr.contains(
-            "other.md is 34, which larger than 10 bytes (by 24 bytes).\n\nThe file must fit within"
+            "other.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nThe file must fit within"
         ),
         "other.md keeps the default advice, stderr: {stderr}"
     );

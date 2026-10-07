@@ -7,9 +7,10 @@ leaves every judgement of the output to `deslag-gold`, which does the reading, c
 in Rust. See README.md in this directory for the steps.
 
     label.py tag      --dir .label/dev --max-usd 8 [--voter NAME ...] [--limit N] [--resume rN] [--again]
+                      [--endpoint TAG]
     label.py register --dir .label/dev --name spacy --file PATH --model NAME [--version V]
     label.py judge    --dir .label/dev --max-usd 8 [--into merge] [--voter NAME ...] [--spacy]
-                      [--trains yes|no] [--resume rN]
+                      [--trains yes|no] [--resume rN] [--again] [--endpoint TAG]
     label.py cost     --dir .label/draw500
     label.py spend
 
@@ -34,6 +35,7 @@ import json
 import math
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -93,6 +95,11 @@ def load_config(path=CONFIG):
                 raise ConfigError(f"{path}: models.{name} has no `{key}`")
         if not re.fullmatch(r"[A-Za-z0-9_\-]+", name):
             raise ConfigError(f"{path}: `{name}` is not letters, digits, `-` and `_`")
+        fallback = model.get("provider_fallback", [])
+        if not isinstance(fallback, list) or not all(isinstance(tag, str) and tag for tag in fallback):
+            raise ConfigError(f"{path}: models.{name}.provider_fallback must be a list of endpoint tags")
+        if len(set(fallback)) != len(fallback) or model["provider"] in fallback:
+            raise ConfigError(f"{path}: models.{name}.provider_fallback repeats an endpoint")
     for key in ("batch_size", "per_part", "retries", "http_attempts", "timeout_s"):
         if not isinstance(config["settings"].get(key), int):
             raise ConfigError(f"{path}: settings.{key} must be a whole number")
@@ -244,6 +251,38 @@ def write(path, text):
         handle.write(text)
 
 
+def write_atomic(path, text):
+    """`text` at `path` so that a crash leaves the old file or the whole new one, never a part: a
+    temporary file beside it, flushed and synced, renamed over it, and the folder synced."""
+    folder = os.path.dirname(path)
+    os.makedirs(folder, exist_ok=True)
+    temp = f"{path}.tmp{os.getpid()}"
+    with open(temp, "w", encoding="utf-8") as handle:
+        handle.write(text)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temp, path)
+    try:
+        descriptor = os.open(folder, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(descriptor)
+    except OSError:
+        pass
+    finally:
+        os.close(descriptor)
+
+
+class EndpointExhausted(openrouter.ApiError):
+    """A voter's or the adjudicator's pinned endpoint kept answering 429 or 5xx through every wait.
+    The run stays saved; `name`, `tag` and `role` say whose endpoint it was."""
+
+    def __init__(self, message, name, tag, role):
+        super().__init__(message)
+        self.name, self.tag, self.role = name, tag, role
+
+
 class Runner:
     def __init__(self, directory, config, prompts, transport, gold, max_usd,
                  sleep=time.sleep, clock=time.monotonic, say=print, warn=None):
@@ -292,39 +331,95 @@ class Runner:
             self.listings[model] = data
         return self.listings[model]
 
-    def start_run(self, name, role, resume=None):
+    def pin(self, name, tag=None):
+        """(config, endpoint) for `name` at the endpoint tagged `tag`: its own `provider` by default, or
+        one of its `provider_fallback`, which must be the same model at the same quantisation or a more
+        precise one than the primary's listing gives. The config returned pins that endpoint."""
+        config = self.config["models"][name]
+        primary = config["provider"]
+        listing = self.listing(config["model"])
+        if tag in (None, primary):
+            return config, openrouter.pinned_endpoint(listing, config)
+        if tag not in config.get("provider_fallback", []):
+            known = ", ".join([primary, *config.get("provider_fallback", [])])
+            raise ConfigError(f"`{tag}` is not an endpoint of {name} in voters.json; it has {known}")
+        alternative = {key: value for key, value in config.items() if key != "quantizations"}
+        alternative["provider"] = tag
+        floor = openrouter.listed_quantization(listing, primary)
+        if floor not in openrouter.QUANT_RANK:
+            floor = openrouter.weakest(config.get("quantizations"))
+        endpoint = openrouter.pinned_endpoint(listing, alternative, at_least=floor)
+        if endpoint.get("quantization"):
+            alternative["quantizations"] = [endpoint["quantization"]]
+        return alternative, endpoint
+
+    def next_endpoint(self, name, tag):
+        """(the next endpoint after `tag` in `name`'s order that passes its checks now, or None; the
+        ones skipped, each with why)."""
+        config = self.config["models"][name]
+        order = [config["provider"], *config.get("provider_fallback", [])]
+        later = order[order.index(tag) + 1 :] if tag in order else order
+        skipped = []
+        for candidate in later:
+            try:
+                self.pin(name, candidate)
+            except openrouter.ApiError as error:
+                skipped.append((candidate, str(error)))
+                continue
+            return candidate, skipped
+        return None, skipped
+
+    CHANGED = ("prompt_sha256", "request", "model", "endpoint", "limit", "scope")
+
+    def start_run(self, name, role, resume=None, limit=None, scope=None, endpoint=None):
         """Allocates a run id from the ledger, or takes `resume`, which must be a run of this voter
         here, and records what the run pins: the endpoint as its listing gives it now, with
-        quantisation and price."""
-        config = self.config["models"][name]
-        endpoint = openrouter.pinned_endpoint(self.listing(config["model"]), config)
-        if resume and not os.path.isfile(self.raw(name, resume, "run.json")):
-            raise openrouter.ApiError(f"{resume} is not a run of {name} in {self.dir}; there is nothing to resume")
+        quantisation and price. `limit` and `scope` (what the run is for: the merge and voters of an
+        adjudicator run) are recorded too.
+
+        A run that is continued keeps its record as it was written: it is refused if the prompt, the
+        request settings, the model, the endpoint, the limit or the scope would now be other than it
+        recorded, since it would then claim what it did not do, and a run has one of each."""
+        saved = None
+        if resume:
+            if not os.path.isfile(self.raw(name, resume, "run.json")):
+                raise openrouter.ApiError(f"{resume} is not a run of {name} in {self.dir}; there is nothing to resume")
+            saved = json.loads(read(self.raw(name, resume, "run.json")))
+        config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
         run = resume or self.ledger.new_run()
-        price_in, price_out = openrouter.prices(endpoint)
+        price_in, price_out = openrouter.prices(pinned)
         meta = {
             "run": run, "role": role, "name": name, "model": config["model"],
-            "provider": endpoint.get("provider_name"), "endpoint": endpoint["tag"],
-            "quantization": endpoint.get("quantization"),
+            "provider": pinned.get("provider_name"), "endpoint": pinned["tag"],
+            "quantization": pinned.get("quantization"),
             "price_in_per_m": price_in * 1e6, "price_out_per_m": price_out * 1e6,
             "date": now(), "prompt_sha256": self.prompts.sha256,
             "guide_sha256": self.prompts.guide_sha256, "sentences": sentence_count(self.dir),
-            "listing": f"listings/{run}.json", "endpoint_record": endpoint,
-            "model_version": listing_version(endpoint), "deslag_commit": self.commit,
+            "listing": f"listings/{run}.json", "endpoint_record": pinned,
+            "model_version": listing_version(pinned), "deslag_commit": self.commit,
+            "limit": limit, "scope": scope,
             "request": {
                 key: config.get(key)
                 for key in ("temperature", "temperature_note", "reasoning", "max_tokens")
                 if config.get(key) is not None or key in ("temperature", "reasoning")
             },
         }
-        if resume:
-            meta["date"] = json.loads(read(self.raw(name, run, "run.json")))["date"]
+        if saved:
+            changed = [key for key in self.CHANGED if saved.get(key) != meta[key]]
+            if changed:
+                raise openrouter.ApiError(
+                    f"{name} {run} was made with other {', '.join(changed)} than it would have now, so "
+                    f"continuing it would change what its record says; --again starts a new run"
+                )
+            return saved, pinned, config
         write(self.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
-        write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(endpoint, indent=2) + "\n")
-        return meta, endpoint, config
+        write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(pinned, indent=2) + "\n")
+        return meta, pinned, config
 
-    def latest_run(self, name, role, complete):
-        """The id of the latest run of `name` in this role here that is complete, or is not, if any."""
+    def latest_run(self, name, role, complete, scope=None, limit=None, endpoint=None):
+        """The id of the latest run of `name` in this role here that is complete, or is not, if any,
+        and made for this `scope` and `limit` (a smoke run, with a limit, is never a full run's), and
+        at this endpoint if one is given."""
         base = os.path.join(self.dir, "raw", name)
         found = []
         if os.path.isdir(base):
@@ -332,20 +427,25 @@ class Runner:
                 path = os.path.join(base, run, "run.json")
                 if os.path.isfile(path):
                     meta = json.loads(read(path))
-                    if bool(meta.get("complete")) == complete and meta.get("role") == role:
+                    if (
+                        bool(meta.get("complete")) == complete and meta.get("role") == role
+                        and meta.get("limit") == limit and meta.get("scope") == scope
+                        and endpoint in (None, meta.get("endpoint"))
+                    ):
                         found.append(run)
         return max(found, key=lambda run: int(run[1:]), default=None)
 
-    def complete_run(self, name, role="voter"):
+    def complete_run(self, name, role="voter", scope=None):
         """The id of a finished run of `name` here, if there is one."""
-        return self.latest_run(name, role, True)
+        return self.latest_run(name, role, True, scope)
 
-    def incomplete_run(self, name, role="voter"):
+    def incomplete_run(self, name, role="voter", scope=None, endpoint=None):
         """The id of the run of `name` that stopped before its end, if there is one: what a rerun
         continues, so that nothing already paid for is asked twice. A run older than a complete one
-        was given up for it."""
-        stopped = self.latest_run(name, role, False)
-        done = self.latest_run(name, role, True)
+        was given up for it. Smoke runs, which have a limit, are never one; an adjudicator run is
+        only for the same scope; with `endpoint`, only a run at that endpoint is."""
+        stopped = self.latest_run(name, role, False, scope, endpoint=endpoint)
+        done = self.latest_run(name, role, True, scope)
         if stopped and done and int(done[1:]) > int(stopped[1:]):
             return None
         return stopped
@@ -357,22 +457,36 @@ class Runner:
         write(path, json.dumps(saved, indent=2) + "\n")
 
     def recheck(self, meta, endpoint, config, kind, request_sha256):
-        """Whether a reply saved by an earlier invocation is used. It is only if the provider and the
-        model saved beside it are the ones this run pins; a reply with no such record is an error.
-        A reply saved with the hash of its request is used only for the same request, and one made
-        before the hash was saved is used as it is."""
-        path = self.raw(meta["name"], meta["run"], f"{kind}.meta.json")
+        """Whether a reply saved by an earlier invocation is used. It is only if the record saved
+        beside it names the provider and model this run pins (an error if not), and holds the hash of
+        this very request: a reply with no record, or a record with no hash or another one, was not
+        made for this request, or was cut short by a crash, and is asked again."""
+        name, run = meta["name"], meta["run"]
+        path = self.raw(name, run, f"{kind}.meta.json")
         if not os.path.isfile(path):
-            raise openrouter.ProviderMismatch(
-                f"{kind}: a saved reply has no record of the provider and model that made it "
-                f"({os.path.relpath(path, self.dir)} is missing), so it is not used"
-            )
+            self.warn(f"label: {name} {run} {kind}: the saved reply has no record beside it, so it is asked again")
+            return False
         saved = json.loads(read(path))
         openrouter.check_names(saved.get("provider"), saved.get("model"), endpoint, config["model"])
-        if saved.get("request_sha256") not in (None, request_sha256):
-            self.warn(f"label: {meta['name']} {meta['run']} {kind}: the saved reply was for another request, so it is asked again")
+        if saved.get("request_sha256") != request_sha256:
+            why = "no record of its request" if not saved.get("request_sha256") else "another request"
+            self.warn(f"label: {name} {run} {kind}: the saved reply was made with {why}, so it is asked again")
             return False
         return True
+
+    def refused_before(self, meta, kind, request_sha256):
+        """Raises what an earlier call of the same request was refused with, if it was: a rerun does not
+        pay again for a reply that will be refused again."""
+        path = self.raw(meta["name"], meta["run"], f"{kind}.rejected.json")
+        if not os.path.isfile(path):
+            return
+        try:
+            saved = json.loads(read(path))
+        except ValueError:
+            return
+        if isinstance(saved, dict) and saved.get("request_sha256") == request_sha256 and saved.get("reason"):
+            error = openrouter.ProviderMismatch if saved.get("mismatch") else openrouter.ApiError
+            raise error(f"{saved['reason']} (refused when it was paid for; it is not asked again for the same request)")
 
     def ask(self, meta, endpoint, config, system, user, kind):
         """One call. Returns the reply text with any think block removed. A reply saved by an earlier
@@ -385,10 +499,17 @@ class Runner:
         a cut-off or reasoning reply are checked before anything of the reply is saved as a reply."""
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
+        saved_meta = self.raw(name, run, f"{kind}.meta.json")
         body = openrouter.request_body(config, system, user)
         request_sha256 = hashlib.sha256(json.dumps(body, sort_keys=True).encode("utf-8")).hexdigest()
         if os.path.isfile(saved) and self.recheck(meta, endpoint, config, kind, request_sha256):
             return read(saved)
+        self.refused_before(meta, kind, request_sha256)
+        # Whatever reply was saved is not this request's: it goes before the call, so that no crash
+        # leaves it where a later run would take it for the answer to the new request.
+        for stale in (saved, saved_meta):
+            if os.path.isfile(stale):
+                os.remove(stale)
         price_in, price_out = openrouter.prices(endpoint)
         worst = ledger_module.worst_case(len(system) + len(user), config["max_tokens"], price_in, price_out)
         key = openrouter.key()
@@ -403,9 +524,16 @@ class Runner:
             return self.transport.post(url, body, key, self.settings["timeout_s"]), ident
 
         started = self.clock()
-        (response, ident), retries = openrouter.with_retries(
-            attempt, **self.retrying(f"{name} {run} {kind}")
-        )
+        try:
+            (response, ident), retries = openrouter.with_retries(
+                attempt, **self.retrying(f"{name} {run} {kind}")
+            )
+        except openrouter.RetriesExhausted as error:
+            if error.busy:
+                raise EndpointExhausted(
+                    f"{name} {run} {kind}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"]
+                ) from None
+            raise
         seconds = self.clock() - started
         reply = openrouter.parse_reply(response)
         # A reply that reports no cost, or a negative or odd one, never lowers the ledger: the
@@ -430,15 +558,16 @@ class Runner:
                     f"{kind}: the reply used {reply.reasoning_tokens} reasoning tokens with reasoning "
                     f"off, so it is not the call that was asked for"
                 )
-        except openrouter.ApiError:
-            write(self.raw(name, run, f"{kind}.rejected.json"), json.dumps(response, indent=2) + "\n")
+        except openrouter.ApiError as error:
+            write(self.raw(name, run, f"{kind}.rejected.json"), json.dumps({
+                "reason": str(error), "mismatch": isinstance(error, openrouter.ProviderMismatch),
+                "request_sha256": request_sha256, "response": response,
+            }, indent=2) + "\n")
             raise
+        rejected = self.raw(name, run, f"{kind}.rejected.json")
+        if os.path.isfile(rejected):
+            os.remove(rejected)
         write(self.raw(name, run, f"{kind}.response.json"), json.dumps(response, indent=2) + "\n")
-        write(self.raw(name, run, f"{kind}.meta.json"), json.dumps({
-            "kind": kind, "provider": reply.provider, "model": reply.model, "requested_model": config["model"],
-            "endpoint": endpoint["tag"], "fingerprint": reply.fingerprint, "id": reply.ident,
-            "finish": reply.finish, "request_sha256": request_sha256,
-        }, indent=2) + "\n")
         record = {
             "kind": kind, "seconds": round(seconds, 3), "retries": retries,
             "prompt_tokens": reply.prompt_tokens, "completion_tokens": reply.completion_tokens,
@@ -448,7 +577,14 @@ class Runner:
         }
         with open(self.raw(name, run, "calls.jsonl"), "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
-        write(saved, reply.content + "\n")
+        # The reply, then the record that vouches for it, each whole or not there at all: a reply
+        # with no record, as a crash between the two leaves, is asked again, never kept.
+        write_atomic(saved, reply.content + "\n")
+        write_atomic(saved_meta, json.dumps({
+            "kind": kind, "provider": reply.provider, "model": reply.model, "requested_model": config["model"],
+            "endpoint": endpoint["tag"], "fingerprint": reply.fingerprint, "id": reply.ident,
+            "finish": reply.finish, "request_sha256": request_sha256,
+        }, indent=2) + "\n")
         # A pause after each call made keeps a voter under a rate limit; a saved reply costs none.
         self.sleep(self.settings["pause_s"])
         return reply.content + "\n"
@@ -534,16 +670,18 @@ class Runner:
         retry = read(retry_path).splitlines() if os.path.isfile(retry_path) else []
         return [line for line in retry if line.strip()]
 
-    def tag(self, name, limit=None, resume=None, again=False):
+    def tag(self, name, limit=None, resume=None, again=False, endpoint=None):
         """One voter over every batch of the sample. Returns (run id, the sentences it abstains on:
         those with no good line after the retries). A run over every batch is marked complete.
         Unless `again`, it continues the voter's run that stopped before its end, whose saved
-        replies are used again, so that a rerun never pays twice for a batch."""
-        if resume is None and not again:
-            resume = self.incomplete_run(name)
+        replies are used again, so that a rerun never pays twice for a batch. A smoke run, with a
+        `limit`, is never continued but by name, and never continues a full run. `endpoint` is a tag
+        among the voter's `provider_fallback` for a new run."""
+        if resume is None and not again and limit is None:
+            resume = self.incomplete_run(name, endpoint=endpoint)
             if resume:
                 self.say(f"{name}: continuing {resume}, which stopped before its end; --again starts a new run")
-        meta, endpoint, config = self.start_run(name, "voter", resume)
+        meta, endpoint, config = self.start_run(name, "voter", resume, limit=limit, endpoint=endpoint)
         run = meta["run"]
         size = self.settings["batch_size"]
         batches = self.batch_files()
@@ -598,20 +736,22 @@ class Runner:
         )
         return said, parts
 
-    def adjudicate(self, into, resume=None, again=False):
+    def adjudicate(self, into, resume=None, again=False, scope=None, endpoint=None):
         """The adjudicator over each part of the worklist. Returns (run id, items still open). Unless
-        `again`, it continues the adjudicator's run that stopped before its end. A run that went
-        through its parts and retries is complete, with items open or not."""
+        `again`, it continues the adjudicator's run that stopped before its end, if that was for the
+        same `scope`: the merge directory, the voters, the spaCy mode. A run that ends with items
+        open is not complete, so a rerun continues it, with every saved reply used again."""
+        scope = scope or {"into": into}
         folder = os.path.join(self.dir, into)
         parts = sorted(
             os.path.join(folder, f) for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)
         )
         name = self.config["adjudicator"]
         if resume is None and not again:
-            resume = self.incomplete_run(name, "adjudicator")
+            resume = self.incomplete_run(name, "adjudicator", scope, endpoint)
             if resume:
                 self.say(f"{name}: continuing {resume}, which stopped before its end; --again starts a new run")
-        meta, endpoint, config = self.start_run(name, "adjudicator", resume)
+        meta, endpoint, config = self.start_run(name, "adjudicator", resume, scope=scope, endpoint=endpoint)
         run = meta["run"]
         self.say(f"{name} {run}: {len(parts)} parts to {config['model']} at {endpoint['tag']}")
         open_items = {}
@@ -633,12 +773,13 @@ class Runner:
                     reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
                     write(self.raw(name, run, f"{kind}.lines.txt"), id_lines(reply))
                 open_items, retry_parts = self.check_answers(meta, into)
-            self.mark_complete(meta)
+            if not open_items:
+                self.mark_complete(meta)
         finally:
             self.write_runs()
         return run, open_items
 
-    def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False):
+    def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False, endpoint=None):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
         `<into>/labelled.conllu`. Returns the items still open (none when it finished).
 
@@ -659,7 +800,11 @@ class Runner:
         parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
         open_items = {}
         if parts:
-            _, open_items = self.adjudicate(into, resume, again)
+            scope = {
+                "into": into, "voters": [name for name, _ in voters],
+                "spacy": any(base_only for _, base_only in voters), "settle_from": settle_from,
+            }
+            _, open_items = self.adjudicate(into, resume, again, scope, endpoint)
         else:
             self.say("nothing is left for the adjudicator")
             empty = os.path.join(folder, "none.lines.txt")
@@ -749,6 +894,27 @@ def make_runner(arguments, config, transport=None, gold=None):
     )
 
 
+def stop_for_endpoint(runner, error, command):
+    """Exit 2 for an endpoint that kept answering 429 or 5xx through every wait. The run is never moved
+    to another endpoint, since one run has one provider; what is printed is the command that starts a
+    new run at the next endpoint voters.json lists for the model, if one passes its checks now."""
+    print(redacted(f"label: {error}"), file=sys.stderr)
+    following, skipped = runner.next_endpoint(error.name, error.tag)
+    print(f"label: the run is saved; running without --again continues it at {error.tag}", file=sys.stderr)
+    for tag, why in skipped:
+        print(f"label: {tag} is not an alternative now: {why}", file=sys.stderr)
+    if following:
+        line = shlex.join(["python3", "scripts/label/label.py", *command, "--again", "--endpoint", following])
+        print(
+            f"label: the next endpoint for {error.name} is {following}; it is never switched to mid-run. "
+            f"A new run there:\n  {line}",
+            file=sys.stderr,
+        )
+    else:
+        print(f"label: no other endpoint is listed for {error.name} (provider_fallback in voters.json)", file=sys.stderr)
+    return 2
+
+
 def command_tag(arguments, config, transport=None, gold=None):
     names = arguments.voter or config["voters"]
     for name in names:
@@ -767,16 +933,25 @@ def command_tag(arguments, config, transport=None, gold=None):
         return 0
     if arguments.resume and len(names) != 1:
         raise ConfigError("--resume continues one run, so it needs exactly one --voter")
+    if arguments.endpoint and len(names) != 1:
+        raise ConfigError("--endpoint picks the endpoint of one voter, so it needs exactly one --voter")
     for name in names:
-        done = None if arguments.again or arguments.limit is not None or arguments.resume or runner.incomplete_run(name) else runner.complete_run(name)
+        done = None
+        if not (arguments.again or arguments.limit is not None or arguments.resume or runner.incomplete_run(name, endpoint=arguments.endpoint)):
+            done = runner.complete_run(name)
         if done:
             print(f"{name} {done}: already complete, skipped; --again runs it afresh")
             continue
         try:
-            run, left = runner.tag(name, arguments.limit, arguments.resume, arguments.again)
+            run, left = runner.tag(name, arguments.limit, arguments.resume, arguments.again, arguments.endpoint)
         except ledger_module.CapExceeded as error:
             print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
             return 4
+        except EndpointExhausted as error:
+            command = ["tag", "--dir", arguments.dir, "--max-usd", f"{arguments.max_usd:g}", "--voter", name]
+            if arguments.limit is not None:
+                command += ["--limit", str(arguments.limit)]
+            return stop_for_endpoint(runner, error, command)
         note = f"; abstains on {len(left)} sentences with no good line" if left and arguments.limit is None else ""
         print(f"{name} {run}: done{note}; runs.tsv updated")
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
@@ -792,10 +967,23 @@ def command_judge(arguments, config, transport=None, gold=None):
     # The paired comparison of spaCy as a voter reuses the plain merge's answers.
     settle_from = arguments.settle_from or ("merge" if arguments.spacy else None)
     try:
-        left = runner.judge(arguments.into, voters, arguments.resume, arguments.trains, settle_from, arguments.again)
+        left = runner.judge(
+            arguments.into, voters, arguments.resume, arguments.trains, settle_from, arguments.again,
+            arguments.endpoint,
+        )
     except ledger_module.CapExceeded as error:
         print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
         return 4
+    except EndpointExhausted as error:
+        command = ["judge", "--dir", arguments.dir, "--max-usd", f"{arguments.max_usd:g}", "--into", arguments.into]
+        for name in arguments.voter or []:
+            command += ["--voter", name]
+        if arguments.spacy:
+            command.append("--spacy")
+        if arguments.settle_from:
+            command += ["--settle-from", arguments.settle_from]
+        command += ["--trains", arguments.trains]
+        return stop_for_endpoint(runner, error, command)
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
     if left:
         print(f"label: {len(left)} items are still open: {', '.join(sorted(left))}", file=sys.stderr)
@@ -835,6 +1023,10 @@ def parser():
         if paid:
             sub.add_argument("--max-usd", type=float, required=True, help="the cap on the ledger's cumulative total")
             sub.add_argument("--resume", metavar="RUN", help="continue this run, keeping its saved replies")
+            sub.add_argument(
+                "--endpoint", metavar="TAG",
+                help="a new run at this endpoint, one of the model's `provider_fallback` in voters.json (one voter)",
+            )
 
     tag = commands.add_parser("tag", help="each voter tags every batch")
     common(tag, True)

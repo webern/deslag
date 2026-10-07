@@ -204,7 +204,24 @@ def asked_ids(body):
     return re.findall(r"^(d\d+): 1 ", user, re.M)
 
 
-PROVIDERS = {"host/fp8": "Host", "bare": "Bare"}
+PROVIDERS = {"host/fp8": "Host", "bare": "Bare", "alt/fp8": "Alt", "alt2/bf16": "Alt2", "low/int4": "Low"}
+
+# LISTING with other endpoints of the same model: one as precise as host/fp8, one more precise, and one less.
+WIDE_LISTING = copy.deepcopy(LISTING)
+for _tag, _name, _quantization in (("alt/fp8", "Alt", "fp8"), ("alt2/bf16", "Alt2", "bf16"), ("low/int4", "Low", "int4")):
+    WIDE_LISTING["data"]["endpoints"].append({
+        "tag": _tag, "provider_name": _name, "quantization": _quantization,
+        "pricing": {"prompt": "0.000001", "completion": "0.000002"},
+        "supported_parameters": ["max_tokens", "temperature", "reasoning"],
+    })
+
+
+def with_fallbacks(**fallbacks):
+    """CONFIG with `provider_fallback` lists on the named models."""
+    config = copy.deepcopy(CONFIG)
+    for name, tags in fallbacks.items():
+        config["models"][name]["provider_fallback"] = tags
+    return config
 
 
 def priced(cost):
@@ -1201,9 +1218,9 @@ class ProviderTests(Base):
             with self.assertRaisesRegex(openrouter.ProviderMismatch, why):
                 self.runner(later).tag("two", limit=1, resume="r1")
         os.remove(path)
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "no record of the provider and model"):
-            self.runner(later).tag("two", limit=1, resume="r1")
-        self.assertEqual(len(later.posts), 0)
+        self.runner(later).tag("two", limit=1, resume="r1")
+        self.assertEqual(len(later.posts), 1, "a reply with no record beside it is asked again")
+        self.assertTrue(any("no record beside it" in line for line in self.warned))
 
     def test_a_reply_cut_off_at_max_tokens_is_not_used(self):
         runner = self.runner(FakeTransport(lambda body, count: chat("d1: N.s N.s", provider="Bare", finish="length")))
@@ -1257,13 +1274,13 @@ class ResumeTests(Base):
         self.assertGreater(len(transport.posts), calls)
         self.assertEqual([row["run"] for row in self.runs_rows()], ["r1", "r2", "r3"])
 
-    def test_a_smoke_test_does_not_make_a_run_complete(self):
+    def test_a_smoke_test_does_not_make_a_run_complete_and_is_not_continued_as_a_full_run(self):
         transport = FakeTransport(answer_all)
         self.command(transport, "--voter", "two", "--limit", "1")
         self.assertEqual(len(transport.posts), 1)
         self.command(transport, "--voter", "two")
-        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"], "the full run continues the smoke test's")
-        self.assertEqual(len(transport.posts), 2, "and does not ask its batch again")
+        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1", "r2"], "the full run is a run of its own")
+        self.assertEqual(len(transport.posts), 3, "and asks both of its batches")
         code, out = self.command(transport, "--voter", "two")
         self.assertIn("already complete", out)
 
@@ -1464,22 +1481,24 @@ class AutoResumeTests(Base):
             self.runner(second).tag("two")
         self.assertEqual(second.posts, [])
 
-    def test_a_saved_reply_for_another_request_is_asked_again_and_one_with_no_hash_is_kept(self):
+    def test_a_saved_reply_for_another_request_or_with_no_hash_is_asked_again(self):
         self.runner(FakeTransport(answer_all)).tag("two", limit=1)
         path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
         meta = json.loads(label.read(path))
         self.assertEqual(len(meta["request_sha256"]), 64)
-        # Made by a version that saved no hash: used as it is.
+        # Made by a version that saved no hash: not known to be for this request, so asked again.
         del meta["request_sha256"]
         label.write(path, json.dumps(meta))
         again = FakeTransport(answer_all)
-        self.runner(again).tag("two", limit=1)
-        self.assertEqual(again.posts, [])
+        self.runner(again).tag("two", limit=1, resume="r1")
+        self.assertEqual(len(again.posts), 1)
+        self.assertTrue(any("no record of its request" in line for line in self.warned))
+        meta = json.loads(label.read(path))
         # A hash of another request: a different call, and asked.
         label.write(path, json.dumps({**meta, "request_sha256": "0" * 64}))
         other = FakeTransport(answer_all)
         runner = self.runner(other)
-        runner.tag("two", limit=1)
+        runner.tag("two", limit=1, resume="r1")
         self.assertEqual(len(other.posts), 1)
         self.assertTrue(any("another request" in line for line in self.warned))
 
@@ -1511,6 +1530,461 @@ class AutoResumeTests(Base):
         runner.judge("merge", [("one", False), ("two", False)])
         runner.judge("merge", [("one", False), ("two", False)], again=True)
         self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"], ["r3", "r4"])
+
+
+class RoundThreeTests(Base):
+    """Smoke runs, a run's own record, the adjudicator's scope, crashes between files, refused
+    replies that are not paid for twice, and the endpoints a model may fall back to."""
+
+    def runner(self, transport, **more):
+        config = copy.deepcopy(more.pop("config", None) or CONFIG)
+        config["settings"]["http_attempts"] = 8
+        return super().runner(transport, config=config, **more)
+
+    def stopping_at(self, batch):
+        def respond(body, count):
+            if count >= batch:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        return FakeTransport(respond)
+
+    def run_json(self, name, run):
+        return os.path.join(self.dir, "raw", name, run, "run.json")
+
+    # -- 1. smoke runs
+
+    def test_a_smoke_run_never_continues_a_full_run_that_stopped(self):
+        with self.assertRaisesRegex(openrouter.ApiError, "stop here"):
+            self.runner(self.stopping_at(2)).tag("two")
+        smoke = FakeTransport(answer_all)
+        run, _ = self.runner(smoke).tag("two", limit=1)
+        self.assertEqual(run, "r2")
+        self.assertEqual(len(smoke.posts), 1)
+        self.assertEqual(json.loads(label.read(self.run_json("two", "r2")))["limit"], 1)
+        rest = FakeTransport(answer_all)
+        run, _ = self.runner(rest).tag("two")
+        self.assertEqual(run, "r1", "the full run is the one a rerun continues, not the newer smoke run")
+        self.assertEqual(len(rest.posts), 1)
+
+    def test_a_smoke_run_after_a_complete_run_does_not_hide_it(self):
+        self.runner(FakeTransport(answer_all)).tag("two")
+        self.runner(FakeTransport(answer_all)).tag("two", limit=1)
+        runner = self.runner(None)
+        self.assertEqual(runner.complete_run("two"), "r1")
+        self.assertIsNone(runner.incomplete_run("two"))
+
+    def test_a_smoke_run_cannot_be_resumed_as_a_full_run_nor_the_reverse(self):
+        self.runner(FakeTransport(answer_all)).tag("two", limit=1)
+        with self.assertRaisesRegex(openrouter.ApiError, "other limit"):
+            self.runner(FakeTransport(answer_all)).tag("two", resume="r1")
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        with self.assertRaisesRegex(openrouter.ApiError, "other limit"):
+            self.runner(FakeTransport(answer_all)).tag("two", limit=1, resume="r2")
+
+    # -- 2. a run's record
+
+    def test_continuing_a_run_keeps_its_record_as_it_was_written(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        before = label.read(self.run_json("two", "r1"))
+        self.runner(FakeTransport(answer_all)).tag("two")
+        saved = json.loads(label.read(self.run_json("two", "r1")))
+        self.assertEqual({key: value for key, value in saved.items() if key != "complete"},
+                         {key: value for key, value in json.loads(before).items()})
+        self.assertTrue(saved["complete"])
+
+    def test_a_run_is_refused_when_continuing_would_change_its_prompt_or_settings(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        before = label.read(self.run_json("two", "r1"))
+        booked = len(self.ledger().booked())
+        other_prompt = self.runner(FakeTransport(answer_all))
+        other_prompt.prompts.sha256 = "0" * 64
+        with self.assertRaisesRegex(openrouter.ApiError, "other prompt_sha256 than it would have now"):
+            other_prompt.tag("two")
+        config = copy.deepcopy(CONFIG)
+        config["models"]["two"]["max_tokens"] = 999
+        transport = FakeTransport(answer_all)
+        with self.assertRaisesRegex(openrouter.ApiError, "other request than it would have now"):
+            self.runner(transport, config=config).tag("two")
+        self.assertEqual(transport.posts, [])
+        self.assertEqual(label.read(self.run_json("two", "r1")), before, "its record is not rewritten")
+        self.assertEqual(len(self.ledger().booked()), booked, "and nothing was booked for either refusal")
+
+    def test_a_saved_reply_with_no_hash_is_asked_again_when_the_run_is_continued(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
+        meta = json.loads(label.read(path))
+        del meta["request_sha256"]
+        label.write(path, json.dumps(meta))
+        second = FakeTransport(answer_all)
+        self.runner(second).tag("two")
+        self.assertEqual(len(second.posts), 2, "both batches: the one with no hash is asked again")
+
+    # -- 3. the adjudicator's scope
+
+    def tagged(self, gold):
+        runner = self.runner(None, gold=gold)
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all), gold=gold).tag(name)
+        return runner
+
+    def stopped_judge(self, gold, into, voters, settle_from=None):
+        def respond(body, count):
+            raise openrouter.ApiError("HTTP 400: stop here")
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond), gold=gold).judge(into, voters, settle_from=settle_from)
+
+    def test_the_adjudicator_continues_only_a_run_for_the_same_merge_directory(self):
+        gold = FakeGold()
+        self.tagged(gold)
+        voters = [("one", False), ("two", False)]
+        self.stopped_judge(gold, "merge-spacy", voters)
+        transport = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare"))
+        self.assertEqual(self.runner(transport, gold=gold).judge("merge", voters), {})
+        adjudicator = [row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"]
+        self.assertEqual(adjudicator, ["r3", "r4"], "a run for `merge`, not the stopped one for `merge-spacy`")
+        self.assertEqual(json.loads(label.read(self.run_json("judge", "r3")))["scope"]["into"], "merge-spacy")
+        later = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare"))
+        self.runner(later, gold=gold).judge("merge-spacy", voters)
+        self.assertTrue(any("continuing r3" in line for line in self.said))
+        self.assertEqual(len(later.posts), 1)
+
+    def test_the_adjudicator_continues_a_spacy_run_only_in_spacy_mode_and_with_resume(self):
+        gold = FakeGold()
+        runner = self.tagged(gold)
+        plain = [("one", False), ("two", False)]
+        transport = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare"))
+        self.runner(transport, gold=gold).judge("merge", plain)
+        gold.dispute = ["d1.2", "d2.3", "d3.2"]
+        spacy = plain + [("spacy", True)]
+        self.stopped_judge(gold, "merge-spacy", spacy, settle_from="merge")
+        spacy_run = [row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"][-1]
+        args = label.parser().parse_args(
+            ["judge", "--dir", self.dir, "--max-usd", "10", "--into", "merge-spacy", "--spacy"])
+        second = FakeTransport(lambda body, count: chat("d3.2: N.s | z", provider="Bare"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(label.command_judge(args, self.fast(CONFIG), second, gold), 0)
+        self.assertEqual(len(second.posts), 1)
+        record = json.loads(label.read(self.run_json("judge", spacy_run)))
+        self.assertEqual(record["scope"], {"into": "merge-spacy", "voters": ["one", "two", "spacy"],
+                                           "spacy": True, "settle_from": "merge"})
+        self.assertTrue(record["complete"], "the spaCy run was the one continued")
+        self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"].count(spacy_run), 1)
+
+    def test_an_adjudicator_run_resumed_by_name_for_another_scope_is_refused(self):
+        gold = FakeGold()
+        self.tagged(gold)
+        voters = [("one", False), ("two", False)]
+        self.stopped_judge(gold, "merge-spacy", voters)
+        with self.assertRaisesRegex(openrouter.ApiError, "other scope"):
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge", voters, resume="r3")
+
+    def fast(self, config):
+        config = copy.deepcopy(config)
+        config["settings"].update(pause_s=0, backoff_s=0, http_attempts=8)
+        return config
+
+    # -- 4. crashes between files
+
+    def test_a_crash_between_the_reply_and_its_record_leaves_a_reply_that_is_not_reused(self):
+        real = label.write_atomic
+
+        def crash_on_record(path, text):
+            if path.endswith("batch-01.meta.json"):
+                raise RuntimeError("killed")
+            real(path, text)
+
+        label.write_atomic = crash_on_record
+        try:
+            with self.assertRaises(RuntimeError):
+                self.runner(FakeTransport(answer_all)).tag("two", limit=1)
+        finally:
+            label.write_atomic = real
+        folder = os.path.join(self.dir, "raw", "two", "r1")
+        self.assertTrue(os.path.isfile(os.path.join(folder, "batch-01.reply.txt")))
+        self.assertFalse(os.path.exists(os.path.join(folder, "batch-01.meta.json")))
+        second = FakeTransport(answer_all)
+        self.runner(second).tag("two", limit=1, resume="r1")
+        self.assertEqual(len(second.posts), 1, "the reply with no record is asked again")
+        self.assertTrue(os.path.isfile(os.path.join(folder, "batch-01.meta.json")))
+        self.assertEqual([name for name in os.listdir(folder) if ".tmp" in name], [])
+
+    def test_the_old_reply_is_gone_before_the_new_call_and_stays_gone_if_it_fails(self):
+        runner = self.runner(FakeTransport(answer_all))
+        meta, endpoint, config = runner.start_run("two", "voter")
+        runner.ask(meta, endpoint, config, "system", "first", "batch-01")
+        folder = os.path.join(self.dir, "raw", "two", "r1")
+        reply = os.path.join(folder, "batch-01.reply.txt")
+        label.write(reply, "d1: N.s\n")
+        record = os.path.join(folder, "batch-01.meta.json")
+        label.write(record, json.dumps({**json.loads(label.read(record)), "request_sha256": "0" * 64}))
+
+        def refuse(body, count):
+            raise openrouter.ApiError("HTTP 400: nope")
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(refuse)).ask(meta, endpoint, config, "system", "second", "batch-01")
+        self.assertFalse(os.path.exists(reply), "no old reply under a new request")
+        self.assertFalse(os.path.exists(record))
+
+    def test_files_are_written_whole(self):
+        path = os.path.join(self.root, "a", "b.txt")
+        label.write_atomic(path, "one\n")
+        label.write_atomic(path, "two\n")
+        self.assertEqual(label.read(path), "two\n")
+        self.assertEqual(os.listdir(os.path.dirname(path)), ["b.txt"])
+
+    # -- 5. statuses
+
+    def test_the_gateway_statuses_are_asked_again(self):
+        for status in (408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529):
+            self.assertIn(status, openrouter.RETRYABLE)
+        for status in (400, 401, 402, 403, 404, 413, 501):
+            self.assertNotIn(status, openrouter.RETRYABLE)
+        import urllib.error
+
+        class Opener:
+            def open(self, request, timeout):
+                raise urllib.error.HTTPError("http://x", 529, "overloaded", {}, io.BytesIO(b"busy"))
+
+        saved = openrouter._OPENER
+        openrouter._OPENER = Opener()
+        try:
+            with self.assertRaises(openrouter.Retryable) as caught:
+                openrouter.Urllib._send(object(), 1)
+        finally:
+            openrouter._OPENER = saved
+        self.assertEqual((str(caught.exception), caught.exception.status), ("HTTP 529", 529))
+
+    # -- 6. refused replies are not paid for twice
+
+    def test_a_reply_cut_off_at_max_tokens_is_not_paid_for_again_on_a_rerun(self):
+        cut = FakeTransport(lambda body, count: chat("d1: N.s", provider="Bare", finish="length"))
+        with self.assertRaisesRegex(openrouter.ApiError, "cut off"):
+            self.runner(cut).tag("two")
+        second = FakeTransport(answer_all)
+        with self.assertRaisesRegex(openrouter.ApiError, "cut off at max_tokens.*not asked again"):
+            self.runner(second).tag("two")
+        self.assertEqual(second.posts, [])
+        self.assertEqual(len([row for row in self.ledger().booked().values() if row["state"] == "settled"]), 1)
+
+    def test_a_reply_from_another_provider_is_not_paid_for_again_on_a_rerun(self):
+        wrong = FakeTransport(lambda body, count: chat("d1: N.s", provider="Elsewhere"))
+        with self.assertRaises(openrouter.ProviderMismatch):
+            self.runner(wrong).tag("two")
+        second = FakeTransport(answer_all)
+        with self.assertRaises(openrouter.ProviderMismatch):
+            self.runner(second).tag("two")
+        self.assertEqual(second.posts, [])
+
+    def test_a_refused_reply_is_asked_again_once_the_request_changes_and_the_refusal_goes(self):
+        cut = FakeTransport(lambda body, count: chat("d1: N.s", provider="Bare", finish="length"))
+        runner = self.runner(cut)
+        meta, endpoint, config = runner.start_run("two", "voter")
+        with self.assertRaises(openrouter.ApiError):
+            runner.ask(meta, endpoint, config, "system", "first", "batch-01")
+        rejected = os.path.join(self.dir, "raw", "two", "r1", "batch-01.rejected.json")
+        self.assertTrue(os.path.isfile(rejected))
+        good = FakeTransport(answer_all)
+        self.runner(good).ask(meta, endpoint, config, "system", "d1: 1 Run 2 it 3 now 4 [.]", "batch-01")
+        self.assertEqual(len(good.posts), 1)
+        self.assertFalse(os.path.exists(rejected))
+
+    # -- 7. a judge with items open
+
+    def test_a_judge_run_with_items_open_is_not_complete_and_its_rerun_pays_nothing(self):
+        gold = FakeGold()
+        self.tagged(gold)
+        voters = [("one", False), ("two", False)]
+        partial = FakeTransport(lambda body, count: chat("d1.2: N.p | x", provider="Bare"))
+        left = self.runner(partial, gold=gold).judge("merge", voters)
+        self.assertEqual(sorted(left), ["d2.3"])
+        self.assertEqual(len(partial.posts), 3, "the part and two rounds of asking again")
+        self.assertFalse(json.loads(label.read(self.run_json("judge", "r3"))).get("complete"))
+        again = FakeTransport(lambda body, count: chat("d1.2: N.p | x", provider="Bare"))
+        left = self.runner(again, gold=gold).judge("merge", voters)
+        self.assertEqual(sorted(left), ["d2.3"])
+        self.assertEqual(again.posts, [], "every saved reply is used again")
+        self.assertTrue(any("continuing r3" in line for line in self.said))
+        full = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare"))
+        self.assertEqual(self.runner(full, gold=gold).judge("merge", voters, again=True), {})
+        self.assertTrue(json.loads(label.read(self.run_json("judge", "r4")))["complete"])
+
+    # -- Retry-After above the most a call waits
+
+    def test_a_retry_after_above_max_wait_stops_without_waiting_and_the_run_continues(self):
+        state = {"calls": 0}
+
+        def respond(body, count):
+            state["calls"] += 1
+            if count > 1:
+                raise openrouter.Retryable("HTTP 429", after=700.0)
+            return answer_all(body)
+
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 1 attempts and 0 s of waiting, the most allowed"):
+            self.runner(FakeTransport(respond)).tag("two")
+        self.assertEqual([seconds for seconds in self.slept if seconds not in (1.0,)], [])
+        second = FakeTransport(answer_all)
+        self.runner(second).tag("two")
+        self.assertEqual(len(second.posts), 1)
+
+    # -- provider_fallback and --endpoint
+
+    def args(self, *more):
+        return label.parser().parse_args(["tag", "--dir", self.dir, "--max-usd", "10", *more])
+
+    def command(self, transport, *more, config=None, gold=None):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.command_tag(self.args(*more), self.fast(config or CONFIG), transport, gold or FakeGold())
+        return code, out.getvalue(), err.getvalue()
+
+    def busy(self, reason="HTTP 429"):
+        def respond(body, count):
+            raise openrouter.Retryable(reason)
+
+        return FakeTransport(respond, WIDE_LISTING)
+
+    def test_the_shipped_config_lists_the_alternative_endpoints(self):
+        models = label.load_config()["models"]
+        self.assertEqual(models["deepseek"]["provider_fallback"], ["gmicloud/fp8", "streamlake/fp8"])
+        self.assertEqual(models["qwen"]["provider_fallback"], ["parasail/fp8"])
+        self.assertNotIn("provider_fallback", models["mistral"])
+
+    def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):
+        for bad in ("alt/fp8", [3], ["alt/fp8", "alt/fp8"], ["host/fp8"]):
+            config = copy.deepcopy(CONFIG)
+            config["models"]["one"]["provider_fallback"] = bad
+            path = os.path.join(self.root, "voters.json")
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "provider_fallback"):
+                label.load_config(path)
+
+    def test_a_voter_that_keeps_being_rate_limited_stops_and_prints_the_command_for_the_next_endpoint(self):
+        transport = self.busy()
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        code, out, err = self.command(transport, "--voter", "one", config=config)
+        self.assertEqual(code, 2)
+        self.assertEqual(len(transport.posts), 8, "every attempt was at the pinned endpoint")
+        self.assertTrue(all(post["provider"]["order"] == ["host/fp8"] for post in transport.posts))
+        self.assertIn("HTTP 429, after 8 attempts", err)
+        expected = f"python3 scripts/label/label.py tag --dir {self.dir} --max-usd 10 --voter one --again --endpoint alt/fp8"
+        self.assertIn(expected, err)
+        self.assertIn("it is never switched to mid-run", err)
+        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"])
+
+    def test_a_server_error_does_the_same_and_a_timeout_does_not(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        code, _, err = self.command(self.busy("HTTP 503"), "--voter", "one", "--again", config=config)
+        self.assertEqual((code, "--endpoint alt/fp8" in err), (2, True))
+        with self.assertRaisesRegex(openrouter.ApiError, "timeout, after 8 attempts"):
+            self.command(self.busy("timeout"), "--voter", "one", "--again", config=config)
+
+    def test_the_command_for_a_new_run_starts_one_at_the_alternative_and_records_it(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        self.command(self.busy(), "--voter", "one", config=config)
+        transport = FakeTransport(answer_all, WIDE_LISTING)
+        code, out, _ = self.command(transport, "--voter", "one", "--again", "--endpoint", "alt/fp8", config=config)
+        self.assertEqual(code, 0)
+        self.assertTrue(all(post["provider"]["order"] == ["alt/fp8"] for post in transport.posts))
+        self.assertTrue(all(post["provider"]["quantizations"] == ["fp8"] for post in transport.posts))
+        self.assertTrue(all(post["provider"]["allow_fallbacks"] is False for post in transport.posts))
+        record = json.loads(label.read(self.run_json("one", "r2")))
+        self.assertEqual((record["endpoint"], record["provider"]), ("alt/fp8", "Alt"))
+        row = [row for row in self.runs_rows() if row["run"] == "r2"][0]
+        self.assertEqual(row["endpoint"], "alt/fp8")
+
+    def test_a_run_at_an_alternative_is_continued_there(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        first = self.stopping_at_alt()
+        with self.assertRaises(openrouter.ApiError):
+            self.command(first, "--voter", "one", "--again", "--endpoint", "alt/fp8", config=config)
+        second = FakeTransport(answer_all, WIDE_LISTING)
+        self.command(second, "--voter", "one", config=config)
+        self.assertEqual(len(second.posts), 1)
+        self.assertEqual(second.posts[0]["provider"]["order"], ["alt/fp8"])
+        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"])
+
+    def stopping_at_alt(self):
+        def respond(body, count):
+            if count >= 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        return FakeTransport(respond, WIDE_LISTING)
+
+    def test_an_alternative_less_precise_than_the_pin_is_skipped_with_its_reason(self):
+        config = with_fallbacks(one=["low/int4", "alt2/bf16"])
+        code, _, err = self.command(self.busy(), "--voter", "one", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("low/int4 is not an alternative now", err)
+        self.assertIn("int4, which is not fp8 or better", err)
+        self.assertIn("--endpoint alt2/bf16", err)
+        with self.assertRaisesRegex(openrouter.ApiError, "int4, which is not fp8 or better"):
+            self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", "--again", "--endpoint", "low/int4", config=config)
+
+    def test_the_next_endpoint_follows_the_one_that_failed_and_none_is_said_so(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        code, _, err = self.command(self.busy(), "--voter", "one", "--again", "--endpoint", "alt/fp8", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("--endpoint alt2/bf16", err)
+        self.assertNotIn("--endpoint alt/fp8", err)
+        code, _, err = self.command(self.busy(), "--voter", "one", "--again", "--endpoint", "alt2/bf16", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("no other endpoint is listed for one", err)
+        code, _, err = self.command(self.busy(), "--voter", "two", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("no other endpoint is listed for two", err)
+
+    def test_endpoint_must_be_one_the_model_lists_and_needs_one_voter(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        with self.assertRaisesRegex(label.ConfigError, "`alt2/bf16` is not an endpoint of one"):
+            self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", "--endpoint", "alt2/bf16", config=config)
+        with self.assertRaisesRegex(label.ConfigError, "exactly one --voter"):
+            self.command(FakeTransport(answer_all, WIDE_LISTING), "--endpoint", "alt/fp8", config=config)
+        # The model's own pin is accepted by name.
+        code, _, _ = self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", "--endpoint", "host/fp8", config=config)
+        self.assertEqual(code, 0)
+
+    def test_a_run_may_not_be_resumed_at_another_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        with self.assertRaises(openrouter.ApiError):
+            self.command(self.stopping_at_alt(), "--voter", "one", config=config)
+        with self.assertRaisesRegex(openrouter.ApiError, "other endpoint than it would have now"):
+            self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", "--resume", "r1",
+                         "--endpoint", "alt/fp8", config=config)
+
+    def test_an_endpoint_flag_does_not_continue_a_run_at_another_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        with self.assertRaises(openrouter.ApiError):
+            self.command(self.stopping_at_alt(), "--voter", "one", config=config)
+        transport = FakeTransport(answer_all, WIDE_LISTING)
+        self.command(transport, "--voter", "one", "--endpoint", "alt/fp8", config=config)
+        self.assertEqual([row["endpoint"] for row in self.runs_rows()], ["host/fp8", "alt/fp8"])
+
+    def test_the_adjudicator_that_keeps_being_rate_limited_prints_the_judge_command(self):
+        config = with_fallbacks(judge=["alt/fp8"])
+        gold = FakeGold()
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all, WIDE_LISTING), gold=gold, config=config).tag(name)
+        args = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "10", "--into", "merge"])
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = label.command_judge(args, self.fast(config), self.busy(), gold)
+        self.assertEqual(code, 2)
+        self.assertIn(
+            f"python3 scripts/label/label.py judge --dir {self.dir} --max-usd 10 --into merge --trains no --again --endpoint alt/fp8",
+            err.getvalue())
+
+    def test_the_key_is_not_in_what_the_stop_prints(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        _, out, err = self.command(self.busy(), "--voter", "one", config=config)
+        self.assertNotIn(self.KEY, out + err)
 
 
 class ProvenanceTests(Base):

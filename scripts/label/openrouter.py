@@ -23,8 +23,12 @@ import urllib.request
 API = "https://openrouter.ai/api/v1"
 KEY_VARIABLE = "OPENROUTER_API_KEY"
 
-# HTTP statuses worth asking again for: the request timed out, or the service was busy or down.
-RETRYABLE = {408, 425, 429, 500, 502, 503, 504}
+# HTTP statuses worth asking again for: the request timed out, or the service was busy or down. 520 to
+# 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
+RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
+
+# Quantisations from least to most precise; those in one tier count as the same.
+QUANT_RANK = {"int4": 0, "fp4": 0, "fp6": 1, "int8": 2, "fp8": 2, "bf16": 3, "fp16": 3, "fp32": 4}
 
 
 class ApiError(Exception):
@@ -71,11 +75,26 @@ def parameters_sent(body):
     return [name for name in ("temperature", "reasoning", "max_tokens") if name in body]
 
 
-def pinned_endpoint(listing, config):
+def listed_quantization(listing, tag):
+    """The quantisation the listing gives the endpoint tagged `tag`, or None."""
+    endpoints = listing.get("data", listing).get("endpoints", [])
+    return next((endpoint.get("quantization") for endpoint in endpoints if endpoint.get("tag") == tag), None)
+
+
+def weakest(quantizations):
+    """The least precise of a list of quantisations, or None if the list is empty or not known."""
+    known = [q for q in quantizations or [] if q in QUANT_RANK]
+    return min(known, key=QUANT_RANK.get, default=None)
+
+
+def pinned_endpoint(listing, config, at_least=None):
     """The endpoint of `listing` (the models/<id>/endpoints JSON) that `config` pins, checked.
 
     Raises ApiError when the listing has no such endpoint, when its quantisation is not one the
-    config allows, or when it does not support a parameter the body will send.
+    config allows, or when it does not support a parameter the body will send. With `at_least`, a
+    quantisation, the endpoint's must be that or a more precise one, and the config's own
+    `quantizations` is not looked at: this is how an alternative endpoint is checked. A floor that is
+    not a known quantisation (`unknown`, say) asks for nothing.
     """
     endpoints = listing.get("data", listing).get("endpoints", [])
     found = [endpoint for endpoint in endpoints if endpoint.get("tag") == config["provider"]]
@@ -86,7 +105,14 @@ def pinned_endpoint(listing, config):
         )
     endpoint = found[0]
     allowed = config.get("quantizations")
-    if allowed and endpoint.get("quantization") not in allowed:
+    if at_least in QUANT_RANK:
+        have = QUANT_RANK.get(endpoint.get("quantization"))
+        if have is None or have < QUANT_RANK[at_least]:
+            raise ApiError(
+                f"{config['model']} at `{config['provider']}` is {endpoint.get('quantization')}, "
+                f"which is not {at_least} or better"
+            )
+    elif at_least is None and allowed and endpoint.get("quantization") not in allowed:
         raise ApiError(
             f"{config['model']} at `{config['provider']}` is {endpoint.get('quantization')}, "
             f"and voters.json pins {', '.join(allowed)}"
@@ -224,7 +250,7 @@ class Urllib:
         except urllib.error.HTTPError as error:
             text = error.read().decode("utf-8", "replace")[:500]
             if error.code in RETRYABLE:
-                raise Retryable(f"HTTP {error.code}", retry_after(error.headers)) from None
+                raise Retryable(f"HTTP {error.code}", retry_after(error.headers), error.code) from None
             raise ApiError(f"HTTP {error.code}: {text}") from None
         except (socket.timeout, TimeoutError):
             raise Retryable("timeout") from None
@@ -242,11 +268,30 @@ class Urllib:
 
 class Retryable(Exception):
     """A failure that asking again may fix: a timeout, a busy service, a rate limit. Its text is a
-    status or an exception type, safe to print. `after` is the wait in seconds the server asked for."""
+    status or an exception type, safe to print. `after` is the wait in seconds the server asked for,
+    and `status` the HTTP status, if there was one (read from a reason `HTTP 429` if not given)."""
 
-    def __init__(self, reason, after=None):
+    def __init__(self, reason, after=None, status=None):
         super().__init__(reason)
         self.after = after
+        if status is None:
+            found = re.fullmatch(r"HTTP (\d{3})", str(reason))
+            status = int(found.group(1)) if found else None
+        self.status = status
+
+
+class RetriesExhausted(ApiError):
+    """A call still failing after every wait it was allowed. `status` is that of the last failure;
+    `busy` says the endpoint itself was rate limiting or failing (429 or 5xx), so another endpoint of
+    the same model may do better."""
+
+    def __init__(self, message, status=None):
+        super().__init__(message)
+        self.status = status
+
+    @property
+    def busy(self):
+        return self.status is not None and (self.status == 429 or 500 <= self.status <= 599)
 
 
 def retry_after(headers, now=time.time):
@@ -288,13 +333,18 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
             return call(), attempt
         except Retryable as error:
             if attempt + 1 == attempts:
-                raise ApiError(f"{error}, after {attempts} attempts and {waited:.0f} s of waiting") from None
+                raise RetriesExhausted(
+                    f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status
+                ) from None
             wait = min(longest, base * (2 ** attempt))
             wait = wait * (0.5 + 0.5 * rng())
             if error.after is not None:
                 wait = max(wait, error.after + rng())
             if waited + wait > max_wait:
-                raise ApiError(f"{error}, after {attempt + 1} attempts and {waited:.0f} s of waiting, the most allowed") from None
+                raise RetriesExhausted(
+                    f"{error}, after {attempt + 1} attempts and {waited:.0f} s of waiting, the most allowed",
+                    error.status,
+                ) from None
             if on_retry:
                 on_retry(attempt + 1, attempts, str(error), wait)
             sleep(wait)

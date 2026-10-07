@@ -33,19 +33,45 @@ The paired difference of the spaCy variant from the plain merge is
 
 A step that stops early says so, and running it again continues it: `tag` continues each voter's latest
 run that stopped before its end, and `judge` the adjudicator's, using the saved replies, so nothing
-already paid for is asked twice (a reply is reused only for the same request, and its saved provider
-and model are checked again; a reply with no such record is an error). A voter that has a complete run
-is skipped. `--again` makes a new run instead, `--limit` smoke tests never count as complete, and
-`--resume rN` names the run to continue, of the one `--voter`. The voters run one after another, with a
-pause (`pause_s`, 1 s) after each call made.
+already paid for is asked twice. A saved reply is reused only if the record beside it (`<kind>.meta.json`)
+holds the hash of this very request and names the pinned provider and model (a different provider or
+model is an error); a reply with no record, or a record with no hash or another one, is asked again.
+`reply.txt` and its record are written whole (temporary file, sync, rename), the record last, and the old
+reply is deleted before a call, so a crash never leaves a stale reply under a new request. A voter that
+has a complete run is skipped. `--again` makes a new run instead, and `--resume rN` names the run to
+continue, of the one `--voter`. A smoke test (`--limit`) has its limit in its `run.json`: it never
+counts as complete, is never continued automatically, and never continues or hides a full run. A
+continued run keeps its `run.json` as written, and is refused (`--again` starts a new run) if the prompt,
+the request settings, the model, the endpoint, the limit or the scope would now differ from what it
+recorded. An adjudicator run records its scope, the merge directory (`--into`), the voters and the spaCy
+mode, and is only continued for the same scope. An adjudicator run that ends with items open is not
+complete: a rerun continues it, uses every saved reply, and pays for nothing already answered. A reply
+refused after it was paid for (cut off at `max_tokens`, or from another provider) is saved with its
+request's hash and is not paid for again on a rerun of the same request. The voters run one after
+another, with a pause (`pause_s`, 1 s) after each call made.
 
-A rate limit (429), a server error (5xx), a timeout or a dropped connection is asked again, up to
+A rate limit (429), a server error (500, 502, 503, 504, 520 to 524, 529), a timeout (408) or a dropped
+connection is asked again, up to
 `http_attempts` (8) times and `max_wait_s` (600 s) of waiting in all, each wait doubling from
 `backoff_s` (5 s) to at most `longest_wait_s` (120 s), with jitter, or the `Retry-After` or
 `X-RateLimit-Reset` the server gave if that is longer. This is separate from asking again for a bad
-reply. Each attempt books its worst case before it is sent and stays booked if it fails. Each wait is
-one line on stderr: the voter, run and batch, the attempt, the HTTP status or exception type, and the
-wait; never a header or a body.
+reply. A `Retry-After` longer than what is left of `max_wait_s` stops the call at once, without
+waiting, and the run stays resumable. Each attempt books its worst case before it is sent and stays
+booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt, the HTTP
+status or exception type, and the wait; never a header or a body.
+
+Endpoints. A model in `voters.json` may list `provider_fallback`: other pinned endpoints of the same
+model, in order, each at the quantisation of `provider`'s listing or a more precise one (checked from
+the listing when it is used; an endpoint below that is refused and skipped). The runner never switches
+mid-run, since one run has one provider. If the pinned endpoint is still answering 429 or 5xx after
+every wait, `tag` or `judge` stops with exit 2 and prints the command for a new run at the next
+endpoint of the list that passes its checks, for example
+`python3 scripts/label/label.py tag --dir .label/dev --max-usd 8 --voter deepseek --again --endpoint gmicloud/fp8`.
+The stopped run is saved, and running without `--again` continues it at its own endpoint. `--endpoint
+TAG` (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
+a run continued at another endpoint than it recorded is refused. A run at an alternative records its
+endpoint in `run.json` and `runs.tsv`. mistral lists none; qwen's `parasail/fp8` is below its `bf16`
+pin, so it is skipped until the pin is relaxed.
 
 Exit codes: 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter; a sentence fewer than two voters answered goes to the
@@ -89,7 +115,7 @@ endpoint exists, has the quantisation pinned and supports every parameter sent; 
 that listing. A reply whose `provider` is not the pinned endpoint's, or that names a model other than
 the pinned one (or a dated version of it), is an error, checked before the reply is saved. So is a
 reply cut off at `max_tokens`, and one with reasoning tokens when reasoning was switched off. Everything
-up to the last `</think>` is dropped. Timeouts, 429, 5xx and a dropped connection are asked again. The
+up to the last `</think>` is dropped. Timeouts, 429, 5xx (the statuses above) and a dropped connection are asked again. The
 adjudicator thinks at `reasoning: {"effort": "low"}` with `max_tokens` 16000 (a token budget is refused by
 Sonnet 5.5); the API requires its default temperature then, so none is sent, and `runs.tsv` says so. A
 reply with no `usage.cost`, or a negative or odd one, is booked at its worst case, never lower. The

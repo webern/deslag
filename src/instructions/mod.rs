@@ -5,6 +5,7 @@
 //! of their own, a file per lint, so the guide does not grow with each new lint.
 
 use crate::Lint;
+use crate::changelog::{Version, changelog};
 use crate::config::{CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION};
 
 /// The guide as written, placeholders and all.
@@ -29,13 +30,29 @@ pub fn guide() -> String {
 }
 
 /// The lints topic `deslag instructions lints` prints: its intro, then a section per lint, in the
-/// order they run, headed by the lint's id.
+/// order they run, headed by the lint's id and saying which release it arrived in.
 pub fn lints() -> String {
     let mut text = LINTS.replace("{version}", env!("CARGO_PKG_VERSION"));
     for lint in Lint::ALL {
-        text.push_str(&format!("\n## `{}`\n\n{}", lint.id(), section(lint)));
+        text.push_str(&format!(
+            "\n## `{}`\n\n{}\n\n{}",
+            lint.id(),
+            since(lint),
+            section(lint)
+        ));
     }
     text
+}
+
+/// The line that says which release `lint` arrived in.
+fn since(lint: Lint) -> String {
+    let arrived = changelog()
+        .arrived_in(lint)
+        .expect("every lint has an entry in changelog.toml");
+    match arrived {
+        Version::Release(version) => format!("Since {version}."),
+        Version::Next => "Since the next release.".to_string(),
+    }
 }
 
 /// What the lints topic says about `lint`: what it fails and a table that turns it on. A new

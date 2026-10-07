@@ -338,3 +338,12 @@ fn the_schema_gives_each_group_its_default() {
         }
     }
 }
+
+/// Each lint's section says which release the lint arrived in, from the changelog.
+#[test]
+fn each_lint_section_says_when_its_lint_arrived() {
+    let text = lints();
+    for (heading, section) in lint_sections(&text) {
+        assert!(section.starts_with("\nSince 0.1.0.\n\n"), "{heading}");
+    }
+}

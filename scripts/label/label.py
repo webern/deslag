@@ -17,6 +17,7 @@ in Rust. See README.md in this directory for the steps.
     label.py handoff-agent (--request PATH | --sha256)
     label.py handoff-run --dir .label/silver/part-01 --into merge [--parallel 6] [--claude PATH]
     label.py probe-confinement [--claude PATH] [--keep]
+    label.py status   --dir .label/silver/part-01 [--into merge] [--max-usd 8]
     label.py spend
 
 The directory is one sample, under this checkout's `.label`: a skeleton made from the dev or owner
@@ -37,13 +38,17 @@ sentences that failed, quoting the validator's message, at most twice; a voter w
 a sentence after that abstains on it. Money: ledger.py, a reservation before every POST. Provenance:
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
 describes it, with the licence voters.json gives its model, the date that licence was read (no run
-starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is asked again in halves; an endpoint that keeps failing
-(HTTP 429 or 5xx, replies cut off on both halves of a split, a provider refusal) is abandoned for the
-next one in voters.json's `provider_fallback`, but a network error here stops the run so that it can
-be continued; backoff, halving and switching draw on one budget of failed calls (`failure_budget`); a
-voter run on which more than a quarter of the sentences abstain ends `failed`; an item the adjudicator
-never settles leaves its sentence out of the labels unless `--strict`. The ledger and the run ids are
-in a state directory shared by every checkout (ledger.py). No error the runner prints shows the key.
+starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is
+asked again in halves; an endpoint that keeps failing (HTTP 429 or 5xx, replies cut off on both
+halves of a split, a provider refusal) is abandoned for the next one in voters.json's
+`provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
+halving and switching draw on one budget of failed calls (`failure_budget`); a voter run on which more
+than a quarter of the sentences abstain ends `failed`; an item the adjudicator never settles leaves
+its sentence out of the labels unless `--strict`. The ledger and the run ids are in a state directory
+shared by every checkout (ledger.py), and the files voters share in a sample directory are written
+under its lock, so the voters of one sample can be tagged at once, each in a process of its own.
+`status` prints where a sample stands, in counts and run ids only. No error the runner prints shows
+the key.
 """
 
 import argparse
@@ -1460,6 +1465,8 @@ class Runner:
         if limit is not None:
             batches = batches[:limit]
         self.cut = fresh_cut(len(batches))
+        if meta.get("batches") != len(batches):
+            self.update_run(name, run, batches=len(batches))
         self.say(f"{name} {run}: {len(batches)} batches to {config['model']} at {endpoint['tag']}")
         try:
             for number, (_, text) in enumerate(batches, 1):
@@ -1492,6 +1499,7 @@ class Runner:
             self.report_cut_offs(meta, config)
             if limit is None:
                 total = meta["sentences"]
+                self.update_run(name, run, abstaining=len(open_lines))
                 if len(open_lines) > self.settings["abstain_limit"] * total:
                     why = (
                         f"{len(open_lines)} of {total} sentences abstain after the retries, more than "
@@ -2428,6 +2436,107 @@ def command_spend(arguments, config, transport=None, gold=None):
     return 0
 
 
+def latest_record(directory, name, role, into=None):
+    """The (id, `run.json`) of the latest run of `name` in `role` in the sample `directory`, whatever
+    became of it, or (None, None); for an adjudicator, only a run for the merge `into`."""
+    found = []
+    for path in glob.glob(os.path.join(directory, "raw", glob.escape(name), "r*", "run.json")):
+        run = os.path.basename(os.path.dirname(path))
+        if not re.fullmatch(r"r\d+", run):
+            continue
+        meta = json.loads(read(path))
+        if meta.get("role") == role and (into is None or (meta.get("scope") or {}).get("into") == into):
+            found.append((int(run[1:]), run, meta))
+    if not found:
+        return None, None
+    _, run, meta = max(found, key=lambda item: item[0])
+    return run, meta
+
+
+def batches_done(directory, name, run):
+    """How many batches of a voter's run have an answer saved: the `batch-NN` asks, whole or in halves,
+    among its `*.lines.txt`."""
+    folder = os.path.join(directory, "raw", name, run)
+    return len({
+        found.group(1)
+        for found in (re.match(r"(batch-\d+)(?:-[ab])*\.lines\.txt$", f) for f in os.listdir(folder))
+        if found
+    })
+
+
+def preflight(directory, into, binary):
+    """The verdict of `deslag-gold silver build --check-part <directory>:<into>` on the part, in a few
+    words and a count, never the problems themselves, which may quote a sentence."""
+    if not os.path.isfile(os.path.join(directory, into, "voters.tsv")):
+        return f"not run (no merge in {into} yet)"
+    if not binary:
+        return "not run (deslag-gold is not built; `make build-label` builds it, or give --gold-bin)"
+    env = {key: value for key, value in os.environ.items() if key != openrouter.KEY_VARIABLE}
+    done = subprocess.run(
+        [binary, "silver", "build", "--check-part", f"{directory}:{into}"],
+        capture_output=True, text=True, check=False, env=env,
+    )
+    if done.returncode == 0:
+        return "ok"
+    problems = len([line for line in done.stderr.splitlines() if line.strip()])
+    return (
+        f"refused, {problems} lines on stderr (exit {done.returncode}); `deslag-gold silver build "
+        f"--check-part {directory}:{into}` prints them"
+    )
+
+
+def command_status(arguments, config, transport=None, gold=None, say=print):
+    """Where the labelling of one sample stands, in counts and run ids only, never a tag or a word: per
+    voter its latest run, what became of it, its batches answered of all, the sentences it abstains on
+    and its dollars; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
+    handoff adjudicator, the requests waiting and the replies present; the ledger's total and what is
+    left under `--max-usd`; and the verdict of the part's preflight. It reads, and writes nothing in
+    the sample directory."""
+    directory = guard.check_dir(arguments.dir)
+    into = check_into(arguments.into)
+    book = ledger_module.open_ledger(guard.root())
+    say(f"sample: {sentence_count(directory)} sentences, {directory}")
+    current = len([
+        f for f in os.listdir(os.path.join(directory, "batches")) if re.fullmatch(r"batch-\d+\.txt", f)
+    ]) if os.path.isdir(os.path.join(directory, "batches")) else None
+    for name in config["voters"]:
+        run, meta = latest_record(directory, name, "voter")
+        if run is None:
+            say(f"voter {name}: no run")
+            continue
+        of = meta.get("batches")
+        if of is None:
+            of = current if meta.get("limit") is None and current is not None else "?"
+        abstaining = meta.get("abstaining")
+        say(
+            f"voter {name}: {run} {run_status(meta)}, {batches_done(directory, name, run)} of {of} batches, "
+            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}"
+        )
+    for name in sorted(config.get("external") or {}):
+        run, meta = latest_record(directory, name, "external")
+        say(f"{name}: {run} {run_status(meta)}" if run else f"{name}: not registered")
+    record = os.path.join(directory, into, ADJUDICATOR_RECORD)
+    adjudicator = json.loads(read(record))["name"] if os.path.isfile(record) else config["adjudicator"]
+    run, meta = latest_record(directory, adjudicator, "adjudicator", into)
+    line = f"adjudicator {adjudicator} ({into}): "
+    line += f"{run} {run_status(meta)}, ${book.run_cost(run):.4f}" if run else "no run"
+    if is_handoff(config["models"].get(adjudicator, {})):
+        waiting = pending_requests(directory, into)
+        folder = latest_handoff(directory, into)
+        replies = [
+            json.loads(read(os.path.join(folder, name)))["reply_name"]
+            for name in (os.listdir(folder) if folder else []) if name.endswith(".request.json")
+        ]
+        present = sum(read_reply(os.path.join(folder, reply)) is not None for reply in replies)
+        line += f"; {len(waiting)} requests waiting, {present} replies present"
+    say(line)
+    total = book.total()
+    left = "" if arguments.max_usd is None else f", ${max(arguments.max_usd - total, 0.0):.4f} left under --max-usd {arguments.max_usd:g}"
+    say(f"ledger: ${total:.4f} booked{left}")
+    say(f"preflight ({into}): {preflight(directory, into, arguments.gold_bin or find_binary('deslag-gold'))}")
+    return 0
+
+
 def parser():
     main = argparse.ArgumentParser(description="Labels sentences with models through OpenRouter. See README.md.")
     commands = main.add_subparsers(dest="command", required=True)
@@ -2527,6 +2636,14 @@ def parser():
     probe.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
     probe.add_argument("--keep", action="store_true", help="keep the scratch tree, and print where it is")
     probe.set_defaults(handler=command_probe_confinement)
+
+    status = commands.add_parser(
+        "status", help="where the labelling of one sample stands, in counts and run ids, never a tag or a word"
+    )
+    common(status, False)
+    status.add_argument("--into", default="merge", help="the merge directory under --dir (default merge)")
+    status.add_argument("--max-usd", type=float, help="the cap, to print what is left under it")
+    status.set_defaults(handler=command_status)
 
     spend = commands.add_parser("spend", help="print the ledger's cumulative total")
     spend.set_defaults(handler=command_spend)

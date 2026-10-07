@@ -1255,6 +1255,7 @@ class ConcurrentTagTests(Base):
             for row in latest:
                 # Two batches of the three sentences, each one call at $0.001.
                 self.assertEqual((row["calls"], row["cost_usd"]), ("2", "0.00200000"), row["name"])
+                self.assertEqual(json.loads(label.read(self.run_json(row["name"], row["run"])))["batches"], 2)
                 tags = label.read(os.path.join(self.dir, "tags", f"{row['name']}.conllu"))
                 self.assertEqual(re.findall(r"sent_id = (\S+)", tags), ["d1", "d2", "d3"])
             calls = [row for row in self.ledger().booked().values() if row["state"] != "run"]
@@ -1273,6 +1274,9 @@ class ConcurrentTagTests(Base):
         label.write(path, '{"kind": "batch-01", "retr\n' + whole)
         with self.assertRaises(ValueError, msg="a bad line that is not the last is an error"):
             self.runner(None).write_runs()
+
+    def run_json(self, name, run):
+        return os.path.join(self.dir, "raw", name, run, "run.json")
 
 
 class KeySafetyTests(Base):
@@ -1778,9 +1782,10 @@ class RoundThreeTests(Base):
         before = label.read(self.run_json("two", "r1"))
         self.runner(FakeTransport(answer_all)).tag("two")
         saved = json.loads(label.read(self.run_json("two", "r1")))
-        self.assertEqual({key: value for key, value in saved.items() if key != "complete"},
+        self.assertEqual({key: value for key, value in saved.items() if key not in ("complete", "abstaining")},
                          {key: value for key, value in json.loads(before).items()})
         self.assertTrue(saved["complete"])
+        self.assertEqual(saved["abstaining"], 0, "the end of a run adds how many sentences abstain")
 
     def test_a_run_is_refused_when_continuing_would_change_its_prompt_or_settings(self):
         with self.assertRaises(openrouter.ApiError):
@@ -2609,6 +2614,120 @@ class SettledTests(Base):
         self.assertEqual(gold.trains, "yes")
         args = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "1"])
         self.assertEqual(args.trains, "no")
+
+
+FAKE_GOLD_BIN = """#!/bin/sh
+# Stands in for deslag-gold's preflight: records its arguments, then passes or refuses as told.
+printf '%s\\n' "$@" > "$0.args"
+if [ -f "$0.refuse" ]; then
+    echo "first problem" >&2
+    echo "second problem" >&2
+    exit 2
+fi
+exit 0
+"""
+
+
+class StatusTests(Base):
+    """`status`: where one sample stands, in counts and run ids only."""
+
+    def status(self, *more, config=CONFIG):
+        said = []
+        arguments = label.parser().parse_args(["status", "--dir", self.dir, *more])
+        self.assertEqual(label.command_status(arguments, config, say=said.append), 0)
+        return said
+
+    def assert_no_word(self, said):
+        """Nothing printed is a word of the sample, or a tag."""
+        words = {form for _, forms in SENTENCES for form in forms if form.isalpha()}
+        for line in said:
+            self.assertFalse(words & set(re.findall(r"[A-Za-z]+", line)), line)
+            self.assertNotIn("N.s", line)
+
+    def test_a_sample_with_nothing_run_says_so(self):
+        said = self.status()
+        self.assertEqual(said[1:], [
+            "voter one: no run",
+            "voter two: no run",
+            "spacy: not registered",
+            "adjudicator judge (merge): no run",
+            "ledger: $0.0000 booked",
+            "preflight (merge): not run (no merge in merge yet)",
+        ])
+        self.assertEqual(said[0], f"sample: 3 sentences, {self.dir}")
+
+    def test_each_voter_shows_its_latest_run_its_batches_its_abstaining_and_its_dollars(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+
+        def respond(body, count):
+            if count >= 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond)).tag("two")
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
+        cost = self.ledger().run_cost("r2")
+        total = self.ledger().total()
+        said = self.status("--max-usd", "1")
+        self.assertEqual(said[1:5], [
+            "voter one: r1 complete, 2 of 2 batches, 0 abstaining, $0.0020",
+            f"voter two: r2 stopped, 1 of 2 batches, - abstaining, ${cost:.4f}",
+            "spacy: r3 complete",
+            "adjudicator judge (merge): no run",
+        ])
+        self.assertEqual(said[5], f"ledger: ${total:.4f} booked, ${1 - total:.4f} left under --max-usd 1")
+        self.assert_no_word(said)
+        # A later run of a voter is the one shown, whatever became of it.
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond)).tag("one", again=True)
+        self.assertEqual(self.status()[1], f"voter one: r4 stopped, 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}")
+
+    def test_a_run_made_before_runs_recorded_their_batches_is_shown_against_the_batches_there(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        path = os.path.join(self.dir, "raw", "one", "r1", "run.json")
+        saved = json.loads(label.read(path))
+        del saved["batches"], saved["abstaining"]
+        label.write(path, json.dumps(saved))
+        self.assertEqual(self.status()[1], "voter one: r1 complete, 2 of 2 batches, - abstaining, $0.0020")
+
+    def test_the_adjudicator_shown_is_the_one_the_merge_records(self):
+        label.write(os.path.join(self.dir, "other", label.ADJUDICATOR_RECORD), json.dumps({"name": "two", "model": "x/two"}))
+        self.assertIn("adjudicator two (other): no run", self.status("--into", "other"))
+
+    def test_the_preflight_is_run_on_the_part_and_prints_its_verdict_and_a_count(self):
+        binary = os.path.join(self.root, "fake-gold")
+        label.write(binary, FAKE_GOLD_BIN)
+        os.chmod(binary, 0o755)
+        label.write(os.path.join(self.dir, "merge", "voters.tsv"), "sent_id\n")
+        said = self.status("--gold-bin", binary)
+        self.assertEqual(said[-1], "preflight (merge): ok")
+        self.assertEqual(label.read(binary + ".args").splitlines(),
+                         ["silver", "build", "--check-part", f"{self.dir}:merge"])
+        label.write(binary + ".refuse", "")
+        said = self.status("--gold-bin", binary)
+        self.assertEqual(said[-1], (
+            f"preflight (merge): refused, 2 lines on stderr (exit 2); `deslag-gold silver build --check-part "
+            f"{self.dir}:merge` prints them"
+        ))
+        self.assertNotIn("problem", said[-1], "the problems themselves are not printed")
+        with unittest.mock.patch.object(label, "find_binary", return_value=None):
+            self.assertIn("not run (deslag-gold is not built", self.status()[-1])
+
+    def test_status_writes_nothing_in_the_sample_directory(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        before = {
+            os.path.join(folder, name): os.stat(os.path.join(folder, name)).st_mtime_ns
+            for folder, _, names in os.walk(self.dir) for name in names
+        }
+        self.status()
+        after = {
+            os.path.join(folder, name): os.stat(os.path.join(folder, name)).st_mtime_ns
+            for folder, _, names in os.walk(self.dir) for name in names
+        }
+        self.assertEqual(after, before)
 
 
 class OutsideTaggerTests(Base):
@@ -3601,6 +3720,22 @@ class HandoffTests(Base):
 
     def run_row(self, role="adjudicator"):
         return [row for row in self.runs_rows() if row["role"] == role][-1]
+
+    def test_status_counts_the_requests_waiting_and_the_replies_present(self):
+        def status():
+            said = []
+            arguments = label.parser().parse_args(["status", "--dir", self.dir])
+            label.command_status(arguments, HANDOFF_CONFIG, say=said.append)
+            return [line for line in said if line.startswith("adjudicator")]
+
+        self.assertEqual(status(), ["adjudicator opus (merge): no run; 0 requests waiting, 0 replies present"])
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        waiting = len(self.requests())
+        self.assertGreater(waiting, 0)
+        self.assertEqual(status(), [f"adjudicator opus (merge): r3 stopped, $0.0000; {waiting} requests waiting, 0 replies present"])
+        self.answer()
+        self.assertEqual(status(), [f"adjudicator opus (merge): r3 stopped, $0.0000; 0 requests waiting, {waiting} replies present"])
 
     def test_a_pass_writes_every_request_then_waits_without_a_call_a_key_or_a_booking(self):
         before = self.ledger().total()

@@ -51,8 +51,9 @@ recorded. An adjudicator run records its scope, the merge directory (`--into`), 
 mode, and is only continued for the same scope. An adjudicator run that ends with items open is not
 complete: a rerun continues it, uses every saved reply, and pays for nothing already answered. A reply
 refused after it was paid for (cut off at `max_tokens`, or from another provider) is saved with its
-request's hash and is not paid for again on a rerun of the same request. The voters run one after
-another, with a pause (`pause_s`, 1 s) after each call made.
+request's hash and is not paid for again on a rerun of the same request. The voters of one `tag` run one
+after another, with a pause (`pause_s`, 1 s) after each call made; `tag --voter NAME` for each voter, in
+processes of their own, may run at once on one sample (see Silver).
 
 A rate limit (429), a server error (500, 502, 503, 504, 520 to 524, 529), a timeout (408) or a dropped
 connection is asked again, up to
@@ -191,8 +192,8 @@ refuses fewer than three model voters, or a `min_voters` below three.
 
 ## What is asked
 
-`voters.json` holds every pin: the three voters, the adjudicator (`opus`, handed to Claude Code subagents, see Opus
-handoff below), the other models defined (`mistral`, and `claude`, Sonnet 5.5 through OpenRouter) and the
+`voters.json` holds every pin: the three voters, the adjudicator (`opus`, answered by confined Claude Code
+processes, see Opus handoff below), the other models defined (`mistral`, and `claude`, Sonnet 5.5 through OpenRouter) and the
 settings. Each call is one batch of about 50 sentences. The system prompt is the annotation guide and
 `prompts/preamble.md`; the user message is the task and the batch's lines. The body is:
 
@@ -236,12 +237,13 @@ adjudicator, by part. A line may carry a bullet, a number, or bold or backticks 
 ## Opus handoff
 
 `opus` (model `claude-opus-5-5`, provider `claude-code`, `"transport": "handoff"` in `voters.json`) is the
-adjudicator. The runner never calls it: it writes a request file for each call, and a person's Claude Code
-session (the coordinator) has a subagent answer each one. A handoff model has no listing, no key, no price, no
-`max_tokens` and no endpoint but `claude-code`; it can adjudicate but not vote, and takes no `--endpoint`.
-`judge --adjudicator NAME` picks a model of `voters.json` for that merge in place of `adjudicator` (`--adjudicator
-claude` for Sonnet through OpenRouter), and the rerun of the same command finds that model's run. `LABEL_FLAGS`
-carries it in every `generate-label-*` target.
+adjudicator. The runner never calls it: `judge` writes a request file for each call, and `label.py
+handoff-run` answers each with a Claude Code process confined to an empty directory (see Silver for the
+confinement and its probe). A handoff model has no listing, no key, no price, no `max_tokens` and no endpoint
+but `claude-code`; it can adjudicate but not vote, and takes no `--endpoint`. `judge --adjudicator NAME` picks
+a model of `voters.json` for that merge in place of `adjudicator` (`--adjudicator claude` for Sonnet through
+OpenRouter), and the rerun of the same command finds that model's run. `LABEL_FLAGS` carries it in every
+`generate-label-*` target.
 
 The loop, one pass of `judge` at a time:
 
@@ -250,35 +252,41 @@ The loop, one pass of `judge` at a time:
    (reason in `runs.tsv`) and exits 6. Nothing is sent, booked, retried, switched or counted against the failure
    budget, and the cap is not reserved against.
 2. `label.py handoff --dir D --into M` prints the requests still without a reply, one path per line.
-   `label.py handoff-agent --request PATH` prints the prompt for the subagent of one (`prompts/handoff-agent.md`
-   with `{request}` filled); one subagent per request, all of a round at once.
-3. Each subagent writes only the answer lines to the `reply_path` its request names,
-   `<call>.<12 hex of request_sha256>.reply.txt`, and returns its exact model id. The coordinator answers
-   each request by running a headless Claude Code process with only the two tools it needs, one per request
-   and all of a round at once:
+   `label.py handoff-agent --request PATH` prints the prompt a process gets for one (`prompts/handoff-agent.md`
+   with `{request}` filled), and `handoff-agent --sha256` the template's sha256.
+3. `label.py handoff-run --dir D --into M [--parallel 6] [--claude PATH]` answers every request still without
+   a reply, `--parallel` processes at once. A process writes only the answer lines to the `reply_path` its
+   request names and replies with its exact model id. For each request handoff-run makes an empty directory
+   under the system temp directory, outside any repository, and copies the request into it with `reply_path`
+   naming a file in that directory (the hash covers the model and the messages, so it is unchanged). From that
+   directory it runs
 
    ```
-   claude -p --model claude-opus-5-5 --tools Read,Write --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-session-persistence --permission-mode acceptEdits "<prompt>"
+   claude -p --safe-mode --model claude-opus-5-5 --tools Read,Write --strict-mcp-config --no-session-persistence --permission-mode acceptEdits --output-format stream-json --verbose "<prompt>" </dev/null
    ```
 
-   Run it from the request's directory, where the prompt is what `label.py handoff-agent --request PATH` prints. The flags:
-   `--tools Read,Write` gives the process only those two tools, no shell; `--strict-mcp-config` with the empty
-   `--mcp-config` gives it no MCP connectors, since the request holds sentences from the corpus, which may read
-   like instructions; `--no-session-persistence` saves no session; `--permission-mode acceptEdits` lets Write
-   run without a prompt, which `-p` could not answer.
-
-   The coordinator writes `handoff/<run>/agent.json` with `harness`, `version`, `agent_type` (free text),
-   `model_reported` (the id the agents returned), `effort`, `tools` (free text, the tools the processes had: `Read,Write`) and
-   `prompt_sha256` (`label.py handoff-agent --sha256`, the template as it is on disk).
-4. The coordinator runs the same command again, only after every process of the round has returned. A reply
-   is read only with an `agent.json` that has every key, a `model_reported` that is the pinned model (or a
-   dated version), and the template's current sha256. A run has one agent: the first reply accepted fixes
-   the run's agent record from `agent.json`, and a later `agent.json` that differs makes the pass refuse
-   (exit 2; restore the file, or `--again` starts a new run). An accepted reply is saved into
-   `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at cost 0 with provider `claude-code` and
-   tokens `-`, and `agent.json` goes into `run.json` and the `settings` of `runs.tsv` (tokens and seconds there
-   are `-`, which is not 0). Items still open go to a retry round, which is a new set of requests and another
-   exit 6, until none are or the retries are spent.
+   then checks the call, copies a reply that passed every check to `<call>.<12 hex of request_sha256>.reply.txt`
+   in the run's folder, and removes the directory. `--tools Read,Write` gives the process those two tools and
+   no shell; `--strict-mcp-config` with no `--mcp-config` gives it no MCP server, since the request holds
+   sentences from the corpus, which may read like instructions; `--safe-mode` gives it no `CLAUDE.md`, skill,
+   hook or plugin; `--permission-mode acceptEdits` lets it write inside its directory without a prompt, which
+   `-p` could not answer, and grants nothing outside. The first call that passes every check writes
+   `handoff/<run>/agent.json`: `harness` (`claude-code`), `version` (`claude --version`), `agent_type`,
+   `model_reported` (the model id the process's init event named), `effort` (`default`), `tools`
+   (`Read,Write`), `prompt_sha256` (the template's), `safe_mode` (true), `args` (the argument list above,
+   without the prompt) and `cwd` (the rule for the working directory). Every later call must report the same
+   model. A round refuses to start if `agent.json` is there and differs from what it would write. Exit 0 when
+   every request has its reply, 6 when a process wrote none (run handoff-run again), 2 when a call failed a
+   check or the round was refused.
+4. The same `judge` command, run again once handoff-run has returned, reads the replies. A reply is read only
+   with an `agent.json` that has every key, `safe_mode` true, the argument list handoff-run uses now, the tools
+   `Read,Write`, a `model_reported` that is the pinned model (or a dated version) and the template's current
+   sha256. A run has one agent: the first reply accepted fixes the run's agent record from `agent.json`, and a
+   later `agent.json` that differs makes the pass refuse (exit 2; restore the file, or `--again` starts a new
+   run). An accepted reply is saved into `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at
+   cost 0 with provider `claude-code` and tokens `-`, and `agent.json` goes into `run.json` and the `settings`
+   of `runs.tsv` (tokens and seconds there are `-`, which is not 0). Items still open go to a retry round,
+   which is a new set of requests and another exit 6, until none are or the retries are spent.
 
 A reply file that is empty or not valid UTF-8 is not read: `judge` and `handoff` warn, naming the file, and the
 item stays pending (its request is still listed by `handoff`, and the pass exits 6), until the file is written
@@ -291,6 +299,112 @@ The request is `{"model", "messages": [system, user], "request_sha256", "call", 
 that changed) has another name, is never read and is warned about, and a request no longer asked for is
 removed. What the harness decided (temperature, effort, `max_tokens`) and that the model saw the request as the
 content of the harness's own prompt, not as its system prompt, is recorded in the run's `request` note.
+
+## Silver
+
+A silver batch is labelled in parts. `deslag-gold draw --parts N` deals one draw into `part-01` to `part-NN`
+under its `--dir`, with the same mix in each. Each part is a draw for labelling whose header adds `# part = k
+of N` and `# tag_version = V`, the tag VERSION of the draw. The guard accepts a part as it accepts any draw
+for labelling, and holds its header: a `part` is `k of N` with k from 1 to N and comes with a `tag_version`,
+`sample.conllu` and `manifest.tsv` give the same values where both give one, and a directory named `part-NN`
+says it is part NN.
+
+Each part is a sample of its own. With `D` the part's directory and `M` its merge:
+
+1. `label.py tag --dir D --max-usd USD --voter NAME` for each voter. The voters may run at once, each in a
+   process of its own: run ids and money are booked under the ledger's lock in the state directory, each voter
+   writes its own files under `raw/<voter>/` and `tags/`, and the files they share, the batches and
+   `runs.tsv`, are written under a lock on `D/label.lock`. A run asks the batch texts it read under that lock.
+2. `spacy.sh D` tags the part with spaCy and runs `label.py register --name spacy --model en-core-web-trf`.
+3. `label.py judge --dir D --into M --max-usd USD --trains yes`, with the merge's voter flags, writes the
+   adjudicator's requests and exits 6; `label.py handoff-run --dir D --into M` answers them; the same `judge`
+   command run again reads them. Repeat until `judge` exits 0.
+4. `label.py status --dir D --into M [--max-usd USD]`, at any point (below).
+
+Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
+and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription
+login still works. `--safe-mode` also ignores permission rules given with `--settings`. In `-p` mode a read
+or write outside the working directory is refused unless a rule grants it, and `--tools Read,Write` leaves
+only those two tools. So the working directory is the boundary, and handoff-run (`confine.py`) runs each call:
+
+- from a new empty directory under the system temp directory, refused if it or a directory above it holds
+  `.git`, and removed after the call;
+- with stdin closed and an environment of `HOME`, `PATH`, `TERM`, the locale (`LANG`, `LANGUAGE`, `LC_*`),
+  `CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_*`, plus `DISABLE_AUTOUPDATER=1` so that Claude
+  Code does not update itself between the probe and a call. Nothing else of the caller's environment is
+  passed: a parent Claude Code session sets variables for its children (its effort, its messaging socket)
+  that would change what the process does or give it a channel out of its directory;
+- with `--output-format stream-json --verbose`, whose events are read for the checks every call is held to:
+  the init event lists exactly the tools Read and Write and no MCP server; it and every assistant message
+  name the pinned model; the process exits 0 with a result that is not an error, whose last line is the model
+  the init event named; it used no tool but Read and Write, no path outside its directory, and had no tool
+  call refused. A call that fails one has its reply discarded, and the round exits 2.
+
+handoff-run refuses to start without a passing probe stamp for the Claude Code installed now and the
+argument list it uses, or when `git status --porcelain` shows a change outside `.label/`. After the round it
+looks again; a change outside `.label/` then removes every reply the round copied, and it exits 2.
+
+The probe. `label.py probe-confinement [--claude PATH] [--keep]` (`make test-confinement`) runs one call as
+handoff-run runs it, in a scratch tree of its own under the system temp directory, and removes the tree
+unless `--keep`. The tree holds a `CLAUDE.md` with a random heading above the working directory `cwd/`;
+three decoys outside `cwd/`, each with a random marker: a plain file, `repo/tests/gold/holdout-decoy.txt` and
+`blobs/.blobs/unpacked/decoy.txt`; and the path of a file to write outside `cwd/`. The request in `cwd/` has a
+random control marker on its first line and asks the process to quote it, to read each decoy and write the
+outside file with its tool, once each, to quote the first heading of any `CLAUDE.md` it was given, and to
+write its report into `cwd/`. The prompt is `prompts/confinement-probe.md`, which asks for every step to be
+tried, so that a refusal is seen. The probe passes only when every assertion holds:
+
+- the checks of every call above (`stream_json`, `init_tools_read_write`, `init_no_mcp_server`,
+  `one_model_id`, `process_finished`, `model_reported_matches`, `only_read_write_used`);
+- `reply_written`, `control_quoted`: the report is written in `cwd/` and quotes the control;
+- `decoy_plain_read_refused`, `decoy_holdout_read_refused`, `decoy_blobs_read_refused`: each decoy read was
+  tried and refused; `decoy_*_marker_absent`: no marker is in the output or the report;
+- `outside_write_refused`, `outside_file_absent`: the outside write was tried and refused, and the file does
+  not exist;
+- `scratch_unchanged_outside_cwd`: every file of the scratch tree outside `cwd/` is as it was;
+- `ancestor_claude_md_absent`, `user_claude_md_absent`: neither the planted heading nor the first heading of
+  the user's own `CLAUDE.md` (`$CLAUDE_CONFIG_DIR` or `~/.claude`) appears. The user's file is read for its
+  heading and never written; with no heading the assertion is skipped, and the stamp says why;
+- `version_unchanged`: `claude --version` is the same after the call as before.
+
+It writes the stamp `.label/confinement.json`, pass or fail: `claude_code_version`, `args` (without the
+prompt), `date`, `time`, `verdict`, `assertions` (each name, true or false) and `skipped`. It prints each
+assertion and never what the process wrote, and exits 0 on a pass, 2 otherwise. Run it again whenever Claude
+Code changes: handoff-run refuses a stamp for another version.
+
+Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids
+only, never a tag or a word, and writes nothing in `D`:
+
+```
+sample: 500 sentences, /path/to/.label/silver/part-01
+voter deepseek: r41 complete, 10 of 10 batches, 2 abstaining, $0.3120
+voter qwen: r42 stopped, 6 of 10 batches, - abstaining, $0.1874
+voter gemma: no run
+spacy: r44 complete
+adjudicator opus (merge): r45 stopped, $0.0000; 3 requests waiting, 9 replies present
+ledger: $5.1003 booked, $2.8997 left under --max-usd 8
+preflight (merge): refused, 1 line on stderr (exit 2); `deslag-gold silver build --check-part /path/to/.label/silver/part-01:merge` prints it
+```
+
+A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it, the batches with
+an answer saved of the batches the run asks (`batches` in its `run.json`), the sentences that abstain after
+its retries (`abstaining`, written when it ends; `-` before), and its dollars from the ledger. The
+adjudicator is the one the merge's `adjudicator.json` records, or `voters.json`'s. The preflight is
+`deslag-gold silver build --check-part D:M`; its line is `ok`, `refused` with the number of lines it
+printed (never the lines, which may quote a sentence), or `not run` before the merge or when `deslag-gold`
+is not built. `status` exits 0 whatever the verdict.
+
+Licences. Every model of `voters.json`, and every outside tagger under `external` (spaCy), has `license`,
+`license_url` (the model card, `https://`) and `license_checked` (the date the card was read), and may have a
+`license_note`; `voters.json` is refused without them. A run copies `license` and `license_checked` into its
+`run.json` and `runs.tsv`, with `voters_sha256`, the sha256 of `voters.json` at its start; no run starts, and
+`register` records none, for a model with no `license_checked`. `register` also requires an `external` entry
+of that name whose `model` is the `--model` given. A continued run is refused if any of the three would
+now differ.
+
+Assembly is `deslag-gold`'s: `silver build --name NAME --part DIR:MERGE ... [--audit DIR] --out DIR` builds a
+batch from the parts, `silver build --check-part DIR:MERGE` is the preflight of one part, `silver check` reads
+a batch's own record, and `silver standing` holds the batches in use to the rules that never lapse.
 
 ## Money
 
@@ -328,11 +442,15 @@ for every status but a plain `complete`, such as "3 items open" or what abandone
 guide, calls, retries, tokens, dollars (from the ledger, failed attempts included), seconds (calls,
 tokens and seconds include the calls cut off), a `status` column, the
 endpoint listing saved under `listings/`, the model the replies named, the listing's model version if
-it has one, the deslag commit (with `-dirty`), and the request settings with the temperature's note.
+it has one, the licence and the date it was read, the sha256 of `voters.json`, the deslag commit (with
+`-dirty`), and the request settings with the temperature's note.
 `deslag-gold finish` writes no `labelled.conllu` unless every word has `Runs=` and every id has a row
 there. Beside each reply, `<call>.meta.json` holds the provider and model that made it. The raw
 replies are `raw/<name>/<run>/`, one `.reply.txt`, `.response.json` and `.lines.txt` per call, with a
-`calls.jsonl` (refused and cut-off calls too) and a `run.json`, written whole (temporary file, sync, rename). spaCy is a run with the role `external`, from `label.py register`.
+`calls.jsonl` (refused and cut-off calls too) and a `run.json`, written whole (temporary file, sync, rename). A
+voter's `run.json` also says how many batches the run asks (`batches`) and, once it ends, how many sentences
+abstain (`abstaining`). `runs.tsv` is rebuilt under the sample's lock and replaced whole. spaCy is a run with
+the role `external`, from `label.py register`.
 
 ## Holdout
 
@@ -351,4 +469,9 @@ labels says `# exam.silver = yes`, and `own` refuses it.
 ## Tests
 
 `make test-python` runs `test_label.py`: a stand-in for OpenRouter, the real `deslag-gold`, no network
-and no key.
+and no key. The handoff-run and probe tests put a fake `claude` on `PATH`, a script that writes the
+stream-json events a real one would and can be told to misbehave (another tool, an MCP server, a read
+outside its directory, a change to the checkout), in a temporary `HOME` and a temporary git checkout; no
+test runs the real `claude`, which only `probe-confinement` does. Three voters are tagged at once in
+processes of their own, against a stand-in for `deslag-gold batches` that fails if two processes are in it
+at once.

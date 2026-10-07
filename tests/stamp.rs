@@ -268,3 +268,13 @@ fn a_stamp_under_md_is_an_unknown_field() {
         );
     }
 }
+
+#[test]
+fn a_config_written_as_a_json_array_still_loads() {
+    let (code, stderr) = check(
+        "json",
+        "[1, {\"globs\":[\"*.md\"],\"lints\":{\"max_size_bytes\":{\"value\":1}}}]",
+    );
+    assert_eq!(code, 1, "stderr: {stderr}");
+    assert!(stderr.contains("max_size_bytes"), "stderr: {stderr}");
+}

@@ -41,7 +41,7 @@ use std::path::{Path, PathBuf};
 
 use schemars::JsonSchema;
 use schemars::generate::SchemaSettings;
-use serde::de::DeserializeOwned;
+use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 use crate::Error;
@@ -94,6 +94,11 @@ struct ConfigFile {
 struct Head {
     #[serde(default)]
     schema_version: Option<NonZeroU32>,
+    /// Never read. It holds the place of `md` in `ConfigFile`, so a config written as a JSON
+    /// array, which serde reads by position, lines up with it.
+    #[serde(default)]
+    #[expect(dead_code, reason = "holds a position, never read")]
+    md: Option<IgnoredAny>,
     #[serde(default, deserialize_with = "stamp_text")]
     deslag_version: Option<String>,
 }

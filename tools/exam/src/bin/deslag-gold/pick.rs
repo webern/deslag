@@ -816,6 +816,7 @@ mod tests {
             repo: repo.to_string(),
             license: "MIT".to_string(),
             sha256: sha256_hex(text.as_bytes()),
+            provenance: Default::default(),
             text,
         }
     }

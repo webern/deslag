@@ -7,6 +7,7 @@ use std::path::Path;
 
 mod common;
 use common::draws::{HEAD, draw, gold, manifest_rows, other_small, quiet_gold, wide_tree};
+use common::silver_parts::reviewed;
 
 /// A manifest naming `repos`, one sentence each.
 fn manifest_of(repos: &[&str]) -> String {
@@ -344,51 +345,6 @@ fn silver_file(count: usize, wrong: Option<usize>) -> String {
              2\trun\t_\t{upos}\t_\t{feats}\t_\t_\t_\tKind=Word|Prov=adjudicated|Runs=r2\n\
              3\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation|Prov=kind\n\n"
         ));
-    }
-    out
-}
-
-/// The owner's review of a blind queue: the labels of `labels` copied in as his own, every
-/// sentence reviewed, and those in `reject` rejected. A word with the id `fill` stays untouched.
-fn reviewed(queue: &str, labels: &str, reject: &[&str]) -> String {
-    let mut codes = std::collections::BTreeMap::new();
-    let mut id = String::new();
-    for line in labels.lines() {
-        if let Some(found) = line.strip_prefix("# sent_id = ") {
-            id = found.to_string();
-        } else if !line.starts_with('#') && !line.is_empty() {
-            let cells: Vec<&str> = line.split('\t').collect();
-            codes.insert(
-                (id.clone(), cells[0].to_string()),
-                (cells[3].to_string(), cells[5].to_string()),
-            );
-        }
-    }
-    let mut out = String::new();
-    let mut id = String::new();
-    for line in queue.lines() {
-        if let Some(found) = line.strip_prefix("# sent_id = ") {
-            id = found.to_string();
-            out.push_str(line);
-            out.push('\n');
-            let mark = if reject.contains(&id.as_str()) {
-                "owner_rejected"
-            } else {
-                "owner_reviewed"
-            };
-            out.push_str(&format!("# {mark} = 2026-10-20\n"));
-        } else if !line.starts_with('#') && !line.is_empty() {
-            let mut cells: Vec<String> = line.split('\t').map(str::to_string).collect();
-            let (upos, feats) = codes[&(id.clone(), cells[0].clone())].clone();
-            cells[3] = upos;
-            cells[5] = feats;
-            cells[9] = cells[9].replace("Kind=", "Prov=owner|Kind=");
-            out.push_str(&cells.join("\t"));
-            out.push('\n');
-        } else {
-            out.push_str(line);
-            out.push('\n');
-        }
     }
     out
 }

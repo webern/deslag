@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 
 pub mod draws;
+pub mod silver_parts;
 
 use std::path::{Path, PathBuf};
 

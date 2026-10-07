@@ -1,0 +1,181 @@
+# What each release of deslag added, for `deslag instructions lints` and the commands that tell an
+# agent what is new. The tests in tests/changelog.rs say what an entry must hold.
+#
+# An entry has a `kind`: `lint`, `setting`, `feature` or `breaking`. A change that adds a lint, a
+# setting, a feature or a migration adds its entry under the `next` release, which is last. The PR
+# that bumps the version in Cargo.toml replaces `next` with that version; `make check-release`
+# fails while `next` remains.
+#
+# `id` is a lint's id, a setting's path in the config schema, or a short name for a feature or a
+# breaking change. A `lint` entry lists in `keys` the settings its table had when it arrived, each
+# as a path inside the table. A `breaking` entry says in `update_does_all` whether `deslag update`
+# does the whole job. `onboarding` is Markdown for an agent: what the thing does and the table that
+# turns it on. Its fenced TOML must fit the schema.
+
+[[release]]
+version = "0.1.0"
+
+[[release.entry]]
+kind = "lint"
+id = "max_size_bytes"
+keys = ["message", "value"]
+summary = "Fails a file larger than its byte budget"
+onboarding = '''
+`max_size_bytes` fails a file larger than its budget. A `max_size_bytes` key in a file's own
+frontmatter beats the config.
+
+```toml
+[md.lints.max_size_bytes]
+value = 16000
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "max_emphasis"
+keys = ["free_spans", "max_percent", "message"]
+summary = "Fails a file with too much bold, italics and capitals"
+onboarding = '''
+`max_emphasis` fails a file with more bold, italics and capitals than it allows.
+
+```toml
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "repo_layout"
+keys = ["heading", "max_entries", "max_width", "message", "min_entries"]
+summary = "Fails a file without a short, true index of the repository"
+onboarding = '''
+`repo_layout` fails a file without a short, true index of the repository, one `path  <- what it
+holds` line per entry. It suits AGENTS.md alone, so turn it on in an override.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.repo_layout = { min_entries = 5, max_entries = 15 }
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "banned_chars"
+keys = ["allow", "ban", "groups.arrows", "groups.box_drawing", "groups.bullets", "groups.checks", "groups.dashes", "groups.ellipsis", "groups.emoji", "groups.invisible", "groups.math", "groups.quotes", "groups.section", "groups.spaces", "message"]
+summary = "Fails a file holding characters agents write and people rarely do"
+onboarding = '''
+`banned_chars` fails a file holding characters agents write and people rarely do, such as the em
+dash. The empty table bans the default groups.
+
+```toml
+[md.lints.banned_chars]
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "banned_phrases"
+keys = ["allow", "ban", "groups.insistence", "groups.metaphors", "groups.precision", "message"]
+summary = "Fails a file holding the stock phrases of LLM prose"
+onboarding = '''
+`banned_phrases` fails a file holding a phrase of its groups, which are on by default, or one that
+`ban` lists. The report names each phrase's group. Switching a group off, or adding a phrase to
+`allow` or `ban`, is the human's call: ask before you change the config.
+
+```toml
+[md.lints.banned_phrases]
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "density"
+keys = ["max_item_chars", "max_paragraph_chars", "message"]
+summary = "Fails walls of text: long paragraphs and list items"
+onboarding = '''
+`density` fails a file with a paragraph or a list item that is too long. The empty table sets the
+default limits.
+
+```toml
+[md.lints.density]
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "list_growth"
+keys = ["message"]
+summary = "Fails a change that leaves a file with more list items"
+onboarding = '''
+`list_growth` fails a change that leaves a file with more list items than it had, so a new rule
+replaces an old one. It skips new files. `check` and `fix` then need a base, such as
+`--base origin/main`.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.list_growth = {}
+```
+'''
+
+[[release.entry]]
+kind = "lint"
+id = "verbs_no_nouns"
+keys = ["message"]
+summary = "Fails a sentence that negates a verb through its object"
+onboarding = '''
+`verbs_no_nouns` fails a sentence that negates a verb through its object, such as `it ships no
+binary`; this repo writes "it does not ship a binary". It is a house style, off by default, and
+human writers trip it too. The fix is to negate the verb or drop the absolute claim: "zero",
+"without", "lacks" and "free of" are the same sentence. For text that is not English, scope it
+with `globs`. Ask the human before turning it off or scoping it.
+
+```toml
+[md.lints.verbs_no_nouns]
+message = "..."  # optional; replaces the advice
+```
+'''
+
+[[release.entry]]
+kind = "setting"
+id = "schema_version"
+summary = "The version of the config file's format"
+onboarding = '''
+`schema_version` is the first key of every config and names the format of the file, not the
+version of deslag. Write `schema_version = 1`; deslag refuses a config whose format it does not
+know.
+'''
+
+[[release.entry]]
+kind = "setting"
+id = "md.globs"
+summary = "Chooses the Markdown files the lints judge"
+onboarding = '''
+`md.globs` lists the files the lints judge. A pattern holding a `/` matches the path from the
+repo root; one without matches the file name in any directory. With no `globs`, every `*.md` file is
+judged.
+
+```toml
+[md]
+globs = ["/AGENTS.md", "/docs/**/*.md"]
+```
+'''
+
+[[release.entry]]
+kind = "setting"
+id = "md.overrides"
+summary = "Sets lints for the files a list of globs matches"
+onboarding = '''
+An `[[md.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
+globs match, on top of the tables under `[md.lints]`. Use one when a file needs another limit, not
+to loosen a limit for every file.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.max_size_bytes.value = 8000
+```
+'''

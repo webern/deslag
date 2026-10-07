@@ -11,6 +11,7 @@
 //! answer in one now and then. Anything else that is not a line of the form is a problem.
 
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 
 use deslag_exam::error::{Error, Place};
 
@@ -52,12 +53,37 @@ fn first_fault(sent: &Sent, codes: &[&str]) -> Option<String> {
     None
 }
 
-/// Reads the lines in `text`, which came from `path`, against `sample`. Returns what it could read
-/// and a problem for each line it could not.
-pub fn parse_lines(path: &str, text: &str, sample: &Sample) -> (Vec<Tagged>, Vec<Error>) {
+/// One line of a tagger's answer that is not what the guide asks for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fault {
+    /// The line it is on, counted from 1.
+    pub line: usize,
+    /// The sentence the line answers, when it names one of the sample's.
+    pub id: Option<String>,
+    /// What is wrong, without the line's number.
+    pub message: String,
+}
+
+impl Fault {
+    /// The problem as every stage that rejects reports it: by sentence when there is one.
+    fn error(&self, path: &str) -> Error {
+        match &self.id {
+            Some(id) => Error::load(
+                path,
+                Place::Sentence(id.clone()),
+                format!("line {}: {}", self.line, self.message),
+            ),
+            None => Error::at(path, self.line, self.message.clone()),
+        }
+    }
+}
+
+/// Reads the lines in `text` against `sample`. Returns what it could read and a fault for each
+/// line it could not.
+pub fn scan(text: &str, sample: &Sample) -> (Vec<Tagged>, Vec<Fault>) {
     let index = sample.index_of();
     let mut read: BTreeMap<usize, Tagged> = BTreeMap::new();
-    let mut problems = Vec::new();
+    let mut faults = Vec::new();
     for (at, raw) in text.lines().enumerate() {
         let number = at + 1;
         let line = raw.trim();
@@ -65,20 +91,20 @@ pub fn parse_lines(path: &str, text: &str, sample: &Sample) -> (Vec<Tagged>, Vec
             continue;
         }
         let Some((id, rest)) = line.split_once(':') else {
-            problems.push(Error::at(
-                path,
-                number,
-                "not a line of the form `id: codes`: there is no colon",
-            ));
+            faults.push(Fault {
+                line: number,
+                id: None,
+                message: "not a line of the form `id: codes`: there is no colon".to_string(),
+            });
             continue;
         };
         let id = id.trim();
         let Some(&position) = index.get(id) else {
-            problems.push(Error::at(
-                path,
-                number,
-                format!("`{id}` is not the id of a sentence of the sample"),
-            ));
+            faults.push(Fault {
+                line: number,
+                id: None,
+                message: format!("`{id}` is not the id of a sentence of the sample"),
+            });
             continue;
         };
         let sent = &sample.sents[position];
@@ -94,12 +120,12 @@ pub fn parse_lines(path: &str, text: &str, sample: &Sample) -> (Vec<Tagged>, Vec
         } else {
             first_fault(sent, &given)
         };
-        if let Some(fault) = fault {
-            problems.push(Error::load(
-                path,
-                Place::Sentence(id.to_string()),
-                format!("line {number}: {fault}"),
-            ));
+        if let Some(message) = fault {
+            faults.push(Fault {
+                line: number,
+                id: Some(id.to_string()),
+                message,
+            });
             continue;
         }
         let codes = given.iter().map(|code| Code::parse(code).ok()).collect();
@@ -111,12 +137,20 @@ pub fn parse_lines(path: &str, text: &str, sample: &Sample) -> (Vec<Tagged>, Vec
             },
         );
     }
-    (read.into_values().collect(), problems)
+    (read.into_values().collect(), faults)
+}
+
+/// Reads the lines in `text`, which came from `path`, against `sample`. Returns what it could read
+/// and a problem for each line it could not.
+pub fn parse_lines(path: &str, text: &str, sample: &Sample) -> (Vec<Tagged>, Vec<Error>) {
+    let (read, faults) = scan(text, sample);
+    (read, faults.iter().map(|fault| fault.error(path)).collect())
 }
 
 /// The CoNLL-U of one tagged sentence: UPOS and FEATS from the codes, and from token kind for a
-/// token that is not a word, with `prov` as each line's `Prov=`.
-pub fn conllu(sent: &Sent, tagged: &Tagged, prov: &str) -> String {
+/// token that is not a word, with `prov` as each line's `Prov=` and `runs`, if given, as the
+/// `Runs=` of each word: no run vouches for a token that is not one.
+pub fn conllu(sent: &Sent, tagged: &Tagged, prov: &str, runs: Option<&str>) -> String {
     let mut out = format!("# sent_id = {}\n# text = {}\n", sent.id, sent.text());
     for (index, (tok, code)) in sent.toks.iter().zip(&tagged.codes).enumerate() {
         let (upos, feats) = match code {
@@ -128,7 +162,7 @@ pub fn conllu(sent: &Sent, tagged: &Tagged, prov: &str) -> String {
             &tok.form,
             upos,
             &feats,
-            &misc(tok, Some(prov)),
+            &misc(tok, Some(prov), runs.filter(|_| code.is_some())),
         ));
     }
     out.push('\n');
@@ -143,6 +177,7 @@ pub fn read_tags(
     sample: &Sample,
     files: &[(String, String)],
     prov: &str,
+    runs: Option<&str>,
     all: bool,
 ) -> Result<(String, usize), Problems> {
     let mut problems = Vec::new();
@@ -184,11 +219,83 @@ pub fn read_tags(
     let mut count = 0;
     for sent in &sample.sents {
         if let Some((tagged, _)) = by_id.get(&sent.id) {
-            out.push_str(&conllu(sent, tagged, prov));
+            out.push_str(&conllu(sent, tagged, prov, runs));
             count += 1;
         }
     }
     Problems::check(problems, (out, count))
+}
+
+/// What `read-tags --check` found: the good sentences as CoNLL-U, and what was wrong with the
+/// rest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Checked {
+    /// The CoNLL-U of the sentences with a good line, in the order of the sample.
+    pub conllu: String,
+    /// How many sentences it holds.
+    pub count: usize,
+    /// Their ids, in the order of the sample.
+    pub kept: Vec<String>,
+    /// One entry for each line that was rejected.
+    pub bad: Vec<Fault>,
+}
+
+/// Reads every file of `files` as [`read_tags`] does, but keeps the good lines whatever else is
+/// wrong, and returns the faults instead of failing. A sentence is kept when one of its lines is
+/// good, even if another line for it is not; a line that names no sentence of the sample is a
+/// fault with no id. A sentence answered well in two files keeps the first.
+pub fn check_tags(
+    sample: &Sample,
+    files: &[(String, String)],
+    prov: &str,
+    runs: Option<&str>,
+) -> Checked {
+    let mut by_id: BTreeMap<String, Tagged> = BTreeMap::new();
+    let mut bad = Vec::new();
+    for (_, text) in files {
+        let (read, faults) = scan(text, sample);
+        bad.extend(faults);
+        for tagged in read {
+            by_id.entry(tagged.id.clone()).or_insert(tagged);
+        }
+    }
+    // A line that was rejected for a sentence another line answered well is not a loss.
+    bad.retain(|fault| fault.id.as_ref().is_none_or(|id| !by_id.contains_key(id)));
+    let mut conllu_text = String::new();
+    let mut kept = Vec::new();
+    for sent in &sample.sents {
+        if let Some(tagged) = by_id.get(&sent.id) {
+            conllu_text.push_str(&conllu(sent, tagged, prov, runs));
+            kept.push(sent.id.clone());
+        }
+    }
+    Checked {
+        conllu: conllu_text,
+        count: kept.len(),
+        kept,
+        bad,
+    }
+}
+
+/// The columns of `<prov>.problems.tsv`, which `read-tags --check` writes.
+const PROBLEM_COLUMNS: [&str; 2] = ["sent_id", "problem"];
+
+/// The id column of a problem that names no sentence.
+pub const NO_ID: &str = "-";
+
+/// The faults as the machine-readable list the runner reads: a header, then one row per fault,
+/// the sentence id (or `-`) and what is wrong, with no tab or line break in either.
+pub fn problems_tsv(bad: &[Fault]) -> String {
+    let mut out = format!("{}\n", PROBLEM_COLUMNS.join("\t"));
+    for fault in bad {
+        let message = fault
+            .message
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
+        let _ = writeln!(out, "{}\t{message}", fault.id.as_deref().unwrap_or(NO_ID));
+    }
+    out
 }
 
 #[cfg(test)]
@@ -225,7 +332,7 @@ pub mod tests {
         };
         let meta = |context| Meta {
             split: Some(Split::Dev),
-            tier: Tier::Human,
+            tier: Some(Tier::Human),
             context,
             file: "f.md".to_string(),
             repo: "o/r".to_string(),
@@ -253,6 +360,7 @@ pub mod tests {
             &sample(),
             &[("tags.txt".to_string(), GOOD.to_string())],
             "blind",
+            None,
             true,
         )
         .unwrap();
@@ -297,7 +405,7 @@ pub mod tests {
             id: "k".to_string(),
             codes: vec![None; 8],
         };
-        let upos: Vec<String> = conllu(&sent, &tagged, "blind")
+        let upos: Vec<String> = conllu(&sent, &tagged, "blind", None)
             .lines()
             .skip(2)
             .filter(|l| !l.is_empty())
@@ -319,7 +427,7 @@ pub mod tests {
             id: "c".to_string(),
             codes: vec![Some(Code::parse("C").unwrap()); 2],
         };
-        let out = conllu(&sent, &tagged, "blind");
+        let out = conllu(&sent, &tagged, "blind", None);
         assert!(out.contains("1\tand\t_\tCCONJ"));
         assert!(out.contains("2\tbecause\t_\tSCONJ"));
     }
@@ -412,7 +520,7 @@ pub mod tests {
             "tags.txt".to_string(),
             "s1: V.fi _ T V.in\ns2: R _ D N.s Q\n".to_string(),
         )];
-        let error = read_tags(&sample(), &files, "blind", false).unwrap_err();
+        let error = read_tags(&sample(), &files, "blind", None, false).unwrap_err();
         assert_eq!(error.0.len(), 2);
         let shown = error.to_string();
         assert!(shown.contains("sentence s1") && shown.contains("sentence s2"));
@@ -421,10 +529,10 @@ pub mod tests {
     #[test]
     fn missing_sentences_are_a_problem_only_when_all_are_required() {
         let files = [("a.txt".to_string(), "s1: V.fi _ T V.in _\n".to_string())];
-        let (out, count) = read_tags(&sample(), &files, "blind", false).unwrap();
+        let (out, count) = read_tags(&sample(), &files, "blind", None, false).unwrap();
         assert_eq!(count, 1);
         assert!(out.contains("sent_id = s1") && !out.contains("sent_id = s2"));
-        let error = read_tags(&sample(), &files, "blind", true).unwrap_err();
+        let error = read_tags(&sample(), &files, "blind", None, true).unwrap_err();
         assert!(
             error
                 .to_string()
@@ -439,14 +547,14 @@ pub mod tests {
             ("b2.txt".to_string(), "s2: R _ D N.s N.p\n".to_string()),
             ("b1.txt".to_string(), "s1: V.fi _ T V.in _\n".to_string()),
         ];
-        let (out, count) = read_tags(&sample(), &files, "blind", true).unwrap();
+        let (out, count) = read_tags(&sample(), &files, "blind", None, true).unwrap();
         assert_eq!(count, 2);
         assert!(out.find("sent_id = s1").unwrap() < out.find("sent_id = s2").unwrap());
         let twice = [
             files[1].clone(),
             ("b3.txt".to_string(), "s1: V.fi _ T V.in _\n".to_string()),
         ];
-        let error = read_tags(&sample(), &twice, "blind", false).unwrap_err();
+        let error = read_tags(&sample(), &twice, "blind", None, false).unwrap_err();
         assert!(
             error.to_string().contains("also answered in b1.txt"),
             "{error}"
@@ -461,10 +569,71 @@ pub mod tests {
             &sample(),
             &[("t".to_string(), GOOD.to_string())],
             "blind",
+            None,
             true,
         )
         .unwrap();
         let sents = crate::data::parse_skeleton("out", &out).unwrap();
         assert_eq!(sents, sample().sents);
+    }
+
+    fn checked(files: &[&str]) -> Checked {
+        let files: Vec<(String, String)> = files
+            .iter()
+            .enumerate()
+            .map(|(at, text)| (format!("f{at}.txt"), text.to_string()))
+            .collect();
+        check_tags(&sample(), &files, "m", Some("r7"))
+    }
+
+    #[test]
+    fn check_mode_keeps_the_good_line_and_lists_the_bad_one() {
+        // `s1` has one code too few; `s2` is good.
+        let got = checked(&["s1: V.fi _ T V.in\ns2: R _ D N.s N.p\n"]);
+        assert_eq!(got.kept, ["s2"]);
+        assert_eq!(got.count, 1);
+        assert!(got.conllu.contains("# sent_id = s2"));
+        assert!(!got.conllu.contains("# sent_id = s1"));
+        assert!(
+            got.conllu.contains("Kind=Word|Prov=m|Runs=r7"),
+            "{}",
+            got.conllu
+        );
+        assert_eq!(got.bad.len(), 1);
+        assert_eq!(got.bad[0].id.as_deref(), Some("s1"));
+        let tsv = problems_tsv(&got.bad);
+        assert!(tsv.starts_with("sent_id\tproblem\ns1\t"), "{tsv}");
+        assert_eq!(tsv.lines().count(), 2);
+    }
+
+    #[test]
+    fn check_mode_lists_a_line_that_names_no_sentence_with_a_dash() {
+        let got = checked(&["nonsense\ns9: N.s\ns1: V.fi _ T V.in _\n"]);
+        assert_eq!(got.kept, ["s1"]);
+        let tsv = problems_tsv(&got.bad);
+        let ids: Vec<&str> = tsv
+            .lines()
+            .skip(1)
+            .map(|line| line.split('\t').next().unwrap())
+            .collect();
+        assert_eq!(ids, ["-", "-"], "{tsv}");
+    }
+
+    #[test]
+    fn a_sentence_answered_well_in_a_later_file_is_no_longer_a_problem() {
+        let got = checked(&[
+            "s1: V.fi _ T V.in\ns2: R _ D N.s N.p\n",
+            "s1: V.fi _ T V.in _\n",
+        ]);
+        assert_eq!(got.kept, ["s1", "s2"]);
+        assert!(got.bad.is_empty(), "{:?}", got.bad);
+        assert_eq!(problems_tsv(&got.bad), "sent_id\tproblem\n");
+        // The first good line wins when two files answer the same sentence.
+        let got = checked(&[
+            "s1: V.fi _ T V.in _\n",
+            "s1: V.fi _ T V.pp _\ns2: R _ D N.s N.p\n",
+        ]);
+        assert!(got.conllu.contains("VerbForm=Inf"));
+        assert!(!got.conllu.contains("VerbForm=Part"));
     }
 }

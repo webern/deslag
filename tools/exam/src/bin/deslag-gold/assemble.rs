@@ -28,7 +28,7 @@ use std::fmt::Write as _;
 
 use deslag_exam::conllu::{self, Id};
 use deslag_exam::error::{Error, Place};
-use deslag_exam::gold::Split;
+use deslag_exam::gold::{Split, Tier};
 
 use crate::code::Code;
 use crate::data::{Manifest, Meta, Sample, line, misc};
@@ -67,21 +67,62 @@ pub struct Filled {
     pub prov: Prov,
     /// For a word, its code as the guide writes it.
     pub code: Option<Code>,
+    /// The runs that vouch for it, as `Runs=` names them: the agreeing voters' for an agreed word,
+    /// the adjudicator's for an adjudicated one. `None` for a gold set built by hand.
+    pub runs: Option<String>,
+}
+
+/// A word no voter agreed on and the adjudicator never settled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Open {
+    /// Its sentence.
+    pub sent_id: String,
+    /// Its token's number in the sentence, from 1.
+    pub token: usize,
+    /// The word.
+    pub form: String,
 }
 
 /// The gold sentences, in the order of the sample.
 #[derive(Debug, Clone)]
 pub struct Built {
-    /// One row of lines per sentence of the sample.
+    /// One row of lines per sentence of the sample. A sentence with a word left open has no lines.
     pub sentences: Vec<Vec<Filled>>,
+    /// The words left open, which only [`build_leaving`] allows.
+    pub open: Vec<Open>,
+}
+
+impl Built {
+    /// The sentences left out for a word left open in them.
+    pub fn left_out(&self) -> usize {
+        self.open
+            .iter()
+            .map(|word| word.sent_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+    }
 }
 
 /// Puts the adjudicated words of `log` into the blanks of `agreed`, which came from `agreed_path`.
+/// A word with no decision is an error.
 pub fn build(
     sample: &Sample,
     agreed_path: &str,
     agreed: &str,
     log: &[Logged],
+) -> Result<Built, Problems> {
+    build_leaving(sample, agreed_path, agreed, log, false)
+}
+
+/// [`build`], except that with `leave_open` a word with no decision is not an error: it is listed in
+/// [`Built::open`], and its sentence is given no lines, so that no file written from it has the
+/// sentence.
+pub fn build_leaving(
+    sample: &Sample,
+    agreed_path: &str,
+    agreed: &str,
+    log: &[Logged],
+    leave_open: bool,
 ) -> Result<Built, Problems> {
     let blocks = conllu::read(agreed_path, agreed)?;
     let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
@@ -103,7 +144,9 @@ pub fn build(
         }
     }
     let mut sentences = Vec::with_capacity(sample.sents.len());
+    let mut open = Vec::new();
     for sent in &sample.sents {
+        let open_before = open.len();
         let Some(block) = by_id.get(sent.id.as_str()) else {
             problems.push(Problems::sentence(
                 agreed_path,
@@ -161,6 +204,7 @@ pub fn build(
                         feats: row.code.feats(),
                         prov: Prov::Adjudicated,
                         code: Some(row.code),
+                        runs: row.run.clone(),
                     });
                 }
                 (true, Some(_)) => problems.push(Problems::sentence(
@@ -184,6 +228,10 @@ pub fn build(
                     } else {
                         None
                     };
+                    let runs = conllu::pairs(&read.misc)
+                        .iter()
+                        .find(|(key, _)| *key == "Runs")
+                        .map(|(_, value)| (*value).to_string());
                     lines.push(Filled {
                         upos: read.upos.clone(),
                         feats: read.feats.clone(),
@@ -193,6 +241,7 @@ pub fn build(
                             Prov::Kind
                         },
                         code,
+                        runs: if tok.is_word() { runs } else { None },
                     });
                 }
                 (false, Some((row, used))) => {
@@ -210,8 +259,14 @@ pub fn build(
                         feats: row.code.feats(),
                         prov: Prov::Adjudicated,
                         code: Some(row.code),
+                        runs: row.run.clone(),
                     });
                 }
+                (false, None) if leave_open => open.push(Open {
+                    sent_id: sent.id.clone(),
+                    token: at,
+                    form: tok.form.clone(),
+                }),
                 (false, None) => problems.push(Problems::sentence(
                     agreed_path,
                     &sent.id,
@@ -222,7 +277,11 @@ pub fn build(
                 )),
             }
         }
-        sentences.push(lines);
+        sentences.push(if open.len() > open_before {
+            Vec::new()
+        } else {
+            lines
+        });
     }
     for ((sent_id, token), (_, used)) in &decided {
         if !used {
@@ -233,7 +292,7 @@ pub fn build(
             ));
         }
     }
-    Problems::check(problems, Built { sentences })
+    Problems::check(problems, Built { sentences, open })
 }
 
 /// What the files of one split say about it: its `exam.trains` and the sentence beside the
@@ -285,7 +344,7 @@ pub fn gold_file(sample: &Sample, built: &Built, split: Split) -> String {
             out,
             "# sent_id = {}\n# exam.tier = {}\n# exam.context = {}\n# source = {file} bytes {}-{}\n# license = {license}\n# text = {}\n",
             sent.id,
-            tier.name(),
+            tier.map_or("unknown", Tier::name),
             context.name(),
             range.start,
             range.end,
@@ -297,7 +356,62 @@ pub fn gold_file(sample: &Sample, built: &Built, split: Split) -> String {
                 &tok.form,
                 &filled.upos,
                 &filled.feats,
-                &misc(tok, Some(filled.prov.name())),
+                &misc(tok, Some(filled.prov.name()), None),
+            ));
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The comment of a labelled file that says how many sentences were left out for an unsettled word.
+pub const LEFT_OUT: &str = "left_out";
+
+/// The labelled sentences of `sample`, which is not the gold sample: `labelled.conllu`, every
+/// sentence of the sample with its final tags, `Prov=` and the `Runs=` of the runs that vouch for
+/// each word. `trains` is its `exam.trains`: `no` for a pilot run over gold sentences, which must
+/// never train anything. The exam's own loader reads it, and so does `score --import`.
+pub fn labelled_file(sample: &Sample, built: &Built, trains: &str) -> String {
+    let source = sample.manifest.get("source").unwrap_or("a labelling draw");
+    let mut out = format!(
+        "# Sentences labelled by the labelling pipeline: voters' agreement, then an adjudicator.\n\
+         # exam.tokens = deslag\n\
+         # exam.trains = {trains}\n\
+         # exam.source = deslag labelling pipeline, {source}\n"
+    );
+    if built.left_out() > 0 {
+        let _ = writeln!(
+            out,
+            "# {LEFT_OUT} = {}\n# Sentences with a word the adjudicator never settled are not in this file.",
+            built.left_out()
+        );
+    }
+    for (sent, lines) in sample.sents.iter().zip(&built.sentences) {
+        if lines.is_empty() && !sent.toks.is_empty() {
+            continue;
+        }
+        let _ = writeln!(out, "# sent_id = {}", sent.id);
+        if let Some(meta) = sample.meta(&sent.id) {
+            let _ = writeln!(out, "# exam.context = {}", meta.context.name());
+            if let Some(tier) = meta.tier {
+                let _ = writeln!(out, "# exam.tier = {}", tier.name());
+            }
+            if !meta.file.is_empty() {
+                let _ = writeln!(
+                    out,
+                    "# source = {} bytes {}-{}\n# repo = {}\n# license = {}",
+                    meta.file, meta.range.start, meta.range.end, meta.repo, meta.license
+                );
+            }
+        }
+        let _ = writeln!(out, "# text = {}", sent.text());
+        for (index, (tok, filled)) in sent.toks.iter().zip(lines).enumerate() {
+            out.push_str(&line(
+                index,
+                &tok.form,
+                &filled.upos,
+                &filled.feats,
+                &misc(tok, Some(filled.prov.name()), filled.runs.as_deref()),
             ));
         }
         out.push('\n');
@@ -442,10 +556,10 @@ mod tests {
 
     use super::*;
     use crate::compact::{read_tags, tests::sample};
+    use crate::merge::{NAMES, agreed_conllu, worklist_tsv};
     use crate::merge::{
         adjudicated_tsv, load_tagger, merge, read_answers, read_log, read_overrides, read_worklist,
     };
-    use crate::merge::{agreed_conllu, worklist_tsv};
 
     /// The sample of the compact tests, with `s2` moved into the holdout.
     fn split_sample() -> Sample {
@@ -455,7 +569,7 @@ mod tests {
             ("corpus".to_string(), "hand-made".to_string()),
         ];
         sample.manifest.rows[1].1.split = Some(Split::Holdout);
-        sample.manifest.rows[1].1.tier = Tier::Llm;
+        sample.manifest.rows[1].1.tier = Some(Tier::Llm);
         sample.manifest.rows[1].1.context = Context::ListItem;
         sample
     }
@@ -474,7 +588,7 @@ mod tests {
                 } else {
                     ("X", "_")
                 };
-                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None)));
+                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None, None)));
             }
             out.push('\n');
         }
@@ -488,6 +602,7 @@ mod tests {
             &sample,
             &[("b".to_string(), BLIND.to_string())],
             "blind",
+            None,
             true,
         )
         .unwrap()
@@ -509,10 +624,10 @@ mod tests {
             load_tagger("spacy", "s", &tagger(&sample, &same), &sample).unwrap(),
         ];
         let merged = merge(&sample, &answers);
-        let agreed = agreed_conllu(&sample, &merged);
-        let work = read_worklist("w", &worklist_tsv(&sample, &merged.items)).unwrap();
+        let agreed = agreed_conllu(&sample, &merged.verdicts, &[]);
+        let work = read_worklist("w", &worklist_tsv(&sample, &merged.items, &NAMES)).unwrap();
         let decided = read_answers(
-            &work,
+            &work.items,
             &[(
                 "a".to_string(),
                 "s2.5: N.p | plural noun, agrees with are\n".to_string(),
@@ -520,7 +635,7 @@ mod tests {
             true,
         )
         .unwrap();
-        let log = adjudicated_tsv(&decided, &[]);
+        let log = adjudicated_tsv(&NAMES.map(String::from), &decided, &[], None);
         let rows = read_log("log", &log).unwrap();
         let built = build(&sample, "agreed.conllu", &agreed, &rows).unwrap();
         let [blind_answers, ..] = answers;
@@ -635,6 +750,7 @@ mod tests {
             form: form.to_string(),
             code: Code::parse("N.p").unwrap(),
             agreed: None,
+            run: None,
         };
         let files = row("s2", 5, "files");
         let says = |rows: &[Logged], expect: &str| {
@@ -668,7 +784,10 @@ mod tests {
         assert_eq!(overrides.len(), 1);
         // The log of the answers, then the override.
         let mut text = log.clone();
-        for line in adjudicated_tsv(&[], &overrides).lines().skip(1) {
+        for line in adjudicated_tsv(&NAMES.map(String::from), &[], &overrides, None)
+            .lines()
+            .skip(1)
+        {
             text.push_str(line);
             text.push('\n');
         }

@@ -422,6 +422,23 @@ impl Texts {
         Ok(texts)
     }
 
+    /// The sentences of `dev.conllu`, which must be there, and of `owner.conllu` when it is, in
+    /// `gold_dir`, and nothing else: no holdout file is opened. What `finish --trains yes` checks
+    /// a draw against, since neither set may ever train a model.
+    pub fn dev_and_owner(gold_dir: &Path) -> Result<Texts, Error> {
+        let mut texts = Texts::default();
+        for (name, required) in [("dev.conllu", true), ("owner.conllu", false)] {
+            let path = gold_dir.join(name);
+            if !required && !path.exists() {
+                continue;
+            }
+            for sentence in &Gold::read(&path)?.sentences {
+                texts.add(&sentence.text);
+            }
+        }
+        Ok(texts)
+    }
+
     /// The sentences of the skeletons `paths`, the `sample.conllu` of earlier draws, and their
     /// ids.
     pub fn draws(paths: &[PathBuf]) -> Result<(Texts, Vec<String>), Error> {
@@ -646,6 +663,7 @@ mod tests {
             form: form.to_string(),
             kind: deslag::document::TokenKind::Word,
             joined: false,
+            origin: deslag::tag::Origin::English,
         };
         assert!(gold.has(&[tok("run"), tok("make ci"), tok("NOW")]));
         assert!(!gold.has(&[tok("run"), tok("now")]));

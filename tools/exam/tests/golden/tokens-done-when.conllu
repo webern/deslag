@@ -1,4 +1,5 @@
 # exam.tokens = deslag
+# exam.from = done-when
 # sent_id = s1
 # exam.context = prose
 # text = I don't like cats.

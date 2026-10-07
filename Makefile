@@ -10,6 +10,30 @@ EWT := $(SCRIPTS)/ewt
 HARPER := $(SCRIPTS)/harper
 SPACY := $(SCRIPTS)/spacy
 TRAIN := $(SCRIPTS)/train
+LABEL := $(SCRIPTS)/label
+
+# The tools the generate-label-* targets run, built with the release profile.
+LABEL_BIN := $(or $(CARGO_TARGET_DIR),target)/release
+GOLD_BIN := $(LABEL_BIN)/deslag-gold
+EXAM_BIN := $(LABEL_BIN)/deslag-exam
+
+# The cap on what labelling may spend, in dollars, counted over the whole ledger, which lives in a state
+# directory shared by every checkout: $LABEL_STATE, or ${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label,
+# so a new worktree starts with the spend of the others (the first time, it imports .label/ledger.tsv);
+# LABEL_FLAGS go to label.py, to the step a target runs, and in generate-label-cost to its judge step, so
+# `--strict` and `--settle-from NAME` work there; LABEL_TAG_FLAGS are the flags of that target's tag step;
+# LABEL_INTO is the directory under .label/<set> that judge writes and the report reads;
+# LABEL_REPORT_FLAGS go to the report, such as `--versus merge`.
+MAX_USD ?= 8
+LABEL_FLAGS ?=
+# `--limit N` in LABEL_FLAGS belongs to a tag step, which is the one that takes it: generate-label-cost
+# sends it there, and the rest of LABEL_FLAGS to its judge step.
+LABEL_FLAGS_JOINED = $(subst --limit ,--limit=,$(LABEL_FLAGS))
+LABEL_LIMIT = $(subst =, ,$(filter --limit=%,$(LABEL_FLAGS_JOINED)))
+LABEL_JUDGE_FLAGS = $(filter-out --limit=%,$(LABEL_FLAGS_JOINED))
+LABEL_TAG_FLAGS ?=
+LABEL_INTO ?= merge
+LABEL_REPORT_FLAGS ?=
 
 # The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
@@ -21,16 +45,19 @@ CARGO_FLAGS ?=
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
-        test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
+        test-label test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
         test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
         check-typos \
-        clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
+        clean clean-blobs clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
         fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
-        generate-brill-percept generate-percept generate-spacy publish-blobs
+        generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
+        generate-label-judge-dev generate-label-judge-owner generate-label-owner \
+        generate-label-report-dev generate-label-report-owner generate-label-spacy \
+        generate-percept generate-spacy publish-blobs build-label
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -60,12 +87,14 @@ help:
 	@echo "                 prints pass or fail per metric; then the Metrics of test-owner"
 	@echo "test-owner       print deslag's score on the owner's hand-tagged gold, tests/gold/owner.conllu, as its own"
 	@echo "                 report-only set, never pooled with dev; fails only when the exam cannot run"
+	@echo "test-label       score every voter's tags under .label/dev and .label/owner with deslag-exam, as the"
+	@echo "                 gold they came from; reads what generate-label-dev and -owner wrote, calls no model"
 	@echo "test-percept     train the perceptron on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
-	@echo "test-python      test how batches are built and published, and the exam's trainers and run.sh; offline,"
-	@echo "                 local repositories, about two minutes, so not in test or ci: its own workflow runs it"
-	@echo "                 when they change"
+	@echo "test-python      test how batches are built and published, how sentences are labelled with models, and"
+	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
+	@echo "                 in test or ci: its own workflow runs it when they change"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-ticlist-brill-deslag"
@@ -89,6 +118,9 @@ help:
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
+	@echo "clean-label      remove what the generate-label-* targets wrote under .label; the ledger of what they"
+	@echo "                 spent is in a state directory outside the checkout, and stays (an old"
+	@echo "                 .label/ledger.tsv stays too, to be imported once)"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
 	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs, with"
@@ -119,6 +151,36 @@ help:
 	@echo "generate-brill-percept"
 	@echo "                 the same from the perceptron's tags, cross-fitted over five folds by document; a few"
 	@echo "                 minutes, so not in ci"
+	@echo "generate-label-audit"
+	@echo "                 pick 50 sentences of .label/draw500's labels at random for the owner to review"
+	@echo "generate-label-cost"
+	@echo "                 draw 500 training sentences, tag them with every voter and spaCy, adjudicate, and"
+	@echo "                 print dollars and minutes per thousand sentences; needs the big tier, spaCy, a key"
+	@echo "                 and MAX_USD of budget, so not in ci; LABEL_FLAGS reach its judge step (--strict),"
+	@echo "                 LABEL_TAG_FLAGS its tag step"
+	@echo "generate-label-dev"
+	@echo "                 have the voters tag deslag's dev gold's sentences, blind, into .label/dev; needs"
+	@echo "                 OPENROUTER_API_KEY; MAX_USD caps the ledger, kept in a state directory shared by every"
+	@echo "                 checkout; LABEL_FLAGS reach label.py"
+	@echo "generate-label-judge-dev"
+	@echo "                 merge the voters' tags of .label/dev, have Claude settle the disputes, and finish;"
+	@echo "                 needs OPENROUTER_API_KEY; LABEL_INTO names the output; with --spacy, merge-spacy,"
+	@echo "                 after the plain merge, whose answers it reuses; LABEL_FLAGS=\"--settle-from merge\" with"
+	@echo "                 another LABEL_INTO reuses them only where every voter's codes are the same, and only"
+	@echo "                 for a merge with the same model voters; LABEL_FLAGS=--strict exits 3 on open items"
+	@echo "generate-label-judge-owner"
+	@echo "                 the same for .label/owner"
+	@echo "generate-label-owner"
+	@echo "                 the same for the owner's gold, tests/gold/owner.conllu, into .label/owner"
+	@echo "generate-label-report-dev"
+	@echo "                 grade .label/dev's merge against the dev gold: each voter, the agreed words, the"
+	@echo "                 adjudicated ones and the pipeline, with sentence-bootstrap intervals"
+	@echo "                 LABEL_REPORT_FLAGS=\"--versus merge\" adds the paired difference from that merge"
+	@echo "generate-label-report-owner"
+	@echo "                 the same for .label/owner against the owner's gold"
+	@echo "generate-label-spacy"
+	@echo "                 tag .label/dev and .label/owner with spaCy and record it as a run for judge"
+	@echo "                 --spacy; needs the sets tagged first, and fetches spaCy; minutes"
 	@echo "generate-percept train the perceptron on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
@@ -137,6 +199,11 @@ build: preflight
 # workflow runs this before it publishes; see $(BLOBSTORE)/blobs.md.
 build-batches: fetch-blobs
 	@$(BLOBSTORE)/batches.sh build
+
+# The release builds the generate-label-* targets run: deslag-gold, which reads, merges and grades, and
+# deslag-exam, which makes the token files. Not in help: it is a step of the targets that call it.
+build-label: preflight
+	cargo build $(CARGO_FLAGS) --release -p deslag-exam --bin deslag-gold --bin deslag-exam
 
 build-release: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features --release
@@ -197,6 +264,21 @@ test-exam: preflight
 test-owner: preflight
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/owner-score.sh
 
+# Every voter's tags in .label/dev and .label/owner, scored by `deslag-exam score --import` against the
+# gold the sample was made from, which is the voter's accuracy on it before any merge. Reads what the
+# generate-label-* targets wrote and calls no model. Not part of test: it needs them to have run. A voter
+# that abstained on a sentence has no tags for it, which the import cannot score: it says so and goes
+# on, and generate-label-report-* grades it on the sentences it answered.
+test-label: preflight
+	@for set in dev owner; do \
+	    for tags in .label/$$set/tags/*.conllu; do \
+	        [ -f "$$tags" ] || { echo "no tags under .label/$$set; run generate-label-$$set first" >&2; exit 1; }; \
+	        echo "$$tags"; \
+	        cargo run $(CARGO_FLAGS) --release --quiet -p deslag-exam -- score --gold tests/gold/$$set.conllu --import "$$tags" \
+	            || echo "$$tags: not scored here; it may be missing sentences the voter abstained on, which the report grades"; \
+	    done; \
+	done
+
 # The perceptron's unit tests, then the exam's full report on the dev and owner sets for it, and `compare`
 # against deslag's tagger, from the import files generate-percept wrote. The runs are saved beside
 # them. Not part of test: it needs the treebank and minutes. The curve is run by hand.
@@ -204,12 +286,15 @@ test-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
 
 # The scripts under scripts/blobstore, run against git repositories the tests
-# make: no network, no login. Minutes of git, so not in test or ci; the python
-# workflow runs it when scripts/blobstore, scripts/llm-detection or scripts/train change. The
-# trainers' tests use made-up sentences and stand-ins for cargo, so they need no treebank.
+# make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,
+# run against a stand-in for OpenRouter and the real deslag-gold: no network, no login, no key,
+# no treebank. Minutes of git, so not in test or ci; the python workflow runs it when
+# scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train or tools/exam change.
 test-python: preflight
+	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
+	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
 # scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
@@ -273,7 +358,7 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt clean-harper clean-spacy clean-train
+clean: clean-blobs clean-ewt clean-harper clean-label clean-spacy clean-train
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
@@ -287,6 +372,14 @@ clean-ewt:
 # .harper is what fetch-harper downloads.
 clean-harper:
 	rm -rf .harper
+
+# .label is what the generate-label-* targets write: the voters' replies, tags, merges and reports. The
+# ledger of what the models cost lives in the state directory ($LABEL_STATE, or
+# ${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label), outside every checkout, so this leaves it alone;
+# delete it there by hand to start the count again. A .label/ledger.tsv from before is kept: it is
+# imported into the state directory the first time that does not have a ledger.
+clean-label:
+	@if [ -d .label ]; then find .label -mindepth 1 -maxdepth 1 ! -name ledger.tsv -exec rm -rf {} +; fi
 
 # .spacy is the venv fetch-spacy installs, with what generate-spacy and test-spacy write beside it.
 clean-spacy:
@@ -399,6 +492,85 @@ generate-brill-deslag: preflight fetch-ewt
 # reads or runs it.
 generate-brill-percept: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-brill-percept
+
+# The 50 sentences of the 500-sentence draw's labels that the owner reviews, drawn at random by a seed
+# from .label/draw500/merge/labelled.conllu into .label/draw500/merge/audit.conllu, each its own pick_id.
+# Run generate-label-cost first. Calls no model.
+generate-label-audit: build-label
+	$(GOLD_BIN) --dir .label/draw500 audit --count 50
+
+# 500 training sentences, 205 each from the human and llm tiers (120 prose, 45 list-item, 25 heading, 15
+# table-cell) and 90 from the mixed tier (30, 25, 20, 15), which is what the mixed tier can give under
+# the per-file and per-repository limits: its whole capacity is about 100, and it holds fewer prose
+# sentences than the other contexts once the others are drawn. Non-prose contexts are still over half of
+# what is drawn, tagged by every voter
+# and spaCy, merged and adjudicated by Claude, then the dollars and minutes each run took per thousand
+# sentences in .label/draw500/cost.tsv. The one target that spends on sentences nobody grades, and the
+# one that fixes the price of labelling the rest. Reads the big tier. Not in ci: it needs the key, spaCy
+# and the network. Its labels are the only ones that may train a model (`--trains yes`, which refuses a
+# sentence with the text of one of dev or owner). LABEL_FLAGS reach the judge step, so LABEL_FLAGS=--strict
+# stops it with exit 3 when an item is left open, instead of leaving its sentence out; the voters' step
+# takes LABEL_TAG_FLAGS, and a `--limit N` in LABEL_FLAGS, which only tag takes, so it limits the voters
+# to N batches each (a smoke run, whose tags the judge step then refuses). The last line says how many
+# words were left out.
+generate-label-cost: build-label fetch-blobs fetch-spacy
+	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 120,45,25,15,120,45,25,15,30,25,20,15
+	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_TAG_FLAGS) $(LABEL_LIMIT)
+	$(LABEL)/spacy.sh .label/draw500
+	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes $(LABEL_JUDGE_FLAGS)
+	python3 $(LABEL)/label.py cost --dir .label/draw500
+
+# Deslag's dev gold's sentences, as tokens with no tags, tagged blind by each voter of
+# $(LABEL)/voters.json through OpenRouter into .label/dev/tags. The spend counts against MAX_USD over
+# the whole of the ledger in the state directory. Needs OPENROUTER_API_KEY. LABEL_FLAGS reach label.py: try
+# LABEL_FLAGS="--voter qwen --limit 1" first, or --dry-run to see a request and send none.
+generate-label-dev: build-label
+	@mkdir -p .label/dev
+	$(EXAM_BIN) tokens --gold tests/gold/dev.conllu --out .label/dev/sample.conllu
+	python3 $(LABEL)/label.py tag --dir .label/dev --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+
+# The voters' tags of .label/dev merged, the disputed words settled by Claude, and the result finished
+# into .label/dev/$(LABEL_INTO)/labelled.conllu. For the variant with spaCy as a fourth voter on the part
+# of speech, run generate-label-spacy and then LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy: the adjudicator
+# answers each item the plain merge also had once, and that answer is reused, so the two differ by voting.
+# For the same voters with one run again, write a merge of its own and keep the first untouched:
+# LABEL_INTO=merge-again LABEL_FLAGS="--settle-from merge" reuses the plain merge's answer only for an
+# item shown with the very same codes from every voter; any other item goes to the adjudicator. A merge
+# whose model voters differ from the first's is refused: its answers were given with other codes in view.
+# The spaCy variant of that merge: LABEL_INTO=merge-again-spacy LABEL_FLAGS="--spacy --settle-from merge-again".
+# A word counts as agreed only when three model voters answered and agree; spaCy is never one of the
+# three, and fewer goes to the adjudicator (LABEL_FLAGS=--min-voters N changes that).
+# An item the adjudicator never settles leaves its sentence out of labelled.conllu and is counted; add
+# --strict to LABEL_FLAGS to exit 3 instead.
+generate-label-judge-dev: build-label
+	python3 $(LABEL)/label.py judge --dir .label/dev --into $(LABEL_INTO) --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+
+generate-label-judge-owner: build-label
+	python3 $(LABEL)/label.py judge --dir .label/owner --into $(LABEL_INTO) --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+
+# The same for the owner's gold, tests/gold/owner.conllu, into .label/owner.
+generate-label-owner: build-label
+	@mkdir -p .label/owner
+	$(EXAM_BIN) tokens --gold tests/gold/owner.conllu --out .label/owner/sample.conllu
+	python3 $(LABEL)/label.py tag --dir .label/owner --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+
+# Each voter, the words they agreed on, the words Claude decided and the pipeline, graded on the dev gold
+# with 95% sentence-bootstrap intervals, to .label/dev/$(LABEL_INTO)/report.txt and report.tsv. Calls no
+# model. After a spaCy variant, LABEL_INTO=merge-spacy grades it; the paired difference from the plain
+# merge is LABEL_INTO=merge-spacy LABEL_REPORT_FLAGS="--versus merge"; likewise merge-gemma against merge.
+# The report refuses a voter whose tags file a later run has overwritten since the merge.
+generate-label-report-dev: build-label
+	$(GOLD_BIN) --dir .label/dev report --gold tests/gold/dev.conllu --into $(LABEL_INTO) $(LABEL_REPORT_FLAGS)
+
+generate-label-report-owner: build-label
+	$(GOLD_BIN) --dir .label/owner report --gold tests/gold/owner.conllu --into $(LABEL_INTO) $(LABEL_REPORT_FLAGS)
+
+# spaCy's tags of .label/dev and .label/owner, from deslag's own tokens, recorded as the run `spacy`:
+# tags/spacy.conllu, and a row of runs.tsv with how long it took. Run after generate-label-dev and
+# generate-label-owner. Minutes, and nothing in ci.
+generate-label-spacy: build-label fetch-spacy
+	$(LABEL)/spacy.sh .label/dev
+	$(LABEL)/spacy.sh .label/owner
 
 # The baselines (deslag's tagger and the most-common tag, saved as runs), then the perceptron trained
 # on the treebank's train set, its confidence tuned on the treebank's dev set, tagging deslag's own

@@ -10,6 +10,12 @@
 //! g0002 (list item): 1 Why 2 [:] 3 The 4 user's 5 files 6 aren't 7 re 8 [-] 9 run 10 [.]
 //! ```
 //!
+//! A word whose origin is not English (a name from code, a command, a file name, a flag: the
+//! skeleton's `Origin=`) has it in braces glued to it, `foo_bar{symbol}`, so a labeller can tell it
+//! from an ordinary word and the count of numbered tokens does not change. What the braces mean is
+//! told to the labeller once, in the preamble `scripts/label/prompts/preamble.md`, which the runner
+//! hashes with the guide. The gold sample has no origins, so its batches are as they were.
+//!
 //! A batch file is only these lines, with no header, no tier and no split, so it can be handed to
 //! a tagger as it is. The tagger answers one line per sentence in the compact form.
 
@@ -17,6 +23,7 @@ use std::fmt::Write as _;
 use std::ops::Range;
 
 use deslag::document::TokenKind;
+use deslag::tag::Origin;
 use deslag_exam::tagger::Context;
 
 use crate::data::{Sent, Tok};
@@ -24,10 +31,16 @@ use crate::data::{Sent, Tok};
 /// The most characters of a code span, URL or tag shown; the rest is `...`.
 const SHOWN: usize = 60;
 
-/// How a token is shown: a word as it is, anything else in brackets.
+/// How a token is shown: a word as it is, with its origin in braces after it when that is not
+/// English, anything else in brackets.
 pub fn show(tok: &Tok) -> String {
     let label = match tok.kind {
-        TokenKind::Word => return tok.form.clone(),
+        TokenKind::Word => {
+            return match tok.origin {
+                Origin::English => tok.form.clone(),
+                origin => format!("{}{{{}}}", tok.form, origin.name().to_lowercase()),
+            };
+        }
         TokenKind::Punctuation | TokenKind::Number => None,
         TokenKind::Symbol => Some("symbol"),
         TokenKind::Code => Some("code"),
@@ -179,6 +192,44 @@ mod tests {
             (TokenKind::Word, "+"),
         ] {
             assert_eq!(show(&tok("+", kind, false)), shown);
+        }
+    }
+
+    #[test]
+    fn a_word_of_another_origin_has_it_in_braces_and_nothing_else_does() {
+        let named = |form: &str, origin| Tok {
+            origin,
+            ..tok(form, TokenKind::Word, false)
+        };
+        let sent = Sent {
+            id: "p0001".to_string(),
+            toks: vec![
+                tok("Run", TokenKind::Word, false),
+                named("cargo", Origin::Command),
+                named("foo_bar", Origin::Symbol),
+                named("main.rs", Origin::Path),
+                named("locked", Origin::Flag),
+                named("now", Origin::English),
+                // An origin on a token that is not a word is not shown.
+                Tok {
+                    origin: Origin::Symbol,
+                    ..tok("+", TokenKind::Symbol, false)
+                },
+            ],
+        };
+        assert_eq!(
+            render(&sent, Context::Prose),
+            "p0001: 1 Run 2 cargo{command} 3 foo_bar{symbol} 4 main.rs{path} 5 locked{flag} 6 now 7 [symbol: +]"
+        );
+    }
+
+    /// The preamble the runner sends with the guide must explain each mark this writer can add.
+    #[test]
+    fn the_preamble_explains_every_origin_mark_the_batches_can_show() {
+        let preamble = include_str!("../../../../../scripts/label/prompts/preamble.md");
+        for origin in Origin::ALL.into_iter().skip(1) {
+            let mark = format!("{{{}}}", origin.name().to_lowercase());
+            assert!(preamble.contains(&mark), "the preamble never says {mark}");
         }
     }
 

@@ -1,5 +1,10 @@
 //! The three-way merger: the blind tagger, Harper and spaCy over the same words.
 //!
+//! This merger is phase 1's and is frozen: the gold set was made with it, and its counts and text
+//! must not change. The labelling flow's merger for any number of voters, which has its own
+//! `Stats` and its own `Display`, is [`crate::voters`]; the two share the worklist, the answers
+//! and the log below, and nothing else.
+//!
 //! Each of the three gives every word token a UPOS and, if it can, FEATS (an import file of the
 //! exam, which is also what the compact reader writes). They are compared as the guide's codes
 //! (`N.p`, `V.pp`):
@@ -40,6 +45,14 @@ pub const NAMES: [&str; 3] = ["blind", "harper", "spacy"];
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Answers(pub Vec<Vec<Option<Code>>>);
 
+impl Answers {
+    /// Whether the tagger gave no answer for sentence `at`: a voter whose reply had no good line
+    /// for it, which [`load_voter`] reads as an empty row.
+    pub fn abstains(&self, at: usize) -> bool {
+        self.0[at].is_empty()
+    }
+}
+
 /// Reads the CoNLL-U answers of the tagger `name` from `text`, which came from `path`, against
 /// `sample`. Every sentence of the sample must be there with the same forms, line for line, and
 /// every word line must have a UPOS of UD's.
@@ -48,6 +61,58 @@ pub fn load_tagger(
     path: &str,
     text: &str,
     sample: &Sample,
+) -> Result<Answers, Problems> {
+    read_answers_of(name, path, text, sample, false)
+}
+
+/// [`load_tagger`] for `labelled.conllu`, which may leave sentences out: only as many as its
+/// `# left_out` comment says it did, each of them an empty row of answers.
+pub fn load_labelled(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+) -> Result<Answers, Problems> {
+    let answers = read_answers_of(name, path, text, sample, true)?;
+    let declared: usize = text
+        .lines()
+        .take_while(|line| !line.starts_with("# sent_id"))
+        .find_map(|line| line.strip_prefix("# left_out = "))
+        .and_then(|count| count.trim().parse().ok())
+        .unwrap_or(0);
+    let missing = answers.0.iter().filter(|said| said.is_empty()).count();
+    if missing != declared {
+        return Err(Error::load(
+            path,
+            Place::File,
+            format!(
+                "{missing} sentences have no answer, and the file says {declared} were left out"
+            ),
+        )
+        .into());
+    }
+    Ok(answers)
+}
+
+/// [`load_tagger`] for a voter of the labelling flow: a sentence the file has no block for is not
+/// an error but an abstention, the voter's row for it left empty. `read-tags --check` keeps only
+/// the sentences with a good line, so a sentence a model never got right is missing, and that must
+/// not stop the merge. A sentence that is there must still be right.
+pub fn load_voter(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+) -> Result<Answers, Problems> {
+    read_answers_of(name, path, text, sample, true)
+}
+
+fn read_answers_of(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+    may_abstain: bool,
 ) -> Result<Answers, Problems> {
     let blocks = conllu::read(path, text)?;
     let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
@@ -83,11 +148,13 @@ pub fn load_tagger(
     let mut answers = Vec::with_capacity(sample.sents.len());
     for sent in &sample.sents {
         let Some(block) = by_id.get(sent.id.as_str()) else {
-            problems.push(Problems::sentence(
-                path,
-                &sent.id,
-                format!("{name} has no answer for it"),
-            ));
+            if !may_abstain {
+                problems.push(Problems::sentence(
+                    path,
+                    &sent.id,
+                    format!("{name} has no answer for it"),
+                ));
+            }
             answers.push(Vec::new());
             continue;
         };
@@ -209,10 +276,14 @@ pub struct Item {
     pub sent: usize,
     /// Its token's position in the sentence, from 0.
     pub tok: usize,
-    /// What each of the three said, in the order of [`NAMES`].
-    pub said: [Code; 3],
+    /// What each tagger said, in the order of [`NAMES`] for the three-way merge and of the voters
+    /// for [`crate::voters`]. `None` is a voter that abstained on the sentence.
+    pub said: Vec<Option<Code>>,
     /// Whether the bases differ, or only a feature.
     pub tags_differ: bool,
+    /// Whether fewer than two voters answered the sentence, so there was nothing to compare and
+    /// the adjudicator gets the whole sentence.
+    pub unvoted: bool,
 }
 
 impl Item {
@@ -289,9 +360,11 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
             let full = matches!(verdict, Verdict::Agreed(_));
             stats.full3 += usize::from(full);
             if let Some(meta) = meta {
-                let tier = stats.by_tier.entry(meta.tier.name()).or_default();
-                tier.0 += 1;
-                tier.1 += usize::from(full);
+                if let Some(tier) = meta.tier {
+                    let tier = stats.by_tier.entry(tier.name()).or_default();
+                    tier.0 += 1;
+                    tier.1 += usize::from(full);
+                }
                 let context = stats.by_context.entry(meta.context.name()).or_default();
                 context.0 += 1;
                 context.1 += usize::from(full);
@@ -305,8 +378,9 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
                 items.push(Item {
                     sent: at,
                     tok,
-                    said: [blind, harper, spacy],
+                    said: vec![Some(blind), Some(harper), Some(spacy)],
                     tags_differ,
+                    unvoted: false,
                 });
             }
             row.push(Some(verdict));
@@ -384,9 +458,17 @@ impl fmt::Display for Stats {
 /// `agreed.conllu`: every sentence, the agreed words with their UPOS, FEATS and `Prov=agree`, the
 /// words that are not words with theirs from their kind (`Prov=kind`), and each disputed word with `_` for UPOS
 /// and no `Prov=`.
-pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
+///
+/// `runs`, when the voters have runs, is for each sentence the `Runs=` of its agreed words: the
+/// runs of the voters that answered it, all of which agreed. A gold flow merge passes none.
+pub fn agreed_conllu(
+    sample: &Sample,
+    verdicts: &[Vec<Option<Verdict>>],
+    runs: &[Option<String>],
+) -> String {
     let mut out = String::new();
-    for (sent, row) in sample.sents.iter().zip(&merged.verdicts) {
+    for (at, (sent, row)) in sample.sents.iter().zip(verdicts).enumerate() {
+        let runs = runs.get(at).and_then(Option::as_deref);
         let _ = writeln!(out, "# sent_id = {}\n# text = {}", sent.id, sent.text());
         for (index, (tok, verdict)) in sent.toks.iter().zip(row).enumerate() {
             let text = match verdict {
@@ -395,17 +477,17 @@ pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
                     &tok.form,
                     upos_of_kind(tok.kind),
                     "_",
-                    &misc(tok, Some("kind")),
+                    &misc(tok, Some("kind"), None),
                 ),
                 Some(Verdict::Agreed(code)) => line(
                     index,
                     &tok.form,
                     code.upos(&tok.form),
                     &code.feats(),
-                    &misc(tok, Some("agree")),
+                    &misc(tok, Some("agree"), runs),
                 ),
                 Some(Verdict::Disputed { .. }) => {
-                    line(index, &tok.form, "_", "_", &misc(tok, None))
+                    line(index, &tok.form, "_", "_", &misc(tok, None, None))
                 }
             };
             out.push_str(&text);
@@ -416,8 +498,12 @@ pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
 }
 
 /// What a tagger said, as the worklist shows it: the code, with `.?` where the tagger gave no
-/// feature that the guide asks of the word, so that leaving one out cannot be read as a code.
-fn said(code: Code) -> String {
+/// feature that the guide asks of the word, so that leaving one out cannot be read as a code, and
+/// `-` for a voter that gave no answer for the sentence.
+fn said(code: Option<Code>) -> String {
+    let Some(code) = code else {
+        return ABSTAINED.to_string();
+    };
     let missing = (matches!(code.base, Base::N | Base::Pn) && code.number.is_none())
         || (code.base.takes_form() && code.form.is_none());
     if missing {
@@ -427,22 +513,101 @@ fn said(code: Code) -> String {
     }
 }
 
-const WORKLIST_HEADER: &str = "\
+/// What the worklist shows for a voter that abstained on the sentence.
+const ABSTAINED: &str = "-";
+
+/// How many taggers the worklist header says there are.
+fn count_word(count: usize) -> String {
+    match count {
+        2 => "two".to_string(),
+        3 => "three".to_string(),
+        4 => "four".to_string(),
+        5 => "five".to_string(),
+        other => other.to_string(),
+    }
+}
+
+/// The text a worklist part opens with, for the taggers `names`, in the order of an item's `said`.
+fn worklist_header(names: &[&str]) -> String {
+    format!(
+        "\
 Adjudicate the words below. Each sentence is shown with its tokens numbered; under it, each
-word the three taggers disagree on, with what each said (blind, harper, spacy). A code that ends
-in .? means that tagger gave the part of speech and no feature.
+word the {} taggers disagree on, with what each said ({}). A code that ends
+in .? means that tagger gave the part of speech and no feature, and - means that tagger gave
+no answer for the sentence.
 
 Decide each word from the annotation guide, for its use in this sentence. Answer with one line per
 item, at the end, in the slots given: the item, a colon, one code of the guide with its feature,
 a bar, and a reason of 15 words or fewer. Answer every item, change nothing else, and write
 nothing else.
-";
+",
+        count_word(names.len()),
+        names.join(", ")
+    )
+}
+
+/// One item of a worklist part: its place in the sample, and what each tagger said as the part
+/// prints it.
+struct Row {
+    sent: usize,
+    tok: usize,
+    id: String,
+    said: Vec<String>,
+}
 
 /// The worklist, in parts of about `per_part` items, never splitting a sentence. Each part is
 /// text for the adjudicator: the numbered sentences, their words in dispute, and a slot to fill
-/// for each item. The parts hold no tier, split or file.
-pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<String> {
-    let mut parts: Vec<Vec<&Item>> = Vec::new();
+/// for each item. The parts hold no tier, split or file. `names` is what each tagger is called in
+/// them, in the order of an item's `said`: `blind`, `harper` and `spacy`, or `A`, `B` and `C` so
+/// that the adjudicator never learns which model said what.
+pub fn worklist_parts(
+    sample: &Sample,
+    items: &[Item],
+    per_part: usize,
+    names: &[&str],
+) -> Vec<String> {
+    let rows: Vec<Row> = items
+        .iter()
+        .map(|item| Row {
+            sent: item.sent,
+            tok: item.tok,
+            id: item.id(sample),
+            said: item.said.iter().map(|code| said(*code)).collect(),
+        })
+        .collect();
+    parts_of(sample, &rows, per_part, names)
+}
+
+/// The parts of the worklist for the items of `work` named in `open`, laid out as
+/// [`worklist_parts`] lays them out, with the taggers shown by letter: what is left to ask the
+/// adjudicator after some answers were rejected.
+pub fn retry_parts(
+    sample: &Sample,
+    work: &Worklist,
+    open: &[String],
+    per_part: usize,
+) -> Vec<String> {
+    let index = sample.index_of();
+    let rows: Vec<Row> = work
+        .items
+        .iter()
+        .filter(|item| open.contains(&item.item))
+        .filter_map(|item| {
+            Some(Row {
+                sent: *index.get(item.sent_id.as_str())?,
+                tok: item.token - 1,
+                id: item.item.clone(),
+                said: item.said.clone(),
+            })
+        })
+        .collect();
+    let letters: Vec<String> = (0..work.names.len()).map(crate::voters::letter).collect();
+    let names: Vec<&str> = letters.iter().map(String::as_str).collect();
+    parts_of(sample, &rows, per_part, &names)
+}
+
+fn parts_of(sample: &Sample, items: &[Row], per_part: usize, names: &[&str]) -> Vec<String> {
+    let mut parts: Vec<&[Row]> = Vec::new();
     let mut at = 0;
     while at < items.len() {
         let mut end = at;
@@ -453,32 +618,35 @@ pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<S
                 end += 1;
             }
         }
-        parts.push(items[at..end].iter().collect());
+        parts.push(&items[at..end]);
         at = end;
     }
     parts
         .iter()
         .map(|part| {
-            let mut out = String::from(WORKLIST_HEADER);
+            let mut out = worklist_header(names);
             let mut slots = String::new();
             let mut current = usize::MAX;
-            for item in part {
+            for item in *part {
                 let sent = &sample.sents[item.sent];
                 if item.sent != current {
                     current = item.sent;
                     let context = sample.meta(&sent.id).map_or(Context::Prose, |m| m.context);
                     let _ = write!(out, "\n{}\n", batch::render(sent, context));
                 }
+                let answers: Vec<String> = names
+                    .iter()
+                    .zip(&item.said)
+                    .map(|(name, code)| format!("{name} {code}"))
+                    .collect();
                 let _ = writeln!(
                     out,
-                    "  {} {}: blind {}, harper {}, spacy {}",
+                    "  {} {}: {}",
                     item.tok + 1,
                     sent.toks[item.tok].form,
-                    said(item.said[0]),
-                    said(item.said[1]),
-                    said(item.said[2])
+                    answers.join(", ")
                 );
-                let _ = writeln!(slots, "{}: ", item.id(sample));
+                let _ = writeln!(slots, "{}: ", item.id);
             }
             let _ = write!(out, "\nSlots:\n{slots}");
             out
@@ -486,27 +654,42 @@ pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<S
         .collect()
 }
 
-/// The columns of `worklist.tsv`.
-const WORK_COLUMNS: [&str; 8] = [
-    "item", "sent_id", "token", "form", "blind", "harper", "spacy", "differs",
-];
+/// The columns of `worklist.tsv` before the taggers' names, which come next, and the one after.
+const WORK_FIRST: [&str; 4] = ["item", "sent_id", "token", "form"];
+const WORK_LAST: &str = "differs";
+
+/// The fewest taggers a merge, and so a worklist, has.
+pub const FEWEST_TAGGERS: usize = 2;
 
 /// `worklist.tsv`, the machine form of the worklist, which [`read_answers`] checks answers against.
-pub fn worklist_tsv(sample: &Sample, items: &[Item]) -> String {
-    let mut out = format!("{}\n", WORK_COLUMNS.join("\t"));
+/// Its columns are the item, the sentence, the token, the form, the name of each tagger in the
+/// order of an item's `said`, and `differs`.
+pub fn worklist_tsv(sample: &Sample, items: &[Item], names: &[&str]) -> String {
+    let columns: Vec<&str> = WORK_FIRST
+        .iter()
+        .chain(names)
+        .chain(std::iter::once(&WORK_LAST))
+        .copied()
+        .collect();
+    let mut out = format!("{}\n", columns.join("\t"));
     for item in items {
         let sent = &sample.sents[item.sent];
+        let said: Vec<String> = item.said.iter().map(|code| said(*code)).collect();
         let _ = writeln!(
             out,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}",
             item.id(sample),
             sent.id,
             item.tok + 1,
             sent.toks[item.tok].form,
-            said(item.said[0]),
-            said(item.said[1]),
-            said(item.said[2]),
-            if item.tags_differ { "tag" } else { "feature" }
+            said.join("\t"),
+            if item.unvoted {
+                "none"
+            } else if item.tags_differ {
+                "tag"
+            } else {
+                "feature"
+            }
         );
     }
     out
@@ -523,38 +706,56 @@ pub struct WorkItem {
     pub token: usize,
     /// The word.
     pub form: String,
-    /// What the three said, as the worklist printed it.
-    pub said: [String; 3],
+    /// What each tagger said, as the worklist printed it, in the order of [`Worklist::names`].
+    pub said: Vec<String>,
+}
+
+/// `worklist.tsv` read back.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Worklist {
+    /// The taggers' names, as the columns give them.
+    pub names: Vec<String>,
+    /// The rows.
+    pub items: Vec<WorkItem>,
+}
+
+/// The taggers' names in a header of `columns` that opens with `first` and closes with `last`,
+/// or `None` when the header is not that.
+fn names_between<'h>(columns: &[&'h str], first: &[&str], last: &[&str]) -> Option<Vec<&'h str>> {
+    let middle = columns.len().checked_sub(first.len() + last.len())?;
+    let fits = columns.starts_with(first) && columns.ends_with(last);
+    (fits && middle >= FEWEST_TAGGERS).then(|| columns[first.len()..first.len() + middle].to_vec())
 }
 
 /// Reads `worklist.tsv`, which came from `path`.
-pub fn read_worklist(path: &str, text: &str) -> Result<Vec<WorkItem>, Error> {
+pub fn read_worklist(path: &str, text: &str) -> Result<Worklist, Error> {
     let mut items = Vec::new();
     let mut lines = text.lines().enumerate();
-    match lines.next() {
-        Some((_, head)) if head.split('\t').eq(WORK_COLUMNS) => {}
-        _ => {
-            return Err(Error::at(
-                path,
-                1,
-                format!("the columns should be {}", WORK_COLUMNS.join(", ")),
-            ));
-        }
-    }
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let Some(names) = names_between(&head, &WORK_FIRST, &[WORK_LAST]) else {
+        return Err(Error::at(
+            path,
+            1,
+            format!(
+                "the columns should be {}, the names of two or more taggers, and {WORK_LAST}",
+                WORK_FIRST.join(", ")
+            ),
+        ));
+    };
+    let width = head.len();
     for (at, line) in lines {
         if line.trim().is_empty() {
             continue;
         }
         let cells: Vec<&str> = line.split('\t').collect();
-        if cells.len() != WORK_COLUMNS.len() {
+        if cells.len() != width {
             return Err(Error::at(
                 path,
                 at + 1,
-                format!(
-                    "expected {} columns, found {}",
-                    WORK_COLUMNS.len(),
-                    cells.len()
-                ),
+                format!("expected {width} columns, found {}", cells.len()),
             ));
         }
         let token = cells[2]
@@ -565,10 +766,16 @@ pub fn read_worklist(path: &str, text: &str) -> Result<Vec<WorkItem>, Error> {
             sent_id: cells[1].to_string(),
             token,
             form: cells[3].to_string(),
-            said: [cells[4], cells[5], cells[6]].map(str::to_string),
+            said: cells[WORK_FIRST.len()..width - 1]
+                .iter()
+                .map(|cell| cell.to_string())
+                .collect(),
         });
     }
-    Ok(items)
+    Ok(Worklist {
+        names: names.into_iter().map(str::to_string).collect(),
+        items,
+    })
 }
 
 /// The most words a reason may have.
@@ -583,6 +790,9 @@ pub struct Answer {
     pub code: Code,
     /// Why, in 15 words or fewer.
     pub reason: String,
+    /// The run of the adjudicator that made it, when it is not the run the log is written for: an
+    /// answer settled by an earlier merge keeps the run that gave it.
+    pub run: Option<String>,
 }
 
 /// The line of an answer, or why it is no answer: `g0007.5: N.p | reason`.
@@ -614,19 +824,41 @@ fn parse_answer<'w>(
     Ok((work, code, reason))
 }
 
-/// Reads the adjudicator's answers: each of `files` is a path and its text. Every line must be
-/// `item: code | reason` for an item of `work`, once, with a code of the guide and a reason of
-/// at most 15 words. With `all`, every item must be answered. Blank lines, code fences and the
-/// lines of a `Slots:` heading are skipped. Returns the answers in the order of `work`.
-pub fn read_answers(
-    work: &[WorkItem],
-    files: &[(String, String)],
-    all: bool,
-) -> Result<Vec<Answer>, Problems> {
+/// A line of the adjudicator's answers that is not an answer.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AnswerFault {
+    /// The file it is in.
+    pub path: String,
+    /// Its line, from 1.
+    pub line: usize,
+    /// The worklist item it answers, when it names one.
+    pub item: Option<String>,
+    /// The sentence of that item.
+    pub sent_id: Option<String>,
+    /// What is wrong, without the line's number.
+    pub message: String,
+}
+
+impl AnswerFault {
+    fn error(&self) -> Error {
+        match &self.sent_id {
+            Some(sent) => Problems::sentence(
+                &self.path,
+                sent,
+                format!("line {}: {}", self.line, self.message),
+            ),
+            None => Error::at(&self.path, self.line, self.message.clone()),
+        }
+    }
+}
+
+/// Every answer in `files` that is one, in the order of `work`, and a fault for each line that is
+/// not. An item answered twice keeps its first answer.
+fn scan_answers(work: &[WorkItem], files: &[(String, String)]) -> (Vec<Answer>, Vec<AnswerFault>) {
     let wanted: BTreeMap<&str, &WorkItem> =
         work.iter().map(|item| (item.item.as_str(), item)).collect();
     let mut found: BTreeMap<&str, Answer> = BTreeMap::new();
-    let mut problems = Vec::new();
+    let mut faults = Vec::new();
     for (path, text) in files {
         for (at, raw) in text.lines().enumerate() {
             let line = raw.trim();
@@ -640,13 +872,19 @@ pub fn read_answers(
             if empty_slot {
                 continue;
             }
+            let fault = |item: Option<&WorkItem>, message: String| AnswerFault {
+                path: path.clone(),
+                line: at + 1,
+                item: item.map(|item| item.item.clone()),
+                sent_id: item.map(|item| item.sent_id.clone()),
+                message,
+            };
             match parse_answer(line, &wanted) {
                 Ok((item, code, reason)) => {
                     if found.contains_key(item.item.as_str()) {
-                        problems.push(Problems::sentence(
-                            path,
-                            &item.sent_id,
-                            format!("line {}: item {} is answered twice", at + 1, item.item),
+                        faults.push(fault(
+                            Some(item),
+                            format!("item {} is answered twice", item.item),
                         ));
                     } else {
                         found.insert(
@@ -655,30 +893,48 @@ pub fn read_answers(
                                 item: item.clone(),
                                 code,
                                 reason,
+                                run: None,
                             },
                         );
                     }
                 }
                 Err(why) => {
-                    let sent = line
+                    let item = line
                         .split_once(':')
                         .and_then(|(item, _)| wanted.get(item.trim()))
-                        .map(|item| item.sent_id.as_str());
-                    problems.push(match sent {
-                        Some(sent) => {
-                            Problems::sentence(path, sent, format!("line {}: {why}", at + 1))
-                        }
-                        None => Error::at(path, at + 1, why),
-                    });
+                        .copied();
+                    faults.push(fault(item, why));
                 }
             }
         }
     }
+    let answers = work
+        .iter()
+        .filter_map(|item| found.remove(item.item.as_str()))
+        .collect();
+    (answers, faults)
+}
+
+/// Reads the adjudicator's answers: each of `files` is a path and its text. Every line must be
+/// `item: code | reason` for an item of `work`, once, with a code of the guide and a reason of
+/// at most 15 words. With `all`, every item must be answered. Blank lines, code fences and the
+/// lines of a `Slots:` heading are skipped. Returns the answers in the order of `work`.
+pub fn read_answers(
+    work: &[WorkItem],
+    files: &[(String, String)],
+    all: bool,
+) -> Result<Vec<Answer>, Problems> {
+    let (answers, faults) = scan_answers(work, files);
+    let mut problems: Vec<Error> = faults.iter().map(AnswerFault::error).collect();
     if all {
+        let answered: std::collections::BTreeSet<&str> = answers
+            .iter()
+            .map(|answer| answer.item.item.as_str())
+            .collect();
         let missing: Vec<&str> = work
             .iter()
             .map(|item| item.item.as_str())
-            .filter(|item| !found.contains_key(item))
+            .filter(|item| !answered.contains(item))
             .collect();
         if !missing.is_empty() {
             let shown: Vec<&str> = missing.iter().copied().take(8).collect();
@@ -693,17 +949,73 @@ pub fn read_answers(
             ));
         }
     }
-    let answers = work
-        .iter()
-        .filter_map(|item| found.remove(item.item.as_str()))
-        .collect();
     Problems::check(problems, answers)
 }
 
-/// The columns of `adjudicated.tsv`, the log of the adjudication.
-const LOG_COLUMNS: [&str; 9] = [
-    "item", "sent_id", "token", "form", "blind", "harper", "spacy", "final", "reason",
-];
+/// What `read-answers --check` found: the good answers, and each item without one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CheckedAnswers {
+    /// The answers that are answers, in the order of the worklist.
+    pub answers: Vec<Answer>,
+    /// The items with no answer, in the order of the worklist, each with what is wrong with the
+    /// first line that tried to answer it, or `no answer` when none did.
+    pub open: Vec<(String, String)>,
+    /// Lines that name no item of the worklist, as `line N: message`.
+    pub stray: Vec<String>,
+}
+
+/// Reads the answers as [`read_answers`] does, but keeps the good ones whatever else is wrong and
+/// returns what is left open instead of failing. An item with a good answer and a bad line too is
+/// answered.
+pub fn check_answers(work: &[WorkItem], files: &[(String, String)]) -> CheckedAnswers {
+    let (answers, faults) = scan_answers(work, files);
+    let answered: std::collections::BTreeSet<&str> = answers
+        .iter()
+        .map(|answer| answer.item.item.as_str())
+        .collect();
+    let mut why: BTreeMap<&str, &str> = BTreeMap::new();
+    for fault in &faults {
+        if let Some(item) = &fault.item {
+            why.entry(item).or_insert(&fault.message);
+        }
+    }
+    let open = work
+        .iter()
+        .filter(|item| !answered.contains(item.item.as_str()))
+        .map(|item| {
+            let message = why.get(item.item.as_str()).copied().unwrap_or("no answer");
+            (
+                item.item.clone(),
+                message.split_whitespace().collect::<Vec<_>>().join(" "),
+            )
+        })
+        .collect();
+    let stray = faults
+        .iter()
+        .filter(|fault| fault.item.is_none())
+        .map(|fault| format!("line {}: {}", fault.line, fault.message))
+        .collect();
+    CheckedAnswers {
+        answers,
+        open,
+        stray,
+    }
+}
+
+/// The columns of `<name>.problems.tsv` of the adjudication.
+pub fn open_tsv(open: &[(String, String)]) -> String {
+    let mut out = String::from("item\tproblem\n");
+    for (item, message) in open {
+        let _ = writeln!(out, "{item}\t{message}");
+    }
+    out
+}
+
+/// The columns of `adjudicated.tsv`, the log of the adjudication, before the taggers' names, which
+/// come next, and after them. A log written for an adjudicator's run adds `run` last.
+const LOG_FIRST: [&str; 4] = ["item", "sent_id", "token", "form"];
+const LOG_LAST: [&str; 2] = ["final", "reason"];
+const LOG_RUN: &str = "run";
 
 /// An agreed word that the revised guide changes: it is adjudicated after all, with a reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -873,40 +1185,193 @@ pub fn read_overrides(
     Problems::check(problems, rows)
 }
 
-/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why,
-/// then each override. An override's item is `sentence.token`, and the three columns of what
-/// they said hold the code they agreed on, which is how `assemble` knows it from an answer.
-pub fn adjudicated_tsv(answers: &[Answer], overrides: &[Override]) -> String {
-    let mut out = format!("{}\n", LOG_COLUMNS.join("\t"));
+/// `adjudicated.tsv`: each answered item with what each of the taggers `names` said, the code
+/// decided and why, then each override. An override's item is `sentence.token`, and the columns of
+/// what the taggers said hold the code they agreed on, which is how `assemble` knows it from an
+/// answer. With `run`, the adjudicator's run, every row ends with it in a `run` column, which
+/// `finish` copies into the `Runs=` of the word; an answer with a run of its own keeps that one.
+pub fn adjudicated_tsv(
+    names: &[String],
+    answers: &[Answer],
+    overrides: &[Override],
+    run: Option<&str>,
+) -> String {
+    let with_run = run.is_some() || answers.iter().any(|answer| answer.run.is_some());
+    let mut columns: Vec<&str> = LOG_FIRST.to_vec();
+    columns.extend(names.iter().map(String::as_str));
+    columns.extend(LOG_LAST);
+    columns.extend(with_run.then_some(LOG_RUN));
+    let mut out = format!("{}\n", columns.join("\t"));
+    let tail_of = |own: Option<&str>| {
+        if with_run {
+            format!("\t{}", own.or(run).unwrap_or("-"))
+        } else {
+            String::new()
+        }
+    };
     for answer in answers {
         let item = &answer.item;
+        let tail = tail_of(answer.run.as_deref());
         let _ = writeln!(
             out,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}{tail}",
             item.item,
             item.sent_id,
             item.token,
             item.form,
-            item.said[0],
-            item.said[1],
-            item.said[2],
+            item.said.join("\t"),
             answer.code,
             answer.reason
         );
     }
+    let tail = tail_of(None);
     for row in overrides {
+        let old = vec![row.old.to_string(); names.len()].join("\t");
         let _ = writeln!(
             out,
-            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{old}\t{old}\t{}\t{}",
+            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{}\t{}{tail}",
             row.form,
             row.new,
             row.reason,
             id = row.sent_id,
             token = row.token,
-            old = row.old,
         );
     }
     out
+}
+
+/// The items of `work` that `earlier` has too, with what each tagger said the same, position by
+/// position. An answer to one of these was made on the same evidence that a new answer would be.
+pub fn same_evidence(work: Vec<WorkItem>, earlier: &[WorkItem]) -> Vec<WorkItem> {
+    let said: BTreeMap<&str, &Vec<String>> = earlier
+        .iter()
+        .map(|item| (item.item.as_str(), &item.said))
+        .collect();
+    work.into_iter()
+        .filter(|item| said.get(item.item.as_str()) == Some(&&item.said))
+        .collect()
+}
+
+/// The columns of `settled.tsv`: the answers a merge takes from an earlier one.
+const SETTLED_COLUMNS: [&str; 4] = ["item", "final", "reason", "run"];
+
+/// The answers of the earlier merge's log `text`, which came from `path`, for the items of `work`
+/// that the log answered, each keeping the run that answered it. A merge of the same sample with a
+/// voter more disputes mostly the same words; the adjudicator is asked about each only once, so
+/// the two merges differ in their voting alone. An item the log has no run for is an error, since
+/// the answer would lose its provenance.
+pub fn settle_from_log(path: &str, text: &str, work: &[WorkItem]) -> Result<Vec<Answer>, Problems> {
+    let mut lines = text.lines().enumerate();
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let column = |name: &str| head.iter().position(|cell| *cell == name);
+    let (Some(item_at), Some(final_at), Some(reason_at), Some(run_at)) = (
+        column("item"),
+        column("final"),
+        column("reason"),
+        column(LOG_RUN),
+    ) else {
+        return Err(Error::at(
+            path,
+            1,
+            "the log to settle from needs the columns item, final, reason and run",
+        )
+        .into());
+    };
+    let wanted: BTreeMap<&str, &WorkItem> =
+        work.iter().map(|item| (item.item.as_str(), item)).collect();
+    let mut answers = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines.filter(|(_, line)| !line.trim().is_empty()) {
+        let cells: Vec<&str> = line.split('\t').collect();
+        if cells.len() != head.len() {
+            problems.push(Error::at(
+                path,
+                at + 1,
+                format!("expected {} columns, found {}", head.len(), cells.len()),
+            ));
+            continue;
+        }
+        let Some(item) = wanted.get(cells[item_at]) else {
+            continue;
+        };
+        let run = cells[run_at];
+        if run.is_empty() || run == "-" {
+            problems.push(Error::at(path, at + 1, "the answer has no run"));
+            continue;
+        }
+        match Code::parse(cells[final_at]) {
+            Ok(code) => answers.push(Answer {
+                item: (*item).clone(),
+                code,
+                reason: cells[reason_at].to_string(),
+                run: Some(run.to_string()),
+            }),
+            Err(why) => problems.push(Error::at(path, at + 1, why)),
+        }
+    }
+    Problems::check(problems, answers)
+}
+
+/// `settled.tsv`: the answers `settle_from_log` took, which `read-answers` adds to the ones the
+/// adjudicator gives for the rest.
+pub fn settled_tsv(answers: &[Answer]) -> String {
+    let mut out = format!("{}\n", SETTLED_COLUMNS.join("\t"));
+    for answer in answers {
+        let _ = writeln!(
+            out,
+            "{}\t{}\t{}\t{}",
+            answer.item.item,
+            answer.code,
+            answer.reason,
+            answer.run.as_deref().unwrap_or("-")
+        );
+    }
+    out
+}
+
+/// Reads `settled.tsv`, which came from `path`, for the items of `work`.
+pub fn read_settled(path: &str, text: &str, work: &[WorkItem]) -> Result<Vec<Answer>, Problems> {
+    let mut lines = text.lines().enumerate();
+    if lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect::<Vec<_>>())
+        != Some(SETTLED_COLUMNS.to_vec())
+    {
+        return Err(Error::at(
+            path,
+            1,
+            format!("the columns should be {}", SETTLED_COLUMNS.join(", ")),
+        )
+        .into());
+    }
+    let wanted: BTreeMap<&str, &WorkItem> =
+        work.iter().map(|item| (item.item.as_str(), item)).collect();
+    let mut answers = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines.filter(|(_, line)| !line.trim().is_empty()) {
+        let cells: Vec<&str> = line.split('\t').collect();
+        let item = wanted.get(cells.first().copied().unwrap_or(""));
+        match (cells.len() == SETTLED_COLUMNS.len(), item) {
+            (true, Some(item)) => match Code::parse(cells[1]) {
+                Ok(code) => answers.push(Answer {
+                    item: (*item).clone(),
+                    code,
+                    reason: cells[2].to_string(),
+                    run: Some(cells[3].to_string()),
+                }),
+                Err(why) => problems.push(Error::at(path, at + 1, why)),
+            },
+            _ => problems.push(Error::at(
+                path,
+                at + 1,
+                "a row of four cells for an item of the worklist is expected",
+            )),
+        }
+    }
+    Problems::check(problems, answers)
 }
 
 /// A row of `adjudicated.tsv`.
@@ -920,54 +1385,67 @@ pub struct Logged {
     pub form: String,
     /// The code decided.
     pub code: Code,
-    /// For an override, the code the three taggers had agreed on.
+    /// For an override, the code the taggers had agreed on.
     pub agreed: Option<Code>,
+    /// The adjudicator's run, when the log has a `run` column.
+    pub run: Option<String>,
 }
 
 /// Reads `adjudicated.tsv`, which came from `path`.
 pub fn read_log(path: &str, text: &str) -> Result<Vec<Logged>, Error> {
     let mut lines = text.lines().enumerate();
-    match lines.next() {
-        Some((_, head)) if head.split('\t').eq(LOG_COLUMNS) => {}
-        _ => {
-            return Err(Error::at(
-                path,
-                1,
-                format!("the columns should be {}", LOG_COLUMNS.join(", ")),
-            ));
-        }
-    }
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let with_run = head.last() == Some(&LOG_RUN);
+    let closing: Vec<&str> = if with_run {
+        LOG_LAST.iter().copied().chain([LOG_RUN]).collect()
+    } else {
+        LOG_LAST.to_vec()
+    };
+    let Some(names) = names_between(&head, &LOG_FIRST, &closing) else {
+        return Err(Error::at(
+            path,
+            1,
+            format!(
+                "the columns should be {}, the names of two or more taggers, and {}",
+                LOG_FIRST.join(", "),
+                closing.join(", ")
+            ),
+        ));
+    };
+    let (width, voters) = (head.len(), names.len());
     let mut rows = Vec::new();
     for (at, line) in lines {
         if line.trim().is_empty() {
             continue;
         }
         let cells: Vec<&str> = line.split('\t').collect();
-        if cells.len() != LOG_COLUMNS.len() {
+        if cells.len() != width {
             return Err(Error::at(
                 path,
                 at + 1,
-                format!(
-                    "expected {} columns, found {}",
-                    LOG_COLUMNS.len(),
-                    cells.len()
-                ),
+                format!("expected {width} columns, found {}", cells.len()),
             ));
         }
         let bad = |what: &str, value: &str| Error::at(path, at + 1, format!("{what} `{value}`"));
+        let said = &cells[LOG_FIRST.len()..LOG_FIRST.len() + voters];
+        let final_at = LOG_FIRST.len() + voters;
         rows.push(Logged {
             sent_id: cells[1].to_string(),
             token: cells[2]
                 .parse()
                 .map_err(|_| bad("bad token number", cells[2]))?,
             form: cells[3].to_string(),
-            code: Code::parse(cells[7]).map_err(|why| bad(&why, cells[7]))?,
-            // Three equal answers are no dispute: the row is an override of an agreed word.
-            agreed: if cells[4] == cells[5] && cells[5] == cells[6] {
-                Code::parse(cells[4]).ok()
+            code: Code::parse(cells[final_at]).map_err(|why| bad(&why, cells[final_at]))?,
+            // Equal answers all round are no dispute: the row is an override of an agreed word.
+            agreed: if said.iter().all(|cell| *cell == said[0]) {
+                Code::parse(said[0]).ok()
             } else {
                 None
             },
+            run: with_run.then(|| cells[width - 1].to_string()),
         });
     }
     Ok(rows)
@@ -997,7 +1475,7 @@ mod tests {
                 } else {
                     ("X", "_")
                 };
-                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None)));
+                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None, None)));
             }
             out.push('\n');
         }
@@ -1014,6 +1492,7 @@ mod tests {
                 "s1: V.fi _ T V.in _\ns2: R _ D N.s N.p\n".to_string(),
             )],
             "blind",
+            None,
             true,
         )
         .unwrap()
@@ -1145,7 +1624,7 @@ mod tests {
         assert_eq!(merged.stats.pairs, [7, 7, 7]);
         assert_eq!(merged.stats.tag3, 7);
         assert_eq!(merged.stats.full3, 7);
-        let out = agreed_conllu(&sample, &merged);
+        let out = agreed_conllu(&sample, &merged.verdicts, &[]);
         assert!(
             !out.contains("\t_\t_\t_\t_\t_\t_\tKind=Word\n"),
             "no pending word"
@@ -1175,7 +1654,7 @@ mod tests {
         assert_eq!(merged.stats.by_context["list-item"], (4, 2));
         assert_eq!(merged.stats.by_context["prose"], (3, 2));
 
-        let out = agreed_conllu(&sample, &merged);
+        let out = agreed_conllu(&sample, &merged.verdicts, &[]);
         assert!(
             out.contains("4\tcompile\t_\t_\t_\t_\t_\t_\t_\tKind=Word|SpaceAfter=No\n"),
             "{out}"
@@ -1268,7 +1747,7 @@ mod tests {
         let mut spacy = SAME;
         spacy[2] = ("NOUN", "Number=Sing");
         let (sample, merged) = merged(&blind(), &harper, &spacy);
-        let parts = worklist_parts(&sample, &merged.items, 60);
+        let parts = worklist_parts(&sample, &merged.items, 60, &NAMES);
         assert_eq!(parts.len(), 1);
         let part = &parts[0];
         assert!(part.contains("15 words or fewer"));
@@ -1298,14 +1777,18 @@ mod tests {
     #[test]
     fn a_feature_a_tagger_left_out_shows_as_a_question_mark() {
         let bare = |upos| Code::from_conllu(upos, "_").unwrap();
-        assert_eq!(said(bare("NOUN")), "N.?");
-        assert_eq!(said(bare("PROPN")), "PN.?");
-        assert_eq!(said(bare("VERB")), "V.?");
-        assert_eq!(said(bare("AUX")), "AX.?");
-        assert_eq!(said(bare("PRON")), "PR", "a pronoun may have no number");
-        assert_eq!(said(bare("ADJ")), "J");
-        assert_eq!(said(code("N.s")), "N.s");
-        assert_eq!(said(code("V.pp")), "V.pp");
+        assert_eq!(said(Some(bare("NOUN"))), "N.?");
+        assert_eq!(said(Some(bare("PROPN"))), "PN.?");
+        assert_eq!(said(Some(bare("VERB"))), "V.?");
+        assert_eq!(said(Some(bare("AUX"))), "AX.?");
+        assert_eq!(
+            said(Some(bare("PRON"))),
+            "PR",
+            "a pronoun may have no number"
+        );
+        assert_eq!(said(Some(bare("ADJ"))), "J");
+        assert_eq!(said(Some(code("N.s"))), "N.s");
+        assert_eq!(said(Some(code("V.pp"))), "V.pp");
     }
 
     #[test]
@@ -1314,19 +1797,20 @@ mod tests {
         let item = |sent, tok| Item {
             sent,
             tok,
-            said: [code("N.s"), code("N.s"), code("N.s")],
+            said: vec![Some(code("N.s")); 3],
             tags_differ: true,
+            unvoted: false,
         };
         let items = [item(0, 0), item(0, 2), item(1, 0), item(1, 2), item(1, 3)];
-        assert_eq!(worklist_parts(&sample, &items, 100).len(), 1);
-        let parts = worklist_parts(&sample, &items, 2);
+        assert_eq!(worklist_parts(&sample, &items, 100, &NAMES).len(), 1);
+        let parts = worklist_parts(&sample, &items, 2, &NAMES);
         assert_eq!(parts.len(), 2, "a sentence is never split");
         assert!(
             parts[0].contains("s1.1") && parts[0].contains("s1.3") && !parts[0].contains("s2.1")
         );
         assert!(parts[1].contains("s2.1") && parts[1].contains("s2.4"));
-        assert!(worklist_parts(&sample, &[], 10).is_empty());
-        let one = worklist_parts(&sample, &items, 1);
+        assert!(worklist_parts(&sample, &[], 10, &NAMES).is_empty());
+        let one = worklist_parts(&sample, &items, 1, &NAMES);
         assert_eq!(
             one.len(),
             2,
@@ -1334,18 +1818,24 @@ mod tests {
         );
     }
 
-    fn work() -> Vec<WorkItem> {
+    fn names() -> Vec<String> {
+        NAMES.map(String::from).to_vec()
+    }
+
+    fn work() -> Worklist {
         let mut harper = SAME;
         harper[6] = ("ADJ", "_");
         let mut spacy = SAME;
         spacy[2] = ("NOUN", "Number=Sing");
         let (sample, merged) = merged(&blind(), &harper, &spacy);
-        read_worklist("w.tsv", &worklist_tsv(&sample, &merged.items)).unwrap()
+        read_worklist("w.tsv", &worklist_tsv(&sample, &merged.items, &NAMES)).unwrap()
     }
 
     #[test]
     fn the_machine_worklist_reads_back() {
         let work = work();
+        assert_eq!(work.names, NAMES);
+        let work = work.items;
         assert_eq!(work.len(), 2);
         assert_eq!(work[0].item, "s1.4");
         assert_eq!(work[0].sent_id, "s1");
@@ -1357,7 +1847,11 @@ mod tests {
     }
 
     fn answers(text: &str, all: bool) -> Result<Vec<Answer>, Problems> {
-        read_answers(&work(), &[("a.txt".to_string(), text.to_string())], all)
+        read_answers(
+            &work().items,
+            &[("a.txt".to_string(), text.to_string())],
+            all,
+        )
     }
 
     #[test]
@@ -1423,7 +1917,7 @@ mod tests {
     #[test]
     fn the_log_records_what_the_three_said_what_was_decided_and_why() {
         let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
-        let log = adjudicated_tsv(&got, &[]);
+        let log = adjudicated_tsv(&names(), &got, &[], None);
         let mut lines = log.lines();
         assert_eq!(
             lines.next().unwrap(),
@@ -1442,5 +1936,133 @@ mod tests {
         assert_eq!(rows[0].sent_id, "s1");
         assert_eq!(rows[0].token, 4);
         assert_eq!(rows[1].code, code("N.p"));
+    }
+
+    #[test]
+    fn check_mode_keeps_the_good_answers_and_names_what_is_open() {
+        let work = work();
+        let long = "a b c d e f g h i j k l m n o p";
+        let text = format!("s1.4: V.in | fine\ns2.5: N.p | {long}\nnot an answer\ns9.1: N.s | x\n");
+        let got = check_answers(&work.items, &[("a.txt".to_string(), text)]);
+        assert_eq!(got.answers.len(), 1);
+        assert_eq!(got.answers[0].item.item, "s1.4");
+        assert_eq!(got.open.len(), 1);
+        assert_eq!(got.open[0].0, "s2.5");
+        assert!(got.open[0].1.contains("16 words"), "{:?}", got.open);
+        assert_eq!(got.stray.len(), 2, "{:?}", got.stray);
+        let tsv = open_tsv(&got.open);
+        assert!(tsv.starts_with("item\tproblem\ns2.5\t"), "{tsv}");
+        // An item with no line at all is open too.
+        let none = check_answers(&work.items, &[("a.txt".to_string(), String::new())]);
+        assert_eq!(
+            none.open,
+            [
+                ("s1.4".to_string(), "no answer".to_string()),
+                ("s2.5".to_string(), "no answer".to_string())
+            ]
+        );
+        // A good answer wins over a bad line for the same item.
+        let both = check_answers(
+            &work.items,
+            &[(
+                "a.txt".to_string(),
+                "s1.4: V.in | x\ns1.4: ZZ | y\n".to_string(),
+            )],
+        );
+        assert_eq!(both.answers.len(), 1);
+        assert_eq!(both.open.len(), 1);
+    }
+
+    #[test]
+    fn the_retry_asks_only_the_open_items_and_shows_the_voters_by_letter() {
+        let sample = sample();
+        let work = work();
+        let parts = retry_parts(&sample, &work, &["s2.5".to_string()], 60);
+        assert_eq!(parts.len(), 1);
+        let part = &parts[0];
+        assert!(part.contains("(A, B, C)"), "{part}");
+        assert!(part.contains("\n  5 files: A N.p, B J, C N.p\n"), "{part}");
+        assert!(
+            !part.contains("compile") && !part.contains("blind"),
+            "{part}"
+        );
+        assert!(part.ends_with("Slots:\ns2.5: \n"), "{part}");
+        assert!(retry_parts(&sample, &work, &[], 60).is_empty());
+    }
+
+    #[test]
+    fn an_answer_settled_by_an_earlier_merge_keeps_its_run_and_is_not_asked_again() {
+        let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
+        // The earlier merge's log: both answered, by run r4.
+        let earlier = adjudicated_tsv(&names(), &got, &[], Some("r4"));
+        let work = work();
+        let settled = settle_from_log("earlier", &earlier, &work.items[..1]).unwrap();
+        assert_eq!(settled.len(), 1, "only the items of the new worklist");
+        assert_eq!(settled[0].item.item, "s1.4");
+        assert_eq!(settled[0].run.as_deref(), Some("r4"));
+        // settled.tsv reads back, and the log of the new merge names the run of each answer: r4
+        // for the settled, the new adjudicator's r9 for the rest.
+        let tsv = settled_tsv(&settled);
+        let back = read_settled("settled.tsv", &tsv, &work.items).unwrap();
+        assert_eq!(back, settled);
+        let mut all = back;
+        all.push(got[1].clone());
+        let log = adjudicated_tsv(&names(), &all, &[], Some("r9"));
+        let rows = read_log("log", &log).unwrap();
+        assert_eq!(rows[0].run.as_deref(), Some("r4"));
+        assert_eq!(rows[1].run.as_deref(), Some("r9"));
+        // An answer with no run to keep is refused: its provenance would be lost.
+        let bare = adjudicated_tsv(&names(), &got, &[], None);
+        assert!(settle_from_log("bare", &bare, &work.items).is_err());
+    }
+
+    #[test]
+    fn the_log_carries_the_adjudicator_s_run_and_reads_back_with_or_without_it() {
+        let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
+        let log = adjudicated_tsv(&names(), &got, &[], Some("r9"));
+        assert!(
+            log.starts_with(
+                "item\tsent_id\ttoken\tform\tblind\tharper\tspacy\tfinal\treason\trun\n"
+            ),
+            "{log}"
+        );
+        assert!(log.contains("\tx\tr9\n"));
+        let rows = read_log("log", &log).unwrap();
+        assert_eq!(rows[0].run.as_deref(), Some("r9"));
+        assert_eq!(rows[1].code, code("N.p"));
+        let plain = read_log("log", &adjudicated_tsv(&names(), &got, &[], None)).unwrap();
+        assert_eq!(plain[0].run, None);
+        // Any number of voters, two or more, has its columns.
+        let two = vec!["a".to_string(), "b".to_string()];
+        let mut item = got[0].clone();
+        item.item.said = vec!["V.in".to_string(), "N.s".to_string()];
+        let log = adjudicated_tsv(&two, &[item], &[], None);
+        assert!(
+            log.starts_with("item\tsent_id\ttoken\tform\ta\tb\tfinal\treason\n"),
+            "{log}"
+        );
+        assert_eq!(read_log("log", &log).unwrap().len(), 1);
+        assert!(read_log("log", "item\tsent_id\ttoken\tform\ta\tfinal\treason\n").is_err());
+    }
+
+    #[test]
+    fn the_machine_worklist_has_a_column_for_each_voter() {
+        let sample = sample();
+        let item = Item {
+            sent: 0,
+            tok: 0,
+            said: vec![Some(code("V.fi")), Some(code("V.pp"))],
+            tags_differ: false,
+            unvoted: false,
+        };
+        let tsv = worklist_tsv(&sample, &[item], &["x", "y"]);
+        assert_eq!(
+            tsv,
+            "item\tsent_id\ttoken\tform\tx\ty\tdiffers\ns1.1\ts1\t1\tRun\tV.fi\tV.pp\tfeature\n"
+        );
+        let back = read_worklist("w", &tsv).unwrap();
+        assert_eq!(back.names, ["x", "y"]);
+        assert_eq!(back.items[0].said, ["V.fi", "V.pp"]);
+        assert!(read_worklist("w", "item\tsent_id\ttoken\tform\tx\tdiffers\n").is_err());
     }
 }

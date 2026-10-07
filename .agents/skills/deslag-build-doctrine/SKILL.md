@@ -44,10 +44,10 @@ Scripts live in `scripts/`. A recipe longer than a few lines, or one that needs 
 is a script. Scripts are bash, open with a comment saying what they are for, use `set -euo pipefail`
 unless they must keep going after a failure, and validate arguments with `${1:?usage: ...}`.
 
-Python 3 is allowed in four places. `scripts/llm-detection/collect.py` rebuilds the corpus,
+Python 3 is allowed in five places. `scripts/llm-detection/collect.py` rebuilds the corpus,
 standard library only, by hand; make, tests, CI run its `batch`.
-`scripts/blobstore/test_batches.py` and `scripts/train/test_train.py` run under `make test-python`.
-`scripts/spacy/` and `scripts/train/` hold the exam's taggers, run by their own targets.
+`scripts/{blobstore,train,label}/test_*.py` run under `make test-python`.
+`scripts/{spacy,train,label}/` hold the exam's taggers, run by their own targets.
 
 Development is supported on macOS and Linux.
 

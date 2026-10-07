@@ -400,7 +400,7 @@ impl fmt::Display for Report<'_> {
                 .manifest
                 .rows
                 .iter()
-                .filter(|(_, meta)| meta.tier == *tier)
+                .filter(|(_, meta)| meta.tier == Some(*tier))
                 .collect();
             write!(f, "  {:<8}", tier.name())?;
             for context in Context::ALL {

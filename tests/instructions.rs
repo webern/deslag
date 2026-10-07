@@ -115,7 +115,7 @@ fn the_schema_has_the_stamp_as_an_optional_string() {
     assert_eq!(stamp["type"], serde_json::json!(["string", "null"]));
     assert!(stamp.get("pattern").is_none(), "{stamp}");
     let description = stamp["description"].as_str().expect("a description");
-    assert!(description.contains("0.1.0"), "{description}");
+    assert!(description.contains("0.0.1"), "{description}");
     assert_eq!(root["required"], serde_json::json!(["schema_version"]));
 }
 

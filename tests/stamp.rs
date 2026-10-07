@@ -205,7 +205,7 @@ fn a_later_schema_is_reported_before_a_newer_stamp() {
 
 #[test]
 fn a_stamp_that_is_not_a_release_is_an_error_naming_the_key() {
-    for stamp in ["4", "\"next\"", "\"0.1.0+x\"", "\"0.1.0-rc.1\"", "\"one\""] {
+    for stamp in ["4", "\"next\"", "\"0.0.1+x\"", "\"0.0.1-rc.1\"", "\"one\""] {
         for language in LANGUAGES {
             let text = config(language, 1, Some(stamp), false);
             let (code, stderr) = check(language, &text);
@@ -221,9 +221,9 @@ fn a_stamp_that_is_not_a_release_is_an_error_naming_the_key() {
 #[test]
 fn a_syntax_error_beside_a_stamp_is_a_parse_error() {
     for (language, text) in [
-        ("toml", "deslag_version = \"0.1.0\"\n[md\n"),
-        ("yaml", "deslag_version: \"0.1.0\"\nmd: [unclosed\n"),
-        ("json", "{\"deslag_version\": \"0.1.0\","),
+        ("toml", "deslag_version = \"0.0.1\"\n[md\n"),
+        ("yaml", "deslag_version: \"0.0.1\"\nmd: [unclosed\n"),
+        ("json", "{\"deslag_version\": \"0.0.1\","),
     ] {
         let (code, stderr) = check(language, text);
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
@@ -249,15 +249,15 @@ fn a_stamp_under_md_is_an_unknown_field() {
     for (language, text) in [
         (
             "toml",
-            "schema_version = 1\n[md]\ndeslag_version = \"0.1.0\"\n",
+            "schema_version = 1\n[md]\ndeslag_version = \"0.0.1\"\n",
         ),
         (
             "yaml",
-            "schema_version: 1\nmd:\n  deslag_version: \"0.1.0\"\n",
+            "schema_version: 1\nmd:\n  deslag_version: \"0.0.1\"\n",
         ),
         (
             "json",
-            "{\"schema_version\": 1, \"md\": {\"deslag_version\": \"0.1.0\"}}",
+            "{\"schema_version\": 1, \"md\": {\"deslag_version\": \"0.0.1\"}}",
         ),
     ] {
         let (code, stderr) = check(language, text);

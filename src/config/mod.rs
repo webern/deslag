@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! schema_version = 1
-//! deslag_version = "0.1.0"
+//! deslag_version = "0.0.1"
 //!
 //! [md]
 //! globs = ["*.md"]
@@ -75,8 +75,8 @@ struct ConfigFile {
     /// The Markdown section.
     #[serde(default)]
     md: md::MdFile,
-    /// The deslag that last onboarded or updated this config, as a release such as "0.1.0". When
-    /// it is missing the config is taken to be from 0.1.0. It may not be later than the deslag
+    /// The deslag that last onboarded or updated this config, as a release such as "0.0.1". When
+    /// it is missing the config is taken to be from 0.0.1. It may not be later than the deslag
     /// that reads the file.
     #[serde(default)]
     #[expect(
@@ -259,7 +259,7 @@ impl Config {
 }
 
 /// The release a `deslag_version` of `text` names. A pre-release or build part is refused: a
-/// stamp is a release, and `0.1.0+x` would order above `0.1.0`.
+/// stamp is a release, and `0.0.1+x` would order above `0.0.1`.
 fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
     semver::Version::parse(text)
         .ok()
@@ -267,7 +267,7 @@ fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
         .ok_or_else(|| Error::Setting {
             path: path.to_string(),
             message: format!(
-                "deslag_version {text:?} is not a release version such as \"0.1.0\", which has \
+                "deslag_version {text:?} is not a release version such as \"0.0.1\", which has \
                  no pre-release or build part"
             ),
         })

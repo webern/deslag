@@ -25,6 +25,7 @@ mod review;
 mod sample;
 mod screen;
 mod terminal;
+mod web;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -257,6 +258,19 @@ enum Command {
         #[arg(long)]
         screen: bool,
     },
+    /// The review as a page in a browser: one sentence at a time, with a menu of tags in plain
+    /// words for each word. Saves the file as `review` does, and can run `own` when every
+    /// sentence is done. Serves this machine only, until Ctrl-C.
+    Web {
+        /// The file to review, edited in place.
+        file: PathBuf,
+        /// The port to serve on.
+        #[arg(long, default_value_t = 8737)]
+        port: u16,
+        /// The owner's file, for `own`.
+        #[arg(long, default_value = "tests/gold/owner.conllu")]
+        into: PathBuf,
+    },
 }
 
 /// Where `rank` and `queue` read from and what they leave out.
@@ -359,7 +373,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             top,
         } => rank_stage(&dir, &from, per_repo, top),
         Command::Queue { from, picks, out } => queue_stage(&from, &picks, &out),
-        Command::Own { queue, into } => own_stage(&queue, &into),
+        Command::Own { queue, into } => own_stage(&queue, &into).map(|moved| println!("{moved}")),
         Command::Batches { size } => batches_stage(&dir, size),
         Command::ReadTags { lines, prov, all } => read_tags_stage(&dir, &lines, &prov, all),
         Command::Merge {
@@ -380,6 +394,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             spacy,
         } => assemble_stage(&dir, &out, [blind, harper, spacy]),
         Command::Review { file, screen } => terminal::run(&file, screen),
+        Command::Web { file, port, into } => web::run(&file, port, &into),
     }
 }
 
@@ -633,7 +648,8 @@ fn queue_stage(from: &Pool, picks: &Path, out: &Path) -> Result<(), Problems> {
     Ok(())
 }
 
-fn own_stage(queue: &Path, into: &Path) -> Result<(), Problems> {
+/// Moves the reviewed sentences of `queue` into `into`, and says how many.
+fn own_stage(queue: &Path, into: &Path) -> Result<String, Problems> {
     let shown = queue.display().to_string();
     let target = into.display().to_string();
     let held = if into.exists() {
@@ -652,8 +668,9 @@ fn own_stage(queue: &Path, into: &Path) -> Result<(), Problems> {
     if let Some(warning) = warning {
         eprintln!("deslag-gold: {target}: {warning}");
     }
-    println!("moved {moved} sentences into {target}, left out {rejected} rejected");
-    Ok(())
+    Ok(format!(
+        "moved {moved} sentences into {target}, left out {rejected} rejected"
+    ))
 }
 
 fn batches_stage(dir: &Path, size: usize) -> Result<(), Problems> {

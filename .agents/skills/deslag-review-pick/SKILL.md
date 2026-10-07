@@ -63,8 +63,11 @@ You pick the sentences; he reviews them with `deslag-gold review`.
 ## The owner
 
 - `deslag-gold review tests/gold/queue/<name>.conllu` tags it, one sentence at a time.
-- `x`, twice, rejects a pick that should not be tagged (personal data, not English). It writes
-  `# owner_rejected = <date>` and tags are not needed. To undo it, delete that line.
+  `deslag-gold web tests/gold/queue/<name>.conllu` does the same in a browser, at
+  `http://127.0.0.1:8737`, and its button runs `own` when every sentence is done.
+- `x`, twice, or the web page's skip button, rejects a pick that should not be tagged (personal
+  data, not English). It writes `# owner_rejected = <date>` and tags are not needed. To undo it,
+  delete that line.
 - `deslag-gold own tests/gold/queue/<name>.conllu` moves the other sentences into
   `tests/gold/owner.conllu`, which he commits. It leaves the rejected ones out.
 - It refuses a queue with an unreviewed sentence or a blank word, and replaces the file whole or

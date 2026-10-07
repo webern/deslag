@@ -286,7 +286,7 @@ fn sync_directory(_file: &Path) -> std::io::Result<()> {
 }
 
 /// Today's date in UTC, `YYYY-MM-DD`.
-fn today() -> String {
+pub fn today() -> String {
     let seconds = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |since| since.as_secs());

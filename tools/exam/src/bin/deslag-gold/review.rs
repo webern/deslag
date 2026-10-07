@@ -564,21 +564,8 @@ impl Session {
                 .into();
             return;
         }
-        let patch = Patch {
-            comments: vec![Comment {
-                block_first_line: self.sentence().first_line,
-                key: "owner_rejected".into(),
-                value: self.today.clone(),
-            }],
-            ..Patch::default()
-        };
-        let saved = patch::apply(&self.source, &patch)
-            .and_then(|text| self.read_back(&text).map(|blocks| (text, blocks)))
-            .and_then(|(text, blocks)| store.save(&text).map(|warning| (text, blocks, warning)));
-        match saved {
-            Ok((text, blocks, warning)) => {
-                self.source = text;
-                self.refresh(&blocks);
+        match self.reject_at(self.at, store) {
+            Ok(warning) => {
                 let at_edge = self.at + 1 == self.sentences.len();
                 let warning =
                     warning.map_or(String::new(), |warning| format!(" (warning: {warning})"));
@@ -590,6 +577,87 @@ impl Session {
             }
             Err(message) => self.notice = format!("not saved: {message}"),
         }
+    }
+
+    /// Marks sentence `at` rejected and saves the file. The session changes only if the store
+    /// took it.
+    pub fn reject_at(
+        &mut self,
+        at: usize,
+        store: &mut dyn Store,
+    ) -> Result<Option<String>, String> {
+        let sentence = self.sentences.get(at).ok_or("no such sentence")?;
+        if sentence.rejected.is_some() {
+            return Err("the sentence is already rejected".into());
+        }
+        let patch = Patch {
+            comments: vec![Comment {
+                block_first_line: sentence.first_line,
+                key: "owner_rejected".into(),
+                value: self.today.clone(),
+            }],
+            ..Patch::default()
+        };
+        let text = patch::apply(&self.source, &patch)?;
+        let blocks = self.read_back(&text)?;
+        let warning = store.save(&text)?;
+        self.source = text;
+        self.refresh(&blocks);
+        Ok(warning)
+    }
+
+    /// Sets the words of sentence `at` to `tags`, one per row and `None` on a row that is not a
+    /// word, and saves it as leaving it does. A word given the tag it has keeps whether deslag
+    /// filled it. A word marked in `accepted` whose tag is deslag's guess was taken from the
+    /// guess, at any confidence, and is saved as filled by deslag. Every word needs a tag; the
+    /// session changes only if the store took the file.
+    pub fn save_tags(
+        &mut self,
+        at: usize,
+        tags: &[Option<Code>],
+        accepted: &[bool],
+        store: &mut dyn Store,
+    ) -> Result<Option<String>, String> {
+        let sentence = self.sentences.get(at).ok_or("no such sentence")?;
+        if sentence.rejected.is_some() {
+            return Err("the sentence is rejected".into());
+        }
+        if tags.len() != sentence.rows.len() {
+            return Err(format!(
+                "{} tags for {} tokens",
+                tags.len(),
+                sentence.rows.len()
+            ));
+        }
+        let before = (sentence.clone(), self.at, self.cursor);
+        for (index, (row, tag)) in self.sentences[at].rows.iter_mut().zip(tags).enumerate() {
+            let Row::Word(word) = row else {
+                continue;
+            };
+            let from_guess = accepted.get(index).copied().unwrap_or(false)
+                && tag.is_some()
+                && word.guess.map(|guess| guess.code) == *tag;
+            if from_guess {
+                word.tag = *tag;
+                word.prefilled = true;
+                word.set = false;
+            } else if word.tag != *tag {
+                word.tag = *tag;
+                word.prefilled = false;
+                word.set = true;
+            }
+        }
+        self.at = at;
+        let blanks = self.sentence().blanks();
+        let saved = if blanks > 0 {
+            Err(format!("{blanks} words have no tag"))
+        } else {
+            self.save(store)
+        };
+        if saved.is_err() {
+            (self.sentences[at], self.at, self.cursor) = before;
+        }
+        saved
     }
 
     /// Leaves the sentence for the next or the previous one, saving it. A rejected sentence is

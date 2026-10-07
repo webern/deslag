@@ -64,6 +64,10 @@ pub enum Entry {
     Setting {
         /// The setting's path in the config's schema, such as `md.lints.density.max_item_chars`.
         id: String,
+        /// For a setting that is a table, the keys it had when it arrived, each as its path
+        /// inside the table. A setting with a value of its own has none.
+        #[serde(default)]
+        keys: Vec<String>,
         /// What the setting does, in one line.
         summary: String,
         /// Markdown for an agent: what the setting does and how to set it.

@@ -161,11 +161,57 @@ impl SchemaPaths {
         paths
     }
 
+    /// `path` with an override's `lints` table folded onto `md.lints`.
+    pub fn fold(path: &str) -> String {
+        path.replacen("md.overrides[].lints", "md.lints", 1)
+    }
+
+    /// `schema` reduced to the one schema it stands for: its `$ref` followed, and the one branch
+    /// of an `anyOf`, `oneOf` or `allOf` that is not `null`, as often as it takes. Any other shape
+    /// would be skipped silently, so it fails here: `path` says where.
+    fn single<'a>(root: &'a Value, schema: &'a Value, path: &str) -> &'a Value {
+        let mut schema = resolve(root, schema);
+        for keyword in ["anyOf", "oneOf", "allOf"] {
+            let Some(branches) = schema.get(keyword) else {
+                continue;
+            };
+            let branches = branches
+                .as_array()
+                .unwrap_or_else(|| panic!("`{keyword}` at `{path}` is not a list: {schema}"));
+            let mut not_null = branches
+                .iter()
+                .filter(|branch| branch.get("type").and_then(Value::as_str) != Some("null"));
+            let (Some(branch), None) = (not_null.next(), not_null.next()) else {
+                panic!(
+                    "the schema walk does not handle `{keyword}` at `{path}`, which has no branch \
+                     or more than one that is not null: {schema}"
+                );
+            };
+            schema = Self::single(root, branch, path);
+        }
+        schema
+    }
+
     fn walk(&mut self, root: &Value, schema: &Value, path: &str) {
-        let schema = resolve(root, schema.pointer("/anyOf/0").unwrap_or(schema));
+        let schema = Self::single(root, schema, path);
+        assert!(
+            !schema.get("items").is_some_and(Value::is_array),
+            "the schema walk does not handle `items` as a list at `{path}`: {schema}"
+        );
+        // A map of scalars, such as `ban`, is a leaf; a map of tables has paths the walk lacks.
+        if let Some(values) = schema
+            .get("additionalProperties")
+            .filter(|values| values.is_object())
+        {
+            let values = Self::single(root, values, path);
+            assert!(
+                values.get("properties").is_none() && values.get("items").is_none(),
+                "the schema walk does not handle a map of tables or lists at `{path}`: {schema}"
+            );
+        }
         let items = schema
             .get("items")
-            .map(|items| resolve(root, items))
+            .map(|items| Self::single(root, items, &format!("{path}[]")))
             .filter(|items| items.get("properties").is_some());
         let (children, container) = match (schema.get("properties"), items) {
             (Some(properties), _) => (properties.as_object().cloned(), true),
@@ -173,7 +219,7 @@ impl SchemaPaths {
             (None, None) => (None, false),
         };
         if !path.is_empty() {
-            let folded = path.replacen("md.overrides[].lints", "md.lints", 1);
+            let folded = Self::fold(path);
             self.all.insert(folded.clone());
             if !container {
                 self.leaves.insert(folded);

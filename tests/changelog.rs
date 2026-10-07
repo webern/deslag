@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::SchemaPaths;
-use deslag::changelog::{Entry, Version, changelog};
+use deslag::changelog::{Changelog, Entry, Version, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::{Config, ConfigSource, Lint, check_file};
@@ -20,14 +20,30 @@ const SUMMARY_MAX: usize = 72;
 /// what the instruction files meet.
 const TEXT_PATH: &str = "src/instructions/changelog.md";
 
-/// Every entry of every release, with the version of its release.
-fn entries() -> impl Iterator<Item = (&'static Version, &'static Entry)> {
-    changelog().releases.iter().flat_map(|release| {
+/// Every entry of every release of `changelog`, with the version of its release.
+fn entries_in(changelog: &Changelog) -> impl Iterator<Item = (&Version, &Entry)> {
+    changelog.releases.iter().flat_map(|release| {
         release
             .entries
             .iter()
             .map(|entry| (&release.version, entry))
     })
+}
+
+/// Every entry of every release of the embedded changelog.
+fn entries() -> impl Iterator<Item = (&'static Version, &'static Entry)> {
+    entries_in(changelog())
+}
+
+/// Where the key `key` of the setting `id`, a table, is in the schema: under the table's items
+/// when the table is a list, as `md.overrides[].globs` is, and folded as the schema paths are.
+fn key_path(paths: &SchemaPaths, id: &str, key: &str) -> String {
+    let path = if paths.all.contains(&format!("{id}[]")) {
+        format!("{id}[].{key}")
+    } else {
+        format!("{id}.{key}")
+    };
+    SchemaPaths::fold(&path)
 }
 
 /// The ids of the `lint` entries, in file order.
@@ -52,10 +68,19 @@ fn stale(entry: &Entry, paths: &SchemaPaths) -> Option<String> {
                 }
             }
         }
-        Entry::Setting { .. } if !paths.all.contains(name) => {
-            return Some(format!(
-                "setting `{name}` is not a path in the config schema"
-            ));
+        Entry::Setting { keys, .. } => {
+            if !paths.all.contains(name) {
+                return Some(format!(
+                    "setting `{name}` is not a path in the config schema"
+                ));
+            }
+            for key in keys {
+                if !paths.all.contains(&key_path(paths, name, key)) {
+                    return Some(format!(
+                        "setting `{name}` lists the key `{key}`, which is not a setting of it"
+                    ));
+                }
+            }
         }
         _ => {}
     }
@@ -78,8 +103,9 @@ fn every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint() {
         assert_eq!(
             count,
             1,
-            "lint `{}` has {count} changelog entries, not one: add a `lint` entry under the \
-             `next` release in src/changelog.toml",
+            "lint `{}` has {count} changelog entries, not one: add a `lint` entry for `{}` under \
+             the `next` release in src/changelog.toml, which its header says how to start",
+            lint.id(),
             lint.id()
         );
     }
@@ -92,33 +118,64 @@ fn every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint() {
     }
 }
 
+/// The leaves of the schema that no entry of `changelog` covers. A `setting` covers its own path
+/// and the keys it lists, and a `lint` the keys it lists under its table; nothing covers a path
+/// by being a prefix of it.
+fn uncovered(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
+    let mut covered = BTreeSet::new();
+    for (_, entry) in entries_in(changelog) {
+        match entry {
+            Entry::Lint { id, keys, .. } => {
+                covered.extend(keys.iter().map(|key| format!("md.lints.{id}.{key}")));
+            }
+            Entry::Setting { id, keys, .. } => {
+                covered.insert(id.clone());
+                covered.extend(keys.iter().map(|key| key_path(paths, id, key)));
+            }
+            _ => {}
+        }
+    }
+    paths.leaves.difference(&covered).cloned().collect()
+}
+
 #[test]
 fn every_setting_in_the_schema_has_an_entry() {
     let paths = SchemaPaths::of(&schema());
-    let setting_ids: Vec<&str> = entries()
-        .filter(|(_, entry)| matches!(entry, Entry::Setting { .. }))
-        .map(|(_, entry)| entry.id())
-        .collect();
-    let keyed: BTreeSet<String> = entries()
-        .filter_map(|(_, entry)| match entry {
-            Entry::Lint { id, keys, .. } => Some((id, keys)),
-            _ => None,
-        })
-        .flat_map(|(id, keys)| keys.iter().map(move |key| format!("md.lints.{id}.{key}")))
-        .collect();
-    for leaf in &paths.leaves {
-        let under_setting = setting_ids.iter().any(|id| {
-            leaf == id
-                || leaf.starts_with(&format!("{id}."))
-                || leaf.starts_with(&format!("{id}[]"))
-        });
-        assert!(
-            under_setting || keyed.contains(leaf),
-            "`{leaf}` is in the config schema and in no changelog entry: add a `setting` entry \
-             with the id `{leaf}` under the `next` release in src/changelog.toml (a new lint \
-             lists its settings in `keys` instead)"
-        );
-    }
+    let uncovered = uncovered(changelog(), &paths);
+    assert!(
+        uncovered.is_empty(),
+        "{uncovered:?} is in the config schema and in no changelog entry: add a `setting` entry \
+         with the path as its `id` under the `next` release in src/changelog.toml, which its \
+         header says how to start (a new lint lists its settings in `keys` instead)"
+    );
+}
+
+/// A table that is a setting covers the keys it lists and no others, and a setting that holds a
+/// value covers itself.
+#[test]
+fn a_setting_covers_its_own_path_and_its_keys_only() {
+    let setting = |id: &str, keys: &str| {
+        format!(
+            "[[release]]\nversion = \"next\"\n[[release.entry]]\nkind = \"setting\"\nid = \"{id}\"\n\
+             {keys}summary = \"A setting\"\nonboarding = \"Set it.\"\n"
+        )
+    };
+    let paths = SchemaPaths::of(&schema());
+    let uncovered =
+        |text: String| uncovered(&Changelog::parse(&text).expect("a changelog"), &paths);
+
+    let value_only = uncovered(setting("md.globs", ""));
+    assert!(!value_only.contains(&"md.globs".to_string()));
+    assert!(value_only.contains(&"md.overrides[].globs".to_string()));
+
+    let no_keys = uncovered(setting("md.overrides", ""));
+    assert!(no_keys.contains(&"md.overrides[].globs".to_string()));
+
+    let globs = uncovered(setting("md.overrides", "keys = [\"globs\"]\n"));
+    assert!(!globs.contains(&"md.overrides[].globs".to_string()));
+
+    let other_key = uncovered(setting("md.overrides", "keys = [\"lints\"]\n"));
+    assert!(other_key.contains(&"md.overrides[].globs".to_string()));
 }
 
 #[test]
@@ -164,7 +221,8 @@ fn the_crate_version_has_a_release_and_none_is_above_it() {
     }
 }
 
-/// Run by `make check-release`, which the release workflow calls after `make ci`.
+/// Run by `make check-release`, which names this test and which the release workflow calls after
+/// `make ci`.
 #[test]
 #[ignore = "fails until the release change replaces `next` with the version"]
 fn no_release_is_left_as_next() {

@@ -2,15 +2,32 @@
 # agent what is new. The tests in tests/changelog.rs say what an entry must hold.
 #
 # An entry has a `kind`: `lint`, `setting`, `feature` or `breaking`. A change that adds a lint, a
-# setting, a feature or a migration adds its entry under the `next` release, which is last. The PR
-# that bumps the version in Cargo.toml replaces `next` with that version; `make check-release`
+# setting, a feature or a migration adds its entry under the `next` release, which is last. When
+# the file has none, start it at the end:
+#
+#   [[release]]
+#   version = "next"
+#
+#   [[release.entry]]
+#   kind = "feature"
+#   id = "a-short-name"
+#   summary = "One line, 72 characters at most"
+#   onboarding = """
+#   Markdown for an agent: what it does and how to use it.
+#   """
+#
+# The PR that bumps the version in Cargo.toml renames `next` to that version; `make check-release`
 # fails while `next` remains.
 #
 # `id` is a lint's id, a setting's path in the config schema, or a short name for a feature or a
 # breaking change. A `lint` entry lists in `keys` the settings its table had when it arrived, each
-# as a path inside the table. A `breaking` entry says in `update_does_all` whether `deslag update`
-# does the whole job. `onboarding` is Markdown for an agent: what the thing does and the table that
-# turns it on. Its fenced TOML must fit the schema.
+# as a path inside the table. A `setting` entry whose id is a table does the same: `md.overrides`
+# lists `globs` and `lints`, which stand for `md.overrides[].globs` and `md.overrides[].lints`. A
+# setting that holds a value has no `keys`. A setting covers its own path and its listed keys, so
+# a key added to a table later gets a `setting` entry of its own, under the release that adds it.
+# A `breaking` entry says in `update_does_all` whether `deslag update` does the whole job.
+# `onboarding` is Markdown for an agent: what the thing does and the table that turns it on. Its
+# fenced TOML must fit the schema.
 
 [[release]]
 version = "0.1.0"
@@ -167,11 +184,13 @@ globs = ["/AGENTS.md", "/docs/**/*.md"]
 [[release.entry]]
 kind = "setting"
 id = "md.overrides"
+keys = ["globs", "lints"]
 summary = "Sets lints for the files a list of globs matches"
 onboarding = '''
 An `[[md.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
 globs match, on top of the tables under `[md.lints]`. Use one when a file needs another limit, not
-to loosen a limit for every file.
+to loosen a limit for every file. An override can turn a lint on or change its settings, but it
+cannot turn off a lint that a wider table turned on.
 
 ```toml
 [[md.overrides]]

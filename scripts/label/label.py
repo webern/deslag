@@ -28,7 +28,8 @@ begin `id:`, has `deslag-gold read-tags --check` keep the good ones, and asks ag
 sentences that failed, quoting the validator's message, at most twice; a voter with no good line for
 a sentence after that abstains on it. Money: ledger.py, a reservation before every POST. Provenance:
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
-describes it. A reply cut off at max_tokens is asked again in halves; an endpoint that keeps failing
+describes it, with the licence voters.json gives its model, the date that licence was read (no run
+starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is asked again in halves; an endpoint that keeps failing
 (HTTP 429 or 5xx, replies cut off on both halves of a split, a provider refusal) is abandoned for the
 next one in voters.json's `provider_fallback`, but a network error here stops the run so that it can
 be continued; backoff, halving and switching draw on one budget of failed calls (`failure_budget`); a
@@ -65,8 +66,14 @@ RUN_COLUMNS = (
     "run", "state_id", "role", "name", "status", "reason", "model", "provider", "endpoint", "quantization",
     "price_in_per_m", "price_out_per_m", "date", "prompt_sha256", "guide_sha256", "calls", "retries",
     "prompt_tokens", "completion_tokens", "reasoning_tokens", "cost_usd", "seconds", "sentences",
-    "listing", "reply_model", "model_version", "deslag_commit", "settings",
+    "listing", "reply_model", "model_version", "license", "license_checked", "voters_sha256", "deslag_commit",
+    "settings",
 )
+
+# What voters.json says of a model's licence, and of an outside tagger's in `external`: the licence (an
+# SPDX id for an open-weight model), the model card or terms, and the date the licence was last read. A
+# run copies `license` and `license_checked` into its record, and no run starts without the date.
+LICENSE_KEYS = ("license", "license_url", "license_checked")
 
 # Optional settings, in seconds: the first wait after a failed call, the longest single wait, the most
 # a call waits in all, and the pause after each call made, which keeps a voter under a rate limit.
@@ -182,7 +189,40 @@ def load_config(path=CONFIG):
             raise ConfigError(f"{path}: settings.{key} must be a number, not below 0")
     if config["settings"]["abstain_limit"] > 1:
         raise ConfigError(f"{path}: settings.abstain_limit is a share of the sentences, at most 1")
+    for name, model in config["models"].items():
+        check_license(path, f"models.{name}", model)
+    external = config.get("external", {})
+    if not isinstance(external, dict):
+        raise ConfigError(f"{path}: `external` must be an object of outside taggers")
+    for name, entry in external.items():
+        if not isinstance(entry, dict) or not isinstance(entry.get("model"), str) or not entry["model"].strip():
+            raise ConfigError(f"{path}: external.{name} must be an object with a `model`")
+        check_license(path, f"external.{name}", entry)
     return config
+
+
+def check_license(path, where, entry):
+    """Refuses a licence field of voters.json that is not a string with text in it, a `license_url`
+    that is not https, or a `license_checked` that is not a date `YYYY-MM-DD`. A field left out is
+    not refused here: a run of that model is (see [Runner.licence])."""
+    for key in (*LICENSE_KEYS, "license_note"):
+        if key in entry and (not isinstance(entry[key], str) or not entry[key].strip()):
+            raise ConfigError(f"{path}: {where}.{key} must be a string, not empty")
+    if "license_url" in entry and not entry["license_url"].startswith("https://"):
+        raise ConfigError(f"{path}: {where}.license_url must be an https URL")
+    if "license_checked" in entry:
+        try:
+            ok = re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["license_checked"]) and datetime.date.fromisoformat(entry["license_checked"])
+        except ValueError:
+            ok = False
+        if not ok:
+            raise ConfigError(f"{path}: {where}.license_checked must be a date, YYYY-MM-DD, not `{entry['license_checked']}`")
+
+
+def file_sha256(path):
+    """The sha256 of the bytes of the file at `path`."""
+    with open(path, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
 
 
 def read(path):
@@ -528,9 +568,11 @@ def fresh_cut(total=0):
 
 class Runner:
     def __init__(self, directory, config, prompts, transport, gold, max_usd,
-                 sleep=time.sleep, clock=time.monotonic, say=print, warn=None):
+                 sleep=time.sleep, clock=time.monotonic, say=print, warn=None, config_path=CONFIG):
         self.dir = guard.check_dir(directory)
         self.config = config
+        # The voters.json the config was read from: its sha256 goes into the record of each run.
+        self.config_path = config_path
         self.prompts = prompts
         self.transport = transport
         self.gold = gold
@@ -615,7 +657,26 @@ class Runner:
             return candidate, skipped
         return None, skipped
 
-    CHANGED = ("prompt_sha256", "request", "model", "endpoint", "limit", "scope")
+    CHANGED = (
+        "prompt_sha256", "request", "model", "endpoint", "limit", "scope", "license", "license_checked",
+        "voters_sha256",
+    )
+
+    def licence(self, name, entry, where):
+        """`license`, `license_checked` and the sha256 of voters.json, for the record of a run of the
+        model or outside tagger `name`, whose entry of voters.json is `entry` (`where` says which).
+        ConfigError if the entry has no `license_checked`: no run starts without a licence read and
+        dated."""
+        if not entry or not str(entry.get("license_checked") or "").strip():
+            raise ConfigError(
+                f"{name} has no `license_checked` in {where} of {self.config_path}: a run records the licence "
+                f"of what made it and the date that licence was read, so read it, and give `license`, "
+                f"`license_url` and `license_checked` there, before a run starts"
+            )
+        return {
+            "license": entry.get("license"), "license_checked": entry["license_checked"],
+            "voters_sha256": file_sha256(self.config_path),
+        }
 
     def start_run(self, name, role, resume=None, limit=None, scope=None, endpoint=None):
         """Allocates a run id from the ledger, or takes `resume`, which must be a run of this voter
@@ -624,8 +685,10 @@ class Runner:
         adjudicator run) are recorded too.
 
         A run that is continued keeps its record as it was written: it is refused if the prompt, the
-        request settings, the model, the endpoint, the limit or the scope would now be other than it
-        recorded, since it would then claim what it did not do, and a run has one of each."""
+        request settings, the model, the endpoint, the limit, the scope, the licence or the bytes of
+        voters.json would now be other than it recorded, since it would then claim what it did not do,
+        and a run has one of each. A model with no `license_checked` starts no run (see [Runner.licence])."""
+        licence = self.licence(name, self.config["models"][name], "models")
         saved = None
         if resume:
             if not os.path.isfile(self.raw(name, resume, "run.json")):
@@ -660,7 +723,7 @@ class Runner:
             "guide_sha256": self.prompts.guide_sha256, "sentences": sentence_count(self.dir),
             "listing": "-" if handoff else f"listings/{run}.json", "endpoint_record": pinned,
             "model_version": "-" if handoff else listing_version(pinned), "deslag_commit": self.commit,
-            "limit": limit, "scope": scope,
+            "limit": limit, "scope": scope, **licence,
             "request": {
                 key: config.get(key)
                 for key in ("temperature", "temperature_note", "reasoning", "max_tokens")
@@ -1733,7 +1796,15 @@ def stamp_runs(text, run):
 
 def register(runner, name, path, model, version, seconds):
     """Records a run made by something that is not an API, such as spaCy: stamps `Runs=` onto its
-    file, writes it as tags/<name>.conllu, and describes the run in runs.tsv. Costs nothing."""
+    file, writes it as tags/<name>.conllu, and describes the run in runs.tsv. Costs nothing. `name`
+    must be an entry of `external` in voters.json, naming `model`, whose licence and the date it was
+    read the run records."""
+    entry = runner.config.get("external", {}).get(name)
+    if entry is None:
+        raise ConfigError(f"`{name}` is not in `external` of {runner.config_path}, which says the licence of each outside tagger")
+    if entry["model"] != model:
+        raise ConfigError(f"external.{name} of {runner.config_path} is the model `{entry['model']}`, not `{model}`")
+    licence = runner.licence(name, entry, "external")
     path = guard.check_file(path, runner.dir)
     run = runner.ledger.new_run()
     text = read(path)
@@ -1744,7 +1815,7 @@ def register(runner, name, path, model, version, seconds):
         "endpoint": "local", "quantization": version or "-", "price_in_per_m": 0.0,
         "price_out_per_m": 0.0, "date": now(), "prompt_sha256": "-",
         "guide_sha256": "-", "sentences": sentences, "listing": "-",
-        "deslag_commit": runner.commit, "model_version": version or "-",
+        "deslag_commit": runner.commit, "model_version": version or "-", **licence,
     }
     write_atomic(runner.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
     write(runner.raw(name, run, "source.conllu"), text)

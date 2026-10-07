@@ -48,16 +48,22 @@ LISTING = {
     }
 }
 
+# What voters.json says of each model's licence; a run copies it into its record.
+LICENSED = {"license": "MIT", "license_url": "https://example.org/card", "license_checked": "2026-10-01"}
+
 CONFIG = {
     "voters": ["one", "two"],
     "adjudicator": "judge",
     "settings": {"batch_size": 2, "per_part": 60, "retries": 2, "http_attempts": 3, "timeout_s": 5},
     "models": {
         "one": {"model": "x/one", "provider": "host/fp8", "quantizations": ["fp8"], "temperature": 0,
-                "reasoning": {"enabled": False}, "max_tokens": 1000},
-        "two": {"model": "x/two", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000},
-        "judge": {"model": "x/judge", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000},
+                "reasoning": {"enabled": False}, "max_tokens": 1000, **LICENSED},
+        "two": {"model": "x/two", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000,
+                **LICENSED, "license": "Apache-2.0"},
+        "judge": {"model": "x/judge", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000,
+                  **LICENSED, "license": "Terms"},
     },
+    "external": {"spacy": {"model": "en-core-web-trf", **LICENSED}},
 }
 
 SENTENCES = [("d1", ["Run", "it", "now", "."]), ("d2", ["Files", "are", "ready", "."]),
@@ -2393,14 +2399,14 @@ class ProvenanceTests(Base):
     def test_register_records_the_commit_too(self):
         source = os.path.join(self.dir, "spacy.conllu")
         label.write(source, "# sent_id = d1\n")
-        label.register(self.runner(None), "spacy", source, "en_core_web_trf", "3.8.0", None)
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
         self.assertRegex(self.runs_rows()[0]["deslag_commit"], r"^([0-9a-f]{40}(-dirty)?|unknown)$")
 
     def test_register_refuses_a_file_outside_the_sample_directory(self):
         outside = os.path.join(self.root, "spacy.conllu")
         label.write(outside, "# sent_id = d1\n")
         with self.assertRaises(guard.Refused):
-            label.register(self.runner(None), "spacy", outside, "m", None, None)
+            label.register(self.runner(None), "spacy", outside, "en-core-web-trf", None, None)
 
 
 class SettledTests(Base):
@@ -2511,14 +2517,14 @@ class OutsideTaggerTests(Base):
                 "2\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation\n\n")
         label.write(source, text)
         runner = self.runner(None)
-        run = label.register(runner, "spacy", source, "en_core_web_trf", "3.8.0", 12.5)
+        run = label.register(runner, "spacy", source, "en-core-web-trf", "3.8.0", 12.5)
         self.assertEqual(run, "r1")
         written = label.read(os.path.join(self.dir, "tags", "spacy.conllu"))
         self.assertIn("Kind=Word|Runs=r1|SpaceAfter=No|Conf=Likely", written)
         self.assertIn("Kind=Punctuation\n", written, "a token that is not a word has no run")
         row = self.runs_rows()[0]
         self.assertEqual((row["role"], row["model"], row["provider"], row["cost_usd"]),
-                         ("external", "en_core_web_trf", "local", "0.00000000"))
+                         ("external", "en-core-web-trf", "local", "0.00000000"))
         self.assertEqual(row["seconds"], "12.5")
 
     def test_cost_is_dollars_and_minutes_per_thousand_sentences(self):
@@ -2530,6 +2536,147 @@ class OutsideTaggerTests(Base):
         # Two calls at $0.30 for three sentences: $0.60 per 3, so $200 per 1000.
         self.assertEqual(row[:4], ["r1", "voter", "two", "complete"])
         self.assertEqual(row[6], "200.0000")
+
+
+class LicenceTests(Base):
+    """Each run records the licence of what made it, the date that licence was read, and the sha256 of
+    the voters.json it started with; no run starts for a model whose licence has no date."""
+
+    def setUp(self):
+        super().setUp()
+        self.voters_file = os.path.join(self.root, "voters.json")
+        label.write(self.voters_file, json.dumps(CONFIG))
+
+    def runner(self, transport, config=None, **more):
+        made = super().runner(transport, config=config, **more)
+        made.config_path = self.voters_file
+        return made
+
+    def write_config(self, config):
+        path = os.path.join(self.root, "check.json")
+        label.write(path, json.dumps(config))
+        return path
+
+    def test_the_shipped_config_dates_the_licence_of_every_model_and_of_spacy(self):
+        config = label.load_config()
+        for name, model in config["models"].items():
+            for key in label.LICENSE_KEYS:
+                self.assertTrue(model.get(key), f"{name} has no {key}")
+            self.assertTrue(model["license_url"].startswith("https://"))
+        for name in config["voters"]:
+            self.assertIn(config["models"][name]["license"], ("MIT", "Apache-2.0"), name)
+        spacy = config["external"]["spacy"]
+        self.assertEqual((spacy["model"], spacy["license"]), ("en-core-web-trf", "MIT"))
+        self.assertRegex(spacy["license_checked"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertIn("--model en-core-web-trf", label.read(os.path.join(label.HERE, "spacy.sh")),
+                      "spacy.sh registers the model that `external` names")
+
+    def test_load_config_refuses_a_licence_field_that_is_not_a_string_or_a_date(self):
+        shipped = label.load_config()
+        cases = [
+            (("models", "qwen", "license_checked"), "2026-13-01", "must be a date"),
+            (("models", "qwen", "license_checked"), "last week", "must be a date"),
+            (("models", "qwen", "license"), 5, "must be a string"),
+            (("models", "qwen", "license"), " ", "must be a string"),
+            (("models", "qwen", "license_url"), "http://example.org", "must be an https URL"),
+            (("external", "spacy", "license_checked"), "2026-10-7", "must be a date"),
+            (("external", "spacy", "model"), "", "must be an object with a `model`"),
+        ]
+        for (top, name, key), value, message in cases:
+            config = copy.deepcopy(shipped)
+            config[top][name][key] = value
+            with self.assertRaisesRegex(label.ConfigError, message):
+                label.load_config(self.write_config(config))
+        config = copy.deepcopy(shipped)
+        config["external"] = ["spacy"]
+        with self.assertRaisesRegex(label.ConfigError, "`external` must be an object"):
+            label.load_config(self.write_config(config))
+        # A model with no licence loads; a run of it is what is refused.
+        config = copy.deepcopy(shipped)
+        for key in label.LICENSE_KEYS:
+            del config["models"]["mistral"][key]
+        label.load_config(self.write_config(config))
+
+    def test_a_run_records_the_licence_and_the_sha256_of_voters_json(self):
+        self.runner(FakeTransport(answer_all)).tag("two")
+        meta = json.loads(label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json")))
+        with open(self.voters_file, "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()
+        self.assertEqual((meta["license"], meta["license_checked"], meta["voters_sha256"]),
+                         ("Apache-2.0", "2026-10-01", digest))
+        columns = label.read(os.path.join(self.dir, "runs.tsv")).splitlines()[0].split("\t")
+        at = columns.index("model_version")
+        self.assertEqual(columns[at + 1 : at + 4], ["license", "license_checked", "voters_sha256"])
+        row = self.runs_rows()[0]
+        self.assertEqual((row["license"], row["license_checked"], row["voters_sha256"]), ("Apache-2.0", "2026-10-01", digest))
+
+    def test_a_model_with_no_license_checked_starts_no_run(self):
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["two"]["license_checked"]
+        transport = FakeTransport(answer_all)
+        with self.assertRaisesRegex(label.ConfigError, "two has no `license_checked` in models of .*voters.json"):
+            self.runner(transport, config=config).tag("two")
+        self.assertEqual((transport.gets, transport.posts), ([], []), "nothing is looked up or asked")
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "two")))
+        self.assertEqual([row for row in self.ledger().rows() if row["state"] == "run" and row["run"] == "r1"], [],
+                         "no run id is taken")
+        out, err = io.StringIO(), io.StringIO()
+        with unittest.mock.patch.object(label, "load_config", return_value=config), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.main(["tag", "--dir", self.dir, "--max-usd", "1", "--voter", "two"], transport, FakeGold())
+        self.assertEqual(code, 2)
+        self.assertIn("two has no `license_checked`", err.getvalue())
+        # The adjudicator is held to the same.
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all)).tag(name)
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["judge"]["license_checked"]
+        with self.assertRaisesRegex(label.ConfigError, "judge has no `license_checked`"):
+            self.runner(FakeTransport(answer_all), config=config).judge("merge", [("one", False), ("two", False)])
+
+    def test_a_run_is_not_continued_when_voters_json_or_the_licence_changed(self):
+        def stop(body, count):
+            if count >= 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(stop)).tag("two")
+        before = label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json"))
+        saved = label.read(self.voters_file)
+        label.write(self.voters_file, saved + " ")
+        with self.assertRaisesRegex(openrouter.ApiError, "other voters_sha256 than it would have now"):
+            self.runner(FakeTransport(answer_all)).tag("two")
+        label.write(self.voters_file, saved)
+        config = copy.deepcopy(CONFIG)
+        config["models"]["two"]["license_checked"] = "2026-10-05"
+        with self.assertRaisesRegex(openrouter.ApiError, "other license_checked than it would have now"):
+            self.runner(FakeTransport(answer_all), config=config).tag("two")
+        config["models"]["two"]["license_checked"] = "2026-10-01"
+        config["models"]["two"]["license"] = "MIT"
+        with self.assertRaisesRegex(openrouter.ApiError, "other license than it would have now"):
+            self.runner(FakeTransport(answer_all), config=config).tag("two")
+        self.assertEqual(label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json")), before)
+        # As it was, the run goes on and keeps its record.
+        self.runner(FakeTransport(answer_all)).tag("two")
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["complete"])
+
+    def test_register_records_the_licence_of_its_external_entry_and_refuses_without_one(self):
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
+        row = self.runs_rows()[0]
+        self.assertEqual((row["license"], row["license_checked"]), ("MIT", "2026-10-01"))
+        self.assertEqual(len(row["voters_sha256"]), 64)
+        with self.assertRaisesRegex(label.ConfigError, "is the model `en-core-web-trf`, not `en_core_web_sm`"):
+            label.register(self.runner(None), "spacy", source, "en_core_web_sm", None, None)
+        with self.assertRaisesRegex(label.ConfigError, "`stanza` is not in `external`"):
+            label.register(self.runner(None), "stanza", source, "en-core-web-trf", None, None)
+        config = copy.deepcopy(CONFIG)
+        del config["external"]["spacy"]["license_checked"]
+        with self.assertRaisesRegex(label.ConfigError, "spacy has no `license_checked` in external"):
+            label.register(self.runner(None, config=config), "spacy", source, "en-core-web-trf", None, None)
+        self.assertEqual(len(self.runs_rows()), 1, "a refused register records no run")
 
 
 class RoundFourTests(Base):
@@ -2877,7 +3024,7 @@ class RoundFourTests(Base):
         self.assertEqual(self.statuses(), [("r1", "stopped")])
         source = os.path.join(self.dir, "spacy.conllu")
         label.write(source, "# sent_id = d1\n1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
-        label.register(self.runner(None), "spacy", source, "model", None, None)
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", None, None)
         self.assertEqual(self.statuses(), [("r1", "stopped"), ("r2", "complete")])
 
     def test_run_json_is_written_by_a_temporary_file_and_a_rename(self):
@@ -3288,7 +3435,9 @@ class RoundFourTests(Base):
 
 HANDOFF_CONFIG = copy.deepcopy(CONFIG)
 HANDOFF_CONFIG["adjudicator"] = "opus"
-HANDOFF_CONFIG["models"]["opus"] = {"model": "claude-opus-5-5", "provider": "claude-code", "transport": "handoff"}
+HANDOFF_CONFIG["models"]["opus"] = {
+    "model": "claude-opus-5-5", "provider": "claude-code", "transport": "handoff", **LICENSED, "license": "Terms",
+}
 # The default adjudicator through OpenRouter, with `opus` also defined, to be named by `--adjudicator`.
 BOTH_CONFIG = copy.deepcopy(CONFIG)
 BOTH_CONFIG["models"]["opus"] = HANDOFF_CONFIG["models"]["opus"]

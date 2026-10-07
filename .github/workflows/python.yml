@@ -1,7 +1,8 @@
 name: python
 
-# make test-python takes minutes of git, so it runs only when the scripts it tests, or how it is
-# run, change. make ci leaves it out; the release runs it beside make ci.
+# make test-python takes minutes of git, so it runs only when the scripts it tests, the deslag-gold
+# they run (tools/exam, and what it builds with), or how it is run, change. make ci leaves it out;
+# the release runs it beside make ci.
 on:
   push:
     branches: [main]
@@ -11,6 +12,10 @@ on:
       - "scripts/llm-detection/**"
       - "scripts/train/**"
       - "scripts/preflight.sh"
+      - "tools/exam/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
       - "Makefile"
       - ".github/workflows/python.yml"
   pull_request:
@@ -20,6 +25,10 @@ on:
       - "scripts/llm-detection/**"
       - "scripts/train/**"
       - "scripts/preflight.sh"
+      - "tools/exam/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
       - "Makefile"
       - ".github/workflows/python.yml"
 
@@ -43,6 +52,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      # test-python builds deslag-gold, so it needs the toolchain rust-toolchain.toml names, and
+      # the registry and target dir cached, as in ci.yml.
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
 
       # make preflight runs first here as in every gate, and it checks for typos, which this job
       # does not otherwise use. Keep it: it is how a machine learns what it lacks.

@@ -6,22 +6,25 @@ standard library only. It does every step of the labelling pipeline that is a ca
 leaves every judgement of the output to `deslag-gold`, which does the reading, comparing and grading
 in Rust. See README.md in this directory for the steps.
 
-    label.py tag      --dir .label/dev --max-usd 8 [--voter NAME ...] [--limit N] [--resume rN]
+    label.py tag      --dir .label/dev --max-usd 8 [--voter NAME ...] [--limit N] [--resume rN] [--again]
     label.py register --dir .label/dev --name spacy --file PATH --model NAME [--version V]
     label.py judge    --dir .label/dev --max-usd 8 [--into merge] [--voter NAME ...] [--spacy]
+                      [--trains yes|no] [--resume rN]
     label.py cost     --dir .label/draw500
     label.py spend
 
-The directory is one sample: `sample.conllu` from `deslag-exam tokens --gold ...` or from
-`deslag-gold draw`, under a directory named `.label`. Anything that names holdout is refused before
-it is read (guard.py), and the Rust stages refuse it again.
+The directory is one sample, under this checkout's `.label`: a skeleton made from the dev or owner
+gold, or a draw for labelling; nothing else is accepted (guard.py, an allow-list, checked on real
+paths before a file is opened), and the Rust stages check it again.
 
 Every call is one batch of about 50 sentences. The system prompt is the annotation guide, which the
 Rust tools compile in, and the notes in prompts/preamble.md; the request pins one endpoint of one
 provider with no fallbacks (openrouter.py). The runner saves every raw reply, keeps the lines that
 begin `id:`, has `deslag-gold read-tags --check` keep the good ones, and asks again for just the
-sentences that failed, quoting the validator's message, at most twice. Money: ledger.py. Provenance:
-each run gets an id, `Runs=` in the labels names it, and `runs.tsv` describes it.
+sentences that failed, quoting the validator's message, at most twice; a voter with no good line for
+a sentence after that abstains on it. Money: ledger.py, a reservation before every POST. Provenance:
+each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
+describes it. No error the runner prints shows the key.
 """
 
 import argparse
@@ -33,6 +36,7 @@ import re
 import subprocess
 import sys
 import time
+import traceback
 
 import guard
 import ledger as ledger_module
@@ -48,11 +52,13 @@ RUN_COLUMNS = (
     "run", "role", "name", "model", "provider", "endpoint", "quantization", "price_in_per_m",
     "price_out_per_m", "date", "prompt_sha256", "guide_sha256", "calls", "retries",
     "prompt_tokens", "completion_tokens", "reasoning_tokens", "cost_usd", "seconds", "sentences",
-    "listing",
+    "listing", "reply_model", "model_version", "deslag_commit", "settings",
 )
 
-# A line of a reply that starts with an id and a colon: `g0001: V.fi _`, `g0007.5: N.p | reason`.
-ID_LINE = re.compile(r"^[A-Za-z][\w.\-]*\s*:")
+# A line of a reply that starts with an id and a colon: `g0001: V.fi _`, `g0007.5: N.p | reason`,
+# after any bullet or number, and with the id in bold or backticks: `- **g0001**: V.fi _`.
+LIST_MARK = re.compile(r"^(?:(?:[-*+\u2022]|\d+[.)])\s+)+")
+ID_LINE = re.compile(r"^([*_`]*)([A-Za-z][\w.\-]*)[*_`]*\s*:[*_`]*\s*(.*)$")
 
 
 class ConfigError(Exception):
@@ -115,12 +121,17 @@ class Prompts:
 
 
 def id_lines(text):
-    """The lines of a reply that begin `id:`, without code fences or the backticks around a line."""
+    """The lines of a reply that begin `id:`, as `id: rest`: without a bullet or a number before them,
+    the bold or backticks around the id or the whole line, or a code fence."""
     kept = []
     for line in text.splitlines():
-        line = line.strip().strip("`").strip()
-        if ID_LINE.match(line):
-            kept.append(line)
+        line = LIST_MARK.sub("", line.strip())
+        found = ID_LINE.match(line)
+        if found:
+            marked, ident, rest = found.groups()
+            if marked:
+                rest = rest.rstrip("*`").rstrip()
+            kept.append(f"{ident}: {rest}".rstrip() if rest else f"{ident}:")
     return "\n".join(kept) + ("\n" if kept else "")
 
 
@@ -136,7 +147,9 @@ class GoldCli:
 
     def _run(self, directory, *args):
         command = [self.binary, "--dir", directory, *args]
-        done = subprocess.run(command, capture_output=True, text=True, check=False)
+        # The Rust stages never need the key, so they never get it.
+        env = {name: value for name, value in os.environ.items() if name != openrouter.KEY_VARIABLE}
+        done = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
         if done.returncode != 0:
             raise GoldError(f"deslag-gold {args[0]} failed:\n{done.stderr.strip()}")
         return done.stdout
@@ -147,8 +160,10 @@ class GoldCli:
     def read_tags(self, directory, name, run, files):
         self._run(directory, "read-tags", "--check", "--lines", *files, "--prov", name, "--run", run)
 
-    def merge(self, directory, into, voters, per_part):
+    def merge(self, directory, into, voters, per_part, settled=None):
         args = ["merge", "--into", into, "--per-part", str(per_part)]
+        if settled:
+            args += ["--settled", settled]
         for name, base_only in voters:
             args += ["--voter", name]
             if base_only:
@@ -156,13 +171,14 @@ class GoldCli:
         return self._run(directory, *args)
 
     def read_answers(self, directory, into, run, files, per_part):
+        which = ["--run", run] if run else []
         self._run(
-            directory, "read-answers", "--check", "--into", into, "--run", run,
+            directory, "read-answers", "--check", "--into", into, *which,
             "--per-part", str(per_part), "--answers", *files,
         )
 
-    def finish(self, directory, into):
-        return self._run(directory, "finish", "--into", into)
+    def finish(self, directory, into, trains="no"):
+        return self._run(directory, "finish", "--into", into, "--trains", trains)
 
 
 def find_binary(name):
@@ -188,6 +204,29 @@ def sentence_count(directory):
         return sum(1 for line in handle if line.startswith("# sent_id"))
 
 
+def deslag_commit():
+    """The commit this checkout is at, with `-dirty` if the tree has changes, or `unknown`."""
+    try:
+        head = subprocess.run(
+            ["git", "-C", REPO, "rev-parse", "HEAD"], capture_output=True, text=True, check=False
+        ).stdout.strip()
+        changes = subprocess.run(
+            ["git", "-C", REPO, "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+    except OSError:
+        return "unknown"
+    return f"{head}{'-dirty' if changes else ''}" if re.fullmatch(r"[0-9a-f]{40}", head) else "unknown"
+
+
+def listing_version(endpoint):
+    """The model version or update stamp an endpoint listing gives, if it gives one."""
+    for field in ("model_version", "version", "updated_at", "updated"):
+        if endpoint.get(field):
+            return str(endpoint[field])
+    return "-"
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
@@ -207,24 +246,15 @@ class Runner:
         self.clock = clock
         self.say = say
         self.settings = config["settings"]
-        self.ledger = ledger_module.Ledger(guard.label_root(self.dir))
+        self.root = guard.root()
+        self.ledger = ledger_module.Ledger(self.root)
         self.listings = {}
+        self.commit = deslag_commit()
 
     # -- runs and their records
 
     def raw(self, name, run, *more):
         return os.path.join(self.dir, "raw", name, run, *more)
-
-    def next_run(self):
-        taken = [0]
-        base = os.path.join(self.dir, "raw")
-        if os.path.isdir(base):
-            for name in os.listdir(base):
-                for run in os.listdir(os.path.join(base, name)):
-                    found = re.fullmatch(r"r(\d+)", run)
-                    if found:
-                        taken.append(int(found.group(1)))
-        return f"r{max(taken) + 1}"
 
     def listing(self, model):
         if model not in self.listings:
@@ -236,11 +266,14 @@ class Runner:
         return self.listings[model]
 
     def start_run(self, name, role, resume=None):
-        """Allocates a run id, or takes `resume`, and records what the run pins: the endpoint as
-        its listing gives it now, with quantisation and price."""
+        """Allocates a run id from the ledger, or takes `resume`, which must be a run of this voter
+        here, and records what the run pins: the endpoint as its listing gives it now, with
+        quantisation and price."""
         config = self.config["models"][name]
         endpoint = openrouter.pinned_endpoint(self.listing(config["model"]), config)
-        run = resume or self.next_run()
+        if resume and not os.path.isfile(self.raw(name, resume, "run.json")):
+            raise openrouter.ApiError(f"{resume} is not a run of {name} in {self.dir}; there is nothing to resume")
+        run = resume or self.ledger.new_run()
         price_in, price_out = openrouter.prices(endpoint)
         meta = {
             "run": run, "role": role, "name": name, "model": config["model"],
@@ -250,71 +283,143 @@ class Runner:
             "date": now(), "prompt_sha256": self.prompts.sha256,
             "guide_sha256": self.prompts.guide_sha256, "sentences": sentence_count(self.dir),
             "listing": f"listings/{run}.json", "endpoint_record": endpoint,
-            "request": {key: config.get(key) for key in ("temperature", "reasoning", "max_tokens")},
+            "model_version": listing_version(endpoint), "deslag_commit": self.commit,
+            "request": {
+                key: config.get(key)
+                for key in ("temperature", "temperature_note", "reasoning", "max_tokens")
+                if config.get(key) is not None or key in ("temperature", "reasoning")
+            },
         }
-        if resume and os.path.isfile(self.raw(name, run, "run.json")):
+        if resume:
             meta["date"] = json.loads(read(self.raw(name, run, "run.json")))["date"]
         write(self.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
         write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(endpoint, indent=2) + "\n")
         return meta, endpoint, config
 
+    def complete_run(self, name, role="voter"):
+        """The id of a finished run of `name` here, if there is one."""
+        base = os.path.join(self.dir, "raw", name)
+        found = []
+        if os.path.isdir(base):
+            for run in os.listdir(base):
+                path = os.path.join(base, run, "run.json")
+                if os.path.isfile(path):
+                    meta = json.loads(read(path))
+                    if meta.get("complete") and meta.get("role") == role:
+                        found.append(run)
+        return max(found, key=lambda run: int(run[1:]), default=None)
+
+    def mark_complete(self, meta):
+        path = self.raw(meta["name"], meta["run"], "run.json")
+        saved = json.loads(read(path))
+        saved["complete"] = True
+        write(path, json.dumps(saved, indent=2) + "\n")
+
+    def recheck(self, meta, endpoint, config, kind):
+        """A reply saved by an earlier invocation is used only if the provider and the model saved
+        beside it are the ones this run pins. A reply with no such record is not used."""
+        path = self.raw(meta["name"], meta["run"], f"{kind}.meta.json")
+        if not os.path.isfile(path):
+            raise openrouter.ProviderMismatch(
+                f"{kind}: a saved reply has no record of the provider and model that made it "
+                f"({os.path.relpath(path, self.dir)} is missing), so it is not used"
+            )
+        saved = json.loads(read(path))
+        openrouter.check_names(saved.get("provider"), saved.get("model"), endpoint, config["model"])
+
     def ask(self, meta, endpoint, config, system, user, kind):
-        """One call: refused if its worst case passes the cap, saved, in the ledger, and its
-        provider checked. Returns the reply text with any think block removed. A reply saved by an
-        earlier invocation of the same run is returned without a call."""
+        """One call. Returns the reply text with any think block removed. A reply saved by an earlier
+        invocation of the same run is returned without a call, after its saved provider and model
+        are checked again.
+
+        Before every POST, each retry too, the call's worst case is booked in the ledger, which
+        refuses it if the cap has no room; after the call the booking is settled at the cost the
+        reply reports. A call that fails stays booked at its worst case. The provider, the model and
+        a cut-off or reasoning reply are checked before anything of the reply is saved as a reply."""
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
         if os.path.isfile(saved):
+            self.recheck(meta, endpoint, config, kind)
             return read(saved)
         body = openrouter.request_body(config, system, user)
         price_in, price_out = openrouter.prices(endpoint)
         worst = ledger_module.worst_case(len(system) + len(user), config["max_tokens"], price_in, price_out)
-        self.ledger.check(self.max_usd, worst)
         key = openrouter.key()
         url = f"{openrouter.API}/chat/completions"
+        where = {
+            "dir": os.path.relpath(self.dir, self.root), "run": run, "role": meta["role"], "name": name,
+            "model": config["model"], "provider": endpoint.get("provider_name") or "",
+        }
+
+        def attempt():
+            ident = self.ledger.reserve(self.max_usd, worst, note=f"{kind}: reserved at worst case", **where)
+            return self.transport.post(url, body, key, self.settings["timeout_s"]), ident
+
         started = self.clock()
-        response, retries = openrouter.with_retries(
-            lambda: self.transport.post(url, body, key, self.settings["timeout_s"]),
-            self.settings["http_attempts"], self.sleep,
-        )
+        (response, ident), retries = openrouter.with_retries(attempt, self.settings["http_attempts"], self.sleep)
         seconds = self.clock() - started
         reply = openrouter.parse_reply(response, price_in, price_out)
-        self.ledger.append(
-            dir=os.path.relpath(self.dir, guard.label_root(self.dir)), run=run, role=meta["role"],
-            name=name, model=config["model"], provider=reply.provider or "",
+        note = f"{kind}: settled"
+        if reply.cost is None:
+            note = f"{kind}: the reply reported no usage, so it stays at its worst case"
+        elif reply.estimated:
+            note = f"{kind}: estimated from tokens"
+        self.ledger.settle(
+            ident, reply.cost, provider=reply.provider or where["provider"],
             prompt_tokens=reply.prompt_tokens, completion_tokens=reply.completion_tokens,
-            reasoning_tokens=reply.reasoning_tokens, cost_usd=f"{reply.cost:.8f}",
-            note="estimated from tokens" if reply.estimated else "",
+            reasoning_tokens=reply.reasoning_tokens, note=note,
         )
+        try:
+            openrouter.check_provider(reply, endpoint, config["model"])
+            if reply.finish == "length":
+                raise openrouter.ApiError(
+                    f"{kind}: the reply was cut off at max_tokens ({config['max_tokens']}); it is not used"
+                )
+            if reply.reasoning_tokens and config.get("reasoning") == {"enabled": False}:
+                raise openrouter.ApiError(
+                    f"{kind}: the reply used {reply.reasoning_tokens} reasoning tokens with reasoning "
+                    f"off, so it is not the call that was asked for"
+                )
+        except openrouter.ApiError:
+            write(self.raw(name, run, f"{kind}.rejected.json"), json.dumps(response, indent=2) + "\n")
+            raise
         write(self.raw(name, run, f"{kind}.response.json"), json.dumps(response, indent=2) + "\n")
+        write(self.raw(name, run, f"{kind}.meta.json"), json.dumps({
+            "kind": kind, "provider": reply.provider, "model": reply.model, "requested_model": config["model"],
+            "endpoint": endpoint["tag"], "fingerprint": reply.fingerprint, "id": reply.ident,
+            "finish": reply.finish,
+        }, indent=2) + "\n")
         record = {
             "kind": kind, "seconds": round(seconds, 3), "retries": retries,
             "prompt_tokens": reply.prompt_tokens, "completion_tokens": reply.completion_tokens,
             "reasoning_tokens": reply.reasoning_tokens, "cost_usd": reply.cost,
             "estimated": reply.estimated, "finish": reply.finish, "think": reply.think,
-            "provider": reply.provider,
+            "provider": reply.provider, "reply_model": reply.model,
         }
         with open(self.raw(name, run, "calls.jsonl"), "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
         write(saved, reply.content + "\n")
-        openrouter.check_provider(reply, endpoint)
         return reply.content + "\n"
 
     def run_row(self, run_json):
-        """The `runs.tsv` row of a run, its totals taken from the calls saved beside it."""
+        """The `runs.tsv` row of a run: its totals from the calls saved beside it, and its dollars from
+        the ledger, which also holds what a failed attempt may have cost."""
         meta = json.loads(read(run_json))
         calls = []
         path = os.path.join(os.path.dirname(run_json), "calls.jsonl")
         if os.path.isfile(path):
             calls = [json.loads(line) for line in read(path).splitlines() if line.strip()]
         row = {key: meta.get(key, "-") for key in RUN_COLUMNS}
+        models = sorted({call["reply_model"] for call in calls if call.get("reply_model")})
         row.update(
             calls=len(calls), retries=sum(call["retries"] for call in calls),
             prompt_tokens=sum(call["prompt_tokens"] for call in calls),
             completion_tokens=sum(call["completion_tokens"] for call in calls),
             reasoning_tokens=sum(call["reasoning_tokens"] for call in calls),
-            cost_usd=f"{sum(call['cost_usd'] for call in calls):.8f}",
+            cost_usd=f"{self.ledger.run_cost(meta['run']):.8f}",
             seconds=f"{sum(call['seconds'] for call in calls):.1f}",
+            reply_model=",".join(models) or "-",
+            settings=json.dumps(meta["request"], sort_keys=True) if meta.get("request") else "-",
         )
         row["price_in_per_m"] = f"{float(meta['price_in_per_m']):.4f}" if meta.get("price_in_per_m") not in (None, "-") else "-"
         row["price_out_per_m"] = f"{float(meta['price_out_per_m']):.4f}" if meta.get("price_out_per_m") not in (None, "-") else "-"
@@ -340,9 +445,13 @@ class Runner:
     # -- tagging
 
     def batch_files(self):
+        """The batches of the sample as it is now: always written afresh, since a sample drawn again
+        would otherwise be asked about with the old batches' sentences."""
         folder = os.path.join(self.dir, "batches")
-        if not os.path.isdir(folder) or not any(f.startswith("batch-") for f in os.listdir(folder)):
-            self.gold.batches(self.dir, self.settings["batch_size"])
+        for stale in os.listdir(folder) if os.path.isdir(folder) else []:
+            if re.fullmatch(r"batch-\d+\.txt", stale):
+                os.remove(os.path.join(folder, stale))
+        self.gold.batches(self.dir, self.settings["batch_size"])
         return [os.path.join(folder, f) for f in sorted(os.listdir(folder)) if re.fullmatch(r"batch-\d+\.txt", f)]
 
     def problems(self, name, ids):
@@ -374,7 +483,8 @@ class Runner:
         return [line for line in retry if line.strip()]
 
     def tag(self, name, limit=None, resume=None):
-        """One voter over every batch of the sample. Returns (run id, the sentences still open)."""
+        """One voter over every batch of the sample. Returns (run id, the sentences it abstains on:
+        those with no good line after the retries). A run over every batch is marked complete."""
         meta, endpoint, config = self.start_run(name, "voter", resume)
         run = meta["run"]
         size = self.settings["batch_size"]
@@ -402,6 +512,8 @@ class Runner:
                     reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
                     write(self.raw(name, run, f"{kind}.lines.txt"), id_lines(reply))
                 open_lines = self.check_tags(name, meta)
+            if limit is None:
+                self.mark_complete(meta)
         finally:
             self.write_runs()
         return run, open_lines
@@ -461,21 +573,37 @@ class Runner:
             self.write_runs()
         return run, open_items
 
-    def judge(self, into, voters, resume=None):
+    def judge(self, into, voters, resume=None, trains="no", settle_from=None):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
-        `<into>/labelled.conllu`. Returns the items still open (none when it finished)."""
-        out = self.gold.merge(self.dir, into, voters, self.settings["per_part"])
+        `<into>/labelled.conllu`. Returns the items still open (none when it finished).
+
+        With `settle_from`, the directory of an earlier merge, every item that merge's adjudicator
+        answered and this merge asks again is settled with that answer, not put to the adjudicator
+        a second time, so the two merges differ by their voting alone."""
+        settled = None
+        if settle_from:
+            settled = os.path.join(self.dir, settle_from, "adjudicated.tsv")
+            if not os.path.isfile(settled):
+                raise GoldError(
+                    f"{os.path.relpath(settled, self.dir)} does not exist: judge the plain merge "
+                    f"first, so that its answers can be reused"
+                )
+        out = self.gold.merge(self.dir, into, voters, self.settings["per_part"], settled)
         self.say(out.rstrip())
-        work = read(os.path.join(self.dir, into, "worklist.tsv")).splitlines()[1:]
+        folder = os.path.join(self.dir, into)
+        parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
         open_items = {}
-        if work:
+        if parts:
             _, open_items = self.adjudicate(into, resume)
         else:
-            self.say("the voters agreed on every word; nothing to adjudicate")
+            self.say("nothing is left for the adjudicator")
+            empty = os.path.join(folder, "none.lines.txt")
+            write(empty, "")
+            self.gold.read_answers(self.dir, into, None, [empty], self.settings["per_part"])
         self.write_runs()
         if open_items:
             return open_items
-        self.say(self.gold.finish(self.dir, into).rstrip())
+        self.say(self.gold.finish(self.dir, into, trains).rstrip())
         return {}
 
 
@@ -503,8 +631,8 @@ def stamp_runs(text, run):
 def register(runner, name, path, model, version, seconds):
     """Records a run made by something that is not an API, such as spaCy: stamps `Runs=` onto its
     file, writes it as tags/<name>.conllu, and describes the run in runs.tsv. Costs nothing."""
-    guard.refuse_path(path)
-    run = runner.next_run()
+    path = guard.check_file(path, runner.dir)
+    run = runner.ledger.new_run()
     text = read(path)
     sentences = sentence_count(runner.dir)
     meta = {
@@ -512,6 +640,7 @@ def register(runner, name, path, model, version, seconds):
         "endpoint": "local", "quantization": version or "-", "price_in_per_m": 0.0,
         "price_out_per_m": 0.0, "date": now(), "prompt_sha256": "-",
         "guide_sha256": "-", "sentences": sentences, "listing": "-",
+        "deslag_commit": runner.commit, "model_version": version or "-",
     }
     write(runner.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
     write(runner.raw(name, run, "source.conllu"), text)
@@ -571,18 +700,22 @@ def command_tag(arguments, config, transport=None, gold=None):
         shown["messages"][1]["content"] = f"<{len(user)} characters>"
         print(f"{len(names)} voters, {len(batches)} batches each; the first request is\n{json.dumps(shown, indent=2)}")
         return 0
-    status = 0
+    if arguments.resume and len(names) != 1:
+        raise ConfigError("--resume continues one run, so it needs exactly one --voter")
     for name in names:
+        done = None if arguments.again or arguments.limit is not None or arguments.resume else runner.complete_run(name)
+        if done:
+            print(f"{name} {done}: already complete, skipped; --again runs it afresh")
+            continue
         try:
             run, left = runner.tag(name, arguments.limit, arguments.resume)
         except ledger_module.CapExceeded as error:
             print(f"label: stopped, {error}; what was saved stays, and --resume continues the run", file=sys.stderr)
             return 4
-        print(f"{name} {run}: {len(left)} sentences without a good line; runs.tsv updated")
-        if left:
-            status = 3
+        note = f"; abstains on {len(left)} sentences with no good line" if left and arguments.limit is None else ""
+        print(f"{name} {run}: done{note}; runs.tsv updated")
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
-    return status
+    return 0
 
 
 def command_judge(arguments, config, transport=None, gold=None):
@@ -591,8 +724,10 @@ def command_judge(arguments, config, transport=None, gold=None):
     if arguments.spacy:
         voters.append(("spacy", True))
     runner = make_runner(arguments, config, transport, gold)
+    # The paired comparison of spaCy as a voter reuses the plain merge's answers.
+    settle_from = arguments.settle_from or ("merge" if arguments.spacy else None)
     try:
-        left = runner.judge(arguments.into, voters, arguments.resume)
+        left = runner.judge(arguments.into, voters, arguments.resume, arguments.trains, settle_from)
     except ledger_module.CapExceeded as error:
         print(f"label: stopped, {error}; what was saved stays, and --resume continues the run", file=sys.stderr)
         return 4
@@ -621,8 +756,7 @@ def command_cost(arguments, config, transport=None, gold=None):
 
 
 def command_spend(arguments, config, transport=None, gold=None):
-    root = os.path.abspath(arguments.label)
-    print(f"${ledger_module.Ledger(root).total():.4f}")
+    print(f"${ledger_module.Ledger(guard.root()).total():.4f}")
     return 0
 
 
@@ -641,6 +775,7 @@ def parser():
     common(tag, True)
     tag.add_argument("--voter", action="append", help="a voter of voters.json; default its `voters`")
     tag.add_argument("--limit", type=int, help="only the first N batches, for a smoke test; no retries")
+    tag.add_argument("--again", action="store_true", help="run a voter that already has a complete run")
     tag.add_argument("--dry-run", action="store_true", help="print the first request and send nothing")
     tag.set_defaults(handler=command_tag)
 
@@ -649,6 +784,14 @@ def parser():
     judge.add_argument("--into", default="merge", help="the directory under --dir the merge goes to")
     judge.add_argument("--voter", action="append", help="a voter of voters.json; default its `voters`")
     judge.add_argument("--spacy", action="store_true", help="add spaCy as a voter on the part of speech alone")
+    judge.add_argument(
+        "--settle-from", metavar="DIR",
+        help="reuse the answers of the merge in this directory; --spacy means `merge`",
+    )
+    judge.add_argument(
+        "--trains", choices=("yes", "no"), default="no",
+        help="`yes` only for a draw for labelling, whose labels may train a model; gold sets are always no",
+    )
     judge.set_defaults(handler=command_judge)
 
     registered = commands.add_parser("register", help="record a run made outside an API, such as spaCy's")
@@ -665,9 +808,14 @@ def parser():
     cost.set_defaults(handler=command_cost)
 
     spend = commands.add_parser("spend", help="print the ledger's cumulative total")
-    spend.add_argument("--label", default=guard.LABEL_DIR, help="the .label directory")
     spend.set_defaults(handler=command_spend)
     return main
+
+
+def redacted(text):
+    """`text` without the API key, if it holds it: nothing printed may."""
+    value = os.environ.get(openrouter.KEY_VARIABLE, "").strip()
+    return text.replace(value, "<key>") if len(value) >= 8 else text
 
 
 def main(argv=None, transport=None, gold=None):
@@ -676,8 +824,19 @@ def main(argv=None, transport=None, gold=None):
         config = load_config()
         return arguments.handler(arguments, config, transport, gold)
     except (guard.Refused, ConfigError, GoldError, openrouter.ApiError, ledger_module.CapExceeded) as error:
-        print(f"label: {error}", file=sys.stderr)
+        print(redacted(f"label: {error}"), file=sys.stderr)
         return 2
+    except KeyboardInterrupt:
+        print("label: interrupted; what was saved stays", file=sys.stderr)
+        return 130
+    except Exception as error:  # noqa: BLE001 - nothing may escape as a traceback, which could show headers
+        frame = traceback.extract_tb(error.__traceback__)[-1]
+        print(
+            f"label: internal error ({type(error).__name__}) at {os.path.basename(frame.filename)}:{frame.lineno}; "
+            f"its message and traceback are not shown, since they could hold the request's headers",
+            file=sys.stderr,
+        )
+        return 1
 
 
 if __name__ == "__main__":

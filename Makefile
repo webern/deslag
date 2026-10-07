@@ -81,9 +81,8 @@ help:
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
 	@echo "test-python      test how batches are built and published, how sentences are labelled with models, and"
-	@echo "                 the exam's trainers and run.sh; offline,"
-	@echo "                 local repositories, about two minutes, so not in test or ci: its own workflow runs it"
-	@echo "                 when they change"
+	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
+	@echo "                 in test or ci: its own workflow runs it when they change"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-ticlist-brill-deslag"
@@ -150,7 +149,8 @@ help:
 	@echo "                 OPENROUTER_API_KEY; MAX_USD caps the ledger; LABEL_FLAGS reach label.py"
 	@echo "generate-label-judge-dev"
 	@echo "                 merge the voters' tags of .label/dev, have Claude settle the disputes, and finish;"
-	@echo "                 needs OPENROUTER_API_KEY; LABEL_INTO names the output, merge-spacy for --spacy"
+	@echo "                 needs OPENROUTER_API_KEY; LABEL_INTO names the output; with --spacy, merge-spacy,"
+	@echo "                 after the plain merge, whose answers it reuses"
 	@echo "generate-label-judge-owner"
 	@echo "                 the same for .label/owner"
 	@echo "generate-label-owner"
@@ -248,13 +248,16 @@ test-owner: preflight
 
 # Every voter's tags in .label/dev and .label/owner, scored by `deslag-exam score --import` against the
 # gold the sample was made from, which is the voter's accuracy on it before any merge. Reads what the
-# generate-label-* targets wrote and calls no model. Not part of test: it needs them to have run.
+# generate-label-* targets wrote and calls no model. Not part of test: it needs them to have run. A voter
+# that abstained on a sentence has no tags for it, which the import cannot score: it says so and goes
+# on, and generate-label-report-* grades it on the sentences it answered.
 test-label: preflight
 	@for set in dev owner; do \
 	    for tags in .label/$$set/tags/*.conllu; do \
 	        [ -f "$$tags" ] || { echo "no tags under .label/$$set; run generate-label-$$set first" >&2; exit 1; }; \
 	        echo "$$tags"; \
-	        cargo run $(CARGO_FLAGS) --release --quiet -p deslag-exam -- score --gold tests/gold/$$set.conllu --import "$$tags" || exit 1; \
+	        cargo run $(CARGO_FLAGS) --release --quiet -p deslag-exam -- score --gold tests/gold/$$set.conllu --import "$$tags" \
+	            || echo "$$tags: not scored here; it may be missing sentences the voter abstained on, which the report grades"; \
 	    done; \
 	done
 
@@ -480,12 +483,13 @@ generate-label-audit: build-label
 # and spaCy, merged and adjudicated by Claude, then the dollars and minutes each run took per thousand
 # sentences in .label/draw500/cost.tsv. The one target that spends on sentences nobody grades, and the
 # one that fixes the price of labelling the rest. Reads the big tier. Not in ci: it needs the key, spaCy
-# and the network.
+# and the network. Its labels are the only ones that may train a model (`--trains yes`), and the judge
+# step takes no LABEL_FLAGS, which belong to the voters' step.
 generate-label-cost: build-label fetch-blobs fetch-spacy
 	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 100,34,17,16,100,34,17,16,100,33,17,16
 	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
 	$(LABEL)/spacy.sh .label/draw500
-	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes
 	python3 $(LABEL)/label.py cost --dir .label/draw500
 
 # Deslag's dev gold's sentences, as tokens with no tags, tagged blind by each voter of
@@ -499,7 +503,8 @@ generate-label-dev: build-label
 
 # The voters' tags of .label/dev merged, the disputed words settled by Claude, and the result finished
 # into .label/dev/$(LABEL_INTO)/labelled.conllu. For the variant with spaCy as a fourth voter on the part
-# of speech, run generate-label-spacy and then LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy.
+# of speech, run generate-label-spacy and then LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy: the adjudicator
+# answers each item the plain merge also had once, and that answer is reused, so the two differ by voting.
 generate-label-judge-dev: build-label
 	python3 $(LABEL)/label.py judge --dir .label/dev --into $(LABEL_INTO) --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
 

@@ -1,12 +1,15 @@
 """The OpenRouter side of the labelling runner: the request body, the transport, the reply.
 
-Standard library only. The key is read from `OPENROUTER_API_KEY` when a call is made, goes into the
-`Authorization` header and nowhere else: it is not printed, logged, saved with a request or put in
-an error. Every request pins one endpoint of one provider, by the tag the endpoint listing gives it,
-with fallbacks off, and asks for the parameters it sends to be honoured; a reply from any other
-provider is an error, since a run's provenance names the provider that made it.
+Standard library only. The key is read from `OPENROUTER_API_KEY` when a call is made, stripped and
+checked to be one token of printable characters, goes into the `Authorization` header and nowhere
+else: it is not printed, logged, saved with a request or put in an error, and a key that fails the
+check is refused without being shown. Every request pins one endpoint of one provider, by the tag
+the endpoint listing gives it, with fallbacks off, and asks for the parameters it sends to be
+honoured; a reply from any other provider or model is an error, since a run's provenance names the
+provider and model that made it.
 """
 
+import http.client
 import json
 import os
 import re
@@ -36,7 +39,12 @@ def endpoints_url(model):
 
 def request_body(config, system, user):
     """The body of one chat completion for the model `config` pins, `system` and `user` as text."""
-    provider = {"order": [config["provider"]], "allow_fallbacks": False, "require_parameters": True}
+    provider = {
+        "order": [config["provider"]],
+        "allow_fallbacks": False,
+        "require_parameters": True,
+        "data_collection": "deny",
+    }
     if config.get("quantizations"):
         provider["quantizations"] = list(config["quantizations"])
     body = {
@@ -97,13 +105,15 @@ def prices(endpoint):
     return float(pricing["prompt"]), float(pricing["completion"])
 
 
-_THINK = re.compile(r"<think(?:ing)?>.*?</think(?:ing)?>", re.DOTALL | re.IGNORECASE)
+_CLOSE_THINK = re.compile(r"</think(?:ing)?>", re.IGNORECASE)
 _OPEN_THINK = re.compile(r"<think(?:ing)?>.*\Z", re.DOTALL | re.IGNORECASE)
 
 
 def strip_think(text):
-    """Text without any think block, whole or left open, and whether there was one."""
-    stripped = _THINK.sub("", text)
+    """The text after the last `</think>`, which also drops a reasoning block whose opening tag the
+    model's template left out, and any block left open at the end. Whether there was a block."""
+    closes = list(_CLOSE_THINK.finditer(text))
+    stripped = text[closes[-1].end():] if closes else text
     stripped = _OPEN_THINK.sub("", stripped)
     return stripped.strip(), stripped != text.strip()
 
@@ -111,10 +121,13 @@ def strip_think(text):
 class Reply:
     """What one call gave back, with what it cost."""
 
-    def __init__(self, content, raw_content, provider, usage, cost, estimated, finish, think, ident):
+    def __init__(self, content, raw_content, provider, usage, cost, estimated, finish, think, ident,
+                 model=None, fingerprint=None):
         self.content = content
         self.raw_content = raw_content
         self.provider = provider
+        self.model = model
+        self.fingerprint = fingerprint
         self.prompt_tokens = int(usage.get("prompt_tokens") or 0)
         self.completion_tokens = int(usage.get("completion_tokens") or 0)
         details = usage.get("completion_tokens_details") or {}
@@ -143,22 +156,35 @@ def parse_reply(response, price_in, price_out):
     usage = response.get("usage") or {}
     cost = usage.get("cost")
     estimated = cost is None
-    if estimated:
+    if estimated and usage.get("prompt_tokens") is not None:
         cost = int(usage.get("prompt_tokens") or 0) * price_in + int(usage.get("completion_tokens") or 0) * price_out
+    # No usage at all leaves the cost unknown (None): the ledger keeps the call booked at its worst.
     return Reply(
-        content, raw, response.get("provider"), usage, float(cost), estimated,
-        choice.get("finish_reason"), think, response.get("id"),
+        content, raw, response.get("provider"), usage, None if cost is None else float(cost), estimated,
+        choice.get("finish_reason"), think, response.get("id"), response.get("model"),
+        response.get("system_fingerprint"),
     )
 
 
-def check_provider(reply, endpoint):
-    """Raises ProviderMismatch unless the reply came from the provider of the pinned endpoint."""
+def check_provider(reply, endpoint, model=None):
+    """Raises ProviderMismatch unless the reply came from the provider of the pinned endpoint and,
+    with `model`, from that model: its name, or the name with a version after a `-` or `:`, as the
+    API names a dated model. A reply that names no model cannot be checked and is refused."""
+    check_names(reply.provider, reply.model, endpoint, model)
+
+
+def check_names(provider, reply_model, endpoint, model=None):
+    """The check of [check_provider] on a provider and a model as saved beside a reply."""
     wanted = str(endpoint.get("provider_name", "")).lower()
-    got = str(reply.provider or "").lower()
+    got = str(provider or "").lower()
     if got != wanted:
         raise ProviderMismatch(
-            f"the reply came from `{reply.provider}`, and the pinned provider is `{endpoint.get('provider_name')}`"
+            f"the reply came from `{provider}`, and the pinned provider is `{endpoint.get('provider_name')}`"
         )
+    if model is not None:
+        named = str(reply_model or "")
+        if not (named == model or named.startswith((model + "-", model + ":"))):
+            raise ProviderMismatch(f"the reply names the model `{named}`, and the pinned model is `{model}`")
 
 
 class Urllib:
@@ -197,8 +223,12 @@ class Urllib:
         except urllib.error.URLError as error:
             if isinstance(error.reason, (socket.timeout, TimeoutError)):
                 raise Retryable("the call timed out") from None
-            raise Retryable(f"could not connect: {error.reason}") from None
-        except json.JSONDecodeError:
+            raise Retryable("could not connect") from None
+        except (http.client.HTTPException, OSError):
+            # A connection reset or a reply cut short: what was sent may have been billed, and the
+            # ledger still has it booked at its worst case.
+            raise Retryable("the connection failed") from None
+        except (json.JSONDecodeError, UnicodeDecodeError):
             raise Retryable("the reply was not JSON") from None
 
 
@@ -220,8 +250,15 @@ def with_retries(call, attempts, sleep=time.sleep, base=2.0):
 
 
 def key():
-    """The API key, from the environment, or ApiError. Never printed."""
-    value = os.environ.get(KEY_VARIABLE)
+    """The API key, from the environment, stripped, or ApiError. A key that is empty, or has
+    whitespace or a control character inside it, or is not ASCII, is refused: an HTTP library puts
+    the value in its error for a header it cannot send. Nothing here ever shows the value."""
+    value = os.environ.get(KEY_VARIABLE, "").strip()
     if not value:
         raise ApiError(f"{KEY_VARIABLE} is not set")
+    if not re.fullmatch(r"[\x21-\x7e]+", value):
+        raise ApiError(
+            f"{KEY_VARIABLE} has whitespace, a control character or a character that is not ASCII "
+            f"inside it, which a key never has; set it again (its value is not shown)"
+        )
     return value

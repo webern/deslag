@@ -19,9 +19,9 @@ and External Assets.
 
 The top-level `Makefile` drives every build, check, test and environment check. When Installed
 Software is missing or the wrong version, `make preflight`, which every build runs first, says what
-is missing and how to install it, all in one pass. Every gate keeps
+is missing and how to install it, all in one pass rather than failing on the first. Every gate keeps
 it, even one needing few of the tools it checks.
-`rust-toolchain.toml` names the toolchain and components.
+`rust-toolchain.toml` names the toolchain and components; rustup installs them on first use.
 
 "The Build System" is the sum of the Makefile, `scripts/`, Installed Software, External Assets,
 cargo and the dependency graph. "The CI System" is the Build System plus what the GitHub workflows
@@ -31,7 +31,7 @@ When a layout change makes caches or local state unusable, the build system must
 clean or migrate. Switching branches, or restoring a CI cache, must never produce a broken build.
 
 External Assets are files unfit for the git tree because they would bloat it: binaries over 256KB,
-text data over 1MB, or large collections of non-first-party files. Rules of thumb;
+text data over 1MB, or large collections of non-first-party files. Rules of thumb, not law;
 first-party source is never one. A `fetch` target pulls them, pinned under source control, and a
 cheap local-state test makes a repeat fetch free.
 
@@ -47,8 +47,7 @@ unless they must keep going after a failure, and validate arguments with `${1:?u
 Python 3 is allowed in five places. `scripts/llm-detection/collect.py` rebuilds the corpus,
 standard library only, by hand; make, tests, CI run its `batch`.
 `scripts/blobstore/test_batches.py` and `scripts/train/test_train.py` run under `make test-python`.
-`scripts/spacy/` and `scripts/train/` hold the exam's taggers, run by their own targets.
-`scripts/label/` labels with models and runs under `make test-python`.
+`scripts/{spacy,train,label}/` hold the exam's taggers, run by their own targets.
 
 Development is supported on macOS and Linux.
 

@@ -56,6 +56,10 @@ RUN_COLUMNS = (
     "listing", "reply_model", "model_version", "deslag_commit", "settings",
 )
 
+# Optional settings, in seconds: the first wait after a failed call, the longest single wait, the most
+# a call waits in all, and the pause after each call made, which keeps a voter under a rate limit.
+SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0}
+
 # A line of a reply that starts with an id and a colon: `g0001: V.fi _`, `g0007.5: N.p | reason`,
 # after any bullet or number, and with the id in bold or backticks: `- **g0001**: V.fi _`.
 LIST_MARK = re.compile(r"^(?:(?:[-*+\u2022]|\d+[.)])\s+)+")
@@ -92,6 +96,10 @@ def load_config(path=CONFIG):
     for key in ("batch_size", "per_part", "retries", "http_attempts", "timeout_s"):
         if not isinstance(config["settings"].get(key), int):
             raise ConfigError(f"{path}: settings.{key} must be a whole number")
+    for key, default in SETTING_DEFAULTS.items():
+        value = config["settings"].setdefault(key, default)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+            raise ConfigError(f"{path}: settings.{key} must be a number of seconds, not below 0")
     return config
 
 
@@ -238,7 +246,7 @@ def write(path, text):
 
 class Runner:
     def __init__(self, directory, config, prompts, transport, gold, max_usd,
-                 sleep=time.sleep, clock=time.monotonic, say=print):
+                 sleep=time.sleep, clock=time.monotonic, say=print, warn=None):
         self.dir = guard.check_dir(directory)
         self.config = config
         self.prompts = prompts
@@ -248,7 +256,10 @@ class Runner:
         self.sleep = sleep
         self.clock = clock
         self.say = say
+        self.warn = warn or (lambda text: print(text, file=sys.stderr))
         self.settings = config["settings"]
+        for key, default in SETTING_DEFAULTS.items():
+            self.settings.setdefault(key, default)
         self.root = guard.root()
         self.ledger = ledger_module.Ledger(self.root)
         self.listings = {}
@@ -259,11 +270,24 @@ class Runner:
     def raw(self, name, run, *more):
         return os.path.join(self.dir, "raw", name, run, *more)
 
+    def retrying(self, what, **extra):
+        """with_retries' arguments from the settings, and a one-line log of each wait: what is being
+        asked, which attempt of how many, the status or exception type, the wait. No header or body."""
+        settings = self.settings
+
+        def log(attempt, attempts, reason, wait):
+            self.warn(f"label: {what}: attempt {attempt}/{attempts} failed ({reason}); waiting {wait:.0f} s")
+
+        return dict(
+            attempts=settings["http_attempts"], sleep=self.sleep, base=settings["backoff_s"],
+            max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log, **extra,
+        )
+
     def listing(self, model):
         if model not in self.listings:
             data, _ = openrouter.with_retries(
                 lambda: self.transport.get(openrouter.endpoints_url(model), self.settings["timeout_s"]),
-                self.settings["http_attempts"], self.sleep,
+                **self.retrying(f"listing of {model}"),
             )
             self.listings[model] = data
         return self.listings[model]
@@ -299,8 +323,8 @@ class Runner:
         write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(endpoint, indent=2) + "\n")
         return meta, endpoint, config
 
-    def complete_run(self, name, role="voter"):
-        """The id of a finished run of `name` here, if there is one."""
+    def latest_run(self, name, role, complete):
+        """The id of the latest run of `name` in this role here that is complete, or is not, if any."""
         base = os.path.join(self.dir, "raw", name)
         found = []
         if os.path.isdir(base):
@@ -308,9 +332,23 @@ class Runner:
                 path = os.path.join(base, run, "run.json")
                 if os.path.isfile(path):
                     meta = json.loads(read(path))
-                    if meta.get("complete") and meta.get("role") == role:
+                    if bool(meta.get("complete")) == complete and meta.get("role") == role:
                         found.append(run)
         return max(found, key=lambda run: int(run[1:]), default=None)
+
+    def complete_run(self, name, role="voter"):
+        """The id of a finished run of `name` here, if there is one."""
+        return self.latest_run(name, role, True)
+
+    def incomplete_run(self, name, role="voter"):
+        """The id of the run of `name` that stopped before its end, if there is one: what a rerun
+        continues, so that nothing already paid for is asked twice. A run older than a complete one
+        was given up for it."""
+        stopped = self.latest_run(name, role, False)
+        done = self.latest_run(name, role, True)
+        if stopped and done and int(done[1:]) > int(stopped[1:]):
+            return None
+        return stopped
 
     def mark_complete(self, meta):
         path = self.raw(meta["name"], meta["run"], "run.json")
@@ -318,9 +356,11 @@ class Runner:
         saved["complete"] = True
         write(path, json.dumps(saved, indent=2) + "\n")
 
-    def recheck(self, meta, endpoint, config, kind):
-        """A reply saved by an earlier invocation is used only if the provider and the model saved
-        beside it are the ones this run pins. A reply with no such record is not used."""
+    def recheck(self, meta, endpoint, config, kind, request_sha256):
+        """Whether a reply saved by an earlier invocation is used. It is only if the provider and the
+        model saved beside it are the ones this run pins; a reply with no such record is an error.
+        A reply saved with the hash of its request is used only for the same request, and one made
+        before the hash was saved is used as it is."""
         path = self.raw(meta["name"], meta["run"], f"{kind}.meta.json")
         if not os.path.isfile(path):
             raise openrouter.ProviderMismatch(
@@ -329,6 +369,10 @@ class Runner:
             )
         saved = json.loads(read(path))
         openrouter.check_names(saved.get("provider"), saved.get("model"), endpoint, config["model"])
+        if saved.get("request_sha256") not in (None, request_sha256):
+            self.warn(f"label: {meta['name']} {meta['run']} {kind}: the saved reply was for another request, so it is asked again")
+            return False
+        return True
 
     def ask(self, meta, endpoint, config, system, user, kind):
         """One call. Returns the reply text with any think block removed. A reply saved by an earlier
@@ -341,10 +385,10 @@ class Runner:
         a cut-off or reasoning reply are checked before anything of the reply is saved as a reply."""
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
-        if os.path.isfile(saved):
-            self.recheck(meta, endpoint, config, kind)
-            return read(saved)
         body = openrouter.request_body(config, system, user)
+        request_sha256 = hashlib.sha256(json.dumps(body, sort_keys=True).encode("utf-8")).hexdigest()
+        if os.path.isfile(saved) and self.recheck(meta, endpoint, config, kind, request_sha256):
+            return read(saved)
         price_in, price_out = openrouter.prices(endpoint)
         worst = ledger_module.worst_case(len(system) + len(user), config["max_tokens"], price_in, price_out)
         key = openrouter.key()
@@ -359,7 +403,9 @@ class Runner:
             return self.transport.post(url, body, key, self.settings["timeout_s"]), ident
 
         started = self.clock()
-        (response, ident), retries = openrouter.with_retries(attempt, self.settings["http_attempts"], self.sleep)
+        (response, ident), retries = openrouter.with_retries(
+            attempt, **self.retrying(f"{name} {run} {kind}")
+        )
         seconds = self.clock() - started
         reply = openrouter.parse_reply(response)
         # A reply that reports no cost, or a negative or odd one, never lowers the ledger: the
@@ -391,7 +437,7 @@ class Runner:
         write(self.raw(name, run, f"{kind}.meta.json"), json.dumps({
             "kind": kind, "provider": reply.provider, "model": reply.model, "requested_model": config["model"],
             "endpoint": endpoint["tag"], "fingerprint": reply.fingerprint, "id": reply.ident,
-            "finish": reply.finish,
+            "finish": reply.finish, "request_sha256": request_sha256,
         }, indent=2) + "\n")
         record = {
             "kind": kind, "seconds": round(seconds, 3), "retries": retries,
@@ -403,6 +449,8 @@ class Runner:
         with open(self.raw(name, run, "calls.jsonl"), "a", encoding="utf-8") as handle:
             handle.write(json.dumps(record) + "\n")
         write(saved, reply.content + "\n")
+        # A pause after each call made keeps a voter under a rate limit; a saved reply costs none.
+        self.sleep(self.settings["pause_s"])
         return reply.content + "\n"
 
     def run_row(self, run_json):
@@ -486,9 +534,15 @@ class Runner:
         retry = read(retry_path).splitlines() if os.path.isfile(retry_path) else []
         return [line for line in retry if line.strip()]
 
-    def tag(self, name, limit=None, resume=None):
+    def tag(self, name, limit=None, resume=None, again=False):
         """One voter over every batch of the sample. Returns (run id, the sentences it abstains on:
-        those with no good line after the retries). A run over every batch is marked complete."""
+        those with no good line after the retries). A run over every batch is marked complete.
+        Unless `again`, it continues the voter's run that stopped before its end, whose saved
+        replies are used again, so that a rerun never pays twice for a batch."""
+        if resume is None and not again:
+            resume = self.incomplete_run(name)
+            if resume:
+                self.say(f"{name}: continuing {resume}, which stopped before its end; --again starts a new run")
         meta, endpoint, config = self.start_run(name, "voter", resume)
         run = meta["run"]
         size = self.settings["batch_size"]
@@ -544,13 +598,19 @@ class Runner:
         )
         return said, parts
 
-    def adjudicate(self, into, resume=None):
-        """The adjudicator over each part of the worklist. Returns (run id, items still open)."""
+    def adjudicate(self, into, resume=None, again=False):
+        """The adjudicator over each part of the worklist. Returns (run id, items still open). Unless
+        `again`, it continues the adjudicator's run that stopped before its end. A run that went
+        through its parts and retries is complete, with items open or not."""
         folder = os.path.join(self.dir, into)
         parts = sorted(
             os.path.join(folder, f) for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)
         )
         name = self.config["adjudicator"]
+        if resume is None and not again:
+            resume = self.incomplete_run(name, "adjudicator")
+            if resume:
+                self.say(f"{name}: continuing {resume}, which stopped before its end; --again starts a new run")
         meta, endpoint, config = self.start_run(name, "adjudicator", resume)
         run = meta["run"]
         self.say(f"{name} {run}: {len(parts)} parts to {config['model']} at {endpoint['tag']}")
@@ -573,11 +633,12 @@ class Runner:
                     reply = self.ask(meta, endpoint, config, self.prompts.system, user, kind)
                     write(self.raw(name, run, f"{kind}.lines.txt"), id_lines(reply))
                 open_items, retry_parts = self.check_answers(meta, into)
+            self.mark_complete(meta)
         finally:
             self.write_runs()
         return run, open_items
 
-    def judge(self, into, voters, resume=None, trains="no", settle_from=None):
+    def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
         `<into>/labelled.conllu`. Returns the items still open (none when it finished).
 
@@ -598,7 +659,7 @@ class Runner:
         parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
         open_items = {}
         if parts:
-            _, open_items = self.adjudicate(into, resume)
+            _, open_items = self.adjudicate(into, resume, again)
         else:
             self.say("nothing is left for the adjudicator")
             empty = os.path.join(folder, "none.lines.txt")
@@ -707,14 +768,14 @@ def command_tag(arguments, config, transport=None, gold=None):
     if arguments.resume and len(names) != 1:
         raise ConfigError("--resume continues one run, so it needs exactly one --voter")
     for name in names:
-        done = None if arguments.again or arguments.limit is not None or arguments.resume else runner.complete_run(name)
+        done = None if arguments.again or arguments.limit is not None or arguments.resume or runner.incomplete_run(name) else runner.complete_run(name)
         if done:
             print(f"{name} {done}: already complete, skipped; --again runs it afresh")
             continue
         try:
-            run, left = runner.tag(name, arguments.limit, arguments.resume)
+            run, left = runner.tag(name, arguments.limit, arguments.resume, arguments.again)
         except ledger_module.CapExceeded as error:
-            print(f"label: stopped, {error}; what was saved stays, and --resume continues the run", file=sys.stderr)
+            print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
             return 4
         note = f"; abstains on {len(left)} sentences with no good line" if left and arguments.limit is None else ""
         print(f"{name} {run}: done{note}; runs.tsv updated")
@@ -731,9 +792,9 @@ def command_judge(arguments, config, transport=None, gold=None):
     # The paired comparison of spaCy as a voter reuses the plain merge's answers.
     settle_from = arguments.settle_from or ("merge" if arguments.spacy else None)
     try:
-        left = runner.judge(arguments.into, voters, arguments.resume, arguments.trains, settle_from)
+        left = runner.judge(arguments.into, voters, arguments.resume, arguments.trains, settle_from, arguments.again)
     except ledger_module.CapExceeded as error:
-        print(f"label: stopped, {error}; what was saved stays, and --resume continues the run", file=sys.stderr)
+        print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
         return 4
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
     if left:
@@ -779,7 +840,7 @@ def parser():
     common(tag, True)
     tag.add_argument("--voter", action="append", help="a voter of voters.json; default its `voters`")
     tag.add_argument("--limit", type=int, help="only the first N batches, for a smoke test; no retries")
-    tag.add_argument("--again", action="store_true", help="run a voter that already has a complete run")
+    tag.add_argument("--again", action="store_true", help="a new run of each voter, not the one that stopped, and run a voter that already has a complete one")
     tag.add_argument("--dry-run", action="store_true", help="print the first request and send nothing")
     tag.set_defaults(handler=command_tag)
 
@@ -788,6 +849,7 @@ def parser():
     judge.add_argument("--into", default="merge", help="the directory under --dir the merge goes to")
     judge.add_argument("--voter", action="append", help="a voter of voters.json; default its `voters`")
     judge.add_argument("--spacy", action="store_true", help="add spaCy as a voter on the part of speech alone")
+    judge.add_argument("--again", action="store_true", help="a new adjudicator run, not the one that stopped")
     judge.add_argument(
         "--settle-from", metavar="DIR",
         help="reuse the answers of the merge in this directory; --spacy means `merge`",

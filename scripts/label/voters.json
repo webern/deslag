@@ -6,8 +6,12 @@
     "batch_size": 50,
     "per_part": 60,
     "retries": 2,
-    "http_attempts": 3,
-    "timeout_s": 240
+    "http_attempts": 8,
+    "timeout_s": 240,
+    "backoff_s": 5,
+    "longest_wait_s": 120,
+    "max_wait_s": 600,
+    "pause_s": 1.0
   },
   "models": {
     "deepseek": {

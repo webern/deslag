@@ -8,6 +8,7 @@ sets or the corpus.
 
 import contextlib
 import copy
+import email.utils
 import http.server
 import io
 import json
@@ -241,6 +242,8 @@ class Base(unittest.TestCase):
         self.addCleanup(setattr, guard, "GENERATOR", guard.GENERATOR)
         guard.GENERATOR = lambda name: skeleton().replace("= dev", f"= {name}").encode()
         self.said = []
+        self.slept = []
+        self.warned = []
 
     def restore_environment(self):
         for name, value in self.saved.items():
@@ -255,7 +258,8 @@ class Base(unittest.TestCase):
     def runner(self, transport, max_usd=10.0, gold=None, config=None, directory=None):
         return label.Runner(
             directory or self.dir, config or CONFIG, label.Prompts(), transport,
-            gold or FakeGold(), max_usd, sleep=lambda seconds: None, say=self.said.append,
+            gold or FakeGold(), max_usd, sleep=self.slept.append, say=self.said.append,
+            warn=self.warned.append,
         )
 
     def runs_rows(self):
@@ -364,20 +368,79 @@ class RequestTests(unittest.TestCase):
         del response["usage"]
         self.assertIsNone(openrouter.parse_reply(response).cost)
 
-    def test_timeouts_are_retried_and_then_an_error(self):
-        attempts = []
+    def test_a_wait_doubles_with_jitter_up_to_the_longest(self):
+        failures = []
 
         def flaky():
-            attempts.append(1)
-            if len(attempts) < 3:
-                raise openrouter.Retryable("the call timed out")
+            failures.append(1)
+            if len(failures) < 8:
+                raise openrouter.Retryable("HTTP 503")
             return "ok"
 
         waits = []
-        self.assertEqual(openrouter.with_retries(flaky, 3, waits.append), ("ok", 2))
-        self.assertEqual(waits, [2.0, 4.0])
-        with self.assertRaisesRegex(openrouter.ApiError, "timed out, after 2 attempts"):
-            openrouter.with_retries(lambda: (_ for _ in ()).throw(openrouter.Retryable("the call timed out")), 2, lambda s: None)
+        result = openrouter.with_retries(flaky, 8, waits.append, base=5.0, longest=40.0, rng=lambda: 1.0)
+        self.assertEqual(result, ("ok", 7))
+        self.assertEqual(waits, [5.0, 10.0, 20.0, 40.0, 40.0, 40.0, 40.0])
+        failures.clear()
+        waits.clear()
+        openrouter.with_retries(flaky, 8, waits.append, base=5.0, longest=40.0, rng=lambda: 0.0)
+        self.assertEqual(waits, [2.5, 5.0, 10.0, 20.0, 20.0, 20.0, 20.0], "half of it at the least")
+
+    def test_what_the_server_asks_for_is_waited_when_it_is_longer(self):
+        waits = []
+        failures = []
+
+        def limited():
+            failures.append(1)
+            if len(failures) < 3:
+                raise openrouter.Retryable("HTTP 429", after=30.0)
+            return "ok"
+
+        openrouter.with_retries(limited, 4, waits.append, base=5.0, rng=lambda: 0.0)
+        self.assertEqual(waits, [30.0, 30.0])
+        failures.clear()
+        waits.clear()
+        openrouter.with_retries(limited, 4, waits.append, base=50.0, rng=lambda: 0.0)
+        self.assertEqual(waits, [30.0, 50.0], "the backoff stands when it is the longer")
+
+    def test_the_waits_stop_at_the_most_allowed_and_say_so(self):
+        waits = []
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 2 attempts and 10 s of waiting, the most allowed"):
+            openrouter.with_retries(
+                lambda: (_ for _ in ()).throw(openrouter.Retryable("HTTP 429")), 8, waits.append,
+                base=10.0, max_wait=25.0, rng=lambda: 1.0,
+            )
+        self.assertEqual(waits, [10.0], "the second wait, of 20, would pass 25 in all")
+        with self.assertRaisesRegex(openrouter.ApiError, "timeout, after 2 attempts"):
+            openrouter.with_retries(lambda: (_ for _ in ()).throw(openrouter.Retryable("timeout")), 2, lambda s: None)
+
+    def test_each_wait_is_told_to_on_retry_before_it_is_taken(self):
+        told = []
+        failures = []
+
+        def flaky():
+            failures.append(1)
+            if len(failures) < 3:
+                raise openrouter.Retryable("ConnectionResetError")
+            return "ok"
+
+        openrouter.with_retries(flaky, 5, lambda s: told.append(("slept", s)), base=4.0, rng=lambda: 1.0,
+                                on_retry=lambda *args: told.append(args))
+        self.assertEqual(told, [(1, 5, "ConnectionResetError", 4.0), ("slept", 4.0),
+                                (2, 5, "ConnectionResetError", 8.0), ("slept", 8.0)])
+
+    def test_retry_after_reads_seconds_dates_and_a_rate_limit_reset(self):
+        now = lambda: 1_800_000_000.0
+        self.assertEqual(openrouter.retry_after({"Retry-After": "12"}, now), 12.0)
+        self.assertEqual(openrouter.retry_after({"Retry-After": "-3"}, now), 0.0)
+        date = email.utils.formatdate(1_800_000_090.0, usegmt=True)
+        self.assertEqual(openrouter.retry_after({"Retry-After": date}, now), 90.0)
+        self.assertEqual(openrouter.retry_after({"X-RateLimit-Reset": "1800000045"}, now), 45.0)
+        self.assertEqual(openrouter.retry_after({"X-RateLimit-Reset": "1800000045000"}, now), 45.0)
+        self.assertEqual(openrouter.retry_after({"X-RateLimit-Reset": "20"}, now), 20.0, "seconds from now")
+        self.assertIsNone(openrouter.retry_after({"Retry-After": "soon"}, now))
+        self.assertIsNone(openrouter.retry_after({}, now))
+        self.assertIsNone(openrouter.retry_after(None, now))
 
 
 class RedirectTests(unittest.TestCase):
@@ -935,7 +998,7 @@ class LedgerTests(Base):
 
             runner = self.runner(FakeTransport(respond))
             before = self.ledger().total()
-            runner.tag("two", limit=1)
+            runner.tag("two", limit=1, again=True)
             row = [r for r in self.ledger().booked().values() if r["state"] == "settled"][-1]
             self.assertGreater(float(row["cost_usd"]), 0.005, f"cost {cost}")
             self.assertGreater(self.ledger().total(), before)
@@ -1159,6 +1222,8 @@ class ResumeTests(Base):
         return label.parser().parse_args(["tag", "--dir", self.dir, "--max-usd", "10", *more])
 
     def command(self, transport, *more, config=CONFIG):
+        config = copy.deepcopy(config)
+        config["settings"].update(pause_s=0, backoff_s=0)
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             code = label.command_tag(self.args(*more), config, transport, FakeGold())
@@ -1195,8 +1260,12 @@ class ResumeTests(Base):
     def test_a_smoke_test_does_not_make_a_run_complete(self):
         transport = FakeTransport(answer_all)
         self.command(transport, "--voter", "two", "--limit", "1")
+        self.assertEqual(len(transport.posts), 1)
         self.command(transport, "--voter", "two")
-        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1", "r2"])
+        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"], "the full run continues the smoke test's")
+        self.assertEqual(len(transport.posts), 2, "and does not ask its batch again")
+        code, out = self.command(transport, "--voter", "two")
+        self.assertIn("already complete", out)
 
     def test_a_voter_with_no_good_line_for_a_sentence_abstains_and_the_run_exits_0(self):
         transport = FakeTransport(lambda body, count: chat("d1: N.s\nd2: N.s N.s N.s _\nd3: N.s N.s _"))
@@ -1214,6 +1283,234 @@ class ResumeTests(Base):
         runner.batch_files()
         self.assertFalse(os.path.exists(stale))
         self.assertEqual(gold.calls.count("batches"), 2)
+
+
+class PatienceTests(Base):
+    """Rate limits and other transient failures: waits, a log of them, and no paying twice."""
+
+    def runner(self, transport, **more):
+        config = copy.deepcopy(more.pop("config", None) or CONFIG)
+        config["settings"]["http_attempts"] = 8
+        return super().runner(transport, config=config, **more)
+
+    def refusing(self, failures, reason="HTTP 429", after=None, then=answer_all):
+        state = {"left": failures}
+
+        def respond(body, count):
+            if state["left"]:
+                state["left"] -= 1
+                raise openrouter.Retryable(reason, after)
+            return then(body)
+
+        return FakeTransport(respond)
+
+    def test_a_rate_limited_call_is_asked_again_with_backoff_until_it_is_answered(self):
+        transport = self.refusing(7)
+        runner = self.runner(transport)
+        runner.tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 8, "seven refusals and the answer")
+        waits = [seconds for seconds in self.slept if seconds != 1.0]
+        self.assertEqual(len(waits), 7)
+        self.assertTrue(all(second >= first * 0.5 for first, second in zip(waits, waits[1:])))
+        self.assertLessEqual(max(waits), 120)
+        self.assertLessEqual(sum(waits), 600)
+        booked = [row for row in self.ledger().booked().values() if row["state"] in ("reserved", "settled")]
+        self.assertEqual(sorted(row["state"] for row in booked), ["reserved"] * 7 + ["settled"])
+
+    def test_every_failed_attempt_stays_booked_and_the_call_gives_up_after_eight(self):
+        runner = self.runner(self.refusing(99))
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+            runner.tag("two", limit=1)
+        reserved = [row for row in self.ledger().booked().values() if row["state"] == "reserved"]
+        self.assertEqual(len(reserved), 8)
+
+    def test_retry_after_is_honoured(self):
+        runner = self.runner(self.refusing(2, after=45.0))
+        runner.tag("two", limit=1)
+        waits = [seconds for seconds in self.slept if seconds != 1.0]
+        self.assertTrue(all(45.0 <= wait <= 46.0 for wait in waits), waits)
+
+    def test_a_timeout_or_a_reset_connection_is_asked_again_like_a_rate_limit(self):
+        for reason in ("timeout", "ConnectionResetError", "HTTP 503"):
+            self.slept.clear()
+            transport = self.refusing(2, reason)
+            self.runner(transport).tag("two", limit=1, again=True)
+            self.assertEqual(len(transport.posts), 3, reason)
+
+    def test_each_wait_is_logged_in_one_line_with_no_secret(self):
+        runner = self.runner(self.refusing(2))
+        runner.tag("two", limit=1)
+        self.assertEqual(len(self.warned), 2)
+        for number, line in enumerate(self.warned, 1):
+            self.assertRegex(line, rf"^label: two r1 batch-01: attempt {number}/8 failed \(HTTP 429\); waiting \d+ s$")
+        text = "\n".join(self.warned + self.said)
+        for secret in ("SECRETVALUE", "Bearer", "Authorization", "messages", "d1:"):
+            self.assertNotIn(secret, text)
+
+    def test_the_log_goes_to_stderr_by_default_and_names_an_exception_by_its_type_only(self):
+        class Leaky(FakeTransport):
+            def post(self, url, body, key, timeout):
+                raise openrouter.Retryable("ConnectionResetError")
+
+        out, err = io.StringIO(), io.StringIO()
+        config = copy.deepcopy(CONFIG)
+        config["settings"]["http_attempts"] = 8
+        runner = label.Runner(self.dir, config, label.Prompts(), Leaky(answer_all), FakeGold(), 10.0,
+                              sleep=lambda seconds: None, say=lambda text: None)
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            with self.assertRaises(openrouter.ApiError):
+                runner.tag("two", limit=1)
+        self.assertIn("attempt 1/8 failed (ConnectionResetError)", err.getvalue())
+        self.assertEqual(out.getvalue(), "")
+        self.assertNotIn("SECRETVALUE", err.getvalue())
+
+    def test_a_pause_follows_each_call_made_and_none_a_saved_reply(self):
+        transport = FakeTransport(answer_all)
+        runner = self.runner(transport)
+        runner.tag("two", limit=1)
+        self.assertEqual(self.slept, [1.0])
+        self.slept.clear()
+        self.runner(transport).tag("two", limit=1, resume="r1")
+        self.assertEqual(self.slept, [], "a saved reply is not asked and not waited for")
+        config = copy.deepcopy(CONFIG)
+        config["settings"]["pause_s"] = 2.5
+        self.slept.clear()
+        self.runner(FakeTransport(answer_all), config=config).tag("two", limit=1, again=True)
+        self.assertEqual(self.slept, [2.5])
+
+    def test_the_shipped_settings_are_the_ones_the_pilot_needs(self):
+        settings = label.load_config()["settings"]
+        self.assertEqual(settings["http_attempts"], 8)
+        self.assertLessEqual(settings["max_wait_s"], 600)
+        self.assertEqual(settings["pause_s"], 1.0)
+
+    def test_a_setting_that_is_not_a_number_of_seconds_is_refused(self):
+        for bad in (-1, "5", True):
+            config = copy.deepcopy(label.load_config())
+            config["settings"]["pause_s"] = bad
+            path = os.path.join(self.root, "voters.json")
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "settings.pause_s"):
+                label.load_config(path)
+
+
+class AutoResumeTests(Base):
+    """A rerun continues what stopped, and never pays twice."""
+
+    def runner(self, transport, **more):
+        config = copy.deepcopy(more.pop("config", None) or CONFIG)
+        config["settings"]["http_attempts"] = 8
+        return super().runner(transport, config=config, **more)
+
+    def stopping_at(self, batch):
+        """A transport that answers, but refuses outright from the batch with this many sentences asked."""
+
+        def respond(body, count):
+            if count >= batch:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        return FakeTransport(respond)
+
+    def test_a_rerun_after_a_stop_continues_the_run_and_asks_only_what_is_missing(self):
+        first = self.stopping_at(2)
+        with self.assertRaisesRegex(openrouter.ApiError, "stop here"):
+            self.runner(first).tag("two")
+        self.assertEqual(len(first.posts), 2, "one batch answered, one refused")
+        before = self.ledger().total()
+        saved = {row["id"]: row for row in self.ledger().booked().values() if row["state"] == "settled"}
+        second = FakeTransport(answer_all)
+        runner = self.runner(second)
+        run, left = runner.tag("two")
+        self.assertEqual((run, left), ("r1", []))
+        self.assertEqual(len(second.posts), 1, "the second batch only; the first is not asked twice")
+        self.assertEqual(asked_ids(second.posts[0]), ["d3"])
+        self.assertTrue(any("continuing r1" in line for line in self.said))
+        after = {row["id"]: row for row in self.ledger().booked().values() if row["state"] == "settled"}
+        for ident, row in saved.items():
+            self.assertEqual(after[ident], row, "what was saved is booked as it was")
+        self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"])
+        self.assertGreaterEqual(self.ledger().total(), before)
+
+    def test_a_rate_limit_that_gave_up_is_continued_by_the_next_invocation(self):
+        state = {"left": 99}
+
+        def respond(body, count):
+            if count > 1 and state["left"]:
+                raise openrouter.Retryable("HTTP 429")
+            return answer_all(body)
+
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+            self.runner(FakeTransport(respond)).tag("two")
+        second = FakeTransport(answer_all)
+        self.runner(second).tag("two")
+        self.assertEqual(len(second.posts), 1)
+
+    def test_again_makes_a_new_run_and_asks_everything(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        second = FakeTransport(answer_all)
+        run, _ = self.runner(second).tag("two", again=True)
+        self.assertEqual(run, "r2")
+        self.assertEqual(len(second.posts), 2)
+
+    def test_the_saved_replies_provider_and_model_are_checked_again_on_the_way(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(self.stopping_at(2)).tag("two")
+        path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
+        label.write(path, json.dumps({**json.loads(label.read(path)), "model": "y/other"}))
+        second = FakeTransport(answer_all)
+        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model `y/other`"):
+            self.runner(second).tag("two")
+        self.assertEqual(second.posts, [])
+
+    def test_a_saved_reply_for_another_request_is_asked_again_and_one_with_no_hash_is_kept(self):
+        self.runner(FakeTransport(answer_all)).tag("two", limit=1)
+        path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
+        meta = json.loads(label.read(path))
+        self.assertEqual(len(meta["request_sha256"]), 64)
+        # Made by a version that saved no hash: used as it is.
+        del meta["request_sha256"]
+        label.write(path, json.dumps(meta))
+        again = FakeTransport(answer_all)
+        self.runner(again).tag("two", limit=1)
+        self.assertEqual(again.posts, [])
+        # A hash of another request: a different call, and asked.
+        label.write(path, json.dumps({**meta, "request_sha256": "0" * 64}))
+        other = FakeTransport(answer_all)
+        runner = self.runner(other)
+        runner.tag("two", limit=1)
+        self.assertEqual(len(other.posts), 1)
+        self.assertTrue(any("another request" in line for line in self.warned))
+
+    def test_judge_continues_the_adjudicator_run_that_stopped(self):
+        gold = FakeGold()
+
+        def respond(body, count):
+            if "Slots:" in body["messages"][1]["content"]:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        runner = self.runner(FakeTransport(respond), gold=gold)
+        runner.tag("one")
+        runner.tag("two")
+        with self.assertRaises(openrouter.ApiError):
+            runner.judge("merge", [("one", False), ("two", False)])
+        second = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare"))
+        self.assertEqual(self.runner(second, gold=gold).judge("merge", [("one", False), ("two", False)]), {})
+        self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"], ["r3"])
+        self.assertTrue(any("continuing r3" in line for line in self.said))
+
+    def test_judge_again_makes_a_new_adjudicator_run(self):
+        gold = FakeGold()
+        transport = FakeTransport(lambda body, count: chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Bare")
+                                  if "Slots:" in body["messages"][1]["content"] else answer_all(body))
+        runner = self.runner(transport, gold=gold)
+        runner.tag("one")
+        runner.tag("two")
+        runner.judge("merge", [("one", False), ("two", False)])
+        runner.judge("merge", [("one", False), ("two", False)], again=True)
+        self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"], ["r3", "r4"])
 
 
 class ProvenanceTests(Base):

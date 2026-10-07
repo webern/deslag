@@ -9,9 +9,11 @@ honoured; a reply from any other provider or model is an error, since a run's pr
 provider and model that made it.
 """
 
+import email.utils
 import http.client
 import json
 import os
+import random
 import re
 import socket
 import time
@@ -222,36 +224,81 @@ class Urllib:
         except urllib.error.HTTPError as error:
             text = error.read().decode("utf-8", "replace")[:500]
             if error.code in RETRYABLE:
-                raise Retryable(f"HTTP {error.code}") from None
+                raise Retryable(f"HTTP {error.code}", retry_after(error.headers)) from None
             raise ApiError(f"HTTP {error.code}: {text}") from None
         except (socket.timeout, TimeoutError):
-            raise Retryable("the call timed out") from None
+            raise Retryable("timeout") from None
         except urllib.error.URLError as error:
             if isinstance(error.reason, (socket.timeout, TimeoutError)):
-                raise Retryable("the call timed out") from None
-            raise Retryable("could not connect") from None
-        except (http.client.HTTPException, OSError):
+                raise Retryable("timeout") from None
+            raise Retryable(f"could not connect, {type(error.reason).__name__}") from None
+        except (http.client.HTTPException, OSError) as error:
             # A connection reset or a reply cut short: what was sent may have been billed, and the
-            # ledger still has it booked at its worst case.
-            raise Retryable("the connection failed") from None
+            # ledger still has it booked at its worst case. Only the type is kept, never the text.
+            raise Retryable(type(error).__name__) from None
         except (json.JSONDecodeError, UnicodeDecodeError):
             raise Retryable("the reply was not JSON") from None
 
 
 class Retryable(Exception):
-    """A failure that asking again may fix: a timeout, a busy service."""
+    """A failure that asking again may fix: a timeout, a busy service, a rate limit. Its text is a
+    status or an exception type, safe to print. `after` is the wait in seconds the server asked for."""
+
+    def __init__(self, reason, after=None):
+        super().__init__(reason)
+        self.after = after
 
 
-def with_retries(call, attempts, sleep=time.sleep, base=2.0):
-    """`call()`, asked again after a Retryable up to `attempts` times in all, with a doubling wait.
-    Returns (result, how many asks were repeated)."""
+def retry_after(headers, now=time.time):
+    """Seconds the server asks us to wait, from `Retry-After` (seconds or an HTTP date) or
+    `X-RateLimit-Reset` (a Unix time, in seconds or milliseconds, or seconds from now), or None."""
+    if headers is None:
+        return None
+    given = headers.get("Retry-After")
+    if given:
+        try:
+            return max(0.0, float(given))
+        except ValueError:
+            try:
+                return max(0.0, email.utils.parsedate_to_datetime(given).timestamp() - now())
+            except (TypeError, ValueError):
+                pass
+    reset = headers.get("X-RateLimit-Reset")
+    if reset:
+        try:
+            value = float(reset)
+        except ValueError:
+            return None
+        if value > 1e11:
+            value /= 1000.0
+        return max(0.0, value - now()) if value > 1e8 else max(0.0, value)
+    return None
+
+
+def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, longest=120.0,
+                 rng=random.random, on_retry=None):
+    """`call()`, asked again after a Retryable, up to `attempts` times in all, as long as the waits
+    add up to `max_wait` seconds. A wait is `base` doubled each time, at most `longest`, with jitter
+    (half to all of it), or what the server asked for, with up to a second of jitter, if that is
+    longer. `on_retry(attempt, attempts, reason, wait)` is told of each wait before it. Returns
+    (result, how many asks were repeated)."""
+    waited = 0.0
     for attempt in range(attempts):
         try:
             return call(), attempt
         except Retryable as error:
             if attempt + 1 == attempts:
-                raise ApiError(f"{error}, after {attempts} attempts") from None
-            sleep(base * (2 ** attempt))
+                raise ApiError(f"{error}, after {attempts} attempts and {waited:.0f} s of waiting") from None
+            wait = min(longest, base * (2 ** attempt))
+            wait = wait * (0.5 + 0.5 * rng())
+            if error.after is not None:
+                wait = max(wait, error.after + rng())
+            if waited + wait > max_wait:
+                raise ApiError(f"{error}, after {attempt + 1} attempts and {waited:.0f} s of waiting, the most allowed") from None
+            if on_retry:
+                on_retry(attempt + 1, attempts, str(error), wait)
+            sleep(wait)
+            waited += wait
     raise AssertionError("unreachable")
 
 

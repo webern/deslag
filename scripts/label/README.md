@@ -31,11 +31,21 @@ The paired difference of the spaCy variant from the plain merge is
 `target/release/deslag-gold --dir .label/dev report --gold tests/gold/dev.conllu --into merge-spacy
 --versus merge`. `make clean-label` removes everything under `.label` but the ledger.
 
-A step that stops early says so and can be run again. `tag` skips a voter that has a complete run
-(`--again` makes a new one, `--limit` smoke tests never count as complete). `--resume rN` continues
-run `rN` of the one `--voter` named, keeping its saved replies, so nothing already paid for is asked
-twice; the saved provider and model of each reply are checked again, and a reply with no such record
-is an error. `judge --resume rN` does the same for the adjudicator. The voters run one after another.
+A step that stops early says so, and running it again continues it: `tag` continues each voter's latest
+run that stopped before its end, and `judge` the adjudicator's, using the saved replies, so nothing
+already paid for is asked twice (a reply is reused only for the same request, and its saved provider
+and model are checked again; a reply with no such record is an error). A voter that has a complete run
+is skipped. `--again` makes a new run instead, `--limit` smoke tests never count as complete, and
+`--resume rN` names the run to continue, of the one `--voter`. The voters run one after another, with a
+pause (`pause_s`, 1 s) after each call made.
+
+A rate limit (429), a server error (5xx), a timeout or a dropped connection is asked again, up to
+`http_attempts` (8) times and `max_wait_s` (600 s) of waiting in all, each wait doubling from
+`backoff_s` (5 s) to at most `longest_wait_s` (120 s), with jitter, or the `Retry-After` or
+`X-RateLimit-Reset` the server gave if that is longer. This is separate from asking again for a bad
+reply. Each attempt books its worst case before it is sent and stays booked if it fails. Each wait is
+one line on stderr: the voter, run and batch, the attempt, the HTTP status or exception type, and the
+wait; never a header or a body.
 
 Exit codes: 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter; a sentence fewer than two voters answered goes to the

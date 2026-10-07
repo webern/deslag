@@ -2196,12 +2196,13 @@ class HandoffRound:
 
     def answer(self, path, request):
         """Puts one request to a confined process. Returns (call, `answered`, `no reply` or
-        `failed`, the names of the checks that failed)."""
+        `failed`, the names of the checks that failed, and for a call that failed, the model ids it
+        named, which say why `one_model_id` failed when it does)."""
         call = request["call"]
         try:
             work = confine.workdir("deslag-handoff-")
         except confine.Unconfined:
-            return call, "failed", ["workdir_outside_repositories"]
+            return call, "failed", ["workdir_outside_repositories"], ""
         try:
             copy = os.path.join(work, os.path.basename(path))
             write(copy, json.dumps({**request, "reply_path": os.path.join(work, request["reply_name"])}, indent=2) + "\n")
@@ -2216,13 +2217,16 @@ class HandoffRound:
                 found["model_matches_agent_json"] = self.agent is not None and (stream.init or {}).get("model") == self.agent["model_reported"]
                 failed = [name for name, ok in found.items() if not ok]
                 if failed:
-                    return call, "failed", failed
+                    named = sorted({str(found) for found in stream.models()})
+                    return call, "failed", failed, (
+                        f"models named: init {(stream.init or {}).get('model')}; assistant messages {', '.join(named) or 'none'}"
+                    )
                 if reply is None:
-                    return call, "no reply", []
+                    return call, "no reply", [], ""
                 target = os.path.join(self.folder, request["reply_name"])
                 write_atomic(target, reply)
                 self.copied.append(target)
-                return call, "answered", []
+                return call, "answered", [], ""
         finally:
             shutil.rmtree(work, ignore_errors=True)
 
@@ -2269,9 +2273,9 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     with concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel) as pool:
         futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
         for future in concurrent.futures.as_completed(futures):
-            call, outcome, failed = future.result()
+            call, outcome, failed, note = future.result()
             counts[outcome] += 1
-            say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else ""))
+            say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else "") + (f"; {note}" if note else ""))
     changes = tree_changes(REPO)
     if changes:
         for target in round_.copied:

@@ -4592,6 +4592,8 @@ class ConfinementTests(Base):
             self.assertFalse(os.path.exists(agent), "agent.json is written by a call that passed, only")
             self.assertTrue(any(f"part-01: failed (" in line and failed in line for line in self.out), self.out)
             self.assertTrue(any("0 answered" in line and "1 failed" in line for line in self.out), self.out)
+        self.assertIn("  part-01: failed (one_model_id, model_matches_agent_json); models named: init "
+                      "claude-sonnet-5-5; assistant messages claude-sonnet-5-5", self.out)
         self.assertEqual(self.left_in_temp(), [])
 
     def test_a_call_that_writes_no_reply_leaves_its_request_pending(self):

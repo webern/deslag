@@ -338,7 +338,8 @@ only those two tools. So the working directory is the boundary, and handoff-run 
   the init event lists exactly the tools Read and Write and no MCP server; it and every assistant message
   name the pinned model; the process exits 0 with a result that is not an error, whose last line is the model
   the init event named; it used no tool but Read and Write, no path outside its directory, and had no tool
-  call refused. A call that fails one has its reply discarded, and the round exits 2.
+  call refused. A call that fails one has its reply discarded, its line names the checks it failed and the
+  model ids it named, and the round exits 2.
 
 handoff-run refuses to start without a passing probe stamp for the Claude Code installed now and the
 argument list it uses, or when `git status --porcelain` shows a change outside `.label/`. After the round it

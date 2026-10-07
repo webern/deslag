@@ -59,8 +59,8 @@ GUIDE = os.path.join(REPO, "tests", "gold", "annotation-guide.md")
 PROMPTS = os.path.join(HERE, "prompts")
 
 RUN_COLUMNS = (
-    "run", "role", "name", "status", "model", "provider", "endpoint", "quantization", "price_in_per_m",
-    "price_out_per_m", "date", "prompt_sha256", "guide_sha256", "calls", "retries",
+    "run", "state_id", "role", "name", "status", "reason", "model", "provider", "endpoint", "quantization",
+    "price_in_per_m", "price_out_per_m", "date", "prompt_sha256", "guide_sha256", "calls", "retries",
     "prompt_tokens", "completion_tokens", "reasoning_tokens", "cost_usd", "seconds", "sentences",
     "listing", "reply_model", "model_version", "deslag_commit", "settings",
 )
@@ -81,6 +81,12 @@ EXIT_FAILED = 5
 # After this many cut-off adjudicator calls in a row, with none answered between, the endpoint is
 # taken for broken: halving a part cannot help when no part is answered.
 CUT_OFF_STREAK = 3
+
+# A voter's batch is lost to cut-offs when both halves of a split of this many sentences or fewer (and
+# more than two) are cut off as well: the endpoint cuts replies off whatever their size, and halving
+# further would only pay for more of the same. One looping sentence cuts off every part that holds it
+# and no other, so two scattered ones cannot do this to a part of more than four.
+SMALL_SPLIT = 4
 
 # A line of a reply that starts with an id and a colon: `g0001: V.fi _`, `g0007.5: N.p | reason`,
 # after any bullet or number, and with the id in bold or backticks: `- **g0001**: V.fi _`.
@@ -208,10 +214,15 @@ class GoldCli:
     def read_tags(self, directory, name, run, files):
         self._run(directory, "read-tags", "--check", "--lines", *files, "--prov", name, "--run", run)
 
-    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False, min_voters=None):
+    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False, min_voters=None,
+              trains="no"):
         args = ["merge", "--into", into, "--per-part", str(per_part)]
         if min_voters is not None:
             args += ["--min-voters", str(min_voters)]
+        if trains != "no":
+            # So that a merge that finish would refuse as trainable is refused before the adjudicator
+            # is paid for it.
+            args += ["--trains", trains]
         if settled:
             args += ["--settled", settled]
             if same_votes:
@@ -293,7 +304,8 @@ def write(path, text):
 def run_status(meta):
     """What became of a run, as `runs.tsv` says it: `abandoned` (its endpoint failed and the next
     took over), `failed` (too many sentences abstained, or every try was cut off), `smoke` (a run with
-    a limit, which is never a full run), `complete`, or `stopped`, which a rerun continues."""
+    a limit, which is never a full run), `complete` (an adjudicator run that finished with items open
+    is complete, and `reason` says how many), or `stopped`, which a rerun continues."""
     if meta.get("abandoned"):
         return "abandoned"
     if meta.get("failed"):
@@ -302,7 +314,25 @@ def run_status(meta):
         return "complete"
     if meta.get("limit") is not None:
         return "smoke"
-    return "complete" if meta.get("complete") else "stopped"
+    # An adjudicator run that finished with items open is complete: the labels are written around them.
+    return "complete" if meta.get("complete") or meta.get("finished") else "stopped"
+
+
+def run_reason(meta, status):
+    """Why a run has the status `runs.tsv` gives it, in a few words: for `abandoned` and `failed` what
+    ended it, for `smoke` its limit, for `stopped` what stopped it, and for a `complete` adjudicator run
+    that finished with words left out, how many items were open. `-` for a plain `complete`."""
+    if status == "abandoned":
+        return meta.get("abandoned_because") or "no reason recorded"
+    if status == "failed":
+        return meta.get("failed_because") or "no reason recorded"
+    if status == "smoke":
+        return f"a smoke run: --limit {meta.get('limit')} batches, never a full run"
+    if status == "stopped":
+        return meta.get("stopped_because") or "stopped before its end; no reason was recorded"
+    if status == "complete" and meta.get("finished") and meta.get("open_items"):
+        return f"{meta['open_items']} items open"
+    return "-"
 
 
 def write_atomic(path, text):
@@ -333,10 +363,10 @@ class EndpointExhausted(openrouter.ApiError):
     say whose endpoint it was, `reason` how it failed.
 
     Three kinds. By default the failure is the endpoint's own (HTTP 429 or 5xx through every wait, a
-    provider refusal): the next endpoint may do better. With `cutoff`, the endpoint cut replies off on
-    both halves of a split, or on every part of the adjudicator's: it cannot do the job, and with no
-    next endpoint the run ends `failed`. With `local`, the failure is a network error here (a
-    connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
+    provider refusal): the next endpoint may do better. With `cutoff`, cut-offs dominate the run (see
+    [Runner.lose_batch]), or the endpoint cut off every part of the adjudicator's: it cannot do the
+    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network
+    error here (a connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
     fail the same, so the run stops where it is and a rerun continues it.
 
     Once every endpoint of the model has failed, `tried` lists them with their reasons and `skipped`
@@ -348,6 +378,11 @@ class EndpointExhausted(openrouter.ApiError):
         self.local, self.cutoff = local, cutoff
         self.tried, self.skipped = [], []
         self.failed = False
+
+
+class BatchLost(Exception):
+    """Both halves of a small split of a voter's batch were cut off: the rest of the batch is not
+    asked, and the retry rounds ask what is still unanswered. Caught by [Runner.ask_lines]."""
 
 
 class BudgetSpent(openrouter.ApiError):
@@ -383,6 +418,12 @@ class FailureBudget:
             )
 
 
+def fresh_cut(total=0):
+    """The counts a step keeps of cut-off replies: calls cut off, the sentences cut off even alone,
+    the adjudicator's streak, and the voter's batches asked and lost."""
+    return {"calls": 0, "alone": set(), "streak": 0, "asked": 0, "lost": 0, "total": total}
+
+
 class Runner:
     def __init__(self, directory, config, prompts, transport, gold, max_usd,
                  sleep=time.sleep, clock=time.monotonic, say=print, warn=None):
@@ -402,7 +443,7 @@ class Runner:
         self.root = guard.root()
         self.ledger = ledger_module.open_ledger(self.root)
         self.budget = FailureBudget(self.settings["failure_budget"])
-        self.cut = {"calls": 0, "alone": set(), "streak": 0}
+        self.cut = fresh_cut()
         self.listings = {}
         self.commit = deslag_commit()
 
@@ -500,7 +541,7 @@ class Runner:
         run = resume or self.ledger.new_run()
         price_in, price_out = openrouter.prices(pinned)
         meta = {
-            "run": run, "role": role, "name": name, "model": config["model"],
+            "run": run, "state_id": self.ledger.state_id(), "role": role, "name": name, "model": config["model"],
             "provider": pinned.get("provider_name"), "endpoint": pinned["tag"],
             "quantization": pinned.get("quantization"),
             "price_in_per_m": price_in * 1e6, "price_out_per_m": price_out * 1e6,
@@ -576,6 +617,15 @@ class Runner:
 
     def mark_complete(self, meta):
         self.update_run(meta["name"], meta["run"], complete=True)
+
+    def note_stop(self, name, run, error):
+        """Records in `run.json` what stopped a run, in one line and without the key, so that
+        `runs.tsv` can say why a `stopped` run is: the cap, a network error, a spent budget. A run
+        that failed or was abandoned has its own reason."""
+        if isinstance(error, RunFailed):
+            return
+        why = " ".join(redacted(str(error)).split())[:300]
+        self.update_run(name, run, stopped_because=why)
 
     def abandon(self, name, run, why):
         """Gives a run up: it stays on disk, but nothing continues it, and a merge never takes tags from
@@ -802,6 +852,7 @@ class Runner:
             calls = [json.loads(line) for line in read(path).splitlines() if line.strip()]
         row = {key: meta.get(key, "-") for key in RUN_COLUMNS}
         row["status"] = run_status(meta)
+        row["reason"] = run_reason(meta, row["status"])
         models = sorted({call["reply_model"] for call in calls if call.get("reply_model")})
         row.update(
             calls=len(calls), retries=sum(call["retries"] for call in calls),
@@ -884,18 +935,51 @@ class Runner:
         """Asks about `lines`, one sentence each, and writes the lines of the reply to `<kind>.lines.txt`.
         A reply cut off at max_tokens is a bad reply, not a stop: its sentences are asked again in
         halves, each a new call booked as any is, down to one sentence; one still cut off alone is
-        given up, and abstains. `user` is the text of the first ask, if it is not `make_user(lines)`."""
-        reply = self.try_ask(meta, endpoint, config, user or make_user(lines), kind)
-        if reply is None:
-            self.halve(meta, endpoint, config, make_user, lines, kind)
-        else:
-            write(self.raw(meta["name"], meta["run"], f"{kind}.lines.txt"), id_lines(reply))
+        given up, and abstains. `user` is the text of the first ask, if it is not `make_user(lines)`.
+
+        A batch (a `batch-NN` ask, not a retry of its sentences) that ends in BatchLost, with both
+        halves of a small split cut off, is counted; see [Runner.lose_batch] for when that abandons the
+        endpoint. Its sentences with no answer yet are asked again by the retry rounds."""
+        counted = kind.startswith("batch-")
+        if counted:
+            self.cut["asked"] += 1
+        try:
+            reply = self.try_ask(meta, endpoint, config, user or make_user(lines), kind)
+            if reply is None:
+                self.halve(meta, endpoint, config, make_user, lines, kind)
+            else:
+                write(self.raw(meta["name"], meta["run"], f"{kind}.lines.txt"), id_lines(reply))
+        except BatchLost:
+            if counted:
+                self.cut["lost"] += 1
+                self.lose_batch(meta, endpoint, config, kind)
+
+    def lose_batch(self, meta, endpoint, config, kind):
+        """A batch was lost to cut-offs: both halves of a split of a few sentences were cut off, as
+        every part is that an endpoint that loops cuts off. One lost batch does not abandon the
+        endpoint: what it did not answer is asked again by the retry rounds. The endpoint is given up
+        (EndpointExhausted, `cutoff`) only when cut-offs dominate the run: more than a quarter of the
+        batches asked so far were lost, and at least two were (the only batch of a run of one counts).
+        A looping sentence or two, which cut off every part that holds them, never lose a batch of
+        more than four sentences, so they only abstain."""
+        lost, asked = self.cut["lost"], self.cut["asked"]
+        if lost >= min(2, self.cut["total"]) and 4 * lost > asked:
+            raise EndpointExhausted(
+                f"{meta['name']} {meta['run']} {kind}: {lost} of {asked} batches asked were lost to replies "
+                f"cut off at max_tokens ({config['max_tokens']}) on both halves of a split of "
+                f"{SMALL_SPLIT} sentences or fewer, more than a quarter of the run's batches, at "
+                f"{endpoint['tag']}",
+                meta["name"], endpoint["tag"], meta["role"], meta["run"],
+                "replies cut off at max_tokens whatever their size", cutoff=True,
+            )
 
     def halve(self, meta, endpoint, config, make_user, lines, kind):
         """Asks again about `lines`, which were cut off, in two halves. Both halves are asked before
-        either is split further: if both are cut off as well, replies are cut off whatever their size,
-        which no more halving will change, so the endpoint is given up (EndpointExhausted, `cutoff`)
-        at the cost of the three calls, and not after 2n-1 of them."""
+        either is split further, and each half that is cut off is halved in turn, down to one
+        sentence, which if it is cut off alone abstains (a looping sentence cuts off every part that
+        holds it, and only those). If both halves of a split of more than two and at most
+        [SMALL_SPLIT] sentences are cut off as well, nothing is answered however small the part:
+        the batch is lost (BatchLost) at the cost of those calls, and does not go on to 2n-1 of them."""
         if len(lines) <= 1:
             self.cut["alone"].update(re.match(r"[^\s:]+", line).group(0) for line in lines)
             return
@@ -907,25 +991,24 @@ class Runner:
                 cut.append((suffix, part))
             else:
                 write(self.raw(meta["name"], meta["run"], f"{kind}-{suffix}.lines.txt"), id_lines(reply))
-        if len(cut) == 2 and len(lines) > 2:
-            raise EndpointExhausted(
-                f"{meta['name']} {meta['run']} {kind}: both halves of {len(lines)} sentences were cut off at "
-                f"max_tokens ({config['max_tokens']}) as well, at {endpoint['tag']}",
-                meta["name"], endpoint["tag"], meta["role"], meta["run"],
-                "replies cut off at max_tokens whatever their size", cutoff=True,
-            )
+        if len(cut) == 2 and 2 < len(lines) <= SMALL_SPLIT:
+            raise BatchLost(f"{kind}: both halves of {len(lines)} sentences were cut off")
         for suffix, part in cut:
             self.halve(meta, endpoint, config, make_user, part, f"{kind}-{suffix}")
 
     def report_cut_offs(self, meta, config):
-        if self.cut["calls"] or self.cut["alone"]:
+        if self.cut["calls"] or self.cut["alone"] or self.cut["lost"]:
             alone = sorted(self.cut["alone"])
             self.say(
                 f"{meta['name']} {meta['run']}: {self.cut['calls']} replies were cut off at max_tokens "
                 f"({config['max_tokens']}) and their sentences asked again in halves; "
-                f"{len(alone)} sentences were cut off even alone and abstain"
+                f"{len(alone)} sentences were cut off even alone and abstain; "
+                f"{self.cut['lost']} batches were lost to cut-offs on both halves of a small split"
             )
-            self.update_run(meta["name"], meta["run"], cut_off={"calls": self.cut["calls"], "alone": alone})
+            cut_off = {"calls": self.cut["calls"], "alone": alone}
+            if self.cut["lost"]:
+                cut_off["batches_lost"] = self.cut["lost"]
+            self.update_run(meta["name"], meta["run"], cut_off=cut_off)
 
     def tag(self, name, limit=None, resume=None, again=False, endpoint=None):
         """One voter over every batch of the sample. Returns (run id, the sentences it abstains on:
@@ -964,7 +1047,7 @@ class Runner:
         batches = self.batch_files()
         if limit is not None:
             batches = batches[:limit]
-        self.cut = {"calls": 0, "alone": set(), "streak": 0}
+        self.cut = fresh_cut(len(batches))
         self.say(f"{name} {run}: {len(batches)} batches to {config['model']} at {endpoint['tag']}")
         try:
             for number, path in enumerate(batches, 1):
@@ -1006,6 +1089,9 @@ class Runner:
                     self.update_run(name, run, failed=True, failed_because=why)
                     raise RunFailed(f"{name} {run}: failed, {why}", name, run)
                 self.mark_complete(meta)
+        except (openrouter.ApiError, ledger_module.CapExceeded) as error:
+            self.note_stop(name, run, error)
+            raise
         finally:
             self.write_runs()
         return run, open_lines
@@ -1089,8 +1175,11 @@ class Runner:
         run = meta["run"]
         self.say(f"{name} {run}: {len(parts)} parts to {config['model']} at {endpoint['tag']}")
         open_items = {}
-        self.cut = {"calls": 0, "alone": set(), "streak": 0}
+        self.cut = fresh_cut()
         size = self.settings["per_part"]
+        if meta.get("finished"):
+            # Continued after a finish that left items open: it is not finished again until it is.
+            self.update_run(name, run, finished=False, open_items=None)
         try:
             for number, path in enumerate(parts, 1):
                 self.ask_part(meta, endpoint, config, read(path), f"part-{number:02d}")
@@ -1121,6 +1210,11 @@ class Runner:
                 self.update_run(name, run, cut_off={"calls": self.cut["calls"], "open_items": len(open_items)})
             if not open_items:
                 self.mark_complete(meta)
+            else:
+                self.update_run(name, run, stopped_because=f"{len(open_items)} items open after the retries")
+        except (openrouter.ApiError, ledger_module.CapExceeded) as error:
+            self.note_stop(name, run, error)
+            raise
         finally:
             self.write_runs()
         return run, open_items
@@ -1189,18 +1283,22 @@ class Runner:
         for name, base_only in voters:
             if not base_only:
                 self.check_tags_run(name)
-        out = self.gold.merge(self.dir, into, voters, self.settings["per_part"], settled, same_votes, min_voters)
+        # With `--trains yes` the merge itself refuses what `finish` would, before any adjudicator call.
+        out = self.gold.merge(
+            self.dir, into, voters, self.settings["per_part"], settled, same_votes, min_voters, trains
+        )
         self.say(out.rstrip())
         folder = os.path.join(self.dir, into)
         parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
         open_items = {}
+        adjudicator_run = None
         if parts:
             scope = {
                 "into": into, "voters": [name for name, _ in voters],
                 "spacy": any(base_only for _, base_only in voters), "settle_from": settle_from,
                 "same_votes": same_votes,
             }
-            _, open_items = self.adjudicate(into, resume, again, scope, endpoint)
+            adjudicator_run, open_items = self.adjudicate(into, resume, again, scope, endpoint)
         else:
             self.say("nothing is left for the adjudicator")
             empty = os.path.join(folder, "none.lines.txt")
@@ -1210,6 +1308,11 @@ class Runner:
         if open_items and strict:
             return open_items
         self.say(self.gold.finish(self.dir, into, trains, leave_open=bool(open_items) and not strict).rstrip())
+        if adjudicator_run:
+            # The labels are written around the open items: the adjudicator's run is finished, and
+            # runs.tsv says `complete` with how many items were open, not `stopped`.
+            self.update_run(self.config["adjudicator"], adjudicator_run, finished=True, open_items=len(open_items))
+            self.write_runs()
         return open_items
 
 
@@ -1242,7 +1345,8 @@ def register(runner, name, path, model, version, seconds):
     text = read(path)
     sentences = sentence_count(runner.dir)
     meta = {
-        "run": run, "role": "external", "name": name, "model": model, "provider": "local",
+        "run": run, "state_id": runner.ledger.state_id(), "role": "external", "name": name,
+        "model": model, "provider": "local",
         "endpoint": "local", "quantization": version or "-", "price_in_per_m": 0.0,
         "price_out_per_m": 0.0, "date": now(), "prompt_sha256": "-",
         "guide_sha256": "-", "sentences": sentences, "listing": "-",
@@ -1350,7 +1454,9 @@ def command_tag(arguments, config, transport=None, gold=None):
     for name in names:
         done = None
         if not (arguments.again or arguments.limit is not None or arguments.resume or runner.incomplete_run(name, endpoint=arguments.endpoint)):
-            done = runner.complete_run(name)
+            # With --endpoint, only a complete run at that endpoint is the voter's done: a run at
+            # another endpoint is not, and the endpoint named starts a new run.
+            done = runner.latest_run(name, "voter", True, endpoint=arguments.endpoint)
         if done:
             print(f"{name} {done}: already complete, skipped; --again runs it afresh")
             continue

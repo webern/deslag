@@ -23,11 +23,11 @@ import urllib.request
 API = "https://openrouter.ai/api/v1"
 KEY_VARIABLE = "OPENROUTER_API_KEY"
 
-# HTTP statuses worth asking again for: the request timed out, or the service was busy or down. 520 to
-# 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
 # The reply was not JSON: a gateway page or half a body, which an endpoint sent, so it is its own.
 NOT_JSON = "the reply was not JSON"
 
+# HTTP statuses worth asking again for: the request timed out, or the service was busy or down. 520 to
+# 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
 RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
 
 # Quantisations from least to most precise; those in one tier count as the same.

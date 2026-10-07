@@ -13,7 +13,8 @@ Rust stages run without it, and it is saved nowhere. `MAX_USD` (default 8) caps 
 not one run: spend from earlier runs, in any checkout, counts (see State directory). `LABEL_FLAGS`
 reach `label.py`'s `tag` and `judge` in every `generate-label-*` target, `generate-label-cost`
 included, so `--strict` works there; `tag` has no `--strict`, so that target sends its `tag` step
-`LABEL_TAG_FLAGS` instead.
+`LABEL_TAG_FLAGS` instead. In `generate-label-cost` a `--limit N` in `LABEL_FLAGS` goes to the `tag`
+step, the only one that takes it, and the rest of `LABEL_FLAGS` to the `judge` step.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -87,7 +88,8 @@ network is back. If every endpoint fails it stops with exit 2 (exit 5 when the l
 `failed`), naming each and why; the earlier runs stay abandoned and the last is kept, so the same
 command continues it later, and `--again` starts a new run at the first endpoint. `--endpoint TAG`
 (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
-falls back from there to the ones after it; a run continued at another endpoint than it recorded is
+falls back from there to the ones after it; a complete run at another endpoint is not continued by it,
+so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
 refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
 is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
 `streamlake/fp8`. qwen's `parasail/fp8` is below its `bf16` pin, so it is skipped until the pin is
@@ -96,8 +98,14 @@ relaxed.
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
 down to one sentence; one still cut off alone abstains and is not asked again by the retry rounds. If
-both halves of a split are cut off the endpoint is taken for broken: the splitting stops (3 calls, not
-2n-1) and the endpoint switches as above. A cut-off adjudicator part is asked again in halves too (the
+both halves of a split of three or four sentences are cut off too, the batch is lost: the splitting
+stops (3 calls, not 2n-1) and the batch's sentences are left to the retry rounds. A lost batch does not
+by itself give up the endpoint. It does when at least two batches are lost (one, if the run has only
+one batch) and they are more than a quarter of the batches asked so far; the endpoint then switches as
+above. A sentence or two that loop cut off every part that holds them, wherever they sit in a batch of
+more than four, so they abstain alone and never lose a batch: the run completes with those sentences
+open. A sentence cut off alone abstains, whatever the rest of the run does. `run.json`'s `cut_off`
+has `batches_lost` when a batch was. A cut-off adjudicator part is asked again in halves too (the
 part's items are split with `read-answers --per-part`); 3 cut-offs in a row with no part answered between
 them count as a storm. An item still cut off alone stays open for the retry rounds. Every cut-off call
 counts in the run's calls, tokens, seconds and dollars. The count is said at the end of the run and
@@ -122,9 +130,16 @@ Three voters. A word counts as agreed only if at least three model voters answer
 agree (spaCy is not a model voter and does not count towards the three). A word with fewer answers, or
 any disagreement, goes to the adjudicator. The minimum is `MIN_AGREEING_VOTERS`, 3, and `--min-voters N`
 sets another; it is recorded in `voters.tsv` of the merge (`# min_voters = N`) and the report says it.
+A merge whose `voters.tsv` has no `# min_voters` line (one made before it was recorded) cannot be
+settled from, and the report says "min_voters unknown (old merge)" for it; merge again.
 With two model voters (a `--voter` subset) every word goes to the adjudicator unless `--min-voters 2`.
 
-`--settle-from NAME` reuses an earlier merge's adjudicated answers. NAME is a plain merge directory
+`--settle-from NAME` reuses an earlier merge's adjudicated answers. With `--spacy` or `--settle-from`
+an item is settled by item, and the earlier merge's model voters must be the same (voter name, run id)
+pairs and `min_voters` as this merge's: a voter run again with `--again` has a new run id, so the
+merge refuses and the items are asked again by a merge without `--settle-from`. Without `--spacy` the
+answer is kept only for an item the earlier merge showed with the very same codes, so no voter check
+is needed. NAME is a plain merge directory
 name in the same sample directory: `/`, `..` and absolute paths are refused, as is a name equal to
 `--into`, and the Rust `--settled` path must resolve inside the sample directory. Each merge records
 its voter set in its directory, and `judge` refuses to settle from a merge whose model voters differ
@@ -132,7 +147,8 @@ from this one's: an answer given with another voter's codes in view would carry 
 merge. So there is no merge of other voters to settle from; a new voter set is a new merge, answered
 afresh. `--settle-from` without `--spacy` reuses an answer only for an item the earlier merge's
 worklist shows with the very same codes from every voter, in order (the same voters, one run again).
-A merge that rewrites its directory removes a `labelled.conllu` left by an earlier run of it.
+A merge that rewrites its directory removes every file of the earlier run it will write again, its
+`adjudicated.tsv` and `labelled.conllu` among them, so a stale answer is never read back.
 `report --into merge-spacy --versus merge` gives the paired difference; the earlier merge's labelled
 file and worklist are all it reads of it.
 
@@ -148,9 +164,12 @@ The spaCy variant is a paired comparison: `merge-spacy` reuses the plain merge's
 every item both have, with the run that gave it, so the two differ by voting alone, and only items
 new to the spaCy merge are asked of Claude. `judge --spacy` needs `merge/adjudicated.tsv`.
 `--trains yes` is for a draw for labelling alone (`generate-label-cost` passes it); a dev or owner
-set is always `exam.trains = no`. `finish --trains yes` also refuses any sentence whose normalised text
-equals one in `tests/gold/dev.conllu` or `owner.conllu`, so a training draw never holds a sentence of
-either (holdout is not read for this).
+set is always `exam.trains = no`. `judge --trains yes` passes it to the merge, which refuses a sample that is
+not a draw for labelling, or that holds a sentence whose normalised text (letters and digits,
+lowercase) equals one in `tests/gold/dev.conllu` or `owner.conllu`, before the adjudicator is paid
+for a call; `finish --trains yes` checks the same again, so a training draw never holds a sentence of
+either (holdout is not read for this). `finish --trains yes` also reads the merge's `voters.tsv` and
+refuses fewer than three model voters, or a `min_voters` below three.
 
 ## What is asked
 
@@ -208,10 +227,14 @@ row at its worst case, so the ledger over-counts and never under-counts.
 
 The ledger and the run-id sequence are shared by every checkout and worktree, so the dollar cap and the
 run ids hold across them. They live in `${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label`, or in
-`$LABEL_STATE` if set (the tests use a temporary one). The first time a state directory is used it
-takes in a checkout's `.label/ledger.tsv` once, and the run ids start above the highest id found in
-that ledger and in any `.label/**/runs.tsv` of the checkout; a ledger of another checkout that is older
-than that first import is not imported afterwards. `label.py spend` shows the total. Delete the state
+`$LABEL_STATE` if set (the tests use a temporary one). Every time a checkout opens it,
+the rows of that checkout's `.label/ledger.tsv` that the state ledger lacks are added, by call id and
+under the lock, so what a checkout spent counts however many other checkouts opened the state
+directory before it, and opening again adds nothing. The next run id is above the highest in the
+state ledger, in the checkout's ledger, in any `.label/**/runs.tsv` and in any `raw/<voter>/rN` of
+the checkout. The checkout's own file is never changed. The state directory has a random 8-hex
+`state_id` (a file beside the ledger), on every run as a `runs.tsv` column; a state directory deleted
+and started again has another. `label.py spend` shows the total. Delete the state
 directory by hand to start the count again.
 
 ## Provenance
@@ -221,8 +244,9 @@ adjudicator's. Run ids come from the state directory's ledger under its lock, so
 and draw of every checkout. `Runs=` in the MISC column of a word names the runs that decided it: all the voters'
 on a word they agreed on, the adjudicator's on one it settled. `runs.tsv` beside the sample describes
 each run (its `status` is `complete`, `smoke` for a `--limit` run, `abandoned` for one left for the
-next endpoint, `failed`, or `stopped` for one that ended early and a rerun continues; `cost.tsv` has the
-same column): model, provider, endpoint, quantisation, prices, date, the sha256 of the prompt and of the
+next endpoint, `failed`, or `stopped` for one that ended early and a rerun continues, an adjudicator run that finished
+with items left open being `complete`; `cost.tsv` has the same column; a `reason` column says why
+for every status but a plain `complete`, such as "3 items open" or what abandoned or stopped it): model, provider, endpoint, quantisation, prices, date, the sha256 of the prompt and of the
 guide, calls, retries, tokens, dollars (from the ledger, failed attempts included), seconds (calls,
 tokens and seconds include the calls cut off), a `status` column, the
 endpoint listing saved under `listings/`, the model the replies named, the listing's model version if

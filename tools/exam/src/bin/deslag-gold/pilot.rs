@@ -110,6 +110,9 @@ pub struct Report {
     pub unvoted: usize,
     /// How many model voters a word needed to count as agreed.
     pub min_voters: usize,
+    /// The merge's `voters.tsv` records no `min_voters`: it was made before the minimum was
+    /// recorded, and `min_voters` is then the rule it was made under, not a number it recorded.
+    pub old_merge: bool,
     /// The share of words the voters agreed on, so were not adjudicated.
     pub agreed_share: Estimate,
     /// The pipeline reweighted, when a mix was given.
@@ -139,6 +142,8 @@ pub struct Inputs<'a> {
     pub mix: Option<&'a BTreeMap<String, f64>>,
     /// Another merge of the sample: its name, its labels, and the words it adjudicated.
     pub versus: Option<(&'a str, &'a Answers, usize)>,
+    /// The merge's `voters.tsv` has no `# min_voters`, so `voted` was made by the rule before it.
+    pub old_merge: bool,
 }
 
 /// The counts of one sentence for one series.
@@ -196,6 +201,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
         labelled,
         mix,
         versus,
+        old_merge,
     } = *inputs;
     let index = sample.index_of();
     // The adjudicator's code for each word it decided.
@@ -385,6 +391,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
             .collect(),
         unvoted: voted.stats.unvoted_sentences,
         min_voters: voted.stats.min_voters,
+        old_merge,
         agreed_share: whole.estimate(&share),
         weighted,
         versus,
@@ -454,13 +461,26 @@ impl fmt::Display for Report {
             .iter()
             .map(|(name, count)| format!("{name} {count}"))
             .collect();
-        writeln!(
-            f,
-            "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than {} model voters' answers, so none of their words counts as agreed",
-            abstained.join(", "),
-            self.unvoted,
-            self.min_voters
-        )?;
+        if self.old_merge {
+            writeln!(
+                f,
+                "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than two voters' answers, so none of their words counts as agreed",
+                abstained.join(", "),
+                self.unvoted
+            )?;
+            writeln!(
+                f,
+                "min_voters unknown (old merge): voters.tsv has no `# min_voters`, so the vote is read by the rule before the minimum was recorded, any two voters answering, spaCy included"
+            )?;
+        } else {
+            writeln!(
+                f,
+                "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than {} model voters' answers, so none of their words counts as agreed",
+                abstained.join(", "),
+                self.unvoted,
+                self.min_voters
+            )?;
+        }
         writeln!(
             f,
             "agreed share of the words (not adjudicated): {}",
@@ -748,6 +768,7 @@ mod tests {
             labelled: &gold,
             mix,
             versus: rival.map(|answers| ("rival", answers, 5)),
+            old_merge: false,
         })
     }
 
@@ -797,6 +818,7 @@ mod tests {
             labelled: &gold,
             mix: None,
             versus: None,
+            old_merge: false,
         });
         assert!(report.lines[1].features.is_none() && report.lines[1].full.is_none());
         assert!(report.to_string().contains("spacy"));
@@ -830,6 +852,7 @@ mod tests {
             labelled: &labelled,
             mix: Some(&mix),
             versus: None,
+            old_merge: false,
         });
         let weighted = report.weighted.clone().unwrap();
         // A context the sample has no sentence of is dropped and the rest renormalised.

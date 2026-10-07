@@ -26,6 +26,11 @@ EXAM_BIN := $(LABEL_BIN)/deslag-exam
 # LABEL_REPORT_FLAGS go to the report, such as `--versus merge`.
 MAX_USD ?= 8
 LABEL_FLAGS ?=
+# `--limit N` in LABEL_FLAGS belongs to a tag step, which is the one that takes it: generate-label-cost
+# sends it there, and the rest of LABEL_FLAGS to its judge step.
+LABEL_FLAGS_JOINED = $(subst --limit ,--limit=,$(LABEL_FLAGS))
+LABEL_LIMIT = $(subst =, ,$(filter --limit=%,$(LABEL_FLAGS_JOINED)))
+LABEL_JUDGE_FLAGS = $(filter-out --limit=%,$(LABEL_FLAGS_JOINED))
 LABEL_TAG_FLAGS ?=
 LABEL_INTO ?= merge
 LABEL_REPORT_FLAGS ?=
@@ -505,12 +510,14 @@ generate-label-audit: build-label
 # and the network. Its labels are the only ones that may train a model (`--trains yes`, which refuses a
 # sentence with the text of one of dev or owner). LABEL_FLAGS reach the judge step, so LABEL_FLAGS=--strict
 # stops it with exit 3 when an item is left open, instead of leaving its sentence out; the voters' step
-# takes LABEL_TAG_FLAGS. The last line says how many words were left out.
+# takes LABEL_TAG_FLAGS, and a `--limit N` in LABEL_FLAGS, which only tag takes, so it limits the voters
+# to N batches each (a smoke run, whose tags the judge step then refuses). The last line says how many
+# words were left out.
 generate-label-cost: build-label fetch-blobs fetch-spacy
 	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 120,45,25,15,120,45,25,15,30,25,20,15
-	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_TAG_FLAGS)
+	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_TAG_FLAGS) $(LABEL_LIMIT)
 	$(LABEL)/spacy.sh .label/draw500
-	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes $(LABEL_FLAGS)
+	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes $(LABEL_JUDGE_FLAGS)
 	python3 $(LABEL)/label.py cost --dir .label/draw500
 
 # Deslag's dev gold's sentences, as tokens with no tags, tagged blind by each voter of

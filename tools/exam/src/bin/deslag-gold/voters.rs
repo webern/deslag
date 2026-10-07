@@ -409,15 +409,20 @@ pub fn voters_tsv(voters: &[Voter], min_voters: usize) -> String {
     out
 }
 
-/// The `min_voters` a `voters.tsv` records. A merge made before it was recorded compared any two
-/// voters, which is [`FEWEST_TAGGERS`].
-pub fn read_min_voters(text: &str) -> usize {
+/// The `min_voters` a `voters.tsv` records, or `None` for a merge made before it was recorded.
+/// That merge compared any two voters, spaCy included, which is neither of the minimums the
+/// current rule can take, so it is never read as one of them: a caller that needs a number says
+/// "unknown" or refuses.
+pub fn read_min_voters(text: &str) -> Option<usize> {
     text.lines()
         .next()
         .and_then(|line| line.strip_prefix(MIN_LINE))
         .and_then(|value| value.trim().parse().ok())
-        .unwrap_or(FEWEST_TAGGERS)
 }
+
+/// The `min_voters` that reproduces the rule before the minimum was recorded: any two voters
+/// answering, spaCy included, since a model voter count of at least zero holds for every sentence.
+pub const OLD_MERGE_MIN_VOTERS: usize = 0;
 
 /// Reads `voters.tsv`, which came from `path`. The voters' answers are empty: the caller reads
 /// them from each voter's file.
@@ -853,12 +858,12 @@ mod tests {
     }
 
     #[test]
-    fn voters_file_records_the_minimum_and_an_old_one_reads_as_two() {
+    fn voters_file_records_the_minimum_and_an_old_one_has_none() {
         let voters = vec![voter("a", &SAME, Some("r1"), false)];
-        assert_eq!(read_min_voters(&voters_tsv(&voters, 3)), 3);
-        assert_eq!(read_min_voters(&voters_tsv(&voters, 2)), 2);
+        assert_eq!(read_min_voters(&voters_tsv(&voters, 3)), Some(3));
+        assert_eq!(read_min_voters(&voters_tsv(&voters, 2)), Some(2));
         let old = "letter\tvoter\tbase_only\trun\tfile\nA\ta\tno\tr1\ttags/a.conllu\n";
-        assert_eq!(read_min_voters(old), 2);
+        assert_eq!(read_min_voters(old), None, "never read as two");
         assert_eq!(read_voters_tsv("voters.tsv", old).unwrap().len(), 1);
     }
 

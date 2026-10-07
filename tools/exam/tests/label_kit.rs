@@ -952,8 +952,30 @@ fn a_merge_of_a_voter_run_again_keeps_an_answer_only_for_the_same_evidence() {
     let settled = fs::read_to_string(dir.join("merge-changed/settled.tsv")).unwrap();
     assert!(!settled.contains("d1.3"), "{settled}");
     assert!(dir.join("merge-changed/worklist-01.txt").exists());
-    // Without the flag the item alone decides, as it does for spaCy as a voter more.
-    let said = again("merge-by-item", false);
+    // Without the flag the item alone decides, as it does for spaCy as a voter more, and so the
+    // voters must be the same runs: `two` run again is another run, even under its name.
+    let by_item = [
+        "merge",
+        "--voter",
+        "one",
+        "--voter",
+        "two",
+        "--min-voters",
+        "2",
+        "--into",
+        "merge-by-item",
+        "--settled",
+        &earlier,
+    ];
+    let error = gold_fails(&dir, &by_item);
+    assert!(
+        error.contains("(voter, run) were one r1, two r2, and these are one r1, two r7"),
+        "{error}"
+    );
+    assert!(!dir.join("merge-by-item/settled.tsv").exists());
+    // The voters as they were, run for run, settle by item.
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    let said = gold_ok(&dir, &by_item);
     assert!(said.contains("1 more words keep the answers"), "{said}");
     // The flag needs `--settled`.
     let error = gold_fails(
@@ -995,8 +1017,78 @@ fn settling_from_another_merge_is_refused_for_other_voters_itself_or_another_pla
     };
     // Another voter in place of `two`: its codes were not in view when the answer was given.
     let error = settle(["--voter", "one", "--voter", "three"], "merge-three", &log);
-    assert!(error.contains("model voters were one, two"), "{error}");
+    assert!(
+        error.contains("(voter, run) were one r1, two r2, and these are one r1, three r6"),
+        "{error}"
+    );
     assert!(!dir.join("merge-three/settled.tsv").exists());
+    // Same names, another run of `two`: refused too.
+    tag_as(&dir, "two", Some("r9"), &lines(&[("d1", 3, "J")]));
+    let error = settle(["--voter", "one", "--voter", "two"], "merge-again", &log);
+    assert!(
+        error.contains("one r1, two r2, and these are one r1, two r9"),
+        "{error}"
+    );
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    // The same runs but another minimum are not settled across either.
+    let error = gold_fails(
+        &dir,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--voter",
+            "three",
+            "--min-voters",
+            "3",
+            "--into",
+            "merge-min",
+            "--settled",
+            path(&log),
+        ],
+    );
+    assert!(
+        error.contains("(voter, run) were one r1, two r2, and these are"),
+        "{error}"
+    );
+    // With `--same-votes` no voter is compared: each answer is kept only for an item shown with
+    // the same codes from every voter, which is the whole check. `three` says what `two` said.
+    let said = gold_ok(
+        &dir,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "three",
+            "--min-voters",
+            "2",
+            "--into",
+            "merge-votes",
+            "--settled",
+            path(&log),
+            "--same-votes",
+        ],
+    );
+    assert!(said.contains("1 more words keep the answers"), "{said}");
+    // A voters.tsv with no `# min_voters` is an old merge: it is not settled from by item.
+    let old = root.path().join(".label").join("dev").join("old-merge");
+    fs::create_dir_all(&old).unwrap();
+    fs::copy(&log, old.join("adjudicated.tsv")).unwrap();
+    let headless: String = voters
+        .lines()
+        .skip(1)
+        .map(|line| format!("{line}\n"))
+        .collect();
+    fs::write(old.join("voters.tsv"), headless).unwrap();
+    let error = settle(
+        ["--voter", "one", "--voter", "two"],
+        "merge-from-old",
+        &old.join("adjudicated.tsv"),
+    );
+    assert!(error.contains("min_voters unknown (old merge)"), "{error}");
     // The merge itself, whose worklist is written before the answers are read.
     let error = settle(["--voter", "one", "--voter", "two"], "merge", &log);
     assert!(error.contains("`--into`"), "{error}");
@@ -1077,6 +1169,280 @@ fn a_merge_that_rewrites_its_directory_removes_the_labels_it_wrote_before() {
         "it belongs to the old worklist"
     );
     assert!(!dir.join("merge/unsettled.tsv").exists());
+}
+
+#[test]
+fn a_rewritten_merge_removes_the_old_answers_before_it_writes_anything() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, _) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    gold_ok(&dir, &TWO);
+    // The adjudicator answered nothing the second time round: the log, the problems and a retry
+    // part are all on disk.
+    let none = write(&dir.join("none.txt"), "");
+    gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--answers",
+            path(&none),
+            "--run",
+            "r3",
+        ],
+    );
+    let stale = [
+        "adjudicated.tsv",
+        "adjudicated.problems.tsv",
+        "adjudicated.retry-01.txt",
+    ];
+    for name in stale {
+        assert!(dir.join("merge").join(name).exists(), "{name}");
+    }
+    fs::write(dir.join("merge/settled.tsv"), "item\n").unwrap();
+    // A voter run again, and the merge written again: nothing of the old answers stays beside the
+    // new worklist, where `finish`, `--settled` and `report` would read it as its answers.
+    tag_as(&dir, "two", Some("r4"), &lines(&[("d1", 3, "N.s")]));
+    gold_ok(&dir, &TWO);
+    for name in stale.into_iter().chain(["settled.tsv"]) {
+        assert!(!dir.join("merge").join(name).exists(), "{name} is stale");
+    }
+    assert!(dir.join("merge/worklist.tsv").exists());
+    assert!(dir.join("merge/voters.tsv").exists());
+}
+
+/// A draw for labelling at `.label/draw` whose sentences are the dev gold's with every token's form
+/// run through `change`, tagged by voters one, two and three (runs r1 to r3) and ready to merge.
+fn draw_of(root: &Path, change: impl Fn(&str) -> String) -> PathBuf {
+    let dev = root.join(".label").join("dev");
+    let draw = root.join(".label").join("draw");
+    fs::create_dir_all(draw.join("tags")).unwrap();
+    let skeleton: String = fs::read_to_string(dev.join("sample.conllu"))
+        .unwrap()
+        .lines()
+        .map(|line| {
+            let mut cells: Vec<String> = line.split('\t').map(str::to_string).collect();
+            if !line.starts_with('#') && cells.len() == 10 {
+                cells[1] = change(&cells[1]);
+            }
+            format!("{}\n", cells.join("\t"))
+        })
+        .collect();
+    fs::write(draw.join("sample.conllu"), skeleton).unwrap();
+    let mut manifest = String::from(
+        "# draw = for labelling, split unlabelled, ids d0001 on\nsent_id\tsplit\ttier\tcontext\tfile\trepo\tlicense\tbytes\n",
+    );
+    for (id, _) in SENTENCES {
+        manifest.push_str(&format!(
+            "{id}\tunlabelled\thuman\tprose\tf.md\to/r\tMIT\t0-10\n"
+        ));
+    }
+    fs::write(draw.join("manifest.tsv"), manifest).unwrap();
+    gold_ok(&draw, &["batches"]);
+    for (name, run) in [("one", "r1"), ("two", "r2"), ("three", "r3")] {
+        tag_as(&draw, name, Some(run), &lines(&[]));
+    }
+    write(
+        &draw.join("runs.tsv"),
+        "run\tmodel\nr1\tone\nr2\ttwo\nr3\tthree\n",
+    );
+    draw
+}
+
+#[test]
+fn trains_yes_is_refused_at_the_merge_for_text_of_dev_under_any_case_or_punctuation() {
+    let root = tempfile::tempdir().unwrap();
+    let (_, _) = setup(root.path());
+    // The dev gold's sentences, upper-cased with `!` for `.`: another id's worth of difference, and
+    // the same sentences once the case and the punctuation are taken away.
+    let draw = draw_of(root.path(), |form| {
+        if form == "." {
+            "!".to_string()
+        } else {
+            form.to_uppercase()
+        }
+    });
+    let three = ["--voter", "one", "--voter", "two", "--voter", "three"];
+    let mut args = vec!["merge"];
+    args.extend(three);
+    args.extend(["--trains", "yes"]);
+    let error = gold_fails(&draw, &args);
+    assert!(
+        error.contains("have the text of a sentence of dev.conllu or owner.conllu"),
+        "{error}"
+    );
+    assert!(
+        error.contains("d1") && !error.contains("RUN"),
+        "ids, never text: {error}"
+    );
+    // The merge refused before it wrote anything, so no adjudicator is ever paid for it.
+    assert!(!draw.join("merge").exists());
+    // Without the training mark the same draw merges.
+    gold_ok(
+        &draw,
+        &[
+            "merge", "--voter", "one", "--voter", "two", "--voter", "three",
+        ],
+    );
+}
+
+#[test]
+fn trains_yes_needs_three_model_voters_at_the_merge_and_at_the_finish() {
+    let root = tempfile::tempdir().unwrap();
+    let (_, _) = setup(root.path());
+    let draw = draw_of(root.path(), |form| format!("{form}z"));
+    // Two voters agreeing under `--min-voters 2` are not enough for silver.
+    let error = gold_fails(
+        &draw,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--min-voters",
+            "2",
+            "--trains",
+            "yes",
+        ],
+    );
+    assert!(error.contains("need at least 3 model voters"), "{error}");
+    // Three voters with the minimum lowered to two are not either.
+    let error = gold_fails(
+        &draw,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--voter",
+            "three",
+            "--min-voters",
+            "2",
+            "--trains",
+            "yes",
+        ],
+    );
+    assert!(error.contains("min_voters 2"), "{error}");
+    assert!(!draw.join("merge").exists());
+    // Three at the default merge, and finish.
+    gold_ok(
+        &draw,
+        &[
+            "merge", "--voter", "one", "--voter", "two", "--voter", "three", "--trains", "yes",
+        ],
+    );
+    gold_ok(&draw, &["finish", "--trains", "yes"]);
+    // A merge made without the mark, with the minimum lowered, is refused when it is finished
+    // as trainable, by what its voters.tsv says.
+    gold_ok(
+        &draw,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--min-voters",
+            "2",
+        ],
+    );
+    let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
+    assert!(
+        error.contains("1 model voters") || error.contains("2 model voters"),
+        "{error}"
+    );
+    gold_ok(
+        &draw,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--voter",
+            "three",
+            "--min-voters",
+            "2",
+        ],
+    );
+    let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
+    assert!(error.contains("min_voters 2"), "{error}");
+    // A voters.tsv with no `# min_voters`, an old merge, is refused: nothing says what agreed it.
+    gold_ok(
+        &draw,
+        &[
+            "merge", "--voter", "one", "--voter", "two", "--voter", "three",
+        ],
+    );
+    let voters = fs::read_to_string(draw.join("merge/voters.tsv")).unwrap();
+    let headless: String = voters
+        .lines()
+        .skip(1)
+        .map(|line| format!("{line}\n"))
+        .collect();
+    fs::write(draw.join("merge/voters.tsv"), headless).unwrap();
+    let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
+    assert!(error.contains("min_voters unknown (old merge)"), "{error}");
+    // No voters.tsv at all.
+    fs::remove_file(draw.join("merge/voters.tsv")).unwrap();
+    let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
+    assert!(error.contains("needs the merge's voters.tsv"), "{error}");
+    // `--trains no` needs neither.
+    gold_ok(&draw, &["finish"]);
+}
+
+#[test]
+fn a_report_of_a_merge_with_no_min_voters_says_it_is_an_old_merge_and_reads_its_rule() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, gold) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    write(&dir.join("tags/spacy.conllu"), &outside_tagger("r2", &[]));
+    write(&dir.join("runs.tsv"), "run\tmodel\nr1\tone\nr2\tspacy\n");
+    // One model voter and spaCy, which is the pairing the old rule let vote.
+    gold_ok(
+        &dir,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "spacy",
+            "--base-only",
+            "spacy",
+            "--min-voters",
+            "1",
+        ],
+    );
+    gold_ok(&dir, &["finish"]);
+    let recorded = gold_ok(&dir, &["report", "--gold", path(&gold)]);
+    assert!(recorded.contains("fewer than 1 model voters"), "{recorded}");
+    assert!(!recorded.contains("old merge"), "{recorded}");
+    let voters = fs::read_to_string(dir.join("merge/voters.tsv")).unwrap();
+    let headless: String = voters
+        .lines()
+        .skip(1)
+        .map(|line| format!("{line}\n"))
+        .collect();
+    fs::write(dir.join("merge/voters.tsv"), headless).unwrap();
+    let old = gold_ok(&dir, &["report", "--gold", path(&gold)]);
+    assert!(old.contains("min_voters unknown (old merge)"), "{old}");
+    assert!(
+        !old.contains("fewer than 2 model voters"),
+        "never read as two: {old}"
+    );
+    // The vote is the one the merge made, by the rule it was made under.
+    let share = |text: &str| {
+        text.lines()
+            .find(|line| line.starts_with("agreed share"))
+            .unwrap()
+            .to_string()
+    };
+    assert_eq!(share(&old), share(&recorded));
 }
 
 #[test]

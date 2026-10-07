@@ -17,8 +17,13 @@ that is started again after a stop cannot spend the cap twice. The check needs n
 ledger has a total of zero and the first call is held to the cap like any other.
 
 Run ids come from here too, under the same lock, so no two runs of any sample, draw or checkout
-share one. The first time the state directory is used, a `.label/ledger.tsv` the checkout has is
-imported once, and the run ids start above the highest in it and in any `runs.tsv` under `.label/`.
+share one. Whenever a checkout opens the state directory, the rows of its `.label/ledger.tsv` that the
+state ledger lacks are merged in, keyed by call id, so the state ledger holds everything every
+checkout that ever opened it has spent, whichever opened it first; and a new run id is above the
+highest in the state ledger, in the checkout's own ledger, in every `runs.tsv` under its `.label/`
+and in every `raw/<name>/rN` folder there. The directory also has a random `state_id`, written once
+and put on every run, so that a run id and a state id are unique together: two state directories
+that were never joined may both have an `r5`, but not under one `state_id`.
 """
 
 import contextlib
@@ -56,8 +61,8 @@ def state_dir():
 
 def open_ledger(label_root, state=None):
     """The ledger of the state directory, with the checkout's own `.label/ledger.tsv` and run ids
-    taken into it if it is new (see [Ledger.import_checkout])."""
-    ledger = Ledger(state or state_dir())
+    taken into it (see [Ledger.import_checkout]), on every open."""
+    ledger = Ledger(state or state_dir(), label_root)
     ledger.import_checkout(label_root)
     return ledger
 
@@ -76,6 +81,12 @@ def dollars(value):
     return f"{math.ceil(float(value) * 1e8 - 1e-9) / 1e8:.8f}"
 
 
+def run_number(text):
+    """The number in a run id such as `r12`, or 0 for anything else."""
+    found = re.fullmatch(r"r(\d+)", str(text))
+    return int(found.group(1)) if found else 0
+
+
 def highest_in_runs_tables(root):
     """The highest run number in the first column of any `runs.tsv` under `root`, or 0."""
     highest = 0
@@ -88,16 +99,34 @@ def highest_in_runs_tables(root):
         except (OSError, UnicodeDecodeError):
             continue
         for line in lines:
-            found = re.fullmatch(r"r(\d+)", line.split("\t")[0])
-            if found:
-                highest = max(highest, int(found.group(1)))
+            highest = max(highest, run_number(line.split("\t")[0]))
     return highest
 
 
+def highest_in_raw(root):
+    """The highest run number among the `raw/<name>/rN` folders under `root`, or 0: a run whose
+    `runs.tsv` was never written, as a crash may leave, still has its id."""
+    highest = 0
+    for folder, names, _ in os.walk(root):
+        if os.path.basename(os.path.dirname(folder)) == "raw":
+            highest = max([highest, *(run_number(name) for name in names)])
+            names[:] = []
+    return highest
+
+
+def highest_in_checkout(root):
+    """The highest run number any record under the checkout's `.label` (`root`) has: its own
+    `ledger.tsv`, every `runs.tsv` and every `raw/<name>/rN`. 0 when there is none."""
+    own = Ledger(root)
+    return max(own.highest_run(), highest_in_runs_tables(root), highest_in_raw(root))
+
+
 class Ledger:
-    def __init__(self, root):
+    def __init__(self, root, label_root=None):
         self.path = os.path.join(root, "ledger.tsv")
         self.lock_path = os.path.join(root, "ledger.lock")
+        self.state_path = os.path.join(root, "state_id")
+        self.label_root = label_root
 
     @contextlib.contextmanager
     def _locked(self):
@@ -143,12 +172,18 @@ class Ledger:
         unknown = set(row) - set(COLUMNS)
         if unknown:
             raise ValueError(f"unknown ledger columns {sorted(unknown)}")
-        fresh = not os.path.isfile(self.path)
         cells = (str(row.get(column, "")).replace("\t", " ").replace("\n", " ") for column in COLUMNS)
+        self._append_lines(["\t".join(cells)])
+
+    def _append_lines(self, lines):
+        """`lines`, whole rows as written, at the end of the ledger, which is given its header first
+        if it is new. Flushed and synced: a booking is on disk before the call it is for is sent."""
+        fresh = not os.path.isfile(self.path)
         with open(self.path, "a", encoding="utf-8") as handle:
             if fresh:
                 handle.write("\t".join(COLUMNS) + "\n")
-            handle.write("\t".join(cells) + "\n")
+            for line in lines:
+                handle.write(line + "\n")
             handle.flush()
             os.fsync(handle.fileno())
 
@@ -183,29 +218,72 @@ class Ledger:
             default=0,
         )
 
-    def import_checkout(self, label_root):
-        """Once, when this ledger does not exist yet: takes in the `ledger.tsv` the checkout's
-        `.label` (`label_root`) has, if it has one, and makes the next run id higher than any in it
-        and in every `runs.tsv` under `label_root`, so that a run of the checkout keeps its id and no
-        run made later takes one of theirs. Nothing is written when there is nothing to take, and a
-        ledger that exists is never touched: its own rows already count every checkout's runs."""
+    def state_id(self):
+        """The random id of this state directory, 8 hex digits, made the first time it is asked for
+        and kept in a file beside the ledger. It is on every run, and a state directory that is
+        deleted and started again has another."""
+        if os.path.isfile(self.state_path):
+            with open(self.state_path, encoding="utf-8") as handle:
+                return handle.read().strip()
         with self._locked():
-            if os.path.isfile(self.path):
-                return
+            return self._ensure_state_id()
+
+    def _ensure_state_id(self):
+        """[state_id] for a caller that holds the lock."""
+        if not os.path.isfile(self.state_path):
+            temp = f"{self.state_path}.tmp{os.getpid()}"
+            with open(temp, "w", encoding="utf-8") as handle:
+                handle.write(uuid.uuid4().hex[:8] + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temp, self.state_path)
+        with open(self.state_path, encoding="utf-8") as handle:
+            return handle.read().strip()
+
+    def import_checkout(self, label_root):
+        """On every open: takes in the rows of the `ledger.tsv` the checkout's `.label`
+        (`label_root`) has that this ledger lacks, keyed by call id, all the rows of an id together
+        and in the order they were written. An id this ledger has is left as it is, so opening
+        again, or from another checkout, changes nothing more, and what a checkout spent before
+        another opened the state directory first still counts against the cap. The next run id is
+        then above every run the checkout has a record of (see [highest_in_checkout]), by a row
+        that says so if the ledger's own highest is lower. Nothing is written when there is nothing
+        to take, and the checkout's file is never changed."""
+        with self._locked():
+            self._ensure_state_id()
             source = os.path.join(label_root, "ledger.tsv")
-            if os.path.isfile(source):
-                temp = f"{self.path}.tmp{os.getpid()}"
-                shutil.copyfile(source, temp)
-                os.replace(temp, self.path)
-            seen = highest_in_runs_tables(label_root)
+            if os.path.isfile(source) and os.path.realpath(source) != os.path.realpath(self.path):
+                known = {row["id"] for row in self.rows()}
+                taken = [
+                    "\t".join(cells)
+                    for cells in (line.split("\t") for line in self._lines(source)[1:])
+                    if len(cells) == len(COLUMNS) and cells[COLUMNS.index("id")] not in known
+                ]
+                if taken:
+                    self._append_lines(taken)
+            seen = highest_in_checkout(label_root)
             if seen > self.highest_run():
                 self._append(id=f"n-{uuid.uuid4().hex[:16]}", state="run", run=f"r{seen}",
-                             cost_usd="0.00000000", note="imported: the highest run in runs.tsv under .label")
+                             cost_usd="0.00000000",
+                             note="imported: the highest run in the checkout's .label")
+
+    @staticmethod
+    def _lines(path):
+        try:
+            with open(path, encoding="utf-8") as handle:
+                return handle.read().splitlines()
+        except (OSError, UnicodeDecodeError):
+            return []
 
     def new_run(self):
-        """A run id no other run, in any sample, draw or checkout, has had: the next number past the
-        highest in the ledger, recorded before it is returned."""
+        """A run id no other run, in any sample, draw or checkout, has had: the next number past
+        the highest in the ledger and in everything the checkout this ledger was opened for has on
+        disk (its ledger, `runs.tsv` files and `raw/` folders, which may have grown since it was
+        opened), recorded before it is returned."""
         with self._locked():
-            run = f"r{self.highest_run() + 1}"
+            seen = self.highest_run()
+            if self.label_root:
+                seen = max(seen, highest_in_checkout(self.label_root))
+            run = f"r{seen + 1}"
             self._append(id=f"n-{uuid.uuid4().hex[:16]}", state="run", run=run, cost_usd="0.00000000")
             return run

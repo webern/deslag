@@ -118,9 +118,11 @@ class FakeGold:
         label.write(os.path.join(directory, "tags", f"{name}.retry.txt"),
                     "".join(batch_line(*s) + "\n" for s in SENTENCES if s[0] not in good))
 
-    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False, min_voters=None):
+    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False, min_voters=None,
+              trains="no"):
         self.calls.append(("merge", into, list(voters)))
         self.min_voters = min_voters
+        self.merge_trains = trains
         self.settled_path = settled
         self.same_votes = same_votes
         already = set()
@@ -2823,7 +2825,7 @@ class RoundFourTests(Base):
         with self.assertRaises(ledger.CapExceeded):
             b.reserve(1.0, 0.6, dir="d", run="r2", role="voter", name="n")
 
-    def test_the_first_use_imports_the_checkouts_ledger_once_and_numbers_runs_above_every_run_seen(self):
+    def test_every_open_imports_the_checkouts_ledger_rows_the_state_lacks_exactly_once(self):
         old = ledger.Ledger(self.label_root)
         old._append(id="c-1", state="settled", run="r5", role="voter", name="n", cost_usd="0.50000000")
         label.write(os.path.join(self.label_root, "dev", "runs.tsv"), "run\tmodel\nr1\ta\nr9\tb\n")
@@ -2833,12 +2835,62 @@ class RoundFourTests(Base):
         fresh = ledger.open_ledger(self.label_root)
         self.assertAlmostEqual(fresh.total(), 0.5, msg="what the checkout had spent counts against the cap")
         self.assertEqual(fresh.new_run(), "r10", "above r9 of a runs.tsv, not just r5 of the ledger")
-        # Once: a later change to the old file is not imported, and the old file is left as it was.
+        # A row the checkout adds later is taken in on the next open, once, and the file is left as it was.
         old._append(id="c-2", state="settled", run="r6", role="voter", name="n", cost_usd="3.00000000")
         again = ledger.open_ledger(self.label_root)
-        self.assertAlmostEqual(again.total(), 0.5)
+        self.assertAlmostEqual(again.total(), 3.5)
         self.assertEqual(again.new_run(), "r11")
         self.assertAlmostEqual(old.total(), 3.5)
+        before = label.read(os.path.join(self.state, "ledger.tsv"))
+        again = ledger.open_ledger(self.label_root)
+        self.assertAlmostEqual(again.total(), 3.5, msg="not counted twice")
+        self.assertEqual(label.read(os.path.join(self.state, "ledger.tsv")), before, "nothing new, nothing written")
+
+    def test_the_ledger_does_not_depend_on_which_checkout_opened_the_state_first(self):
+        other = os.path.join(self.root, "other", ".label")
+        mine = ledger.Ledger(self.label_root)
+        for number in range(1, 6):
+            mine._append(id=f"c-{number}", state="settled", run=f"r{number}", role="voter", name="n",
+                         cost_usd="1.00000000")
+        # Another checkout opens the state directory first: it has spent nothing, and runs r1.
+        first = ledger.open_ledger(other)
+        self.assertEqual(first.new_run(), "r1")
+        self.assertAlmostEqual(first.total(), 0.0)
+        # Then this one opens: its $5 counts, and its next run is above both its own r5 and the r1.
+        later = ledger.open_ledger(self.label_root)
+        self.assertAlmostEqual(later.total(), 5.0)
+        self.assertEqual(later.new_run(), "r6")
+        # And the other checkout, opening again, sees the same total and an id nobody has had.
+        self.assertAlmostEqual(ledger.open_ledger(other).total(), 5.0)
+        self.assertEqual(ledger.open_ledger(other).new_run(), "r7")
+        self.assertAlmostEqual(self.ledger().total(), 5.0)
+
+    def test_the_cap_counts_what_a_checkout_spent_before_another_opened_the_state(self):
+        other = os.path.join(self.root, "other", ".label")
+        ledger.open_ledger(other)
+        old = ledger.Ledger(self.label_root)
+        old._append(id="c-1", state="settled", run="r5", role="voter", name="n", cost_usd="9.50000000")
+        transport = FakeTransport(answer_all)
+        with self.assertRaises(ledger.CapExceeded):
+            self.runner(transport, max_usd=9.5001).tag("two")
+        self.assertEqual(transport.posts, [])
+
+    def test_the_next_run_id_is_above_the_runs_tables_and_raw_folders_of_the_checkout(self):
+        label.write(os.path.join(self.label_root, "dev", "runs.tsv"), "run\tmodel\nr3\ta\n")
+        os.makedirs(os.path.join(self.label_root, "dev", "raw", "one", "r12"))
+        self.assertEqual(ledger.open_ledger(self.label_root).new_run(), "r13")
+
+    def test_every_run_has_the_random_state_id_of_the_state_directory(self):
+        run, _ = self.runner(FakeTransport(answer_all)).tag("one")
+        first = self.run_json("one", run)["state_id"]
+        self.assertRegex(first, r"^[0-9a-f]{8}$")
+        self.assertEqual(self.ledger().state_id(), first)
+        self.runner(FakeTransport(answer_all)).tag("two")
+        self.assertEqual({row["state_id"] for row in self.runs_rows()}, {first})
+        self.assertIn("state_id", label.RUN_COLUMNS)
+        # Another state directory is another id.
+        os.environ[ledger.STATE_VARIABLE] = os.path.join(self.root, "state2")
+        self.assertNotEqual(ledger.open_ledger(self.label_root).state_id(), first)
 
     def test_a_checkout_with_runs_but_no_ledger_still_starts_its_ids_above_them(self):
         label.write(os.path.join(self.label_root, "dev", "runs.tsv"), "run\tmodel\nr4\ta\n")
@@ -2921,6 +2973,181 @@ class RoundFourTests(Base):
         with contextlib.redirect_stdout(out):
             label.command_cost(arguments, CONFIG)
         self.assertIn("2 words the adjudicator never settled are left out", out.getvalue())
+
+    # -- the cut-off rule for a split
+
+    def eight_sentences(self):
+        """The sample with eight sentences, d1 to d8, in place of the fixture's three."""
+        sentences = [(f"d{n}", ["Run", "it", "now", "."]) for n in range(1, 9)]
+        saved = SENTENCES[:]
+        SENTENCES[:] = sentences
+        self.addCleanup(SENTENCES.__setitem__, slice(None), saved)
+        label.write(os.path.join(self.dir, "sample.conllu"), skeleton())
+
+    @staticmethod
+    def looping(*loops):
+        """A responder that cuts off every reply that holds one of the sentences `loops`."""
+
+        def respond(body, count):
+            if set(asked_ids(body)) & set(loops):
+                return RoundFourTests.cut_off(body)
+            return answer_all(body)
+
+        return respond
+
+    def test_two_scattered_looping_sentences_in_one_batch_abstain_and_the_run_completes(self):
+        self.eight_sentences()
+        config = self.batches_of(8, tolerant(0.25))
+        transport = FakeTransport(self.looping("d2", "d7"))
+        run, left = self.runner(transport, config=config).tag("two")
+        self.assertEqual(sorted(line.split(":")[0] for line in left), ["d2", "d7"])
+        self.assertEqual(self.statuses(), [("r1", "complete")], "the endpoint is not abandoned for two loops")
+        self.assertEqual(len(transport.posts), 11, "the batch and its halving; d2 and d7 are cut off alone, so they are not asked again")
+        record = self.run_json("two", run)["cut_off"]
+        self.assertEqual(record["alone"], ["d2", "d7"])
+        self.assertNotIn("batches_lost", record)
+
+    def test_a_sentence_cut_off_alone_abstains_and_nothing_else_does(self):
+        self.eight_sentences()
+        config = self.batches_of(2, tolerant(0.25))
+        run, left = self.runner(FakeTransport(self.looping("d3")), config=config).tag("two")
+        self.assertEqual([line.split(":")[0] for line in left], ["d3"])
+        self.assertEqual(self.statuses(), [("r1", "complete")])
+
+    def test_one_lost_batch_among_many_does_not_abandon_the_endpoint(self):
+        self.eight_sentences()
+        # Batches of four: d1..d4 loops on d1 and d3 (halves d1,d2 and d3,d4 both cut off: lost),
+        # and the other three batches answer.
+        config = self.batches_of(4, tolerant(0.5))
+        config["settings"]["failure_budget"] = 100
+        transport = FakeTransport(self.looping("d1", "d3"))
+        run, left = self.runner(transport, config=config).tag("two")
+        self.assertEqual(sorted(line.split(":")[0] for line in left), ["d1", "d2", "d3", "d4"],
+                         "the lost batch's sentences are asked again, and abstain if they cut off again")
+        self.assertEqual(self.statuses(), [("r1", "complete")])
+        self.assertGreaterEqual(self.run_json("two", run)["cut_off"]["batches_lost"], 1)
+
+    def test_cut_offs_that_take_most_batches_abandon_the_endpoint_after_two_lost_batches(self):
+        self.eight_sentences()
+        config = self.batches_of(4, with_fallbacks(one=["alt/fp8"]))
+        config["settings"]["failure_budget"] = 100
+
+        def respond(body, count):
+            if body["provider"]["order"] == ["host/fp8"]:
+                return self.looping("d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8")(body, count)
+            return answer_all(body)
+
+        transport = FakeTransport(respond, WIDE_LISTING)
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r2", []))
+        host = [p for p in transport.posts if p["provider"]["order"] == ["host/fp8"]]
+        self.assertEqual(len(host), 6, "two batches of three calls each, and no third batch")
+        self.assertEqual(self.statuses(), [("r1", "abandoned"), ("r2", "complete")])
+        self.assertIn("cut off at max_tokens", self.runs_rows()[0]["reason"])
+
+    # -- the runs table says why
+
+    def test_runs_tsv_gives_a_reason_for_every_status_but_a_plain_complete(self):
+        self.eight_sentences()
+        # complete: no reason.
+        self.runner(FakeTransport(answer_all), config=self.batches_of(4)).tag("one")
+        # smoke
+        self.runner(FakeTransport(answer_all), config=self.batches_of(4)).tag("two", limit=1)
+        by = {row["name"]: row for row in self.runs_rows()}
+        self.assertIn("reason", self.runs_rows()[0])
+        self.assertEqual(by["one"]["reason"], "-")
+        self.assertIn("smoke", by["two"]["reason"])
+        self.assertIn("--limit 1", by["two"]["reason"])
+
+    def test_a_stopped_run_says_what_stopped_it_and_a_failed_run_why_it_failed(self):
+        config = self.batches_of(3)
+        config["settings"]["failure_budget"] = 2
+        with self.assertRaises(label.BudgetSpent):
+            self.runner(FakeTransport(self.cut_off), config=config).tag("two")
+        row = self.runs_rows()[-1]
+        self.assertEqual(row["status"], "stopped")
+        self.assertIn("budget of 2", row["reason"])
+        code, _, _ = self.command(FakeTransport(self.wrong_codes), "--voter", "one", "--again")
+        failed = [r for r in self.runs_rows() if r["name"] == "one"][-1]
+        self.assertEqual(failed["status"], "failed")
+        self.assertIn("abstain", failed["reason"])
+
+    def test_an_adjudicator_run_that_finished_with_open_items_is_complete_with_the_count(self):
+        gold = FakeGold()
+        self.judged(gold)
+        runner = self.runner(FakeTransport(lambda body, count: chat("nothing", provider="Bare")), gold=gold)
+        left = runner.judge("merge", [("one", False), ("two", False)])
+        self.assertEqual(sorted(left), ["d1.2", "d2.3"])
+        row = [r for r in self.runs_rows() if r["role"] == "adjudicator"][0]
+        self.assertEqual((row["status"], row["reason"]), ("complete", "2 items open"))
+
+    def test_an_adjudicator_run_stopped_by_strict_says_so(self):
+        gold = FakeGold()
+        self.judged(gold)
+        runner = self.runner(FakeTransport(lambda body, count: chat("nothing", provider="Bare")), gold=gold)
+        left = runner.judge("merge", [("one", False), ("two", False)], strict=True)
+        self.assertEqual(len(left), 2)
+        row = [r for r in self.runs_rows() if r["role"] == "adjudicator"][0]
+        self.assertEqual(row["status"], "stopped")
+        self.assertIn("2 items open after the retries", row["reason"])
+
+    # -- --trains yes reaches the merge, before the adjudicator is paid
+
+    def test_judge_passes_trains_to_the_merge(self):
+        gold = FakeGold()
+        self.judged(gold)
+        self.runner(FakeTransport(answer_all), gold=gold).judge(
+            "merge", [("one", False), ("two", False)], trains="yes")
+        self.assertEqual(gold.merge_trains, "yes")
+        self.assertEqual(gold.trains, "yes")
+
+    def test_a_merge_that_refuses_trains_yes_costs_no_adjudicator_call(self):
+        class Refusing(FakeGold):
+            def merge(self, *args, **kwargs):
+                raise label.GoldError("deslag-gold merge: the sample holds dev text")
+
+        gold = Refusing()
+        self.judged(gold)
+        transport = FakeTransport(answer_all)
+        with self.assertRaisesRegex(label.GoldError, "dev text"):
+            self.runner(transport, gold=gold).judge("merge", [("one", False), ("two", False)], trains="yes")
+        self.assertEqual(transport.posts, [])
+
+    # -- --endpoint
+
+    def test_an_endpoint_flag_starts_a_new_run_when_the_complete_run_is_at_another_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", config=config)
+        self.assertEqual([r["endpoint"] for r in self.runs_rows()], ["host/fp8"])
+        transport = FakeTransport(answer_all, WIDE_LISTING)
+        self.command(transport, "--voter", "one", "--endpoint", "alt/fp8", config=config)
+        self.assertTrue(transport.posts, "a new run, not the complete one at the other endpoint")
+        self.assertEqual([(r["endpoint"], r["status"]) for r in self.runs_rows()],
+                         [("host/fp8", "complete"), ("alt/fp8", "complete")])
+        # Asking for the endpoint it is complete at again changes nothing.
+        again = FakeTransport(answer_all, WIDE_LISTING)
+        self.command(again, "--voter", "one", "--endpoint", "alt/fp8", config=config)
+        self.assertEqual(again.posts, [])
+
+    def test_label_flags_limit_goes_to_the_tag_step_and_not_the_judge(self):
+        make = shutil.which("make")
+        if make is None:
+            self.skipTest("make is not installed")
+        repo = os.path.dirname(os.path.dirname(label.HERE))
+        for flags in ("--limit 2 --strict", "--strict --limit=2"):
+            done = subprocess.run(
+                [make, "-n", "-C", repo, "generate-label-cost", f"LABEL_FLAGS={flags}", "MAX_USD=1"],
+                capture_output=True, text=True, check=False,
+            )
+            lines = done.stdout.splitlines()
+            tags = [line for line in lines if "label.py tag" in line]
+            judges = [line for line in lines if "label.py judge" in line]
+            self.assertEqual(len(tags), 1, done.stdout + done.stderr)
+            self.assertIn("--limit 2", tags[0])
+            self.assertNotIn("--strict", tags[0])
+            self.assertEqual(len(judges), 1)
+            self.assertNotIn("--limit", judges[0])
+            self.assertIn("--strict", judges[0])
 
     # -- 9. numbering
 

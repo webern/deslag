@@ -7,19 +7,24 @@ symlinks and `..` followed, and checks before it opens any sample file. It accep
 - a directory under the `.label` of this checkout (or `DESLAG_LABEL_ROOT`, for the tests), whose real
   path names no holdout or treebank file;
 - whose `sample.conllu` and `manifest.tsv` are files in that directory and not links out of it;
-- and that is either a skeleton `deslag-exam tokens --gold` made from `tests/gold/dev.conllu` or
-  `owner.conllu`, which says so in `# exam.from = dev` or `owner` and has no manifest, or a draw for
-  labelling: a manifest that says `# draw = for labelling ...` with every row `unlabelled`.
+- and that is either a skeleton with no manifest whose text is, byte for byte, what `deslag-exam
+  tokens --gold tests/gold/dev.conllu` (or `owner.conllu`, as `# exam.from` says) writes now, or a
+  draw for labelling: a manifest that says `# draw = for labelling ...` with every row
+  `unlabelled`. The header `exam.from` only says which gold to generate from; text under that header
+  proves nothing, so a hand-made file, a hard link or a copy of anything else is refused.
 
 A skeleton of a holdout gold says `# exam.split = holdout`, and is refused wherever it is. The gold
-flow's own `sample.conllu` mixes holdout in and keeps the split in its manifest; it says neither of
-the above and is refused.
+flow's own `sample.conllu` mixes holdout in and keeps the split in its manifest; it is neither of the
+above and is refused. Files with more than one hard link are refused: the targets write fresh ones.
 
 The Rust `deslag-gold` stages refuse the same, so a directory that gets past here is checked again
 by every stage that reads it.
 """
 
+import hashlib
 import os
+import subprocess
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -32,6 +37,38 @@ GOLDS = ("dev", "owner")
 
 class Refused(Exception):
     """A path or file the labelling flow will not read."""
+
+
+def find_exam():
+    """The newest built `deslag-exam` under CARGO_TARGET_DIR or this checkout's target, or None."""
+    target = os.environ.get("CARGO_TARGET_DIR") or os.path.join(REPO, "target")
+    found = [
+        os.path.join(target, profile, "deslag-exam")
+        for profile in ("release", "fast", "debug")
+        if os.path.isfile(os.path.join(target, profile, "deslag-exam"))
+    ]
+    return max(found, key=os.path.getmtime, default=None)
+
+
+def generate(name):
+    """What the Make target writes now for the gold `name`: `deslag-exam tokens --gold
+    tests/gold/<name>.conllu`, as bytes. The tests replace this with a generator of their own."""
+    binary = find_exam()
+    if binary is None:
+        raise Refused("deslag-exam is not built, so a sample cannot be checked against its gold; `make build-label` builds it")
+    with tempfile.TemporaryDirectory() as folder:
+        out = os.path.join(folder, "sample.conllu")
+        done = subprocess.run(
+            [binary, "tokens", "--gold", os.path.join(REPO, "tests", "gold", f"{name}.conllu"), "--out", out],
+            capture_output=True, text=True, check=False,
+        )
+        if done.returncode != 0:
+            raise Refused(f"deslag-exam could not make the skeleton of {name}: {done.stderr.strip()}")
+        with open(out, "rb") as handle:
+            return handle.read()
+
+
+GENERATOR = generate
 
 
 def root():
@@ -92,6 +129,8 @@ def _own_file(real, name):
     refuse_path(linked)
     if os.path.dirname(linked) != real:
         raise Refused(f"{path}: it is a link to a file outside its directory, which is not followed")
+    if os.stat(linked).st_nlink > 1:
+        raise Refused(f"{path}: it is a hard link, and the labelling flow reads only files its targets wrote")
     return linked
 
 
@@ -133,6 +172,14 @@ def check_dir(directory):
             f"{sample}: it does not say it was made from tests/gold/dev.conllu or owner.conllu "
             f"(`# exam.from = dev` or `owner`), as `deslag-exam tokens --gold` writes it"
         )
+    else:
+        with open(sample, "rb") as handle:
+            seen = hashlib.sha256(handle.read()).hexdigest()
+        if seen != hashlib.sha256(GENERATOR(says["exam.from"])).hexdigest():
+            raise Refused(
+                f"{sample}: it is not what `deslag-exam tokens --gold tests/gold/{says['exam.from']}.conllu` "
+                f"writes now, so it is not a sample the labelling flow made; run the generate-label target again"
+            )
     return real
 
 

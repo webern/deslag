@@ -46,7 +46,7 @@ unless they must keep going after a failure, and validate arguments with `${1:?u
 
 Python 3 is allowed in five places. `scripts/llm-detection/collect.py` rebuilds the corpus,
 standard library only, by hand; make, tests, CI run its `batch`.
-`scripts/blobstore/test_batches.py` and `scripts/train/test_train.py` run under `make test-python`.
+`scripts/{blobstore,train,label}/test_*.py` run under `make test-python`.
 `scripts/{spacy,train,label}/` hold the exam's taggers, run by their own targets.
 
 Development is supported on macOS and Linux.

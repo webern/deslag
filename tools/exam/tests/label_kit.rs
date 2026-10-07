@@ -129,8 +129,20 @@ fn lines(changes: &[(&str, usize, &str)]) -> String {
     out
 }
 
+/// The directory that holds the test's `dev.conllu`, standing in for tests/gold: the nearest
+/// directory above `dir` that has one.
+fn gold_dir_of(dir: &Path) -> Option<PathBuf> {
+    dir.ancestors()
+        .find(|above| above.join("dev.conllu").exists())
+        .map(Path::to_path_buf)
+}
+
 fn gold_cmd(dir: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_deslag-gold"))
+    let mut command = Command::new(env!("CARGO_BIN_EXE_deslag-gold"));
+    if let Some(golds) = gold_dir_of(dir) {
+        command.env("DESLAG_GOLD_DIR", golds);
+    }
+    command
         .arg("--dir")
         .arg(dir)
         .args(args)
@@ -534,9 +546,9 @@ fn nothing_in_the_labelling_flow_takes_a_holdout_skeleton_path_or_gold() {
 
     // The report will not grade against a holdout file, whatever it is called, or by a path.
     let error = gold_fails(&dir, &["report", "--gold", path(&hold_gold)]);
-    assert!(error.contains("dev.conllu or owner.conllu only"), "{error}");
-    // A copy of a holdout gold named dev.conllu says holdout inside, and a link named dev.conllu
-    // resolves to the name of what it links to.
+    assert!(error.contains("dev.conllu or"), "{error}");
+    // A copy of a holdout gold named dev.conllu, or any copy of the dev gold, is not at the real
+    // path of the dev gold, and a link named dev.conllu resolves to what it links to.
     let copy_dir = root.path().join("copy");
     fs::create_dir_all(&copy_dir).unwrap();
     fs::copy(&hold_gold, copy_dir.join("dev.conllu")).unwrap();
@@ -544,7 +556,12 @@ fn nothing_in_the_labelling_flow_takes_a_holdout_skeleton_path_or_gold() {
         &dir,
         &["report", "--gold", path(&copy_dir.join("dev.conllu"))],
     );
-    assert!(error.contains("holdout gold"), "{error}");
+    assert!(error.contains("by their real paths"), "{error}");
+    let same = root.path().join("same");
+    fs::create_dir_all(&same).unwrap();
+    fs::copy(&gold, same.join("dev.conllu")).unwrap();
+    let error = gold_fails(&dir, &["report", "--gold", path(&same.join("dev.conllu"))]);
+    assert!(error.contains("by their real paths"), "{error}");
     let link_dir = root.path().join("link");
     fs::create_dir_all(&link_dir).unwrap();
     std::os::unix::fs::symlink(&hold_gold, link_dir.join("dev.conllu")).unwrap();
@@ -552,7 +569,7 @@ fn nothing_in_the_labelling_flow_takes_a_holdout_skeleton_path_or_gold() {
         &dir,
         &["report", "--gold", path(&link_dir.join("dev.conllu"))],
     );
-    assert!(error.contains("dev.conllu or owner.conllu only"), "{error}");
+    assert!(error.contains("by their real paths"), "{error}");
     let named = root
         .path()
         .join("tests")
@@ -844,4 +861,37 @@ fn a_second_merge_keeps_the_answers_the_first_settled_and_their_runs() {
         ],
     );
     assert!(!dir.join("merge-spacy/settled.tsv").exists());
+}
+
+#[test]
+fn a_header_on_text_the_target_did_not_write_is_refused_and_so_is_a_hard_link() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, _) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    let made = fs::read_to_string(dir.join("sample.conllu")).unwrap();
+    // The header is right and the sentences are not the dev gold's.
+    let forged = root.path().join(".label").join("forged");
+    fs::create_dir_all(&forged).unwrap();
+    fs::write(
+        forged.join("sample.conllu"),
+        made.replace("Run it now", "Somebody else's"),
+    )
+    .unwrap();
+    let error = gold_fails(&forged, &["batches"]);
+    assert!(
+        error.contains("not what `deslag-exam tokens --gold"),
+        "{error}"
+    );
+    assert!(!error.contains("Somebody"), "no text in the error: {error}");
+    // Right text, hard-linked from elsewhere.
+    let linked = root.path().join(".label").join("linked");
+    fs::create_dir_all(&linked).unwrap();
+    fs::write(root.path().join("elsewhere.conllu"), &made).unwrap();
+    fs::hard_link(
+        root.path().join("elsewhere.conllu"),
+        linked.join("sample.conllu"),
+    )
+    .unwrap();
+    let error = gold_fails(&linked, &["batches"]);
+    assert!(error.contains("hard link"), "{error}");
 }

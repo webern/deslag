@@ -31,6 +31,7 @@ import argparse
 import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import subprocess
@@ -182,13 +183,15 @@ class GoldCli:
 
 
 def find_binary(name):
-    """target/release/<name>, else target/debug/<name>, under CARGO_TARGET_DIR or the repository."""
+    """The most recently built of target/{release,fast,debug}/<name>, under CARGO_TARGET_DIR or the
+    repository, so that a stale build of one profile does not shadow a newer one."""
     root = os.environ.get("CARGO_TARGET_DIR") or os.path.join(REPO, "target")
-    for profile in ("release", "debug"):
-        path = os.path.join(root, profile, name)
-        if os.path.isfile(path):
-            return path
-    return None
+    found = [
+        os.path.join(root, profile, name)
+        for profile in ("release", "fast", "debug")
+        if os.path.isfile(os.path.join(root, profile, name))
+    ]
+    return max(found, key=os.path.getmtime, default=None)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -358,14 +361,15 @@ class Runner:
         started = self.clock()
         (response, ident), retries = openrouter.with_retries(attempt, self.settings["http_attempts"], self.sleep)
         seconds = self.clock() - started
-        reply = openrouter.parse_reply(response, price_in, price_out)
+        reply = openrouter.parse_reply(response)
+        # A reply that reports no cost, or a negative or odd one, never lowers the ledger: the
+        # booking stays at the worst case.
+        cost = reply.cost if reply.cost is not None and math.isfinite(reply.cost) and reply.cost >= 0 else None
         note = f"{kind}: settled"
-        if reply.cost is None:
-            note = f"{kind}: the reply reported no usage, so it stays at its worst case"
-        elif reply.estimated:
-            note = f"{kind}: estimated from tokens"
+        if cost is None:
+            note = f"{kind}: the reply reported no usable cost, so it stays at its worst case"
         self.ledger.settle(
-            ident, reply.cost, provider=reply.provider or where["provider"],
+            ident, cost, provider=reply.provider or where["provider"],
             prompt_tokens=reply.prompt_tokens, completion_tokens=reply.completion_tokens,
             reasoning_tokens=reply.reasoning_tokens, note=note,
         )
@@ -392,8 +396,8 @@ class Runner:
         record = {
             "kind": kind, "seconds": round(seconds, 3), "retries": retries,
             "prompt_tokens": reply.prompt_tokens, "completion_tokens": reply.completion_tokens,
-            "reasoning_tokens": reply.reasoning_tokens, "cost_usd": reply.cost,
-            "estimated": reply.estimated, "finish": reply.finish, "think": reply.think,
+            "reasoning_tokens": reply.reasoning_tokens, "cost_usd": cost,
+            "finish": reply.finish, "think": reply.think,
             "provider": reply.provider, "reply_model": reply.model,
         }
         with open(self.raw(name, run, "calls.jsonl"), "a", encoding="utf-8") as handle:

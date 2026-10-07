@@ -273,7 +273,7 @@ test-percept: generate-percept
 # no treebank. Minutes of git, so not in test or ci; the python workflow runs it when
 # scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train or tools/exam change.
 test-python: preflight
-	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold
+	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'

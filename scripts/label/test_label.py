@@ -8,6 +8,7 @@ sets or the corpus.
 
 import contextlib
 import copy
+import http.server
 import io
 import json
 import multiprocessing
@@ -15,7 +16,9 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import tempfile
+import threading
 import unittest
 
 import guard
@@ -233,6 +236,10 @@ class Base(unittest.TestCase):
         os.environ["OPENROUTER_API_KEY"] = self.KEY
         os.environ[guard.ROOT_VARIABLE] = self.label_root
         self.addCleanup(self.restore_environment)
+        # What the Make target would write for the gold: here, the fixture's own skeleton.
+        self.saved_generator = guard.GENERATOR
+        self.addCleanup(setattr, guard, "GENERATOR", guard.GENERATOR)
+        guard.GENERATOR = lambda name: skeleton().replace("= dev", f"= {name}").encode()
         self.said = []
 
     def restore_environment(self):
@@ -293,9 +300,8 @@ class RequestTests(unittest.TestCase):
         claude = config["models"][config["adjudicator"]]
         body = openrouter.request_body(claude, "s", "u")
         self.assertNotIn("temperature", body, "the Anthropic route lists no temperature")
-        self.assertEqual(body["reasoning"], {"max_tokens": 2000}, "the adjudicator thinks, modestly")
-        self.assertEqual(body["max_tokens"], 8000)
-        self.assertLess(body["reasoning"]["max_tokens"], body["max_tokens"])
+        self.assertEqual(body["reasoning"], {"effort": "low"}, "the adjudicator thinks, at low effort")
+        self.assertEqual(body["max_tokens"], 16000)
         self.assertIn("default of 1", claude["temperature_note"], "the temperature the API requires is recorded")
 
     def test_think_blocks_are_stripped_whole_or_left_open(self):
@@ -320,10 +326,10 @@ class RequestTests(unittest.TestCase):
 
     def test_a_reply_from_another_provider_is_an_error(self):
         endpoint = LISTING["data"]["endpoints"][0]
-        reply = openrouter.parse_reply(chat("x", provider="Elsewhere"), 1e-6, 2e-6)
+        reply = openrouter.parse_reply(chat("x", provider="Elsewhere"))
         with self.assertRaises(openrouter.ProviderMismatch):
             openrouter.check_provider(reply, endpoint)
-        openrouter.check_provider(openrouter.parse_reply(chat("x", provider="host"), 1e-6, 2e-6), endpoint)
+        openrouter.check_provider(openrouter.parse_reply(chat("x", provider="host")), endpoint)
 
     def test_the_model_a_reply_names_must_be_the_pinned_one_or_a_dated_version_of_it(self):
         endpoint = LISTING["data"]["endpoints"][0]
@@ -331,7 +337,7 @@ class RequestTests(unittest.TestCase):
         def named(model):
             response = chat("x", provider="Host")
             response["model"] = model
-            return openrouter.parse_reply(response, 1e-6, 2e-6)
+            return openrouter.parse_reply(response)
 
         openrouter.check_provider(named("x/one"), endpoint, "x/one")
         openrouter.check_provider(named("x/one-20261001"), endpoint, "x/one")
@@ -356,14 +362,7 @@ class RequestTests(unittest.TestCase):
     def test_a_reply_with_no_usage_has_no_cost_and_the_ledger_keeps_its_worst_case(self):
         response = chat("x")
         del response["usage"]
-        self.assertIsNone(openrouter.parse_reply(response, 1e-6, 2e-6).cost)
-
-    def test_a_reply_without_a_cost_is_priced_from_its_tokens_and_marked(self):
-        response = chat("x", prompt=1000, completion=100)
-        del response["usage"]["cost"]
-        reply = openrouter.parse_reply(response, 1e-6, 2e-6)
-        self.assertTrue(reply.estimated)
-        self.assertAlmostEqual(reply.cost, 1000 * 1e-6 + 100 * 2e-6)
+        self.assertIsNone(openrouter.parse_reply(response).cost)
 
     def test_timeouts_are_retried_and_then_an_error(self):
         attempts = []
@@ -379,6 +378,71 @@ class RequestTests(unittest.TestCase):
         self.assertEqual(waits, [2.0, 4.0])
         with self.assertRaisesRegex(openrouter.ApiError, "timed out, after 2 attempts"):
             openrouter.with_retries(lambda: (_ for _ in ()).throw(openrouter.Retryable("the call timed out")), 2, lambda s: None)
+
+
+class RedirectTests(unittest.TestCase):
+    """The real transport against two local servers: the first redirects, the second must never be
+    reached, least of all with the key."""
+
+    def serve(self, handler):
+        server = http.server.HTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        return server
+
+    def setUp(self):
+        self.reached = []
+        reached = self.reached
+
+        class Elsewhere(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                reached.append(("POST", self.headers.get("Authorization")))
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"{}")
+
+            do_GET = do_POST
+
+            def log_message(self, *args):
+                pass
+
+        self.elsewhere = self.serve(Elsewhere)
+        target = f"http://127.0.0.1:{self.elsewhere.server_port}/stolen"
+
+        class Redirecting(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.send_response(self.server.code)
+                self.send_header("Location", target)
+                self.end_headers()
+
+            do_GET = do_POST
+
+            def log_message(self, *args):
+                pass
+
+        self.redirecting = self.serve(Redirecting)
+        self.url = f"http://127.0.0.1:{self.redirecting.server_port}/chat"
+
+    def test_a_redirect_of_a_post_is_refused_and_the_key_is_not_sent_on(self):
+        for code in (301, 302, 303, 307, 308):
+            self.redirecting.code = code
+            with self.assertRaisesRegex(openrouter.ApiError, f"HTTP {code}, a redirect, which is not followed") as caught:
+                openrouter.Urllib().post(self.url, {"model": "x"}, "sk-test-KEYBYTES", 5)
+            self.assertNotIn("KEYBYTES", str(caught.exception))
+            self.assertNotIn("stolen", str(caught.exception), "not even where it pointed")
+        self.assertEqual(self.reached, [], "the other server was never asked")
+
+    def test_a_redirect_of_a_get_is_refused_too(self):
+        self.redirecting.code = 302
+        with self.assertRaisesRegex(openrouter.ApiError, "not followed"):
+            openrouter.Urllib().get(self.url, 5)
+        self.assertEqual(self.reached, [])
+
+    def test_a_plain_reply_still_comes_back(self):
+        reply = openrouter.Urllib().post(f"http://127.0.0.1:{self.elsewhere.server_port}/x", {}, "sk-test-KEYBYTES", 5)
+        self.assertEqual(reply, {})
+        self.assertEqual(self.reached, [("POST", "Bearer sk-test-KEYBYTES")])
 
 
 class PromptTests(unittest.TestCase):
@@ -441,6 +505,44 @@ class GuardTests(Base):
                 guard.check_dir(self.dir)
         label.write(os.path.join(self.dir, "sample.conllu"), skeleton().replace("# exam.from = dev\n", ""))
         with self.assertRaisesRegex(guard.Refused, "does not say it was made from"):
+            guard.check_dir(self.dir)
+
+    def test_a_header_on_text_the_target_did_not_write_is_refused(self):
+        sample = os.path.join(self.dir, "sample.conllu")
+        # The header says dev; the sentences are somebody else's.
+        label.write(sample, skeleton().replace("Run it now", "Held it back"))
+        with self.assertRaisesRegex(guard.Refused, "not what `deslag-exam tokens --gold tests/gold/dev.conllu` writes now"):
+            guard.check_dir(self.dir)
+        # The split moved off the first block, where a check of the first block would miss it.
+        label.write(sample, skeleton().replace("# sent_id = d2\n", "# sent_id = d2\n# exam.split = holdout\n"))
+        with self.assertRaises(guard.Refused):
+            guard.check_dir(self.dir)
+        label.write(sample, skeleton() + "# sent_id = extra\n")
+        with self.assertRaises(guard.Refused):
+            guard.check_dir(self.dir)
+        label.write(sample, skeleton())
+        guard.check_dir(self.dir)
+
+    def test_a_hard_link_is_refused_even_to_right_text(self):
+        other = os.path.join(self.label_root, "linked")
+        os.makedirs(other)
+        label.write(os.path.join(self.root, "elsewhere.conllu"), skeleton())
+        os.link(os.path.join(self.root, "elsewhere.conllu"), os.path.join(other, "sample.conllu"))
+        with self.assertRaisesRegex(guard.Refused, "hard link"):
+            guard.check_dir(other)
+        # And one made inside `.label`, from the sample of an accepted directory.
+        twin = os.path.join(self.label_root, "twin")
+        os.makedirs(twin)
+        os.link(os.path.join(self.dir, "sample.conllu"), os.path.join(twin, "sample.conllu"))
+        with self.assertRaisesRegex(guard.Refused, "hard link"):
+            guard.check_dir(twin)
+
+    def test_the_default_generator_needs_a_built_deslag_exam_and_says_so(self):
+        guard.GENERATOR = self.saved_generator
+        saved = os.environ.get("CARGO_TARGET_DIR")
+        os.environ["CARGO_TARGET_DIR"] = os.path.join(self.root, "no-target")
+        self.addCleanup(lambda: os.environ.pop("CARGO_TARGET_DIR", None) if saved is None else os.environ.__setitem__("CARGO_TARGET_DIR", saved))
+        with self.assertRaisesRegex(guard.Refused, "deslag-exam is not built"):
             guard.check_dir(self.dir)
 
     def test_a_draw_for_labelling_is_accepted_and_nothing_else_with_a_manifest_is(self):
@@ -820,8 +922,23 @@ class LedgerTests(Base):
         runner.tag("two", limit=1)
         row, = [row for row in self.ledger().booked().values() if row["state"] == "settled"]
         self.assertGreater(float(row["cost_usd"]), 0.005)
-        self.assertIn("no usage", row["note"])
+        self.assertIn("no usable cost", row["note"])
         self.assertAlmostEqual(runner.ledger.run_cost("r1"), float(row["cost_usd"]))
+
+    def test_a_negative_or_missing_cost_never_lowers_the_ledger(self):
+        for cost in (-5.0, None, float("nan")):
+            def respond(body, count, cost=cost):
+                response = answer_all(body)
+                response["usage"]["cost"] = cost
+                response["usage"]["prompt_tokens"] = 0 if cost is None else 100
+                return response
+
+            runner = self.runner(FakeTransport(respond))
+            before = self.ledger().total()
+            runner.tag("two", limit=1)
+            row = [r for r in self.ledger().booked().values() if r["state"] == "settled"][-1]
+            self.assertGreater(float(row["cost_usd"]), 0.005, f"cost {cost}")
+            self.assertGreater(self.ledger().total(), before)
 
     def test_a_crash_between_the_reservation_and_the_settlement_leaves_the_ledger_over_counting(self):
         def crash(body, count):
@@ -1238,8 +1355,44 @@ class OutsideTaggerTests(Base):
         self.assertEqual(row[5], "200.0000")
 
 
-@unittest.skipUnless(label.find_binary("deslag-gold"), "deslag-gold is not built")
+def gold_text():
+    """A dev gold of the fixture's sentences, for `deslag-exam tokens --gold` to make a skeleton of."""
+    out = "# exam.tokens = deslag\n# exam.split = dev\n# exam.trains = undecided\n# exam.source = hand-made\n"
+    for sent_id, forms in SENTENCES:
+        text = " ".join(forms).replace(" .", ".")
+        out += f"# sent_id = {sent_id}\n# exam.context = prose\n# text = {text}\n"
+        for index, form in enumerate(forms, 1):
+            word = form != "."
+            glue = "|SpaceAfter=No" if index == len(forms) - 1 else ""
+            upos, feats, kind = ("NOUN", "Number=Sing", "Word") if word else ("PUNCT", "_", "Punctuation")
+            prov = "agree" if word else "kind"
+            out += f"{index}\t{form}\t_\t{upos}\t_\t{feats}\t_\t_\t_\tKind={kind}|Prov={prov}{glue}\n"
+        out += "\n"
+    return out
+
+
+@unittest.skipUnless(
+    label.find_binary("deslag-gold") and label.find_binary("deslag-exam"), "deslag-gold or deslag-exam is not built"
+)
 class EndToEndTests(Base):
+    def setUp(self):
+        """The real stages check a sample against the dev gold, so the fixture has a gold of its own,
+        named by DESLAG_GOLD_DIR, and the sample is the skeleton `deslag-exam tokens` makes of it."""
+        super().setUp()
+        golds = os.path.join(self.root, "golds")
+        for name in ("dev", "owner"):
+            label.write(os.path.join(golds, f"{name}.conllu"), gold_text())
+        saved = os.environ.get("DESLAG_GOLD_DIR")
+        os.environ["DESLAG_GOLD_DIR"] = golds
+        self.addCleanup(lambda: os.environ.pop("DESLAG_GOLD_DIR", None) if saved is None
+                        else os.environ.__setitem__("DESLAG_GOLD_DIR", saved))
+        sample = os.path.join(self.dir, "sample.conllu")
+        subprocess.run([label.find_binary("deslag-exam"), "tokens", "--gold", os.path.join(golds, "dev.conllu"),
+                        "--out", sample], check=True, capture_output=True)
+        with open(sample, "rb") as handle:
+            made = handle.read()
+        guard.GENERATOR = lambda name: made
+
     def test_the_real_validator_keeps_the_good_lines_and_stamps_the_run(self):
         gold = label.GoldCli(label.find_binary("deslag-gold"))
 

@@ -121,7 +121,7 @@ def strip_think(text):
 class Reply:
     """What one call gave back, with what it cost."""
 
-    def __init__(self, content, raw_content, provider, usage, cost, estimated, finish, think, ident,
+    def __init__(self, content, raw_content, provider, usage, cost, finish, think, ident,
                  model=None, fingerprint=None):
         self.content = content
         self.raw_content = raw_content
@@ -133,15 +133,14 @@ class Reply:
         details = usage.get("completion_tokens_details") or {}
         self.reasoning_tokens = int(details.get("reasoning_tokens") or 0)
         self.cost = cost
-        self.estimated = estimated
         self.finish = finish
         self.think = think
         self.ident = ident
 
 
-def parse_reply(response, price_in, price_out):
-    """A Reply from a chat completion's JSON. Cost is the usage's own; failing that, tokens at the
-    endpoint's price, which is marked an estimate."""
+def parse_reply(response):
+    """A Reply from a chat completion's JSON. Its cost is the usage's own, and None when the reply
+    gives none, which the ledger books at the call's worst case."""
     if "error" in response and not response.get("choices"):
         error = response["error"]
         message = error.get("message") if isinstance(error, dict) else error
@@ -155,12 +154,8 @@ def parse_reply(response, price_in, price_out):
     content, think = strip_think(raw)
     usage = response.get("usage") or {}
     cost = usage.get("cost")
-    estimated = cost is None
-    if estimated and usage.get("prompt_tokens") is not None:
-        cost = int(usage.get("prompt_tokens") or 0) * price_in + int(usage.get("completion_tokens") or 0) * price_out
-    # No usage at all leaves the cost unknown (None): the ledger keeps the call booked at its worst.
     return Reply(
-        content, raw, response.get("provider"), usage, None if cost is None else float(cost), estimated,
+        content, raw, response.get("provider"), usage, None if cost is None else float(cost),
         choice.get("finish_reason"), think, response.get("id"), response.get("model"),
         response.get("system_fingerprint"),
     )
@@ -187,6 +182,17 @@ def check_names(provider, reply_model, endpoint, model=None):
             raise ProviderMismatch(f"the reply names the model `{named}`, and the pinned model is `{model}`")
 
 
+class _Refuse(urllib.request.HTTPRedirectHandler):
+    """Follows no redirect: urllib would send the same headers, the key's among them, to wherever the
+    reply points."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ApiError(f"the server answered HTTP {code}, a redirect, which is not followed so that the key is never sent elsewhere")
+
+
+_OPENER = urllib.request.build_opener(_Refuse)
+
+
 class Urllib:
     """The real transport. A transport has `get(url, timeout)` and `post(url, body, key, timeout)`,
     each returning the decoded JSON, and raises Retryable for what asking again may fix."""
@@ -211,7 +217,7 @@ class Urllib:
     @staticmethod
     def _send(request, timeout):
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as handle:
+            with _OPENER.open(request, timeout=timeout) as handle:
                 return json.loads(handle.read().decode("utf-8"))
         except urllib.error.HTTPError as error:
             text = error.read().decode("utf-8", "replace")[:500]

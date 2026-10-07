@@ -80,8 +80,10 @@ that listing. A reply whose `provider` is not the pinned endpoint's, or that nam
 the pinned one (or a dated version of it), is an error, checked before the reply is saved. So is a
 reply cut off at `max_tokens`, and one with reasoning tokens when reasoning was switched off. Everything
 up to the last `</think>` is dropped. Timeouts, 429, 5xx and a dropped connection are asked again. The
-adjudicator thinks, with a budget of 2000 tokens; the API requires its default temperature then, so none
-is sent, and `runs.tsv` says so.
+adjudicator thinks at `reasoning: {"effort": "low"}` with `max_tokens` 16000 (a token budget is refused by
+Sonnet 5.5); the API requires its default temperature then, so none is sent, and `runs.tsv` says so. A
+reply with no `usage.cost`, or a negative or odd one, is booked at its worst case, never lower. The
+transport follows no redirect, so the key goes only where the call was sent.
 
 The runner keeps the lines that begin `id:`, has `deslag-gold read-tags --check` keep the good ones
 and write `.problems.tsv` and a `.retry.txt` of the rest, and asks again for just those sentences,
@@ -115,12 +117,15 @@ replies are `raw/<name>/<run>/`, one `.reply.txt`, `.response.json` and `.lines.
 ## Holdout
 
 Nothing here reads holdout or the treebank, by an allow-list on real paths (symlinks and `..`
-followed) checked before any file is opened. The runner and the Rust stages accept only a skeleton the
-Make targets made from `tests/gold/dev.conllu` or `owner.conllu`, which says so in `# exam.from =` (dev
-or owner), or a draw whose manifest says `draw = for labelling` with every row `unlabelled`, in a
-directory of this checkout's `.label`. A path with a component that begins `holdout`, contains `en_ewt`
+followed) checked before any file is opened. The runner and the Rust stages accept only a skeleton
+whose text is, byte for byte, what `deslag-exam tokens --gold tests/gold/dev.conllu` (or `owner.conllu`,
+as `# exam.from =` says) writes now, or a draw whose manifest says `draw = for labelling` with every row
+`unlabelled`, in a directory of this checkout's `.label`. A header on other text, a hand-made file, a
+copy or a hard link proves nothing and is refused. The Python guard builds the skeleton with
+`deslag-exam` (`make build-label`); the Rust stages build it themselves, from `tests/gold`, or from
+`DESLAG_GOLD_DIR` for the tests. A path with a component that begins `holdout`, contains `en_ewt`
 or `en-ewt` or is `.ewt` is refused, and a file that links out of its directory is not followed.
-`report --gold` takes only `dev.conllu` or `owner.conllu` by real path. The audit queue of silver
+`report --gold` takes only `tests/gold/dev.conllu` or `owner.conllu` of this checkout, by real path. The audit queue of silver
 labels says `# exam.silver = yes`, and `own` refuses it.
 
 ## Tests

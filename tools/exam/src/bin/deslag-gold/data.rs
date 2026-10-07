@@ -11,6 +11,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::ops::Range;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 use deslag::document::{Token, TokenKind};
@@ -436,8 +437,10 @@ impl Sample {
     /// symlinks and `..` are followed, no file may be a link out of the directory, and no part of
     /// a real path may name holdout. Then it is opened only if it is
     ///
-    /// - a skeleton of the dev or the owner gold, which says so in `exam.from`, as
-    ///   `deslag-exam tokens --gold` writes it, with no manifest; or
+    /// - a skeleton of the dev or the owner gold, with no manifest, which is the very text
+    ///   `deslag-exam tokens --gold tests/gold/<from>.conllu` writes now: `exam.from` only says
+    ///   which gold to write it from, and the text is compared whole, so a header on some other
+    ///   text, a hand-made file or a hard link to one proves nothing; or
     /// - a draw for labelling: a manifest that says `draw = for labelling ...`, whose every row is
     ///   `unlabelled`.
     ///
@@ -446,6 +449,11 @@ impl Sample {
     /// `exam.split = holdout`, as `deslag-exam tokens` writes for a holdout gold, is refused
     /// wherever it is. The gold flow's own `.gold` is not under `.label` and is read as before.
     pub fn open(dir: &Path) -> Result<Sample, Problems> {
+        Sample::open_in(dir, &gold_dir())
+    }
+
+    /// [Sample::open], with the golds a skeleton is compared with in `golds`.
+    pub fn open_in(dir: &Path, golds: &Path) -> Result<Sample, Problems> {
         let real = real_path(dir)?;
         let labelling = in_label_place(dir) || in_label_place(&real);
         let sample_path = dir.join("sample.conllu");
@@ -456,6 +464,15 @@ impl Sample {
                 if file.exists() {
                     let linked = real_path(file)?;
                     refuse_holdout(&linked)?;
+                    // The Make targets write these files afresh, so a hard link is not theirs.
+                    if std::fs::metadata(&linked).is_ok_and(|meta| meta.nlink() > 1) {
+                        return Err(Error::load(
+                            &file.display().to_string(),
+                            Place::File,
+                            "it is a hard link, and the labelling flow reads only files its targets wrote",
+                        )
+                        .into());
+                    }
                     if linked.parent() != Some(real.as_path()) {
                         return Err(Error::load(
                             &file.display().to_string(),
@@ -544,7 +561,24 @@ impl Sample {
             let allowed = if manifest_path.exists() {
                 sample.is_labelling_draw()
             } else {
-                first(exam_skeleton::FROM).is_some_and(|from| LABELLED_FROM.contains(&from))
+                match first(exam_skeleton::FROM).filter(|from| LABELLED_FROM.contains(from)) {
+                    Some(from) => {
+                        let gold = deslag_exam::gold::Gold::read(&graded_gold(golds, from)?)?;
+                        if exam_skeleton::skeleton(&gold) != text {
+                            return Err(Error::load(
+                                &shown,
+                                Place::File,
+                                format!(
+                                    "it is not what `deslag-exam tokens --gold tests/gold/{from}.conllu` writes now, \
+                                     so it is not a sample the labelling flow made; run the generate-label target again"
+                                ),
+                            )
+                            .into());
+                        }
+                        true
+                    }
+                    None => false,
+                }
             };
             if !allowed {
                 return Err(Error::load(
@@ -615,6 +649,23 @@ pub fn in_label_place(dir: &Path) -> bool {
 
 /// The golds a labelling skeleton may be made from, as `exam.from` says them.
 const LABELLED_FROM: [&str; 2] = ["dev", "owner"];
+
+/// The variable that names the directory of the dev and owner golds, for the tests.
+pub const GOLD_DIR_VARIABLE: &str = "DESLAG_GOLD_DIR";
+
+/// The directory of the dev and owner golds: `tests/gold` of the checkout this was built in, or
+/// the one `DESLAG_GOLD_DIR` names, which the tests use for golds of their own.
+pub fn gold_dir() -> PathBuf {
+    std::env::var_os(GOLD_DIR_VARIABLE).map_or_else(
+        || Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/gold"),
+        PathBuf::from,
+    )
+}
+
+/// The real path of the gold `name` (`dev` or `owner`) in `golds`.
+pub fn graded_gold(golds: &Path, name: &str) -> Result<PathBuf, Error> {
+    real_path(&golds.join(format!("{name}.conllu")))
+}
 
 /// `path` with every symlink and `..` resolved, as the file system has it.
 pub fn real_path(path: &Path) -> Result<PathBuf, Error> {
@@ -906,30 +957,56 @@ pub mod tests {
         }
     }
 
-    /// A skeleton of `run_now` under `.label/<name>` in `root`, made from the dev gold as
-    /// `deslag-exam tokens` makes it, with `extra` as comments before it.
-    fn label_dir(root: &Path, name: &str, extra: &str) -> std::path::PathBuf {
+    /// A gold of one sentence, as the dev or owner gold stands in for the real ones.
+    const GOLD: &str = "# exam.tokens = deslag\n# exam.split = dev\n# exam.trains = undecided\n\
+        # exam.source = hand-made\n# sent_id = g0001\n# exam.context = list-item\n\
+        # text = Run it now.\n\
+        1\tRun\t_\tVERB\t_\tVerbForm=Fin\t_\t_\t_\tKind=Word|Prov=agree\n\
+        2\tit\t_\tPRON\t_\t_\t_\t_\t_\tKind=Word|Prov=agree\n\
+        3\tnow\t_\tADV\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|SpaceAfter=No\n\
+        4\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation|Prov=kind\n\n";
+
+    /// A directory of golds `dev.conllu` and `owner.conllu` in `root`, and its path.
+    fn golds(root: &Path) -> PathBuf {
+        let dir = root.join("golds");
+        std::fs::create_dir_all(&dir).unwrap();
+        for name in ["dev", "owner"] {
+            std::fs::write(dir.join(format!("{name}.conllu")), GOLD).unwrap();
+        }
+        dir
+    }
+
+    /// What `deslag-exam tokens --gold <root>/golds/dev.conllu` writes.
+    fn made_text(root: &Path) -> String {
+        let gold = deslag_exam::gold::Gold::read(&golds(root).join("dev.conllu")).unwrap();
+        exam_skeleton::skeleton(&gold)
+    }
+
+    /// The sample `deslag-exam tokens` writes for the dev gold under `.label/<name>` in `root`,
+    /// with `extra` as comments after the line that says what it was made from.
+    fn label_dir(root: &Path, name: &str, extra: &str) -> PathBuf {
         label_dir_from(root, name, &format!("# exam.from = dev\n{extra}"))
     }
 
-    /// The same with `extra` and no `exam.from`, unless `extra` has one.
-    fn label_dir_from(root: &Path, name: &str, extra: &str) -> std::path::PathBuf {
+    /// The same with `extra` in place of the line that says what it was made from.
+    fn label_dir_from(root: &Path, name: &str, extra: &str) -> PathBuf {
         let dir = root.join(LABEL_DIR).join(name);
         std::fs::create_dir_all(&dir).unwrap();
-        let text = skeleton(&[run_now()], |_| Some(Context::ListItem), false).replacen(
-            "# exam.tokens = deslag\n",
-            &format!("# exam.tokens = deslag\n{extra}"),
-            1,
-        );
+        let text = made_text(root).replacen("# exam.from = dev\n", extra, 1);
         std::fs::write(dir.join("sample.conllu"), text).unwrap();
         dir
+    }
+
+    /// [Sample::open] with the golds of [golds] in `root`.
+    fn open(root: &Path, dir: &Path) -> Result<Sample, Problems> {
+        Sample::open_in(dir, &golds(root))
     }
 
     #[test]
     fn a_bare_skeleton_opens_with_its_contexts_and_no_tier_or_split() {
         let root = tempfile::tempdir().unwrap();
         let dir = label_dir(root.path(), "dev", "");
-        let sample = Sample::open(&dir).unwrap();
+        let sample = open(root.path(), &dir).unwrap();
         assert_eq!(sample.sents.len(), 1);
         let meta = sample.meta("g0001").unwrap();
         assert_eq!(meta.context, Context::ListItem);
@@ -943,16 +1020,16 @@ pub mod tests {
         // No header: a copy of `.gold/sample.conllu`, which mixes holdout in, or any skeleton whose
         // header was stripped.
         let bare = label_dir_from(root.path(), "bare", "");
-        let error = Sample::open(&bare).unwrap_err().to_string();
+        let error = open(root.path(), &bare).unwrap_err().to_string();
         assert!(error.contains("exam.from"), "{error}");
         // Any gold's stem other than dev or owner, holdout's among them.
         for stem in ["holdout", "train", "x"] {
             let dir = label_dir_from(root.path(), stem, &format!("# exam.from = {stem}\n"));
-            assert!(Sample::open(&dir).is_err(), "{stem}");
+            assert!(open(root.path(), &dir).is_err(), "{stem}");
         }
         for stem in ["dev", "owner"] {
             let dir = label_dir_from(root.path(), stem, &format!("# exam.from = {stem}\n"));
-            assert!(Sample::open(&dir).is_ok(), "{stem}");
+            assert!(open(root.path(), &dir).is_ok(), "{stem}");
         }
         // A manifest with the gold flow's rows is no labelling draw, whatever its sample says.
         let mixed = label_dir(root.path(), "mixed", "");
@@ -961,7 +1038,7 @@ pub mod tests {
             rows: vec![("g0001".to_string(), meta_of(split))],
         };
         std::fs::write(mixed.join("manifest.tsv"), row(Some(Split::Dev)).render()).unwrap();
-        assert!(Sample::open(&mixed).is_err());
+        assert!(open(root.path(), &mixed).is_err());
         // A draw for labelling is: its header says so and no row has a split.
         let mut draw = row(None);
         draw.header.push((
@@ -970,12 +1047,59 @@ pub mod tests {
         ));
         let drawn = label_dir_from(root.path(), "draw", "");
         std::fs::write(drawn.join("manifest.tsv"), draw.render()).unwrap();
-        assert!(Sample::open(&drawn).is_ok());
-        assert!(Sample::open(&drawn).unwrap().is_labelling_draw());
+        assert!(open(root.path(), &drawn).is_ok());
+        assert!(open(root.path(), &drawn).unwrap().is_labelling_draw());
         // And a draw header over rows that are dev is not.
         draw.rows[0].1.split = Some(Split::Dev);
         std::fs::write(drawn.join("manifest.tsv"), draw.render()).unwrap();
-        assert!(Sample::open(&drawn).is_err());
+        assert!(open(root.path(), &drawn).is_err());
+    }
+
+    #[test]
+    fn a_header_on_other_text_or_a_hard_link_proves_nothing() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = label_dir(root.path(), "forged", "");
+        assert!(open(root.path(), &dir).is_ok());
+        // The header says dev and the sentences are somebody else's.
+        let text = std::fs::read_to_string(dir.join("sample.conllu")).unwrap();
+        std::fs::write(
+            dir.join("sample.conllu"),
+            text.replace("Run it now", "Held it back"),
+        )
+        .unwrap();
+        let error = open(root.path(), &dir).unwrap_err().to_string();
+        assert!(
+            error.contains("not what `deslag-exam tokens --gold"),
+            "{error}"
+        );
+        assert!(!error.contains("Held"), "no text in the error: {error}");
+        // The split moved off the first block, as a holdout gold's text could have it.
+        std::fs::write(
+            dir.join("sample.conllu"),
+            text.replace(
+                "# sent_id = g0001",
+                "# sent_id = g0001\n# exam.split = holdout",
+            ),
+        )
+        .unwrap();
+        assert!(open(root.path(), &dir).is_err());
+        // Extra text after the sentences.
+        std::fs::write(dir.join("sample.conllu"), format!("{text}# sent_id = h1\n")).unwrap();
+        assert!(open(root.path(), &dir).is_err());
+        // A hard link, even to text that is right.
+        let linked = root.path().join(LABEL_DIR).join("linked");
+        std::fs::create_dir_all(&linked).unwrap();
+        std::fs::write(root.path().join("elsewhere.conllu"), &text).unwrap();
+        std::fs::hard_link(
+            root.path().join("elsewhere.conllu"),
+            linked.join("sample.conllu"),
+        )
+        .unwrap();
+        let error = open(root.path(), &linked).unwrap_err().to_string();
+        assert!(error.contains("hard link"), "{error}");
+        // The same text a target wrote is read.
+        std::fs::write(dir.join("sample.conllu"), &text).unwrap();
+        assert!(open(root.path(), &dir).is_ok());
     }
 
     #[test]
@@ -991,12 +1115,12 @@ pub mod tests {
         std::fs::create_dir_all(&decoy).unwrap();
         std::os::unix::fs::symlink(hold.join("sample.conllu"), decoy.join("sample.conllu"))
             .unwrap();
-        let error = Sample::open(&decoy).unwrap_err().to_string();
+        let error = open(root.path(), &decoy).unwrap_err().to_string();
         assert!(error.contains("holdout"), "{error}");
         // `.label/hop` is a link to the holdout directory itself.
         let hop = root.path().join(LABEL_DIR).join("hop");
         std::os::unix::fs::symlink(&hold, &hop).unwrap();
-        assert!(Sample::open(&hop).is_err());
+        assert!(open(root.path(), &hop).is_err());
         // A sample linked from a harmless place outside its directory is refused all the same.
         let elsewhere = root.path().join("elsewhere");
         std::fs::create_dir_all(&elsewhere).unwrap();
@@ -1008,10 +1132,10 @@ pub mod tests {
             linked.join("sample.conllu"),
         )
         .unwrap();
-        assert!(Sample::open(&linked).is_err());
+        assert!(open(root.path(), &linked).is_err());
         // `..` is resolved: this reaches the holdout directory from a `.label` path.
         let dotted = ok.join("..").join("..").join("holdout-copy");
-        assert!(Sample::open(&dotted).is_err());
+        assert!(open(root.path(), &dotted).is_err());
         // A link to the gold flow's directory is read as label, so its mixed manifest is refused.
         let gold = root.path().join(".gold");
         std::fs::create_dir_all(&gold).unwrap();
@@ -1027,7 +1151,7 @@ pub mod tests {
         .unwrap();
         let via = root.path().join(LABEL_DIR).join("via");
         std::os::unix::fs::symlink(&gold, &via).unwrap();
-        assert!(Sample::open(&via).is_err());
+        assert!(open(root.path(), &via).is_err());
     }
 
     /// A manifest row's meta, with the split `split`.
@@ -1048,14 +1172,14 @@ pub mod tests {
     fn a_skeleton_of_a_holdout_gold_is_refused_wherever_it_is() {
         let root = tempfile::tempdir().unwrap();
         let dir = label_dir(root.path(), "hold", "# exam.split = holdout\n");
-        let error = Sample::open(&dir).unwrap_err().to_string();
+        let error = open(root.path(), &dir).unwrap_err().to_string();
         assert!(error.contains("holdout"), "{error}");
         assert!(!error.contains("Run"), "no text in the error: {error}");
         // Outside `.label` too.
         let elsewhere = root.path().join("anywhere");
         std::fs::create_dir_all(&elsewhere).unwrap();
         std::fs::copy(dir.join("sample.conllu"), elsewhere.join("sample.conllu")).unwrap();
-        assert!(Sample::open(&elsewhere).is_err());
+        assert!(open(root.path(), &elsewhere).is_err());
     }
 
     #[test]
@@ -1083,18 +1207,18 @@ pub mod tests {
             rows(Some(Split::Holdout)).render(),
         )
         .unwrap();
-        let error = Sample::open(&dir).unwrap_err().to_string();
+        let error = open(root.path(), &dir).unwrap_err().to_string();
         assert!(error.contains("1 holdout rows"), "{error}");
         // Dev rows are no draw for labelling either: only a draw's manifest is read here.
         std::fs::write(dir.join("manifest.tsv"), rows(Some(Split::Dev)).render()).unwrap();
-        assert!(Sample::open(&dir).is_err());
+        assert!(open(root.path(), &dir).is_err());
         // A header `split = holdout` is as bad.
         let mut headed = rows(Some(Split::Dev));
         headed
             .header
             .push(("split".to_string(), "holdout".to_string()));
         std::fs::write(dir.join("manifest.tsv"), headed.render()).unwrap();
-        assert!(Sample::open(&dir).is_err());
+        assert!(open(root.path(), &dir).is_err());
         // The gold flow's directory is not under `.label`, and mixes holdout in.
         let gold_flow = root.path().join(".gold");
         std::fs::create_dir_all(&gold_flow).unwrap();
@@ -1104,7 +1228,7 @@ pub mod tests {
             rows(Some(Split::Holdout)).render(),
         )
         .unwrap();
-        assert!(Sample::open(&gold_flow).is_ok());
+        assert!(open(root.path(), &gold_flow).is_ok());
     }
 
     #[test]

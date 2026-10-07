@@ -1526,8 +1526,8 @@ fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Re
     Ok(())
 }
 
-/// The golds `report` grades against, by the name of the file its path resolves to.
-const GRADED_GOLDS: [&str; 2] = ["dev.conllu", "owner.conllu"];
+/// The golds `report` grades against, in the directory of the checkout's golds.
+const GRADED_GOLDS: [&str; 2] = ["dev", "owner"];
 
 fn report_stage(
     dir: &Path,
@@ -1541,14 +1541,18 @@ fn report_stage(
     data::refuse_holdout(gold)?;
     let real = data::real_path(gold)?;
     data::refuse_holdout(&real)?;
-    if !real
-        .file_name()
-        .is_some_and(|name| GRADED_GOLDS.iter().any(|known| name == *known))
-    {
+    let golds = data::gold_dir();
+    let graded = GRADED_GOLDS
+        .iter()
+        .any(|name| data::graded_gold(&golds, name).is_ok_and(|known| known == real));
+    if !graded {
         return Err(Error::load(
             &gold.display().to_string(),
             Place::File,
-            format!("a report grades against {} only", GRADED_GOLDS.join(" or ")),
+            format!(
+                "a report grades against {0}/dev.conllu or {0}/owner.conllu only, by their real paths",
+                golds.display()
+            ),
         )
         .into());
     }

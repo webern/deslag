@@ -406,7 +406,7 @@ mod tests {
         )
         .replace("\tGo\t", "\tGone\t");
         let error = error_of(&text, false);
-        assert!(error.starts_with("f:5:"), "{error}");
+        assert!(error.starts_with("f:6:"), "{error}");
         assert!(
             error.contains("FORM `Gone` where the skeleton has `Go`"),
             "{error}"

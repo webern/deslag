@@ -8,8 +8,10 @@
 //! `UPOS` on every `Word` line, so it grades on deslag's own tokens. The skeleton starts with
 //! `# exam.tokens = deslag` and gives each sentence its `# exam.context`, so a file filled from it
 //! is read in the context each sentence was in, and as deslag's tokens. It never carries the tier
-//! or any gold label. The one thing it says of its gold is a holdout's `# exam.split = holdout`, so
-//! that no stage that reads a skeleton can take the text of a holdout set for another.
+//! or any gold label. It says two things of its gold: the stem of its file in `# exam.from`, so the
+//! labelling flow can tell a skeleton of the dev or owner gold from any other sample, and a
+//! holdout's `# exam.split = holdout`, so that no stage that reads a skeleton can take the text of a
+//! holdout set for another.
 
 use std::fmt::Write;
 
@@ -26,6 +28,11 @@ pub const HEADER: &str = "# exam.tokens = deslag\n";
 
 /// The line a holdout gold's skeleton adds after [`HEADER`], so a copy of it still says what it is.
 pub const HOLDOUT: &str = "# exam.split = holdout\n";
+
+/// The comment that names the gold a skeleton was made from, by its file's stem: `dev` for
+/// `tests/gold/dev.conllu`. The labelling flow reads a skeleton only if this says `dev` or `owner`,
+/// so a sample made any other way, from the gold flow's mixed sample say, is not taken for one.
+pub const FROM: &str = "exam.from";
 
 /// The context of a block's sentences: `heading` if the block is a heading, else `table-cell` if
 /// it is a table cell, else `list-item` if a block around it is a list item, else `prose`. This
@@ -102,6 +109,9 @@ pub fn origin_misc(token: &Token<'_>, origin: Origin) -> String {
 /// The skeleton of every sentence of `gold`.
 pub fn skeleton(gold: &Gold) -> String {
     let mut out = String::from(HEADER);
+    if let Some(stem) = std::path::Path::new(&gold.path).file_stem() {
+        let _ = writeln!(out, "# {FROM} = {}", stem.to_string_lossy());
+    }
     if gold.holdout() {
         out.push_str(HOLDOUT);
     }

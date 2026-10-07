@@ -41,8 +41,8 @@ fn the_skeleton_reads_back_as_the_gold_s_own_tokens() {
             );
             assert_eq!(
                 block.comments.len(),
-                if at == 0 { 4 } else { 3 },
-                "no tier or gold label: {name}"
+                if at == 0 { 5 } else { 3 },
+                "the first sentence has `exam.tokens` and `exam.from`, and none has a tier or gold label: {name}"
             );
             let tokens = sentence.tokens();
             assert_eq!(block.lines.len(), tokens.len());
@@ -247,7 +247,8 @@ fn a_holdout_gold_s_skeleton_says_so_and_no_other_does() {
     let holdout = deslag_exam::gold::Gold::parse("h.conllu", "h.conllu", text).unwrap();
     let skeleton_text = skeleton(&holdout);
     assert!(
-        skeleton_text.starts_with("# exam.tokens = deslag\n# exam.split = holdout\n"),
+        skeleton_text
+            .starts_with("# exam.tokens = deslag\n# exam.from = h\n# exam.split = holdout\n"),
         "{skeleton_text}"
     );
     // The line leads the file, so a reader that looks at the first sentence's comments sees it.

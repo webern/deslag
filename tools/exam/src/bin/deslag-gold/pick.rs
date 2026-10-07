@@ -684,6 +684,25 @@ pub fn own(
         Some(text) => conllu::read(owner_path, text)?,
         None => Vec::new(),
     };
+    // Silver is a model's labels. An audit queue is drawn from it and says so; a word that
+    // names runs was labelled by one. Neither may become owner gold, however the owner reviews it.
+    let silver = blocks.iter().any(|block| {
+        block.comment(crate::pilot::SILVER_KEY).is_some()
+            || block.lines.iter().any(|line| {
+                conllu::pairs(&line.misc)
+                    .iter()
+                    .any(|(key, _)| *key == "Runs")
+            })
+    });
+    if silver {
+        return Err(Error::load(
+            queue_path,
+            Place::File,
+            "this queue holds silver, labels a model made, which never becomes owner gold; \
+             `deslag-gold queue` makes the queues `own` takes",
+        )
+        .into());
+    }
     let rejected = |block: &conllu::Block| block.comment("owner_rejected").is_some();
     let mut problems = Vec::new();
     for block in blocks.iter().filter(|block| !rejected(block)) {

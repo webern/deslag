@@ -1325,7 +1325,8 @@ Ok.
         let exam = deslag_exam::skeleton::skeleton(
             &Gold::parse("the sample", "the sample", &as_gold(&sents)).unwrap(),
         );
-        assert_eq!(with, exam);
+        // The exam's skeleton adds only which gold it was made from.
+        assert_eq!(with, exam.replace("# exam.from = the sample\n", ""));
         // The bare mentions carry an origin; the code span is a kind of token and carries none.
         let line_of = |form: &str| {
             with.lines()

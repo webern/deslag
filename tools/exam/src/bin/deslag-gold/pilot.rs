@@ -101,6 +101,10 @@ pub struct Report {
     pub words: usize,
     /// The voters, the agreed words, the adjudicated words and the pipeline, in that order.
     pub lines: Vec<Line>,
+    /// The sentences each voter gave no answer for, and so was not graded on, by name.
+    pub abstained: Vec<(String, usize)>,
+    /// The sentences fewer than two voters answered, which went whole to the adjudicator.
+    pub unvoted: usize,
     /// The share of words the voters agreed on, so were not adjudicated.
     pub agreed_share: Estimate,
     /// The pipeline reweighted, when a mix was given.
@@ -329,6 +333,14 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
         sentences: sample.sents.len(),
         words: whole.total[pipeline_at * WIDTH + WORDS] as usize,
         lines,
+        abstained: voted
+            .stats
+            .names
+            .iter()
+            .cloned()
+            .zip(voted.stats.abstained.iter().copied())
+            .collect(),
+        unvoted: voted.stats.unvoted_sentences,
         agreed_share: whole.estimate(&share),
         weighted,
         versus,
@@ -392,6 +404,17 @@ impl fmt::Display for Report {
                 pct_of(&line.full)
             )?;
         }
+        let abstained: Vec<String> = self
+            .abstained
+            .iter()
+            .map(|(name, count)| format!("{name} {count}"))
+            .collect();
+        writeln!(
+            f,
+            "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than two answers",
+            abstained.join(", "),
+            self.unvoted
+        )?;
         writeln!(
             f,
             "agreed share of the words (not adjudicated): {}",
@@ -540,6 +563,12 @@ fn blocks(labelled: &str) -> Vec<Vec<&str>> {
     out
 }
 
+/// The comment an audit queue opens with, which marks its sentences as silver.
+pub const SILVER_KEY: &str = "exam.silver";
+
+/// The line of that comment.
+const SILVER: &str = "# exam.silver = yes";
+
 /// The review queue of `count` sentences of `labelled` picked at random by `seed`, in the order of
 /// the file: a skeleton the review opens, with the labels in, each sentence naming itself as its
 /// `pick_id`. Fewer sentences than `count` is an error.
@@ -564,7 +593,9 @@ pub fn audit(path: &str, labelled: &str, count: usize, seed: u64) -> Result<Stri
     }
     let mut picked = order[..count].to_vec();
     picked.sort_unstable();
-    let mut out = String::from(skeleton::HEADER);
+    // The queue says it is silver, so `own` can refuse it: its labels are a model's, and
+    // whatever the owner corrects stays in this queue and is graded, never moved into owner.conllu.
+    let mut out = format!("{}{SILVER}\n", skeleton::HEADER);
     for at in picked {
         let block = &blocks[at];
         let id = block[0]
@@ -795,27 +826,27 @@ mod tests {
 # sent_id = a1
 # exam.context = prose
 # text = One two.
-1\tOne\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree
-2\ttwo\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree
+1\tOne\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
+2\ttwo\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
 
 # sent_id = a2
 # exam.context = prose
 # text = Three four.
-1\tThree\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree
-2\tfour\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree
+1\tThree\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
+2\tfour\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
 
 # sent_id = a3
 # exam.context = prose
 # text = Five six.
-1\tFive\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree
-2\tsix\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree
+1\tFive\t_\tNUM\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
+2\tsix\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2
 ";
 
     #[test]
     fn an_audit_picks_by_seed_in_file_order_with_the_labels_and_a_pick_id() {
         let queue = audit("l", LABELLED, 2, 7).unwrap();
         assert!(
-            queue.starts_with("# exam.tokens = deslag\n# sent_id"),
+            queue.starts_with("# exam.tokens = deslag\n# exam.silver = yes\n# sent_id"),
             "{queue}"
         );
         assert_eq!(queue.matches("# sent_id").count(), 2);
@@ -832,7 +863,7 @@ mod tests {
         // `pick_id` is the sentence's own id, before its text.
         let first = queue
             .lines()
-            .nth(1)
+            .nth(2)
             .unwrap()
             .split_once('=')
             .unwrap()
@@ -859,6 +890,19 @@ mod tests {
             error.contains("4 sentences asked for, and the file has 3"),
             "{error}"
         );
+        // The queue says it is silver; the review still opens it, and `own` never takes it.
+        assert!(queue.contains("# exam.silver = yes\n"));
+        crate::review::Session::open("queue.conllu", queue.clone(), "2026-10-07").unwrap();
+        let error = crate::pick::own("queue.conllu", &queue, "owner.conllu", None)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("silver"), "{error}");
+        // A queue without the mark is still silver if its words name runs.
+        let marked = queue.replace("# exam.silver = yes\n", "");
+        let error = crate::pick::own("queue.conllu", &marked, "owner.conllu", None)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("silver"), "{error}");
         // Another seed can pick others.
         let others: std::collections::BTreeSet<String> = (0..20)
             .map(|seed| audit("l", LABELLED, 1, seed).unwrap())

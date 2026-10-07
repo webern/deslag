@@ -18,7 +18,14 @@
 //!
 //! Everything else goes to the adjudication worklist as phase 1's merger does, with the voters
 //! shown as `A`, `B`, `C` in the order they were given, never by name. The agreed words stand,
-//! `Prov=agree`, with `Runs=` naming every voter's run, since every voter agreed.
+//! `Prov=agree`, with `Runs=` naming the run of every voter that answered the sentence, since
+//! every one of them agreed.
+//!
+//! A voter that has no good line for a sentence after its retries abstains on all of it, and the
+//! merge goes on with the voters left, so one sentence a model cannot write never stops the
+//! pilot. A sentence fewer than two voters answered has nothing to compare: every word of it goes
+//! to the adjudicator, with `-` for the voters that abstained. The report counts the abstentions
+//! of each voter and the sentences that went whole.
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
@@ -86,14 +93,21 @@ pub struct VoteStats {
     pub names: Vec<String>,
     /// Word tokens compared.
     pub words: usize,
-    /// For each pair of voters in the order (0,1), (0,2), ..., (1,2), ...: the pair and how many
-    /// words they agree on the base of.
-    pub pairs: Vec<((usize, usize), usize)>,
-    /// How many words every voter agrees on the base of.
+    /// For each pair of voters in the order (0,1), (0,2), ..., (1,2), ...: the pair, how many
+    /// words they agree on the base of, and how many words both answered.
+    pub pairs: Vec<((usize, usize), usize, usize)>,
+    /// Sentences each voter abstained on, in the order of `names`.
+    pub abstained: Vec<usize>,
+    /// Sentences fewer than two voters answered, whose words all went to the adjudicator.
+    pub unvoted_sentences: usize,
+    /// The words of those sentences.
+    pub unvoted_words: usize,
+    /// How many words every voter that answered agrees on the base of.
     pub tag_all: usize,
     /// How many words every voter agrees on completely: these stand.
     pub agreed: usize,
-    /// Of the words in dispute, how many differ in a base.
+    /// Of the words in dispute, how many differ in a base. Words of an unvoted sentence are in
+    /// neither this nor the next.
     pub tag_disputes: usize,
     /// Of the words in dispute, how many differ only in a feature.
     pub feature_disputes: usize,
@@ -122,20 +136,22 @@ pub fn letter(index: usize) -> String {
 }
 
 /// Compares the voters' answers on every word of `sample`. There must be at least
-/// [`FEWEST_TAGGERS`] voters, and each one's answers must cover the sample, which
-/// [`crate::merge::load_tagger`] has checked.
+/// [`FEWEST_TAGGERS`] voters, whose answers cover the sample as [`crate::merge::load_voter`] reads
+/// them: a sentence a voter has no answer for is an abstention.
 pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
     assert!(
         voters.len() >= FEWEST_TAGGERS,
         "a merge needs {FEWEST_TAGGERS} voters or more"
     );
-    let base_only: Vec<bool> = voters.iter().map(|voter| voter.base_only).collect();
     let mut stats = VoteStats {
         names: voters.iter().map(|voter| voter.name.clone()).collect(),
         words: 0,
         pairs: (0..voters.len())
-            .flat_map(|a| (a + 1..voters.len()).map(move |b| ((a, b), 0)))
+            .flat_map(|a| (a + 1..voters.len()).map(move |b| ((a, b), 0, 0)))
             .collect(),
+        abstained: vec![0; voters.len()],
+        unvoted_sentences: 0,
+        unvoted_words: 0,
         tag_all: 0,
         agreed: 0,
         tag_disputes: 0,
@@ -147,22 +163,51 @@ pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
     let mut items = Vec::new();
     for (at, sent) in sample.sents.iter().enumerate() {
         let meta = sample.meta(&sent.id);
+        let answering: Vec<usize> = (0..voters.len())
+            .filter(|&voter| !voters[voter].answers.abstains(at))
+            .collect();
+        for (count, voter) in stats.abstained.iter_mut().zip(voters) {
+            *count += usize::from(voter.answers.abstains(at));
+        }
+        let voted = answering.len() >= FEWEST_TAGGERS;
+        stats.unvoted_sentences += usize::from(!voted);
+        let base_only: Vec<bool> = answering
+            .iter()
+            .map(|&voter| voters[voter].base_only)
+            .collect();
         let mut row = Vec::with_capacity(sent.toks.len());
         for tok in 0..sent.toks.len() {
-            let said: Option<Vec<Code>> = voters
-                .iter()
-                .map(|voter| voter.answers.0[at][tok])
-                .collect();
-            let Some(said) = said else {
+            if !sent.toks[tok].is_word() {
                 row.push(None);
                 continue;
-            };
-            stats.words += 1;
-            for ((a, b), count) in &mut stats.pairs {
-                *count += usize::from(said[*a].base == said[*b].base);
             }
-            let verdict = judge_voters(&said, &base_only);
-            stats.tag_all += usize::from(said.iter().all(|code| code.base == said[0].base));
+            // What every voter said, `None` for one that abstained on the sentence.
+            let said: Vec<Option<Code>> = voters
+                .iter()
+                .map(|voter| voter.answers.0[at].get(tok).copied().flatten())
+                .collect();
+            stats.words += 1;
+            if !voted {
+                stats.unvoted_words += 1;
+                items.push(Item {
+                    sent: at,
+                    tok,
+                    said,
+                    tags_differ: false,
+                    unvoted: true,
+                });
+                row.push(Some(Verdict::Disputed { tags_differ: false }));
+                continue;
+            }
+            let heard: Vec<Code> = answering.iter().filter_map(|&voter| said[voter]).collect();
+            for ((a, b), agree, both) in &mut stats.pairs {
+                if let (Some(a), Some(b)) = (said[*a], said[*b]) {
+                    *both += 1;
+                    *agree += usize::from(a.base == b.base);
+                }
+            }
+            let verdict = judge_voters(&heard, &base_only);
+            stats.tag_all += usize::from(heard.iter().all(|code| code.base == heard[0].base));
             let full = matches!(verdict, Verdict::Agreed(_));
             stats.agreed += usize::from(full);
             if let Some(meta) = meta {
@@ -186,6 +231,7 @@ pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
                     tok,
                     said,
                     tags_differ,
+                    unvoted: false,
                 });
             }
             row.push(Some(verdict));
@@ -199,11 +245,21 @@ pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
     }
 }
 
-/// The `Runs=` value of the agreed words: every voter's run, in order, as `r3,r4,r5`. `None` when
-/// any voter has no run, since a list with a gap would name fewer voters than agreed.
-pub fn runs_of(voters: &[Voter]) -> Option<String> {
-    let runs: Option<Vec<&str>> = voters.iter().map(|voter| voter.run.as_deref()).collect();
-    runs.map(|runs| runs.join(","))
+/// The `Runs=` value of the agreed words of each sentence: the run of every voter that answered
+/// it, in order, as `r3,r4,r5`. A sentence's entry is `None` when a voter that answered it has no
+/// run, since a list with a gap would name fewer voters than agreed; `finish` then refuses the
+/// words, so provenance cannot go missing without an error.
+pub fn runs_by_sentence(voters: &[Voter], sentences: usize) -> Vec<Option<String>> {
+    (0..sentences)
+        .map(|at| {
+            let runs: Option<Vec<&str>> = voters
+                .iter()
+                .filter(|voter| !voter.answers.abstains(at))
+                .map(|voter| voter.run.as_deref())
+                .collect();
+            runs.map(|runs| runs.join(","))
+        })
+        .collect()
 }
 
 fn percent(part: usize, whole: usize) -> String {
@@ -233,16 +289,25 @@ impl fmt::Display for VoteStats {
         for (index, name) in self.names.iter().enumerate() {
             writeln!(f, "  {:<4}{name}", letter(index))?;
         }
+        writeln!(f, "sentences each voter gave no answer for (abstained)")?;
+        for (name, count) in self.names.iter().zip(&self.abstained) {
+            writeln!(f, "  {name:<44}{count:>6}")?;
+        }
+        writeln!(
+            f,
+            "  {:<44}{:>6}  ({} words, all to the adjudicator)",
+            "sentences fewer than two voters answered", self.unvoted_sentences, self.unvoted_words
+        )?;
         writeln!(f, "pairs, on the part of speech")?;
-        for ((a, b), count) in &self.pairs {
+        for ((a, b), count, both) in &self.pairs {
             let label = format!("{} and {}", self.names[*a], self.names[*b]);
             writeln!(
                 f,
-                "  {label:<44}{count:>6}  {:>6}",
-                percent(*count, self.words)
+                "  {label:<44}{count:>6}  {:>6}  of {both}",
+                percent(*count, *both)
             )?;
         }
-        writeln!(f, "all {}", self.names.len())?;
+        writeln!(f, "all that answered")?;
         row(f, "agree on the part of speech", self.tag_all)?;
         row(
             f,
@@ -260,6 +325,7 @@ impl fmt::Display for VoteStats {
             "  of which only a feature differs",
             self.feature_disputes,
         )?;
+        row(f, "  of which no vote was possible", self.unvoted_words)?;
         for (title, table) in [("by tier", &self.by_tier), ("by context", &self.by_context)] {
             if table.is_empty() {
                 continue;
@@ -353,7 +419,7 @@ pub fn read_voters_tsv(path: &str, text: &str) -> Result<Vec<Voter>, Error> {
 mod tests {
     use super::*;
     use crate::compact::tests::sample;
-    use crate::merge::{agreed_conllu, load_tagger, worklist_parts};
+    use crate::merge::{agreed_conllu, load_tagger, load_voter, worklist_parts};
 
     fn code(text: &str) -> Code {
         Code::parse(text).unwrap()
@@ -532,10 +598,16 @@ mod tests {
         assert_eq!(voted.stats.agreed, 7);
         // Six pairs of four voters.
         assert_eq!(voted.stats.pairs.len(), 6);
-        assert!(voted.stats.pairs.iter().all(|(_, count)| *count == 7));
-        let runs = runs_of(&voters);
-        assert_eq!(runs.as_deref(), Some("r1,r2,r3,r4"));
-        let out = agreed_conllu(&sample, &voted.verdicts, runs.as_deref());
+        assert!(
+            voted
+                .stats
+                .pairs
+                .iter()
+                .all(|(_, count, both)| *count == 7 && *both == 7)
+        );
+        let runs = runs_by_sentence(&voters, sample.sents.len());
+        assert_eq!(runs[0].as_deref(), Some("r1,r2,r3,r4"));
+        let out = agreed_conllu(&sample, &voted.verdicts, &runs);
         assert!(
             out.contains(
                 "4\tuser's\t_\tNOUN\t_\tNumber=Sing\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1,r2,r3,r4\n"
@@ -555,7 +627,7 @@ mod tests {
             voter("a", &SAME, Some("r1"), false),
             voter("harper", &SAME, None, false),
         ];
-        assert_eq!(runs_of(&voters), None);
+        assert_eq!(runs_by_sentence(&voters, 2), [None, None]);
     }
 
     #[test]
@@ -594,6 +666,101 @@ mod tests {
         let report = voted.stats.to_string();
         assert!(report.contains("alpha and beta"), "{report}");
         assert!(report.contains("A   alpha"), "{report}");
+    }
+
+    /// A voter whose reply had no good line for the sentences in `drop`: its file has no block
+    /// for them, as `read-tags --check` leaves it.
+    fn voter_without(name: &str, run: &str, drop: &[&str]) -> Voter {
+        let kept: Vec<String> = conllu_of(&SAME, Some(run))
+            .split("\n\n")
+            .filter(|block| !block.is_empty())
+            .filter(|block| {
+                !drop
+                    .iter()
+                    .any(|id| block.contains(&format!("sent_id = {id}\n")))
+            })
+            .map(|block| format!("{block}\n\n"))
+            .collect();
+        let text = kept.concat();
+        Voter {
+            name: name.to_string(),
+            answers: load_voter(name, name, &text, &sample()).unwrap(),
+            base_only: false,
+            run: run_in(&text),
+            file: format!("tags/{name}.conllu"),
+        }
+    }
+
+    #[test]
+    fn a_voter_with_no_good_line_for_a_sentence_abstains_on_it_and_the_merge_goes_on() {
+        let text = conllu_of(&SAME, Some("r1"));
+        let head = &text[..text.find("\n\n").unwrap() + 2];
+        // As a tagger, a missing sentence is an error; as a voter, an abstention.
+        assert!(load_tagger("a", "a", head, &sample()).is_err());
+        let voters = vec![
+            voter("a", &SAME, Some("r1"), false),
+            voter("b", &SAME, Some("r2"), false),
+            voter_without("c", "r3", &["s2"]),
+        ];
+        let sample = sample();
+        assert!(voters[2].answers.abstains(1) && !voters[2].answers.abstains(0));
+        let voted = merge_voters(&sample, &voters);
+        assert!(voted.items.is_empty(), "the two that answered agree");
+        assert_eq!(voted.stats.abstained, [0, 0, 1]);
+        assert_eq!(voted.stats.unvoted_sentences, 0);
+        // The pair that includes the abstainer is compared on the words it answered.
+        let both: Vec<usize> = voted.stats.pairs.iter().map(|(_, _, both)| *both).collect();
+        assert_eq!(both, [7, 3, 3]);
+        // Runs= names the voters that answered the sentence, and no others.
+        let runs = runs_by_sentence(&voters, sample.sents.len());
+        assert_eq!(runs[0].as_deref(), Some("r1,r2,r3"));
+        assert_eq!(runs[1].as_deref(), Some("r1,r2"));
+        let out = agreed_conllu(&sample, &voted.verdicts, &runs);
+        assert!(
+            out.contains("Prov=agree|Runs=r1,r2|SpaceAfter=No\n"),
+            "{out}"
+        );
+        let report = voted.stats.to_string();
+        assert!(
+            report.contains("gave no answer for (abstained)"),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn a_sentence_fewer_than_two_voters_answered_goes_to_the_adjudicator_whole() {
+        let voters = vec![
+            voter("a", &SAME, Some("r1"), false),
+            voter_without("b", "r2", &["s1"]),
+            voter_without("c", "r3", &["s1", "s2"]),
+        ];
+        let sample = sample();
+        let voted = merge_voters(&sample, &voters);
+        // s1 had one answer, so all three of its words go; s2 had two, which agree.
+        let ids: Vec<String> = voted.items.iter().map(|item| item.id(&sample)).collect();
+        assert_eq!(ids, ["s1.1", "s1.3", "s1.4"]);
+        assert!(
+            voted
+                .items
+                .iter()
+                .all(|item| item.unvoted && !item.tags_differ)
+        );
+        assert_eq!(voted.stats.unvoted_sentences, 1);
+        assert_eq!(voted.stats.unvoted_words, 3);
+        assert_eq!(voted.stats.agreed, 4);
+        assert_eq!(voted.stats.tag_disputes + voted.stats.feature_disputes, 0);
+        assert_eq!(voted.stats.abstained, [0, 1, 2]);
+        let names = ["a", "b", "c"];
+        let tsv = crate::merge::worklist_tsv(&sample, &voted.items, &names);
+        assert!(
+            tsv.contains("s1.1\ts1\t1\tRun\tV.fi\t-\t-\tnone\n"),
+            "{tsv}"
+        );
+        let parts = worklist_parts(&sample, &voted.items, 60, &["A", "B", "C"]);
+        assert!(parts[0].contains("1 Run: A V.fi, B -, C -"), "{}", parts[0]);
+        // The words an unvoted sentence has carry no voter's run.
+        let runs = runs_by_sentence(&voters, 2);
+        assert_eq!(runs, [Some("r1".to_string()), Some("r1,r2".to_string())]);
     }
 
     #[test]

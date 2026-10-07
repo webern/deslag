@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-07
+updated: 2026-10-04
 subsystems:
   - deslag-gold
 max_size_bytes: 8192
@@ -100,12 +100,6 @@ on the worklist, with its sentence, the three answers (`N.?` for a missing featu
 `g0007.5: N.p | reason`, with a code of the guide and a reason of at most 15 words, for an item of
 `worklist.tsv`. `adjudicated.tsv` is the log.
 
-## Labelling pilot
-
-`scripts/label/` has models vote on a sample in `.label`, never holdout. `merge` takes any
-number of `--voter`s, `--base-only` ones on UPOS alone. `Runs=` names a word's runs, which `finish`
-needs in `runs.tsv`. `report` grades it; `audit` picks a queue.
-
 ## Overrides
 
 `read-answers --overrides FILE` reads a TSV with the columns `sentence_id`, `token_index`, `form`,
@@ -141,9 +135,7 @@ tools/exam/src/bin/deslag-gold/
   batch.rs     the numbered batch lines
   code.rs      the guide's codes, and their UPOS and FEATS
   compact.rs   compact lines to CoNLL-U
-  merge.rs     comparing the taggers, the worklist, the answers
-  voters.rs    the voters of a merge
-  pilot.rs     the labelling report, the audit queue
+  merge.rs     comparing three taggers, the worklist, the answers
   assemble.rs  the gold files, and a tagger's accuracy
   problems.rs  every problem a stage finds, one line each
 ```

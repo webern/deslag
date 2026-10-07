@@ -197,6 +197,11 @@ enum Command {
         /// A voter that votes on the part of speech alone.
         #[arg(long, requires = "voter")]
         base_only: Vec<String>,
+        /// The `adjudicated.tsv` of an earlier merge of this sample: an item it answered keeps
+        /// that answer and its run, and is not put to the adjudicator again, so two merges differ
+        /// in their voting alone. `settled.tsv` records what was taken.
+        #[arg(long, requires = "voter")]
+        settled: Option<PathBuf>,
         /// The directory under the working directory the merge is written to.
         #[arg(long, default_value = "merge", value_parser = parse_name)]
         into: String,
@@ -632,13 +637,20 @@ fn run(cli: Cli) -> Result<(), Problems> {
             spacy,
             voter,
             base_only,
+            settled,
             into,
             per_part,
         } => {
             if voter.is_empty() {
                 merge_stage(&dir, [blind, harper, spacy], per_part, &into)
             } else {
-                merge_voters_stage(&dir, &into, &voter, &base_only, per_part)
+                let voting = Voting {
+                    given: &voter,
+                    base_only: &base_only,
+                    settled: settled.as_deref(),
+                    per_part,
+                };
+                merge_voters_stage(&dir, &into, &voting)
             }
         }
         Command::ReadAnswers {
@@ -1139,7 +1151,7 @@ fn merge_stage(
     let out = dir.join(into);
     write_text(
         &out.join("agreed.conllu"),
-        &merge::agreed_conllu(&sample, &merged.verdicts, None),
+        &merge::agreed_conllu(&sample, &merged.verdicts, &[]),
     )?;
     write_text(
         &out.join("worklist.tsv"),
@@ -1200,7 +1212,7 @@ fn load_voters(
             .unwrap_or_else(|| dir.join("tags").join(format!("{name}.conllu")));
         let shown = path.display().to_string();
         let voter = read_text(&path).map_err(Problems::from).and_then(|text| {
-            let answers = merge::load_tagger(name, &shown, &text, sample)?;
+            let answers = merge::load_voter(name, &shown, &text, sample)?;
             Ok(voters::Voter {
                 name: name.clone(),
                 answers,
@@ -1217,15 +1229,17 @@ fn load_voters(
     Problems::check(problems, loaded)
 }
 
-fn merge_voters_stage(
-    dir: &Path,
-    into: &str,
-    given: &[(String, Option<PathBuf>)],
-    base_only: &[String],
+/// What `merge --voter` was asked.
+struct Voting<'a> {
+    given: &'a [(String, Option<PathBuf>)],
+    base_only: &'a [String],
+    settled: Option<&'a Path>,
     per_part: usize,
-) -> Result<(), Problems> {
+}
+
+fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(), Problems> {
     let sample = load_sample(dir)?;
-    let voters = load_voters(dir, given, base_only, &sample)?;
+    let voters = load_voters(dir, voting.given, voting.base_only, &sample)?;
     let voted = voters::merge_voters(&sample, &voters);
     let out = dir.join(into);
     let names: Vec<&str> = voters.iter().map(|voter| voter.name.as_str()).collect();
@@ -1236,14 +1250,36 @@ fn merge_voters_stage(
         &merge::agreed_conllu(
             &sample,
             &voted.verdicts,
-            voters::runs_of(&voters).as_deref(),
+            &voters::runs_by_sentence(&voters, sample.sents.len()),
         ),
     )?;
-    write_text(
-        &out.join("worklist.tsv"),
-        &merge::worklist_tsv(&sample, &voted.items, &names),
-    )?;
-    let parts = merge::worklist_parts(&sample, &voted.items, per_part, &letters);
+    let work_text = merge::worklist_tsv(&sample, &voted.items, &names);
+    write_text(&out.join("worklist.tsv"), &work_text)?;
+    // The items an earlier merge answered are not asked again.
+    let settled = match voting.settled {
+        Some(path) => {
+            let work = merge::read_worklist("worklist.tsv", &work_text)?;
+            let text = read_text(path)?;
+            merge::settle_from_log(&path.display().to_string(), &text, &work.items)?
+        }
+        None => Vec::new(),
+    };
+    let settled_items: Vec<String> = settled
+        .iter()
+        .map(|answer| answer.item.item.clone())
+        .collect();
+    // A merge without `--settled` does not inherit the answers of an earlier one into `out`.
+    let _ = std::fs::remove_file(out.join("settled.tsv"));
+    if voting.settled.is_some() {
+        write_text(&out.join("settled.tsv"), &merge::settled_tsv(&settled))?;
+    }
+    let pending: Vec<merge::Item> = voted
+        .items
+        .iter()
+        .filter(|item| !settled_items.contains(&item.id(&sample)))
+        .cloned()
+        .collect();
+    let parts = merge::worklist_parts(&sample, &pending, voting.per_part, &letters);
     write_parts(&out, "worklist-", &parts)?;
     write_text(&out.join("voters.tsv"), &voters::voters_tsv(&voters))?;
     let report = voted.stats.to_string();
@@ -1252,9 +1288,15 @@ fn merge_voters_stage(
     println!(
         "wrote agreed.conllu, worklist.tsv, voters.tsv and {} worklist parts for {} words to {}",
         parts.len(),
-        voted.items.len(),
+        pending.len(),
         out.display()
     );
+    if !settled.is_empty() {
+        println!(
+            "{} more words keep the answers of the merge they were settled by",
+            settled.len()
+        );
+    }
     Ok(())
 }
 
@@ -1274,18 +1316,41 @@ fn read_answers_stage(dir: &Path, asked: &Answering<'_>) -> Result<(), Problems>
     let work_path = out.join("worklist.tsv");
     let work = merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
     let files = read_all(asked.answers)?;
-    let (decided, open) = if asked.check {
-        let checked = merge::check_answers(&work.items, &files);
+    // The items an earlier merge answered are not put to the adjudicator, and so are neither
+    // missing nor open.
+    let settled_path = out.join("settled.tsv");
+    let settled = if settled_path.exists() {
+        merge::read_settled(
+            &settled_path.display().to_string(),
+            &read_text(&settled_path)?,
+            &work.items,
+        )?
+    } else {
+        Vec::new()
+    };
+    let pending: Vec<merge::WorkItem> = work
+        .items
+        .iter()
+        .filter(|item| !settled.iter().any(|answer| answer.item.item == item.item))
+        .cloned()
+        .collect();
+    let (mut decided, open) = if asked.check {
+        let checked = merge::check_answers(&pending, &files);
         for stray in &checked.stray {
             eprintln!("deslag-gold: not an answer, {stray}");
         }
         (checked.answers, Some(checked.open))
     } else {
-        (
-            merge::read_answers(&work.items, &files, !asked.partial)?,
-            None,
-        )
+        (merge::read_answers(&pending, &files, !asked.partial)?, None)
     };
+    decided.extend(settled);
+    let order: BTreeMap<&str, usize> = work
+        .items
+        .iter()
+        .enumerate()
+        .map(|(at, item)| (item.item.as_str(), at))
+        .collect();
+    decided.sort_by_key(|answer| order[answer.item.item.as_str()]);
     let changed = match asked.overrides {
         Some(path) => {
             let agreed_path = out.join("agreed.conllu");
@@ -1345,6 +1410,18 @@ fn runs_named(built: &assemble::Built) -> Vec<String> {
 
 fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Result<(), Problems> {
     let sample = load_sample(dir)?;
+    // Only a draw of text that was never gold may be marked as training data; whatever was
+    // labelled over dev or owner sentences is silver of a gold set and must not train a model.
+    if trains != "no" && !sample.is_labelling_draw() {
+        return Err(Error::load(
+            &dir.join("manifest.tsv").display().to_string(),
+            Place::File,
+            format!(
+                "`--trains {trains}` is for a labelling draw, which this sample is not: labels over dev or owner sentences never train anything"
+            ),
+        )
+        .into());
+    }
     let out = dir.join(into);
     let work_path = out.join("worklist.tsv");
     let work = merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
@@ -1371,6 +1448,33 @@ fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Re
         &read_text(&agreed_path)?,
         &log,
     )?;
+    // Every word must say which runs vouch for it: a file that loses its provenance on the way is
+    // an error, not a smaller set of runs.
+    let bare: Vec<String> = sample
+        .sents
+        .iter()
+        .zip(&built.sentences)
+        .flat_map(|(sent, lines)| {
+            lines
+                .iter()
+                .enumerate()
+                .filter(|(_, filled)| filled.code.is_some() && filled.runs.is_none())
+                .map(|(at, _)| format!("{}.{}", sent.id, at + 1))
+        })
+        .collect();
+    if !bare.is_empty() {
+        let shown: Vec<&str> = bare.iter().map(String::as_str).take(5).collect();
+        return Err(Error::load(
+            &agreed_path.display().to_string(),
+            Place::File,
+            format!(
+                "{} words have no `Runs=`, among them {}; the voters' files must come from `read-tags --run`",
+                bare.len(),
+                shown.join(", ")
+            ),
+        )
+        .into());
+    }
     let named = runs_named(&built);
     if !named.is_empty() {
         let runs_path = runs.map_or_else(|| dir.join("runs.tsv"), Path::to_path_buf);
@@ -1422,6 +1526,9 @@ fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Re
     Ok(())
 }
 
+/// The golds `report` grades against, by the name of the file its path resolves to.
+const GRADED_GOLDS: [&str; 2] = ["dev.conllu", "owner.conllu"];
+
 fn report_stage(
     dir: &Path,
     into: &str,
@@ -1429,9 +1536,24 @@ fn report_stage(
     mix_from: Option<&Path>,
     versus: Option<&str>,
 ) -> Result<(), Problems> {
+    // The real path decides, before anything is opened: a link or a copy named dev.conllu is not
+    // the dev gold, and a link to holdout is not either.
     data::refuse_holdout(gold)?;
+    let real = data::real_path(gold)?;
+    data::refuse_holdout(&real)?;
+    if !real
+        .file_name()
+        .is_some_and(|name| GRADED_GOLDS.iter().any(|known| name == *known))
+    {
+        return Err(Error::load(
+            &gold.display().to_string(),
+            Place::File,
+            format!("a report grades against {} only", GRADED_GOLDS.join(" or ")),
+        )
+        .into());
+    }
     let shown = gold.display().to_string();
-    let gold_text = read_text(gold)?;
+    let gold_text = read_text(&real)?;
     let blocks = deslag_exam::conllu::read(&shown, &gold_text)?;
     let split = blocks
         .first()
@@ -1455,7 +1577,7 @@ fn report_stage(
     )?;
     for voter in &mut voters {
         let path = PathBuf::from(&voter.file);
-        voter.answers = merge::load_tagger(&voter.name, &voter.file, &read_text(&path)?, &sample)?;
+        voter.answers = merge::load_voter(&voter.name, &voter.file, &read_text(&path)?, &sample)?;
     }
     let voted = voters::merge_voters(&sample, &voters);
     let log_path = out.join("adjudicated.tsv");

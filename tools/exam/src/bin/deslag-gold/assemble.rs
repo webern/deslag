@@ -562,7 +562,7 @@ mod tests {
             load_tagger("spacy", "s", &tagger(&sample, &same), &sample).unwrap(),
         ];
         let merged = merge(&sample, &answers);
-        let agreed = agreed_conllu(&sample, &merged.verdicts, None);
+        let agreed = agreed_conllu(&sample, &merged.verdicts, &[]);
         let work = read_worklist("w", &worklist_tsv(&sample, &merged.items, &NAMES)).unwrap();
         let decided = read_answers(
             &work.items,

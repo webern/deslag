@@ -11,13 +11,14 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::ops::Range;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use deslag::document::{Token, TokenKind};
 use deslag::tag::Origin;
 use deslag_exam::conllu::{self, Id};
 use deslag_exam::error::{Error, Place};
 use deslag_exam::gold::{Split, Tier, kind_from_name, kind_name};
+use deslag_exam::skeleton as exam_skeleton;
 use deslag_exam::tagger::Context;
 
 use crate::problems::Problems;
@@ -429,23 +430,53 @@ impl Sample {
     /// file's sentences. A bare sample has each sentence's context from its `# exam.context`, and
     /// no split, tier, file or repository.
     ///
-    /// It is refused when its skeleton says `exam.split = holdout`, which `deslag-exam tokens`
-    /// writes for a holdout gold, and, in a directory under `.label`, when its manifest has a
-    /// holdout row. Nothing the labelling flow reads or writes may hold a holdout sentence. The
-    /// gold flow's own `.gold` mixes holdout in its sample, and is not refused.
+    /// Nothing the labelling flow reads or writes may hold a holdout sentence, so a directory
+    /// under `.label`, by its path as written or by its real path, is read by an allow-list and
+    /// not a deny-list. Its real path is taken first, and checked before any file is opened:
+    /// symlinks and `..` are followed, no file may be a link out of the directory, and no part of
+    /// a real path may name holdout. Then it is opened only if it is
+    ///
+    /// - a skeleton of the dev or the owner gold, which says so in `exam.from`, as
+    ///   `deslag-exam tokens --gold` writes it, with no manifest; or
+    /// - a draw for labelling: a manifest that says `draw = for labelling ...`, whose every row is
+    ///   `unlabelled`.
+    ///
+    /// A copy of the gold flow's `.gold/sample.conllu`, which mixes holdout in and keeps its split
+    /// only in its manifest, says neither and is refused. A skeleton that says
+    /// `exam.split = holdout`, as `deslag-exam tokens` writes for a holdout gold, is refused
+    /// wherever it is. The gold flow's own `.gold` is not under `.label` and is read as before.
     pub fn open(dir: &Path) -> Result<Sample, Problems> {
+        let real = real_path(dir)?;
+        let labelling = in_label_place(dir) || in_label_place(&real);
         let sample_path = dir.join("sample.conllu");
         let manifest_path = dir.join("manifest.tsv");
+        if labelling {
+            refuse_holdout(&real)?;
+            for file in [&sample_path, &manifest_path] {
+                if file.exists() {
+                    let linked = real_path(file)?;
+                    refuse_holdout(&linked)?;
+                    if linked.parent() != Some(real.as_path()) {
+                        return Err(Error::load(
+                            &file.display().to_string(),
+                            Place::File,
+                            "it is a link to a file outside its directory, which the labelling flow does not follow",
+                        )
+                        .into());
+                    }
+                }
+            }
+        }
         let shown = sample_path.display().to_string();
         let text = read_text(&sample_path)?;
         let blocks = conllu::read(&shown, &text)?;
-        let says_holdout = |key: &str| {
+        let first = |key: &str| {
             blocks
                 .first()
                 .and_then(|block| block.comment(key))
-                .is_some_and(|comment| comment.value == Split::Holdout.name())
+                .map(|comment| comment.value.as_str())
         };
-        if says_holdout("exam.split") {
+        if first("exam.split") == Some(Split::Holdout.name()) {
             return Err(Error::load(
                 &shown,
                 Place::File,
@@ -488,7 +519,7 @@ impl Sample {
                 },
             }
         };
-        if in_label_place(dir) {
+        if labelling {
             let held = sample
                 .manifest
                 .rows
@@ -510,8 +541,37 @@ impl Sample {
                 )
                 .into());
             }
+            let allowed = if manifest_path.exists() {
+                sample.is_labelling_draw()
+            } else {
+                first(exam_skeleton::FROM).is_some_and(|from| LABELLED_FROM.contains(&from))
+            };
+            if !allowed {
+                return Err(Error::load(
+                    &shown,
+                    Place::File,
+                    format!(
+                        "under `{LABEL_DIR}` only a skeleton of tests/gold/dev.conllu or owner.conllu (`{}` says which) \
+                         or a labelling draw (a manifest that says `draw = for labelling`, every row `unlabelled`) is read",
+                        exam_skeleton::FROM
+                    ),
+                )
+                .into());
+            }
         }
         Ok(sample)
+    }
+
+    /// Whether this is a draw for labelling: its manifest says so, and every row is unlabelled.
+    pub fn is_labelling_draw(&self) -> bool {
+        self.manifest
+            .get("draw")
+            .is_some_and(|draw| draw.starts_with("for labelling"))
+            && self
+                .manifest
+                .rows
+                .iter()
+                .all(|(_, meta)| meta.split.is_none())
     }
 
     /// Reads the skeleton at `sample` and the manifest at `manifest`, and checks that they name
@@ -553,13 +613,27 @@ pub fn in_label_place(dir: &Path) -> bool {
         .any(|part| part.as_os_str() == std::ffi::OsStr::new(LABEL_DIR))
 }
 
+/// The golds a labelling skeleton may be made from, as `exam.from` says them.
+const LABELLED_FROM: [&str; 2] = ["dev", "owner"];
+
+/// `path` with every symlink and `..` resolved, as the file system has it.
+pub fn real_path(path: &Path) -> Result<PathBuf, Error> {
+    std::fs::canonicalize(path).map_err(|source| Error::Io {
+        path: path.display().to_string(),
+        source,
+    })
+}
+
 /// Refuses a path that names holdout or an English Web Treebank file: a component that starts with
-/// `holdout`, or that holds `en_ewt` or is `.ewt`. The labelling flow grades against dev and owner
+/// `holdout`, or that holds `en_ewt` or `en-ewt`, or is `.ewt`. The labelling flow grades against dev and owner
 /// only, and checks the path before it opens anything.
 pub fn refuse_holdout(path: &Path) -> Result<(), Error> {
     let barred = path.components().any(|part| {
         let name = part.as_os_str().to_string_lossy().to_lowercase();
-        name.starts_with("holdout") || name.contains("en_ewt") || name == ".ewt"
+        name.starts_with("holdout")
+            || name.contains("en_ewt")
+            || name.contains("en-ewt")
+            || name == ".ewt"
     });
     if barred {
         return Err(Error::load(
@@ -832,8 +906,14 @@ pub mod tests {
         }
     }
 
-    /// A skeleton of `run_now` under `.label/<name>` in `root`, with `extra` as comments before it.
+    /// A skeleton of `run_now` under `.label/<name>` in `root`, made from the dev gold as
+    /// `deslag-exam tokens` makes it, with `extra` as comments before it.
     fn label_dir(root: &Path, name: &str, extra: &str) -> std::path::PathBuf {
+        label_dir_from(root, name, &format!("# exam.from = dev\n{extra}"))
+    }
+
+    /// The same with `extra` and no `exam.from`, unless `extra` has one.
+    fn label_dir_from(root: &Path, name: &str, extra: &str) -> std::path::PathBuf {
         let dir = root.join(LABEL_DIR).join(name);
         std::fs::create_dir_all(&dir).unwrap();
         let text = skeleton(&[run_now()], |_| Some(Context::ListItem), false).replacen(
@@ -855,6 +935,113 @@ pub mod tests {
         assert_eq!(meta.context, Context::ListItem);
         assert_eq!((meta.tier, meta.split), (None, None));
         assert!(in_label_place(&dir));
+    }
+
+    #[test]
+    fn under_label_only_a_skeleton_of_dev_or_owner_or_a_labelling_draw_opens() {
+        let root = tempfile::tempdir().unwrap();
+        // No header: a copy of `.gold/sample.conllu`, which mixes holdout in, or any skeleton whose
+        // header was stripped.
+        let bare = label_dir_from(root.path(), "bare", "");
+        let error = Sample::open(&bare).unwrap_err().to_string();
+        assert!(error.contains("exam.from"), "{error}");
+        // Any gold's stem other than dev or owner, holdout's among them.
+        for stem in ["holdout", "train", "x"] {
+            let dir = label_dir_from(root.path(), stem, &format!("# exam.from = {stem}\n"));
+            assert!(Sample::open(&dir).is_err(), "{stem}");
+        }
+        for stem in ["dev", "owner"] {
+            let dir = label_dir_from(root.path(), stem, &format!("# exam.from = {stem}\n"));
+            assert!(Sample::open(&dir).is_ok(), "{stem}");
+        }
+        // A manifest with the gold flow's rows is no labelling draw, whatever its sample says.
+        let mixed = label_dir(root.path(), "mixed", "");
+        let row = |split| Manifest {
+            header: Vec::new(),
+            rows: vec![("g0001".to_string(), meta_of(split))],
+        };
+        std::fs::write(mixed.join("manifest.tsv"), row(Some(Split::Dev)).render()).unwrap();
+        assert!(Sample::open(&mixed).is_err());
+        // A draw for labelling is: its header says so and no row has a split.
+        let mut draw = row(None);
+        draw.header.push((
+            "draw".to_string(),
+            "for labelling, split unlabelled, ids x0001 on".to_string(),
+        ));
+        let drawn = label_dir_from(root.path(), "draw", "");
+        std::fs::write(drawn.join("manifest.tsv"), draw.render()).unwrap();
+        assert!(Sample::open(&drawn).is_ok());
+        assert!(Sample::open(&drawn).unwrap().is_labelling_draw());
+        // And a draw header over rows that are dev is not.
+        draw.rows[0].1.split = Some(Split::Dev);
+        std::fs::write(drawn.join("manifest.tsv"), draw.render()).unwrap();
+        assert!(Sample::open(&drawn).is_err());
+    }
+
+    #[test]
+    fn a_link_or_a_dot_dot_cannot_take_a_holdout_sample_into_label() {
+        let root = tempfile::tempdir().unwrap();
+        // A directory named for holdout, holding a sample that says nothing of it.
+        let hold = root.path().join("holdout-copy");
+        std::fs::create_dir_all(&hold).unwrap();
+        let ok = label_dir(root.path(), "ok", "");
+        std::fs::copy(ok.join("sample.conllu"), hold.join("sample.conllu")).unwrap();
+        // `.label/decoy/sample.conllu` is a link into it.
+        let decoy = root.path().join(LABEL_DIR).join("decoy");
+        std::fs::create_dir_all(&decoy).unwrap();
+        std::os::unix::fs::symlink(hold.join("sample.conllu"), decoy.join("sample.conllu"))
+            .unwrap();
+        let error = Sample::open(&decoy).unwrap_err().to_string();
+        assert!(error.contains("holdout"), "{error}");
+        // `.label/hop` is a link to the holdout directory itself.
+        let hop = root.path().join(LABEL_DIR).join("hop");
+        std::os::unix::fs::symlink(&hold, &hop).unwrap();
+        assert!(Sample::open(&hop).is_err());
+        // A sample linked from a harmless place outside its directory is refused all the same.
+        let elsewhere = root.path().join("elsewhere");
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        std::fs::copy(ok.join("sample.conllu"), elsewhere.join("sample.conllu")).unwrap();
+        let linked = root.path().join(LABEL_DIR).join("linked");
+        std::fs::create_dir_all(&linked).unwrap();
+        std::os::unix::fs::symlink(
+            elsewhere.join("sample.conllu"),
+            linked.join("sample.conllu"),
+        )
+        .unwrap();
+        assert!(Sample::open(&linked).is_err());
+        // `..` is resolved: this reaches the holdout directory from a `.label` path.
+        let dotted = ok.join("..").join("..").join("holdout-copy");
+        assert!(Sample::open(&dotted).is_err());
+        // A link to the gold flow's directory is read as label, so its mixed manifest is refused.
+        let gold = root.path().join(".gold");
+        std::fs::create_dir_all(&gold).unwrap();
+        std::fs::copy(ok.join("sample.conllu"), gold.join("sample.conllu")).unwrap();
+        std::fs::write(
+            gold.join("manifest.tsv"),
+            Manifest {
+                header: Vec::new(),
+                rows: vec![("g0001".to_string(), meta_of(Some(Split::Holdout)))],
+            }
+            .render(),
+        )
+        .unwrap();
+        let via = root.path().join(LABEL_DIR).join("via");
+        std::os::unix::fs::symlink(&gold, &via).unwrap();
+        assert!(Sample::open(&via).is_err());
+    }
+
+    /// A manifest row's meta, with the split `split`.
+    fn meta_of(split: Option<Split>) -> Meta {
+        Meta {
+            split,
+            tier: Some(Tier::Human),
+            context: Context::Prose,
+            file: "f.md".to_string(),
+            repo: "o/r".to_string(),
+            license: "MIT".to_string(),
+            range: 0..1,
+            provenance: None,
+        }
     }
 
     #[test]
@@ -898,8 +1085,9 @@ pub mod tests {
         .unwrap();
         let error = Sample::open(&dir).unwrap_err().to_string();
         assert!(error.contains("1 holdout rows"), "{error}");
+        // Dev rows are no draw for labelling either: only a draw's manifest is read here.
         std::fs::write(dir.join("manifest.tsv"), rows(Some(Split::Dev)).render()).unwrap();
-        assert!(Sample::open(&dir).is_ok());
+        assert!(Sample::open(&dir).is_err());
         // A header `split = holdout` is as bad.
         let mut headed = rows(Some(Split::Dev));
         headed
@@ -926,6 +1114,7 @@ pub mod tests {
             "holdout-copy.conllu",
             "/tmp/Holdout/dev.conllu",
             "en_ewt-ud-test.conllu",
+            "en-ewt-ud-test.conllu",
             ".ewt/train.conllu",
         ] {
             assert!(refuse_holdout(Path::new(barred)).is_err(), "{barred}");

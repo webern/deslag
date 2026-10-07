@@ -481,7 +481,7 @@ fn the_pilot_runs_from_a_skeleton_to_a_report_with_provenance_at_every_step() {
     gold_ok(&dir, &["audit", "--count", "2"]);
     let queue = fs::read_to_string(dir.join("merge/audit.conllu")).unwrap();
     assert!(
-        queue.starts_with("# exam.tokens = deslag\n# sent_id"),
+        queue.starts_with("# exam.tokens = deslag\n# exam.silver = yes\n# sent_id"),
         "{queue}"
     );
     assert_eq!(queue.matches("# pick_id = ").count(), 2);
@@ -534,7 +534,25 @@ fn nothing_in_the_labelling_flow_takes_a_holdout_skeleton_path_or_gold() {
 
     // The report will not grade against a holdout file, whatever it is called, or by a path.
     let error = gold_fails(&dir, &["report", "--gold", path(&hold_gold)]);
-    assert!(error.contains("holdout"), "{error}");
+    assert!(error.contains("dev.conllu or owner.conllu only"), "{error}");
+    // A copy of a holdout gold named dev.conllu says holdout inside, and a link named dev.conllu
+    // resolves to the name of what it links to.
+    let copy_dir = root.path().join("copy");
+    fs::create_dir_all(&copy_dir).unwrap();
+    fs::copy(&hold_gold, copy_dir.join("dev.conllu")).unwrap();
+    let error = gold_fails(
+        &dir,
+        &["report", "--gold", path(&copy_dir.join("dev.conllu"))],
+    );
+    assert!(error.contains("holdout gold"), "{error}");
+    let link_dir = root.path().join("link");
+    fs::create_dir_all(&link_dir).unwrap();
+    std::os::unix::fs::symlink(&hold_gold, link_dir.join("dev.conllu")).unwrap();
+    let error = gold_fails(
+        &dir,
+        &["report", "--gold", path(&link_dir.join("dev.conllu"))],
+    );
+    assert!(error.contains("dev.conllu or owner.conllu only"), "{error}");
     let named = root
         .path()
         .join("tests")
@@ -575,4 +593,255 @@ fn a_manifest_with_holdout_rows_under_label_is_refused_and_the_gold_flow_is_not(
     fs::copy(dir.join("sample.conllu"), gold_dir.join("sample.conllu")).unwrap();
     fs::write(gold_dir.join("manifest.tsv"), &manifest).unwrap();
     gold_ok(&gold_dir, &["batches"]);
+}
+
+/// Has `read-tags --check` read `text` as the replies of voter `name`, run `run`.
+fn tag_as(dir: &Path, name: &str, run: Option<&str>, text: &str) {
+    let file = write(&dir.join(format!("{name}.reply.txt")), text);
+    let mut args = vec![
+        "read-tags",
+        "--check",
+        "--lines",
+        path(&file),
+        "--prov",
+        name,
+    ];
+    if let Some(run) = run {
+        args.extend(["--run", run]);
+    }
+    gold_ok(dir, &args);
+}
+
+/// `lines(&[])` without the sentences in `drop`: the replies of a voter that never got them right.
+fn lines_without(drop: &[&str]) -> String {
+    lines(&[])
+        .lines()
+        .filter(|line| !drop.iter().any(|id| line.starts_with(&format!("{id}:"))))
+        .map(|line| format!("{line}\n"))
+        .collect()
+}
+
+#[test]
+fn a_sentence_a_voter_never_got_right_does_not_stop_the_pilot_and_is_counted() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, gold) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    tag_as(&dir, "two", Some("r2"), &lines_without(&["d4"]));
+    tag_as(&dir, "three", Some("r3"), &lines_without(&["d3", "d4"]));
+    let said = gold_ok(
+        &dir,
+        &[
+            "merge", "--voter", "one", "--voter", "two", "--voter", "three",
+        ],
+    );
+    assert!(said.contains("gave no answer for (abstained)"), "{said}");
+    assert!(
+        said.contains("sentences fewer than two voters answered"),
+        "{said}"
+    );
+    let agreement = fs::read_to_string(dir.join("merge/agreement.txt")).unwrap();
+    assert!(
+        agreement.contains("two") && agreement.contains("three"),
+        "{agreement}"
+    );
+    // d4 had one answer, so all three of its words go to the adjudicator, with `-` for the rest.
+    let work = fs::read_to_string(dir.join("merge/worklist.tsv")).unwrap();
+    assert!(
+        work.contains("d4.1\td4\t1\tFiles\tN.p\t-\t-\tnone\n"),
+        "{work}"
+    );
+    let part = fs::read_to_string(dir.join("merge/worklist-01.txt")).unwrap();
+    assert!(part.contains("1 Files: A N.p, B -, C -"), "{part}");
+    // The agreed words name the voters that answered: d3 had two.
+    let agreed = fs::read_to_string(dir.join("merge/agreed.conllu")).unwrap();
+    assert!(agreed.contains("Prov=agree|Runs=r1,r2"), "{agreed}");
+    assert!(agreed.contains("Prov=agree|Runs=r1,r2,r3"), "{agreed}");
+    let answers = write(
+        &dir.join("adj.txt"),
+        "d4.1: N.p | plural noun\nd4.2: AX.pr | present auxiliary\nd4.3: J | predicative adjective\n",
+    );
+    gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--answers",
+            path(&answers),
+            "--run",
+            "r4",
+        ],
+    );
+    write(
+        &dir.join("runs.tsv"),
+        "run\tmodel\nr1\tone\nr2\ttwo\nr3\tthree\nr4\tadjudicator\n",
+    );
+    gold_ok(&dir, &["finish"]);
+    let text = fs::read_to_string(dir.join("merge/labelled.conllu")).unwrap();
+    assert!(
+        text.contains("Kind=Word|Prov=adjudicated|Runs=r4"),
+        "{text}"
+    );
+    // The report grades each voter on the sentences it answered and says how many it did not.
+    let said = gold_ok(&dir, &["report", "--gold", path(&gold)]);
+    assert!(
+        said.contains(
+            "is not graded on (one 0, two 1, three 2); 1 sentences had fewer than two answers"
+        ),
+        "{said}"
+    );
+    let tsv = fs::read_to_string(dir.join("merge/report.tsv")).unwrap();
+    let words = |name: &str| -> String {
+        tsv.lines()
+            .find(|line| line.starts_with(&format!("{name}\t")))
+            .unwrap()
+            .split('\t')
+            .nth(1)
+            .unwrap()
+            .to_string()
+    };
+    assert_eq!(
+        (words("one"), words("two"), words("three")),
+        ("11".into(), "8".into(), "6".into())
+    );
+}
+
+#[test]
+fn finish_refuses_words_with_no_runs_and_a_training_mark_a_gold_sample_may_not_have() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, _) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    // Replies read without `--run` leave no provenance, and `finish` must not take that as none
+    // to name.
+    tag_as(&dir, "one", None, &lines(&[]));
+    tag_as(&dir, "two", None, &lines(&[]));
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    let error = gold_fails(&dir, &["finish"]);
+    assert!(error.contains("11 words have no `Runs=`"), "{error}");
+    assert!(error.contains("d1.1"), "{error}");
+    // One voter with a run and one without is no better.
+    tag_as(&dir, "two", Some("r2"), &lines(&[]));
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    let error = gold_fails(&dir, &["finish"]);
+    assert!(error.contains("have no `Runs=`"), "{error}");
+    // Labels over dev or owner sentences never train anything, so `yes` is refused for them.
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    write(&dir.join("runs.tsv"), "run\tmodel\nr1\tone\nr2\ttwo\n");
+    for trains in ["yes", "undecided"] {
+        let error = gold_fails(&dir, &["finish", "--trains", trains]);
+        assert!(error.contains("labelling draw"), "{trains}: {error}");
+    }
+    gold_ok(&dir, &["finish"]);
+    let text = fs::read_to_string(dir.join("merge/labelled.conllu")).unwrap();
+    assert!(text.contains("# exam.trains = no"), "{text}");
+    // A labelling draw may be marked: the refusal is not about it.
+    let draw = root.path().join(".label").join("draw");
+    fs::create_dir_all(&draw).unwrap();
+    fs::copy(dir.join("sample.conllu"), draw.join("sample.conllu")).unwrap();
+    let mut manifest = String::from(
+        "# draw = for labelling, split unlabelled, ids d0001 on\nsent_id\tsplit\ttier\tcontext\tfile\trepo\tlicense\tbytes\n",
+    );
+    for (id, _) in SENTENCES {
+        manifest.push_str(&format!(
+            "{id}\tunlabelled\thuman\tprose\tf.md\to/r\tMIT\t0-10\n"
+        ));
+    }
+    fs::write(draw.join("manifest.tsv"), manifest).unwrap();
+    let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
+    assert!(!error.contains("labelling draw"), "{error}");
+}
+
+#[test]
+fn a_second_merge_keeps_the_answers_the_first_settled_and_their_runs() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, _) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    write(
+        &dir.join("tags/spacy.conllu"),
+        &outside_tagger("r4", &[("d2", 2, "N.s")]),
+    );
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    let answers = write(&dir.join("adj.txt"), "d1.3: R | adverb of time\n");
+    gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--answers",
+            path(&answers),
+            "--run",
+            "r3",
+        ],
+    );
+    // spaCy votes on the base alone, so it adds the disputes d2 has. d1.3 is the same item.
+    let said = gold_ok(
+        &dir,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--voter",
+            "spacy",
+            "--base-only",
+            "spacy",
+            "--into",
+            "merge-spacy",
+            "--settled",
+            path(&dir.join("merge/adjudicated.tsv")),
+        ],
+    );
+    assert!(said.contains("1 more words keep the answers"), "{said}");
+    let settled = fs::read_to_string(dir.join("merge-spacy/settled.tsv")).unwrap();
+    assert!(
+        settled.contains("d1.3\tR\tadverb of time\tr3\n"),
+        "{settled}"
+    );
+    assert!(
+        !dir.join("merge-spacy/worklist-01.txt").exists(),
+        "nothing is left to ask the adjudicator"
+    );
+    let empty = write(&dir.join("none.txt"), "");
+    let said = gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--into",
+            "merge-spacy",
+            "--answers",
+            path(&empty),
+            "--run",
+            "r5",
+        ],
+    );
+    assert!(said.contains("read 1 of 1 answers"), "{said}");
+    write(
+        &dir.join("runs.tsv"),
+        "run\tmodel\nr1\tone\nr2\ttwo\nr3\tadjudicator\nr4\tspacy\nr5\tadjudicator\n",
+    );
+    gold_ok(&dir, &["finish", "--into", "merge-spacy"]);
+    let text = fs::read_to_string(dir.join("merge-spacy/labelled.conllu")).unwrap();
+    assert!(
+        text.contains("Kind=Word|Prov=adjudicated|Runs=r3"),
+        "the settled word keeps the run that answered it: {text}"
+    );
+    // A merge without --settled does not inherit the file.
+    gold_ok(
+        &dir,
+        &[
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            "two",
+            "--into",
+            "merge-spacy",
+        ],
+    );
+    assert!(!dir.join("merge-spacy/settled.tsv").exists());
 }

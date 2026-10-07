@@ -1,5 +1,10 @@
 //! The three-way merger: the blind tagger, Harper and spaCy over the same words.
 //!
+//! This merger is phase 1's and is frozen: the gold set was made with it, and its counts and text
+//! must not change. The labelling flow's merger for any number of voters, which has its own
+//! `Stats` and its own `Display`, is [`crate::voters`]; the two share the worklist, the answers
+//! and the log below, and nothing else.
+//!
 //! Each of the three gives every word token a UPOS and, if it can, FEATS (an import file of the
 //! exam, which is also what the compact reader writes). They are compared as the guide's codes
 //! (`N.p`, `V.pp`):
@@ -40,6 +45,14 @@ pub const NAMES: [&str; 3] = ["blind", "harper", "spacy"];
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Answers(pub Vec<Vec<Option<Code>>>);
 
+impl Answers {
+    /// Whether the tagger gave no answer for sentence `at`: a voter whose reply had no good line
+    /// for it, which [`load_voter`] reads as an empty row.
+    pub fn abstains(&self, at: usize) -> bool {
+        self.0[at].is_empty()
+    }
+}
+
 /// Reads the CoNLL-U answers of the tagger `name` from `text`, which came from `path`, against
 /// `sample`. Every sentence of the sample must be there with the same forms, line for line, and
 /// every word line must have a UPOS of UD's.
@@ -48,6 +61,29 @@ pub fn load_tagger(
     path: &str,
     text: &str,
     sample: &Sample,
+) -> Result<Answers, Problems> {
+    read_answers_of(name, path, text, sample, false)
+}
+
+/// [`load_tagger`] for a voter of the labelling flow: a sentence the file has no block for is not
+/// an error but an abstention, the voter's row for it left empty. `read-tags --check` keeps only
+/// the sentences with a good line, so a sentence a model never got right is missing, and that must
+/// not stop the merge. A sentence that is there must still be right.
+pub fn load_voter(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+) -> Result<Answers, Problems> {
+    read_answers_of(name, path, text, sample, true)
+}
+
+fn read_answers_of(
+    name: &str,
+    path: &str,
+    text: &str,
+    sample: &Sample,
+    may_abstain: bool,
 ) -> Result<Answers, Problems> {
     let blocks = conllu::read(path, text)?;
     let mut by_id: BTreeMap<&str, &conllu::Block> = BTreeMap::new();
@@ -83,11 +119,13 @@ pub fn load_tagger(
     let mut answers = Vec::with_capacity(sample.sents.len());
     for sent in &sample.sents {
         let Some(block) = by_id.get(sent.id.as_str()) else {
-            problems.push(Problems::sentence(
-                path,
-                &sent.id,
-                format!("{name} has no answer for it"),
-            ));
+            if !may_abstain {
+                problems.push(Problems::sentence(
+                    path,
+                    &sent.id,
+                    format!("{name} has no answer for it"),
+                ));
+            }
             answers.push(Vec::new());
             continue;
         };
@@ -210,10 +248,13 @@ pub struct Item {
     /// Its token's position in the sentence, from 0.
     pub tok: usize,
     /// What each tagger said, in the order of [`NAMES`] for the three-way merge and of the voters
-    /// for [`crate::voters`].
-    pub said: Vec<Code>,
+    /// for [`crate::voters`]. `None` is a voter that abstained on the sentence.
+    pub said: Vec<Option<Code>>,
     /// Whether the bases differ, or only a feature.
     pub tags_differ: bool,
+    /// Whether fewer than two voters answered the sentence, so there was nothing to compare and
+    /// the adjudicator gets the whole sentence.
+    pub unvoted: bool,
 }
 
 impl Item {
@@ -308,8 +349,9 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
                 items.push(Item {
                     sent: at,
                     tok,
-                    said: vec![blind, harper, spacy],
+                    said: vec![Some(blind), Some(harper), Some(spacy)],
                     tags_differ,
+                    unvoted: false,
                 });
             }
             row.push(Some(verdict));
@@ -388,15 +430,16 @@ impl fmt::Display for Stats {
 /// words that are not words with theirs from their kind (`Prov=kind`), and each disputed word with `_` for UPOS
 /// and no `Prov=`.
 ///
-/// `runs`, when the voters have runs, is the `Runs=` of every agreed word: the runs of the voters
-/// that agreed, which for an agreed word is all of them.
+/// `runs`, when the voters have runs, is for each sentence the `Runs=` of its agreed words: the
+/// runs of the voters that answered it, all of which agreed. A gold flow merge passes none.
 pub fn agreed_conllu(
     sample: &Sample,
     verdicts: &[Vec<Option<Verdict>>],
-    runs: Option<&str>,
+    runs: &[Option<String>],
 ) -> String {
     let mut out = String::new();
-    for (sent, row) in sample.sents.iter().zip(verdicts) {
+    for (at, (sent, row)) in sample.sents.iter().zip(verdicts).enumerate() {
+        let runs = runs.get(at).and_then(Option::as_deref);
         let _ = writeln!(out, "# sent_id = {}\n# text = {}", sent.id, sent.text());
         for (index, (tok, verdict)) in sent.toks.iter().zip(row).enumerate() {
             let text = match verdict {
@@ -426,8 +469,12 @@ pub fn agreed_conllu(
 }
 
 /// What a tagger said, as the worklist shows it: the code, with `.?` where the tagger gave no
-/// feature that the guide asks of the word, so that leaving one out cannot be read as a code.
-fn said(code: Code) -> String {
+/// feature that the guide asks of the word, so that leaving one out cannot be read as a code, and
+/// `-` for a voter that gave no answer for the sentence.
+fn said(code: Option<Code>) -> String {
+    let Some(code) = code else {
+        return ABSTAINED.to_string();
+    };
     let missing = (matches!(code.base, Base::N | Base::Pn) && code.number.is_none())
         || (code.base.takes_form() && code.form.is_none());
     if missing {
@@ -436,6 +483,9 @@ fn said(code: Code) -> String {
         code.to_string()
     }
 }
+
+/// What the worklist shows for a voter that abstained on the sentence.
+const ABSTAINED: &str = "-";
 
 /// How many taggers the worklist header says there are.
 fn count_word(count: usize) -> String {
@@ -454,7 +504,8 @@ fn worklist_header(names: &[&str]) -> String {
         "\
 Adjudicate the words below. Each sentence is shown with its tokens numbered; under it, each
 word the {} taggers disagree on, with what each said ({}). A code that ends
-in .? means that tagger gave the part of speech and no feature.
+in .? means that tagger gave the part of speech and no feature, and - means that tagger gave
+no answer for the sentence.
 
 Decide each word from the annotation guide, for its use in this sentence. Answer with one line per
 item, at the end, in the slots given: the item, a colon, one code of the guide with its feature,
@@ -603,7 +654,13 @@ pub fn worklist_tsv(sample: &Sample, items: &[Item], names: &[&str]) -> String {
             item.tok + 1,
             sent.toks[item.tok].form,
             said.join("\t"),
-            if item.tags_differ { "tag" } else { "feature" }
+            if item.unvoted {
+                "none"
+            } else if item.tags_differ {
+                "tag"
+            } else {
+                "feature"
+            }
         );
     }
     out
@@ -704,6 +761,9 @@ pub struct Answer {
     pub code: Code,
     /// Why, in 15 words or fewer.
     pub reason: String,
+    /// The run of the adjudicator that made it, when it is not the run the log is written for: an
+    /// answer settled by an earlier merge keeps the run that gave it.
+    pub run: Option<String>,
 }
 
 /// The line of an answer, or why it is no answer: `g0007.5: N.p | reason`.
@@ -804,6 +864,7 @@ fn scan_answers(work: &[WorkItem], files: &[(String, String)]) -> (Vec<Answer>, 
                                 item: item.clone(),
                                 code,
                                 reason,
+                                run: None,
                             },
                         );
                     }
@@ -1099,21 +1160,29 @@ pub fn read_overrides(
 /// decided and why, then each override. An override's item is `sentence.token`, and the columns of
 /// what the taggers said hold the code they agreed on, which is how `assemble` knows it from an
 /// answer. With `run`, the adjudicator's run, every row ends with it in a `run` column, which
-/// `finish` copies into the `Runs=` of the word.
+/// `finish` copies into the `Runs=` of the word; an answer with a run of its own keeps that one.
 pub fn adjudicated_tsv(
     names: &[String],
     answers: &[Answer],
     overrides: &[Override],
     run: Option<&str>,
 ) -> String {
+    let with_run = run.is_some() || answers.iter().any(|answer| answer.run.is_some());
     let mut columns: Vec<&str> = LOG_FIRST.to_vec();
     columns.extend(names.iter().map(String::as_str));
     columns.extend(LOG_LAST);
-    columns.extend(run.map(|_| LOG_RUN));
+    columns.extend(with_run.then_some(LOG_RUN));
     let mut out = format!("{}\n", columns.join("\t"));
-    let tail = run.map_or_else(String::new, |run| format!("\t{run}"));
+    let tail_of = |own: Option<&str>| {
+        if with_run {
+            format!("\t{}", own.or(run).unwrap_or("-"))
+        } else {
+            String::new()
+        }
+    };
     for answer in answers {
         let item = &answer.item;
+        let tail = tail_of(answer.run.as_deref());
         let _ = writeln!(
             out,
             "{}\t{}\t{}\t{}\t{}\t{}\t{}{tail}",
@@ -1126,6 +1195,7 @@ pub fn adjudicated_tsv(
             answer.reason
         );
     }
+    let tail = tail_of(None);
     for row in overrides {
         let old = vec![row.old.to_string(); names.len()].join("\t");
         let _ = writeln!(
@@ -1139,6 +1209,128 @@ pub fn adjudicated_tsv(
         );
     }
     out
+}
+
+/// The columns of `settled.tsv`: the answers a merge takes from an earlier one.
+const SETTLED_COLUMNS: [&str; 4] = ["item", "final", "reason", "run"];
+
+/// The answers of the earlier merge's log `text`, which came from `path`, for the items of `work`
+/// that the log answered, each keeping the run that answered it. A merge of the same sample with a
+/// voter more disputes mostly the same words; the adjudicator is asked about each only once, so
+/// the two merges differ in their voting alone. An item the log has no run for is an error, since
+/// the answer would lose its provenance.
+pub fn settle_from_log(path: &str, text: &str, work: &[WorkItem]) -> Result<Vec<Answer>, Problems> {
+    let mut lines = text.lines().enumerate();
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let column = |name: &str| head.iter().position(|cell| *cell == name);
+    let (Some(item_at), Some(final_at), Some(reason_at), Some(run_at)) = (
+        column("item"),
+        column("final"),
+        column("reason"),
+        column(LOG_RUN),
+    ) else {
+        return Err(Error::at(
+            path,
+            1,
+            "the log to settle from needs the columns item, final, reason and run",
+        )
+        .into());
+    };
+    let wanted: BTreeMap<&str, &WorkItem> =
+        work.iter().map(|item| (item.item.as_str(), item)).collect();
+    let mut answers = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines.filter(|(_, line)| !line.trim().is_empty()) {
+        let cells: Vec<&str> = line.split('\t').collect();
+        if cells.len() != head.len() {
+            problems.push(Error::at(
+                path,
+                at + 1,
+                format!("expected {} columns, found {}", head.len(), cells.len()),
+            ));
+            continue;
+        }
+        let Some(item) = wanted.get(cells[item_at]) else {
+            continue;
+        };
+        let run = cells[run_at];
+        if run.is_empty() || run == "-" {
+            problems.push(Error::at(path, at + 1, "the answer has no run"));
+            continue;
+        }
+        match Code::parse(cells[final_at]) {
+            Ok(code) => answers.push(Answer {
+                item: (*item).clone(),
+                code,
+                reason: cells[reason_at].to_string(),
+                run: Some(run.to_string()),
+            }),
+            Err(why) => problems.push(Error::at(path, at + 1, why)),
+        }
+    }
+    Problems::check(problems, answers)
+}
+
+/// `settled.tsv`: the answers `settle_from_log` took, which `read-answers` adds to the ones the
+/// adjudicator gives for the rest.
+pub fn settled_tsv(answers: &[Answer]) -> String {
+    let mut out = format!("{}\n", SETTLED_COLUMNS.join("\t"));
+    for answer in answers {
+        let _ = writeln!(
+            out,
+            "{}\t{}\t{}\t{}",
+            answer.item.item,
+            answer.code,
+            answer.reason,
+            answer.run.as_deref().unwrap_or("-")
+        );
+    }
+    out
+}
+
+/// Reads `settled.tsv`, which came from `path`, for the items of `work`.
+pub fn read_settled(path: &str, text: &str, work: &[WorkItem]) -> Result<Vec<Answer>, Problems> {
+    let mut lines = text.lines().enumerate();
+    if lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect::<Vec<_>>())
+        != Some(SETTLED_COLUMNS.to_vec())
+    {
+        return Err(Error::at(
+            path,
+            1,
+            format!("the columns should be {}", SETTLED_COLUMNS.join(", ")),
+        )
+        .into());
+    }
+    let wanted: BTreeMap<&str, &WorkItem> =
+        work.iter().map(|item| (item.item.as_str(), item)).collect();
+    let mut answers = Vec::new();
+    let mut problems = Vec::new();
+    for (at, line) in lines.filter(|(_, line)| !line.trim().is_empty()) {
+        let cells: Vec<&str> = line.split('\t').collect();
+        let item = wanted.get(cells.first().copied().unwrap_or(""));
+        match (cells.len() == SETTLED_COLUMNS.len(), item) {
+            (true, Some(item)) => match Code::parse(cells[1]) {
+                Ok(code) => answers.push(Answer {
+                    item: (*item).clone(),
+                    code,
+                    reason: cells[2].to_string(),
+                    run: Some(cells[3].to_string()),
+                }),
+                Err(why) => problems.push(Error::at(path, at + 1, why)),
+            },
+            _ => problems.push(Error::at(
+                path,
+                at + 1,
+                "a row of four cells for an item of the worklist is expected",
+            )),
+        }
+    }
+    Problems::check(problems, answers)
 }
 
 /// A row of `adjudicated.tsv`.
@@ -1391,7 +1583,7 @@ mod tests {
         assert_eq!(merged.stats.pairs, [7, 7, 7]);
         assert_eq!(merged.stats.tag3, 7);
         assert_eq!(merged.stats.full3, 7);
-        let out = agreed_conllu(&sample, &merged.verdicts, None);
+        let out = agreed_conllu(&sample, &merged.verdicts, &[]);
         assert!(
             !out.contains("\t_\t_\t_\t_\t_\t_\tKind=Word\n"),
             "no pending word"
@@ -1421,7 +1613,7 @@ mod tests {
         assert_eq!(merged.stats.by_context["list-item"], (4, 2));
         assert_eq!(merged.stats.by_context["prose"], (3, 2));
 
-        let out = agreed_conllu(&sample, &merged.verdicts, None);
+        let out = agreed_conllu(&sample, &merged.verdicts, &[]);
         assert!(
             out.contains("4\tcompile\t_\t_\t_\t_\t_\t_\t_\tKind=Word|SpaceAfter=No\n"),
             "{out}"
@@ -1544,14 +1736,18 @@ mod tests {
     #[test]
     fn a_feature_a_tagger_left_out_shows_as_a_question_mark() {
         let bare = |upos| Code::from_conllu(upos, "_").unwrap();
-        assert_eq!(said(bare("NOUN")), "N.?");
-        assert_eq!(said(bare("PROPN")), "PN.?");
-        assert_eq!(said(bare("VERB")), "V.?");
-        assert_eq!(said(bare("AUX")), "AX.?");
-        assert_eq!(said(bare("PRON")), "PR", "a pronoun may have no number");
-        assert_eq!(said(bare("ADJ")), "J");
-        assert_eq!(said(code("N.s")), "N.s");
-        assert_eq!(said(code("V.pp")), "V.pp");
+        assert_eq!(said(Some(bare("NOUN"))), "N.?");
+        assert_eq!(said(Some(bare("PROPN"))), "PN.?");
+        assert_eq!(said(Some(bare("VERB"))), "V.?");
+        assert_eq!(said(Some(bare("AUX"))), "AX.?");
+        assert_eq!(
+            said(Some(bare("PRON"))),
+            "PR",
+            "a pronoun may have no number"
+        );
+        assert_eq!(said(Some(bare("ADJ"))), "J");
+        assert_eq!(said(Some(code("N.s"))), "N.s");
+        assert_eq!(said(Some(code("V.pp"))), "V.pp");
     }
 
     #[test]
@@ -1560,8 +1756,9 @@ mod tests {
         let item = |sent, tok| Item {
             sent,
             tok,
-            said: vec![code("N.s"); 3],
+            said: vec![Some(code("N.s")); 3],
             tags_differ: true,
+            unvoted: false,
         };
         let items = [item(0, 0), item(0, 2), item(1, 0), item(1, 2), item(1, 3)];
         assert_eq!(worklist_parts(&sample, &items, 100, &NAMES).len(), 1);
@@ -1753,6 +1950,32 @@ mod tests {
     }
 
     #[test]
+    fn an_answer_settled_by_an_earlier_merge_keeps_its_run_and_is_not_asked_again() {
+        let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
+        // The earlier merge's log: both answered, by run r4.
+        let earlier = adjudicated_tsv(&names(), &got, &[], Some("r4"));
+        let work = work();
+        let settled = settle_from_log("earlier", &earlier, &work.items[..1]).unwrap();
+        assert_eq!(settled.len(), 1, "only the items of the new worklist");
+        assert_eq!(settled[0].item.item, "s1.4");
+        assert_eq!(settled[0].run.as_deref(), Some("r4"));
+        // settled.tsv reads back, and the log of the new merge names the run of each answer: r4
+        // for the settled, the new adjudicator's r9 for the rest.
+        let tsv = settled_tsv(&settled);
+        let back = read_settled("settled.tsv", &tsv, &work.items).unwrap();
+        assert_eq!(back, settled);
+        let mut all = back;
+        all.push(got[1].clone());
+        let log = adjudicated_tsv(&names(), &all, &[], Some("r9"));
+        let rows = read_log("log", &log).unwrap();
+        assert_eq!(rows[0].run.as_deref(), Some("r4"));
+        assert_eq!(rows[1].run.as_deref(), Some("r9"));
+        // An answer with no run to keep is refused: its provenance would be lost.
+        let bare = adjudicated_tsv(&names(), &got, &[], None);
+        assert!(settle_from_log("bare", &bare, &work.items).is_err());
+    }
+
+    #[test]
     fn the_log_carries_the_adjudicator_s_run_and_reads_back_with_or_without_it() {
         let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
         let log = adjudicated_tsv(&names(), &got, &[], Some("r9"));
@@ -1787,8 +2010,9 @@ mod tests {
         let item = Item {
             sent: 0,
             tok: 0,
-            said: vec![code("V.fi"), code("V.pp")],
+            said: vec![Some(code("V.fi")), Some(code("V.pp"))],
             tags_differ: false,
+            unvoted: false,
         };
         let tsv = worklist_tsv(&sample, &[item], &["x", "y"]);
         assert_eq!(

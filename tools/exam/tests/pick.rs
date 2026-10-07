@@ -780,7 +780,7 @@ fn a_draw_is_clear_of_reserved_repositories_listed_fixtures_gold_text_and_earlie
     );
     assert_eq!(
         exam.lines()
-            .filter(|l| !l.starts_with("# sent_id"))
+            .filter(|l| !l.starts_with("# sent_id") && !l.starts_with("# exam.from"))
             .collect::<Vec<_>>(),
         skeleton
             .lines()

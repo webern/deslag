@@ -2480,8 +2480,8 @@ def preflight(directory, into, binary):
         return "ok"
     problems = len([line for line in done.stderr.splitlines() if line.strip()])
     return (
-        f"refused, {problems} lines on stderr (exit {done.returncode}); `deslag-gold silver build "
-        f"--check-part {directory}:{into}` prints them"
+        f"refused, {problems} line{'' if problems == 1 else 's'} on stderr (exit {done.returncode}); "
+        f"`deslag-gold silver build --check-part {directory}:{into}` prints {'it' if problems == 1 else 'them'}"
     )
 
 

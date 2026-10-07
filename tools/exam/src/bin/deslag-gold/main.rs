@@ -302,6 +302,12 @@ enum Command {
         /// the paired difference of the two pipelines.
         #[arg(long, value_parser = parse_name)]
         versus: Option<String>,
+        /// With `--versus`: compare the two merges although they were made with another
+        /// `min_voters`, or one of them with none recorded (an old merge). They then differ by
+        /// the rule that agreed their words as well as by their adjudicator, and the report
+        /// says so in its first line.
+        #[arg(long, requires = "versus")]
+        mixed_rules: bool,
     },
     /// Picks sentences of a finished labelling merge at random by a seed into a review queue, for
     /// the owner to check the labels: `<into>/audit.conllu` unless `--out` says another. The
@@ -715,7 +721,15 @@ fn run(cli: Cli) -> Result<(), Problems> {
             into,
             mix_from,
             versus,
-        } => report_stage(&dir, &into, &gold, mix_from.as_deref(), versus.as_deref()),
+            mixed_rules,
+        } => report_stage(
+            &dir,
+            &into,
+            &gold,
+            mix_from.as_deref(),
+            versus.as_deref(),
+            mixed_rules,
+        ),
         Command::Audit {
             into,
             count,
@@ -1834,12 +1848,57 @@ fn finish_stage(
 /// The golds `report` grades against, in the directory of the checkout's golds.
 const GRADED_GOLDS: [&str; 2] = ["dev", "owner"];
 
+/// Whether the merge `rival` (a directory under the sample's) agreed its words by the same rule as
+/// the one being reported, which recorded `recorded` as its `min_voters`. A report that sets two
+/// pipelines side by side would otherwise credit the adjudicator with what the rule did. They must
+/// have the same recorded `min_voters`; a merge with none recorded (an old merge) is unknown, not
+/// equal to anything. With `mixed_rules` the comparison is made anyway, and the warning line it
+/// is made under is returned for the report to start with.
+fn same_rule(
+    name: &str,
+    rival: &Path,
+    recorded: Option<usize>,
+    mixed_rules: bool,
+) -> Result<Option<String>, Problems> {
+    let path = rival.join("voters.tsv");
+    let theirs = read_text(&path)
+        .ok()
+        .and_then(|text| voters::read_min_voters(&text));
+    if recorded.is_some() && recorded == theirs {
+        return Ok(None);
+    }
+    let show = |value: Option<usize>| {
+        value.map_or("unknown (old merge)".to_string(), |count| count.to_string())
+    };
+    let said = format!(
+        "this merge has min_voters {} and {name} has {}, so the two did not agree their words by the same rule",
+        show(recorded),
+        show(theirs)
+    );
+    if mixed_rules {
+        return Ok(Some(format!(
+            "warning: --mixed-rules: {said}; the difference below is the rule's as well as the adjudicator's"
+        )));
+    }
+    Err(Error::load(
+        &path.display().to_string(),
+        Place::File,
+        format!(
+            "{said}; the difference would be the rule's as well as the adjudicator's; judge the earlier \
+             merge again under the current rule (`--settle-from` reuses its answers), or pass \
+             `--mixed-rules` to compare them anyway"
+        ),
+    )
+    .into())
+}
+
 fn report_stage(
     dir: &Path,
     into: &str,
     gold: &Path,
     mix_from: Option<&Path>,
     versus: Option<&str>,
+    mixed_rules: bool,
 ) -> Result<(), Problems> {
     // The real path decides, before anything is opened: a link or a copy named dev.conllu is not
     // the dev gold, and a link to holdout is not either.
@@ -1933,9 +1992,11 @@ fn report_stage(
         Some(draw) => Some(pilot::context_mix(&Sample::open(draw)?)),
         None => None,
     };
+    let mut mixed_note = None;
     let rival = match versus {
         Some(name) => {
             let other = dir.join(name);
+            mixed_note = same_rule(name, &other, recorded, mixed_rules)?;
             let path = other.join("labelled.conllu");
             let answers = merge::load_labelled(
                 name,
@@ -1963,7 +2024,10 @@ fn report_stage(
             .map(|(name, answers, count)| (*name, answers, *count)),
         old_merge: recorded.is_none(),
     });
-    let text = report.to_string();
+    let text = match mixed_note {
+        Some(note) => format!("{note}\n{report}"),
+        None => report.to_string(),
+    };
     write_text(&out.join("report.txt"), &text)?;
     write_text(&out.join("report.tsv"), &report.tsv())?;
     print!("{text}");

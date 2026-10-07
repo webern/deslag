@@ -1684,7 +1684,9 @@ class RoundThreeTests(Base):
         self.assertEqual(len(second.posts), 1)
         record = json.loads(label.read(self.run_json("judge", spacy_run)))
         self.assertEqual(record["scope"], {"into": "merge-spacy", "voters": ["one", "two", "spacy"],
-                                           "spacy": True, "settle_from": "merge", "same_votes": False})
+                                           "spacy": True, "settle_from": "merge", "same_votes": False,
+                                        "voter_runs": [["one", "r1"], ["two", "r2"], ["spacy", "-"]],
+                                        "min_voters": 3, "adjudicator": "judge"})
         self.assertTrue(record["complete"], "the spaCy run was the one continued")
         self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"].count(spacy_run), 1)
 
@@ -2364,6 +2366,46 @@ class SettledTests(Base):
         self.assertIn("d3.2:", sent)
         self.assertNotIn("d1.2:", sent)
         self.assertNotIn("d2.3:", sent)
+
+    def other_adjudicator(self):
+        """CONFIG with a second adjudicator model, `other`, as the adjudicator."""
+        config = copy.deepcopy(CONFIG)
+        config["models"]["other"] = {**config["models"]["judge"], "model": "x/other"}
+        config["adjudicator"] = "other"
+        return config
+
+    def test_the_merge_records_its_adjudicator_and_a_settle_from_another_one_is_refused(self):
+        gold, transport, runner = self.judged()
+        record = json.loads(label.read(os.path.join(self.dir, "merge", "adjudicator.json")))
+        self.assertEqual(record, {"name": "judge", "model": "x/judge"})
+        calls, posts = len(gold.calls), len(transport.posts)
+        other = self.runner(FakeTransport(answer_all), gold=gold, config=self.other_adjudicator())
+        for settle_same in (False, True):
+            spacy = [("one", False), ("two", False)] + ([] if settle_same else [("spacy", True)])
+            with self.assertRaisesRegex(
+                label.GoldError, r"answers were given by the adjudicator judge \(x/judge\), and this merge's "
+                                 r"adjudicator is other \(x/other\)"):
+                other.judge("merge-b", spacy, settle_from="merge")
+        self.assertEqual(len(gold.calls), calls, "refused before anything was merged")
+        self.assertEqual(len(transport.posts), posts)
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "merge-b")))
+        # The same adjudicator is let through, and records itself for the merge after.
+        gold.dispute = ["d1.2", "d2.3", "d3.2"]
+        runner.judge("merge-b", [("one", False), ("two", False), ("spacy", True)], settle_from="merge")
+        self.assertEqual(json.loads(label.read(os.path.join(self.dir, "merge-b", "adjudicator.json")))["name"], "judge")
+
+    def test_a_merge_with_no_record_is_read_by_the_runs_of_its_answers(self):
+        gold, transport, runner = self.judged()
+        os.remove(os.path.join(self.dir, "merge", "adjudicator.json"))
+        self.assertEqual(runner.judge("merge-b", [("one", False), ("two", False), ("spacy", True)],
+                                      settle_from="merge"), {})
+        other = self.runner(FakeTransport(answer_all), gold=gold, config=self.other_adjudicator())
+        with self.assertRaisesRegex(label.GoldError, "answers were given by the adjudicator judge"):
+            other.judge("merge-c", [("one", False), ("two", False), ("spacy", True)], settle_from="merge")
+        # A log that names no run says nothing about who answered, and is not settled from.
+        label.write(os.path.join(self.dir, "merge", "adjudicated.tsv"), "item\tanswer\nd1.2\tN.p\n")
+        with self.assertRaisesRegex(label.GoldError, "none that it records"):
+            runner.judge("merge-d", [("one", False), ("two", False), ("spacy", True)], settle_from="merge")
 
     def test_when_every_item_is_shared_the_adjudicator_is_not_called_at_all(self):
         gold, transport, runner = self.judged()
@@ -3218,7 +3260,7 @@ class HandoffTests(Base):
     def agent(**more):
         return {"harness": "claude-code", "version": "2.1.0", "agent_type": "general-purpose",
                 "model_reported": "claude-opus-5-5", "effort": "high",
-                "prompt_sha256": label.handoff_template_sha256(), **more}
+                "tools": "Read,Write", "prompt_sha256": label.handoff_template_sha256(), **more}
 
     def write_agent(self, run="r3", **more):
         label.write(os.path.join(self.folder(run), "agent.json"), json.dumps(self.agent(**more)))
@@ -3268,6 +3310,8 @@ class HandoffTests(Base):
                          ("stopped", "claude-code", "claude-code", "0.00000000"))
         self.assertEqual(row["reason"], "waiting on 1 handoff replies")
         self.assertEqual((row["prompt_tokens"], row["completion_tokens"], row["seconds"]), ("-", "-", "-"))
+        self.assertEqual((row["quantization"], row["price_in_per_m"], row["listing"]), ("-", "-", "-"),
+                         "a handoff run has none of these, and the table says `-`, not None")
 
     def test_the_whole_loop_with_a_retry_round_and_a_stale_reply_refused(self):
         with self.assertRaises(label.HandoffWait):
@@ -3309,7 +3353,9 @@ class HandoffTests(Base):
         self.assertEqual(len(rows), 2)
         meta = self.run_json("opus", "r3")
         self.assertEqual(meta["agent"], self.agent())
+        self.assertEqual(meta["agent"]["tools"], "Read,Write", "the tools the agents had are in the run's record")
         self.assertEqual(json.loads(row["settings"])["agent"], self.agent())
+        self.assertEqual(json.loads(row["settings"])["agent"]["tools"], "Read,Write")
         calls = [json.loads(line) for line in label.read(os.path.join(self.dir, "raw", "opus", "r3", "calls.jsonl")).splitlines()]
         self.assertEqual([c["prompt_tokens"] for c in calls], [None, None])
         self.assertEqual(self.transport.posts, [])
@@ -3333,6 +3379,7 @@ class HandoffTests(Base):
         self.answer()
         cases = [
             ({"effort": ""}, "lacks effort"),
+            ({"tools": ""}, "lacks tools"),
             ({"model_reported": "claude-sonnet-5-5"}, "claude-opus-5-5"),
             ({"prompt_sha256": "0" * 64}, "another agent prompt"),
         ]
@@ -3345,6 +3392,188 @@ class HandoffTests(Base):
             self.pass_()
         self.assertAlmostEqual(self.ledger().total(), self.spent)
         self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "opus", "r3", "part-01.reply.txt")))
+
+    def main_code(self, *more):
+        """`label.py judge --adjudicator opus` through main, which turns an ApiError into exit 2."""
+        out, err = io.StringIO(), io.StringIO()
+        with unittest.mock.patch.object(label, "load_config", return_value=copy.deepcopy(BOTH_CONFIG)), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.main(
+                ["judge", "--dir", self.dir, "--max-usd", "10", "--adjudicator", "opus", *more],
+                self.transport, self.gold,
+            )
+        return code, out.getvalue(), err.getvalue()
+
+    def test_a_run_has_one_agent_and_a_changed_agent_json_makes_the_pass_refuse(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer({"d2.3": "no bar"})
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        first = self.run_json("opus", "r3")["agent"]
+        self.assertEqual(first, self.agent())
+        # The coordinator upgrades Claude Code between rounds and rewrites agent.json.
+        self.write_agent(version="9.9.9")
+        self.answer()
+        spent = self.ledger().total()
+        with self.assertRaisesRegex(openrouter.ApiError, "now differs from the agent this run recorded \\(in version\\)"):
+            self.pass_()
+        self.assertEqual(self.run_json("opus", "r3")["agent"], first, "the record of the run is not overwritten")
+        self.assertEqual(json.loads(self.run_row()["settings"])["agent"]["version"], "2.1.0")
+        self.assertAlmostEqual(self.ledger().total(), spent)
+        calls = label.read(os.path.join(self.dir, "raw", "opus", "r3", "calls.jsonl")).splitlines()
+        self.assertEqual(len(calls), 1, "the reply of the second round was not taken")
+        code, _, err = self.main_code()
+        self.assertEqual(code, 2)
+        self.assertIn("a run has one agent", err)
+        self.assertIn("--again", err)
+        # Restored, the run goes on; or --again starts a new run, whose agent is the new one.
+        self.write_agent()
+        self.assertEqual(self.pass_(), {})
+        self.write_agent(version="9.9.9")
+        with self.assertRaises(label.HandoffWait):
+            self.runner(self.transport, gold=self.gold).judge("merge", self.voters, again=True)
+        self.assertEqual(self.run_json("opus", "r4").get("agent"), None)
+
+    def test_a_reply_that_is_not_utf8_or_is_empty_is_warned_about_and_the_item_stays_pending(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        reply = json.loads(label.read(self.requests()[0]))["reply_path"]
+        for content, why in ((b"d1.2: J | a w\xe9rd\n", "is not valid UTF-8"), (b"", "is empty"), (b" \n\n", "is empty")):
+            with open(reply, "wb") as handle:
+                handle.write(content)
+            self.warned.clear()
+            with self.assertRaisesRegex(label.HandoffWait, "waiting on 1 handoff replies"):
+                self.pass_()
+            self.assertEqual(len([w for w in self.warned if reply in w and why in w]), 1, self.warned)
+            self.assertEqual(self.requests(), [os.path.join(self.folder(), "part-01.request.json")])
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                code = label.command_handoff(
+                    label.parser().parse_args(["handoff", "--dir", self.dir, "--into", "merge"]), CONFIG)
+            self.assertEqual((code, out.getvalue().splitlines()), (0, self.requests()), "still listed as pending")
+            self.assertIn(reply, err.getvalue())
+            self.assertIn(why, err.getvalue())
+            code, _, err = self.command("--adjudicator", "opus")
+            self.assertEqual(code, label.EXIT_HANDOFF, err)
+        self.assertEqual(self.ledger().total(), self.spent)
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "opus", "r3", "part-01.reply.txt")))
+        # Written again as text, the reply is taken.
+        label.write(reply, "d1.2: J | a word\nd2.3: J | a word\n")
+        self.assertEqual(self.pass_(), {})
+
+    def test_a_pass_that_stops_on_an_error_leaves_the_requests_of_the_other_parts(self):
+        class Parts(FakeGold):
+            def merge(self, *args, **more):
+                out = super().merge(*args, **more)
+                label.write(os.path.join(args[0], args[1], "worklist-02.txt"), "Adjudicate.\n\nSlots:\nd3.2: \n")
+                return out
+
+        self.gold = Parts()
+        with self.assertRaisesRegex(label.HandoffWait, "waiting on 2 handoff replies"):
+            self.pass_()
+        names = ["part-01.request.json", "part-02.request.json"]
+        self.assertEqual([os.path.basename(p) for p in self.requests()], names)
+        # part-01 is answered, and agent.json is missing: the pass stops on that, in part-01, before it
+        # has written part-02 again.
+        first = json.loads(label.read(self.requests()[0]))
+        label.write(first["reply_path"], "d1.2: J | a word\nd2.3: J | a word\n")
+        with self.assertRaisesRegex(openrouter.ApiError, "agent.json"):
+            self.pass_()
+        self.assertEqual([os.path.basename(p) for p in self.requests()], names)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff(label.parser().parse_args(["handoff", "--dir", self.dir, "--into", "merge"]), CONFIG)
+        self.assertEqual(out.getvalue().splitlines(), [self.requests()[1]], "part-02 is still listed")
+        # A pass that gets to its end still removes what is no longer asked.
+        self.write_agent()
+        with self.assertRaisesRegex(label.HandoffWait, "waiting on 1 handoff replies"):
+            self.pass_()
+        # The worklist has one part now: the request of part-02 is no longer asked, and a pass that gets to
+        # its end removes it.
+        self.gold = FakeGold()
+        self.assertEqual(self.pass_(), {})
+        self.assertEqual([os.path.basename(p) for p in self.requests()], ["part-01.request.json"])
+
+    def test_a_voter_run_again_a_minimum_or_an_adjudicator_makes_a_new_adjudicator_run(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        scope = self.run_json("opus", "r3")["scope"]
+        self.assertEqual(scope["voter_runs"], [["one", "r1"], ["two", "r2"]])
+        self.assertEqual((scope["min_voters"], scope["adjudicator"]), (3, "opus"))
+        # The same command goes on in the same run.
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.assertEqual([r["run"] for r in self.runs_rows() if r["role"] == "adjudicator"], ["r3"])
+        # A voter run again has another run id, and so the adjudicator's run is another: it never reads
+        # the replies given to the older worklist.
+        self.write_agent()
+        self.answer()
+        self.runner(FakeTransport(answer_all), gold=self.gold).tag("one", again=True)
+        self.said.clear()
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.assertEqual([r["run"] for r in self.runs_rows() if r["role"] == "adjudicator"], ["r3", "r5"])
+        self.assertEqual(self.run_json("opus", "r5")["scope"]["voter_runs"], [["one", "r4"], ["two", "r2"]])
+        said = " ".join(self.said)
+        self.assertIn("opus r3 stopped for merge is not continued", said)
+        self.assertIn("voter_runs", said)
+        self.assertEqual(os.listdir(os.path.join(self.dir, "merge", "handoff")).count("r5"), 1)
+        self.assertEqual([n for n in os.listdir(self.folder("r5")) if n.endswith(".reply.txt")], [],
+                         "no reply of the older run is read for the new one")
+        # Another minimum is another run, and so is another adjudicator.
+        self.said.clear()
+        with self.assertRaises(label.HandoffWait):
+            self.runner(self.transport, gold=self.gold).judge("merge", self.voters, min_voters=2)
+        self.assertIn("min_voters", " ".join(self.said))
+        self.assertEqual(self.run_json("opus", "r6")["scope"]["min_voters"], 2)
+        self.said.clear()
+        config = copy.deepcopy(HANDOFF_CONFIG)
+        config["adjudicator"] = "judge"
+        answered = FakeTransport(lambda body, count: chat("d1.2: J | x\nd2.3: J | y", provider="Bare"))
+        super().runner(answered, config=config, gold=self.gold).judge("merge", self.voters)
+        self.assertIn("opus r", " ".join(self.said))
+        self.assertIn("adjudicator", " ".join(self.said))
+        self.assertEqual(self.run_row()["name"], "judge")
+
+    def test_a_finished_merge_is_not_judged_again_unless_asked(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer()
+        self.assertEqual(self.pass_(), {})
+        labelled = os.path.join(self.dir, "merge", "labelled.conllu")
+        self.assertTrue(os.path.isfile(labelled))
+        calls = list(self.gold.calls)
+        runs = self.runs_rows()
+        code, out, err = self.command("--adjudicator", "opus")
+        self.assertEqual(code, 0, err)
+        self.assertIn("already finished", out)
+        self.assertIn("--again", out)
+        self.assertTrue(os.path.isfile(labelled), "the labels are not deleted")
+        self.assertEqual(self.gold.calls, calls, "nothing is merged, read or finished again")
+        self.assertEqual(self.runs_rows(), runs)
+        self.assertEqual(self.requests("r4"), [])
+        self.assertEqual(self.transport.posts, [])
+        # --again redoes it: a new merge, a new run, and a round of requests.
+        code, _, err = self.command("--adjudicator", "opus", "--again")
+        self.assertEqual(code, label.EXIT_HANDOFF, err)
+        self.assertEqual([r["run"] for r in self.runs_rows() if r["role"] == "adjudicator"], ["r3", "r4"])
+        self.assertEqual(len(self.requests("r4")), 1)
+
+    def test_a_finished_merge_is_judged_again_when_what_it_depends_on_changed(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer()
+        self.assertEqual(self.pass_(), {})
+        # --trains yes is not what was finished.
+        calls = len(self.gold.calls)
+        with self.assertRaises(label.HandoffWait):
+            self.runner(self.transport, gold=self.gold).judge("merge", self.voters, trains="yes")
+        self.assertGreater(len(self.gold.calls), calls)
 
     def test_the_cap_is_not_reserved_against_for_a_handoff_call(self):
         with self.assertRaises(label.HandoffWait):

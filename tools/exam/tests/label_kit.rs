@@ -1446,6 +1446,101 @@ fn a_report_of_a_merge_with_no_min_voters_says_it_is_an_old_merge_and_reads_its_
 }
 
 #[test]
+fn a_report_versus_a_merge_of_another_rule_is_refused_unless_mixed_rules_is_given() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, gold) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    write(&dir.join("tags/spacy.conllu"), &outside_tagger("r2", &[]));
+    write(&dir.join("runs.tsv"), "run\tmodel\nr1\tone\nr2\tspacy\n");
+    for into in ["merge", "rival"] {
+        gold_ok(
+            &dir,
+            &[
+                "merge",
+                "--into",
+                into,
+                "--voter",
+                "one",
+                "--voter",
+                "spacy",
+                "--base-only",
+                "spacy",
+                "--min-voters",
+                "1",
+            ],
+        );
+        gold_ok(&dir, &["finish", "--into", into]);
+    }
+    let versus = ["report", "--gold", path(&gold), "--versus", "rival"];
+    // The same rule is compared as it always was.
+    let same = gold_ok(&dir, &versus);
+    assert!(
+        same.contains("pipeline less rival (percentage points, paired)"),
+        "{same}"
+    );
+    assert!(!same.contains("warning"), "{same}");
+    let voters = fs::read_to_string(dir.join("rival/voters.tsv")).unwrap();
+    let with_min = |text: &str, line: &str| -> String {
+        let body: Vec<&str> = text.lines().skip(1).collect();
+        format!("{line}{}\n", body.join("\n"))
+    };
+    // Another minimum is another rule.
+    fs::write(
+        dir.join("rival/voters.tsv"),
+        with_min(&voters, "# min_voters = 2\n"),
+    )
+    .unwrap();
+    let error = gold_fails(&dir, &versus);
+    assert!(
+        error.contains("this merge has min_voters 1 and rival has 2")
+            && error.contains("--mixed-rules"),
+        "{error}"
+    );
+    // With the flag it is made, under a warning that the report keeps.
+    let mixed = gold_ok(
+        &dir,
+        &[
+            "report",
+            "--gold",
+            path(&gold),
+            "--versus",
+            "rival",
+            "--mixed-rules",
+        ],
+    );
+    assert!(
+        mixed.starts_with("warning: --mixed-rules: this merge has min_voters 1 and rival has 2"),
+        "{mixed}"
+    );
+    assert!(mixed.contains("pipeline less rival"), "{mixed}");
+    let kept = fs::read_to_string(dir.join("merge/report.txt")).unwrap();
+    assert!(kept.starts_with("warning: --mixed-rules:"), "{kept}");
+    // A rival with no minimum recorded is unknown, and so is the merge reported when it has none.
+    fs::write(dir.join("rival/voters.tsv"), with_min(&voters, "")).unwrap();
+    let error = gold_fails(&dir, &versus);
+    assert!(error.contains("rival has unknown (old merge)"), "{error}");
+    fs::write(dir.join("rival/voters.tsv"), &voters).unwrap();
+    let mine = fs::read_to_string(dir.join("merge/voters.tsv")).unwrap();
+    fs::write(dir.join("merge/voters.tsv"), with_min(&mine, "")).unwrap();
+    let error = gold_fails(&dir, &versus);
+    assert!(
+        error.contains("this merge has min_voters unknown (old merge) and rival has 1"),
+        "{error}"
+    );
+    // Both unknown is still unknown: the two old merges' rules are not shown to be one.
+    fs::write(dir.join("rival/voters.tsv"), with_min(&voters, "")).unwrap();
+    let error = gold_fails(&dir, &versus);
+    assert!(
+        error.contains("unknown (old merge) and rival has unknown"),
+        "{error}"
+    );
+    // The flag does not stand alone.
+    let run = gold_cmd(&dir, &["report", "--gold", path(&gold), "--mixed-rules"]);
+    assert!(!run.status.success());
+}
+
+#[test]
 fn three_model_voters_must_answer_for_a_word_to_count_as_agreed() {
     let root = tempfile::tempdir().unwrap();
     let (dir, _) = setup(root.path());

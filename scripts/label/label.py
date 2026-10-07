@@ -39,6 +39,7 @@ in a state directory shared by every checkout (ledger.py). No error the runner p
 
 import argparse
 import datetime
+import glob
 import hashlib
 import json
 import math
@@ -90,6 +91,11 @@ CUT_OFF_STREAK = 3
 # and no other, so two scattered ones cannot do this to a part of more than four.
 SMALL_SPLIT = 4
 
+# How many model voters a word needs to count as agreed when `--min-voters` is not given: deslag-gold's
+# own default (`MIN_AGREEING_VOTERS` in tools/exam/src/bin/deslag-gold/voters.rs), which is what the
+# scope of an adjudicator run records for the merge, since the run is looked for before the merge is.
+MIN_AGREEING_VOTERS = 3
+
 # The exit code of a judge that wrote its requests and is waiting for the harness's replies.
 EXIT_HANDOFF = 6
 
@@ -104,8 +110,11 @@ ID_LINE = re.compile(r"^([*_`]*)([A-Za-z][\w.\-]*)[*_`]*\s*:[*_`]*\s*(.*)$")
 HANDOFF = "handoff"
 HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
 
+# Written in a merge directory: which adjudicator answers its items, for a merge that settles from it.
+ADJUDICATOR_RECORD = "adjudicator.json"
+
 # What `handoff/<run>/agent.json` must say about the agents that made the replies.
-AGENT_KEYS = ("harness", "version", "agent_type", "model_reported", "effort", "prompt_sha256")
+AGENT_KEYS = ("harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256")
 
 # The endpoint of a handoff model: not an OpenRouter listing, so a record of its own.
 CLAUDE_CODE_ENDPOINT = {"tag": "claude-code", "provider_name": "claude-code"}
@@ -179,6 +188,31 @@ def load_config(path=CONFIG):
 def read(path):
     with open(path, encoding="utf-8") as handle:
         return handle.read()
+
+
+def read_reply(path, warn=None):
+    """The text of a handoff reply file, stripped, or None when the item has no usable reply: the file
+    is not there, is empty, or is not valid UTF-8 (a subagent can write any bytes). Nothing is raised
+    for a bad file; `warn`, if given, is told its name and what is wrong, and the item stays pending."""
+    try:
+        with open(path, "rb") as handle:
+            raw = handle.read()
+    except FileNotFoundError:
+        return None
+    except OSError as error:
+        raise openrouter.ApiError(f"{path}: the reply cannot be read ({type(error).__name__})") from None
+    try:
+        text = raw.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        text = None
+        why = "is not valid UTF-8"
+    else:
+        why = "is empty"
+    if not text:
+        if warn:
+            warn(f"label: {path} {why}, so it is not read: the item stays pending until the file is written again")
+        return None
+    return text
 
 
 def is_handoff(model):
@@ -512,6 +546,7 @@ class Runner:
         self.ledger = ledger_module.open_ledger(self.root)
         self.budget = FailureBudget(self.settings["failure_budget"])
         self.cut = fresh_cut()
+        self.reply_warned = set()
         self.listings = {}
         self.commit = deslag_commit()
 
@@ -917,19 +952,31 @@ class Runner:
         """Where the requests and replies of a handoff run are: `<into>/handoff/<run>`."""
         return os.path.join(self.dir, meta["scope"]["into"], "handoff", meta["run"])
 
+    def reply_text(self, path):
+        """[read_reply] for this runner: a bad or empty reply file is warned about once in a pass."""
+        def warn(text):
+            if path not in self.reply_warned:
+                self.reply_warned.add(path)
+                self.warn(text)
+
+        return read_reply(path, warn)
+
     def clear_unanswered_requests(self, meta):
-        """Removes the request files of the run that have no reply beside them: a pass writes the
-        requests it needs afresh, so one that is no longer asked for, such as one of an older
-        worklist, is not left for the coordinator to answer. A request with its reply stays."""
+        """Removes the request files of the run that have no reply beside them and were not asked for
+        in this pass: a pass writes the requests it needs afresh, so one that is no longer asked for,
+        such as one of an older worklist, is not left for the coordinator to answer. A request with its
+        reply stays, and so does every request of a pass that did not get to the end (it stopped on an
+        error), since the requests it had yet to write are not known."""
         folder = self.handoff_dir(meta)
+        asked = {request for _, request, _ in self.cut["waiting"]}
         for name in os.listdir(folder) if os.path.isdir(folder) else []:
             if name.endswith(".request.json"):
                 request = os.path.join(folder, name)
                 try:
-                    reply = os.path.join(folder, json.loads(read(request)).get("reply_name", ""))
-                except ValueError:
-                    reply = ""
-                if not os.path.isfile(reply) or not read(reply).strip():
+                    reply = os.path.join(folder, json.loads(read(request))["reply_name"])
+                except (ValueError, KeyError, TypeError):
+                    reply = None
+                if request not in asked and (reply is None or self.reply_text(reply) is None):
                     os.remove(request)
 
     def read_agent(self, meta, config):
@@ -989,7 +1036,7 @@ class Runner:
         for other in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
             if re.fullmatch(rf"{re.escape(kind)}\.[0-9a-f]{{12}}\.reply\.txt", other) and other != reply_name:
                 self.warn(f"label: {name} {run} {kind}: {other} answers an older request, so it is not read")
-        text = read(reply_path).strip() if os.path.isfile(reply_path) else ""
+        text = self.reply_text(reply_path)
         if not text:
             request_path = os.path.join(folder, f"{kind}.request.json")
             write_atomic(request_path, json.dumps({
@@ -999,6 +1046,15 @@ class Runner:
             self.cut["waiting"].append((kind, request_path, reply_path))
             return PENDING
         agent = self.read_agent(meta, config)
+        if meta.get("agent") and meta["agent"] != agent:
+            # A run has one agent, as it has one endpoint: its replies already saved are recorded as
+            # made by the agent in run.json, and a file that says another now would rewrite that.
+            differing = [key for key in sorted({*meta["agent"], *agent}) if meta["agent"].get(key) != agent.get(key)]
+            raise openrouter.ApiError(
+                f"{name} {run}: {os.path.join(folder, 'agent.json')} now differs from the agent this run recorded "
+                f"(in {', '.join(differing)}), and a run has one agent, so no reply is read; restore the file as "
+                f"it was, or `--again` starts a new run"
+            )
         where = {
             "dir": os.path.relpath(self.dir, self.root), "run": run, "role": meta["role"], "name": name,
             "model": config["model"], "provider": endpoint["provider_name"],
@@ -1018,7 +1074,7 @@ class Runner:
         write(self.raw(name, run, f"{kind}.response.json"), json.dumps({
             "transport": HANDOFF, "reply_file": os.path.relpath(reply_path, self.dir), "agent": agent,
         }, indent=2) + "\n")
-        if meta.get("agent") != agent:
+        if not meta.get("agent"):
             self.update_run(name, run, agent=agent)
             meta["agent"] = agent
         write_atomic(saved, text + "\n")
@@ -1032,8 +1088,11 @@ class Runner:
 
     def stop_for_handoff(self, meta):
         """Raises HandoffWait if any call of this pass had no reply: the requests are written, and
-        nothing is checked until the replies are."""
+        nothing is checked until the replies are. The requests that are no longer asked for are removed
+        here, at the end of the pass, and not at its start, so that a pass that stops on an error leaves
+        every request as it was."""
         if self.cut["waiting"]:
+            self.clear_unanswered_requests(meta)
             raise HandoffWait(meta["name"], meta["run"], list(self.cut["waiting"]))
 
     def reject(self, meta, kind, request_sha256, response, error):
@@ -1055,7 +1114,7 @@ class Runner:
         path = os.path.join(os.path.dirname(run_json), "calls.jsonl")
         if os.path.isfile(path):
             calls = [json.loads(line) for line in read(path).splitlines() if line.strip()]
-        row = {key: meta.get(key, "-") for key in RUN_COLUMNS}
+        row = {key: "-" if meta.get(key) is None else meta[key] for key in RUN_COLUMNS}
         row["status"] = run_status(meta)
         row["reason"] = run_reason(meta, row["status"])
         models = sorted({call["reply_model"] for call in calls if call.get("reply_model")})
@@ -1380,6 +1439,29 @@ class Runner:
             except EndpointExhausted as error:
                 endpoint, resume, again = self.fall_back(error, tried), None, True
 
+    def say_other_scopes(self, into, name, scope):
+        """Says which stopped adjudicator runs of this merge directory are not continued, and why: their
+        scope (voters and their runs, `min_voters`, spaCy, settling, the adjudicator) is not this one's,
+        so a new run starts. The case to see is a rerun without the `--adjudicator` of the first pass,
+        or after a voter was run again."""
+        found = []
+        for path in glob.glob(os.path.join(self.dir, "raw", "*", "r*", "run.json")):
+            meta = json.loads(read(path))
+            other = meta.get("scope") or {}
+            if (
+                meta.get("role") == "adjudicator" and not meta.get("complete") and not meta.get("abandoned")
+                and not meta.get("failed") and other.get("into") == into and other != scope
+            ):
+                found.append(meta)
+        if found:
+            latest = max(found, key=lambda meta: int(meta["run"][1:]))
+            differs = [key for key in sorted({*latest["scope"], *scope}) if latest["scope"].get(key) != scope.get(key)]
+            self.say(
+                f"{name}: {latest['name']} {latest['run']} stopped for {into} is not continued: its scope differs "
+                f"from this one's in {', '.join(differs)}, so a new run starts (`--adjudicator {latest['name']}` "
+                f"asks for that model; a changed voter run or `--min-voters` is a new worklist)"
+            )
+
     def adjudicate_run(self, into, resume, again, scope, endpoint):
         folder = os.path.join(self.dir, into)
         parts = [
@@ -1390,6 +1472,8 @@ class Runner:
             resume = self.incomplete_run(name, "adjudicator", scope, endpoint)
             if resume:
                 self.say(f"{name}: continuing {resume}, which stopped before its end; --again starts a new run")
+            else:
+                self.say_other_scopes(into, name, scope)
         meta, endpoint, config = self.start_run(name, "adjudicator", resume, scope=scope, endpoint=endpoint)
         run = meta["run"]
         self.say(f"{name} {run}: {len(parts)} parts to {config['model']} at {endpoint['tag']}")
@@ -1399,8 +1483,6 @@ class Runner:
         if meta.get("finished"):
             # Continued after a finish that left items open: it is not finished again until it is.
             self.update_run(name, run, finished=False, open_items=None)
-        if is_handoff(config):
-            self.clear_unanswered_requests(meta)
         try:
             for number, path in enumerate(parts, 1):
                 self.ask_part(meta, endpoint, config, read(path), f"part-{number:02d}")
@@ -1431,6 +1513,8 @@ class Runner:
                     f"{len(open_items)} are still open"
                 )
                 self.update_run(name, run, cut_off={"calls": self.cut["calls"], "open_items": len(open_items)})
+            if is_handoff(config):
+                self.clear_unanswered_requests(meta)
             if not open_items:
                 self.mark_complete(meta)
             else:
@@ -1484,6 +1568,77 @@ class Runner:
             )
         return settled
 
+    def adjudicator_record(self):
+        """Who adjudicates this merge: the name in voters.json and the model it pins."""
+        name = self.config["adjudicator"]
+        return {"name": name, "model": self.config["models"][name]["model"]}
+
+    def judge_scope(self, into, voters, settle_from, same_votes, min_voters):
+        """What an adjudicator run is for: the merge directory, the voters with the run each one's tags
+        file names, `min_voters`, the spaCy mode, `settle_from`, `same_votes` and the adjudicator. A
+        run is continued only for the same scope, so a voter run again, another minimum or another
+        adjudicator starts a new run, and no answer given to an older worklist is read back."""
+        runs = []
+        for name, _ in voters:
+            path = os.path.join(self.dir, "tags", f"{name}.conllu")
+            found = sorted(set(re.findall(r"Runs\s*=\s*(r\d+)", read(path)))) if os.path.isfile(path) else []
+            runs.append([name, ",".join(found) or "-"])
+        return {
+            "into": into, "voters": [name for name, _ in voters],
+            "spacy": any(base_only for _, base_only in voters), "settle_from": settle_from,
+            "same_votes": same_votes, "voter_runs": runs,
+            "min_voters": MIN_AGREEING_VOTERS if min_voters is None else min_voters,
+            "adjudicator": self.config["adjudicator"],
+        }
+
+    def finished_run(self, into, scope, trains):
+        """The id of the adjudicator's run that finished this merge for this scope, if `into` still has
+        its labels: complete with no item open, finished with the same `--trains`. None otherwise."""
+        name = self.config["adjudicator"]
+        run = self.latest_run(name, "adjudicator", True, scope)
+        if run is None or not os.path.isfile(os.path.join(self.dir, into, "labelled.conllu")):
+            return None
+        meta = json.loads(read(self.raw(name, run, "run.json")))
+        if meta.get("finished") and not meta.get("open_items") and meta.get("trains", "no") == trains:
+            return run
+        return None
+
+    def adjudicators_of(self, merge):
+        """The (name, model) pairs of the adjudicators that answered the items of the merge directory
+        `merge`: the one its `adjudicator.json` records or, for a merge made before it was, those of the
+        runs named in its `adjudicated.tsv`. Empty if neither says."""
+        record = os.path.join(self.dir, merge, ADJUDICATOR_RECORD)
+        if os.path.isfile(record):
+            saved = json.loads(read(record))
+            return {(saved["name"], saved["model"])}
+        found = set()
+        log = os.path.join(self.dir, merge, "adjudicated.tsv")
+        lines = read(log).splitlines() if os.path.isfile(log) else []
+        # `run` is the last column of the log, when it has one.
+        has_run = bool(lines) and lines[0].split("\t")[-1] == "run"
+        runs = {line.split("\t")[-1] for line in lines[1:]} if has_run else set()
+        runs = {run for run in runs if re.fullmatch(r"r\d+", run)}
+        for run in runs:
+            for path in glob.glob(os.path.join(self.dir, "raw", "*", run, "run.json")):
+                meta = json.loads(read(path))
+                if meta.get("role") == "adjudicator":
+                    found.add((meta["name"], meta["model"]))
+        return found
+
+    def check_settle_adjudicator(self, settle_from):
+        """Refuses to settle from a merge whose answers another adjudicator gave: the items would be
+        decided by two models under one merge. `--adjudicator NAME` picks the earlier one."""
+        now = (self.config["adjudicator"], self.config["models"][self.config["adjudicator"]]["model"])
+        before = self.adjudicators_of(settle_from)
+        if before == {now}:
+            return
+        shown = ", ".join(f"{name} ({model})" for name, model in sorted(before)) or "none that it records"
+        raise GoldError(
+            f"--settle-from {settle_from}: its answers were given by the adjudicator {shown}, and this merge's "
+            f"adjudicator is {now[0]} ({now[1]}), so one merge would hold the answers of two; `--adjudicator` "
+            f"names the earlier one, or judge a plain merge"
+        )
+
     def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False, endpoint=None,
               same_votes=False, strict=False, min_voters=None):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
@@ -1496,31 +1651,43 @@ class Runner:
         other voters' codes in view is not this merge's). With `same_votes`, only an answer to an item
         the earlier merge showed with the very same codes from every voter is settled so: for a voter
         run again, whose codes may have changed, the adjudicator is asked again whenever what it would
-        see has changed. `min_voters` is the minimum of model voters for a word to count as agreed, if
-        not deslag-gold's own (three).
+        see has changed. The earlier merge's answers must have been given by this merge's adjudicator
+        (its `adjudicator.json`, or the runs in its log), or it is refused. `min_voters` is the minimum
+        of model voters for a word to count as agreed, if not deslag-gold's own (three).
+
+        A merge that is already finished, as `finished_run` says, is not judged again unless `again`:
+        nothing is merged, asked or deleted.
 
         An item still open after the adjudicator's retries does not stop the finish, unless `strict`:
         the word is left out of `labelled.conllu` with its whole sentence, `unsettled.tsv` lists it,
         and the items are returned for the caller to count."""
         settled = self.settle_path(into, settle_from) if settle_from is not None else None
+        if settle_from is not None:
+            self.check_settle_adjudicator(settle_from)
         for name, base_only in voters:
             if not base_only:
                 self.check_tags_run(name)
+        scope = self.judge_scope(into, voters, settle_from, same_votes, min_voters)
+        if not again and resume is None:
+            done = self.finished_run(into, scope, trains)
+            if done:
+                self.say(
+                    f"{into} is already finished: {self.config['adjudicator']} {done} adjudicated this merge "
+                    f"(same voters, runs and rules) and {into}/labelled.conllu is written, so nothing is merged, "
+                    f"asked or deleted; --again redoes it"
+                )
+                return {}
         # With `--trains yes` the merge itself refuses what `finish` would, before any adjudicator call.
         out = self.gold.merge(
             self.dir, into, voters, self.settings["per_part"], settled, same_votes, min_voters, trains
         )
+        write_atomic(os.path.join(self.dir, into, ADJUDICATOR_RECORD), json.dumps(self.adjudicator_record(), indent=2) + "\n")
         self.say(out.rstrip())
         folder = os.path.join(self.dir, into)
         parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
         open_items = {}
         adjudicator_run = None
         if parts:
-            scope = {
-                "into": into, "voters": [name for name, _ in voters],
-                "spacy": any(base_only for _, base_only in voters), "settle_from": settle_from,
-                "same_votes": same_votes,
-            }
             adjudicator_run, open_items = self.adjudicate(into, resume, again, scope, endpoint)
         else:
             self.say("nothing is left for the adjudicator")
@@ -1534,7 +1701,9 @@ class Runner:
         if adjudicator_run:
             # The labels are written around the open items: the adjudicator's run is finished, and
             # runs.tsv says `complete` with how many items were open, not `stopped`.
-            self.update_run(self.config["adjudicator"], adjudicator_run, finished=True, open_items=len(open_items))
+            self.update_run(
+                self.config["adjudicator"], adjudicator_run, finished=True, open_items=len(open_items), trains=trains
+            )
             self.write_runs()
         return open_items
 
@@ -1673,7 +1842,7 @@ def report_handoff_wait(error, arguments):
     return EXIT_HANDOFF
 
 
-def pending_requests(directory, into):
+def pending_requests(directory, into, warn=None):
     """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
     yet, in the order of their numbers: what the coordinator still has to have answered."""
     base = os.path.join(directory, into, "handoff")
@@ -1690,7 +1859,7 @@ def pending_requests(directory, into):
             reply = os.path.join(folder, json.loads(read(request))["reply_name"])
         except (ValueError, KeyError):
             raise GoldError(f"{request} is not a request file this runner wrote") from None
-        if not os.path.isfile(reply) or not read(reply).strip():
+        if read_reply(reply, warn) is None:
             pending.append(request)
     return pending
 
@@ -1699,7 +1868,10 @@ def command_handoff(arguments, config, transport=None, gold=None):
     directory = guard.check_dir(arguments.dir)
     if not re.fullmatch(r"[A-Za-z0-9_\-]+", arguments.into):
         raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{arguments.into}`")
-    for request in pending_requests(directory, arguments.into):
+    def warned(text):
+        print(text, file=sys.stderr)
+
+    for request in pending_requests(directory, arguments.into, warned):
         print(request)
     return 0
 

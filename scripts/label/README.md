@@ -134,7 +134,12 @@ A merge whose `voters.tsv` has no `# min_voters` line (one made before it was re
 settled from, and the report says "min_voters unknown (old merge)" for it; merge again.
 With two model voters (a `--voter` subset) every word goes to the adjudicator unless `--min-voters 2`.
 
-`--settle-from NAME` reuses an earlier merge's adjudicated answers. With `--spacy` or `--settle-from`
+`--settle-from NAME` reuses an earlier merge's adjudicated answers, all of them given by this merge's
+adjudicator: every merge records its adjudicator (name and model) in `<into>/adjudicator.json`, and
+`judge` refuses to settle from a merge whose adjudicator is another (for a merge made before the record,
+the runs in its `adjudicated.tsv` say who answered; a log that names none is not settled from).
+`--adjudicator NAME` picks the earlier one. So `--spacy` under the default `opus` refuses to reuse a Sonnet
+merge's answers. With `--spacy` or `--settle-from`
 an item is settled by item, and the earlier merge's model voters must be the same (voter name, run id)
 pairs and `min_voters` as this merge's: a voter run again with `--again` has a new run id, so the
 merge refuses and the items are asked again by a merge without `--settle-from`. Without `--spacy` the
@@ -150,7 +155,20 @@ worklist shows with the very same codes from every voter, in order (the same vot
 A merge that rewrites its directory removes every file of the earlier run it will write again, its
 `adjudicated.tsv` and `labelled.conllu` among them, so a stale answer is never read back.
 `report --into merge-spacy --versus merge` gives the paired difference; the earlier merge's labelled
-file and worklist are all it reads of it.
+file, worklist and `voters.tsv` are all it reads of it. The two merges must have been made with the same
+`min_voters`, and both must record it: otherwise the difference would be the rule's as well as the
+adjudicator's, and `--versus` refuses, naming the two minimums. A merge made before the minimum was recorded
+is unknown, not equal to anything. `--mixed-rules` compares them anyway and starts `report.txt` with a
+`warning: --mixed-rules` line.
+
+An adjudicator run is continued only for its own scope: the merge directory, each voter with the run its
+tags file names, `min_voters`, spaCy, `--settle-from` and the adjudicator. A voter run again, another
+`--min-voters` or another `--adjudicator` therefore starts a new run (and says which stopped run it did
+not continue, and what differs), so a rerun never reads replies given to an older worklist; repeat the
+`--adjudicator` of the first pass to find its run. Running `judge` again on a merge that is finished
+(`labelled.conllu` written, the adjudicator's run complete with no item open, the same scope and
+`--trains`) does nothing: it says "already finished", deletes nothing, asks nothing and exits 0.
+`--again` redoes it.
 
 Exit codes: 6 a handoff judge is waiting on its replies (below); 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter, unless more than `abstain_limit` abstained, which is exit
@@ -235,15 +253,33 @@ The loop, one pass of `judge` at a time:
    `label.py handoff-agent --request PATH` prints the prompt for the subagent of one (`prompts/handoff-agent.md`
    with `{request}` filled); one subagent per request, all of a round at once.
 3. Each subagent writes only the answer lines to the `reply_path` its request names,
-   `<call>.<12 hex of request_sha256>.reply.txt`, and returns its exact model id. The coordinator writes
-   `handoff/<run>/agent.json` with `harness`, `version`, `agent_type`, `model_reported` (the id the agents
-   returned), `effort` and `prompt_sha256` (`label.py handoff-agent --sha256`, the template as it is on disk).
-4. The coordinator runs the same command again. A reply is read only with an `agent.json` that has every key,
-   a `model_reported` that is the pinned model (or a dated version), and the template's current sha256.
-   An accepted reply is saved into `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at cost 0
-   with provider `claude-code` and tokens `-`, and `agent.json` goes into `run.json` and the `settings` of
-   `runs.tsv` (tokens and seconds there are `-`, which is not 0). Items still open go to a retry round, which is
-   a new set of requests and another exit 6, until none are or the retries are spent.
+   `<call>.<12 hex of request_sha256>.reply.txt`, and returns its exact model id. The coordinator answers
+   each request by running a headless Claude Code process with only the two tools it needs, one per request
+   and all of a round at once:
+
+   ```
+   label.py handoff-agent --request PATH | claude -p --model claude-opus-5-5 --tools Read,Write --strict-mcp-config
+   ```
+
+   `--tools Read,Write` gives the process no shell, and `--strict-mcp-config` no MCP server, since the
+   request holds sentences from the corpus, which may read like instructions. The coordinator writes
+   `handoff/<run>/agent.json` with `harness`, `version`, `agent_type` (free text), `model_reported` (the id the
+   agents returned), `effort`, `tools` (free text, the tools the processes had: `Read,Write`) and
+   `prompt_sha256` (`label.py handoff-agent --sha256`, the template as it is on disk).
+4. The coordinator runs the same command again, only after every process of the round has returned. A reply
+   is read only with an `agent.json` that has every key, a `model_reported` that is the pinned model (or a
+   dated version), and the template's current sha256. A run has one agent: the first reply accepted fixes
+   the run's agent record from `agent.json`, and a later `agent.json` that differs makes the pass refuse
+   (exit 2; restore the file, or `--again` starts a new run). An accepted reply is saved into
+   `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at cost 0 with provider `claude-code` and
+   tokens `-`, and `agent.json` goes into `run.json` and the `settings` of `runs.tsv` (tokens and seconds there
+   are `-`, which is not 0). Items still open go to a retry round, which is a new set of requests and another
+   exit 6, until none are or the retries are spent.
+
+A reply file that is empty or not valid UTF-8 is not read: `judge` and `handoff` warn, naming the file, and the
+item stays pending (its request is still listed by `handoff`, and the pass exits 6), until the file is written
+again. A pass that stops on an error leaves every request file as it was; the requests no longer asked for are
+removed by a pass that reaches its end.
 
 The request is `{"model", "messages": [system, user], "request_sha256", "call", "run", "reply_name",
 "reply_path"}`; the hash is the sha256 of the canonical JSON (sorted keys, no spaces) of `model` and

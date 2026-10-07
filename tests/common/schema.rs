@@ -1,6 +1,8 @@
 //! A check that a JSON value fits a JSON schema, for the schemas deslag prints. It knows only the
 //! keywords those schemas use, and fails on any other, so a schema that grows a new one is noticed.
 
+use std::collections::BTreeSet;
+
 use serde_json::Value;
 
 /// The keywords the schemas deslag prints use, which are all `misfit` knows.
@@ -135,4 +137,58 @@ pub fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<S
         }
     }
     None
+}
+
+/// The property paths of a schema, with `[]` for an array's items: `md.overrides[].globs`.
+///
+/// An override's `lints` table is the same table as `md.lints`, so its paths are folded onto
+/// `md.lints`, and a setting appears once however many places the config takes it.
+pub struct SchemaPaths {
+    /// Every path, containers included.
+    pub all: BTreeSet<String>,
+    /// The paths with nothing under them.
+    pub leaves: BTreeSet<String>,
+}
+
+impl SchemaPaths {
+    /// The paths of `root`, the whole schema.
+    pub fn of(root: &Value) -> SchemaPaths {
+        let mut paths = SchemaPaths {
+            all: BTreeSet::new(),
+            leaves: BTreeSet::new(),
+        };
+        paths.walk(root, root, "");
+        paths
+    }
+
+    fn walk(&mut self, root: &Value, schema: &Value, path: &str) {
+        let schema = resolve(root, schema.pointer("/anyOf/0").unwrap_or(schema));
+        let items = schema
+            .get("items")
+            .map(|items| resolve(root, items))
+            .filter(|items| items.get("properties").is_some());
+        let (children, container) = match (schema.get("properties"), items) {
+            (Some(properties), _) => (properties.as_object().cloned(), true),
+            (None, Some(_)) => (None, true),
+            (None, None) => (None, false),
+        };
+        if !path.is_empty() {
+            let folded = path.replacen("md.overrides[].lints", "md.lints", 1);
+            self.all.insert(folded.clone());
+            if !container {
+                self.leaves.insert(folded);
+            }
+        }
+        for (key, child) in children.into_iter().flatten() {
+            let at = if path.is_empty() {
+                key
+            } else {
+                format!("{path}.{key}")
+            };
+            self.walk(root, &child, &at);
+        }
+        if let Some(items) = items {
+            self.walk(root, items, &format!("{path}[]"));
+        }
+    }
 }

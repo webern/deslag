@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-05
+updated: 2026-10-07
 subsystems:
   - tests
 max_size_bytes: 4096
@@ -49,7 +49,8 @@ The whole corpus then runs in its real layout under a budget, an emphasis limit,
 and density, and the binary must report what the library finds. Tokens and sentences must keep to
 their blocks, and each location found under the golden config must hold what it names.
 
-`make test-scripts` runs `scripts/blobstore/test_batches.py` against local git repositories.
+`make test-python` runs `scripts/blobstore/test_batches.py` against local git repositories. It is
+not in `test` or `ci`.
 
 ## The golden set
 

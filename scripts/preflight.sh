@@ -20,7 +20,7 @@ need rustup "https://rustup.rs"
 need cargo "installed by rustup"
 need typos "cargo install typos-cli, or brew install typos-cli"
 need git "https://git-scm.com/downloads; the --diff tests build repositories"
-need python3 "https://www.python.org/downloads; make test-scripts, and collect.py, need it"
+need python3 "https://www.python.org/downloads; make test-python, and collect.py, need it"
 
 if [ "$missing" -ne 0 ]; then
     echo "run make install to install what it can, or install what is listed above, then run make again" >&2

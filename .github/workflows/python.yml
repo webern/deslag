@@ -1,0 +1,51 @@
+name: python
+
+# make test-python takes minutes of git, so it runs only when the scripts it tests, or how it is
+# run, change. make ci leaves it out; the release runs it beside make ci.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/blobstore/**"
+      - "scripts/llm-detection/**"
+      - "scripts/preflight.sh"
+      - "Makefile"
+      - ".github/workflows/python.yml"
+  pull_request:
+    paths:
+      - "scripts/blobstore/**"
+      - "scripts/llm-detection/**"
+      - "scripts/preflight.sh"
+      - "Makefile"
+      - ".github/workflows/python.yml"
+
+# A new push to the same branch supersedes the run in progress.
+concurrency:
+  group: python-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-python:
+    strategy:
+      fail-fast: false
+      matrix:
+        # collect.py starts its workers afresh on macOS, and on Linux from Python 3.14.
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      # make preflight runs first here as in every gate, and it checks for typos, which this job
+      # does not otherwise use. Keep it: it is how a machine learns what it lacks.
+      - name: Install typos
+        uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      - name: Test the scripts
+        run: make test-python

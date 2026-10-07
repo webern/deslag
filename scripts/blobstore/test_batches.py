@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tests of how batches are built and published: collect.py's manifests, `batch` and `complete`,
 and batches.sh's build, bundle, unbundle and pin-lock. They run offline, against git repositories
-made here, with `make test-scripts`, which `make test` and `make ci` include. Python 3, standard
-library only, like the script it tests."""
+made here, with `make test-python`, which the python workflow runs when these scripts change; `make
+test` and `make ci` leave it out. Python 3, standard library only, like the script it tests."""
 
 import hashlib
 import json

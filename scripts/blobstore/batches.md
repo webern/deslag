@@ -157,4 +157,5 @@ gives one batch. A fixture's path is `FILE/row-N.md` and its text is the cell as
 
 ## Tests
 
-`make test-scripts` runs `test_batches.py` beside this file, offline, against local repositories.
+`make test-python` runs `test_batches.py` beside this file, offline, against local repositories. It
+is not in `make test` or `make ci`; the python workflow runs it when these scripts change.

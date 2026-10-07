@@ -49,3 +49,9 @@ rust-version = "1.85"
 
 [workspace.lints.rust]
 missing_docs = "warn"
+
+# The tests of `make ci-fast`: the dev profile, debug assertions included, with enough
+# optimisation that tagging the corpus takes seconds, not a minute. Built in target/fast.
+[profile.fast]
+inherits = "dev"
+opt-level = 1

@@ -8,15 +8,18 @@
 //! ```text
 //! deslag/
 //!   Makefile     <- every build, test and check
-//!   src/lint/    <- running the lints; a description too long for its
-//!                   line continues on the next, aligned under it
+//!   src/lint/    <- running the lints
 //! ```
 //!
+//! An entry is one line. A description that goes on to the next line, aligned under it, is
+//! [`Malformed::Continued`]: the section is an index, and a description that does not fit is too
+//! long for one.
+//!
 //! A first line naming the root, unindented, one word and ending in `/`, is not an entry. A blank
-//! line is skipped, and ends the description above. Every entry's path starts in the first
-//! entry's column and every `<-` sits in the first entry's column. A path is relative to the
-//! directory of the Markdown file, and one ending in `/` must be a directory. Paths are looked up
-//! on disk, so a path git ignores, such as a build directory, passes only where it has been built.
+//! line is skipped. Every entry's path starts in the first entry's column and every `<-` sits in
+//! the first entry's column. A path is relative to the directory of the Markdown file, and one
+//! ending in `/` must be a directory. Paths are looked up on disk, so a path git ignores, such as
+//! a build directory, passes only where it has been built.
 //!
 //! A file fails when it has no such section or block, when it lists too few or too many entries,
 //! when a line is too wide, trailing whitespace aside, or out of format ([`Malformed`]), or when a
@@ -115,8 +118,10 @@ pub enum Problem {
 /// How a line of the layout is out of format. Columns are 1-based and counted in characters.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Malformed {
-    /// The line is neither an entry nor a description continued under the one above.
+    /// The line is not an entry.
     Stray,
+    /// The line continues the description of the entry above it. An entry is one line.
+    Continued,
     /// The text before `<-` is not one path.
     NotOnePath,
     /// The entry has no description.
@@ -376,10 +381,12 @@ impl Problem {
 impl Malformed {
     fn describe(&self) -> String {
         match self {
-            Malformed::Stray => format!(
-                "this is neither an entry, `path  {ARROW} what it holds`, nor a description \
-                 continued from the line above and aligned under it"
-            ),
+            Malformed::Stray => {
+                format!("this is not an entry, `path  {ARROW} what it holds`")
+            }
+            Malformed::Continued => "this continues the description above; an entry must fit on \
+                                     one line, so shorten the description"
+                .to_string(),
             Malformed::NotOnePath => format!("the text before `{ARROW}` must be one path"),
             Malformed::NoDescription { path } => {
                 format!("{path} has no description after `{ARROW}`")
@@ -453,8 +460,9 @@ fn default_advice(path: &str, heading: &str, range: &str, max_width: u64) -> Str
          ```\n\
          \n\
          The first line naming the root is optional. Every path starts in one column, every \
-         `{ARROW}` sits in one column, every entry has a description, and no line is wider than \
-         {max_width} characters. Paths must exist, and one ending in `/` must be a directory.\n\
+         `{ARROW}` sits in one column, every entry has a description, and every entry is one line, \
+         no wider than {max_width} characters; a description does not continue on the next line. \
+         Paths must exist, and one ending in `/` must be a directory.\n\
          \n\
          Do not change the limits or the heading to get past this check. Only a human can tell \
          you to do that, and I am a linter, not a human."
@@ -535,6 +543,7 @@ struct Reader {
     /// The 0-based column of the first entry's `<-`.
     arrow_column: Option<usize>,
     /// The 0-based column the description above starts in, where a line continuing it starts.
+    /// A blank line, or a line that is not under it, ends the description.
     description_column: Option<usize>,
 }
 
@@ -553,7 +562,11 @@ impl Reader {
             && row.split_whitespace().count() == 1
             && row.trim_end().ends_with('/');
         self.started = true;
-        if is_root || self.description_column == Some(indent) {
+        if is_root {
+            return;
+        }
+        if self.description_column == Some(indent) {
+            self.malformed.push((location, Malformed::Continued));
             return;
         }
 

@@ -6,7 +6,7 @@
     {
       "path": "AGENTS.md",
       "lint": "repo_layout",
-      "report": "ERROR: deslag detected a broken repository layout!\n\nAGENTS.md has 12 problems in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and no line is wider than 80 characters. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  the layout lists 10 entries; it must list between 1 and 5\n  line 11: the path starts in column 4; the first entry's starts in column 3\n  line 11: src/main.rs does not exist\n  line 12: `<-` is in column 16; the first entry's is in column 17\n  line 13: the line is 110 characters wide; shorten it to 80 or fewer\n  line 14: gone.rs does not exist\n  line 15: Makefile/ ends in / but is not a directory\n  line 16: /etc/hosts must be relative, not absolute\n  line 17: the text before `<-` must be one path\n  line 18: README.md has no description after `<-`\n  line 19: this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it\n  line 20: this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nAGENTS.md has 12 problems in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  the layout lists 10 entries; it must list between 1 and 5\n  line 11: the path starts in column 4; the first entry's starts in column 3\n  line 11: src/main.rs does not exist\n  line 12: `<-` is in column 16; the first entry's is in column 17\n  line 13: the line is 110 characters wide; shorten it to 80 or fewer\n  line 14: gone.rs does not exist\n  line 15: Makefile/ ends in / but is not a directory\n  line 16: /etc/hosts must be relative, not absolute\n  line 17: the text before `<-` must be one path\n  line 18: README.md has no description after `<-`\n  line 19: this is not an entry, `path  <- what it holds`\n  line 20: this is not an entry, `path  <- what it holds`",
       "marks": [
         {
           "kind": "evidence",
@@ -116,7 +116,7 @@
           "column": 1,
           "end_line": 19,
           "end_column": 39,
-          "note": "this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it"
+          "note": "this is not an entry, `path  <- what it holds`"
         },
         {
           "kind": "occurrence",
@@ -126,7 +126,7 @@
           "column": 1,
           "end_line": 20,
           "end_column": 32,
-          "note": "this is neither an entry, `path  <- what it holds`, nor a description continued from the line above and aligned under it"
+          "note": "this is not an entry, `path  <- what it holds`"
         }
       ]
     }

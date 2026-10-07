@@ -1,5 +1,5 @@
-`repo_layout` fails a file without a short, true index of the repository. It suits AGENTS.md
-alone, so turn it on in an override.
+`repo_layout` fails a file without a short, true index of the repository, one `path  <- what it
+holds` line per entry. It suits AGENTS.md alone, so turn it on in an override.
 
 ```toml
 [[md.overrides]]

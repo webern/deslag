@@ -1,6 +1,6 @@
 ERROR: deslag detected a broken repository layout!
 
-AGENTS.md has 12 problems in its "Repository layout" section.
+AGENTS.md has 1 problem in its "Repository layout" section.
 
 The "Repository layout" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory AGENTS.md is in, like this:
 
@@ -18,17 +18,6 @@ The first line naming the root is optional. Every path starts in one column, eve
 Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
 The problems:
-  the layout lists 10 entries; it must list between 1 and 5
-  line 11: the path starts in column 4; the first entry's starts in column 3
-  line 11: src/main.rs does not exist
-  line 12: `<-` is in column 16; the first entry's is in column 17
-  line 13: the line is 110 characters wide; shorten it to 80 or fewer
-  line 14: gone.rs does not exist
-  line 15: Makefile/ ends in / but is not a directory
-  line 16: /etc/hosts must be relative, not absolute
-  line 17: the text before `<-` must be one path
-  line 18: README.md has no description after `<-`
-  line 19: this is not an entry, `path  <- what it holds`
-  line 20: this is not an entry, `path  <- what it holds`
+  line 11: this continues the description above; an entry must fit on one line, so shorten the description
 
-deslag: 1 of 3 Markdown files with a broken repository layout.
+deslag: 1 of 2 Markdown files with a broken repository layout.

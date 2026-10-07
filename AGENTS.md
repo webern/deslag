@@ -19,7 +19,7 @@ deslag/
   src/document/        <- a file read once into blocks, tokens and sentences, which the lints read
   src/parse/           <- the keys a file declares in its frontmatter, such as its byte budget
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
-  tests/               <- tests, see `tests/AGENTS.md` 
+  tests/               <- tests, see `tests/AGENTS.md`
   tools/               <- not published; training and project tools; see tools/AGENTS.md
   scripts/             <- build, lint and utility scripts
   docs/design/         <- design docs; the /deslag-design-docs skill says who owns which

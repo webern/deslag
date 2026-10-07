@@ -19,11 +19,14 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import threading
+import time
 import unittest
 import unittest.mock
 
+import confine
 import guard
 import label
 import ledger
@@ -3474,9 +3477,8 @@ class HandoffTests(Base):
 
     @staticmethod
     def agent(**more):
-        return {"harness": "claude-code", "version": "2.1.0", "agent_type": "general-purpose",
-                "model_reported": "claude-opus-5-5", "effort": "high",
-                "tools": "Read,Write", "prompt_sha256": label.handoff_template_sha256(), **more}
+        """The agent.json handoff-run writes."""
+        return {**label.agent_record("2.1.0", "claude-opus-5-5", confine.arguments("claude-opus-5-5")), **more}
 
     def write_agent(self, run="r3", **more):
         label.write(os.path.join(self.folder(run), "agent.json"), json.dumps(self.agent(**more)))
@@ -3598,6 +3600,12 @@ class HandoffTests(Base):
             ({"tools": ""}, "lacks tools"),
             ({"model_reported": "claude-sonnet-5-5"}, "claude-opus-5-5"),
             ({"prompt_sha256": "0" * 64}, "another agent prompt"),
+            ({"safe_mode": False}, "lacks safe_mode"),
+            ({"safe_mode": "yes"}, "does not record the confined process"),
+            ({"args": ["-p", "--model", "claude-opus-5-5", "--tools", "Read,Write"]}, "does not record the confined process"),
+            ({"args": []}, "lacks args"),
+            ({"cwd": ""}, "lacks cwd"),
+            ({"tools": "Read,Write,Bash"}, "other tools"),
         ]
         for more, message in cases:
             self.write_agent(**more)
@@ -3935,6 +3943,492 @@ class HandoffTests(Base):
             judges = [line for line in done.stdout.splitlines() if "label.py judge" in line]
             self.assertTrue(judges, done.stdout + done.stderr)
             self.assertTrue(all("--adjudicator claude" in line for line in judges), judges)
+
+
+# A stand-in for `claude`: no network, no login, no model. `--version` prints SETUP's version; a call
+# reads the request its prompt names and answers it, through tool events as Claude Code's stream-json
+# shows them. It refuses a Read or Write outside its working directory, as `-p` mode does, unless SETUP
+# says to read or write anything (the leaking fakes). SETUP also sets its tools, MCP servers, model and
+# last line, a file it changes outside any tool (`dirty`), a sleep, whether it writes its reply, and a
+# log of each call (its arguments, working directory, environment and stdin, and when it ran).
+FAKE_CLAUDE = r'''#!PYTHON
+import json, os, re, sys, time
+
+SETUP = json.loads(SETUP_JSON)
+
+
+def emit(event):
+    sys.stdout.write(json.dumps(event) + "\n")
+    sys.stdout.flush()
+
+
+def inside(path):
+    real, here = os.path.realpath(path), os.path.realpath(os.getcwd())
+    return real == here or real.startswith(here + os.sep)
+
+
+if sys.argv[1:] == ["--version"]:
+    print(SETUP["version"] + " (Claude Code)")
+    sys.exit(0)
+args, prompt = sys.argv[1:-1], sys.argv[-1]
+stdin = sys.stdin.read()
+started = time.time()
+if SETUP.get("log"):
+    with open(SETUP["log"], "a") as handle:
+        handle.write(json.dumps({"args": args, "cwd": os.getcwd(), "listing": sorted(os.listdir(".")),
+                                 "env": dict(os.environ), "stdin": stdin, "prompt": prompt}) + "\n")
+model = SETUP.get("model", "claude-opus-5-5")
+emit({"type": "system", "subtype": "init", "cwd": os.getcwd(), "tools": SETUP.get("tools", ["Read", "Write"]),
+      "mcp_servers": SETUP.get("mcp_servers", []), "model": model, "permissionMode": "acceptEdits"})
+denials = []
+count = [0]
+
+
+def tool(name, path, content=None):
+    count[0] += 1
+    ident = "toolu_%d" % count[0]
+    entry = {"file_path": path} if content is None else {"file_path": path, "content": content}
+    emit({"type": "assistant", "message": {"model": model, "content": [{"type": "tool_use", "id": ident, "name": name, "input": entry}]}})
+    if not (inside(path) or SETUP.get("read_anything" if name == "Read" else "write_anything")):
+        denials.append({"tool_name": name, "tool_use_id": ident, "tool_input": entry})
+        said = "Claude requested permissions to %s %s, but you haven't granted it yet." % ("read from" if name == "Read" else "write to", path)
+        emit({"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": ident, "is_error": True, "content": said}]}})
+        return None
+    if name == "Read":
+        with open(path) as handle:
+            result = handle.read()
+    else:
+        with open(path, "w") as handle:
+            handle.write(content)
+        result = "File created successfully at: " + path
+    emit({"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": ident, "content": result}]}})
+    return result
+
+
+request = json.loads(tool("Read", re.search(r"(/\S+\.request\.json)", prompt).group(1)))
+if "control" in request:
+    lines = [request["control"]]
+    for path in request["read"]:
+        got = tool("Read", path)
+        lines.append(path + (": refused" if got is None else ": read, " + got.splitlines()[0]))
+    lines.append("write: " + ("refused" if tool("Write", request["write"], "written\n") is None else "written"))
+    if SETUP.get("quote_claude_md"):
+        with open(os.path.join(os.path.dirname(os.getcwd()), "CLAUDE.md")) as handle:
+            lines.append(handle.readline().strip())
+    else:
+        lines.append("no CLAUDE.md")
+    tool("Write", request["reply_path"], "\n".join(lines) + "\n")
+else:
+    for path in SETUP.get("also_read", []):
+        tool("Read", path)
+    if SETUP.get("dirty"):
+        with open(SETUP["dirty"], "w") as handle:
+            handle.write("changed\n")
+    time.sleep(SETUP.get("sleep", 0))
+    items = sorted(set(re.findall(r"^(d\d+\.\d+): ", request["messages"][1]["content"], re.M)))
+    if not SETUP.get("no_reply"):
+        tool("Write", request["reply_path"], "".join(item + ": J | a word\n" for item in items))
+if SETUP.get("log"):
+    with open(SETUP["log"] + ".times", "a") as handle:
+        handle.write(json.dumps([started, time.time()]) + "\n")
+emit({"type": "result", "subtype": "success", "is_error": False, "result": SETUP.get("final", model),
+      "permission_denials": denials})
+'''
+
+
+def fake_claude(folder, **setup):
+    """The fake at `<folder>/claude`, made executable, with SETUP `setup`; its path."""
+    setup.setdefault("version", "2.1.293")
+    path = os.path.join(folder, "claude")
+    label.write(path, FAKE_CLAUDE.replace("#!PYTHON", "#!" + sys.executable).replace("SETUP_JSON", repr(json.dumps(setup))))
+    os.chmod(path, 0o755)
+    return path
+
+
+class PartsGold(FakeGold):
+    """FakeGold with one disputed item in each of `parts` worklist parts."""
+
+    def __init__(self, parts):
+        super().__init__()
+        self.dispute = ["d1.2", "d2.3", "d3.2", "d1.3", "d2.2", "d1.4"][:parts]
+
+    def merge(self, directory, into, *args, **more):
+        out = super().merge(directory, into, *args, **more)
+        folder = os.path.join(directory, into)
+        os.remove(os.path.join(folder, "worklist-01.txt"))
+        for number, item in enumerate(self.dispute, 1):
+            label.write(os.path.join(folder, f"worklist-{number:02d}.txt"), f"Adjudicate.\n\nSlots:\n{item}: \n")
+        return out
+
+
+class ConfinementTests(Base):
+    """`handoff-run` and `probe-confinement` with a fake `claude`, in a checkout of their own (a git
+    repository the test makes), with a home whose CLAUDE.md the probe must not see leak."""
+
+    def setUp(self):
+        super().setUp()
+        self.bin = os.path.join(self.root, "bin")
+        os.makedirs(self.bin)
+        self.log = os.path.join(self.root, "calls.jsonl")
+        self.home = os.path.join(self.root, "home")
+        label.write(os.path.join(self.home, ".claude", "CLAUDE.md"), "# Home rules of the tester\n\nNever quote this.\n")
+        self.checkout = os.path.join(self.root, "checkout")
+        os.makedirs(self.checkout)
+        for command in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "--allow-empty", "-m", "start"]):
+            subprocess.run(["git", "-C", self.checkout, *command], check=True, capture_output=True)
+        self.temp = os.path.join(self.root, "temp")
+        os.makedirs(self.temp)
+        for name, value in (("HOME", self.home), ("CLAUDE_CONFIG_DIR", None)):
+            saved = os.environ.get(name)
+            self.addCleanup(lambda name=name, saved=saved: os.environ.pop(name, None) if saved is None else os.environ.__setitem__(name, saved))
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+        for patch in (unittest.mock.patch.object(label, "REPO", self.checkout),
+                      unittest.mock.patch.object(tempfile, "tempdir", self.temp)):
+            patch.start()
+            self.addCleanup(patch.stop)
+        self.out = []
+        self.gold = FakeGold()
+
+    def fake(self, **setup):
+        setup.setdefault("log", self.log)
+        return fake_claude(self.bin, **setup)
+
+    def probe(self, *more, **setup):
+        claude = self.fake(**setup)
+        arguments = label.parser().parse_args(["probe-confinement", "--claude", claude, *more])
+        return label.command_probe_confinement(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append)
+
+    def stamp(self):
+        return json.loads(label.read(os.path.join(self.label_root, "confinement.json")))
+
+    def waiting(self, gold=None):
+        """A handoff judge that wrote its requests and waits: the voters tagged, the judge passed once."""
+        self.gold = gold or self.gold
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all), gold=self.gold).tag(name)
+        with self.assertRaises(label.HandoffWait):
+            self.judge()
+        return label.pending_requests(self.dir, "merge")
+
+    def judge(self):
+        return self.runner(None, gold=self.gold, config=copy.deepcopy(HANDOFF_CONFIG)).judge("merge", [("one", False), ("two", False)])
+
+    def handoff_run(self, *more, claude=None):
+        arguments = label.parser().parse_args(
+            ["handoff-run", "--dir", self.dir, "--into", "merge", "--claude", claude or os.path.join(self.bin, "claude"), *more]
+        )
+        return label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append)
+
+    def calls(self):
+        return [json.loads(line) for line in label.read(self.log).splitlines()] if os.path.isfile(self.log) else []
+
+    def left_in_temp(self):
+        return sorted(os.listdir(self.temp))
+
+    # -- the probe
+
+    def test_an_honest_process_passes_the_probe_and_the_stamp_records_it(self):
+        home = confine.snapshot(self.home, os.path.join(self.root, "none"))
+        self.assertEqual(self.probe(), 0, self.out)
+        stamp = self.stamp()
+        self.assertEqual(stamp["verdict"], "pass")
+        self.assertEqual(stamp["claude_code_version"], "2.1.293")
+        self.assertEqual(stamp["args"], confine.arguments("claude-opus-5-5"))
+        self.assertRegex(stamp["date"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertEqual(stamp["skipped"], {})
+        expected = {
+            "stream_json", "init_tools_read_write", "init_no_mcp_server", "one_model_id", "process_finished",
+            "model_reported_matches", "only_read_write_used", "reply_written", "control_quoted",
+            "decoy_plain_read_refused", "decoy_plain_marker_absent", "decoy_holdout_read_refused",
+            "decoy_holdout_marker_absent", "decoy_blobs_read_refused", "decoy_blobs_marker_absent",
+            "outside_write_refused", "outside_file_absent", "scratch_unchanged_outside_cwd",
+            "ancestor_claude_md_absent", "user_claude_md_absent", "version_unchanged",
+        }
+        self.assertEqual(set(stamp["assertions"]), expected)
+        self.assertTrue(all(value is True for value in stamp["assertions"].values()), stamp)
+        printed = "\n".join(self.out)
+        for name in expected:
+            self.assertIn(f"  {name}: true", printed)
+        self.assertNotRegex(printed, r"DECOY-|CONTROL-|Scratch notes|Home rules", "no marker or transcript is printed")
+        self.assertEqual(self.left_in_temp(), [], "the scratch tree is removed")
+        self.assertEqual(confine.snapshot(self.home, os.path.join(self.root, "none")), home, "nothing under the home is written")
+        call, = self.calls()
+        self.assertEqual(call["args"], confine.arguments("claude-opus-5-5"))
+        self.assertEqual(os.path.basename(call["cwd"]), "cwd")
+        self.assertEqual(call["listing"], ["probe.request.json"])
+
+    def test_the_probe_request_carries_the_control_on_its_first_line_and_names_no_claude_md(self):
+        self.assertEqual(self.probe("--keep"), 0, self.out)
+        scratch, = self.left_in_temp()
+        scratch = os.path.join(self.temp, scratch)
+        self.assertTrue(any(scratch in line for line in self.out), "--keep says where the tree is")
+        request = label.read(os.path.join(scratch, "cwd", "probe.request.json"))
+        self.assertRegex(request.splitlines()[0], r'^\{"control": "CONTROL-[0-9a-f]{16}",$')
+        parsed = json.loads(request)
+        self.assertEqual(parsed["reply_path"], os.path.join(scratch, "cwd", "probe.reply.txt"))
+        self.assertEqual(parsed["read"], [os.path.join(scratch, "decoy.txt"),
+                                          os.path.join(scratch, "repo", "tests", "gold", "holdout-decoy.txt"),
+                                          os.path.join(scratch, "blobs", ".blobs", "unpacked", "decoy.txt")])
+        self.assertEqual(parsed["write"], os.path.join(scratch, "outside-write.txt"))
+        self.assertNotIn("Scratch notes", request)
+        self.assertNotIn("Home rules", request)
+        self.assertTrue(label.read(os.path.join(scratch, "CLAUDE.md")).startswith("# Scratch notes "))
+        shutil.rmtree(scratch)
+
+    def test_a_process_that_reads_a_decoy_fails_the_probe(self):
+        self.assertEqual(self.probe(read_anything=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertEqual(self.stamp()["verdict"], "fail")
+        for name in ("plain", "holdout", "blobs"):
+            self.assertFalse(checks[f"decoy_{name}_read_refused"])
+            self.assertFalse(checks[f"decoy_{name}_marker_absent"])
+        self.assertTrue(checks["outside_write_refused"])
+        self.assertIn("verdict: fail", self.out[-1])
+        self.assertNotRegex("\n".join(self.out), r"DECOY-")
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_process_that_writes_outside_fails_the_probe(self):
+        self.assertEqual(self.probe(write_anything=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertFalse(checks["outside_write_refused"])
+        self.assertFalse(checks["outside_file_absent"])
+        self.assertFalse(checks["scratch_unchanged_outside_cwd"])
+        self.assertTrue(checks["decoy_plain_read_refused"])
+
+    def test_a_process_with_an_mcp_server_or_a_third_tool_fails_the_probe(self):
+        self.assertEqual(self.probe(mcp_servers=[{"name": "claude.ai Gmail", "status": "connected"}]), 2)
+        self.assertFalse(self.stamp()["assertions"]["init_no_mcp_server"])
+        self.assertTrue(self.stamp()["assertions"]["init_tools_read_write"])
+        self.assertEqual(self.probe(tools=["Read", "Write", "Bash"]), 2)
+        self.assertFalse(self.stamp()["assertions"]["init_tools_read_write"])
+        self.assertEqual(self.probe(model="claude-sonnet-5-5", final="claude-sonnet-5-5"), 2)
+        self.assertFalse(self.stamp()["assertions"]["one_model_id"])
+        self.assertEqual(self.probe(final="I am Claude"), 2)
+        self.assertFalse(self.stamp()["assertions"]["model_reported_matches"])
+
+    def test_a_process_given_a_claude_md_fails_the_probe(self):
+        self.assertEqual(self.probe(quote_claude_md=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertFalse(checks["ancestor_claude_md_absent"])
+        self.assertTrue(checks["user_claude_md_absent"])
+
+    def test_with_no_user_claude_md_that_check_is_skipped_with_a_note(self):
+        os.remove(os.path.join(self.home, ".claude", "CLAUDE.md"))
+        self.assertEqual(self.probe(), 0, self.out)
+        self.assertNotIn("user_claude_md_absent", self.stamp()["assertions"])
+        self.assertIn("user_claude_md_absent", self.stamp()["skipped"])
+        self.assertTrue(any("user_claude_md_absent: skipped" in line for line in self.out))
+        self.assertFalse(os.path.exists(os.path.join(self.home, ".claude", "CLAUDE.md")), "the probe makes no CLAUDE.md there")
+
+    def test_the_process_gets_a_scrubbed_environment_and_no_stdin(self):
+        os.environ["CLAUDE_EFFORT"] = "max"
+        os.environ["CLAUDE_CODE_MESSAGING_SOCKET"] = "/tmp/socket"
+        os.environ["ANTHROPIC_BASE_URL"] = "https://example.org"
+        self.addCleanup(lambda: [os.environ.pop(name, None) for name in ("CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "ANTHROPIC_BASE_URL")])
+        self.assertEqual(self.probe(), 0, self.out)
+        env = self.calls()[0]["env"]
+        self.assertEqual(env["DISABLE_AUTOUPDATER"], "1")
+        self.assertEqual(env["HOME"], self.home)
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://example.org")
+        for name in ("OPENROUTER_API_KEY", "CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "CLAUDECODE",
+                     guard.ROOT_VARIABLE, ledger.STATE_VARIABLE):
+            self.assertNotIn(name, env)
+        for name in env:
+            self.assertTrue(name in confine.KEPT or name.startswith(confine.KEPT_PREFIXES) or name == "DISABLE_AUTOUPDATER", name)
+        self.assertEqual(self.calls()[0]["stdin"], "")
+
+    def test_the_environment_keeps_the_login_and_drops_the_rest(self):
+        kept = confine.environment({
+            "HOME": "/h", "PATH": "/bin", "LC_ALL": "C.UTF-8", "TERM": "xterm", "ANTHROPIC_API_KEY": "k",
+            "CLAUDE_CONFIG_DIR": "/c", "CLAUDE_CODE_OAUTH_TOKEN": "t", "CLAUDE_EFFORT": "max", "CLAUDECODE": "1",
+            "CLAUDE_CODE_SESSION_ID": "s", "OPENROUTER_API_KEY": "o", "SSH_AUTH_SOCK": "/s",
+        })
+        self.assertEqual(sorted(kept), ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR",
+                                        "DISABLE_AUTOUPDATER", "HOME", "LC_ALL", "PATH", "TERM"])
+
+    def test_the_fake_on_path_is_the_claude_found_by_default(self):
+        self.fake()
+        saved = os.environ["PATH"]
+        os.environ["PATH"] = self.bin + os.pathsep + saved
+        self.addCleanup(os.environ.__setitem__, "PATH", saved)
+        self.assertEqual(shutil.which("claude"), os.path.join(self.bin, "claude"))
+        arguments = label.parser().parse_args(["probe-confinement"])
+        self.assertEqual(label.command_probe_confinement(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append), 0)
+        self.assertEqual(len(self.calls()), 1, "the fake answered, not another claude")
+
+    # -- handoff-run
+
+    def test_handoff_run_answers_each_request_and_the_judge_then_finishes(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        call, = self.calls()
+        self.assertEqual(call["args"], confine.arguments("claude-opus-5-5"))
+        self.assertEqual(call["listing"], ["part-01.request.json"], "the working directory holds the request alone")
+        self.assertTrue(call["cwd"].startswith(self.temp + os.sep))
+        self.assertEqual(call["prompt"], label.read(label.HANDOFF_TEMPLATE).replace("{request}", os.path.join(call["cwd"], "part-01.request.json")))
+        self.assertEqual(self.left_in_temp(), [], "the working directory is removed")
+        request = json.loads(label.read(pending[0]))
+        self.assertEqual(label.read(request["reply_path"]), "d1.2: J | a word\nd2.3: J | a word\n")
+        agent = json.loads(label.read(os.path.join(os.path.dirname(pending[0]), "agent.json")))
+        self.assertEqual(agent, {
+            "harness": "claude-code", "version": "2.1.293", "agent_type": "claude -p --safe-mode",
+            "model_reported": "claude-opus-5-5", "effort": "default", "tools": "Read,Write",
+            "prompt_sha256": label.handoff_template_sha256(), "safe_mode": True,
+            "args": confine.arguments("claude-opus-5-5"), "cwd": confine.CWD_RULE,
+        })
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.judge(), {})
+        run = json.loads(label.read(os.path.join(self.dir, "raw", "opus", "r3", "run.json")))
+        self.assertEqual(run["agent"], agent)
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "labelled.conllu")))
+        self.assertEqual(self.handoff_run(), 0)
+        self.assertIn("no request of merge is waiting", self.out[-1])
+
+    def test_handoff_run_refuses_without_a_passing_stamp_for_this_version_and_these_arguments(self):
+        self.waiting()
+        self.fake()
+        with self.assertRaisesRegex(label.GoldError, "there is no .*confinement.json"):
+            self.handoff_run()
+        self.assertEqual(self.probe(read_anything=True), 2)
+        with self.assertRaisesRegex(label.GoldError, "does not record a probe that passed"):
+            self.handoff_run()
+        self.assertEqual(self.probe(), 0)
+        self.fake(version="2.1.294")
+        with self.assertRaisesRegex(label.GoldError, "records Claude Code 2.1.293, and `claude --version` says 2.1.294"):
+            self.handoff_run()
+        self.fake()
+        stamp = self.stamp()
+        stamp["args"] = [arg for arg in stamp["args"] if arg != "--safe-mode"]
+        label.write(os.path.join(self.label_root, "confinement.json"), json.dumps(stamp))
+        with self.assertRaisesRegex(label.GoldError, "another argument list"):
+            self.handoff_run()
+        self.assertEqual(self.probe(), 0)
+        stamp = self.stamp()
+        stamp["assertions"]["decoy_plain_read_refused"] = False
+        label.write(os.path.join(self.label_root, "confinement.json"), json.dumps(stamp))
+        with self.assertRaisesRegex(label.GoldError, "does not record a probe that passed"):
+            self.handoff_run()
+        self.assertEqual([call for call in self.calls() if "part-01.request.json" in call["prompt"]], [],
+                         "no handoff call was made")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+
+    def test_handoff_run_refuses_a_tree_that_is_not_clean_outside_label_and_fails_one_changed_by_the_round(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        label.write(os.path.join(self.checkout, "notes.txt"), "a change\n")
+        with self.assertRaisesRegex(label.GoldError, "git status shows 1 changes outside .label/ .*notes.txt"):
+            self.handoff_run()
+        os.remove(os.path.join(self.checkout, "notes.txt"))
+        # A change under .label/ is the labelling's own, and is not one.
+        label.write(os.path.join(self.checkout, ".label", "scratch.txt"), "x\n")
+        self.fake(dirty=os.path.join(self.checkout, "escaped.txt"))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn("after the round git status shows 1 changes", err.getvalue())
+        self.assertIn("escaped.txt", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1, "the reply of the round is removed")
+
+    def test_a_call_that_fails_a_check_has_no_reply_copied_and_says_which_check(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        reply = json.loads(label.read(pending[0]))["reply_path"]
+        agent = os.path.join(os.path.dirname(pending[0]), "agent.json")
+        for setup, failed in (
+            ({"also_read": [os.path.join(self.root, "calls.jsonl")]}, "no_tool_refused"),
+            ({"tools": ["Read", "Write", "Bash"]}, "init_tools_read_write"),
+            ({"mcp_servers": [{"name": "x", "status": "connected"}]}, "init_no_mcp_server"),
+            ({"final": "claude-opus-5-5\nwith a word more"}, "model_reported_matches"),
+            ({"model": "claude-sonnet-5-5", "final": "claude-sonnet-5-5"}, "one_model_id"),
+        ):
+            self.fake(**setup)
+            self.out.clear()
+            self.assertEqual(self.handoff_run(), 2, setup)
+            self.assertFalse(os.path.exists(reply), setup)
+            self.assertFalse(os.path.exists(agent), "agent.json is written by a call that passed, only")
+            self.assertTrue(any(f"part-01: failed (" in line and failed in line for line in self.out), self.out)
+            self.assertTrue(any("0 answered" in line and "1 failed" in line for line in self.out), self.out)
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_call_that_writes_no_reply_leaves_its_request_pending(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        self.fake(no_reply=True)
+        self.assertEqual(self.handoff_run(), label.EXIT_HANDOFF)
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_an_agent_json_that_differs_from_what_this_round_would_write_is_refused(self):
+        pending = self.waiting(PartsGold(2))
+        self.assertEqual(self.probe(), 0)
+        agent_path = os.path.join(os.path.dirname(pending[0]), "agent.json")
+        label.write(agent_path, json.dumps({**label.agent_record("2.1.0", "claude-opus-5-5", confine.arguments("claude-opus-5-5"))}))
+        with self.assertRaisesRegex(label.GoldError, r"differs from what this round would write \(in version\)"):
+            self.handoff_run()
+        label.write(agent_path, json.dumps(label.agent_record("2.1.293", "claude-opus-5-5", confine.arguments("claude-opus-5-5"))))
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_a_request_whose_reply_name_was_changed_is_refused(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        request = json.loads(label.read(pending[0]))
+        request["reply_name"] = "../../../elsewhere.reply.txt"
+        label.write(pending[0], json.dumps(request))
+        with self.assertRaisesRegex(label.GoldError, "is not a request this runner wrote"):
+            self.handoff_run()
+
+    def test_a_temp_directory_inside_a_repository_is_refused(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        inner = os.path.join(self.checkout, "tmp")
+        os.makedirs(inner)
+        with unittest.mock.patch.object(tempfile, "tempdir", inner):
+            with self.assertRaisesRegex(confine.Unconfined, "is inside the repository"):
+                self.handoff_run()
+            self.assertEqual(os.listdir(inner), [])
+        err = io.StringIO()
+        with unittest.mock.patch.object(tempfile, "tempdir", inner), \
+                unittest.mock.patch.object(label, "load_config", return_value=copy.deepcopy(HANDOFF_CONFIG)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = label.main(["probe-confinement", "--claude", os.path.join(self.bin, "claude")])
+        self.assertEqual(code, 2)
+        self.assertIn("is inside the repository", err.getvalue())
+
+    def test_handoff_run_runs_its_calls_in_parallel(self):
+        pending = self.waiting(PartsGold(4))
+        self.assertEqual(len(pending), 4)
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        os.remove(self.log + ".times")
+        self.fake(sleep=0.5)
+        started = time.monotonic()
+        self.assertEqual(self.handoff_run("--parallel", "3"), 0, self.out)
+        self.assertLess(time.monotonic() - started, 4 * 0.5 + 1.5)
+        times = [json.loads(line) for line in label.read(self.log + ".times").splitlines()]
+        self.assertEqual(len(times), 4)
+        most = max(sum(1 for start, end in times if start <= moment < end) for moment, _ in times)
+        self.assertGreaterEqual(most, 2, "calls overlap")
+        self.assertLessEqual(most, 3, "--parallel 3 runs three at once at most")
+        self.assertEqual(len({call["cwd"] for call in self.calls()}), 4, "each call has a directory of its own")
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.judge(), {})
+
+    def test_main_exits_2_for_a_refused_round_and_says_why(self):
+        self.waiting()
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "load_config", return_value=copy.deepcopy(HANDOFF_CONFIG)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = label.main(["handoff-run", "--dir", self.dir, "--into", "merge", "--claude", self.fake()])
+        self.assertEqual(code, 2)
+        self.assertIn("confinement.json", err.getvalue())
 
 
 def gold_text():

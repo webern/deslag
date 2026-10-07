@@ -15,11 +15,19 @@ in Rust. See README.md in this directory for the steps.
     label.py cost     --dir .label/draw500
     label.py handoff  --dir .label/dev [--into merge]
     label.py handoff-agent (--request PATH | --sha256)
+    label.py handoff-run --dir .label/silver/part-01 --into merge [--parallel 6] [--claude PATH]
+    label.py probe-confinement [--claude PATH] [--keep]
     label.py spend
 
 The directory is one sample, under this checkout's `.label`: a skeleton made from the dev or owner
 gold, or a draw for labelling; nothing else is accepted (guard.py, an allow-list, checked on real
-paths before a file is opened), and the Rust stages check it again.
+paths before a file is opened), and the Rust stages check it again. A part of a draw dealt into parts
+is a draw for labelling like any other.
+
+The handoff adjudicator (`opus`) is not called by the runner: `judge` writes a request file per call,
+and `handoff-run` answers each with a `claude -p --safe-mode` process confined to an empty working
+directory (confine.py), once `probe-confinement` has shown, for the Claude Code installed, that such a
+process reads and writes nothing outside it.
 
 Every call is one batch of about 50 sentences. The system prompt is the annotation guide, which the
 Rust tools compile in, and the notes in prompts/preamble.md; the request pins one endpoint of one
@@ -39,6 +47,7 @@ in a state directory shared by every checkout (ledger.py). No error the runner p
 """
 
 import argparse
+import concurrent.futures
 import datetime
 import glob
 import hashlib
@@ -47,11 +56,14 @@ import math
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
+import threading
 import time
 import traceback
 
+import confine
 import guard
 import ledger as ledger_module
 import openrouter
@@ -120,8 +132,20 @@ HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
 # Written in a merge directory: which adjudicator answers its items, for a merge that settles from it.
 ADJUDICATOR_RECORD = "adjudicator.json"
 
-# What `handoff/<run>/agent.json` must say about the agents that made the replies.
-AGENT_KEYS = ("harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256")
+# What `handoff/<run>/agent.json` must say about the agents that made the replies: `handoff-run` writes
+# it, and a reply is read only if it says `safe_mode: true`, the tools Read and Write, and the argument
+# list handoff-run uses now (see [Runner.read_agent]).
+AGENT_KEYS = (
+    "harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256", "safe_mode",
+    "args", "cwd",
+)
+
+# The stamp of the confinement probe, in this checkout's `.label`: without one that passed for the
+# Claude Code installed now and the argument list handoff-run uses, handoff-run makes no call.
+STAMP = "confinement.json"
+
+# A reply file's name as `judge` makes it: `<call>.<12 hex of the request's sha256>.reply.txt`.
+REPLY_NAME = re.compile(r"[A-Za-z0-9_\-]+\.[0-9a-f]{12}\.reply\.txt")
 
 # The endpoint of a handoff model: not an OpenRouter listing, so a record of its own.
 CLAUDE_CODE_ENDPOINT = {"tag": "claude-code", "provider_name": "claude-code"}
@@ -232,7 +256,7 @@ def read(path):
 
 def read_reply(path, warn=None):
     """The text of a handoff reply file, stripped, or None when the item has no usable reply: the file
-    is not there, is empty, or is not valid UTF-8 (a subagent can write any bytes). Nothing is raised
+    is not there, is empty, or is not valid UTF-8 (a process can write any bytes). Nothing is raised
     for a bad file; `warn`, if given, is told its name and what is wrong, and the item stays pending."""
     try:
         with open(path, "rb") as handle:
@@ -274,7 +298,7 @@ def handoff_template_sha256():
 
 
 def fill_handoff(request_path):
-    """The prompt of one handoff subagent: the template with `{request}` replaced by the path of its
+    """The prompt of one handoff process: the template with `{request}` replaced by the path of its
     request file."""
     return re.sub(r"\{request\}", lambda _: request_path, read(HANDOFF_TEMPLATE))
 
@@ -1043,10 +1067,11 @@ class Runner:
                     os.remove(request)
 
     def read_agent(self, meta, config):
-        """The `agent.json` the coordinator wrote beside a handoff run's replies, checked: every key
-        in AGENT_KEYS is given, the model the agents report is the pinned one (or a dated version of
-        it), and the prompt it records is the template in the repository now. ApiError if not: no
-        reply is read without a record of who made it."""
+        """The `agent.json` that `handoff-run` wrote beside a handoff run's replies, checked: every key
+        in AGENT_KEYS is given, `safe_mode` is true, the argument list is the one handoff-run uses now,
+        the tools are Read and Write, the model the process reported is the pinned one (or a dated
+        version of it), and the prompt it records is the template in the repository now. ApiError if
+        not: no reply is read without a record of who made it."""
         path = os.path.join(self.handoff_dir(meta), "agent.json")
         if not os.path.isfile(path):
             raise openrouter.ApiError(
@@ -1060,6 +1085,13 @@ class Runner:
         missing = [key for key in AGENT_KEYS if not isinstance(agent, dict) or not str(agent.get(key) or "").strip()]
         if missing:
             raise openrouter.ApiError(f"{path} lacks {', '.join(missing)}")
+        if agent["safe_mode"] is not True or agent["args"] != confine.arguments(config["model"]):
+            raise openrouter.ApiError(
+                f"{path} does not record the confined process handoff-run starts (`safe_mode: true` and its argument "
+                f"list, {shlex.join(confine.arguments(config['model']))}); a reply is read only from one"
+            )
+        if agent["tools"] != ",".join(confine.TOOLS) or not isinstance(agent["cwd"], str):
+            raise openrouter.ApiError(f"{path} records other tools than {','.join(confine.TOOLS)}, or no rule for the working directory")
         openrouter.check_names(CLAUDE_CODE_ENDPOINT["provider_name"], agent["model_reported"], CLAUDE_CODE_ENDPOINT, config["model"])
         if agent["prompt_sha256"] != handoff_template_sha256():
             raise openrouter.ApiError(
@@ -1906,23 +1938,28 @@ def report_handoff_wait(error, arguments):
     for kind, request, reply in error.waiting:
         print(f"label:   {kind}: {request}", file=sys.stderr)
     print(
-        f"label: write handoff/{error.run}/agent.json (see README.md), have an agent answer each request "
-        f"into the reply path it names (`label.py handoff-agent --request PATH` prints its prompt), and run "
-        f"the same command again once every agent of the round has returned; "
-        f"`label.py handoff --dir {arguments.dir} --into {arguments.into}` lists the requests still unanswered",
+        f"label: `label.py handoff-run --dir {arguments.dir} --into {arguments.into}` answers each request with a "
+        f"confined claude process and writes handoff/{error.run}/agent.json (see README.md); run the same command "
+        f"again once it has returned; `label.py handoff --dir {arguments.dir} --into {arguments.into}` lists the "
+        f"requests still unanswered",
         file=sys.stderr,
     )
     return EXIT_HANDOFF
 
 
-def pending_requests(directory, into, warn=None):
-    """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
-    yet, in the order of their numbers: what the coordinator still has to have answered."""
+def latest_handoff(directory, into):
+    """The folder of the latest handoff run in `<directory>/<into>/handoff`, or None."""
     base = os.path.join(directory, into, "handoff")
     runs = [name for name in os.listdir(base) if re.fullmatch(r"r\d+", name)] if os.path.isdir(base) else []
-    if not runs:
+    return os.path.join(base, max(runs, key=lambda name: int(name[1:]))) if runs else None
+
+
+def pending_requests(directory, into, warn=None):
+    """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
+    yet, in the order of their numbers: what is still to be answered."""
+    folder = latest_handoff(directory, into)
+    if folder is None:
         return []
-    folder = os.path.join(base, max(runs, key=lambda name: int(name[1:])))
     pending = []
     for name in numbered(os.listdir(folder)):
         if not name.endswith(".request.json"):
@@ -1937,10 +1974,17 @@ def pending_requests(directory, into, warn=None):
     return pending
 
 
+def check_into(into):
+    """`into`, which must be a plain directory name."""
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", into):
+        raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{into}`")
+    return into
+
+
 def command_handoff(arguments, config, transport=None, gold=None):
     directory = guard.check_dir(arguments.dir)
-    if not re.fullmatch(r"[A-Za-z0-9_\-]+", arguments.into):
-        raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{arguments.into}`")
+    check_into(arguments.into)
+
     def warned(text):
         print(text, file=sys.stderr)
 
@@ -1962,6 +2006,266 @@ def command_handoff_agent(arguments, config, transport=None, gold=None):
         raise GoldError(f"{arguments.request} is not a request file under {guard.root()}")
     print(fill_handoff(real), end="")
     return 0
+
+
+# ---------------------------------------------------------------------------------------------
+# the handoff answered by confined claude processes, and the probe of their confinement
+
+
+def stamp_path():
+    """Where the stamp of the confinement probe is: `confinement.json` in this checkout's `.label`."""
+    return os.path.join(guard.root(), STAMP)
+
+
+def handoff_model(config):
+    """The model id of the handoff adjudicator: `adjudicator` if it is one, or else the one handoff
+    model of voters.json."""
+    if is_handoff(config["models"][config["adjudicator"]]):
+        return config["models"][config["adjudicator"]]["model"]
+    found = [model["model"] for model in config["models"].values() if is_handoff(model)]
+    if len(found) != 1:
+        raise ConfigError(f"voters.json defines {len(found)} handoff models; the probe needs one")
+    return found[0]
+
+
+def check_stamp(version, args):
+    """Refuses a round of handoff-run unless the probe's stamp says it passed, every check true, for
+    the Claude Code installed now (`version`) and the argument list about to be used."""
+    path = stamp_path()
+    again = "`label.py probe-confinement` (make test-confinement) writes it again"
+    if not os.path.isfile(path):
+        raise GoldError(f"there is no {path}: no handoff call is made before the confinement probe has passed; {again}")
+    try:
+        stamp = json.loads(read(path))
+    except ValueError:
+        raise GoldError(f"{path} is not JSON; {again}") from None
+    checks = stamp.get("assertions") if isinstance(stamp, dict) else None
+    if stamp.get("verdict") != "pass" or not isinstance(checks, dict) or not checks or not all(v is True for v in checks.values()):
+        raise GoldError(f"{path} does not record a probe that passed; {again}")
+    if stamp.get("claude_code_version") != version:
+        raise GoldError(
+            f"{path} records Claude Code {stamp.get('claude_code_version')}, and `claude --version` says {version} now: "
+            f"the probe holds for the version it ran; {again}"
+        )
+    if stamp.get("args") != args:
+        raise GoldError(f"{path} records another argument list than handoff-run uses now ({shlex.join(args)}); {again}")
+
+
+def tree_changes(repo):
+    """The paths `git status --porcelain` shows changed or new in the checkout `repo`, outside
+    `.label/`. GoldError if git cannot say."""
+    done = subprocess.run(
+        ["git", "--no-optional-locks", "-C", repo, "status", "--porcelain", "-z", "--untracked-files=all"],
+        capture_output=True, check=False,
+    )
+    if done.returncode != 0:
+        why = (done.stderr.decode("utf-8", "replace").strip().splitlines() or ["no reason given"])[0]
+        raise GoldError(f"git status failed in {repo}, so whether its tree is clean is not known: {why}")
+    entries = done.stdout.decode("utf-8", "replace").split("\0")
+    paths = []
+    at = 0
+    while at < len(entries):
+        entry = entries[at]
+        at += 1
+        if not entry:
+            continue
+        paths.append(entry[3:])
+        if entry[0] in "RC" and at < len(entries):
+            # A rename or copy is followed by the path it came from.
+            paths.append(entries[at])
+            at += 1
+    label = guard.LABEL_DIR
+    return [path for path in paths if path != label and not path.startswith(label + "/")]
+
+
+def agent_record(version, model_reported, args):
+    """What `agent.json` says of the processes handoff-run starts."""
+    return {
+        "harness": "claude-code", "version": version, "agent_type": "claude -p --safe-mode",
+        "model_reported": model_reported, "effort": "default", "tools": ",".join(confine.TOOLS),
+        "prompt_sha256": handoff_template_sha256(), "safe_mode": True, "args": list(args), "cwd": confine.CWD_RULE,
+    }
+
+
+def handoff_request(path, model):
+    """The request file at `path`, checked to be one `judge` wrote for `model`: its hash is of its
+    model and messages, and its reply name is `<call>.<12 hex of that>.reply.txt`. GoldError if not,
+    since the reply is copied to the folder under that name."""
+    try:
+        request = json.loads(read(path))
+    except ValueError:
+        raise GoldError(f"{path} is not JSON") from None
+    if not isinstance(request, dict):
+        raise GoldError(f"{path} is not a request file this runner wrote")
+    digest = hashlib.sha256(canonical_json({"model": request.get("model"), "messages": request.get("messages")}).encode("utf-8")).hexdigest()
+    name = str(request.get("reply_name"))
+    if (
+        request.get("model") != model or request.get("request_sha256") != digest
+        or name != f"{request.get('call')}.{digest[:12]}.reply.txt" or not REPLY_NAME.fullmatch(name)
+    ):
+        raise GoldError(f"{path} is not a request this runner wrote for {model}: its hash, model or reply name is not its own")
+    return request
+
+
+class HandoffRound:
+    """One round of handoff-run: each request still unanswered, put to a confined claude process.
+
+    For a request: a new empty working directory (see [confine.workdir]); the request copied into
+    it, with `reply_path` naming a file in the same directory (the request's hash is of its model and
+    messages, so it is the same); `prompts/handoff-agent.md` filled with the copy's path; the process
+    run from there; its checks ([confine.checks]); the directory removed. Only a call that passes
+    every check and wrote a reply has it copied to the request's reply name in the run's folder.
+    `agent.json` is written by the first call that passes, with the model it reported, which every
+    later call must report too."""
+
+    def __init__(self, folder, model, claude, version):
+        self.folder = folder
+        self.model = model
+        self.claude = claude
+        self.version = version
+        self.args = confine.arguments(model)
+        self.agent_path = os.path.join(folder, "agent.json")
+        self.agent = None
+        self.copied = []
+        self.lock = threading.Lock()
+
+    def check_agent(self):
+        """Refuses the round if `agent.json` is there and says other than this round would write."""
+        if not os.path.isfile(self.agent_path):
+            return
+        try:
+            saved = json.loads(read(self.agent_path))
+        except ValueError:
+            raise GoldError(f"{self.agent_path} is not JSON") from None
+        expected = agent_record(self.version, saved.get("model_reported") if isinstance(saved, dict) else None, self.args)
+        if saved != expected:
+            differing = sorted(key for key in {*saved, *expected} if saved.get(key) != expected.get(key)) if isinstance(saved, dict) else ["all"]
+            raise GoldError(
+                f"{self.agent_path} differs from what this round would write (in {', '.join(differing)}), and a run has one "
+                f"agent; `judge --again` starts a new run"
+            )
+        self.agent = saved
+
+    def answer(self, path, request):
+        """Puts one request to a confined process. Returns (call, `answered`, `no reply` or
+        `failed`, the names of the checks that failed)."""
+        call = request["call"]
+        try:
+            work = confine.workdir("deslag-handoff-")
+        except confine.Unconfined:
+            return call, "failed", ["workdir_outside_repositories"]
+        try:
+            copy = os.path.join(work, os.path.basename(path))
+            write(copy, json.dumps({**request, "reply_path": os.path.join(work, request["reply_name"])}, indent=2) + "\n")
+            code, out = confine.run(self.claude, self.args, fill_handoff(copy), work)
+            stream = confine.Stream(out)
+            found = confine.checks(stream, code, self.model, work)
+            reply = confine.regular_text(os.path.join(work, request["reply_name"]))
+            with self.lock:
+                if all(found.values()) and self.agent is None:
+                    self.agent = agent_record(self.version, stream.init["model"], self.args)
+                    write_atomic(self.agent_path, json.dumps(self.agent, indent=2) + "\n")
+                found["model_matches_agent_json"] = self.agent is not None and (stream.init or {}).get("model") == self.agent["model_reported"]
+                failed = [name for name, ok in found.items() if not ok]
+                if failed:
+                    return call, "failed", failed
+                if reply is None:
+                    return call, "no reply", []
+                target = os.path.join(self.folder, request["reply_name"])
+                write_atomic(target, reply)
+                self.copied.append(target)
+                return call, "answered", []
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
+
+def command_handoff_run(arguments, config, transport=None, gold=None, say=print):
+    """`handoff-run`: answers the requests of a handoff judge still unanswered, each with a confined
+    claude process, `--parallel` at once (see [HandoffRound]). Refuses to start without a passing
+    probe stamp for the Claude Code installed now and these arguments, with an `agent.json` that
+    differs from what it would write, or when `git status` shows a change outside `.label/`; and after
+    the round, if the tree has changed outside `.label/`, it removes the replies it copied and fails.
+    Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
+    call failed a check or anything was refused."""
+    directory = guard.check_dir(arguments.dir)
+    check_into(arguments.into)
+    if arguments.parallel < 1:
+        raise ConfigError("--parallel is how many processes run at once, at least 1")
+    pending = pending_requests(directory, arguments.into, lambda text: print(text, file=sys.stderr))
+    if not pending:
+        say(f"no request of {arguments.into} is waiting for a reply")
+        return 0
+    folder = os.path.dirname(pending[0])
+    run = os.path.basename(folder)
+    records = glob.glob(os.path.join(directory, "raw", "*", run, "run.json"))
+    meta = json.loads(read(records[0])) if len(records) == 1 else {}
+    if meta.get("transport") != HANDOFF or meta.get("name") not in config["models"] or not is_handoff(config["models"][meta["name"]]):
+        raise GoldError(f"{run} is not the run of a handoff model of voters.json, so its requests are not answered here")
+    model = meta["model"]
+    requests = {path: handoff_request(path, model) for path in pending}
+    claude = confine.find_claude(arguments.claude)
+    version = confine.version(claude)
+    check_stamp(version, confine.arguments(model))
+    round_ = HandoffRound(folder, model, claude, version)
+    round_.check_agent()
+    changes = tree_changes(REPO)
+    if changes:
+        raise GoldError(
+            f"git status shows {len(changes)} changes outside .label/ in {REPO} ({', '.join(changes[:5])}); a round starts "
+            f"only from a clean tree, so that a change after it is the round's"
+        )
+    # A temp directory inside a repository is refused now, before any call, not call by call.
+    os.rmdir(confine.workdir("deslag-handoff-"))
+    say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
+    counts = {"answered": 0, "no reply": 0, "failed": 0}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel) as pool:
+        futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
+        for future in concurrent.futures.as_completed(futures):
+            call, outcome, failed = future.result()
+            counts[outcome] += 1
+            say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else ""))
+    changes = tree_changes(REPO)
+    if changes:
+        for target in round_.copied:
+            os.remove(target)
+        print(
+            f"label: after the round git status shows {len(changes)} changes outside .label/ in {REPO} "
+            f"({', '.join(changes[:5])}), so the {len(round_.copied)} replies of this round are removed and none is read",
+            file=sys.stderr,
+        )
+        return 2
+    say(
+        f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
+        f"{counts['failed']} failed a check; `judge` run again reads the replies"
+    )
+    if counts["failed"]:
+        return 2
+    return EXIT_HANDOFF if counts["no reply"] else 0
+
+
+def command_probe_confinement(arguments, config, transport=None, gold=None, say=print):
+    """`probe-confinement`: [confine.probe], with the model of the handoff adjudicator, and the
+    stamp it writes in this checkout's `.label`, whether it passed or not. Prints each check and its
+    result, never what the process wrote. Exit 0 when it passed, 2 when it did not."""
+    claude = confine.find_claude(arguments.claude)
+    model = handoff_model(config)
+    version = confine.version(claude)
+    args = confine.arguments(model)
+    say(f"probe: claude {version}, {shlex.join(args)}")
+    results, skipped = confine.probe(claude, model, arguments.keep, say)
+    results["version_unchanged"] = confine.version(claude) == version
+    for name, ok in results.items():
+        say(f"  {name}: {'true' if ok else 'false'}")
+    for name, why in skipped.items():
+        say(f"  {name}: skipped, {why}")
+    verdict = "pass" if all(results.values()) else "fail"
+    stamp = {
+        "claude_code_version": version, "args": args, "date": now()[:10], "time": now(), "verdict": verdict,
+        "assertions": results, "skipped": skipped,
+    }
+    write_atomic(stamp_path(), json.dumps(stamp, indent=2) + "\n")
+    say(f"verdict: {verdict}; {stamp_path()} written")
+    return 0 if verdict == "pass" else 2
 
 
 def command_tag(arguments, config, transport=None, gold=None):
@@ -2132,7 +2436,8 @@ def parser():
     judge.add_argument(
         "--adjudicator", metavar="NAME",
         help="a model of voters.json to adjudicate this merge, in place of its `adjudicator`: `opus` is handed "
-        "to Claude Code subagents through files (exit 6 while it waits), `claude` is Sonnet through OpenRouter",
+        "to confined Claude Code processes through files (exit 6 while it waits; handoff-run answers), `claude` is "
+        "Sonnet through OpenRouter",
     )
     judge.add_argument(
         "--trains", choices=("yes", "no"), default="no",
@@ -2161,11 +2466,27 @@ def parser():
     handoff.set_defaults(handler=command_handoff)
 
     agent = commands.add_parser(
-        "handoff-agent", help="print the prompt of the subagent for one request file, or the template's sha256"
+        "handoff-agent", help="print the prompt of the process for one request file, or the template's sha256"
     )
     agent.add_argument("--request", metavar="PATH", help="a `<call>.request.json` that `judge` wrote")
     agent.add_argument("--sha256", action="store_true", help="print the sha256 of the template, for agent.json")
     agent.set_defaults(handler=command_handoff_agent)
+
+    answered = commands.add_parser(
+        "handoff-run", help="answer the requests of a handoff judge, each with a confined `claude -p --safe-mode`"
+    )
+    answered.add_argument("--dir", required=True, help="the sample directory, under .label")
+    answered.add_argument("--into", required=True, help="the merge directory under --dir the judge wrote to")
+    answered.add_argument("--parallel", type=int, default=6, help="how many processes run at once (default 6)")
+    answered.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
+    answered.set_defaults(handler=command_handoff_run)
+
+    probe = commands.add_parser(
+        "probe-confinement", help="check that a claude process run as handoff-run runs it is confined, and stamp it"
+    )
+    probe.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
+    probe.add_argument("--keep", action="store_true", help="keep the scratch tree, and print where it is")
+    probe.set_defaults(handler=command_probe_confinement)
 
     spend = commands.add_parser("spend", help="print the ledger's cumulative total")
     spend.set_defaults(handler=command_spend)
@@ -2183,7 +2504,7 @@ def main(argv=None, transport=None, gold=None):
     try:
         config = load_config()
         return arguments.handler(arguments, config, transport, gold)
-    except (guard.Refused, ConfigError, GoldError, openrouter.ApiError, ledger_module.CapExceeded) as error:
+    except (guard.Refused, ConfigError, GoldError, openrouter.ApiError, ledger_module.CapExceeded, confine.Unconfined) as error:
         print(redacted(f"label: {error}"), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

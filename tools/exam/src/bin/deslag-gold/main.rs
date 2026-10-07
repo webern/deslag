@@ -23,11 +23,13 @@ mod labelling;
 mod merge;
 mod patch;
 mod pick;
+mod pilot;
 mod problems;
 mod review;
 mod sample;
 mod screen;
 mod terminal;
+mod voters;
 mod web;
 
 use std::collections::BTreeMap;
@@ -145,6 +147,12 @@ enum Command {
     /// Reads the blind tagger's compact lines, `g0001: V.fi _ T`, and writes CoNLL-U with `Prov=`
     /// to `tags/<prov>.conllu`. A malformed line is rejected with its sentence id and nothing is
     /// written.
+    ///
+    /// With `--check`, the good lines are kept whatever else is wrong: the CoNLL-U of the good
+    /// sentences goes to `tags/<prov>.conllu`, a list of the rejected lines to
+    /// `tags/<prov>.problems.tsv` (`sent_id`, `problem`, `-` for a line that names no sentence),
+    /// and the sentences still without a good line, as batch lines ready to ask again, to
+    /// `tags/<prov>.retry.txt`. Exit 0 whatever was rejected.
     ReadTags {
         /// Files of lines, one per batch.
         #[arg(long, required = true, num_args = 1..)]
@@ -153,40 +161,134 @@ enum Command {
         #[arg(long, default_value = "blind")]
         prov: String,
         /// Require a line for every sentence of the sample.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "check")]
         all: bool,
+        /// Keep the good lines and list the bad, as above.
+        #[arg(long)]
+        check: bool,
+        /// The id of the run that made these lines, written as `Runs=` on every word, as
+        /// `runs.tsv` has it.
+        #[arg(long, value_parser = parse_name)]
+        run: Option<String>,
     },
     /// Compares the blind tagger, Harper and spaCy, and writes the agreed tokens, the worklist and
     /// `agreement.txt` to `merge/`, and prints the agreement.
+    ///
+    /// With `--voter`, compares any number of voters, two or more, instead: each is a name and
+    /// the CoNLL-U of its tags, `tags/<name>.conllu` unless `NAME=PATH` says another. They agree
+    /// on a word when they name the same part of speech and no feature clashes, a voter that
+    /// gives no feature abstaining on it. A voter named in `--base-only` votes on the part of
+    /// speech alone. The worklist shows the voters as A, B, C, in the order given; `voters.tsv`
+    /// says which is which. Agreed words carry `Runs=`, the runs the voters' files name.
     Merge {
         /// The blind tagger's CoNLL-U, default `tags/blind.conllu`.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "voter")]
         blind: Option<PathBuf>,
         /// Harper's, default `tags/harper.conllu`: the skeleton `sample.conllu` filled in with UPOS
         /// and, if it has them, FEATS.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "voter")]
         harper: Option<PathBuf>,
         /// spaCy's, default `tags/spacy.conllu`, in the same form.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "voter")]
         spacy: Option<PathBuf>,
+        /// A voter, `NAME` or `NAME=PATH`. Give it two or more times.
+        #[arg(long, value_parser = parse_voter)]
+        voter: Vec<(String, Option<PathBuf>)>,
+        /// A voter that votes on the part of speech alone.
+        #[arg(long, requires = "voter")]
+        base_only: Vec<String>,
+        /// The directory under the working directory the merge is written to.
+        #[arg(long, default_value = "merge", value_parser = parse_name)]
+        into: String,
         /// About how many disputed words each worklist part holds.
         #[arg(long, default_value_t = 60)]
         per_part: usize,
     },
     /// Reads the adjudicator's answers, `g0007.5: N.p | reason`, against `merge/worklist.tsv`
     /// and writes the log `merge/adjudicated.tsv`.
+    ///
+    /// With `--check`, the good answers are kept whatever else is wrong: the log holds them, the
+    /// items still open go to `adjudicated.problems.tsv` (`item`, `problem`) and, as worklist
+    /// parts ready to ask again, to `adjudicated.retry-NN.txt`. Exit 0 whatever is open.
     ReadAnswers {
         /// Files of answers, one per worklist part.
         #[arg(long, num_args = 1..)]
         answers: Vec<PathBuf>,
         /// Accept a log that leaves some items unanswered.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "check")]
         partial: bool,
         /// A TSV of agreed words the guide has since changed (sentence_id, token_index, form,
         /// old_code, new_code, reason), each turned into an adjudicated word with its reason in
         /// the log.
         #[arg(long)]
         overrides: Option<PathBuf>,
+        /// Keep the good answers and list what is open, as above.
+        #[arg(long)]
+        check: bool,
+        /// The id of the adjudicator's run, a `run` column of the log that becomes `Runs=` on the
+        /// words it decided.
+        #[arg(long, value_parser = parse_name)]
+        run: Option<String>,
+        /// The directory the merge was written to.
+        #[arg(long, default_value = "merge", value_parser = parse_name)]
+        into: String,
+        /// About how many open items each retry part holds.
+        #[arg(long, default_value_t = 60)]
+        per_part: usize,
+    },
+    /// Puts a labelling merge's agreed and adjudicated words together and writes
+    /// `labelled.conllu` beside them: every sentence of the sample, final tags, `Prov=` and
+    /// `Runs=`, which `deslag-exam score --import` grades like any tagger's output. Reads it back
+    /// with the exam's loader. Never writes into a gold directory.
+    ///
+    /// Every run named in `Runs=` must have a row in `runs.tsv`, which is `<dir>/runs.tsv` unless
+    /// `--runs` says another; a labelled file whose runs are not described is not written.
+    Finish {
+        /// The directory the merge was written to.
+        #[arg(long, default_value = "merge", value_parser = parse_name)]
+        into: String,
+        /// Whether the labels may train a model: `no` for anything labelled over gold sentences.
+        #[arg(long, default_value = "no", value_parser = ["yes", "no", "undecided"])]
+        trains: String,
+        /// The description of the runs.
+        #[arg(long)]
+        runs: Option<PathBuf>,
+    },
+    /// Grades a finished labelling merge against a gold file that is not holdout: each voter, the
+    /// words they agreed on, the words the adjudicator decided and the pipeline, in part of speech
+    /// and features, each with the exam's 95% sentence-bootstrap interval. Writes `report.txt`
+    /// and `report.tsv` beside the merge and prints the table. Refuses a holdout or EWT file.
+    Report {
+        /// The gold file the sample was made from: dev or owner.
+        #[arg(long)]
+        gold: PathBuf,
+        /// The directory the merge was written to.
+        #[arg(long, default_value = "merge", value_parser = parse_name)]
+        into: String,
+        /// A draw's directory: reweight the pipeline's accuracy to its context mix.
+        #[arg(long)]
+        mix_from: Option<PathBuf>,
+        /// Another merge of the same sentences, by its directory under the working directory:
+        /// the paired difference of the two pipelines.
+        #[arg(long, value_parser = parse_name)]
+        versus: Option<String>,
+    },
+    /// Picks sentences of a finished labelling merge at random by a seed into a review queue, for
+    /// the owner to check the labels: `<into>/audit.conllu` unless `--out` says another. The
+    /// labels, `Prov=` and `Runs=` are in the queue, and each sentence is its own `pick_id`.
+    Audit {
+        /// The directory the merge was written to.
+        #[arg(long, default_value = "merge", value_parser = parse_name)]
+        into: String,
+        /// How many sentences.
+        #[arg(long, default_value_t = 50)]
+        count: usize,
+        /// The seed, decimal or `0x` hex. The default is the bytes of `deslag`.
+        #[arg(long, default_value = "0x6465736c6167", value_parser = parse_seed)]
+        seed: u64,
+        /// Where the queue goes.
+        #[arg(long)]
+        out: Option<PathBuf>,
     },
     /// Puts the agreed and the adjudicated words together and writes `dev.conllu`,
     /// `holdout.conllu`, their empty `.disputes.tsv` files, `adjudication.tsv` and `manifest.tsv`.
@@ -362,6 +464,30 @@ fn parse_seed(text: &str) -> Result<u64, String> {
     parsed.map_err(|_| format!("`{text}` is not a number, decimal or 0x hex"))
 }
 
+/// A name of a voter, a run's id or a directory under the working directory: letters, digits,
+/// `-` and `_`.
+fn parse_name(text: &str) -> Result<String, String> {
+    if text.is_empty()
+        || !text
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    {
+        return Err(format!("`{text}` is not letters, digits, `-` and `_`"));
+    }
+    Ok(text.to_string())
+}
+
+/// `NAME` or `NAME=PATH`.
+fn parse_voter(text: &str) -> Result<(String, Option<PathBuf>), String> {
+    match text.split_once('=') {
+        Some((name, path)) if !path.is_empty() => {
+            Ok((parse_name(name)?, Some(PathBuf::from(path))))
+        }
+        Some(_) => Err(format!("`{text}` has no path after the `=`")),
+        None => Ok((parse_name(text)?, None)),
+    }
+}
+
 fn main() -> ExitCode {
     match run(Cli::parse()) {
         Ok(()) => ExitCode::SUCCESS,
@@ -486,18 +612,70 @@ fn run(cli: Cli) -> Result<(), Problems> {
         Command::Queue { from, picks, out } => queue_stage(&from, &picks, &out),
         Command::Own { queue, into } => own_stage(&queue, &into).map(|moved| println!("{moved}")),
         Command::Batches { size } => batches_stage(&dir, size),
-        Command::ReadTags { lines, prov, all } => read_tags_stage(&dir, &lines, &prov, all),
+        Command::ReadTags {
+            lines,
+            prov,
+            all,
+            check,
+            run,
+        } => {
+            parse_name(&prov).map_err(|why| Error::load("--prov", Place::File, why))?;
+            if check {
+                check_tags_stage(&dir, &lines, &prov, run.as_deref())
+            } else {
+                read_tags_stage(&dir, &lines, &prov, run.as_deref(), all)
+            }
+        }
         Command::Merge {
             blind,
             harper,
             spacy,
+            voter,
+            base_only,
+            into,
             per_part,
-        } => merge_stage(&dir, [blind, harper, spacy], per_part),
+        } => {
+            if voter.is_empty() {
+                merge_stage(&dir, [blind, harper, spacy], per_part, &into)
+            } else {
+                merge_voters_stage(&dir, &into, &voter, &base_only, per_part)
+            }
+        }
         Command::ReadAnswers {
             answers,
             partial,
             overrides,
-        } => read_answers_stage(&dir, &answers, partial, overrides.as_deref()),
+            check,
+            run,
+            into,
+            per_part,
+        } => read_answers_stage(
+            &dir,
+            &Answering {
+                answers: &answers,
+                partial,
+                overrides: overrides.as_deref(),
+                check,
+                run: run.as_deref(),
+                into: &into,
+                per_part,
+            },
+        ),
+        Command::Finish { into, trains, runs } => {
+            finish_stage(&dir, &into, &trains, runs.as_deref())
+        }
+        Command::Report {
+            gold,
+            into,
+            mix_from,
+            versus,
+        } => report_stage(&dir, &into, &gold, mix_from.as_deref(), versus.as_deref()),
+        Command::Audit {
+            into,
+            count,
+            seed,
+            out,
+        } => audit_stage(&dir, &into, count, seed, out.as_deref()),
         Command::Assemble {
             out,
             blind,
@@ -511,7 +689,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
 
 /// The sample and its manifest in `dir`.
 fn load_sample(dir: &Path) -> Result<Sample, Problems> {
-    Sample::read(&dir.join("sample.conllu"), &dir.join("manifest.tsv"))
+    Sample::open(dir)
 }
 
 /// The big tier or the small tree as the sampler's files, and what to call it in the manifest.
@@ -840,22 +1018,16 @@ fn read_all(paths: &[PathBuf]) -> Result<Vec<(String, String)>, Error> {
         .collect()
 }
 
-fn read_tags_stage(dir: &Path, lines: &[PathBuf], prov: &str, all: bool) -> Result<(), Problems> {
-    if prov.is_empty()
-        || !prov
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-    {
-        return Err(Error::load(
-            "--prov",
-            Place::File,
-            "a Prov value is letters, digits, `-` and `_`",
-        )
-        .into());
-    }
+fn read_tags_stage(
+    dir: &Path,
+    lines: &[PathBuf],
+    prov: &str,
+    run: Option<&str>,
+    all: bool,
+) -> Result<(), Problems> {
     let sample = load_sample(dir)?;
     let files = read_all(lines)?;
-    let (conllu, count) = compact::read_tags(&sample, &files, prov, all)?;
+    let (conllu, count) = compact::read_tags(&sample, &files, prov, run, all)?;
     let out = dir.join("tags").join(format!("{prov}.conllu"));
     write_text(&out, &conllu)?;
     println!(
@@ -863,6 +1035,47 @@ fn read_tags_stage(dir: &Path, lines: &[PathBuf], prov: &str, all: bool) -> Resu
         sample.sents.len(),
         out.display(),
         sample.sents.len() - count
+    );
+    Ok(())
+}
+
+/// `read-tags --check`: keeps the good lines and writes what is wrong and what is left to ask.
+fn check_tags_stage(
+    dir: &Path,
+    lines: &[PathBuf],
+    prov: &str,
+    run: Option<&str>,
+) -> Result<(), Problems> {
+    let sample = load_sample(dir)?;
+    let files = read_all(lines)?;
+    let checked = compact::check_tags(&sample, &files, prov, run);
+    let tags = dir.join("tags");
+    let out = tags.join(format!("{prov}.conllu"));
+    write_text(&out, &checked.conllu)?;
+    let mut retry = String::new();
+    for sent in sample
+        .sents
+        .iter()
+        .filter(|sent| !checked.kept.contains(&sent.id))
+    {
+        let context = sample
+            .meta(&sent.id)
+            .map_or(Context::Prose, |meta| meta.context);
+        retry.push_str(&batch::render(sent, context));
+        retry.push('\n');
+    }
+    write_text(
+        &tags.join(format!("{prov}.problems.tsv")),
+        &compact::problems_tsv(&checked.bad),
+    )?;
+    write_text(&tags.join(format!("{prov}.retry.txt")), &retry)?;
+    println!(
+        "kept {} of {} sentences in {}; {} lines rejected, {} sentences to ask again",
+        checked.count,
+        sample.sents.len(),
+        out.display(),
+        checked.bad.len(),
+        sample.sents.len() - checked.count
     );
     Ok(())
 }
@@ -892,33 +1105,48 @@ fn load_taggers(
     }
 }
 
-fn merge_stage(dir: &Path, given: [Option<PathBuf>; 3], per_part: usize) -> Result<(), Problems> {
-    let sample = load_sample(dir)?;
-    let taggers = load_taggers(dir, given, &sample)?.map(|(_, answers)| answers);
-    let merged = merge::merge(&sample, &taggers);
-    let out = dir.join("merge");
-
-    // Parts from an earlier run would be taken for this one's.
-    if let Ok(entries) = std::fs::read_dir(&out) {
+/// Removes the files of `out` that an earlier run of a stage wrote and this one would take for its
+/// own: those whose name starts with `prefix` and ends with `.txt`.
+fn clear_parts(out: &Path, prefix: &str) {
+    if let Ok(entries) = std::fs::read_dir(out) {
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().into_owned();
-            if name.starts_with("worklist-") && name.ends_with(".txt") {
+            if name.starts_with(prefix) && name.ends_with(".txt") {
                 let _ = std::fs::remove_file(entry.path());
             }
         }
     }
+}
+
+/// Writes `parts` as `<prefix>NN.txt` in `out`.
+fn write_parts(out: &Path, prefix: &str, parts: &[String]) -> Result<(), Error> {
+    clear_parts(out, prefix);
+    for (number, part) in parts.iter().enumerate() {
+        write_text(&out.join(format!("{prefix}{:02}.txt", number + 1)), part)?;
+    }
+    Ok(())
+}
+
+fn merge_stage(
+    dir: &Path,
+    given: [Option<PathBuf>; 3],
+    per_part: usize,
+    into: &str,
+) -> Result<(), Problems> {
+    let sample = load_sample(dir)?;
+    let taggers = load_taggers(dir, given, &sample)?.map(|(_, answers)| answers);
+    let merged = merge::merge(&sample, &taggers);
+    let out = dir.join(into);
     write_text(
         &out.join("agreed.conllu"),
-        &merge::agreed_conllu(&sample, &merged),
+        &merge::agreed_conllu(&sample, &merged.verdicts, None),
     )?;
     write_text(
         &out.join("worklist.tsv"),
-        &merge::worklist_tsv(&sample, &merged.items),
+        &merge::worklist_tsv(&sample, &merged.items, &NAMES),
     )?;
-    let parts = merge::worklist_parts(&sample, &merged.items, per_part);
-    for (number, part) in parts.iter().enumerate() {
-        write_text(&out.join(format!("worklist-{:02}.txt", number + 1)), part)?;
-    }
+    let parts = merge::worklist_parts(&sample, &merged.items, per_part, &NAMES);
+    write_parts(&out, "worklist-", &parts)?;
     let report = merged.stats.to_string();
     write_text(&out.join("agreement.txt"), &report)?;
     print!("{report}");
@@ -931,18 +1159,134 @@ fn merge_stage(dir: &Path, given: [Option<PathBuf>; 3], per_part: usize) -> Resu
     Ok(())
 }
 
-fn read_answers_stage(
+/// The voters of a labelling merge, each with the answers in its file. A voter's run is the one
+/// its file names in `Runs=`.
+fn load_voters(
     dir: &Path,
-    answers: &[PathBuf],
-    partial: bool,
-    overrides: Option<&Path>,
+    given: &[(String, Option<PathBuf>)],
+    base_only: &[String],
+    sample: &Sample,
+) -> Result<Vec<voters::Voter>, Problems> {
+    let mut problems = Vec::new();
+    if given.len() < merge::FEWEST_TAGGERS {
+        problems.push(Error::load(
+            "--voter",
+            Place::File,
+            format!("a merge needs {} voters or more", merge::FEWEST_TAGGERS),
+        ));
+    }
+    for (at, (name, _)) in given.iter().enumerate() {
+        if given[..at].iter().any(|(earlier, _)| earlier == name) {
+            problems.push(Error::load(
+                "--voter",
+                Place::File,
+                format!("`{name}` is given twice"),
+            ));
+        }
+    }
+    for name in base_only {
+        if !given.iter().any(|(voter, _)| voter == name) {
+            problems.push(Error::load(
+                "--base-only",
+                Place::File,
+                format!("`{name}` is not a voter"),
+            ));
+        }
+    }
+    let mut loaded = Vec::new();
+    for (name, path) in given {
+        let path = path
+            .clone()
+            .unwrap_or_else(|| dir.join("tags").join(format!("{name}.conllu")));
+        let shown = path.display().to_string();
+        let voter = read_text(&path).map_err(Problems::from).and_then(|text| {
+            let answers = merge::load_tagger(name, &shown, &text, sample)?;
+            Ok(voters::Voter {
+                name: name.clone(),
+                answers,
+                base_only: base_only.contains(name),
+                run: voters::run_in(&text),
+                file: shown.clone(),
+            })
+        });
+        match voter {
+            Ok(voter) => loaded.push(voter),
+            Err(found) => problems.extend(found.0),
+        }
+    }
+    Problems::check(problems, loaded)
+}
+
+fn merge_voters_stage(
+    dir: &Path,
+    into: &str,
+    given: &[(String, Option<PathBuf>)],
+    base_only: &[String],
+    per_part: usize,
 ) -> Result<(), Problems> {
-    let out = dir.join("merge");
+    let sample = load_sample(dir)?;
+    let voters = load_voters(dir, given, base_only, &sample)?;
+    let voted = voters::merge_voters(&sample, &voters);
+    let out = dir.join(into);
+    let names: Vec<&str> = voters.iter().map(|voter| voter.name.as_str()).collect();
+    let letters: Vec<String> = (0..voters.len()).map(voters::letter).collect();
+    let letters: Vec<&str> = letters.iter().map(String::as_str).collect();
+    write_text(
+        &out.join("agreed.conllu"),
+        &merge::agreed_conllu(
+            &sample,
+            &voted.verdicts,
+            voters::runs_of(&voters).as_deref(),
+        ),
+    )?;
+    write_text(
+        &out.join("worklist.tsv"),
+        &merge::worklist_tsv(&sample, &voted.items, &names),
+    )?;
+    let parts = merge::worklist_parts(&sample, &voted.items, per_part, &letters);
+    write_parts(&out, "worklist-", &parts)?;
+    write_text(&out.join("voters.tsv"), &voters::voters_tsv(&voters))?;
+    let report = voted.stats.to_string();
+    write_text(&out.join("agreement.txt"), &report)?;
+    print!("{report}");
+    println!(
+        "wrote agreed.conllu, worklist.tsv, voters.tsv and {} worklist parts for {} words to {}",
+        parts.len(),
+        voted.items.len(),
+        out.display()
+    );
+    Ok(())
+}
+
+/// What `read-answers` was asked.
+struct Answering<'a> {
+    answers: &'a [PathBuf],
+    partial: bool,
+    overrides: Option<&'a Path>,
+    check: bool,
+    run: Option<&'a str>,
+    into: &'a str,
+    per_part: usize,
+}
+
+fn read_answers_stage(dir: &Path, asked: &Answering<'_>) -> Result<(), Problems> {
+    let out = dir.join(asked.into);
     let work_path = out.join("worklist.tsv");
     let work = merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
-    let files = read_all(answers)?;
-    let decided = merge::read_answers(&work, &files, !partial)?;
-    let changed = match overrides {
+    let files = read_all(asked.answers)?;
+    let (decided, open) = if asked.check {
+        let checked = merge::check_answers(&work.items, &files);
+        for stray in &checked.stray {
+            eprintln!("deslag-gold: not an answer, {stray}");
+        }
+        (checked.answers, Some(checked.open))
+    } else {
+        (
+            merge::read_answers(&work.items, &files, !asked.partial)?,
+            None,
+        )
+    };
+    let changed = match asked.overrides {
         Some(path) => {
             let agreed_path = out.join("agreed.conllu");
             merge::read_overrides(
@@ -955,16 +1299,237 @@ fn read_answers_stage(
         None => Vec::new(),
     };
     let log = out.join("adjudicated.tsv");
-    write_text(&log, &merge::adjudicated_tsv(&decided, &changed))?;
+    write_text(
+        &log,
+        &merge::adjudicated_tsv(&work.names, &decided, &changed, asked.run),
+    )?;
     println!(
         "read {} of {} answers into {}",
         decided.len(),
-        work.len(),
+        work.items.len(),
         log.display()
     );
-    if overrides.is_some() {
+    if asked.overrides.is_some() {
         println!("applied {} overrides of agreed words", changed.len());
     }
+    if let Some(open) = open {
+        let sample = load_sample(dir)?;
+        let ids: Vec<String> = open.iter().map(|(item, _)| item.clone()).collect();
+        write_text(
+            &out.join("adjudicated.problems.tsv"),
+            &merge::open_tsv(&open),
+        )?;
+        let parts = merge::retry_parts(&sample, &work, &ids, asked.per_part);
+        write_parts(&out, "adjudicated.retry-", &parts)?;
+        println!(
+            "{} items still open, in {} retry parts",
+            open.len(),
+            parts.len()
+        );
+    }
+    Ok(())
+}
+
+/// The run ids a labelled file names in `Runs=`, in order of first appearance.
+fn runs_named(built: &assemble::Built) -> Vec<String> {
+    let mut seen: Vec<String> = Vec::new();
+    for filled in built.sentences.iter().flatten() {
+        for run in filled.runs.iter().flat_map(|runs| runs.split(',')) {
+            if !seen.iter().any(|known| known == run) {
+                seen.push(run.to_string());
+            }
+        }
+    }
+    seen
+}
+
+fn finish_stage(dir: &Path, into: &str, trains: &str, runs: Option<&Path>) -> Result<(), Problems> {
+    let sample = load_sample(dir)?;
+    let out = dir.join(into);
+    let work_path = out.join("worklist.tsv");
+    let work = merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
+    let agreed_path = out.join("agreed.conllu");
+    let log_path = out.join("adjudicated.tsv");
+    let log = if log_path.exists() {
+        merge::read_log(&log_path.display().to_string(), &read_text(&log_path)?)?
+    } else if work.items.is_empty() {
+        Vec::new()
+    } else {
+        return Err(Error::load(
+            &log_path.display().to_string(),
+            Place::File,
+            format!(
+                "there is no log, and {} items to adjudicate; run `read-answers` first",
+                work.items.len()
+            ),
+        )
+        .into());
+    };
+    let built = assemble::build(
+        &sample,
+        &agreed_path.display().to_string(),
+        &read_text(&agreed_path)?,
+        &log,
+    )?;
+    let named = runs_named(&built);
+    if !named.is_empty() {
+        let runs_path = runs.map_or_else(|| dir.join("runs.tsv"), Path::to_path_buf);
+        let shown = runs_path.display().to_string();
+        let described = read_text(&runs_path).map_err(|_| {
+            Error::load(
+                &shown,
+                Place::File,
+                format!(
+                    "the labels name {} runs and there is no runs.tsv to describe them",
+                    named.len()
+                ),
+            )
+        })?;
+        let known: Vec<&str> = described
+            .lines()
+            .skip(1)
+            .filter_map(|line| line.split('\t').next())
+            .collect();
+        let problems: Vec<Error> = named
+            .iter()
+            .filter(|run| !known.contains(&run.as_str()))
+            .map(|run| Error::load(&shown, Place::File, format!("run `{run}` is not described")))
+            .collect();
+        Problems::check(problems, ())?;
+    }
+    let path = out.join("labelled.conllu");
+    let text = assemble::labelled_file(&sample, &built, trains);
+    assemble::reread(&path.display().to_string(), &text)?;
+    write_text(&path, &text)?;
+    let words = built
+        .sentences
+        .iter()
+        .flatten()
+        .filter(|filled| filled.code.is_some())
+        .count();
+    let adjudicated = built
+        .sentences
+        .iter()
+        .flatten()
+        .filter(|filled| filled.prov == assemble::Prov::Adjudicated)
+        .count();
+    println!(
+        "wrote {} sentences, {words} words ({adjudicated} adjudicated), {} runs, to {}",
+        built.sentences.len(),
+        named.len(),
+        path.display()
+    );
+    Ok(())
+}
+
+fn report_stage(
+    dir: &Path,
+    into: &str,
+    gold: &Path,
+    mix_from: Option<&Path>,
+    versus: Option<&str>,
+) -> Result<(), Problems> {
+    data::refuse_holdout(gold)?;
+    let shown = gold.display().to_string();
+    let gold_text = read_text(gold)?;
+    let blocks = deslag_exam::conllu::read(&shown, &gold_text)?;
+    let split = blocks
+        .first()
+        .and_then(|block| block.comment("exam.split"))
+        .map(|comment| comment.value.as_str());
+    if split == Some(Split::Holdout.name()) {
+        return Err(Error::load(
+            &shown,
+            Place::File,
+            "this is a holdout gold; a report never grades against it",
+        )
+        .into());
+    }
+    let sample = load_sample(dir)?;
+    let out = dir.join(into);
+    let gold = merge::load_tagger("gold", &shown, &gold_text, &sample)?;
+    let entries_path = out.join("voters.tsv");
+    let mut voters = voters::read_voters_tsv(
+        &entries_path.display().to_string(),
+        &read_text(&entries_path)?,
+    )?;
+    for voter in &mut voters {
+        let path = PathBuf::from(&voter.file);
+        voter.answers = merge::load_tagger(&voter.name, &voter.file, &read_text(&path)?, &sample)?;
+    }
+    let voted = voters::merge_voters(&sample, &voters);
+    let log_path = out.join("adjudicated.tsv");
+    let log = if log_path.exists() {
+        merge::read_log(&log_path.display().to_string(), &read_text(&log_path)?)?
+    } else {
+        Vec::new()
+    };
+    let labelled_path = out.join("labelled.conllu");
+    let labelled = merge::load_tagger(
+        "pipeline",
+        &labelled_path.display().to_string(),
+        &read_text(&labelled_path)?,
+        &sample,
+    )?;
+    let mix = match mix_from {
+        Some(draw) => Some(pilot::context_mix(&Sample::open(draw)?)),
+        None => None,
+    };
+    let rival = match versus {
+        Some(name) => {
+            let other = dir.join(name);
+            let path = other.join("labelled.conllu");
+            let answers = merge::load_tagger(
+                name,
+                &path.display().to_string(),
+                &read_text(&path)?,
+                &sample,
+            )?;
+            let work_path = other.join("worklist.tsv");
+            let work =
+                merge::read_worklist(&work_path.display().to_string(), &read_text(&work_path)?)?;
+            Some((name, answers, work.items.len()))
+        }
+        None => None,
+    };
+    let report = pilot::report(&pilot::Inputs {
+        sample: &sample,
+        gold: &gold,
+        voters: &voters,
+        voted: &voted,
+        log: &log,
+        labelled: &labelled,
+        mix: mix.as_ref(),
+        versus: rival
+            .as_ref()
+            .map(|(name, answers, count)| (*name, answers, *count)),
+    });
+    let text = report.to_string();
+    write_text(&out.join("report.txt"), &text)?;
+    write_text(&out.join("report.tsv"), &report.tsv())?;
+    print!("{text}");
+    Ok(())
+}
+
+fn audit_stage(
+    dir: &Path,
+    into: &str,
+    count: usize,
+    seed: u64,
+    out: Option<&Path>,
+) -> Result<(), Problems> {
+    // Opening the sample first applies its holdout refusals.
+    load_sample(dir)?;
+    let labelled_path = dir.join(into).join("labelled.conllu");
+    let queue = pilot::audit(
+        &labelled_path.display().to_string(),
+        &read_text(&labelled_path)?,
+        count,
+        seed,
+    )?;
+    let target = out.map_or_else(|| dir.join(into).join("audit.conllu"), Path::to_path_buf);
+    write_text(&target, &queue)?;
+    println!("wrote {count} sentences to {}", target.display());
     Ok(())
 }
 

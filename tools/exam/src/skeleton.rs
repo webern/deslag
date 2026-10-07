@@ -8,7 +8,8 @@
 //! `UPOS` on every `Word` line, so it grades on deslag's own tokens. The skeleton starts with
 //! `# exam.tokens = deslag` and gives each sentence its `# exam.context`, so a file filled from it
 //! is read in the context each sentence was in, and as deslag's tokens. It never carries the tier
-//! or any gold label.
+//! or any gold label. The one thing it says of its gold is a holdout's `# exam.split = holdout`, so
+//! that no stage that reads a skeleton can take the text of a holdout set for another.
 
 use std::fmt::Write;
 
@@ -22,6 +23,9 @@ use crate::tags::{Tag, upos};
 /// The first line of a skeleton: its lines are deslag's tokens, so a file made from it is a
 /// `deslag` gold file, whoever tags it.
 pub const HEADER: &str = "# exam.tokens = deslag\n";
+
+/// The line a holdout gold's skeleton adds after [`HEADER`], so a copy of it still says what it is.
+pub const HOLDOUT: &str = "# exam.split = holdout\n";
 
 /// The context of a block's sentences: `heading` if the block is a heading, else `table-cell` if
 /// it is a table cell, else `list-item` if a block around it is a list item, else `prose`. This
@@ -98,6 +102,9 @@ pub fn origin_misc(token: &Token<'_>, origin: Origin) -> String {
 /// The skeleton of every sentence of `gold`.
 pub fn skeleton(gold: &Gold) -> String {
     let mut out = String::from(HEADER);
+    if gold.holdout() {
+        out.push_str(HOLDOUT);
+    }
     for sentence in &gold.sentences {
         let tokens = sentence.tokens();
         let origins = deslag::tag::origins(&tokens);

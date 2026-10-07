@@ -31,6 +31,10 @@ pub struct Tok {
     pub kind: TokenKind,
     /// Whether no space follows it in the source.
     pub joined: bool,
+    /// Where the word comes from, as the skeleton's `Origin=` says; English when it says none, and
+    /// for every token that is not a word. A draw for labelling writes it, so the batches can show
+    /// a labeller that `foo_bar` is a name from code; the gold sample has none.
+    pub origin: Origin,
 }
 
 impl Tok {
@@ -80,12 +84,19 @@ pub fn upos_of_kind(kind: TokenKind) -> &'static str {
     }
 }
 
-/// The MISC column of a token line: `Kind=`, then `Prov=` when `prov` is given, then
+/// The MISC column of a token line: `Kind=`, then `Origin=` when the token is a word of a
+/// non-English origin, then `Prov=` when `prov` is given, then `Runs=` when `runs` is given, then
 /// `SpaceAfter=No`. UD asks for keys in alphabetical order.
-pub fn misc(tok: &Tok, prov: Option<&str>) -> String {
+pub fn misc(tok: &Tok, prov: Option<&str>, runs: Option<&str>) -> String {
     let mut misc = format!("Kind={}", kind_name(tok.kind));
+    if tok.is_word() && tok.origin != Origin::English {
+        let _ = write!(misc, "|Origin={}", tok.origin.name());
+    }
     if let Some(prov) = prov {
         let _ = write!(misc, "|Prov={prov}");
+    }
+    if let Some(runs) = runs {
+        let _ = write!(misc, "|Runs={runs}");
     }
     if tok.joined {
         misc.push_str("|SpaceAfter=No");
@@ -170,8 +181,9 @@ pub struct Meta {
     /// Dev or holdout; none for a sentence of a draw for labelling, written `unlabelled`. The exam's
     /// own `Split` has no such value, so no gold file can say it.
     pub split: Option<Split>,
-    /// Who wrote the file it came from.
-    pub tier: Tier,
+    /// Who wrote the file it came from; none for a sentence of a bare skeleton, which has no
+    /// manifest to say.
+    pub tier: Option<Tier>,
     /// The block it was in.
     pub context: Context,
     /// The corpus fixture it was quoted from, as the loader names it.
@@ -220,6 +232,9 @@ const COLUMNS: [&str; 8] = [
 /// What the split column says of a sentence no one has labelled.
 const UNLABELLED: &str = "unlabelled";
 
+/// What the tier column says of a sentence whose tier is not known.
+const UNKNOWN_TIER: &str = "unknown";
+
 /// The columns a draw for labelling adds after [`COLUMNS`].
 const PROVENANCE_COLUMNS: [&str; 5] = [
     "source_commit",
@@ -262,7 +277,7 @@ impl Manifest {
                 out,
                 "{id}\t{}\t{}\t{}\t{}\t{}\t{}\t{}-{}",
                 meta.split.map_or(UNLABELLED, Split::name),
-                meta.tier.name(),
+                meta.tier.map_or(UNKNOWN_TIER, Tier::name),
                 meta.context.name(),
                 meta.file,
                 meta.repo,
@@ -346,7 +361,11 @@ impl Manifest {
                 } else {
                     Some(Split::from_name(cells[1]).ok_or_else(|| bad("bad split", cells[1]))?)
                 },
-                tier: Tier::from_name(cells[2]).ok_or_else(|| bad("bad tier", cells[2]))?,
+                tier: if cells[2] == UNKNOWN_TIER {
+                    None
+                } else {
+                    Some(Tier::from_name(cells[2]).ok_or_else(|| bad("bad tier", cells[2]))?)
+                },
                 context: Context::from_name(cells[3])
                     .ok_or_else(|| bad("bad context", cells[3]))?,
                 file: cells[4].to_string(),
@@ -405,6 +424,96 @@ impl Sample {
             .collect()
     }
 
+    /// The sample in `dir`: `sample.conllu` and the manifest beside it, or, where `dir` has no
+    /// `manifest.tsv`, the skeleton alone, which is how `deslag-exam tokens --gold` writes a gold
+    /// file's sentences. A bare sample has each sentence's context from its `# exam.context`, and
+    /// no split, tier, file or repository.
+    ///
+    /// It is refused when its skeleton says `exam.split = holdout`, which `deslag-exam tokens`
+    /// writes for a holdout gold, and, in a directory under `.label`, when its manifest has a
+    /// holdout row. Nothing the labelling flow reads or writes may hold a holdout sentence. The
+    /// gold flow's own `.gold` mixes holdout in its sample, and is not refused.
+    pub fn open(dir: &Path) -> Result<Sample, Problems> {
+        let sample_path = dir.join("sample.conllu");
+        let manifest_path = dir.join("manifest.tsv");
+        let shown = sample_path.display().to_string();
+        let text = read_text(&sample_path)?;
+        let blocks = conllu::read(&shown, &text)?;
+        let says_holdout = |key: &str| {
+            blocks
+                .first()
+                .and_then(|block| block.comment(key))
+                .is_some_and(|comment| comment.value == Split::Holdout.name())
+        };
+        if says_holdout("exam.split") {
+            return Err(Error::load(
+                &shown,
+                Place::File,
+                "this skeleton came from a holdout gold, which no labelling stage may read",
+            )
+            .into());
+        }
+        let sample = if manifest_path.exists() {
+            Sample::read(&sample_path, &manifest_path)?
+        } else {
+            let sents = parse_skeleton(&shown, &text)?;
+            let rows = sents
+                .iter()
+                .zip(&blocks)
+                .map(|(sent, block)| {
+                    let context = block
+                        .comment("exam.context")
+                        .and_then(|comment| Context::from_name(&comment.value))
+                        .unwrap_or(Context::Prose);
+                    (
+                        sent.id.clone(),
+                        Meta {
+                            split: None,
+                            tier: None,
+                            context,
+                            file: String::new(),
+                            repo: String::new(),
+                            license: String::new(),
+                            range: 0..0,
+                            provenance: None,
+                        },
+                    )
+                })
+                .collect();
+            Sample {
+                sents,
+                manifest: Manifest {
+                    header: vec![("source".to_string(), "a bare skeleton".to_string())],
+                    rows,
+                },
+            }
+        };
+        if in_label_place(dir) {
+            let held = sample
+                .manifest
+                .rows
+                .iter()
+                .filter(|(_, meta)| meta.split == Some(Split::Holdout))
+                .count();
+            let headed = sample
+                .manifest
+                .header
+                .iter()
+                .any(|(key, value)| key == "split" && value == Split::Holdout.name());
+            if held > 0 || headed {
+                return Err(Error::load(
+                    &manifest_path.display().to_string(),
+                    Place::File,
+                    format!(
+                        "the manifest has {held} holdout rows, and nothing under `{LABEL_DIR}` may hold holdout"
+                    ),
+                )
+                .into());
+            }
+        }
+        Ok(sample)
+    }
+
     /// Reads the skeleton at `sample` and the manifest at `manifest`, and checks that they name
     /// the same sentences.
     pub fn read(sample: &Path, manifest: &Path) -> Result<Sample, Problems> {
@@ -436,6 +545,34 @@ impl Sample {
         Ok(Sample { sents, manifest })
     }
 }
+
+/// Whether `dir` is, or is inside, a directory named `.label`: where the labelling flow keeps
+/// everything, and where no holdout sentence may be.
+pub fn in_label_place(dir: &Path) -> bool {
+    dir.components()
+        .any(|part| part.as_os_str() == std::ffi::OsStr::new(LABEL_DIR))
+}
+
+/// Refuses a path that names holdout or an English Web Treebank file: a component that starts with
+/// `holdout`, or that holds `en_ewt` or is `.ewt`. The labelling flow grades against dev and owner
+/// only, and checks the path before it opens anything.
+pub fn refuse_holdout(path: &Path) -> Result<(), Error> {
+    let barred = path.components().any(|part| {
+        let name = part.as_os_str().to_string_lossy().to_lowercase();
+        name.starts_with("holdout") || name.contains("en_ewt") || name == ".ewt"
+    });
+    if barred {
+        return Err(Error::load(
+            &path.display().to_string(),
+            Place::File,
+            "holdout and EWT files are never read by the labelling flow",
+        ));
+    }
+    Ok(())
+}
+
+/// The directory the labelling flow keeps its files in, which git ignores.
+pub const LABEL_DIR: &str = ".label";
 
 /// The text of `path`, which must be UTF-8.
 pub fn read_text(path: &Path) -> Result<String, Error> {
@@ -491,8 +628,14 @@ pub fn parse_skeleton(path: &str, text: &str) -> Result<Vec<Sent>, Error> {
             }
             let mut kind = None;
             let mut joined = false;
+            let mut origin = Origin::English;
             for (key, value) in conllu::pairs(&line.misc) {
                 match key {
+                    "Origin" => {
+                        origin = Origin::from_name(value).ok_or_else(|| {
+                            Error::at(path, line.number, format!("unknown Origin `{value}`"))
+                        })?
+                    }
                     "Kind" => {
                         kind = Some(kind_from_name(value).ok_or_else(|| {
                             Error::at(path, line.number, format!("unknown Kind `{value}`"))
@@ -509,10 +652,18 @@ pub fn parse_skeleton(path: &str, text: &str) -> Result<Vec<Sent>, Error> {
                     "no Kind= in MISC, which a skeleton needs",
                 )
             })?;
+            // Only a word has an origin; a skeleton that gives one to another token is read as
+            // English there, as the exam's own skeleton never writes it.
+            let origin = if kind == TokenKind::Word {
+                origin
+            } else {
+                Origin::English
+            };
             toks.push(Tok {
                 form: line.form.clone(),
                 kind,
                 joined,
+                origin,
             });
         }
         if toks.is_empty() {
@@ -533,6 +684,7 @@ pub mod tests {
             form: form.to_string(),
             kind,
             joined,
+            origin: Origin::English,
         }
     }
 
@@ -583,7 +735,7 @@ pub mod tests {
     fn a_manifest_with_provenance_reads_back_and_one_without_keeps_its_eight_columns() {
         let meta = |provenance| Meta {
             split: None,
-            tier: Tier::Llm,
+            tier: Some(Tier::Llm),
             context: Context::Heading,
             file: "f.md".to_string(),
             repo: "o/n".to_string(),
@@ -638,7 +790,7 @@ pub mod tests {
                 "g0001".to_string(),
                 Meta {
                     split: Some(Split::Holdout),
-                    tier: Tier::Llm,
+                    tier: Some(Tier::Llm),
                     context: Context::ListItem,
                     file: "batches/b/llm/o/n/f.md".to_string(),
                     repo: "o/n".to_string(),
@@ -677,6 +829,113 @@ pub mod tests {
         ] {
             let error = Manifest::parse("m", &text).unwrap_err().to_string();
             assert!(error.contains(says), "{error} should say {says}");
+        }
+    }
+
+    /// A skeleton of `run_now` under `.label/<name>` in `root`, with `extra` as comments before it.
+    fn label_dir(root: &Path, name: &str, extra: &str) -> std::path::PathBuf {
+        let dir = root.join(LABEL_DIR).join(name);
+        std::fs::create_dir_all(&dir).unwrap();
+        let text = skeleton(&[run_now()], |_| Some(Context::ListItem), false).replacen(
+            "# exam.tokens = deslag\n",
+            &format!("# exam.tokens = deslag\n{extra}"),
+            1,
+        );
+        std::fs::write(dir.join("sample.conllu"), text).unwrap();
+        dir
+    }
+
+    #[test]
+    fn a_bare_skeleton_opens_with_its_contexts_and_no_tier_or_split() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = label_dir(root.path(), "dev", "");
+        let sample = Sample::open(&dir).unwrap();
+        assert_eq!(sample.sents.len(), 1);
+        let meta = sample.meta("g0001").unwrap();
+        assert_eq!(meta.context, Context::ListItem);
+        assert_eq!((meta.tier, meta.split), (None, None));
+        assert!(in_label_place(&dir));
+    }
+
+    #[test]
+    fn a_skeleton_of_a_holdout_gold_is_refused_wherever_it_is() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = label_dir(root.path(), "hold", "# exam.split = holdout\n");
+        let error = Sample::open(&dir).unwrap_err().to_string();
+        assert!(error.contains("holdout"), "{error}");
+        assert!(!error.contains("Run"), "no text in the error: {error}");
+        // Outside `.label` too.
+        let elsewhere = root.path().join("anywhere");
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        std::fs::copy(dir.join("sample.conllu"), elsewhere.join("sample.conllu")).unwrap();
+        assert!(Sample::open(&elsewhere).is_err());
+    }
+
+    #[test]
+    fn a_manifest_row_or_header_that_says_holdout_is_refused_under_label_only() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = label_dir(root.path(), "x", "");
+        let rows = |split: Option<Split>| Manifest {
+            header: Vec::new(),
+            rows: vec![(
+                "g0001".to_string(),
+                Meta {
+                    split,
+                    tier: Some(Tier::Human),
+                    context: Context::Prose,
+                    file: "f.md".to_string(),
+                    repo: "o/r".to_string(),
+                    license: "MIT".to_string(),
+                    range: 0..1,
+                    provenance: None,
+                },
+            )],
+        };
+        std::fs::write(
+            dir.join("manifest.tsv"),
+            rows(Some(Split::Holdout)).render(),
+        )
+        .unwrap();
+        let error = Sample::open(&dir).unwrap_err().to_string();
+        assert!(error.contains("1 holdout rows"), "{error}");
+        std::fs::write(dir.join("manifest.tsv"), rows(Some(Split::Dev)).render()).unwrap();
+        assert!(Sample::open(&dir).is_ok());
+        // A header `split = holdout` is as bad.
+        let mut headed = rows(Some(Split::Dev));
+        headed
+            .header
+            .push(("split".to_string(), "holdout".to_string()));
+        std::fs::write(dir.join("manifest.tsv"), headed.render()).unwrap();
+        assert!(Sample::open(&dir).is_err());
+        // The gold flow's directory is not under `.label`, and mixes holdout in.
+        let gold_flow = root.path().join(".gold");
+        std::fs::create_dir_all(&gold_flow).unwrap();
+        std::fs::copy(dir.join("sample.conllu"), gold_flow.join("sample.conllu")).unwrap();
+        std::fs::write(
+            gold_flow.join("manifest.tsv"),
+            rows(Some(Split::Holdout)).render(),
+        )
+        .unwrap();
+        assert!(Sample::open(&gold_flow).is_ok());
+    }
+
+    #[test]
+    fn holdout_and_ewt_paths_are_refused_before_anything_is_read() {
+        for barred in [
+            "tests/gold/holdout.conllu",
+            "holdout-copy.conllu",
+            "/tmp/Holdout/dev.conllu",
+            "en_ewt-ud-test.conllu",
+            ".ewt/train.conllu",
+        ] {
+            assert!(refuse_holdout(Path::new(barred)).is_err(), "{barred}");
+        }
+        for allowed in [
+            "tests/gold/dev.conllu",
+            "tests/gold/owner.conllu",
+            ".label/dev",
+        ] {
+            assert!(refuse_holdout(Path::new(allowed)).is_ok(), "{allowed}");
         }
     }
 }

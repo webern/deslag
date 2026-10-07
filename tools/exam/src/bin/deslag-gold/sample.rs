@@ -30,6 +30,7 @@ use std::ops::Range;
 
 use deslag::Document;
 use deslag::document::{Body, Token, TokenKind};
+use deslag::tag::Origin;
 use deslag_corpus::stats::Rng;
 use deslag_exam::error::Error;
 use deslag_exam::gold::{Gold, Split, Tier};
@@ -237,6 +238,7 @@ pub fn candidates(text: &str, settings: &Settings, skipped: &mut Skipped) -> Vec
                     joined: tokens
                         .get(index + 1)
                         .is_some_and(|next| next.range.start == token.range.end),
+                    origin: Origin::English,
                 })
                 .collect();
             if toks.len() > settings.max_tokens {
@@ -506,7 +508,7 @@ pub fn draw(
             id.clone(),
             Meta {
                 split: pick.split,
-                tier: pick.tier,
+                tier: Some(pick.tier),
                 context: pick.cand.context,
                 file: file.path.clone(),
                 repo: file.repo.clone(),
@@ -629,7 +631,7 @@ fn as_gold(sents: &[Sent]) -> String {
                 &tok.form,
                 upos,
                 "_",
-                &crate::data::misc(tok, Some("agree")),
+                &crate::data::misc(tok, Some("agree"), None),
             ));
         }
         text.push('\n');
@@ -684,7 +686,10 @@ impl fmt::Display for Counts<'_> {
         let outcome = self.0;
         let mut table: BTreeMap<(usize, usize, usize), usize> = BTreeMap::new();
         for (_, meta) in &outcome.sample.manifest.rows {
-            let tier = Tier::ALL.iter().position(|t| *t == meta.tier).unwrap_or(0);
+            let tier = Tier::ALL
+                .iter()
+                .position(|t| Some(*t) == meta.tier)
+                .unwrap_or(0);
             let context = Context::ALL
                 .iter()
                 .position(|c| *c == meta.context)
@@ -967,13 +972,13 @@ Ok.
             for (context, quota) in Context::ALL.iter().zip(small().quotas) {
                 let in_cell: Vec<_> = rows
                     .iter()
-                    .filter(|(_, m)| m.tier == tier && m.context == *context)
+                    .filter(|(_, m)| m.tier == Some(tier) && m.context == *context)
                     .collect();
                 assert_eq!(in_cell.len(), quota, "{} {}", tier.name(), context.name());
             }
             let held = rows
                 .iter()
-                .filter(|(_, m)| m.tier == tier && m.split == Some(Split::Holdout))
+                .filter(|(_, m)| m.tier == Some(tier) && m.split == Some(Split::Holdout))
                 .count();
             assert_eq!(held, 4, "{}", tier.name());
         }
@@ -1047,7 +1052,7 @@ Ok.
         let ids: Vec<&str> = outcome.sample.sents.iter().map(|s| s.id.as_str()).collect();
         let expect: Vec<String> = (1..=30).map(|n| format!("g{n:04}")).collect();
         assert_eq!(ids, expect.iter().map(String::as_str).collect::<Vec<_>>());
-        let tiers: Vec<Tier> = outcome
+        let tiers: Vec<Option<Tier>> = outcome
             .sample
             .manifest
             .rows
@@ -1170,7 +1175,7 @@ Ok.
             assert!(!gold.has(&sent.toks), "{}", sent.text());
             let from = meta.provenance.as_ref().unwrap();
             assert_eq!(from.commit, format!("commit-of-{}", meta.file));
-            assert_eq!(from.model.is_empty(), meta.tier != Tier::Llm);
+            assert_eq!(from.model.is_empty(), meta.tier != Some(Tier::Llm));
         }
         // The same seed gives the same bytes, manifest included.
         let again = drawn(&settings);
@@ -1292,7 +1297,7 @@ Ok.
                 .manifest
                 .rows
                 .iter()
-                .filter(|(_, meta)| meta.tier == tier)
+                .filter(|(_, meta)| meta.tier == Some(tier))
                 .count()
         };
         assert_eq!(

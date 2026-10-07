@@ -646,6 +646,7 @@ mod tests {
             form: form.to_string(),
             kind: deslag::document::TokenKind::Word,
             joined: false,
+            origin: deslag::tag::Origin::English,
         };
         assert!(gold.has(&[tok("run"), tok("make ci"), tok("NOW")]));
         assert!(!gold.has(&[tok("run"), tok("now")]));

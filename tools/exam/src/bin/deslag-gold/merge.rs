@@ -209,8 +209,9 @@ pub struct Item {
     pub sent: usize,
     /// Its token's position in the sentence, from 0.
     pub tok: usize,
-    /// What each of the three said, in the order of [`NAMES`].
-    pub said: [Code; 3],
+    /// What each tagger said, in the order of [`NAMES`] for the three-way merge and of the voters
+    /// for [`crate::voters`].
+    pub said: Vec<Code>,
     /// Whether the bases differ, or only a feature.
     pub tags_differ: bool,
 }
@@ -289,9 +290,11 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
             let full = matches!(verdict, Verdict::Agreed(_));
             stats.full3 += usize::from(full);
             if let Some(meta) = meta {
-                let tier = stats.by_tier.entry(meta.tier.name()).or_default();
-                tier.0 += 1;
-                tier.1 += usize::from(full);
+                if let Some(tier) = meta.tier {
+                    let tier = stats.by_tier.entry(tier.name()).or_default();
+                    tier.0 += 1;
+                    tier.1 += usize::from(full);
+                }
                 let context = stats.by_context.entry(meta.context.name()).or_default();
                 context.0 += 1;
                 context.1 += usize::from(full);
@@ -305,7 +308,7 @@ pub fn merge(sample: &Sample, taggers: &[Answers; 3]) -> Merged {
                 items.push(Item {
                     sent: at,
                     tok,
-                    said: [blind, harper, spacy],
+                    said: vec![blind, harper, spacy],
                     tags_differ,
                 });
             }
@@ -384,9 +387,16 @@ impl fmt::Display for Stats {
 /// `agreed.conllu`: every sentence, the agreed words with their UPOS, FEATS and `Prov=agree`, the
 /// words that are not words with theirs from their kind (`Prov=kind`), and each disputed word with `_` for UPOS
 /// and no `Prov=`.
-pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
+///
+/// `runs`, when the voters have runs, is the `Runs=` of every agreed word: the runs of the voters
+/// that agreed, which for an agreed word is all of them.
+pub fn agreed_conllu(
+    sample: &Sample,
+    verdicts: &[Vec<Option<Verdict>>],
+    runs: Option<&str>,
+) -> String {
     let mut out = String::new();
-    for (sent, row) in sample.sents.iter().zip(&merged.verdicts) {
+    for (sent, row) in sample.sents.iter().zip(verdicts) {
         let _ = writeln!(out, "# sent_id = {}\n# text = {}", sent.id, sent.text());
         for (index, (tok, verdict)) in sent.toks.iter().zip(row).enumerate() {
             let text = match verdict {
@@ -395,17 +405,17 @@ pub fn agreed_conllu(sample: &Sample, merged: &Merged) -> String {
                     &tok.form,
                     upos_of_kind(tok.kind),
                     "_",
-                    &misc(tok, Some("kind")),
+                    &misc(tok, Some("kind"), None),
                 ),
                 Some(Verdict::Agreed(code)) => line(
                     index,
                     &tok.form,
                     code.upos(&tok.form),
                     &code.feats(),
-                    &misc(tok, Some("agree")),
+                    &misc(tok, Some("agree"), runs),
                 ),
                 Some(Verdict::Disputed { .. }) => {
-                    line(index, &tok.form, "_", "_", &misc(tok, None))
+                    line(index, &tok.form, "_", "_", &misc(tok, None, None))
                 }
             };
             out.push_str(&text);
@@ -427,22 +437,97 @@ fn said(code: Code) -> String {
     }
 }
 
-const WORKLIST_HEADER: &str = "\
+/// How many taggers the worklist header says there are.
+fn count_word(count: usize) -> String {
+    match count {
+        2 => "two".to_string(),
+        3 => "three".to_string(),
+        4 => "four".to_string(),
+        5 => "five".to_string(),
+        other => other.to_string(),
+    }
+}
+
+/// The text a worklist part opens with, for the taggers `names`, in the order of an item's `said`.
+fn worklist_header(names: &[&str]) -> String {
+    format!(
+        "\
 Adjudicate the words below. Each sentence is shown with its tokens numbered; under it, each
-word the three taggers disagree on, with what each said (blind, harper, spacy). A code that ends
+word the {} taggers disagree on, with what each said ({}). A code that ends
 in .? means that tagger gave the part of speech and no feature.
 
 Decide each word from the annotation guide, for its use in this sentence. Answer with one line per
 item, at the end, in the slots given: the item, a colon, one code of the guide with its feature,
 a bar, and a reason of 15 words or fewer. Answer every item, change nothing else, and write
 nothing else.
-";
+",
+        count_word(names.len()),
+        names.join(", ")
+    )
+}
+
+/// One item of a worklist part: its place in the sample, and what each tagger said as the part
+/// prints it.
+struct Row {
+    sent: usize,
+    tok: usize,
+    id: String,
+    said: Vec<String>,
+}
 
 /// The worklist, in parts of about `per_part` items, never splitting a sentence. Each part is
 /// text for the adjudicator: the numbered sentences, their words in dispute, and a slot to fill
-/// for each item. The parts hold no tier, split or file.
-pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<String> {
-    let mut parts: Vec<Vec<&Item>> = Vec::new();
+/// for each item. The parts hold no tier, split or file. `names` is what each tagger is called in
+/// them, in the order of an item's `said`: `blind`, `harper` and `spacy`, or `A`, `B` and `C` so
+/// that the adjudicator never learns which model said what.
+pub fn worklist_parts(
+    sample: &Sample,
+    items: &[Item],
+    per_part: usize,
+    names: &[&str],
+) -> Vec<String> {
+    let rows: Vec<Row> = items
+        .iter()
+        .map(|item| Row {
+            sent: item.sent,
+            tok: item.tok,
+            id: item.id(sample),
+            said: item.said.iter().map(|code| said(*code)).collect(),
+        })
+        .collect();
+    parts_of(sample, &rows, per_part, names)
+}
+
+/// The parts of the worklist for the items of `work` named in `open`, laid out as
+/// [`worklist_parts`] lays them out, with the taggers shown by letter: what is left to ask the
+/// adjudicator after some answers were rejected.
+pub fn retry_parts(
+    sample: &Sample,
+    work: &Worklist,
+    open: &[String],
+    per_part: usize,
+) -> Vec<String> {
+    let index = sample.index_of();
+    let rows: Vec<Row> = work
+        .items
+        .iter()
+        .filter(|item| open.contains(&item.item))
+        .filter_map(|item| {
+            Some(Row {
+                sent: *index.get(item.sent_id.as_str())?,
+                tok: item.token - 1,
+                id: item.item.clone(),
+                said: item.said.clone(),
+            })
+        })
+        .collect();
+    let letters: Vec<String> = (0..work.names.len()).map(crate::voters::letter).collect();
+    let names: Vec<&str> = letters.iter().map(String::as_str).collect();
+    parts_of(sample, &rows, per_part, &names)
+}
+
+fn parts_of(sample: &Sample, items: &[Row], per_part: usize, names: &[&str]) -> Vec<String> {
+    let mut parts: Vec<&[Row]> = Vec::new();
     let mut at = 0;
     while at < items.len() {
         let mut end = at;
@@ -453,32 +538,35 @@ pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<S
                 end += 1;
             }
         }
-        parts.push(items[at..end].iter().collect());
+        parts.push(&items[at..end]);
         at = end;
     }
     parts
         .iter()
         .map(|part| {
-            let mut out = String::from(WORKLIST_HEADER);
+            let mut out = worklist_header(names);
             let mut slots = String::new();
             let mut current = usize::MAX;
-            for item in part {
+            for item in *part {
                 let sent = &sample.sents[item.sent];
                 if item.sent != current {
                     current = item.sent;
                     let context = sample.meta(&sent.id).map_or(Context::Prose, |m| m.context);
                     let _ = write!(out, "\n{}\n", batch::render(sent, context));
                 }
+                let answers: Vec<String> = names
+                    .iter()
+                    .zip(&item.said)
+                    .map(|(name, code)| format!("{name} {code}"))
+                    .collect();
                 let _ = writeln!(
                     out,
-                    "  {} {}: blind {}, harper {}, spacy {}",
+                    "  {} {}: {}",
                     item.tok + 1,
                     sent.toks[item.tok].form,
-                    said(item.said[0]),
-                    said(item.said[1]),
-                    said(item.said[2])
+                    answers.join(", ")
                 );
-                let _ = writeln!(slots, "{}: ", item.id(sample));
+                let _ = writeln!(slots, "{}: ", item.id);
             }
             let _ = write!(out, "\nSlots:\n{slots}");
             out
@@ -486,26 +574,35 @@ pub fn worklist_parts(sample: &Sample, items: &[Item], per_part: usize) -> Vec<S
         .collect()
 }
 
-/// The columns of `worklist.tsv`.
-const WORK_COLUMNS: [&str; 8] = [
-    "item", "sent_id", "token", "form", "blind", "harper", "spacy", "differs",
-];
+/// The columns of `worklist.tsv` before the taggers' names, which come next, and the one after.
+const WORK_FIRST: [&str; 4] = ["item", "sent_id", "token", "form"];
+const WORK_LAST: &str = "differs";
+
+/// The fewest taggers a merge, and so a worklist, has.
+pub const FEWEST_TAGGERS: usize = 2;
 
 /// `worklist.tsv`, the machine form of the worklist, which [`read_answers`] checks answers against.
-pub fn worklist_tsv(sample: &Sample, items: &[Item]) -> String {
-    let mut out = format!("{}\n", WORK_COLUMNS.join("\t"));
+/// Its columns are the item, the sentence, the token, the form, the name of each tagger in the
+/// order of an item's `said`, and `differs`.
+pub fn worklist_tsv(sample: &Sample, items: &[Item], names: &[&str]) -> String {
+    let columns: Vec<&str> = WORK_FIRST
+        .iter()
+        .chain(names)
+        .chain(std::iter::once(&WORK_LAST))
+        .copied()
+        .collect();
+    let mut out = format!("{}\n", columns.join("\t"));
     for item in items {
         let sent = &sample.sents[item.sent];
+        let said: Vec<String> = item.said.iter().map(|code| said(*code)).collect();
         let _ = writeln!(
             out,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}",
             item.id(sample),
             sent.id,
             item.tok + 1,
             sent.toks[item.tok].form,
-            said(item.said[0]),
-            said(item.said[1]),
-            said(item.said[2]),
+            said.join("\t"),
             if item.tags_differ { "tag" } else { "feature" }
         );
     }
@@ -523,38 +620,56 @@ pub struct WorkItem {
     pub token: usize,
     /// The word.
     pub form: String,
-    /// What the three said, as the worklist printed it.
-    pub said: [String; 3],
+    /// What each tagger said, as the worklist printed it, in the order of [`Worklist::names`].
+    pub said: Vec<String>,
+}
+
+/// `worklist.tsv` read back.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Worklist {
+    /// The taggers' names, as the columns give them.
+    pub names: Vec<String>,
+    /// The rows.
+    pub items: Vec<WorkItem>,
+}
+
+/// The taggers' names in a header of `columns` that opens with `first` and closes with `last`,
+/// or `None` when the header is not that.
+fn names_between<'h>(columns: &[&'h str], first: &[&str], last: &[&str]) -> Option<Vec<&'h str>> {
+    let middle = columns.len().checked_sub(first.len() + last.len())?;
+    let fits = columns.starts_with(first) && columns.ends_with(last);
+    (fits && middle >= FEWEST_TAGGERS).then(|| columns[first.len()..first.len() + middle].to_vec())
 }
 
 /// Reads `worklist.tsv`, which came from `path`.
-pub fn read_worklist(path: &str, text: &str) -> Result<Vec<WorkItem>, Error> {
+pub fn read_worklist(path: &str, text: &str) -> Result<Worklist, Error> {
     let mut items = Vec::new();
     let mut lines = text.lines().enumerate();
-    match lines.next() {
-        Some((_, head)) if head.split('\t').eq(WORK_COLUMNS) => {}
-        _ => {
-            return Err(Error::at(
-                path,
-                1,
-                format!("the columns should be {}", WORK_COLUMNS.join(", ")),
-            ));
-        }
-    }
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let Some(names) = names_between(&head, &WORK_FIRST, &[WORK_LAST]) else {
+        return Err(Error::at(
+            path,
+            1,
+            format!(
+                "the columns should be {}, the names of two or more taggers, and {WORK_LAST}",
+                WORK_FIRST.join(", ")
+            ),
+        ));
+    };
+    let width = head.len();
     for (at, line) in lines {
         if line.trim().is_empty() {
             continue;
         }
         let cells: Vec<&str> = line.split('\t').collect();
-        if cells.len() != WORK_COLUMNS.len() {
+        if cells.len() != width {
             return Err(Error::at(
                 path,
                 at + 1,
-                format!(
-                    "expected {} columns, found {}",
-                    WORK_COLUMNS.len(),
-                    cells.len()
-                ),
+                format!("expected {width} columns, found {}", cells.len()),
             ));
         }
         let token = cells[2]
@@ -565,10 +680,16 @@ pub fn read_worklist(path: &str, text: &str) -> Result<Vec<WorkItem>, Error> {
             sent_id: cells[1].to_string(),
             token,
             form: cells[3].to_string(),
-            said: [cells[4], cells[5], cells[6]].map(str::to_string),
+            said: cells[WORK_FIRST.len()..width - 1]
+                .iter()
+                .map(|cell| cell.to_string())
+                .collect(),
         });
     }
-    Ok(items)
+    Ok(Worklist {
+        names: names.into_iter().map(str::to_string).collect(),
+        items,
+    })
 }
 
 /// The most words a reason may have.
@@ -614,19 +735,41 @@ fn parse_answer<'w>(
     Ok((work, code, reason))
 }
 
-/// Reads the adjudicator's answers: each of `files` is a path and its text. Every line must be
-/// `item: code | reason` for an item of `work`, once, with a code of the guide and a reason of
-/// at most 15 words. With `all`, every item must be answered. Blank lines, code fences and the
-/// lines of a `Slots:` heading are skipped. Returns the answers in the order of `work`.
-pub fn read_answers(
-    work: &[WorkItem],
-    files: &[(String, String)],
-    all: bool,
-) -> Result<Vec<Answer>, Problems> {
+/// A line of the adjudicator's answers that is not an answer.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AnswerFault {
+    /// The file it is in.
+    pub path: String,
+    /// Its line, from 1.
+    pub line: usize,
+    /// The worklist item it answers, when it names one.
+    pub item: Option<String>,
+    /// The sentence of that item.
+    pub sent_id: Option<String>,
+    /// What is wrong, without the line's number.
+    pub message: String,
+}
+
+impl AnswerFault {
+    fn error(&self) -> Error {
+        match &self.sent_id {
+            Some(sent) => Problems::sentence(
+                &self.path,
+                sent,
+                format!("line {}: {}", self.line, self.message),
+            ),
+            None => Error::at(&self.path, self.line, self.message.clone()),
+        }
+    }
+}
+
+/// Every answer in `files` that is one, in the order of `work`, and a fault for each line that is
+/// not. An item answered twice keeps its first answer.
+fn scan_answers(work: &[WorkItem], files: &[(String, String)]) -> (Vec<Answer>, Vec<AnswerFault>) {
     let wanted: BTreeMap<&str, &WorkItem> =
         work.iter().map(|item| (item.item.as_str(), item)).collect();
     let mut found: BTreeMap<&str, Answer> = BTreeMap::new();
-    let mut problems = Vec::new();
+    let mut faults = Vec::new();
     for (path, text) in files {
         for (at, raw) in text.lines().enumerate() {
             let line = raw.trim();
@@ -640,13 +783,19 @@ pub fn read_answers(
             if empty_slot {
                 continue;
             }
+            let fault = |item: Option<&WorkItem>, message: String| AnswerFault {
+                path: path.clone(),
+                line: at + 1,
+                item: item.map(|item| item.item.clone()),
+                sent_id: item.map(|item| item.sent_id.clone()),
+                message,
+            };
             match parse_answer(line, &wanted) {
                 Ok((item, code, reason)) => {
                     if found.contains_key(item.item.as_str()) {
-                        problems.push(Problems::sentence(
-                            path,
-                            &item.sent_id,
-                            format!("line {}: item {} is answered twice", at + 1, item.item),
+                        faults.push(fault(
+                            Some(item),
+                            format!("item {} is answered twice", item.item),
                         ));
                     } else {
                         found.insert(
@@ -660,25 +809,42 @@ pub fn read_answers(
                     }
                 }
                 Err(why) => {
-                    let sent = line
+                    let item = line
                         .split_once(':')
                         .and_then(|(item, _)| wanted.get(item.trim()))
-                        .map(|item| item.sent_id.as_str());
-                    problems.push(match sent {
-                        Some(sent) => {
-                            Problems::sentence(path, sent, format!("line {}: {why}", at + 1))
-                        }
-                        None => Error::at(path, at + 1, why),
-                    });
+                        .copied();
+                    faults.push(fault(item, why));
                 }
             }
         }
     }
+    let answers = work
+        .iter()
+        .filter_map(|item| found.remove(item.item.as_str()))
+        .collect();
+    (answers, faults)
+}
+
+/// Reads the adjudicator's answers: each of `files` is a path and its text. Every line must be
+/// `item: code | reason` for an item of `work`, once, with a code of the guide and a reason of
+/// at most 15 words. With `all`, every item must be answered. Blank lines, code fences and the
+/// lines of a `Slots:` heading are skipped. Returns the answers in the order of `work`.
+pub fn read_answers(
+    work: &[WorkItem],
+    files: &[(String, String)],
+    all: bool,
+) -> Result<Vec<Answer>, Problems> {
+    let (answers, faults) = scan_answers(work, files);
+    let mut problems: Vec<Error> = faults.iter().map(AnswerFault::error).collect();
     if all {
+        let answered: std::collections::BTreeSet<&str> = answers
+            .iter()
+            .map(|answer| answer.item.item.as_str())
+            .collect();
         let missing: Vec<&str> = work
             .iter()
             .map(|item| item.item.as_str())
-            .filter(|item| !found.contains_key(item))
+            .filter(|item| !answered.contains(item))
             .collect();
         if !missing.is_empty() {
             let shown: Vec<&str> = missing.iter().copied().take(8).collect();
@@ -693,17 +859,73 @@ pub fn read_answers(
             ));
         }
     }
-    let answers = work
-        .iter()
-        .filter_map(|item| found.remove(item.item.as_str()))
-        .collect();
     Problems::check(problems, answers)
 }
 
-/// The columns of `adjudicated.tsv`, the log of the adjudication.
-const LOG_COLUMNS: [&str; 9] = [
-    "item", "sent_id", "token", "form", "blind", "harper", "spacy", "final", "reason",
-];
+/// What `read-answers --check` found: the good answers, and each item without one.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CheckedAnswers {
+    /// The answers that are answers, in the order of the worklist.
+    pub answers: Vec<Answer>,
+    /// The items with no answer, in the order of the worklist, each with what is wrong with the
+    /// first line that tried to answer it, or `no answer` when none did.
+    pub open: Vec<(String, String)>,
+    /// Lines that name no item of the worklist, as `line N: message`.
+    pub stray: Vec<String>,
+}
+
+/// Reads the answers as [`read_answers`] does, but keeps the good ones whatever else is wrong and
+/// returns what is left open instead of failing. An item with a good answer and a bad line too is
+/// answered.
+pub fn check_answers(work: &[WorkItem], files: &[(String, String)]) -> CheckedAnswers {
+    let (answers, faults) = scan_answers(work, files);
+    let answered: std::collections::BTreeSet<&str> = answers
+        .iter()
+        .map(|answer| answer.item.item.as_str())
+        .collect();
+    let mut why: BTreeMap<&str, &str> = BTreeMap::new();
+    for fault in &faults {
+        if let Some(item) = &fault.item {
+            why.entry(item).or_insert(&fault.message);
+        }
+    }
+    let open = work
+        .iter()
+        .filter(|item| !answered.contains(item.item.as_str()))
+        .map(|item| {
+            let message = why.get(item.item.as_str()).copied().unwrap_or("no answer");
+            (
+                item.item.clone(),
+                message.split_whitespace().collect::<Vec<_>>().join(" "),
+            )
+        })
+        .collect();
+    let stray = faults
+        .iter()
+        .filter(|fault| fault.item.is_none())
+        .map(|fault| format!("line {}: {}", fault.line, fault.message))
+        .collect();
+    CheckedAnswers {
+        answers,
+        open,
+        stray,
+    }
+}
+
+/// The columns of `<name>.problems.tsv` of the adjudication.
+pub fn open_tsv(open: &[(String, String)]) -> String {
+    let mut out = String::from("item\tproblem\n");
+    for (item, message) in open {
+        let _ = writeln!(out, "{item}\t{message}");
+    }
+    out
+}
+
+/// The columns of `adjudicated.tsv`, the log of the adjudication, before the taggers' names, which
+/// come next, and after them. A log written for an adjudicator's run adds `run` last.
+const LOG_FIRST: [&str; 4] = ["item", "sent_id", "token", "form"];
+const LOG_LAST: [&str; 2] = ["final", "reason"];
+const LOG_RUN: &str = "run";
 
 /// An agreed word that the revised guide changes: it is adjudicated after all, with a reason.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -873,37 +1095,47 @@ pub fn read_overrides(
     Problems::check(problems, rows)
 }
 
-/// `adjudicated.tsv`: each answered item with what the three said, the code decided and why,
-/// then each override. An override's item is `sentence.token`, and the three columns of what
-/// they said hold the code they agreed on, which is how `assemble` knows it from an answer.
-pub fn adjudicated_tsv(answers: &[Answer], overrides: &[Override]) -> String {
-    let mut out = format!("{}\n", LOG_COLUMNS.join("\t"));
+/// `adjudicated.tsv`: each answered item with what each of the taggers `names` said, the code
+/// decided and why, then each override. An override's item is `sentence.token`, and the columns of
+/// what the taggers said hold the code they agreed on, which is how `assemble` knows it from an
+/// answer. With `run`, the adjudicator's run, every row ends with it in a `run` column, which
+/// `finish` copies into the `Runs=` of the word.
+pub fn adjudicated_tsv(
+    names: &[String],
+    answers: &[Answer],
+    overrides: &[Override],
+    run: Option<&str>,
+) -> String {
+    let mut columns: Vec<&str> = LOG_FIRST.to_vec();
+    columns.extend(names.iter().map(String::as_str));
+    columns.extend(LOG_LAST);
+    columns.extend(run.map(|_| LOG_RUN));
+    let mut out = format!("{}\n", columns.join("\t"));
+    let tail = run.map_or_else(String::new, |run| format!("\t{run}"));
     for answer in answers {
         let item = &answer.item;
         let _ = writeln!(
             out,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}{tail}",
             item.item,
             item.sent_id,
             item.token,
             item.form,
-            item.said[0],
-            item.said[1],
-            item.said[2],
+            item.said.join("\t"),
             answer.code,
             answer.reason
         );
     }
     for row in overrides {
+        let old = vec![row.old.to_string(); names.len()].join("\t");
         let _ = writeln!(
             out,
-            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{old}\t{old}\t{}\t{}",
+            "{id}.{token}\t{id}\t{token}\t{}\t{old}\t{}\t{}{tail}",
             row.form,
             row.new,
             row.reason,
             id = row.sent_id,
             token = row.token,
-            old = row.old,
         );
     }
     out
@@ -920,54 +1152,67 @@ pub struct Logged {
     pub form: String,
     /// The code decided.
     pub code: Code,
-    /// For an override, the code the three taggers had agreed on.
+    /// For an override, the code the taggers had agreed on.
     pub agreed: Option<Code>,
+    /// The adjudicator's run, when the log has a `run` column.
+    pub run: Option<String>,
 }
 
 /// Reads `adjudicated.tsv`, which came from `path`.
 pub fn read_log(path: &str, text: &str) -> Result<Vec<Logged>, Error> {
     let mut lines = text.lines().enumerate();
-    match lines.next() {
-        Some((_, head)) if head.split('\t').eq(LOG_COLUMNS) => {}
-        _ => {
-            return Err(Error::at(
-                path,
-                1,
-                format!("the columns should be {}", LOG_COLUMNS.join(", ")),
-            ));
-        }
-    }
+    let head: Vec<&str> = lines
+        .next()
+        .map(|(_, head)| head.split('\t').collect())
+        .unwrap_or_default();
+    let with_run = head.last() == Some(&LOG_RUN);
+    let closing: Vec<&str> = if with_run {
+        LOG_LAST.iter().copied().chain([LOG_RUN]).collect()
+    } else {
+        LOG_LAST.to_vec()
+    };
+    let Some(names) = names_between(&head, &LOG_FIRST, &closing) else {
+        return Err(Error::at(
+            path,
+            1,
+            format!(
+                "the columns should be {}, the names of two or more taggers, and {}",
+                LOG_FIRST.join(", "),
+                closing.join(", ")
+            ),
+        ));
+    };
+    let (width, voters) = (head.len(), names.len());
     let mut rows = Vec::new();
     for (at, line) in lines {
         if line.trim().is_empty() {
             continue;
         }
         let cells: Vec<&str> = line.split('\t').collect();
-        if cells.len() != LOG_COLUMNS.len() {
+        if cells.len() != width {
             return Err(Error::at(
                 path,
                 at + 1,
-                format!(
-                    "expected {} columns, found {}",
-                    LOG_COLUMNS.len(),
-                    cells.len()
-                ),
+                format!("expected {width} columns, found {}", cells.len()),
             ));
         }
         let bad = |what: &str, value: &str| Error::at(path, at + 1, format!("{what} `{value}`"));
+        let said = &cells[LOG_FIRST.len()..LOG_FIRST.len() + voters];
+        let final_at = LOG_FIRST.len() + voters;
         rows.push(Logged {
             sent_id: cells[1].to_string(),
             token: cells[2]
                 .parse()
                 .map_err(|_| bad("bad token number", cells[2]))?,
             form: cells[3].to_string(),
-            code: Code::parse(cells[7]).map_err(|why| bad(&why, cells[7]))?,
-            // Three equal answers are no dispute: the row is an override of an agreed word.
-            agreed: if cells[4] == cells[5] && cells[5] == cells[6] {
-                Code::parse(cells[4]).ok()
+            code: Code::parse(cells[final_at]).map_err(|why| bad(&why, cells[final_at]))?,
+            // Equal answers all round are no dispute: the row is an override of an agreed word.
+            agreed: if said.iter().all(|cell| *cell == said[0]) {
+                Code::parse(said[0]).ok()
             } else {
                 None
             },
+            run: with_run.then(|| cells[width - 1].to_string()),
         });
     }
     Ok(rows)
@@ -997,7 +1242,7 @@ mod tests {
                 } else {
                     ("X", "_")
                 };
-                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None)));
+                out.push_str(&line(index, &tok.form, upos, feats, &misc(tok, None, None)));
             }
             out.push('\n');
         }
@@ -1014,6 +1259,7 @@ mod tests {
                 "s1: V.fi _ T V.in _\ns2: R _ D N.s N.p\n".to_string(),
             )],
             "blind",
+            None,
             true,
         )
         .unwrap()
@@ -1145,7 +1391,7 @@ mod tests {
         assert_eq!(merged.stats.pairs, [7, 7, 7]);
         assert_eq!(merged.stats.tag3, 7);
         assert_eq!(merged.stats.full3, 7);
-        let out = agreed_conllu(&sample, &merged);
+        let out = agreed_conllu(&sample, &merged.verdicts, None);
         assert!(
             !out.contains("\t_\t_\t_\t_\t_\t_\tKind=Word\n"),
             "no pending word"
@@ -1175,7 +1421,7 @@ mod tests {
         assert_eq!(merged.stats.by_context["list-item"], (4, 2));
         assert_eq!(merged.stats.by_context["prose"], (3, 2));
 
-        let out = agreed_conllu(&sample, &merged);
+        let out = agreed_conllu(&sample, &merged.verdicts, None);
         assert!(
             out.contains("4\tcompile\t_\t_\t_\t_\t_\t_\t_\tKind=Word|SpaceAfter=No\n"),
             "{out}"
@@ -1268,7 +1514,7 @@ mod tests {
         let mut spacy = SAME;
         spacy[2] = ("NOUN", "Number=Sing");
         let (sample, merged) = merged(&blind(), &harper, &spacy);
-        let parts = worklist_parts(&sample, &merged.items, 60);
+        let parts = worklist_parts(&sample, &merged.items, 60, &NAMES);
         assert_eq!(parts.len(), 1);
         let part = &parts[0];
         assert!(part.contains("15 words or fewer"));
@@ -1314,19 +1560,19 @@ mod tests {
         let item = |sent, tok| Item {
             sent,
             tok,
-            said: [code("N.s"), code("N.s"), code("N.s")],
+            said: vec![code("N.s"); 3],
             tags_differ: true,
         };
         let items = [item(0, 0), item(0, 2), item(1, 0), item(1, 2), item(1, 3)];
-        assert_eq!(worklist_parts(&sample, &items, 100).len(), 1);
-        let parts = worklist_parts(&sample, &items, 2);
+        assert_eq!(worklist_parts(&sample, &items, 100, &NAMES).len(), 1);
+        let parts = worklist_parts(&sample, &items, 2, &NAMES);
         assert_eq!(parts.len(), 2, "a sentence is never split");
         assert!(
             parts[0].contains("s1.1") && parts[0].contains("s1.3") && !parts[0].contains("s2.1")
         );
         assert!(parts[1].contains("s2.1") && parts[1].contains("s2.4"));
-        assert!(worklist_parts(&sample, &[], 10).is_empty());
-        let one = worklist_parts(&sample, &items, 1);
+        assert!(worklist_parts(&sample, &[], 10, &NAMES).is_empty());
+        let one = worklist_parts(&sample, &items, 1, &NAMES);
         assert_eq!(
             one.len(),
             2,
@@ -1334,18 +1580,24 @@ mod tests {
         );
     }
 
-    fn work() -> Vec<WorkItem> {
+    fn names() -> Vec<String> {
+        NAMES.map(String::from).to_vec()
+    }
+
+    fn work() -> Worklist {
         let mut harper = SAME;
         harper[6] = ("ADJ", "_");
         let mut spacy = SAME;
         spacy[2] = ("NOUN", "Number=Sing");
         let (sample, merged) = merged(&blind(), &harper, &spacy);
-        read_worklist("w.tsv", &worklist_tsv(&sample, &merged.items)).unwrap()
+        read_worklist("w.tsv", &worklist_tsv(&sample, &merged.items, &NAMES)).unwrap()
     }
 
     #[test]
     fn the_machine_worklist_reads_back() {
         let work = work();
+        assert_eq!(work.names, NAMES);
+        let work = work.items;
         assert_eq!(work.len(), 2);
         assert_eq!(work[0].item, "s1.4");
         assert_eq!(work[0].sent_id, "s1");
@@ -1357,7 +1609,11 @@ mod tests {
     }
 
     fn answers(text: &str, all: bool) -> Result<Vec<Answer>, Problems> {
-        read_answers(&work(), &[("a.txt".to_string(), text.to_string())], all)
+        read_answers(
+            &work().items,
+            &[("a.txt".to_string(), text.to_string())],
+            all,
+        )
     }
 
     #[test]
@@ -1423,7 +1679,7 @@ mod tests {
     #[test]
     fn the_log_records_what_the_three_said_what_was_decided_and_why() {
         let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
-        let log = adjudicated_tsv(&got, &[]);
+        let log = adjudicated_tsv(&names(), &got, &[], None);
         let mut lines = log.lines();
         assert_eq!(
             lines.next().unwrap(),
@@ -1442,5 +1698,106 @@ mod tests {
         assert_eq!(rows[0].sent_id, "s1");
         assert_eq!(rows[0].token, 4);
         assert_eq!(rows[1].code, code("N.p"));
+    }
+
+    #[test]
+    fn check_mode_keeps_the_good_answers_and_names_what_is_open() {
+        let work = work();
+        let long = "a b c d e f g h i j k l m n o p";
+        let text = format!("s1.4: V.in | fine\ns2.5: N.p | {long}\nnot an answer\ns9.1: N.s | x\n");
+        let got = check_answers(&work.items, &[("a.txt".to_string(), text)]);
+        assert_eq!(got.answers.len(), 1);
+        assert_eq!(got.answers[0].item.item, "s1.4");
+        assert_eq!(got.open.len(), 1);
+        assert_eq!(got.open[0].0, "s2.5");
+        assert!(got.open[0].1.contains("16 words"), "{:?}", got.open);
+        assert_eq!(got.stray.len(), 2, "{:?}", got.stray);
+        let tsv = open_tsv(&got.open);
+        assert!(tsv.starts_with("item\tproblem\ns2.5\t"), "{tsv}");
+        // An item with no line at all is open too.
+        let none = check_answers(&work.items, &[("a.txt".to_string(), String::new())]);
+        assert_eq!(
+            none.open,
+            [
+                ("s1.4".to_string(), "no answer".to_string()),
+                ("s2.5".to_string(), "no answer".to_string())
+            ]
+        );
+        // A good answer wins over a bad line for the same item.
+        let both = check_answers(
+            &work.items,
+            &[(
+                "a.txt".to_string(),
+                "s1.4: V.in | x\ns1.4: ZZ | y\n".to_string(),
+            )],
+        );
+        assert_eq!(both.answers.len(), 1);
+        assert_eq!(both.open.len(), 1);
+    }
+
+    #[test]
+    fn the_retry_asks_only_the_open_items_and_shows_the_voters_by_letter() {
+        let sample = sample();
+        let work = work();
+        let parts = retry_parts(&sample, &work, &["s2.5".to_string()], 60);
+        assert_eq!(parts.len(), 1);
+        let part = &parts[0];
+        assert!(part.contains("(A, B, C)"), "{part}");
+        assert!(part.contains("\n  5 files: A N.p, B J, C N.p\n"), "{part}");
+        assert!(
+            !part.contains("compile") && !part.contains("blind"),
+            "{part}"
+        );
+        assert!(part.ends_with("Slots:\ns2.5: \n"), "{part}");
+        assert!(retry_parts(&sample, &work, &[], 60).is_empty());
+    }
+
+    #[test]
+    fn the_log_carries_the_adjudicator_s_run_and_reads_back_with_or_without_it() {
+        let got = answers("s1.4: V.in | x\ns2.5: N.p | y z\n", true).unwrap();
+        let log = adjudicated_tsv(&names(), &got, &[], Some("r9"));
+        assert!(
+            log.starts_with(
+                "item\tsent_id\ttoken\tform\tblind\tharper\tspacy\tfinal\treason\trun\n"
+            ),
+            "{log}"
+        );
+        assert!(log.contains("\tx\tr9\n"));
+        let rows = read_log("log", &log).unwrap();
+        assert_eq!(rows[0].run.as_deref(), Some("r9"));
+        assert_eq!(rows[1].code, code("N.p"));
+        let plain = read_log("log", &adjudicated_tsv(&names(), &got, &[], None)).unwrap();
+        assert_eq!(plain[0].run, None);
+        // Any number of voters, two or more, has its columns.
+        let two = vec!["a".to_string(), "b".to_string()];
+        let mut item = got[0].clone();
+        item.item.said = vec!["V.in".to_string(), "N.s".to_string()];
+        let log = adjudicated_tsv(&two, &[item], &[], None);
+        assert!(
+            log.starts_with("item\tsent_id\ttoken\tform\ta\tb\tfinal\treason\n"),
+            "{log}"
+        );
+        assert_eq!(read_log("log", &log).unwrap().len(), 1);
+        assert!(read_log("log", "item\tsent_id\ttoken\tform\ta\tfinal\treason\n").is_err());
+    }
+
+    #[test]
+    fn the_machine_worklist_has_a_column_for_each_voter() {
+        let sample = sample();
+        let item = Item {
+            sent: 0,
+            tok: 0,
+            said: vec![code("V.fi"), code("V.pp")],
+            tags_differ: false,
+        };
+        let tsv = worklist_tsv(&sample, &[item], &["x", "y"]);
+        assert_eq!(
+            tsv,
+            "item\tsent_id\ttoken\tform\tx\ty\tdiffers\ns1.1\ts1\t1\tRun\tV.fi\tV.pp\tfeature\n"
+        );
+        let back = read_worklist("w", &tsv).unwrap();
+        assert_eq!(back.names, ["x", "y"]);
+        assert_eq!(back.items[0].said, ["V.fi", "V.pp"]);
+        assert!(read_worklist("w", "item\tsent_id\ttoken\tform\tx\tdiffers\n").is_err());
     }
 }

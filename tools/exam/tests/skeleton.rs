@@ -230,3 +230,35 @@ fn a_named_disputes_file_that_is_missing_exits_2() {
         .unwrap();
     assert_eq!(run.status.code(), Some(2));
 }
+
+#[test]
+fn a_holdout_gold_s_skeleton_says_so_and_no_other_does() {
+    let text = "\
+# exam.tokens = deslag
+# exam.split = holdout
+# exam.trains = no
+# sent_id = h1
+# exam.context = prose
+# text = Run it.
+1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word|Prov=agree
+2\tit\t_\tPRON\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|SpaceAfter=No
+3\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation|Prov=kind
+";
+    let holdout = deslag_exam::gold::Gold::parse("h.conllu", "h.conllu", text).unwrap();
+    let skeleton_text = skeleton(&holdout);
+    assert!(
+        skeleton_text.starts_with("# exam.tokens = deslag\n# exam.split = holdout\n"),
+        "{skeleton_text}"
+    );
+    // The line leads the file, so a reader that looks at the first sentence's comments sees it.
+    let blocks = conllu::read("skeleton", &skeleton_text).unwrap();
+    assert_eq!(
+        blocks[0].comment("exam.split").map(|c| c.value.as_str()),
+        Some("holdout")
+    );
+    let dev = text
+        .replace("holdout", "dev")
+        .replace("trains = no", "trains = undecided");
+    let dev = deslag_exam::gold::Gold::parse("d.conllu", "d.conllu", &dev).unwrap();
+    assert!(!skeleton(&dev).contains("exam.split"));
+}

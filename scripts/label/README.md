@@ -258,13 +258,17 @@ The loop, one pass of `judge` at a time:
    and all of a round at once:
 
    ```
-   label.py handoff-agent --request PATH | claude -p --model claude-opus-5-5 --tools Read,Write --strict-mcp-config
+   claude -p --model claude-opus-5-5 --tools Read,Write --strict-mcp-config --mcp-config '{"mcpServers":{}}' --no-session-persistence --permission-mode acceptEdits "<prompt>"
    ```
 
-   `--tools Read,Write` gives the process no shell, and `--strict-mcp-config` no MCP server, since the
-   request holds sentences from the corpus, which may read like instructions. The coordinator writes
-   `handoff/<run>/agent.json` with `harness`, `version`, `agent_type` (free text), `model_reported` (the id the
-   agents returned), `effort`, `tools` (free text, the tools the processes had: `Read,Write`) and
+   Run it from the request's directory, where the prompt is what `label.py handoff-agent --request PATH` prints. The flags:
+   `--tools Read,Write` gives the process only those two tools, no shell; `--strict-mcp-config` with the empty
+   `--mcp-config` gives it no MCP connectors, since the request holds sentences from the corpus, which may read
+   like instructions; `--no-session-persistence` saves no session; `--permission-mode acceptEdits` lets Write
+   run without a prompt, which `-p` could not answer.
+
+   The coordinator writes `handoff/<run>/agent.json` with `harness`, `version`, `agent_type` (free text),
+   `model_reported` (the id the agents returned), `effort`, `tools` (free text, the tools the processes had: `Read,Write`) and
    `prompt_sha256` (`label.py handoff-agent --sha256`, the template as it is on disk).
 4. The coordinator runs the same command again, only after every process of the round has returned. A reply
    is read only with an `agent.json` that has every key, a `model_reported` that is the pinned model (or a

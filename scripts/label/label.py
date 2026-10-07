@@ -1593,13 +1593,15 @@ class Runner:
 
     def finished_run(self, into, scope, trains):
         """The id of the adjudicator's run that finished this merge for this scope, if `into` still has
-        its labels: complete with no item open, finished with the same `--trains`. None otherwise."""
+        its labels: complete with no item open, finished with the same `--trains` and by the model the
+        adjudicator pins now, as continuing a run requires. None otherwise."""
         name = self.config["adjudicator"]
         run = self.latest_run(name, "adjudicator", True, scope)
         if run is None or not os.path.isfile(os.path.join(self.dir, into, "labelled.conllu")):
             return None
         meta = json.loads(read(self.raw(name, run, "run.json")))
-        if meta.get("finished") and not meta.get("open_items") and meta.get("trains", "no") == trains:
+        same_model = meta.get("model") == self.config["models"][name]["model"]
+        if same_model and meta.get("finished") and not meta.get("open_items") and meta.get("trains", "no") == trains:
             return run
         return None
 

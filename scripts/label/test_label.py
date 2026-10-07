@@ -3575,6 +3575,22 @@ class HandoffTests(Base):
             self.runner(self.transport, gold=self.gold).judge("merge", self.voters, trains="yes")
         self.assertGreater(len(self.gold.calls), calls)
 
+    def test_a_finished_merge_is_judged_again_when_the_adjudicator_pin_moved(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer()
+        self.assertEqual(self.pass_(), {})
+        calls = len(self.gold.calls)
+        # The same name pinned to another model: the finished run's answers are not this adjudicator's.
+        config = copy.deepcopy(HANDOFF_CONFIG)
+        config["models"]["opus"]["model"] = "claude-opus-5-6"
+        self.said.clear()
+        with self.assertRaises(label.HandoffWait):
+            self.runner(self.transport, config=config, gold=self.gold).judge("merge", self.voters)
+        self.assertNotIn("already finished", " ".join(self.said))
+        self.assertGreater(len(self.gold.calls), calls)
+
     def test_the_cap_is_not_reserved_against_for_a_handoff_call(self):
         with self.assertRaises(label.HandoffWait):
             self.pass_(max_usd=0.0000001)

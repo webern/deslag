@@ -262,11 +262,10 @@ check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 
 # Fails while src/changelog.toml has a `next` release. The change that bumps the version in
-# Cargo.toml renames it, so `check` cannot run this. It runs that one test by its exact name, so a
-# later ignored test in the binary does not ride along. Rename the test and this line together: a
-# name that matches nothing runs no test and passes.
+# Cargo.toml renames it, so `check` cannot run this. It runs every ignored test in
+# tests/changelog.rs: those are the release-time checks, so a new one there rides along.
 check-release: preflight
-	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored --exact no_release_is_left_as_next
+	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored
 
 check-typos: preflight
 	typos

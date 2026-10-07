@@ -221,8 +221,8 @@ fn the_crate_version_has_a_release_and_none_is_above_it() {
     }
 }
 
-/// Run by `make check-release`, which names this test and which the release workflow calls after
-/// `make ci`.
+/// The ignored tests in this file are the release-time checks. `make check-release` runs all of
+/// them, and the release workflow calls it after `make ci`.
 #[test]
 #[ignore = "fails until the release change replaces `next` with the version"]
 fn no_release_is_left_as_next() {

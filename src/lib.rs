@@ -138,7 +138,7 @@ pub enum Error {
         /// The `deslag_version` the file declares.
         stamp: semver::Version,
         /// The version of this deslag.
-        current: changelog::Version,
+        current: semver::Version,
     },
 
     /// A glob pattern in the config is not a valid pattern.

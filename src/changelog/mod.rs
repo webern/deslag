@@ -13,7 +13,7 @@ use std::sync::LazyLock;
 use serde::Deserialize;
 
 use crate::Lint;
-pub use version::{ParseError, Version};
+pub use version::{ParseError, Version, current_release};
 
 /// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
 pub const BASELINE: semver::Version = semver::Version::new(0, 1, 0);

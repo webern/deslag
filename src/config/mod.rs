@@ -45,7 +45,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Deserializer};
 
 use crate::Error;
-use crate::changelog::{BASELINE, Version};
+use crate::changelog::{BASELINE, Version, current_release};
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, ListGrowth, MaxEmphasis, MaxSizeBytes,
@@ -72,6 +72,9 @@ struct ConfigFile {
     /// reads.
     #[schemars(range(max = SCHEMA_VERSION.get()))]
     schema_version: NonZeroU32,
+    /// The Markdown section.
+    #[serde(default)]
+    md: md::MdFile,
     /// The deslag that last onboarded or updated this config, as a release such as "0.1.0". When
     /// it is missing the config is taken to be from 0.1.0. It may not be later than the deslag
     /// that reads the file.
@@ -81,9 +84,6 @@ struct ConfigFile {
         reason = "read from `Head` before this parse; here for the schema"
     )]
     deslag_version: Option<String>,
-    /// The Markdown section.
-    #[serde(default)]
-    md: md::MdFile,
 }
 
 /// The two keys that decide whether deslag can read a config at all, read before the rest.
@@ -93,7 +93,7 @@ struct ConfigFile {
 #[derive(Debug, Deserialize)]
 struct Head {
     #[serde(default)]
-    schema_version: Option<u32>,
+    schema_version: Option<NonZeroU32>,
     #[serde(default, deserialize_with = "stamp_text")]
     deslag_version: Option<String>,
 }
@@ -167,7 +167,7 @@ impl Config {
         // The versions come first, so a config from a later deslag says so, whatever else in it
         // this deslag does not know.
         let head: Head = deserialize(text, format).map_err(parse_error)?;
-        match head.schema_version.and_then(NonZeroU32::new) {
+        match head.schema_version {
             Some(found) if found > SCHEMA_VERSION => {
                 return Err(Error::SchemaVersion {
                     path: path_string,
@@ -181,12 +181,13 @@ impl Config {
             .deslag_version
             .map(|text| parse_stamp(&text, &path_string))
             .transpose()?;
+        let current = current_release();
         match &stamp {
-            Some(stamp) if Version::Release(stamp.clone()) > Version::current() => {
+            Some(stamp) if *stamp > current => {
                 return Err(Error::NewerStamp {
                     path: path_string,
                     stamp: stamp.clone(),
-                    current: Version::current(),
+                    current,
                 });
             }
             _ => {}

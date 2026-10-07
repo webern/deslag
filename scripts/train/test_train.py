@@ -3,6 +3,8 @@
 
 import os
 import random
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -811,6 +813,77 @@ if args[0] == "score":
 else:
     print("  Best-guess accuracy   80.0%   85.0%   +5.0 [+1.0, +9.0]   better")
 """
+
+# A stand-in for both `cargo` and `python3` that logs each call, one line of arguments, and succeeds.
+# curve.py leaves the file run.sh moves.
+STUB_LOGGER = """#!/bin/sh
+echo "$(basename "$0") $*" >> "$RUN_LOG"
+case "$*" in *curve.py*) : > .train/curve.txt ;; esac
+"""
+
+
+class OwnerSetTests(unittest.TestCase):
+    """The owner's gold is report-only: run.sh may tag, score and compare it, and nothing else."""
+
+    @classmethod
+    def setUpClass(cls):
+        here = os.path.dirname(os.path.abspath(__file__))
+        cls.run_sh = os.path.join(here, "run.sh")
+        cls.lock = os.path.join(here, "..", "ewt", "ewt.lock")
+
+    def run_all(self, *commands, edit=lambda text: text):
+        """Runs each run.sh command, as `edit` rewrote it, from a scratch tree whose `cargo` and
+        `python3` only log their arguments, and returns every logged call."""
+        with tempfile.TemporaryDirectory() as root:
+            os.makedirs(os.path.join(root, "scripts", "train"))
+            os.makedirs(os.path.join(root, "scripts", "ewt"))
+            os.makedirs(os.path.join(root, "bin"))
+            with open(self.run_sh, encoding="utf-8") as f:
+                write(os.path.join(root, "scripts", "train"), "run.sh", edit(f.read()))
+            shutil.copy(self.lock, os.path.join(root, "scripts", "ewt", "ewt.lock"))
+            for tool in ("cargo", "python3"):
+                path = write(os.path.join(root, "bin"), tool, STUB_LOGGER)
+                os.chmod(path, 0o755)
+            log = os.path.join(root, "calls.log")
+            env = dict(os.environ, PATH=os.path.join(root, "bin") + os.pathsep + os.environ["PATH"],
+                       RUN_LOG=log)
+            for command in commands:
+                done = subprocess.run(
+                    ["bash", os.path.join(root, "scripts", "train", "run.sh"), command],
+                    env=env, capture_output=True, text=True, cwd=root)
+                self.assertEqual(done.returncode, 0, f"{command}: {done.stderr}")
+            with open(log, encoding="utf-8") as f:
+                return f.read().splitlines()
+
+    def test_the_owner_set_is_reported_and_never_trained_tuned_or_gated(self):
+        calls = self.run_all(
+            "generate", "generate-brill", "generate-brill-deslag", "generate-brill-percept",
+            "test", "test-brill", "test-brill-deslag", "test-brill-percept", "curve")
+        owner = [c for c in calls if "owner" in c]
+        self.assertTrue(any(" score " in c for c in owner), "the owner set is never scored")
+        self.assertTrue(any(" compare " in c or " tag " in c for c in owner))
+        for call in owner:
+            self.assertFalse(
+                " train " in call or "curve.py" in call or " gate " in call or "--tune" in call,
+                f"the owner set reached a trainer, a tuner or a gate: {call}")
+        self.assertTrue(any(" train " in c for c in calls), "no trainer ran, so nothing was checked")
+        self.assertTrue(any("curve.py" in c for c in calls))
+
+    def test_a_trainer_given_the_owner_set_is_stopped(self):
+        with self.assertRaises(AssertionError) as caught:
+            self.run_all("generate", edit=lambda text: text.replace(
+                "--tune-tokens .train/ewt-dev.tokens", "--tune-tokens .train/owner.tokens"))
+        self.assertIn("report-only", str(caught.exception))
+
+    def test_a_gate_given_the_owner_set_is_stopped(self):
+        # The gate runs in a pipeline whose subshell would swallow an exit, so the guard has to
+        # stop the run before it: exit 2, not a finding the `|| echo` after the pipeline absorbs.
+        with self.assertRaises(AssertionError) as caught:
+            self.run_all("test-brill-deslag", edit=lambda text: text.replace(
+                '".train/deslag-dev.$name.import.conllu"', '".train/owner.$name.import.conllu"'))
+        message = str(caught.exception)
+        self.assertIn("2 != 0", message)
+        self.assertIn("report-only", message)
 
 
 if __name__ == "__main__":

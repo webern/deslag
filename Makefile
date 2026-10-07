@@ -21,8 +21,8 @@ CARGO_FLAGS ?=
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
-        test-percept test-python test-spacy test-ticlist-brill-deslag test-ticlist-brill-percept \
-        test-ticlist-percept \
+        test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
+        test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci ci-fast \
@@ -36,17 +36,19 @@ help:
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
-	@echo "                 gates; not test-python, which runs when the scripts it tests change"
+	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
+	@echo "                 tests change"
 	@echo "test-blobs       fetch the corpus's big tier, test it, and fail if tagging takes over its budget"
 	@echo "                 of the time to read it; needs the network, so not in test"
-	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on both dev sets with"
+	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag, its initial tagger and the perceptron;"
 	@echo "                 generates first, so minutes, not in test or ci; run test-percept first for the"
 	@echo "                 perceptron's comparison"
 	@echo "test-brill-deslag"
-	@echo "                 train the Brill tagger that starts from deslag's own readings, grade it on both dev"
-	@echo "                 sets with deslag-exam, judge it against the dev gates and compare it with deslag, the"
-	@echo "                 perceptron and the first Brill tagger; generates first, so minutes, not in test or ci"
+	@echo "                 train the Brill tagger that starts from deslag's own readings, grade it on the"
+	@echo "                 dev and owner sets with deslag-exam, judge it against the dev gates and compare it"
+	@echo "                 with deslag, the perceptron and the first Brill tagger; generates first, so minutes,"
+	@echo "                 not in test or ci"
 	@echo "test-brill-percept"
 	@echo "                 the same for the Brill tagger that starts from the perceptron, a diagnostic; trains"
 	@echo "                 the perceptron first, then five more for the folds, so about five minutes"
@@ -54,12 +56,15 @@ help:
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
 	@echo "                 the dev or holdout gold or misses a word of the must-pass list; the holdout"
-	@echo "                 prints pass or fail per metric"
-	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
+	@echo "                 prints pass or fail per metric; then the Metrics of test-owner"
+	@echo "test-owner       print deslag's score on the owner's hand-tagged gold, tests/gold/owner.conllu, as its own"
+	@echo "                 report-only set, never pooled with dev; fails only when the exam cannot run"
+	@echo "test-percept     train the perceptron on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
-	@echo "test-python      test how batches are built and published; offline, local repositories, about"
-	@echo "                 two minutes, so not in test or ci: its own workflow runs it when they change"
+	@echo "test-python      test how batches are built and published, and the exam's trainers and run.sh; offline,"
+	@echo "                 local repositories, about two minutes, so not in test or ci: its own workflow runs it"
+	@echo "                 when they change"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-ticlist-brill-deslag"
@@ -86,7 +91,8 @@ help:
 	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs, with"
 	@echo "                 --locked; not test-python, which the python workflow runs"
 	@echo "ci-fast          the gate to run before a push, about 20 seconds warm: preflight, check, the"
-	@echo "                 exam's gates and the Rust tests but the slowest, at once; ci runs the rest"
+	@echo "                 exam's gates, the owner set's metrics and the Rust tests but the slowest, at once;"
+	@echo "                 ci runs the rest"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
 	@echo "                 file of list_growth; fetches the image first, needs the network, so not in fix"
@@ -102,15 +108,15 @@ help:
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "fetch-harper     fetch the Harper tagger model that $(HARPER)/harper.lock pins into .harper"
 	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
-	@echo "generate-brill   train the Brill tagger on the treebank's train set and tag both dev sets into .train,"
+	@echo "generate-brill   train the Brill tagger on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-brill-deslag"
 	@echo "                 train the Brill tagger on the treebank's train set from deslag's own readings and tag"
-	@echo "                 both dev sets into .train; fetches the treebank first; a minute, so not in ci"
+	@echo "                 the dev and owner sets into .train; fetches the treebank first; a minute, so not in ci"
 	@echo "generate-brill-percept"
 	@echo "                 the same from the perceptron's tags, cross-fitted over five folds by document; a few"
 	@echo "                 minutes, so not in ci"
-	@echo "generate-percept train the perceptron on the treebank's train set and tag both dev sets into .train,"
+	@echo "generate-percept train the perceptron on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
 	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
@@ -146,7 +152,7 @@ test-blobs: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
 
-# The Brill tagger's unit tests, then the exam's full report on both dev sets for it and for its
+# The Brill tagger's unit tests, then the exam's full report on the dev and owner sets for it and for its
 # initial tagger, and `compare` against deslag's tagger, the initial tagger and, if test-percept
 # ran, the perceptron, from the import files generate-brill wrote. The runs are saved beside them.
 # Not part of test: it needs the treebank and minutes.
@@ -154,7 +160,7 @@ test-brill: generate-brill
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill
 
 # The same for the Brill tagger that starts from deslag's readings and the one that starts from the
-# perceptron: the unit tests, then the exam's full report on both dev sets, `compare` against deslag,
+# perceptron: the unit tests, then the exam's full report on the dev and owner sets, `compare` against deslag,
 # the perceptron and the first Brill tagger as far as their runs exist, and for deslag's dev set the
 # gates of tests/gold/gates.toml and the must-pass list, whose misses are printed and do not stop
 # the target. Not part of test: it needs the treebank and minutes.
@@ -176,8 +182,19 @@ test-ewt: preflight fetch-ewt
 test-exam: preflight
 	cargo test $(CARGO_FLAGS) -p deslag --all-features --test golden
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/owner-score.sh --metrics
 
-# The perceptron's unit tests, then the exam's full report on both dev sets for it, and `compare`
+# The owner's hand-tagged gold, scored on its own and never pooled with the dev gold: it was drawn
+# differently (`deslag-gold rank`, the sentences the tagger was least sure of), so pooling biases
+# both. It gates nothing; the set is small and its intervals are wide, so this prints a report and
+# fails only when the exam cannot run. Not a gates.toml set: `gate` prints counts, with no strata and
+# no intervals. Claude proposed the tags of some of these sentences before the owner checked them, so
+# a Claude adjudicator's score on this set may read high. test-exam and ci-fast print its Metrics block
+# after the gate, so the gate result stays on screen.
+test-owner: preflight
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/owner-score.sh
+
+# The perceptron's unit tests, then the exam's full report on the dev and owner sets for it, and `compare`
 # against deslag's tagger, from the import files generate-percept wrote. The runs are saved beside
 # them. Not part of test: it needs the treebank and minutes. The curve is run by hand.
 test-percept: generate-percept
@@ -185,9 +202,11 @@ test-percept: generate-percept
 
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make: no network, no login. Minutes of git, so not in test or ci; the python
-# workflow runs it when scripts/blobstore or scripts/llm-detection change.
+# workflow runs it when scripts/blobstore, scripts/llm-detection or scripts/train change. The
+# trainers' tests use made-up sentences and stand-ins for cargo, so they need no treebank.
 test-python: preflight
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
+	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
 # scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
@@ -285,6 +304,7 @@ ci: preflight check build test test-blobs
 ci-fast: CARGO_FLAGS += --locked
 ci-fast: preflight check
 	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
+	@CARGO_FLAGS="$(CARGO_FLAGS) --profile fast" $(SCRIPTS)/owner-score.sh --metrics
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-fast.sh
 
 fix: fix-fmt fix-clippy fix-golden fix-test-output
@@ -348,16 +368,16 @@ fetch-spacy:
 
 # The baselines (deslag's tagger and the most-common tag, saved as runs), then the Brill tagger
 # trained on the treebank's train set, its rules cut off on the treebank's dev set, tagging deslag's
-# own tokens of both dev sets into .train/*.brill.import.conllu, and its initial tagger alone into
+# own tokens of the dev and owner sets into .train/*.brill.import.conllu, and its initial tagger alone into
 # .train/*.brillinit.import.conllu, for `deslag-exam score --import`. The model is
 # .train/brill.model.json and the rules .train/brill.rules.txt. Nothing in ci reads or runs it.
 generate-brill: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-brill
 
-# The baselines, then deslag's own readings of the treebank's train set and both dev sets, from
+# The baselines, then deslag's own readings of the treebank's train set and the dev and owner sets, from
 # `deslag-exam readings`, and the Brill tagger trained on them: deslag's `Sure` words frozen, a rule
 # picking only among the tags deslag keeps, its rules cut and its confidence counted on the
-# treebank's dev set. It tags both dev sets into .train/*.brilldeslag.import.conllu; the model is
+# treebank's dev set. It tags the dev and owner sets into .train/*.brilldeslag.import.conllu; the model is
 # .train/brilldeslag.model.json, its rules .train/brilldeslag.rules.txt and what its confidence
 # rests on .train/brilldeslag.evidence.tsv. Nothing in ci reads or runs it.
 generate-brill-deslag: preflight fetch-ewt
@@ -373,7 +393,7 @@ generate-brill-percept: preflight fetch-ewt
 
 # The baselines (deslag's tagger and the most-common tag, saved as runs), then the perceptron trained
 # on the treebank's train set, its confidence tuned on the treebank's dev set, tagging deslag's own
-# tokens of both dev sets into .train/*.percept.import.conllu, for `deslag-exam score --import`. The
+# tokens of the dev and owner sets into .train/*.percept.import.conllu, for `deslag-exam score --import`. The
 # weights are .train/percept.weights.json. Nothing in ci reads or runs it, and training takes a
 # minute or two.
 generate-percept: preflight fetch-ewt

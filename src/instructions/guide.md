@@ -38,6 +38,7 @@ A config looks like this:
 
 ```toml
 schema_version = {schema_version}
+deslag_version = "{version}"
 
 [md]
 globs = ["/AGENTS.md", "/docs/**/*.md"]

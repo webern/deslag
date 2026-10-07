@@ -94,12 +94,29 @@ fn the_guide_fills_in_what_the_code_knows() {
 
     assert!(guide.contains(&format!("deslag {}", env!("CARGO_PKG_VERSION"))));
     assert!(guide.contains(&format!("schema_version = {SCHEMA_VERSION}\n")));
+    assert!(guide.contains(&format!(
+        "deslag_version = \"{}\"\n",
+        env!("CARGO_PKG_VERSION")
+    )));
     for stem in CANONICAL_CONFIG_STEMS {
         assert!(guide.contains(&format!("\n{stem}\n")), "{stem}");
     }
     for extension in CONFIG_EXTENSIONS {
         assert!(guide.contains(&format!("`.{extension}`")), "{extension}");
     }
+}
+
+/// The stamp is an optional string, not a pattern: the schema cannot say "not newer than this
+/// binary", so deslag checks the value, and the property says in words what it holds.
+#[test]
+fn the_schema_has_the_stamp_as_an_optional_string() {
+    let root = schema();
+    let stamp = &root["properties"]["deslag_version"];
+    assert_eq!(stamp["type"], serde_json::json!(["string", "null"]));
+    assert!(stamp.get("pattern").is_none(), "{stamp}");
+    let description = stamp["description"].as_str().expect("a description");
+    assert!(description.contains("0.1.0"), "{description}");
+    assert_eq!(root["required"], serde_json::json!(["schema_version"]));
 }
 
 /// The lints are the tables of the config's sections: each section's `lints` table names only

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::SchemaPaths;
-use deslag::changelog::{Changelog, Entry, Version, changelog};
+use deslag::changelog::{BASELINE, Changelog, Entry, Version, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::{Config, ConfigSource, Lint, check_file};
@@ -184,6 +184,16 @@ fn no_entry_names_a_path_or_block_the_schema_refuses() {
     for (version, entry) in entries() {
         assert_eq!(stale(entry, &paths), None, "in release {version}");
     }
+}
+
+/// A config with no `deslag_version` is taken to be from the first release, so the lints it can
+/// have are the ones that release lists.
+#[test]
+fn the_baseline_is_the_first_release() {
+    assert_eq!(
+        changelog().releases.first().map(|release| &release.version),
+        Some(&Version::Release(BASELINE))
+    );
 }
 
 #[test]

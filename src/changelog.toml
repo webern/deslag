@@ -198,3 +198,21 @@ globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
 ```
 '''
+
+[[release]]
+version = "next"
+
+[[release.entry]]
+kind = "setting"
+id = "deslag_version"
+summary = "Records the release of deslag that last touched the config"
+onboarding = '''
+`deslag_version` is a top-level key beside `schema_version`: the release of deslag that last
+onboarded or updated the config. A config without it is taken to be from 0.1.0. deslag refuses a
+config stamped with a release newer than itself, and it refuses a value that is not a release, such
+as `next` or a pre-release.
+
+```toml
+deslag_version = "0.1.0"
+```
+'''

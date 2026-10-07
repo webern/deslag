@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tagging review</title>
+<style>
+  :root {
+    --header: 58px;
+    --bg: #f5f4f0;
+    --panel: #ffffff;
+    --ink: #1c1c1e;
+    --muted: #66666c;
+    --line: #e2e0da;
+    --accent: #2b59c3;
+    --accent-soft: #e9eefb;
+    --good: #1d7a48;
+    --good-soft: #e5f3eb;
+    --warn: #8a5b00;
+    --warn-soft: #fff3d1;
+    --bad: #b3261e;
+    --bad-soft: #fce8e6;
+    --skip-soft: #ececec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+  }
+  button {
+    font: inherit;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) { border-color: #bdbab2; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover:not(:disabled) { background: #224aa6; }
+  button.quiet { border-color: transparent; background: transparent; color: var(--accent); padding: 4px 8px; }
+  button.danger { color: var(--bad); }
+  button.quiet.small { font-family: system-ui, sans-serif; font-size: 12px; padding: 0; margin-top: 2px; text-align: left; }
+  button:disabled { opacity: .45; cursor: default; }
+  select {
+    font: inherit;
+    padding: 5px 8px;
+    border: 1px solid #cfccc4;
+    border-radius: 7px;
+    background: #fff;
+    width: 100%;
+  }
+  select:disabled { background: #f3f2ee; color: var(--muted); border-color: var(--line); }
+  select:focus, button:focus-visible { outline: 3px solid #b8c9f3; outline-offset: 1px; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: .92em; background: #f0eee8; padding: 1px 4px; border-radius: 4px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    height: var(--header);
+    display: flex; align-items: center; gap: 18px;
+    padding: 0 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  header h1 { font-size: 17px; margin: 0; white-space: nowrap; }
+  header .file { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .progress { display: flex; align-items: center; gap: 10px; margin-left: auto; color: var(--muted); white-space: nowrap; }
+  .bar { width: 200px; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--good); transition: width .3s; }
+
+  .layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+  .layout.guide-open { grid-template-columns: minmax(0, 1fr) 460px; }
+  .layout.guide-open nav { display: none; }
+
+  nav {
+    position: sticky; top: var(--header);
+    height: calc(100vh - var(--header));
+    overflow: auto;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+  }
+  nav h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 16px 6px; }
+  nav ol { list-style: none; margin: 0; padding: 0 0 20px; }
+  nav li button {
+    display: flex; gap: 10px; align-items: baseline;
+    width: 100%; text-align: left;
+    border: 0; border-radius: 0;
+    padding: 7px 16px;
+    background: transparent;
+    font-size: 13.5px;
+  }
+  nav li button:hover { background: #f4f3ef; }
+  nav li button.current { background: var(--accent-soft); box-shadow: inset 3px 0 var(--accent); }
+  nav .num { color: var(--muted); min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; }
+  nav .snippet { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  nav .mark { width: 16px; text-align: center; font-weight: 700; }
+  nav .mark.done { color: var(--good); }
+  nav .mark.skipped { color: var(--muted); }
+  nav .mark.todo { color: #c9c6be; }
+
+  main { padding: 22px 28px 120px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; margin-bottom: 16px; }
+  .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 16px; margin-bottom: 10px; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .sentence { font-size: 21px; line-height: 1.6; }
+  .sentence .tok { border-radius: 4px; padding: 1px 1px; cursor: pointer; }
+  .sentence .tok.word:hover, .sentence .tok.lit { background: #ffe58a; }
+  .sentence .tok.other { color: var(--muted); cursor: default; }
+
+  .banner { border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; }
+  .banner.saved { background: var(--good-soft); color: #14532d; }
+  .banner.skipped { background: var(--skip-soft); color: #3f3f46; }
+  .banner.finish { background: var(--accent-soft); color: #1e3a8a; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .banner.finish p { margin: 0; flex: 1; min-width: 260px; }
+
+  .how { font-size: 13.5px; color: var(--muted); margin: 0 0 12px; }
+  .how .key { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin: 0 3px 0 8px; }
+
+  table.words { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  table.words th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; padding: 10px 10px; border-bottom: 1px solid var(--line); background: #fbfaf8; }
+  table.words td { padding: 7px 10px; border-bottom: 1px solid #efede8; vertical-align: middle; }
+  table.words tr:last-child td { border-bottom: 0; }
+  table.words td.n { color: var(--muted); width: 36px; text-align: right; font-variant-numeric: tabular-nums; border-left: 4px solid transparent; }
+  table.words td.form { font-family: ui-monospace, Menlo, monospace; font-size: 15px; width: 18%; word-break: break-word; }
+  table.words td.pos { width: 25%; }
+  table.words td.detail { width: 22%; }
+  table.words td.guess { font-size: 13px; color: var(--muted); }
+  table.words td.help { width: 60px; text-align: right; }
+  tr.other td { background: #faf9f6; color: var(--muted); font-size: 13.5px; }
+  tr.other td.form { color: #8b8b90; }
+  tr.word.todo td.n { border-left-color: #c9c6be; }
+  tr.word.missing td { background: var(--bad-soft); }
+  tr.word.missing td.n { border-left-color: var(--bad); }
+  tr.word.filled td.n { border-left-color: #e0a800; }
+  tr.word.filled td.pos select, tr.word.filled td.detail select { background: var(--warn-soft); }
+  tr.word.chosen td.n { border-left-color: var(--good); }
+  tr.word.lit td { box-shadow: inset 0 0 0 9999px rgba(255, 229, 138, .35); }
+  .badge { display: inline-block; font-family: system-ui, sans-serif; font-size: 11.5px; padding: 0 6px; border-radius: 9px; background: #eef0f4; color: #4b5563; margin-left: 6px; white-space: nowrap; }
+  .note { font-size: 12px; color: var(--warn); margin-top: 3px; }
+  .guess .conf { white-space: nowrap; }
+  .guess-line { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+  button.use { font-size: 12.5px; padding: 3px 10px; border-color: #b9c8ee; color: var(--accent); background: var(--accent-soft); white-space: nowrap; }
+  button.use:hover:not(:disabled) { background: #dbe4fa; border-color: var(--accent); }
+  .using { font-size: 12px; color: var(--good); white-space: nowrap; }
+  .guess .also { display: block; font-size: 12px; }
+
+  .actions {
+    position: sticky; bottom: 0;
+    margin-top: 16px;
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, .96);
+    border: 1px solid var(--line); border-radius: 12px;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, .05);
+  }
+  .actions .spacer { flex: 1; }
+  .actions .hint { font-size: 12px; color: var(--muted); }
+  .message { margin-top: 10px; border-radius: 10px; padding: 9px 13px; font-size: 14px; }
+  .message.error { background: var(--bad-soft); color: #7f1d1d; }
+  .message.ok { background: var(--good-soft); color: #14532d; }
+  .message.info { background: var(--accent-soft); color: #1e3a8a; }
+  .confirm { margin-top: 10px; border: 1px solid #e6c36a; background: var(--warn-soft); border-radius: 10px; padding: 12px 14px; }
+  .confirm p { margin: 0 0 10px; }
+  .confirm .row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  aside {
+    position: sticky; top: var(--header);
+    height: calc(100vh - var(--header));
+    overflow: auto;
+    background: var(--panel);
+    border-left: 1px solid var(--line);
+    padding: 16px 20px 40px;
+    font-size: 14px;
+  }
+  aside[hidden] { display: none; }
+  aside .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  aside h2 { font-size: 17px; margin: 0; }
+  aside h3 { font-size: 15px; margin: 22px 0 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+  aside details { margin: 10px 0; }
+  aside summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+  aside ul, aside ol { padding-left: 20px; margin: 6px 0; }
+  aside li { margin: 6px 0; }
+  .focus { background: #fffbea; border: 1px solid #f0dd9a; border-radius: 10px; padding: 12px 14px; margin: 8px 0 14px; }
+  .focus h4 { margin: 0 0 6px; font-size: 15px; }
+  .focus .rule { border-top: 1px dashed #e6d48e; padding-top: 8px; margin-top: 8px; }
+  .ref { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .ref td { padding: 5px 4px; border-bottom: 1px solid #efede8; vertical-align: top; }
+  .ref td:first-child { font-weight: 600; white-space: nowrap; padding-right: 10px; }
+  .chip { display: inline-block; font-size: 12px; line-height: 1.5; padding: 0 6px; margin: 1px 0; border-radius: 9px; background: var(--accent-soft); color: #1e3a8a; white-space: nowrap; }
+  .chip.muted { background: #eeeeee; color: #6b7280; }
+  .example { overflow-x: auto; margin: 6px 0; }
+  .example table { border-collapse: collapse; font-size: 12.5px; }
+  .example td { padding: 2px 6px; border: 1px solid #ebe9e3; text-align: center; white-space: nowrap; }
+  .example tr:first-child td { font-family: ui-monospace, Menlo, monospace; }
+  .hit { background: #fff1a8; border-radius: 6px; box-shadow: 0 0 0 4px #fff1a8; }
+  .loading { padding: 60px; text-align: center; color: var(--muted); }
+
+  @media (max-width: 1100px) {
+    .layout.guide-open { grid-template-columns: minmax(0, 1fr); }
+    aside { position: fixed; right: 0; top: var(--header); width: min(460px, 92vw); z-index: 20; box-shadow: -8px 0 30px rgba(0, 0, 0, .12); }
+  }
+  @media (max-width: 860px) {
+    .layout, .layout.guide-open { grid-template-columns: minmax(0, 1fr); }
+    nav { display: none; }
+    main { padding: 14px 12px 120px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Tagging review</h1>
+  <span class="file" id="file"></span>
+  <div class="progress"><span id="count"></span><div class="bar"><div id="bar" style="width:0"></div></div></div>
+  <button id="guide-toggle">Tagging guide</button>
+</header>
+<div class="layout" id="layout">
+  <nav><h2>Sentences</h2><ol id="list"></ol></nav>
+  <main id="main"><div class="loading">Loading…</div></main>
+  <aside id="guide" hidden></aside>
+</div>
+<script>
+'use strict';
+
+// The parts of speech, in the guide's order. `code` is what the file stores; the owner never
+// needs to see it.
+const TAGS = [
+  { code: 'N', name: 'Noun', short: 'noun', detail: 'number',
+    hint: 'A thing, person, idea, or action named as a thing: file, user, error, thanks. A noun in front of a noun stays a noun: "error codes".' },
+  { code: 'PN', name: 'Proper noun (a name)', short: 'proper noun', detail: 'number',
+    hint: 'The name of a specific person, company, product, project, tool, language, format, protocol, place or file: Rust, GitHub, JSON, npm, README.md. Identifiers such as foo_bar or main.rs too.' },
+  { code: 'V', name: 'Verb', short: 'verb', detail: 'form',
+    hint: 'A main verb: run, install, fails. Also "including", "following", "based on", "given" used like prepositions.' },
+  { code: 'AX', name: 'Helping verb (auxiliary)', short: 'helping verb', detail: 'form',
+    hint: '"be" in every use (is green, was deleted, is running), except "there is". "have" only in "has run". "do" only in questions, "does not" and emphasis. can, could, will, would, should, must, may, might, shall.' },
+  { code: 'J', name: 'Adjective', short: 'adjective',
+    hint: 'Describes a noun: fast, main, local. Ordinals (first, last). Quantity words: many, few, several, more, most, other, same, own, such.' },
+  { code: 'R', name: 'Adverb', short: 'adverb',
+    hint: 'Modifies a verb, adjective or clause: also, only, just, very, then, here, e.g. Always: how, why, when, where.' },
+  { code: 'PR', name: 'Pronoun', short: 'pronoun', detail: 'pronoun',
+    hint: 'I, me, my, it, its, they, their; who, whose; something, nothing; "there" in "there is"; this/that/which standing alone; "that" in "the file that changed".' },
+  { code: 'D', name: 'Determiner (a, the, this…)', short: 'determiner',
+    hint: 'a, an, the, every, no; this, that, which, what before a noun; all, both, each, some, any, another.' },
+  { code: 'P', name: 'Preposition', short: 'preposition',
+    hint: 'Links a noun phrase: in, of, for, via, per, than, like ("tools like X"); "to" before a noun. The "up" in "set up", "in" in "log in".' },
+  { code: 'C', name: 'Conjunction', short: 'conjunction',
+    hint: 'and, or, but, nor, plus; if, whether, because, although, while, unless, until, since; "that" in "says that it works".' },
+  { code: 'T', name: 'Particle (not, to, \'s)', short: 'particle',
+    hint: 'Only three things: "not", "to" before a verb, and a possessive \'s that is its own token.' },
+  { code: 'NM', name: 'Number word (numeral)', short: 'number word',
+    hint: 'Numbers written as words: one, two, hundred. Roman numerals. Version labels written as one word: v1.2, v13.' },
+  { code: 'I', name: 'Interjection', short: 'interjection',
+    hint: 'yes and no as answers, OK, please, hello, oh.' },
+  { code: 'X', name: 'Other (rare)', short: 'other',
+    hint: 'Only: etc; a prefix split off by a hyphen (re-, non-); a plural s after code; letter labels like (a); words that are not English; gibberish. Never because a word is hard.' },
+];
+const TAG = Object.fromEntries(TAGS.map(t => [t.code, t]));
+
+// The second menu: number for nouns and pronouns, verb form for verbs.
+const DETAILS = {
+  number: [['s', 'Singular'], ['p', 'Plural']],
+  pronoun: [['s', 'Singular'], ['p', 'Plural'], ['none', 'No number (you, who, what, which…)']],
+  form: [['pr', 'Present tense'], ['pa', 'Past tense'], ['fi', 'No tense: command or modal'],
+         ['in', 'Infinitive (bare form)'], ['ing', '-ing form'], ['pp', 'Past participle']],
+};
+const DETAIL_WORDS = {
+  s: 'singular', p: 'plural', none: 'no number', pr: 'present tense', pa: 'past tense',
+  fi: 'no tense', in: 'infinitive', ing: '-ing form', pp: 'past participle',
+};
+const DETAIL_HELP = [
+  ['Singular', 'One thing. Mass nouns are singular (software, code). A name is singular unless it is plural: Windows is singular; in "GitHub Actions", Actions is plural.'],
+  ['Plural', 'More than one. "data" and "criteria" are plural unless a singular verb agrees with them.'],
+  ['No number', 'Pronouns only: you, your, yours, who, whom, whose, what, which, "that" in "the file that changed", and "there" in "there is".'],
+  ['Present tense', 'runs, are, do.'],
+  ['Past tense', 'ran, was; "it deleted the file".'],
+  ['No tense: command or modal', 'A command ("Run the tests") and the modals can, could, will, would, should, must, may, might, shall.'],
+  ['Infinitive (bare form)', 'After "to", a modal, "do", "let", "make", "help", "go", "come", or "have" meaning cause: to run, can run, does not run, let it run, have the bot merge it.'],
+  ['-ing form', 'Any -ing verb: running, installing.'],
+  ['Past participle', 'After "have" or "be", or alone as a describing word: has run, was deleted, the deleted file, files deleted by X.'],
+];
+const CONTEXTS = {
+  'prose': 'ordinary paragraph text', 'list-item': 'a list item',
+  'heading': 'a heading', 'table-cell': 'a table cell',
+};
+const KINDS = {
+  Punctuation: 'punctuation', Number: 'a number in digits', Symbol: 'a symbol',
+  Code: 'code (in backticks)', Html: 'HTML', Image: 'an image', Url: 'a web address',
+  Footnote: 'a footnote',
+};
+const ORIGINS = {
+  Command: 'looks like a command name', Path: 'looks like a file name',
+  Symbol: 'looks like a name from code', Flag: 'looks like a command-line flag',
+};
+const CONFIDENCE = {
+  Sure: 'sure', Likely: 'fairly sure', Unsure: 'not sure',
+  Unknown: 'does not know this word, guessed from its spelling',
+};
+
+let state = null;       // what the server sent last
+let at = 0;             // the sentence on screen
+let choices = [];       // per line: { base, detail } for a word, null for anything else
+let original = [];      // the choices as the sentence was opened, to tell what changed
+let lit = null;         // the line highlighted in the sentence and the table
+let guideFor = null;    // the line the guide panel is helping with
+let ask = null;         // an open question: { kind: 'leave', to } or { kind: 'skip' }
+let message = null;     // { kind, html }
+let finished = null;    // what `own` said
+let tried = false;      // whether the owner tried to save this sentence with words left blank
+let guideItems = [];    // the guide's rules, for lookups
+let guideHtml = '';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+// --- Codes in plain words -----------------------------------------------------------------
+
+function parseCode(code) {
+  if (!code) return { base: '', detail: '', fromGuess: false };
+  const [base, feature] = code.split('.');
+  if (feature) return { base, detail: feature, fromGuess: false };
+  return { base, detail: base === 'PR' ? 'none' : '', fromGuess: false };
+}
+
+function codeOf(choice) {
+  if (!choice || !choice.base) return null;
+  const kind = TAG[choice.base].detail;
+  if (!kind) return choice.base;
+  if (!choice.detail) return null;
+  return choice.detail === 'none' ? choice.base : `${choice.base}.${choice.detail}`;
+}
+
+// "N.s" -> "noun, singular"; null for anything that is not a code.
+function words(code) {
+  if (code === '_') return 'not a word';
+  if (/^\.[a-z]+$/.test(code)) return DETAIL_WORDS[code.slice(1)] || null;
+  const [base, feature] = code.split('.');
+  const tag = TAG[base];
+  if (!tag) return null;
+  if (!feature) return tag.short;
+  return DETAIL_WORDS[feature] ? `${tag.short}, ${DETAIL_WORDS[feature]}` : null;
+}
+
+// --- The guide ----------------------------------------------------------------------------
+
+// A backticked span of codes ("D N.s N.s", "s1: V.fi _ T") as chips, or null if it is not one.
+function chips(inner) {
+  const text = inner.trim().replace(/^s\d+:\s*/, '');
+  const pieces = text.split(/\s+/).filter(Boolean);
+  if (!pieces.length) return null;
+  const said = pieces.map(words);
+  if (said.some(w => !w)) return null;
+  return said.map((w, i) => `<span class="chip${pieces[i] === '_' ? ' muted' : ''}">${esc(w)}</span>`).join(' ');
+}
+
+function inline(text) {
+  return text.split(/(``.*?``|`[^`]*`)/).map(part => {
+    if (part.startsWith('``') && part.endsWith('``') && part.length >= 4) {
+      return `<code>${esc(part.slice(2, -2).trim())}</code>`;
+    }
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      const inner = part.slice(1, -1);
+      return chips(inner) || `<code>${esc(inner)}</code>`;
+    }
+    return esc(part)
+      .replace(/\*\*([^*]+)\*\*/g, (_, b) => `<strong>${TAG[b] ? esc(TAG[b].name) : b}</strong>`)
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  }).join('');
+}
+
+// A worked example ("`s1`: Run [code: cargo build] to ...") laid out word over tag.
+function example(md, next) {
+  const tags = next && next.match(/^`(s\d+): ([^`]+)`$/);
+  const head = md.match(/^`(s\d+)`( \([^)]*\))?: (.*)$/s);
+  if (!tags || !head) return null;
+  const tokens = head[3].replace(/\s+/g, ' ').match(/\[[^\]]*\]|[^\s\[]+/g) || [];
+  const codes = tags[2].trim().split(/\s+/);
+  if (tokens.length !== codes.length) return null;
+  const top = tokens.map(t => `<td>${esc(t.replace(/^\[|\]$/g, ''))}</td>`).join('');
+  const bottom = codes.map(c => `<td>${chips(c) || esc(c)}</td>`).join('');
+  const where = head[2] ? esc(head[2].trim()) : '';
+  return `${where}<div class="example"><table><tr>${top}</tr><tr>${bottom}</tr></table></div>`;
+}
+
+// Renders the guide from its second section on (the first is about a file format the owner never
+// sees; the quick reference says the same in plain words), and keeps each rule for lookups.
+function buildGuide(md) {
+  const lines = md.split('\n');
+  const out = [];
+  const items = [];
+  let section = null;
+  let i = 0;
+  const indented = l => /^\s{2,}\S/.test(l);
+  while (i < lines.length) {
+    const line = lines[i];
+    const heading = line.match(/^##\s+(.*)/);
+    if (heading) {
+      section = /^1\./.test(heading[1]) ? null : heading[1];
+      if (section) out.push(`<h3>${inline(section)}</h3>`);
+      i++;
+      continue;
+    }
+    if (!section || !line.trim() || /^#\s/.test(line)) { i++; continue; }
+    const bullet = /^- /.test(line);
+    const numbered = /^\d+\.\s/.test(line);
+    if (bullet || numbered) {
+      const parts = [];
+      while (i < lines.length && (bullet ? /^- / : /^\d+\.\s/).test(lines[i])) {
+        const paragraphs = [lines[i].replace(/^- |^\d+\.\s+/, '')];
+        i++;
+        while (i < lines.length) {
+          if (indented(lines[i])) {
+            const last = paragraphs.length - 1;
+            paragraphs[last] = paragraphs[last] ? `${paragraphs[last]} ${lines[i].trim()}` : lines[i].trim();
+            i++;
+          } else if (!lines[i].trim() && i + 1 < lines.length && indented(lines[i + 1])) {
+            paragraphs.push('');
+            i++;
+          } else {
+            break;
+          }
+        }
+        const md = paragraphs[0];
+        const html = (numbered && example(md, paragraphs[1])) ||
+          paragraphs.map(p => inline(p)).join('<br>');
+        const id = `rule-${items.length}`;
+        items.push({ id, md: paragraphs.join(' '), html, section });
+        parts.push(`<li id="${id}">${html}</li>`);
+        if (!numbered) {
+          while (i < lines.length && !lines[i].trim() && /^- /.test(lines[i + 1] || '')) i++;
+        } else {
+          while (i < lines.length && !lines[i].trim() && /^\d+\.\s/.test(lines[i + 1] || '')) i++;
+        }
+      }
+      out.push(bullet ? `<ul>${parts.join('')}</ul>` : `<ol>${parts.join('')}</ol>`);
+      continue;
+    }
+    let paragraph = line;
+    i++;
+    while (i < lines.length && lines[i].trim() && !/^(- |\d+\.\s|#)/.test(lines[i])) {
+      paragraph += ' ' + lines[i].trim();
+      i++;
+    }
+    const id = `rule-${items.length}`;
+    const html = inline(paragraph);
+    items.push({ id, md: paragraph, html, section });
+    out.push(`<p id="${id}">${html}</p>`);
+  }
+  guideItems = items;
+  guideHtml = out.join('');
+}
+
+// The guide's own entry for a part of speech.
+function entryFor(base) {
+  if (base === 'X') return guideItems.find(item => item.md.startsWith('`X` is only for'));
+  return guideItems.find(item => item.md.startsWith(`**${base}** `));
+}
+
+// The rules that mention the word on line `index`, or whose subject it looks like.
+function rulesFor(index) {
+  const rows = state.sentences[at].rows;
+  const row = rows[index];
+  const word = row.form;
+  const lower = word.toLowerCase();
+  const hits = [];
+  const add = item => { if (item && !hits.includes(item)) hits.push(item); };
+  for (const item of guideItems) {
+    if (/^\*\*[A-Z]+\*\* /.test(item.md)) continue; // the tag entries: shown on their own
+    for (const match of item.md.matchAll(/\*([^*]+)\*/g)) {
+      if (match[1].toLowerCase().split(/[^a-z0-9'’-]+/).includes(lower)) { add(item); break; }
+    }
+  }
+  const starting = key => guideItems.find(item => item.md.startsWith(key));
+  const hyphen = (rows[index + 1] && rows[index + 1].form === '-' && !row.space) ||
+    (rows[index - 1] && rows[index - 1].form === '-' && !rows[index - 1].space);
+  if (lower.length > 4 && lower.endsWith('ing')) add(starting('**-ing words**'));
+  if (lower.length > 3 && /(ed|en)$/.test(lower)) add(starting('**-ed/-en words**'));
+  if (lower.length > 3 && lower.endsWith('ed')) add(starting('**Past or participle**'));
+  if (/['’]/.test(word)) add(starting('**Contractions**'));
+  if (hyphen) add(starting('**Slugs**'));
+  if (hyphen) add(starting('**Hyphenated words**'));
+  if (/\d/.test(word)) add(starting('**Numbers**'));
+  if (/^[A-Z]{2,}s?$/.test(word)) add(starting('**Acronyms**'));
+  if (row.origin && row.origin !== 'English') add(starting('**Identifiers outside code spans**'));
+  if (rows.length && index === rows.findIndex(r => r.word) && state.sentences[at].context !== 'prose') {
+    add(starting('**Fragments**'));
+  }
+  return hits;
+}
+
+function quickReference(open) {
+  const tags = TAGS.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.hint)}</td></tr>`).join('');
+  const details = DETAIL_HELP.map(([n, h]) => `<tr><td>${esc(n)}</td><td>${esc(h)}</td></tr>`).join('');
+  return `
+    <details${open ? ' open' : ''}><summary>Parts of speech, in plain words</summary>
+      <p>Tag each word for how it is used in this sentence, not its usual use. Capital letters never decide.</p>
+      <table class="ref">${tags}</table></details>
+    <details><summary>The second menu: singular, plural and verb forms</summary>
+      <p>Nouns and proper nouns always need singular or plural. Pronouns need it too, or "No number". Verbs and helping verbs need a form.</p>
+      <table class="ref">${details}</table></details>
+    <details><summary>When you are unsure</summary>
+      <p>Every word still gets a real choice. Apply the rules, then choose what the word most often is in technical English in that position. Between noun and proper noun, choose noun. Between adjective and a verb form, choose the verb. Between preposition and conjunction, choose preposition unless a clause follows. For a single unknown word, choose noun, singular.</p>
+      <p>A typo is tagged as the word that was meant ("This files is": files is a singular noun).</p></details>`;
+}
+
+// --- Drawing ------------------------------------------------------------------------------
+
+function doneCount() {
+  return state.sentences.filter(s => s.reviewed || s.rejected).length;
+}
+
+function drawHeader() {
+  const total = state.sentences.length;
+  const done = doneCount();
+  $('file').textContent = state.file;
+  $('count').textContent = `${done} of ${total} sentences done`;
+  $('bar').style.width = `${(100 * done / total).toFixed(1)}%`;
+}
+
+function drawList() {
+  $('list').innerHTML = state.sentences.map((s, i) => {
+    const mark = s.rejected ? ['skipped', '–', 'skipped'] : s.reviewed ? ['done', '✓', 'saved'] : ['todo', '●', 'to do'];
+    return `<li><button data-go="${i}" class="${i === at ? 'current' : ''}" title="${esc(mark[2])}">
+      <span class="num">${i + 1}</span><span class="mark ${mark[0]}">${mark[1]}</span>
+      <span class="snippet">${esc(s.text)}</span></button></li>`;
+  }).join('');
+  const current = $('list').querySelector('.current');
+  if (current) current.scrollIntoView({ block: 'nearest' });
+}
+
+function rowClass(index) {
+  const row = state.sentences[at].rows[index];
+  if (!row.word) return 'other';
+  const code = codeOf(choices[index]);
+  const sentence = state.sentences[at];
+  if (sentence.rejected) return 'word';
+  if (!code) return tried ? 'word missing' : 'word todo';
+  const same = code === codeOf(original[index]);
+  if (row.prefilled && same) return 'word filled';
+  if (!same || sentence.reviewed) return 'word chosen';
+  return 'word';
+}
+
+function detailOptions(index) {
+  const choice = choices[index];
+  const kind = choice.base && TAG[choice.base].detail;
+  if (!kind) return `<option value="">${choice.base ? 'not needed' : '—'}</option>`;
+  const options = DETAILS[kind].map(([v, label]) =>
+    `<option value="${v}"${choice.detail === v ? ' selected' : ''}>${esc(label)}</option>`).join('');
+  return `<option value=""${choice.detail ? '' : ' selected'}>Choose…</option>${options}`;
+}
+
+function guessHtml(row, index) {
+  const g = row.guess;
+  if (!g) return '';
+  const said = words(g.tag) || g.tag;
+  const also = g.others.length ? `<span class="also">also possible: ${esc(g.others.map(c => TAG[c] ? TAG[c].short : c).join(', '))}</span>` : '';
+  let use = '';
+  if (!state.sentences[at].rejected) {
+    use = codeOf(choices[index]) === codeOf(parseCode(g.tag))
+      ? '<span class="using">✓ in use</span>'
+      : `<button class="use" data-use="${index}" title="Set this word to deslag's guess">Use this</button>`;
+  }
+  return `<div class="guess-line"><span>${esc(cap(said))} <span class="conf">(${esc(CONFIDENCE[g.confidence] || g.confidence)})</span>${also}</span>${use}</div>`;
+}
+
+// The words of each run joined by hyphens with no spaces, such as zsh-syntax-highlighting, keyed
+// by its first word.
+function hyphenRuns(rows) {
+  const runs = {};
+  let i = 0;
+  while (i < rows.length) {
+    if (!rows[i].word) { i++; continue; }
+    const members = [i];
+    let j = i;
+    while (j + 2 < rows.length && !rows[j].space && rows[j + 1].form === '-' && !rows[j + 1].space && rows[j + 2].word) {
+      members.push(j + 2);
+      j += 2;
+    }
+    if (members.length > 1) runs[i] = members;
+    i = j + 1;
+  }
+  return runs;
+}
+
+function runText(rows, members) {
+  return rows.slice(members[0], members[members.length - 1] + 1).map(r => r.form).join('');
+}
+
+function drawRow(index) {
+  const row = state.sentences[at].rows[index];
+  const n = `<td class="n">${index + 1}</td>`;
+  if (!row.word) {
+    return `<tr class="other" data-row="${index}">${n}<td class="form">${esc(row.form)}</td>
+      <td colspan="4">Not a word: ${esc(KINDS[row.kind] || row.kind)}. Nothing to choose.</td></tr>`;
+  }
+  const rejected = !!state.sentences[at].rejected;
+  const choice = choices[index];
+  const kind = choice.base && TAG[choice.base].detail;
+  const options = TAGS.map(t => `<option value="${t.code}"${choice.base === t.code ? ' selected' : ''}>${esc(t.name)}</option>`).join('');
+  const origin = ORIGINS[row.origin] ? `<span class="badge">${esc(ORIGINS[row.origin])}</span>` : '';
+  const filled = row.prefilled && codeOf(choice) === codeOf(original[index]) && !rejected
+    ? '<div class="note">Filled in from deslag\'s guess. Check it.</div>' : '';
+  const rows = state.sentences[at].rows;
+  const run = hyphenRuns(rows)[index];
+  const name = run && !rejected
+    ? `<div><button class="quiet small" data-name="${index}" title="Sets every word piece to proper noun, singular, as the guide's rule for names joined by hyphens says">Tag “${esc(runText(rows, run))}” as one name</button></div>` : '';
+  return `<tr class="${rowClass(index)}${lit === index ? ' lit' : ''}" data-row="${index}">${n}
+    <td class="form">${esc(row.form)}${origin}${name}</td>
+    <td class="pos"><select data-base="${index}" aria-label="Part of speech of ${esc(row.form)}"${rejected ? ' disabled' : ''}>
+      <option value=""${choice.base ? '' : ' selected'}>Choose…</option>${options}</select>${filled}</td>
+    <td class="detail"><select data-detail="${index}" aria-label="Detail for ${esc(row.form)}"${rejected || !kind ? ' disabled' : ''}>${detailOptions(index)}</select></td>
+    <td class="guess">${guessHtml(row, index)}</td>
+    <td class="help"><button class="quiet" data-help="${index}" title="What the guide says about this word">Help</button></td></tr>`;
+}
+
+function drawSentenceText(sentence) {
+  return sentence.rows.map((row, i) => {
+    const cls = row.word ? 'word' : 'other';
+    return `<span class="tok ${cls}${lit === i ? ' lit' : ''}" data-tok="${i}">${esc(row.form)}</span>${row.space && i + 1 < sentence.rows.length ? ' ' : ''}`;
+  }).join('');
+}
+
+function missing() {
+  return state.sentences[at].rows
+    .map((row, i) => (row.word && !codeOf(choices[i]) ? i : -1))
+    .filter(i => i >= 0);
+}
+
+function dirty() {
+  const sentence = state.sentences[at];
+  if (sentence.rejected) return false;
+  return choices.some((c, i) => c && codeOf(c) !== codeOf(original[i]) ||
+    (c && c.base !== (original[i] && original[i].base)));
+}
+
+function drawMain() {
+  const sentence = state.sentences[at];
+  const total = state.sentences.length;
+  const allDone = doneCount() === total;
+  const source = [sentence.repo, sentence.source && sentence.source.replace(/^.*?\/[^/]+--[^/]+\//, '').replace(/ bytes \d+-\d+$/, '')].filter(Boolean).join(' · ');
+  let banner = '';
+  if (sentence.rejected) {
+    banner = `<div class="banner skipped">You skipped this sentence on ${esc(sentence.rejected)}. It will be left out of your gold file. (To undo a skip, ask Claude: it means deleting one line in the file.)</div>`;
+  } else if (sentence.reviewed) {
+    banner = `<div class="banner saved">Saved on ${esc(sentence.reviewed)}. You can still change it and save again.</div>`;
+  }
+  let finish = '';
+  if (allDone) {
+    finish = finished
+      ? `<div class="banner finish"><p><b>Done.</b> ${esc(finished)}<br>Next: commit <code>${esc(state.into)}</code> and remove the queue file. Claude can do both for you.</p></div>`
+      : `<div class="banner finish"><p><b>Every sentence is done.</b> The last step copies your tagged sentences into your gold file, <code>${esc(state.into)}</code>. Skipped ones are left out.</p>
+          <button class="primary" id="own">Move them into the gold file</button></div>`;
+  }
+  const rows = sentence.rows.map((_, i) => drawRow(i)).join('');
+  const nextLabel = sentence.rejected ? 'Next sentence →'
+    : sentence.reviewed ? (at + 1 < total ? 'Save changes and go to next →' : 'Save changes')
+    : (at + 1 < total ? 'Save and go to next →' : 'Save');
+  $('main').innerHTML = `
+    ${finish}
+    <div class="card">
+      <div class="meta"><span><b>Sentence ${at + 1} of ${total}</b></span>
+        <span>Appears in ${esc(CONTEXTS[sentence.context] || sentence.context)}</span>
+        ${source ? `<span>From ${esc(source)}</span>` : ''}</div>
+      <div class="sentence" id="sentence">${drawSentenceText(sentence)}</div>
+    </div>
+    ${banner}
+    <p class="how">For each word, choose its part of speech, and in the second menu its detail when it needs one.
+      <span class="key" style="background:#e0a800"></span>filled in from deslag's guess: check it
+      <span class="key" style="background:#c9c6be"></span>still needs a choice
+      <span class="key" style="background:var(--good)"></span>your choice</p>
+    <table class="words">
+      <thead><tr><th></th><th>Word</th><th>Part of speech</th><th>Detail</th><th>deslag's guess</th><th></th></tr></thead>
+      <tbody id="rows">${rows}</tbody>
+    </table>
+    <div class="actions">
+      <button id="prev"${at === 0 ? ' disabled' : ''}>← Previous</button>
+      <button class="primary" id="save">${nextLabel}</button>
+      <span class="hint">or press ${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter</span>
+      <span class="spacer"></span>
+      ${sentence.rejected ? '' : '<button class="danger" id="skip">Skip this sentence…</button>'}
+      <div style="flex-basis:100%">${drawAsk()}${message ? `<div class="message ${message.kind}">${message.html}</div>` : ''}</div>
+    </div>`;
+}
+
+function drawAsk() {
+  if (!ask) return '';
+  if (ask.kind === 'clash') {
+    return `<div class="confirm"><p><b>The same word has different tags in this sentence.</b> That can be right, as with “that” used as a determiner and as a conjunction, but check it.</p>
+      <ul>${ask.list.map(item => `<li>${item}</li>`).join('')}</ul>
+      <div class="row"><button class="primary" id="clash-save">Save anyway</button><button id="ask-no">Go back and check</button></div></div>`;
+  }
+  if (ask.kind === 'skip') {
+    return `<div class="confirm"><p><b>Skip this sentence?</b> Only for a sentence that should not be tagged at all: it holds personal information, or it is not English. It will be left out of your gold file.</p>
+      <div class="row"><button class="danger" id="skip-yes">Yes, skip it</button><button id="ask-no">Cancel</button></div></div>`;
+  }
+  return `<div class="confirm"><p><b>You have choices on this sentence that are not saved.</b></p>
+    <div class="row"><button class="primary" id="leave-save">Save them, then go</button>
+    <button id="leave-drop">Throw them away and go</button><button id="ask-no">Stay here</button></div></div>`;
+}
+
+function drawGuide() {
+  const aside = $('guide');
+  if (aside.hidden) return;
+  let focus = '';
+  if (guideFor !== null && state.sentences[at].rows[guideFor]) {
+    const row = state.sentences[at].rows[guideFor];
+    const code = codeOf(choices[guideFor]);
+    const base = (choices[guideFor] && choices[guideFor].base) || (row.guess && parseCode(row.guess.tag).base);
+    const entry = base && entryFor(base);
+    const chosen = code ? `You chose: <b>${esc(cap(words(code)))}</b>.`
+      : base && choices[guideFor].base ? `You chose: <b>${esc(TAG[base].name)}</b>, with no detail yet.`
+      : row.guess ? `Nothing chosen yet. deslag guesses <b>${esc(words(row.guess.tag) || row.guess.tag)}</b>.` : 'Nothing chosen yet.';
+    const rules = rulesFor(guideFor);
+    focus = `<div class="focus"><h4>Help for “${esc(row.form)}”</h4><div>${chosen}</div>
+      ${entry ? `<div class="rule">${entry.html}</div>` : ''}
+      ${rules.length ? `<div class="rule"><b>Other rules that mention this word or its shape:</b><ul>${rules.map(r => `<li>${r.html}</li>`).join('')}</ul></div>`
+        : '<div class="rule">No other rule in the guide mentions this word.</div>'}</div>`;
+  }
+  aside.innerHTML = `<div class="top"><h2>Tagging guide</h2><button class="quiet" id="guide-close">Close</button></div>
+    ${focus}${quickReference(guideFor === null)}
+    <details><summary>The full guide</summary>${guideHtml}</details>`;
+}
+
+function draw() {
+  drawHeader();
+  drawList();
+  drawMain();
+  drawGuide();
+}
+
+// --- Changing things ----------------------------------------------------------------------
+
+function open(index) {
+  at = index;
+  const sentence = state.sentences[at];
+  choices = sentence.rows.map(row => (row.word ? parseCode(row.tag) : null));
+  original = choices.map(c => (c ? { ...c } : null));
+  lit = null;
+  guideFor = null;
+  tried = false;
+  ask = null;
+  message = null;
+  draw();
+  window.scrollTo({ top: 0 });
+}
+
+function go(index) {
+  if (index < 0 || index >= state.sentences.length || index === at) return;
+  if (dirty()) {
+    ask = { kind: 'leave', to: index };
+    message = null;
+    drawMain();
+    return;
+  }
+  open(index);
+}
+
+function nextIndex() {
+  const total = state.sentences.length;
+  if (at + 1 < total) return at + 1;
+  const todo = state.sentences.findIndex(s => !s.reviewed && !s.rejected);
+  return todo >= 0 ? todo : at;
+}
+
+async function call(path, body) {
+  let response;
+  try {
+    response = await fetch(path, body === undefined ? {} : {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (_) {
+    throw new Error('This page cannot reach the program that saves your work. It may have stopped: ask Claude to start it again, then reload this page. Your choices on this sentence are still on screen.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `The server answered ${response.status}.`);
+  return data;
+}
+
+// The words that have more than one tag in this sentence, as text for the owner.
+function clashes() {
+  const rows = state.sentences[at].rows;
+  const seen = new Map();
+  rows.forEach((row, i) => {
+    if (!row.word) return;
+    const key = row.form.toLowerCase();
+    if (!seen.has(key)) seen.set(key, { form: row.form, codes: new Map() });
+    const codes = seen.get(key).codes;
+    const code = codeOf(choices[i]);
+    codes.set(code, (codes.get(code) || 0) + 1);
+  });
+  const times = n => (n === 1 ? 'once' : n === 2 ? 'twice' : `${n} times`);
+  return [...seen.values()].filter(w => w.codes.size > 1).map(w =>
+    `“${esc(w.form)}”: ${[...w.codes].map(([code, n]) => `${esc(words(code))} ${times(n)}`).join(', ')}`);
+}
+
+async function save(then, anyway) {
+  const sentence = state.sentences[at];
+  if (sentence.rejected) { open(then === undefined ? nextIndex() : then); return; }
+  const gaps = missing();
+  if (gaps.length) {
+    ask = null;
+    tried = true;
+    const names = gaps.map(i => `“${esc(sentence.rows[i].form)}”`).join(', ');
+    message = { kind: 'error', html: `${gaps.length === 1 ? 'One word still needs' : `${gaps.length} words still need`} a choice: ${names}.` };
+    drawMain();
+    const first = document.querySelector(`select[data-base="${gaps[0]}"]`);
+    if (first) {
+      const choice = choices[gaps[0]];
+      const target = choice.base ? document.querySelector(`select[data-detail="${gaps[0]}"]`) : first;
+      target.scrollIntoView({ block: 'center' });
+      target.focus();
+    }
+    return;
+  }
+  const clash = anyway ? [] : clashes();
+  if (clash.length) {
+    ask = { kind: 'clash', list: clash, to: then };
+    message = null;
+    drawMain();
+    return;
+  }
+  const tags = choices.map(c => (c ? codeOf(c) : null));
+  const accepted = choices.map(c => !!(c && c.fromGuess));
+  try {
+    const data = await call('/save', { sentence: at, tags, accepted });
+    const was = at;
+    state = data.state;
+    open(then === undefined ? nextIndex() : then);
+    const note = data.warning ? ` (warning: ${esc(data.warning)})` : '';
+    message = { kind: 'ok', html: `Sentence ${was + 1} saved.${note}` };
+    drawMain();
+  } catch (error) {
+    ask = null;
+    message = { kind: 'error', html: esc(error.message) };
+    drawMain();
+  }
+}
+
+async function skip() {
+  try {
+    const data = await call('/reject', { sentence: at });
+    const was = at;
+    state = data.state;
+    open(nextIndex());
+    message = { kind: 'ok', html: `Sentence ${was + 1} skipped.` };
+    drawMain();
+  } catch (error) {
+    ask = null;
+    message = { kind: 'error', html: esc(error.message) };
+    drawMain();
+  }
+}
+
+async function own() {
+  try {
+    const data = await call('/own', {});
+    finished = data.message;
+    message = null;
+  } catch (error) {
+    message = { kind: 'error', html: `Not moved: ${esc(error.message)}` };
+  }
+  drawMain();
+}
+
+// Sets a word to deslag's guess, whatever its confidence. The file marks it as deslag's.
+function useGuess(index) {
+  const guess = state.sentences[at].rows[index].guess;
+  if (!guess) return;
+  choices[index] = { ...parseCode(guess.tag), fromGuess: true };
+  document.querySelector(`select[data-base="${index}"]`).value = choices[index].base;
+  updateRow(index, true);
+  message = null;
+}
+
+// Tags every word piece of the hyphen-joined run starting at `index` as a name.
+function tagName(index) {
+  const run = hyphenRuns(state.sentences[at].rows)[index] || [];
+  for (const member of run) {
+    choices[member] = { base: 'PN', detail: 's', fromGuess: false };
+    document.querySelector(`select[data-base="${member}"]`).value = 'PN';
+    updateRow(member, true);
+  }
+  message = null;
+}
+
+function light(index) {
+  lit = index;
+  document.querySelectorAll('.lit').forEach(el => el.classList.remove('lit'));
+  if (index === null) return;
+  document.querySelectorAll(`[data-tok="${index}"], tr[data-row="${index}"]`).forEach(el => el.classList.add('lit'));
+}
+
+function showGuide(index) {
+  guideFor = index;
+  $('guide').hidden = false;
+  $('layout').classList.add('guide-open');
+  drawGuide();
+  $('guide').scrollTop = 0;
+}
+
+function hideGuide() {
+  $('guide').hidden = true;
+  $('layout').classList.remove('guide-open');
+}
+
+// Updates a word's line after a choice, without redrawing the menu in use, so typing the first
+// letters of a choice keeps working.
+function updateRow(index, newBase) {
+  const tr = document.querySelector(`tr[data-row="${index}"]`);
+  if (!tr) return;
+  tr.className = rowClass(index) + (lit === index ? ' lit' : '');
+  const choice = choices[index];
+  const detail = tr.querySelector('select[data-detail]');
+  if (newBase) {
+    detail.innerHTML = detailOptions(index);
+    detail.disabled = !(choice.base && TAG[choice.base].detail);
+  }
+  const note = tr.querySelector('.note');
+  if (note && codeOf(choice) !== codeOf(original[index])) note.remove();
+  tr.querySelector('td.guess').innerHTML = guessHtml(state.sentences[at].rows[index], index);
+  if (guideFor === index) drawGuide();
+}
+
+// --- Events -------------------------------------------------------------------------------
+
+document.addEventListener('change', event => {
+  const el = event.target;
+  if (el.dataset.base !== undefined) {
+    const index = Number(el.dataset.base);
+    const choice = choices[index];
+    choice.base = el.value;
+    choice.fromGuess = false;
+    const kind = choice.base && TAG[choice.base].detail;
+    const allowed = kind ? DETAILS[kind].map(([v]) => v) : [];
+    if (!allowed.includes(choice.detail)) choice.detail = '';
+    updateRow(index, true);
+  } else if (el.dataset.detail !== undefined) {
+    const index = Number(el.dataset.detail);
+    choices[index].detail = el.value;
+    choices[index].fromGuess = false;
+    updateRow(index, false);
+  }
+});
+
+document.addEventListener('click', event => {
+  const el = event.target.closest('button, [data-tok]');
+  if (!el) return;
+  if (el.dataset.go !== undefined) return go(Number(el.dataset.go));
+  if (el.dataset.help !== undefined) return showGuide(Number(el.dataset.help));
+  if (el.dataset.name !== undefined) return tagName(Number(el.dataset.name));
+  if (el.dataset.use !== undefined) return useGuess(Number(el.dataset.use));
+  if (el.dataset.tok !== undefined) {
+    const index = Number(el.dataset.tok);
+    if (!state.sentences[at].rows[index].word) return;
+    const select = document.querySelector(`select[data-base="${index}"]`);
+    if (select) { select.scrollIntoView({ block: 'center' }); select.focus(); }
+    return light(index);
+  }
+  switch (el.id) {
+    case 'save': return save();
+    case 'prev': return go(at - 1);
+    case 'skip': ask = { kind: 'skip' }; message = null; return drawMain();
+    case 'skip-yes': return skip();
+    case 'ask-no': ask = null; return drawMain();
+    case 'leave-save': { const to = ask.to; ask = null; return save(to); }
+    case 'leave-drop': { const to = ask.to; ask = null; return open(to); }
+    case 'clash-save': { const to = ask.to; ask = null; return save(to, true); }
+    case 'own': return own();
+    case 'guide-toggle': return $('guide').hidden ? showGuide(null) : hideGuide();
+    case 'guide-close': return hideGuide();
+  }
+});
+
+document.addEventListener('focusin', event => {
+  const el = event.target;
+  const index = el.dataset && (el.dataset.base ?? el.dataset.detail);
+  if (index !== undefined) light(Number(index));
+});
+
+document.addEventListener('mouseover', event => {
+  const el = event.target.closest('[data-tok], tr[data-row]');
+  if (!el) return;
+  const index = Number(el.dataset.tok ?? el.dataset.row);
+  if (state && state.sentences[at].rows[index] && state.sentences[at].rows[index].word) light(index);
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+    event.preventDefault();
+    save();
+  }
+});
+
+window.addEventListener('beforeunload', event => {
+  if (state && dirty()) { event.preventDefault(); event.returnValue = ''; }
+});
+
+(async () => {
+  try {
+    state = await call('/state');
+    buildGuide(state.guide);
+    const first = state.sentences.findIndex(s => !s.reviewed && !s.rejected);
+    open(first >= 0 ? first : 0);
+  } catch (error) {
+    $('main').innerHTML = `<div class="message error">${esc(error.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>

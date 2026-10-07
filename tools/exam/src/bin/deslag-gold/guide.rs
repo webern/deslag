@@ -6,7 +6,8 @@
 
 use crate::code::Base;
 
-const GUIDE: &str = include_str!("../../../../../tests/gold/annotation-guide.md");
+/// The guide's Markdown.
+pub const GUIDE: &str = include_str!("../../../../../tests/gold/annotation-guide.md");
 
 /// The guide's entry for `base`, on one line.
 pub fn entry(base: Base) -> Option<String> {

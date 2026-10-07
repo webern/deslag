@@ -1,0 +1,1300 @@
+# exam.tokens = deslag
+# exam.trains = no
+# exam.source = owner review
+# Sentences the owner chose and reviewed: a stratum of hard sentences, never pooled with dev.
+# They are never training data. Silver must leave out every repository named in a repo line.
+# sent_id = o0001
+# exam.context = prose
+# exam.tier = mixed
+# source = batches/2026-09-27-02/mixed/nicknisi--dotfiles/README.md bytes 7407-7533
+# repo = nicknisi/dotfiles
+# pick_id = rc87bfb791f9ffb7e
+# license = MIT
+# text = The configured plugins are zsh-async, zsh-syntax-highlighting, zsh-autosuggestions, zsh-npm-scripts-autocomplete, and fzf-tab.
+# owner_reviewed = 2026-10-06
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	configured	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+3	plugins	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+4	are	_	AUX	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	zsh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	async	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	zsh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+10	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	syntax	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+12	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	highlighting	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+14	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+15	zsh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+16	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	autosuggestions	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+18	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+19	zsh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+20	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+21	npm	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+22	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+23	scripts	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+24	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+25	autocomplete	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+26	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+27	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+28	fzf	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No
+29	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+30	tab	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+31	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0002
+# exam.context = list-item
+# exam.tier = mixed
+# source = batches/2026-09-27-02/mixed/caffeinelabs--motoko/Changelog.md bytes 28595-28702
+# repo = caffeinelabs/motoko
+# pick_id = r3996565d4acf32e0
+# license = Apache-2.0
+# text = bugfix: Fix type inference for return expressions inside unannotated lambdas passed to generic functions.
+# owner_reviewed = 2026-10-06
+1	bugfix	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Fix	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	type	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	inference	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+7	return	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+8	expressions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	inside	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	unannotated	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+11	lambdas	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+12	passed	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+13	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+14	generic	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+15	functions	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+16	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0003
+# exam.context = heading
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/authgear--authgear-server/docs__specs__oidc.md bytes 17841-17902
+# repo = authgear/authgear-server
+# pick_id = r4c8f1609bba34fbd
+# license = Apache-2.0
+# text = External application acting as RP while Authgear acting as OP
+# owner_reviewed = 2026-10-06
+1	External	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	application	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	acting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	RP	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	while	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	Authgear	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	acting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	OP	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0004
+# exam.context = heading
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md bytes 1513-1577
+# repo = PetoiCamp/OpenCat-Quadruped-Robot
+# pick_id = r7d937937c11f0d48
+# license = MIT
+# text = Quaddle mini robot dog — launching on Kickstarter Sept 2, 2026
+# owner_reviewed = 2026-10-06
+1	Quaddle	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	mini	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	robot	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	dog	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	launching	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	Kickstarter	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	Sept	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+10	2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	2026	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+
+# sent_id = o0005
+# exam.context = table-cell
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/gitlab--GoogleDriveIndex--Google-Drive-Index/README.md bytes 13731-13802
+# repo = GoogleDriveIndex/Google-Drive-Index
+# pick_id = r405e4047c32d2b2e
+# license = MIT
+# text = Set automatically by build script — used for npm CDN asset versioning
+# owner_reviewed = 2026-10-06
+1	Set	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+2	automatically	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner
+3	by	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	build	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	script	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+7	used	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+8	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	npm	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+10	CDN	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	asset	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	versioning	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0006
+# exam.context = table-cell
+# exam.tier = mixed
+# source = batches/2026-09-27-02/mixed/netbootxyz--netboot.xyz/README.md bytes 3208-3244
+# repo = netbootxyz/netboot.xyz
+# pick_id = r1a246410de7512a2
+# license = Apache-2.0
+# text = Legacy USB combined IMG for USB Keys
+# owner_reviewed = 2026-10-06
+1	Legacy	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	USB	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	combined	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+4	IMG	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	USB	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	Keys	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0007
+# exam.context = prose
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/vitest-dev--vitest/docs__guide__features.md bytes 4588-4739
+# repo = vitest-dev/vitest
+# pick_id = r0b36cd5fe27523ac
+# license = MIT
+# text = Vitest supports both happy-dom or jsdom for mocking DOM and browser APIs.
+# owner_reviewed = 2026-10-06
+1	Vitest	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	supports	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+3	both	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner
+4	happy	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	dom	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	or	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	jsdom	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	mocking	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	DOM	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+12	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	browser	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	APIs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0008
+# exam.context = prose
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/SchemaStore--schemastore/CONTRIBUTING.md bytes 10403-10546
+# repo = SchemaStore/schemastore
+# pick_id = raa22c6fffe3ef51a
+# license = Apache-2.0
+# text = Many tools, such as validate-pyproject , accept passing in subpaths for validation like so:
+# owner_reviewed = 2026-10-06
+1	Many	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	tools	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+3	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	such	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+5	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	validate	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	pyproject	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	accept	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+11	passing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+12	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	subpaths	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+15	validation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	like	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	so	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+18	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0009
+# exam.context = prose
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/nltk--nltk/CONTRIBUTING.md bytes 3554-3647
+# repo = nltk/nltk
+# pick_id = r15a2f2c792eba0c6
+# license = Apache-2.0
+# text = NLTK uses pre-commit to run code quality checks before each commit.
+# owner_reviewed = 2026-10-06
+1	NLTK	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	uses	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	pre	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	commit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	run	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	code	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	quality	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	checks	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	before	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	each	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	commit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+14	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0010
+# exam.context = list-item
+# exam.tier = mixed
+# source = batches/2026-09-27-01/mixed/coverlet-coverage--coverlet/Documentation__Changelog.md bytes 7079-7183
+# repo = coverlet-coverage/coverlet
+# pick_id = r1fec9dd459ba8636
+# license = MIT
+# text = Upgraded minimum required .NET SDK and runtime to .NET 8.0 LTS (Long Term Support) ( Breaking Change )
+# owner_reviewed = 2026-10-06
+1	Upgraded	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	minimum	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+3	required	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+4	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	NET	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	SDK	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	runtime	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+10	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	NET	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+12	8.0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+13	LTS	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	Long	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	Term	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+17	Support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+18	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+19	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	Breaking	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+21	Change	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+22	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0011
+# exam.context = list-item
+# exam.tier = mixed
+# source = batches/2026-09-27-02/mixed/markshust--docker-magento/CHANGELOG.md bytes 31651-31754
+# repo = markshust/docker-magento
+# pick_id = r23d5c46a95569825
+# license = MIT
+# text = Checksum flag to rsync in bin/update PR #707 .
+# owner_reviewed = 2026-10-06
+1	Checksum	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	flag	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+4	rsync	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+5	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	bin/update	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+7	PR	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	707	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+10	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0012
+# exam.context = heading
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/mrtcnbsk--northstar/docs__superpowers__plans__2026-07-11-epic-1-rebrand.md bytes 3628-3715
+# repo = mrtcnbsk/northstar
+# pick_id = r0ba76bf1fa8d15fe
+# license = MIT
+# text = Task 1.2 — Config dir + file names + env vars (back-compat) — THE delicate one, TDD
+# owner_reviewed = 2026-10-06
+1	Task	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	1.2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+3	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	Config	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	dir	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner
+6	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+7	file	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	names	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+10	env	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner
+11	vars	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	back	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+14	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	compat	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+16	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+18	THE	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	delicate	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+20	one	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+21	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+22	TDD	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0013
+# exam.context = heading
+# exam.tier = human
+# source = batches/2026-09-27-02/human/nerds-odd-e--doughnut/README.md bytes 5965-6067
+# repo = nerds-odd-e/doughnut
+# pick_id = r21ed6d2d9e08823f
+# license = MIT
+# text = Build & Bundle Vue3 frontend web-app assets and startup backend app (backend app started on port 8081)
+# owner_reviewed = 2026-10-06
+1	Build	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	&	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Bundle	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	Vue3	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	frontend	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	web	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	assets	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	startup	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+12	backend	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	backend	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	started	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+18	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	port	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+20	8081	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+21	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0014
+# exam.context = heading
+# exam.tier = human
+# source = batches/2026-09-27-02/human/shiguredo--momo/README.en.md bytes 1090-1123
+# repo = shiguredo/momo
+# pick_id = r389246e8cd2a40b6
+# license = Apache-2.0
+# text = Binary for Jetson Xavier NX / AGX
+# owner_reviewed = 2026-10-06
+1	Binary	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	Jetson	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	Xavier	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	NX	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+7	AGX	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0015
+# exam.context = heading
+# exam.tier = human
+# source = batches/2026-09-27-02/human/mulle-concurrent--mulle-concurrent/dox__BUILD.md bytes 1944-1983
+# repo = mulle-concurrent/mulle-concurrent
+# pick_id = re30b050872f14694
+# license = BSD-3-Clause
+# text = OSX: Install mulle-build using homebrew
+# owner_reviewed = 2026-10-06
+1	OSX	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Install	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	mulle	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	build	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	homebrew	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0016
+# exam.context = heading
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/mitchdenny--hex1b/docs__experimental__unix-pty-startup.md bytes 2-39
+# repo = mitchdenny/hex1b
+# pick_id = r24202a507e84c011
+# license = MIT
+# text = Experimental Unix PTY startup timeout
+# owner_reviewed = 2026-10-06
+1	Experimental	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+2	Unix	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	PTY	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	startup	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	timeout	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner
+
+# sent_id = o0017
+# exam.context = heading
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/useful-toys--slf4j-toys/doc__TDR-0039-accept-scaled-integer-rounding-in-json5-serialization.md bytes 2-65
+# repo = useful-toys/slf4j-toys
+# pick_id = rca954030f52ea06e
+# license = Apache-2.0
+# text = TDR-0039: Accept Scaled-Integer Rounding in JSON5 Serialization
+# owner_reviewed = 2026-10-06
+1	TDR	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	0039	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+4	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+5	Accept	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+6	Scaled	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	Integer	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	Rounding	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+10	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	JSON5	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	Serialization	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0018
+# exam.context = heading
+# exam.tier = llm
+# source = batches/2026-09-27-01/llm/shanraisshan--claude-code-best-practice/tips__claude-boris-15-tips-30-mar-26.md bytes 7824-7879
+# repo = shanraisshan/claude-code-best-practice
+# pick_id = rf5a05f24c5dede1e
+# license = MIT
+# text = 13/ Use --add-dir to Give Claude Access to More Folders
+# owner_reviewed = 2026-10-06
+1	13	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+2	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Use	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	add	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	dir	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+9	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	Give	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	Claude	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	Access	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+14	More	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+15	Folders	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0019
+# exam.context = heading
+# exam.tier = human
+# source = batches/2026-09-27-02/human/Sobeston--zig.guide/chapter-4.md bytes 11627-11642
+# repo = Sobeston/zig.guide
+# pick_id = r071059eea9a249f6
+# license = MIT
+# text = Zig cc, Zig c++
+# owner_reviewed = 2026-10-06
+1	Zig	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	cc	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+3	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	Zig	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	c	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+6	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind|SpaceAfter=No
+7	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+
+# sent_id = o0020
+# exam.context = table-cell
+# exam.tier = llm
+# source = batches/2026-09-27-01/llm/xr843--fojin/docs__superpowers__specs__2026-06-03-cross-canon-parallel-reading-v1-design.md bytes 9693-9789
+# repo = xr843/fojin
+# pick_id = r53dc3ef450e0e530
+# license = Apache-2.0
+# text = Throttle observer to 16ms; loop guard 80ms; test on T0251 (longest juan ~10k chars) before merge
+# owner_reviewed = 2026-10-06
+1	Throttle	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	observer	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+4	16ms	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+5	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	loop	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	guard	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	80ms	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+9	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	test	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+11	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	T0251	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+14	longest	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+15	juan	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+16	~	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind|SpaceAfter=No
+17	10k	_	NUM	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	chars	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+19	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	before	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+21	merge	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0021
+# exam.context = table-cell
+# exam.tier = human
+# source = batches/2026-09-27-02/human/MaxLeiter--maxleiter.com/posts__X11.md bytes 5476-5534
+# repo = MaxLeiter/maxleiter.com
+# pick_id = r8bee7de7d192863d
+# license = MIT
+# text = Add a fake Xplugin.h to fool /unix/xserver/miext/rootless.
+# owner_reviewed = 2026-10-06
+1	Add	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	a	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	fake	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	Xplugin.h	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	fool	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner
+7	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	unix	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+9	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	xserver	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	miext	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+13	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+14	rootless	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0022
+# exam.context = table-cell
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/yanacuti1121--Yana-AI/claude__skills__hook-block-commands__SKILL.md bytes 693-744
+# repo = yanacuti1121/Yana-AI
+# pick_id = rbaf2641bfeaa0113
+# license = Apache-2.0
+# text = Catastrophic only: rm -rf ~, dd to disk, fork bombs
+# owner_reviewed = 2026-10-06
+1	Catastrophic	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+2	only	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+3	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	rm	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	rf	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner|Was=prefill
+7	~	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind|SpaceAfter=No
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	dd	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+10	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+11	disk	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	fork	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	bombs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0023
+# exam.context = table-cell
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/saraswatayu--swoop/claude__docs__google-flights-protobuf-schema.md bytes 18935-18969
+# repo = saraswatayu/swoop
+# pick_id = r76666363dfc8ba9f
+# license = MIT
+# text = In-seat power, Live TV, Free Wi-Fi
+# owner_reviewed = 2026-10-06
+1	In	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	seat	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	power	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+5	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	Live	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+7	TV	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	Free	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+10	Wi	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	Fi	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0024
+# exam.context = table-cell
+# exam.tier = human
+# source = batches/2026-09-27-02/human/hahwul--WebHackersWeapons/README.md bytes 65665-65709
+# repo = hahwul/WebHackersWeapons
+# pick_id = rc5a4d4e1611ff22e
+# license = MIT
+# text = declutters url lists for crawling/pentesting
+# owner_reviewed = 2026-10-06
+1	declutters	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	url	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	lists	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	crawling	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	pentesting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+
+# sent_id = o0025
+# exam.context = table-cell
+# exam.tier = llm
+# source = batches/2026-09-27-01/llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md bytes 8232-8251
+# repo = pipeshub-ai/pipeshub-ai
+# pick_id = r0256cd05f27ed9f5
+# license = Apache-2.0
+# text = Latency p50/p95/p99
+# owner_reviewed = 2026-10-06
+1	Latency	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	p50	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+3	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	p95	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+5	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	p99	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0026
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/ondata--ckan-mcp-server/skills__ckan-mcp__references__hvd.md bytes 6424-6532
+# repo = ondata/ckan-mcp-server
+# pick_id = rfab4a2293bda2d8c
+# license = MIT
+# text = National CKAN portals that implement DCAT-AP (e.g. dati.gov.it) store HVD metadata as standard extra fields.
+# owner_reviewed = 2026-10-06
+1	National	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+2	CKAN	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	portals	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	that	_	PRON	_	_	_	_	_	Kind=Word|Prov=owner
+5	implement	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+6	DCAT	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+7	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	AP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	e.g	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+11	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	dati.gov.it	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Symbol|Prov=owner|SpaceAfter=No
+13	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+14	store	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+15	HVD	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	metadata	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	standard	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	extra	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+20	fields	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+21	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0027
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/rmartin16--qbittorrent-api/README.md bytes 1180-1339
+# repo = rmartin16/qbittorrent-api
+# pick_id = r333f79804647392b
+# license = MIT
+# text = Currently supports up to qBittorrent v4.3.9 (Web API v2.8.2) released on Oct 31, 2021.
+# owner_reviewed = 2026-10-06
+1	Currently	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner
+2	supports	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+3	up	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner
+4	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+5	qBittorrent	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	v4.3.9	_	NUM	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	Web	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	v2.8.2	_	NUM	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+11	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	released	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+13	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	Oct	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	31	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+16	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	2021	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+18	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0028
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/markshust--docker-magento/CHANGELOG.md bytes 4327-4453
+# repo = markshust/docker-magento
+# pick_id = r4d174d3e6de60ce0
+# license = MIT
+# text = This major update includes support for Apple Silicon (M1/M1X) chips, as well as SSH support for fully native filesystem speed.
+# owner_reviewed = 2026-10-06
+1	This	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	major	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	update	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+4	includes	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	Apple	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	Silicon	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	M1	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	M1X	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+13	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+14	chips	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+15	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+16	as	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner
+17	well	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	SSH	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+20	support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+21	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+22	fully	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+23	native	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+24	filesystem	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+25	speed	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+26	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0029
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/nomadkaraoke--karaoke-gen/docs__archive__2026-01-09-lessons-learned-archive.md bytes 47371-47467
+# repo = nomadkaraoke/karaoke-gen
+# pick_id = r9bb88b2b1c8d0904
+# license = MIT
+# text = This package supports BOTH Vertex AI (service account auth) and Google AI Studio (API key auth):
+# owner_reviewed = 2026-10-06
+1	This	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	package	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	supports	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	BOTH	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner
+5	Vertex	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	AI	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+8	service	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	account	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	auth	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+11	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	Google	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	AI	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	Studio	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+16	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	key	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	auth	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+20	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+21	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0030
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/asosteam--asos-devprod-git-ai-old/docs__superpowers__plans__2026-04-30-ai-helper-script-improvements.md bytes 661-740
+# repo = asosteam/asos-devprod-git-ai-old
+# pick_id = raaacd5b8b422599d
+# license = Apache-2.0
+# text = Tech Stack: Python 3, subprocess for git/gh CLI, argparse for command parsing
+# owner_reviewed = 2026-10-06
+1	Tech	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+2	Stack	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+3	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	Python	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	3	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+6	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+7	subprocess	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	git	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|SpaceAfter=No|Was=prefill
+10	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	gh	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+12	CLI	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+13	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+14	argparse	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	command	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	parsing	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0031
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/In-Time-Tec--rika/amp__in__artifacts__e2b-orb-acceptance__report.md bytes 3509-3617
+# repo = In-Time-Tec/rika
+# pick_id = rb0f3e7e5c5e646da
+# license = MIT
+# text = E2B's current documentation says hostname filtering inspects HTTP Host on port 80 and TLS SNI on port 443.
+# owner_reviewed = 2026-10-06
+1	E2B's	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	current	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	documentation	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	says	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	hostname	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner
+6	filtering	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	inspects	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	HTTP	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	Host	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+10	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	port	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	80	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+13	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	TLS	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	SNI	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	port	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	443	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+19	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0032
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/AzureAD--microsoft-authentication-library-for-js/lib__msal-node__docs__faq.md bytes 5906-5968
+# repo = AzureAD/microsoft-authentication-library-for-js
+# pick_id = rba8b35308f1b6185
+# license = MIT
+# text = See this in action: MSAL Node B2C web app sample (using PKCE)
+# owner_reviewed = 2026-10-06
+1	See	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	this	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	action	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+5	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	MSAL	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	Node	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	B2C	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	web	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	sample	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+13	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	PKCE	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+15	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0033
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/microsoft--cpp_client_telemetry/docs__building-with-vcpkg.md bytes 563-708
+# repo = microsoft/cpp_client_telemetry
+# pick_id = rdbcb3c638e71800f
+# license = Apache-2.0
+# text = However, local port / CONTROL file included in 1DS C++ SDK git repo allows to build SDK with additional Microsoft-proprietary private submodules.
+# owner_reviewed = 2026-10-06
+1	However	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+2	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	local	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	port	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	CONTROL	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	file	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	included	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+9	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	1DS	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+11	C	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+12	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind|SpaceAfter=No
+13	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+14	SDK	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+15	git	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Origin=Command|Prov=owner|Was=prefill
+16	repo	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+17	allows	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	build	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner|Was=prefill
+20	SDK	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+21	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+22	additional	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+23	Microsoft	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+24	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+25	proprietary	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+26	private	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+27	submodules	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+28	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0034
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/gastownhall--gastown/plugins__submodule-commit__plugin.md bytes 797-922
+# repo = gastownhall/gastown
+# pick_id = r590cbc9adb306c8e
+# license = MIT
+# text = Polecats only operate on parent repo worktrees and have no commit mandate for submodule repos — this plugin fills that gap.
+# owner_reviewed = 2026-10-06
+1	Polecats	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+2	only	_	ADV	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	operate	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	parent	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+6	repo	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	worktrees	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+8	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	have	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+10	no	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	commit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+12	mandate	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+14	submodule	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+15	repos	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	this	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+18	plugin	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+19	fills	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+20	that	_	DET	_	_	_	_	_	Kind=Word|Prov=owner
+21	gap	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+22	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0035
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/annProg--PanBook/styles__slide__material__README.md bytes 352-468
+# repo = annProg/PanBook
+# pick_id = r3699dbaf42663f2c
+# license = MIT
+# text = For demonstration please see materialDesignExample.pdf which doubles as a quick manual.
+# owner_reviewed = 2026-10-06
+1	For	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	demonstration	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	please	_	INTJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	see	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+5	materialDesignExample.pdf	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Path|Prov=owner
+6	which	_	PRON	_	_	_	_	_	Kind=Word|Prov=owner
+7	doubles	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+8	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	a	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	quick	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	manual	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0036
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/evgeshniyzik-dev--nextjs/examples__with-mdx__README.md bytes 24-126
+# repo = evgeshniyzik-dev/nextjs
+# pick_id = rbdbeb55be1a1ceb3
+# license = MIT
+# text = This example shows using MDX as top level pages for your next.js app.
+# owner_reviewed = 2026-10-06
+1	This	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	example	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+3	shows	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|Was=prefill
+4	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	MDX	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	top	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+8	level	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	pages	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+11	your	_	PRON	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+12	next.js	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Path|Prov=owner|Was=prefill
+13	app	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+14	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0037
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/thiagowfx--thiagowfx.github.io/content__posts__2013-10-30-openbox-challenge-day-4.md bytes 1761-1853
+# repo = thiagowfx/thiagowfx.github.io
+# pick_id = r12ed02a6abe91821
+# license = BSD-3-Clause
+# text = But this -obconf suffix adds more functionality to it, exposing some of the openbox configs.
+# owner_reviewed = 2026-10-06
+1	But	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner
+2	this	_	DET	_	_	_	_	_	Kind=Word|Prov=owner
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	obconf	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+5	suffix	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	adds	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+7	more	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+8	functionality	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+10	it	_	PRON	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	exposing	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+13	some	_	DET	_	_	_	_	_	Kind=Word|Prov=owner
+14	of	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+15	the	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	openbox	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+17	configs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+18	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0038
+# exam.context = prose
+# exam.tier = human
+# source = batches/2026-09-27-02/human/cheat--cheat/doc__cheat.1.md bytes 1752-1816
+# repo = cheat/cheat
+# pick_id = r215eda6d323798ee
+# license = MIT
+# text = To remove (delete) the foo/bar cheatsheet: : cheat --rm foo/bar
+# owner_reviewed = 2026-10-06
+1	To	_	PART	_	_	_	_	_	Kind=Word|Prov=owner
+2	remove	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner
+3	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	delete	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+5	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+6	the	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+7	foo	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+8	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	bar	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+10	cheatsheet	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	cheat	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	rm	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+17	foo	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+18	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+19	bar	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0039
+# exam.context = prose
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/swornagent--sworn/docs__captures__2026-08-25-in-engine-learning-spec.md bytes 10596-10788
+# repo = swornagent/sworn
+# pick_id = r2c39319fe3e00d52
+# license = MIT
+# text = The overnight's slices (S3/S4/S5/S7) all edit the same core files (turn_recovery.go, dispatch.go, service.go); parallel tracks over overlapping touchpoints buy merge conflicts, not throughput.
+# owner_reviewed = 2026-10-06
+1	The	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+2	overnight's	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+3	slices	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+4	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	S3	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	S4	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+8	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	S5	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+10	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	S7	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+12	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	all	_	DET	_	_	_	_	_	Kind=Word|Prov=owner
+14	edit	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+15	the	_	DET	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+16	same	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+17	core	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+18	files	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+19	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+20	turn_recovery.go	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Symbol|Prov=owner|SpaceAfter=No
+21	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+22	dispatch.go	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Symbol|Prov=owner|SpaceAfter=No
+23	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+24	service.go	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Symbol|Prov=owner|SpaceAfter=No
+25	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+26	;	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+27	parallel	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+28	tracks	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+29	over	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+30	overlapping	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+31	touchpoints	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+32	buy	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+33	merge	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+34	conflicts	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+35	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+36	not	_	PART	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+37	throughput	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No|Was=prefill
+38	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0040
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-02/human/ossrs--srs/trunk__doc__CHANGELOG.md bytes 78182-78261
+# repo = ossrs/srs
+# pick_id = rcde04c5c46d72213
+# license = MIT
+# text = v1.0, 2014-03-30, fix bug for st detecting epoll failed, force st to use epoll.
+# owner_reviewed = 2026-10-06
+1	v1.0	_	NUM	_	_	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+2	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	2014	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	03	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	30	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	fix	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+10	bug	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+11	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+12	st	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	detecting	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+14	epoll	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	failed	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+16	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	force	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+18	st	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+19	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner
+20	use	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner
+21	epoll	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+22	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0041
+# exam.context = list-item
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/RyanYCT--bdo-market-insights/kiro__specs__v3__design.md bytes 8095-8184
+# repo = RyanYCT/bdo-market-insights
+# pick_id = r7ea865e944962358
+# license = MIT
+# text = Alarms: ETL failure (any ABORTED in 24 h), API 5xx > 1% over 5 min, p95 latency breach.
+# owner_reviewed = 2026-10-06
+1	Alarms	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	ETL	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+4	failure	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	any	_	DET	_	_	_	_	_	Kind=Word|Prov=owner
+7	ABORTED	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+9	24	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+10	h	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+12	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+13	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	5xx	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+15	>	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+16	1	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+17	%	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+18	over	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+19	5	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+20	min	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+21	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+22	p95	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+23	latency	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+24	breach	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+25	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0042
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-02/human/mindspore-ai--akg/RELEASE.md bytes 2020-2081
+# repo = mindspore-ai/akg
+# pick_id = r52665b208717fd10
+# license = Apache-2.0
+# text = [STABLE] Support transdata + matmul prefusion pattern in akg.
+# owner_reviewed = 2026-10-06
+1	[	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+2	STABLE	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+3	]	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	Support	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+5	transdata	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	+	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+7	matmul	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+8	prefusion	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	pattern	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+10	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+11	akg	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0043
+# exam.context = list-item
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/jamditis--claude-skills-journalism/research__web-capture-tools-research.md bytes 16447-16504
+# repo = jamditis/claude-skills-journalism
+# pick_id = rfe7cc14d659a99cb
+# license = MIT
+# text = AI-Enhanced Search for content in PDFs, blogs, subdomains
+# owner_reviewed = 2026-10-06
+1	AI	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	Enhanced	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+4	Search	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+6	content	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+8	PDFs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+9	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	blogs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+11	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+12	subdomains	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0044
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-02/human/material-components--material-web/CHANGELOG.md bytes 16434-16478
+# repo = material-components/material-web
+# pick_id = r42ebbfe903064871
+# license = Apache-2.0
+# text = mwc-select's button role changed to combobox
+# owner_reviewed = 2026-10-06
+1	mwc	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+2	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+3	select's	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+4	button	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	role	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	changed	_	VERB	_	Tense=Past|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+7	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+8	combobox	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0045
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-01/human/rust-lang--pkg-config-rs/CHANGELOG.md bytes 3400-3469
+# repo = rust-lang/pkg-config-rs
+# pick_id = r084e6fa5fbcd9cb1
+# license = Apache-2.0 OR MIT
+# text = Respect pkg-config escaping rules used with --cflags and --libs (#61)
+# owner_reviewed = 2026-10-06
+1	Respect	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	pkg	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	config	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	escaping	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	rules	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+7	used	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+8	with	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+9	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+10	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+11	cflags	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+12	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+13	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+14	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	libs	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+16	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+17	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+18	61	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+19	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0046
+# exam.context = list-item
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/element-software--CasaBoard/github__copilot-instructions.md bytes 3312-3370
+# repo = element-software/CasaBoard
+# pick_id = rc500127cc6d6c029
+# license = MIT
+# text = Uses : Turbopack (--turbopack flag) for faster dev builds
+# owner_reviewed = 2026-10-06
+1	Uses	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+3	Turbopack	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+4	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	turbopack	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Origin=Flag|Prov=owner
+8	flag	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+9	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+10	for	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+11	faster	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+12	dev	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	builds	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0047
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-01/human/gitlab--serebit--wraith-master/CHANGELOG.md bytes 3212-3341
+# repo = serebit/wraith-master
+# pick_id = r13c8d6c4f903e9c2
+# license = Apache-2.0
+# text = #10 - Remove "plugdev" group requirement to resolve udev error on Fedora
+# owner_reviewed = 2026-10-06
+1	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+2	10	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+4	Remove	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+5	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	plugdev	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+7	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+8	group	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+9	requirement	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+10	to	_	PART	_	_	_	_	_	Kind=Word|Prov=owner
+11	resolve	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=owner
+12	udev	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	error	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	on	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+15	Fedora	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+
+# sent_id = o0048
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-01/human/django-oauth--django-oauth-toolkit/CHANGELOG.md bytes 877-1027
+# repo = django-oauth/django-oauth-toolkit
+# pick_id = ree75ab9b930e9130
+# license = BSD-2-Clause
+# text = #953 Allow loopback redirect URIs using random ports as described in RFC8252 section 7.3 .
+# owner_reviewed = 2026-10-06
+1	#	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+2	953	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+3	Allow	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+4	loopback	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	redirect	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	URIs	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+7	using	_	VERB	_	VerbForm=Ger	_	_	_	Kind=Word|Prov=owner
+8	random	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+9	ports	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+10	as	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=owner
+11	described	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+12	in	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+13	RFC8252	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+14	section	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+15	7.3	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+16	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0049
+# exam.context = list-item
+# exam.tier = human
+# source = batches/2026-09-27-02/human/aquova--chip8-book/src__intro.md bytes 2177-2244
+# repo = aquova/chip8-book
+# pick_id = rf0878fd956ef9232
+# license = CC0-1.0
+# text = Sixteen 8-bit general purpose registers, referred to as V0 thru VF.
+# owner_reviewed = 2026-10-06
+1	Sixteen	_	NUM	_	_	_	_	_	Kind=Word|Prov=owner
+2	8	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+3	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+4	bit	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+5	general	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+6	purpose	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	registers	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+8	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	referred	_	VERB	_	Tense=Past|VerbForm=Part	_	_	_	Kind=Word|Prov=owner
+10	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+11	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+12	V0	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+13	thru	_	ADP	_	_	_	_	_	Kind=Word|Prov=owner
+14	VF	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+15	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = o0050
+# exam.context = list-item
+# exam.tier = llm
+# source = batches/2026-09-27-02/llm/microsoft--prompty/runtime__IMPLEMENTATION_GUIDE.md bytes 3729-3796
+# repo = microsoft/prompty
+# pick_id = raf1e6d738063e280
+# license = MIT
+# text = Check that README and API reference examples use current API names.
+# owner_reviewed = 2026-10-06
+1	Check	_	VERB	_	VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+2	that	_	SCONJ	_	_	_	_	_	Kind=Word|Prov=owner
+3	README	_	PROPN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+4	and	_	CCONJ	_	_	_	_	_	Kind=Word|Prov=owner|Was=prefill
+5	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+6	reference	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+7	examples	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner
+8	use	_	VERB	_	Tense=Pres|VerbForm=Fin	_	_	_	Kind=Word|Prov=owner
+9	current	_	ADJ	_	_	_	_	_	Kind=Word|Prov=owner
+10	API	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=owner
+11	names	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=owner|SpaceAfter=No
+12	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind

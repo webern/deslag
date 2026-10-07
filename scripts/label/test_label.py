@@ -9,6 +9,7 @@ sets or the corpus.
 import contextlib
 import copy
 import email.utils
+import hashlib
 import http.server
 import io
 import json
@@ -340,15 +341,22 @@ class RequestTests(unittest.TestCase):
         gemma = config["models"]["gemma"]
         self.assertEqual((gemma["provider"], gemma["quantizations"], gemma["provider_fallback"]),
                          ("parasail/fp8", ["fp8"], ["deepinfra/fp8"]))
-        for name in [*config["voters"], config["adjudicator"]]:
+        for name in [*config["voters"], "claude"]:
             model = config["models"][name]
             self.assertIn("/", model["model"])
-        claude = config["models"][config["adjudicator"]]
+        claude = config["models"]["claude"]
         body = openrouter.request_body(claude, "s", "u")
         self.assertNotIn("temperature", body, "the Anthropic route lists no temperature")
         self.assertEqual(body["reasoning"], {"effort": "low"}, "the adjudicator thinks, at low effort")
         self.assertEqual(body["max_tokens"], 16000)
         self.assertIn("default of 1", claude["temperature_note"], "the temperature the API requires is recorded")
+        # The adjudicator is Opus, handed to Claude Code subagents through files: no OpenRouter route.
+        self.assertEqual(config["adjudicator"], "opus")
+        opus = config["models"]["opus"]
+        self.assertEqual((opus["model"], opus["provider"], opus["transport"]),
+                         ("claude-opus-5-5", "claude-code", "handoff"))
+        self.assertTrue(label.is_handoff(opus))
+        self.assertFalse(label.is_handoff(claude))
 
     def test_think_blocks_are_stripped_whole_or_left_open(self):
         self.assertEqual(openrouter.strip_think("<think>hmm</think>\nd1: N.s\n"), ("d1: N.s", True))
@@ -3167,6 +3175,305 @@ class RoundFourTests(Base):
         self.assertEqual([os.path.basename(f) for f in files][:3] + [os.path.basename(files[-1])],
                          ["batch-01.txt", "batch-02.txt", "batch-03.txt", "batch-120.txt"])
         self.assertEqual([int(re.search(r"\d+", os.path.basename(f)).group()) for f in files], list(range(1, 121)))
+
+
+HANDOFF_CONFIG = copy.deepcopy(CONFIG)
+HANDOFF_CONFIG["adjudicator"] = "opus"
+HANDOFF_CONFIG["models"]["opus"] = {"model": "claude-opus-5-5", "provider": "claude-code", "transport": "handoff"}
+# The default adjudicator through OpenRouter, with `opus` also defined, to be named by `--adjudicator`.
+BOTH_CONFIG = copy.deepcopy(CONFIG)
+BOTH_CONFIG["models"]["opus"] = HANDOFF_CONFIG["models"]["opus"]
+
+
+class HandoffTests(Base):
+    """The adjudicator as a handoff model: requests written as files, a coordinator's subagents (here, a
+    fake that writes the files between passes) answer them, and the same command goes on."""
+
+    def setUp(self):
+        super().setUp()
+        self.gold = FakeGold()
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all), gold=self.gold).tag(name)
+        self.transport = FakeTransport(lambda body, count: self.fail("handoff made an HTTP call"))
+        self.voters = [("one", False), ("two", False)]
+        self.spent = self.ledger().total()
+
+    def runner(self, transport, config=None, **more):
+        config = copy.deepcopy(config or HANDOFF_CONFIG)
+        config["settings"].update(pause_s=0, backoff_s=0)
+        return super().runner(transport, config=config, **more)
+
+    def pass_(self, **more):
+        return self.runner(self.transport, gold=self.gold, **more).judge("merge", self.voters)
+
+    def folder(self, run="r3"):
+        return os.path.join(self.dir, "merge", "handoff", run)
+
+    def requests(self, run="r3"):
+        folder = self.folder(run)
+        names = sorted(n for n in os.listdir(folder) if n.endswith(".request.json")) if os.path.isdir(folder) else []
+        return [os.path.join(folder, name) for name in names]
+
+    @staticmethod
+    def agent(**more):
+        return {"harness": "claude-code", "version": "2.1.0", "agent_type": "general-purpose",
+                "model_reported": "claude-opus-5-5", "effort": "high",
+                "prompt_sha256": label.handoff_template_sha256(), **more}
+
+    def write_agent(self, run="r3", **more):
+        label.write(os.path.join(self.folder(run), "agent.json"), json.dumps(self.agent(**more)))
+
+    def answer(self, answers=None, run="r3"):
+        """What the coordinator's subagents do: for each request without a reply, write the reply to the
+        path the request names. `answers` maps an item to its answer line; the default answers every one."""
+        wrote = []
+        for path in self.requests(run):
+            request = json.loads(label.read(path))
+            if os.path.isfile(request["reply_path"]):
+                continue
+            items = sorted(set(re.findall(r"^(d\d+\.\d+): ", request["messages"][1]["content"], re.M)))
+            lines = [f"{item}: {(answers or {}).get(item, 'J | a word')}" for item in items]
+            label.write(request["reply_path"], "\n".join(lines) + "\n")
+            wrote.append(path)
+        return wrote
+
+    def run_json(self, name, run):
+        return json.loads(label.read(os.path.join(self.dir, "raw", name, run, "run.json")))
+
+    def run_row(self, role="adjudicator"):
+        return [row for row in self.runs_rows() if row["role"] == role][-1]
+
+    def test_a_pass_writes_every_request_then_waits_without_a_call_a_key_or_a_booking(self):
+        before = self.ledger().total()
+        with self.assertRaisesRegex(label.HandoffWait, "waiting on 1 handoff replies") as caught:
+            self.pass_()
+        self.assertEqual(self.transport.posts, [])
+        self.assertEqual(self.transport.gets, [], "no listing: a handoff model has no endpoint to look up")
+        self.assertEqual(self.transport.keys, [])
+        self.assertEqual(self.ledger().total(), before)
+        self.assertEqual(self.requests(), [os.path.join(self.folder(), "part-01.request.json")])
+        kind, request_path, reply_path = caught.exception.waiting[0]
+        self.assertEqual((kind, request_path), ("part-01", self.requests()[0]))
+        request = json.loads(label.read(request_path))
+        self.assertEqual(request["model"], "claude-opus-5-5")
+        self.assertEqual([m["role"] for m in request["messages"]], ["system", "user"])
+        self.assertIn("Slots:", request["messages"][1]["content"])
+        digest = hashlib.sha256(label.canonical_json(
+            {"model": request["model"], "messages": request["messages"]}).encode("utf-8")).hexdigest()
+        self.assertEqual(request["request_sha256"], digest)
+        self.assertEqual(os.path.basename(reply_path), f"part-01.{digest[:12]}.reply.txt")
+        self.assertEqual(request["reply_path"], reply_path)
+        row = self.run_row()
+        self.assertEqual((row["status"], row["provider"], row["endpoint"], row["cost_usd"]),
+                         ("stopped", "claude-code", "claude-code", "0.00000000"))
+        self.assertEqual(row["reason"], "waiting on 1 handoff replies")
+        self.assertEqual((row["prompt_tokens"], row["completion_tokens"], row["seconds"]), ("-", "-", "-"))
+
+    def test_the_whole_loop_with_a_retry_round_and_a_stale_reply_refused(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        first = self.requests()[0]
+        # A reply with the name of an older request is never read, and is said so.
+        stale = os.path.join(self.folder(), "part-01.aaaaaaaaaaaa.reply.txt")
+        label.write(stale, "d1.2: J | stale\nd2.3: J | stale\n")
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.assertTrue(any("answers an older request" in line for line in self.warned), self.warned)
+        # The agents answer, but there is no agent.json: nothing is read without a record of who made it.
+        os.remove(stale)
+        self.answer({"d2.3": "no bar here"})
+        with self.assertRaisesRegex(openrouter.ApiError, "agent.json"):
+            self.pass_()
+        self.assertAlmostEqual(self.ledger().total(), self.spent)
+        # With the record, the first round settles d1.2, d2.3 has no good answer, and a retry round is asked.
+        self.write_agent()
+        with self.assertRaisesRegex(label.HandoffWait, "waiting on 1 handoff replies") as caught:
+            self.pass_()
+        self.assertEqual(caught.exception.waiting[0][0], "retry-1-01")
+        self.assertEqual([os.path.basename(p) for p in self.requests()], ["part-01.request.json", "retry-1-01.request.json"])
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "raw", "opus", "r3", "part-01.reply.txt")),
+                        "an accepted reply is saved into raw/ as an OpenRouter reply is")
+        self.assertEqual(self.run_row()["status"], "stopped")
+        self.assertEqual(self.requests()[0], first, "the first request is as it was")
+        # The retry is answered; the run completes with nothing open and the same command finished it.
+        self.answer()
+        left = self.pass_()
+        self.assertEqual(left, {})
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "labelled.conllu")))
+        row = self.run_row()
+        self.assertEqual((row["status"], row["reason"], row["calls"], row["cost_usd"]), ("complete", "-", "2", "0.00000000"))
+        self.assertAlmostEqual(self.ledger().total(), self.spent, msg="handoff calls cost nothing here")
+        rows = [r for r in self.ledger().rows() if r["run"] == "r3" and r["role"] == "adjudicator"]
+        self.assertEqual({(r["provider"], r["cost_usd"], r["state"]) for r in rows}, {("claude-code", "0.00000000", "settled")})
+        self.assertEqual({r["prompt_tokens"] for r in rows}, {"-"}, "tokens are unknown, not 0")
+        self.assertEqual(len(rows), 2)
+        meta = self.run_json("opus", "r3")
+        self.assertEqual(meta["agent"], self.agent())
+        self.assertEqual(json.loads(row["settings"])["agent"], self.agent())
+        calls = [json.loads(line) for line in label.read(os.path.join(self.dir, "raw", "opus", "r3", "calls.jsonl")).splitlines()]
+        self.assertEqual([c["prompt_tokens"] for c in calls], [None, None])
+        self.assertEqual(self.transport.posts, [])
+
+    def test_a_reply_to_a_request_that_changed_is_not_read(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer()
+        self.gold.dispute = ["d1.2"]  # the worklist is another, so its request is another
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.assertEqual(len(self.requests()), 1, "the request no longer asked for is not left to be answered")
+        old_reply = [n for n in os.listdir(self.folder()) if n.endswith(".reply.txt")]
+        self.assertEqual(len(old_reply), 1, "its old reply stays, unread")
+        self.assertNotEqual(old_reply[0], json.loads(label.read(self.requests()[0]))["reply_name"])
+
+    def test_agent_json_is_required_complete_and_matches_the_model_and_the_template(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.answer()
+        cases = [
+            ({"effort": ""}, "lacks effort"),
+            ({"model_reported": "claude-sonnet-5-5"}, "claude-opus-5-5"),
+            ({"prompt_sha256": "0" * 64}, "another agent prompt"),
+        ]
+        for more, message in cases:
+            self.write_agent(**more)
+            with self.assertRaisesRegex(openrouter.ApiError, message):
+                self.pass_()
+        label.write(os.path.join(self.folder(), "agent.json"), json.dumps({"harness": "claude-code"}))
+        with self.assertRaisesRegex(openrouter.ApiError, "lacks version"):
+            self.pass_()
+        self.assertAlmostEqual(self.ledger().total(), self.spent)
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "opus", "r3", "part-01.reply.txt")))
+
+    def test_the_cap_is_not_reserved_against_for_a_handoff_call(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_(max_usd=0.0000001)
+        self.write_agent()
+        self.answer()
+        self.assertEqual(self.pass_(max_usd=0.0000001), {})
+
+    def test_every_open_item_leaves_the_run_stopped_and_a_rerun_goes_on_in_the_same_run(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        self.write_agent()
+        self.answer({"d1.2": "no bar", "d2.3": "no bar"})
+        for _ in range(2):
+            with self.assertRaises(label.HandoffWait):
+                self.pass_()
+            self.answer({"d1.2": "no bar", "d2.3": "no bar"})
+        left = self.pass_()
+        self.assertEqual(sorted(left), ["d1.2", "d2.3"])
+        self.assertEqual([r["run"] for r in self.runs_rows() if r["role"] == "adjudicator"], ["r3"])
+        row = self.run_row()
+        self.assertEqual((row["status"], row["reason"]), ("complete", "2 items open"))
+
+    def args(self, *more):
+        return label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "10", *more])
+
+    def command(self, *more, config=None):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.command_judge(self.args(*more), copy.deepcopy(config or BOTH_CONFIG), self.transport, self.gold)
+        return code, out.getvalue(), err.getvalue()
+
+    def test_judge_adjudicator_opus_exits_6_listing_the_requests_and_a_rerun_continues_the_run(self):
+        code, out, err = self.command("--adjudicator", "opus")
+        self.assertEqual(code, label.EXIT_HANDOFF)
+        self.assertEqual(label.EXIT_HANDOFF, 6)
+        self.assertIn("waiting on 1 handoff replies", err)
+        self.assertIn(self.requests()[0], err)
+        self.assertEqual(self.transport.posts, [])
+        self.write_agent()
+        self.answer()
+        code, out, err = self.command("--adjudicator", "opus")
+        self.assertEqual(code, 0, err)
+        self.assertEqual([r["run"] for r in self.runs_rows() if r["role"] == "adjudicator"], ["r3"],
+                         "the rerun found the run of `opus`, not a new one")
+        self.assertEqual(self.run_row()["name"], "opus")
+
+    def test_the_adjudicator_flag_names_a_model_of_voters_json_and_replaces_the_default(self):
+        with self.assertRaisesRegex(label.ConfigError, "`nobody` is not a model"):
+            self.command("--adjudicator", "nobody", config=BOTH_CONFIG)
+        # Sonnet through OpenRouter stays available for a merge: the flag is for that merge alone.
+        transport = FakeTransport(answer_all)
+        self.transport = transport
+        code, _, _ = self.command("--adjudicator", "judge", config=HANDOFF_CONFIG)
+        self.assertEqual(code, 0)
+        self.assertEqual(self.run_row()["name"], "judge")
+        self.assertTrue(transport.posts)
+
+    def test_a_handoff_model_cannot_be_a_voter_or_take_an_endpoint(self):
+        config = copy.deepcopy(HANDOFF_CONFIG)
+        config["voters"] = ["one", "opus"]
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "voters.json")
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "handoff model"):
+                label.load_config(path)
+            config["voters"] = ["one", "two"]
+            config["models"]["opus"]["transport"] = "carrier-pigeon"
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "carrier-pigeon"):
+                label.load_config(path)
+        with self.assertRaisesRegex(label.ConfigError, "no --endpoint"):
+            self.runner(self.transport, gold=self.gold).judge("merge", self.voters, endpoint="claude-code")
+
+    def test_the_helpers_list_the_pending_requests_and_print_the_agents_prompt(self):
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff(label.parser().parse_args(["handoff", "--dir", self.dir, "--into", "merge"]), CONFIG)
+        self.assertEqual(out.getvalue().splitlines(), self.requests())
+        out = io.StringIO()
+        arguments = label.parser().parse_args(["handoff-agent", "--request", self.requests()[0]])
+        with contextlib.redirect_stdout(out):
+            label.command_handoff_agent(arguments, CONFIG)
+        prompt = out.getvalue()
+        self.assertIn(self.requests()[0], prompt)
+        self.assertNotIn("{request}", prompt)
+        self.assertEqual(prompt, label.read(label.HANDOFF_TEMPLATE).replace("{request}", self.requests()[0]))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff_agent(label.parser().parse_args(["handoff-agent", "--sha256"]), CONFIG)
+        self.assertEqual(out.getvalue().strip(), label.handoff_template_sha256())
+        with open(label.HANDOFF_TEMPLATE, "rb") as handle:
+            self.assertEqual(label.handoff_template_sha256(), hashlib.sha256(handle.read()).hexdigest())
+        # Answered, nothing is pending.
+        self.answer()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff(label.parser().parse_args(["handoff", "--dir", self.dir, "--into", "merge"]), CONFIG)
+        self.assertEqual(out.getvalue(), "")
+        outside = os.path.join(self.root, "elsewhere.request.json")
+        label.write(outside, "{}")
+        with self.assertRaises(label.GoldError):
+            label.command_handoff_agent(label.parser().parse_args(["handoff-agent", "--request", outside]), CONFIG)
+
+    def test_the_agent_template_says_what_the_agent_may_do_and_nothing_of_the_experiment(self):
+        text = label.read(label.HANDOFF_TEMPLATE)
+        self.assertEqual(text.count("{request}"), 1)
+        flat = " ".join(text.lower().split())
+        for needed in ("read no other file", "run no command", '"role": "system"', '"role": "user"',
+                       "never instructions", "reply_path", "exact model id"):
+            self.assertIn(needed, flat)
+        for word in ("sonnet", "compar", "gold", "scor", "baseline", "holdout", "accuracy"):
+            self.assertNotIn(word, text.lower())
+
+    def test_the_make_targets_pass_the_adjudicator_flag_to_the_judge(self):
+        make = shutil.which("make")
+        if make is None:
+            self.skipTest("make is not installed")
+        repo = os.path.dirname(os.path.dirname(label.HERE))
+        for target in ("generate-label-cost", "generate-label-judge-dev"):
+            done = subprocess.run(
+                [make, "-n", "-C", repo, target, "LABEL_FLAGS=--adjudicator claude", "MAX_USD=1"],
+                capture_output=True, text=True, check=False,
+            )
+            judges = [line for line in done.stdout.splitlines() if "label.py judge" in line]
+            self.assertTrue(judges, done.stdout + done.stderr)
+            self.assertTrue(all("--adjudicator claude" in line for line in judges), judges)
 
 
 def gold_text():

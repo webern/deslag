@@ -287,3 +287,11 @@ class Ledger:
             run = f"r{seen + 1}"
             self._append(id=f"n-{uuid.uuid4().hex[:16]}", state="run", run=run, cost_usd="0.00000000")
             return run
+
+    def book_free(self, **fields):
+        """Books a call that costs nothing, and meters nothing: a row settled at cost 0, with no cap
+        check. For a call made by a person's own harness, whose cost is not this ledger's."""
+        with self._locked():
+            ident = f"c-{uuid.uuid4().hex[:16]}"
+            self._append(id=ident, state="settled", cost_usd="0.00000000", **fields)
+            return ident

@@ -152,7 +152,7 @@ A merge that rewrites its directory removes every file of the earlier run it wil
 `report --into merge-spacy --versus merge` gives the paired difference; the earlier merge's labelled
 file and worklist are all it reads of it.
 
-Exit codes: 0 done (a voter with no good line for a sentence after its retries abstains on it, which
+Exit codes: 6 a handoff judge is waiting on its replies (below); 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter, unless more than `abstain_limit` abstained, which is exit
 5; a sentence fewer than three model voters answered goes to the adjudicator whole); 1 an unexpected
 error, printed as its type and place only; 2 refused, bad config, an API error, the network down, or
@@ -173,7 +173,8 @@ refuses fewer than three model voters, or a `min_voters` below three.
 
 ## What is asked
 
-`voters.json` holds every pin: the three voters, the adjudicator, the other models defined (`mistral`) and the
+`voters.json` holds every pin: the three voters, the adjudicator (`opus`, handed to Claude Code subagents, see Opus
+handoff below), the other models defined (`mistral`, and `claude`, Sonnet 5.5 through OpenRouter) and the
 settings. Each call is one batch of about 50 sentences. The system prompt is the annotation guide and
 `prompts/preamble.md`; the user message is the task and the batch's lines. The body is:
 
@@ -204,7 +205,7 @@ the pinned one (or a dated version of it), is an error, checked before the reply
 reply cut off at `max_tokens` (asked again in halves, as above), and one with reasoning tokens when
 reasoning was switched off. Everything
 up to the last `</think>` is dropped. Timeouts, 429, 5xx (the statuses above) and a dropped connection are asked again. The
-adjudicator thinks at `reasoning: {"effort": "low"}` with `max_tokens` 16000 (a token budget is refused by
+OpenRouter adjudicator (`claude`) thinks at `reasoning: {"effort": "low"}` with `max_tokens` 16000 (a token budget is refused by
 Sonnet 5.5); the API requires its default temperature then, so none is sent, and `runs.tsv` says so. A
 reply with no `usage.cost`, or a negative or odd one, is booked at its worst case, never lower. The
 transport follows no redirect, so the key goes only where the call was sent.
@@ -213,6 +214,43 @@ The runner keeps the lines that begin `id:`, has `deslag-gold read-tags --check`
 and write `.problems.tsv` and a `.retry.txt` of the rest, and asks again for just those sentences,
 quoting the validator's message, at most twice. `read-answers --check` does the same for the
 adjudicator, by part. A line may carry a bullet, a number, or bold or backticks around its id.
+
+## Opus handoff
+
+`opus` (model `claude-opus-5-5`, provider `claude-code`, `"transport": "handoff"` in `voters.json`) is the
+adjudicator. The runner never calls it: it writes a request file for each call, and a person's Claude Code
+session (the coordinator) has a subagent answer each one. A handoff model has no listing, no key, no price, no
+`max_tokens` and no endpoint but `claude-code`; it can adjudicate but not vote, and takes no `--endpoint`.
+`judge --adjudicator NAME` picks a model of `voters.json` for that merge in place of `adjudicator` (`--adjudicator
+claude` for Sonnet through OpenRouter), and the rerun of the same command finds that model's run. `LABEL_FLAGS`
+carries it in every `generate-label-*` target.
+
+The loop, one pass of `judge` at a time:
+
+1. A pass writes every request it needs that has no reply, to `<into>/handoff/<run>/<call>.request.json`
+   (`part-01`, `retry-1-01`, ...), says "waiting on N handoff replies" with the list, ends the run `stopped`
+   (reason in `runs.tsv`) and exits 6. Nothing is sent, booked, retried, switched or counted against the failure
+   budget, and the cap is not reserved against.
+2. `label.py handoff --dir D --into M` prints the requests still without a reply, one path per line.
+   `label.py handoff-agent --request PATH` prints the prompt for the subagent of one (`prompts/handoff-agent.md`
+   with `{request}` filled); one subagent per request, all of a round at once.
+3. Each subagent writes only the answer lines to the `reply_path` its request names,
+   `<call>.<12 hex of request_sha256>.reply.txt`, and returns its exact model id. The coordinator writes
+   `handoff/<run>/agent.json` with `harness`, `version`, `agent_type`, `model_reported` (the id the agents
+   returned), `effort` and `prompt_sha256` (`label.py handoff-agent --sha256`, the template as it is on disk).
+4. The coordinator runs the same command again. A reply is read only with an `agent.json` that has every key,
+   a `model_reported` that is the pinned model (or a dated version), and the template's current sha256.
+   An accepted reply is saved into `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at cost 0
+   with provider `claude-code` and tokens `-`, and `agent.json` goes into `run.json` and the `settings` of
+   `runs.tsv` (tokens and seconds there are `-`, which is not 0). Items still open go to a retry round, which is
+   a new set of requests and another exit 6, until none are or the retries are spent.
+
+The request is `{"model", "messages": [system, user], "request_sha256", "call", "run", "reply_name",
+"reply_path"}`; the hash is the sha256 of the canonical JSON (sorted keys, no spaces) of `model` and
+`messages`. A reply is named for the hash of the request it answers, so a reply to an older request (a worklist
+that changed) has another name, is never read and is warned about, and a request no longer asked for is
+removed. What the harness decided (temperature, effort, `max_tokens`) and that the model saw the request as the
+content of the harness's own prompt, not as its system prompt, is recorded in the run's `request` note.
 
 ## Money
 

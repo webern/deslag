@@ -11,8 +11,10 @@ in Rust. See README.md in this directory for the steps.
     label.py register --dir .label/dev --name spacy --file PATH --model NAME [--version V]
     label.py judge    --dir .label/dev --max-usd 8 [--into merge] [--voter NAME ...] [--spacy]
                       [--trains yes|no] [--resume rN] [--again] [--endpoint TAG] [--settle-from NAME]
-                      [--strict] [--min-voters N]
+                      [--strict] [--min-voters N] [--adjudicator NAME]
     label.py cost     --dir .label/draw500
+    label.py handoff  --dir .label/dev [--into merge]
+    label.py handoff-agent (--request PATH | --sha256)
     label.py spend
 
 The directory is one sample, under this checkout's `.label`: a skeleton made from the dev or owner
@@ -88,10 +90,34 @@ CUT_OFF_STREAK = 3
 # and no other, so two scattered ones cannot do this to a part of more than four.
 SMALL_SPLIT = 4
 
+# The exit code of a judge that wrote its requests and is waiting for the harness's replies.
+EXIT_HANDOFF = 6
+
 # A line of a reply that starts with an id and a colon: `g0001: V.fi _`, `g0007.5: N.p | reason`,
 # after any bullet or number, and with the id in bold or backticks: `- **g0001**: V.fi _`.
 LIST_MARK = re.compile(r"^(?:(?:[-*+\u2022]|\d+[.)])\s+)+")
 ID_LINE = re.compile(r"^([*_`]*)([A-Za-z][\w.\-]*)[*_`]*\s*:[*_`]*\s*(.*)$")
+
+
+# A model whose calls are made by a person's own harness, not by this runner: `"transport": "handoff"`
+# in voters.json. See [Runner.ask_handoff].
+HANDOFF = "handoff"
+HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
+
+# What `handoff/<run>/agent.json` must say about the agents that made the replies.
+AGENT_KEYS = ("harness", "version", "agent_type", "model_reported", "effort", "prompt_sha256")
+
+# The endpoint of a handoff model: not an OpenRouter listing, so a record of its own.
+CLAUDE_CODE_ENDPOINT = {"tag": "claude-code", "provider_name": "claude-code"}
+
+HANDOFF_NOTE = (
+    "handoff: the harness made the calls, so it decided the temperature, reasoning effort and max_tokens, "
+    "and the model saw the harness's own system prompt with the request as its content, not the request "
+    "as its system prompt; tokens and seconds are not known"
+)
+
+# What a handoff `ask` gives back when the reply is not there yet.
+PENDING = object()
 
 
 class ConfigError(Exception):
@@ -115,10 +141,18 @@ def load_config(path=CONFIG):
     for name in [*config["voters"], config["adjudicator"]]:
         if name not in config["models"]:
             raise ConfigError(f"{path}: `{name}` is not in `models`")
+    for name in config["voters"]:
+        if is_handoff(config["models"][name]):
+            raise ConfigError(f"{path}: `{name}` is a handoff model, which adjudicates; it cannot be a voter")
     for name, model in config["models"].items():
-        for key in ("model", "provider", "max_tokens"):
+        if "transport" in model and model["transport"] != HANDOFF:
+            raise ConfigError(f"{path}: models.{name}.transport is `{model['transport']}`; only `{HANDOFF}` is known")
+        # A handoff model has no max_tokens: the harness decides it.
+        for key in ("model", "provider", *(() if is_handoff(model) else ("max_tokens",))):
             if key not in model:
                 raise ConfigError(f"{path}: models.{name} has no `{key}`")
+        if is_handoff(model) and model.get("provider_fallback"):
+            raise ConfigError(f"{path}: models.{name} is a handoff model, which has no other endpoint")
         if not re.fullmatch(r"[A-Za-z0-9_\-]+", name):
             raise ConfigError(f"{path}: `{name}` is not letters, digits, `-` and `_`")
         fallback = model.get("provider_fallback", [])
@@ -145,6 +179,30 @@ def load_config(path=CONFIG):
 def read(path):
     with open(path, encoding="utf-8") as handle:
         return handle.read()
+
+
+def is_handoff(model):
+    """Whether a model of voters.json is handed to a harness rather than called over HTTP."""
+    return model.get("transport") == HANDOFF
+
+
+def canonical_json(value):
+    """`value` as JSON with sorted keys and no spaces, in the characters it has: the one text a
+    request is hashed from, so that the same request always has the same hash."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def handoff_template_sha256():
+    """The sha256 of `prompts/handoff-agent.md` as it is on disk, with its `{request}` unfilled: what
+    `agent.json` records as the definition of the agent."""
+    with open(HANDOFF_TEMPLATE, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
+
+
+def fill_handoff(request_path):
+    """The prompt of one handoff subagent: the template with `{request}` replaced by the path of its
+    request file."""
+    return re.sub(r"\{request\}", lambda _: request_path, read(HANDOFF_TEMPLATE))
 
 
 def numbered(names):
@@ -365,8 +423,8 @@ class EndpointExhausted(openrouter.ApiError):
     Three kinds. By default the failure is the endpoint's own (HTTP 429 or 5xx through every wait, a
     provider refusal): the next endpoint may do better. With `cutoff`, cut-offs dominate the run (see
     [Runner.lose_batch]), or the endpoint cut off every part of the adjudicator's: it cannot do the
-    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network
-    error here (a connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
+    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network error here (a
+    connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
     fail the same, so the run stops where it is and a rerun continues it.
 
     Once every endpoint of the model has failed, `tried` lists them with their reasons and `skipped`
@@ -378,6 +436,16 @@ class EndpointExhausted(openrouter.ApiError):
         self.local, self.cutoff = local, cutoff
         self.tried, self.skipped = [], []
         self.failed = False
+
+
+class HandoffWait(openrouter.ApiError):
+    """A pass of a handoff adjudicator wrote its requests and is waiting for their replies. `waiting`
+    is a list of (call, request path, reply path). Not a failure: the run stays `stopped`, and the same
+    command, run again once every agent of the round has returned, goes on."""
+
+    def __init__(self, name, run, waiting):
+        super().__init__(f"waiting on {len(waiting)} handoff replies")
+        self.name, self.run, self.waiting = name, run, waiting
 
 
 class BatchLost(Exception):
@@ -420,8 +488,8 @@ class FailureBudget:
 
 def fresh_cut(total=0):
     """The counts a step keeps of cut-off replies: calls cut off, the sentences cut off even alone,
-    the adjudicator's streak, and the voter's batches asked and lost."""
-    return {"calls": 0, "alone": set(), "streak": 0, "asked": 0, "lost": 0, "total": total}
+    the adjudicator's streak, the voter's batches asked and lost, and the handoff calls waiting."""
+    return {"calls": 0, "alone": set(), "streak": 0, "asked": 0, "lost": 0, "total": total, "waiting": []}
 
 
 class Runner:
@@ -537,18 +605,26 @@ class Runner:
                     f"{name} {resume} failed ({saved.get('failed_because')}); it is never continued, and "
                     f"--again starts a new run"
                 )
-        config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
+        handoff = is_handoff(self.config["models"][name])
+        if handoff:
+            if endpoint:
+                raise ConfigError(f"{name} is a handoff model with one endpoint, `claude-code`; there is no --endpoint")
+            config, pinned = self.config["models"][name], dict(CLAUDE_CODE_ENDPOINT)
+            price_in = price_out = None
+        else:
+            config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
+            price_in, price_out = openrouter.prices(pinned)
         run = resume or self.ledger.new_run()
-        price_in, price_out = openrouter.prices(pinned)
         meta = {
             "run": run, "state_id": self.ledger.state_id(), "role": role, "name": name, "model": config["model"],
             "provider": pinned.get("provider_name"), "endpoint": pinned["tag"],
             "quantization": pinned.get("quantization"),
-            "price_in_per_m": price_in * 1e6, "price_out_per_m": price_out * 1e6,
+            "price_in_per_m": None if handoff else price_in * 1e6,
+            "price_out_per_m": None if handoff else price_out * 1e6,
             "date": now(), "prompt_sha256": self.prompts.sha256,
             "guide_sha256": self.prompts.guide_sha256, "sentences": sentence_count(self.dir),
-            "listing": f"listings/{run}.json", "endpoint_record": pinned,
-            "model_version": listing_version(pinned), "deslag_commit": self.commit,
+            "listing": "-" if handoff else f"listings/{run}.json", "endpoint_record": pinned,
+            "model_version": "-" if handoff else listing_version(pinned), "deslag_commit": self.commit,
             "limit": limit, "scope": scope,
             "request": {
                 key: config.get(key)
@@ -556,6 +632,9 @@ class Runner:
                 if config.get(key) is not None or key in ("temperature", "reasoning")
             },
         }
+        if handoff:
+            meta["transport"] = HANDOFF
+            meta["request"] = {"transport": HANDOFF, "note": HANDOFF_NOTE}
         if saved:
             changed = [key for key in self.CHANGED if saved.get(key) != meta[key]]
             if changed:
@@ -565,7 +644,8 @@ class Runner:
                 )
             return saved, pinned, config
         write_atomic(self.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
-        write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(pinned, indent=2) + "\n")
+        if not handoff:
+            write(os.path.join(self.dir, "listings", f"{run}.json"), json.dumps(pinned, indent=2) + "\n")
         return meta, pinned, config
 
     def latest_run(self, name, role, complete, scope=None, limit=None, endpoint=None):
@@ -620,8 +700,8 @@ class Runner:
 
     def note_stop(self, name, run, error):
         """Records in `run.json` what stopped a run, in one line and without the key, so that
-        `runs.tsv` can say why a `stopped` run is: the cap, a network error, a spent budget. A run
-        that failed or was abandoned has its own reason."""
+        `runs.tsv` can say why a `stopped` run is: the cap, a network error, a spent budget, a wait
+        for the harness. A run that failed or was abandoned has its own reason."""
         if isinstance(error, RunFailed):
             return
         why = " ".join(redacted(str(error)).split())[:300]
@@ -724,6 +804,8 @@ class Runner:
         raises EndpointExhausted for the caller to switch endpoint; a network error here raises it
         `local`, and the run stops where it is; a reply cut off raises CutOff for the caller to ask in
         halves."""
+        if is_handoff(config):
+            return self.ask_handoff(meta, endpoint, config, system, user, kind)
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
         saved_meta = self.raw(name, run, f"{kind}.meta.json")
@@ -831,6 +913,129 @@ class Runner:
         self.sleep(self.settings["pause_s"])
         return reply.content + "\n"
 
+    def handoff_dir(self, meta):
+        """Where the requests and replies of a handoff run are: `<into>/handoff/<run>`."""
+        return os.path.join(self.dir, meta["scope"]["into"], "handoff", meta["run"])
+
+    def clear_unanswered_requests(self, meta):
+        """Removes the request files of the run that have no reply beside them: a pass writes the
+        requests it needs afresh, so one that is no longer asked for, such as one of an older
+        worklist, is not left for the coordinator to answer. A request with its reply stays."""
+        folder = self.handoff_dir(meta)
+        for name in os.listdir(folder) if os.path.isdir(folder) else []:
+            if name.endswith(".request.json"):
+                request = os.path.join(folder, name)
+                try:
+                    reply = os.path.join(folder, json.loads(read(request)).get("reply_name", ""))
+                except ValueError:
+                    reply = ""
+                if not os.path.isfile(reply) or not read(reply).strip():
+                    os.remove(request)
+
+    def read_agent(self, meta, config):
+        """The `agent.json` the coordinator wrote beside a handoff run's replies, checked: every key
+        in AGENT_KEYS is given, the model the agents report is the pinned one (or a dated version of
+        it), and the prompt it records is the template in the repository now. ApiError if not: no
+        reply is read without a record of who made it."""
+        path = os.path.join(self.handoff_dir(meta), "agent.json")
+        if not os.path.isfile(path):
+            raise openrouter.ApiError(
+                f"{meta['name']} {meta['run']}: replies are waiting, but there is no {path}; the agents' "
+                f"record ({', '.join(AGENT_KEYS)}) is written before any reply is read"
+            )
+        try:
+            agent = json.loads(read(path))
+        except ValueError:
+            raise openrouter.ApiError(f"{path} is not JSON") from None
+        missing = [key for key in AGENT_KEYS if not isinstance(agent, dict) or not str(agent.get(key) or "").strip()]
+        if missing:
+            raise openrouter.ApiError(f"{path} lacks {', '.join(missing)}")
+        openrouter.check_names(CLAUDE_CODE_ENDPOINT["provider_name"], agent["model_reported"], CLAUDE_CODE_ENDPOINT, config["model"])
+        if agent["prompt_sha256"] != handoff_template_sha256():
+            raise openrouter.ApiError(
+                f"{path} records another agent prompt than prompts/handoff-agent.md has now (sha256 "
+                f"{handoff_template_sha256()}); the replies were not made by this definition"
+            )
+        return {key: agent[key] for key in agent}
+
+    def ask_handoff(self, meta, endpoint, config, system, user, kind):
+        """One call of a handoff model: a person's own harness answers it, through files.
+
+        Returns the reply, if there is one, as `ask` does: a reply saved in `raw/` by an earlier pass
+        whose record holds this request's hash, or the reply file `<kind>.<12 hex of the hash>.reply.txt`
+        beside the request, if it is not empty. The hash is of the request, so a reply to an older
+        request has another name and is never read. An accepted reply is saved into `raw/` as an
+        OpenRouter reply is (`reply.txt`, its record with the hash, a `calls.jsonl` row), needs
+        `agent.json` first (see [Runner.read_agent]) and is booked in the ledger at 0, without the cap.
+        With no reply the request is written to `<kind>.request.json`, the call is added to the waiting
+        ones and PENDING is returned: nothing is asked, retried, switched or counted against the
+        failure budget, and nothing is booked."""
+        name, run = meta["name"], meta["run"]
+        saved = self.raw(name, run, f"{kind}.reply.txt")
+        saved_meta = self.raw(name, run, f"{kind}.meta.json")
+        request = {
+            "model": config["model"],
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        }
+        request_sha256 = hashlib.sha256(canonical_json(request).encode("utf-8")).hexdigest()
+        if os.path.isfile(saved) and self.recheck(meta, endpoint, config, kind, request_sha256):
+            return read(saved)
+        for stale in (saved, saved_meta):
+            if os.path.isfile(stale):
+                os.remove(stale)
+        folder = self.handoff_dir(meta)
+        reply_name = f"{kind}.{request_sha256[:12]}.reply.txt"
+        reply_path = os.path.join(folder, reply_name)
+        for other in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+            if re.fullmatch(rf"{re.escape(kind)}\.[0-9a-f]{{12}}\.reply\.txt", other) and other != reply_name:
+                self.warn(f"label: {name} {run} {kind}: {other} answers an older request, so it is not read")
+        text = read(reply_path).strip() if os.path.isfile(reply_path) else ""
+        if not text:
+            request_path = os.path.join(folder, f"{kind}.request.json")
+            write_atomic(request_path, json.dumps({
+                **request, "request_sha256": request_sha256, "call": kind, "run": run,
+                "reply_name": reply_name, "reply_path": reply_path,
+            }, indent=2) + "\n")
+            self.cut["waiting"].append((kind, request_path, reply_path))
+            return PENDING
+        agent = self.read_agent(meta, config)
+        where = {
+            "dir": os.path.relpath(self.dir, self.root), "run": run, "role": meta["role"], "name": name,
+            "model": config["model"], "provider": endpoint["provider_name"],
+        }
+        self.ledger.book_free(
+            prompt_tokens="-", completion_tokens="-", reasoning_tokens="-",
+            note=f"{kind}: handoff reply accepted, not metered", **where,
+        )
+        record = {
+            "kind": kind, "seconds": None, "retries": 0, "prompt_tokens": None, "completion_tokens": None,
+            "reasoning_tokens": None, "cost_usd": 0.0, "finish": "stop", "think": False,
+            "provider": endpoint["provider_name"], "reply_model": agent["model_reported"], "refused": None,
+        }
+        os.makedirs(self.raw(name, run), exist_ok=True)
+        with open(self.raw(name, run, "calls.jsonl"), "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record) + "\n")
+        write(self.raw(name, run, f"{kind}.response.json"), json.dumps({
+            "transport": HANDOFF, "reply_file": os.path.relpath(reply_path, self.dir), "agent": agent,
+        }, indent=2) + "\n")
+        if meta.get("agent") != agent:
+            self.update_run(name, run, agent=agent)
+            meta["agent"] = agent
+        write_atomic(saved, text + "\n")
+        write_atomic(saved_meta, json.dumps({
+            "kind": kind, "provider": endpoint["provider_name"], "model": agent["model_reported"],
+            "requested_model": config["model"], "endpoint": endpoint["tag"], "fingerprint": None,
+            "id": request_sha256[:12], "finish": "stop", "request_sha256": request_sha256,
+            "transport": HANDOFF,
+        }, indent=2) + "\n")
+        return text + "\n"
+
+    def stop_for_handoff(self, meta):
+        """Raises HandoffWait if any call of this pass had no reply: the requests are written, and
+        nothing is checked until the replies are."""
+        if self.cut["waiting"]:
+            raise HandoffWait(meta["name"], meta["run"], list(self.cut["waiting"]))
+
     def reject(self, meta, kind, request_sha256, response, error):
         """Saves a reply that was refused, with the hash of its request, so that a rerun of the same
         request raises the same refusal and pays for nothing."""
@@ -854,15 +1059,27 @@ class Runner:
         row["status"] = run_status(meta)
         row["reason"] = run_reason(meta, row["status"])
         models = sorted({call["reply_model"] for call in calls if call.get("reply_model")})
+
+        def total(key, shown):
+            """The sum of `key` over the calls, or `-` when a call did not report it: a handoff call
+            has no token count or seconds, which is unknown and not 0."""
+            values = [call.get(key) for call in calls]
+            if meta.get("transport") == "handoff" or any(value is None for value in values):
+                return "-"
+            return shown(sum(values))
+
+        settings = meta.get("request")
+        if settings and meta.get("agent"):
+            settings = {**settings, "agent": meta["agent"]}
         row.update(
             calls=len(calls), retries=sum(call["retries"] for call in calls),
-            prompt_tokens=sum(call["prompt_tokens"] for call in calls),
-            completion_tokens=sum(call["completion_tokens"] for call in calls),
-            reasoning_tokens=sum(call["reasoning_tokens"] for call in calls),
+            prompt_tokens=total("prompt_tokens", str),
+            completion_tokens=total("completion_tokens", str),
+            reasoning_tokens=total("reasoning_tokens", str),
             cost_usd=f"{self.ledger.run_cost(meta['run']):.8f}",
-            seconds=f"{sum(call['seconds'] for call in calls):.1f}",
+            seconds=total("seconds", lambda value: f"{value:.1f}"),
             reply_model=",".join(models) or "-",
-            settings=json.dumps(meta["request"], sort_keys=True) if meta.get("request") else "-",
+            settings=json.dumps(settings, sort_keys=True) if settings else "-",
         )
         row["price_in_per_m"] = f"{float(meta['price_in_per_m']):.4f}" if meta.get("price_in_per_m") not in (None, "-") else "-"
         row["price_out_per_m"] = f"{float(meta['price_out_per_m']):.4f}" if meta.get("price_out_per_m") not in (None, "-") else "-"
@@ -1127,6 +1344,8 @@ class Runner:
         answered between them in one pass (the first, or a retry round, whose parts are of one size),
         the endpoint is given up as one that cuts every reply off."""
         reply = self.try_ask(meta, endpoint, config, user, kind)
+        if reply is PENDING:
+            return
         if reply is None:
             self.cut["streak"] += 1
             if self.cut["streak"] >= CUT_OFF_STREAK:
@@ -1180,9 +1399,12 @@ class Runner:
         if meta.get("finished"):
             # Continued after a finish that left items open: it is not finished again until it is.
             self.update_run(name, run, finished=False, open_items=None)
+        if is_handoff(config):
+            self.clear_unanswered_requests(meta)
         try:
             for number, path in enumerate(parts, 1):
                 self.ask_part(meta, endpoint, config, read(path), f"part-{number:02d}")
+            self.stop_for_handoff(meta)
             if self.cut["calls"]:
                 size = max(1, (size + 1) // 2)
             open_items, retry_parts = self.check_answers(meta, into, size)
@@ -1198,6 +1420,7 @@ class Runner:
                     problems = "\n".join(f"{item}: {open_items[item]}" for item in here)
                     user = self.prompts.fill("adjudicator-retry.md", problems=problems, worklist=text)
                     self.ask_part(meta, endpoint, config, user, f"retry-{attempt}-{number:02d}")
+                self.stop_for_handoff(meta)
                 if self.cut["calls"] > cut_before:
                     size = max(1, (size + 1) // 2)
                 open_items, retry_parts = self.check_answers(meta, into, size)
@@ -1371,10 +1594,12 @@ def cost_table(rows, sentences):
     lines = ["run\trole\tname\tstatus\tcost_usd\tseconds\tusd_per_1000\tminutes_per_1000"]
     for row in rows:
         scale = 1000.0 / max(int(row["sentences"]) if str(row["sentences"]).isdigit() else sentences, 1)
+        # A handoff run has no seconds, which is not 0 minutes.
+        minutes = "-" if row["seconds"] == "-" else f"{float(row['seconds']) * scale / 60:.2f}"
         lines.append(
             "\t".join([
                 row["run"], row["role"], row["name"], row["status"], row["cost_usd"], row["seconds"],
-                f"{float(row['cost_usd']) * scale:.4f}", f"{float(row['seconds']) * scale / 60:.2f}",
+                f"{float(row['cost_usd']) * scale:.4f}", minutes,
             ])
         )
     return "\n".join(lines) + "\n"
@@ -1431,11 +1656,76 @@ def stop_for_endpoint(error):
     return code
 
 
+def report_handoff_wait(error, arguments):
+    """Exit 6 for a judge that is waiting on the harness: says so, lists the request files, and says
+    what to do. Nothing failed, and the run is kept: the same command goes on once the replies are
+    there."""
+    print(f"label: {error} ({error.name} {error.run})", file=sys.stderr)
+    for kind, request, reply in error.waiting:
+        print(f"label:   {kind}: {request}", file=sys.stderr)
+    print(
+        f"label: write handoff/{error.run}/agent.json (see README.md), have an agent answer each request "
+        f"into the reply path it names (`label.py handoff-agent --request PATH` prints its prompt), and run "
+        f"the same command again once every agent of the round has returned; "
+        f"`label.py handoff --dir {arguments.dir} --into {arguments.into}` lists the requests still unanswered",
+        file=sys.stderr,
+    )
+    return EXIT_HANDOFF
+
+
+def pending_requests(directory, into):
+    """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
+    yet, in the order of their numbers: what the coordinator still has to have answered."""
+    base = os.path.join(directory, into, "handoff")
+    runs = [name for name in os.listdir(base) if re.fullmatch(r"r\d+", name)] if os.path.isdir(base) else []
+    if not runs:
+        return []
+    folder = os.path.join(base, max(runs, key=lambda name: int(name[1:])))
+    pending = []
+    for name in numbered(os.listdir(folder)):
+        if not name.endswith(".request.json"):
+            continue
+        request = os.path.join(folder, name)
+        try:
+            reply = os.path.join(folder, json.loads(read(request))["reply_name"])
+        except (ValueError, KeyError):
+            raise GoldError(f"{request} is not a request file this runner wrote") from None
+        if not os.path.isfile(reply) or not read(reply).strip():
+            pending.append(request)
+    return pending
+
+
+def command_handoff(arguments, config, transport=None, gold=None):
+    directory = guard.check_dir(arguments.dir)
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", arguments.into):
+        raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{arguments.into}`")
+    for request in pending_requests(directory, arguments.into):
+        print(request)
+    return 0
+
+
+def command_handoff_agent(arguments, config, transport=None, gold=None):
+    if arguments.sha256:
+        print(handoff_template_sha256())
+        return 0
+    if not arguments.request:
+        raise ConfigError("handoff-agent needs --request PATH, or --sha256")
+    guard.refuse_path(arguments.request)
+    real = os.path.realpath(arguments.request)
+    guard.refuse_path(real)
+    if not guard.inside(real, guard.root()) or not real.endswith(".request.json") or not os.path.isfile(real):
+        raise GoldError(f"{arguments.request} is not a request file under {guard.root()}")
+    print(fill_handoff(real), end="")
+    return 0
+
+
 def command_tag(arguments, config, transport=None, gold=None):
     names = arguments.voter or config["voters"]
     for name in names:
         if name not in config["models"]:
             raise ConfigError(f"`{name}` is not in voters.json")
+        if is_handoff(config["models"][name]):
+            raise ConfigError(f"`{name}` is a handoff model, which adjudicates; it cannot be a voter")
     runner = make_runner(arguments, config, transport, gold)
     if arguments.dry_run:
         batches = runner.batch_files()
@@ -1481,6 +1771,11 @@ def command_tag(arguments, config, transport=None, gold=None):
 
 
 def command_judge(arguments, config, transport=None, gold=None):
+    if arguments.adjudicator:
+        if arguments.adjudicator not in config["models"]:
+            raise ConfigError(f"`{arguments.adjudicator}` is not a model of voters.json")
+        # For this merge alone: the run it starts, and the run a rerun looks for, are this model's.
+        config = {**config, "adjudicator": arguments.adjudicator}
     names = arguments.voter or config["voters"]
     voters = [(name, False) for name in names]
     if arguments.spacy:
@@ -1503,6 +1798,8 @@ def command_judge(arguments, config, transport=None, gold=None):
         return 4
     except EndpointExhausted as error:
         return stop_for_endpoint(error)
+    except HandoffWait as error:
+        return report_handoff_wait(error, arguments)
     print(f"ledger total ${runner.ledger.total():.4f} of --max-usd ${arguments.max_usd:.2f}")
     if left and arguments.strict:
         print(f"label: {len(left)} items are still open: {', '.join(sorted(left))}", file=sys.stderr)
@@ -1588,6 +1885,11 @@ def parser():
         "counts); default 3, deslag-gold's own; fewer goes to the adjudicator",
     )
     judge.add_argument(
+        "--adjudicator", metavar="NAME",
+        help="a model of voters.json to adjudicate this merge, in place of its `adjudicator`: `opus` is handed "
+        "to Claude Code subagents through files (exit 6 while it waits), `claude` is Sonnet through OpenRouter",
+    )
+    judge.add_argument(
         "--trains", choices=("yes", "no"), default="no",
         help="`yes` only for a draw for labelling, whose labels may train a model; gold sets are always no",
     )
@@ -1605,6 +1907,20 @@ def parser():
     cost = commands.add_parser("cost", help="dollars and minutes per thousand sentences of each run")
     common(cost, False)
     cost.set_defaults(handler=command_cost)
+
+    handoff = commands.add_parser(
+        "handoff", help="print the request files of a handoff judge that have no reply yet, one per line"
+    )
+    common(handoff, False)
+    handoff.add_argument("--into", default="merge", help="the merge directory under --dir the judge wrote to")
+    handoff.set_defaults(handler=command_handoff)
+
+    agent = commands.add_parser(
+        "handoff-agent", help="print the prompt of the subagent for one request file, or the template's sha256"
+    )
+    agent.add_argument("--request", metavar="PATH", help="a `<call>.request.json` that `judge` wrote")
+    agent.add_argument("--sha256", action="store_true", help="print the sha256 of the template, for agent.json")
+    agent.set_defaults(handler=command_handoff_agent)
 
     spend = commands.add_parser("spend", help="print the ledger's cumulative total")
     spend.set_defaults(handler=command_spend)

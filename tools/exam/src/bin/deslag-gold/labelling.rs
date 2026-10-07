@@ -15,13 +15,20 @@
 //! `.gold` or the gold directory ([`is_gold_place`]), and it writes `sample.conllu` and
 //! `manifest.tsv` there and nothing else.
 //!
+//! With `--parts N` the one draw is dealt into `part-01` to `part-NN` under the working
+//! directory instead ([`deal`]): each part is a complete draw for labelling, with the draw's
+//! header and `part = k of N`, and the caps, the text checks and the selection are the one
+//! draw's, so `--parts` changes no sentence drawn. Every draw's header records `tag_version`, the
+//! tag VERSION the tokens and `Origin=` were made under, which a later preflight compares with
+//! the build that assembles the batch.
+//!
 //! What it says goes to stderr, as counts: the fixtures left out, each under the first reason
 //! that applies; what remained to draw from; what each tier could give at most under the caps
 //! ([`sample::capacity`]), so a larger draw can be planned; how many sentences the draw dropped
 //! for gold text and for repeating an earlier draw; and what was kept per tier. It never names a
 //! repository, a file or a sentence.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 use std::path::{Component, Path, PathBuf};
 
@@ -30,7 +37,7 @@ use deslag_exam::gold::Tier;
 use deslag_exam::tagger::Context;
 
 use crate::Pool;
-use crate::data::{self, Sent, write_text};
+use crate::data::{self, Manifest, Meta, Sent, write_text};
 use crate::exclude::{Exclusion, Repos, Reserved, Texts};
 use crate::problems::Problems;
 use crate::sample::{self, File, Labelling, Mode, Outcome, Settings};
@@ -55,6 +62,45 @@ pub struct Inputs<'a> {
     pub exclude_draws: &'a [PathBuf],
     /// Leave out the files whose label is a publisher's statement.
     pub without_declared: bool,
+    /// Deal the draw into this many parts; none writes it whole.
+    pub parts: Option<usize>,
+}
+
+/// The most parts a draw is dealt into: two digits name a part.
+pub const MOST_PARTS: usize = 99;
+
+/// The directory of part `number` under a draw's working directory: `part-01`.
+pub fn part_dir(number: usize) -> String {
+    format!("part-{number:02}")
+}
+
+/// Which part, counted from 0, each of `rows` goes to when the draw is dealt into `parts`. The
+/// sentences of each tier and context cell, in the draw's seeded order, go round the parts one
+/// after another, and the next cell carries on from the part after the last one used. Every part
+/// then has the mix of the whole, to within one sentence in a cell, and no part gets the extra
+/// sentence of every cell: the parts differ in size by at most one sentence in all.
+pub fn deal(rows: &[(String, Meta)], parts: usize) -> Vec<usize> {
+    let mut cells: BTreeMap<(usize, usize), Vec<usize>> = BTreeMap::new();
+    for (at, (_, meta)) in rows.iter().enumerate() {
+        let tier = meta
+            .tier
+            .and_then(|tier| Tier::ALL.iter().position(|each| *each == tier))
+            .unwrap_or(Tier::ALL.len());
+        let context = Context::ALL
+            .iter()
+            .position(|each| *each == meta.context)
+            .unwrap_or(Context::ALL.len());
+        cells.entry((tier, context)).or_default().push(at);
+    }
+    let mut dealt = vec![0; rows.len()];
+    let mut next = 0;
+    for members in cells.values() {
+        for &at in members {
+            dealt[at] = next;
+            next = (next + 1) % parts;
+        }
+    }
+    dealt
 }
 
 /// Fixtures left out for one reason.
@@ -102,6 +148,31 @@ fn check_prefix(prefix: &str) -> Result<(), Error> {
         return Err(bad(format!(
             "`{prefix}` is a prefix of the gold flow's ids ({}); give another",
             GOLD_PREFIXES.join(", ")
+        )));
+    }
+    Ok(())
+}
+
+/// Whether the draw may be dealt into `parts` parts under `dir`: one to [`MOST_PARTS`], and no
+/// `part-NN` already in `dir` beyond them, which a draw of other size left and which a reader of
+/// `dir` would take for part of this draw.
+fn check_parts(parts: usize, dir: &Path) -> Result<(), Error> {
+    let bad = |message: String| Error::load("--parts", Place::File, message);
+    if parts == 0 || parts > MOST_PARTS {
+        return Err(bad(format!("give from 1 to {MOST_PARTS} parts")));
+    }
+    let names: BTreeSet<String> = (1..=parts).map(part_dir).collect();
+    let stale: Vec<String> = std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .filter(|name| name.starts_with("part-") && !names.contains(name))
+        .collect();
+    if let Some(first) = stale.first() {
+        return Err(bad(format!(
+            "{} already has {first}, which a draw of {parts} parts does not make; remove it first, or give another --dir",
+            dir.display()
         )));
     }
     Ok(())
@@ -190,6 +261,9 @@ fn is_gold_place(dir: &Path, gold_dir: &Path) -> bool {
 pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), Problems> {
     let from = inputs.from;
     check_prefix(inputs.prefix)?;
+    if let Some(parts) = inputs.parts {
+        check_parts(parts, dir)?;
+    }
     if is_gold_place(dir, &from.gold_dir) {
         return Err(Error::load(
             &dir.display().to_string(),
@@ -288,22 +362,80 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
             cuts[1..].iter().map(|cut| cut.fixtures).sum::<usize>()
         ),
     ));
+    header.push(("tag_version".to_string(), deslag::tag::VERSION.to_string()));
     sample::check_with_exam(&outcome.sample.sents)?;
 
-    let contexts: std::collections::BTreeMap<&str, Context> = outcome
+    let contexts: BTreeMap<&str, Context> = outcome
         .sample
         .manifest
         .rows
         .iter()
         .map(|(id, meta)| (id.as_str(), meta.context))
         .collect();
-    let sample_path = dir.join("sample.conllu");
-    let manifest_path = dir.join("manifest.tsv");
-    write_text(
-        &sample_path,
-        &data::skeleton(&outcome.sample.sents, |id| contexts.get(id).copied(), true),
-    )?;
-    write_text(&manifest_path, &outcome.sample.manifest.render())?;
+    let dealt = match inputs.parts {
+        None => None,
+        Some(parts) => {
+            let rows = &outcome.sample.manifest.rows;
+            if rows.len() < parts {
+                return Err(Error::load(
+                    "--parts",
+                    Place::File,
+                    format!(
+                        "the draw has {} sentences, fewer than the {parts} parts asked for",
+                        rows.len()
+                    ),
+                )
+                .into());
+            }
+            Some((parts, deal(rows, parts)))
+        }
+    };
+    let mut written = Vec::new();
+    match &dealt {
+        None => {
+            let sample_path = dir.join("sample.conllu");
+            let manifest_path = dir.join("manifest.tsv");
+            write_text(
+                &sample_path,
+                &data::skeleton(&outcome.sample.sents, |id| contexts.get(id).copied(), true),
+            )?;
+            write_text(&manifest_path, &outcome.sample.manifest.render())?;
+            written.push(sample_path);
+            written.push(manifest_path);
+        }
+        Some((parts, dealt)) => {
+            for part in 0..*parts {
+                let sents: Vec<Sent> = outcome
+                    .sample
+                    .sents
+                    .iter()
+                    .zip(dealt)
+                    .filter(|(_, to)| **to == part)
+                    .map(|(sent, _)| sent.clone())
+                    .collect();
+                let rows = outcome
+                    .sample
+                    .manifest
+                    .rows
+                    .iter()
+                    .zip(dealt)
+                    .filter(|(_, to)| **to == part)
+                    .map(|(row, _)| row.clone())
+                    .collect();
+                let mut header = outcome.sample.manifest.header.clone();
+                header.push(("part".to_string(), format!("{} of {parts}", part + 1)));
+                let manifest = Manifest { header, rows };
+                let folder = dir.join(part_dir(part + 1));
+                write_text(
+                    &folder.join("sample.conllu"),
+                    &data::skeleton(&sents, |id| contexts.get(id).copied(), true),
+                )?;
+                write_text(&folder.join("manifest.tsv"), &manifest.render())?;
+            }
+            written.push(dir.join(part_dir(1)));
+            written.push(dir.join(part_dir(*parts)));
+        }
+    }
     eprintln!(
         "{}",
         Report {
@@ -314,13 +446,23 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
             settings,
             gold: gold.len(),
             outcome: &outcome,
+            dealt: dealt
+                .as_ref()
+                .map(|(parts, dealt)| (*parts, dealt.as_slice())),
         }
     );
-    println!(
-        "wrote {} and {}",
-        sample_path.display(),
-        manifest_path.display()
-    );
+    match dealt {
+        None => println!(
+            "wrote {} and {}",
+            written[0].display(),
+            written[1].display()
+        ),
+        Some((parts, _)) => println!(
+            "wrote {parts} parts, {} to {}, each with sample.conllu and manifest.tsv",
+            written[0].display(),
+            written[1].display()
+        ),
+    }
     Ok(())
 }
 
@@ -333,6 +475,8 @@ struct Report<'a> {
     settings: &'a Settings,
     gold: usize,
     outcome: &'a Outcome,
+    /// The number of parts and the part, from 0, of each sentence, when the draw is dealt.
+    dealt: Option<(usize, &'a [usize])>,
 }
 
 impl fmt::Display for Report<'_> {
@@ -419,7 +563,14 @@ impl fmt::Display for Report<'_> {
             f,
             "left out of those files: {} too short, {} too long, {} not English, {} unreadable by the exam, {} duplicate, {} gold text, {} repeat of an earlier draw",
             s.few_words, s.long, s.not_english, s.unreadable, s.duplicate, s.gold_text, s.earlier
-        )
+        )?;
+        if let Some((parts, dealt)) = self.dealt {
+            write!(f, "\ndealt into {parts} parts, sentences per part:")?;
+            for part in 0..parts {
+                write!(f, " {}", dealt.iter().filter(|to| **to == part).count())?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -502,6 +653,44 @@ mod tests {
         for bad in ["", "P", "p1", "a-b", "toolongname", "g", "o", "q", "r"] {
             assert!(check_prefix(bad).is_err(), "{bad}");
         }
+    }
+
+    fn row(id: &str, tier: Tier, context: Context) -> (String, Meta) {
+        (
+            id.to_string(),
+            Meta {
+                split: None,
+                tier: Some(tier),
+                context,
+                file: String::new(),
+                repo: String::new(),
+                license: String::new(),
+                range: 0..0,
+                provenance: None,
+            },
+        )
+    }
+
+    #[test]
+    fn dealing_goes_round_each_cell_and_carries_on_from_the_part_after_the_last() {
+        // Three cells of 2, 2 and 1 sentences, interleaved in the draw's order, dealt in three:
+        // the cell of two humans takes parts 0 and 1, the next carries on at 2 and 0, the last
+        // at 1. The sizes are 2, 2, 1 and no part holds the odd sentence of every cell.
+        let rows = vec![
+            row("p1", Tier::Human, Context::Prose),
+            row("p2", Tier::Llm, Context::Prose),
+            row("p3", Tier::Human, Context::Prose),
+            row("p4", Tier::Llm, Context::Prose),
+            row("p5", Tier::Mixed, Context::Heading),
+        ];
+        assert_eq!(deal(&rows, 3), [0, 2, 1, 0, 1]);
+        // One part takes everything; a draw of the same size as the parts gives one each.
+        assert_eq!(deal(&rows, 1), [0; 5]);
+        let mut five = deal(&rows, 5);
+        five.sort_unstable();
+        assert_eq!(five, [0, 1, 2, 3, 4]);
+        // The order of the draw within a cell is what decides, and the dealing is repeatable.
+        assert_eq!(deal(&rows, 3), deal(&rows, 3));
     }
 
     #[test]

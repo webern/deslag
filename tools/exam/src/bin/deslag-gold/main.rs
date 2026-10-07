@@ -395,6 +395,13 @@ enum Command {
         /// model.
         #[arg(long)]
         without_declared: bool,
+        /// Deal the one draw into this many parts, `part-01` to `part-NN` under `--dir`, each a
+        /// complete draw for labelling (`sample.conllu`, `manifest.tsv` with the draw's header
+        /// and `part = k of N`). The sentences of each tier and context go round the parts in the
+        /// draw's seeded order, so every part has the same mix to within one sentence, and the
+        /// draw is the one `--parts` would not have dealt: same caps, same checks, same sentences.
+        #[arg(long)]
+        parts: Option<usize>,
     },
     /// Ranks the corpus's sentences by how unsure deslag is, as the review will show them, and
     /// writes `rank.tsv` to the working directory. Reads the big tier, or `tests/corpus` when it
@@ -599,6 +606,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             min_words,
             max_tokens,
             without_declared,
+            parts,
         } => {
             // Four counts are the quota of every tier; twelve give each tier its own.
             if mix.len() != 4 && mix.len() != 12 {
@@ -636,6 +644,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                     prefix: &prefix,
                     exclude_draws: &exclude_draws,
                     without_declared,
+                    parts,
                 },
                 &settings,
             )

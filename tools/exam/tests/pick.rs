@@ -1211,3 +1211,191 @@ fn a_draw_leaves_out_sources_whose_declared_model_is_of_a_banned_family() {
         "{said}"
     );
 }
+
+/// A gold directory that reserves nothing: dev and holdout manifests of one repository the tree
+/// does not have, and dev and holdout text no fixture holds.
+fn quiet_gold(work: &Path) -> PathBuf {
+    let gold_dir = work.join("gold");
+    fs::create_dir_all(&gold_dir).unwrap();
+    for name in ["dev", "holdout"] {
+        fs::write(
+            gold_dir.join(format!("{name}.manifest.tsv")),
+            format!("{HEAD}g1\t{name}\thuman\tprose\tx.md\tzz/none\tMIT\t0-1\n"),
+        )
+        .unwrap();
+        fs::write(
+            gold_dir.join(format!("{name}.conllu")),
+            format!("# exam.tokens = deslag\n# exam.split = {name}\n# exam.trains = {}\n# sent_id = a\n# text = Zzqx qqzx\n1\tZzqx\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Prov=agree\n2\tqqzx\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Prov=agree\n\n",
+                if name == "holdout" { "no" } else { "undecided" }),
+        )
+        .unwrap();
+    }
+    gold_dir
+}
+
+/// A small tier whose repositories no draw tree has.
+fn other_small(work: &Path) -> PathBuf {
+    let small = work.join("small");
+    for (tier, path, _) in wide_tree(&small, 1) {
+        let json = small.join(path.replace(".md", ".json"));
+        let mut sidecar: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&json).unwrap()).unwrap();
+        sidecar["source"]["repo"] = format!("small/{tier}").into();
+        fs::write(&json, serde_json::to_string_pretty(&sidecar).unwrap()).unwrap();
+    }
+    small
+}
+
+#[test]
+fn a_draw_dealt_in_parts_is_the_one_draw_split_with_the_same_mix_in_every_part() {
+    let work = tempfile::tempdir().unwrap();
+    let root = work.path().join("tree");
+    wide_tree(&root, 10);
+    let small = other_small(work.path());
+    let gold_dir = quiet_gold(work.path());
+    let list = work.path().join("exclude.tsv");
+    fs::write(&list, format!("{}\n", "0".repeat(64))).unwrap();
+    let args = |dir: &Path, extra: &[&str]| -> Output {
+        let mut all = vec![
+            "--prefix",
+            "p",
+            "--tree",
+            root.to_str().unwrap(),
+            "--tests-corpus",
+            small.to_str().unwrap(),
+            "--gold-dir",
+            gold_dir.to_str().unwrap(),
+            "--exclude",
+            list.to_str().unwrap(),
+            "--mix",
+            "5,2,1,0",
+            "--dir",
+            dir.to_str().unwrap(),
+        ];
+        all.extend(extra);
+        label(work.path(), &all)
+    };
+    let whole = work.path().join("whole");
+    let said = |run: &Output| String::from_utf8_lossy(&run.stderr).into_owned();
+    let run = args(&whole, &[]);
+    assert!(run.status.success(), "{}", said(&run));
+    let dealt = work.path().join(".label").join("silver");
+    let run = args(&dealt, &["--parts", "4"]);
+    assert!(run.status.success(), "{}", said(&run));
+    assert!(said(&run).contains("dealt into 4 parts, sentences per part:"));
+
+    // Nothing is written beside the parts, and the parts together are the draw.
+    let names: Vec<String> = fs::read_dir(&dealt)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .collect();
+    let mut sorted = names.clone();
+    sorted.sort();
+    assert_eq!(sorted, ["part-01", "part-02", "part-03", "part-04"]);
+    let all = manifest_rows(&whole.join("manifest.tsv"));
+    assert_eq!(all.len(), 24, "eight sentences in each of three tiers");
+    let mut together: Vec<Vec<String>> = Vec::new();
+    let mut sizes = Vec::new();
+    let mut cell_sizes: std::collections::BTreeMap<(String, String), Vec<usize>> =
+        Default::default();
+    for number in 1..=4 {
+        let part = dealt.join(format!("part-{number:02}"));
+        let rows = manifest_rows(&part.join("manifest.tsv"));
+        sizes.push(rows.len());
+        for row in &rows {
+            cell_sizes
+                .entry((row[2].clone(), row[3].clone()))
+                .or_insert_with(|| vec![0; 4])[number - 1] += 1;
+        }
+        let head = fs::read_to_string(part.join("manifest.tsv")).unwrap();
+        assert!(
+            head.contains(&format!("# part = {number} of 4\n")),
+            "{head}"
+        );
+        assert!(
+            head.contains(&format!("# tag_version = {}\n", deslag::tag::VERSION)),
+            "{head}"
+        );
+        assert!(head.contains("# draw = for labelling, split unlabelled, ids p0001 on\n"));
+        // Each part is a complete draw: the sample names the manifest's sentences, in id order.
+        let sample = fs::read_to_string(part.join("sample.conllu")).unwrap();
+        let ids: Vec<&str> = sample
+            .lines()
+            .filter_map(|line| line.strip_prefix("# sent_id = "))
+            .collect();
+        let named: Vec<&str> = rows.iter().map(|row| row[0].as_str()).collect();
+        assert_eq!(ids, named);
+        assert!(named.windows(2).all(|pair| pair[0] < pair[1]));
+        together.extend(rows);
+    }
+    together.sort();
+    let mut expected = all.clone();
+    expected.sort();
+    assert_eq!(together, expected, "the parts hold the draw's sentences");
+    // No sentence of the whole draw changed: the parts' skeletons put together are its.
+    let whole_sample = fs::read_to_string(whole.join("sample.conllu")).unwrap();
+    for number in 1..=4 {
+        let sample =
+            fs::read_to_string(dealt.join(format!("part-{number:02}/sample.conllu"))).unwrap();
+        for block in sample
+            .split("\n\n")
+            .filter(|block| block.contains("# sent_id"))
+        {
+            assert!(whole_sample.contains(block.trim_start_matches("# exam.tokens = deslag\n")));
+        }
+    }
+    // The parts differ by at most one sentence, and so does each cell between them, and the
+    // sentence left over in a cell does not always land in the first part.
+    assert_eq!(sizes.iter().sum::<usize>(), 24);
+    assert!(
+        sizes.iter().max().unwrap() - sizes.iter().min().unwrap() <= 1,
+        "{sizes:?}"
+    );
+    for (cell, per_part) in &cell_sizes {
+        assert!(
+            per_part.iter().max().unwrap() - per_part.iter().min().unwrap() <= 1,
+            "{cell:?} {per_part:?}"
+        );
+    }
+    let extras: Vec<usize> = (0..4)
+        .map(|part| {
+            cell_sizes
+                .values()
+                .filter(|per_part| per_part[part] > *per_part.iter().min().unwrap())
+                .count()
+        })
+        .collect();
+    assert!(
+        extras.iter().max().unwrap() - extras.iter().min().unwrap() <= 2,
+        "no part holds the extra sentence of every cell: {extras:?}"
+    );
+
+    // The same draw is repeatable.
+    let again = work.path().join("again");
+    assert!(args(&again, &["--parts", "4"]).status.success());
+    assert_eq!(
+        tree_bytes(&dealt),
+        tree_bytes(&again),
+        "parts are the same files again"
+    );
+
+    // A part is a draw for labelling that the labelling flow opens under `.label`.
+    let batches = gold(&dealt.join("part-02"), &["batches", "--size", "5"]);
+    assert!(
+        batches.status.success(),
+        "{}",
+        String::from_utf8_lossy(&batches.stderr)
+    );
+    // Refusals: no parts, too many, more than sentences, and the part of another draw left behind.
+    for bad in ["0", "100", "25"] {
+        let out = work.path().join("bad");
+        let run = args(&out, &["--parts", bad]);
+        assert_eq!(run.status.code(), Some(2), "{bad}");
+        assert!(!out.exists(), "{bad}: nothing is written");
+    }
+    let four = work.path().join("four");
+    assert!(args(&four, &["--parts", "4"]).status.success());
+    let run = args(&four, &["--parts", "3"]);
+    assert_eq!(run.status.code(), Some(2));
+    assert!(said(&run).contains("part-04"), "{}", said(&run));
+}

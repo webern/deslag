@@ -875,6 +875,16 @@ class OwnerSetTests(unittest.TestCase):
                 "--tune-tokens .train/ewt-dev.tokens", "--tune-tokens .train/owner.tokens"))
         self.assertIn("report-only", str(caught.exception))
 
+    def test_a_gate_given_the_owner_set_is_stopped(self):
+        # The gate runs in a pipeline whose subshell would swallow an exit, so the guard has to
+        # stop the run before it: exit 2, not a finding the `|| echo` after the pipeline absorbs.
+        with self.assertRaises(AssertionError) as caught:
+            self.run_all("test-brill-deslag", edit=lambda text: text.replace(
+                '".train/deslag-dev.$name.import.conllu"', '".train/owner.$name.import.conllu"'))
+        message = str(caught.exception)
+        self.assertIn("2 != 0", message)
+        self.assertIn("report-only", message)
+
 
 if __name__ == "__main__":
     unittest.main()

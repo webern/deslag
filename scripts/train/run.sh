@@ -7,9 +7,9 @@
 # The owner's gold, tests/gold/owner.conllu, is a third set that is tagged, scored and compared beside
 # the two dev sets and nothing else: never trained on, never tuned on, never gated. See `no_owner`.
 #
-#   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on both dev sets
-#   run.sh generate        baseline, then train, tune and tag both dev sets into import files
-#   run.sh test            the unit tests, then the exam's report and `compare` for both dev sets
+#   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on every set
+#   run.sh generate        baseline, then train, tune and tag every set into import files
+#   run.sh test            the unit tests, then the exam's report and `compare` for every set
 #   run.sh generate-brill  baseline, then the Brill tagger and its initial tagger alone, as above
 #   run.sh test-brill      the unit tests, then the reports and the `compare` runs of the Brill tagger
 #   run.sh generate-brill-deslag, generate-brill-percept
@@ -32,8 +32,8 @@ ewt=".ewt/$release"
 # The dev sets: what a learner is tuned on and what the gates judge.
 sets=(ewt-dev deslag-dev)
 # Every set that is tagged, scored and compared. The owner's gold is report-only: it was drawn
-# differently from the dev sets, so pooling it with them biases both, and 50 sentences give intervals
-# too wide for a gate. Its readings file carries `Gold=`, so the owner set joins the loops over this
+# differently from the dev sets, so pooling it with them biases both, and a set this small gives
+# intervals too wide for a gate. Its readings file carries `Gold=`, so the owner set joins the loops over this
 # list and nothing else: not a trainer, not `gate`, not `curve`.
 report_sets=("${sets[@]}" owner)
 gold_of() {
@@ -45,6 +45,8 @@ gold_of() {
 }
 # Stops the run if an argument names the owner set. Every trainer, `curve` and `gate` goes through it,
 # so a change that feeds the owner set to one fails here, before it trains or gates on it.
+# It matches the name, so it catches a change that passes the owner's file, not a renamed copy of it, and
+# a path with `owner` in it would trip it; the arguments are relative paths, so none does today.
 no_owner() {
   local arg
   for arg in "$@"; do
@@ -170,7 +172,7 @@ test_brill() {
   done
 }
 
-# Scores NAME on both dev sets, then judges it against the dev gates, which exit 1 on a miss; a
+# Scores NAME on every set, then judges it against the dev gates, which exit 1 on a miss; a
 # miss is a finding, so it is printed and the run goes on. Then the `compare` runs against deslag,
 # the perceptron and #109's Brill tagger, as far as their runs exist.
 test_brill_start() {
@@ -190,7 +192,10 @@ test_brill_start() {
     done
   done
   echo "=== deslag-dev: the dev gates and the must-pass list, on $name"
-  exam gate --gates tests/gold/gates.toml --import ".train/deslag-dev.$name.import.conllu" dev mustpass |
+  # Before the pipeline: an exit in a pipeline's subshell would not stop the run.
+  local gate=(gate --gates tests/gold/gates.toml --import ".train/deslag-dev.$name.import.conllu" dev mustpass)
+  no_owner "${gate[@]}"
+  exam "${gate[@]}" |
     tee ".train/deslag-dev.$name.gates.txt" || echo "(a gate failed: a finding, not an error)"
 }
 

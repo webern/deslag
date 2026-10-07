@@ -28,6 +28,7 @@ mod problems;
 mod review;
 mod sample;
 mod screen;
+mod silver;
 mod terminal;
 mod voters;
 mod web;
@@ -312,6 +313,17 @@ enum Command {
     /// Picks sentences of a finished labelling merge at random by a seed into a review queue, for
     /// the owner to check the labels: `<into>/audit.conllu` unless `--out` says another. The
     /// labels, `Prov=` and `Runs=` are in the queue, and each sentence is its own `pick_id`.
+    ///
+    /// With `--blind --from silver.conllu --out DIR` the same draw is made from a silver batch's
+    /// file, and `DIR/queue.conllu` has no UPOS, FEATS, `Prov=` or `Runs=`, with silver's labels
+    /// of those sentences in `DIR/labels.conllu`. The review pre-fills deslag's readings at
+    /// Likely and above, as for `owner.conllu`. Its home is `.label/silver/audit/`, then `audit/`
+    /// in the batch, and never the gold directory: the queues there reserve their repositories.
+    ///
+    /// With `--score --queue Q --labels L` the reviewed queue is scored against silver's labels:
+    /// the part of speech and the whole code, with intervals, by how silver labelled the word and
+    /// by context, the words left at deslag's pre-fill, the rejected sentences, and met or not
+    /// against `--bar`. `score.tsv` goes beside the queue unless `--out` says another file.
     Audit {
         /// The directory the merge was written to.
         #[arg(long, default_value = "merge", value_parser = parse_name)]
@@ -322,9 +334,27 @@ enum Command {
         /// The seed, decimal or `0x` hex. The default is the bytes of `deslag`.
         #[arg(long, default_value = "0x6465736c6167", value_parser = parse_seed)]
         seed: u64,
-        /// Where the queue goes.
+        /// Where the queue goes; with `--blind` a directory, with `--score` the score's file.
         #[arg(long)]
         out: Option<PathBuf>,
+        /// Draw a blind audit of a silver batch.
+        #[arg(long, requires = "from", conflicts_with = "score")]
+        blind: bool,
+        /// With `--blind`: the batch's `silver.conllu`.
+        #[arg(long, requires = "blind")]
+        from: Option<PathBuf>,
+        /// Score a reviewed blind queue.
+        #[arg(long, requires_all = ["queue", "labels"])]
+        score: bool,
+        /// With `--score`: the queue the owner reviewed.
+        #[arg(long, requires = "score")]
+        queue: Option<PathBuf>,
+        /// With `--score`: silver's labels of the queue's sentences.
+        #[arg(long, requires = "score")]
+        labels: Option<PathBuf>,
+        /// With `--score`: the bar on the part of speech, in percent, such as `95.0`.
+        #[arg(long, requires = "score")]
+        bar: Option<f64>,
     },
     /// Puts the agreed and the adjudicated words together and writes `dev.conllu`,
     /// `holdout.conllu`, their empty `.disputes.tsv` files, `adjudication.tsv` and `manifest.tsv`.
@@ -496,6 +526,20 @@ struct Pool {
     /// to the reserved set and never replace any of it.
     #[arg(long, num_args = 1..)]
     exclude_repos: Vec<PathBuf>,
+    /// The silver batches of the unpacked image. `rank` and `queue` leave out every repository
+    /// a live batch's manifest names, and `draw` every text its sentences have; the counts are
+    /// printed, so a fetch that did not happen shows as zero. A batch the retired list names is
+    /// not left out.
+    #[arg(long, default_value = ".blobs/unpacked/silver")]
+    silver: PathBuf,
+    /// The batches retired from silver: batch, date and reason. It must be there when the image
+    /// holds a silver batch.
+    #[arg(long, default_value = silver::live::RETIRED_PATH)]
+    silver_retired: PathBuf,
+    /// Silver being labelled: a directory of `part-NN` draws. `rank` and `queue` leave out the
+    /// repositories of their manifests, so a queue drawn while silver is made is clear of it.
+    #[arg(long, default_value = ".label/silver")]
+    silver_parts: PathBuf,
 }
 
 /// A seed written in decimal or as `0x` and hex.
@@ -744,7 +788,31 @@ fn run(cli: Cli) -> Result<(), Problems> {
             count,
             seed,
             out,
-        } => audit_stage(&dir, &into, count, seed, out.as_deref()),
+            blind,
+            from,
+            score,
+            queue,
+            labels,
+            bar,
+        } => {
+            if blind {
+                let from = from.expect("clap requires --from with --blind");
+                let out = out.ok_or_else(|| {
+                    Error::load(
+                        "--out",
+                        Place::File,
+                        "`--blind` needs --out, the directory of the audit",
+                    )
+                })?;
+                audit_blind_stage(&from, count, seed, &out)
+            } else if score {
+                let queue = queue.expect("clap requires --queue with --score");
+                let labels = labels.expect("clap requires --labels with --score");
+                audit_score_stage(&queue, &labels, bar, out.as_deref())
+            } else {
+                audit_stage(&dir, &into, count, seed, out.as_deref())
+            }
+        }
         Command::Assemble {
             out,
             blind,
@@ -967,28 +1035,57 @@ fn offer(
     except: &[&Path],
 ) -> Result<pick::Offer, Problems> {
     let files = files_of(fixtures);
-    let (files, listed, repos, by_repo) = leave_out(from, files, except)?;
+    let left = leave_out(from, files, except)?;
     println!(
-        "left out {listed} fixtures of the exclusion list and {by_repo} files of {repos} repositories"
+        "left out {} fixtures of the exclusion list and {} files of {} repositories",
+        left.listed, left.by_repo, left.repos
     );
-    let offer = pick::rank(&files)?;
+    println!("{}", left.silver);
+    let offer = pick::rank(&left.files)?;
     println!("{}", offer.dropped);
     Ok(offer)
 }
 
-/// `files` without the fixtures of the list and the files of the reserved repositories and of
-/// those `--exclude-repos` adds: what is left, and how many of each were dropped.
+/// What `rank` and `queue` left out of the files offered, as counts.
+struct LeftOut<'a> {
+    files: Vec<File<'a>>,
+    /// Fixtures of the exclusion list.
+    listed: usize,
+    /// Repositories left out, silver's among them.
+    repos: usize,
+    /// Files of those repositories.
+    by_repo: usize,
+    /// The line that says how much silver was left out.
+    silver: String,
+}
+
+/// `files` without the fixtures of the list and the files of the reserved repositories, of those
+/// `--exclude-repos` adds, and of silver, live batches and parts being labelled: what is left, and
+/// how many of each were dropped.
 fn leave_out<'a>(
     from: &Pool,
     files: Vec<File<'a>>,
     except: &[&Path],
-) -> Result<(Vec<File<'a>>, usize, usize, usize), Error> {
+) -> Result<LeftOut<'a>, Error> {
     let shown = from.exclude.display().to_string();
     let list = Exclusion::parse(&shown, &read_text(&from.exclude)?)?;
     let (files, listed) = list.drop(files);
-    let repos = Repos::reserved(&from.gold_dir, except)?.with(Repos::read(&from.exclude_repos)?);
+    let live = silver::live::Live::read(&from.silver, &from.silver_retired)?;
+    let held = live.repos()?;
+    let (in_parts, parts) = silver::live::parts_repos(&from.silver_parts)?;
+    let line = silver::live::left_out_line(&live, held.len(), parts, in_parts.len());
+    let repos = Repos::reserved(&from.gold_dir, except)?
+        .with(Repos::read(&from.exclude_repos)?)
+        .with(held)
+        .with(in_parts);
     let (files, by_repo) = repos.drop(files);
-    Ok((files, listed, repos.len(), by_repo))
+    Ok(LeftOut {
+        files,
+        listed,
+        repos: repos.len(),
+        by_repo,
+        silver: line,
+    })
 }
 
 fn rank_stage(dir: &Path, from: &Pool, per_repo: usize, top: usize) -> Result<(), Problems> {
@@ -2060,8 +2157,63 @@ fn audit_stage(
         seed,
     )?;
     let target = out.map_or_else(|| dir.join(into).join("audit.conllu"), Path::to_path_buf);
+    refuse_gold_dir(&target)?;
     write_text(&target, &queue)?;
     println!("wrote {count} sentences to {}", target.display());
+    Ok(())
+}
+
+/// Refuses `target`, a path an audit would write, when it is in the gold directory: a queue there
+/// reserves its sentences' repositories, and silver's audit is of silver's own.
+fn refuse_gold_dir(target: &Path) -> Result<(), Error> {
+    let golds = data::gold_dir();
+    if labelling::in_gold_dir(target, &golds) {
+        return Err(Error::load(
+            &target.display().to_string(),
+            Place::File,
+            "an audit does not go in the gold directory, where every queue reserves the repositories \
+             of its sentences; give a path under `.label`",
+        ));
+    }
+    Ok(())
+}
+
+/// `audit --blind`: the queue and silver's labels of the same sentences, in `out`.
+fn audit_blind_stage(from: &Path, count: usize, seed: u64, out: &Path) -> Result<(), Problems> {
+    data::refuse_holdout(&data::real_path(from)?)?;
+    refuse_gold_dir(out)?;
+    let (queue, labels) =
+        pilot::audit_blind(&from.display().to_string(), &read_text(from)?, count, seed)?;
+    write_text(&out.join("queue.conllu"), &queue)?;
+    write_text(&out.join("labels.conllu"), &labels)?;
+    println!(
+        "wrote {count} sentences to {} and silver's labels of them to {}",
+        out.join("queue.conllu").display(),
+        out.join("labels.conllu").display()
+    );
+    Ok(())
+}
+
+/// `audit --score`: the reviewed queue against silver's labels.
+fn audit_score_stage(
+    queue: &Path,
+    labels: &Path,
+    bar: Option<f64>,
+    out: Option<&Path>,
+) -> Result<(), Problems> {
+    let target = out.map_or_else(|| queue.with_file_name("score.tsv"), Path::to_path_buf);
+    refuse_gold_dir(&target)?;
+    let scored = silver::score::score(
+        &queue.display().to_string(),
+        &read_text(queue)?,
+        &labels.display().to_string(),
+        &read_text(labels)?,
+        0,
+        bar,
+    )?;
+    write_text(&target, &scored.tsv())?;
+    print!("{}", scored.report());
+    println!("wrote {}", target.display());
     Ok(())
 }
 

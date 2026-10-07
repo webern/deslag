@@ -2,6 +2,8 @@
 
 #![allow(dead_code)]
 
+pub mod draws;
+
 use std::path::{Path, PathBuf};
 
 use deslag::document::{Token, TokenKind};

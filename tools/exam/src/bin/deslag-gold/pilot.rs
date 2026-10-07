@@ -9,8 +9,12 @@
 //! [`deslag_exam::stats`]: a bootstrap over sentences, 1000 replicates, so no interval is
 //! computed anywhere else. A base-only voter (spaCy) is graded on the part of speech alone.
 //!
-//! The pipeline's accuracy is an upper bound on the silver set's: where the pipeline disagrees
-//! with the gold, the gold is sometimes the one that is wrong. It can also be reweighted to the
+//! The pipeline's accuracy against a gold is not a bound on the silver set's, either way. A gold
+//! error that silver gets right pushes the figure down, and an error silver shares with the gold
+//! pushes it up. Dev's figure is high: Opus made dev's adjudications, spaCy helped make dev, and
+//! both vote on silver. The owner's is low: `rank` picked the sentences deslag found hardest. The
+//! two bracket the silver set's accuracy and bound neither side; the owner's audit of silver
+//! itself (`audit --blind`, `audit --score`) is the measure. A rate can also be reweighted to the
 //! context mix of a draw (`--mix-from`): a stratified estimate, each context's rate weighted by
 //! that context's share of the draw's word tokens. Two merges of the same sample can be compared
 //! (`--versus`): the paired difference of their pipelines' accuracy, which is how the fourth
@@ -18,7 +22,11 @@
 //!
 //! `audit` picks sentences of a labelled draw at random, by a seed, into a review queue the owner
 //! can open: the labels are filled in, with their `Prov=` and `Runs=`, so the owner corrects what
-//! is wrong and the corrections count the silver set's noise.
+//! is wrong and the corrections count the silver set's noise. `audit --blind` picks the same way
+//! from `silver.conllu` and writes the queue with every UPOS and FEATS blank and no `Prov=` or
+//! `Runs=`, so that nothing silver said anchors the owner, and silver's labels beside it in
+//! `labels.conllu`; the review pre-fills deslag's own readings at Likely and above, as for
+//! `owner.conllu`. `audit --score` ([`crate::silver::score`]) compares the two once reviewed.
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
@@ -697,6 +705,50 @@ pub fn audit(path: &str, labelled: &str, count: usize, seed: u64) -> Result<Stri
     Ok(out)
 }
 
+/// A queue sentence's word line with the label taken off: UPOS and FEATS blank, and no `Prov=` or
+/// `Runs=` in MISC. A comment line is returned as it is.
+fn blind_line(line: &str) -> String {
+    let cells: Vec<&str> = line.split('\t').collect();
+    if cells.len() != 10 {
+        return line.to_string();
+    }
+    let misc: Vec<&str> = if cells[9] == "_" {
+        Vec::new()
+    } else {
+        cells[9]
+            .split('|')
+            .filter(|entry| !entry.starts_with("Prov=") && !entry.starts_with("Runs="))
+            .collect()
+    };
+    let misc = if misc.is_empty() {
+        "_".to_string()
+    } else {
+        misc.join("|")
+    };
+    format!(
+        "{}\t{}\t{}\t_\t{}\t_\t{}\t{}\t{}\t{misc}",
+        cells[0], cells[1], cells[2], cells[4], cells[6], cells[7], cells[8]
+    )
+}
+
+/// The blind audit of `count` sentences of `silver`, the text of a `silver.conllu`, picked as
+/// [`audit`] picks them: the queue the owner reviews, with no labels, and silver's labels of the
+/// same sentences. Both are marked silver.
+pub fn audit_blind(
+    path: &str,
+    silver: &str,
+    count: usize,
+    seed: u64,
+) -> Result<(String, String), Error> {
+    let labels = audit(path, silver, count, seed)?;
+    let mut queue = String::new();
+    for line in labels.lines() {
+        queue.push_str(&blind_line(line));
+        queue.push('\n');
+    }
+    Ok((queue, labels))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -992,5 +1044,43 @@ mod tests {
             .map(|seed| audit("l", LABELLED, 1, seed).unwrap())
             .collect();
         assert!(others.len() > 1);
+    }
+
+    #[test]
+    fn a_blind_audit_has_the_same_sentences_with_no_label_and_keeps_silver_s_beside_it() {
+        let (queue, labels) = audit_blind("l", LABELLED, 2, 7).unwrap();
+        assert_eq!(labels, audit("l", LABELLED, 2, 7).unwrap());
+        assert_eq!(queue.matches("# sent_id").count(), 2);
+        assert!(
+            queue.contains(
+                "# exam.silver = yes
+"
+            ) && queue.contains("# pick_id = a")
+        );
+        // Not a tag, a feature, a provenance or a run is left in the queue.
+        for line in queue.lines().filter(|line| !line.starts_with('#')) {
+            let cells: Vec<&str> = line.split('\t').collect();
+            if cells.len() == 10 {
+                assert_eq!((cells[3], cells[5]), ("_", "_"), "{line}");
+                assert!(
+                    !cells[9].contains("Prov=") && !cells[9].contains("Runs="),
+                    "{line}"
+                );
+                assert!(cells[9].starts_with("Kind=Word"), "{line}");
+            }
+        }
+        assert!(!queue.contains("NOUN") && !queue.contains("Number=") && !queue.contains("r1,r2"));
+        assert!(labels.contains("Prov=agree|Runs=r1,r2"));
+        // The review opens it, and `own` still refuses it.
+        crate::review::Session::open("queue.conllu", queue.clone(), "2026-10-07").unwrap();
+        let error = crate::pick::own("queue.conllu", &queue, "owner.conllu", None)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("silver"), "{error}");
+        // A line with no MISC left reads `_`.
+        assert_eq!(
+            blind_line("1\tOne\t_\tNUM\t_\t_\t_\t_\t_\tProv=agree"),
+            "1\tOne\t_\t_\t_\t_\t_\t_\t_\t_"
+        );
     }
 }

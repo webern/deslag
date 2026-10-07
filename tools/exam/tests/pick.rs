@@ -9,6 +9,9 @@ use std::process::{Command, Output};
 
 use deslag_exam::gold::{Gold, Trains};
 
+mod common;
+use common::draws::{other_small, quiet_gold};
+
 fn corpus() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/corpus")
 }
@@ -1210,40 +1213,6 @@ fn a_draw_leaves_out_sources_whose_declared_model_is_of_a_banned_family() {
         !said.contains("fix/") && !said.contains("datasets/"),
         "{said}"
     );
-}
-
-/// A gold directory that reserves nothing: dev and holdout manifests of one repository the tree
-/// does not have, and dev and holdout text no fixture holds.
-fn quiet_gold(work: &Path) -> PathBuf {
-    let gold_dir = work.join("gold");
-    fs::create_dir_all(&gold_dir).unwrap();
-    for name in ["dev", "holdout"] {
-        fs::write(
-            gold_dir.join(format!("{name}.manifest.tsv")),
-            format!("{HEAD}g1\t{name}\thuman\tprose\tx.md\tzz/none\tMIT\t0-1\n"),
-        )
-        .unwrap();
-        fs::write(
-            gold_dir.join(format!("{name}.conllu")),
-            format!("# exam.tokens = deslag\n# exam.split = {name}\n# exam.trains = {}\n# sent_id = a\n# text = Zzqx qqzx\n1\tZzqx\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Prov=agree\n2\tqqzx\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Prov=agree\n\n",
-                if name == "holdout" { "no" } else { "undecided" }),
-        )
-        .unwrap();
-    }
-    gold_dir
-}
-
-/// A small tier whose repositories no draw tree has.
-fn other_small(work: &Path) -> PathBuf {
-    let small = work.join("small");
-    for (tier, path, _) in wide_tree(&small, 1) {
-        let json = small.join(path.replace(".md", ".json"));
-        let mut sidecar: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&json).unwrap()).unwrap();
-        sidecar["source"]["repo"] = format!("small/{tier}").into();
-        fs::write(&json, serde_json::to_string_pretty(&sidecar).unwrap()).unwrap();
-    }
-    small
 }
 
 #[test]

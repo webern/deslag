@@ -439,6 +439,28 @@ impl Texts {
         Ok(texts)
     }
 
+    /// The texts of the sentences of the CoNLL-U files `paths`, by their `# text`: live silver's
+    /// `silver.conllu`.
+    pub fn conllu(paths: &[PathBuf]) -> Result<Texts, Error> {
+        let mut texts = Texts::default();
+        for path in paths {
+            let shown = path.display().to_string();
+            for block in conllu::read(&shown, &crate::data::read_text(path)?)? {
+                let text = block.comment("text").ok_or_else(|| {
+                    Error::load(&shown, Place::File, "a sentence has no `# text`")
+                })?;
+                texts.add(&text.value);
+            }
+        }
+        Ok(texts)
+    }
+
+    /// This set and the texts of `other`.
+    pub fn with(mut self, other: Texts) -> Texts {
+        self.keys.extend(other.keys);
+        self
+    }
+
     /// The sentences of the skeletons `paths`, the `sample.conllu` of earlier draws, and their
     /// ids.
     pub fn draws(paths: &[PathBuf]) -> Result<(Texts, Vec<String>), Error> {

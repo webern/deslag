@@ -20,7 +20,8 @@
 //! header and `part = k of N`, and the caps, the text checks and the selection are the one
 //! draw's, so `--parts` changes no sentence drawn. Every draw's header records `tag_version`, the
 //! tag VERSION the tokens and `Origin=` were made under, which a later preflight compares with
-//! the build that assembles the batch.
+//! the build that assembles the batch. It also leaves out the texts of live silver batches
+//! ([`Live`]), as it does those of an earlier draw, and records how many in the header.
 //!
 //! What it says goes to stderr, as counts: the fixtures left out, each under the first reason
 //! that applies; what remained to draw from; what each tier could give at most under the caps
@@ -41,6 +42,7 @@ use crate::data::{self, Manifest, Meta, Sent, write_text};
 use crate::exclude::{Exclusion, Repos, Reserved, Texts};
 use crate::problems::Problems;
 use crate::sample::{self, File, Labelling, Mode, Outcome, Settings};
+use crate::silver::live::Live;
 
 /// The working directory when `--dir` is not given.
 pub const DIR: &str = ".pool";
@@ -245,6 +247,20 @@ fn resolve(path: &Path) -> PathBuf {
     at
 }
 
+/// Whether `path` is, or is inside, `gold_dir`, compared after [`resolve`], other than under a
+/// `.label` directory directly in it. Silver's audit queue must never be written there:
+/// `Repos::reserved` reads every queue in the gold directory and would reserve silver's own
+/// repositories. (A checkout keeps `.label` beside `tests/gold`; the carve-out is for a gold
+/// directory that is a work directory, as the tests have it.)
+pub fn in_gold_dir(path: &Path, gold_dir: &Path) -> bool {
+    resolve(path)
+        .strip_prefix(resolve(gold_dir))
+        .is_ok_and(|inside| {
+            inside.components().next().map(|part| part.as_os_str())
+                != Some(std::ffi::OsStr::new(crate::data::LABEL_DIR))
+        })
+}
+
 /// Whether `dir` is, or is inside, the gold flow's places: a directory named `.gold`, or the gold
 /// directory. Both are compared after [`resolve`], so a relative path, a path through `..` or a
 /// symlink, and one that does not exist yet are all caught.
@@ -326,6 +342,12 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
 
     let gold = Texts::gold(&from.gold_dir)?;
     let (earlier, earlier_ids) = Texts::draws(inputs.exclude_draws)?;
+    // Live silver's texts are left out as an earlier draw's are: a sentence labelled once is not
+    // drawn to be labelled again.
+    let live = Live::read(&from.silver, &from.silver_retired)?;
+    let held = live.texts()?;
+    let silver = (live.names.len(), held.len());
+    let earlier = earlier.with(held);
     let used = |id: &String| {
         id.strip_prefix(inputs.prefix)
             .is_some_and(|rest| !rest.is_empty() && rest.bytes().all(|b| b.is_ascii_digit()))
@@ -361,6 +383,10 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
             small.len(),
             cuts[1..].iter().map(|cut| cut.fixtures).sum::<usize>()
         ),
+    ));
+    header.push((
+        "exclude silver".to_string(),
+        format!("{} live batches, {} texts", silver.0, silver.1),
     ));
     header.push(("tag_version".to_string(), deslag::tag::VERSION.to_string()));
     sample::check_with_exam(&outcome.sample.sents)?;
@@ -445,6 +471,7 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
             capacity,
             settings,
             gold: gold.len(),
+            silver,
             outcome: &outcome,
             dealt: dealt
                 .as_ref()
@@ -474,6 +501,8 @@ struct Report<'a> {
     capacity: [[usize; 5]; 3],
     settings: &'a Settings,
     gold: usize,
+    /// The live silver batches and the distinct texts they hold.
+    silver: (usize, usize),
     outcome: &'a Outcome,
     /// The number of parts and the part, from 0, of each sentence, when the draw is dealt.
     dealt: Option<(usize, &'a [usize])>,
@@ -528,10 +557,12 @@ impl fmt::Display for Report<'_> {
         let outcome = self.outcome;
         writeln!(
             f,
-            "drew {} sentences ({} words) as unlabelled; compared with {} distinct texts of gold",
+            "drew {} sentences ({} words) as unlabelled; compared with {} distinct texts of gold and {} of {} live silver batches",
             outcome.sample.sents.len(),
             outcome.sample.sents.iter().map(Sent::words).sum::<usize>(),
-            self.gold
+            self.gold,
+            self.silver.1,
+            self.silver.0
         )?;
         write!(f, "kept per tier:\n  {:<8}", "tier")?;
         for context in Context::ALL {

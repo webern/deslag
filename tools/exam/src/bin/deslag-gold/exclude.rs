@@ -96,6 +96,13 @@ impl Exclusion {
         key == file.sha256 || key == file.path
     }
 
+    /// Whether the list names the fixture at `path` with content of `sha256`.
+    pub fn lists(&self, path: &str, sha256: &str) -> bool {
+        self.keys
+            .iter()
+            .any(|(key, _)| key == sha256 || key == path)
+    }
+
     /// `files` without the listed ones, and how many were removed. An entry that names no file
     /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
@@ -497,6 +504,11 @@ impl Texts {
     pub fn has(&self, toks: &[Tok]) -> bool {
         let text: String = toks.iter().map(|tok| tok.form.as_str()).collect();
         self.keys.contains(&Texts::normal(&text))
+    }
+
+    /// Whether `text` is one of the texts.
+    pub fn has_text(&self, text: &str) -> bool {
+        self.keys.contains(&Texts::normal(text))
     }
 
     /// How many distinct texts it holds.

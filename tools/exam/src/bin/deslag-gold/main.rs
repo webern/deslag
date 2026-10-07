@@ -356,6 +356,12 @@ enum Command {
         #[arg(long, requires = "score")]
         bar: Option<f64>,
     },
+    /// The silver set: sentences that models labelled, put together into a batch that the training
+    /// reader may read and CI can check without a model. See `scripts/label/README.md`.
+    Silver {
+        #[command(subcommand)]
+        command: SilverCommand,
+    },
     /// Puts the agreed and the adjudicated words together and writes `dev.conllu`,
     /// `holdout.conllu`, their empty `.disputes.tsv` files, `adjudication.tsv` and `manifest.tsv`.
     /// Then reads them back with the exam's loader and prints what it finds.
@@ -502,6 +508,91 @@ enum Command {
         #[arg(long, default_value = "tests/gold/owner.conllu")]
         into: PathBuf,
     },
+}
+
+/// What `silver` does.
+#[derive(Subcommand)]
+enum SilverCommand {
+    /// Puts labelled parts together into the batch `--out`, or with `--check-part DIR:MERGE`
+    /// only checks one part, which is what each gate of the labelling runs.
+    ///
+    /// A part is DIR, a directory `draw --parts` dealt with the labelling's `runs.tsv` in it, and
+    /// MERGE, the name of the merge inside it that `finish --trains yes` made. The batch is
+    /// written to `--out`, a directory named `--name`, only when `silver check` passes on it.
+    Build(Box<SilverBuild>),
+    /// Checks batches against what they recorded, never against this checkout. With no `--batch`
+    /// it checks every batch under `--silver`, the retired ones too, and passes when there is none.
+    Check {
+        /// The silver root of the unpacked image.
+        #[arg(long, default_value = ".blobs/unpacked/silver")]
+        silver: PathBuf,
+        /// A batch directory to check, as often as wanted.
+        #[arg(long)]
+        batch: Vec<PathBuf>,
+    },
+    /// Holds each live batch to today's gold and corpus: no reserved repository, no gold text, no
+    /// excluded fixture, and an audit that met its bar or was accepted.
+    Standing {
+        /// The `voters.json` of this checkout.
+        #[arg(long, default_value = "scripts/label/voters.json")]
+        voters: PathBuf,
+        /// The small tier.
+        #[arg(long, default_value = "tests/corpus")]
+        tests_corpus: PathBuf,
+        #[command(flatten)]
+        pool: Pool,
+    },
+}
+
+/// The arguments of `silver build`.
+#[derive(clap::Args)]
+struct SilverBuild {
+    /// Check this one part and write nothing: every fault one part can have is reported.
+    #[arg(
+        long,
+        value_name = "DIR:MERGE",
+        conflicts_with_all = ["name", "part", "out", "audit"]
+    )]
+    check_part: Option<silver::part::Spec>,
+    /// The batch's name, which is its directory's: `YYYY-MM-DD-slug`.
+    #[arg(long, value_parser = parse_name, required_unless_present = "check_part")]
+    name: Option<String>,
+    /// A part to put in the batch, `DIR:MERGE`, as often as there are parts.
+    #[arg(long, value_name = "DIR:MERGE", required_unless_present = "check_part")]
+    part: Vec<silver::part::Spec>,
+    /// The directory of the batch to write.
+    #[arg(long, required_unless_present = "check_part")]
+    out: Option<PathBuf>,
+    /// The owner's reviewed audit: a directory with `queue.conllu` and `labels.conllu`, as
+    /// `audit --blind` wrote them and the review answered. His rejections are dropped.
+    #[arg(long, requires = "archive_sha256")]
+    audit: Option<PathBuf>,
+    /// The sha256 of the archive of what stays on the machine that made the batch.
+    #[arg(long)]
+    archive_sha256: Option<String>,
+    /// The bar on the audit's part of speech, in percent.
+    #[arg(long, default_value_t = 95.0)]
+    bar: f64,
+    /// The owner's words accepting an audit below its bar, kept in `record/`.
+    #[arg(long, requires = "audit")]
+    accept_below_bar: Option<String>,
+    /// A calibration report, `NAME=FILE`: a `report.tsv`, numbers only.
+    #[arg(long, value_name = "NAME=FILE")]
+    noise: Vec<String>,
+    /// The licence the annotations are published under.
+    #[arg(long, required_unless_present = "check_part")]
+    annotations_license: Option<String>,
+    /// The datasheet template, copied into `record/`.
+    #[arg(long, default_value = "scripts/label/silver-datasheet.md")]
+    template: PathBuf,
+    /// The `voters.json` the runs were made under, copied into `record/`.
+    #[arg(long, default_value = "scripts/label/voters.json")]
+    voters: PathBuf,
+    /// The small tier, whose repositories no silver sentence may be of.
+    #[arg(long, default_value = "tests/corpus")]
+    tests_corpus: PathBuf,
+    #[command(flatten)]
+    pool: Pool,
 }
 
 /// Where `rank`, `queue` and `draw` read from and what they leave out.
@@ -693,6 +784,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 &settings,
             )
         }
+        Command::Silver { command } => silver_stage(command),
         Command::Rank {
             from,
             per_repo,
@@ -1086,6 +1178,133 @@ fn leave_out<'a>(
         by_repo,
         silver: line,
     })
+}
+
+/// `silver build`, `silver check` and `silver standing`.
+fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
+    match command {
+        SilverCommand::Build(build) => {
+            let SilverBuild {
+                check_part,
+                name,
+                part,
+                out,
+                audit,
+                archive_sha256,
+                bar,
+                accept_below_bar,
+                noise,
+                annotations_license,
+                template,
+                voters,
+                tests_corpus,
+                pool,
+            } = *build;
+            let env = silver::part::Env::read(&silver::part::EnvArgs {
+                pool: &pool,
+                tests_corpus: &tests_corpus,
+                voters: &voters,
+            })?;
+            if let Some(spec) = check_part {
+                print!("{}", silver::build::check_part(&spec, &env)?);
+                return Ok(());
+            }
+            let mut named = Vec::new();
+            for entry in &noise {
+                let (label, file) = entry.split_once('=').ok_or_else(|| {
+                    Error::load(
+                        "--noise",
+                        Place::File,
+                        format!("`{entry}` is not NAME=FILE"),
+                    )
+                })?;
+                parse_name(label).map_err(|why| Error::load("--noise", Place::File, why))?;
+                named.push((label.to_string(), PathBuf::from(file)));
+            }
+            let report = silver::build::build(
+                &silver::build::Args {
+                    name: name.as_deref().unwrap_or_default(),
+                    parts: &part,
+                    audit: audit.as_deref(),
+                    archive_sha256: archive_sha256.as_deref(),
+                    bar,
+                    accept: accept_below_bar.as_deref(),
+                    noise: &named,
+                    annotations_license: annotations_license.as_deref().unwrap_or_default(),
+                    template: &template,
+                    out: out.as_deref().unwrap_or(Path::new("")),
+                },
+                &env,
+            )?;
+            print!("{report}");
+            Ok(())
+        }
+        SilverCommand::Check { silver, batch } => {
+            let dirs: Vec<PathBuf> = if batch.is_empty() {
+                silver::live::batches(&silver)?
+                    .into_iter()
+                    .map(|name| silver.join(name))
+                    .collect()
+            } else {
+                batch
+            };
+            if dirs.is_empty() {
+                println!(
+                    "silver check: no silver batch in {}; nothing to check",
+                    silver.display()
+                );
+                return Ok(());
+            }
+            let mut problems = Vec::new();
+            for dir in &dirs {
+                let loaded = silver::layout::Batch::load(dir)?;
+                match silver::check::check(&loaded) {
+                    Ok(done) => println!(
+                        "silver check: {} passes: {} sentences, {} words, {} parts, {} runs{}",
+                        loaded.name,
+                        done.sentences,
+                        done.words,
+                        done.parts,
+                        done.runs,
+                        if done.audit {
+                            ", audited"
+                        } else {
+                            ", no audit"
+                        }
+                    ),
+                    Err(found) => problems.extend(
+                        found
+                            .0
+                            .into_iter()
+                            .map(|error| Error::load(&loaded.name, Place::File, error.to_string())),
+                    ),
+                }
+            }
+            Problems::check(problems, ())
+        }
+        SilverCommand::Standing {
+            voters,
+            tests_corpus,
+            pool,
+        } => {
+            let live = silver::live::Live::read(&pool.silver, &pool.silver_retired)?;
+            if live.names.is_empty() {
+                println!(
+                    "silver standing: no live silver batch in {} ({} retired); nothing to hold",
+                    pool.silver.display(),
+                    live.retired.len()
+                );
+                return Ok(());
+            }
+            let env = silver::part::Env::read(&silver::part::EnvArgs {
+                pool: &pool,
+                tests_corpus: &tests_corpus,
+                voters: &voters,
+            })?;
+            print!("{}", silver::standing::standing(&live, &env)?);
+            Ok(())
+        }
+    }
 }
 
 fn rank_stage(dir: &Path, from: &Pool, per_repo: usize, top: usize) -> Result<(), Problems> {

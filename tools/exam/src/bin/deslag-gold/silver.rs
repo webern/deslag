@@ -15,5 +15,14 @@
 //! - [`standing`]: a live batch against today's gold and corpus.
 //! - [`datasheet`]: the numbers of a batch and the sheet rendered from them.
 
+pub mod build;
+pub mod check;
+pub mod datasheet;
+pub mod kit;
+pub mod layout;
 pub mod live;
+pub mod part;
+pub mod runs;
 pub mod score;
+pub mod standing;
+pub mod table;

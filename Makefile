@@ -17,11 +17,16 @@ LABEL_BIN := $(or $(CARGO_TARGET_DIR),target)/release
 GOLD_BIN := $(LABEL_BIN)/deslag-gold
 EXAM_BIN := $(LABEL_BIN)/deslag-exam
 
-# The cap on what labelling may spend, in dollars, counted over the whole ledger in .label/ledger.tsv;
-# LABEL_FLAGS go to label.py; LABEL_INTO is the directory under .label/<set> that judge writes and the
-# report reads; LABEL_REPORT_FLAGS go to the report, such as `--versus merge`.
+# The cap on what labelling may spend, in dollars, counted over the whole ledger, which lives in a state
+# directory shared by every checkout: $LABEL_STATE, or ${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label,
+# so a new worktree starts with the spend of the others (the first time, it imports .label/ledger.tsv);
+# LABEL_FLAGS go to label.py, to the step a target runs, and in generate-label-cost to its judge step, so
+# `--strict` and `--settle-from NAME` work there; LABEL_TAG_FLAGS are the flags of that target's tag step;
+# LABEL_INTO is the directory under .label/<set> that judge writes and the report reads;
+# LABEL_REPORT_FLAGS go to the report, such as `--versus merge`.
 MAX_USD ?= 8
 LABEL_FLAGS ?=
+LABEL_TAG_FLAGS ?=
 LABEL_INTO ?= merge
 LABEL_REPORT_FLAGS ?=
 
@@ -108,8 +113,9 @@ help:
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
-	@echo "clean-label      remove what the generate-label-* targets wrote under .label, but the ledger of"
-	@echo "                 what they spent, ledger.tsv"
+	@echo "clean-label      remove what the generate-label-* targets wrote under .label; the ledger of what they"
+	@echo "                 spent is in a state directory outside the checkout, and stays (an old"
+	@echo "                 .label/ledger.tsv stays too, to be imported once)"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
 	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs, with"
@@ -145,15 +151,18 @@ help:
 	@echo "generate-label-cost"
 	@echo "                 draw 500 training sentences, tag them with every voter and spaCy, adjudicate, and"
 	@echo "                 print dollars and minutes per thousand sentences; needs the big tier, spaCy, a key"
-	@echo "                 and MAX_USD of budget, so not in ci"
+	@echo "                 and MAX_USD of budget, so not in ci; LABEL_FLAGS reach its judge step (--strict),"
+	@echo "                 LABEL_TAG_FLAGS its tag step"
 	@echo "generate-label-dev"
 	@echo "                 have the voters tag deslag's dev gold's sentences, blind, into .label/dev; needs"
-	@echo "                 OPENROUTER_API_KEY; MAX_USD caps the ledger; LABEL_FLAGS reach label.py"
+	@echo "                 OPENROUTER_API_KEY; MAX_USD caps the ledger, kept in a state directory shared by every"
+	@echo "                 checkout; LABEL_FLAGS reach label.py"
 	@echo "generate-label-judge-dev"
 	@echo "                 merge the voters' tags of .label/dev, have Claude settle the disputes, and finish;"
 	@echo "                 needs OPENROUTER_API_KEY; LABEL_INTO names the output; with --spacy, merge-spacy,"
 	@echo "                 after the plain merge, whose answers it reuses; LABEL_FLAGS=\"--settle-from merge\" with"
-	@echo "                 LABEL_INTO=merge-gemma reuses them only where every voter's codes are the same"
+	@echo "                 another LABEL_INTO reuses them only where every voter's codes are the same, and only"
+	@echo "                 for a merge with the same model voters; LABEL_FLAGS=--strict exits 3 on open items"
 	@echo "generate-label-judge-owner"
 	@echo "                 the same for .label/owner"
 	@echo "generate-label-owner"
@@ -360,8 +369,10 @@ clean-harper:
 	rm -rf .harper
 
 # .label is what the generate-label-* targets write: the voters' replies, tags, merges and reports. The
-# ledger of what the models cost, .label/ledger.tsv, is the one file kept, since the cap on spending is
-# counted over it; delete it by hand to start the count again.
+# ledger of what the models cost lives in the state directory ($LABEL_STATE, or
+# ${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label), outside every checkout, so this leaves it alone;
+# delete it there by hand to start the count again. A .label/ledger.tsv from before is kept: it is
+# imported into the state directory the first time that does not have a ledger.
 clean-label:
 	@if [ -d .label ]; then find .label -mindepth 1 -maxdepth 1 ! -name ledger.tsv -exec rm -rf {} +; fi
 
@@ -491,18 +502,20 @@ generate-label-audit: build-label
 # and spaCy, merged and adjudicated by Claude, then the dollars and minutes each run took per thousand
 # sentences in .label/draw500/cost.tsv. The one target that spends on sentences nobody grades, and the
 # one that fixes the price of labelling the rest. Reads the big tier. Not in ci: it needs the key, spaCy
-# and the network. Its labels are the only ones that may train a model (`--trains yes`), and the judge
-# step takes no LABEL_FLAGS, which belong to the voters' step.
+# and the network. Its labels are the only ones that may train a model (`--trains yes`, which refuses a
+# sentence with the text of one of dev or owner). LABEL_FLAGS reach the judge step, so LABEL_FLAGS=--strict
+# stops it with exit 3 when an item is left open, instead of leaving its sentence out; the voters' step
+# takes LABEL_TAG_FLAGS. The last line says how many words were left out.
 generate-label-cost: build-label fetch-blobs fetch-spacy
 	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 120,45,25,15,120,45,25,15,30,25,20,15
-	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
+	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_TAG_FLAGS)
 	$(LABEL)/spacy.sh .label/draw500
-	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes
+	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes $(LABEL_FLAGS)
 	python3 $(LABEL)/label.py cost --dir .label/draw500
 
 # Deslag's dev gold's sentences, as tokens with no tags, tagged blind by each voter of
 # $(LABEL)/voters.json through OpenRouter into .label/dev/tags. The spend counts against MAX_USD over
-# the whole of .label/ledger.tsv. Needs OPENROUTER_API_KEY. LABEL_FLAGS reach label.py: try
+# the whole of the ledger in the state directory. Needs OPENROUTER_API_KEY. LABEL_FLAGS reach label.py: try
 # LABEL_FLAGS="--voter qwen --limit 1" first, or --dry-run to see a request and send none.
 generate-label-dev: build-label
 	@mkdir -p .label/dev
@@ -513,11 +526,13 @@ generate-label-dev: build-label
 # into .label/dev/$(LABEL_INTO)/labelled.conllu. For the variant with spaCy as a fourth voter on the part
 # of speech, run generate-label-spacy and then LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy: the adjudicator
 # answers each item the plain merge also had once, and that answer is reused, so the two differ by voting.
-# For other voters, say gemma for mistral, write a merge of its own and keep the first untouched:
-# LABEL_INTO=merge-gemma LABEL_FLAGS="--settle-from merge" reuses the plain merge's answer only for an
-# item shown with the very same codes from every voter, since an answer given with another voter's
-# codes in view would carry that voter into the new merge; any other item goes to the adjudicator.
-# The spaCy variant of that merge: LABEL_INTO=merge-gemma-spacy LABEL_FLAGS="--spacy --settle-from merge-gemma".
+# For the same voters with one run again, write a merge of its own and keep the first untouched:
+# LABEL_INTO=merge-again LABEL_FLAGS="--settle-from merge" reuses the plain merge's answer only for an
+# item shown with the very same codes from every voter; any other item goes to the adjudicator. A merge
+# whose model voters differ from the first's is refused: its answers were given with other codes in view.
+# The spaCy variant of that merge: LABEL_INTO=merge-again-spacy LABEL_FLAGS="--spacy --settle-from merge-again".
+# A word counts as agreed only when three model voters answered and agree; spaCy is never one of the
+# three, and fewer goes to the adjudicator (LABEL_FLAGS=--min-voters N changes that).
 # An item the adjudicator never settles leaves its sentence out of labelled.conllu and is counted; add
 # --strict to LABEL_FLAGS to exit 3 instead.
 generate-label-judge-dev: build-label

@@ -25,6 +25,9 @@ KEY_VARIABLE = "OPENROUTER_API_KEY"
 
 # HTTP statuses worth asking again for: the request timed out, or the service was busy or down. 520 to
 # 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
+# The reply was not JSON: a gateway page or half a body, which an endpoint sent, so it is its own.
+NOT_JSON = "the reply was not JSON"
+
 RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
 
 # Quantisations from least to most precise; those in one tier count as the same.
@@ -41,6 +44,11 @@ class ProviderMismatch(ApiError):
 
 class CutOff(ApiError):
     """A reply cut off at max_tokens: a bad reply, which the caller asks again in smaller pieces."""
+
+
+class ProviderRefused(ApiError):
+    """The provider refused the request: an error body in place of a completion, or a reply whose
+    finish reason is `content_filter`. It belongs to the endpoint, so another endpoint may answer."""
 
 
 def endpoints_url(model):
@@ -176,7 +184,7 @@ def parse_reply(response):
     if "error" in response and not response.get("choices"):
         error = response["error"]
         message = error.get("message") if isinstance(error, dict) else error
-        raise ApiError(f"the API answered with an error: {message}")
+        raise ProviderRefused(f"the API answered with an error: {message}")
     choices = response.get("choices") or []
     if not choices:
         raise ApiError("the reply has no choices")
@@ -267,13 +275,19 @@ class Urllib:
             # ledger still has it booked at its worst case. Only the type is kept, never the text.
             raise Retryable(type(error).__name__) from None
         except (json.JSONDecodeError, UnicodeDecodeError):
-            raise Retryable("the reply was not JSON") from None
+            raise Retryable(NOT_JSON) from None
 
 
 class Retryable(Exception):
     """A failure that asking again may fix: a timeout, a busy service, a rate limit. Its text is a
     status or an exception type, safe to print. `after` is the wait in seconds the server asked for,
-    and `status` the HTTP status, if there was one (read from a reason `HTTP 429` if not given)."""
+    and `status` the HTTP status, if there was one (read from a reason `HTTP 429` if not given).
+
+    `owned` says whose failure it is. An answer from the endpoint, HTTP 429 or 5xx, or a reply that
+    is not JSON, is the endpoint's own, and another endpoint of the model may do better. Nothing
+    else is: a connection refused, a name that does not resolve, a timeout with no answer, a dropped
+    connection and a 408 or 425 are as likely to be the network here, or OpenRouter, as the endpoint,
+    and every endpoint would fail the same way."""
 
     def __init__(self, reason, after=None, status=None):
         super().__init__(reason)
@@ -283,16 +297,24 @@ class Retryable(Exception):
             status = int(found.group(1)) if found else None
         self.status = status
 
+    @property
+    def owned(self):
+        if self.status is not None:
+            return self.status == 429 or self.status >= 500
+        return str(self) == NOT_JSON
+
 
 class RetriesExhausted(ApiError):
     """A call still failing after every wait it was allowed (a rate limit, a server error, a timeout, a
     dropped connection). `status` is that of the last failure, if it had one; `reason` is its text, a
-    status or an exception type."""
+    status or an exception type. `owned` is [Retryable.owned] of the last failure: whether it was the
+    endpoint's own."""
 
-    def __init__(self, message, status=None, reason=""):
+    def __init__(self, message, status=None, reason="", owned=False):
         super().__init__(message)
         self.status = status
         self.reason = reason
+        self.owned = owned
 
 
 def retry_after(headers, now=time.time):
@@ -335,7 +357,7 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
         except Retryable as error:
             if attempt + 1 == attempts:
                 raise RetriesExhausted(
-                    f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status, str(error)
+                    f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status, str(error), error.owned
                 ) from None
             wait = min(longest, base * (2 ** attempt))
             wait = wait * (0.5 + 0.5 * rng())
@@ -346,6 +368,7 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
                     f"{error}, after {attempt + 1} attempts and {waited:.0f} s of waiting, the most allowed",
                     error.status,
                     str(error),
+                    error.owned,
                 ) from None
             if on_retry:
                 on_retry(attempt + 1, attempts, str(error), wait)

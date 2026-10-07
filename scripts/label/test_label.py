@@ -21,6 +21,7 @@ import subprocess
 import tempfile
 import threading
 import unittest
+import unittest.mock
 
 import guard
 import label
@@ -117,8 +118,9 @@ class FakeGold:
         label.write(os.path.join(directory, "tags", f"{name}.retry.txt"),
                     "".join(batch_line(*s) + "\n" for s in SENTENCES if s[0] not in good))
 
-    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False):
+    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False, min_voters=None):
         self.calls.append(("merge", into, list(voters)))
+        self.min_voters = min_voters
         self.settled_path = settled
         self.same_votes = same_votes
         already = set()
@@ -226,6 +228,14 @@ def with_fallbacks(**fallbacks):
     return config
 
 
+def tolerant(share=0.5, config=None):
+    """CONFIG, or `config`, that lets `share` of a run's sentences abstain before it fails: the fixture
+    has three sentences, and one abstaining is a third of them."""
+    config = copy.deepcopy(config or CONFIG)
+    config["settings"]["abstain_limit"] = share
+    return config
+
+
 def priced(cost):
     """A responder that answers every sentence rightly, and bills `cost` for the call."""
 
@@ -252,9 +262,16 @@ class Base(unittest.TestCase):
         self.label_root = os.path.join(self.root, ".label")
         self.dir = os.path.join(self.label_root, "dev")
         label.write(os.path.join(self.dir, "sample.conllu"), skeleton())
-        self.saved = {name: os.environ.get(name) for name in ("OPENROUTER_API_KEY", guard.ROOT_VARIABLE)}
+        # The ledger and the run ids live in a state directory outside the checkout: here, a temporary
+        # one, never the real one.
+        self.state = os.path.join(self.root, "state")
+        self.saved = {
+            name: os.environ.get(name)
+            for name in ("OPENROUTER_API_KEY", guard.ROOT_VARIABLE, ledger.STATE_VARIABLE)
+        }
         os.environ["OPENROUTER_API_KEY"] = self.KEY
         os.environ[guard.ROOT_VARIABLE] = self.label_root
+        os.environ[ledger.STATE_VARIABLE] = self.state
         self.addCleanup(self.restore_environment)
         # What the Make target would write for the gold: here, the fixture's own skeleton.
         self.saved_generator = guard.GENERATOR
@@ -272,7 +289,7 @@ class Base(unittest.TestCase):
                 os.environ[name] = value
 
     def ledger(self):
-        return ledger.Ledger(self.label_root)
+        return ledger.Ledger(self.state)
 
     def runner(self, transport, max_usd=10.0, gold=None, config=None, directory=None):
         return label.Runner(
@@ -825,7 +842,7 @@ class TagTests(Base):
 
     def test_at_most_two_rounds_of_retries_and_then_the_sentences_are_reported(self):
         transport = FakeTransport(lambda body, count: chat("d1: N.s\nd2: N.s N.s N.s _\nd3: N.s N.s _"))
-        runner = self.runner(transport)
+        runner = self.runner(transport, config=tolerant())
         run, left = runner.tag("two")
         self.assertEqual([line.split(":")[0] for line in left], ["d1"])
         # Two batches, then d1 asked again twice.
@@ -1063,7 +1080,7 @@ class LedgerTests(Base):
         self.assertEqual([first, second, third], ["r1", "r2", "r3"])
         context = multiprocessing.get_context("fork")
         barrier, results = context.Barrier(4), context.Queue()
-        workers = [context.Process(target=_new_run_once, args=(self.label_root, barrier, results)) for _ in range(4)]
+        workers = [context.Process(target=_new_run_once, args=(self.state, barrier, results)) for _ in range(4)]
         for worker in workers:
             worker.start()
         for worker in workers:
@@ -1271,7 +1288,7 @@ class ResumeTests(Base):
 
     def test_a_voter_with_no_good_line_for_a_sentence_abstains_and_the_run_exits_0(self):
         transport = FakeTransport(lambda body, count: chat("d1: N.s\nd2: N.s N.s N.s _\nd3: N.s N.s _"))
-        code, out = self.command(transport, "--voter", "two")
+        code, out = self.command(transport, "--voter", "two", config=tolerant())
         self.assertEqual(code, 0)
         self.assertIn("abstains on 1 sentences", out)
         self.assertEqual(len(transport.posts), 4, "two batches, then the failed sentence twice more")
@@ -1829,7 +1846,7 @@ class RoundThreeTests(Base):
         models = label.load_config()["models"]
         self.assertEqual(
             (models["deepseek"]["provider"], models["deepseek"]["provider_fallback"]),
-            ("gmicloud/fp8", ["streamlake/fp8", "deepinfra/fp8"]))
+            ("gmicloud/fp8", ["streamlake/fp8"]), "deepinfra/fp8 loops until max_tokens: no fallback to it")
         self.assertEqual(models["qwen"]["provider_fallback"], ["parasail/fp8"])
         self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
 
@@ -1933,7 +1950,7 @@ class RoundThreeTests(Base):
 
     def test_a_sentence_cut_off_alone_abstains_and_is_not_asked_again(self):
         transport = self.cut_when(lambda ids: "d2" in ids)
-        run, left = self.runner(transport).tag("two")
+        run, left = self.runner(transport, config=tolerant()).tag("two")
         self.assertEqual(len(left), 1)
         self.assertTrue(left[0].startswith("d2"))
         self.assertEqual([asked_ids(body) for body in transport.posts], [["d1", "d2"], ["d1"], ["d2"], ["d3"]],
@@ -1943,7 +1960,7 @@ class RoundThreeTests(Base):
         self.assertTrue(any("1 sentences were cut off even alone and abstain" in line for line in self.said))
         # A rerun of the complete run pays for nothing; naming it asks nothing either.
         again = FakeTransport(answer_all)
-        self.runner(again).tag("two", resume="r1")
+        self.runner(again, config=tolerant()).tag("two", resume="r1")
         self.assertEqual(again.posts, [])
 
     def test_a_retry_that_is_cut_off_is_asked_again_in_halves_too(self):
@@ -1968,19 +1985,19 @@ class RoundThreeTests(Base):
 
     def test_a_reply_cut_off_at_max_tokens_is_not_saved_and_is_not_paid_for_again_on_a_rerun(self):
         cut = FakeTransport(lambda body, count: chat("d1: N.s", provider="Bare", finish="length"))
-        run, left = self.runner(cut).tag("two")
+        run, left = self.runner(cut, config=tolerant(1.0)).tag("two")
         self.assertEqual(len(left), 3, "every sentence abstains")
         folder = os.path.join(self.dir, "raw", "two", "r1")
         self.assertEqual([f for f in os.listdir(folder) if f.endswith(".reply.txt")], [])
         self.assertEqual([f for f in os.listdir(folder) if f.endswith(".lines.txt")], ["empty.lines.txt"])
         self.assertEqual(len(cut.posts), 4)
         second = FakeTransport(answer_all)
-        self.runner(second).tag("two", resume="r1")
+        self.runner(second, config=tolerant(1.0)).tag("two", resume="r1")
         self.assertEqual(second.posts, [], "the cut-off asks are refused again without a call")
 
     def test_a_cut_off_refusal_saved_before_the_flag_existed_is_still_a_cut_off(self):
         cut = FakeTransport(lambda body, count: chat("d1: N.s", provider="Bare", finish="length"))
-        self.runner(cut).tag("two")
+        self.runner(cut, config=tolerant(1.0)).tag("two")
         folder = os.path.join(self.dir, "raw", "two", "r1")
         for name in os.listdir(folder):
             if name.endswith(".rejected.json"):
@@ -1989,7 +2006,7 @@ class RoundThreeTests(Base):
                 del saved["cutoff"]
                 label.write(path, json.dumps(saved))
         second = FakeTransport(answer_all)
-        run, left = self.runner(second).tag("two", resume="r1")
+        run, left = self.runner(second, config=tolerant(1.0)).tag("two", resume="r1")
         self.assertEqual((run, second.posts, len(left)), ("r1", [], 3), "r1 goes on and asks for nothing")
 
     def test_a_cut_off_adjudicator_part_leaves_its_items_open_and_they_are_asked_again(self):
@@ -2045,9 +2062,9 @@ class RoundThreeTests(Base):
             self.runner(FakeTransport(answer_all, WIDE_LISTING), config=config).tag("one", resume="r1")
         self.assertIn("Runs=r2", label.read(os.path.join(self.dir, "tags", "one.conllu")).replace(" = ", "="))
 
-    def test_a_timeout_falls_back_too_and_the_next_that_fails_is_abandoned_in_turn(self):
+    def test_a_server_error_falls_back_too_and_the_next_that_fails_is_abandoned_in_turn(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
-        transport = self.failing({"host/fp8", "alt/fp8"}, "timeout")
+        transport = self.failing({"host/fp8", "alt/fp8"}, "HTTP 503")
         run, _ = self.runner(transport, config=config).tag("one")
         self.assertEqual(run, "r3")
         flags = [json.loads(label.read(self.run_json("one", r))).get("abandoned") for r in ("r1", "r2", "r3")]
@@ -2392,8 +2409,537 @@ class OutsideTaggerTests(Base):
         table = label.cost_table(runner.write_runs(), 3)
         row = table.splitlines()[1].split("\t")
         # Two calls at $0.30 for three sentences: $0.60 per 3, so $200 per 1000.
-        self.assertEqual(row[:3], ["r1", "voter", "two"])
-        self.assertEqual(row[5], "200.0000")
+        self.assertEqual(row[:4], ["r1", "voter", "two", "complete"])
+        self.assertEqual(row[6], "200.0000")
+
+
+class RoundFourTests(Base):
+    """What the fourth audit asked for: a limit on failure, endpoint switching only for the endpoint's
+    own failures, three voters, a safe `--settle-from`, statuses, a shared state directory."""
+
+    def runner(self, transport, config=None, **more):
+        config = copy.deepcopy(config or CONFIG)
+        config["settings"].update(pause_s=0, backoff_s=0)
+        return super().runner(transport, config=config, **more)
+
+    def args(self, *more):
+        return label.parser().parse_args(["tag", "--dir", self.dir, "--max-usd", "10", *more])
+
+    def command(self, transport, *more, config=None, gold=None):
+        config = copy.deepcopy(config or CONFIG)
+        config["settings"].update(pause_s=0, backoff_s=0)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.command_tag(self.args(*more), config, transport, gold or FakeGold())
+        return code, out.getvalue(), err.getvalue()
+
+    def run_json(self, name, run):
+        return json.loads(label.read(os.path.join(self.dir, "raw", name, run, "run.json")))
+
+    def statuses(self):
+        return [(row["run"], row["status"]) for row in self.runs_rows()]
+
+    @staticmethod
+    def batches_of(size, config=None):
+        config = copy.deepcopy(config or CONFIG)
+        config["settings"]["batch_size"] = size
+        return config
+
+    @staticmethod
+    def cut_off(body, count=0):
+        return chat("d1: N.s", provider=PROVIDERS[body["provider"]["order"][0]], finish="length")
+
+    @staticmethod
+    def wrong_codes(body, count=0):
+        return chat("\n".join(f"{i}: N.s" for i in asked_ids(body)), provider=PROVIDERS[body["provider"]["order"][0]])
+
+    def judged(self, gold):
+        """`judge` of voters one and two, whose tags are made from right answers."""
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all), gold=gold).tag(name)
+
+    # -- 1. the failure limit
+
+    def test_a_run_that_mostly_abstains_ends_failed_and_tag_exits_non_zero(self):
+        code, out, err = self.command(FakeTransport(self.wrong_codes), "--voter", "two")
+        self.assertEqual(code, label.EXIT_FAILED)
+        self.assertNotEqual(code, 0)
+        self.assertIn("failed", err)
+        self.assertIn("3 of 3 sentences abstain", err)
+        self.assertNotIn("done", out, "it does not say it is done")
+        record = self.run_json("two", "r1")
+        self.assertTrue(record["failed"])
+        self.assertNotIn("complete", record)
+        self.assertEqual(self.statuses(), [("r1", "failed")])
+        # Nothing continues it, it does not hide a rerun, and a merge takes no tags from it.
+        runner = self.runner(None)
+        self.assertIsNone(runner.incomplete_run("two"))
+        self.assertIsNone(runner.complete_run("two"))
+        label.write(os.path.join(self.dir, "tags", "two.conllu"), "# Runs = r1\n")
+        with self.assertRaisesRegex(label.GoldError, "did not finish"):
+            runner.check_tags_run("two")
+        with self.assertRaisesRegex(openrouter.ApiError, "r1 failed"):
+            self.runner(FakeTransport(answer_all)).tag("two", resume="r1")
+        again = FakeTransport(answer_all)
+        code, _, _ = self.command(again, "--voter", "two")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.statuses(), [("r1", "failed"), ("r2", "complete")])
+
+    def test_more_than_a_quarter_by_default_and_the_share_is_a_setting(self):
+        settings = label.load_config()["settings"]
+        self.assertEqual((settings["abstain_limit"], settings["failure_budget"]), (0.25, 40))
+
+        def one_bad(body, count):
+            return chat("d1: N.s N.s N.s _\nd2: N.s\nd3: N.s N.s _", provider="Bare")
+
+        with self.assertRaises(label.RunFailed):
+            self.runner(FakeTransport(one_bad), config=tolerant(0.33)).tag("two")
+        run, left = self.runner(FakeTransport(one_bad), config=tolerant(0.34)).tag("two", again=True)
+        self.assertEqual(len(left), 1)
+        self.assertEqual(self.statuses(), [("r1", "failed"), ("r2", "complete")])
+        for bad in (-1, "x", True, 1.5):
+            config = copy.deepcopy(label.load_config())
+            config["settings"]["abstain_limit"] = bad
+            path = os.path.join(self.root, "voters.json")
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "abstain_limit"):
+                label.load_config(path)
+
+    def test_a_smoke_run_is_not_failed_for_abstaining(self):
+        run, left = self.runner(FakeTransport(self.wrong_codes)).tag("two", limit=1)
+        self.assertEqual(self.statuses(), [("r1", "smoke")])
+
+    def test_replies_cut_off_on_both_halves_of_a_split_end_the_run_failed_after_three_calls(self):
+        config = self.batches_of(3)
+        transport = FakeTransport(self.cut_off)
+        code, out, err = self.command(transport, "--voter", "two", config=config)
+        self.assertEqual(len(transport.posts), 3, "the batch and its two halves, not 2n-1 calls")
+        self.assertEqual(code, label.EXIT_FAILED)
+        self.assertIn("cut off", err)
+        self.assertEqual(self.statuses(), [("r1", "failed")])
+        self.assertIn("cut off", self.run_json("two", "r1")["failed_because"])
+        self.assertNotIn("complete", self.run_json("two", "r1"))
+
+    def test_an_endpoint_that_cuts_every_reply_off_falls_back_to_the_next_endpoint(self):
+        config = self.batches_of(3, with_fallbacks(one=["alt/fp8"]))
+
+        def respond(body, count):
+            return self.cut_off(body) if body["provider"]["order"] == ["host/fp8"] else answer_all(body)
+
+        transport = FakeTransport(respond, WIDE_LISTING)
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r2", []))
+        self.assertEqual([p["provider"]["order"] for p in transport.posts], [["host/fp8"]] * 3 + [["alt/fp8"]])
+        self.assertEqual(self.statuses(), [("r1", "abandoned"), ("r2", "complete")])
+
+    def test_backoff_halving_and_switching_draw_on_one_budget(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        config["settings"]["failure_budget"] = 4
+        busy = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")), WIDE_LISTING)
+        with self.assertRaisesRegex(label.BudgetSpent, "budget of 4"):
+            self.runner(busy, config=config).tag("one")
+        self.assertEqual(len(busy.posts), 5, "three attempts at the first endpoint, two at the next, then it stops")
+        # Cut-off calls come out of the same budget.
+        config = self.batches_of(3)
+        config["settings"]["failure_budget"] = 2
+        cut = FakeTransport(self.cut_off)
+        with self.assertRaisesRegex(label.BudgetSpent, "budget of 2"):
+            self.runner(cut, config=config).tag("two")
+        self.assertEqual(len(cut.posts), 3)
+        self.assertEqual(self.statuses()[-1], ("r3", "stopped"))
+        self.assertEqual(self.runner(None).incomplete_run("two"), "r3", "the run is kept")
+
+    def test_the_budget_is_new_for_each_step_and_a_saved_refusal_costs_none(self):
+        config = self.batches_of(3)
+        config["settings"]["failure_budget"] = 2
+        with self.assertRaises(label.BudgetSpent):
+            self.runner(FakeTransport(self.cut_off), config=config).tag("two")
+        again = FakeTransport(self.cut_off)
+        with self.assertRaises(label.EndpointExhausted):
+            self.runner(again, config=config).tag("two")
+        self.assertEqual(again.posts, [], "the refused asks are refused again from their saved records")
+
+    def test_every_adjudicator_part_cut_off_ends_the_run_failed_and_judge_exits_5(self):
+        class Parts(FakeGold):
+            def merge(self, *args, **more):
+                out = super().merge(*args, **more)
+                folder = os.path.join(args[0], args[1])
+                for number in (2, 3, 4):
+                    label.write(os.path.join(folder, f"worklist-{number:02d}.txt"), "Adjudicate.\n\nSlots:\nd1.2: \n")
+                return out
+
+        gold = Parts()
+        self.judged(gold)
+        transport = FakeTransport(self.cut_off)
+        runner = self.runner(transport, gold=gold)
+        self.assertEqual(runner.settings["per_part"], 60)
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            runner.judge("merge", [("one", False), ("two", False)])
+        self.assertTrue(caught.exception.failed)
+        self.assertEqual(len(transport.posts), label.CUT_OFF_STREAK, "stopped after three parts in a row")
+        self.assertEqual(self.statuses()[-1], ("r3", "failed"))
+        out, err = io.StringIO(), io.StringIO()
+        gold = Parts()
+        args = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "10", "--into", "merge-b"])
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.command_judge(args, tolerant(), FakeTransport(self.cut_off), gold)
+        self.assertEqual(code, label.EXIT_FAILED)
+
+    # -- 2. whose failure it is
+
+    def test_which_failures_belong_to_the_endpoint(self):
+        for reason, owned in (
+            ("HTTP 429", True), ("HTTP 500", True), ("HTTP 503", True), ("HTTP 524", True), ("HTTP 529", True),
+            (openrouter.NOT_JSON, True), ("timeout", False), ("could not connect, ConnectionRefusedError", False),
+            ("could not connect, gaierror", False), ("ConnectionResetError", False), ("IncompleteRead", False),
+            ("HTTP 408", False), ("HTTP 425", False),
+        ):
+            self.assertEqual(openrouter.Retryable(reason).owned, owned, reason)
+
+    def test_a_network_error_here_stops_the_run_and_a_rerun_continues_it(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        for reason in ("could not connect, ConnectionRefusedError", "could not connect, gaierror", "timeout",
+                       "ConnectionResetError"):
+            with self.subTest(reason):
+                def respond(body, count):
+                    if count > 1:
+                        raise openrouter.Retryable(reason)
+                    return answer_all(body)
+
+                transport = FakeTransport(respond, WIDE_LISTING)
+                before = len(self.runs_rows()) if os.path.isfile(os.path.join(self.dir, "runs.tsv")) else 0
+                with self.assertRaises(label.EndpointExhausted) as caught:
+                    self.runner(transport, config=config).tag("one", again=True)
+                run = caught.exception.run
+                self.assertTrue(caught.exception.local)
+                self.assertEqual({p["provider"]["order"][0] for p in transport.posts}, {"host/fp8"},
+                                 "no other endpoint was tried")
+                self.assertNotIn("abandoned", self.run_json("one", run))
+                self.assertEqual(len(self.runs_rows()), before + 1, "and no other run was made")
+                self.assertEqual(self.statuses()[-1][1], "stopped")
+                self.assertEqual(self.runner(None, config=config).incomplete_run("one"), run)
+                back = FakeTransport(answer_all, WIDE_LISTING)
+                again, left = self.runner(back, config=config).tag("one")
+                self.assertEqual((again, left), (run, []), "the network is back: the same run goes on")
+                self.assertEqual(len(back.posts), 1, "and asks only for the batch it had not got")
+                self.assertEqual(self.statuses()[-1], (run, "complete"))
+
+    def test_a_network_error_stops_the_command_with_exit_2_and_says_so(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        down = FakeTransport(lambda body, count: (_ for _ in ()).throw(
+            openrouter.Retryable("could not connect, ConnectionRefusedError")), WIDE_LISTING)
+        code, out, err = self.command(down, "--voter", "one", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("network", err)
+        self.assertIn("r1 is kept", err)
+        self.assertNotIn("abandoned", err)
+        self.assertEqual(len(down.posts), 3, "http_attempts, at the one endpoint")
+
+    def test_a_provider_refusal_falls_back_to_the_next_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        for refusal in ({"error": {"message": "the content was refused"}},
+                        chat("", provider="Host", finish="content_filter")):
+            with self.subTest(str(refusal)[:30]):
+                def respond(body, count):
+                    if body["provider"]["order"] == ["host/fp8"]:
+                        return copy.deepcopy(refusal)
+                    return answer_all(body)
+
+                transport = FakeTransport(respond, WIDE_LISTING)
+                run, left = self.runner(transport, config=config).tag("one", again=True)
+                self.assertEqual(left, [])
+                self.assertEqual(self.run_json("one", run)["endpoint"], "alt/fp8")
+                abandoned = [r for r in ("r1", "r3") if os.path.isfile(os.path.join(self.dir, "raw", "one", r, "run.json"))
+                             and self.run_json("one", r).get("abandoned")]
+                self.assertTrue(abandoned)
+                self.assertIn("provider refusal", self.run_json("one", abandoned[-1])["abandoned_because"])
+
+    def test_a_refusal_is_not_paid_for_again_and_a_refused_run_with_no_endpoint_left_stops(self):
+        refusal = FakeTransport(lambda body, count: {"error": {"message": "no"}})
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(refusal).tag("two")
+        self.assertFalse(caught.exception.local)
+        self.assertEqual(len(refusal.posts), 1)
+        again = FakeTransport(lambda body, count: {"error": {"message": "no"}})
+        with self.assertRaises(label.EndpointExhausted):
+            self.runner(again).tag("two")
+        self.assertEqual(again.posts, [], "the same request is refused again from its saved record")
+
+    def test_the_shipped_config_has_no_fallback_to_deepinfra_for_deepseek_and_no_stale_note(self):
+        config = label.load_config()
+        self.assertNotIn("deepinfra/fp8", config["models"]["deepseek"]["provider_fallback"])
+        self.assertNotIn("never switches", config["note"])
+        self.assertNotIn("--again --endpoint", config["note"])
+        self.assertIn("network error", config["note"])
+
+    # -- 3. three voters
+
+    def test_judge_passes_the_minimum_of_voters_only_when_given(self):
+        gold = FakeGold()
+        gold.dispute = []
+        self.judged(gold)
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False), ("two", False)])
+        self.assertIsNone(gold.min_voters, "deslag-gold's own default of three applies")
+        self.runner(FakeTransport(answer_all), gold=gold).judge(
+            "merge", [("one", False), ("two", False)], min_voters=2)
+        self.assertEqual(gold.min_voters, 2)
+        arguments = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "1", "--min-voters", "2"])
+        self.assertEqual(arguments.min_voters, 2)
+        self.assertIsNone(label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "1"]).min_voters)
+        cli = label.GoldCli("deslag-gold")
+        seen = []
+        cli._run = lambda directory, *args: seen.append(args)
+        cli.merge("d", "merge", [("one", False)], 60, min_voters=2)
+        cli.merge("d", "merge", [("one", False)], 60)
+        self.assertIn("--min-voters", seen[0])
+        self.assertNotIn("--min-voters", seen[1])
+
+    # -- 4. --settle-from
+
+    def test_settle_from_is_a_plain_merge_name_inside_the_sample_and_not_into(self):
+        gold = FakeGold()
+        self.judged(gold)
+        voters = [("one", False), ("two", False)]
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge", voters)
+        elsewhere = os.path.join(self.label_root, "elsewhere")
+        label.write(os.path.join(elsewhere, "adjudicated.tsv"), "item\tanswer\trun\n")
+        os.symlink(elsewhere, os.path.join(self.dir, "linked"))
+        merges = len([call for call in gold.calls if call[0] == "merge"])
+        for bad in ("../elsewhere", "merge/..", "/etc", elsewhere, "a/b", "..", ".", "", "linked", "merge-x y"):
+            with self.subTest(bad):
+                with self.assertRaises(label.GoldError):
+                    self.runner(FakeTransport(answer_all), gold=gold).judge(
+                        "merge-b", voters, settle_from=bad)
+        with self.assertRaisesRegex(label.GoldError, "is the merge being written"):
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge", voters, settle_from="merge")
+        with self.assertRaisesRegex(label.GoldError, "does not exist"):
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge-b", voters, settle_from="nothing")
+        self.assertEqual(len([call for call in gold.calls if call[0] == "merge"]), merges, "nothing was merged")
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge-b", voters, settle_from="merge")
+        self.assertEqual(gold.settled_path, os.path.join(self.dir, "merge", "adjudicated.tsv"))
+
+    def test_the_spacy_default_of_merge_is_refused_when_it_is_the_merge_written(self):
+        gold = FakeGold()
+        self.judged(gold)
+        arguments = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "10", "--spacy"])
+        with self.assertRaisesRegex(label.GoldError, "is the merge being written"):
+            label.command_judge(arguments, CONFIG, FakeTransport(answer_all), gold)
+
+    # -- 5. runs.tsv, cost.tsv
+
+    def test_runs_tsv_says_what_became_of_each_run_and_counts_every_call_that_was_paid(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        config = self.batches_of(3, config)
+
+        def respond(body, count):
+            if body["provider"]["order"] == ["host/fp8"]:
+                return chat("d1: N.s", provider="Host", finish="length", prompt=100, completion=20, cost=0.01)
+            return answer_all(body)
+
+        transport = FakeTransport(respond, WIDE_LISTING)
+        self.runner(transport, config=config).tag("one")
+        self.runner(FakeTransport(answer_all, WIDE_LISTING), config=config).tag("two", limit=1)
+        with self.assertRaises(label.RunFailed):
+            self.runner(FakeTransport(self.wrong_codes, WIDE_LISTING), config=config).tag("two", again=True)
+        first, *_ = self.runs_rows()
+        self.assertEqual(self.statuses(), [("r1", "abandoned"), ("r2", "complete"), ("r3", "smoke"), ("r4", "failed")])
+        self.assertEqual(first["calls"], "3", "the three cut-off calls are calls, tokens and seconds of the run")
+        self.assertEqual((first["prompt_tokens"], first["completion_tokens"]), ("300", "60"))
+        self.assertAlmostEqual(float(first["cost_usd"]), 0.03 + 0.0, places=2)
+        lines = label.read(os.path.join(self.dir, "raw", "one", "r1", "calls.jsonl")).splitlines()
+        self.assertEqual(len(lines), len(transport.posts) - 1, "one row for every POST that was answered")
+        table = label.cost_table(self.runner(None).write_runs(), 3).splitlines()
+        self.assertEqual(table[0].split("\t")[:4], ["run", "role", "name", "status"])
+        self.assertEqual([row.split("\t")[3] for row in table[1:]], ["abandoned", "complete", "smoke", "failed"])
+
+    def test_a_stopped_run_and_an_outside_run_have_their_statuses(self):
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.ApiError("HTTP 400: x")))).tag("two")
+        self.assertEqual(self.statuses(), [("r1", "stopped")])
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None), "spacy", source, "model", None, None)
+        self.assertEqual(self.statuses(), [("r1", "stopped"), ("r2", "complete")])
+
+    def test_run_json_is_written_by_a_temporary_file_and_a_rename(self):
+        self.runner(FakeTransport(answer_all)).tag("two", limit=1)
+        path = os.path.join(self.dir, "raw", "two", "r1", "run.json")
+        before = label.read(path)
+        renamed = []
+        real = os.replace
+
+        def spy(source, target):
+            renamed.append((source, target))
+            real(source, target)
+
+        runner = self.runner(None)
+        with unittest.mock.patch("os.replace", spy):
+            runner.update_run("two", "r1", note="x")
+        self.assertEqual([target for _, target in renamed], [path])
+        self.assertNotEqual(renamed[0][0], path)
+        self.assertEqual(json.loads(label.read(path))["note"], "x")
+        # A crash at the rename leaves the old file whole.
+        label.write(path, before)
+
+        def crash(source, target):
+            raise OSError("killed")
+
+        with unittest.mock.patch("os.replace", crash), self.assertRaises(OSError):
+            runner.update_run("two", "r1", note="y")
+        self.assertEqual(label.read(path), before)
+        json.loads(label.read(path))
+
+    # -- 6. the state directory
+
+    def test_the_state_directory_is_outside_the_checkout_and_follows_the_environment(self):
+        self.assertTrue(ledger.state_dir().startswith(self.root), "the tests use a temporary one")
+        self.assertFalse(ledger.state_dir().startswith(self.label_root))
+        saved = {name: os.environ.get(name) for name in ("LABEL_STATE", "XDG_STATE_HOME", "HOME")}
+        self.addCleanup(lambda: [os.environ.pop(n, None) if v is None else os.environ.__setitem__(n, v)
+                                 for n, v in saved.items()])
+        del os.environ["LABEL_STATE"]
+        os.environ["XDG_STATE_HOME"] = "/xdg/state"
+        os.environ["HOME"] = "/home/someone"
+        self.assertEqual(ledger.state_dir(), "/xdg/state/deslag-label")
+        del os.environ["XDG_STATE_HOME"]
+        self.assertEqual(ledger.state_dir(), "/home/someone/.local/state/deslag-label")
+        os.environ["XDG_STATE_HOME"] = ""
+        self.assertEqual(ledger.state_dir(), "/home/someone/.local/state/deslag-label")
+        os.environ["LABEL_STATE"] = os.path.join(self.root, "named")
+        self.assertEqual(ledger.state_dir(), os.path.join(self.root, "named"))
+
+    def test_the_ledger_and_run_ids_are_not_written_under_the_checkout(self):
+        self.runner(FakeTransport(answer_all)).tag("two")
+        self.assertTrue(os.path.isfile(os.path.join(self.state, "ledger.tsv")))
+        self.assertFalse(os.path.exists(os.path.join(self.label_root, "ledger.tsv")))
+        self.assertGreater(self.ledger().total(), 0)
+
+    def test_two_checkouts_share_the_cap_and_never_share_a_run_id(self):
+        other = os.path.join(self.root, "other", ".label")
+        a = ledger.open_ledger(self.label_root)
+        b = ledger.open_ledger(other)
+        self.assertEqual((a.new_run(), b.new_run(), a.new_run()), ("r1", "r2", "r3"))
+        a.reserve(1.0, 0.6, dir="d", run="r1", role="voter", name="n")
+        with self.assertRaises(ledger.CapExceeded):
+            b.reserve(1.0, 0.6, dir="d", run="r2", role="voter", name="n")
+
+    def test_the_first_use_imports_the_checkouts_ledger_once_and_numbers_runs_above_every_run_seen(self):
+        old = ledger.Ledger(self.label_root)
+        old._append(id="c-1", state="settled", run="r5", role="voter", name="n", cost_usd="0.50000000")
+        label.write(os.path.join(self.label_root, "dev", "runs.tsv"), "run\tmodel\nr1\ta\nr9\tb\n")
+        label.write(os.path.join(self.label_root, "deep", "er", "runs.tsv"), "run\tmodel\nr7\ta\n")
+        label.write(os.path.join(self.label_root, "owner", "runs.tsv"), "run\tmodel\nnot-a-run\tx\n")
+        self.assertFalse(os.path.exists(os.path.join(self.state, "ledger.tsv")))
+        fresh = ledger.open_ledger(self.label_root)
+        self.assertAlmostEqual(fresh.total(), 0.5, msg="what the checkout had spent counts against the cap")
+        self.assertEqual(fresh.new_run(), "r10", "above r9 of a runs.tsv, not just r5 of the ledger")
+        # Once: a later change to the old file is not imported, and the old file is left as it was.
+        old._append(id="c-2", state="settled", run="r6", role="voter", name="n", cost_usd="3.00000000")
+        again = ledger.open_ledger(self.label_root)
+        self.assertAlmostEqual(again.total(), 0.5)
+        self.assertEqual(again.new_run(), "r11")
+        self.assertAlmostEqual(old.total(), 3.5)
+
+    def test_a_checkout_with_runs_but_no_ledger_still_starts_its_ids_above_them(self):
+        label.write(os.path.join(self.label_root, "dev", "runs.tsv"), "run\tmodel\nr4\ta\n")
+        self.assertEqual(ledger.open_ledger(self.label_root).new_run(), "r5")
+        self.assertEqual(ledger.open_ledger(self.label_root).new_run(), "r6")
+
+    def test_a_runner_imports_the_checkouts_ledger_into_the_cap(self):
+        old = ledger.Ledger(self.label_root)
+        old._append(id="c-1", state="settled", run="r5", role="voter", name="n", cost_usd="9.50000000")
+        transport = FakeTransport(answer_all)
+        with self.assertRaises(ledger.CapExceeded):
+            self.runner(transport, max_usd=9.5001).tag("two")
+        self.assertEqual(transport.posts, [], "the cap counted what the checkout had spent")
+        run, _ = self.runner(FakeTransport(answer_all), max_usd=20.0).tag("two")
+        self.assertEqual(run, "r6")
+
+    # -- 8. adjudicator cut-offs, left-out words
+
+    def test_a_cut_off_adjudicator_part_is_asked_again_in_halves_of_the_part_size(self):
+        class Sizes(FakeGold):
+            sizes = []
+
+            def read_answers(self, directory, into, run, files, per_part):
+                self.sizes.append(per_part)
+                return super().read_answers(directory, into, run, files, per_part)
+
+        gold = Sizes()
+        self.judged(gold)
+        Sizes.sizes = []
+        runner = self.runner(FakeTransport(self.cut_off), gold=gold)
+        left = runner.judge("merge", [("one", False), ("two", False)])
+        self.assertEqual(sorted(left), ["d1.2", "d2.3"], "the items stay open and are left out")
+        self.assertEqual(Sizes.sizes, [30, 15, 8], "the retry parts are half the size after each cut-off round")
+        record = self.run_json("judge", "r3")
+        self.assertEqual(record["cut_off"], {"calls": 3, "open_items": 2})
+        self.assertNotIn("complete", record)
+        self.assertEqual(gold.left_open, True)
+
+    def test_a_round_without_a_cut_off_keeps_the_part_size(self):
+        class Sizes(FakeGold):
+            sizes = []
+
+            def read_answers(self, directory, into, run, files, per_part):
+                self.sizes.append(per_part)
+                return super().read_answers(directory, into, run, files, per_part)
+
+        gold = Sizes()
+        self.judged(gold)
+        Sizes.sizes = []
+        self.runner(FakeTransport(lambda body, count: chat("nothing", provider="Bare")), gold=gold).judge(
+            "merge", [("one", False), ("two", False)])
+        self.assertEqual(Sizes.sizes, [60, 60, 60])
+
+    def test_finish_leaves_words_open_only_when_there_are_open_items(self):
+        gold = FakeGold()
+        gold.dispute = []
+        self.judged(gold)
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False), ("two", False)])
+        self.assertFalse(gold.left_open, "no item was open, so a word Rust finds open is an error, not a count")
+
+    def test_the_make_targets_pass_label_flags_through_to_the_judge(self):
+        make = shutil.which("make")
+        if make is None:
+            self.skipTest("make is not installed")
+        repo = os.path.dirname(os.path.dirname(label.HERE))
+        for target in ("generate-label-cost", "generate-label-judge-dev", "generate-label-judge-owner"):
+            done = subprocess.run(
+                [make, "-n", "-C", repo, target, "LABEL_FLAGS=--strict --settle-from merge", "MAX_USD=1"],
+                capture_output=True, text=True, check=False,
+            )
+            judges = [line for line in done.stdout.splitlines() if "label.py judge" in line]
+            self.assertTrue(judges, f"{target}: {done.stdout}{done.stderr}")
+            self.assertTrue(all("--strict --settle-from merge" in line for line in judges), f"{target}: {judges}")
+
+    def test_the_cost_command_says_how_many_words_were_left_out(self):
+        draw = os.path.join(self.dir, "merge")
+        label.write(os.path.join(draw, "unsettled.tsv"), "sent_id\ttoken\tform\nd1\t3\tx\nd2\t1\ty\n")
+        out = io.StringIO()
+        arguments = label.parser().parse_args(["cost", "--dir", self.dir])
+        with contextlib.redirect_stdout(out):
+            label.command_cost(arguments, CONFIG)
+        self.assertIn("2 words the adjudicator never settled are left out", out.getvalue())
+
+    # -- 9. numbering
+
+    def test_files_are_ordered_by_their_numbers(self):
+        names = ["batch-100.txt", "batch-11.txt", "batch-02.txt", "batch-99.txt", "batch-01.txt"]
+        self.assertEqual(label.numbered(names),
+                         ["batch-01.txt", "batch-02.txt", "batch-11.txt", "batch-99.txt", "batch-100.txt"])
+        self.assertEqual(label.numbered(["retry-1-02-a.lines.txt", "batch-10.lines.txt", "batch-9.lines.txt"]),
+                         ["batch-9.lines.txt", "batch-10.lines.txt", "retry-1-02-a.lines.txt"])
+
+        class Many(FakeGold):
+            def batches(self, directory, size):
+                for number in range(1, 121):
+                    label.write(os.path.join(directory, "batches", f"batch-{number:02d}.txt"), "d1: 1 x\n")
+
+        files = self.runner(None, gold=Many()).batch_files()
+        self.assertEqual([os.path.basename(f) for f in files][:3] + [os.path.basename(files[-1])],
+                         ["batch-01.txt", "batch-02.txt", "batch-03.txt", "batch-120.txt"])
+        self.assertEqual([int(re.search(r"\d+", os.path.basename(f)).group()) for f in files], list(range(1, 121)))
 
 
 def gold_text():
@@ -2469,7 +3015,7 @@ class EndToEndTests(Base):
         runner = self.runner(transport, gold=gold)
         runner.tag("one")
         runner.tag("two")
-        left = runner.judge("merge", [("one", False), ("two", False)])
+        left = runner.judge("merge", [("one", False), ("two", False)], min_voters=2)
         self.assertEqual(left, {})
         text = label.read(os.path.join(self.dir, "merge", "labelled.conllu"))
         self.assertIn("Prov=adjudicated|Runs=r3", text)
@@ -2503,7 +3049,7 @@ class EndToEndTests(Base):
         runner.tag("one")
         runner.tag("two")
         with self.assertRaisesRegex(label.GoldError, "labelling draw"):
-            runner.judge("merge", [("one", False), ("two", False)], trains="yes")
+            runner.judge("merge", [("one", False), ("two", False)], trains="yes", min_voters=2)
         self.assertFalse(os.path.exists(os.path.join(self.dir, "merge", "labelled.conllu")))
 
     def test_a_voter_with_no_good_line_for_a_sentence_abstains_in_the_real_merge(self):
@@ -2518,11 +3064,11 @@ class EndToEndTests(Base):
                 lines.append(f"{sent_id}: " + " ".join(codes))
             return chat("\n".join(lines), provider=PROVIDERS[body["provider"]["order"][0]])
 
-        runner = self.runner(FakeTransport(respond), gold=gold)
+        runner = self.runner(FakeTransport(respond), gold=gold, config=tolerant())
         runner.tag("one")
         run, left = runner.tag("two")
         self.assertEqual(len(left), 1)
-        said = gold.merge(self.dir, "merge", [("one", False), ("two", False)], 60)
+        said = gold.merge(self.dir, "merge", [("one", False), ("two", False)], 60, min_voters=2)
         self.assertRegex(said, r"(?i)abstain")
         self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "worklist.tsv")))
 

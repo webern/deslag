@@ -1,5 +1,7 @@
-"""The spend ledger: cumulative across invocations, one file under `.label/`, kept so that a crash,
-a kill or a second process can only make it count too much, never too little.
+"""The spend ledger: cumulative across invocations, one file in a state directory outside every
+checkout, kept so that a crash, a kill or a second process can only make it count too much, never too
+little. The directory is `$LABEL_STATE`, or `${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label`, so
+every checkout and worktree of the repository shares one cap and one sequence of run ids.
 
 Money is booked in two steps. Before every POST, the first try and each retry alike, a row is
 appended at the call's worst case (the input at an upper estimate of its tokens plus `max_tokens` of
@@ -14,7 +16,9 @@ a reply that reports no usage. The total counts the last row of each `id`.
 that is started again after a stop cannot spend the cap twice. The check needs no history: an empty
 ledger has a total of zero and the first call is held to the cap like any other.
 
-Run ids come from here too, under the same lock, so no two runs of any sample or draw share one.
+Run ids come from here too, under the same lock, so no two runs of any sample, draw or checkout
+share one. The first time the state directory is used, a `.label/ledger.tsv` the checkout has is
+imported once, and the run ids start above the highest in it and in any `runs.tsv` under `.label/`.
 """
 
 import contextlib
@@ -22,8 +26,11 @@ import fcntl
 import math
 import os
 import re
+import shutil
 import time
 import uuid
+
+STATE_VARIABLE = "LABEL_STATE"
 
 COLUMNS = (
     "time", "id", "state", "dir", "run", "role", "name", "model", "provider", "prompt_tokens",
@@ -33,6 +40,26 @@ COLUMNS = (
 # Characters per token assumed for the worst case. English text is nearer four; code and non-Latin
 # text are nearer two, and this is a cap, so it leans to the expensive side.
 CHARS_PER_TOKEN = 2.0
+
+
+def state_dir():
+    """The directory the ledger and the run ids live in: `$LABEL_STATE`, or
+    `${XDG_STATE_HOME:-$HOME/.local/state}/deslag-label`. Tests set `LABEL_STATE`."""
+    given = os.environ.get(STATE_VARIABLE)
+    if given:
+        return os.path.realpath(given)
+    base = os.environ.get("XDG_STATE_HOME") or os.path.join(
+        os.environ.get("HOME") or os.path.expanduser("~"), ".local", "state"
+    )
+    return os.path.join(base, "deslag-label")
+
+
+def open_ledger(label_root, state=None):
+    """The ledger of the state directory, with the checkout's own `.label/ledger.tsv` and run ids
+    taken into it if it is new (see [Ledger.import_checkout])."""
+    ledger = Ledger(state or state_dir())
+    ledger.import_checkout(label_root)
+    return ledger
 
 
 class CapExceeded(Exception):
@@ -47,6 +74,24 @@ def worst_case(prompt_chars, max_tokens, price_in, price_out):
 def dollars(value):
     """`value` as the ledger writes it: eight places, rounded up so that a booking is never less."""
     return f"{math.ceil(float(value) * 1e8 - 1e-9) / 1e8:.8f}"
+
+
+def highest_in_runs_tables(root):
+    """The highest run number in the first column of any `runs.tsv` under `root`, or 0."""
+    highest = 0
+    for folder, _, names in os.walk(root):
+        if "runs.tsv" not in names:
+            continue
+        try:
+            with open(os.path.join(folder, "runs.tsv"), encoding="utf-8") as handle:
+                lines = handle.read().splitlines()[1:]
+        except (OSError, UnicodeDecodeError):
+            continue
+        for line in lines:
+            found = re.fullmatch(r"r(\d+)", line.split("\t")[0])
+            if found:
+                highest = max(highest, int(found.group(1)))
+    return highest
 
 
 class Ledger:
@@ -131,15 +176,36 @@ class Ledger:
             merged.pop("time", None)
             self._append(**merged)
 
-    def new_run(self):
-        """A run id no other run, in any sample or draw, has had: the next number past the highest
-        in the ledger, recorded before it is returned."""
+    def highest_run(self):
+        """The number of the highest run id the ledger has, or 0."""
+        return max(
+            (int(found.group(1)) for row in self.rows() if (found := re.fullmatch(r"r(\d+)", row["run"]))),
+            default=0,
+        )
+
+    def import_checkout(self, label_root):
+        """Once, when this ledger does not exist yet: takes in the `ledger.tsv` the checkout's
+        `.label` (`label_root`) has, if it has one, and makes the next run id higher than any in it
+        and in every `runs.tsv` under `label_root`, so that a run of the checkout keeps its id and no
+        run made later takes one of theirs. Nothing is written when there is nothing to take, and a
+        ledger that exists is never touched: its own rows already count every checkout's runs."""
         with self._locked():
-            numbers = [
-                int(found.group(1))
-                for row in self.rows()
-                if (found := re.fullmatch(r"r(\d+)", row["run"]))
-            ]
-            run = f"r{max(numbers, default=0) + 1}"
+            if os.path.isfile(self.path):
+                return
+            source = os.path.join(label_root, "ledger.tsv")
+            if os.path.isfile(source):
+                temp = f"{self.path}.tmp{os.getpid()}"
+                shutil.copyfile(source, temp)
+                os.replace(temp, self.path)
+            seen = highest_in_runs_tables(label_root)
+            if seen > self.highest_run():
+                self._append(id=f"n-{uuid.uuid4().hex[:16]}", state="run", run=f"r{seen}",
+                             cost_usd="0.00000000", note="imported: the highest run in runs.tsv under .label")
+
+    def new_run(self):
+        """A run id no other run, in any sample, draw or checkout, has had: the next number past the
+        highest in the ledger, recorded before it is returned."""
+        with self._locked():
+            run = f"r{self.highest_run() + 1}"
             self._append(id=f"n-{uuid.uuid4().hex[:16]}", state="run", run=run, cost_usd="0.00000000")
             return run

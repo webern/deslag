@@ -23,7 +23,8 @@ Rust stages run without it, and it is saved nowhere. `MAX_USD` (default 8) caps 
 | spaCy | `make generate-label-spacy` | `tags/spacy.conllu` in both sets |
 | adjudication | `make generate-label-judge-dev`, `make generate-label-judge-owner` | `merge/labelled.conllu` |
 | with spaCy | `make generate-label-judge-dev LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy`, after the plain merge | `merge-spacy/` |
-| report | `make generate-label-report-dev`, `make generate-label-report-owner` | `report.txt`, `report.tsv` |
+| other voters | `make generate-label-judge-dev LABEL_INTO=merge-gemma LABEL_FLAGS="--settle-from merge"` | `merge-gemma/` |
+| report | `make generate-label-report-dev`, `make generate-label-report-owner`; `LABEL_INTO=merge-gemma LABEL_REPORT_FLAGS="--versus merge"` for a variant | `report.txt`, `report.tsv` |
 | cost | `make generate-label-cost` | `.label/draw500/cost.tsv` |
 | audit queue | `make generate-label-audit` | `.label/draw500/merge/audit.conllu` |
 
@@ -70,8 +71,22 @@ endpoint of the list that passes its checks, for example
 The stopped run is saved, and running without `--again` continues it at its own endpoint. `--endpoint
 TAG` (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
 a run continued at another endpoint than it recorded is refused. A run at an alternative records its
-endpoint in `run.json` and `runs.tsv`. mistral lists none; qwen's `parasail/fp8` is below its `bf16`
-pin, so it is skipped until the pin is relaxed.
+endpoint in `run.json` and `runs.tsv`. qwen's `parasail/fp8` is below its `bf16` pin, so it is skipped
+until the pin is relaxed.
+
+Voters. After the pilot Mistral was swapped for Gemma (`voters` is deepseek, qwen, gemma; `mistral`
+stays in `models`, its pilot runs being on record). Only a model that is a voter now has a run that a
+rerun continues: a run of a model since dropped, stopped or stray, is never taken up again but by
+`--resume rN`. `judge` refuses a voter whose `tags/<voter>.conllu` was written by a run that did not
+finish (a smoke run, or one that stopped), since a run writes that file, and the report refuses a voter
+whose file a later run has overwritten since the merge. A merge of other voters goes to its own
+directory and leaves the first alone. To compare it with the first, `judge --into merge-gemma
+--settle-from merge` (without `--spacy`) reuses the first merge's adjudicated answer only for an item the
+first merge's worklist shows with the very same codes from every voter, in order: the adjudicator then
+saw the same evidence. An item the new voter changed goes to the adjudicator, since an answer given with
+the old voter's codes in view would carry that voter into the new merge. `report --into merge-gemma
+--versus merge` gives the paired difference; the first merge's labelled file and worklist are all it reads
+of it.
 
 Exit codes: 0 done (a voter with no good line for a sentence after its retries abstains on it, which
 `tag` reports and the merge counts per voter; a sentence fewer than two voters answered goes to the
@@ -86,7 +101,7 @@ set is always `exam.trains = no`.
 
 ## What is asked
 
-`voters.json` holds every pin: the three voters, the fallback (`gemma`), the adjudicator and the
+`voters.json` holds every pin: the three voters, the adjudicator, the other models defined (`mistral`) and the
 settings. Each call is one batch of about 50 sentences. The system prompt is the annotation guide and
 `prompts/preamble.md`; the user message is the task and the batch's lines. The body is:
 

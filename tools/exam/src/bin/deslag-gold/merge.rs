@@ -1211,6 +1211,18 @@ pub fn adjudicated_tsv(
     out
 }
 
+/// The items of `work` that `earlier` has too, with what each tagger said the same, position by
+/// position. An answer to one of these was made on the same evidence that a new answer would be.
+pub fn same_evidence(work: Vec<WorkItem>, earlier: &[WorkItem]) -> Vec<WorkItem> {
+    let said: BTreeMap<&str, &Vec<String>> = earlier
+        .iter()
+        .map(|item| (item.item.as_str(), &item.said))
+        .collect();
+    work.into_iter()
+        .filter(|item| said.get(item.item.as_str()) == Some(&&item.said))
+        .collect()
+}
+
 /// The columns of `settled.tsv`: the answers a merge takes from an earlier one.
 const SETTLED_COLUMNS: [&str; 4] = ["item", "final", "reason", "run"];
 

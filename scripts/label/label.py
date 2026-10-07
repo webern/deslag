@@ -10,7 +10,7 @@ in Rust. See README.md in this directory for the steps.
                       [--endpoint TAG]
     label.py register --dir .label/dev --name spacy --file PATH --model NAME [--version V]
     label.py judge    --dir .label/dev --max-usd 8 [--into merge] [--voter NAME ...] [--spacy]
-                      [--trains yes|no] [--resume rN] [--again] [--endpoint TAG]
+                      [--trains yes|no] [--resume rN] [--again] [--endpoint TAG] [--settle-from DIR]
     label.py cost     --dir .label/draw500
     label.py spend
 
@@ -176,10 +176,12 @@ class GoldCli:
     def read_tags(self, directory, name, run, files):
         self._run(directory, "read-tags", "--check", "--lines", *files, "--prov", name, "--run", run)
 
-    def merge(self, directory, into, voters, per_part, settled=None):
+    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False):
         args = ["merge", "--into", into, "--per-part", str(per_part)]
         if settled:
             args += ["--settled", settled]
+            if same_votes:
+                args.append("--same-votes")
         for name, base_only in voters:
             args += ["--voter", name]
             if base_only:
@@ -443,7 +445,12 @@ class Runner:
         """The id of the run of `name` that stopped before its end, if there is one: what a rerun
         continues, so that nothing already paid for is asked twice. A run older than a complete one
         was given up for it. Smoke runs, which have a limit, are never one; an adjudicator run is
-        only for the same scope; with `endpoint`, only a run at that endpoint is."""
+        only for the same scope; with `endpoint`, only a run at that endpoint is. Only a model that
+        is a voter now (or the adjudicator) has one: a run of a model since dropped from `voters`,
+        stopped or stray, is never taken up again but by naming it with `--resume`."""
+        current = self.config["voters"] if role == "voter" else [self.config["adjudicator"]]
+        if name not in current:
+            return None
         stopped = self.latest_run(name, role, False, scope, endpoint=endpoint)
         done = self.latest_run(name, role, True, scope)
         if stopped and done and int(done[1:]) > int(stopped[1:]):
@@ -779,13 +786,33 @@ class Runner:
             self.write_runs()
         return run, open_items
 
-    def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False, endpoint=None):
+    def check_tags_run(self, name):
+        """Refuses to merge a voter whose `tags/<name>.conllu` was made by a run that did not finish: a
+        smoke run or a stray one writes that file too, and the merge would take it for the voter's."""
+        path = os.path.join(self.dir, "tags", f"{name}.conllu")
+        if not os.path.isfile(path):
+            return
+        runs = sorted(set(re.findall(r"Runs\s*=\s*(r\d+)", read(path))))
+        for run in runs:
+            record = self.raw(name, run, "run.json")
+            if os.path.isfile(record) and not json.loads(read(record)).get("complete"):
+                raise GoldError(
+                    f"tags/{name}.conllu was made by {run}, which did not finish (a smoke run, or one that "
+                    f"stopped), so it is not merged; `tag --voter {name} --resume <a finished run>` writes the "
+                    f"tags again from that run's saved replies, which costs nothing"
+                )
+
+    def judge(self, into, voters, resume=None, trains="no", settle_from=None, again=False, endpoint=None,
+              same_votes=False):
         """Merges the voters, has the adjudicator settle the disputes, and finishes: writes
         `<into>/labelled.conllu`. Returns the items still open (none when it finished).
 
         With `settle_from`, the directory of an earlier merge, every item that merge's adjudicator
         answered and this merge asks again is settled with that answer, not put to the adjudicator
-        a second time, so the two merges differ by their voting alone."""
+        a second time, so the two merges differ by their voting alone. With `same_votes`, only an
+        answer to an item the earlier merge showed with the very same codes from every voter is
+        settled so: for a merge with other voters, whose answers would otherwise carry the old voters'
+        evidence over, the adjudicator is asked again whenever what it would see has changed."""
         settled = None
         if settle_from:
             settled = os.path.join(self.dir, settle_from, "adjudicated.tsv")
@@ -794,7 +821,10 @@ class Runner:
                     f"{os.path.relpath(settled, self.dir)} does not exist: judge the plain merge "
                     f"first, so that its answers can be reused"
                 )
-        out = self.gold.merge(self.dir, into, voters, self.settings["per_part"], settled)
+        for name, base_only in voters:
+            if not base_only:
+                self.check_tags_run(name)
+        out = self.gold.merge(self.dir, into, voters, self.settings["per_part"], settled, same_votes)
         self.say(out.rstrip())
         folder = os.path.join(self.dir, into)
         parts = [f for f in os.listdir(folder) if re.fullmatch(r"worklist-\d+\.txt", f)]
@@ -803,6 +833,7 @@ class Runner:
             scope = {
                 "into": into, "voters": [name for name, _ in voters],
                 "spacy": any(base_only for _, base_only in voters), "settle_from": settle_from,
+                "same_votes": same_votes,
             }
             _, open_items = self.adjudicate(into, resume, again, scope, endpoint)
         else:
@@ -966,10 +997,13 @@ def command_judge(arguments, config, transport=None, gold=None):
     runner = make_runner(arguments, config, transport, gold)
     # The paired comparison of spaCy as a voter reuses the plain merge's answers.
     settle_from = arguments.settle_from or ("merge" if arguments.spacy else None)
+    # Settling by item alone is for a voter added (spaCy); with other voters it keeps an answer only
+    # for an item the adjudicator would see with the same codes from every voter.
+    same_votes = bool(settle_from) and not arguments.spacy
     try:
         left = runner.judge(
             arguments.into, voters, arguments.resume, arguments.trains, settle_from, arguments.again,
-            arguments.endpoint,
+            arguments.endpoint, same_votes,
         )
     except ledger_module.CapExceeded as error:
         print(f"label: stopped, {error}; what was saved stays, and running it again continues the run", file=sys.stderr)
@@ -1044,7 +1078,8 @@ def parser():
     judge.add_argument("--again", action="store_true", help="a new adjudicator run, not the one that stopped")
     judge.add_argument(
         "--settle-from", metavar="DIR",
-        help="reuse the answers of the merge in this directory; --spacy means `merge`",
+        help="reuse the answers of the merge in this directory; --spacy means `merge`; without --spacy, "
+        "only for items shown with the same codes from every voter",
     )
     judge.add_argument(
         "--trains", choices=("yes", "no"), default="no",

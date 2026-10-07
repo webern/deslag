@@ -1,6 +1,6 @@
 {
-  "note": "The voters, the fallback and the adjudicator, pinned. `voters` and `adjudicator` name entries of `models`, so swapping a voter is one line there. `provider` is the tag the OpenRouter endpoint listing gives the endpoint (models/<id>/endpoints), and the runner checks the listing at run time: the endpoint must exist, have the quantisation pinned here, and support every parameter sent. `temperature` and `reasoning` are sent only when not null, since the request requires every parameter it sends: Mistral's endpoint lists no `reasoning`, and the Anthropic route lists no `temperature`. `reasoning` is passed through as OpenRouter's object; the adjudicator thinks at low effort, and `max_tokens` (16000) includes the thinking. `provider_fallback` lists other pinned endpoints of the same model, in order, at the same quantisation or a more precise one than `provider`'s listing gives; the runner never switches to one mid-run: when `provider` keeps answering 429 or 5xx it stops and prints the command for a new run at the next one (`--again --endpoint TAG`). Pins from the listings of 2026-10-07.",
-  "voters": ["deepseek", "qwen", "mistral"],
+  "note": "The voters, the other models defined and the adjudicator, pinned. After the pilot gemma replaced mistral as the third voter (mistral stays defined, its runs being on record). `voters` and `adjudicator` name entries of `models`, so swapping a voter is one line there. `provider` is the tag the OpenRouter endpoint listing gives the endpoint (models/<id>/endpoints), and the runner checks the listing at run time: the endpoint must exist, have the quantisation pinned here, and support every parameter sent. `temperature` and `reasoning` are sent only when not null, since the request requires every parameter it sends: Mistral's endpoint lists no `reasoning`, and the Anthropic route lists no `temperature`. `reasoning` is passed through as OpenRouter's object; the adjudicator thinks at low effort, and `max_tokens` (16000) includes the thinking. `provider_fallback` lists other pinned endpoints of the same model, in order, at the same quantisation or a more precise one than `provider`'s listing gives; the runner never switches to one mid-run: when `provider` keeps answering 429 or 5xx it stops and prints the command for a new run at the next one (`--again --endpoint TAG`). Pins from the listings of 2026-10-07.",
+  "voters": ["deepseek", "qwen", "gemma"],
   "adjudicator": "claude",
   "settings": {
     "batch_size": 50,
@@ -42,8 +42,9 @@
     },
     "gemma": {
       "model": "google/gemma-4-31b-it",
-      "provider": "crusoe/bf16",
-      "quantizations": ["bf16"],
+      "provider": "parasail/fp8",
+      "provider_fallback": ["deepinfra/fp8"],
+      "quantizations": ["fp8"],
       "temperature": 0,
       "reasoning": {"enabled": false},
       "max_tokens": 6000

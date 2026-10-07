@@ -117,9 +117,10 @@ class FakeGold:
         label.write(os.path.join(directory, "tags", f"{name}.retry.txt"),
                     "".join(batch_line(*s) + "\n" for s in SENTENCES if s[0] not in good))
 
-    def merge(self, directory, into, voters, per_part, settled=None):
+    def merge(self, directory, into, voters, per_part, settled=None, same_votes=False):
         self.calls.append(("merge", into, list(voters)))
         self.settled_path = settled
+        self.same_votes = same_votes
         already = set()
         if settled:
             already = {line.split("\t")[0] for line in label.read(settled).splitlines()[1:]}
@@ -314,7 +315,11 @@ class RequestTests(unittest.TestCase):
 
     def test_the_shipped_config_loads_and_pins_every_voter_to_one_endpoint(self):
         config = label.load_config()
-        self.assertEqual(config["voters"], ["deepseek", "qwen", "mistral"])
+        self.assertEqual(config["voters"], ["deepseek", "qwen", "gemma"])
+        self.assertIn("mistral", config["models"], "mistral stays defined: its pilot runs are on record")
+        gemma = config["models"]["gemma"]
+        self.assertEqual((gemma["provider"], gemma["quantizations"], gemma["provider_fallback"]),
+                         ("parasail/fp8", ["fp8"], ["deepinfra/fp8"]))
         for name in [*config["voters"], config["adjudicator"]]:
             model = config["models"][name]
             self.assertIn("/", model["model"])
@@ -1672,7 +1677,7 @@ class RoundThreeTests(Base):
         self.assertEqual(len(second.posts), 1)
         record = json.loads(label.read(self.run_json("judge", spacy_run)))
         self.assertEqual(record["scope"], {"into": "merge-spacy", "voters": ["one", "two", "spacy"],
-                                           "spacy": True, "settle_from": "merge"})
+                                           "spacy": True, "settle_from": "merge", "same_votes": False})
         self.assertTrue(record["complete"], "the spaCy run was the one continued")
         self.assertEqual([row["run"] for row in self.runs_rows() if row["role"] == "adjudicator"].count(spacy_run), 1)
 
@@ -1985,6 +1990,86 @@ class RoundThreeTests(Base):
         config = with_fallbacks(one=["alt/fp8"])
         _, out, err = self.command(self.busy(), "--voter", "one", config=config)
         self.assertNotIn(self.KEY, out + err)
+
+
+class SwappedVoterTests(Base):
+    """A voter swapped out: its stray runs are never taken up, and a merge of other voters is its own."""
+
+    def test_a_model_that_is_no_longer_a_voter_has_no_run_to_continue(self):
+        config = copy.deepcopy(CONFIG)
+        config["voters"] = ["one"]
+        stopped = FakeTransport(lambda body, count: answer_all(body) if count < 2 else (_ for _ in ()).throw(
+            openrouter.ApiError("HTTP 400: stop here")))
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(stopped).tag("two")
+        runner = self.runner(None, config=config)
+        self.assertIsNone(runner.incomplete_run("two"), "two is not a voter of this config")
+        again = FakeTransport(answer_all)
+        run, _ = self.runner(again, config=config).tag("two")
+        self.assertEqual(run, "r2", "a new run, not the stray one")
+        # By name it can still be continued.
+        second = FakeTransport(answer_all)
+        run, _ = self.runner(second, config=config).tag("two", resume="r1")
+        self.assertEqual(run, "r1")
+
+    def test_a_merge_refuses_the_tags_of_a_run_that_did_not_finish(self):
+        gold = FakeGold()
+        self.runner(FakeTransport(answer_all), gold=gold).tag("one")
+        def respond(body, count):
+            if count > 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            response = answer_all(body)
+            # d2 comes back with the wrong number of codes, so the run goes on to ask again, and stops there.
+            response["choices"][0]["message"]["content"] = response["choices"][0]["message"]["content"].replace(
+                "d2: N.s N.s N.s _", "d2: N.s")
+            return response
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond), gold=gold).tag("two")
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "tags", "two.conllu")))
+        with self.assertRaisesRegex(label.GoldError, "tags/two.conllu was made by r2, which did not finish"):
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False), ("two", False)])
+        self.assertFalse([call for call in gold.calls if call[0] == "merge"], "nothing was merged")
+        # A smoke run writes the tags file too, and is refused the same way.
+        self.runner(FakeTransport(answer_all), gold=gold).tag("one", limit=1)
+        with self.assertRaisesRegex(label.GoldError, "tags/one.conllu was made by r3"):
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False)])
+        # Once the voter has a finished run, its tags are fine.
+        self.runner(FakeTransport(answer_all), gold=gold).tag("one", again=True)
+        gold.dispute = []
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False)])
+
+    def judged_args(self, *more):
+        return label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "10", "--into", "merge-two", *more])
+
+    def test_a_merge_of_other_voters_settles_only_what_was_shown_the_same(self):
+        gold = FakeGold()
+        gold.dispute = []
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.runner(FakeTransport(answer_all), gold=gold).tag("one")
+            self.runner(FakeTransport(answer_all), gold=gold).tag("two")
+            self.runner(FakeTransport(answer_all), gold=gold).judge("merge", [("one", False)])
+            label.command_judge(self.judged_args("--settle-from", "merge"), CONFIG, FakeTransport(answer_all), gold)
+        self.assertEqual((gold.settled_path, gold.same_votes),
+                         (os.path.join(self.dir, "merge", "adjudicated.tsv"), True))
+        with contextlib.redirect_stdout(io.StringIO()):
+            label.command_judge(self.judged_args("--spacy"), CONFIG, FakeTransport(answer_all), gold)
+        self.assertEqual(gold.same_votes, False, "spaCy as a voter more settles by item alone")
+        with contextlib.redirect_stdout(io.StringIO()):
+            label.command_judge(self.judged_args(), CONFIG, FakeTransport(answer_all), gold)
+        self.assertIsNone(gold.settled_path)
+        self.assertEqual(gold.same_votes, False)
+
+    def test_the_merge_of_other_voters_writes_to_its_own_directory_and_leaves_the_first_alone(self):
+        gold = FakeGold()
+        gold.dispute = []
+        self.runner(FakeTransport(answer_all), gold=gold).tag("one")
+        runner = self.runner(FakeTransport(answer_all), gold=gold)
+        runner.judge("merge", [("one", False)])
+        before = label.read(os.path.join(self.dir, "merge", "labelled.conllu"))
+        self.runner(FakeTransport(answer_all), gold=gold).judge("merge-other", [("one", False)])
+        self.assertEqual(label.read(os.path.join(self.dir, "merge", "labelled.conllu")), before)
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge-other", "labelled.conllu")))
 
 
 class ProvenanceTests(Base):

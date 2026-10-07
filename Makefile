@@ -18,10 +18,12 @@ GOLD_BIN := $(LABEL_BIN)/deslag-gold
 EXAM_BIN := $(LABEL_BIN)/deslag-exam
 
 # The cap on what labelling may spend, in dollars, counted over the whole ledger in .label/ledger.tsv;
-# LABEL_FLAGS go to label.py; LABEL_INTO is the directory under .label/<set> that judge writes.
+# LABEL_FLAGS go to label.py; LABEL_INTO is the directory under .label/<set> that judge writes and the
+# report reads; LABEL_REPORT_FLAGS go to the report, such as `--versus merge`.
 MAX_USD ?= 8
 LABEL_FLAGS ?=
 LABEL_INTO ?= merge
+LABEL_REPORT_FLAGS ?=
 
 # The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
@@ -150,7 +152,8 @@ help:
 	@echo "generate-label-judge-dev"
 	@echo "                 merge the voters' tags of .label/dev, have Claude settle the disputes, and finish;"
 	@echo "                 needs OPENROUTER_API_KEY; LABEL_INTO names the output; with --spacy, merge-spacy,"
-	@echo "                 after the plain merge, whose answers it reuses"
+	@echo "                 after the plain merge, whose answers it reuses; LABEL_FLAGS=\"--settle-from merge\" with"
+	@echo "                 LABEL_INTO=merge-gemma reuses them only where every voter's codes are the same"
 	@echo "generate-label-judge-owner"
 	@echo "                 the same for .label/owner"
 	@echo "generate-label-owner"
@@ -158,6 +161,7 @@ help:
 	@echo "generate-label-report-dev"
 	@echo "                 grade .label/dev's merge against the dev gold: each voter, the agreed words, the"
 	@echo "                 adjudicated ones and the pipeline, with sentence-bootstrap intervals"
+	@echo "                 LABEL_REPORT_FLAGS=\"--versus merge\" adds the paired difference from that merge"
 	@echo "generate-label-report-owner"
 	@echo "                 the same for .label/owner against the owner's gold"
 	@echo "generate-label-spacy"
@@ -479,14 +483,18 @@ generate-brill-percept: preflight fetch-ewt
 generate-label-audit: build-label
 	$(GOLD_BIN) --dir .label/draw500 audit --count 50
 
-# 500 training sentences drawn evenly over the three tiers and the four contexts, tagged by every voter
+# 500 training sentences, 205 each from the human and llm tiers (120 prose, 45 list-item, 25 heading, 15
+# table-cell) and 90 from the mixed tier (30, 25, 20, 15), which is what the mixed tier can give under
+# the per-file and per-repository limits: its whole capacity is about 100, and it holds fewer prose
+# sentences than the other contexts once the others are drawn. Non-prose contexts are still over half of
+# what is drawn, tagged by every voter
 # and spaCy, merged and adjudicated by Claude, then the dollars and minutes each run took per thousand
 # sentences in .label/draw500/cost.tsv. The one target that spends on sentences nobody grades, and the
 # one that fixes the price of labelling the rest. Reads the big tier. Not in ci: it needs the key, spaCy
 # and the network. Its labels are the only ones that may train a model (`--trains yes`), and the judge
 # step takes no LABEL_FLAGS, which belong to the voters' step.
 generate-label-cost: build-label fetch-blobs fetch-spacy
-	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 100,34,17,16,100,34,17,16,100,33,17,16
+	$(GOLD_BIN) --dir .label/draw500 draw --prefix cost --mix 120,45,25,15,120,45,25,15,30,25,20,15
 	python3 $(LABEL)/label.py tag --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
 	$(LABEL)/spacy.sh .label/draw500
 	python3 $(LABEL)/label.py judge --dir .label/draw500 --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) --trains yes
@@ -505,6 +513,10 @@ generate-label-dev: build-label
 # into .label/dev/$(LABEL_INTO)/labelled.conllu. For the variant with spaCy as a fourth voter on the part
 # of speech, run generate-label-spacy and then LABEL_INTO=merge-spacy LABEL_FLAGS=--spacy: the adjudicator
 # answers each item the plain merge also had once, and that answer is reused, so the two differ by voting.
+# For other voters, say gemma for mistral, write a merge of its own and keep the first untouched:
+# LABEL_INTO=merge-gemma LABEL_FLAGS="--settle-from merge" reuses the plain merge's answer only for an
+# item shown with the very same codes from every voter, since an answer given with another voter's
+# codes in view would carry that voter into the new merge; any other item goes to the adjudicator.
 generate-label-judge-dev: build-label
 	python3 $(LABEL)/label.py judge --dir .label/dev --into $(LABEL_INTO) --max-usd $(MAX_USD) --gold-bin $(GOLD_BIN) $(LABEL_FLAGS)
 
@@ -520,12 +532,13 @@ generate-label-owner: build-label
 # Each voter, the words they agreed on, the words Claude decided and the pipeline, graded on the dev gold
 # with 95% sentence-bootstrap intervals, to .label/dev/$(LABEL_INTO)/report.txt and report.tsv. Calls no
 # model. After a spaCy variant, LABEL_INTO=merge-spacy grades it; the paired difference from the plain
-# merge is `deslag-gold --dir .label/dev report --gold tests/gold/dev.conllu --into merge-spacy --versus merge`.
+# merge is LABEL_INTO=merge-spacy LABEL_REPORT_FLAGS="--versus merge"; likewise merge-gemma against merge.
+# The report refuses a voter whose tags file a later run has overwritten since the merge.
 generate-label-report-dev: build-label
-	$(GOLD_BIN) --dir .label/dev report --gold tests/gold/dev.conllu --into $(LABEL_INTO)
+	$(GOLD_BIN) --dir .label/dev report --gold tests/gold/dev.conllu --into $(LABEL_INTO) $(LABEL_REPORT_FLAGS)
 
 generate-label-report-owner: build-label
-	$(GOLD_BIN) --dir .label/owner report --gold tests/gold/owner.conllu --into $(LABEL_INTO)
+	$(GOLD_BIN) --dir .label/owner report --gold tests/gold/owner.conllu --into $(LABEL_INTO) $(LABEL_REPORT_FLAGS)
 
 # spaCy's tags of .label/dev and .label/owner, from deslag's own tokens, recorded as the run `spacy`:
 # tags/spacy.conllu, and a row of runs.tsv with how long it took. Run after generate-label-dev and

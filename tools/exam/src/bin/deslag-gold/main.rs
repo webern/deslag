@@ -202,6 +202,12 @@ enum Command {
         /// in their voting alone. `settled.tsv` records what was taken.
         #[arg(long, requires = "voter")]
         settled: Option<PathBuf>,
+        /// With `--settled`, keep an answer only for an item the earlier merge's `worklist.tsv`
+        /// (beside its `adjudicated.tsv`) shows with the same codes from every voter, in the same
+        /// order: the adjudicator then saw the same evidence for the word, whoever the voters were.
+        /// For a merge with other voters, not one with a voter more.
+        #[arg(long, requires = "settled")]
+        same_votes: bool,
         /// The directory under the working directory the merge is written to.
         #[arg(long, default_value = "merge", value_parser = parse_name)]
         into: String,
@@ -638,6 +644,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             voter,
             base_only,
             settled,
+            same_votes,
             into,
             per_part,
         } => {
@@ -648,6 +655,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                     given: &voter,
                     base_only: &base_only,
                     settled: settled.as_deref(),
+                    same_votes,
                     per_part,
                 };
                 merge_voters_stage(&dir, &into, &voting)
@@ -1234,6 +1242,7 @@ struct Voting<'a> {
     given: &'a [(String, Option<PathBuf>)],
     base_only: &'a [String],
     settled: Option<&'a Path>,
+    same_votes: bool,
     per_part: usize,
 }
 
@@ -1258,9 +1267,17 @@ fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(),
     // The items an earlier merge answered are not asked again.
     let settled = match voting.settled {
         Some(path) => {
-            let work = merge::read_worklist("worklist.tsv", &work_text)?;
+            let mut work = merge::read_worklist("worklist.tsv", &work_text)?.items;
+            if voting.same_votes {
+                let earlier_path = path.with_file_name("worklist.tsv");
+                let earlier = merge::read_worklist(
+                    &earlier_path.display().to_string(),
+                    &read_text(&earlier_path)?,
+                )?;
+                work = merge::same_evidence(work, &earlier.items);
+            }
             let text = read_text(path)?;
-            merge::settle_from_log(&path.display().to_string(), &text, &work.items)?
+            merge::settle_from_log(&path.display().to_string(), &text, &work)?
         }
         None => Vec::new(),
     };
@@ -1581,7 +1598,27 @@ fn report_stage(
     )?;
     for voter in &mut voters {
         let path = PathBuf::from(&voter.file);
-        voter.answers = merge::load_voter(&voter.name, &voter.file, &read_text(&path)?, &sample)?;
+        let text = read_text(&path)?;
+        // A later run of the voter writes the same file; grading it would grade other answers than
+        // the ones the merge used.
+        let now = voters::run_in(&text);
+        if now != voter.run {
+            let show = |run: &Option<String>| run.clone().unwrap_or_else(|| "none".to_string());
+            return Err(Error::load(
+                &voter.file,
+                Place::File,
+                format!(
+                    "this file now holds run {}, but {} used run {} of {}; a later run overwrote it, \
+                     so the report would grade other answers than the merge's",
+                    show(&now),
+                    entries_path.display(),
+                    show(&voter.run),
+                    voter.name
+                ),
+            )
+            .into());
+        }
+        voter.answers = merge::load_voter(&voter.name, &voter.file, &text, &sample)?;
     }
     let voted = voters::merge_voters(&sample, &voters);
     let log_path = out.join("adjudicated.tsv");

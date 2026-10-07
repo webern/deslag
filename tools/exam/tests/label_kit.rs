@@ -488,6 +488,14 @@ fn the_pilot_runs_from_a_skeleton_to_a_report_with_provenance_at_every_step() {
         tsv,
         fs::read_to_string(dir.join("merge/report.tsv")).unwrap()
     );
+    // A later run of a voter writes the same tags file; the report will not grade those answers as
+    // the merge's.
+    let kept = fs::read_to_string(dir.join("tags/one.conllu")).unwrap();
+    tag_as(&dir, "one", Some("r99"), &lines(&[]));
+    let error = gold_fails(&dir, &["report", "--gold", path(&gold)]);
+    assert!(error.contains("a later run overwrote it"), "{error}");
+    fs::write(dir.join("tags/one.conllu"), kept).unwrap();
+    gold_ok(&dir, &["report", "--gold", path(&gold)]);
 
     // The audit queue is the labels, picked by a seed, ready for the review.
     gold_ok(&dir, &["audit", "--count", "2"]);
@@ -861,6 +869,73 @@ fn a_second_merge_keeps_the_answers_the_first_settled_and_their_runs() {
         ],
     );
     assert!(!dir.join("merge-spacy/settled.tsv").exists());
+}
+
+#[test]
+fn a_merge_of_other_voters_keeps_an_answer_only_for_the_same_evidence() {
+    let root = tempfile::tempdir().unwrap();
+    let (dir, _) = setup(root.path());
+    gold_ok(&dir, &["batches"]);
+    tag_as(&dir, "one", Some("r1"), &lines(&[]));
+    tag_as(&dir, "two", Some("r2"), &lines(&[("d1", 3, "J")]));
+    // `three` says what `two` said at d1.3; `four` says something else there.
+    tag_as(&dir, "three", Some("r6"), &lines(&[("d1", 3, "J")]));
+    tag_as(&dir, "four", Some("r7"), &lines(&[("d1", 3, "N.s")]));
+    gold_ok(&dir, &["merge", "--voter", "one", "--voter", "two"]);
+    let answers = write(&dir.join("adj.txt"), "d1.3: R | adverb of time\n");
+    gold_ok(
+        &dir,
+        &[
+            "read-answers",
+            "--check",
+            "--answers",
+            path(&answers),
+            "--run",
+            "r3",
+        ],
+    );
+    let earlier = path(&dir.join("merge/adjudicated.tsv")).to_string();
+    let swap = |other: &str, into: &str, same: bool| {
+        let mut args = vec![
+            "merge",
+            "--voter",
+            "one",
+            "--voter",
+            other,
+            "--into",
+            into,
+            "--settled",
+            &earlier,
+        ];
+        if same {
+            args.push("--same-votes");
+        }
+        gold_ok(&dir, &args)
+    };
+    // The same codes from every voter: the answer is kept, with its run.
+    let said = swap("three", "merge-three", true);
+    assert!(said.contains("1 more words keep the answers"), "{said}");
+    let settled = fs::read_to_string(dir.join("merge-three/settled.tsv")).unwrap();
+    assert!(
+        settled.contains("d1.3\tR\tadverb of time\tr3\n"),
+        "{settled}"
+    );
+    assert!(!dir.join("merge-three/worklist-01.txt").exists());
+    // Another code from the new voter: the adjudicator is asked again, and nothing is kept.
+    let said = swap("four", "merge-four", true);
+    assert!(!said.contains("keep the answers"), "{said}");
+    let settled = fs::read_to_string(dir.join("merge-four/settled.tsv")).unwrap();
+    assert!(!settled.contains("d1.3"), "{settled}");
+    assert!(dir.join("merge-four/worklist-01.txt").exists());
+    // Without the flag the item alone decides, as it does for spaCy as a voter more.
+    let said = swap("four", "merge-by-item", false);
+    assert!(said.contains("1 more words keep the answers"), "{said}");
+    // The flag needs `--settled`.
+    let error = gold_fails(
+        &dir,
+        &["merge", "--voter", "one", "--voter", "two", "--same-votes"],
+    );
+    assert!(error.contains("--settled"), "{error}");
 }
 
 #[test]

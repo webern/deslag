@@ -1,12 +1,12 @@
 # The phrase catalogue
 
 `banned_phrases` bans the phrases of its groups by default. The phrases are in
-`src/lint/banned_phrases.toml`, one entry each with its group, its advice, the version it first
-ships in (`since`) and its counts; the groups are the `GROUPS` table in `src/lint/banned_phrases.rs`
+`src/lint/banned_phrases.toml`, one entry each with its group, advice, first
+version (`since`) and counts; the groups are the `GROUPS` table in `src/lint/banned_phrases.rs`
 and the fields of `PhraseGroups` in the config: `insistence`, `metaphors` and `precision`.
 
 A group's name is a config key, so renaming one breaks configs. A config that still sets the
-removed `signposts` group is read, with a warning, and the setting is ignored.
+removed `signposts` group is read, and the setting is ignored with a warning.
 
 ## What gets in
 
@@ -32,9 +32,9 @@ missing one costs nothing.
 - `tests/corpus.rs` holds every group at zero `human/` fixtures of the tree and at least five
   `llm/` fixtures, so no group is dead weight.
 - `tests/phrases.rs` refuses an entry nested in another or repeated once folded, a group with no
-  entry, an entry with `llm` files in under 40 repositories, and a `since` past the crate's
-  version. `tests/instructions.rs` holds the schema's groups
-  to `GROUPS`.
+  entry and an entry with `llm` files in under 40 repositories.
+- `tests/changelog.rs` holds each `since` to a release or `next`;
+  `tests/instructions.rs` holds the schema's groups to `GROUPS`.
 
 `remeasure.sh` runs `make fix-blobs`, `make test-blobs` and `tests/phrases.rs` on a batch pull
 request and on a publish, so a bad batch fails before the branch goes red. The sieve's counts are

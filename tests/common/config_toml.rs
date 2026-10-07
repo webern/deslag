@@ -1,0 +1,55 @@
+//! Checks on TOML configs and on the TOML blocks of Markdown, shared by the tests of what deslag
+//! tells an agent to write in its config.
+
+use std::collections::BTreeSet;
+
+use deslag::config::schema;
+use serde_json::Value;
+
+use super::schema::misfit;
+use super::{Repo, code, stderr};
+
+/// Why the TOML config `text` does not fit the schema, or `None` when it does.
+pub fn toml_misfit(text: &str) -> Option<String> {
+    let value: toml::Value = toml::from_str(text).expect("valid TOML");
+    let value: Value = serde_json::to_value(value).expect("TOML is JSON too");
+    let root = schema();
+    misfit(&root, &root, &value, "the config")
+}
+
+/// The TOML blocks in the Markdown `text`, in order.
+pub fn toml_blocks(text: &str) -> Vec<&str> {
+    text.split("```toml\n")
+        .skip(1)
+        .map(|rest| rest.split_once("```").expect("the end of the block").0)
+        .collect()
+}
+
+/// The lints the config `text` turns on, under `[md.lints]` or in an override.
+pub fn lints_turned_on(text: &str) -> BTreeSet<String> {
+    let config: toml::Value = toml::from_str(text).expect("valid TOML");
+    let md = config.get("md");
+    let overrides = md
+        .and_then(|md| md.get("overrides"))
+        .and_then(toml::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|entry| entry.get("lints"));
+    md.and_then(|md| md.get("lints"))
+        .into_iter()
+        .chain(overrides)
+        .flat_map(|lints| lints.as_table().expect("a lints table").keys().cloned())
+        .collect()
+}
+
+/// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else.
+pub fn assert_runs_clean(config: &str) {
+    let repo = Repo::new();
+    repo.write("deslag.toml", config);
+    let output = repo.check();
+    assert_eq!(
+        (code(&output), stderr(&output)),
+        (0, String::new()),
+        "{config}"
+    );
+}

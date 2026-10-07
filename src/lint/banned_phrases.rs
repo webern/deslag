@@ -22,6 +22,7 @@ use std::sync::LazyLock;
 
 use serde::Deserialize;
 
+use crate::changelog::Version;
 use crate::config::{BannedPhrases, PhraseGroups};
 use crate::document::{Document, Location, Token, TokenKind};
 use crate::lint::{Keep, Mark, MarkKind};
@@ -229,7 +230,7 @@ pub struct Entry {
     /// The advice the report gives with it.
     pub advice: String,
     /// The version of deslag it first ships in.
-    pub since: String,
+    pub since: Version,
     /// The big tier's `llm` files that hold it.
     pub llm_files: u64,
     /// The repositories those files come from.

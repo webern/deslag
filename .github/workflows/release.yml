@@ -107,6 +107,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make ci test-python
 
+      - name: Check the changelog has no next release
+        run: make check-release
+
       - name: Check the crate packages
         run: make check-publish
 

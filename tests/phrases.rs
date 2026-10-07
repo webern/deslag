@@ -399,21 +399,10 @@ fn no_catalogue_phrase_repeats_or_lies_inside_another() {
 
 #[test]
 fn every_catalogue_phrase_is_one_a_config_could_ban() {
-    let version = |text: &str| -> Vec<u64> {
-        text.split('.')
-            .map(|part| part.parse().expect("a version"))
-            .collect()
-    };
     for entry in &CATALOGUE.entries {
         let settings = banning(&[entry.phrase.as_str()]);
         assert_eq!(settings.invalid(), None, "{}", entry.phrase);
         assert!(!entry.advice.is_empty(), "{}", entry.phrase);
-        assert!(
-            version(&entry.since) <= version(env!("CARGO_PKG_VERSION")),
-            "{} ships in {}",
-            entry.phrase,
-            entry.since
-        );
         assert!(entry.llm_repos >= 40, "{}", entry.phrase);
     }
 }

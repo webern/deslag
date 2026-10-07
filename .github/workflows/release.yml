@@ -101,10 +101,11 @@ jobs:
             exit 1
           fi
 
+      # make ci leaves test-python to its own workflow; a release runs both.
       - name: Run CI checks
         env:
           GH_TOKEN: ${{ github.token }}
-        run: make ci
+        run: make ci test-python
 
       - name: Check the crate packages
         run: make check-publish

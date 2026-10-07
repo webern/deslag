@@ -54,7 +54,8 @@ jobs:
           path: .blobs
           key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
 
-      # blobs.sh reads the package with gh's token, which here is the workflow token.
+      # blobs.sh reads the package with gh's token, which here is the workflow token. make ci is
+      # not everything: python.yml runs make test-python when the scripts it tests change.
       - name: CI
         env:
           GH_TOKEN: ${{ github.token }}

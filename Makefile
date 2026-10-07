@@ -14,18 +14,18 @@ TRAIN := $(SCRIPTS)/train
 # The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
 
-# Flags for every cargo call. `ci` adds --locked so a stale Cargo.lock fails
-# there instead of being rewritten.
+# Flags for every cargo call. `ci` and `ci-fast` add --locked so a stale
+# Cargo.lock fails there instead of being rewritten.
 CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
-        test-percept test-scripts test-spacy test-ticlist-brill-deslag test-ticlist-brill-percept \
+        test-percept test-python test-spacy test-ticlist-brill-deslag test-ticlist-brill-percept \
         test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
-        ci \
+        ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
         fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
@@ -35,7 +35,8 @@ help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
-	@echo "test             run every test that needs no network, doctests included, and the exam's gates"
+	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
+	@echo "                 gates; not test-python, which runs when the scripts it tests change"
 	@echo "test-blobs       fetch the corpus's big tier, test it, and fail if tagging takes over its budget"
 	@echo "                 of the time to read it; needs the network, so not in test"
 	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on both dev sets with"
@@ -57,7 +58,8 @@ help:
 	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
-	@echo "test-scripts     test how batches are built and published; offline, local repositories"
+	@echo "test-python      test how batches are built and published; offline, local repositories, about"
+	@echo "                 two minutes, so not in test or ci: its own workflow runs it when they change"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-ticlist-brill-deslag"
@@ -81,7 +83,10 @@ help:
 	@echo "clean-harper     remove the fetched Harper model"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
-	@echo "ci               what CI runs: preflight, check, build, test, test-blobs, with --locked"
+	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs, with"
+	@echo "                 --locked; not test-python, which the python workflow runs"
+	@echo "ci-fast          the gate to run before a push, about 20 seconds warm: preflight, check, the"
+	@echo "                 exam's gates and the Rust tests but the slowest, at once; ci runs the rest"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
 	@echo "                 file of list_growth; fetches the image first, needs the network, so not in fix"
@@ -130,7 +135,7 @@ build-release: preflight
 # ---------------------------------------------------------------------------
 # test
 
-test: preflight test-scripts test-exam
+test: preflight test-exam
 	cargo test $(CARGO_FLAGS) --workspace --all-features
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
@@ -179,8 +184,9 @@ test-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
 
 # The scripts under scripts/blobstore, run against git repositories the tests
-# make: no network, no login.
-test-scripts: preflight
+# make: no network, no login. Minutes of git, so not in test or ci; the python
+# workflow runs it when scripts/blobstore or scripts/llm-detection change.
+test-python: preflight
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
@@ -270,6 +276,16 @@ clean-train:
 # under ci is --locked.
 ci: CARGO_FLAGS += --locked
 ci: preflight check build test test-blobs
+
+# The pre-push gate. Preflight stays first, as in every gate: it costs nothing and
+# is how a new machine or worktree learns what it lacks. The gates and
+# test-fast.sh use Cargo.toml's fast profile; test-fast.sh runs every Rust test
+# binary but the slowest at once. The slowest binaries, the doctests, the big tier
+# and test-python are left to CI.
+ci-fast: CARGO_FLAGS += --locked
+ci-fast: preflight check
+	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-fast.sh
 
 fix: fix-fmt fix-clippy fix-golden fix-test-output
 

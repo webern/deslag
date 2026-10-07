@@ -19,7 +19,8 @@ and External Assets.
 
 The top-level `Makefile` drives every build, check, test and environment check. When Installed
 Software is missing or the wrong version, `make preflight`, which every build runs first, says what
-is missing and how to install it, all in one pass rather than failing on the first.
+is missing and how to install it, all in one pass rather than failing on the first. Every gate keeps
+it, even one needing few of the tools it checks.
 `rust-toolchain.toml` names the toolchain and components; rustup installs them on first use.
 
 "The Build System" is the sum of the Makefile, `scripts/`, Installed Software, External Assets,
@@ -45,11 +46,8 @@ unless they must keep going after a failure, and validate arguments with `${1:?u
 
 Python 3 is the exception, in four places. `scripts/llm-detection/collect.py` rebuilds the corpus,
 standard library only, by hand; make, tests and CI run its `batch`.
-`scripts/blobstore/test_batches.py` tests it offline under `make test-scripts`.
-
-`scripts/spacy/tag.py` is the exam's spaCy tagger, pinned by hash in `.spacy/`, run by `make
-fetch-spacy`, `generate-spacy` and `test-spacy`. `scripts/train/` is the exam's perceptron and Brill
-tagger, standard library only and offline after `make fetch-ewt`. Neither is in `test` or `ci`.
+`scripts/blobstore/test_batches.py` tests it offline under `make test-python`.
+`scripts/spacy/` and `scripts/train/` hold the exam's other taggers, run only by their own targets.
 
 Development is supported on macOS and Linux.
 
@@ -71,19 +69,19 @@ Target names start with a verb. The vocabulary:
 - test: runs tests
 - clean: deletes build, test and other artifacts; everything the Makefile creates is cleanable
 
-`ci` is the one non-verb target. It runs what CI runs: preflight, check, build, test and
-`test-blobs`, with `--locked`. Both workflows call it so they cannot drift.
+`ci`, the GitHub ci job the release also calls, and `ci-fast`, the pre-push gate of about 20
+seconds, are the non-verb targets. Neither runs everything; `test-python` has its own workflow.
 
 The scope follows the verb: `check-clippy` runs clippy, `fix-fmt` runs rustfmt. The bare verb is the
 "do everything" version: `make build` builds every target, `make test` runs every test, `make check`
 runs every check that gates CI, `make clean` removes everything the Makefile introduced. A target
 too slow for every run, or needing the network, may stay out of the bare verb if help says so, as
-`check-publish` and `test-blobs` do.
+`check-publish`, `test-blobs` and `test-python` do.
 
 Help is the default goal, hand-written, and ordered: each plain verb then its scoped versions
-alphabetically, in the order build, test, check, clean; then ci, fix, preflight and any other target
-an operator would call directly. Targets are public or private the same way functions are; private
-ones stay out of help.
+alphabetically, in the order build, test, check, clean; then ci, ci-fast, fix, preflight and any
+other target an operator would call directly. Targets are public or private the same way functions
+are; private ones stay out of help.
 
 Target definitions in the file follow the order of help, with `set` targets first.
 
@@ -91,4 +89,5 @@ Target definitions in the file follow the order of help, with `set` targets firs
 
 Actions are pinned by commit SHA with the version and date in a trailing comment; dependabot bumps
 them. Every job declares the least `permissions` it needs. A release is a read-only verify job, then
-a build job per target, then one privileged publish job that runs only after the others pass.
+a build job per target, then one privileged publish job that runs only after the others pass. A slow
+workflow may run only when its paths change, and is then never a required check.

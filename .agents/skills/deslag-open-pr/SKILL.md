@@ -22,7 +22,9 @@ closes and related issues. It might also be related to other PRs.
 Have you followed relevant repo skills in your implementation? If not, you may need to make changes
 before you are ready to open the PR.
 
-You should have already verified that the branch passes CI. If you haven't, run `make ci`.
+Run `make ci-fast` before every push, and `make test-python` too if you changed
+`scripts/blobstore/` or `scripts/llm-detection/`. GitHub runs `make ci`, and `make test-python`
+when those scripts change.
 
 ## Writing it
 
@@ -57,7 +59,7 @@ What changed and why, in a paragraph or two.
 
 ## Testing
 
-- [x] `make ci`: exit 0
+- [x] `make ci-fast`: exit 0
 - [x] whatever else was run
 
 ## References

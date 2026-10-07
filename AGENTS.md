@@ -35,8 +35,8 @@ deslag/
 
 ## Build
 
-`make help` lists the targets. `make ci` is the gate CI runs: preflight, check, build, test,
-test-blobs. `make test-blobs` fetches the
+`make help` lists the targets. Run `make ci-fast` before a push; GitHub runs
+`make ci`. `make test-blobs` fetches the
 corpus's big tier first; see `scripts/blobstore/blobs.md`. The `/deslag-build-doctrine` skill
 governs the Makefile, `scripts/`, CI and dependencies; read it before changing any of them.
 

@@ -1,0 +1,6 @@
+repo	url	commits	licenses	license_files	human	llm	mixed
+fix/human-3	https://github.com/fix/human-3	e48927c0c5292de6c701b5183fdec2fe2063549b	Apache-2.0	https://github.com/fix/human-3/blob/e48927c0c5292de6c701b5183fdec2fe2063549b/LICENSE	2	0	0
+fix/human-4	https://github.com/fix/human-4	4dadee00bc1f9bc3b44ba93f2d03b5e8a40516aa	Apache-2.0	https://github.com/fix/human-4/blob/4dadee00bc1f9bc3b44ba93f2d03b5e8a40516aa/LICENSE	1	0	0
+fix/llm-1	https://github.com/fix/llm-1	9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305	MIT	https://github.com/fix/llm-1/blob/9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305/LICENSE	0	2	0
+fix/llm-3	https://github.com/fix/llm-3	9171b5477d416cb5ad552d8d00b66e73a30fa087	MIT	https://github.com/fix/llm-3/blob/9171b5477d416cb5ad552d8d00b66e73a30fa087/LICENSE	0	1	0
+fix/mixed-3	https://github.com/fix/mixed-3	a7e5ce4f39570b66be4aa2d211a33a2368a67ffc	MIT	https://github.com/fix/mixed-3/blob/a7e5ce4f39570b66be4aa2d211a33a2368a67ffc/LICENSE.txt	0	0	1

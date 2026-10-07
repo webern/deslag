@@ -853,9 +853,15 @@ fn read_merge(dir: &Path, problems: &mut Vec<Error>) -> MergeFiles {
         let text = text?;
         let shown = dir.join(name).display().to_string();
         match Tsv::parse(&shown, &text, None) {
-            Ok(table) if table.columns.len() >= 2 && table.column("sent_id").is_some() => Some(table),
+            Ok(table) if table.columns.len() >= 2 && table.column("sent_id").is_some() => {
+                Some(table)
+            }
             Ok(_) => {
-                problems.push(Error::load(&shown, Place::File, "it has no `sent_id` column"));
+                problems.push(Error::load(
+                    &shown,
+                    Place::File,
+                    "it has no `sent_id` column",
+                ));
                 None
             }
             Err(error) => {

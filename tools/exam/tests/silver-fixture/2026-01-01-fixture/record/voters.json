@@ -1,0 +1,98 @@
+{
+  "note": "The voters, the other models defined and the adjudicator, pinned. The adjudicator is `opus`, Claude Opus 5.5 run as confined Claude Code processes through files (`transport: handoff`); `claude`, Sonnet 5.5 through OpenRouter, stays defined, its pilot runs being on record, and `judge --adjudicator claude` picks it for one merge. After the pilot gemma replaced mistral as the third voter (mistral stays defined, its runs being on record). `voters` and `adjudicator` name entries of `models`, so swapping a voter is one line there. `provider` is the tag the OpenRouter endpoint listing gives the endpoint (models/<id>/endpoints), and the runner checks the listing at run time: the endpoint must exist, have the quantisation pinned here, and support every parameter sent. `temperature` and `reasoning` are sent only when not null, since the request requires every parameter it sends: Mistral's endpoint lists no `reasoning`, and the Anthropic route lists no `temperature`. `reasoning` is passed through as OpenRouter's object; the adjudicator thinks at low effort, and `max_tokens` (16000) includes the thinking. `provider_fallback` lists other pinned endpoints of the same model, in order, at the same quantisation or a more precise one than `provider`'s listing gives. When an endpoint fails in a way that is its own (HTTP 429 or 5xx through every wait, replies cut off on both halves of a split, a provider refusal) the runner abandons that run and starts a new one at the next endpoint, which asks every batch afresh; a run never changes endpoint. A network error here (connection refused, DNS, a timeout with no answer) is no endpoint's fault: the run stops and a rerun continues it. `--endpoint TAG` starts a run at a listed endpoint by hand. `settings.failure_budget` (40) is the most calls that may fail in one step, across every wait, halving and switch; `settings.abstain_limit` (0.25) is the share of a voter run's sentences that may abstain before the run ends failed. deepseek's fallback is `streamlake/fp8` alone: DeepInfra's DeepSeek runs every reply to `max_tokens`. Pins from the listings of 2026-10-07. Every model has `license` (an SPDX id for an open-weight model), `license_url` (its model card, or for Claude the terms) and `license_checked`, the date its licence was last read, without which no run of it starts: a run copies the licence and the date into its `run.json` and `runs.tsv`, with the sha256 of this file. `external` holds the same for spaCy, which `register` records. The card URLs were checked to resolve, and to give that licence, on 2026-10-07.",
+  "voters": ["deepseek", "qwen", "gemma"],
+  "adjudicator": "opus",
+  "external": {
+    "spacy": {
+      "model": "en-core-web-trf",
+      "license": "MIT",
+      "license_url": "https://huggingface.co/spacy/en_core_web_trf",
+      "license_checked": "2026-10-07",
+      "license_note": "MIT by its maker, Explosion; trained on OntoNotes 5 among other data"
+    }
+  },
+  "settings": {
+    "batch_size": 50,
+    "per_part": 60,
+    "retries": 2,
+    "http_attempts": 8,
+    "timeout_s": 240,
+    "backoff_s": 5,
+    "longest_wait_s": 120,
+    "max_wait_s": 600,
+    "pause_s": 1.0,
+    "failure_budget": 40,
+    "abstain_limit": 0.25
+  },
+  "models": {
+    "deepseek": {
+      "model": "deepseek/deepseek-v4-flash",
+      "provider": "gmicloud/fp8",
+      "provider_fallback": ["streamlake/fp8"],
+      "quantizations": ["fp8"],
+      "temperature": 0,
+      "reasoning": {"enabled": false},
+      "max_tokens": 6000,
+      "license": "MIT",
+      "license_url": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
+      "license_checked": "2026-10-04"
+    },
+    "qwen": {
+      "model": "qwen/qwen3.8-27b",
+      "provider": "deepinfra/bf16",
+      "provider_fallback": ["parasail/fp8"],
+      "quantizations": ["bf16"],
+      "temperature": 0,
+      "reasoning": {"enabled": false},
+      "max_tokens": 6000,
+      "license": "Apache-2.0",
+      "license_url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "license_checked": "2026-10-04"
+    },
+    "mistral": {
+      "model": "mistralai/mistral-large-2512",
+      "provider": "mistral/zdr",
+      "provider_fallback": ["mistral/eu"],
+      "temperature": 0,
+      "reasoning": null,
+      "max_tokens": 6000,
+      "license": "Apache-2.0",
+      "license_url": "https://huggingface.co/mistralai/Mistral-Large-3-675B-Instruct-2512",
+      "license_checked": "2026-10-04",
+      "license_note": "the card is matched to OpenRouter's `mistralai/mistral-large-2512` by name and date (Mistral Large 3, 2512), since OpenRouter's id names no card"
+    },
+    "gemma": {
+      "model": "google/gemma-4-31b-it",
+      "provider": "parasail/fp8",
+      "provider_fallback": ["deepinfra/fp8"],
+      "quantizations": ["fp8"],
+      "temperature": 0,
+      "reasoning": {"enabled": false},
+      "max_tokens": 6000,
+      "license": "Apache-2.0",
+      "license_url": "https://huggingface.co/google/gemma-4-31B-it",
+      "license_checked": "2026-10-04"
+    },
+    "opus": {
+      "model": "claude-opus-5-5",
+      "provider": "claude-code",
+      "transport": "handoff",
+      "transport_note": "not called by the runner: it writes a request file per call, and `label.py handoff-run` answers each with a `claude -p --safe-mode` process confined to an empty working directory (README.md, `handoff-run`). No price, temperature, reasoning or max_tokens is set: the harness decides them, and provenance (handoff/<run>/agent.json, in runs.tsv's settings) says so.",
+      "license": "Anthropic Commercial Terms (adjudicator, D2a)",
+      "license_url": "https://www.anthropic.com/legal/commercial-terms",
+      "license_checked": "2026-10-04",
+      "license_note": "run through Claude Code with the login of the person who runs it; when that login is a personal subscription, Anthropic's Consumer Terms (https://www.anthropic.com/legal/consumer-terms) govern it rather than the Commercial Terms"
+    },
+    "claude": {
+      "model": "anthropic/claude-sonnet-5.5",
+      "provider": "anthropic",
+      "temperature": null,
+      "temperature_note": "not sent: with thinking on the API requires its default of 1, and the Anthropic route lists no temperature",
+      "reasoning": {"effort": "low"},
+      "max_tokens": 16000,
+      "license": "Anthropic Commercial Terms (adjudicator, D2a)",
+      "license_url": "https://www.anthropic.com/legal/commercial-terms",
+      "license_checked": "2026-10-04"
+    }
+  }
+}

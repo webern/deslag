@@ -1,0 +1,19 @@
+{
+  "agent_type": "claude -p --safe-mode",
+  "args": [
+    "-p",
+    "--safe-mode",
+    "--model",
+    "claude-opus-5-5",
+    "--tools",
+    "Read,Write"
+  ],
+  "cwd": "an empty directory made for the call",
+  "effort": "default",
+  "harness": "claude-code",
+  "model_reported": "claude-opus-5-5",
+  "prompt_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "safe_mode": true,
+  "tools": "Read,Write",
+  "version": "2.1.293"
+}

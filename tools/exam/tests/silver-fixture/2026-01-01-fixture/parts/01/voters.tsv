@@ -1,0 +1,6 @@
+# min_voters = 3
+letter	voter	base_only	run
+A	deepseek	no	r1
+B	qwen	no	r2
+C	gemma	no	r3
+D	spacy	yes	r4

@@ -528,7 +528,11 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
             };
             let table = Tsv::parse(&path, text, None)?;
             let Some(at) = table.column("sent_id") else {
-                problems.push(Error::load(&path, Place::File, "it has no `sent_id` column"));
+                problems.push(Error::load(
+                    &path,
+                    Place::File,
+                    "it has no `sent_id` column",
+                ));
                 continue;
             };
             for row in &table.rows {
@@ -909,4 +913,46 @@ fn audit_rules(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The batch `tests/silver-fixture/` holds was assembled once, with an audit, an owner's
+    /// rejection and a calibration table, and these rules have passed it since. It is never
+    /// rebuilt to suit a rule: a rule that stops passing it has changed, and changing a rule
+    /// needs a new check version. `regenerate_the_committed_fixture_batch` in
+    /// `tests/silver_batch.rs` writes it again, for the day a new version is added.
+    #[test]
+    fn the_committed_batch_still_passes_the_frozen_rules() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/silver-fixture/2026-01-01-fixture");
+        let batch = Batch::load(&dir).expect("the committed batch loads");
+        let checked = check(&batch).unwrap_or_else(|problems| {
+            panic!(
+                "the committed batch fails version {} of the rules:\n{}",
+                super::super::kit::CHECK_VERSION,
+                problems
+                    .0
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            )
+        });
+        assert_eq!(
+            checked,
+            Checked {
+                sentences: 7,
+                words: 127,
+                parts: 2,
+                runs: 10,
+                audit: true
+            }
+        );
+        assert_eq!(batch.name, "2026-01-01-fixture");
+        let kit = Kit::parse(batch.get(layout::KIT).unwrap()).unwrap();
+        assert_eq!(kit.get("check_version"), "1");
+    }
 }

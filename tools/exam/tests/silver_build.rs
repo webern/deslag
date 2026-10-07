@@ -60,7 +60,8 @@ fn fixture(made: &Made, id: &str) -> (std::path::PathBuf, std::path::PathBuf) {
 /// Changes the sidecar of the fixture of `id` by `change` on its JSON.
 fn edit_sidecar(made: &Made, id: &str, change: impl FnOnce(&mut serde_json::Value)) {
     let (_, json) = fixture(made, id);
-    let mut value: serde_json::Value = serde_json::from_str(&fs::read_to_string(&json).unwrap()).unwrap();
+    let mut value: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&json).unwrap()).unwrap();
     change(&mut value);
     fs::write(&json, serde_json::to_string_pretty(&value).unwrap()).unwrap();
 }
@@ -71,25 +72,44 @@ fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_nothin
     let before = common::draws::tree_bytes(&made.root);
     let said = made.check_part(1).ok();
     assert!(said.out.contains("part 01 of 2"), "{}", said.out);
-    assert!(said.out.contains("5 sentences drawn, 5 labelled and kept, 0 dropped"), "{}", said.out);
-    let said = made.check_part(2).ok();
-    assert!(said.out.contains("part 02 of 2"), "{}", said.out);
     assert!(
-        said.out.contains("4 sentences drawn, 3 labelled and kept, 0 dropped, 1 left out unsettled (1 words)"),
+        said.out
+            .contains("5 sentences drawn, 5 labelled and kept, 0 dropped"),
         "{}",
         said.out
     );
-    assert_eq!(before, common::draws::tree_bytes(&made.root), "the preflight wrote something");
+    let said = made.check_part(2).ok();
+    assert!(said.out.contains("part 02 of 2"), "{}", said.out);
+    assert!(
+        said.out.contains(
+            "4 sentences drawn, 3 labelled and kept, 0 dropped, 1 left out unsettled (1 words)"
+        ),
+        "{}",
+        said.out
+    );
+    assert_eq!(
+        before,
+        common::draws::tree_bytes(&made.root),
+        "the preflight wrote something"
+    );
 }
 
 #[test]
 fn labels_that_do_not_say_trains_yes_are_refused() {
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replace("# exam.trains = yes", "# exam.trains = no")),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replace("# exam.trains = yes", "# exam.trains = no")
+            })
+        },
         &["exam.trains = no", "finish --trains yes"],
     );
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replace("# exam.trains = yes\n", "")),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replace("# exam.trains = yes\n", "")
+            })
+        },
         &["exam.trains = nothing"],
     );
 }
@@ -142,7 +162,11 @@ fn an_id_used_twice_is_refused() {
 #[test]
 fn a_draw_that_was_not_dealt_into_parts_is_refused() {
     refused(
-        |made| made.edit(1, "manifest.tsv", |text| text.replace("# part = 1 of 1\n", "")),
+        |made| {
+            made.edit(1, "manifest.tsv", |text| {
+                text.replace("# part = 1 of 1\n", "")
+            })
+        },
         &["no `# part = k of N`", "no exemption for an undealt draw"],
     );
 }
@@ -150,11 +174,19 @@ fn a_draw_that_was_not_dealt_into_parts_is_refused() {
 #[test]
 fn a_draw_made_under_another_tag_version_is_refused() {
     refused(
-        |made| made.edit(1, "manifest.tsv", |text| text.replace("# tag_version = 11\n", "# tag_version = 10\n")),
+        |made| {
+            made.edit(1, "manifest.tsv", |text| {
+                text.replace("# tag_version = 11\n", "# tag_version = 10\n")
+            })
+        },
         &["tag version 10", "draw again"],
     );
     refused(
-        |made| made.edit(1, "manifest.tsv", |text| text.replace("# tag_version = 11\n", "")),
+        |made| {
+            made.edit(1, "manifest.tsv", |text| {
+                text.replace("# tag_version = 11\n", "")
+            })
+        },
         &["records no tag_version"],
     );
 }
@@ -174,7 +206,11 @@ fn tokens_the_exam_would_not_write_are_refused() {
 #[test]
 fn labels_for_other_tokens_than_the_draws_are_refused() {
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replacen("\tproperty\t", "\tproperties\t", 1)),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen("\tproperty\t", "\tproperties\t", 1)
+            })
+        },
         &["is not the token the draw holds"],
     );
 }
@@ -182,15 +218,27 @@ fn labels_for_other_tokens_than_the_draws_are_refused() {
 #[test]
 fn a_word_with_no_provenance_or_no_run_is_refused() {
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replacen("Prov=agree|", "", 1)),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen("Prov=agree|", "", 1)
+            })
+        },
         &["has no `Prov=`"],
     );
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replacen("Prov=agree", "Prov=blind", 1)),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen("Prov=agree", "Prov=blind", 1)
+            })
+        },
         &["a silver word is agreed or adjudicated"],
     );
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replacen("|Runs=r1,r2,r3,r4", "", 1)),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen("|Runs=r1,r2,r3,r4", "", 1)
+            })
+        },
         &["has no `Runs=`"],
     );
 }
@@ -198,7 +246,11 @@ fn a_word_with_no_provenance_or_no_run_is_refused() {
 #[test]
 fn a_word_with_no_part_of_speech_is_refused() {
     refused(
-        |made| made.edit(1, "merge/labelled.conllu", |text| text.replacen("\tNOUN\t_\tNumber=Sing", "\t_\t_\t_", 1)),
+        |made| {
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen("\tNOUN\t_\tNumber=Sing", "\t_\t_\t_", 1)
+            })
+        },
         &["has no part of speech"],
     );
 }
@@ -247,7 +299,13 @@ fn a_merge_that_lacks_a_file_is_refused() {
 #[test]
 fn an_adjudicator_json_that_names_another_adjudicator_is_refused() {
     refused(
-        |made| made.write(1, "merge/adjudicator.json", "{\"name\": \"claude\", \"model\": \"anthropic/claude-sonnet-5.5\"}\n"),
+        |made| {
+            made.write(
+                1,
+                "merge/adjudicator.json",
+                "{\"name\": \"claude\", \"model\": \"anthropic/claude-sonnet-5.5\"}\n",
+            )
+        },
         &["adjudicator.json names `claude`", "voters.json has `opus`"],
     );
 }
@@ -257,7 +315,10 @@ fn a_run_the_run_table_does_not_describe_is_refused() {
     refused(
         |made| {
             made.edit(1, "runs.tsv", |text| {
-                text.lines().filter(|line| !line.starts_with("r2\t")).map(|l| format!("{l}\n")).collect()
+                text.lines()
+                    .filter(|line| !line.starts_with("r2\t"))
+                    .map(|l| format!("{l}\n"))
+                    .collect()
             });
         },
         &["run r2 is named and runs.tsv does not describe it"],
@@ -268,13 +329,19 @@ fn a_run_the_run_table_does_not_describe_is_refused() {
 fn a_run_that_is_not_complete_is_refused() {
     refused(
         |made| made.set_run(1, "r1", "status", "failed"),
-        &["run r1 is `failed`", "only a complete run may vouch for a word"],
+        &[
+            "run r1 is `failed`",
+            "only a complete run may vouch for a word",
+        ],
     );
 }
 
 #[test]
 fn a_run_with_no_state_is_refused() {
-    refused(|made| made.set_run(1, "r1", "state_id", "-"), &["run r1 has no state_id"]);
+    refused(
+        |made| made.set_run(1, "r1", "state_id", "-"),
+        &["run r1 has no state_id"],
+    );
 }
 
 #[test]
@@ -287,14 +354,24 @@ fn a_run_id_under_two_states_is_refused() {
                 format!("{text}{other}\n")
             });
         },
-        &["run r1 is under 2 states", "a word names a run by its id alone"],
+        &[
+            "run r1 is under 2 states",
+            "a word names a run by its id alone",
+        ],
     );
 }
 
 #[test]
 fn runs_at_more_than_one_commit_are_refused() {
     refused(
-        |made| made.set_run(1, "r2", "deslag_commit", "fedcba9876543210fedcba9876543210fedcba98"),
+        |made| {
+            made.set_run(
+                1,
+                "r2",
+                "deslag_commit",
+                "fedcba9876543210fedcba9876543210fedcba98",
+            )
+        },
         &["made at 2 commits of deslag"],
     );
 }
@@ -316,7 +393,10 @@ fn a_run_at_a_dirty_commit_is_refused() {
 fn a_voter_at_an_endpoint_voters_json_does_not_list_is_refused() {
     refused(
         |made| made.set_run(1, "r1", "endpoint", "elsewhere/fp8"),
-        &["run r1 was at endpoint elsewhere/fp8", "does not list for `deepseek`"],
+        &[
+            "run r1 was at endpoint elsewhere/fp8",
+            "does not list for `deepseek`",
+        ],
     );
 }
 
@@ -375,7 +455,8 @@ fn a_run_made_under_another_voters_json_is_refused() {
     let mut text = fs::read_to_string(&made.voters).unwrap();
     text = text.replacen("\"batch_size\": 50", "\"batch_size\": 40", 1);
     fs::write(&made.voters, text).unwrap();
-    made.check_part(1).refused(&["began under a voters.json of sha256"]);
+    made.check_part(1)
+        .refused(&["began under a voters.json of sha256"]);
 }
 
 #[test]
@@ -416,11 +497,25 @@ fn an_agent_record_that_is_not_the_confined_process_is_refused() {
         serde_json::json!({ "agent": agent }).to_string()
     };
     refused(
-        |made| made.set_run(1, "r5", "settings", &with(|a| a["safe_mode"] = false.into())),
+        |made| {
+            made.set_run(
+                1,
+                "r5",
+                "settings",
+                &with(|a| a["safe_mode"] = false.into()),
+            )
+        },
         &["does not say safe_mode true"],
     );
     refused(
-        |made| made.set_run(1, "r5", "settings", &with(|a| a["tools"] = "Read,Write,Bash".into())),
+        |made| {
+            made.set_run(
+                1,
+                "r5",
+                "settings",
+                &with(|a| a["tools"] = "Read,Write,Bash".into()),
+            )
+        },
         &["has other tools than Read,Write"],
     );
     refused(
@@ -428,7 +523,14 @@ fn an_agent_record_that_is_not_the_confined_process_is_refused() {
         &["its agent record lacks version"],
     );
     refused(
-        |made| made.set_run(1, "r5", "settings", &with(|a| a["prompt_sha256"] = "short".into())),
+        |made| {
+            made.set_run(
+                1,
+                "r5",
+                "settings",
+                &with(|a| a["prompt_sha256"] = "short".into()),
+            )
+        },
         &["no prompt sha256"],
     );
 }
@@ -441,7 +543,10 @@ fn an_outside_tagger_other_than_spacy_is_refused() {
     );
     refused(
         |made| made.set_run(1, "r4", "model", "en-core-web-sm"),
-        &["run r4 is of model en-core-web-sm", "does not give for `spacy`"],
+        &[
+            "run r4 is of model en-core-web-sm",
+            "does not give for `spacy`",
+        ],
     );
 }
 
@@ -463,7 +568,11 @@ fn a_merge_with_fewer_than_three_model_voters_is_refused() {
 #[test]
 fn a_merge_that_agreed_words_on_fewer_than_three_voters_is_refused() {
     refused(
-        |made| made.edit(1, "merge/voters.tsv", |text| text.replace("# min_voters = 3", "# min_voters = 2")),
+        |made| {
+            made.edit(1, "merge/voters.tsv", |text| {
+                text.replace("# min_voters = 3", "# min_voters = 2")
+            })
+        },
         &["min_voters is 2", "at least 3 model voters"],
     );
 }
@@ -486,11 +595,19 @@ fn a_merge_with_no_spacy_is_refused() {
 #[test]
 fn a_voter_with_no_run_or_the_run_of_another_voter_is_refused() {
     refused(
-        |made| made.edit(1, "merge/voters.tsv", |text| text.replace("\tr2\t", "\t-\t")),
+        |made| {
+            made.edit(1, "merge/voters.tsv", |text| {
+                text.replace("\tr2\t", "\t-\t")
+            })
+        },
         &["voter qwen has no run recorded"],
     );
     refused(
-        |made| made.edit(1, "merge/voters.tsv", |text| text.replace("\tr2\t", "\tr1\t")),
+        |made| {
+            made.edit(1, "merge/voters.tsv", |text| {
+                text.replace("\tr2\t", "\tr1\t")
+            })
+        },
         &["voter qwen names run r1", "a run of `deepseek`"],
     );
 }
@@ -498,7 +615,11 @@ fn a_voter_with_no_run_or_the_run_of_another_voter_is_refused() {
 #[test]
 fn a_voter_that_voters_json_does_not_name_is_refused_in_the_merge() {
     refused(
-        |made| made.edit(1, "merge/voters.tsv", |text| text.replace("\tgemma\t", "\tmistral\t")),
+        |made| {
+            made.edit(1, "merge/voters.tsv", |text| {
+                text.replace("\tgemma\t", "\tmistral\t")
+            })
+        },
         &["voter mistral is not a voter of voters.json"],
     );
 }
@@ -535,7 +656,11 @@ fn a_fixture_whose_content_commit_or_url_changed_is_refused() {
 fn a_fixture_whose_licence_differs_from_the_manifests_is_refused() {
     refused(
         |made| {
-            let other = if made.cell(1, "s0003", "license") == "MIT" { "BSD-3-Clause" } else { "MIT" };
+            let other = if made.cell(1, "s0003", "license") == "MIT" {
+                "BSD-3-Clause"
+            } else {
+                "MIT"
+            };
             set_manifest(made, "s0003", "license", other);
         },
         &["sidecar licence", "is not the manifest's"],
@@ -546,7 +671,9 @@ fn a_fixture_whose_licence_differs_from_the_manifests_is_refused() {
 fn a_fixture_whose_licence_is_outside_the_accepted_list_is_refused() {
     refused(
         |made| {
-            edit_sidecar(made, "s0003", |value| value["source"]["license"] = "GPL-3.0-only".into());
+            edit_sidecar(made, "s0003", |value| {
+                value["source"]["license"] = "GPL-3.0-only".into()
+            });
             set_manifest(made, "s0003", "license", "GPL-3.0-only");
         },
         &["a fixture does not load"],
@@ -618,8 +745,18 @@ fn a_fixture_whose_declared_generator_is_banned_is_refused() {
 fn a_path_of_the_makers_machine_in_a_file_the_part_ships_is_refused() {
     // A listing.
     refused(
-        |made| made.write(1, "listings/r1.json", "{\"note\": \"/home/someone/.label/silver\"}\n"),
-        &["listings/r1.json", "/home/someone/.label/silver", "a path of the machine that made it"],
+        |made| {
+            made.write(
+                1,
+                "listings/r1.json",
+                "{\"note\": \"/home/someone/.label/silver\"}\n",
+            )
+        },
+        &[
+            "listings/r1.json",
+            "/home/someone/.label/silver",
+            "a path of the machine that made it",
+        ],
     );
     // A cell of the run table, inside the JSON of `settings`.
     refused(
@@ -629,13 +766,24 @@ fn a_path_of_the_makers_machine_in_a_file_the_part_ships_is_refused() {
                 agent["cwd"] = "/tmp/scratch/empty".into();
                 agent
             };
-            made.set_run(1, "r5", "settings", &serde_json::json!({ "agent": agent }).to_string());
+            made.set_run(
+                1,
+                "r5",
+                "settings",
+                &serde_json::json!({ "agent": agent }).to_string(),
+            );
         },
         &["/tmp/scratch/empty", "a path of the machine that made it"],
     );
     // A cell of the adjudicator's record.
     refused(
-        |made| made.write(1, "merge/adjudicator.json", "{\"name\": \"opus\", \"model\": \"claude-opus-5-5\", \"dir\": \"~/x\"}\n"),
+        |made| {
+            made.write(
+                1,
+                "merge/adjudicator.json",
+                "{\"name\": \"opus\", \"model\": \"claude-opus-5-5\", \"dir\": \"~/x\"}\n",
+            )
+        },
         &["adjudicator.json", "~/x"],
     );
 }
@@ -662,7 +810,10 @@ fn a_part_in_the_image_that_is_not_a_labelling_draw_is_refused() {
     refused(
         |made| {
             made.edit(1, "manifest.tsv", |text| {
-                text.replace("# draw = for labelling, split unlabelled", "# draw = for gold, split unlabelled")
+                text.replace(
+                    "# draw = for labelling, split unlabelled",
+                    "# draw = for gold, split unlabelled",
+                )
             })
         },
         &["under `.label` only a skeleton", "a labelling draw"],
@@ -679,9 +830,7 @@ fn a_sentence_whose_text_became_gold_is_dropped_and_counted_not_refused() {
         .find(|block| block.contains("# sent_id = s0004"))
         .unwrap()
         .lines()
-        .filter(|line| {
-            line.starts_with("# text") || !line.starts_with('#')
-        })
+        .filter(|line| line.starts_with("# text") || !line.starts_with('#'))
         .map(|line| {
             if line.starts_with('#') {
                 return line.to_string();
@@ -701,7 +850,11 @@ fn a_sentence_whose_text_became_gold_is_dropped_and_counted_not_refused() {
     text.push_str(&format!("# sent_id = g0900\n{block}\n\n"));
     fs::write(&dev, text).unwrap();
     let said = made.check_part(1).ok();
-    assert!(said.out.contains("7 labelled and kept, 1 dropped"), "{}", said.out);
+    assert!(
+        said.out.contains("7 labelled and kept, 1 dropped"),
+        "{}",
+        said.out
+    );
     assert!(said.out.contains("dropped, gold text: 1"), "{}", said.out);
     let built = made.build("2026-10-08-gold", &[]).ok();
     assert!(built.out.contains("dropped 1"), "{}", built.out);
@@ -732,12 +885,25 @@ fn a_sentence_whose_repository_became_reserved_is_dropped_and_counted_not_refuse
     text.push_str(&format!("g2\tdev\thuman\tprose\tx.md\t{repo}\tMIT\t0-1\n"));
     fs::write(manifest, text).unwrap();
     let said = made.check_part(1).ok();
-    assert!(said.out.contains(&format!("{} dropped", same.len())), "{}", said.out);
-    assert!(said.out.contains(&format!("dropped, reserved repository: {}", same.len())), "{}", said.out);
+    assert!(
+        said.out.contains(&format!("{} dropped", same.len())),
+        "{}",
+        said.out
+    );
+    assert!(
+        said.out
+            .contains(&format!("dropped, reserved repository: {}", same.len())),
+        "{}",
+        said.out
+    );
     made.build("2026-10-08-reserved", &[]).ok();
-    let drops = fs::read_to_string(made.out("2026-10-08-reserved").join("record/drops.tsv")).unwrap();
+    let drops =
+        fs::read_to_string(made.out("2026-10-08-reserved").join("record/drops.tsv")).unwrap();
     for id in same {
-        assert!(drops.contains(&format!("{id}\t01\treserved repository\n")), "{drops}");
+        assert!(
+            drops.contains(&format!("{id}\t01\treserved repository\n")),
+            "{drops}"
+        );
     }
 }
 
@@ -753,7 +919,11 @@ fn a_sentence_the_small_tier_now_holds_is_dropped_as_a_reserved_repository() {
     fs::copy(&md, dir.join(md.file_name().unwrap())).unwrap();
     fs::copy(&json, dir.join(json.file_name().unwrap())).unwrap();
     let said = made.check_part(1).ok();
-    assert!(said.out.contains("dropped, reserved repository"), "{}", said.out);
+    assert!(
+        said.out.contains("dropped, reserved repository"),
+        "{}",
+        said.out
+    );
     assert!(repo.contains('/'));
 }
 
@@ -765,8 +935,11 @@ fn two_parts() -> Made {
 #[test]
 fn parts_of_two_different_draws_are_refused() {
     let made = two_parts();
-    made.edit(2, "manifest.tsv", |text| text.replacen("# seed = 0x6465736c6167", "# seed = 0x1", 1));
-    made.build("2026-10-08-draws", &[]).refused(&["part 02 is of another draw than part 01"]);
+    made.edit(2, "manifest.tsv", |text| {
+        text.replacen("# seed = 0x6465736c6167", "# seed = 0x1", 1)
+    });
+    made.build("2026-10-08-draws", &[])
+        .refused(&["part 02 is of another draw than part 01"]);
     assert!(!made.out("2026-10-08-draws").exists());
 }
 
@@ -780,8 +953,11 @@ fn the_same_part_twice_is_refused() {
 #[test]
 fn parts_with_other_voters_are_refused() {
     let made = two_parts();
-    made.edit(2, "merge/voters.tsv", |text| text.replace("# min_voters = 3", "# min_voters = 4"));
-    made.build("2026-10-08-voters", &[]).refused(&["part 02 has other voters than part 01"]);
+    made.edit(2, "merge/voters.tsv", |text| {
+        text.replace("# min_voters = 3", "# min_voters = 4")
+    });
+    made.build("2026-10-08-voters", &[])
+        .refused(&["part 02 has other voters than part 01"]);
 }
 
 #[test]
@@ -789,35 +965,49 @@ fn a_run_id_written_twice_with_different_rows_across_parts_is_refused() {
     let made = two_parts();
     // Part 2's table also describes part 1's first run, with another number of calls.
     made.edit(2, "runs.tsv", |text| {
-        let row = made.read(1, "runs.tsv").lines().find(|line| line.starts_with("r1\t")).unwrap().to_string();
+        let row = made
+            .read(1, "runs.tsv")
+            .lines()
+            .find(|line| line.starts_with("r1\t"))
+            .unwrap()
+            .to_string();
         let mut cells: Vec<&str> = row.split('\t').collect();
         cells[15] = "99";
         format!("{text}{}\n", cells.join("\t"))
     });
-    made.build("2026-10-08-rows", &[]).refused(&["run r1 is written twice under state st1 with different rows"]);
+    made.build("2026-10-08-rows", &[])
+        .refused(&["run r1 is written twice under state st1 with different rows"]);
 }
 
 #[test]
 fn two_prompts_for_one_model_across_parts_are_refused() {
     let made = two_parts();
     made.set_run(2, "r6", "prompt_sha256", &"6".repeat(64));
-    made.build("2026-10-08-prompts", &[]).refused(&["model deepseek/deepseek-v4-flash has 2 prompt_sha256 values"]);
+    made.build("2026-10-08-prompts", &[])
+        .refused(&["model deepseek/deepseek-v4-flash has 2 prompt_sha256 values"]);
 }
 
 #[test]
 fn two_guides_for_one_model_across_parts_are_refused() {
     let made = two_parts();
     made.set_run(2, "r7", "guide_sha256", &"5".repeat(64));
-    made.build("2026-10-08-guides", &[]).refused(&["has 2 guide_sha256 values"]);
+    made.build("2026-10-08-guides", &[])
+        .refused(&["has 2 guide_sha256 values"]);
 }
 
 #[test]
 fn runs_at_two_commits_across_parts_are_refused() {
     let made = two_parts();
     for run in ["r6", "r7", "r8", "r9", "r10"] {
-        made.set_run(2, run, "deslag_commit", "fedcba9876543210fedcba9876543210fedcba98");
+        made.set_run(
+            2,
+            run,
+            "deslag_commit",
+            "fedcba9876543210fedcba9876543210fedcba98",
+        );
     }
-    made.build("2026-10-08-commits", &[]).refused(&["made at 2 commits of deslag"]);
+    made.build("2026-10-08-commits", &[])
+        .refused(&["made at 2 commits of deslag"]);
 }
 
 #[test]
@@ -825,15 +1015,23 @@ fn two_agents_across_parts_are_refused() {
     let made = two_parts();
     let mut agent = common::silver_parts::agent();
     agent["version"] = "2.1.294".into();
-    made.set_run(2, "r10", "settings", &serde_json::json!({ "agent": agent }).to_string());
-    made.build("2026-10-08-agents", &[]).refused(&["record 2 different agents"]);
+    made.set_run(
+        2,
+        "r10",
+        "settings",
+        &serde_json::json!({ "agent": agent }).to_string(),
+    );
+    made.build("2026-10-08-agents", &[])
+        .refused(&["record 2 different agents"]);
 }
 
 #[test]
 fn a_repeated_text_is_dropped_as_a_repeat() {
     // Part 2 is a copy of part 1 under other ids: every one of its sentences repeats a text.
     let made = Made::with(1);
-    made.edit(1, "manifest.tsv", |text| text.replace("# part = 1 of 1", "# part = 1 of 2"));
+    made.edit(1, "manifest.tsv", |text| {
+        text.replace("# part = 1 of 1", "# part = 1 of 2")
+    });
     let copy = made.root.join(".label/silver/part-02");
     copy_dir(made.part(1), &copy);
     for name in [
@@ -853,10 +1051,14 @@ fn a_repeated_text_is_dropped_as_a_repeat() {
         fs::write(&path, renamed).unwrap();
     }
     let spec = |dir: &std::path::Path| format!("{}:merge", dir.display());
-    made.build_parts("2026-10-08-repeat", &[spec(made.part(1)), spec(&copy)], &[]).ok();
+    made.build_parts("2026-10-08-repeat", &[spec(made.part(1)), spec(&copy)], &[])
+        .ok();
     let out = made.out("2026-10-08-repeat");
     let drops = fs::read_to_string(out.join("record/drops.tsv")).unwrap();
-    let repeats = drops.lines().filter(|line| line.ends_with("\trepeat")).count();
+    let repeats = drops
+        .lines()
+        .filter(|line| line.ends_with("\trepeat"))
+        .count();
     assert_eq!(repeats, 8, "{drops}");
     assert!(drops.contains("t0001\t02\trepeat\n"), "{drops}");
 }
@@ -897,7 +1099,8 @@ fn an_out_directory_that_is_not_named_for_the_batch_is_refused() {
     args.extend(made.pool_args());
     args.extend(made.corpus_args());
     let args: Vec<&str> = args.iter().map(String::as_str).collect();
-    made.gold(&args).refused(&["--out must be a directory named `2026-10-08-x`"]);
+    made.gold(&args)
+        .refused(&["--out must be a directory named `2026-10-08-x`"]);
     assert!(!wrong.exists());
 }
 

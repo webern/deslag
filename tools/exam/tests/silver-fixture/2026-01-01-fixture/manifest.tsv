@@ -1,0 +1,19 @@
+# silver.batch = 2026-01-01-fixture
+# parts = 01, 02 of 2
+# seed = 0x6465736c6167
+# corpus = tests/corpus tree
+# per tier quotas = prose:2 list-item:1 heading:0 table-cell:0
+# draw = for labelling, split unlabelled, ids s0001 on
+# limits = per file 2, per repo 4, words at least 2, tokens at most 60
+# exclude = sha256 827d096d92f3deeaa0e8070d79f45beb176768e57a958a1cd325f5f4b754b048, 0 fixtures
+# exclude repos = 1 repositories and 3 of tests/corpus, 0 fixtures
+# exclude silver = 0 live batches, 0 texts
+# tag_version = 11
+sent_id	split	tier	context	file	repo	license	bytes	source_commit	source_url	content_sha256	model	model_license	part
+s0001	tune	mixed	list-item	mixed/fix-mixed-3/sdk__identity__Azure.Identity__CHANGELOG.md	fix/mixed-3	MIT	60759-60854	a7e5ce4f39570b66be4aa2d211a33a2368a67ffc	https://github.com/Azure/azure-sdk-for-net/blob/a7e5ce4f39570b66be4aa2d211a33a2368a67ffc/sdk/identity/Azure.Identity/CHANGELOG.md	560e8c388c37b614ca960e39278e32e17382da67befdcab2e0659e2d87fb4aa0			01
+s0002	train	llm	list-item	llm/fix-llm-1/skills__job-patterns__SKILL.md	fix/llm-1	MIT	8572-8713	9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305	https://github.com/AkbarDevop/ai-job-agent/blob/9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305/skills/job-patterns/SKILL.md	fb5f6b5391f6d8b624fa57ae7e8cd7858a98f5247ec8dfc457fd99fcacb2992d			02
+s0003	train	human	list-item	human/fix-human-4/README.md	fix/human-4	Apache-2.0	5072-5224	4dadee00bc1f9bc3b44ba93f2d03b5e8a40516aa	https://github.com/ICLRandD/Blackstone/blob/4dadee00bc1f9bc3b44ba93f2d03b5e8a40516aa/README.md	e1e06929c6dec5b50d9473a021ab925c43daeed2ab4a58d5d0a0159899c45073			01
+s0005	train	human	prose	human/fix-human-3/README.md	fix/human-3	Apache-2.0	7085-7474	e48927c0c5292de6c701b5183fdec2fe2063549b	https://github.com/GitLiveApp/firebase-kotlin-sdk/blob/e48927c0c5292de6c701b5183fdec2fe2063549b/README.md	ea7eab863b1d9dd8aa9559acaf807a2b90e48d5a47f9b11535db3e90cb090ac6			01
+s0006	train	llm	prose	llm/fix-llm-3/custom_modes__plan_instructions.md	fix/llm-3	MIT	8642-8696	9171b5477d416cb5ad552d8d00b66e73a30fa087	https://github.com/Baukebrenninkmeijer/table-evaluator/blob/9171b5477d416cb5ad552d8d00b66e73a30fa087/custom_modes/plan_instructions.md	e77b42f92a4de694d510ad1fb23bbb8e71eb3c468ec7180105a37051d5a190f1			02
+s0007	train	human	prose	human/fix-human-3/README.md	fix/human-3	Apache-2.0	5718-5851	e48927c0c5292de6c701b5183fdec2fe2063549b	https://github.com/GitLiveApp/firebase-kotlin-sdk/blob/e48927c0c5292de6c701b5183fdec2fe2063549b/README.md	ea7eab863b1d9dd8aa9559acaf807a2b90e48d5a47f9b11535db3e90cb090ac6			02
+s0008	train	llm	prose	llm/fix-llm-1/skills__job-patterns__SKILL.md	fix/llm-1	MIT	3402-3494	9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305	https://github.com/AkbarDevop/ai-job-agent/blob/9ce47d29b5fcfd37ea2fdd5588c8d178bbfa7305/skills/job-patterns/SKILL.md	fb5f6b5391f6d8b624fa57ae7e8cd7858a98f5247ec8dfc457fd99fcacb2992d			01

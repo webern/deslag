@@ -1,0 +1,194 @@
+# exam.tokens = deslag
+# exam.silver = yes
+# sent_id = s0001
+# exam.context = list-item
+# pick_id = s0001
+# text = Renamed property VerificationUrl -> VerificationUri and changed type from string to Uri
+1	Renamed	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|Runs=r5
+2	property	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	VerificationUrl	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	>	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+6	VerificationUri	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+7	and	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+8	changed	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+9	type	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	from	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	string	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+12	to	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	Uri	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+
+# sent_id = s0002
+# exam.context = list-item
+# pick_id = s0002
+# text = Bay Area apps are 0/14 on interviews while Midwest is 2/8 — you're being filtered out as a non-local Mizzou student in the Bay Area pool.
+1	Bay	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|Runs=r10
+2	Area	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+3	apps	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+4	are	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+5	0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	14	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+8	on	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+9	interviews	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+10	while	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+11	Midwest	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+12	is	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+13	2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+14	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	8	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+16	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	you're	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+18	being	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+19	filtered	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+20	out	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+21	as	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+22	a	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+23	non	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+24	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+25	local	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+26	Mizzou	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+27	student	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+28	in	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+29	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+30	Bay	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+31	Area	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+32	pool	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+33	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0003
+# exam.context = list-item
+# pick_id = s0003
+# text = The models have been trained on English case law and the library has been built with the peculiarities of the legal system of England and Wales in mind.
+1	The	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+2	models	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	have	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+4	been	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+5	trained	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+6	on	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+7	English	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+8	case	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+9	law	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	and	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+12	library	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	has	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+14	been	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+15	built	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+16	with	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+17	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+18	peculiarities	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+19	of	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+20	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+21	legal	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+22	system	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+23	of	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+24	England	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+25	and	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+26	Wales	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+27	in	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+28	mind	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+29	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0005
+# exam.context = prose
+# pick_id = s0005
+# text = The official Firebase SDKs use different platform-specific ways to support writing data with and without custom classes in Cloud Firestore , Realtime Database and Functions .
+1	The	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+2	official	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	Firebase	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+4	SDKs	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+5	use	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+6	different	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+7	platform	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+8	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+9	specific	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	ways	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	to	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+12	support	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	writing	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+14	data	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+15	with	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+16	and	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+17	without	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+18	custom	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+19	classes	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+20	in	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+21	Cloud	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+22	Firestore	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+23	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+24	Realtime	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+25	Database	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+26	and	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+27	Functions	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+28	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0006
+# exam.context = prose
+# pick_id = s0006
+# text = For these components, flag them for the CREATIVE mode.
+1	For	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+2	these	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+3	components	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+4	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+5	flag	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+6	them	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+7	for	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+8	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+9	CREATIVE	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+10	mode	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+11	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0007
+# exam.context = prose
+# pick_id = s0007
+# text = Asynchronous streams of values are represented by Flows in the SDK instead of repeatedly invoked callbacks or listeners, for example:
+1	Asynchronous	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+2	streams	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+3	of	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+4	values	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+5	are	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+6	represented	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+7	by	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+8	Flows	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+9	in	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+10	the	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+11	SDK	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+12	instead	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+13	of	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+14	repeatedly	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+15	invoked	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+16	callbacks	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+17	or	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+18	listeners	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+19	,	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	for	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+21	example	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+22	:	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0008
+# exam.context = prose
+# pick_id = s0008
+# text = Skip platforms with apps < 3 (too noisy) or list them in a separate "low-volume" footnote.
+1	Skip	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+2	platforms	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	with	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+4	apps < 3	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+5	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	too	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+7	noisy	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+8	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	or	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	list	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	them	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+12	in	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	a	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+14	separate	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+15	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	low	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+17	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+18	volume	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+19	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	footnote	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+21	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+

@@ -1,0 +1,201 @@
+# exam.tokens = deslag
+# exam.silver = yes
+# sent_id = s0001
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0001
+# text = Renamed property VerificationUrl -> VerificationUri and changed type from string to Uri
+1	Renamed	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	property	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	VerificationUrl	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+4	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+5	>	_	SYM	_	_	_	_	_	Prov=owner|Kind=Symbol
+6	VerificationUri	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+7	and	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+8	changed	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+9	type	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	from	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	string	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+12	to	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	Uri	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+
+# sent_id = s0002
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0002
+# text = Bay Area apps are 0/14 on interviews while Midwest is 2/8 — you're being filtered out as a non-local Mizzou student in the Bay Area pool.
+1	Bay	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	Area	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	apps	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+4	are	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+5	0	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+7	14	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number
+8	on	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+9	interviews	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	while	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	Midwest	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+12	is	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	2	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number|SpaceAfter=No
+14	/	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+15	8	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number
+16	—	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+17	you're	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+18	being	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+19	filtered	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+20	out	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+21	as	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+22	a	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+23	non	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+24	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+25	local	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+26	Mizzou	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+27	student	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+28	in	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+29	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+30	Bay	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+31	Area	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+32	pool	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+33	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0003
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0003
+# text = The models have been trained on English case law and the library has been built with the peculiarities of the legal system of England and Wales in mind.
+1	The	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	models	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	have	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+4	been	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+5	trained	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+6	on	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+7	English	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+8	case	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+9	law	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	and	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+12	library	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	has	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+14	been	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+15	built	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+16	with	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+17	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+18	peculiarities	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+19	of	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+20	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+21	legal	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+22	system	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+23	of	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+24	England	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+25	and	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+26	Wales	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+27	in	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+28	mind	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+29	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0005
+# owner_reviewed = 2026-10-20
+# exam.context = prose
+# pick_id = s0005
+# text = The official Firebase SDKs use different platform-specific ways to support writing data with and without custom classes in Cloud Firestore , Realtime Database and Functions .
+1	The	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	official	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	Firebase	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+4	SDKs	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+5	use	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+6	different	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+7	platform	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+8	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+9	specific	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	ways	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	to	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+12	support	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	writing	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+14	data	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+15	with	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+16	and	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+17	without	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+18	custom	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+19	classes	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+20	in	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+21	Cloud	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+22	Firestore	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+23	,	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+24	Realtime	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+25	Database	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+26	and	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+27	Functions	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+28	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0006
+# owner_reviewed = 2026-10-20
+# exam.context = prose
+# pick_id = s0006
+# text = For these components, flag them for the CREATIVE mode.
+1	For	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	these	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	components	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+4	,	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+5	flag	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+6	them	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+7	for	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+8	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+9	CREATIVE	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	mode	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+11	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0007
+# owner_reviewed = 2026-10-20
+# exam.context = prose
+# pick_id = s0007
+# text = Asynchronous streams of values are represented by Flows in the SDK instead of repeatedly invoked callbacks or listeners, for example:
+1	Asynchronous	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	streams	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	of	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+4	values	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+5	are	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+6	represented	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+7	by	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+8	Flows	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+9	in	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	the	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	SDK	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+12	instead	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	of	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+14	repeatedly	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+15	invoked	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+16	callbacks	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+17	or	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+18	listeners	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+19	,	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+20	for	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+21	example	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+22	:	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0008
+# owner_reviewed = 2026-10-20
+# exam.context = prose
+# pick_id = s0008
+# text = Skip platforms with apps < 3 (too noisy) or list them in a separate "low-volume" footnote.
+1	Skip	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+2	platforms	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+3	with	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+4	apps < 3	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+5	(	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+6	too	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+7	noisy	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+8	)	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+9	or	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+10	list	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+11	them	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+12	in	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+13	a	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+14	separate	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word
+15	"	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+16	low	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+17	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+18	volume	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+19	"	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+20	footnote	_	NOUN	_	Number=Sing	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+21	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+

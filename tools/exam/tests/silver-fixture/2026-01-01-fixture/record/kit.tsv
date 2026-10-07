@@ -1,0 +1,16 @@
+key	value
+check_version	1
+name	2026-01-01-fixture
+deslag_commit	0123456789abcdef0123456789abcdef01234567
+tag_version	11
+tokens	deslag
+draw_source	tests/corpus tree
+draw_parts	2
+parts	01,02
+min_voters	3
+voters_json_sha256	0f7b7dd88bae661302a170046f3113fa60637dc46b2842821e3c66706109a8a0
+template_sha256	570c4d39ada92dac88e0d61f7a8a3dd7da86079b19c36f17a256bce5d7149ad8
+agent_sha256	9286c1495a2c89b5a26c410d7a4c4ce1bf07549b2349f43c844a31e54584aca6
+archive_sha256	13d6283f4923d69c6e8a9054ceaa2226854c45173b9de6e0b3c7b748c572f87f
+annotations_license	CC-BY-4.0
+audit_bar	95.0

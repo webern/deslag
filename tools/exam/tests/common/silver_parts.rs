@@ -252,11 +252,26 @@ pub fn agent() -> serde_json::Value {
 
 /// The rows of the runs of one part: three voters, spaCy and the adjudicator, with ids from
 /// `first`. Each is `(set of cells)`.
-fn part_runs(voters_sha: &str, voters: &serde_json::Value, first: usize) -> Vec<Vec<(String, String)>> {
+fn part_runs(
+    voters_sha: &str,
+    voters: &serde_json::Value,
+    first: usize,
+) -> Vec<Vec<(String, String)>> {
     let run = |offset: usize| format!("r{}", first + offset);
-    let model = |name: &str| voters["models"][name]["model"].as_str().unwrap().to_string();
+    let model = |name: &str| {
+        voters["models"][name]["model"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
     let mut rows: Vec<Vec<(String, String)>> = Vec::new();
-    let common = |run: String, role: &str, name: &str, model: String, endpoint: &str, quantization: &str, license: &str| {
+    let common = |run: String,
+                  role: &str,
+                  name: &str,
+                  model: String,
+                  endpoint: &str,
+                  quantization: &str,
+                  license: &str| {
         let mut cells: Vec<(String, String)> = [
             ("run", run.clone()),
             ("state_id", STATE.to_string()),
@@ -285,11 +300,51 @@ fn part_runs(voters_sha: &str, voters: &serde_json::Value, first: usize) -> Vec<
         }
         cells
     };
-    rows.push(common(run(0), "voter", "deepseek", model("deepseek"), "gmicloud/fp8", "fp8", "MIT"));
-    rows.push(common(run(1), "voter", "qwen", model("qwen"), "deepinfra/bf16", "bf16", "Apache-2.0"));
-    rows.push(common(run(2), "voter", "gemma", model("gemma"), "parasail/fp8", "fp8", "Apache-2.0"));
-    rows.push(common(run(3), "external", "spacy", "en-core-web-trf".to_string(), "local", "-", "MIT"));
-    let mut judge = common(run(4), "adjudicator", "opus", "claude-opus-5-5".to_string(), "claude-code", "-", "Anthropic Commercial Terms (adjudicator, D2a)");
+    rows.push(common(
+        run(0),
+        "voter",
+        "deepseek",
+        model("deepseek"),
+        "gmicloud/fp8",
+        "fp8",
+        "MIT",
+    ));
+    rows.push(common(
+        run(1),
+        "voter",
+        "qwen",
+        model("qwen"),
+        "deepinfra/bf16",
+        "bf16",
+        "Apache-2.0",
+    ));
+    rows.push(common(
+        run(2),
+        "voter",
+        "gemma",
+        model("gemma"),
+        "parasail/fp8",
+        "fp8",
+        "Apache-2.0",
+    ));
+    rows.push(common(
+        run(3),
+        "external",
+        "spacy",
+        "en-core-web-trf".to_string(),
+        "local",
+        "-",
+        "MIT",
+    ));
+    let mut judge = common(
+        run(4),
+        "adjudicator",
+        "opus",
+        "claude-opus-5-5".to_string(),
+        "claude-code",
+        "-",
+        "Anthropic Commercial Terms (adjudicator, D2a)",
+    );
     judge.push(("prompt_sha256".to_string(), "7".repeat(64)));
     judge.push((
         "settings".to_string(),
@@ -458,8 +513,17 @@ impl Made {
         self.gold_in(
             dir,
             &[
-                "merge", "--voter", "deepseek", "--voter", "qwen", "--voter", "gemma", "--voter",
-                "spacy", "--base-only", "spacy",
+                "merge",
+                "--voter",
+                "deepseek",
+                "--voter",
+                "qwen",
+                "--voter",
+                "gemma",
+                "--voter",
+                "spacy",
+                "--base-only",
+                "spacy",
             ],
         )
         .ok();

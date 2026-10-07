@@ -1,0 +1,34 @@
+Agreement of 4 voters over 65 word tokens
+a word is agreed only if at least 3 model voters answered and all agree (spaCy, which votes the base tag alone, does not count toward them)
+voters, as the adjudicator sees them
+  A   deepseek
+  B   qwen
+  C   gemma
+  D   spacy
+sentences each voter gave no answer for (abstained)
+  deepseek                                         0
+  qwen                                             0
+  gemma                                            0
+  spacy                                            0
+  sentences fewer than 3 model voters answered     0  (0 words, all to the adjudicator)
+pairs, on the part of speech
+  deepseek and qwen                               65  100.0%  of 65
+  deepseek and gemma                              63   96.9%  of 65
+  deepseek and spacy                              65  100.0%  of 65
+  qwen and gemma                                  63   96.9%  of 65
+  qwen and spacy                                  65  100.0%  of 65
+  gemma and spacy                                 63   96.9%  of 65
+all that answered
+  agree on the part of speech                     63   96.9%
+  agree on it and every feature (these stand)     63   96.9%
+  to adjudicate                                    2    3.1%
+    of which the part of speech differs            2    3.1%
+    of which only a feature differs                0    0.0%
+    of which no vote was possible                  0    0.0%
+by tier, all voters agree on every word
+  human             20 of 20      100.0%
+  llm               32 of 33       97.0%
+  mixed             11 of 12       91.7%
+by context, all voters agree on every word
+  list-item         23 of 24       95.8%
+  prose             40 of 41       97.6%

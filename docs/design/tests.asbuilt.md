@@ -77,6 +77,13 @@ that earns it.
 `make test-blobs` ends with `deslag-corpus --tier blobs time --check`. Over the budget of the
 profile built, it measures again, each file keeping its fastest of six passes, and judges only that.
 
+`make test-blobs` also runs `make test-silver`: `deslag-gold silver check` takes every silver batch
+of the unpacked image against what the batch recorded, never against the checkout, and
+`deslag-gold silver standing` holds the live ones to the two rules that never lapse. Both pass on an
+image with no `silver/`. A committed synthetic batch, `tools/exam/tests/silver-fixture/`, is held to
+the frozen rules by `cargo test`, so a change to the checks that would fail a published batch fails
+there first.
+
 ## The frozen gold lists
 
 `tests/gold/mustpass.tsv` holds 982 dev words that deslag tags right at `Sure`; `ticlist.tsv`, 172

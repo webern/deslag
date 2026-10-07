@@ -2,8 +2,9 @@
 #
 # An entry has no `human` file on the corpus's big tier and `llm` files in at least 40
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
-# they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the version the entry
-# first ships in.
+# they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the release the entry
+# first ships in, or `next` for the unreleased one; tests/changelog.rs checks it against
+# src/changelog.toml.
 
 measured_on = "ghcr.io/webern/deslag-blobs:v6@sha256:d075cbb39f05adb38eedef319a1bd57a1726c0f7d1ae168c75caea65cc16472a"
 

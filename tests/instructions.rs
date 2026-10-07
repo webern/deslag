@@ -5,7 +5,8 @@ mod common;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use common::schema::{misfit, resolve};
+use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
+use common::schema::resolve;
 use common::{Repo, code, stderr, stdout};
 use deslag::Lint;
 use deslag::config::{
@@ -38,45 +39,12 @@ fn lint_names() -> BTreeSet<String> {
         .collect()
 }
 
-/// Why the TOML config `text` does not fit the schema, or `None` when it does.
-fn toml_misfit(text: &str) -> Option<String> {
-    let value: toml::Value = toml::from_str(text).expect("valid TOML");
-    let value = serde_json::to_value(value).expect("TOML is JSON too");
-    let root = schema();
-    misfit(&root, &root, &value, "the config")
-}
-
-/// The TOML blocks in the Markdown `text`, in order.
-fn toml_blocks(text: &str) -> Vec<&str> {
-    text.split("```toml\n")
-        .skip(1)
-        .map(|rest| rest.split_once("```").expect("the end of the block").0)
-        .collect()
-}
-
 /// Each lint's section of `deslag instructions lints` as printed: its heading, the lint's id in a
 /// code span, and its text.
 fn lint_sections(text: &str) -> Vec<(&str, &str)> {
     text.split("\n## ")
         .skip(1)
         .map(|section| section.split_once('\n').expect("a heading and its text"))
-        .collect()
-}
-
-/// The lints the config `text` turns on, under `[md.lints]` or in an override.
-fn lints_turned_on(text: &str) -> BTreeSet<String> {
-    let config: toml::Value = toml::from_str(text).expect("valid TOML");
-    let md = config.get("md");
-    let overrides = md
-        .and_then(|md| md.get("overrides"))
-        .and_then(toml::Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|entry| entry.get("lints"));
-    md.and_then(|md| md.get("lints"))
-        .into_iter()
-        .chain(overrides)
-        .flat_map(|lints| lints.as_table().expect("a lints table").keys().cloned())
         .collect()
 }
 
@@ -90,18 +58,6 @@ fn placeholders(text: &str) -> Vec<&str> {
             !inside.is_empty() && inside.chars().all(|c| c == '_' || c.is_ascii_lowercase())
         })
         .collect()
-}
-
-/// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else.
-fn assert_runs_clean(config: &str) {
-    let repo = Repo::new();
-    repo.write("deslag.toml", config);
-    let output = repo.check();
-    assert_eq!(
-        (code(&output), stderr(&output)),
-        (0, String::new()),
-        "{config}"
-    );
 }
 
 #[test]

@@ -1176,6 +1176,105 @@ class LedgerTests(Base):
         self.assertTrue(set(ids).isdisjoint({"r1", "r2", "r3"}))
 
 
+class SlowGold(FakeGold):
+    """FakeGold whose `batches` works as deslag-gold's does, slowly: it removes every batch file there,
+    failing on one another process removed first, then writes each batch after a pause. It also fails
+    when another process is inside it at the same time, which the sample's lock is there to prevent."""
+
+    def batches(self, directory, size):
+        self.calls.append("batches")
+        busy = os.path.join(directory, "batches.busy")
+        try:
+            os.close(os.open(busy, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+        except FileExistsError:
+            raise label.GoldError("another process is writing the batches") from None
+        try:
+            folder = os.path.join(directory, "batches")
+            for name in os.listdir(folder) if os.path.isdir(folder) else []:
+                if re.fullmatch(r"batch-\d+\.txt", name):
+                    os.remove(os.path.join(folder, name))
+            for number in range(0, len(SENTENCES), size):
+                time.sleep(0.05)
+                text = "".join(batch_line(*sent) + "\n" for sent in SENTENCES[number : number + size])
+                label.write(os.path.join(folder, f"batch-{number // size + 1:02d}.txt"), text)
+        finally:
+            os.remove(busy)
+
+
+def _tag_once(directory, name, config, barrier, results):
+    """A process of the concurrent tagging: wait for the others, then `tag --voter name`, as a make
+    target running the voters at once would."""
+
+    def respond(body, count):
+        time.sleep(0.02)
+        return answer_all(body)
+
+    barrier.wait()
+    arguments = label.parser().parse_args(["tag", "--dir", directory, "--max-usd", "10", "--voter", name, "--again"])
+    try:
+        with open(os.devnull, "w", encoding="utf-8") as quiet, contextlib.redirect_stdout(quiet):
+            code = label.command_tag(arguments, config, FakeTransport(respond), SlowGold())
+        results.put((name, code, ""))
+    except Exception as error:  # noqa: BLE001 - the parent reports it
+        results.put((name, None, f"{type(error).__name__}: {error}"))
+
+
+class ConcurrentTagTests(Base):
+    """Three voters tagged at once on one sample, each in a process of its own: the run ids and the
+    ledger are locked in the state directory, each voter writes its own files, and the files they share,
+    the batches and `runs.tsv`, are written under the sample's lock."""
+
+    def test_three_voters_tagged_at_once_on_one_sample_each_finish_one_run(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["three"] = {**config["models"]["one"], "model": "x/three"}
+        config["voters"] = ["one", "two", "three"]
+        config["settings"].update(pause_s=0, backoff_s=0)
+        context = multiprocessing.get_context("fork")
+        # Each round runs every voter afresh (`--again`), and three rounds give a race three chances.
+        for round_ in range(3):
+            barrier, results = context.Barrier(3), context.Queue()
+            workers = [
+                context.Process(target=_tag_once, args=(self.dir, name, config, barrier, results))
+                for name in config["voters"]
+            ]
+            for worker in workers:
+                worker.start()
+            outcome = sorted(results.get(timeout=60) for _ in workers)
+            for worker in workers:
+                worker.join(30)
+            self.assertEqual(outcome, [("one", 0, ""), ("three", 0, ""), ("two", 0, "")], f"round {round_}")
+            lines = label.read(os.path.join(self.dir, "runs.tsv")).splitlines()
+            self.assertEqual(lines[0].split("\t"), list(label.RUN_COLUMNS))
+            self.assertTrue(all(len(line.split("\t")) == len(label.RUN_COLUMNS) for line in lines[1:]))
+            rows = self.runs_rows()
+            self.assertEqual(len(rows), 3 * (round_ + 1), "every run of every round is a row")
+            latest = rows[-3:]
+            self.assertEqual(sorted(row["name"] for row in latest), ["one", "three", "two"])
+            self.assertEqual(len({row["run"] for row in rows}), len(rows), "no two runs share an id")
+            self.assertEqual({row["status"] for row in latest}, {"complete"})
+            for row in latest:
+                # Two batches of the three sentences, each one call at $0.001.
+                self.assertEqual((row["calls"], row["cost_usd"]), ("2", "0.00200000"), row["name"])
+                tags = label.read(os.path.join(self.dir, "tags", f"{row['name']}.conllu"))
+                self.assertEqual(re.findall(r"sent_id = (\S+)", tags), ["d1", "d2", "d3"])
+            calls = [row for row in self.ledger().booked().values() if row["state"] != "run"]
+            self.assertEqual(len(calls), 6 * (round_ + 1))
+            self.assertEqual({row["state"] for row in calls}, {"settled"}, "every call booked was settled")
+            self.assertAlmostEqual(self.ledger().total(), 0.006 * (round_ + 1))
+
+    def test_a_calls_file_another_process_is_appending_to_is_read_without_its_last_part_line(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        path = os.path.join(self.dir, "raw", "one", "r1", "calls.jsonl")
+        whole = label.read(path)
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write('{"kind": "batch-03", "retr')
+        rows = self.runner(None).write_runs()
+        self.assertEqual(rows[0]["calls"], 2, "the line still being written is not a call yet")
+        label.write(path, '{"kind": "batch-01", "retr\n' + whole)
+        with self.assertRaises(ValueError, msg="a bad line that is not the last is an error"):
+            self.runner(None).write_runs()
+
+
 class KeySafetyTests(Base):
     SECRET = "SECRETBYTES"
 
@@ -3430,7 +3529,7 @@ class RoundFourTests(Base):
                 for number in range(1, 121):
                     label.write(os.path.join(directory, "batches", f"batch-{number:02d}.txt"), "d1: 1 x\n")
 
-        files = self.runner(None, gold=Many()).batch_files()
+        files = [path for path, _ in self.runner(None, gold=Many()).batch_files()]
         self.assertEqual([os.path.basename(f) for f in files][:3] + [os.path.basename(files[-1])],
                          ["batch-01.txt", "batch-02.txt", "batch-03.txt", "batch-120.txt"])
         self.assertEqual([int(re.search(r"\d+", os.path.basename(f)).group()) for f in files], list(range(1, 121)))

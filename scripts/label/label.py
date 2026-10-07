@@ -48,7 +48,9 @@ in a state directory shared by every checkout (ledger.py). No error the runner p
 
 import argparse
 import concurrent.futures
+import contextlib
 import datetime
+import fcntl
 import glob
 import hashlib
 import json
@@ -131,6 +133,9 @@ HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
 
 # Written in a merge directory: which adjudicator answers its items, for a merge that settles from it.
 ADJUDICATOR_RECORD = "adjudicator.json"
+# The lock file of a sample directory, which processes working in it at once take before they write
+# the files they share: the batches and `runs.tsv`.
+SAMPLE_LOCK = "label.lock"
 
 # What `handoff/<run>/agent.json` must say about the agents that made the replies: `handoff-run` writes
 # it, and a reply is read only if it says `safe_mode: true`, the tools Read and Write, and the argument
@@ -512,6 +517,34 @@ def write_atomic(path, text):
         pass
     finally:
         os.close(descriptor)
+
+
+@contextlib.contextmanager
+def locked(path):
+    """An exclusive lock on the file `path` for the block, waited for: what keeps two processes from
+    rewriting a file they share at once. The lock goes with the process, so a kill leaves none held."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "a", encoding="utf-8") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def json_lines(path):
+    """The objects of the JSON lines file `path`. A last line that is not whole, as a process still
+    appending to it may leave for a moment, is skipped; a bad line anywhere else is an error."""
+    lines = [line for line in read(path).splitlines(keepends=True) if line.strip()]
+    rows = []
+    for number, line in enumerate(lines, 1):
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            if number == len(lines) and not line.endswith("\n"):
+                break
+            raise
+    return rows
 
 
 class EndpointExhausted(openrouter.ApiError):
@@ -1208,7 +1241,7 @@ class Runner:
         calls = []
         path = os.path.join(os.path.dirname(run_json), "calls.jsonl")
         if os.path.isfile(path):
-            calls = [json.loads(line) for line in read(path).splitlines() if line.strip()]
+            calls = json_lines(path)
         row = {key: "-" if meta.get(key) is None else meta[key] for key in RUN_COLUMNS}
         row["status"] = run_status(meta)
         row["reason"] = run_reason(meta, row["status"])
@@ -1240,33 +1273,41 @@ class Runner:
         return row
 
     def write_runs(self):
-        """Rebuilds `runs.tsv` from every run recorded under raw/, in the order of the ids."""
-        rows = []
-        base = os.path.join(self.dir, "raw")
-        if os.path.isdir(base):
-            for name in sorted(os.listdir(base)):
-                for run in os.listdir(os.path.join(base, name)):
-                    path = os.path.join(base, name, run, "run.json")
-                    if os.path.isfile(path):
-                        rows.append(self.run_row(path))
-        rows.sort(key=lambda row: int(row["run"][1:]))
-        lines = ["\t".join(RUN_COLUMNS)]
-        for row in rows:
-            lines.append("\t".join(str(row[column]).replace("\t", " ").replace("\n", " ") for column in RUN_COLUMNS))
-        write(os.path.join(self.dir, "runs.tsv"), "\n".join(lines) + "\n")
+        """Rebuilds `runs.tsv` from every run recorded under raw/, in the order of the ids. The runs are
+        read and the table written under the sample's lock, and the table is replaced whole, so voters
+        tagged at once in processes of their own leave the table of the latest state, and a reader
+        never sees half of one."""
+        with locked(os.path.join(self.dir, SAMPLE_LOCK)):
+            rows = []
+            base = os.path.join(self.dir, "raw")
+            if os.path.isdir(base):
+                for name in sorted(os.listdir(base)):
+                    for run in os.listdir(os.path.join(base, name)):
+                        path = os.path.join(base, name, run, "run.json")
+                        if os.path.isfile(path):
+                            rows.append(self.run_row(path))
+            rows.sort(key=lambda row: int(row["run"][1:]))
+            lines = ["\t".join(RUN_COLUMNS)]
+            for row in rows:
+                lines.append("\t".join(str(row[column]).replace("\t", " ").replace("\n", " ") for column in RUN_COLUMNS))
+            write_atomic(os.path.join(self.dir, "runs.tsv"), "\n".join(lines) + "\n")
         return rows
 
     # -- tagging
 
     def batch_files(self):
-        """The batches of the sample as it is now: always written afresh, since a sample drawn again
-        would otherwise be asked about with the old batches' sentences."""
+        """The batches of the sample as it is now, as (path, text) pairs: always written afresh, since a
+        sample drawn again would otherwise be asked about with the old batches' sentences. They are
+        written and read under the sample's lock, and the run asks the texts read then, so voters tagged
+        at once in processes of their own never ask a batch while another process rewrites it."""
         folder = os.path.join(self.dir, "batches")
-        for stale in os.listdir(folder) if os.path.isdir(folder) else []:
-            if re.fullmatch(r"batch-\d+\.txt", stale):
-                os.remove(os.path.join(folder, stale))
-        self.gold.batches(self.dir, self.settings["batch_size"])
-        return [os.path.join(folder, f) for f in numbered(os.listdir(folder)) if re.fullmatch(r"batch-\d+\.txt", f)]
+        with locked(os.path.join(self.dir, SAMPLE_LOCK)):
+            for stale in os.listdir(folder) if os.path.isdir(folder) else []:
+                if re.fullmatch(r"batch-\d+\.txt", stale):
+                    os.remove(os.path.join(folder, stale))
+            self.gold.batches(self.dir, self.settings["batch_size"])
+            names = [f for f in numbered(os.listdir(folder)) if re.fullmatch(r"batch-\d+\.txt", f)]
+            return [(os.path.join(folder, f), read(os.path.join(folder, f))) for f in names]
 
     def problems(self, name, ids):
         """The validator's messages for `ids`, as the lines the retry quotes."""
@@ -1421,8 +1462,7 @@ class Runner:
         self.cut = fresh_cut(len(batches))
         self.say(f"{name} {run}: {len(batches)} batches to {config['model']} at {endpoint['tag']}")
         try:
-            for number, path in enumerate(batches, 1):
-                text = read(path)
+            for number, (_, text) in enumerate(batches, 1):
                 self.ask_lines(
                     meta, endpoint, config,
                     lambda part: self.prompts.fill("voter-task.md", batch="\n".join(part) + "\n"),
@@ -2279,7 +2319,7 @@ def command_tag(arguments, config, transport=None, gold=None):
     if arguments.dry_run:
         batches = runner.batch_files()
         model = config["models"][names[0]]
-        user = runner.prompts.fill("voter-task.md", batch=read(batches[0]))
+        user = runner.prompts.fill("voter-task.md", batch=batches[0][1])
         body = openrouter.request_body(model, runner.prompts.system, user)
         shown = json.loads(json.dumps(body))
         shown["messages"][0]["content"] = f"<{len(runner.prompts.system)} characters of guide and notes>"

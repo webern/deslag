@@ -233,13 +233,9 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
         .iter()
         .flat_map(|part| part.used.iter().cloned())
         .collect();
-    let facts = match runs::check(layout::RUNS, &runs, &used, &env.voters) {
-        Ok(facts) => facts,
-        Err(found) => {
-            problems.extend(found);
-            runs::Facts::default()
-        }
-    };
+    if let Err(found) = runs::check(layout::RUNS, &runs, &used, &env.voters) {
+        problems.extend(found);
+    }
     if !problems.is_empty() {
         return Err(Problems(problems));
     }
@@ -286,6 +282,22 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
         return Err(Problems(problems));
     }
     let keep: BTreeSet<String> = kept.iter().map(|(_, k)| k.id.clone()).collect();
+
+    // The runs the batch ships are the ones its kept words and its voters name, which drops may
+    // have made fewer: an adjudicator whose every word was dropped is not in the batch.
+    let mut used: BTreeSet<String> = parts
+        .iter()
+        .flat_map(|part| part.voters.iter().map(|(_, _, run)| run.clone()))
+        .collect();
+    for (_, sentence) in &kept {
+        for line in &sentence.lines {
+            let misc = line.split('\t').nth(9).unwrap_or("");
+            if let Some(names) = super::part::misc_of(misc, "Runs") {
+                used.extend(names.split(',').map(str::to_string));
+            }
+        }
+    }
+    let facts = runs::check(layout::RUNS, &runs, &used, &env.voters).map_err(Problems)?;
 
     // The files.
     let mut batch = Batch {
@@ -427,9 +439,8 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
     );
     let template = read_text(args.template)?;
     put(layout::TEMPLATE, template.clone());
-    let agent = parts
+    let agent = used
         .iter()
-        .flat_map(|part| part.used.iter())
         .find(|run| runs.get(run, "role") == "adjudicator")
         .and_then(|run| serde_json::from_str::<serde_json::Value>(runs.get(run, "settings")).ok())
         .and_then(|settings| settings.get("agent").cloned());
@@ -453,7 +464,7 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
         first
             .header
             .iter()
-            .find(|(k, _)| k == "source")
+            .find(|(k, _)| k == "corpus")
             .map_or("-".to_string(), |(_, v)| v.clone()),
     );
     set("draw_parts", first.of.to_string());

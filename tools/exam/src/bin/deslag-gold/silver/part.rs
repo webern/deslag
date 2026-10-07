@@ -292,7 +292,7 @@ fn raw_lines(text: &str) -> Vec<Vec<String>> {
 }
 
 /// The value of `key` in a MISC column.
-fn misc_of<'a>(misc: &'a str, key: &str) -> Option<&'a str> {
+pub(super) fn misc_of<'a>(misc: &'a str, key: &str) -> Option<&'a str> {
     conllu::pairs(misc)
         .into_iter()
         .find(|(name, _)| *name == key)
@@ -683,6 +683,13 @@ impl Part {
                 ));
             }
         }
+        for found in absolute_paths_in(&part.runs.only(&part.used).render(), Cells::Tabs) {
+            problems.push(Error::load(
+                &runs_shown,
+                Place::File,
+                format!("it holds `{found}`, a path of the machine that made it"),
+            ));
+        }
         for (run, text) in &part.listings {
             for found in absolute_paths_in(text, Cells::Json) {
                 problems.push(Error::load(
@@ -846,9 +853,9 @@ fn read_merge(dir: &Path, problems: &mut Vec<Error>) -> MergeFiles {
         let text = text?;
         let shown = dir.join(name).display().to_string();
         match Tsv::parse(&shown, &text, None) {
-            Ok(table) if table.columns.len() >= 2 && table.column("sent").is_some() => Some(table),
+            Ok(table) if table.columns.len() >= 2 && table.column("sent_id").is_some() => Some(table),
             Ok(_) => {
-                problems.push(Error::load(&shown, Place::File, "it has no `sent` column"));
+                problems.push(Error::load(&shown, Place::File, "it has no `sent_id` column"));
                 None
             }
             Err(error) => {

@@ -100,7 +100,11 @@ saw the words and what each voter said. A sentence with a word nobody settled is
 Of {{words}} words, {{agreed_words}} were agreed and {{adjudicated_words}} adjudicated
 ({{agreed_share}} percent agreed).
 
+By tier:
+
 {{table agreement_by_tier}}
+
+By context:
 
 {{table agreement_by_context}}
 

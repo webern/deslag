@@ -527,8 +527,8 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
                 continue;
             };
             let table = Tsv::parse(&path, text, None)?;
-            let Some(at) = table.column("sent") else {
-                problems.push(Error::load(&path, Place::File, "it has no `sent` column"));
+            let Some(at) = table.column("sent_id") else {
+                problems.push(Error::load(&path, Place::File, "it has no `sent_id` column"));
                 continue;
             };
             for row in &table.rows {

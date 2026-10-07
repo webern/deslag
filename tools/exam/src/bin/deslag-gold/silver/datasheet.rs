@@ -760,6 +760,10 @@ pub fn render(template: &str, value: &Value) -> Result<String, Error> {
     let nodes = parse_template(template)?;
     let mut out = String::new();
     emit(&nodes, value, value, &mut out)?;
+    // A block that shows nothing leaves its blank lines; a page has one between paragraphs.
+    while out.contains("\n\n\n") {
+        out = out.replace("\n\n\n", "\n\n");
+    }
     Ok(out)
 }
 

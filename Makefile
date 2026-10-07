@@ -21,8 +21,8 @@ CARGO_FLAGS ?=
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
-        test-percept test-python test-spacy test-ticlist-brill-deslag test-ticlist-brill-percept \
-        test-ticlist-percept \
+        test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
+        test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-typos \
         clean clean-blobs clean-ewt clean-harper clean-spacy clean-train \
         ci ci-fast \
@@ -54,7 +54,9 @@ help:
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
 	@echo "                 the dev or holdout gold or misses a word of the must-pass list; the holdout"
-	@echo "                 prints pass or fail per metric"
+	@echo "                 prints pass or fail per metric; then test-owner"
+	@echo "test-owner       print deslag's score on the owner's hand-tagged gold, tests/gold/owner.conllu, as its own"
+	@echo "                 report-only set, never pooled with dev; fails only when the exam cannot run"
 	@echo "test-percept     train the perceptron on the treebank's train set, grade it on both dev sets with"
 	@echo "                 deslag-exam and compare it with deslag; generates first, so minutes, not in test or ci;"
 	@echo "                 the learning curve is $(TRAIN)/run.sh curve"
@@ -169,6 +171,17 @@ test-brill-percept: generate-brill-percept
 test-ewt: preflight fetch-ewt
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml ewt-dev
 
+# The owner's hand-tagged gold, scored on its own and never pooled with the dev gold: it was drawn
+# differently (`deslag-gold rank`, the sentences the tagger was least sure of), so pooling biases
+# both. It gates nothing; the set is small and its intervals are wide, so this prints a report and
+# fails only when the exam cannot run. Not a gates.toml set: `gate` prints counts, with no strata and
+# no intervals. Claude proposed the tags of some of these sentences before the owner checked them, so
+# a Claude adjudicator's score on this set may read high. test-exam and ci-fast run it after the gate.
+OWNER_SCORE := score --gold tests/gold/owner.conllu --tagger deslag --aggregate
+
+test-owner: preflight
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- $(OWNER_SCORE)
+
 # The whole golden binary, not a name filter: a filter that matches nothing passes silently. Then
 # the gates of tests/gold/gates.toml on the dev gold, the must-pass list and the holdout gold, which
 # print a table of counts for dev, the words missed for mustpass and a pass or fail per metric for
@@ -176,6 +189,7 @@ test-ewt: preflight fetch-ewt
 test-exam: preflight
 	cargo test $(CARGO_FLAGS) -p deslag --all-features --test golden
 	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam -- $(OWNER_SCORE)
 
 # The perceptron's unit tests, then the exam's full report on both dev sets for it, and `compare`
 # against deslag's tagger, from the import files generate-percept wrote. The runs are saved beside
@@ -285,6 +299,7 @@ ci: preflight check build test test-blobs
 ci-fast: CARGO_FLAGS += --locked
 ci-fast: preflight check
 	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
+	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- $(OWNER_SCORE)
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-fast.sh
 
 fix: fix-fmt fix-clippy fix-golden fix-test-output

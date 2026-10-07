@@ -4,6 +4,9 @@
 # generate-*`, `make test-percept`, `make test-brill*` and `make test-ticlist-*` targets, and by
 # hand for the curve; never by tests or CI. Needs the treebank, which `make fetch-ewt` fetches.
 #
+# The owner's gold, tests/gold/owner.conllu, is a third set that is tagged, scored and compared beside
+# the two dev sets and nothing else: never trained on, never tuned on, never gated. See `no_owner`.
+#
 #   run.sh baseline        tokens, and deslag's and the most-common-tag runs, on both dev sets
 #   run.sh generate        baseline, then train, tune and tag both dev sets into import files
 #   run.sh test            the unit tests, then the exam's report and `compare` for both dev sets
@@ -26,16 +29,39 @@ cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|t
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
+# The dev sets: what a learner is tuned on and what the gates judge.
 sets=(ewt-dev deslag-dev)
+# Every set that is tagged, scored and compared. The owner's gold is report-only: it was drawn
+# differently from the dev sets, so pooling it with them biases both, and 50 sentences give intervals
+# too wide for a gate. Its readings file carries `Gold=`, so the owner set joins the loops over this
+# list and nothing else: not a trainer, not `gate`, not `curve`.
+report_sets=("${sets[@]}" owner)
 gold_of() {
   case "$1" in
     ewt-dev) echo "$ewt/en_ewt-ud-dev.conllu" ;;
     deslag-dev) echo "tests/gold/dev.conllu" ;;
+    owner) echo "tests/gold/owner.conllu" ;;
   esac
 }
+# Stops the run if an argument names the owner set. Every trainer, `curve` and `gate` goes through it,
+# so a change that feeds the owner set to one fails here, before it trains or gates on it.
+no_owner() {
+  local arg
+  for arg in "$@"; do
+    case "$arg" in
+      *owner*) echo "run.sh: the owner set is report-only, but an argument names it: $arg" >&2; exit 2 ;;
+    esac
+  done
+}
 exam() {
+  [ "${1:-}" != gate ] || no_owner "$@"
   # shellcheck disable=SC2086
   cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam -- "$@"
+}
+# A learner's `train`: the fit and the tuning, which never see the owner set.
+train() {
+  no_owner "$@"
+  python3 "$@"
 }
 export PYTHONHASHSEED=0
 python=scripts/train/percept.py
@@ -43,7 +69,7 @@ brill=scripts/train/brill.py
 mkdir -p .train
 
 baseline() {
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     gold=$(gold_of "$set")
     exam tokens --gold "$gold" --out ".train/$set.tokens.conllu"
     exam score --gold "$gold" --tagger deslag --save ".train/$set.deslag.run.json" --aggregate \
@@ -55,9 +81,9 @@ baseline() {
 
 generate() {
   baseline
-  python3 $python train --train "$ewt/en_ewt-ud-train.conllu" --out .train/percept.weights.json \
+  train $python train --train "$ewt/en_ewt-ud-train.conllu" --out .train/percept.weights.json \
     --tune-tokens .train/ewt-dev.tokens.conllu --tune-gold "$(gold_of ewt-dev)"
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     python3 $python tag --weights .train/percept.weights.json --tokens ".train/$set.tokens.conllu" \
       --out ".train/$set.percept.import.conllu"
   done
@@ -65,11 +91,11 @@ generate() {
 
 generate_brill() {
   baseline
-  python3 $brill train --train "$ewt/en_ewt-ud-train.conllu" --out .train/brill.model.json \
+  train $brill train --train "$ewt/en_ewt-ud-train.conllu" --out .train/brill.model.json \
     --tune-tokens .train/ewt-dev.tokens.conllu --tune-gold "$(gold_of ewt-dev)" \
     --log .train/brill.log.tsv
   python3 $brill rules --model .train/brill.model.json --out .train/brill.rules.txt
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     python3 $brill tag --model .train/brill.model.json --tokens ".train/$set.tokens.conllu" \
       --out ".train/$set.brill.import.conllu" --firings ".train/$set.brill.firings.txt"
     python3 $brill tag --model .train/brill.model.json --tokens ".train/$set.tokens.conllu" \
@@ -81,7 +107,7 @@ generate_brill() {
 # learner that starts from deslag's tagger trains on. Each file has the gold the exam aligned.
 readings() {
   exam readings --gold "$ewt/en_ewt-ud-train.conllu" --out .train/ewt-train.readings.conllu
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     exam readings --gold "$(gold_of "$set")" --out ".train/$set.readings.conllu"
   done
 }
@@ -89,12 +115,12 @@ readings() {
 generate_brill_deslag() {
   baseline
   readings
-  python3 $brill train --start deslag --train .train/ewt-train.readings.conllu \
+  train $brill train --start deslag --train .train/ewt-train.readings.conllu \
     --out .train/brilldeslag.model.json --tune-readings .train/ewt-dev.readings.conllu \
     --log .train/brilldeslag.log.tsv
   python3 $brill rules --model .train/brilldeslag.model.json --out .train/brilldeslag.rules.txt \
     --evidence .train/brilldeslag.evidence.tsv
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     python3 $brill tag --model .train/brilldeslag.model.json --tokens ".train/$set.tokens.conllu" \
       --readings ".train/$set.readings.conllu" --out ".train/$set.brilldeslag.import.conllu" \
       --firings ".train/$set.brilldeslag.firings.txt"
@@ -104,12 +130,12 @@ generate_brill_deslag() {
 generate_brill_percept() {
   generate
   readings
-  python3 $brill train --start perceptron --weights .train/percept.weights.json \
+  train $brill train --start perceptron --weights .train/percept.weights.json \
     --train "$ewt/en_ewt-ud-train.conllu" --out .train/brillpercept.model.json \
     --tune-readings .train/ewt-dev.readings.conllu --log .train/brillpercept.log.tsv
   python3 $brill rules --model .train/brillpercept.model.json --out .train/brillpercept.rules.txt \
     --evidence .train/brillpercept.evidence.tsv
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     python3 $brill tag --model .train/brillpercept.model.json --tokens ".train/$set.tokens.conllu" \
       --out ".train/$set.brillpercept.import.conllu" --firings ".train/$set.brillpercept.firings.txt"
   done
@@ -125,7 +151,7 @@ compare() {
 
 test_brill() {
   python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     gold=$(gold_of "$set")
     for tagger in brill brillinit; do
       echo "=== $set: $tagger"
@@ -150,7 +176,7 @@ test_brill() {
 test_brill_start() {
   local name=$1
   python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
-  for set in "${sets[@]}"; do
+  for set in "${report_sets[@]}"; do
     echo "=== $set: $name"
     exam score --gold "$(gold_of "$set")" --import ".train/$set.$name.import.conllu" \
       --save ".train/$set.$name.run.json" | tee ".train/$set.$name.report.txt"
@@ -198,7 +224,7 @@ case "$cmd" in
   test-brill) test_brill ;;
   test)
     python3 -m unittest discover -b -s scripts/train -p 'test_*.py'
-    for set in "${sets[@]}"; do
+    for set in "${report_sets[@]}"; do
       gold=$(gold_of "$set")
       echo "=== $set: perceptron"
       exam score --gold "$gold" --import ".train/$set.percept.import.conllu" \
@@ -219,11 +245,13 @@ case "$cmd" in
     shift
     learners=("$@")
     [ ${#learners[@]} -gt 0 ] || learners=(perceptron brill)
+    curve_sets=()
+    for set in "${sets[@]}"; do
+      curve_sets+=(--set "$set:.train/$set.tokens.conllu:$(gold_of "$set"):.train/$set.deslag.run.json")
+    done
     for name in "${learners[@]}"; do
-      python3 scripts/train/curve.py --learner "$name" --train "$ewt/en_ewt-ud-train.conllu" \
-        --out .train --exam "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --" \
-        --set "ewt-dev:.train/ewt-dev.tokens.conllu:$(gold_of ewt-dev):.train/ewt-dev.deslag.run.json" \
-        --set "deslag-dev:.train/deslag-dev.tokens.conllu:$(gold_of deslag-dev):.train/deslag-dev.deslag.run.json"
+      train scripts/train/curve.py --learner "$name" --train "$ewt/en_ewt-ud-train.conllu" \
+        --out .train --exam "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --" "${curve_sets[@]}"
       mv .train/curve.txt ".train/curve.$name.txt"
     done
     ;;

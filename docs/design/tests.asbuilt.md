@@ -49,8 +49,7 @@ The whole corpus then runs in its real layout under a budget, an emphasis limit,
 and density, and the binary must report what the library finds. Tokens and sentences must keep to
 their blocks, and each location found under the golden config must hold what it names.
 
-`make test-python` runs `scripts/blobstore/test_batches.py` against local git repositories. It is
-not in `test` or `ci`.
+`make test-python` runs the Python tests under `scripts/`, offline. It is not in `test` or `ci`.
 
 ## The golden set
 
@@ -69,20 +68,14 @@ a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 `make test` runs `make test-exam` first: the whole `golden` binary, so a change to the tag stream
 fails, then `deslag-exam gate` on the `dev`, `mustpass` and `holdout` sets of
-`tests/gold/gates.toml`, which `exam.asbuilt.md` describes. A gate is raised by hand, in the change
-that earns it.
+`tests/gold/gates.toml`, which `exam.asbuilt.md` describes.
 `make test-ewt` judges the `ewt-dev` set the same way; it fetches the treebank, so it is not in
 `test` or `ci`.
 
 `make test-blobs` ends with `deslag-corpus --tier blobs time --check`. Over the budget of the
 profile built, it measures again, each file keeping its fastest of six passes, and judges only that.
 
-`make test-blobs` also runs `make test-silver`: `deslag-gold silver check` takes every silver batch
-of the unpacked image against what the batch recorded, never against the checkout, and
-`deslag-gold silver standing` holds the live ones to the two rules that never lapse. Both pass on an
-image with no `silver/`. A committed synthetic batch, `tools/exam/tests/silver-fixture/`, is held to
-the frozen rules by `cargo test`, so a change to the checks that would fail a published batch fails
-there first.
+`make test-blobs` first runs `make test-silver`, which checks the silver batches and passes with none.
 
 ## The frozen gold lists
 

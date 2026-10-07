@@ -23,9 +23,12 @@
 //!
 //! A voter that has no good line for a sentence after its retries abstains on all of it, and the
 //! merge goes on with the voters left, so one sentence a model cannot write never stops the
-//! pilot. A sentence fewer than two voters answered has nothing to compare: every word of it goes
-//! to the adjudicator, with `-` for the voters that abstained. The report counts the abstentions
-//! of each voter and the sentences that went whole.
+//! pilot. Agreement needs [`MIN_AGREEING_VOTERS`] model voters (three, unless `--min-voters` says
+//! otherwise): a word stands as agreed only when at least that many model voters answered its
+//! sentence and all agree. spaCy, which votes on the base alone, is a voter that never counts
+//! toward the number. A sentence fewer model voters answered goes whole to the adjudicator, with
+//! `-` for the voters that abstained. The report counts the abstentions of each voter and the
+//! sentences that went whole, and says the minimum it used.
 
 use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
@@ -35,6 +38,12 @@ use crate::data::Sample;
 use deslag_exam::error::Error;
 
 use crate::merge::{Answers, FEWEST_TAGGERS, Item, Verdict};
+
+/// How many model voters must answer a sentence for any of its words to count as agreed: the
+/// default of `merge --min-voters`. Three voters is what the agreed-word accuracy of the pilot was
+/// measured with; a word two voters agree on goes to the adjudicator. A voter that votes on the
+/// base alone, as spaCy does, is not one of them.
+pub const MIN_AGREEING_VOTERS: usize = 3;
 
 /// One voter of a merge.
 #[derive(Debug, Clone)]
@@ -89,6 +98,8 @@ pub fn judge_voters(said: &[Code], base_only: &[bool]) -> Verdict {
 /// Counts of agreement, for the report.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VoteStats {
+    /// How many model voters had to answer a sentence for its words to count as agreed.
+    pub min_voters: usize,
     /// The voters' names, in order.
     pub names: Vec<String>,
     /// Word tokens compared.
@@ -98,7 +109,8 @@ pub struct VoteStats {
     pub pairs: Vec<((usize, usize), usize, usize)>,
     /// Sentences each voter abstained on, in the order of `names`.
     pub abstained: Vec<usize>,
-    /// Sentences fewer than two voters answered, whose words all went to the adjudicator.
+    /// Sentences fewer than `min_voters` model voters answered, whose words all went to the
+    /// adjudicator.
     pub unvoted_sentences: usize,
     /// The words of those sentences.
     pub unvoted_words: usize,
@@ -137,13 +149,16 @@ pub fn letter(index: usize) -> String {
 
 /// Compares the voters' answers on every word of `sample`. There must be at least
 /// [`FEWEST_TAGGERS`] voters, whose answers cover the sample as [`crate::merge::load_voter`] reads
-/// them: a sentence a voter has no answer for is an abstention.
-pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
+/// them: a sentence a voter has no answer for is an abstention. A word is agreed only when at
+/// least `min_voters` voters that are not base-only answered its sentence and all agree; for a
+/// sentence fewer answered, every word goes to the adjudicator.
+pub fn merge_voters(sample: &Sample, voters: &[Voter], min_voters: usize) -> Voted {
     assert!(
         voters.len() >= FEWEST_TAGGERS,
         "a merge needs {FEWEST_TAGGERS} voters or more"
     );
     let mut stats = VoteStats {
+        min_voters,
         names: voters.iter().map(|voter| voter.name.clone()).collect(),
         words: 0,
         pairs: (0..voters.len())
@@ -169,7 +184,11 @@ pub fn merge_voters(sample: &Sample, voters: &[Voter]) -> Voted {
         for (count, voter) in stats.abstained.iter_mut().zip(voters) {
             *count += usize::from(voter.answers.abstains(at));
         }
-        let voted = answering.len() >= FEWEST_TAGGERS;
+        let model_answering = answering
+            .iter()
+            .filter(|&&voter| !voters[voter].base_only)
+            .count();
+        let voted = answering.len() >= FEWEST_TAGGERS && model_answering >= min_voters;
         stats.unvoted_sentences += usize::from(!voted);
         let base_only: Vec<bool> = answering
             .iter()
@@ -285,6 +304,11 @@ impl fmt::Display for VoteStats {
             self.names.len(),
             self.words
         )?;
+        writeln!(
+            f,
+            "a word is agreed only if at least {} model voters answered and all agree (spaCy, which votes the base tag alone, does not count toward them)",
+            self.min_voters
+        )?;
         writeln!(f, "voters, as the adjudicator sees them")?;
         for (index, name) in self.names.iter().enumerate() {
             writeln!(f, "  {:<4}{name}", letter(index))?;
@@ -296,7 +320,12 @@ impl fmt::Display for VoteStats {
         writeln!(
             f,
             "  {:<44}{:>6}  ({} words, all to the adjudicator)",
-            "sentences fewer than two voters answered", self.unvoted_sentences, self.unvoted_words
+            format!(
+                "sentences fewer than {} model voters answered",
+                self.min_voters
+            ),
+            self.unvoted_sentences,
+            self.unvoted_words
         )?;
         writeln!(f, "pairs, on the part of speech")?;
         for ((a, b), count, both) in &self.pairs {
@@ -356,11 +385,16 @@ pub fn run_in(text: &str) -> Option<String> {
 /// The columns of `voters.tsv`.
 const VOTER_COLUMNS: [&str; 5] = ["letter", "voter", "base_only", "run", "file"];
 
-/// The `voters.tsv` of a merge: a voter's letter, name, whether it votes on the base alone, its run
-/// and its file, so a reader of a worklist can map a letter back and `report` can find the answers.
-/// It is kept apart from the worklist, which the adjudicator reads.
-pub fn voters_tsv(voters: &[Voter]) -> String {
-    let mut out = format!("{}\n", VOTER_COLUMNS.join("\t"));
+/// The line before the columns of `voters.tsv` that says how many model voters a word needed to
+/// count as agreed.
+const MIN_LINE: &str = "# min_voters = ";
+
+/// The `voters.tsv` of a merge: the `min_voters` it was made with, then a voter's letter, name,
+/// whether it votes on the base alone, its run and its file, so a reader of a worklist can map a
+/// letter back and `report` can find the answers. It is kept apart from the worklist, which the
+/// adjudicator reads.
+pub fn voters_tsv(voters: &[Voter], min_voters: usize) -> String {
+    let mut out = format!("{MIN_LINE}{min_voters}\n{}\n", VOTER_COLUMNS.join("\t"));
     for (index, voter) in voters.iter().enumerate() {
         let _ = writeln!(
             out,
@@ -375,10 +409,23 @@ pub fn voters_tsv(voters: &[Voter]) -> String {
     out
 }
 
+/// The `min_voters` a `voters.tsv` records. A merge made before it was recorded compared any two
+/// voters, which is [`FEWEST_TAGGERS`].
+pub fn read_min_voters(text: &str) -> usize {
+    text.lines()
+        .next()
+        .and_then(|line| line.strip_prefix(MIN_LINE))
+        .and_then(|value| value.trim().parse().ok())
+        .unwrap_or(FEWEST_TAGGERS)
+}
+
 /// Reads `voters.tsv`, which came from `path`. The voters' answers are empty: the caller reads
 /// them from each voter's file.
 pub fn read_voters_tsv(path: &str, text: &str) -> Result<Vec<Voter>, Error> {
-    let mut lines = text.lines().enumerate();
+    let mut lines = text
+        .lines()
+        .enumerate()
+        .skip_while(|(_, line)| line.starts_with('#'));
     let head: Vec<&str> = lines
         .next()
         .map(|(_, head)| head.split('\t').collect())
@@ -592,7 +639,7 @@ mod tests {
             ),
         ];
         let sample = sample();
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, MIN_AGREEING_VOTERS);
         assert!(voted.items.is_empty());
         assert_eq!(voted.stats.words, 7);
         assert_eq!(voted.stats.agreed, 7);
@@ -639,7 +686,7 @@ mod tests {
             voter("beta", &other, Some("r2"), false),
         ];
         let sample = sample();
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 2);
         let ids: Vec<String> = voted.items.iter().map(|item| item.id(&sample)).collect();
         assert_eq!(ids, ["s1.4"]);
         assert!(voted.items[0].tags_differ);
@@ -704,7 +751,7 @@ mod tests {
         ];
         let sample = sample();
         assert!(voters[2].answers.abstains(1) && !voters[2].answers.abstains(0));
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 2);
         assert!(voted.items.is_empty(), "the two that answered agree");
         assert_eq!(voted.stats.abstained, [0, 0, 1]);
         assert_eq!(voted.stats.unvoted_sentences, 0);
@@ -735,7 +782,7 @@ mod tests {
             voter_without("c", "r3", &["s1", "s2"]),
         ];
         let sample = sample();
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 2);
         // s1 had one answer, so all three of its words go; s2 had two, which agree.
         let ids: Vec<String> = voted.items.iter().map(|item| item.id(&sample)).collect();
         assert_eq!(ids, ["s1.1", "s1.3", "s1.4"]);
@@ -764,6 +811,58 @@ mod tests {
     }
 
     #[test]
+    fn two_model_voters_that_agree_are_not_enough_and_spacy_is_never_the_third() {
+        let voters = vec![
+            voter("a", &SAME, Some("r1"), false),
+            voter("b", &SAME, Some("r2"), false),
+            voter("spacy", &SAME, Some("r3"), true),
+        ];
+        let sample = sample();
+        // Three voters in all, but only two vote on more than the base: nothing is agreed.
+        let voted = merge_voters(&sample, &voters, MIN_AGREEING_VOTERS);
+        assert_eq!(voted.stats.agreed, 0);
+        assert_eq!(voted.items.len(), 7);
+        assert!(voted.items.iter().all(|item| item.unvoted));
+        assert_eq!(voted.stats.unvoted_sentences, 2);
+        let report = voted.stats.to_string();
+        assert!(
+            report.contains("sentences fewer than 3 model voters answered"),
+            "{report}"
+        );
+        assert!(report.contains("at least 3 model voters"), "{report}");
+        // The same voters stand when the minimum is asked to be two.
+        let voted = merge_voters(&sample, &voters, 2);
+        assert_eq!(voted.stats.agreed, 7);
+        assert!(voted.items.is_empty());
+    }
+
+    #[test]
+    fn a_sentence_one_of_three_model_voters_missed_goes_whole_to_the_adjudicator() {
+        let voters = vec![
+            voter("a", &SAME, Some("r1"), false),
+            voter("b", &SAME, Some("r2"), false),
+            voter_without("c", "r3", &["s2"]),
+        ];
+        let sample = sample();
+        let voted = merge_voters(&sample, &voters, MIN_AGREEING_VOTERS);
+        // s1 has three answers, which agree; s2 has two, and two do not make an agreement.
+        let ids: Vec<String> = voted.items.iter().map(|item| item.id(&sample)).collect();
+        assert_eq!(ids, ["s2.1", "s2.3", "s2.4", "s2.5"]);
+        assert_eq!(voted.stats.agreed, 3);
+        assert_eq!(voted.stats.unvoted_sentences, 1);
+    }
+
+    #[test]
+    fn voters_file_records_the_minimum_and_an_old_one_reads_as_two() {
+        let voters = vec![voter("a", &SAME, Some("r1"), false)];
+        assert_eq!(read_min_voters(&voters_tsv(&voters, 3)), 3);
+        assert_eq!(read_min_voters(&voters_tsv(&voters, 2)), 2);
+        let old = "letter\tvoter\tbase_only\trun\tfile\nA\ta\tno\tr1\ttags/a.conllu\n";
+        assert_eq!(read_min_voters(old), 2);
+        assert_eq!(read_voters_tsv("voters.tsv", old).unwrap().len(), 1);
+    }
+
+    #[test]
     fn letters_run_past_z() {
         assert_eq!(letter(0), "A");
         assert_eq!(letter(25), "Z");
@@ -776,10 +875,10 @@ mod tests {
             voter("a", &SAME, Some("r1"), false),
             voter("spacy", &SAME, None, true),
         ];
-        let text = voters_tsv(&voters);
+        let text = voters_tsv(&voters, 3);
         assert_eq!(
             text,
-            "letter\tvoter\tbase_only\trun\tfile\nA\ta\tno\tr1\ttags/a.conllu\nB\tspacy\tyes\t-\ttags/spacy.conllu\n"
+            "# min_voters = 3\nletter\tvoter\tbase_only\trun\tfile\nA\ta\tno\tr1\ttags/a.conllu\nB\tspacy\tyes\t-\ttags/spacy.conllu\n"
         );
         let back = read_voters_tsv("voters.tsv", &text).unwrap();
         assert_eq!(back.len(), 2);

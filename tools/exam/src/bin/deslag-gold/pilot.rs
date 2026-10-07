@@ -105,8 +105,11 @@ pub struct Report {
     pub lines: Vec<Line>,
     /// The sentences each voter gave no answer for, and so was not graded on, by name.
     pub abstained: Vec<(String, usize)>,
-    /// The sentences fewer than two voters answered, which went whole to the adjudicator.
+    /// The sentences fewer than `min_voters` model voters answered, which went whole to the
+    /// adjudicator.
     pub unvoted: usize,
+    /// How many model voters a word needed to count as agreed.
+    pub min_voters: usize,
     /// The share of words the voters agreed on, so were not adjudicated.
     pub agreed_share: Estimate,
     /// The pipeline reweighted, when a mix was given.
@@ -381,6 +384,7 @@ pub fn report(inputs: &Inputs<'_>) -> Report {
             .zip(voted.stats.abstained.iter().copied())
             .collect(),
         unvoted: voted.stats.unvoted_sentences,
+        min_voters: voted.stats.min_voters,
         agreed_share: whole.estimate(&share),
         weighted,
         versus,
@@ -452,9 +456,10 @@ impl fmt::Display for Report {
             .collect();
         writeln!(
             f,
-            "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than two answers",
+            "sentences a voter gave no answer for, and is not graded on ({}); {} sentences had fewer than {} model voters' answers, so none of their words counts as agreed",
             abstained.join(", "),
-            self.unvoted
+            self.unvoted,
+            self.min_voters
         )?;
         writeln!(
             f,
@@ -730,7 +735,7 @@ mod tests {
         wrong[2] = "N.s";
         wrong[5] = "N.p";
         let voters = vec![voter("a", &GOLD, false), voter("b", &wrong, false)];
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 2);
         assert_eq!(voted.items.len(), 2, "compile and user's");
         let log = vec![logged("s1", 4, "V.in"), logged("s2", 4, "N.s")];
         let gold = answers(&GOLD);
@@ -781,7 +786,7 @@ mod tests {
     fn a_base_only_voter_is_graded_on_the_part_of_speech_alone() {
         let sample = sample();
         let voters = vec![voter("a", &GOLD, false), voter("spacy", &GOLD, true)];
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 1);
         let gold = answers(&GOLD);
         let report = report(&Inputs {
             sample: &sample,
@@ -806,7 +811,7 @@ mod tests {
         let mut wrong = GOLD;
         wrong[2] = "N.s";
         let voters = vec![voter("a", &GOLD, false), voter("b", &wrong, false)];
-        let voted = merge_voters(&sample, &voters);
+        let voted = merge_voters(&sample, &voters, 2);
         let gold = answers(&GOLD);
         let labelled = answers(&labelled);
         let log = vec![logged("s1", 4, "V.in")];

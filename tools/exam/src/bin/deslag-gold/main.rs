@@ -199,7 +199,9 @@ enum Command {
         base_only: Vec<String>,
         /// The `adjudicated.tsv` of an earlier merge of this sample: an item it answered keeps
         /// that answer and its run, and is not put to the adjudicator again, so two merges differ
-        /// in their voting alone. `settled.tsv` records what was taken.
+        /// in their voting alone. `settled.tsv` records what was taken. It is the file of a merge
+        /// directly under this sample's directory, which is not the `--into` one, and whose model
+        /// voters are this merge's.
         #[arg(long, requires = "voter")]
         settled: Option<PathBuf>,
         /// With `--settled`, keep an answer only for an item the earlier merge's `worklist.tsv`
@@ -214,6 +216,12 @@ enum Command {
         /// About how many disputed words each worklist part holds.
         #[arg(long, default_value_t = 60)]
         per_part: usize,
+        /// With `--voter`: how many model voters must answer a sentence for a word of it to count
+        /// as agreed. A voter named in `--base-only` is not one of them. A sentence fewer answered
+        /// goes whole to the adjudicator. Three, which is what agreed-word accuracy was measured
+        /// with; `--min-voters 2` lets two voters agree.
+        #[arg(long, default_value_t = voters::MIN_AGREEING_VOTERS, requires = "voter")]
+        min_voters: usize,
     },
     /// Reads the adjudicator's answers, `g0007.5: N.p | reason`, against `merge/worklist.tsv`
     /// and writes the log `merge/adjudicated.tsv`.
@@ -652,6 +660,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             same_votes,
             into,
             per_part,
+            min_voters,
         } => {
             if voter.is_empty() {
                 merge_stage(&dir, [blind, harper, spacy], per_part, &into)
@@ -662,6 +671,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                     settled: settled.as_deref(),
                     same_votes,
                     per_part,
+                    min_voters,
                 };
                 merge_voters_stage(&dir, &into, &voting)
             }
@@ -1165,6 +1175,7 @@ fn merge_stage(
     let taggers = load_taggers(dir, given, &sample)?.map(|(_, answers)| answers);
     let merged = merge::merge(&sample, &taggers);
     let out = dir.join(into);
+    clear_finished(&out);
     write_text(
         &out.join("agreed.conllu"),
         &merge::agreed_conllu(&sample, &merged.verdicts, &[]),
@@ -1193,6 +1204,7 @@ fn load_voters(
     dir: &Path,
     given: &[(String, Option<PathBuf>)],
     base_only: &[String],
+    min_voters: usize,
     sample: &Sample,
 ) -> Result<Vec<voters::Voter>, Problems> {
     let mut problems = Vec::new();
@@ -1201,6 +1213,20 @@ fn load_voters(
             "--voter",
             Place::File,
             format!("a merge needs {} voters or more", merge::FEWEST_TAGGERS),
+        ));
+    }
+    let model_voters = given
+        .iter()
+        .filter(|(name, _)| !base_only.contains(name))
+        .count();
+    if model_voters < min_voters {
+        problems.push(Error::load(
+            "--voter",
+            Place::File,
+            format!(
+                "{model_voters} model voters were given and a word counts as agreed only when at least {min_voters} answer \
+                 (a `--base-only` voter such as spaCy does not count); give more voters, or `--min-voters` to lower it"
+            ),
         ));
     }
     for (at, (name, _)) in given.iter().enumerate() {
@@ -1252,13 +1278,103 @@ struct Voting<'a> {
     settled: Option<&'a Path>,
     same_votes: bool,
     per_part: usize,
+    min_voters: usize,
+}
+
+/// The `adjudicated.tsv` of the earlier merge that `--settled` names, as a real path, after the
+/// checks that keep a merge from reading answers of another sample or of itself: it is the log of a
+/// merge directly under `dir`, the sample's own directory, and not the one written now (`into`).
+fn earlier_merge(dir: &Path, into: &str, settled: &Path) -> Result<PathBuf, Error> {
+    let shown = settled.display().to_string();
+    let refused = |why: &str| Error::load(&shown, Place::File, why);
+    data::refuse_holdout(settled)?;
+    let real = data::real_path(settled)?;
+    let base = data::real_path(dir)?;
+    let merge_dir = real.parent().map(Path::to_path_buf).unwrap_or_default();
+    if real
+        .file_name()
+        .is_none_or(|name| name != "adjudicated.tsv")
+        || merge_dir.parent() != Some(base.as_path())
+    {
+        return Err(refused(&format!(
+            "`--settled` takes the `adjudicated.tsv` of a merge directly under the sample directory {}, nothing elsewhere",
+            base.display()
+        )));
+    }
+    if merge_dir.file_name().is_some_and(|name| name == into) {
+        return Err(refused(
+            "this is the merge being written (`--into`); settle from another merge's answers",
+        ));
+    }
+    Ok(real)
+}
+
+/// Refuses to settle from a merge whose model voters are not these: its answers were given with
+/// other voters' codes in view. The voters a merge had are in its `voters.tsv`; a voter that votes
+/// on the base alone, as spaCy does, is not one of the model voters.
+fn same_model_voters(earlier: &Path, voters: &[voters::Voter]) -> Result<(), Error> {
+    let path = earlier.with_file_name("voters.tsv");
+    let shown = path.display().to_string();
+    let text = read_text(&path).map_err(|_| {
+        Error::load(
+            &shown,
+            Place::File,
+            "the earlier merge has no voters.tsv, so its voters cannot be compared with these",
+        )
+    })?;
+    let names = |list: &[voters::Voter]| -> Vec<String> {
+        let mut names: Vec<String> = list
+            .iter()
+            .filter(|voter| !voter.base_only)
+            .map(|voter| voter.name.clone())
+            .collect();
+        names.sort();
+        names
+    };
+    let before = names(&voters::read_voters_tsv(&shown, &text)?);
+    let now = names(voters);
+    if before != now {
+        return Err(Error::load(
+            &shown,
+            Place::File,
+            format!(
+                "the earlier merge's model voters were {}, and these are {}; answers given with other voters' codes in view are not settled from",
+                before.join(", "),
+                now.join(", ")
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// Removes what an earlier finish of `out` wrote, which a merge that rewrites the directory would
+/// leave beside a worklist it no longer matches.
+fn clear_finished(out: &Path) {
+    for name in ["labelled.conllu", "unsettled.tsv"] {
+        let _ = std::fs::remove_file(out.join(name));
+    }
 }
 
 fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(), Problems> {
     let sample = load_sample(dir)?;
-    let voters = load_voters(dir, voting.given, voting.base_only, &sample)?;
-    let voted = voters::merge_voters(&sample, &voters);
+    let voters = load_voters(
+        dir,
+        voting.given,
+        voting.base_only,
+        voting.min_voters,
+        &sample,
+    )?;
+    let earlier = match voting.settled {
+        Some(path) => {
+            let earlier = earlier_merge(dir, into, path)?;
+            same_model_voters(&earlier, &voters)?;
+            Some(earlier)
+        }
+        None => None,
+    };
+    let voted = voters::merge_voters(&sample, &voters, voting.min_voters);
     let out = dir.join(into);
+    clear_finished(&out);
     let names: Vec<&str> = voters.iter().map(|voter| voter.name.as_str()).collect();
     let letters: Vec<String> = (0..voters.len()).map(voters::letter).collect();
     let letters: Vec<&str> = letters.iter().map(String::as_str).collect();
@@ -1273,7 +1389,7 @@ fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(),
     let work_text = merge::worklist_tsv(&sample, &voted.items, &names);
     write_text(&out.join("worklist.tsv"), &work_text)?;
     // The items an earlier merge answered are not asked again.
-    let settled = match voting.settled {
+    let settled = match &earlier {
         Some(path) => {
             let mut work = merge::read_worklist("worklist.tsv", &work_text)?.items;
             if voting.same_votes {
@@ -1295,7 +1411,7 @@ fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(),
         .collect();
     // A merge without `--settled` does not inherit the answers of an earlier one into `out`.
     let _ = std::fs::remove_file(out.join("settled.tsv"));
-    if voting.settled.is_some() {
+    if earlier.is_some() {
         write_text(&out.join("settled.tsv"), &merge::settled_tsv(&settled))?;
     }
     let pending: Vec<merge::Item> = voted
@@ -1306,7 +1422,10 @@ fn merge_voters_stage(dir: &Path, into: &str, voting: &Voting<'_>) -> Result<(),
         .collect();
     let parts = merge::worklist_parts(&sample, &pending, voting.per_part, &letters);
     write_parts(&out, "worklist-", &parts)?;
-    write_text(&out.join("voters.tsv"), &voters::voters_tsv(&voters))?;
+    write_text(
+        &out.join("voters.tsv"),
+        &voters::voters_tsv(&voters, voting.min_voters),
+    )?;
     let report = voted.stats.to_string();
     write_text(&out.join("agreement.txt"), &report)?;
     print!("{report}");
@@ -1452,6 +1571,29 @@ fn finish_stage(
             ),
         )
         .into());
+    }
+    if trains != "no" {
+        // The last guard that dev or owner text never becomes trainable: the draw's own checks
+        // should have kept it out, and a sentence that equals one of theirs is refused here.
+        let golds = exclude::Texts::dev_and_owner(&data::gold_dir())?;
+        let clashes: Vec<&str> = sample
+            .sents
+            .iter()
+            .filter(|sent| golds.has(&sent.toks))
+            .map(|sent| sent.id.as_str())
+            .collect();
+        if !clashes.is_empty() {
+            return Err(Error::load(
+                &dir.join("sample.conllu").display().to_string(),
+                Place::File,
+                format!(
+                    "`--trains {trains}` is refused: {} sentences have the text of a sentence of dev.conllu or owner.conllu, among them {}; labels over them never train anything",
+                    clashes.len(),
+                    clashes.iter().take(5).copied().collect::<Vec<_>>().join(", ")
+                ),
+            )
+            .into());
+        }
     }
     let out = dir.join(into);
     let work_path = out.join("worklist.tsv");
@@ -1653,7 +1795,8 @@ fn report_stage(
         }
         voter.answers = merge::load_voter(&voter.name, &voter.file, &text, &sample)?;
     }
-    let voted = voters::merge_voters(&sample, &voters);
+    let min_voters = voters::read_min_voters(&read_text(&entries_path)?);
+    let voted = voters::merge_voters(&sample, &voters, min_voters);
     let log_path = out.join("adjudicated.tsv");
     let log = if log_path.exists() {
         merge::read_log(&log_path.display().to_string(), &read_text(&log_path)?)?

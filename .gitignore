@@ -16,6 +16,9 @@ test/output/
 # the working files of deslag-gold, which makes the deslag gold set; see tools/exam
 .gold/
 
+# the working files of `deslag-gold sample --for-labelling`, the draw that training labels
+.pool/
+
 # the UD English Web Treebank that make fetch-ewt downloads, and the scratch directory it builds
 # it in; see scripts/ewt/ewt.lock
 .ewt/

@@ -7,12 +7,14 @@
 //! It carries no tier or label, so it is what Harper and spaCy are run
 //! over. `manifest.tsv` is the rest: split, tier, context and source file of each sentence.
 
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
 use std::ops::Range;
 use std::path::Path;
 
-use deslag::document::TokenKind;
+use deslag::document::{Token, TokenKind};
+use deslag::tag::Origin;
 use deslag_exam::conllu::{self, Id};
 use deslag_exam::error::{Error, Place};
 use deslag_exam::gold::{Split, Tier, kind_from_name, kind_name};
@@ -99,19 +101,63 @@ pub fn line(index: usize, form: &str, upos: &str, feats: &str, misc: &str) -> St
     )
 }
 
-/// The skeleton of `sents`, byte for byte what `deslag-exam tokens` writes for the same tokens.
-/// `context` gives each sentence's context by its `sent_id`; a sentence it names none for has no
-/// `# exam.context`, which a reader takes as prose.
-pub fn skeleton(sents: &[Sent], context: impl Fn(&str) -> Option<Context>) -> String {
+/// The tokens of `sent` as deslag reads them from `joined`, which is `sent.text()`: each token has
+/// its kind, its text and its place in `joined`, and nothing else is set. It is what `deslag-exam
+/// tokens` reads back from the gold file of the same sentence.
+pub fn tokens_of<'t>(joined: &'t str, sent: &Sent) -> Vec<Token<'t>> {
+    let mut at = 0;
+    let mut tokens = Vec::with_capacity(sent.toks.len());
+    for (index, tok) in sent.toks.iter().enumerate() {
+        let range = at..at + tok.form.len();
+        tokens.push(Token {
+            kind: tok.kind,
+            text: Cow::Borrowed(&joined[range.clone()]),
+            range,
+            reading: None,
+            origin: Origin::English,
+        });
+        at += tok.form.len();
+        if !tok.joined && index + 1 < sent.toks.len() {
+            at += 1;
+        }
+    }
+    tokens
+}
+
+/// The skeleton of `sents`, byte for byte what `deslag-exam tokens` writes for the same tokens
+/// when `with_origin` is given, and the same without its `Origin=` keys when it is not (a gold
+/// draw does not carry them). `context` gives each sentence's context by its `sent_id`; a
+/// sentence it names none for has no `# exam.context`, which a reader takes as prose.
+pub fn skeleton(
+    sents: &[Sent],
+    context: impl Fn(&str) -> Option<Context>,
+    with_origin: bool,
+) -> String {
     let mut out = String::from(deslag_exam::skeleton::HEADER);
     for sent in sents {
         let _ = writeln!(out, "# sent_id = {}", sent.id);
         if let Some(context) = context(&sent.id) {
             let _ = writeln!(out, "# exam.context = {}", context.name());
         }
-        let _ = writeln!(out, "# text = {}", sent.text());
+        let text = sent.text();
+        let _ = writeln!(out, "# text = {text}");
+        let tokens = tokens_of(&text, sent);
+        let origins = if with_origin {
+            deslag::tag::origins(&tokens)
+        } else {
+            vec![Origin::English; tokens.len()]
+        };
         for (index, tok) in sent.toks.iter().enumerate() {
-            out.push_str(&line(index, &tok.form, "_", "_", &misc(tok, None)));
+            // Kind, Origin, SpaceAfter: UD's alphabetical order of keys, as the exam writes them.
+            let mut misc = format!("Kind={}", kind_name(tok.kind));
+            misc.push_str(&deslag_exam::skeleton::origin_misc(
+                &tokens[index],
+                origins[index],
+            ));
+            if tok.joined {
+                misc.push_str("|SpaceAfter=No");
+            }
+            out.push_str(&line(index, &tok.form, "_", "_", &misc));
         }
         out.push('\n');
     }
@@ -121,8 +167,9 @@ pub fn skeleton(sents: &[Sent], context: impl Fn(&str) -> Option<Context>) -> St
 /// What the manifest records about one sentence.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Meta {
-    /// Dev or holdout.
-    pub split: Split,
+    /// Dev or holdout; none for a sentence of a draw for labelling, written `unlabelled`. The exam's
+    /// own `Split` has no such value, so no gold file can say it.
+    pub split: Option<Split>,
     /// Who wrote the file it came from.
     pub tier: Tier,
     /// The block it was in.
@@ -135,6 +182,25 @@ pub struct Meta {
     pub license: String,
     /// Where the sentence is in the fixture's bytes.
     pub range: Range<usize>,
+    /// What a draw for labelling records about the fixture; none in a gold draw.
+    pub provenance: Option<Provenance>,
+}
+
+/// What a draw for labelling records about a fixture, so a later datasheet can name each source
+/// and the generator's licence without opening the corpus: a manifest carries it in five more
+/// columns after the eight.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Provenance {
+    /// The commit the fixture was quoted at, its sidecar's `source.commit`.
+    pub commit: String,
+    /// A permalink to the file at that commit, `source.url`.
+    pub url: String,
+    /// The sha256 of the fixture's bytes, `content.sha256`.
+    pub sha256: String,
+    /// The model a publisher names for the file, `declared.model`; empty when none is named.
+    pub model: String,
+    /// That model's licence, `declared.model_license`; empty when none is named.
+    pub model_license: String,
 }
 
 /// The manifest: a header of `# key = value` lines and one row per sentence, in sample order.
@@ -151,6 +217,23 @@ const COLUMNS: [&str; 8] = [
     "sent_id", "split", "tier", "context", "file", "repo", "license", "bytes",
 ];
 
+/// What the split column says of a sentence no one has labelled.
+const UNLABELLED: &str = "unlabelled";
+
+/// The columns a draw for labelling adds after [`COLUMNS`].
+const PROVENANCE_COLUMNS: [&str; 5] = [
+    "source_commit",
+    "source_url",
+    "content_sha256",
+    "model",
+    "model_license",
+];
+
+/// `value` as one cell: runs of whitespace, tabs and line breaks among them, become one space.
+fn cell(value: &str) -> String {
+    value.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 impl Manifest {
     /// The header value of `key`.
     pub fn get(&self, key: &str) -> Option<&str> {
@@ -166,12 +249,19 @@ impl Manifest {
         for (key, value) in &self.header {
             let _ = writeln!(out, "# {key} = {value}");
         }
-        let _ = writeln!(out, "{}", COLUMNS.join("\t"));
+        // A manifest has the provenance columns when its rows carry it, which a draw for
+        // labelling gives every row.
+        let wide = self.rows.iter().any(|(_, meta)| meta.provenance.is_some());
+        let mut columns = COLUMNS.to_vec();
+        if wide {
+            columns.extend(PROVENANCE_COLUMNS);
+        }
+        let _ = writeln!(out, "{}", columns.join("\t"));
         for (id, meta) in &self.rows {
-            let _ = writeln!(
+            let _ = write!(
                 out,
                 "{id}\t{}\t{}\t{}\t{}\t{}\t{}\t{}-{}",
-                meta.split.name(),
+                meta.split.map_or(UNLABELLED, Split::name),
                 meta.tier.name(),
                 meta.context.name(),
                 meta.file,
@@ -180,6 +270,20 @@ impl Manifest {
                 meta.range.start,
                 meta.range.end
             );
+            if wide {
+                let none = Provenance::default();
+                let from = meta.provenance.as_ref().unwrap_or(&none);
+                for value in [
+                    &from.commit,
+                    &from.url,
+                    &from.sha256,
+                    &from.model,
+                    &from.model_license,
+                ] {
+                    let _ = write!(out, "\t{}", cell(value));
+                }
+            }
+            out.push('\n');
         }
         out
     }
@@ -187,7 +291,8 @@ impl Manifest {
     /// Reads a manifest, `path` being where `text` came from.
     pub fn parse(path: &str, text: &str) -> Result<Manifest, Error> {
         let mut manifest = Manifest::default();
-        let mut seen_columns = false;
+        // How many columns the column line has: the eight, or those and the provenance columns.
+        let mut width = 0;
         let mut ids = BTreeSet::new();
         for (index, line) in text.lines().enumerate() {
             let number = index + 1;
@@ -203,22 +308,30 @@ impl Manifest {
                 continue;
             }
             let cells: Vec<&str> = line.split('\t').collect();
-            if !seen_columns {
-                if cells != COLUMNS {
+            if width == 0 {
+                let wide: Vec<&str> = COLUMNS.iter().chain(&PROVENANCE_COLUMNS).copied().collect();
+                if cells == COLUMNS {
+                    width = COLUMNS.len();
+                } else if cells == wide {
+                    width = wide.len();
+                } else {
                     return Err(Error::at(
                         path,
                         number,
-                        format!("the columns should be {}", COLUMNS.join(", ")),
+                        format!(
+                            "the columns should be {}, and may go on with {}",
+                            COLUMNS.join(", "),
+                            PROVENANCE_COLUMNS.join(", ")
+                        ),
                     ));
                 }
-                seen_columns = true;
                 continue;
             }
-            if cells.len() != COLUMNS.len() {
+            if cells.len() != width {
                 return Err(Error::at(
                     path,
                     number,
-                    format!("expected {} columns, found {}", COLUMNS.len(), cells.len()),
+                    format!("expected {width} columns, found {}", cells.len()),
                 ));
             }
             let bad =
@@ -228,7 +341,11 @@ impl Manifest {
                 .and_then(|(a, b)| Some(a.parse::<usize>().ok()?..b.parse::<usize>().ok()?))
                 .ok_or_else(|| bad("bad byte range", cells[7]))?;
             let meta = Meta {
-                split: Split::from_name(cells[1]).ok_or_else(|| bad("bad split", cells[1]))?,
+                split: if cells[1] == UNLABELLED {
+                    None
+                } else {
+                    Some(Split::from_name(cells[1]).ok_or_else(|| bad("bad split", cells[1]))?)
+                },
                 tier: Tier::from_name(cells[2]).ok_or_else(|| bad("bad tier", cells[2]))?,
                 context: Context::from_name(cells[3])
                     .ok_or_else(|| bad("bad context", cells[3]))?,
@@ -236,6 +353,13 @@ impl Manifest {
                 repo: cells[5].to_string(),
                 license: cells[6].to_string(),
                 range,
+                provenance: (width > COLUMNS.len()).then(|| Provenance {
+                    commit: cells[8].to_string(),
+                    url: cells[9].to_string(),
+                    sha256: cells[10].to_string(),
+                    model: cells[11].to_string(),
+                    model_license: cells[12].to_string(),
+                }),
             };
             if !ids.insert(cells[0].to_string()) {
                 return Err(Error::at(
@@ -246,7 +370,7 @@ impl Manifest {
             }
             manifest.rows.push((cells[0].to_string(), meta));
         }
-        if !seen_columns {
+        if width == 0 {
             return Err(Error::load(path, Place::File, "no column line"));
         }
         Ok(manifest)
@@ -440,19 +564,70 @@ pub mod tests {
             other.toks.pop();
             other
         }];
-        let text = skeleton(&sents, |_| None);
+        let text = skeleton(&sents, |_| None, false);
         assert!(text.contains("\tKind=Word|SpaceAfter=No\n"));
         assert_eq!(parse_skeleton("f", &text).unwrap(), sents);
     }
 
     #[test]
     fn a_skeleton_with_a_duplicate_or_a_missing_kind_is_rejected() {
-        let text = skeleton(&[run_now(), run_now()], |_| None);
+        let text = skeleton(&[run_now(), run_now()], |_| None, false);
         let error = parse_skeleton("f", &text).unwrap_err().to_string();
         assert!(error.contains("sent_id `g0001` is used twice"), "{error}");
         let text = "# sent_id = a\n1\tx\t_\t_\t_\t_\t_\t_\t_\t_\n";
         let error = parse_skeleton("f", text).unwrap_err().to_string();
         assert!(error.contains("f:2: no Kind="), "{error}");
+    }
+
+    #[test]
+    fn a_manifest_with_provenance_reads_back_and_one_without_keeps_its_eight_columns() {
+        let meta = |provenance| Meta {
+            split: None,
+            tier: Tier::Llm,
+            context: Context::Heading,
+            file: "f.md".to_string(),
+            repo: "o/n".to_string(),
+            license: "MIT".to_string(),
+            range: 1..9,
+            provenance,
+        };
+        let provenance = Provenance {
+            commit: "c0ffee".to_string(),
+            url: "https://example.test/o/n/blob/c0ffee/f.md".to_string(),
+            sha256: "ab".repeat(32),
+            model: "a model\twith a tab".to_string(),
+            model_license: String::new(),
+        };
+        let manifest = Manifest {
+            header: Vec::new(),
+            rows: vec![("p0001".to_string(), meta(Some(provenance.clone())))],
+        };
+        let text = manifest.render();
+        assert!(text.contains("\tmodel\tmodel_license\n"), "{text}");
+        // A tab in a cell would shift the columns: it is written as a space.
+        let back = Manifest::parse("m", &text).unwrap();
+        let read = back.rows[0].1.provenance.clone().unwrap();
+        assert_eq!(read.model, "a model with a tab");
+        assert_eq!(
+            Provenance {
+                model: provenance.model.clone(),
+                ..read
+            },
+            provenance
+        );
+        let plain = Manifest {
+            header: Vec::new(),
+            rows: vec![("g0001".to_string(), meta(None))],
+        };
+        assert!(plain.render().contains("\tbytes\n"));
+        assert_eq!(Manifest::parse("m", &plain.render()).unwrap(), plain);
+        // Neither width may be mixed with the other's rows.
+        let narrow = text.replacen(
+            "\tsource_commit\tsource_url\tcontent_sha256\tmodel\tmodel_license",
+            "",
+            1,
+        );
+        assert!(Manifest::parse("m", &narrow).is_err());
     }
 
     #[test]
@@ -462,13 +637,14 @@ pub mod tests {
             rows: vec![(
                 "g0001".to_string(),
                 Meta {
-                    split: Split::Holdout,
+                    split: Some(Split::Holdout),
                     tier: Tier::Llm,
                     context: Context::ListItem,
                     file: "batches/b/llm/o/n/f.md".to_string(),
                     repo: "o/n".to_string(),
                     license: "MIT".to_string(),
                     range: 10..42,
+                    provenance: None,
                 },
             )],
         };

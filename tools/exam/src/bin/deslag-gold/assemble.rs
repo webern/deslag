@@ -267,7 +267,10 @@ pub fn gold_file(sample: &Sample, built: &Built, split: Split) -> String {
         split.name()
     );
     for (sent, lines) in sample.sents.iter().zip(&built.sentences) {
-        let Some(meta) = sample.meta(&sent.id).filter(|meta| meta.split == split) else {
+        let Some(meta) = sample
+            .meta(&sent.id)
+            .filter(|meta| meta.split == Some(split))
+        else {
             continue;
         };
         let Meta {
@@ -335,7 +338,7 @@ pub fn accuracy(
         let wanted = match split {
             Some(split) => sample
                 .meta(&sent.id)
-                .is_some_and(|meta| meta.split == split),
+                .is_some_and(|meta| meta.split == Some(split)),
             None => true,
         };
         if !wanted {
@@ -391,7 +394,10 @@ pub fn log_file(sample: &Sample, log: &str, split: Split) -> String {
     let mut out = format!("{}\n", lines.next().unwrap_or_default());
     for line in lines {
         let sent_id = line.split('\t').nth(1).unwrap_or_default();
-        if sample.meta(sent_id).is_some_and(|meta| meta.split == split) {
+        if sample
+            .meta(sent_id)
+            .is_some_and(|meta| meta.split == Some(split))
+        {
             out.push_str(line);
             out.push('\n');
         }
@@ -405,7 +411,7 @@ pub fn manifest_file(sample: &Sample, split: Split) -> String {
         .manifest
         .rows
         .iter()
-        .filter(|(_, meta)| meta.split == split)
+        .filter(|(_, meta)| meta.split == Some(split))
         .cloned()
         .collect();
     Manifest {
@@ -448,7 +454,7 @@ mod tests {
             ("seed".to_string(), "0x6465736c6167".to_string()),
             ("corpus".to_string(), "hand-made".to_string()),
         ];
-        sample.manifest.rows[1].1.split = Split::Holdout;
+        sample.manifest.rows[1].1.split = Some(Split::Holdout);
         sample.manifest.rows[1].1.tier = Tier::Llm;
         sample.manifest.rows[1].1.context = Context::ListItem;
         sample

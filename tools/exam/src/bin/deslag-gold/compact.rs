@@ -224,13 +224,14 @@ pub mod tests {
             ],
         };
         let meta = |context| Meta {
-            split: Split::Dev,
+            split: Some(Split::Dev),
             tier: Tier::Human,
             context,
             file: "f.md".to_string(),
             repo: "o/r".to_string(),
             license: "MIT".to_string(),
             range: 0..1,
+            provenance: None,
         };
         Sample {
             sents: vec![s1, s2],

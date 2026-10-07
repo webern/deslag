@@ -134,6 +134,11 @@ fn the_load_errors_of_the_conventions() {
             sentence("a", "# exam.split = val\n"),
             "`exam.split` is `val`",
         ),
+        // A draw's manifest says "unlabelled"; the exam has no such split.
+        (
+            sentence("a", "# exam.split = unlabelled\n"),
+            "`exam.split` is `unlabelled`",
+        ),
         (
             sentence("a", "# exam.tokens = penn\n"),
             "`exam.tokens` is `penn`",

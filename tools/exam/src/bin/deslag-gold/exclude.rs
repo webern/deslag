@@ -10,16 +10,27 @@
 //! [`Repos`] is the same cut by repository: every file of a repository a manifest or an owner file
 //! names is left out. A repository that gave dev or holdout a sentence gives the owner none, and a
 //! repository the owner reviewed gives later draws and silver none. [`Repos::reserved`] is the one
-//! set of repositories nothing may draw from: the dev and holdout manifests, `owner.conllu` and
-//! every queue. `rank`, `queue` and `sample --reserved` all use it; `--exclude-repos` adds to it.
+//! set of repositories the review strata may not draw from: the dev and holdout manifests,
+//! `owner.conllu` and every queue. `rank`, `queue` and `sample --reserved` all use it;
+//! `--exclude-repos` adds to it. [`Reserved`] keeps the parts apart, so `draw` can say how many
+//! files each cost it; `draw` adds [`Repos::tests_corpus`], the repositories of the fixtures of
+//! `tests/corpus/`, which the training set leaves out and the strata do not.
+//!
+//! [`Texts`] is the cut by sentence: the normalised text of every dev, holdout, owner and queue
+//! sentence, or of earlier draws. A repository that gave a gold sentence is already reserved, but
+//! a heading such as `Installation` is in a thousand repositories, so `draw` drops any sentence
+//! whose text equals one of theirs. It reads holdout, so it only counts: it holds the texts but
+//! cannot be printed, no method of it returns one, and nothing it prints is text.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use deslag_exam::conllu;
 use deslag_exam::error::{Error, Place};
+use deslag_exam::gold::Gold;
 use sha2::{Digest, Sha256};
 
+use crate::data::Tok;
 use crate::problems::Problems;
 use crate::sample::File;
 
@@ -88,13 +99,16 @@ impl Exclusion {
     /// `files` without the listed ones, and how many were removed. An entry that names no file
     /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
-        let before = files.len();
-        let kept: Vec<File<'a>> = files
+        let (kept, dropped) = self.split(files);
+        (kept, dropped.len())
+    }
+
+    /// `files` as those the list does not name, then those it does. An entry that names no file
+    /// is not a problem here, as for [`Exclusion::drop`].
+    pub fn split<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, Vec<File<'a>>) {
+        files
             .into_iter()
-            .filter(|file| !self.keys.iter().any(|(key, _)| Self::names(key, file)))
-            .collect();
-        let dropped = before - kept.len();
-        (kept, dropped)
+            .partition(|file| !self.keys.iter().any(|(key, _)| Self::names(key, file)))
     }
 
     /// `files` without the listed ones, and how many were removed. An entry that names no file
@@ -216,19 +230,17 @@ impl Repos {
     }
 
     /// Every repository that must never be offered for review or drawn into a later set: the
-    /// repositories of the dev and holdout manifests, of `owner.conllu` when it exists and of
+    /// repositories of the dev and holdout manifests, of `owner.conllu` when it exists, of
     /// every `queue/*.conllu` in `gold_dir`, except the queue files in `except` (the one being
-    /// rebuilt). The first two must be there and name a repository. This set is fixed: a flag
-    /// can add to it and never replaces any of it.
+    /// rebuilt). The first two must be there and name a repository. This set is fixed: a flag can
+    /// add to it and never replaces any of it.
     pub fn reserved(gold_dir: &Path, except: &[&Path]) -> Result<Repos, Error> {
+        Ok(Reserved::read(gold_dir, except)?.all())
+    }
+
+    /// The repositories of every `queue/*.conllu` in `gold_dir`, but the files in `except`.
+    fn queues(gold_dir: &Path, except: &[&Path]) -> Result<Repos, Error> {
         let mut all = Repos::default();
-        for name in RESERVED_MANIFESTS {
-            all.names.extend(Repos::read(&[gold_dir.join(name)])?.names);
-        }
-        let owner = gold_dir.join("owner.conllu");
-        if owner.exists() {
-            all.names.extend(Repos::read(&[owner])?.names);
-        }
         let queue = gold_dir.join("queue");
         if queue.is_dir() {
             let io = |source| Error::Io {
@@ -272,13 +284,185 @@ impl Repos {
     /// `files` without those of the repositories, and how many were removed. A repository is
     /// matched by each sidecar's `source.repo`, never by a path.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
-        let before = files.len();
-        let kept: Vec<File<'a>> = files
+        let (kept, dropped) = self.split(files);
+        (kept, dropped.len())
+    }
+
+    /// `files` as those of other repositories, then those of the repositories.
+    pub fn split<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, Vec<File<'a>>) {
+        files.into_iter().partition(|file| !self.has(&file.repo))
+    }
+
+    /// The repositories of the fixtures under `root`, the small tier `tests/corpus`, read from
+    /// their sidecars. A root that is missing, does not load or holds no fixture is an error,
+    /// since it would exclude nothing.
+    pub fn tests_corpus(root: &Path) -> Result<Repos, Error> {
+        let shown = root.display().to_string();
+        let bad = |message: &str| Error::load(&shown, Place::File, message);
+        let fixtures = deslag_corpus::load::tree(root)
+            .map_err(|error| bad(&format!("the small tier does not load: {error}")))?;
+        let mut names = BTreeSet::new();
+        for fixture in &fixtures {
+            names.insert(
+                normal(&fixture.sidecar.source.repo)
+                    .map_err(|why| bad(&format!("a fixture's source.repo: {why}")))?,
+            );
+        }
+        if names.is_empty() {
+            return Err(bad("it holds no fixture, so it would exclude nothing"));
+        }
+        Ok(Repos { names })
+    }
+}
+
+/// The reserved repositories, by what reserves them.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Reserved {
+    /// Those of `dev.manifest.tsv`.
+    pub dev: Repos,
+    /// Those of `holdout.manifest.tsv`.
+    pub holdout: Repos,
+    /// Those of `owner.conllu`, when it exists.
+    pub owner: Repos,
+    /// Those of every `queue/*.conllu`.
+    pub queue: Repos,
+}
+
+impl Reserved {
+    /// The four parts: the manifests, the owner file and the queues in `gold_dir`, as for
+    /// [`Repos::reserved`].
+    pub fn read(gold_dir: &Path, except: &[&Path]) -> Result<Reserved, Error> {
+        let manifest = |name: &str| Repos::read(&[gold_dir.join(name)]);
+        let owner = gold_dir.join("owner.conllu");
+        Ok(Reserved {
+            dev: manifest(RESERVED_MANIFESTS[0])?,
+            holdout: manifest(RESERVED_MANIFESTS[1])?,
+            owner: if owner.exists() {
+                Repos::read(&[owner])?
+            } else {
+                Repos::default()
+            },
+            queue: Repos::queues(gold_dir, except)?,
+        })
+    }
+
+    /// Every repository of the parts.
+    pub fn all(&self) -> Repos {
+        [&self.dev, &self.holdout, &self.owner, &self.queue]
             .into_iter()
-            .filter(|file| !self.has(&file.repo))
-            .collect();
-        let dropped = before - kept.len();
-        (kept, dropped)
+            .fold(Repos::default(), |all, part| all.with(part.clone()))
+    }
+}
+
+/// The texts a draw must not repeat, normalised. See the module's doc. It has no `Debug`, so no
+/// text of it can reach a log by accident.
+#[derive(Default)]
+pub struct Texts {
+    keys: BTreeSet<String>,
+}
+
+impl Texts {
+    /// What two sentences' texts are compared by: their letters and digits in lower case, so a
+    /// difference of spacing, punctuation or case is not a different sentence.
+    pub fn normal(text: &str) -> String {
+        text.chars()
+            .filter(|c| c.is_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect()
+    }
+
+    /// The sentences of `dev.conllu` and `holdout.conllu`, which must be there, of `owner.conllu`
+    /// when it is, and of every `queue/*.conllu`, in `gold_dir`: all of it is or will be gold.
+    pub fn gold(gold_dir: &Path) -> Result<Texts, Error> {
+        let mut texts = Texts::default();
+        for (name, required) in [
+            ("dev.conllu", true),
+            ("holdout.conllu", true),
+            ("owner.conllu", false),
+        ] {
+            let path = gold_dir.join(name);
+            if !required && !path.exists() {
+                continue;
+            }
+            let gold = Gold::read(&path)?;
+            for sentence in &gold.sentences {
+                texts.add(&sentence.text);
+            }
+        }
+        let queue = gold_dir.join("queue");
+        if queue.is_dir() {
+            let shown = queue.display().to_string();
+            let io = |source| Error::Io {
+                path: shown.clone(),
+                source,
+            };
+            let mut found = Vec::new();
+            for entry in std::fs::read_dir(&queue).map_err(io)? {
+                let path = entry.map_err(io)?.path();
+                if path.extension().is_some_and(|ext| ext == "conllu") {
+                    found.push(path);
+                }
+            }
+            found.sort();
+            for path in found {
+                let shown = path.display().to_string();
+                for block in conllu::read(&shown, &crate::data::read_text(&path)?)? {
+                    // A queue is a skeleton: its `# text`, or else its words' forms.
+                    match block.comment("text") {
+                        Some(text) => texts.add(&text.value),
+                        None => {
+                            let forms: String =
+                                block.lines.iter().map(|line| line.form.as_str()).collect();
+                            texts.add(&forms);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(texts)
+    }
+
+    /// The sentences of the skeletons `paths`, the `sample.conllu` of earlier draws, and their
+    /// ids.
+    pub fn draws(paths: &[PathBuf]) -> Result<(Texts, Vec<String>), Error> {
+        let mut texts = Texts::default();
+        let mut ids = Vec::new();
+        for path in paths {
+            let shown = path.display().to_string();
+            for sent in crate::data::parse_skeleton(&shown, &crate::data::read_text(path)?)? {
+                texts.add(&sent.text());
+                ids.push(sent.id);
+            }
+        }
+        Ok((texts, ids))
+    }
+
+    fn add(&mut self, text: &str) {
+        let key = Texts::normal(text);
+        if !key.is_empty() {
+            self.keys.insert(key);
+        }
+    }
+
+    /// What holds the texts `texts`.
+    #[cfg(test)]
+    pub fn of<I: IntoIterator<Item = String>>(texts: I) -> Texts {
+        let mut all = Texts::default();
+        for text in texts {
+            all.add(&text);
+        }
+        all
+    }
+
+    /// Whether the sentence of `toks` has one of the texts.
+    pub fn has(&self, toks: &[Tok]) -> bool {
+        let text: String = toks.iter().map(|tok| tok.form.as_str()).collect();
+        self.keys.contains(&Texts::normal(&text))
+    }
+
+    /// How many distinct texts it holds.
+    pub fn len(&self) -> usize {
+        self.keys.len()
     }
 }
 
@@ -293,6 +477,7 @@ fn same_file(a: &Path, b: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::Provenance;
     use deslag_exam::gold::Tier;
 
     fn file(path: &str, text: &'static str) -> File<'static> {
@@ -302,8 +487,14 @@ mod tests {
             repo: "o/r".to_string(),
             license: "MIT".to_string(),
             sha256: sha256_hex(text.as_bytes()),
+            provenance: Provenance::default(),
             text,
         }
+    }
+
+    /// The small tier of this repository.
+    fn corpus_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/corpus")
     }
 
     fn corpus() -> Vec<File<'static>> {
@@ -422,6 +613,12 @@ mod tests {
         for repo in ["d/ev", "h/old", "o/wner", "q/one", "q/two"] {
             assert!(all.has(repo), "{repo}");
         }
+        // The parts stay apart, and the union is all of them.
+        let parts = Reserved::read(gold, &[]).unwrap();
+        assert!(parts.dev.has("d/ev") && !parts.dev.has("h/old"));
+        assert!(parts.holdout.has("h/old") && parts.owner.has("o/wner"));
+        assert!(parts.queue.has("q/one") && !parts.queue.has("o/wner"));
+        assert_eq!(parts.all(), all);
         // The queue being rebuilt does not reserve its own repositories.
         let queue = gold.join("queue/q2.conllu");
         let rebuilt = Repos::reserved(gold, &[queue.as_path()]).unwrap();
@@ -429,6 +626,30 @@ mod tests {
         // A queue that names nothing is an error too.
         std::fs::write(gold.join("queue/q3.conllu"), "").unwrap();
         assert!(Repos::reserved(gold, &[]).is_err());
+    }
+
+    #[test]
+    fn the_small_tier_must_exist_and_hold_a_fixture() {
+        assert!(Repos::tests_corpus(&corpus_root()).unwrap().len() > 10);
+        let dir = tempfile::tempdir().unwrap();
+        let missing = Repos::tests_corpus(&dir.path().join("none")).unwrap_err();
+        assert!(missing.to_string().contains("none"), "{missing}");
+        let empty = Repos::tests_corpus(dir.path()).unwrap_err();
+        assert!(empty.to_string().contains("no fixture"), "{empty}");
+    }
+
+    #[test]
+    fn texts_are_compared_by_letters_and_digits_and_never_by_spacing_or_case() {
+        assert_eq!(Texts::normal("  Hello,  World! 2 "), "helloworld2");
+        let gold = Texts::of(["Run `make ci` now.".to_string()]);
+        let tok = |form: &str| Tok {
+            form: form.to_string(),
+            kind: deslag::document::TokenKind::Word,
+            joined: false,
+        };
+        assert!(gold.has(&[tok("run"), tok("make ci"), tok("NOW")]));
+        assert!(!gold.has(&[tok("run"), tok("now")]));
+        assert!(!gold.has(&[]));
     }
 
     #[test]

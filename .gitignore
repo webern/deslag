@@ -19,6 +19,10 @@ test/output/
 # the working files of `deslag-gold sample --for-labelling`, the draw that training labels
 .pool/
 
+# the labelling pilot's working files, replies and tags, which make generate-label-* writes; the
+# ledger of what it spent is in there too, and make clean-label keeps it; see scripts/label/README.md
+.label/
+
 # the UD English Web Treebank that make fetch-ewt downloads, and the scratch directory it builds
 # it in; see scripts/ewt/ewt.lock
 .ewt/

@@ -1,6 +1,6 @@
 ERROR: deslag detected Markdown bloat!
 
-notes.md is 48, which larger than 20 bytes (by 28 bytes).
+notes.md is 48, which is larger than 20 bytes (by 28 bytes).
 
 The file must fit within its max_size_bytes budget of 20 bytes.
 

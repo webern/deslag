@@ -117,10 +117,10 @@ pub fn code(output: &Output) -> i32 {
 }
 
 /// Whether `stderr` reports the file at `path` as over a budget of `budget` bytes, as deslag's
-/// over-budget line does: `path is N, which larger than {budget} bytes (by M bytes).`
+/// over-budget line does: `path is N, which is larger than {budget} bytes (by M bytes).`
 pub fn over_budget(stderr: &str, path: &str, budget: u64) -> bool {
     stderr.lines().any(|line| {
-        let Some((left, right)) = line.split_once(", which larger than ") else {
+        let Some((left, right)) = line.split_once(", which is larger than ") else {
             return false;
         };
         left.strip_prefix(path)

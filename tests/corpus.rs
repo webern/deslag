@@ -376,13 +376,13 @@ fn body_after_frontmatter(text: &str) -> &str {
     text
 }
 
-/// The `path is N, which larger than B bytes (by M bytes).` lines of a run, sorted, as (path,
+/// The `path is N, which is larger than B bytes (by M bytes).` lines of a run, sorted, as (path,
 /// size, budget) triples.
 fn reported(stderr: &str) -> Vec<(String, u64, u64)> {
     let mut found: Vec<(String, u64, u64)> = stderr
         .lines()
         .filter_map(|line| {
-            let (left, rest) = line.split_once(", which larger than ")?;
+            let (left, rest) = line.split_once(", which is larger than ")?;
             let (path, size) = left.rsplit_once(" is ")?;
             let (budget, rest) = rest.split_once(" bytes (by ")?;
             rest.strip_suffix(" bytes).")?;

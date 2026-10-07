@@ -63,7 +63,7 @@ pub fn render(path: &str, over: &Over) -> String {
     format!(
         "{HEADING}\n\
          \n\
-         {path} is {size_bytes}, which larger than {budget} bytes (by {over_amount} bytes).\n\
+         {path} is {size_bytes}, which is larger than {budget} bytes (by {over_amount} bytes).\n\
          \n\
          {advice}"
     )

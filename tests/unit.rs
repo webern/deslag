@@ -561,6 +561,30 @@ fn md_globs_choose_which_files_are_markdown() {
     );
 }
 
+/// A config written for an older deslag never stops loading: `[md]` selects any file its globs
+/// name, with or without a Markdown extension.
+#[test]
+fn an_md_glob_with_no_markdown_extension_still_loads() {
+    let repo = Repo::new();
+    repo.write(
+        ".deslag/config.toml",
+        "schema_version = 1\n\
+         \n[md]\nglobs = [\"docs/**\", \"*\", \"README\"]\n\
+         \n[md.lints.max_size_bytes]\nvalue = 5\n",
+    );
+    repo.write("notes.txt", "selected, far past five bytes\n");
+    repo.write("README", "selected, far past five bytes\n");
+    repo.write("docs/a/page", "selected, far past five bytes\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    for file in ["notes.txt", "README", "docs/a/page"] {
+        assert!(over_budget(&stderr, file, 5), "stderr: {stderr}");
+    }
+}
+
 #[test]
 fn a_config_without_a_schema_version_is_an_error() {
     let repo = Repo::new();

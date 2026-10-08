@@ -1,7 +1,7 @@
 //! `deslag explain`: the settings the config gives a file, and the layers they come from.
 //!
 //! A file's settings are the `[md]` section's `lints`, then each override that matches it in the
-//! order [`MdConfig::overrides_for`](crate::config::MdConfig::overrides_for) gives, then a budget
+//! order [`Section::overrides_for`](crate::config::Section::overrides_for) gives, then a budget
 //! in the file's own frontmatter. For each file this names the config, says whether the walk skips
 //! the file and whether `[md]` selects it, lists the overrides and the frontmatter budget, and
 //! shows every lint's settings as TOML, whatever language the config is written in.

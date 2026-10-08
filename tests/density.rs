@@ -2,7 +2,7 @@
 //! pinned by the cases.
 
 use deslag::Document;
-use deslag::config::{Density, MdLints, Merge};
+use deslag::config::{Density, Lints, Merge};
 use deslag::lint::density::{Kind, check, measure};
 
 /// The line, kind and length of every block in `text`.
@@ -15,7 +15,7 @@ fn blocks(text: &str) -> Vec<(usize, Kind, usize)> {
 
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> Density {
-    let lints: MdLints = toml::from_str(&format!("[density]\n{toml}")).expect("valid settings");
+    let lints: Lints = toml::from_str(&format!("[density]\n{toml}")).expect("valid settings");
     lints.density.expect("a density table")
 }
 

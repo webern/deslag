@@ -3,16 +3,16 @@
 //! A rename or removal keeps `schema_version`. The typed structs keep the old key as a hidden
 //! field, so each format reads it with its own rules and reports its errors at its own line. Before
 //! the config is compiled, a move function takes the old value out and puts it at the new path,
-//! once for `[md.lints]` and once for each override. Setting both old and new in one table is an
-//! error. A section and an override may differ: the override still wins.
+//! once for each section's `lints` and once for each override. Setting both old and new in one
+//! table is an error. A section and an override may differ: the override still wins.
 //!
 //! [`REDIRECTS`] is the contract. It is data as well as code, so that `deslag update` can write
 //! the same edit into a file: `in_force` is the list it walks. Each entry has a `breaking`
 //! changelog entry whose id is its old path.
 
 use crate::Error;
-use crate::config::lints::MdLints;
-use crate::config::md::MdFile;
+use crate::config::lints::Lints;
+use crate::config::section::Parts;
 
 /// A setting that was renamed or removed.
 #[derive(Debug)]
@@ -24,7 +24,7 @@ pub struct Redirect {
     /// A value for `old`, written as JSON, that a test sets to see the redirect work.
     pub example: &'static str,
     /// Moves the setting out of one `lints` table, and says whether the table set it.
-    moves: fn(&mut MdLints) -> Result<bool, BothSet>,
+    moves: fn(&mut Lints) -> Result<bool, BothSet>,
 }
 
 /// A table that sets both the old and the new path.
@@ -119,23 +119,29 @@ pub struct Used {
     pub places: Vec<String>,
 }
 
-/// What [`apply`] found `file` using.
+/// What [`apply`] found the config using.
 pub(super) struct Applied {
-    /// One warning for each redirect that `file` used, however many tables set it.
+    /// One warning for each redirect that the config used, however many tables set it.
     pub(super) warnings: Vec<String>,
-    /// The redirects that `file` used, in the order of the warnings.
+    /// The redirects that the config used, in the order of the warnings.
     pub(super) used: Vec<Used>,
 }
 
-/// Moves every old setting in `file` to its new path.
-pub(super) fn apply(file: &mut MdFile, config_path: &str) -> Result<Applied, Error> {
+/// Moves every old setting in `sections`, each with its name, to its new path.
+pub(super) fn apply(
+    sections: &mut [(&'static str, Parts)],
+    config_path: &str,
+) -> Result<Applied, Error> {
     let mut applied = Applied {
         warnings: Vec::new(),
         used: Vec::new(),
     };
     for redirect in in_force() {
         let mut places = Vec::new();
-        for (place, lints) in file.lints_tables() {
+        let tables = sections
+            .iter_mut()
+            .flat_map(|(name, parts)| parts.lints_tables(name));
+        for (place, lints) in tables {
             match (redirect.moves)(lints) {
                 Ok(moved) => {
                     if moved {

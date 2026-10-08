@@ -142,20 +142,16 @@ def listed_quantization(listing, tag):
     return next((endpoint.get("quantization") for endpoint in endpoints if endpoint.get("tag") == tag), None)
 
 
-def weakest(quantizations):
-    """The least precise of a list of quantisations, or None if the list is empty or not known."""
-    known = [q for q in quantizations or [] if q in QUANT_RANK]
-    return min(known, key=QUANT_RANK.get, default=None)
-
-
 def pinned_endpoint(listing, config, at_least=None):
     """The endpoint of `listing` (the models/<id>/endpoints JSON) that `config` pins, checked.
 
     Raises ListingMismatch (an ApiError) when the listing has no such endpoint, when its quantisation
     is not one the config allows, or when it does not support a parameter the body will send. With
     `at_least`, a quantisation, the endpoint's must be that or a more precise one, and the config's own
-    `quantizations` is not looked at: this is how an alternative endpoint is checked. A floor that is
-    not a known quantisation (`unknown`, say) asks for nothing.
+    `quantizations` is not looked at: this is how an alternative endpoint of a model with no
+    `quantizations` is checked (mistral, claude); one with them holds every endpoint to them, the
+    pin and the alternatives alike. A floor that is not a known quantisation (`unknown`, say) asks for
+    nothing.
     """
     endpoints = listing.get("data", listing).get("endpoints", [])
     found = [endpoint for endpoint in endpoints if endpoint.get("tag") == config["provider"]]

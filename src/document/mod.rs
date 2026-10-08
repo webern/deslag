@@ -17,10 +17,13 @@
 
 pub mod cpp;
 mod edit;
+mod lift;
 mod map;
 mod markdown;
 mod plain;
+mod region;
 pub mod rust;
+mod rust_regions;
 mod sentences;
 mod stack;
 mod tokens;
@@ -33,6 +36,8 @@ use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
 pub(crate) use map::Gathered;
+use region::Region;
+pub use region::Surface;
 pub(crate) use stack::Need;
 pub use stack::{Reader, Stack};
 
@@ -58,6 +63,9 @@ pub struct Document<'a> {
     pub sentences: Vec<Sentence>,
     /// Where each line of the source starts.
     lines: Vec<usize>,
+    /// The comments of a code file that were read as prose, in the order of the file: their text,
+    /// where it is in the file, and how the file holds it. A Markdown file has none.
+    regions: Vec<Region>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
     /// with to prove it. The later layers are made from the first, so they need no reading.
     stack: Stack,
@@ -122,6 +130,13 @@ pub enum BlockKind<'a> {
     Html,
     /// The file's frontmatter.
     Frontmatter,
+    /// The prose of a comment, or a run of comments, in a code file. It holds the blocks that its
+    /// text was read into, and a lint that wants to know the surface reads it from the block
+    /// around.
+    Region {
+        /// What kind of comment it is.
+        surface: Surface,
+    },
 }
 
 /// What a block holds.
@@ -338,18 +353,58 @@ impl<'a> Document<'a> {
             tokens: Vec::new(),
             sentences: Vec::new(),
             lines,
+            regions: Vec::new(),
             stack,
         }
     }
 
-    /// The file's text at `range`, as it is written. In a Markdown file an entity such as `&amp;`
-    /// is the entity, not the character it stands for.
+    /// The text the lints read at `range`, a range of the file. In a Markdown file it is the file
+    /// as written, so an entity such as `&amp;` is the entity, not the character it stands for. In
+    /// a comment of a code file it is the text of the region, without the markers and indents that
+    /// part its lines: a line break stands where the lines part, so a range over two `///` lines
+    /// reads as the sentence it is. A range that is not in one region is read from the file.
     ///
     /// # Panics
     ///
     /// If `range` is not on characters of the file.
     pub(crate) fn text(&self, range: Range<usize>) -> Cow<'_, str> {
-        text(self.source, range)
+        Cow::Borrowed(self.read_at(range).1)
+    }
+
+    /// Each character of [`Document::text`] at `range`, with the range of the file that holds it.
+    /// A line break between two lines of a comment is held by the empty range where the first line
+    /// ends.
+    pub(crate) fn chars(&self, range: Range<usize>) -> impl Iterator<Item = (Range<usize>, char)> {
+        let (region, text, from) = self.read_at(range);
+        text.char_indices().map(move |(at, ch)| {
+            let inner = from + at..from + at + ch.len_utf8();
+            match region {
+                Some(region) => (region.map.to_file(inner).range, ch),
+                None => (inner, ch),
+            }
+        })
+    }
+
+    /// The region that holds all of `range`, if one does.
+    fn region_at(&self, range: &Range<usize>) -> Option<&Region> {
+        let at = self
+            .regions
+            .partition_point(|region| region.outer.end <= range.start);
+        self.regions
+            .get(at)
+            .filter(|region| region.outer.start <= range.start && range.end <= region.outer.end)
+    }
+
+    /// The region that holds all of `range`, the text the lints read there, and where that text
+    /// starts in the region's own or, outside every region, in the file.
+    fn read_at(&self, range: Range<usize>) -> (Option<&Region>, &str, usize) {
+        match self.region_at(&range) {
+            Some(region) => {
+                let inner = region.map.to_inner(range);
+                (Some(region), &region.inner[inner.clone()], inner.start)
+            }
+            None => (None, &self.source[range.clone()], range.start),
+        }
     }
 
     /// Where `range` is: a range of bytes of the source that starts and ends on characters.
@@ -450,8 +505,9 @@ impl<'a> Document<'a> {
     }
 }
 
-/// The body of [`Document::text`], for the readers of the second layer, which hold the fields of a
-/// document and not the document.
+/// The file's text at `range`, for the readers of the second layer, which hold the fields of a
+/// document and not the document. They read the whitespace between tokens, which the file and a
+/// region's text agree on.
 fn text(source: &str, range: Range<usize>) -> Cow<'_, str> {
     Cow::Borrowed(&source[range])
 }
@@ -533,5 +589,57 @@ mod tests {
         let source = "Crème.\n";
         let inside = source.find('è').unwrap() + 1;
         Document::markdown(source).text(0..inside);
+    }
+
+    fn rust(source: &str) -> Document<'_> {
+        let surfaces = vec![Surface::DocComment, Surface::Comment];
+        Stack::new(Reader::Rust { surfaces }).document(source)
+    }
+
+    #[test]
+    fn text_over_two_lines_of_a_comment_holds_the_break_and_not_the_markers() {
+        let source = "fn f() {}\n    /// One sentence\n    /// over two lines.\n";
+        let document = rust(source);
+        let from = source.find("sentence").unwrap();
+        let to = source.find("two").unwrap() + "two".len();
+
+        assert_eq!(document.text(from..to), "sentence\nover two");
+        assert_eq!(document.text(from..from + "sent".len()), "sent");
+        assert_eq!(document.text(0..9), "fn f() {}");
+        assert_eq!(document.text(from..from), "");
+        let words: Vec<&Token<'_>> = document
+            .tokens
+            .iter()
+            .filter(|token| token.kind == TokenKind::Word)
+            .collect();
+        let (sentence, over) = (words[1], words[2]);
+        assert_eq!(&*sentence.text, "sentence");
+        assert_eq!(document.text(sentence.range.end..over.range.start), "\n");
+    }
+
+    #[test]
+    fn chars_over_two_lines_of_a_comment_are_held_where_the_file_has_them() {
+        let source = "/// é\n/// ü—\n";
+        let document = rust(source);
+        let start = source.find('é').unwrap();
+        let end = source.find('—').unwrap() + '—'.len_utf8();
+
+        let chars: Vec<(Range<usize>, char)> = document.chars(start..end).collect();
+
+        let at = |ch: char| source.find(ch).unwrap();
+        assert_eq!(
+            chars,
+            [
+                (at('é')..at('é') + 2, 'é'),
+                (at('é') + 2..at('é') + 2, '\n'),
+                (at('ü')..at('ü') + 2, 'ü'),
+                (at('—')..at('—') + 3, '—'),
+            ]
+        );
+        // Markdown is its own text.
+        let markdown = Document::markdown("Fish &mdash;\n");
+        let found: Vec<(Range<usize>, char)> = markdown.chars(5..12).collect();
+        assert_eq!(found.len(), 7);
+        assert_eq!(found[0], (5..6, '&'));
     }
 }

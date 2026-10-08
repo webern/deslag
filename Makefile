@@ -138,8 +138,9 @@ help:
 	@echo "                 in test or ci: its own workflow runs it when they change"
 	@echo "test-scanners    fetch the crates Cargo.lock names and those of $(CRATES)/c/Cargo.lock, then sweep deslag's"
 	@echo "                 src and tools and the Rust crates, and the C and C++ crates, with deslag-sweep, and fail"
-	@echo "                 on any non-zero exit; prints the sweep's TOML; needs the network, so not in test; ci"
-	@echo "                 runs it"
+	@echo "                 on any non-zero exit; prints the sweep's TOML; also reads the comments of the Rust crates"
+	@echo "                 as prose and checks they are written back as found; needs the network, so not in test;"
+	@echo "                 ci runs it"
 	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
 	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
 	@echo "                 runs it"
@@ -376,13 +377,16 @@ test-python: preflight
 
 # Sweeps deslag's own source and the vendored crates of Cargo.lock with deslag-sweep, which checks the
 # comment scanners against the real lexers, and fails on any non-zero exit: the scanners differ from a
-# lexer, or the sweep cannot run. It then sweeps the C and C++ of the crates that $(CRATES)/c/Cargo.lock
-# names, once as C and once as C++, since each grammar judges a different set of headers. It prints
-# the sweep's TOML, so a log shows what was swept. All runs are debug builds. Needs the network for
-# the crates, so not in test; ci runs it.
+# lexer, or the sweep cannot run. Then a test of deslag's own reads every comment of those crates as a
+# region of prose and checks that each is written back as the file holds it; it prints the counts. It
+# then sweeps the C and C++ of the crates that $(CRATES)/c/Cargo.lock names, once as C and once as C++,
+# since each grammar judges a different set of headers. It prints the sweep's TOML, so a log shows
+# what was swept. All runs are debug builds. Needs the network for the crates, so not in test; ci
+# runs it.
 test-scanners: preflight fetch-crates
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust src tools
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust .crates/vendor
+	cargo test $(CARGO_FLAGS) --lib -- --ignored --nocapture vendored_crates
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- c .crates/c/vendor
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- cpp .crates/c/vendor
 

@@ -170,6 +170,47 @@ impl SourceMap {
         }
     }
 
+    /// Where the inner text holds `outer`, a range of the outer text that starts and ends on
+    /// characters: the inverse of [`SourceMap::to_file`].
+    ///
+    /// The inner range starts at the first byte of the inner text that lies at or after the start of
+    /// `outer`, and ends after the last byte that lies at or before its end. An escaped segment is
+    /// in the range only when all of its outer bytes are. A synthetic segment, which stands at a
+    /// point, is in the range when the point is its start or inside it, but not its end. So the text
+    /// between the end of a token and the start of the next, on two lines, is the line break
+    /// between them. A range that lies wholly in a gap is empty.
+    ///
+    /// For an inner range that does not end in a synthetic segment, `to_inner` of what `to_file`
+    /// says holds the inner range, and is equal to it when `to_file` says it is editable, unless a
+    /// synthetic segment stands at its start.
+    pub fn to_inner(&self, outer: Range<usize>) -> Range<usize> {
+        let first = self.segments.partition_point(|s| match s.kind {
+            SegmentKind::Verbatim => s.outer.end <= outer.start,
+            _ => s.outer.start < outer.start,
+        });
+        let last = self.segments.partition_point(|s| match s.kind {
+            SegmentKind::Escaped => s.outer.end <= outer.end,
+            _ => s.outer.start < outer.end,
+        });
+        let start = self
+            .segments
+            .get(first)
+            .map_or(self.len(), |s| match s.kind {
+                SegmentKind::Verbatim => s.inner.start + outer.start.saturating_sub(s.outer.start),
+                _ => s.inner.start,
+            });
+        let end = last.checked_sub(1).map_or(0, |last| {
+            let s = &self.segments[last];
+            match s.kind {
+                SegmentKind::Verbatim => {
+                    s.inner.start + (outer.end - s.outer.start).min(s.inner.len())
+                }
+                _ => s.inner.end,
+            }
+        });
+        start..end.max(start)
+    }
+
     /// The map from this map's inner text to `outer`'s outer text, where `self` maps its inner text
     /// to `outer`'s inner text.
     ///
@@ -182,7 +223,7 @@ impl SourceMap {
     /// # Panics
     ///
     /// If `outer` is empty and `self` is not.
-    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    // TODO: remove the dead_code guard when the reader of fenced code uses it.
     #[allow(dead_code)]
     pub fn compose(&self, outer: &SourceMap) -> SourceMap {
         let mut parts: Vec<Part> = Vec::new();
@@ -241,7 +282,7 @@ impl SourceMap {
     }
 
     /// The segments, in order.
-    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    // TODO: remove the dead_code guard when the reader of fenced code uses it.
     #[allow(dead_code)]
     pub fn segments(&self) -> &[Segment] {
         &self.segments
@@ -253,7 +294,7 @@ impl SourceMap {
     }
 
     /// Whether the map tiles no text.
-    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    // TODO: remove the dead_code guard when the reader of fenced code uses it.
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.segments.is_empty()
@@ -267,7 +308,7 @@ impl SourceMap {
 
 /// A segment being composed: the kind, the length of inner text and the outer range it will be
 /// pushed with.
-// TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+// TODO: remove the dead_code guard when the reader of fenced code uses it.
 #[allow(dead_code)]
 struct Part {
     kind: SegmentKind,
@@ -277,7 +318,7 @@ struct Part {
 
 /// Adds a part to `parts`. A part whose outer range starts before the last one's ends becomes one
 /// escaped part with it, and so on back while the parts overlap.
-// TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+// TODO: remove the dead_code guard when the reader of fenced code uses it.
 #[allow(dead_code)]
 fn join(parts: &mut Vec<Part>, kind: SegmentKind, len: usize, outer: Range<usize>) {
     parts.push(Part { kind, len, outer });
@@ -925,6 +966,77 @@ mod tests {
                             range.start <= segment.outer.start && segment.outer.end <= range.end,
                             "seed {seed}, range {start}..{end} maps to {range:?}, not over {segment:?}"
                         );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn to_inner_reads_the_text_between_two_stretches_as_the_break_that_parts_them() {
+        // `ab\ncd`, as two lines `// ab` and `// cd` hold it.
+        let map = map_of(&[
+            (Verbatim, 2, 3..5),
+            (Synthetic, 1, 5..5),
+            (Verbatim, 2, 9..11),
+        ]);
+
+        assert_eq!(map.to_inner(3..5), 0..2);
+        assert_eq!(map.to_inner(4..5), 1..2);
+        assert_eq!(map.to_inner(5..9), 2..3);
+        assert_eq!(map.to_inner(4..10), 1..4);
+        assert_eq!(map.to_inner(3..11), 0..5);
+        // A range in the gap, or at a point, holds no text.
+        assert_eq!(map.to_inner(6..8), 3..3);
+        assert_eq!(map.to_inner(6..6), 3..3);
+        assert_eq!(map.to_inner(0..3), 0..0);
+        assert_eq!(map.to_inner(11..14), 5..5);
+    }
+
+    #[test]
+    fn to_inner_takes_an_escape_whole_or_not_at_all() {
+        let map = map_of(&[(Verbatim, 1, 0..1), (Escaped, 1, 1..6), (Verbatim, 1, 6..7)]);
+
+        assert_eq!(map.to_inner(0..7), 0..3);
+        assert_eq!(map.to_inner(1..6), 1..2);
+        assert_eq!(map.to_inner(0..5), 0..1);
+        assert_eq!(map.to_inner(2..7), 2..3);
+    }
+
+    #[test]
+    fn to_inner_holds_the_range_it_came_from() {
+        for seed in 1..=2000 {
+            let case = Case::new(&mut Rng::new(seed));
+            if case.text.is_empty() {
+                continue;
+            }
+            let bounds = case.bounds();
+            for (index, &start) in bounds.iter().enumerate() {
+                for &end in &bounds[index + 1..] {
+                    let segments = case.map.segments();
+                    let in_synthetic = |segment: &Segment| segment.kind == Synthetic;
+                    if (segments.iter())
+                        .any(|s| in_synthetic(s) && s.inner.start < end && end <= s.inner.end)
+                    {
+                        continue;
+                    }
+                    let mapped = case.map.to_file(start..end);
+                    let back = case.map.to_inner(mapped.range.clone());
+                    let context = format!(
+                        "seed {seed}, range {start}..{end} maps to {:?}",
+                        mapped.range
+                    );
+                    assert!(
+                        back.start <= start && end <= back.end,
+                        "{context}: {back:?}"
+                    );
+                    let point_at_start = segments.iter().any(|s| {
+                        in_synthetic(s)
+                            && s.outer.start == mapped.range.start
+                            && s.inner.end <= start
+                    });
+                    if mapped.editable && !point_at_start {
+                        assert_eq!(back, start..end, "{context}");
                     }
                 }
             }

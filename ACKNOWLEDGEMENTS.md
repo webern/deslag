@@ -263,3 +263,18 @@ close, the suffix of a literal, and the shebang and frontmatter at the top of a 
 
 Its number lexing is ported, as a modified adaptation under MIT: the functions `digits_end`,
 `number_end` and `exponent_end`, with the notice in that file.
+
+## rustdoc
+
+- URL: https://github.com/rust-lang/rust, `compiler/rustc_resolve/src/rustdoc.rs` and
+  `compiler/rustc_ast/src/util/comments.rs`
+- Licence: MIT, taken from the dual licence MIT OR Apache-2.0, as for `rustc_lexer` above
+- Copyright: "Copyright (c) The Rust Project Contributors"
+- Studied at: commit
+  [ae0fe511](https://github.com/rust-lang/rust/tree/ae0fe511b15ab760d7e963b13389d1bc2ab42b18), read
+  2026-10-08
+
+Code was not ported. The reader of Rust comments in `src/document/rust_regions.rs` follows two of
+rustdoc's rules, written afresh: the unindent of doc comment lines, by the least indent of a space
+or tab over the lines that are not blank, and the trim of a block doc comment, which drops a gutter
+of `*` that every line holds. It leaves out the rest of what rustdoc does to a doc comment.

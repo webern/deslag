@@ -390,8 +390,8 @@ impl Report {
         });
         let change = self.change.iter().map(|change| {
             format!(
-                "deslag: {} of {scanned} files changed since {}; findings outside the \
-                 change are not shown.",
+                "deslag: {} of {scanned} files changed since {}; \
+                 findings outside the change are not shown.",
                 change.files_changed, change.base
             )
         });

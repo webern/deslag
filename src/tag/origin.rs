@@ -25,8 +25,8 @@
 //! A word with an apostrophe is English. The names are facts, not a work of anyone's, so no licence
 //! travels with the lists; they are written by hand from git's own command list, the GNU
 //! coreutils manual and what tools are called in everyday use. They are Rust data, sorted and
-//! unique, and nothing reads them from a config or the environment. [`PROGRAMS`] holds no name that
-//! a table holds, and [`HELD`] and [`SHARED`] hold only such names (tests check both).
+//! unique, and nothing reads them from a config or the environment. [`PROGRAMS`] does not hold a
+//! name that a table holds, and [`HELD`] and [`SHARED`] hold only such names (tests check both).
 //!
 //! **What the tagger commits to** is narrower than the origin, and is set for a word neither table
 //! has, which is `Unknown`:
@@ -522,7 +522,7 @@ pub(super) fn mark(
 /// The origin of the word at `at`, given the origins `tokens` already hold for the words before it.
 ///
 /// It runs on every word of every document, so a plain lower-case word, which most are, is read
-/// once as bytes and goes no further than the neighbour and name checks, and it looks at a
+/// once as bytes and stops at the neighbour and name checks, and it looks at a
 /// neighbour's kind, which lives in the token, before its text, which does not.
 #[inline(never)]
 fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {
@@ -665,10 +665,10 @@ impl Marks {
         marks
     }
 
-    /// Whether `text`, whose marks these are and which has no dot, is written as a name from code:
-    /// an underscore among its letters (`0001_initial` too), or camel or Pascal case. A word of
-    /// lower-case letters alone has no such cue, and a camel shape that starts with a digit
-    /// (`1Password`) is left to `shape.rs`.
+    /// Whether `text`, whose marks these are and which does not have a dot, is written as a name
+    /// from code: an underscore among its letters (`0001_initial` too), or camel or Pascal case. A
+    /// word of lower-case letters alone does not have such a cue, and a camel shape that starts
+    /// with a digit (`1Password`) is left to `shape.rs`.
     fn is_symbol(&self, text: &str) -> bool {
         if !self.other {
             return false;
@@ -923,7 +923,7 @@ pub(super) fn read(origin: Origin, text: &str, by_shape: Reading) -> Reading {
 /// Reads as verbs the commands that open an instruction with an object after them (*grep the
 /// logs*): the program is an English verb too, no word comes before it in the sentence or one of
 /// [`LEAD`] does, and the next word can only be a determiner or a pronoun. The reading stays
-/// `Unknown`; dev holds no such command, so nothing measures it yet.
+/// `Unknown`; dev does not hold such a command, so nothing measures it yet.
 pub(super) fn verbs(tokens: &mut [Token<'_>]) {
     for at in 0..tokens.len().saturating_sub(1) {
         let token = &tokens[at];

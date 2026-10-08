@@ -2,7 +2,7 @@
 //!
 //! The phrases come in [`GROUPS`], each on by default and switched by the config, which may also
 //! ban more phrases, each with the advice its report gives. The groups' phrases are in
-//! `banned_phrases.toml`: each has no match in the corpus's `human` files and matches `llm` files
+//! `banned_phrases.toml`: each does not match a `human` file of the corpus and matches `llm` files
 //! of at least 40 repositories, counts that `make test-blobs` checks. A phrase in `ban` takes its
 //! advice from `ban`, whatever the groups say. The report names the group of each phrase it lists,
 //! so that a human can switch the group off. A

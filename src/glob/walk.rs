@@ -60,7 +60,8 @@ pub fn walk(root: &Path) -> Result<Vec<RepoFile>, Error> {
 }
 
 /// The file that `path`, given relative to the canonical repo root `root`, names, with any link and
-/// `..` resolved, as the walk would find it. The error says why it names no file in the repo.
+/// `..` resolved, as the walk would find it. The error says why it does not name a file in the
+/// repo.
 pub fn find(root: &Path, path: &Path) -> Result<RepoFile, String> {
     let joined = root.join(path);
     if !joined.exists() {

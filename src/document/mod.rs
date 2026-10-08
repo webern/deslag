@@ -85,7 +85,8 @@ pub struct Block<'a> {
 /// What kind of block a block is.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BlockKind<'a> {
-    /// A paragraph, or the text of a tight list item, which has no paragraph markup of its own.
+    /// A paragraph, or the text of a tight list item, which does not have paragraph markup of its
+    /// own.
     Paragraph,
     /// A heading, of level 1 to 6.
     Heading {
@@ -218,7 +219,7 @@ pub enum SpanKind<'a> {
     Series,
 }
 
-/// A place between tokens or blocks that takes no room among them but stands for whitespace.
+/// A place between tokens or blocks that does not take room among them but stands for whitespace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Point {
     /// What kind of place it is.
@@ -283,9 +284,9 @@ pub enum TokenKind {
 ///
 /// The bytes run from `start` up to `end`, which is not included. Lines count from 1 and end at
 /// each LF, so the CR of a CRLF is the last character of its line. Columns count characters,
-/// Unicode scalar values, from 1; a byte order mark that opens the file takes no column, as SARIF
-/// counts them. `end_line` is the line of the last byte, and `end_column` is one past the column of
-/// the last character. An empty stretch ends where it starts.
+/// Unicode scalar values, from 1; a byte order mark that opens the file does not take a column, as
+/// SARIF counts them. `end_line` is the line of the last byte, and `end_column` is one past the
+/// column of the last character. An empty stretch ends where it starts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Location {
     /// The offset of the first byte, counted from 0.

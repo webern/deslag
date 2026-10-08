@@ -27,7 +27,7 @@ const MOST_CHANGED: usize = 2000;
 const MOST_CELLS: usize = 4_000_000;
 
 /// A line of a text: what it says, and the bytes that end it: `\n`, `\r\n`, or nothing for the last
-/// line of a file that has no final line ending.
+/// line of a file that does not have a final line ending.
 #[derive(Debug, Clone, Copy)]
 struct Line<'a> {
     content: &'a str,

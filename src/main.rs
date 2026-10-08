@@ -116,7 +116,7 @@ fn run() -> anyhow::Result<ExitCode> {
 ///
 /// The config is found as `check` finds it, but not loaded through [`load_config`]: the notice
 /// would point at the command already running. Only a config that is not there falls back to the
-/// baseline, and the text says so; a `--config-path` that names no file is an error.
+/// baseline, and the text says so; a `--config-path` that does not name a file is an error.
 fn update(args: &UpdateArgs) -> anyhow::Result<String> {
     let (from, start) = match &args.since {
         Some(since) => (Version::Release(since.clone()), Start::Since),

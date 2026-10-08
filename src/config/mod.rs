@@ -107,7 +107,7 @@ struct ConfigFile {
         reason = "read from `Head` before this parse; here for the schema"
     )]
     deslag_version: Option<String>,
-    /// The Rust section. A config without one reads no Rust file.
+    /// The Rust section. A config without one does not read a Rust file.
     #[serde(default)]
     rust: Option<rust::RustFile>,
 }
@@ -115,8 +115,8 @@ struct ConfigFile {
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
 /// can read it at all, and the place of each section.
 ///
-/// It refuses no unknown key, so a config from a later deslag, which may hold keys this one has
-/// never heard of, reports that it is from a later deslag and not the first of those keys.
+/// It does not refuse an unknown key, so a config from a later deslag, which may hold keys this one
+/// has never heard of, reports that it is from a later deslag and not the first of those keys.
 ///
 /// The sections are here for the config written as a JSON array, which serde reads by position.
 /// The fields must be in the order of [`ConfigFile`]'s, or the array reads differently in the two
@@ -340,8 +340,8 @@ impl Config {
 
     /// The section to read `rel_path` with when it is named on its own, as `check_file` is: the one
     /// that selects it, else the section that reads files of its extension, else `[md]`, which
-    /// reads whatever it is given. A file of an extension that a section reads, when the config has
-    /// no such section, is an error: reading it as Markdown would be a mistake.
+    /// reads whatever it is given. A file of an extension that a section reads, when the config
+    /// does not have such a section, is an error: reading it as Markdown would be a mistake.
     pub(crate) fn section_to_read(&self, rel_path: &str) -> Result<&Section, Error> {
         if let Some(section) = self.sole_section_for(rel_path)? {
             return Ok(section);

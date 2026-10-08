@@ -14,8 +14,8 @@
 //!
 //! [`edits`] names a fix for a banned character only where its replacement is exact: named for
 //! that character alone, by `ban` or a rule of one character, and holding no letter or digit. The
-//! edit replaces the character's bytes and no others, and the replacement holds no character the
-//! settings ban, as [`contradiction`] makes sure before a file is checked, so the fixed text
+//! edit replaces the character's bytes and no others, and the replacement does not hold a character
+//! the settings ban, as [`contradiction`] makes sure before a file is checked, so the fixed text
 //! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a range of characters, is a
 //! guess at meaning, and is left to the writer.
 

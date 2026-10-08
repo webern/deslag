@@ -8,9 +8,9 @@
 //!    an edit there to be safe.
 //!    In a comment of a code file the prefix of a line, the line break between two lines and the
 //!    close of a block comment are not text either, so an edit that reaches one is refused.
-//! 2. It covers whole grapheme clusters, alone or with the edits beside it, so it leaves no
+//! 2. It covers whole grapheme clusters, alone or with the edits beside it, so it does not leave a
 //!    variation selector or combining mark behind.
-//! 3. Its replacement holds no control character, so no line starts or ends, and, in a block
+//! 3. Its replacement does not hold a control character, so no line starts or ends, and, in a block
 //!    comment, nothing that would read as `/*` or `*/`.
 //! 4. The document's own reader, reading the result, finds the same blocks, spans, line breaks and
 //!    pieces, and the same text in them but for the edits. Tokens and sentences are made from

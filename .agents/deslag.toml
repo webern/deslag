@@ -122,3 +122,5 @@ globs = ["/src/**/*.rs"]
 groups = { emoji = true }
 
 [rust.lints.banned_phrases]
+
+[rust.lints.verbs_no_nouns]

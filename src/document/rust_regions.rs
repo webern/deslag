@@ -11,7 +11,7 @@
 //!    a time the code would be taken for prose and the prose for code. A comment that follows code
 //!    on its line is a region of its own.
 //! 2. The marker and the least indent of the region's lines, a space or a tab counting for one,
-//!    are stripped from every line. A line of nothing but whitespace has no text.
+//!    are stripped from every line. A line of nothing but whitespace does not have text.
 //! 3. A block comment loses a `*` gutter if every line but the first has one, as `rustc` trims it
 //!    (`horizontal_trim`). A blank first line and a blank last line are dropped too, which is not
 //!    `rustc`'s rule: Markdown ignores them. Then rule 2 applies.
@@ -314,8 +314,8 @@ fn gutter(source: &str, rows: &mut [Row]) {
 }
 
 /// The text of the `rows` with their least indent stripped, where each byte of it is in the file,
-/// and the bytes around it. A row with nothing but whitespace has no text. `prefix` is what a new
-/// line starts with; if none, the gutter and indent of the rows, which a block comment has.
+/// and the bytes around it. A row with nothing but whitespace does not have text. `prefix` is what
+/// a new line starts with; if none, the gutter and indent of the rows, which a block comment has.
 fn build(source: &str, rows: &[Row], prefix: Option<String>) -> Option<(String, SourceMap, Frame)> {
     let text = |row: &Row| &source[row.rest.clone()];
     let indent = |row: &Row| {

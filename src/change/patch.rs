@@ -73,7 +73,7 @@ pub fn parse(diff: &str) -> Result<BTreeMap<String, File>, String> {
 
 /// One file's patch, as far as it has been read.
 struct Patch {
-    /// The `diff --git` line after its first word, for a patch whose header names no path.
+    /// The `diff --git` line after its first word, for a patch whose header does not name a path.
     names: String,
     status: Status,
     /// Its path in the base, once a header line names it; `None` for `/dev/null` too.

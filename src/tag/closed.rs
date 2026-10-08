@@ -111,7 +111,7 @@ const ENTRIES: &[Entry] = &[
     e("such", &[Adjective, Determiner, Pronoun], NO),
     e("little", &[Adjective, Adverb, Noun, Pronoun], NO),
 
-    // Personal pronouns, possessives and reflexives. `you` has no number.
+    // Personal pronouns, possessives and reflexives. `you` does not have a number.
     e("i", &[Pronoun], SG1),
     e("me", &[Pronoun], SG1),
     e("my", &[Pronoun], SG1),

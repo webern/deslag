@@ -21,10 +21,10 @@
 //! must be a directory. Paths are looked up on disk, so a path git ignores, such as a build
 //! directory, passes only where it has been built.
 //!
-//! A file fails when it has no such section or block, when it lists too few or too many entries,
-//! when a line is too wide, trailing whitespace aside, or out of format ([`Malformed`]), or when a
-//! listed path does not exist. The report lists every problem with its line. The limits' defaults
-//! are the `DEFAULT_` constants of [`RepoLayout`].
+//! A file fails when it does not have such a section or block, when it lists too few or too many
+//! entries, when a line is too wide, trailing whitespace aside, or out of format ([`Malformed`]),
+//! or when a listed path does not exist. The report lists every problem with its line. The limits'
+//! defaults are the `DEFAULT_` constants of [`RepoLayout`].
 //!
 //! [`read`] needs only the document: it finds the section and reads the layout, so it runs on any
 //! Markdown, the corpus included, under a few real headings; `core/rt-agents.md` must read with no
@@ -73,7 +73,7 @@ impl Over {
 pub enum Problem {
     /// No heading in the file is the section's. Always the only problem.
     NoSection,
-    /// The section holds no code block. Always the only problem.
+    /// The section does not hold a code block. Always the only problem.
     NoBlock {
         /// Where the section's heading is.
         location: Location,
@@ -124,7 +124,7 @@ pub enum Malformed {
     Continued,
     /// The text before `<-` is not one path.
     NotOnePath,
-    /// The entry has no description.
+    /// The entry does not have a description.
     NoDescription {
         /// The path as listed.
         path: String,
@@ -338,7 +338,8 @@ impl Problem {
     }
 
     /// Where the problem is and what it is to the finding: a wrong line is an occurrence, and
-    /// what a verdict on the whole section rests on is evidence. A missing section has no place.
+    /// what a verdict on the whole section rests on is evidence. A missing section does not have a
+    /// place.
     fn place(&self) -> Option<(MarkKind, &Location)> {
         match self {
             Problem::NoSection => None,
@@ -404,7 +405,7 @@ impl Malformed {
 
 /// The places the report lists: each line of the layout that is wrong, and what a verdict on the
 /// whole section rests on, the heading with no block under it or the block that lists too few or
-/// too many entries. A missing section has no place.
+/// too many entries. A missing section does not have a place.
 pub fn marks(over: &Over) -> Vec<Mark> {
     over.problems
         .iter()
@@ -548,7 +549,7 @@ struct Reader {
 }
 
 impl Reader {
-    /// Reads `row`, which is at `location` in the file, or is blank and has no location.
+    /// Reads `row`, which is at `location` in the file, or is blank and does not have a location.
     fn read(&mut self, location: Option<Location>, row: &str) {
         let Some(location) = location else {
             self.description_column = None;

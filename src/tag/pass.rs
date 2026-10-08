@@ -22,7 +22,7 @@
 //!   tag the neighbour may have asks [`View::within`] instead, and a rule that leans on a
 //!   neighbour's best guess asks [`View::decided`], which answers only if that guess is `Likely`
 //!   or `Sure`, as step 4 allows. Reading a neighbour's text or kind is not leaning on its
-//!   reading, and needs no such care.
+//!   reading, and does not need such care.
 //!
 //! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
 //! its tests, which run each case through the whole tagger.

@@ -66,12 +66,14 @@ pub enum LexemeKind {
 /// character, and a number is read as the preprocessor reads it, so `1e+'a'` is a number and an
 /// unterminated character. Raw strings and the prefixes `L`, `u`, `U` and `u8` are read in every
 /// file. Inside `#include`, `#include_next`, `#import` and `#embed`, and after `__has_include` and
-/// its kin, `<a//b>` is a header name and holds no comment, and `"a//b"` is a [`LexemeKind::Str`].
+/// its kin, `<a//b>` is a header name and does not hold a comment, and `"a//b"` is a
+/// [`LexemeKind::Str`].
 ///
 /// A compiler's mode can change what a file lexes to, and this follows the mode in which a program
-/// that compiles in both C and C++ means the same. C before C23 has no digit separator, so there
-/// `1'a'` is `1` and a character. Strict ISO C replaces trigraphs and takes `R"(a " b)"` for three
-/// tokens. Neither is done here. A C++20 `import <a//b>;` with no `#` is not read as a header name.
+/// that compiles in both C and C++ means the same. C before C23 does not have a digit separator, so
+/// there `1'a'` is `1` and a character. Strict ISO C replaces trigraphs and takes `R"(a " b)"` for
+/// three tokens. Neither is done here. A C++20 `import <a//b>;` with no `#` is not read as a header
+/// name.
 pub fn lex(src: &str) -> Vec<Lexeme> {
     let mut scanner = Scanner {
         bytes: src.as_bytes(),

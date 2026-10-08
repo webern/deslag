@@ -2,7 +2,7 @@
 //!
 //! The parser is `granit-parser`, which `serde-saphyr` re-exports: it gives a span for every scalar,
 //! keys included, which `serde-saphyr` itself does not. A key reached through an alias or a `<<`
-//! merge has no place of its own and is not listed.
+//! merge does not have a place of its own and is not listed.
 
 use serde_saphyr::granit_parser::{Event, Parser, ScalarStyle, StructureStyle};
 

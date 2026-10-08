@@ -641,8 +641,8 @@ fn a_comment_block_a_blank_line_above_the_key_stays() {
 
 #[test]
 fn comments_that_open_a_table_stay_when_other_keys_follow() {
-    // The audit's second repro has no key after the deleted one, so the lines that touch it go,
-    // and the header stays.
+    // The audit's second repro does not have a key after the deleted one, so the lines that touch
+    // it go, and the header stays.
     assert_eq!(
         edited("toml", REPRO_OPENING, None),
         "schema_version = 1\n\n[md.lints.banned_phrases.groups]\n"

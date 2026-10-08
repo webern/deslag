@@ -229,7 +229,7 @@ struct Found {
     /// The line of the key, and of the last line of its value, counting from 1.
     line: usize,
     last_line: usize,
-    /// Whether the table that holds the key holds no other.
+    /// Whether the table that holds the key does not hold another.
     alone: bool,
 }
 

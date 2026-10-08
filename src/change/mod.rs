@@ -39,19 +39,20 @@ pub struct Change {
 pub struct File {
     /// What happened to it.
     pub status: Status,
-    /// Its path in the base, another for a renamed file; `None` when the base has no file there.
+    /// Its path in the base, another for a renamed file; `None` when the base does not have a file
+    /// there.
     pub base_path: Option<String>,
     /// The stretches of lines the change replaced, in the order of the file.
     pub hunks: Vec<Hunk>,
-    /// Whether git calls it binary, and so gives no lines for it.
+    /// Whether git calls it binary, and so does not give lines for it.
     pub binary: bool,
 }
 
 /// What a change did to a file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
-    /// The base has no file there: a new file, one git does not track, or one whose type changed,
-    /// such as to a link.
+    /// The base does not have a file there: a new file, one git does not track, or one whose type
+    /// changed, such as to a link.
     Added,
     /// It has new content or a new mode.
     Modified,
@@ -108,8 +109,8 @@ impl File {
 impl Change {
     /// The change from where `base` and HEAD meet to the working tree of the repository `root` is
     /// in. `root` may be below the top of the repository; paths are relative to it. The error says
-    /// why there is no change to read: git is missing, `root` is in no work tree, `base` names no
-    /// commit, or it shares no history with HEAD.
+    /// why there is no change to read: git is missing, `root` is in no work tree, `base` does not
+    /// name a commit, or it does not share history with HEAD.
     pub fn against(root: &Path, base: &str) -> Result<Change, Error> {
         let fail = |problem: String| Error::Change {
             base: base.to_string(),

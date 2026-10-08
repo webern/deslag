@@ -42,7 +42,7 @@
 //!    common nouns (`Reactivity`). The ending still adds the tags it allows, since a capital also
 //!    starts a sentence. Which of them a capital means is for the pass that sees where it stands.
 //! 10. **Nothing else** is a singular noun that may be a verb or an adjective: the open class is
-//!     open, and a word that no table knows has no shape to say which.
+//!     open, and a word that no table knows does not have a shape to say which.
 
 use super::{Confidence, Features, Reading, Tag, TagSet, starts_upper};
 
@@ -283,7 +283,7 @@ fn starting_with_a_digit(text: &str) -> Option<Shape> {
 }
 
 /// Whether a lower-case letter is followed straight away by a capital: `userId`, `PowerShell`,
-/// `xDS`. A word in capitals, or with only its first letter a capital, has no such pair.
+/// `xDS`. A word in capitals, or with only its first letter a capital, does not have such a pair.
 fn is_camel_case(text: &str) -> bool {
     let mut after_lower = false;
     for ch in text.chars() {
@@ -318,7 +318,7 @@ fn capitalised(text: &str, ending: Option<Shape>) -> Option<Shape> {
         // The plural of an acronym: `APIs`, `CDNs`.
         return Some(Shape::new(Tag::Noun, Features::PLURAL, NOUN));
     }
-    // An ending that makes common nouns makes no name (`Reactivity`).
+    // An ending that makes common nouns does not make a name (`Reactivity`).
     let common = |ending: Shape| ending.tag == Tag::Noun && ending.features == SINGULAR;
     let shape = if is_all_capitals(text) || ending.is_some_and(common) {
         Shape::new(Tag::Noun, SINGULAR, NAME)
@@ -525,7 +525,7 @@ mod tests {
         assert_guess("FROBZ", Noun, SINGULAR, &[Noun, ProperNoun]);
         assert_guess("FZ", Noun, SINGULAR, &[Noun, ProperNoun]);
         assert_guess("FROBZs", Noun, Features::PLURAL, &[Noun, ProperNoun]);
-        // A lone capital is no acronym and has no shape, but may be a name.
+        // A lone capital is no acronym and does not have a shape, but may be a name.
         let lone = guess("Q");
         assert_eq!(lone.tag, Noun);
         assert_eq!(lone.kept, set(&[Noun, Verb, Adjective, ProperNoun]));

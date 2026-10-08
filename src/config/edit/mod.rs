@@ -51,7 +51,7 @@ pub enum Edit {
         /// The `lints` table that sets it, such as `md.overrides[1].lints`, when `line` was not
         /// found.
         place: Option<String>,
-        /// Whether the table it is in holds no other key.
+        /// Whether the table it is in does not hold another key.
         alone: bool,
     },
     /// A renamed setting takes its new name.
@@ -493,7 +493,7 @@ impl Scan {
             .iter()
             .filter_map(|member| {
                 let label = place(&member.path)?;
-                // The table that holds the key holds no other.
+                // The table that holds the key does not hold another.
                 let parent = &member.path[..member.path.len() - 1];
                 let alone = !self.members.iter().any(|other| {
                     other.path.len() == member.path.len()

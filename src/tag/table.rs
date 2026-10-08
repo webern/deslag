@@ -305,14 +305,15 @@ fn probe_short(key: u64, len: usize) -> Option<Entry> {
     let mut at = short_hash(key, len) & mask;
     loop {
         let slots = &buckets[at].slots;
-        // All four compared at once, so that where the word is in the bucket costs no branch.
+        // All four compared at once, so that where the word is in the bucket does not cost a
+        // branch.
         let mut found = 0;
         for (i, slot) in slots.iter().enumerate() {
             found |= usize::from(slot.key == key && slot.len as usize == len) << i;
         }
         if found != 0 {
             let slot = &slots[found.trailing_zeros() as usize];
-            // An empty slot has no length, and no word is that short.
+            // An empty slot does not have a length, and no word is that short.
             return (len != 0).then_some(Entry {
                 reading: slot.reading,
                 dominant: slot.dominant,
@@ -392,8 +393,8 @@ fn at_least(lane: u64, byte: u8) -> u64 {
 }
 
 /// Whether the ASCII lane holds letters alone, lower case, or with a capital where `first` has its
-/// `0x20` bits. Eight bytes at once: `| 0x20` makes a capital lower case and moves no other byte
-/// into `a` to `z`.
+/// `0x20` bits. Eight bytes at once: `| 0x20` makes a capital lower case and does not move any
+/// other byte into `a` to `z`.
 #[inline(always)]
 fn is_letters(lane: u64, first: u64) -> bool {
     let folded = lane | CASE;

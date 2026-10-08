@@ -4546,7 +4546,9 @@ class ConfinementTests(Base):
         label.write(os.path.join(self.home, ".claude", "CLAUDE.md"), "# Home rules of the tester\n\nNever quote this.\n")
         self.checkout = os.path.join(self.root, "checkout")
         os.makedirs(self.checkout)
-        for command in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "--allow-empty", "-m", "start"]):
+        # A global `commit.gpgsign = true` would ask for a key the test does not have.
+        commit = ["-c", "user.name=t", "-c", "user.email=t@example.org", "-c", "commit.gpgsign=false"]
+        for command in (["init", "-q"], ["add", "-A"], [*commit, "commit", "-q", "--allow-empty", "-m", "start"]):
             subprocess.run(["git", "-C", self.checkout, *command], check=True, capture_output=True)
         self.temp = os.path.join(self.root, "temp")
         os.makedirs(self.temp)

@@ -103,7 +103,7 @@ fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_only_t
         serde_json::from_str(&fs::read_to_string(&lock).unwrap()).unwrap();
     assert_eq!(
         held["voters"],
-        serde_json::json!(["deepseek", "qwen", "gemma"])
+        serde_json::json!(["deepseek", "qwen", "hy3"])
     );
     assert_eq!(held["adjudicator"], "opus");
     assert_eq!(held["min_voters"], 3);
@@ -111,7 +111,7 @@ fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_only_t
     assert!(held["draw"].get("part").is_none(), "{held}");
     assert_eq!(held["agent"]["version"], "2.1.293");
     assert_eq!(held["agent"]["args"], common::silver_parts::agent()["args"]);
-    for name in ["deepseek", "qwen", "gemma", "opus"] {
+    for name in ["deepseek", "qwen", "hy3", "opus"] {
         for hash in ["prompt_sha256", "guide_sha256"] {
             assert!(held["models"][name][hash].is_string(), "{held}");
         }
@@ -831,7 +831,7 @@ fn a_voter_that_voters_json_does_not_name_is_refused_in_the_merge() {
     refused(
         |made| {
             made.edit(1, "merge/voters.tsv", |text| {
-                text.replace("\tgemma\t", "\tmistral\t")
+                text.replace("\thy3\t", "\tmistral\t")
             })
         },
         &["voter mistral is not a voter of voters.json"],

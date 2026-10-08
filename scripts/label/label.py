@@ -41,10 +41,11 @@ a sentence after that abstains on it. Money: ledger.py, a reservation before eve
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
 describes it, with the licence voters.json gives its model, the date that licence was read (no run
 starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is
-asked again in halves; an endpoint that keeps failing (HTTP 429 or 5xx, replies cut off on both
-halves of a split, a provider refusal) is abandoned for the next one in voters.json's
-`provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
-halving and switching draw on one budget of failed calls (`failure_budget`); a voter run on which more
+asked again in halves; an endpoint that keeps failing (HTTP 429, 5xx or timeouts, an HTTP error
+that is not about the key, replies cut off on both halves of a split, a provider refusal, a reply from
+another provider, an endpoint the listing no longer has as pinned) is abandoned for the next one in
+voters.json's `provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
+halving and refusals draw on one budget of failed calls for each endpoint (`failure_budget`); a voter run on which more
 than a quarter of the sentences abstain ends `failed`; an item the adjudicator never settles leaves
 its sentence out of the labels unless `--strict`. The ledger and the run ids are in a state directory
 shared by every checkout (ledger.py), and the files voters share in a sample directory are written
@@ -97,13 +98,16 @@ RUN_COLUMNS = (
 # run copies `license` and `license_checked` into its record, and no run starts without the date.
 LICENSE_KEYS = ("license", "license_url", "license_checked")
 
-# Optional settings, in seconds: the first wait after a failed call, the longest single wait, the most
-# a call waits in all, and the pause after each call made, which keeps a voter under a rate limit.
-SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0}
+# Optional settings: in seconds, the first wait after a failed call, the longest single wait, the most
+# a call waits in all, and the pause after each call made, which keeps a voter under a rate limit; and
+# `rate_limit_attempts`, how many times a call that gets HTTP 429 is asked at one endpoint (a whole
+# number, at least 1), where `http_attempts` is the count for any other failure.
+SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0, "rate_limit_attempts": 4}
 
-# The failure limits. `failure_budget` is how many calls may fail in one step (one voter's `tag`, or
-# one `judge`), across every wait, every halving and every endpoint it switches to: a POST that failed
-# with a retryable error, or whose reply was cut off or refused. `abstain_limit` is the share of a
+# The failure limits. `failure_budget` is how many calls may fail at one endpoint in one step (one
+# voter's `tag`, or one `judge`), across every wait and every halving, and it starts over at each
+# endpoint the step switches to: a POST that failed with a retryable error, or whose reply was cut off
+# or refused. `abstain_limit` is the share of a
 # run's sentences that may abstain before the run ends `failed` instead of complete.
 LIMIT_DEFAULTS = {"failure_budget": 40, "abstain_limit": 0.25}
 
@@ -258,7 +262,10 @@ def load_config(path=CONFIG):
             raise ConfigError(f"{path}: settings.{key} must be a whole number")
     for key, default in SETTING_DEFAULTS.items():
         value = config["settings"].setdefault(key, default)
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        if key == "rate_limit_attempts":
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ConfigError(f"{path}: settings.{key} must be a whole number, at least 1")
+        elif isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
             raise ConfigError(f"{path}: settings.{key} must be a number of seconds, not below 0")
     for key, default in LIMIT_DEFAULTS.items():
         value = config["settings"].setdefault(key, default)
@@ -826,21 +833,25 @@ class EndpointExhausted(openrouter.ApiError):
     """A call failed in a way that stops a run. The run stays saved; `name`, `tag`, `role` and `run`
     say whose endpoint it was, `reason` how it failed.
 
-    Three kinds. By default the failure is the endpoint's own (HTTP 429 or 5xx through every wait, a
-    provider refusal): the next endpoint may do better. With `cutoff`, cut-offs dominate the run (see
+    Three kinds. By default the failure is the endpoint's own: the next endpoint may do better. That is
+    HTTP 429 or 5xx through every wait, a timeout through every wait, any other HTTP error that is not
+    about the key (not 401, 402 or 413), a provider refusal, a reply from another provider or one that
+    used reasoning with reasoning off, and an endpoint the listing no longer has as pinned (`run` is then
+    the run that was to be continued, or None). With `cutoff`, cut-offs dominate the run (see
     [Runner.lose_batch]), or the endpoint cut off every part of the adjudicator's: it cannot do the
-    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network error here (a
-    connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
+    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network error
+    here (a connection refused, a name that does not resolve, a dropped connection): every endpoint would
     fail the same, so the run stops where it is and a rerun continues it.
 
-    Once every endpoint of the model has failed, `tried` lists them with their reasons and `skipped`
-    those that did not pass the listing's checks. `failed` is set when the run was marked failed."""
+    Once every endpoint of the model has failed, `tried` lists them in order with their reasons, those
+    that did not pass the listing's checks too (`not tried, ...`). `failed` is set when the run was
+    marked failed."""
 
     def __init__(self, message, name, tag, role, run, reason, local=False, cutoff=False):
         super().__init__(message)
         self.name, self.tag, self.role, self.run, self.reason = name, tag, role, run, reason
         self.local, self.cutoff = local, cutoff
-        self.tried, self.skipped = [], []
+        self.tried = []
         self.failed = False
 
 
@@ -860,7 +871,7 @@ class BatchLost(Exception):
 
 
 class BudgetSpent(openrouter.ApiError):
-    """More calls failed in one step than `failure_budget` allows. The run is kept as it is."""
+    """More calls failed at one endpoint of a step than `failure_budget` allows. The run is kept as it is."""
 
 
 class RunFailed(openrouter.ApiError):
@@ -872,11 +883,14 @@ class RunFailed(openrouter.ApiError):
 
 
 class FailureBudget:
-    """The failed calls of one step, counted together whatever failed them: a retryable error that
-    backoff waits out, a reply cut off that halving asks again, a provider refusal that makes the
-    runner switch endpoint. Each is a POST that was booked and may have been billed. One bad endpoint
-    therefore cannot turn into thousands of calls by any of the three: past `limit` the step stops
-    with BudgetSpent. A call answered from a saved reply is not a POST and is not counted."""
+    """The failed calls at one endpoint of a step, counted together whatever failed them: a retryable
+    error that backoff waits out, a reply cut off that halving asks again, a provider refusal that
+    makes the runner switch endpoint. Each is a POST that was booked and may have been billed. One bad
+    endpoint therefore cannot turn into thousands of calls by any of the three: past `limit` the step
+    stops with BudgetSpent. The runner starts a new budget at each endpoint it switches to, so that a
+    step is never stopped before it has tried every endpoint of the model; a step costs at most `limit`
+    failed calls for each endpoint listed. A call answered from a saved reply is not a POST and is not
+    counted."""
 
     def __init__(self, limit):
         self.limit = limit
@@ -950,9 +964,12 @@ class Runner:
         if parts_lock_path(self.dir) is not None:
             pin_parts_lock(self.dir, what, self.lock_fields(**known))
 
-    def retrying(self, what, **extra):
+    def retrying(self, what, moves_on=True, **extra):
         """with_retries' arguments from the settings, and a one-line log of each wait: what is being
-        asked, which attempt of how many, the status or exception type, the wait. No header or body."""
+        asked, which attempt of how many, the status or exception type, the wait. No header or body.
+        A call that `moves_on` to another endpoint when one keeps answering HTTP 429 asks it at most
+        `rate_limit_attempts` times; one with no other endpoint to move to (the endpoint listing) waits
+        a 429 out as it does a 5xx."""
         settings = self.settings
 
         def log(attempt, attempts, reason, wait):
@@ -960,22 +977,38 @@ class Runner:
 
         return dict(
             attempts=settings["http_attempts"], sleep=self.sleep, base=settings["backoff_s"],
-            max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log, **extra,
+            max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log,
+            rate_limit_attempts=settings["rate_limit_attempts"] if moves_on else None, **extra,
         )
 
     def listing(self, model):
         if model not in self.listings:
             data, _ = openrouter.with_retries(
                 lambda: self.transport.get(openrouter.endpoints_url(model), self.settings["timeout_s"]),
-                **self.retrying(f"listing of {model}"),
+                **self.retrying(f"listing of {model}", moves_on=False),
             )
             self.listings[model] = data
         return self.listings[model]
 
+    def listing_answers(self, model):
+        """Whether OpenRouter answers a fresh request for the endpoint listing of `model`, asked once with
+        no wait and no cache. Run after the calls to an endpoint all timed out: if the listing does not
+        answer either, the network here is the likelier cause, and the endpoint is not blamed. An error
+        status or a body that is not JSON is an answer."""
+        try:
+            self.transport.get(openrouter.endpoints_url(model), self.settings["timeout_s"])
+        except openrouter.Retryable as error:
+            return error.owned or error.status is not None
+        except openrouter.ApiError:
+            return True
+        return True
+
     def pin(self, name, tag=None):
         """(config, endpoint) for `name` at the endpoint tagged `tag`: its own `provider` by default, or
-        one of its `provider_fallback`, which must be the same model at the same quantisation or a more
-        precise one than the primary's listing gives. The config returned pins that endpoint."""
+        one of its `provider_fallback`. An alternative is held to the model's `quantizations`, as the
+        primary is, so that `quantizations` is the one statement of what the voter may run at. A model
+        without `quantizations` (mistral, claude) holds an alternative to the same quantisation as the
+        primary's listing gives, or a more precise one. The config returned pins that endpoint."""
         config = self.config["models"][name]
         primary = config["provider"]
         listing = self.listing(config["model"])
@@ -984,19 +1017,19 @@ class Runner:
         if tag not in config.get("provider_fallback", []):
             known = ", ".join([primary, *config.get("provider_fallback", [])])
             raise ConfigError(f"`{tag}` is not an endpoint of {name} in voters.json; it has {known}")
-        alternative = {key: value for key, value in config.items() if key != "quantizations"}
-        alternative["provider"] = tag
-        floor = openrouter.listed_quantization(listing, primary)
-        if floor not in openrouter.QUANT_RANK:
-            floor = openrouter.weakest(config.get("quantizations"))
-        endpoint = openrouter.pinned_endpoint(listing, alternative, at_least=floor)
+        alternative = {**config, "provider": tag}
+        if config.get("quantizations"):
+            endpoint = openrouter.pinned_endpoint(listing, alternative)
+        else:
+            floor = openrouter.listed_quantization(listing, primary)
+            endpoint = openrouter.pinned_endpoint(listing, alternative, at_least=floor)
         if endpoint.get("quantization"):
             alternative["quantizations"] = [endpoint["quantization"]]
         return alternative, endpoint
 
     def next_endpoint(self, name, tag):
         """(the next endpoint after `tag` in `name`'s order that passes its checks now, or None; the
-        ones skipped, each with why)."""
+        ones skipped, each with why, as a fixed phrase)."""
         config = self.config["models"][name]
         order = [config["provider"], *config.get("provider_fallback", [])]
         later = order[order.index(tag) + 1 :] if tag in order else order
@@ -1004,8 +1037,8 @@ class Runner:
         for candidate in later:
             try:
                 self.pin(name, candidate)
-            except openrouter.ApiError as error:
-                skipped.append((candidate, str(error)))
+            except openrouter.ListingMismatch as error:
+                skipped.append((candidate, error.category))
                 continue
             return candidate, skipped
         return None, skipped
@@ -1064,7 +1097,14 @@ class Runner:
             config, pinned = self.config["models"][name], dict(CLAUDE_CODE_ENDPOINT)
             price_in = price_out = None
         else:
-            config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
+            wanted = endpoint or (saved or {}).get("endpoint")
+            try:
+                config, pinned = self.pin(name, wanted)
+            except openrouter.ListingMismatch as error:
+                tag = wanted or self.config["models"][name]["provider"]
+                raise EndpointExhausted(
+                    f"{name}: {error}", name, tag, role, resume, error.category
+                ) from None
             price_in, price_out = openrouter.prices(pinned)
         run = resume or self.ledger.new_run()
         meta = {
@@ -1156,7 +1196,7 @@ class Runner:
         for the harness. A run that failed or was abandoned has its own reason."""
         if isinstance(error, RunFailed):
             return
-        why = " ".join(redacted(str(error)).split())[:300]
+        why = " ".join(redacted(getattr(error, "category", None) or str(error)).split())[:300]
         self.update_run(name, run, stopped_because=why)
 
     def abandon(self, name, run, why):
@@ -1174,26 +1214,50 @@ class Runner:
     def fall_back(self, error, tried):
         """After a call failed in a way that stops a run (see EndpointExhausted). A network error here
         is raised as it is: the run stays, for a rerun to continue, and no other endpoint is tried. An
-        endpoint's own failure abandons its run and returns the next endpoint of the model that passes
-        the listing's checks, saying so in one line. When there is none, raises `error` with what was
-        tried: that run stays as it is, for a rerun to continue, unless the endpoint cut replies off on
-        every try, which ends it `failed`."""
+        endpoint's own failure abandons its run, if it had one, and returns the next endpoint of the
+        model that passes the listing's checks, saying so in one line. When there is none, every endpoint has failed: raises `error` with what was
+        tried, in order, the skipped ones too, and the last run is abandoned as the others were, so
+        that a rerun starts again at the first endpoint and does not replay what failed. A run that
+        ends `failed`, the endpoint having cut replies off on every try, stays so."""
         if error.local:
             raise error
         tried.append((error.tag, error.reason))
         following, skipped = self.next_endpoint(error.name, error.tag)
+        tried.extend((tag, f"not tried, {why}") for tag, why in skipped)
         if following is None:
-            error.tried, error.skipped = tried, skipped
+            error.tried = tried
             if error.cutoff:
                 self.fail(error.name, error.run, f"{error.tag}: {error.reason}")
                 error.failed = True
+            elif error.run:
+                self.abandon(error.name, error.run, self.every_failed(error.name, tried))
             raise error
-        self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}")
-        self.warn(
-            f"label: {error.name} {error.run}: {error.tag} kept failing ({error.reason}); the run is "
-            f"abandoned and a new run starts at {following}"
-        )
+        passed = "".join(f"; {tag} was not tried, {why}" for tag, why in skipped)
+        if error.run:
+            self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}{passed}")
+            self.warn(
+                f"label: {error.name} {error.run}: {error.tag} kept failing ({error.reason}); the run is "
+                f"abandoned and a new run starts at {following}{passed}"
+            )
+        else:
+            self.warn(
+                f"label: {error.name}: {error.tag} cannot be asked ({error.reason}); a run starts at "
+                f"{following}{passed}"
+            )
+        # The budget is the endpoint's: a voter must get to try every endpoint it lists, and an endpoint
+        # that burns calls is still stopped by its own.
+        self.budget = FailureBudget(self.settings["failure_budget"])
         return following
+
+    def every_failed(self, name, tried):
+        """The reason a run ends with when no endpoint is left: `every endpoint failed: TAG: why; ...`, in
+        the order of the model's list. A walk that began after the first endpoint (`--endpoint`, or a run
+        continued at another) says from where."""
+        config = self.config["models"][name]
+        first = config["provider"]
+        head = "every endpoint failed" if tried[0][0] == first else f"every endpoint from {tried[0][0]} on failed"
+        text = f"{head}: " + "; ".join(f"{tag}: {why}" for tag, why in tried)
+        return " ".join(redacted(text).split())[:600]
 
     def recheck(self, meta, endpoint, config, kind, request_sha256):
         """Whether a reply saved by an earlier invocation is used. It is only if the record saved
@@ -1224,19 +1288,21 @@ class Runner:
         except ValueError:
             return
         if isinstance(saved, dict) and saved.get("request_sha256") == request_sha256 and saved.get("reason"):
-            cut = saved.get("cutoff") or "cut off at max_tokens" in saved["reason"]
             note = " (refused when it was paid for; it is not asked again for the same request)"
-            if saved.get("refusal"):
-                raise self.endpoint_fault(meta, endpoint, openrouter.ProviderRefused(saved["reason"] + note))
-            error = openrouter.CutOff if cut else openrouter.ProviderMismatch if saved.get("mismatch") else openrouter.ApiError
-            raise error(saved["reason"] + note)
+            if saved.get("cutoff") or "cut off at max_tokens" in saved["reason"]:
+                raise openrouter.CutOff(saved["reason"] + note)
+            error = openrouter.ApiError(saved["reason"] + note)
+            error.category = saved.get("category") or "provider refusal"
+            raise self.endpoint_fault(meta, endpoint, error)
 
     def endpoint_fault(self, meta, endpoint, error):
-        """The EndpointExhausted that a provider's refusal is: the endpoint's own failure, which makes
-        the runner try the next endpoint of the model."""
+        """The EndpointExhausted that a failure of the endpoint's own is, other than one through the
+        waits: an HTTP error that is not about the key, a provider's refusal, a reply from another
+        provider, a reply that used reasoning with reasoning off. The runner tries the next endpoint of
+        the model. Its reason is the error's fixed `category`."""
         return EndpointExhausted(
             f"{meta['name']} {meta['run']}: {error}, at {endpoint['tag']}", meta["name"], endpoint["tag"],
-            meta["role"], meta["run"], "provider refusal",
+            meta["role"], meta["run"], error.category,
         )
 
     def ask(self, meta, endpoint, config, system, user, kind):
@@ -1251,10 +1317,11 @@ class Runner:
         Every call that was answered, a refused reply too, is a row of `calls.jsonl`, so that the
         run's calls, tokens and seconds are what its dollars paid for.
 
-        A retryable failure, a cut-off reply and a refusal each spend from the step's failure budget.
+        A retryable failure, a cut-off reply and a refusal each spend from the endpoint's failure budget.
         What stops the run: a failure that is the endpoint's own through every wait, or a refusal,
         raises EndpointExhausted for the caller to switch endpoint; a network error here raises it
-        `local`, and the run stops where it is; a reply cut off raises CutOff for the caller to ask in
+        `local`, and the run stops where it is, as it does for a timeout through every wait when the
+        endpoint listing does not answer either; a reply cut off raises CutOff for the caller to ask in
         halves."""
         if is_handoff(config):
             return self.ask_handoff(meta, endpoint, config, system, user, kind)
@@ -1285,17 +1352,27 @@ class Runner:
             ident = self.ledger.reserve(self.max_usd, worst, note=f"{kind}: reserved at worst case", **where)
             try:
                 return self.transport.post(url, body, key, self.settings["timeout_s"]), ident
-            except openrouter.Retryable:
+            except (openrouter.Retryable, openrouter.HttpError):
                 self.budget.spend(what)
                 raise
 
         started = self.clock()
         try:
             (response, ident), retries = openrouter.with_retries(attempt, **self.retrying(what))
+        except openrouter.HttpError as error:
+            # The provider's text is kept beside the run, and in no message, status or reason.
+            write(self.raw(name, run, f"{kind}.http-error.json"), json.dumps(
+                {"status": error.status, "request_sha256": request_sha256, "body": redacted(error.body)}, indent=2) + "\n")
+            if error.status in openrouter.KEY_STATUSES:
+                raise
+            raise self.endpoint_fault(meta, endpoint, error) from None
         except openrouter.RetriesExhausted as error:
+            # A timeout through every wait is the endpoint's if OpenRouter still answers for the model's
+            # listing, and the network here if it does not.
+            local = not error.owned and (error.reason != openrouter.TIMEOUT or not self.listing_answers(config["model"]))
             raise EndpointExhausted(
                 f"{what}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"],
-                run, error.reason, local=not error.owned,
+                run, error.reason, local=local,
             ) from None
         seconds = self.clock() - started
         try:
@@ -1325,7 +1402,7 @@ class Runner:
                     f"{kind}: the reply was cut off at max_tokens ({config['max_tokens']}); it is not used"
                 )
             if reply.reasoning_tokens and config.get("reasoning") == {"enabled": False}:
-                raise openrouter.ApiError(
+                raise openrouter.ReasoningUsed(
                     f"{kind}: the reply used {reply.reasoning_tokens} reasoning tokens with reasoning "
                     f"off, so it is not the call that was asked for"
                 )
@@ -1344,14 +1421,13 @@ class Runner:
             handle.write(json.dumps(record) + "\n")
         if refused is not None:
             self.reject(meta, kind, request_sha256, response, refused)
-            if isinstance(refused, (openrouter.CutOff, openrouter.ProviderRefused)):
-                self.budget.spend(what)
-            if isinstance(refused, openrouter.ProviderRefused):
-                raise self.endpoint_fault(meta, endpoint, refused) from None
-            raise refused
-        rejected = self.raw(name, run, f"{kind}.rejected.json")
-        if os.path.isfile(rejected):
-            os.remove(rejected)
+            self.budget.spend(what)
+            if isinstance(refused, openrouter.CutOff):
+                raise refused
+            raise self.endpoint_fault(meta, endpoint, refused) from None
+        for stale in (f"{kind}.rejected.json", f"{kind}.http-error.json"):
+            if os.path.isfile(self.raw(name, run, stale)):
+                os.remove(self.raw(name, run, stale))
         write(self.raw(name, run, f"{kind}.response.json"), json.dumps(response, indent=2) + "\n")
         # The reply, then the record that vouches for it, each whole or not there at all: a reply
         # with no record, as a crash between the two leaves, is asked again, never kept.
@@ -1553,9 +1629,8 @@ class Runner:
         """Saves a reply that was refused, with the hash of its request, so that a rerun of the same
         request raises the same refusal and pays for nothing."""
         write(self.raw(meta["name"], meta["run"], f"{kind}.rejected.json"), json.dumps({
-            "reason": str(error), "mismatch": isinstance(error, openrouter.ProviderMismatch),
+            "reason": str(error), "category": error.category,
             "cutoff": isinstance(error, openrouter.CutOff),
-            "refusal": isinstance(error, openrouter.ProviderRefused),
             "request_sha256": request_sha256, "response": response,
         }, indent=2) + "\n")
 
@@ -1756,13 +1831,14 @@ class Runner:
         `limit`, is never continued but by name, and never continues a full run. `endpoint` is a tag
         among the voter's `provider_fallback` for a new run.
 
-        When the endpoint itself keeps failing (429 or 5xx through every wait, a provider refusal,
-        replies cut off on both halves of a split), its run is abandoned and a new run starts at the
-        next endpoint of `provider_fallback` that passes the listing's checks; a run never changes
-        endpoint. A network error here stops the run, which stays as it is. Only when every endpoint
-        has failed does it raise EndpointExhausted, the last run left as it is, or `failed` if it was
-        the cut-offs that failed it. The failed calls of all of it, every wait, halving and switch,
-        come out of one budget (BudgetSpent).
+        When the endpoint itself keeps failing (see EndpointExhausted), its run is abandoned and a new
+        run starts at the next endpoint of `provider_fallback` that passes the listing's checks; a run
+        never changes endpoint. An endpoint that fails the listing's checks when it is to start is
+        skipped, with no run. A network error here stops the run, which stays as it is. Only when every
+        endpoint has failed does it raise EndpointExhausted, every run abandoned (so that a rerun starts
+        at the first endpoint), or the last `failed` if it was the cut-offs that failed it. The failed
+        calls at an endpoint, every wait and halving, come out of one budget for it (BudgetSpent), which
+        starts over at the next endpoint.
 
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
         `failed`, not complete: RunFailed, and nothing continues it.
@@ -1901,7 +1977,7 @@ class Runner:
         same `scope`: the merge directory, the voters, the spaCy mode. A run that ends with items
         open is not complete, so a rerun continues it, with every saved reply used again. An endpoint
         that keeps failing is fallen back from as `tag` does: its run is abandoned, and a new one
-        starts at the next endpoint, within one budget of failed calls.
+        starts at the next endpoint, each with its own budget of failed calls.
 
         A part whose reply was cut off leaves its items open, and they are asked again in parts half
         the size, as a voter's batch is halved: each retry round halves the size of the retry parts
@@ -2296,10 +2372,9 @@ def make_runner(arguments, config, transport=None, gold=None):
 
 def stop_for_endpoint(error):
     """Exit 2 for a call that stopped a run (see EndpointExhausted), and exit 5 for a run it ended
-    `failed`. A network error here keeps the run, and says to run the command again; for a model
-    every endpoint of which failed, the runs of the earlier endpoints were abandoned as each failed
-    and the last is kept as it is, for the same command to continue it later, and `--again` starts a
-    new run at the model's first endpoint."""
+    `failed`. A network error here keeps the run, and says to run the command again. For a model
+    every endpoint of which failed, every run was abandoned as its endpoint failed, so the same
+    command starts a new run at the model's first endpoint (`--again` does the same)."""
     print(redacted(f"label: {error}"), file=sys.stderr)
     if error.local:
         print(
@@ -2312,20 +2387,23 @@ def stop_for_endpoint(error):
     if error.failed:
         print(
             f"label: every endpoint of {error.name} failed ({tried}); {error.run} at {error.tag} is marked "
-            f"failed and is not continued; --again starts a new run at the first endpoint",
+            f"failed and is not continued; running the command again starts a new run at the first endpoint",
             file=sys.stderr,
         )
         code = EXIT_FAILED
     else:
         print(
-            f"label: every endpoint of {error.name} failed ({tried}); the earlier runs are abandoned and "
-            f"{error.run} at {error.tag} is kept: running the command again continues it, and --again "
-            f"starts a new run at the first endpoint",
+            f"label: every endpoint of {error.name} failed ({tried}); every run of it is abandoned, and "
+            f"running the command again starts a new run at the first endpoint",
             file=sys.stderr,
         )
         code = 2
-    for tag, why in error.skipped:
-        print(f"label: {tag} was not tried: {why}", file=sys.stderr)
+    if all(why == openrouter.TIMEOUT for tag, why in error.tried if not why.startswith("not tried")):
+        print(
+            f"label: every call that was tried timed out, which the network here can cause as well as the "
+            f"endpoints; check it before running the command again",
+            file=sys.stderr,
+        )
     return code
 
 
@@ -3060,6 +3138,15 @@ def latest_record(directory, name, role, into=None):
     return run, meta
 
 
+def abandoned_runs(directory, name):
+    """How many of the voter `name`'s runs in the sample `directory` were abandoned for the next endpoint."""
+    count = 0
+    for path in glob.glob(os.path.join(directory, "raw", glob.escape(name), "r*", "run.json")):
+        meta = json.loads(read(path))
+        count += meta.get("role") == "voter" and bool(meta.get("abandoned"))
+    return count
+
+
 def batches_done(directory, name, run):
     """How many batches of a voter's run have an answer saved for all their sentences: the `batch-NN`
     asks whose `*.lines.txt` is saved whole or, for one cut off and asked again in halves, for both
@@ -3115,8 +3202,9 @@ def status_merge(directory):
 
 def command_status(arguments, config, transport=None, gold=None, say=print):
     """Where the labelling of one sample stands, in counts and run ids only, never a tag or a word: per
-    voter its latest run, what became of it, its batches answered of all, the sentences it abstains on
-    and its dollars; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
+    voter its latest run, what became of it and, when that is not a plain `complete`, why (the reason
+    `runs.tsv` gives: endpoint tags and counts), its batches answered of all, the sentences it abstains
+    on, its dollars and how many of its runs were abandoned; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
     handoff adjudicator, the requests waiting and the replies present; the ledger's total and what is
     left under `--max-usd`; and the verdict of the part's preflight. It reads, and writes nothing in
     the sample directory."""
@@ -3136,9 +3224,14 @@ def command_status(arguments, config, transport=None, gold=None, say=print):
         if of is None:
             of = current if meta.get("limit") is None and current is not None else "?"
         abstaining = meta.get("abstaining")
+        status = run_status(meta)
+        reason = run_reason(meta, status)
+        why = "" if reason == "-" else f" ({' '.join(reason.split())})"
+        gave_up = abandoned_runs(directory, name)
+        runs = "" if not gave_up else f"; {gave_up} run{'s' if gave_up != 1 else ''} abandoned"
         say(
-            f"voter {name}: {run} {run_status(meta)}, {batches_done(directory, name, run)} of {of} batches, "
-            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}"
+            f"voter {name}: {run} {status}{why}, {batches_done(directory, name, run)} of {of} batches, "
+            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}{runs}"
         )
     for name in sorted(config.get("external") or {}):
         run, meta = latest_record(directory, name, "external")

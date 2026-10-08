@@ -239,10 +239,13 @@ for _tag, _name, _quantization in (("alt/fp8", "Alt", "fp8"), ("alt2/bf16", "Alt
 
 
 def with_fallbacks(**fallbacks):
-    """CONFIG with `provider_fallback` lists on the named models."""
+    """CONFIG with `provider_fallback` lists on the named models, whose `quantizations` (where they
+    have any) are widened to fp8 and bf16, so that a bf16 alternative of an fp8 pin is allowed."""
     config = copy.deepcopy(CONFIG)
     for name, tags in fallbacks.items():
         config["models"][name]["provider_fallback"] = tags
+        if config["models"][name].get("quantizations"):
+            config["models"][name]["quantizations"] = ["fp8", "bf16"]
     return config
 
 
@@ -358,11 +361,15 @@ class RequestTests(unittest.TestCase):
 
     def test_the_shipped_config_loads_and_pins_every_voter_to_one_endpoint(self):
         config = label.load_config()
-        self.assertEqual(config["voters"], ["deepseek", "qwen", "gemma"])
+        self.assertEqual(config["voters"], ["deepseek", "qwen", "hy3"])
         self.assertIn("mistral", config["models"], "mistral stays defined: its pilot runs are on record")
-        gemma = config["models"]["gemma"]
-        self.assertEqual((gemma["provider"], gemma["quantizations"], gemma["provider_fallback"]),
-                         ("parasail/fp8", ["fp8"], ["deepinfra/fp8"]))
+        self.assertIn("gemma", config["models"], "gemma stays defined: its runs are on record")
+        hy3 = config["models"]["hy3"]
+        self.assertEqual(
+            (hy3["model"], hy3["provider"], hy3["quantizations"], hy3["temperature"], hy3["reasoning"], hy3["max_tokens"]),
+            ("tencent/hy3", "tencent/fp8", ["fp8", "bf16"], 0, {"enabled": False}, 6000))
+        self.assertEqual((hy3["license"], hy3["license_url"]), ("Apache-2.0", "https://huggingface.co/tencent/Hy3"))
+        self.assertRegex(hy3["license_checked"], r"^\d{4}-\d{2}-\d{2}$")
         for name in [*config["voters"], "claude"]:
             model = config["models"][name]
             self.assertIn("/", model["model"])
@@ -419,7 +426,7 @@ class RequestTests(unittest.TestCase):
         openrouter.check_provider(named("x/one-20261001"), endpoint, "x/one")
         openrouter.check_provider(named("x/one:free"), endpoint, "x/one")
         for wrong in ("x/other", "x/one2", None, ""):
-            with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model"):
+            with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/one`"):
                 openrouter.check_provider(named(wrong), endpoint, "x/one")
 
     def test_the_key_is_stripped_and_a_key_with_whitespace_inside_is_refused_without_being_shown(self):
@@ -1063,8 +1070,9 @@ class MoneyTests(Base):
     def test_a_reply_from_the_wrong_provider_is_an_error_after_its_cost_is_recorded(self):
         transport = FakeTransport(lambda body, count: chat("d1: N.s N.s N.s _", provider="Elsewhere", cost=0.5))
         runner = self.runner(transport)
-        with self.assertRaises(openrouter.ProviderMismatch):
+        with self.assertRaises(label.EndpointExhausted) as caught:
             runner.tag("one")
+        self.assertEqual(caught.exception.reason, "reply from another provider")
         self.assertAlmostEqual(runner.ledger.total(), 0.5)
 
 
@@ -1575,7 +1583,7 @@ class ProviderTests(Base):
             return response
 
         runner = self.runner(FakeTransport(respond))
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model `y/another`"):
+        with self.assertRaisesRegex(label.EndpointExhausted, "names another model than the pinned `x/two`"):
             runner.tag("two", limit=1)
         folder = os.path.join(self.dir, "raw", "two", "r1")
         self.assertEqual([f for f in os.listdir(folder) if f.endswith((".reply.txt", ".lines.txt"))], [])
@@ -1584,7 +1592,7 @@ class ProviderTests(Base):
 
     def test_a_reply_from_the_wrong_provider_is_not_saved_either(self):
         runner = self.runner(FakeTransport(lambda body, count: chat("d1: N.s", provider="Elsewhere")))
-        with self.assertRaises(openrouter.ProviderMismatch):
+        with self.assertRaises(label.EndpointExhausted):
             runner.tag("two", limit=1)
         self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "two", "r1", "batch-01.reply.txt")))
 
@@ -1594,7 +1602,7 @@ class ProviderTests(Base):
             response["model"] = None
             return response
 
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model ``"):
+        with self.assertRaisesRegex(label.EndpointExhausted, "names another model than the pinned `x/two`"):
             self.runner(FakeTransport(respond)).tag("two", limit=1)
 
     def test_a_dated_version_of_the_pinned_model_is_accepted_and_recorded(self):
@@ -1619,7 +1627,7 @@ class ProviderTests(Base):
         # Unchanged: the saved reply is used and nothing is asked for it.
         self.runner(later).tag("two", limit=1, resume="r1")
         self.assertEqual(len(later.posts), 0)
-        for field, value, why in (("provider", "Elsewhere", "came from `Elsewhere`"), ("model", "y/other", "names the model `y/other`")):
+        for field, value, why in (("provider", "Elsewhere", "came from another provider than the pinned `Bare`"), ("model", "y/other", "names another model than the pinned `x/two`")):
             label.write(path, json.dumps({**saved, field: value}))
             with self.assertRaisesRegex(openrouter.ProviderMismatch, why):
                 self.runner(later).tag("two", limit=1, resume="r1")
@@ -1721,8 +1729,8 @@ class PatienceTests(Base):
 
         return FakeTransport(respond)
 
-    def test_a_rate_limited_call_is_asked_again_with_backoff_until_it_is_answered(self):
-        transport = self.refusing(7)
+    def test_a_busy_server_is_asked_again_with_backoff_until_it_is_answered(self):
+        transport = self.refusing(7, "HTTP 503")
         runner = self.runner(transport)
         runner.tag("two", limit=1)
         self.assertEqual(len(transport.posts), 8, "seven refusals and the answer")
@@ -1735,11 +1743,79 @@ class PatienceTests(Base):
         self.assertEqual(sorted(row["state"] for row in booked), ["reserved"] * 7 + ["settled"])
 
     def test_every_failed_attempt_stays_booked_and_the_call_gives_up_after_eight(self):
-        runner = self.runner(self.refusing(99))
-        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+        runner = self.runner(self.refusing(99, "HTTP 503"))
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 503, after 8 attempts"):
             runner.tag("two", limit=1)
         reserved = [row for row in self.ledger().booked().values() if row["state"] == "reserved"]
         self.assertEqual(len(reserved), 8)
+
+    def test_a_rate_limited_call_is_asked_four_times_with_backoff_and_then_given_up(self):
+        transport = self.refusing(99)
+        runner = self.runner(transport)
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 4 attempts .*the most a rate limit is asked"):
+            runner.tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 4)
+        waits = [seconds for seconds in self.slept if seconds != 1.0]
+        self.assertEqual(len(waits), 3, "no wait after the fourth")
+        self.assertLessEqual(sum(waits), 35.0)
+        reserved = [row for row in self.ledger().booked().values() if row["state"] == "reserved"]
+        self.assertEqual(len(reserved), 4)
+
+    def test_a_rate_limit_after_a_server_error_counts_only_the_rate_limits(self):
+        seen = []
+
+        def respond(body, count):
+            seen.append(count)
+            if count <= 3:
+                raise openrouter.Retryable("HTTP 503")
+            if count <= 6:
+                raise openrouter.Retryable("HTTP 429")
+            return answer_all(body)
+
+        transport = FakeTransport(respond)
+        self.runner(transport).tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 7, "three 503 and three 429 are within 8 and 4")
+
+    def test_a_rate_limit_that_asks_for_more_than_the_longest_wait_is_given_up_at_once(self):
+        transport = self.refusing(99, after=300.0)
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, with a wait of 300 s asked for"):
+            self.runner(transport).tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 1)
+        self.assertEqual([seconds for seconds in self.slept if seconds != 1.0], [], "no wait")
+
+    def test_the_endpoint_listing_waits_out_a_rate_limit_it_has_nowhere_else_to_go_with(self):
+        class Limited(FakeTransport):
+            limited = 6
+
+            def get(self, url, timeout):
+                if self.limited:
+                    self.limited -= 1
+                    raise openrouter.Retryable("HTTP 429", after=45.0 if self.limited == 3 else None)
+                return super().get(url, timeout)
+
+        transport = Limited(answer_all)
+        self.runner(transport).tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 1)
+        waits = [seconds for seconds in self.slept if seconds != 1.0]
+        self.assertEqual(len(waits), 6, "six rate limits, past the four a call to an endpoint is given")
+        self.assertTrue(any(wait >= 45.0 for wait in waits), "a Retry-After is honoured")
+
+    def test_the_endpoint_listing_gives_up_after_http_attempts_of_rate_limits(self):
+        class Limited(FakeTransport):
+            def get(self, url, timeout):
+                self.gets.append(url)
+                raise openrouter.Retryable("HTTP 429")
+
+        transport = Limited(answer_all)
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+            self.runner(transport).tag("two", limit=1)
+        self.assertEqual((len(transport.gets), transport.posts), (8, []))
+
+    def test_a_server_error_that_asks_for_a_long_wait_still_waits_for_it(self):
+        transport = self.refusing(1, "HTTP 503", after=300.0)
+        self.runner(transport).tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 2)
+        self.assertEqual([seconds for seconds in self.slept if seconds != 1.0][0] >= 300.0, True)
 
     def test_retry_after_is_honoured(self):
         runner = self.runner(self.refusing(2, after=45.0))
@@ -1759,7 +1835,7 @@ class PatienceTests(Base):
         runner.tag("two", limit=1)
         self.assertEqual(len(self.warned), 2)
         for number, line in enumerate(self.warned, 1):
-            self.assertRegex(line, rf"^label: two r1 batch-01: attempt {number}/8 failed \(HTTP 429\); waiting \d+ s$")
+            self.assertRegex(line, rf"^label: two r1 batch-01: attempt {number}/4 failed \(HTTP 429\); waiting \d+ s$")
         text = "\n".join(self.warned + self.said)
         for secret in ("SECRETVALUE", "Bearer", "Authorization", "messages", "d1:"):
             self.assertNotIn(secret, text)
@@ -1849,7 +1925,7 @@ class AutoResumeTests(Base):
         self.assertEqual([row["run"] for row in self.runs_rows()], ["r1"])
         self.assertGreaterEqual(self.ledger().total(), before)
 
-    def test_a_rate_limit_that_gave_up_is_continued_by_the_next_invocation(self):
+    def test_a_rate_limit_that_gave_up_on_every_endpoint_is_asked_afresh_by_the_next_invocation(self):
         state = {"left": 99}
 
         def respond(body, count):
@@ -1857,11 +1933,11 @@ class AutoResumeTests(Base):
                 raise openrouter.Retryable("HTTP 429")
             return answer_all(body)
 
-        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 4 attempts"):
             self.runner(FakeTransport(respond)).tag("two")
         second = FakeTransport(answer_all)
-        self.runner(second).tag("two")
-        self.assertEqual(len(second.posts), 1)
+        run, _ = self.runner(second).tag("two")
+        self.assertEqual((run, len(second.posts)), ("r2", 2), "a new run at the first endpoint asks both batches")
 
     def test_again_makes_a_new_run_and_asks_everything(self):
         with self.assertRaises(openrouter.ApiError):
@@ -1877,7 +1953,7 @@ class AutoResumeTests(Base):
         path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
         label.write(path, json.dumps({**json.loads(label.read(path)), "model": "y/other"}))
         second = FakeTransport(answer_all)
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model `y/other`"):
+        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/two`"):
             self.runner(second).tag("two")
         self.assertEqual(second.posts, [])
 
@@ -2164,16 +2240,124 @@ class RoundThreeTests(Base):
             openrouter._OPENER = saved
         self.assertEqual((str(caught.exception), caught.exception.status), ("HTTP 529", 529))
 
+    def send_error(self, status, body):
+        import urllib.error
+
+        class Opener:
+            def open(self, request, timeout):
+                raise urllib.error.HTTPError("http://x", status, "no", {}, io.BytesIO(body))
+
+        saved = openrouter._OPENER
+        openrouter._OPENER = Opener()
+        try:
+            return openrouter.Urllib._send(object(), 1)
+        finally:
+            openrouter._OPENER = saved
+
+    def test_a_429_names_the_limit_source_the_error_body_gives_and_nothing_else_of_it(self):
+        body = json.dumps({"error": {"code": 429, "message": "SECRETWORDS rate limited",
+                                     "metadata": {"limit_source": "upstream_provider_shared_pool", "raw": "SECRETRAW"}}})
+        with self.assertRaises(openrouter.Retryable) as caught:
+            self.send_error(429, body.encode("utf-8"))
+        error = caught.exception
+        self.assertEqual(str(error), "HTTP 429 (upstream_provider_shared_pool)")
+        self.assertEqual((error.status, error.owned), (429, True))
+        self.assertNotIn("SECRET", str(error))
+
+    def test_a_429_without_a_usable_limit_source_is_plain(self):
+        for body in (b"", b"<html>busy</html>", b"[]", b'{"error": "x"}', b'{"error": {"metadata": {}}}',
+                     b'{"error": {"metadata": {"limit_source": "Bad Source"}}}',
+                     b'{"error": {"metadata": {"limit_source": 7}}}',
+                     b'{"error": {"metadata": {"limit_source": "' + b"a" * 41 + b'"}}}',
+                     b'{"error": {"metadata": {"limit_source": "bad\nline"}}}'):
+            with self.assertRaises(openrouter.Retryable) as caught:
+                self.send_error(429, body)
+            self.assertEqual(str(caught.exception), "HTTP 429", body)
+
+    def test_a_429_body_nested_too_deep_to_parse_is_plain_and_not_a_traceback(self):
+        for body in (b"[" * 70000, b'{"error":' * 3000):
+            with self.assertRaises(openrouter.Retryable) as caught:
+                self.send_error(429, body)
+            self.assertEqual(str(caught.exception), "HTTP 429")
+        # Inside the bound, where how deep a parser goes depends on the interpreter: whatever it raises.
+        body = b'{"error": {"metadata": {"limit_source": "upstream_provider_shared_pool"}}}'
+        with unittest.mock.patch.object(openrouter.json, "loads", side_effect=RecursionError):
+            self.assertIsNone(openrouter.limit_source(body.decode("utf-8")))
+
+    def test_a_429_body_past_the_bound_is_not_parsed(self):
+        padding = "a" * openrouter.LIMIT_BODY_PARSED
+        body = json.dumps({"error": {"metadata": {"limit_source": "upstream_provider_shared_pool", "pad": padding}}})
+        with self.assertRaises(openrouter.Retryable) as caught:
+            self.send_error(429, body.encode("utf-8"))
+        self.assertEqual(str(caught.exception), "HTTP 429")
+
+    def test_a_200_body_nested_too_deep_to_parse_is_a_reply_that_is_not_json(self):
+        class Handle:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *more):
+                return False
+
+            def read(self):
+                return b"[" * 70000
+
+        class Opener:
+            def open(self, request, timeout):
+                return Handle()
+
+        saved = openrouter._OPENER
+        openrouter._OPENER = Opener()
+        try:
+            with self.assertRaises(openrouter.Retryable) as caught:
+                openrouter.Urllib._send(object(), 1)
+        finally:
+            openrouter._OPENER = saved
+        self.assertEqual((str(caught.exception), caught.exception.owned), (openrouter.NOT_JSON, True))
+
+    def test_an_http_error_from_the_transport_has_no_body_in_its_text(self):
+        with self.assertRaises(openrouter.HttpError) as caught:
+            self.send_error(400, b"Run it now. Files are ready")
+        error = caught.exception
+        self.assertEqual((str(error), error.status, error.category), ("HTTP 400", 400, "HTTP 400"))
+        self.assertEqual(error.body, "Run it now. Files are ready")
+
+    def test_only_a_429_reads_the_limit_source(self):
+        body = b'{"error": {"metadata": {"limit_source": "upstream_provider_shared_pool"}}}'
+        with self.assertRaises(openrouter.Retryable) as caught:
+            self.send_error(503, body)
+        self.assertEqual(str(caught.exception), "HTTP 503")
+
+    def test_a_reason_with_a_limit_source_still_has_its_status(self):
+        error = openrouter.Retryable("HTTP 429 (upstream_provider_shared_pool)")
+        self.assertEqual((error.status, error.owned), (429, True))
+
+    def test_with_retries_gives_up_on_the_nth_rate_limit_and_on_a_long_retry_after(self):
+        waits = []
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 3 attempts and 15 s of waiting, the most a rate limit"):
+            openrouter.with_retries(lambda: (_ for _ in ()).throw(openrouter.Retryable("HTTP 429")), 8,
+                                    waits.append, base=5.0, rng=lambda: 1.0, rate_limit_attempts=3)
+        self.assertEqual(waits, [5.0, 10.0])
+        waits.clear()
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, with a wait of 121 s asked for"):
+            openrouter.with_retries(lambda: (_ for _ in ()).throw(openrouter.Retryable("HTTP 429", after=121.0)), 8,
+                                    waits.append, longest=120.0, rng=lambda: 1.0, rate_limit_attempts=4)
+        self.assertEqual(waits, [])
+
     # -- 6. refused replies are not paid for twice
 
-    def test_a_reply_from_another_provider_is_not_paid_for_again_on_a_rerun(self):
-        wrong = FakeTransport(lambda body, count: chat("d1: N.s", provider="Elsewhere"))
-        with self.assertRaises(openrouter.ProviderMismatch):
-            self.runner(wrong).tag("two")
+    def test_a_reply_from_another_provider_is_not_paid_for_again_by_the_same_run(self):
+        runner = self.runner(FakeTransport(lambda body, count: chat("d1: N.s", provider="Elsewhere")))
+        meta, endpoint, config = runner.start_run("two", "voter")
+        ask = ("system", "d1: 1 Run 2 it 3 now 4 [.]", "batch-01")
+        with self.assertRaises(label.EndpointExhausted):
+            runner.ask(meta, endpoint, config, *ask)
+        # The refusal is saved with its request's hash, so a run asked the same again pays for nothing.
         second = FakeTransport(answer_all)
-        with self.assertRaises(openrouter.ProviderMismatch):
-            self.runner(second).tag("two")
-        self.assertEqual(second.posts, [])
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(second).ask(meta, endpoint, config, *ask)
+        self.assertEqual((second.posts, caught.exception.reason), ([], "reply from another provider"))
+        self.assertIn("refused when it was paid for", str(caught.exception))
 
     def test_a_refused_reply_is_asked_again_once_the_request_changes_and_the_refusal_goes(self):
         cut = FakeTransport(lambda body, count: chat("d1: N.s", provider="Bare", finish="length"))
@@ -2210,21 +2394,21 @@ class RoundThreeTests(Base):
 
     # -- Retry-After above the most a call waits
 
-    def test_a_retry_after_above_max_wait_stops_without_waiting_and_the_run_continues(self):
+    def test_a_server_error_with_a_retry_after_above_max_wait_stops_without_waiting_and_a_rerun_asks_afresh(self):
         state = {"calls": 0}
 
         def respond(body, count):
             state["calls"] += 1
             if count > 1:
-                raise openrouter.Retryable("HTTP 429", after=700.0)
+                raise openrouter.Retryable("HTTP 503", after=700.0)
             return answer_all(body)
 
-        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 1 attempts and 0 s of waiting, the most allowed"):
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 503, after 1 attempts and 0 s of waiting, the most allowed"):
             self.runner(FakeTransport(respond)).tag("two")
         self.assertEqual([seconds for seconds in self.slept if seconds not in (1.0,)], [])
         second = FakeTransport(answer_all)
-        self.runner(second).tag("two")
-        self.assertEqual(len(second.posts), 1)
+        run, _ = self.runner(second).tag("two")
+        self.assertEqual((run, len(second.posts)), ("r2", 2), "a new run at the first endpoint")
 
     # -- provider_fallback and --endpoint
 
@@ -2245,11 +2429,26 @@ class RoundThreeTests(Base):
 
     def test_the_shipped_config_lists_the_alternative_endpoints(self):
         models = label.load_config()["models"]
-        self.assertEqual(
-            (models["deepseek"]["provider"], models["deepseek"]["provider_fallback"]),
-            ("gmicloud/fp8", ["streamlake/fp8"]), "deepinfra/fp8 loops until max_tokens: no fallback to it")
-        self.assertEqual(models["qwen"]["provider_fallback"], [], "no other qwen endpoint lists bf16")
+        self.assertEqual(models["deepseek"]["provider"], "gmicloud/fp8")
+        self.assertNotIn("deepinfra/fp8", models["deepseek"]["provider_fallback"], "it loops until max_tokens")
+        self.assertIn("streamlake/fp8", models["deepseek"]["provider_fallback"])
+        self.assertEqual(models["qwen"]["quantizations"], ["fp8", "bf16"], "no other qwen endpoint lists bf16")
+        self.assertEqual(models["qwen"]["provider"], "deepinfra/bf16", "calibration measures what nearly every part uses")
         self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
+
+    def test_every_voters_endpoints_are_at_a_quantization_it_lists_and_none_is_fireworks(self):
+        models = label.load_config()["models"]
+        for name in label.load_config()["voters"]:
+            model = models[name]
+            tags = [model["provider"], *model["provider_fallback"]]
+            self.assertGreaterEqual(len(tags), 2, f"{name} has a second endpoint")
+            self.assertEqual(len(set(tags)), len(tags), name)
+            for tag in tags:
+                provider, _, quantization = tag.partition("/")
+                self.assertIn(quantization, model["quantizations"], f"{name}: {tag} is not at a listed quantization")
+                self.assertNotIn("fireworks", provider.lower(), name)
+            self.assertEqual(model["provider"], tags[0], "the pin is first")
+        self.assertNotIn("deepinfra/fp8", models["deepseek"]["provider_fallback"])
 
     def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):
         for bad in ("alt/fp8", [3], ["alt/fp8", "alt/fp8"], ["host/fp8"]):
@@ -2445,8 +2644,8 @@ class RoundThreeTests(Base):
         run, left = runner.tag("one")
         self.assertEqual((run, left), ("r2", []))
         orders = [post["provider"]["order"] for post in transport.posts]
-        self.assertEqual(orders[:8], [["host/fp8"]] * 8, "every attempt at the pinned endpoint first")
-        self.assertTrue(all(order == ["alt/fp8"] for order in orders[8:]), "then one run, one provider")
+        self.assertEqual(orders[:4], [["host/fp8"]] * 4, "four asks at the pinned endpoint first")
+        self.assertTrue(all(order == ["alt/fp8"] for order in orders[4:]), "then one run, one provider")
         first, second = (json.loads(label.read(self.run_json("one", r))) for r in ("r1", "r2"))
         self.assertTrue(first["abandoned"])
         self.assertIn("host/fp8 kept failing: HTTP 429", first["abandoned_because"])
@@ -2456,12 +2655,75 @@ class RoundThreeTests(Base):
         self.assertEqual(len(said), 1, "one line says it")
         self.assertIn("one r1: host/fp8 kept failing (HTTP 429); the run is abandoned and a new run starts at alt/fp8", said[0])
         reserved = [row for row in self.ledger().booked().values() if row["state"] == "reserved"]
-        self.assertEqual(len(reserved), 8, "the failed attempts stay booked")
+        self.assertEqual(len(reserved), 4, "the failed attempts stay booked")
         # Nothing continues the abandoned run, and a merge would not take tags from it.
         self.assertIsNone(self.runner(None, config=config).incomplete_run("one"))
         with self.assertRaisesRegex(openrouter.ApiError, "r1 was abandoned"):
             self.runner(FakeTransport(answer_all, WIDE_LISTING), config=config).tag("one", resume="r1")
         self.assertIn("Runs=r2", label.read(os.path.join(self.dir, "tags", "one.conllu")).replace(" = ", "="))
+
+    def test_four_rate_limits_at_the_pin_abandon_its_run_and_name_the_limit_source(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        transport = self.failing({"host/fp8"}, "HTTP 429 (upstream_provider_shared_pool)")
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r2", []))
+        orders = [post["provider"]["order"] for post in transport.posts]
+        self.assertEqual(orders.count(["host/fp8"]), 4, "four POSTs at the pin")
+        first, second = (json.loads(label.read(self.run_json("one", r))) for r in ("r1", "r2"))
+        self.assertTrue(first["abandoned"])
+        self.assertIn("host/fp8 kept failing: HTTP 429 (upstream_provider_shared_pool)", first["abandoned_because"])
+        self.assertTrue(second["complete"])
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["abandoned", "complete"])
+
+    def test_a_server_error_still_gets_eight_asks_at_an_endpoint_before_the_next(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        transport = self.failing({"host/fp8"}, "HTTP 503")
+        run, _ = self.runner(transport, config=config).tag("one")
+        self.assertEqual(run, "r2")
+        orders = [post["provider"]["order"] for post in transport.posts]
+        self.assertEqual(orders.count(["host/fp8"]), 8)
+
+    def test_a_rate_limit_that_asks_for_a_long_wait_moves_on_without_waiting(self):
+        config = with_fallbacks(one=["alt/fp8"])
+
+        def respond(body, count):
+            if body["provider"]["order"][0] == "host/fp8":
+                raise openrouter.Retryable("HTTP 429", after=300.0)
+            return answer_all(body)
+
+        transport = FakeTransport(respond, WIDE_LISTING)
+        run, _ = self.runner(transport, config=config).tag("one")
+        self.assertEqual(run, "r2")
+        self.assertEqual(len([p for p in transport.posts if p["provider"]["order"] == ["host/fp8"]]), 1)
+        self.assertEqual([seconds for seconds in self.slept if seconds != 1.0], [])
+
+    def test_an_alternative_more_precise_than_the_pin_but_outside_quantizations_is_skipped(self):
+        config = with_fallbacks(one=["alt2/bf16", "alt/fp8"])
+        config["models"]["one"]["quantizations"] = ["fp8"]
+        transport = self.failing({"host/fp8"})
+        run, _ = self.runner(transport, config=config).tag("one")
+        self.assertEqual(run, "r2")
+        orders = [post["provider"]["order"] for post in transport.posts]
+        self.assertNotIn(["alt2/bf16"], orders)
+        self.assertEqual(transport.posts[-1]["provider"]["order"], ["alt/fp8"])
+
+    def test_an_alternative_less_precise_than_the_pin_is_allowed_when_quantizations_lists_it(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        config["models"]["one"].update(provider="alt2/bf16", quantizations=["fp8", "bf16"])
+        transport = self.failing({"alt2/bf16"})
+        run, _ = self.runner(transport, config=config).tag("one")
+        self.assertEqual(run, "r2")
+        self.assertEqual(transport.posts[-1]["provider"]["order"], ["alt/fp8"])
+        self.assertEqual(transport.posts[-1]["provider"]["quantizations"], ["fp8"])
+
+    def test_a_model_without_quantizations_keeps_the_floor_of_its_primary(self):
+        config = with_fallbacks(two=["low/int4", "alt2/bf16"])
+        config["models"]["two"]["provider"] = "alt/fp8"
+        transport = self.failing({"alt/fp8"})
+        run, _ = self.runner(transport, config=config).tag("two")
+        self.assertEqual(run, "r2")
+        self.assertEqual(transport.posts[-1]["provider"]["order"], ["alt2/bf16"])
+        self.assertFalse([post for post in transport.posts if post["provider"]["order"] == ["low/int4"]])
 
     def test_a_server_error_falls_back_too_and_the_next_that_fails_is_abandoned_in_turn(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
@@ -2487,32 +2749,34 @@ class RoundThreeTests(Base):
         self.assertEqual(transport.posts[-1]["provider"]["order"], ["alt2/bf16"])
         self.assertEqual(run, "r2")
 
-    def test_when_every_endpoint_fails_it_stops_with_exit_2_and_keeps_the_last_run(self):
+    def test_when_every_endpoint_fails_it_stops_with_exit_2_and_a_rerun_starts_at_the_first_endpoint(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
         transport = self.failing({"host/fp8", "alt/fp8", "alt2/bf16"})
         code, out, err = self.command(transport, "--voter", "one", config=config)
         self.assertEqual(code, 2)
-        self.assertEqual(len(transport.posts), 24)
+        self.assertEqual(len(transport.posts), 12, "four asks at each of three endpoints")
         self.assertIn("every endpoint of one failed (host/fp8: HTTP 429; alt/fp8: HTTP 429; alt2/bf16: HTTP 429)", err)
-        self.assertIn("r3 at alt2/bf16 is kept", err)
+        self.assertIn("starts a new run at the first endpoint", err)
         flags = [json.loads(label.read(self.run_json("one", r))).get("abandoned") for r in ("r1", "r2", "r3")]
-        self.assertEqual(flags, [True, True, None], "the last run stays, resumable")
+        self.assertEqual(flags, [True, True, True], "the last run is given up too, and nothing replays it")
+        last = json.loads(label.read(self.run_json("one", "r3")))["abandoned_because"]
+        self.assertEqual(last, "every endpoint failed: host/fp8: HTTP 429; alt/fp8: HTTP 429; alt2/bf16: HTTP 429")
         self.assertNotIn(self.KEY, out + err)
-        # The same command continues the last run once it answers; --again starts at the first endpoint.
+        self.assertIsNone(self.runner(None, config=config).incomplete_run("one"))
+        # The same command, with no flag, starts again at the first endpoint.
         later = self.failing(set())
         code, _, _ = self.command(later, "--voter", "one", config=config)
         self.assertEqual(code, 0)
-        self.assertTrue(all(post["provider"]["order"] == ["alt2/bf16"] for post in later.posts))
-        again = self.failing(set())
-        self.command(again, "--voter", "one", "--again", config=config)
-        self.assertEqual(again.posts[0]["provider"]["order"], ["host/fp8"])
+        self.assertTrue(all(post["provider"]["order"] == ["host/fp8"] for post in later.posts))
+        self.assertEqual(self.runs_rows()[-1]["run"], "r4")
 
     def test_a_model_with_no_alternative_stops_at_once(self):
         code, _, err = self.command(self.failing({"bare"}), "--voter", "two")
         self.assertEqual(code, 2)
         self.assertIn("every endpoint of two failed (bare: HTTP 429)", err)
         self.assertEqual(self.runs_rows()[0]["run"], "r1")
-        self.assertNotIn("abandoned", json.loads(label.read(self.run_json("two", "r1"))))
+        first = json.loads(label.read(self.run_json("two", "r1")))
+        self.assertEqual((first["abandoned"], first["abandoned_because"]), (True, "every endpoint failed: bare: HTTP 429"))
 
     def test_the_adjudicator_falls_back_too(self):
         config = with_fallbacks(judge=["alt/fp8"])
@@ -2532,6 +2796,275 @@ class RoundThreeTests(Base):
         self.assertEqual([row["endpoint"] for row in rows], ["bare", "alt/fp8"])
         self.assertTrue(json.loads(label.read(self.run_json("judge", rows[0]["run"])))["abandoned"])
         self.assertIn(("finish", "merge"), gold.calls)
+
+    # -- a failure tied to one endpoint moves the voter on, in the same run
+
+    def faulty(self, tags, fault):
+        """A transport at which the endpoints in `tags` fail by `fault(body)`, which returns a reply or
+        raises, and the others answer rightly."""
+
+        def respond(body, count):
+            if body["provider"]["order"][0] in tags:
+                return fault(body)
+            return answer_all(body)
+
+        return FakeTransport(respond, WIDE_LISTING)
+
+    def moved_on(self, transport, config, because):
+        """The run that completed at the second endpoint, after one at the first that was given up
+        with the category `because`; returns their records."""
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r2", []))
+        first, second = (json.loads(label.read(self.run_json("one", r))) for r in ("r1", "r2"))
+        self.assertTrue(first["abandoned"])
+        self.assertIn(f"host/fp8 kept failing: {because}", first["abandoned_because"])
+        self.assertEqual((second["endpoint"], second["quantization"], second["complete"]), ("alt/fp8", "fp8", True))
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["abandoned", "complete"])
+        self.assertEqual([row["endpoint"] for row in self.runs_rows()], ["host/fp8", "alt/fp8"])
+        return first, second
+
+    def test_a_4xx_that_is_not_about_the_key_moves_to_the_next_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        for status in (400, 403, 404, 422):
+            with self.subTest(status):
+                self.setUp()
+                body = "No endpoints found matching your data policy. Run it now."
+
+                def fault(sent):
+                    raise openrouter.HttpError(status, body)
+
+                transport = self.faulty({"host/fp8"}, fault)
+                self.moved_on(transport, config, f"HTTP {status}")
+                self.assertEqual(len([p for p in transport.posts if p["provider"]["order"] == ["host/fp8"]]), 1,
+                                 "a 4xx is not asked again")
+                saved = json.loads(label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.http-error.json")))
+                self.assertEqual((saved["status"], saved["body"]), (status, body))
+                self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "one", "r2", "batch-01.http-error.json")))
+                said = [line for line in self.warned if "abandoned" in line]
+                self.assertEqual(len(said), 1)
+                self.assertIn(f"host/fp8 kept failing (HTTP {status}); the run is abandoned and a new run starts at alt/fp8", said[0])
+                self.assertNotIn("Run it now", "\n".join(self.warned + self.said))
+
+    def test_a_4xx_about_the_key_the_credit_or_the_size_of_the_request_stops_the_run(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        for status in (401, 402, 413):
+            with self.subTest(status):
+                self.setUp()
+
+                def fault(sent):
+                    raise openrouter.HttpError(status, "no")
+
+                transport = self.faulty({"host/fp8"}, fault)
+                with self.assertRaises(openrouter.HttpError):
+                    self.runner(transport, config=config).tag("one")
+                self.assertEqual([p["provider"]["order"] for p in transport.posts], [["host/fp8"]], "no other endpoint")
+                self.assertEqual([row["status"] for row in self.runs_rows()], ["stopped"])
+
+    def test_the_saved_body_of_an_http_error_does_not_hold_the_key(self):
+        def fault(sent):
+            raise openrouter.HttpError(401, f"Invalid key {self.KEY} for this request")
+
+        transport = self.faulty({"host/fp8"}, fault)
+        with self.assertRaises(openrouter.HttpError):
+            self.runner(transport, config=with_fallbacks(one=["alt/fp8"])).tag("one")
+        text = label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.http-error.json"))
+        self.assertNotIn(self.KEY, text)
+        self.assertIn("<key>", text)
+
+    def test_a_reply_from_another_provider_moves_to_the_next_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        transport = self.faulty({"host/fp8"}, lambda body: chat("d1: N.s", provider="Elsewhere"))
+        self.moved_on(transport, config, "reply from another provider")
+
+    def test_reasoning_tokens_with_reasoning_off_move_to_the_next_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8"])
+
+        def fault(body):
+            response = answer_all(body)
+            response["usage"]["completion_tokens_details"]["reasoning_tokens"] = 40
+            return response
+
+        self.moved_on(self.faulty({"host/fp8"}, fault), config, "reasoning used with reasoning off")
+
+    def test_the_replies_that_moved_the_voter_on_are_booked_and_kept_beside_the_run(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        transport = self.faulty({"host/fp8"}, lambda body: chat("d1: N.s", provider="Elsewhere", cost=0.25))
+        self.runner(transport, config=config).tag("one")
+        self.assertGreaterEqual(self.ledger().total(), 0.25, "the call was billed, and is booked")
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "raw", "one", "r1", "batch-01.rejected.json")))
+
+    def test_a_timeout_through_every_wait_is_the_endpoints_and_the_voter_moves_on(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+
+        def fault(body):
+            raise openrouter.Retryable(openrouter.TIMEOUT)
+
+        transport = self.faulty({"host/fp8"}, fault)
+        self.moved_on(transport, config, "timeout")
+        self.assertEqual(len([p for p in transport.posts if p["provider"]["order"] == ["host/fp8"]]), 8,
+                         "http_attempts, as for any retryable failure")
+
+    def test_a_timeout_with_the_listing_unreachable_is_our_network_and_stops_the_run_in_place(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+
+        class Blackhole(FakeTransport):
+            def get(self, url, timeout):
+                if self.posts:
+                    self.gets.append(url)
+                    raise openrouter.Retryable(openrouter.TIMEOUT)
+                return super().get(url, timeout)
+
+        def respond(body, count):
+            if count == 1:
+                return answer_all(body)
+            raise openrouter.Retryable(openrouter.TIMEOUT)
+
+        transport = Blackhole(respond, WIDE_LISTING)
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(transport, config=config).tag("one")
+        self.assertTrue(caught.exception.local)
+        self.assertEqual({p["provider"]["order"][0] for p in transport.posts}, {"host/fp8"}, "no walk")
+        self.assertEqual(len(transport.posts), 1 + 8, "one batch answered, then http_attempts timeouts")
+        self.assertEqual(len(transport.gets), 2, "the listing once for the pin, once after the timeouts")
+        meta = json.loads(label.read(self.run_json("one", "r1")))
+        self.assertFalse(meta.get("abandoned"), "the run is kept for a rerun to continue")
+        self.assertFalse(os.path.exists(self.run_json("one", "r2")))
+
+    def test_a_timeout_with_the_listing_answering_is_the_endpoints_even_when_the_listing_is_an_error(self):
+        config = with_fallbacks(one=["alt/fp8"])
+
+        class Answering(FakeTransport):
+            def get(self, url, timeout):
+                super().get(url, timeout)
+                if self.posts:
+                    raise openrouter.Retryable("HTTP 503")
+                return copy.deepcopy(self.listing)
+
+        transport = Answering(
+            lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(openrouter.TIMEOUT))
+            if body["provider"]["order"][0] == "host/fp8" else answer_all(body), WIDE_LISTING)
+        self.moved_on(transport, config, "timeout")
+        self.assertEqual(len(transport.gets), 2, "asked once after the timeouts, not again at the next endpoint")
+
+    def test_a_timeout_everywhere_stops_the_voter_after_the_last_endpoint_and_says_it_may_be_the_network(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        down = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(openrouter.TIMEOUT)), WIDE_LISTING)
+        code, _, err = self.command(down, "--voter", "one", config=config)
+        self.assertEqual(code, 2)
+        self.assertEqual([p["provider"]["order"][0] for p in down.posts], ["host/fp8"] * 8 + ["alt/fp8"] * 8)
+        self.assertIn("every endpoint of one failed (host/fp8: timeout; alt/fp8: timeout)", err)
+        self.assertIn("the network here", err)
+
+    def test_other_network_errors_still_stop_the_voter_at_the_endpoint_they_met(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        down = self.faulty({"host/fp8"}, lambda body: (_ for _ in ()).throw(openrouter.Retryable("ConnectionResetError")))
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(down, config=config).tag("one")
+        self.assertTrue(caught.exception.local)
+        self.assertEqual({p["provider"]["order"][0] for p in down.posts}, {"host/fp8"})
+
+    def test_a_pin_the_listing_lacks_starts_the_voter_at_the_next_endpoint(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        config["models"]["one"]["provider"] = "gone/fp8"
+        transport = FakeTransport(answer_all, WIDE_LISTING)
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r1", []), "no run was made for the endpoint that cannot be asked")
+        self.assertEqual({p["provider"]["order"][0] for p in transport.posts}, {"alt/fp8"})
+        self.assertEqual([row["endpoint"] for row in self.runs_rows()], ["alt/fp8"])
+        self.assertTrue(any("gone/fp8 cannot be asked (missing from the listing); a run starts at alt/fp8" in w for w in self.warned))
+
+    def test_a_fallback_the_listing_lacks_or_has_changed_is_skipped_and_the_next_asked(self):
+        config = with_fallbacks(one=["gone/fp8", "alt/fp16", "low/int4", "alt2/bf16"])
+        config["models"]["one"]["quantizations"] = ["fp8", "bf16"]
+        listing = copy.deepcopy(WIDE_LISTING)
+        listing["data"]["endpoints"].append({
+            "tag": "alt/fp16", "provider_name": "Alt16", "quantization": "fp16", "pricing": {"prompt": "1", "completion": "2"},
+            "supported_parameters": ["max_tokens", "temperature", "reasoning"],
+        })
+        listing["data"]["endpoints"][-1]["quantization"] = "fp4"  # the tag still says fp16; the listing changed
+        transport = FakeTransport(
+            lambda body, count: answer_all(body) if body["provider"]["order"][0] == "alt2/bf16" else (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")),
+            listing,
+        )
+        run, left = self.runner(transport, config=config).tag("one")
+        self.assertEqual((run, left), ("r2", []))
+        orders = [p["provider"]["order"][0] for p in transport.posts]
+        self.assertEqual(sorted(set(orders)), ["alt2/bf16", "host/fp8"], "the skipped endpoints are never asked")
+        first = json.loads(label.read(self.run_json("one", "r1")))
+        for skipped in ("gone/fp8 was not tried, missing from the listing", "alt/fp16 was not tried, quantization changed",
+                        "low/int4 was not tried, quantization changed"):
+            self.assertIn(skipped, first["abandoned_because"])
+        self.assertEqual(json.loads(label.read(self.run_json("one", "r2")))["quantization"], "bf16")
+
+    def test_an_endpoint_that_lost_a_parameter_is_skipped(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        listing = copy.deepcopy(WIDE_LISTING)
+        for endpoint in listing["data"]["endpoints"]:
+            if endpoint["tag"] == "alt/fp8":
+                endpoint["supported_parameters"] = ["max_tokens", "temperature"]
+        transport = FakeTransport(
+            lambda body, count: answer_all(body) if body["provider"]["order"][0] != "host/fp8" else (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")),
+            listing,
+        )
+        run, _ = self.runner(transport, config=config).tag("one")
+        self.assertEqual(self.runs_rows()[-1]["endpoint"], "alt2/bf16")
+        self.assertIn("alt/fp8 was not tried, parameter not supported", json.loads(label.read(self.run_json("one", "r1")))["abandoned_because"])
+
+    def test_when_the_listing_has_none_of_the_endpoints_the_voter_stops_naming_why(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        config["models"]["one"]["provider"] = "gone/fp8"
+        config["models"]["one"]["provider_fallback"] = ["gone2/fp8"]
+        code, _, err = self.command(FakeTransport(answer_all, WIDE_LISTING), "--voter", "one", config=config)
+        self.assertEqual(code, 2)
+        self.assertIn("every endpoint of one failed (gone/fp8: missing from the listing; gone2/fp8: not tried, missing from the listing)", err)
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "one")), "no run was made, so none was booked")
+        self.assertEqual(self.ledger().total(), 0)
+
+    def test_a_stopped_run_whose_endpoint_the_listing_no_longer_has_is_given_up_and_the_voter_moves_on(self):
+        config = with_fallbacks(one=["alt/fp8"])
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.HttpError(401, "x"))
+                                      if count > 1 else answer_all(body), WIDE_LISTING), config=config).tag("one")
+        listing = copy.deepcopy(WIDE_LISTING)
+        listing["data"]["endpoints"] = [e for e in listing["data"]["endpoints"] if e["tag"] != "host/fp8"]
+        later = FakeTransport(answer_all, listing)
+        run, _ = self.runner(later, config=config).tag("one")
+        self.assertEqual(run, "r2")
+        first = json.loads(label.read(self.run_json("one", "r1")))
+        self.assertIn("host/fp8 kept failing: missing from the listing", first["abandoned_because"])
+
+    def test_the_adjudicator_moves_on_from_a_4xx_too(self):
+        config = with_fallbacks(judge=["alt/fp8"])
+        gold = FakeGold()
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all, WIDE_LISTING), gold=gold, config=config).tag(name)
+
+        def respond(body, count):
+            if body["provider"]["order"] == ["bare"]:
+                raise openrouter.HttpError(404, "No endpoints found matching your data policy")
+            return chat("d1.2: N.p | x\nd2.3: N.s | y", provider="Alt")
+
+        left = self.runner(FakeTransport(respond, WIDE_LISTING), gold=gold, config=config).judge(
+            "merge", [("one", False), ("two", False)])
+        self.assertEqual(left, {})
+        rows = [row for row in self.runs_rows() if row["role"] == "adjudicator"]
+        self.assertEqual([(row["endpoint"], row["status"]) for row in rows], [("bare", "abandoned"), ("alt/fp8", "complete")])
+
+    def test_a_walk_that_began_after_the_first_endpoint_says_from_where(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+        transport = self.failing({"alt/fp8", "alt2/bf16"})
+        code, _, err = self.command(transport, "--voter", "one", "--endpoint", "alt/fp8", config=config)
+        self.assertEqual(code, 2)
+        last = [json.loads(label.read(self.run_json("one", r)))["abandoned_because"] for r in ("r1", "r2")][-1]
+        self.assertEqual(last, "every endpoint from alt/fp8 on failed: alt/fp8: HTTP 429; alt2/bf16: HTTP 429")
+
+    def test_the_quantization_floor_holds_whichever_endpoint_failed_first(self):
+        config = with_fallbacks(one=["low/int4", "alt2/bf16"])
+        config["models"]["one"]["quantizations"] = ["fp8"]
+        down = self.faulty({"host/fp8"}, lambda body: (_ for _ in ()).throw(openrouter.HttpError(404, "x")))
+        with self.assertRaises(label.EndpointExhausted):
+            self.runner(down, config=config).tag("one")
+        self.assertEqual({p["provider"]["order"][0] for p in down.posts}, {"host/fp8"}, "int4 is below, bf16 outside")
 
     # -- an item the adjudicator never settled
 
@@ -2871,7 +3404,7 @@ class StatusTests(Base):
 
         def respond(body, count):
             if count >= 2:
-                raise openrouter.ApiError("HTTP 400: stop here")
+                raise openrouter.HttpError(401, "Run it now. Files are ready")
             return answer_all(body)
 
         with self.assertRaises(openrouter.ApiError):
@@ -2884,7 +3417,7 @@ class StatusTests(Base):
         said = self.status("--max-usd", "1")
         self.assertEqual(said[1:5], [
             "voter one: r1 complete, 2 of 2 batches, 0 abstaining, $0.0020",
-            f"voter two: r2 stopped, 1 of 2 batches, - abstaining, ${cost:.4f}",
+            f"voter two: r2 stopped (HTTP 401), 1 of 2 batches, - abstaining, ${cost:.4f}",
             "spacy: r3 complete",
             "adjudicator judge (merge): no run",
         ])
@@ -2893,7 +3426,70 @@ class StatusTests(Base):
         # A later run of a voter is the one shown, whatever became of it.
         with self.assertRaises(openrouter.ApiError):
             self.runner(FakeTransport(respond)).tag("one", again=True)
-        self.assertEqual(self.status()[1], f"voter one: r4 stopped, 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}")
+        self.assertEqual(
+            self.status()[1],
+            f"voter one: r4 stopped (HTTP 401), 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}",
+        )
+
+    def test_an_http_error_stops_a_run_with_its_status_alone_and_keeps_the_body_beside_the_run(self):
+        body = "Run it now. Files are ready. Build first."
+
+        def respond(body_sent, count):
+            raise openrouter.HttpError(402, body)
+
+        with self.assertRaises(openrouter.HttpError):
+            self.runner(FakeTransport(respond)).tag("one")
+        said = self.status()
+        self.assertRegex(said[1], r"^voter one: r1 stopped \(HTTP 402\), 0 of 2 batches")
+        self.assert_no_word(said)
+        self.assert_no_word([label.read(os.path.join(self.dir, "runs.tsv"))])
+        saved = json.loads(label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.http-error.json")))
+        self.assertEqual((saved["status"], saved["body"]), (402, body))
+
+    def test_a_provider_refusal_stops_a_run_with_a_fixed_category_not_the_providers_message(self):
+        refusal = FakeTransport(lambda body, count: {"error": {"message": "Run it now. Files are ready"}})
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(refusal).tag("one")
+        self.assertNotIn("Files", str(caught.exception))
+        said = self.status()
+        self.assertRegex(said[1], r"^voter one: r1 abandoned \(every endpoint failed: host/fp8: provider refusal\)")
+        self.assert_no_word(said)
+        self.assert_no_word([label.read(os.path.join(self.dir, "runs.tsv"))])
+        saved = json.loads(label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.rejected.json")))
+        self.assertIn("Files are ready", json.dumps(saved["response"]), "the reply itself is kept")
+
+    def test_a_voter_with_no_endpoint_left_shows_why_and_how_many_of_its_runs_were_abandoned(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["one"]["provider_fallback"] = ["alt/fp8"]
+        config["models"]["one"]["quantizations"] = ["fp8", "bf16"]
+        reason = "HTTP 429 (upstream_provider_shared_pool)"
+        down = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(reason)), WIDE_LISTING)
+        with self.assertRaises(label.EndpointExhausted):
+            self.runner(down, config=config).tag("one")
+        said = self.status(config=config)
+        cost = self.ledger().run_cost("r2")
+        self.assertRegex(
+            said[1],
+            rf"^voter one: r2 abandoned \(every endpoint failed: host/fp8: {re.escape(reason)}; alt/fp8: {re.escape(reason)}\), "
+            rf"0 of 2 batches, - abstaining, \${cost:.4f}; 2 runs abandoned$",
+        )
+        self.assert_no_word(said)
+        self.assertEqual(said[2], "voter two: no run")
+        self.assertIn("every endpoint failed: host/fp8: " + reason, label.read(os.path.join(self.dir, "runs.tsv")))
+
+    def test_a_voter_that_completed_after_abandoning_a_run_says_how_many(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["one"]["provider_fallback"] = ["alt/fp8"]
+        config["models"]["one"]["quantizations"] = ["fp8", "bf16"]
+
+        def respond(body, count):
+            if body["provider"]["order"] == ["host/fp8"]:
+                raise openrouter.Retryable("HTTP 429")
+            return answer_all(body)
+
+        self.runner(FakeTransport(respond, WIDE_LISTING), config=config).tag("one")
+        self.assertEqual(self.status(config=config)[1],
+                         f"voter one: r2 complete, 2 of 2 batches, 0 abstaining, ${self.ledger().run_cost('r2'):.4f}; 1 run abandoned")
 
     def test_a_run_made_before_runs_recorded_their_batches_is_shown_against_the_batches_there(self):
         self.runner(FakeTransport(answer_all)).tag("one")
@@ -3246,6 +3842,22 @@ class RoundFourTests(Base):
         self.assertEqual(code, 0)
         self.assertEqual(self.statuses(), [("r1", "failed"), ("r2", "complete")])
 
+    def test_rate_limit_attempts_is_a_whole_number_of_asks_defaulting_to_four(self):
+        self.assertEqual(label.load_config()["settings"]["rate_limit_attempts"], 4)
+        self.assertEqual(label.SETTING_DEFAULTS["rate_limit_attempts"], 4)
+        for bad in (0, -1, "4", True, 2.5):
+            config = copy.deepcopy(label.load_config())
+            config["settings"]["rate_limit_attempts"] = bad
+            path = os.path.join(self.root, "voters.json")
+            label.write(path, json.dumps(config))
+            with self.assertRaisesRegex(label.ConfigError, "rate_limit_attempts"):
+                label.load_config(path)
+        config = copy.deepcopy(label.load_config())
+        del config["settings"]["rate_limit_attempts"]
+        path = os.path.join(self.root, "voters.json")
+        label.write(path, json.dumps(config))
+        self.assertEqual(label.load_config(path)["settings"]["rate_limit_attempts"], 4)
+
     def test_more_than_a_quarter_by_default_and_the_share_is_a_setting(self):
         settings = label.load_config()["settings"]
         self.assertEqual((settings["abstain_limit"], settings["failure_budget"]), (0.25, 40))
@@ -3293,22 +3905,37 @@ class RoundFourTests(Base):
         self.assertEqual([p["provider"]["order"] for p in transport.posts], [["host/fp8"]] * 3 + [["alt/fp8"]])
         self.assertEqual(self.statuses(), [("r1", "abandoned"), ("r2", "complete")])
 
-    def test_backoff_halving_and_switching_draw_on_one_budget(self):
+    def test_backoff_and_halving_draw_on_one_budget_for_each_endpoint(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
-        config["settings"]["failure_budget"] = 4
+        config["settings"]["failure_budget"] = 2
         busy = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")), WIDE_LISTING)
-        with self.assertRaisesRegex(label.BudgetSpent, "budget of 4"):
+        with self.assertRaisesRegex(label.BudgetSpent, "budget of 2"):
             self.runner(busy, config=config).tag("one")
-        self.assertEqual(len(busy.posts), 5, "three attempts at the first endpoint, two at the next, then it stops")
-        # Cut-off calls come out of the same budget.
+        self.assertEqual(len(busy.posts), 3, "the third failed attempt at the first endpoint is past its budget")
+        # Cut-off calls come out of the same budget as the attempts of a retryable error.
         config = self.batches_of(3)
         config["settings"]["failure_budget"] = 2
         cut = FakeTransport(self.cut_off)
         with self.assertRaisesRegex(label.BudgetSpent, "budget of 2"):
             self.runner(cut, config=config).tag("two")
         self.assertEqual(len(cut.posts), 3)
-        self.assertEqual(self.statuses()[-1], ("r3", "stopped"))
-        self.assertEqual(self.runner(None).incomplete_run("two"), "r3", "the run is kept")
+        self.assertEqual(self.statuses()[-1], ("r2", "stopped"))
+        self.assertEqual(self.runner(None).incomplete_run("two"), "r2", "the run is kept")
+
+    def test_the_budget_starts_over_at_each_endpoint_so_a_voter_tries_every_one_it_lists(self):
+        tags = ["alt/fp8", "alt2/bf16", "low2/bf16"]
+        config = with_fallbacks(one=tags)
+        config["settings"]["failure_budget"] = 3
+        listing = copy.deepcopy(WIDE_LISTING)
+        listing["data"]["endpoints"].append(
+            {**listing["data"]["endpoints"][-2], "tag": "low2/bf16", "provider_name": "Low2"})
+        busy = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")), listing)
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(busy, config=config).tag("one")
+        self.assertEqual([tag for tag, _ in caught.exception.tried], ["host/fp8", *tags])
+        self.assertEqual([p["provider"]["order"][0] for p in busy.posts],
+                         [t for t in ("host/fp8", *tags) for _ in range(3)], "three asks at each of four endpoints")
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["abandoned"] * 4)
 
     def test_the_budget_is_new_for_each_step_and_a_saved_refusal_costs_none(self):
         config = self.batches_of(3)
@@ -3353,13 +3980,13 @@ class RoundFourTests(Base):
             ("HTTP 429", True), ("HTTP 500", True), ("HTTP 503", True), ("HTTP 524", True), ("HTTP 529", True),
             (openrouter.NOT_JSON, True), ("timeout", False), ("could not connect, ConnectionRefusedError", False),
             ("could not connect, gaierror", False), ("ConnectionResetError", False), ("IncompleteRead", False),
-            ("HTTP 408", False), ("HTTP 425", False),
+            ("HTTP 408", True), ("HTTP 425", True),
         ):
             self.assertEqual(openrouter.Retryable(reason).owned, owned, reason)
 
     def test_a_network_error_here_stops_the_run_and_a_rerun_continues_it(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
-        for reason in ("could not connect, ConnectionRefusedError", "could not connect, gaierror", "timeout",
+        for reason in ("could not connect, ConnectionRefusedError", "could not connect, gaierror",
                        "ConnectionResetError"):
             with self.subTest(reason):
                 def respond(body, count):
@@ -3415,16 +4042,20 @@ class RoundFourTests(Base):
                 self.assertTrue(abandoned)
                 self.assertIn("provider refusal", self.run_json("one", abandoned[-1])["abandoned_because"])
 
-    def test_a_refusal_is_not_paid_for_again_and_a_refused_run_with_no_endpoint_left_stops(self):
+    def test_a_refused_run_with_no_endpoint_left_stops_and_a_rerun_starts_afresh_at_the_first_endpoint(self):
         refusal = FakeTransport(lambda body, count: {"error": {"message": "no"}})
         with self.assertRaises(label.EndpointExhausted) as caught:
             self.runner(refusal).tag("two")
         self.assertFalse(caught.exception.local)
         self.assertEqual(len(refusal.posts), 1)
+        self.assertTrue(self.run_json("two", "r1")["abandoned"])
         again = FakeTransport(lambda body, count: {"error": {"message": "no"}})
-        with self.assertRaises(label.EndpointExhausted):
+        with self.assertRaises(label.EndpointExhausted) as caught:
             self.runner(again).tag("two")
-        self.assertEqual(again.posts, [], "the same request is refused again from its saved record")
+        self.assertEqual((len(again.posts), caught.exception.run), (1, "r2"), "asked again, not replayed from r1")
+        answered = FakeTransport(answer_all)
+        run, _ = self.runner(answered).tag("two")
+        self.assertEqual(run, "r3")
 
     def test_the_shipped_config_has_no_fallback_to_deepinfra_for_deepseek_and_no_stale_note(self):
         config = label.load_config()
@@ -5543,6 +6174,58 @@ class EndToEndTests(Base):
         said = gold.merge(self.dir, "merge", [("one", False), ("two", False)], 60, min_voters=2)
         self.assertRegex(said, r"(?i)abstain")
         self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "worklist.tsv")))
+
+
+class SilverPartScriptTests(unittest.TestCase):
+    """`silver-part.sh` run over a stand-in `label.py`, `voters.json` and `spacy.sh` in a temporary
+    folder, so it needs no key, no network and no model."""
+
+    def setUp(self):
+        self.root = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root)
+        self.here = os.path.join(self.root, "kit")
+        os.makedirs(self.here)
+        shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "silver-part.sh"), self.here)
+        label.write(os.path.join(self.here, "voters.json"), json.dumps({"voters": ["deepseek", "qwen", "hy3"]}))
+        # The stand-in exits with the code its `--voter` is given in the CODES environment variable.
+        label.write(os.path.join(self.here, "label.py"), (
+            "import json, os, sys\n"
+            "voter = sys.argv[sys.argv.index('--voter') + 1]\n"
+            "sys.exit(json.loads(os.environ.get('CODES', '{}')).get(voter, 0))\n"
+        ))
+        self.spacy_ran = os.path.join(self.root, "spacy-ran")
+        label.write(os.path.join(self.here, "spacy.sh"), f"#!/usr/bin/env bash\ntouch '{self.spacy_ran}'\n")
+        os.chmod(os.path.join(self.here, "spacy.sh"), 0o755)
+        self.silver = os.path.join(self.root, "silver")
+        label.write(os.path.join(self.silver, "part-01", "sample.conllu"), "")
+
+    def run_script(self, codes, *flags):
+        return subprocess.run(
+            ["bash", os.path.join(self.here, "silver-part.sh"), self.silver, "01", "5", "gold-bin", *flags],
+            capture_output=True, text=True, env={**os.environ, "CODES": json.dumps(codes)}, check=False,
+        )
+
+    def test_every_voter_that_failed_is_named_with_its_exit_code_and_spacy_does_not_run(self):
+        done = self.run_script({"qwen": 2, "hy3": 5})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("silver-part.sh: the voters that failed: qwen (exit 2) hy3 (exit 5)", done.stderr)
+        self.assertNotIn("deepseek", done.stderr)
+        self.assertFalse(os.path.exists(self.spacy_ran))
+
+    def test_a_voter_that_hit_the_cap_is_named_with_4(self):
+        done = self.run_script({"deepseek": 4})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("the voters that failed: deepseek (exit 4)", done.stderr)
+
+    def test_when_no_voter_fails_spacy_runs(self):
+        done = self.run_script({})
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue(os.path.exists(self.spacy_ran))
+
+    def test_a_smoke_run_does_not_run_spacy(self):
+        done = self.run_script({}, "--limit", "1")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertFalse(os.path.exists(self.spacy_ran))
 
 
 if __name__ == "__main__":

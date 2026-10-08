@@ -61,42 +61,77 @@ connection is asked again, up to
 `backoff_s` (5 s) to at most `longest_wait_s` (120 s), with jitter, or the `Retry-After` or
 `X-RateLimit-Reset` the server gave if that is longer. This is separate from asking again for a bad
 reply. A `Retry-After` longer than what is left of `max_wait_s` stops the call at once, without
-waiting, and the run stays resumable. Each attempt books its worst case before it is sent and stays
-booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt, the HTTP
+waiting, and the run stays resumable. A 429 is asked fewer times: `rate_limit_attempts` (4), about 35 s
+of waiting in all, and a 429 whose `Retry-After` is longer than `longest_wait_s` gives up at once, since
+the limits that last (a provider's shared pool closed for hours) outlast any wait and the next endpoint is
+seconds away. Either way the endpoint has failed on its own and the run moves on (Endpoints). When the
+error body of a 429 gives OpenRouter's `limit_source` (`error.metadata.limit_source`), the reason names it:
+`HTTP 429 (upstream_provider_shared_pool)` is a pool of the provider's that other keys share, so switch
+endpoint or model; a source that names a limit on this key means wait. Only that field
+is read, and only a short token of lower-case letters and `_` is kept; without it the reason is
+`HTTP 429`. The GET of an endpoint listing has no other endpoint to move to, so a 429 there is
+asked again like a 5xx, up to `http_attempts` and `max_wait_s`. Each attempt books its worst case before it is sent and stays
+booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt (of
+`rate_limit_attempts` for a 429, else of `http_attempts`), the HTTP
 status or exception type, and the wait; never a header or a body.
 
-Failure limit. Backoff, halving and endpoint switching share one budget, `failure_budget` (40 in
-`voters.json`): the number of POSTs that failed in one step (one voter's `tag`, or one `judge`) with a
-retryable error, a cut-off reply or a provider refusal, counted across every wait, every half and every
-endpoint tried. Past it the step stops with exit 2 and the run is kept for a rerun to continue. A
+Failure limit. Backoff, halving and refusals share one budget for each endpoint, `failure_budget` (40 in
+`voters.json`): the number of POSTs that failed at one endpoint in one step (one voter's `tag`, or one
+`judge`) with a retryable error, a cut-off reply or a provider refusal, counted across every wait and every
+half. The budget starts over at each endpoint the step switches to, so a step is never stopped before it has
+tried every endpoint of its model (the most it can spend is `failure_budget` failed calls for each endpoint
+listed). Past it at one endpoint the step stops with exit 2 and the run is kept for a rerun to continue. A
 run that keeps failing cannot end `complete`. The rule is simple: a voter run on which more than
 `abstain_limit` (25%) of its sentences abstain after the retries ends `failed`, and so does a run
 where a cut-off storm leaves no endpoint to switch to (below). A `failed` run is never continued, its
 tags are not merged, and `tag` exits 5.
 
 Endpoints. A model in `voters.json` may list `provider_fallback`: other pinned endpoints of the same
-model, in order, each at the quantisation of `provider`'s listing or a more precise one (checked from
-the listing when it is used; an endpoint below that is skipped). One run has one provider, and never
-changes it. The run moves to the next endpoint only for the endpoint's own failures: a 429 or 5xx
-still coming after every wait, a reply that is not JSON, a storm of cut-off replies, or a refusal by
-the provider (a reply from another provider than the pinned one). Then `tag` or `judge` marks that
-run abandoned in its `run.json` (it stays on disk; nothing continues it, and a merge takes no tags
-from it), says so in one line on stderr, and starts a new run of the voter or the adjudicator at the
-next endpoint of the list that passes the listing's checks; that run asks every batch afresh. A
-network error here (connection refused, DNS, a timeout with no answer) is no endpoint's fault: it
-switches nothing, stops the run with exit 2 and keeps it, and the same command continues it once the
-network is back. If every endpoint fails it stops with exit 2 (exit 5 when the last run ended
-`failed`), naming each and why; the earlier runs stay abandoned and the last is kept, so the same
-command continues it later, and `--again` starts a new run at the first endpoint. `--endpoint TAG`
+model, in order, each at a quantisation the model's `quantizations` lists (checked from the listing when
+it is used; any other endpoint is skipped), so `quantizations` is the one statement of what the voter may
+run at, for the primary and every alternative alike. A model without `quantizations` (mistral, claude)
+holds an alternative to the primary's quantisation or a more precise one instead. One run has one provider, and never
+changes it. The run moves to the next endpoint for any failure that belongs to the endpoint: a 429
+or 5xx still coming after its waits (`rate_limit_attempts` for a 429), a timeout still coming after its
+waits while the endpoint listing answers, any other HTTP error that is not about the key (not 401, 402 or 413; a 404 is what OpenRouter
+answers when `data_collection: deny` rules a provider out), a reply that is not JSON, a storm of cut-off
+replies, a refusal by the provider, a reply from another provider than the pinned one, a reply that used
+reasoning tokens with reasoning off, and an endpoint that is no longer in the listing as pinned (gone, its
+tag changed, its quantisation outside `quantizations`, or a parameter dropped). Then `tag` or `judge`
+marks that run abandoned in its `run.json` (it stays on disk; nothing continues it, and a merge takes no
+tags from it), says so in one line on stderr, and starts a new run of the voter or the adjudicator at the
+next endpoint of the list that passes the listing's checks; that run asks every batch afresh. An
+endpoint that cannot be asked at all is skipped without a run, and said so. A 401, 402 or 413 is about
+the key, the credit or the request, so it stops the run. A network error here (connection refused, DNS, a
+dropped connection, or a timeout through every wait when the endpoint listing, asked once more, does not
+answer either) is no endpoint's fault: it switches nothing, stops the run with exit 2 and keeps it,
+and the same command continues it once the network is back. If every endpoint fails it stops with exit 2
+(exit 5 when the last run ended `failed`), naming each and why; every run is abandoned, the last too, so
+the same command (with or without `--again`) starts a new run at the first endpoint and replays nothing
+that was refused. If every endpoint timed out, the network here may be the cause, and the message says so.
+A run's `run.json` and `runs.tsv` row record the endpoint it used, and the quantisation, whichever
+endpoint that was. `--endpoint TAG`
 (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
 falls back from there to the ones after it; a complete run at another endpoint is not continued by it,
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
-refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
-is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
-`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is
-below its pin. When DeepInfra fails it, `tag` has no endpoint to switch to and exits 2 (5 when the last run ended
-`failed`), naming the endpoint and why. Running the command again continues the run at DeepInfra, and `--again`
-starts a new run there; nothing in the kit decides when to stop trying.
+refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`.
+
+Each voter lists every endpoint of its model that may run, from OpenRouter's endpoint listing of
+2026-10-08 (`GET /api/v1/models/<id>/endpoints`): the pin first, the rest by the listing's uptime of the day.
+An endpoint is listed if its quantisation is in the voter's `quantizations`, it supports every parameter the
+voter sends, it is not Fireworks, it is not known bad (DeepInfra's DeepSeek runs every reply to `max_tokens`),
+and it is one OpenRouter lists as keeping no data (`GET /api/v1/endpoints/zdr`) or one a run or screening
+has already answered through, since every request says `data_collection: deny`. `quantizations` is the one
+statement of what a voter may run at, the pin and every alternative alike; nothing below it runs, and
+`silver build` and `silver check` hold a run to it by membership. deepseek: `gmicloud/fp8`, then
+`siliconflow/fp8`, `parasail/fp8`, `novita/fp8`, `streamlake/fp8`, `mancer/fp8`. qwen: `deepinfra/bf16`, the
+only bf16 endpoint of its model, then six fp8 endpoints (`mancer`, `parasail`, `coreweave`, `venice`,
+`akashml`, `ionstream`), so its `quantizations` are fp8 and bf16: calibration measures bf16, which nearly every
+part uses, and a part that falls back is labelled at fp8, recorded per run and in the datasheet. hy3:
+`tencent/fp8`, then `atlas-cloud/fp8` and `gmicloud/bf16`. When every endpoint fails, `tag` exits 2 (5 when the
+last run ended `failed`), naming each endpoint and why. Running the command again walks the list from the
+top; nothing in the kit decides when to stop trying. A failure of the whole
+model, an outage of every provider, still stops a run, and a voter cannot change in the middle of one.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
@@ -122,8 +157,14 @@ word of the sample: the words of a sentence left out count as wrong in the pipel
 `--versus` rival's, if it left sentences out too), and the report says how many sentences and words.
 The voters' and the adjudicator's lines are graded on the words they answered, as before.
 
-Voters. After the pilot Mistral was swapped for Gemma (`voters` is deepseek, qwen, gemma; `mistral`
-stays in `models`, its pilot runs being on record). Only a model that is a voter now has a run that a
+Voters. After the pilot Mistral was swapped for Gemma (`mistral` stays in `models`, its pilot runs being on
+record). On 2026-10-08 Gemma was swapped for Tencent Hy3 (`hy3`, Apache-2.0, `tencent/hy3`), so `voters` is
+deepseek, qwen, hy3 and `gemma` stays in `models`, its runs being on record. The silver run had labelled parts
+01 to 05 and stopped for two hours at part 06: Gemma 4 31B returned HTTP 429 at every OpenRouter endpoint,
+with `limit_source: upstream_provider_shared_pool`, a pool of the provider's that other keys share. The
+stall was the model's pool and not an endpoint's, so only another model got past it. A swap is one line of
+`voters`, and a new voter or a new endpoint is a new commit, which the lock of the parts refuses in the
+middle of a run: so every acceptable endpoint of each voter is listed up front (Endpoints). Only a model that is a voter now has a run that a
 rerun continues: a run of a model since dropped, stopped or stray, is never taken up again but by
 `--resume rN`. `judge` refuses a voter whose `tags/<voter>.conllu` was written by a run that did not
 finish (a smoke run, one that stopped or failed), since a run writes that file, and the report refuses a
@@ -177,7 +218,7 @@ Exit codes: 6 a handoff judge is waiting on its replies (below); 0 done (a voter
 `tag` reports and the merge counts per voter, unless more than `abstain_limit` abstained, which is exit
 5; a sentence fewer than three model voters answered goes to the adjudicator whole); 1 an unexpected
 error, printed as its type and place only; 2 refused, bad config, an API error, the network down, or
-every endpoint of a model failing (the run is kept); 3 adjudicator items still open after the retries,
+every endpoint of a model failing (a rerun starts again at the first); 3 adjudicator items still open after the retries,
 with `--strict` only; 4 the cap stopped it; 5 a run ended `failed` (too many abstentions, or a cut-off
 storm with no endpoint left).
 
@@ -483,17 +524,24 @@ draw (the merge the assembler reads) and `merge` in any other sample:
 ```
 sample: 500 sentences, /path/to/.label/silver/part-01
 voter deepseek: r41 complete, 10 of 10 batches, 2 abstaining, $0.3120
-voter qwen: r42 stopped, 6 of 10 batches, - abstaining, $0.1874
-voter gemma: no run
+voter qwen: r43 abandoned (every endpoint failed: deepinfra/bf16: HTTP 429 (upstream_provider_shared_pool); mancer/fp8: HTTP 404; parasail/fp8: HTTP 429), 0 of 10 batches, - abstaining, $0.1874; 3 runs abandoned
+voter hy3: no run
 spacy: r44 complete
 adjudicator opus (merge): r45 stopped, $0.0000; 3 requests waiting, 9 replies present
 ledger: $5.1003 booked, $2.8997 left under --max-usd 8
 preflight (merge): refused, 1 line on stderr (exit 2); `deslag-gold silver build --check-part /path/to/.label/silver/part-01:merge` prints it
 ```
 
-A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it, the batches with
+A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it and, when that is
+not a plain `complete`, its reason as `runs.tsv` gives it, in parentheses (for a run that stopped because
+every endpoint of its model failed, each endpoint and why; a reason is an HTTP status, an endpoint tag, a
+`limit_source` token or one of a few fixed phrases such as `provider refusal`, and never text a provider
+wrote: the body of an HTTP error is saved beside the run as `<call>.http-error.json`, and a refused reply as
+`<call>.rejected.json`), the batches with
 an answer saved of the batches the run asks (`batches` in its `run.json`), the sentences that abstain after
-its retries (`abstaining`, written when it ends; `-` before), and its dollars from the ledger. The
+its retries (`abstaining`, written when it ends; `-` before), its dollars from the ledger, and, after a
+`;`, how many of the voter's runs in the sample were abandoned for the next endpoint (nothing when none
+were). The
 adjudicator is the one the merge's `adjudicator.json` records, or `voters.json`'s. The preflight is
 `deslag-gold silver build --check-part D:M`; its line is `ok`, `refused` with the number of lines it
 printed (never the lines, which may quote a sentence), or `not run` before the merge or when `deslag-gold`
@@ -519,14 +567,18 @@ Makefile), so the run can change them.
 - `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
   at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so
   `LABEL_FLAGS="--limit 1"` is a smoke run, and `--dry-run` sends nothing; with either, spaCy does not run, so
-  that nothing writes the lock. A voter that fails is named, and spaCy does not run. The Opus round is steps 3
-  and 4 above, driven by hand.
+  that nothing writes the lock. A voter that fails is named with its exit code (`the voters that failed: qwen
+  (exit 2) hy3 (exit 5)`; the codes are above), and spaCy does not run. The Opus round is steps 3 and 4
+  above, driven by hand.
 - `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
   `.label/silver`. Without `--audit` in `SILVER_BUILD_FLAGS` it writes the draft, into
   `SILVER_DRAFT_DIR/NAME` (`.label/silver/draft/NAME`); with `SILVER_BUILD_FLAGS="--audit DIR --archive-sha256
   SHA"` the batch, into `SILVER_BATCH_DIR/NAME` (`.label/silver/batch/NAME`), since a build never writes over
   a directory that has files. The labels are published under `SILVER_ANNOTATIONS_LICENSE`, MIT unless set:
   the owner's choice, which the datasheet states.
+- make reports any failure of a recipe as 2, whatever the exit code of the command in it (`Error N` in its
+  output names that code). A driver that branches on `judge`'s exit code, 6 for a wait on the harness,
+  calls `label.py judge` itself and not `make generate-label-judge-dev` or `-owner`.
 - `make test-silver`, which `make test-blobs` runs: `silver check` and `silver standing` over the unpacked
   image. Both pass when it has no `silver/`.
 - `make test-confinement`: the probe above.

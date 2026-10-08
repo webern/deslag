@@ -221,6 +221,8 @@ help:
 	@echo "                 after the plain merge, whose answers it reuses; LABEL_FLAGS=\"--settle-from merge\" with"
 	@echo "                 another LABEL_INTO reuses them only where every voter's codes are the same, and only"
 	@echo "                 for a merge with the same model voters; LABEL_FLAGS=--strict exits 3 on open items"
+	@echo "                 (make reports any failure as 2 and prints the code as Error N; to branch on judge's"
+	@echo "                 6, a wait for the harness, run label.py judge itself)"
 	@echo "generate-label-judge-owner"
 	@echo "                 the same for .label/owner"
 	@echo "generate-label-owner"

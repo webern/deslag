@@ -23,6 +23,15 @@ pub mod lock;
 pub mod report;
 pub mod rust;
 
+// deslag's Rust scanner, compiled from its source file so that this crate shares no dependencies
+// with deslag. It uses `std` and `unicode-ident`, which this crate pins. Not a doc comment: the
+// file has its own, and its intra-doc links would resolve here, in this module's parent, if an
+// outer one joined it.
+// TODO: remove dead_code guard if the sweep ever uses every item the scanner exports.
+#[allow(dead_code)]
+#[path = "../../../src/document/rust.rs"]
+pub mod deslag_rust;
+
 use std::path::PathBuf;
 
 pub use error::Error;

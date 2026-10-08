@@ -5,7 +5,7 @@
 //! where the lexer vouches for that: every lexeme is compared whole, on a list of the traps of
 //! the lexing rules and on random strings of the characters that set them.
 
-use deslag::document::rust::{DocStyle, Lexeme, LexemeKind, lex};
+use deslag_sweep::deslag_rust::{DocStyle, Lexeme, LexemeKind, lex};
 use deslag_sweep::lang::Lang;
 use ra_ap_rustc_lexer::{
     DocStyle as LexerDocStyle, FrontmatterAllowed, LiteralKind, TokenKind, strip_shebang, tokenize,

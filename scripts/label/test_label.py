@@ -2245,6 +2245,45 @@ class RoundThreeTests(Base):
                 self.send_error(429, body)
             self.assertEqual(str(caught.exception), "HTTP 429", body)
 
+    def test_a_429_body_nested_too_deep_to_parse_is_plain_and_not_a_traceback(self):
+        deep = b'{"a":' * 1100 + b"1" + b"}" * 1100
+        self.assertLess(len(deep), openrouter.LIMIT_BODY_PARSED, "inside the bound, so the parser itself must fail")
+        for body in (deep, b"[" * 70000, b'{"error":' * 3000):
+            with self.assertRaises(openrouter.Retryable) as caught:
+                self.send_error(429, body)
+            self.assertEqual(str(caught.exception), "HTTP 429")
+
+    def test_a_429_body_past_the_bound_is_not_parsed(self):
+        padding = "a" * openrouter.LIMIT_BODY_PARSED
+        body = json.dumps({"error": {"metadata": {"limit_source": "upstream_provider_shared_pool", "pad": padding}}})
+        with self.assertRaises(openrouter.Retryable) as caught:
+            self.send_error(429, body.encode("utf-8"))
+        self.assertEqual(str(caught.exception), "HTTP 429")
+
+    def test_a_200_body_nested_too_deep_to_parse_is_a_reply_that_is_not_json(self):
+        class Handle:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *more):
+                return False
+
+            def read(self):
+                return b"[" * 70000
+
+        class Opener:
+            def open(self, request, timeout):
+                return Handle()
+
+        saved = openrouter._OPENER
+        openrouter._OPENER = Opener()
+        try:
+            with self.assertRaises(openrouter.Retryable) as caught:
+                openrouter.Urllib._send(object(), 1)
+        finally:
+            openrouter._OPENER = saved
+        self.assertEqual((str(caught.exception), caught.exception.owned), (openrouter.NOT_JSON, True))
+
     def test_only_a_429_reads_the_limit_source(self):
         body = b'{"error": {"metadata": {"limit_source": "upstream_provider_shared_pool"}}}'
         with self.assertRaises(openrouter.Retryable) as caught:

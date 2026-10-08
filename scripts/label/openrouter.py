@@ -30,8 +30,10 @@ NOT_JSON = "the reply was not JSON"
 # 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
 RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
 
-# The most of an error body that is read, to look for a 429's `limit_source`.
+# The most of an error body that is read, and the most of it that is parsed, to look for a 429's
+# `limit_source`. OpenRouter's error bodies are a few hundred bytes.
 ERROR_BODY_READ = 65536
+LIMIT_BODY_PARSED = 8192
 
 # Quantisations from least to most precise; those in one tier count as the same.
 QUANT_RANK = {"int4": 0, "fp4": 0, "fp6": 1, "int8": 2, "fp8": 2, "bf16": 3, "fp16": 3, "fp32": 4}
@@ -281,7 +283,7 @@ class Urllib:
             # A connection reset or a reply cut short: what was sent may have been billed, and the
             # ledger still has it booked at its worst case. Only the type is kept, never the text.
             raise Retryable(type(error).__name__) from None
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, RecursionError):
             raise Retryable(NOT_JSON) from None
 
 
@@ -328,11 +330,15 @@ def limit_source(text):
     """What OpenRouter says limited a 429, from the `limit_source` of the error body's `metadata`
     (`upstream_provider_shared_pool` for a pool of the provider's that other keys share, say), or
     None. Only that field is read, and only a short token of lower-case letters and `_` is taken; the
-    rest of the body is never kept or shown."""
+    rest of the body is never kept or shown. The parse is bounded: a body past [LIMIT_BODY_PARSED]
+    characters is not parsed, and one nested too deeply for the parser gives None like any other body
+    that is not the expected shape."""
+    if len(text) > LIMIT_BODY_PARSED:
+        return None
     try:
         body = json.loads(text)
         found = body["error"]["metadata"]["limit_source"]
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, RecursionError):
         return None
     if isinstance(found, str) and re.fullmatch(r"[a-z_]{1,40}", found):
         return found

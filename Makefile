@@ -87,7 +87,7 @@ CARGO_FLAGS ?=
         generate-spacy publish-blobs build-label
 
 help:
-	@echo "build            build deslag and the crates under tools/ with the debug profile"
+	@echo "build            build deslag and the workspace crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"

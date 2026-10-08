@@ -5011,6 +5011,7 @@ class ConfinementTests(Base):
         del fewer["version_unchanged"]
         refused({**good, "assertions": fewer}, "other assertions")
         refused({**good, "assertions": fewer, "skipped": {"version_unchanged": "no reason"}}, "other assertions")
+        refused({**good, "skipped": None}, "other assertions")
         # The user's CLAUDE.md is the one check a pass may skip, when there is none to look for.
         fewer = dict(good["assertions"])
         del fewer["user_claude_md_absent"]

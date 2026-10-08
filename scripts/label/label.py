@@ -2487,7 +2487,7 @@ def check_stamp(version, args):
     checks = stamp.get("assertions")
     if stamp.get("verdict") != "pass" or not isinstance(checks, dict) or not checks or not all(v is True for v in checks.values()):
         raise GoldError(f"{path} does not record a probe that passed; {again}")
-    skipped = stamp.get("skipped") or {}
+    skipped = stamp.get("skipped", {})
     if (
         not isinstance(skipped, dict) or set(skipped) - set(confine.SKIPPABLE) or set(checks) & set(skipped)
         or set(checks) | set(skipped) != set(confine.ASSERTIONS)

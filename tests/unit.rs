@@ -39,7 +39,7 @@ fn over_budget_reports_and_exits_nonzero() {
     assert!(stderr.contains(HEADING), "stderr: {stderr}");
     assert!(over_budget(&stderr, "AGENTS.md", 10), "stderr: {stderr}");
     assert!(
-        stderr.contains("deslag: 1 of 1 Markdown files over budget."),
+        stderr.contains("deslag: 1 of 1 files over budget."),
         "stderr: {stderr}"
     );
 }
@@ -556,7 +556,7 @@ fn md_globs_choose_which_files_are_markdown() {
     );
     assert!(!stderr.contains("AGENTS.md"), "stderr: {stderr}");
     assert!(
-        stderr.contains("deslag: 2 of 2 Markdown files over budget."),
+        stderr.contains("deslag: 2 of 2 files over budget."),
         "stderr: {stderr}"
     );
 }

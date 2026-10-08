@@ -2,7 +2,7 @@ ERROR: deslag detected banned phrases!
 
 README.md has 2 banned phrases.
 
-This repo keeps these phrases out of its Markdown. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
 
 Do not hide a phrase in a code span or HTML, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
@@ -10,4 +10,4 @@ The phrases, and what to do about each:
   line 3: "load-bearing"; say what depends on it (group: metaphors)
   line 5: "it lands"; say what happens, such as "it is merged" or "it ships" (group: metaphors)
 
-deslag: 1 of 1 Markdown files with banned phrases.
+deslag: 1 of 1 files with banned phrases.

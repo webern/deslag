@@ -1,8 +1,8 @@
-//! deslag: a linter that stops Markdown files from growing without bound.
+//! deslag: a linter that stops files from growing without bound.
 //!
-//! An LLM editing a Markdown file tends to make it longer and never takes anything out. Deslag
-//! gives every Markdown file a byte budget and fails when a file is over it. Its other lints, each
-//! a module under [`lint`], fail a file that breaks another rule the config sets.
+//! An LLM editing a file tends to make it longer and never takes anything out. Deslag gives every
+//! file a byte budget and fails when a file is over it. Its other lints, each a module under
+//! [`lint`], fail a file that breaks another rule the config sets.
 //!
 //! The budget for a file comes from, most specific first:
 //!

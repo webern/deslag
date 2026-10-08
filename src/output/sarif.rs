@@ -22,7 +22,8 @@ pub fn render(report: &Report) -> String {
             let id = lint.id();
             // GitHub wants a full description and help on every rule.
             let full = format!(
-                "{} The config turns it on with its [md.lints.{id}] table.",
+                "{} The config turns it on in the lints table of the section that selects the \
+                 file, such as `[md.lints.{id}]`.",
                 lint.summary()
             );
             let help = "The message of each result says what is wrong and how to fix it. `deslag \

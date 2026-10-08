@@ -15,7 +15,7 @@ ERROR: deslag detected banned characters!
 
 README.md has 3 banned characters.
 
-This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.
 
@@ -25,4 +25,4 @@ The characters, and what to write instead:
   lines 6, 8: U+2014 em dash "—"; write `-`
   line 8: U+2705 white heavy check mark "✅"; write `yes`
 
-deslag: 1 of 1 Markdown files with banned characters.
+deslag: 1 of 1 files with banned characters.

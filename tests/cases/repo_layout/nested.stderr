@@ -20,4 +20,4 @@ Do not change the limits or the heading to get past this check. Only a human can
 The problems:
   line 11: Makefile does not exist
 
-deslag: 1 of 1 Markdown files with a broken repository layout.
+deslag: 1 of 1 files with a broken repository layout.

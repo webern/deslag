@@ -1,4 +1,4 @@
-//! `banned_phrases`: a Markdown file must not hold the phrases the config bans.
+//! `banned_phrases`: a file must not hold the phrases the config bans.
 //!
 //! The phrases come in [`GROUPS`], each on by default and switched by the config, which may also
 //! ban more phrases, each with the advice its report gives. The groups' phrases are in
@@ -375,7 +375,7 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
 }
 
 /// The advice for a file that holds banned phrases.
-const DEFAULT_ADVICE: &str = "This repo keeps these phrases out of its Markdown. Do what the \
+const DEFAULT_ADVICE: &str = "This repo keeps these phrases out of its writing. Do what the \
     advice with each one says, or reword the sentence; it often reads better with the phrase \
     simply gone.\n\
     \n\

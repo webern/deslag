@@ -17,4 +17,4 @@ The first line naming the root is optional. Every path starts in one column, eve
 
 Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
-deslag: 1 of 1 Markdown files with a broken repository layout.
+deslag: 1 of 1 files with a broken repository layout.

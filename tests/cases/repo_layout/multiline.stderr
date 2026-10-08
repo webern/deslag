@@ -20,4 +20,4 @@ Do not change the limits or the heading to get past this check. Only a human can
 The problems:
   line 11: this continues the description above; an entry must fit on one line, so shorten the description
 
-deslag: 1 of 2 Markdown files with a broken repository layout.
+deslag: 1 of 2 files with a broken repository layout.

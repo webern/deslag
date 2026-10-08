@@ -1,5 +1,5 @@
-//! `banned_chars`: a Markdown file must not hold characters, such as the em dash, that have
-//! something plain to write instead.
+//! `banned_chars`: a file must not hold characters, such as the em dash, that have something plain
+//! to write instead.
 //!
 //! The characters come in [`GROUPS`], each on by default but `emoji`, and switched by the config,
 //! which may also allow a character or ban one more: `allow` beats `ban`, and `ban` the groups.
@@ -549,9 +549,9 @@ fn note(banned: &Banned) -> String {
 }
 
 /// The advice for a file that holds banned characters.
-const DEFAULT_ADVICE: &str = "This repo writes its Markdown in plain characters, and each of \
-    these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as \
-    a comma, a colon, parentheses or a new sentence.\n\
+const DEFAULT_ADVICE: &str = "This repo writes in plain characters, and each of these has a \
+    plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a \
+    colon, parentheses or a new sentence.\n\
     \n\
     Code blocks and code spans are not checked, so a diagram may use these characters inside a \
     fenced code block.\n\

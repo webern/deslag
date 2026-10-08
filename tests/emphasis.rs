@@ -167,7 +167,7 @@ fn an_over_emphasized_file_gets_the_whole_report() {
         "stderr: {stderr}"
     );
     assert!(
-        stderr.ends_with("deslag: 1 of 1 Markdown files over-emphasized.\n"),
+        stderr.ends_with("deslag: 1 of 1 files over-emphasized.\n"),
         "stderr: {stderr}"
     );
 }
@@ -226,11 +226,11 @@ fn both_lints_report_on_one_file() {
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
-        stderr.contains("deslag: 1 of 1 Markdown files over budget.\n"),
+        stderr.contains("deslag: 1 of 1 files over budget.\n"),
         "stderr: {stderr}"
     );
     assert!(
-        stderr.contains("deslag: 1 of 1 Markdown files over-emphasized.\n"),
+        stderr.contains("deslag: 1 of 1 files over-emphasized.\n"),
         "stderr: {stderr}"
     );
 }

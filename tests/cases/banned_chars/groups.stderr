@@ -2,7 +2,7 @@ ERROR: deslag detected banned characters!
 
 README.md has 6 banned characters.
 
-This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.
 
@@ -17,7 +17,7 @@ ERROR: deslag detected banned characters!
 
 docs/diagram.md has 1 banned character.
 
-This repo writes its Markdown in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.
 
@@ -26,4 +26,4 @@ Do not write the characters as HTML entities, and do not change the config to ge
 The characters, and what to write instead:
   line 3: U+1F389 emoji "🎉"; delete it
 
-deslag: 2 of 2 Markdown files with banned characters.
+deslag: 2 of 2 files with banned characters.

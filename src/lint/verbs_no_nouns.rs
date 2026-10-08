@@ -1,5 +1,5 @@
-//! `verbs_no_nouns`: a Markdown file must negate a verb, not its object, as in "deslag does not
-//! bake cakes" for "deslag bakes no cakes".
+//! `verbs_no_nouns`: a file must negate a verb, not its object, as in "deslag does not bake cakes"
+//! for "deslag bakes no cakes".
 //!
 //! The construction is [`PATTERN`]: a word ending in `s` with no apostrophe, then `no`, then a
 //! word, in one sentence. With no tagger to say which word is a verb, closed sets of words stand

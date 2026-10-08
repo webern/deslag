@@ -1,4 +1,4 @@
-//! `max_emphasis`: a Markdown file must not lean on bold, italics and ALL CAPS.
+//! `max_emphasis`: a file must not lean on bold, italics and ALL CAPS.
 //!
 //! An emphasized **span** is one of:
 //!

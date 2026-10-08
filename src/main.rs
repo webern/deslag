@@ -7,7 +7,9 @@ use std::process::ExitCode;
 use anyhow::Context;
 use clap::Parser;
 
-use deslag::cli::{Cli, Command, Format, Topic};
+use deslag::changelog::{BASELINE, Version, changelog};
+use deslag::cli::{Cli, Command, Format, Topic, UpdateArgs, UpdateFormat};
+use deslag::instructions::{self, Start};
 use deslag::output::{github, json, sarif};
 
 /// Exits 0 when a run finishes and nothing fails, 1 when it finishes and a file fails a lint, and 2
@@ -23,7 +25,8 @@ fn main() -> ExitCode {
     }
 }
 
-/// Loads the config, saying on stderr what in it deslag ignores.
+/// Loads the config, saying on stderr what in it deslag ignores and, when an older deslag last
+/// updated it and a release since has something to tell, where to read what.
 fn load_config(
     root: &std::path::Path,
     explicit: Option<&std::path::Path>,
@@ -31,6 +34,10 @@ fn load_config(
     let config = deslag::Config::load(root, explicit)?;
     for warning in config.warnings() {
         eprintln!("deslag: warning: {warning}");
+    }
+    let stamp = config.deslag_version();
+    if let Some(notice) = instructions::notice(&stamp, &Version::current(), changelog()) {
+        eprintln!("deslag: note: {notice}");
     }
     Ok(config)
 }
@@ -78,15 +85,43 @@ fn run() -> anyhow::Result<ExitCode> {
         }
         Command::Instructions(args) => {
             let text = match args.topic {
-                None => deslag::instructions::guide(),
-                Some(Topic::Lints) => deslag::instructions::lints(),
+                None => instructions::guide(),
+                Some(Topic::Lints) => instructions::lints(),
                 Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
                 Some(Topic::OutputSchema) => format!("{:#}\n", json::schema()),
+                Some(Topic::Update(args)) => update(&args)?,
             };
             write_stdout(&text)?;
             Ok(ExitCode::SUCCESS)
         }
     }
+}
+
+/// What `deslag instructions update` prints: what is new since `--since`, or since the release the
+/// config was last updated by.
+///
+/// The config is found as `check` finds it, but not loaded through [`load_config`]: the notice
+/// would point at the command already running. Only a config that is not there falls back to the
+/// baseline, and the text says so; a `--config-path` that names no file is an error.
+fn update(args: &UpdateArgs) -> anyhow::Result<String> {
+    let (from, start) = match &args.since {
+        Some(since) => (Version::Release(since.clone()), Start::Since),
+        None => {
+            let root = std::env::current_dir().context("cannot read the current directory")?;
+            match deslag::Config::load(&root, args.config_path.as_deref()) {
+                Ok(config) => (config.deslag_version(), Start::Config),
+                Err(deslag::Error::ConfigNotFound { .. }) => {
+                    (Version::Release(BASELINE), Start::NoConfig)
+                }
+                Err(error) => return Err(error.into()),
+            }
+        }
+    };
+    let to = Version::current();
+    Ok(match args.format {
+        UpdateFormat::Text => instructions::update_text(changelog(), &from, &to, start),
+        UpdateFormat::Json => instructions::update_json(changelog(), &from, &to),
+    })
 }
 
 /// The change from `base`, when there is one, to the working tree of the repo rooted at `root`.

@@ -10,11 +10,11 @@ mod version;
 
 use std::sync::LazyLock;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::Lint;
-pub(crate) use version::current_release;
 pub use version::{ParseError, Version};
+pub(crate) use version::{current_release, parse_release};
 
 /// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
 pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
@@ -99,6 +99,23 @@ pub enum Entry {
     },
 }
 
+/// The kind of an [`Entry`], as the `kind` key of the entry spells it.
+///
+/// The variants are in the order `deslag instructions update` prints the kinds in: what can break a
+/// config first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Kind {
+    /// A change that can break a config.
+    Breaking,
+    /// A new lint.
+    Lint,
+    /// A new setting.
+    Setting,
+    /// A command, a flag or an output format.
+    Feature,
+}
+
 impl Changelog {
     /// Reads a changelog from `text`.
     pub fn parse(text: &str) -> Result<Changelog, toml::de::Error> {
@@ -111,6 +128,28 @@ impl Changelog {
         self.releases
             .iter()
             .filter(move |release| release.version > *version)
+    }
+
+    /// The entries of the releases after `from`, up to and including `to`, each with its release:
+    /// oldest release first, and an entry's place in the file within a release.
+    ///
+    /// This is what a config last updated by `from` has not seen of the deslag `to`. Both bounds
+    /// are versions of deslag that exist, so `to` is a release, and `next`, which sorts above every
+    /// release, is out of the range without a case of its own. `deslag instructions update` prints
+    /// the range and the notice that points at it asks whether it holds anything.
+    pub fn between<'a>(
+        &'a self,
+        from: &'a Version,
+        to: &'a Version,
+    ) -> impl Iterator<Item = (&'a Version, &'a Entry)> {
+        self.after(from)
+            .filter(move |release| release.version <= *to)
+            .flat_map(|release| {
+                release
+                    .entries
+                    .iter()
+                    .map(move |entry| (&release.version, entry))
+            })
     }
 
     /// The version `lint` arrived in, or `None` when no release has an entry for it.
@@ -128,6 +167,27 @@ impl Changelog {
 }
 
 impl Entry {
+    /// Which kind of entry this is.
+    pub fn kind(&self) -> Kind {
+        match self {
+            Entry::Lint { .. } => Kind::Lint,
+            Entry::Setting { .. } => Kind::Setting,
+            Entry::Feature { .. } => Kind::Feature,
+            Entry::Breaking { .. } => Kind::Breaking,
+        }
+    }
+
+    /// For a breaking change, whether `deslag update` does the whole job of adapting a config to
+    /// it. `None` for an entry of another kind.
+    pub fn update_does_all(&self) -> Option<bool> {
+        match self {
+            Entry::Breaking {
+                update_does_all, ..
+            } => Some(*update_does_all),
+            _ => None,
+        }
+    }
+
     /// What the entry is about: a lint's id, a setting's path or a feature's name.
     pub fn id(&self) -> &str {
         match self {
@@ -224,6 +284,70 @@ onboarding = "Pass the flag."
         assert_eq!(versions_after(&changelog, "0.2.0"), ["next"]);
         assert_eq!(versions_after(&changelog, "1.0.0"), ["next"]);
         assert!(versions_after(&changelog, "next").is_empty());
+    }
+
+    fn ids_between(changelog: &Changelog, from: &str, to: &str) -> Vec<(String, String)> {
+        let (from, to) = (version(from), version(to));
+        changelog
+            .between(&from, &to)
+            .map(|(release, entry)| (release.to_string(), entry.id().to_string()))
+            .collect()
+    }
+
+    fn pair(release: &str, id: &str) -> (String, String) {
+        (release.to_string(), id.to_string())
+    }
+
+    #[test]
+    fn the_entries_between_exclude_the_start_and_include_the_end() {
+        let changelog = small();
+        assert_eq!(
+            ids_between(&changelog, "0.0.9", "0.2.0"),
+            [
+                pair("0.1.0", "density"),
+                pair("0.2.0", "list_growth"),
+                pair("0.2.0", "rename"),
+            ]
+        );
+        assert_eq!(
+            ids_between(&changelog, "0.1.0", "0.2.0"),
+            [pair("0.2.0", "list_growth"), pair("0.2.0", "rename")]
+        );
+        assert!(ids_between(&changelog, "0.2.0", "0.2.0").is_empty());
+        assert!(ids_between(&changelog, "0.2.0", "0.1.0").is_empty());
+    }
+
+    #[test]
+    fn next_is_never_between_two_releases() {
+        let changelog = small();
+        assert!(
+            ids_between(&changelog, "0.0.1", "999.0.0")
+                .iter()
+                .all(|(release, _)| release != "next")
+        );
+        assert!(ids_between(&changelog, "0.2.0", "999.0.0").is_empty());
+    }
+
+    #[test]
+    fn an_entry_has_its_kind_and_a_breaking_one_says_what_update_does() {
+        let changelog = small();
+        let kinds: Vec<(Kind, Option<bool>)> = changelog
+            .releases
+            .iter()
+            .flat_map(|release| &release.entries)
+            .map(|entry| (entry.kind(), entry.update_does_all()))
+            .collect();
+        assert_eq!(
+            kinds,
+            [
+                (Kind::Lint, None),
+                (Kind::Lint, None),
+                (Kind::Breaking, Some(true)),
+                (Kind::Feature, None),
+            ]
+        );
+        assert!(Kind::Breaking < Kind::Lint && Kind::Lint < Kind::Setting);
+        assert!(Kind::Setting < Kind::Feature);
     }
 
     #[test]

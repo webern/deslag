@@ -1,20 +1,23 @@
-//! Tests for `deslag instructions`: the setup guide, the lints, and the JSON schema of the config.
+//! Tests for `deslag instructions`: the setup guide, the lints, what is new since the config was
+//! last updated, and the JSON schema of the config.
 
 mod common;
 
 use std::collections::BTreeSet;
 use std::path::Path;
+use std::process::Output;
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::resolve;
-use common::{Repo, code, stderr, stdout};
+use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::Lint;
 use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
-use deslag::instructions::{guide, lints};
-use deslag::lint::{banned_chars, banned_phrases};
+use deslag::instructions::{Start, guide, lints, update_json, update_text};
+use deslag::lint::{banned_chars, banned_phrases, check_file};
+use deslag::{Config, ConfigSource};
 use serde_json::Value;
 
 /// The table `name` of the table `schema`, whether or not it is optional.
@@ -387,4 +390,375 @@ fn each_lint_section_says_when_its_lint_arrived() {
         };
         assert!(section.starts_with(&format!("\n{line}\n\n")), "{heading}");
     }
+}
+
+/// A release older than every release, which puts the first one in the range of a stamp.
+const OLDER: &str = "0.0.0";
+
+/// A repo whose config is stamped `stamp`.
+fn stamped(stamp: &str) -> Repo {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        &format!("schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{stamp}\"\n"),
+    );
+    repo
+}
+
+/// `instructions update` with `args`, run in `repo`.
+fn update(repo: &Repo, args: &[&str]) -> Output {
+    let args = [&["instructions", "update"], args].concat();
+    repo.run(&args)
+}
+
+/// The release `text` names.
+fn release(text: &str) -> Version {
+    text.parse().expect("a release")
+}
+
+/// The id and release of each entry `text` prints, in order, from the headings of the entries.
+fn headings(text: &str) -> Vec<(String, String)> {
+    text.lines()
+        .filter_map(|line| line.strip_prefix("### `"))
+        .map(|rest| {
+            let (id, release) = rest.split_once("` (").expect("an id and a release");
+            (id.to_string(), release.trim_end_matches(')').to_string())
+        })
+        .collect()
+}
+
+#[test]
+fn the_guide_names_the_update_topic() {
+    assert!(guide().contains("`deslag instructions update`"));
+}
+
+#[test]
+fn the_update_topic_prints_what_is_new_since_the_stamp() {
+    let repo = stamped(OLDER);
+    let output = update(&repo, &[]);
+    assert_eq!(code(&output), 0);
+    assert_eq!(
+        raw_stderr(&output),
+        "",
+        "the notice points here, so not here"
+    );
+    let text = stdout(&output);
+    assert_eq!(
+        text,
+        update_text(
+            changelog(),
+            &release(OLDER),
+            &Version::current(),
+            Start::Config
+        )
+    );
+
+    let current = env!("CARGO_PKG_VERSION");
+    assert!(text.starts_with(&format!(
+        "# What is new in deslag {current}, since {OLDER}\n"
+    )));
+    // The first release is in the range, with a section for each of its kinds.
+    for heading in [
+        "## New lints",
+        "## New settings",
+        "### `max_size_bytes` (0.0.1)",
+    ] {
+        assert!(text.contains(heading), "{heading}");
+    }
+    assert!(
+        text.contains(&format!(
+            "set `deslag_version` to \"{current}\" at the top level"
+        )),
+        "the closing names the version to set"
+    );
+    // `next` is not in the range: its entries would head their sections with `(next)`.
+    assert!(!text.contains("(next)"));
+}
+
+#[test]
+fn the_json_holds_the_entries_of_the_text() {
+    let repo = stamped(OLDER);
+    let text = stdout(&update(&repo, &[]));
+    let output = update(&repo, &["--format", "json"]);
+    assert_eq!(code(&output), 0);
+    assert_eq!(raw_stderr(&output), "");
+    let json = stdout(&output);
+    assert_eq!(
+        json,
+        update_json(changelog(), &release(OLDER), &Version::current())
+    );
+
+    let parsed: Value = serde_json::from_str(&json).expect("JSON");
+    assert_eq!(parsed["from"], OLDER);
+    assert_eq!(parsed["to"], env!("CARGO_PKG_VERSION"));
+    let entries = parsed["entries"].as_array().expect("entries");
+    let printed: Vec<(String, String)> = entries
+        .iter()
+        .map(|entry| {
+            (
+                entry["id"].as_str().expect("an id").to_string(),
+                entry["version"].as_str().expect("a version").to_string(),
+            )
+        })
+        .collect();
+    assert!(!printed.is_empty());
+    assert_eq!(printed, headings(&text));
+    for entry in entries {
+        let kind = entry["kind"].as_str().expect("a kind");
+        assert!(
+            ["breaking", "lint", "setting", "feature"].contains(&kind),
+            "{kind}"
+        );
+        for key in ["summary", "onboarding"] {
+            assert!(
+                !entry[key].as_str().expect(key).is_empty(),
+                "{key} of {entry}"
+            );
+        }
+        // Only a breaking change says whether `deslag update` does the whole job.
+        assert_eq!(
+            entry.get("update_does_all").is_some(),
+            kind == "breaking",
+            "{entry}"
+        );
+    }
+}
+
+/// A stamp at the running version is current. `--since` it has read no config, so it calls none
+/// current.
+#[test]
+fn a_stamp_or_a_since_at_the_running_version_prints_the_current_line() {
+    let current = env!("CARGO_PKG_VERSION");
+    let repo = stamped(current);
+    let lines = [
+        (
+            &[][..],
+            format!("Nothing is new in deslag {current} since {current}: the config is current.\n"),
+        ),
+        (
+            &["--since", current],
+            format!("Nothing is new in deslag {current} since {current}.\n"),
+        ),
+    ];
+    for (args, line) in lines {
+        let output = update(&repo, args);
+        assert_eq!(code(&output), 0, "{args:?}");
+        assert_eq!(raw_stderr(&output), "", "{args:?}");
+        assert_eq!(stdout(&output), line, "{args:?}");
+    }
+    let output = update(&repo, &["--since", current, "--format", "json"]);
+    let parsed: Value = serde_json::from_str(&stdout(&output)).expect("JSON");
+    assert_eq!(parsed["entries"], serde_json::json!([]));
+}
+
+#[test]
+fn since_replaces_the_stamp_and_reads_no_config() {
+    let repo = stamped(env!("CARGO_PKG_VERSION"));
+    let output = update(&repo, &["--since", OLDER]);
+    assert_eq!(code(&output), 0);
+    assert_eq!(
+        stdout(&output),
+        update_text(
+            changelog(),
+            &release(OLDER),
+            &Version::current(),
+            Start::Since
+        )
+    );
+    // A config that cannot be read is not read.
+    let broken = Repo::new();
+    broken.write("deslag.toml", "schema_version = [");
+    let output = update(&broken, &["--since", OLDER]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert_eq!(raw_stderr(&output), "");
+}
+
+#[test]
+fn a_since_that_is_not_a_release_or_is_newer_than_this_deslag_exits_2() {
+    let current = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version");
+    let newer = format!("{}.0.0", current.major + 1);
+    let repo = stamped(OLDER);
+    for since in ["next", "0.1.0+x", "0.0.1-rc.1", "1", "latest", "", &newer] {
+        let output = update(&repo, &["--since", since]);
+        assert_eq!(code(&output), 2, "{since:?}");
+        assert_eq!(stdout(&output), "", "{since:?}");
+        assert!(stderr(&output).contains("--since"), "{since:?}");
+    }
+    let output = update(&repo, &["--since", &newer]);
+    assert!(stderr(&output).contains("newer than this deslag"));
+}
+
+#[test]
+fn since_and_config_path_do_not_go_together() {
+    let repo = stamped(OLDER);
+    let output = update(&repo, &["--since", OLDER, "--config-path", "deslag.toml"]);
+    assert_eq!(code(&output), 2);
+    assert_eq!(stdout(&output), "");
+    assert!(stderr(&output).contains("cannot be used with"));
+}
+
+#[test]
+fn config_path_names_the_config_whose_stamp_is_used() {
+    let repo = stamped(env!("CARGO_PKG_VERSION"));
+    repo.write(
+        "elsewhere/old.toml",
+        &format!("schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n"),
+    );
+    let output = update(&repo, &["--config-path", "elsewhere/old.toml"]);
+    assert_eq!(code(&output), 0);
+    assert_eq!(
+        stdout(&output),
+        update_text(
+            changelog(),
+            &release(OLDER),
+            &Version::current(),
+            Start::Config
+        )
+    );
+}
+
+#[test]
+fn a_config_path_naming_no_file_exits_2() {
+    let repo = stamped(OLDER);
+    let output = update(&repo, &["--config-path", "nowhere.toml"]);
+    assert_eq!(code(&output), 2);
+    assert_eq!(stdout(&output), "");
+    assert!(stderr(&output).contains("cannot find the config file nowhere.toml"));
+}
+
+#[test]
+fn a_config_deslag_cannot_read_stops_the_topic() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = [");
+    let output = update(&repo, &[]);
+    assert_eq!(code(&output), 2);
+    assert_eq!(stdout(&output), "");
+}
+
+/// Only a config that is not there lets the topic start from the baseline. A config that is there
+/// and cannot be used stops it with the words `check` stops with, so an agent on an old deslag
+/// reads "upgrade deslag", not that no config was found.
+#[test]
+fn a_newer_stamp_stops_the_topic_with_the_message_check_prints() {
+    let current = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version");
+    let newer = format!("{}.0.0", current.major + 1);
+    let repo = stamped(&newer);
+    let checked = repo.check();
+    assert_eq!(code(&checked), 2);
+
+    for args in [&[][..], &["--format", "json"]] {
+        let output = update(&repo, args);
+        assert_eq!(code(&output), 2, "{args:?}");
+        assert_eq!(stdout(&output), "", "{args:?}");
+        assert_eq!(stderr(&output), stderr(&checked), "{args:?}");
+    }
+    let said = stderr(&checked);
+    assert!(
+        said.contains(&format!(
+            "was last updated by deslag {newer}, and this is deslag {}; upgrade deslag",
+            env!("CARGO_PKG_VERSION")
+        )),
+        "{said}"
+    );
+}
+
+#[test]
+fn two_configs_at_one_location_stop_the_topic_with_the_message_check_prints() {
+    let repo = stamped(OLDER);
+    repo.write(
+        "deslag.yaml",
+        &format!("schema_version: {SCHEMA_VERSION}\n"),
+    );
+    let checked = repo.check();
+    assert_eq!(code(&checked), 2);
+
+    for args in [&[][..], &["--format", "json"]] {
+        let output = update(&repo, args);
+        assert_eq!(code(&output), 2, "{args:?}");
+        assert_eq!(stdout(&output), "", "{args:?}");
+        assert_eq!(stderr(&output), stderr(&checked), "{args:?}");
+    }
+    let said = stderr(&checked);
+    assert!(
+        said.contains("found more than one config at one location"),
+        "{said}"
+    );
+}
+
+/// With no config at all the topic starts from the baseline, as `--since` it does, and says so
+/// first. The same text follows in both cases, and the JSON is that of a config with no stamp.
+#[test]
+fn with_no_config_the_topic_says_so_and_prints_what_since_the_baseline_prints() {
+    let none = Repo::new();
+    let no_config = update(&none, &[]);
+    assert_eq!(code(&no_config), 0);
+    assert_eq!(raw_stderr(&no_config), "");
+
+    let unstamped = Repo::new();
+    unstamped.write(
+        "deslag.toml",
+        &format!("schema_version = {SCHEMA_VERSION}\n"),
+    );
+    let no_stamp = update(&unstamped, &[]);
+    assert_eq!(code(&no_stamp), 0);
+    assert_eq!(raw_stderr(&no_stamp), "");
+
+    let baseline = BASELINE.to_string();
+    let since = update(&none, &["--since", &baseline]);
+    let (said, rest) = stdout(&no_config)
+        .split_once("\n\n")
+        .map(|(said, rest)| (said.to_string(), rest.to_string()))
+        .expect("a note and the text");
+    assert!(said.starts_with("No deslag config was found"), "{said}");
+    assert!(said.contains(&baseline), "{said}");
+    assert_eq!(rest, stdout(&since));
+    assert!(!stdout(&no_stamp).contains("No deslag config"));
+
+    // The JSON has no note: it starts from the baseline either way.
+    let json = update(&none, &["--format", "json"]);
+    assert_eq!(code(&json), 0);
+    assert_eq!(
+        stdout(&json),
+        stdout(&update(&unstamped, &["--format", "json"]))
+    );
+}
+
+/// The topic reads the config as `check` does, from the root of the repo and nowhere else.
+#[test]
+fn a_config_in_a_subdirectory_is_not_found_from_there() {
+    let repo = stamped(OLDER);
+    repo.write("docs/README.md", "A readme.\n");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_deslag"))
+        .args(["instructions", "update"])
+        .current_dir(repo.root().join("docs"))
+        .output()
+        .expect("deslag runs");
+    assert_eq!(code(&output), 0);
+    assert!(stdout(&output).starts_with("No deslag config was found"));
+}
+
+/// `src/instructions/update.md` is held to the budget `.agents/deslag.toml` gives it, and to the
+/// repo's other rules.
+#[test]
+fn update_md_meets_its_budget() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let path = root.join(".agents/deslag.toml");
+    let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
+    let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
+    let file = "src/instructions/update.md";
+    assert!(config.md().selects(file), "{file} is not linted");
+    let budget = config
+        .md()
+        .lints_for(file)
+        .max_size_bytes
+        .and_then(|lint| lint.value)
+        .unwrap_or_else(|| panic!("{file} has no byte budget in .agents/deslag.toml"));
+    let contents = std::fs::read(root.join(file)).expect(file);
+    assert!(
+        contents.len() as u64 <= budget,
+        "{file} is {} bytes, over its budget of {budget}",
+        contents.len()
+    );
+    let findings = check_file(&config, file, &contents, root).expect("the lints run");
+    assert!(findings.is_empty(), "{findings:?}");
 }

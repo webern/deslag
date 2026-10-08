@@ -6,9 +6,16 @@
     "--model",
     "claude-opus-5-5",
     "--tools",
-    "Read,Write"
+    "Read,Write",
+    "--strict-mcp-config",
+    "--no-session-persistence",
+    "--permission-mode",
+    "acceptEdits",
+    "--output-format",
+    "stream-json",
+    "--verbose"
   ],
-  "cwd": "an empty directory made for the call",
+  "cwd": "an empty directory under the system temp directory outside any repository, removed after the call",
   "effort": "default",
   "harness": "claude-code",
   "model_reported": "claude-opus-5-5",

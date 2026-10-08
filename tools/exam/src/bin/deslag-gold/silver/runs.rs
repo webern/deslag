@@ -69,6 +69,49 @@ pub const AGENT_KEYS: [&str; 10] = [
 /// The tools the adjudicator's processes have.
 pub const AGENT_TOOLS: &str = "Read,Write";
 
+/// The harness of the adjudicator's processes.
+pub const AGENT_HARNESS: &str = "claude-code";
+
+/// What kind of process each was.
+pub const AGENT_TYPE: &str = "claude -p --safe-mode";
+
+/// Where each process ran, as `CWD_RULE` in `scripts/label/confine.py` has it.
+pub const AGENT_CWD: &str = "an empty directory under the system temp directory outside any repository, removed after the call";
+
+/// The argument list of every confined call of the adjudicator's `model`, as `arguments` in
+/// `scripts/label/confine.py` gives it.
+pub fn confined_args(model: &str) -> Vec<String> {
+    [
+        "-p",
+        "--safe-mode",
+        "--model",
+        model,
+        "--tools",
+        AGENT_TOOLS,
+        "--strict-mcp-config",
+        "--no-session-persistence",
+        "--permission-mode",
+        "acceptEdits",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+    ]
+    .map(String::from)
+    .to_vec()
+}
+
+/// Whether `text` is a version as `claude --version` prints one: numbers joined by dots, then
+/// perhaps a suffix with no space, such as `2.1.293` or `2.2.0-beta`.
+pub fn is_version(text: &str) -> bool {
+    let numbers = text
+        .find(|c: char| !c.is_ascii_digit() && c != '.')
+        .map_or(text, |at| &text[..at]);
+    let parts: Vec<&str> = numbers.split('.').collect();
+    parts.len() >= 2
+        && parts.iter().all(|part| !part.is_empty())
+        && !text.chars().any(char::is_whitespace)
+}
+
 /// The name of the outside tagger that may vote (decision D3).
 pub const EXTERNAL_VOTER: &str = "spacy";
 
@@ -316,8 +359,9 @@ fn record_sha256(record: &serde_json::Value) -> String {
 /// with one prompt hash and one guide hash for each model. A voter's run must be at an endpoint
 /// the file lists for its model, with a licence of MIT or Apache-2.0 that was read on a date, and
 /// begin with the file's sha256. The outside tagger must be spaCy, under the same licence rule.
-/// An adjudicator run must be the file's adjudicator, answered by the confined processes of one
-/// agent record.
+/// Every run, of every role, begins with the file's sha256. An adjudicator run must be the file's
+/// adjudicator, answered by the confined processes of one agent record that says the harness, the
+/// tools, the argument list and the working directory of the confined call.
 pub fn check(
     path: &str,
     runs: &Runs,
@@ -363,18 +407,15 @@ pub fn check(
         }
         let role = get("role");
         let name = get("name");
-        match role {
-            "voter" | "external" => {
-                licence_rule(&mut bad, run, get("license"), get("license_checked"));
-                if get("voters_sha256") != voters.sha256 {
-                    bad(format!(
-                        "run {run} began under a voters.json of sha256 {}, and the record holds {}",
-                        get("voters_sha256"),
-                        voters.sha256
-                    ));
-                }
-            }
-            _ => {}
+        if matches!(role, "voter" | "external") {
+            licence_rule(&mut bad, run, get("license"), get("license_checked"));
+        }
+        if get("voters_sha256") != voters.sha256 {
+            bad(format!(
+                "run {run} began under a voters.json of sha256 {}, and the record holds {}",
+                get("voters_sha256"),
+                voters.sha256
+            ));
         }
         match role {
             "voter" => match voters.listed(name) {
@@ -443,7 +484,7 @@ pub fn check(
                             .entry(record_sha256(&agent))
                             .or_default()
                             .push(run.clone());
-                        agent_rules(&mut bad, run, &agent);
+                        agent_rules(&mut bad, run, get("model"), &agent);
                     }
                     None => bad(format!(
                         "run {run} records no agent in its settings; its replies were not made by a confined process"
@@ -504,8 +545,8 @@ fn licence_rule(bad: &mut impl FnMut(String), run: &str, license: &str, checked:
     }
 }
 
-/// What one agent record must say.
-fn agent_rules(bad: &mut impl FnMut(String), run: &str, agent: &serde_json::Value) {
+/// What one agent record of a run of `model` must say.
+fn agent_rules(bad: &mut impl FnMut(String), run: &str, model: &str, agent: &serde_json::Value) {
     let missing: Vec<&str> = AGENT_KEYS
         .iter()
         .filter(|key| {
@@ -534,6 +575,41 @@ fn agent_rules(bad: &mut impl FnMut(String), run: &str, agent: &serde_json::Valu
     }
     if !agent["prompt_sha256"].as_str().is_some_and(is_sha256) {
         bad(format!("run {run}: its agent record has no prompt sha256"));
+    }
+    for (key, wanted) in [("harness", AGENT_HARNESS), ("agent_type", AGENT_TYPE), ("cwd", AGENT_CWD)] {
+        if agent[key].as_str() != Some(wanted) {
+            bad(format!(
+                "run {run}: its agent record says {key} `{}`, and a confined call's is `{wanted}`",
+                shown(&agent[key])
+            ));
+        }
+    }
+    if !agent["version"].as_str().is_some_and(is_version) {
+        bad(format!(
+            "run {run}: its agent record says version `{}`, which is not a version of Claude Code",
+            shown(&agent["version"])
+        ));
+    }
+    let args = confined_args(model);
+    if agent["args"] != serde_json::json!(args) {
+        bad(format!(
+            "run {run}: its agent record gives the arguments `{}`, and a confined call of {model} is `{}`",
+            shown(&agent["args"]),
+            args.join(" ")
+        ));
+    }
+}
+
+/// A JSON value as a message shows it: a string bare, a list of strings joined by spaces.
+fn shown(value: &serde_json::Value) -> String {
+    match value {
+        serde_json::Value::String(text) => text.clone(),
+        serde_json::Value::Array(items) if items.iter().all(serde_json::Value::is_string) => items
+            .iter()
+            .filter_map(serde_json::Value::as_str)
+            .collect::<Vec<_>>()
+            .join(" "),
+        other => other.to_string(),
     }
 }
 
@@ -564,8 +640,10 @@ mod tests {
             .map(|column| (*column, "-".to_string()))
             .collect();
         let agent = format!(
-            r#"{{"request":{{}},"agent":{{"harness":"claude-code","version":"2.1.293","agent_type":"claude -p --safe-mode","model_reported":"vendor-d/judge","effort":"default","tools":"Read,Write","prompt_sha256":"{}","safe_mode":true,"args":["-p"],"cwd":"empty"}}}}"#,
-            "a".repeat(64)
+            r#"{{"request":{{}},"agent":{{"harness":"claude-code","version":"2.1.293","agent_type":"claude -p --safe-mode","model_reported":"vendor-d/judge","effort":"default","tools":"Read,Write","prompt_sha256":"{}","safe_mode":true,"args":{},"cwd":"{}"}}}}"#,
+            "a".repeat(64),
+            serde_json::json!(confined_args("vendor-d/judge")),
+            AGENT_CWD
         );
         let (name, role, model, endpoint, quantization) = match run {
             "r1" => ("deepseek", "voter", "vendor-a/model-a", "host-a/fp8", "fp8"),
@@ -706,9 +784,38 @@ mod tests {
         let unsafe_agent = row("r5", &[]).replace("\"safe_mode\":true", "\"safe_mode\":false");
         let cells: Vec<&str> = unsafe_agent.split('\t').collect();
         says(&[("r5", &[("settings", cells[30])])], "safe_mode true");
-        let other_tools = row("r5", &[]).replace("Read,Write", "Read,Write,Bash");
+        let other_tools = row("r5", &[]).replace("\"tools\":\"Read,Write\"", "\"tools\":\"Read,Write,Bash\"");
         let cells: Vec<&str> = other_tools.split('\t').collect();
         says(&[("r5", &[("settings", cells[30])])], "other tools");
+        says(
+            &[("r5", &[("voters_sha256", &"f".repeat(64))])],
+            "run r5 began under a voters.json",
+        );
+        // The agent record is held by value: its arguments, version, working directory and kind.
+        for (from, to, part) in [
+            ("\"--strict-mcp-config\",", "", "a confined call of vendor-d/judge is `-p --safe-mode"),
+            ("\"--verbose\"", "\"--verbose\",\"--add-dir\",\"/\"", "--add-dir"),
+            ("\"version\":\"2.1.293\"", "\"version\":\"latest\"", "version `latest`"),
+            ("\"version\":\"2.1.293\"", "\"version\":\"2.1 .293\"", "not a version"),
+            ("outside any repository", "anywhere", "says cwd"),
+            ("\"claude -p --safe-mode\"", "\"claude -p\"", "says agent_type `claude -p`"),
+            ("\"harness\":\"claude-code\"", "\"harness\":\"other\"", "says harness `other`"),
+        ] {
+            let changed = row("r5", &[]).replacen(from, to, 1);
+            assert_ne!(changed, row("r5", &[]), "{from}");
+            let cells: Vec<&str> = changed.split('\t').collect();
+            says(&[("r5", &[("settings", cells[30])])], part);
+        }
+    }
+
+    #[test]
+    fn a_version_is_numbers_joined_by_dots_and_a_suffix() {
+        for good in ["2.1.293", "2.1", "10.0.0-beta.1", "2.1.293+build"] {
+            assert!(is_version(good), "{good}");
+        }
+        for bad in ["", "2", "latest", "2..1", ".2.1", "2.1 .3", "v2.1.293", "2.1.293 (Claude Code)"] {
+            assert!(!is_version(bad), "{bad}");
+        }
     }
 
     #[test]

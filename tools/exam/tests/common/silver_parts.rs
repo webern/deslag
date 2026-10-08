@@ -245,8 +245,12 @@ pub fn agent() -> serde_json::Value {
         "tools": "Read,Write",
         "prompt_sha256": "a".repeat(64),
         "safe_mode": true,
-        "args": ["-p", "--safe-mode", "--model", "claude-opus-5-5", "--tools", "Read,Write"],
-        "cwd": "an empty directory made for the call",
+        "args": [
+            "-p", "--safe-mode", "--model", "claude-opus-5-5", "--tools", "Read,Write",
+            "--strict-mcp-config", "--no-session-persistence", "--permission-mode", "acceptEdits",
+            "--output-format", "stream-json", "--verbose",
+        ],
+        "cwd": "an empty directory under the system temp directory outside any repository, removed after the call",
     })
 }
 
@@ -291,9 +295,7 @@ fn part_runs(
         .into_iter()
         .map(|(k, v)| (k.to_string(), v))
         .collect();
-        if role != "adjudicator" {
-            cells.push(("voters_sha256".to_string(), voters_sha.to_string()));
-        }
+        cells.push(("voters_sha256".to_string(), voters_sha.to_string()));
         if role == "voter" {
             cells.push(("prompt_sha256".to_string(), "8".repeat(64)));
             cells.push(("listing".to_string(), format!("listings/{run}.json")));

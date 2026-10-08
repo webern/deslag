@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "deslag_version": "0.0.1",
+  "md": {
+    "globs": [
+      "docs/*.md"
+    ],
+    "lints": {
+      "max_size_bytes": {
+        "value": 20000,
+        "message": "{path} is over {max_size_bytes} bytes"
+      },
+      "max_emphasis": {
+        "free_spans": 2,
+        "max_percent": 1.5,
+        "message": "{path} has too much emphasis"
+      },
+      "repo_layout": {
+        "heading": "Layout",
+        "min_entries": 1,
+        "max_entries": 15,
+        "max_width": 100,
+        "message": "{path} needs a layout"
+      },
+      "banned_chars": {
+        "allow": [
+          "é"
+        ],
+        "message": "{path} has a banned character",
+        "ban": {
+          "¤": "write the currency's name"
+        },
+        "groups": {
+          "dashes": true,
+          "arrows": true,
+          "ellipsis": true,
+          "bullets": true,
+          "math": true,
+          "checks": true,
+          "section": true,
+          "box_drawing": true,
+          "spaces": true,
+          "invisible": true,
+          "quotes": true,
+          "emoji": false
+        }
+      },
+      "banned_phrases": {
+        "allow": [
+          "not silently ignored"
+        ],
+        "message": "{path} has a banned phrase",
+        "ban": {
+          "in order to": "write to"
+        },
+        "groups": {
+          "signposts": false,
+          "insistence": true,
+          "metaphors": true,
+          "precision": true
+        }
+      },
+      "density": {
+        "max_paragraph_chars": 600,
+        "max_item_chars": 300,
+        "message": "{path} has a dense block"
+      },
+      "list_growth": {
+        "message": "{path} has more list items"
+      },
+      "verbs_no_nouns": {
+        "message": "{path} negates an object"
+      }
+    },
+    "overrides": [
+      {
+        "globs": [
+          "docs/note.md"
+        ],
+        "lints": {
+          "max_size_bytes": {
+            "value": 8000
+          },
+          "banned_phrases": {
+            "groups": {
+              "signposts": true
+            }
+          }
+        }
+      }
+    ]
+  }
+}

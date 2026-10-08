@@ -370,6 +370,30 @@ fn next_holds_no_entry() {
     );
 }
 
+/// A release freezes a config in each language under `tests/configs/`, naming every setting the
+/// schema has. A setting added since the newest freeze fails this until the release adds a
+/// directory.
+#[test]
+#[ignore = "fails until the release change freezes configs naming every setting"]
+fn the_newest_frozen_configs_name_every_setting() {
+    let (release, directory) = common::frozen::releases().pop().expect("a frozen release");
+    let paths = SchemaPaths::of(&schema());
+    for extension in common::frozen::EXTENSIONS {
+        let value = common::frozen::value(&common::frozen::config(&directory, extension));
+        let missing: Vec<_> = paths
+            .leaves
+            .iter()
+            .filter(|leaf| !common::frozen::names(&value, leaf))
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "tests/configs/{release}/config.{extension} leaves out {missing:?}: the release \
+             change adds a directory named for the new version, with a config in each language \
+             that sets every setting, and edits no older one"
+        );
+    }
+}
+
 #[test]
 #[ignore = "fails while the crate version has a pre-release or build part"]
 fn the_crate_version_is_a_release() {

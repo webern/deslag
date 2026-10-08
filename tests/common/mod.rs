@@ -6,6 +6,7 @@ pub mod blobs;
 pub mod config_toml;
 pub mod corpus;
 pub mod fixture;
+pub mod frozen;
 pub mod git;
 pub mod schema;
 

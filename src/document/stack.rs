@@ -11,6 +11,21 @@ pub enum Reader {
     Plain,
 }
 
+/// The least of a document that a lint runs on.
+// TODO: remove the dead_code guard when the load check of the `[rust]` section reads it.
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Need {
+    /// The file as a whole.
+    File,
+    /// Markdown blocks and spans.
+    Structure,
+    /// Sentences, with their tokens and tags.
+    Sentences,
+    /// Any prose.
+    Text,
+}
+
 /// What a [`Document`] is read with: owned data, cloned into each document so that it can read an
 /// edited source the same way.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,6 +46,19 @@ impl Stack {
         match self.outer {
             Reader::Markdown => markdown::read(self, source),
             Reader::Plain => plain::read(self, source),
+        }
+    }
+
+    /// Whether a document read with this stack has what `need` asks for. Markdown has all of it.
+    /// Plain text is prose, so it has sentences and text, but no blocks of Markdown, and it is no
+    /// file of its own.
+    // TODO: remove the dead_code guard when the load check of the `[rust]` section calls it.
+    #[allow(dead_code)]
+    pub(crate) fn provides(&self, need: Need) -> bool {
+        match (self.outer, need) {
+            (Reader::Markdown, _) => true,
+            (Reader::Plain, Need::Sentences | Need::Text) => true,
+            (Reader::Plain, Need::File | Need::Structure) => false,
         }
     }
 

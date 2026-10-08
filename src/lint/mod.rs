@@ -23,7 +23,7 @@ use serde::Serialize;
 use crate::Error;
 use crate::change::{self, Change};
 use crate::config::{Config, Section};
-use crate::document::{Document, Edit, Location};
+use crate::document::{Document, Edit, Location, Need};
 use crate::glob::{self, RepoFile};
 
 /// Every lint deslag has. Everything that lists the lints, such as the order they run in and the
@@ -88,6 +88,20 @@ impl Lint {
             | Lint::BannedPhrases
             | Lint::Density
             | Lint::VerbsNoNouns => false,
+        }
+    }
+
+    /// The least of a document that it runs on.
+    // TODO: remove the dead_code guard when the load check of the `[rust]` section calls it.
+    #[allow(dead_code)]
+    pub(crate) fn needs(self) -> Need {
+        match self {
+            Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
+            Lint::ListGrowth => Need::Structure,
+            Lint::VerbsNoNouns => Need::Sentences,
+            Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
+                Need::Text
+            }
         }
     }
 
@@ -598,6 +612,28 @@ pub(crate) fn check_text<'a>(
 mod tests {
     use std::fs;
     use std::path::Path;
+
+    use super::Lint;
+    use crate::document::{Reader, Stack};
+
+    /// Markdown has what every lint needs. Plain text lacks the file and the blocks, so the lints
+    /// that need them cannot run on it.
+    #[test]
+    fn markdown_provides_every_need_and_plain_text_only_prose() {
+        let markdown = Stack::new(Reader::Markdown);
+        let plain = Stack::new(Reader::Plain);
+        let refused: Vec<Lint> = Lint::ALL
+            .into_iter()
+            .filter(|lint| !plain.provides(lint.needs()))
+            .collect();
+        for lint in Lint::ALL {
+            assert!(markdown.provides(lint.needs()), "{lint}");
+        }
+        assert_eq!(
+            refused,
+            [Lint::MaxSizeBytes, Lint::RepoLayout, Lint::ListGrowth]
+        );
+    }
 
     /// A lint reads and quotes the file through `Document::text`, which knows where a range is in
     /// the text the lints read, and never slices `Document::source` itself.

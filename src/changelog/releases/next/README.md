@@ -37,6 +37,8 @@ the table. A `setting` entry whose id is a table does the same: `md.overrides` l
 value has no `keys`. A setting covers its own path and its listed keys, so a key added to a table
 later gets a `setting` entry of its own, in the release that adds it.
 
+Every section takes the same lints, so a `lint` entry covers its keys in each section.
+
 A `breaking` entry says in `update_does_all` whether a config can be brought up to date without
 the person editing it.
 

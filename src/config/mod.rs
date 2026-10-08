@@ -106,13 +106,15 @@ struct ConfigFile {
 }
 
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
-/// can read it at all, and the place of `md`.
+/// can read it at all, and the place of each section.
 ///
 /// It refuses no unknown key, so a config from a later deslag, which may hold keys this one has
 /// never heard of, reports that it is from a later deslag and not the first of those keys.
 ///
-/// `md` is here for the config written as a JSON array, which serde reads by position. The fields
-/// must be in the order of [`ConfigFile`]'s, or the array reads differently in the two structs.
+/// The sections are here for the config written as a JSON array, which serde reads by position.
+/// The fields must be in the order of [`ConfigFile`]'s, or the array reads differently in the two
+/// structs. A section that is added goes after `deslag_version`, in both, so that an array written
+/// before it keeps its positions.
 #[derive(Debug, Deserialize)]
 struct Head {
     #[serde(default)]
@@ -325,4 +327,24 @@ fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
         path: path.to_string(),
         message: format!("deslag_version {error}"),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn load_json(text: &str) -> Config {
+        Config::parse(text, PathBuf::from("deslag.json"), ConfigSource::Explicit)
+            .unwrap_or_else(|error| panic!("{text}: {error}"))
+    }
+
+    /// A config written as a JSON array is read by position, in `Head` and in `ConfigFile`. A field
+    /// in one and not in the other, or in another order, moves the stamp.
+    #[test]
+    fn a_json_array_reads_the_stamp_where_head_and_the_file_agree_it_is() {
+        let config = load_json(r#"[1, {}, "0.0.1"]"#);
+        assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
+        assert_eq!(load_json("[1, {}]").stamp(), None);
+        assert_eq!(load_json("[1]").sections().len(), 1);
+    }
 }

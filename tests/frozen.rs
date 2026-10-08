@@ -98,7 +98,7 @@ fn the_languages_of_a_release_compile_to_the_same_settings() {
                 let text = std::fs::read_to_string(&path).expect("a readable config");
                 let config = Config::parse(&text, path, ConfigSource::Explicit)
                     .unwrap_or_else(|error| panic!("{release} {extension}: {error:#?}"));
-                format!("{:?}", config.md())
+                format!("{:?}", config.sections())
             })
             .collect();
         assert_eq!(compiled[0], compiled[1], "{release}: toml and yaml differ");
@@ -148,6 +148,21 @@ fn no_frozen_config_is_edited_and_each_has_a_line_in_hashes() {
          adds a new directory, tests/configs/<version>/, and its lines to tests/configs/hashes.",
         wrong.join("\n")
     );
+}
+
+/// A frozen config names a lint setting of any section by the lint setting of any other: they are
+/// one type. A key of a section itself is named only by that section.
+#[test]
+fn a_lint_setting_is_named_by_any_section_that_sets_it() {
+    let value = serde_json::json!({
+        "schema_version": 1,
+        "md": { "globs": ["*.md"], "lints": { "density": { "max_item_chars": 1 } } },
+    });
+    assert!(frozen::names(&value, "md.lints.density.max_item_chars"));
+    assert!(frozen::names(&value, "x.lints.density.max_item_chars"));
+    assert!(!frozen::names(&value, "x.lints.density.message"));
+    assert!(frozen::names(&value, "md.globs"));
+    assert!(!frozen::names(&value, "x.globs"));
 }
 
 /// The hash is FNV-1a 64, whose published test values these are.

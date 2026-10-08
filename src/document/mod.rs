@@ -33,6 +33,7 @@ use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
 pub(crate) use map::Gathered;
+pub(crate) use stack::Need;
 pub use stack::{Reader, Stack};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.

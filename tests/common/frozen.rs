@@ -82,11 +82,27 @@ pub fn sets(value: &Value, path: &str) -> bool {
 /// that moves to it. That lets the directory of a release before a rename keep its old key. It
 /// also lets a later directory set a removed or renamed name and pass; the redirect's own tests
 /// are what hold the old name working, so this does not check for it.
+///
+/// Every section takes the same `lints`, so a lint setting `<section>.lints.<rest>` is named when
+/// any section of `value` sets it. A key of a section itself, such as `md.globs`, must be set.
 pub fn names(value: &Value, leaf: &str) -> bool {
-    sets(value, leaf)
-        || REDIRECTS
-            .iter()
-            .any(|redirect| redirect.new == Some(leaf) && sets(value, redirect.old))
+    let exact = |leaf: &str| {
+        sets(value, leaf)
+            || REDIRECTS
+                .iter()
+                .any(|redirect| redirect.new == Some(leaf) && sets(value, redirect.old))
+    };
+    match leaf
+        .split_once('.')
+        .and_then(|(_, rest)| rest.strip_prefix("lints."))
+    {
+        Some(rest) => value
+            .as_object()
+            .into_iter()
+            .flat_map(|sections| sections.keys())
+            .any(|section| exact(&format!("{section}.lints.{rest}"))),
+        None => exact(leaf),
+    }
 }
 
 /// The hash of a file's bytes, FNV-1a 64, as 16 hex digits. It is no defence against an attacker;

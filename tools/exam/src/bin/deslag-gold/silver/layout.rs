@@ -110,12 +110,38 @@ impl Batch {
         Ok(Batch { name, files })
     }
 
-    /// Writes the files under `dir`, which must not hold a file already.
+    /// Writes the files under `dir`, which must be empty or not there. They are written first to
+    /// `NAME.partial` beside it, read back and compared with what was meant, and only then is that
+    /// renamed to `dir`, so a write that fails part way leaves no half batch under the name.
     pub fn write(&self, dir: &Path) -> Result<(), Error> {
-        for (path, text) in &self.files {
-            crate::data::write_text(&dir.join(path), text)?;
+        let io = |path: &Path, source| Error::Io {
+            path: path.display().to_string(),
+            source,
+        };
+        let name = dir
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let partial = dir.with_file_name(format!("{name}.partial"));
+        if partial.exists() {
+            std::fs::remove_dir_all(&partial).map_err(|source| io(&partial, source))?;
         }
-        Ok(())
+        for (path, text) in &self.files {
+            crate::data::write_text(&partial.join(path), text)?;
+        }
+        if Batch::load(&partial)?.files != self.files {
+            return Err(Error::load(
+                &partial.display().to_string(),
+                Place::File,
+                "what was read back is not what was written; the batch is left there and not renamed",
+            ));
+        }
+        if dir.exists() {
+            // An empty directory, as `build` requires; rename does not replace a directory on
+            // every system.
+            std::fs::remove_dir(dir).map_err(|source| io(dir, source))?;
+        }
+        std::fs::rename(&partial, dir).map_err(|source| io(dir, source))
     }
 }
 

@@ -309,6 +309,22 @@ fn a_build_into_a_directory_that_has_files_is_refused() {
 }
 
 #[test]
+fn a_build_writes_beside_its_directory_and_renames_it_into_place() {
+    let made = Made::new();
+    // An empty directory is taken, and a half batch an interrupted build left beside it is not
+    // read into this one.
+    let out = made.out("2026-10-08-whole");
+    fs::create_dir_all(&out).unwrap();
+    let partial = out.with_file_name("2026-10-08-whole.partial");
+    fs::create_dir_all(partial.join("parts")).unwrap();
+    fs::write(partial.join("notes.txt"), "half a batch").unwrap();
+    made.build("2026-10-08-whole", &[]).ok();
+    assert!(!partial.exists());
+    assert!(!out.join("notes.txt").exists());
+    check(&made, &out).ok();
+}
+
+#[test]
 fn a_refused_build_writes_nothing() {
     let made = Made::new();
     made.set_run(2, "r6", "license", "GPL-3.0");

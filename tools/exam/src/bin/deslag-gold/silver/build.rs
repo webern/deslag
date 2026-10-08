@@ -51,10 +51,127 @@ pub struct Args<'a> {
     pub out: &'a Path,
 }
 
-/// What the preflight of one part found, as lines for the person running it.
+/// What the preflight of one part found, as lines for the person running it. A part that passes
+/// is held to the lock of the parts of its draw, which is written if there is none yet.
 pub fn check_part(spec: &Spec, env: &Env) -> Result<String, Problems> {
     let part = Part::load(spec, env)?;
-    Ok(part_report(&part))
+    let mut report = part_report(&part);
+    report.push_str(&hold_to_lock(&spec.dir, &part)?);
+    Ok(report)
+}
+
+/// The value at `keys` in `value`.
+fn lock_at<'a>(value: &'a serde_json::Value, keys: &[String]) -> Option<&'a serde_json::Value> {
+    keys.iter().try_fold(value, |at, key| at.get(key))
+}
+
+/// `value` written at `keys` in `into`, making the objects on the way.
+fn lock_put(into: &mut serde_json::Value, keys: &[String], value: serde_json::Value) {
+    let mut at = into;
+    for key in &keys[..keys.len() - 1] {
+        if !at.get(key).is_some_and(serde_json::Value::is_object) {
+            at[key.as_str()] = serde_json::json!({});
+        }
+        at = &mut at[key.as_str()];
+    }
+    at[keys[keys.len() - 1].as_str()] = value;
+}
+
+/// A value of the lock as a message shows it: a string or a number as it is, nothing as
+/// `nothing`, anything else as JSON.
+fn lock_shown(value: Option<&serde_json::Value>) -> String {
+    match value {
+        None | Some(serde_json::Value::Null) => "nothing".to_string(),
+        Some(serde_json::Value::String(text)) => text.clone(),
+        Some(other) => other.to_string(),
+    }
+}
+
+/// Holds `part`, in `dir`, to the lock of the parts of its draw ([`super::part::PARTS_LOCK`] in the
+/// directory that holds `dir`), as `label.py` holds each run to it: a field the lock holds must
+/// have the part's value, every key of its `draw` among them, and a field it does not hold yet is
+/// written into it, so the first part to pass writes the lock if no run did. A line for the
+/// report, or a problem naming each field, the lock's value and the part's.
+fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
+    let path = dir
+        .parent()
+        .unwrap_or_else(|| Path::new(""))
+        .join(super::part::PARTS_LOCK);
+    let shown = path.display().to_string();
+    let found = path.exists();
+    let lock: serde_json::Value = if found {
+        let text = read_text(&path).map_err(|error| Problems(vec![error]))?;
+        match serde_json::from_str::<serde_json::Value>(&text) {
+            Ok(value) if value.is_object() => value,
+            _ => {
+                return Err(Problems(vec![Error::load(
+                    &shown,
+                    Place::File,
+                    "it is not a JSON object; it is the lock of the parts of a draw, so restore it, or remove it and label every part again",
+                )]));
+            }
+        }
+    } else {
+        serde_json::json!({})
+    };
+    let fields = part.lock_fields();
+    let mut problems = Vec::new();
+    let mut differ = |field: String,
+                      held: Option<&serde_json::Value>,
+                      here: Option<&serde_json::Value>| {
+        problems.push(Error::load(
+            &shown,
+            Place::File,
+            format!(
+                "`{field}` is {} in the lock and {} in this part; the parts of one draw are labelled at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model and one Claude Code, so that their batch can be assembled. Put back what changed, or remove the lock and label every part again",
+                lock_shown(held),
+                lock_shown(here)
+            ),
+        ));
+    };
+    let mut merged = lock.clone();
+    for (keys, value) in &fields {
+        match lock_at(&lock, keys) {
+            Some(held) if held != value => differ(keys.join("."), Some(held), Some(value)),
+            Some(_) => {}
+            None => {
+                if lock_at(&merged, keys).is_none() {
+                    lock_put(&mut merged, keys, value.clone());
+                }
+            }
+        }
+    }
+    if let Some(draw) = lock.get("draw").and_then(serde_json::Value::as_object) {
+        for (key, held) in draw {
+            if !fields
+                .iter()
+                .any(|(keys, _)| keys.len() == 2 && keys[0] == "draw" && &keys[1] == key)
+            {
+                differ(format!("draw.{key}"), Some(held), None);
+            }
+        }
+    }
+    if !problems.is_empty() {
+        return Err(Problems(problems));
+    }
+    if merged == lock {
+        return Ok(format!("held to the lock of the parts, {shown}\n"));
+    }
+    let text = serde_json::to_string_pretty(&merged).expect("a JSON value writes") + "\n";
+    let partial = path.with_extension("json.partial");
+    let wrote = std::fs::write(&partial, text).and_then(|()| std::fs::rename(&partial, &path));
+    if let Err(error) = wrote {
+        return Err(Problems(vec![Error::load(
+            &shown,
+            Place::File,
+            format!("it could not be written: {error}"),
+        )]));
+    }
+    Ok(if found {
+        format!("held to the lock of the parts, {shown}, and added what it did not hold yet\n")
+    } else {
+        format!("wrote the lock of the parts, {shown}\n")
+    })
 }
 
 /// A part's counts.

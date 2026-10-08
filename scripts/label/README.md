@@ -354,7 +354,10 @@ A step that knows a field the lock holds with another value refuses before any c
 started, naming the lock, the field (`deslag_commit`, `draw.tag_version`, `models.qwen.prompt_sha256`,
 `agent.version`, ...) and both values. Put back what changed (the commit, `voters.json`, a prompt or guide,
 Claude Code); or, to start the draw over with the new ones, remove `lock.json` and label every part again.
-`deslag-gold silver build --check-part` holds a part to the same lock.
+`deslag-gold silver build --check-part` holds a part that passes to the same lock, field by field from the
+part's own files (its runs' commit, its manifest header, `voters.tsv`, `adjudicator.json`, its runs' hashes
+and agent record), refuses it the same way, and adds the fields the lock lacks: the first part to pass its
+preflight writes the lock if no run has.
 
 Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
 and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription
@@ -475,7 +478,8 @@ Makefile), so the run can change them.
 
 The assembler. `deslag-gold silver build --name NAME --part DIR:MERGE ... [--audit DIR --archive-sha256 SHA]
 --out DIR` puts the parts together and writes the batch to `--out` only when `silver check` passes on what it
-wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, with no output, and is what
+wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, which writes no file but the lock
+of the parts, and is what
 `label.py status` runs; run it after each part, so a fault shows after one part and not at assembly. It
 refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has no `part` and
 `tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id twice with

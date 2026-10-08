@@ -67,10 +67,16 @@ fn edit_sidecar(made: &Made, id: &str, change: impl FnOnce(&mut serde_json::Valu
 }
 
 #[test]
-fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_nothing() {
+fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_only_the_lock() {
     let made = Made::new();
     let before = common::draws::tree_bytes(&made.root);
+    let lock = made.root.join(".label/silver/lock.json");
     let said = made.check_part(1).ok();
+    assert!(
+        said.out.contains("wrote the lock of the parts"),
+        "{}",
+        said.out
+    );
     assert!(said.out.contains("part 01 of 2"), "{}", said.out);
     assert!(
         said.out
@@ -87,11 +93,143 @@ fn a_part_that_was_labelled_passes_its_preflight_and_the_preflight_writes_nothin
         "{}",
         said.out
     );
+    assert!(
+        said.out.contains("held to the lock of the parts"),
+        "{}",
+        said.out
+    );
+    // The lock holds what spans the parts, as label.py names it.
+    let held: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&lock).unwrap()).unwrap();
+    assert_eq!(
+        held["voters"],
+        serde_json::json!(["deepseek", "qwen", "gemma"])
+    );
+    assert_eq!(held["adjudicator"], "opus");
+    assert_eq!(held["min_voters"], 3);
+    assert!(held["draw"]["tag_version"].is_string(), "{held}");
+    assert!(held["draw"].get("part").is_none(), "{held}");
+    assert_eq!(held["agent"]["version"], "2.1.293");
+    assert_eq!(held["agent"]["args"], common::silver_parts::agent()["args"]);
+    for name in ["deepseek", "qwen", "gemma", "opus"] {
+        for hash in ["prompt_sha256", "guide_sha256"] {
+            assert!(held["models"][name][hash].is_string(), "{held}");
+        }
+    }
+    assert!(held["models"].get("spacy").is_none(), "{held}");
+    assert!(held["deslag_commit"].is_string(), "{held}");
+    fs::remove_file(&lock).unwrap();
     assert_eq!(
         before,
         common::draws::tree_bytes(&made.root),
-        "the preflight wrote something"
+        "the preflight wrote something other than the lock"
     );
+}
+
+#[test]
+fn a_part_whose_claude_code_is_not_the_locks_is_refused_at_its_preflight() {
+    let made = two_parts();
+    made.check_part(1).ok();
+    let mut agent = common::silver_parts::agent();
+    agent["version"] = "2.1.294".into();
+    made.set_run(
+        2,
+        "r10",
+        "settings",
+        &serde_json::json!({ "agent": agent }).to_string(),
+    );
+    made.check_part(2).refused(&[
+        "lock.json",
+        "`agent.version` is 2.1.293 in the lock and 2.1.294 in this part",
+        "remove the lock and label every part again",
+    ]);
+}
+
+/// A change to the lock of the parts.
+type LockEdit = Box<dyn Fn(&mut serde_json::Value)>;
+
+#[test]
+fn a_part_is_held_to_each_field_of_a_lock_label_py_wrote() {
+    let made = two_parts();
+    made.check_part(1).ok();
+    let lock = made.root.join(".label/silver/lock.json");
+    let written = fs::read_to_string(&lock).unwrap();
+    let cases: Vec<(&str, LockEdit, &str)> = vec![
+        (
+            "another commit",
+            Box::new(|l| l["deslag_commit"] = "f".repeat(40).into()),
+            "`deslag_commit` is ffff",
+        ),
+        (
+            "another draw",
+            Box::new(|l| l["draw"]["seed"] = "7".into()),
+            "`draw.seed` is 7 in the lock",
+        ),
+        (
+            "a draw key the part lacks",
+            Box::new(|l| l["draw"]["caps"] = "3".into()),
+            "`draw.caps` is 3 in the lock and nothing in this part",
+        ),
+        (
+            "other voters",
+            Box::new(|l| l["voters"] = serde_json::json!(["deepseek", "qwen", "llama"])),
+            "`voters` is [\"deepseek\",\"qwen\",\"llama\"] in the lock",
+        ),
+        (
+            "another adjudicator",
+            Box::new(|l| l["adjudicator"] = "gpt".into()),
+            "`adjudicator` is gpt in the lock and opus in this part",
+        ),
+        (
+            "another min_voters",
+            Box::new(|l| l["min_voters"] = 4.into()),
+            "`min_voters` is 4 in the lock and 3 in this part",
+        ),
+        (
+            "another prompt",
+            Box::new(|l| l["models"]["qwen"]["prompt_sha256"] = "e".repeat(64).into()),
+            "`models.qwen.prompt_sha256` is eeee",
+        ),
+        (
+            "another guide",
+            Box::new(|l| l["models"]["opus"]["guide_sha256"] = "e".repeat(64).into()),
+            "`models.opus.guide_sha256` is eeee",
+        ),
+        (
+            "other arguments",
+            Box::new(|l| l["agent"]["args"] = serde_json::json!(["-p"])),
+            "`agent.args` is [\"-p\"] in the lock",
+        ),
+    ];
+    for (name, change, needle) in cases {
+        let mut value: serde_json::Value = serde_json::from_str(&written).unwrap();
+        change(&mut value);
+        fs::write(&lock, value.to_string()).unwrap();
+        let ran = made.check_part(2);
+        assert_eq!(ran.code, 2, "{name}: {}{}", ran.out, ran.err);
+        assert!(
+            ran.err.contains(needle),
+            "{name}: stderr lacks `{needle}`:\n{}",
+            ran.err
+        );
+    }
+    // A lock label.py began, before it knew the adjudicator's Claude Code, is completed.
+    let mut value: serde_json::Value = serde_json::from_str(&written).unwrap();
+    value.as_object_mut().unwrap().remove("agent");
+    fs::write(&lock, value.to_string()).unwrap();
+    let said = made.check_part(2).ok();
+    assert!(
+        said.out.contains("added what it did not hold yet"),
+        "{}",
+        said.out
+    );
+    let completed: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&lock).unwrap()).unwrap();
+    assert_eq!(completed["agent"]["version"], "2.1.293");
+    // A lock that is not a JSON object stops the preflight.
+    fs::write(&lock, "[]").unwrap();
+    made.check_part(2)
+        .refused(&["lock.json", "it is not a JSON object"]);
 }
 
 #[test]

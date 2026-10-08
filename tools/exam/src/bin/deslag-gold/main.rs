@@ -551,7 +551,9 @@ enum SilverCommand {
 /// The arguments of `silver build`.
 #[derive(clap::Args)]
 struct SilverBuild {
-    /// Check this one part and write nothing: every fault one part can have is reported.
+    /// Check this one part: every fault one part can have is reported. A part that passes is held
+    /// to the lock of the parts of its draw, `lock.json` beside the part directories, which is
+    /// written if there is none yet; nothing else is written.
     #[arg(
         long,
         value_name = "DIR:MERGE",

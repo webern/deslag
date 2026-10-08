@@ -5,7 +5,8 @@
 //! (`labelled.conllu`, `voters.tsv`, `worklist.tsv`, `adjudicated.tsv`, `agreement.txt`,
 //! `adjudicator.json`). [`Part::load`] is the preflight `silver build --check-part` runs at each
 //! gate of the labelling, so a fault shows after one part and not at assembly; `silver build` loads
-//! every part the same way.
+//! every part the same way. The preflight also holds the part to the lock of the parts of its
+//! draw, [`PARTS_LOCK`], which spans the parts.
 //!
 //! Two kinds of thing go wrong. A fault in what was made (a model's licence, a run at two
 //! commits, a word with no provenance, an id of the gold flow) is a problem, and the part is
@@ -31,6 +32,16 @@ use crate::problems::Problems;
 
 /// The fewest model voters a silver word needs (decision D2).
 pub const MIN_MODEL_VOTERS: usize = 3;
+
+/// The lock of the parts of a draw, in the directory that holds the part directories: the deslag
+/// commit, the draw, the voters, the adjudicator, `min_voters`, each model's prompt and guide
+/// hashes and the adjudicator's Claude Code (`agent.version` and `agent.args`), which every part
+/// must share. `label.py` writes it at the first run of the first part and adds each field when a
+/// step first knows it; `silver build --check-part` holds each part to it.
+pub const PARTS_LOCK: &str = "lock.json";
+
+/// A field of the lock of the parts, as its keys from the top, and its value.
+pub type LockField = (Vec<String>, serde_json::Value);
 
 /// A part to read: its directory and the name of the merge inside it, `DIR:MERGE`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -305,6 +316,61 @@ fn terms(expression: &str) -> impl Iterator<Item = &str> {
 }
 
 impl Part {
+    /// What the part says of each field of the lock of the parts ([`PARTS_LOCK`]): the commit of
+    /// its runs, its draw header without `part`, its model voters in `voters.tsv`'s order, the
+    /// name `adjudicator.json` gives, `min_voters`, the prompt and guide hashes of each run it uses
+    /// of a voter or the adjudicator, by the run's name, and the version and arguments of the
+    /// Claude Code its adjudicator runs record. A field may come twice, from two runs.
+    pub fn lock_fields(&self) -> Vec<LockField> {
+        let key = |keys: &[&str]| keys.iter().map(|k| k.to_string()).collect::<Vec<String>>();
+        let mut out: Vec<LockField> = Vec::new();
+        if !self.facts.commit.is_empty() {
+            out.push((key(&["deslag_commit"]), self.facts.commit.clone().into()));
+        }
+        for (name, value) in &self.header {
+            out.push((key(&["draw", name]), value.clone().into()));
+        }
+        let voters: Vec<serde_json::Value> = self
+            .voters
+            .iter()
+            .filter(|(_, base_only, _)| !base_only)
+            .map(|(name, _, _)| name.clone().into())
+            .collect();
+        out.push((key(&["voters"]), voters.into()));
+        if let Some(name) = serde_json::from_str::<serde_json::Value>(&self.merge.adjudicator)
+            .ok()
+            .and_then(|value| value["name"].as_str().map(str::to_string))
+        {
+            out.push((key(&["adjudicator"]), name.into()));
+        }
+        out.push((key(&["min_voters"]), self.min_voters.into()));
+        for run in &self.used {
+            if self.runs.row(run).is_none() {
+                continue;
+            }
+            let role = self.runs.get(run, "role");
+            let name = self.runs.get(run, "name");
+            if role == "voter" || role == "adjudicator" {
+                for hash in ["prompt_sha256", "guide_sha256"] {
+                    out.push((
+                        key(&["models", name, hash]),
+                        self.runs.get(run, hash).into(),
+                    ));
+                }
+            }
+            if role == "adjudicator" {
+                let settings: serde_json::Value =
+                    serde_json::from_str(self.runs.get(run, "settings")).unwrap_or_default();
+                for field in ["version", "args"] {
+                    if let Some(value) = settings.get("agent").and_then(|agent| agent.get(field)) {
+                        out.push((key(&["agent", field]), value.clone()));
+                    }
+                }
+            }
+        }
+        out
+    }
+
     /// Reads the part `spec` names and checks it against `env`.
     pub fn load(spec: &Spec, env: &Env) -> Result<Part, Problems> {
         let dir = &spec.dir;

@@ -101,14 +101,15 @@ pub fn hash(bytes: &[u8]) -> String {
 }
 
 /// The frozen files, each as its path from `tests/configs/` with `/` for separators, and the hash
-/// of its bytes, in the order of the lines of `hashes`.
-pub fn hash_lines() -> Vec<(String, String)> {
+/// of its bytes, in the order of the lines of `hashes`. A file that is gone has no hash.
+pub fn hash_lines() -> Vec<(String, Option<String>)> {
     let mut lines = Vec::new();
     for (release, directory) in releases() {
         for extension in EXTENSIONS {
-            let path = config(&directory, extension);
-            let bytes = std::fs::read(&path).expect("a readable config");
-            lines.push((format!("{release}/config.{extension}"), hash(&bytes)));
+            let hash = std::fs::read(config(&directory, extension))
+                .ok()
+                .map(|bytes| hash(&bytes));
+            lines.push((format!("{release}/config.{extension}"), hash));
         }
     }
     lines

@@ -150,7 +150,9 @@ help:
 	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
 	@echo "check-release    fail while src/changelog/releases/next/ holds an entry, or the crate version is a"
 	@echo "                 pre-release or has a build part; the release change fixes both, so not part of"
-	@echo "                 check, and the release workflow runs it"
+	@echo "                 check, and the release workflow runs it; it also fails while the newest"
+	@echo "                 tests/configs/ directory leaves out a setting, so a release that adds a setting"
+	@echo "                 adds a directory there, and one that does not needs none"
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
@@ -420,6 +422,8 @@ check-publish: preflight
 # pre-release or has a build part: a release is X.Y.Z. The change that bumps the version in
 # Cargo.toml fixes both, so `check` cannot run this. It runs every ignored test in
 # tests/changelog.rs: those are the release-time checks, so a new one there rides along.
+# One of them fails while the newest tests/configs/ directory leaves out a setting, so a release
+# that adds a setting adds a directory there, and one that does not needs none.
 check-release: preflight
 	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored
 

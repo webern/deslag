@@ -62,11 +62,15 @@ Renaming `next/` itself is wrong: git then files the new entry of an open branch
 that shipped. The release does not edit a test or a case config. `make check-release` fails while
 `next/` holds an entry.
 
-The release also adds `tests/configs/<version>/`, with a config in each language that sets every
-setting the schema has, and one line for each of the three files in `tests/configs/hashes`. It
-leaves every older directory and its lines as they are: frozen configs are never edited, and a
-renamed or removed setting is a redirect instead. `make check-release` fails, naming the leaves,
-while the newest directory leaves one out; the failing hash test prints the line to add.
+A release that adds a setting also adds `tests/configs/<version>/`, with a config in each
+language that sets every setting the schema has, and one line for each of the three files in
+`tests/configs/hashes`. A release that does not add a setting does not add a directory either: the
+newest one already names every setting.
+
+The release leaves every older directory and its lines as they are. Frozen configs are never
+edited, and a renamed or removed setting is a redirect instead. `make check-release` fails, naming
+the leaves, while the newest directory leaves one out; the failing hash test prints the line to
+add.
 
 An unstamped config is taken to be from 0.0.1, so from the first release after that one
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in

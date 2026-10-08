@@ -106,41 +106,46 @@ fn the_languages_of_a_release_compile_to_the_same_settings() {
     }
 }
 
-/// Frozen configs are never edited. A rename or removal of a setting that edits them to match
-/// hides the break the gate exists to show, so each file's hash is pinned in `hashes`.
+/// Frozen configs are never edited or removed. A rename or removal of a setting that edits them to
+/// match hides the break the gate exists to show, so each file's hash is pinned in `hashes`.
 #[test]
 fn no_frozen_config_is_edited_and_each_has_a_line_in_hashes() {
     let recorded = frozen::recorded_hashes();
     let mut wrong = Vec::new();
-    for (path, hash) in frozen::hash_lines() {
-        match recorded.iter().find(|(recorded, _)| *recorded == path) {
-            None => wrong.push(format!(
+    let files = frozen::hash_lines();
+    for (path, hash) in &files {
+        let lines: Vec<_> = recorded.iter().filter(|(line, _)| line == path).collect();
+        match (hash, lines.as_slice()) {
+            (None, _) => wrong.push(format!(
+                "tests/configs/{path} is gone: frozen configs are never edited or removed"
+            )),
+            (Some(hash), []) => wrong.push(format!(
                 "tests/configs/{path} has no line in tests/configs/hashes: a release adds a \
                  directory and its lines, and nothing else. Add `{path} {hash}`"
             )),
-            Some((_, was)) if *was != hash => wrong.push(format!(
+            (Some(hash), [(_, was)]) if was != hash => wrong.push(format!(
                 "tests/configs/{path} is {hash}, and tests/configs/hashes says {was}"
             )),
-            Some(_) => {}
+            (Some(_), [_]) => {}
+            (Some(_), _) => wrong.push(format!(
+                "tests/configs/hashes has {} lines for tests/configs/{path}: it has one",
+                lines.len()
+            )),
         }
     }
-    let files: Vec<_> = frozen::hash_lines()
-        .into_iter()
-        .map(|(path, _)| path)
-        .collect();
     for (path, _) in &recorded {
-        if !files.contains(path) {
+        if !files.iter().any(|(file, _)| file == path) {
             wrong.push(format!(
                 "tests/configs/hashes has a line for tests/configs/{path}, which is not a frozen \
-                 file: frozen configs are never removed"
+                 file: frozen configs are never edited or removed"
             ));
         }
     }
     assert!(
         wrong.is_empty(),
-        "{}\n\nFrozen configs are never edited. A setting that was renamed or removed needs a \
-         redirect in src/config/redirect.rs, so that the old config still loads. A release adds a \
-         new directory, tests/configs/<version>/, and its lines to tests/configs/hashes.",
+        "{}\n\nFrozen configs are never edited or removed. A setting that was renamed or removed \
+         needs a redirect in src/config/redirect.rs, so that the old config still loads. A release \
+         adds a new directory, tests/configs/<version>/, and its lines to tests/configs/hashes.",
         wrong.join("\n")
     );
 }

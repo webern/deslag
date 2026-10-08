@@ -277,6 +277,8 @@ fn the_schema_refuses_what_deslag_refuses() {
         "schema_version = 1\n[md.lints.density]\nmax_item_chars = 0",
         "schema_version = 1\n[md.lints.banned_chars.groups]\ndash = false",
         "schema_version = 1\n[[md.overrides]]\nlints.density = {}",
+        "schema_version = 1\n[rust]\nsurfaces = [\"docstring\"]",
+        "schema_version = 1\n[rust]\nstrings = []",
     ] {
         assert!(toml_misfit(text).is_some(), "the schema accepts {text:?}");
         let repo = Repo::new();
@@ -744,7 +746,7 @@ fn update_md_meets_its_budget() {
     let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
     let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
     let file = "src/instructions/update.md";
-    let section = config.section_for(file);
+    let section = config.sole_section_for(file).expect("one section at most");
     let section = section.unwrap_or_else(|| panic!("{file} is not linted"));
     let budget = section
         .lints_for(file)

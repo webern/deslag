@@ -6,6 +6,10 @@
 //! once for each section's `lints` and once for each override. Setting both old and new in one
 //! table is an error. A section and an override may differ: the override still wins.
 //!
+//! A redirect is for the section its old path names. A section added after the setting was removed
+//! never had it, so there the old key is unknown. When a later rename has to cover several
+//! sections, `Redirect` gains a list of places.
+//!
 //! [`REDIRECTS`] is the contract. It is data as well as code, so that `deslag update` can write
 //! the same edit into a file: `in_force` is the list it walks. Each entry has a `breaking`
 //! changelog entry whose id is its old path.
@@ -50,7 +54,7 @@ fn rename<T>(old: &mut Option<T>, new: &mut Option<T>) -> Result<bool, BothSet> 
     }
 }
 
-/// Every redirect, in the order they are applied.
+/// Every redirect, in the order they are applied. Each applies in the section its `old` path names.
 pub const REDIRECTS: &[Redirect] = &[Redirect {
     old: "md.lints.banned_phrases.groups.signposts",
     new: None,
@@ -81,6 +85,13 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
 };
 
 impl Redirect {
+    /// The section the old path is in, and the old path inside that section's `lints` table.
+    fn split(&self) -> (&'static str, &'static str) {
+        self.old
+            .split_once(".lints.")
+            .expect("the old path of a redirect is in a lints table")
+    }
+
     /// What to say, once, about a config at `config_path` that sets the old path.
     pub fn warning(&self, config_path: &str) -> String {
         let old = self.old;
@@ -128,6 +139,10 @@ pub(super) struct Applied {
 }
 
 /// Moves every old setting in `sections`, each with its name, to its new path.
+///
+/// A redirect applies in the section its `old` path begins with. Another section may be younger
+/// than the redirect and never had the setting, so a table of it that sets the setting holds an
+/// unknown key, as the closed schema says.
 pub(super) fn apply(
     sections: &mut [(&'static str, Parts)],
     config_path: &str,
@@ -137,27 +152,37 @@ pub(super) fn apply(
         used: Vec::new(),
     };
     for redirect in in_force() {
+        let (home, in_lints) = redirect.split();
         let mut places = Vec::new();
-        let tables = sections
-            .iter_mut()
-            .flat_map(|(name, parts)| parts.lints_tables(name));
-        for (place, lints) in tables {
-            match (redirect.moves)(lints) {
-                Ok(moved) => {
-                    if moved {
-                        places.push(place);
+        for (name, parts) in sections.iter_mut() {
+            for (place, lints) in parts.lints_tables(name) {
+                let moved = (redirect.moves)(lints);
+                if *name != home {
+                    if matches!(moved, Ok(true) | Err(BothSet)) {
+                        return Err(Error::Setting {
+                            path: config_path.to_string(),
+                            message: format!(
+                                "unknown key `{place}.{in_lints}`: the setting was removed \
+                                 before [{name}] existed, and [{name}] never had it"
+                            ),
+                        });
                     }
+                    continue;
                 }
-                Err(BothSet) => {
-                    let new = redirect.new.unwrap_or("its replacement");
-                    return Err(Error::Setting {
-                        path: config_path.to_string(),
-                        message: format!(
-                            "`{}` and `{new}` are both set in {place}; the first was renamed to \
-                             the second, so delete the first",
-                            redirect.old
-                        ),
-                    });
+                match moved {
+                    Ok(true) => places.push(place),
+                    Ok(false) => {}
+                    Err(BothSet) => {
+                        let new = redirect.new.unwrap_or("its replacement");
+                        return Err(Error::Setting {
+                            path: config_path.to_string(),
+                            message: format!(
+                                "`{}` and `{new}` are both set in {place}; the first was renamed \
+                                 to the second, so delete the first",
+                                redirect.old
+                            ),
+                        });
+                    }
                 }
             }
         }
@@ -385,6 +410,20 @@ mod tests {
                     lints.density = { max_paragraph_len = 1, max_paragraph_chars = 2 }\n";
         let message = load("toml", text).expect_err("both set").to_string();
         assert!(message.contains("md.overrides[1].lints"), "{message}");
+    }
+
+    /// A section younger than the rename never had the old key, so there both keys set is the same
+    /// "unknown key" as the old key alone, not a both-set error.
+    #[test]
+    fn both_set_in_a_younger_section_is_an_unknown_key() {
+        let text = "schema_version = 1\n\
+                    [rust.lints.density]\nmax_paragraph_len = 1\nmax_paragraph_chars = 2\n";
+        let message = load("toml", text).expect_err("both set").to_string();
+        assert!(
+            message.contains("unknown key `rust.lints.density.max_paragraph_len`")
+                && message.contains("[rust] never had it"),
+            "{message}"
+        );
     }
 
     /// An anchor and a merge key can bring the old key under a map that sets the new.

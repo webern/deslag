@@ -1,0 +1,14 @@
+kind = "setting"
+id = "rust.surfaces"
+summary = "Chooses which comments of a Rust file the lints read"
+onboarding = '''
+`rust.surfaces` lists the kinds of comment to read: `doc_comment` for `///`, `//!`, `/** */` and
+`/*! */`, read as Markdown, and `comment` for the other `//` and `/* */` comments, read as plain
+text. With no `surfaces`, both are read. A lint that needs Markdown blocks, such as `list_growth`,
+needs `doc_comment`.
+
+```toml
+[rust]
+surfaces = ["doc_comment"]
+```
+'''

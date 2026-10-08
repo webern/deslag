@@ -178,6 +178,48 @@ fn each_redirect_with_a_new_path_refuses_a_table_that_sets_both() {
     }
 }
 
+/// A redirect is for the section its old path names. A section that came after the setting was
+/// removed never had it, so there the key is unknown, in the section's table and in an override's.
+#[test]
+fn every_section_but_the_one_a_redirect_names_refuses_its_old_key() {
+    let schema = schema();
+    let paths = SchemaPaths::of(&schema);
+    let sections = paths.sections();
+    assert!(sections.len() > 1, "the schema has one section");
+    for redirect in REDIRECTS {
+        let (home, in_lints) = redirect.old.split_once(".lints.").expect("a lints path");
+        assert!(sections.contains(&home), "{}", redirect.old);
+        let example: Value = serde_json::from_str(redirect.example).expect("JSON");
+        let nested = in_lints
+            .rsplit('.')
+            .fold(example, |inner, key| json!({ key: inner }));
+        for section in sections.iter().filter(|section| **section != home) {
+            for over in [false, true] {
+                let (table, place) = if over {
+                    (
+                        json!({ "overrides": [{ "globs": ["a.rs"], "lints": nested }] }),
+                        format!("{section}.overrides[0].lints"),
+                    )
+                } else {
+                    (json!({ "lints": nested }), format!("{section}.lints"))
+                };
+                let config = json!({ "schema_version": 1, *section: table });
+                for extension in ["toml", "yaml", "json"] {
+                    let name = format!("{} in {place} {extension}", redirect.old);
+                    let error = load(extension, &written(&config, extension))
+                        .err()
+                        .unwrap_or_else(|| panic!("{name}: loaded"));
+                    let message = error.to_string();
+                    assert!(
+                        message.contains(&format!("unknown key `{place}.{in_lints}`")),
+                        "{name}: {message}"
+                    );
+                }
+            }
+        }
+    }
+}
+
 #[test]
 fn no_old_path_is_a_setting_and_every_new_path_is() {
     let paths = SchemaPaths::of(&schema());

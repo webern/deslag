@@ -380,5 +380,5 @@ const DEFAULT_ADVICE: &str = "This repo keeps these phrases out of its writing. 
     advice with each one says, or reword the sentence; it often reads better with the phrase \
     simply gone.\n\
     \n\
-    Do not hide a phrase in a code span or HTML, and do not change the config to get past this \
+    Do not hide a phrase in code or markup, and do not change the config to get past this \
     check. Only a human can tell you to do that, and I am a linter, not a human.";

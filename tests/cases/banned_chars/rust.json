@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nsrc/lib.rs has 3 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 1, 3: U+2014 em dash \"—\"; write `-`\n  line 9: U+2192 rightwards arrow \"→\"; write `->`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 14,
+          "end": 17,
+          "line": 1,
+          "column": 15,
+          "end_line": 1,
+          "end_column": 16,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 50,
+          "line": 3,
+          "column": 19,
+          "end_line": 3,
+          "end_column": 20,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 169,
+          "end": 172,
+          "line": 9,
+          "column": 24,
+          "end_line": 9,
+          "end_column": 25,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        }
+      ]
+    }
+  ]
+}

@@ -180,7 +180,13 @@ pub fn lints(
     let docs: Vec<&Doc> = filters
         .apply(corpus)
         .into_iter()
-        .filter(|doc| every_file || config.section_for(&doc.source_path).is_some())
+        // A path that two sections select passes: `check_file` reports it.
+        .filter(|doc| {
+            every_file
+                || config
+                    .sole_section_for(&doc.source_path)
+                    .map_or(true, |section| section.is_some())
+        })
         .collect();
     let checked = in_chunks(&docs, 32, |chunk| {
         chunk

@@ -112,3 +112,13 @@ lints.max_size_bytes.value = 8192
 [[md.overrides]]
 globs = ["/docs/design/*.asbuilt.md"]
 lints.max_size_bytes.value = 4096
+
+# The comments of deslag's own source. A comment may not hold the characters and phrases the
+# prose of this repo may not.
+[rust]
+globs = ["/src/**/*.rs"]
+
+[rust.lints.banned_chars]
+groups = { emoji = true }
+
+[rust.lints.banned_phrases]

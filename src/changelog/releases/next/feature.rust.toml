@@ -1,0 +1,21 @@
+kind = "feature"
+id = "rust"
+summary = "Lints the doc comments and comments of Rust files, by section"
+onboarding = '''
+A `[rust]` section lints the comments of Rust files with the lints that read prose. A doc comment
+(`///`, `//!`, `/** */`) is read as Markdown and any other comment as plain text. Code, strings and
+attributes are never read, and `deslag fix` edits a comment only when the edit leaves it reading as
+it did.
+
+A config with no `[rust]` section does not read a Rust file. Its lints are the same tables as `[md]`'s,
+under `[rust.lints]`, and the same lints turn on. A lint that needs the whole file, such as
+`max_size_bytes`, or one that needs Markdown blocks without the `doc_comment` surface, such as
+`list_growth`, is an error there. A file that `[md]` and `[rust]` both select is an error.
+
+```toml
+[rust]
+globs = ["/src/**/*.rs"]
+
+[rust.lints.banned_chars]
+```
+'''

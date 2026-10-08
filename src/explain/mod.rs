@@ -54,7 +54,7 @@ fn block(
         out.push_str("# ignored: yes, so deslag check never reads it\n");
         return Ok(out);
     }
-    let Some(section) = config.section_for(relative) else {
+    let Some(section) = config.sole_section_for(relative)? else {
         out.push_str("# selected by [md]: no\n");
         return Ok(out);
     };

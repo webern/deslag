@@ -17,8 +17,6 @@ pub enum Reader {
 }
 
 /// The least of a document that a lint runs on.
-// TODO: remove the dead_code guard when the load check of the `[rust]` section reads it.
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Need {
     /// The file as a whole.
@@ -29,6 +27,19 @@ pub(crate) enum Need {
     Sentences,
     /// Any prose.
     Text,
+}
+
+impl Need {
+    /// What it asks for, and what gives it, for a message.
+    pub(crate) fn asks(self) -> &'static str {
+        match self {
+            Need::File => "the whole file, which only [md] reads",
+            Need::Structure => "the blocks of Markdown, which only the doc_comment surface gives",
+            Need::Sentences | Need::Text => {
+                "prose, which the doc_comment and comment surfaces give"
+            }
+        }
+    }
 }
 
 /// What a [`Document`] is read with: owned data, cloned into each document so that it can read an
@@ -58,14 +69,28 @@ impl Stack {
     /// Whether a document read with this stack has what `need` asks for. Markdown has all of it.
     /// Plain text is prose, so it has sentences and text, but no blocks of Markdown, and it is no
     /// file of its own. A code file has what any of its surfaces gives, and is never the file.
-    // TODO: remove the dead_code guard when the load check of the `[rust]` section calls it.
-    #[allow(dead_code)]
     pub(crate) fn provides(&self, need: Need) -> bool {
         match (&self.outer, need) {
             (Reader::Markdown, _) => true,
             (Reader::Plain, Need::Sentences | Need::Text) => true,
             (Reader::Plain, Need::File | Need::Structure) => false,
             (Reader::Rust { surfaces }, _) => surfaces.iter().any(|surface| surface.provides(need)),
+        }
+    }
+
+    /// What this stack reads, for a message: the surfaces of a code file, or the format.
+    pub(crate) fn reads(&self) -> String {
+        match &self.outer {
+            Reader::Markdown => "Markdown".to_string(),
+            Reader::Plain => "plain text".to_string(),
+            Reader::Rust { surfaces } => match surfaces.as_slice() {
+                [] => "no surface".to_string(),
+                [only] => format!("the {} surface", only.name()),
+                several => {
+                    let names: Vec<&str> = several.iter().map(|surface| surface.name()).collect();
+                    format!("the surfaces {}", names.join(" and "))
+                }
+            },
         }
     }
 

@@ -11,6 +11,7 @@ use crate::Error;
 use crate::config::lints::{Lints, Merge};
 use crate::document::Stack;
 use crate::glob::{self, Pattern};
+use crate::lint::Lint;
 
 /// One entry of a section's `overrides`, as it is written on disk.
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -29,6 +30,9 @@ pub(super) struct Parts {
     pub(super) globs: Option<Vec<String>>,
     /// The patterns the section selects when the file names none.
     pub(super) default_globs: &'static [&'static str],
+    /// The extensions every pattern the file writes must end in, or `None` for any. `[md]` has
+    /// none, as it never has: a config of an older release may select any file.
+    pub(super) extensions: Option<&'static [&'static str]>,
     /// What reads the files the section selects.
     pub(super) stack: Stack,
     /// The settings for every selected file that no override changes.
@@ -38,6 +42,53 @@ pub(super) struct Parts {
 }
 
 impl Parts {
+    /// Whether every pattern the file wrote ends in an extension the section reads.
+    fn check_globs(&self, name: &str, config_path: &str) -> Result<(), Error> {
+        let (Some(extensions), Some(texts)) = (self.extensions, &self.globs) else {
+            return Ok(());
+        };
+        let ends = |text: &str| {
+            extensions
+                .iter()
+                .any(|extension| text.ends_with(&format!(".{extension}")))
+        };
+        match texts.iter().find(|text| !ends(text)) {
+            None => Ok(()),
+            Some(text) => {
+                let wanted: Vec<String> = extensions.iter().map(|e| format!(".{e}")).collect();
+                Err(Error::Setting {
+                    path: config_path.to_string(),
+                    message: format!(
+                        "{name}.globs holds `{text}`, which does not end in {}; [{name}] reads \
+                         only those files",
+                        wanted.join(" or ")
+                    ),
+                })
+            }
+        }
+    }
+
+    /// Whether the stack can feed every lint that a `lints` table of the section turns on.
+    fn check_needs(&mut self, name: &str, config_path: &str) -> Result<(), Error> {
+        let stack = self.stack.clone();
+        for (place, lints) in self.lints_tables(name) {
+            let unfed = Lint::ALL
+                .into_iter()
+                .find(|lint| lints.is_on(*lint) && !stack.provides(lint.needs()));
+            if let Some(lint) = unfed {
+                return Err(Error::Setting {
+                    path: config_path.to_string(),
+                    message: format!(
+                        "{place}.{lint} is on, but it needs {}; [{name}] reads {}",
+                        lint.needs().asks(),
+                        stack.reads()
+                    ),
+                });
+            }
+        }
+        Ok(())
+    }
+
     /// Every `lints` table of the section named `section`, with its place in the config: the
     /// section's, then each override's.
     pub(super) fn lints_tables(
@@ -83,9 +134,11 @@ impl Section {
     /// Compiles `parts` as the section named `name`, naming `config_path` in any error.
     pub(super) fn compile(
         name: &'static str,
-        parts: Parts,
+        mut parts: Parts,
         config_path: &str,
     ) -> Result<Section, Error> {
+        parts.check_globs(name, config_path)?;
+        parts.check_needs(name, config_path)?;
         let compile = |texts: &[String]| {
             glob::compile_all(texts).map_err(|(pattern, source)| Error::Glob {
                 path: config_path.to_string(),
@@ -191,6 +244,7 @@ mod tests {
         Parts {
             globs: None,
             default_globs: &["*.md"],
+            extensions: None,
             stack: Stack::new(Reader::Markdown),
             lints: Lints::default(),
             overrides: (0..overrides)

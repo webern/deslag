@@ -43,8 +43,8 @@ impl Edited {
 /// only if it is that config and differs from `old_text` by the edits alone.
 ///
 /// The settings come first: the new text must load, with no warning, have the schema version and
-/// the `md` section of `old`, and carry the stamp. Then the lines: each line it removed or added
-/// must be one an edit is for.
+/// every section of `old`, `[rust]` included, and carry the stamp. Then the lines: each line it
+/// removed or added must be one an edit is for.
 pub(super) fn check(
     old: &Config,
     old_text: &str,

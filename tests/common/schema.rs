@@ -16,6 +16,7 @@ const KEYWORDS: &[&str] = &[
     "default",
     "definitions",
     "description",
+    "enum",
     "format",
     "items",
     "maximum",
@@ -74,6 +75,11 @@ pub fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<S
         .is_some_and(|constant| constant != value)
     {
         return Some(format!("{at} is not {}", schema["const"]));
+    }
+    if let Some(values) = schema.get("enum").and_then(Value::as_array) {
+        if !values.contains(value) {
+            return Some(format!("{at} is none of {}", Value::Array(values.clone())));
+        }
     }
     if let Some(types) = schema.get("type") {
         let fits = |kind: &Value| match kind.as_str() {

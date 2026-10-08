@@ -20,6 +20,14 @@ pub enum Surface {
 }
 
 impl Surface {
+    /// Its name in the config, such as `doc_comment`.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Surface::DocComment => "doc_comment",
+            Surface::Comment => "comment",
+        }
+    }
+
     /// Whether a document of this surface has what `need` asks for.
     pub(crate) fn provides(self, need: Need) -> bool {
         match need {

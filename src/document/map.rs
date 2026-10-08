@@ -12,7 +12,7 @@ use std::ops::Range;
 
 /// How the outer text holds the bytes of a [`Segment`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SegmentKind {
+pub(crate) enum SegmentKind {
     /// The outer text holds the same bytes. A range inside it maps exactly.
     Verbatim,
     /// The outer text holds other bytes that read as these, such as the entity `&amp;` for `&`.
@@ -24,7 +24,7 @@ pub enum SegmentKind {
 
 /// A stretch of the inner text and where the outer text holds it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Segment {
+pub(crate) struct Segment {
     /// Its bytes in the inner text.
     pub inner: Range<usize>,
     /// Its bytes in the outer text.
@@ -35,7 +35,7 @@ pub struct Segment {
 
 /// Where a range of the inner text is in the outer text.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Mapped {
+pub(crate) struct Mapped {
     /// The range of the outer text.
     pub range: Range<usize>,
     /// Whether the range holds exactly the bytes of the inner range, so that replacing it replaces
@@ -49,7 +49,7 @@ pub struct Mapped {
 /// they are sorted and disjoint, except that the points of synthetic segments may tie with their
 /// neighbours. [`SourceMap::push`] is the only way to add one, and asserts all of it.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct SourceMap {
+pub(crate) struct SourceMap {
     segments: Vec<Segment>,
 }
 
@@ -182,6 +182,8 @@ impl SourceMap {
     /// # Panics
     ///
     /// If `outer` is empty and `self` is not.
+    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    #[allow(dead_code)]
     pub fn compose(&self, outer: &SourceMap) -> SourceMap {
         let mut parts: Vec<Part> = Vec::new();
         for segment in &self.segments {
@@ -239,6 +241,8 @@ impl SourceMap {
     }
 
     /// The segments, in order.
+    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    #[allow(dead_code)]
     pub fn segments(&self) -> &[Segment] {
         &self.segments
     }
@@ -249,6 +253,8 @@ impl SourceMap {
     }
 
     /// Whether the map tiles no text.
+    // TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.segments.is_empty()
     }
@@ -261,6 +267,8 @@ impl SourceMap {
 
 /// A segment being composed: the kind, the length of inner text and the outer range it will be
 /// pushed with.
+// TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+#[allow(dead_code)]
 struct Part {
     kind: SegmentKind,
     len: usize,
@@ -269,6 +277,8 @@ struct Part {
 
 /// Adds a part to `parts`. A part whose outer range starts before the last one's ends becomes one
 /// escaped part with it, and so on back while the parts overlap.
+// TODO: remove the dead_code guard when the reader of Rust comments lands and uses it.
+#[allow(dead_code)]
 fn join(parts: &mut Vec<Part>, kind: SegmentKind, len: usize, outer: Range<usize>) {
     parts.push(Part { kind, len, outer });
     while let Some(after) = parts.pop() {
@@ -584,6 +594,44 @@ mod tests {
         );
     }
 
+    #[test]
+    fn compose_makes_a_point_inside_an_entity_the_whole_entity() {
+        // The second reading has a point between the two bytes that the file's one entity reads
+        // as. A range that ends at the point ends after the entity, and one that starts at it
+        // starts before, so only the entity as a whole holds both.
+        let inner = map_of(&[(Verbatim, 1, 0..1), (Escaped, 2, 1..8), (Verbatim, 1, 8..9)]);
+        let outer = map_of(&[
+            (Verbatim, 1, 0..1),
+            (Synthetic, 1, 2..2),
+            (Verbatim, 1, 3..4),
+        ]);
+
+        let composed = outer.compose(&inner);
+
+        assert_eq!(
+            composed.segments(),
+            [
+                Segment {
+                    inner: 0..1,
+                    outer: 0..1,
+                    kind: Verbatim
+                },
+                Segment {
+                    inner: 1..2,
+                    outer: 1..8,
+                    kind: Escaped
+                },
+                Segment {
+                    inner: 2..3,
+                    outer: 8..9,
+                    kind: Verbatim
+                },
+            ]
+        );
+        assert_eq!(mapped(&composed, 0..2), (0..8, false));
+        assert_eq!(mapped(&composed, 1..2), (1..8, false));
+    }
+
     /// A small, fast pseudo-random generator, xorshift64*, so every seed draws the same case.
     struct Rng(u64);
 
@@ -705,8 +753,9 @@ mod tests {
         }
     }
 
-    /// What `Run::source_of` was before the map took its place, over the pieces as it kept them:
-    /// empty ones too, and verbatim ones apart.
+    /// The search over a list of pieces that mapped a range of the gathered text to a range of the
+    /// source before `SourceMap` existed (the algorithm `Run::source_of` used), over the pieces as
+    /// it kept them: empty ones too, and verbatim ones apart.
     fn old_source_of(case: &Case, range: Range<usize>) -> Range<usize> {
         let mut pieces: Vec<(usize, Range<usize>, bool)> = Vec::new();
         let mut at = 0;
@@ -898,8 +947,9 @@ mod tests {
             let bounds = outer.bounds();
             for (index, &start) in bounds.iter().enumerate() {
                 for &end in &bounds[index + 1..] {
-                    let middle = outer.map.to_file(start..end).range;
-                    let twice = inner.map.to_file(middle).range;
+                    let first = outer.map.to_file(start..end);
+                    let second = inner.map.to_file(first.range.clone());
+                    let twice = second.range.clone();
                     let once = composed.to_file(start..end);
                     let context = format!("seed {seed}, range {start}..{end}");
                     assert!(
@@ -907,6 +957,9 @@ mod tests {
                         "{context}: {:?} does not hold {twice:?}",
                         once.range
                     );
+                    if first.editable && second.editable {
+                        assert!(once.editable, "{context}: both steps are editable");
+                    }
                     if once.editable {
                         assert_eq!(once.range, twice, "{context}");
                         assert_eq!(

@@ -29,7 +29,6 @@ use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
 pub(crate) use map::Gathered;
-pub use map::{Mapped, Segment, SegmentKind, SourceMap};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 ///
@@ -326,14 +325,13 @@ impl<'a> Document<'a> {
         }
     }
 
-    /// The text the lints read at `range`, a range of the file on characters: as the reader was
-    /// given it, with no gaps. In a Markdown file that is the file as written, entities and escapes
-    /// included, not what they render as.
+    /// The file's text at `range`, as it is written. In a Markdown file an entity such as `&amp;`
+    /// is the entity, not the character it stands for.
     ///
     /// # Panics
     ///
     /// If `range` is not on characters of the file.
-    pub fn text(&self, range: Range<usize>) -> Cow<'_, str> {
+    pub(crate) fn text(&self, range: Range<usize>) -> Cow<'_, str> {
         text(self.source, range)
     }
 
@@ -480,5 +478,43 @@ impl<'d, 'a> Iterator for Walk<'d, 'a> {
             }
             return Some((block, ancestors));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn text_is_a_markdown_entity_as_written() {
+        let source = "Fish &mdash; chips &amp; peas.\n";
+        let document = Document::markdown(source);
+        let start = source.find("&mdash;").unwrap();
+
+        let text = document.text(start..start + "&mdash;".len());
+
+        assert_eq!(text, "&mdash;");
+        assert_eq!(text.len(), 7);
+        assert!(matches!(text, Cow::Borrowed(_)));
+    }
+
+    #[test]
+    fn text_is_a_range_of_many_byte_characters() {
+        let source = "Crème brûlée — naïve 😀 fun.\n";
+        let document = Document::markdown(source);
+        let start = source.find('è').unwrap();
+        let end = source.find("ve").unwrap() + 2;
+
+        assert_eq!(document.text(start..end), "ème brûlée — naïve");
+        assert_eq!(document.text(0..source.len()), source);
+        assert_eq!(document.text(start..start), "");
+    }
+
+    #[test]
+    #[should_panic]
+    fn text_panics_inside_a_character() {
+        let source = "Crème.\n";
+        let inside = source.find('è').unwrap() + 1;
+        Document::markdown(source).text(0..inside);
     }
 }

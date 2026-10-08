@@ -69,8 +69,9 @@ impl Rows<'_, '_> {
                 TokenKind::Punctuation if is_terminal(&token.text) => true,
                 TokenKind::Punctuation if ended && is_closing(&token.text) => {
                     let before = &self.tokens[at - 1];
-                    !super::text(self.source, before.range.end..token.range.start)
-                        .contains(char::is_whitespace)
+                    before.range.end <= token.range.start
+                        && !super::text(self.source, before.range.end..token.range.start)
+                            .contains(char::is_whitespace)
                 }
                 _ => false,
             };

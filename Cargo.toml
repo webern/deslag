@@ -40,9 +40,11 @@ workspace = true
 
 # tools/corpus measures the test corpus and tools/exam grades taggers. Neither is published, and
 # deslag depends on neither, so `cargo publish` sees deslag alone. (tools/corpus is a path-only
-# dev-dependency, which the package drops.)
+# dev-dependency, which the package drops.) tools/sweep is excluded: it needs a newer Rust and a C
+# compiler, and keeps its own lockfile.
 [workspace]
 members = ["tools/corpus", "tools/exam"]
+exclude = ["tools/sweep"]
 
 [workspace.package]
 edition = "2024"

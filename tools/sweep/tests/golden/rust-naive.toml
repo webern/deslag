@@ -1,0 +1,70 @@
+corpus = "sha256:614f498dd7b6b7e4f2a1cedd85a7bf88a6ffa5e9fac611bc7966d603b4d205c4"
+lock = "sha256:3c4fca838aa51116c87a5c784f4fee2550d8a0b1f270b9ca4294e57bba325f8c"
+lang = "rust"
+oracles = ["ra-ap-rustc_lexer 0.176.0"]
+scanner = true
+files = 7
+bytes = 1109
+skipped_large = 0
+skipped_not_utf8 = 0
+unclean_files = 0
+
+[clean.comment]
+oracle = 10
+scanner = 11
+agree = 6
+kind_differs = 0
+end_differs = 0
+only_oracle = 4
+only_scanner = 5
+oracle_blind = 0
+
+[clean.str]
+oracle = 11
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 11
+only_scanner = 0
+oracle_blind = 0
+
+[clean.char]
+oracle = 8
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 8
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.comment]
+oracle = 0
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 0
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.str]
+oracle = 0
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 0
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.char]
+oracle = 0
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 0
+only_scanner = 0
+oracle_blind = 0

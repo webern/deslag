@@ -1147,12 +1147,36 @@ fn a_part_judged_into_merge_then_into_merge_spacy_is_checked_and_built() {
                 .any(|line| line.contains(&format!("\t{second}"))),
             "the word spaCy disputes is answered by the second run: {settled}"
         );
+        let rows: Vec<Vec<&str>> = judges
+            .iter()
+            .map(|line| line.split('\t').collect())
+            .collect();
+        assert_ne!(rows[0], rows[1], "the two runs are different runs: {runs}");
         made.check_part(number).ok();
     }
     assert!(made.spec(1).ends_with(":merge-spacy"));
     // Only `merge-spacy` is read: the plain merge is not shipped.
     made.build("two", &[]).ok();
     let out = made.out("two");
+    for number in 1..=2 {
+        let plain = made.read(number, "merge/adjudicated.tsv");
+        let shipped =
+            fs::read_to_string(out.join(format!("parts/{number:02}/adjudicated.tsv"))).unwrap();
+        let spacy = made.read(number, "merge-spacy/adjudicated.tsv");
+        assert_eq!(shipped, spacy, "part {number} ships merge-spacy's answers");
+        assert!(
+            shipped
+                .lines()
+                .any(|line| line.contains(&format!("\t{}", made.run(number, 5)))),
+            "the second run's answer is shipped: {shipped}"
+        );
+        assert!(
+            !plain
+                .lines()
+                .any(|line| line.contains(&format!("\t{}", made.run(number, 5)))),
+            "the plain merge never had the second run's answer: {plain}"
+        );
+    }
     let silver = fs::read_to_string(out.join("silver.conllu")).unwrap();
     assert!(
         silver.contains(&format!("Runs={}", made.run(1, 4))),

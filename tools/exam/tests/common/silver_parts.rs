@@ -382,8 +382,21 @@ fn part_runs(
         serde_json::json!({"agent": agent()}).to_string(),
     ));
     if two {
+        // The second run asks about the one word spaCy disputes, in the merge spaCy votes in: its
+        // own id, day, size and settings, as a run of its own has.
         let mut again = judge.clone();
-        again[0].1 = run(5);
+        let mut set = |key: &str, value: &str| {
+            let cell = again.iter_mut().find(|(k, _)| k == key).unwrap();
+            cell.1 = value.to_string();
+        };
+        set("run", &run(5));
+        set("date", "2026-10-09");
+        set("sentences", "1");
+        set(
+            "settings",
+            &serde_json::json!({"agent": agent(), "into": "merge-spacy", "spacy": true})
+                .to_string(),
+        );
         rows.push(judge);
         rows.push(again);
     } else {
@@ -414,7 +427,9 @@ impl Made {
     /// into `merge-spacy`, which spaCy votes in and which is settled from `merge`. spaCy takes
     /// the second word of the first sentence for a noun where the models agree on a verb, so the
     /// adjudicator is asked a second time, in a run of its own, and the assembler reads
-    /// `merge-spacy`.
+    /// `merge-spacy`. This stands in for `label.py judge` and `judge --into merge-spacy --spacy`
+    /// (settled from `merge`, with other voters), driving `deslag-gold merge`, `read-answers` and
+    /// `finish` directly.
     pub fn with_two_merges(parts: usize) -> Made {
         Made::build_with(parts, "2,1,0,0", 6, true)
     }

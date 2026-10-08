@@ -137,7 +137,8 @@ help:
 	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
 	@echo "                 in test or ci: its own workflow runs it when they change"
 	@echo "test-scanners    fetch the crates Cargo.lock names, then sweep deslag's src and tools and those crates"
-	@echo "                 with deslag-sweep, and fail on any non-zero exit; prints the sweep's TOML; needs the"
+	@echo "                 with deslag-sweep, and fail on any non-zero exit; prints the sweep's TOML; until a"
+	@echo "                 scanner is wired in it prints the oracle's counts and checks nothing; needs the"
 	@echo "                 network, so not in test; ci runs it"
 	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
 	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
@@ -371,8 +372,9 @@ test-python: preflight
 
 # Sweeps deslag's own source and the vendored crates of Cargo.lock with deslag-sweep, which checks the
 # comment scanners against the real lexers, and fails on any non-zero exit: the scanners differ from a
-# lexer, or the sweep cannot run. It prints the sweep's TOML, so a log shows what was swept. Both runs
-# are debug builds. Needs the network for the crates, so not in test; ci runs it.
+# lexer, or the sweep cannot run. Until a scanner is wired in, no scanner can differ from a lexer: the
+# run prints the oracle's counts and checks nothing. It prints the sweep's TOML, so a log shows what was
+# swept. Both runs are debug builds. Needs the network for the crates, so not in test; ci runs it.
 test-scanners: preflight fetch-crates
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust src tools
 	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust .crates/vendor
@@ -556,10 +558,10 @@ install:
 fetch-blobs:
 	@$(BLOBSTORE)/blobs.sh fetch
 
-# The crates Cargo.lock names, vendored for test-scanners; see $(CRATES)/fetch.sh. A stamp that matches
-# the lock is the whole check.
+# The crates Cargo.lock names, vendored for test-scanners; see $(CRATES)/fetch.sh, which takes any
+# manifest and a directory under .crates. A stamp that matches the lock is the whole check.
 fetch-crates:
-	@$(CRATES)/fetch.sh fetch
+	@$(CRATES)/fetch.sh fetch Cargo.toml .crates/vendor
 
 # The treebank the exam grades on, from the release $(EWT)/ewt.lock pins. Nothing in ci reads it. A
 # stamp that matches the lock is the whole check.

@@ -56,7 +56,8 @@ jobs:
 
       # .crates is Cargo.lock's crates vendored, with the stamp that says so, so a hit means
       # fetch-crates touches nothing. Keyed on the lock, with no restore keys: another lock's
-      # crates are fetched again anyway.
+      # crates are fetched again anyway. A second corpus lock, vendored under .crates by another
+      # fetch-crates call, must join the key.
       - name: Cache the vendored crates
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
         with:

@@ -1,23 +1,29 @@
 #!/usr/bin/env bash
 #
-# Vendors every crate the root Cargo.lock names into .crates/vendor at the repo root, for the
+# Vendors every crate a Cargo.lock names into a directory under .crates at the repo root, for the
 # sweep to read as its corpus of real Rust: `deslag-sweep rust .crates/vendor`. `make test-scanners`
 # runs it; the build and the other tests do not read it.
 #
-#   fetch.sh fetch   `cargo vendor --locked --versioned-dirs`, unless .crates is already that
+#   fetch.sh fetch <manifest> <dest>
 #
-# .crates/stamp is a copy of the Cargo.lock .crates was fetched from. A stamp equal to the lock is
-# the whole check, so a repeat fetch is free. crates.io versions never change and --locked checks
-# their checksums, so the lock pins the bytes. A stamp that differs, or none, vendors again.
+# <manifest> is a Cargo.toml, and the Cargo.lock beside it is the lock. <dest> is the directory to
+# vendor into. Both are paths from the repo root, and <dest> must be under .crates, so that
+# `make clean-crates` removes it. The Makefile passes Cargo.toml and .crates/vendor. A second corpus
+# is one more call with its own manifest and <dest>. The sweep labels a corpus by the basename of
+# its root, so <dest> is what names it in the sweep's report.
+#
+# `cargo vendor --locked --versioned-dirs` runs unless <dest> is already that. <dest>.stamp is a
+# copy of the lock <dest> was vendored from. A stamp equal to the lock, with <dest> there, is the
+# whole check, so a repeat fetch is free. crates.io versions never change and --locked checks their
+# checksums, so the lock pins the bytes. A stamp that differs, or none, vendors again.
 # Vendoring happens in a scratch directory beside .crates, so a failed or offline run leaves a good
-# .crates as it was. The last step removes .crates and moves the scratch directory, stamp included,
-# into its place. Those are two commands, not one atomic swap, and that is safe: a run killed
-# between them leaves .crates absent or part removed, with a stamp that differs from the lock or
-# none, and the next fetch sees that and vendors again. The scratch directory goes when the script
-# exits; one left by a killed run is named .crates.new.*, and the next fetch and `make clean-crates`
-# remove it.
+# <dest> as it was. The last step removes the old stamp, then <dest>, moves the scratch copy into
+# place, and moves its stamp in last. Those are several commands, not one atomic swap, and that is
+# safe: the stamp is gone before <dest> is touched and comes back only after <dest> is whole, so a
+# run killed anywhere in between leaves no stamp, and the next fetch vendors again. The scratch
+# directory goes when the script exits; one left by a killed run is named .crates.new.*, and the
+# next fetch and `make clean-crates` remove it.
 #
-# The directory is always named vendor, since the sweep labels a corpus by the basename of its root.
 # `cargo vendor` prints a config snippet for .cargo/config.toml on stdout; it is discarded, and
 # nothing here ever points cargo at the vendored copy.
 
@@ -25,9 +31,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-LOCK="$ROOT/Cargo.lock"
 CRATES="$ROOT/.crates"
-STAMP="$CRATES/stamp"
+USAGE="fetch.sh fetch <manifest> <dest>"
 SELF="${HERE#"$ROOT/"}/$(basename "${BASH_SOURCE[0]}")"
 
 fail() {
@@ -36,9 +41,9 @@ fail() {
 Error in:
 $SELF
 
-The crates in Cargo.lock are an External Asset: the sweep reads them as real Rust, to check the
+The crates a Cargo.lock names are an External Asset: the sweep reads them as real Rust, to check the
 comment scanners against. Nothing in the build needs them. A failure has occurred in the script
-that vendors them; they are pinned by Cargo.lock.
+that vendors them; they are pinned by the Cargo.lock beside the manifest.
 
 Error message:
 $*
@@ -47,9 +52,22 @@ MSG
 }
 
 fetch() {
-    [ -f "$LOCK" ] || fail "Cargo.lock is missing."
-    if [ -f "$STAMP" ] && cmp -s "$LOCK" "$STAMP"; then
-        echo "crates: the crates of Cargo.lock are already vendored"
+    local manifest="${1:?$USAGE}" dest="${2:?$USAGE}"
+    case "$dest" in
+        .crates/*) ;;
+        *) fail "The destination '$dest' is not under .crates. The usage is: $USAGE" ;;
+    esac
+    case "/$dest/" in
+        */../* | */./* | *//*) fail "The destination '$dest' must be a plain path." ;;
+    esac
+    [ "${manifest##*/}" = "Cargo.toml" ] || fail "'$manifest' is not a Cargo.toml."
+    [ -f "$ROOT/$manifest" ] || fail "$manifest is missing."
+    local lock="$ROOT/${manifest%Cargo.toml}Cargo.lock"
+    [ -f "$lock" ] || fail "The Cargo.lock beside $manifest is missing."
+
+    local out="$ROOT/$dest" stamp="$ROOT/$dest.stamp"
+    if [ -d "$out" ] && [ -f "$stamp" ] && cmp -s "$lock" "$stamp"; then
+        echo "crates: the crates of $manifest are already vendored in $dest"
         return 0
     fi
     command -v cargo >/dev/null 2>&1 || fail "cargo is not installed, and it vendors the crates."
@@ -62,20 +80,22 @@ fetch() {
     scratch="$(mktemp -d "$ROOT/.crates.new.XXXXXX")"
     trap 'rm -rf "$scratch"' EXIT
 
-    echo "crates: vendoring the crates of Cargo.lock"
-    cargo vendor --quiet --locked --versioned-dirs --manifest-path "$ROOT/Cargo.toml" "$scratch/vendor" \
-        >/dev/null || fail "cargo vendor failed."
+    echo "crates: vendoring the crates of $manifest"
+    cargo vendor --quiet --locked --versioned-dirs --manifest-path "$ROOT/$manifest" \
+        "$scratch/vendor" >/dev/null || fail "cargo vendor failed."
 
-    cp "$LOCK" "$scratch/stamp"
-    chmod 755 "$scratch"
-    # Not atomic, and safe: if this is killed after the rm, the stamp is gone or differs from the
-    # lock, so the next fetch vendors again.
-    rm -rf "$CRATES"
-    mv "$scratch" "$CRATES"
-    echo "crates: the vendored crates are in ${CRATES#"$ROOT/"}/vendor"
+    cp "$lock" "$scratch/stamp"
+    mkdir -p "$(dirname "$out")"
+    # Not atomic, and safe: the stamp goes first and comes back last, so a run killed anywhere here
+    # leaves none, and the next fetch vendors again.
+    rm -f "$stamp"
+    rm -rf "$out"
+    mv "$scratch/vendor" "$out"
+    mv "$scratch/stamp" "$stamp"
+    echo "crates: the vendored crates are in $dest"
 }
 
-case "${1:?usage: fetch.sh fetch}" in
-    fetch) fetch ;;
-    *) fail "Unknown command '$1'. The usage is: fetch.sh fetch" ;;
+case "${1:?usage: $USAGE}" in
+    fetch) shift; fetch "$@" ;;
+    *) fail "Unknown command '$1'. The usage is: $USAGE" ;;
 esac

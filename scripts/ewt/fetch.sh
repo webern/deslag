@@ -10,9 +10,9 @@
 # check, so a repeat fetch is free. A stamp that differs, or none, clears .ewt and fetches again.
 # Files are downloaded and verified in a scratch directory beside .ewt, so a failed download leaves
 # a good .ewt as it was. The last step removes .ewt and moves the scratch directory, stamp included,
-# into its place. Those are two commands, not one atomic swap, and that is safe: a run killed
-# between them leaves .ewt absent or part removed, with a stamp that differs from the lock or none,
-# and the next fetch sees that and fetches again. The scratch directory goes when the script exits;
+# into its place. Those are several commands, not one atomic swap, and that is safe: the old stamp
+# is removed before anything else of .ewt, so a run killed during the swap leaves no stamp, and the
+# next fetch fetches again. The scratch directory goes when the script exits;
 # one left by a killed run is named .ewt.new.*, and the next fetch and `make clean-ewt` remove it.
 
 set -euo pipefail
@@ -96,8 +96,9 @@ fetch() {
 
     cp "$LOCK" "$scratch/stamp"
     chmod 755 "$scratch"
-    # Not atomic, and safe: if this is killed after the rm, the stamp is gone or differs from the
-    # lock, so the next fetch fetches again.
+    # Not atomic, and safe: the stamp goes before the rest of .ewt, so a run killed after this
+    # leaves none, and the next fetch fetches again.
+    rm -f "$STAMP"
     rm -rf "$EWT"
     mv "$scratch" "$EWT"
     echo "ewt: $release is in ${EWT#"$ROOT/"}/$release"

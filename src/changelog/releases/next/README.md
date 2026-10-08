@@ -40,6 +40,10 @@ later gets a `setting` entry of its own, in the release that adds it.
 A `breaking` entry says in `update_does_all` whether a config can be brought up to date without
 the person editing it.
 
+A setting that is renamed or removed is a redirect in `src/config/redirect.rs`, which keeps the old
+key working with a warning. Each redirect has one `breaking` entry whose id is the old path, filed
+under `next/`. Renaming also edits the old entry of the setting, as the last section says.
+
 `onboarding` is Markdown for an agent: what the thing does and the table that turns it on. Its
 fenced TOML must fit the schema.
 

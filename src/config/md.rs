@@ -27,19 +27,15 @@ pub(super) struct MdFile {
 }
 
 impl MdFile {
-    /// The settings the file makes that deslag no longer has, which it ignores.
-    pub(super) fn removed_settings(&self) -> Vec<&'static str> {
-        let signposts = |lints: &MdLints| {
-            lints
-                .banned_phrases
-                .as_ref()
-                .is_some_and(|phrases| phrases.groups.signposts.is_some())
-        };
-        let mut removed = Vec::new();
-        if signposts(&self.lints) || self.overrides.iter().any(|over| signposts(&over.lints)) {
-            removed.push("banned_phrases.groups.signposts");
-        }
-        removed
+    /// Every `lints` table in the file with its place in the config: the section's, then each
+    /// override's.
+    pub(super) fn lints_tables(&mut self) -> impl Iterator<Item = (String, &mut MdLints)> {
+        let overrides = self
+            .overrides
+            .iter_mut()
+            .enumerate()
+            .map(|(index, over)| (format!("md.overrides[{index}].lints"), &mut over.lints));
+        std::iter::once(("md.lints".to_string(), &mut self.lints)).chain(overrides)
     }
 }
 

@@ -33,8 +33,7 @@ missing one costs nothing.
   `llm/` fixtures, so no group is dead weight.
 - `tests/phrases.rs` refuses an entry nested in another or repeated once folded, a group with no
   entry and an entry with `llm` files in under 40 repositories.
-- `tests/changelog.rs` holds each `since` to a release or `next`;
-  `tests/instructions.rs` holds the schema's groups to `GROUPS`.
+- `tests/instructions.rs` holds the schema's groups to `GROUPS`.
 
 `remeasure.sh` runs `make fix-blobs`, `make test-blobs` and `tests/phrases.rs` on a batch pull
 request and on a publish, so a bad batch fails before the branch goes red. The sieve's counts are

@@ -46,11 +46,12 @@ fn key_path(paths: &SchemaPaths, id: &str, key: &str) -> String {
     SchemaPaths::fold(&path)
 }
 
-/// The ids of the `lint` entries, release by release.
-fn lint_entry_ids() -> Vec<&'static str> {
+/// The `lint` entries, release by release, each as its file inside `src/changelog/releases/` and
+/// its id.
+fn lint_entries() -> Vec<(String, &'static str)> {
     entries()
         .filter(|(_, entry)| matches!(entry, Entry::Lint { .. }))
-        .map(|(_, entry)| entry.id())
+        .map(|(version, entry)| (format!("{version}/{}", entry.file_name()), entry.id()))
         .collect()
 }
 
@@ -95,12 +96,12 @@ fn stale(entry: &Entry, paths: &SchemaPaths) -> Option<String> {
     None
 }
 
-/// What is wrong with `ids`, the ids of the `lint` entries: a lint with not one entry, and an entry
-/// that is no lint. Each message names the file to add or fix.
-fn lint_entry_problems(ids: &[&str]) -> Vec<String> {
+/// What is wrong with `entries`, the `lint` entries as a file and an id: a lint with not one
+/// entry, and an entry that is no lint. Each message names the file to add or fix.
+fn lint_entry_problems(entries: &[(String, &str)]) -> Vec<String> {
     let mut problems = Vec::new();
     for lint in Lint::ALL {
-        let count = ids.iter().filter(|id| **id == lint.id()).count();
+        let count = entries.iter().filter(|(_, id)| *id == lint.id()).count();
         if count != 1 {
             problems.push(format!(
                 "lint `{}` has {count} changelog entries, not one: add \
@@ -111,11 +112,11 @@ fn lint_entry_problems(ids: &[&str]) -> Vec<String> {
         }
     }
     let known: BTreeSet<&str> = Lint::ALL.iter().map(|lint| lint.id()).collect();
-    for id in ids {
+    for (file, id) in entries {
         if !known.contains(id) {
             problems.push(format!(
-                "the `lint` entry `{id}` in src/changelog/releases/ is not a lint: fix its id and \
-                 the name of its file"
+                "src/changelog/releases/{file} holds the `lint` entry `{id}`, which is not a lint: \
+                 fix its id and the name of the file"
             ));
         }
     }
@@ -124,18 +125,18 @@ fn lint_entry_problems(ids: &[&str]) -> Vec<String> {
 
 #[test]
 fn every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint() {
-    let problems = lint_entry_problems(&lint_entry_ids());
+    let problems = lint_entry_problems(&lint_entries());
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
 /// Taking an entry file away fails the check, and the message names the file to put back.
 #[test]
 fn a_lint_with_no_entry_file_fails_and_names_the_file_to_add() {
-    let ids: Vec<&str> = lint_entry_ids()
+    let entries: Vec<(String, &str)> = lint_entries()
         .into_iter()
-        .filter(|id| *id != "density")
+        .filter(|(_, id)| *id != "density")
         .collect();
-    let problems = lint_entry_problems(&ids);
+    let problems = lint_entry_problems(&entries);
     assert_eq!(problems.len(), 1, "{problems:?}");
     assert!(
         problems[0].contains("src/changelog/releases/next/lint.density.toml"),
@@ -164,10 +165,22 @@ fn uncovered(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
 }
 
 /// The files to add for the leaves of the schema that no entry of `changelog` covers, as the paths
-/// inside `src/changelog/releases/`.
+/// inside `src/changelog/releases/`. A setting of a lint with no `lint` entry is left out: the
+/// entry the lint lacks lists it in `keys`, and the lint's own check says to add that file.
 fn files_to_add(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
+    let lints: BTreeSet<&str> = entries_in(changelog)
+        .filter(|(_, entry)| matches!(entry, Entry::Lint { .. }))
+        .map(|(_, entry)| entry.id())
+        .collect();
     uncovered(changelog, paths)
         .iter()
+        .filter(|path| {
+            let lint = path
+                .strip_prefix("md.lints.")
+                .and_then(|rest| rest.split_once('.'))
+                .map(|(lint, _)| lint);
+            lint.is_none_or(|lint| lints.contains(lint))
+        })
         .map(|path| format!("next/setting.{}.toml", path.replace("[]", "")))
         .collect()
 }
@@ -192,6 +205,71 @@ fn a_setting_with_no_entry_file_fails_and_names_the_file_to_add() {
     let to_add = files_to_add(&none, &paths);
     assert!(to_add.contains(&"next/setting.md.globs.toml".to_string()));
     assert!(to_add.contains(&"next/setting.md.overrides.globs.toml".to_string()));
+}
+
+/// The embedded changelog's files from the disk, as paths inside `src/changelog/releases/`,
+/// without the one at `skip`. A hidden file or directory is left out, as `build.rs` leaves it.
+fn files_on_disk(skip: &str) -> Vec<(String, String)> {
+    let visible = |path: &Path| {
+        let name = path.file_name().and_then(|name| name.to_str());
+        name.map(|name| !name.starts_with('.'))
+            .expect("a UTF-8 name")
+    };
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/changelog/releases");
+    let mut files = Vec::new();
+    for release in std::fs::read_dir(&root).expect("the releases directory") {
+        let release = release.expect("a directory entry").path();
+        if !visible(&release) {
+            continue;
+        }
+        for file in std::fs::read_dir(&release).expect("a release directory") {
+            let file = file.expect("a directory entry").path();
+            if !visible(&file) {
+                continue;
+            }
+            let name = |path: &Path| path.file_name().and_then(|n| n.to_str()).map(String::from);
+            let path = format!(
+                "{}/{}",
+                name(&release).expect("a name"),
+                name(&file).expect("a name")
+            );
+            if path != skip {
+                files.push((path, std::fs::read_to_string(&file).expect("a file")));
+            }
+        }
+    }
+    files
+}
+
+/// Without the entry of a lint, the settings of its table are not asked for as `setting` files:
+/// they belong in the `keys` of the lint's entry, which its own check asks for.
+#[test]
+fn a_lint_with_no_entry_does_not_ask_for_setting_files_for_its_keys() {
+    let paths = SchemaPaths::of(&schema());
+    let owned = files_on_disk("0.0.1/lint.density.toml");
+    let files = owned
+        .iter()
+        .map(|(path, text)| (path.as_str(), text.as_str()));
+    let without = Changelog::from_files(files).expect("a changelog");
+
+    // The keys are uncovered, so the files would be asked for if nothing held them back.
+    assert!(
+        uncovered(&without, &paths)
+            .iter()
+            .any(|path| path.starts_with("md.lints.density.")),
+    );
+    assert_eq!(files_to_add(&without, &paths), Vec::<String>::new());
+
+    let entries: Vec<(String, &str)> = entries_in(&without)
+        .filter(|(_, entry)| matches!(entry, Entry::Lint { .. }))
+        .map(|(version, entry)| (format!("{version}/{}", entry.file_name()), entry.id()))
+        .collect();
+    let problems = lint_entry_problems(&entries);
+    assert_eq!(problems.len(), 1, "{problems:?}");
+    assert!(
+        problems[0].contains("src/changelog/releases/next/lint.density.toml"),
+        "{problems:?}"
+    );
 }
 
 /// A table that is a setting covers the keys it lists and no others, and a setting that holds a
@@ -230,7 +308,12 @@ fn a_setting_covers_its_own_path_and_its_keys_only() {
 fn no_entry_names_a_path_or_block_the_schema_refuses() {
     let paths = SchemaPaths::of(&schema());
     for (version, entry) in entries() {
-        assert_eq!(stale(entry, &paths), None, "in release {version}");
+        assert_eq!(
+            stale(entry, &paths),
+            None,
+            "in src/changelog/releases/{version}/{}",
+            entry.file_name()
+        );
     }
 }
 
@@ -274,8 +357,9 @@ fn next_holds_no_entry() {
         .collect();
     assert!(
         left.is_empty(),
-        "src/changelog/releases/next/ still holds {left:?}: move them into a directory named for \
-         the version in Cargo.toml with `git mv next/*.toml <version>/`, and leave next/README.md"
+        "src/changelog/releases/next/ still holds {left:?}: set the version in \
+         Cargo.toml and in the deslag entry of Cargo.lock, then in src/changelog/releases/ run \
+         `mkdir <version> && git mv next/*.toml <version>/`, and leave next/README.md"
     );
 }
 
@@ -459,6 +543,33 @@ fn an_entry_in_two_releases_is_refused_with_both_paths() {
         ],
         "next/feature.json.toml",
         "0.1.0/feature.json.toml",
+    );
+}
+
+#[test]
+fn an_entry_with_an_empty_id_is_refused() {
+    let empty = feature("");
+    assert_refused(
+        &[("next/feature..toml", &empty)],
+        "next/feature..toml",
+        "id is empty",
+    );
+}
+
+/// Two ids that differ only by the `[]` that a file name drops are one entry.
+#[test]
+fn ids_that_differ_only_by_brackets_are_the_same_entry_across_releases() {
+    let setting = |id: &str| {
+        format!("kind = \"setting\"\nid = \"{id}\"\nsummary = \"s\"\nonboarding = \"o\"\n")
+    };
+    let (list, table) = (setting("a.b[]"), setting("a.b"));
+    assert_refused(
+        &[
+            ("0.1.0/setting.a.b.toml", &list),
+            ("next/setting.a.b.toml", &table),
+        ],
+        "next/setting.a.b.toml",
+        "0.1.0/setting.a.b.toml",
     );
 }
 

@@ -2,8 +2,11 @@
 //! `(path, text)` pairs that `include_str!` embeds, for `crate::changelog` to read.
 //!
 //! The script lists and does not judge: a stray file or directory is embedded like any other, and
-//! `Changelog::from_files` refuses it with a message that names it. Cargo is told to watch the
-//! directory, which it walks, so a file added, removed or renamed rebuilds the crate.
+//! `Changelog::from_files` refuses it with a message that names it. The one exception is a hidden
+//! file or directory, whose name starts with `.`: the operating system and editors leave those
+//! (`.DS_Store`, `.x.toml.swp`), nobody writes an entry in one, and refusing one would break every
+//! local build with a cause that is not in the diff. Cargo is told to watch the directory, which it
+//! walks, so a file added, removed or renamed rebuilds the crate.
 
 use std::fmt::Write as _;
 use std::fs;
@@ -38,11 +41,16 @@ fn main() {
     fs::write(out.join("changelog_files.rs"), table).expect("OUT_DIR is writable");
 }
 
-/// Pushes the path of every file under `dir`, relative to `root`, onto `found`. A directory is
-/// followed and also watched by cargo, so an empty one is missed but a file in it is not.
+/// Pushes the path of every file under `dir`, relative to `root`, onto `found`, skipping hidden
+/// ones. A directory is followed and also watched by cargo, so an empty one is missed but a file in
+/// it is not.
 fn list(root: &Path, dir: &Path, found: &mut Vec<PathBuf>) -> io::Result<()> {
     for entry in fs::read_dir(dir)? {
-        let path = entry?.path();
+        let entry = entry?;
+        if entry.file_name().to_string_lossy().starts_with('.') {
+            continue;
+        }
+        let path = entry.path();
         if path.is_dir() {
             list(root, &path, found)?;
         } else {

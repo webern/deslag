@@ -107,7 +107,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make ci test-python
 
-      - name: Check the changelog has no next release and the crate version is a release
+      - name: Check next/ of the changelog holds no entry and the crate version is a release
         run: make check-release
 
       - name: Check the crate packages

@@ -154,7 +154,8 @@ impl Changelog {
     /// - it is a `.toml` file of one entry, or `README.md` in `next`, which must be there;
     /// - its name is the entry's [`file_name`](Entry::file_name) and has only `a-z`, `0-9`, `_`,
     ///   `.` and `-`;
-    /// - a kind and id are in one file across all releases.
+    /// - its id is not empty;
+    /// - a kind and id are in one file across all releases, compared by file name.
     ///
     /// Releases come out oldest first and the entries of a release by kind, then id.
     pub fn from_files<'a>(
@@ -164,7 +165,7 @@ impl Changelog {
         files.sort();
 
         let mut releases: BTreeMap<Version, Vec<Entry>> = BTreeMap::new();
-        let mut seen: BTreeMap<(Kind, String), &str> = BTreeMap::new();
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         let mut has_readme = false;
         for (path, text) in files {
             let parts: Vec<&str> = path.split('/').collect();
@@ -210,6 +211,12 @@ impl Changelog {
             let entry: Entry = toml::from_str(text).map_err(|error| {
                 FileError::new(path, format!("not one entry, which a file holds: {error}"))
             })?;
+            if entry.id().is_empty() {
+                return Err(FileError::new(
+                    path,
+                    "the id is empty: give the entry an id",
+                ));
+            }
             if name != entry.file_name() {
                 return Err(FileError::new(
                     path,
@@ -221,11 +228,14 @@ impl Changelog {
                     ),
                 ));
             }
-            if let Some(first) = seen.insert((entry.kind(), entry.id().to_string()), path) {
+            // Keyed on the file name, which drops the `[]` of a setting's id, so ids that differ
+            // only by it are one entry too.
+            if let Some(first) = seen.insert(entry.file_name(), path) {
                 return Err(FileError::new(
                     path,
                     format!(
-                        "the same {} `{}` is in {first}",
+                        "the {} `{}` has the file name {name}, which {first} has too: an entry \
+                         is in one file across all releases",
                         entry.kind().name(),
                         entry.id()
                     ),
@@ -564,6 +574,62 @@ onboarding = "Pass the flag."
             .map(Entry::id)
             .collect();
         assert_eq!(ids, ["rename", "list_growth"]);
+    }
+
+    /// The order of the files' paths puts `feature` before `lint` and `setting`, and the order of
+    /// the kinds puts it last, so only sorting the entries by kind can give the second.
+    #[test]
+    fn a_release_lists_its_entries_by_kind_and_not_by_file_path() {
+        let entry = |kind: &str, id: &str| {
+            let keys = if kind == "lint" { "keys = []\n" } else { "" };
+            let does_all = if kind == "breaking" {
+                "update_does_all = true\n"
+            } else {
+                ""
+            };
+            format!(
+                "kind = \"{kind}\"\nid = \"{id}\"\n{keys}{does_all}summary = \"s\"\n\
+                 onboarding = \"o\"\n"
+            )
+        };
+        let names = [
+            "feature.f",
+            "lint.l",
+            "lint.k",
+            "setting.s",
+            "breaking.b",
+            "feature.e",
+        ];
+        let texts: Vec<(String, String)> = names
+            .iter()
+            .map(|name| {
+                let (kind, id) = name.split_once('.').expect("a kind and an id");
+                (format!("next/{name}.toml"), entry(kind, id))
+            })
+            .collect();
+        let mut files: Vec<(&str, &str)> = texts
+            .iter()
+            .map(|(path, text)| (path.as_str(), text.as_str()))
+            .collect();
+        files.push(("next/README.md", ""));
+
+        let changelog = Changelog::from_files(files).expect("a changelog");
+        let order: Vec<(Kind, &str)> = changelog.releases[0]
+            .entries
+            .iter()
+            .map(|entry| (entry.kind(), entry.id()))
+            .collect();
+        assert_eq!(
+            order,
+            [
+                (Kind::Breaking, "b"),
+                (Kind::Lint, "k"),
+                (Kind::Lint, "l"),
+                (Kind::Setting, "s"),
+                (Kind::Feature, "e"),
+                (Kind::Feature, "f"),
+            ]
+        );
     }
 
     #[test]

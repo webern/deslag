@@ -9,7 +9,7 @@ to add or fix.
 ## Adding an entry
 
 A change that adds a lint, a setting, a feature or a migration adds a file under `next/`. It
-does not edit any other file, so two changes that add entries never conflict.
+leaves every other changelog file alone, so two changes that add entries never conflict.
 
 The file is named `<kind>.<id>.toml`, with the `[]` of a setting's id left out, in the characters
 `a-z`, `0-9`, `_`, `.` and `-`. A file for the feature `a-short-name` is
@@ -45,10 +45,13 @@ fenced TOML must fit the schema.
 
 ## Releasing
 
-The change that bumps the version in `Cargo.toml` moves the entries out of `next/` with
-`git mv next/*.toml <version>/`, and leaves `next/` and this file where they are. Renaming
-`next/` itself is wrong: git then files the new entry of an open branch under the release that
-shipped. The release does not edit a test or a case config. `make check-release` fails while
+The change that releases a version sets it in `Cargo.toml` and in the `deslag` entry of
+`Cargo.lock`, and moves the entries out of `next/`. In `src/changelog/releases/` the move is
+`mkdir <version> && git mv next/*.toml <version>/`, with the new version for `<version>`. The
+change leaves `next/` and this file where they are.
+
+Renaming `next/` itself is wrong: git then files the new entry of an open branch under the release
+that shipped. The release does not edit a test or a case config. `make check-release` fails while
 `next/` holds an entry.
 
 An unstamped config is taken to be from 0.0.1, so from the first release after that one

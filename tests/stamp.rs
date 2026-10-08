@@ -234,6 +234,65 @@ fn a_syntax_error_beside_a_stamp_is_a_parse_error() {
     }
 }
 
+/// A config the head cannot read is reported in the words of the typed parse, which reads `md`
+/// itself, and not of the head, which skips it.
+#[test]
+fn a_json_trailing_comma_inside_md_keeps_its_message() {
+    for (text, expected) in [
+        (
+            "{\"schema_version\": 1, \"md\": {\"globs\": [\"*.md\"],}}",
+            "trailing comma at line 1 column 48",
+        ),
+        (
+            "{\"schema_version\": 1, \"md\": {\"globs\": [\"*.md\",]}}",
+            "trailing comma at line 1 column 47",
+        ),
+    ] {
+        let (code, stderr) = check("json", text);
+        assert_eq!(code, 2, "stderr: {stderr}");
+        assert!(stderr.contains(expected), "stderr: {stderr}");
+    }
+}
+
+#[test]
+fn a_bare_json_value_is_read_as_the_config_file() {
+    for text in ["null", "1", "\"x\""] {
+        let (code, stderr) = check("json", text);
+        assert_eq!(code, 2, "{text}, stderr: {stderr}");
+        assert!(
+            stderr.contains("expected struct ConfigFile") && !stderr.contains("Head"),
+            "{text}, stderr: {stderr}"
+        );
+    }
+}
+
+/// YAML reads `md: {a: 1` as far as the unknown key before it sees the missing brace; the head
+/// skips `md` and sees only the brace. The same goes for a first `md` written twice.
+#[test]
+fn a_yaml_syntax_error_inside_md_keeps_its_message() {
+    for (language, text, expected) in [
+        (
+            "yaml",
+            "schema_version: 1\nmd: {a: 1\n",
+            "unknown field `a`",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nmd:\n  foo: 1\nmd:\n  globs: [\"*.md\"]\n",
+            "unknown field `foo`",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"md\": {\"foo\": 1}, \"md\": {}}",
+            "unknown field `foo`",
+        ),
+    ] {
+        let (code, stderr) = check(language, text);
+        assert_eq!(code, 2, "{language}, stderr: {stderr}");
+        assert!(stderr.contains(expected), "{language}, stderr: {stderr}");
+    }
+}
+
 #[test]
 fn a_wrong_typed_schema_version_keeps_its_message() {
     let (code, stderr) = check("toml", "schema_version = \"1\"\n");

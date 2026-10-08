@@ -1045,6 +1045,18 @@ fn a_reason_naming_the_building_machines_own_places_is_refused() {
         made.check_part_with(1, &env)
             .refused(&[found, "a path of the machine that made it"]);
     }
+    // A home named with a closing slash is the same home.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/builder/.cache/x"),
+    );
+    made.check_part_with(1, &[("HOME", "/home/builder/")])
+        .refused(&[
+            "/home/builder/.cache/x",
+            "a path of the machine that made it",
+        ]);
     // Not the home of someone else, and not the bare temp directory.
     let made = Made::with(1);
     made.edit(

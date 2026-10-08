@@ -242,7 +242,11 @@ mod tests {
 
     /// The context of the sentence holding the word `word`, from a document read as `markdown`.
     fn context_for(markdown: &str, word: &str) -> Context {
-        let doc = Document::markdown(markdown);
+        context_in(&Document::markdown(markdown), word)
+    }
+
+    /// The context of the sentence holding the word `word` in `doc`.
+    fn context_in(doc: &Document<'_>, word: &str) -> Context {
         for (block, ancestors) in doc.walk() {
             let has = doc.tokens_of(block).iter().any(|token| token.text == word);
             if has {
@@ -261,6 +265,14 @@ mod tests {
         let table = "| h |\n|---|\n| cell |\n";
         assert_eq!(context_for(table, "cell"), Context::TableCell);
         assert_eq!(context_for(table, "h"), Context::TableCell);
+    }
+
+    #[test]
+    fn a_plain_text_item_is_a_list_item() {
+        let item = Document::plain("see\n\n- an item\n  goes on\n\n      raw");
+        assert_eq!(context_in(&item, "see"), Context::Prose);
+        assert_eq!(context_in(&item, "item"), Context::ListItem);
+        assert_eq!(context_in(&item, "goes"), Context::ListItem);
     }
 
     #[test]

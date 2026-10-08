@@ -18,6 +18,7 @@
 mod edit;
 mod map;
 mod markdown;
+mod plain;
 mod sentences;
 mod tokens;
 
@@ -292,11 +293,21 @@ pub struct Sentence {
 impl<'a> Document<'a> {
     /// Reads `source` as Markdown.
     pub fn markdown(source: &'a str) -> Document<'a> {
-        let mut document = markdown::read(source);
-        tokens::split(&mut document);
-        sentences::split(&mut document);
-        crate::tag::document(&mut document);
-        document
+        markdown::read(source).finish()
+    }
+
+    /// Reads `source` as plain text, such as the text of a `//` comment: paragraphs, bulleted and
+    /// numbered items, and raw runs of indented lines.
+    pub fn plain(source: &'a str) -> Document<'a> {
+        plain::read(source).finish()
+    }
+
+    /// Fills the later layers from the first: tokens, sentences and what the tagger reads.
+    fn finish(mut self) -> Document<'a> {
+        tokens::split(&mut self);
+        sentences::split(&mut self);
+        crate::tag::document(&mut self);
+        self
     }
 
     /// A document of `source` whose first layer a reader has filled, with no tokens or sentences.

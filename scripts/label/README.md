@@ -543,8 +543,8 @@ a value the lock of the parts holds otherwise; a fixture the image lacks or whos
 licence differs from the manifest's, that an exclusion names, or whose generator is banned; and a path of the
 machine that made it in any file it writes. In a cell the kit fills, a JSON cell or a listing too, that is any
 absolute path. A word's `form` and the adjudicator's `reason` quote the corpus, which has paths such as
-`/etc/hosts`, so there it is only a path under `/home/NAME/`, `/Users/NAME/` or `/tmp/`, a handoff's working
-directory, or this machine's home, temp directory or checkout. It drops and counts, and does not refuse, a
+`/etc/hosts`, `/tmp/cache` or `/home/NAME/.cache`, so there it is only a path in a handoff's working
+directory or under this machine's own home, temp directory (unless that is a bare `/tmp`) or checkout. It drops and counts, and does not refuse, a
 sentence whose repository became reserved after the draw or whose text is now a gold sentence's, one that is a
 repeat, and one the owner rejected in the audit. The batch ships the runs that the words it kept name, with the
 voters', and the agent record of those, worked out after the drops.

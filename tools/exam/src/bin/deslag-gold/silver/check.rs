@@ -24,8 +24,9 @@
 //! - each part's tables name sentences of the manifest and runs of `runs.tsv`;
 //! - no file but the CoNLL-U text holds a path of the machine that made it: in a cell the kit
 //!   fills, no absolute path at all; in the words of a part's tables, a `form` or a `reason`,
-//!   which may quote the corpus's paths, none under a home directory, `/tmp/`, a handoff's
-//!   working directory, or the home, temp directory or checkout of the machine running the check;
+//!   which may quote the corpus's paths (`/tmp/cache`, `/home/NAME/.cache`), none in a handoff's
+//!   working directory or under the home, temp directory or checkout of the machine running the
+//!   check;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
 //!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
 //!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance, in words (an

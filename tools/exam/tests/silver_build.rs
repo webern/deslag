@@ -1003,6 +1003,80 @@ fn a_path_of_the_makers_machine_in_a_file_the_part_ships_is_refused() {
 }
 
 #[test]
+fn a_reason_quoting_a_path_that_any_machine_has_is_not_refused() {
+    let made = Made::with(1);
+    made.edit(1, "merge/adjudicated.tsv", |text| {
+        text.replace(
+            "\tthe guide says so\t",
+            "\tthe text quotes /tmp/cache, /home/someone/.cache and /Users/someone/x\t",
+        )
+    });
+    made.check_part(1).ok();
+    made.build("quoted", &[]).ok();
+}
+
+#[test]
+fn a_reason_naming_the_building_machines_own_places_is_refused() {
+    let checkout = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap();
+    let reason = |words: &str| {
+        let words = words.to_string();
+        move |text: &str| text.replace("\tthe guide says so\t", &format!("\t{words}\t"))
+    };
+    // The home directory and the temp directory of the machine that runs the check. Their paths are
+    // made up for the test, and handed to the check as its environment.
+    let env = [("HOME", "/home/builder"), ("TMPDIR", "/var/tmp/build-7")];
+    for (words, found) in [
+        ("it read /home/builder/.cache/x", "/home/builder/.cache/x"),
+        ("it read /var/tmp/build-7/x.json", "/var/tmp/build-7/x.json"),
+        (
+            &format!("it read {}/tests/x", checkout.display()),
+            &format!("{}/tests/x", checkout.display()),
+        ),
+        (
+            "it read deslag-handoff-x/request.json",
+            "deslag-handoff-x/request.json",
+        ),
+    ] {
+        let made = Made::with(1);
+        made.edit(1, "merge/adjudicated.tsv", reason(words));
+        made.check_part_with(1, &env)
+            .refused(&[found, "a path of the machine that made it"]);
+    }
+    // Not the home of someone else, and not the bare temp directory.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/other/.cache and /tmp/cache and /var/tmp/x"),
+    );
+    made.check_part_with(1, &env).ok();
+}
+
+#[test]
+fn a_structured_field_refuses_any_rooted_path_even_one_a_reason_may_quote() {
+    // The same path that a reason may quote, in a cell the kit fills.
+    refused(
+        |made| {
+            made.set_run(1, "r1", "listing", "/tmp/cache");
+        },
+        &["/tmp/cache", "a path of the machine that made it"],
+    );
+    refused(
+        |made| {
+            made.write(
+                1,
+                "merge/adjudicator.json",
+                "{\"name\": \"opus\", \"model\": \"claude-opus-5-5\", \"dir\": \"/etc/cache\"}\n",
+            )
+        },
+        &["/etc/cache", "a path of the machine that made it"],
+    );
+}
+
+#[test]
 fn a_part_judged_into_merge_then_into_merge_spacy_is_checked_and_built() {
     let made = Made::with_two_merges(2);
     for number in 1..=2 {

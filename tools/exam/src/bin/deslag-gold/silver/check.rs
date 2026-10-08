@@ -25,8 +25,10 @@
 //! - no file but the CoNLL-U text holds a path of the machine that made it: in a cell the kit
 //!   fills, no absolute path at all; in the words of a part's tables, a `form` or a `reason`,
 //!   which may quote the corpus's paths (`/tmp/cache`, `/home/NAME/.cache`), none in a handoff's
-//!   working directory or under the home, temp directory or checkout of the machine running the
-//!   check;
+//!   working directory (`deslag-handoff-`) and none under the directories of the `machine` given
+//!   to [`check`]. The `silver check` command gives it none, so that a batch gets the same verdict
+//!   on every machine; the machine's own home, temp directory and checkout are refused where
+//!   the batch is made, by `silver build` and `silver build --check-part`;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
 //!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
 //!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance, in words (an
@@ -156,7 +158,9 @@ fn allowed(path: &str, parts: &[usize]) -> bool {
     }
 }
 
-/// Checks `batch`.
+/// Checks `batch`. `machine` holds the directories whose paths the words of a part's tables may not
+/// quote: the building machine's, from `silver build`. The `silver check` command passes none, so that
+/// the verdict on a published batch does not depend on the machine that checks it.
 pub fn check(batch: &Batch, machine: &Machine) -> Result<Checked, Problems> {
     let mut problems: Vec<Error> = Vec::new();
     let parts = batch.part_numbers();
@@ -1007,7 +1011,7 @@ mod tests {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/silver-fixture/2026-01-01-fixture");
         let batch = Batch::load(&dir).expect("the committed batch loads");
-        let checked = check(&batch, &Machine::here()).unwrap_or_else(|problems| {
+        let checked = check(&batch, &Machine::default()).unwrap_or_else(|problems| {
             panic!(
                 "the committed batch fails version {} of the rules:\n{}",
                 super::super::kit::CHECK_VERSION,

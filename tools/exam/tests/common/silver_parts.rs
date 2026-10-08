@@ -827,8 +827,31 @@ impl Made {
         self.build_parts(name, &parts, extra)
     }
 
+    /// [Made::build] with more environment, such as the `HOME` of the machine that builds.
+    pub fn build_env(&self, name: &str, extra: &[&str], env: &[(&str, &str)]) -> Ran {
+        let parts: Vec<String> = (1..=self.parts.len()).map(|n| self.spec(n)).collect();
+        self.build_parts_with(name, &parts, extra, env)
+    }
+
+    /// `silver check --batch DIR` of the batch built as `name`, with more environment, such as the
+    /// `HOME` of the machine that checks.
+    pub fn check_batch_with(&self, name: &str, env: &[(&str, &str)]) -> Ran {
+        let out = self.out(name);
+        self.gold_with(&["silver", "check", "--batch", out.to_str().unwrap()], env)
+    }
+
     /// `silver build` of the given parts.
     pub fn build_parts(&self, name: &str, parts: &[String], extra: &[&str]) -> Ran {
+        self.build_parts_with(name, parts, extra, &[])
+    }
+
+    fn build_parts_with(
+        &self,
+        name: &str,
+        parts: &[String],
+        extra: &[&str],
+        env: &[(&str, &str)],
+    ) -> Ran {
         let out = self.out(name);
         let mut args: Vec<String> = ["silver", "build", "--name", name, "--out"]
             .into_iter()
@@ -849,7 +872,7 @@ impl Made {
         args.extend(self.corpus_args());
         args.extend(extra.iter().map(|arg| arg.to_string()));
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
-        self.gold(&args)
+        self.gold_with(&args, env)
     }
 }
 

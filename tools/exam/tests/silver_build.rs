@@ -1077,6 +1077,51 @@ fn a_structured_field_refuses_any_rooted_path_even_one_a_reason_may_quote() {
 }
 
 #[test]
+fn a_batch_built_on_one_machine_passes_the_check_on_another() {
+    let reason = |words: &str| {
+        let words = words.to_string();
+        move |text: &str| text.replace("\tthe guide says so\t", &format!("\t{words}\t"))
+    };
+    let builder = [("HOME", "/home/builder"), ("TMPDIR", "/var/tmp/build-7")];
+    let runner = [("HOME", "/home/runner"), ("TMPDIR", "/var/tmp/runner-1")];
+    // The reason quotes the home of a machine that checks later, as CI documents do.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("the log shows /home/runner/work/x/y and /Users/runner/z"),
+    );
+    // It passes where it is built, and is refused where the quoted home is the builder's own.
+    made.check_part_with(1, &builder).ok();
+    made.check_part_with(1, &runner).refused(&[
+        "/home/runner/work/x/y",
+        "a path of the machine that made it",
+    ]);
+    made.build_env("one", &[], &builder).ok();
+    // The batch says the same on every machine: the check does not read the machine it runs on.
+    for (env, name) in [
+        (&builder[..], "the builder"),
+        (&runner[..], "a runner"),
+        (&[("HOME", "/Users/runner")][..], "a mac"),
+        (&[][..], "the machine of the test"),
+    ] {
+        let said = made.check_batch_with("one", env).ok();
+        assert!(said.out.contains("one passes"), "{name}: {}", said.out);
+    }
+    // The builder's own home is refused when the batch is built, so it never reaches a batch.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/builder/.cache/x"),
+    );
+    made.build_env("two", &[], &builder).refused(&[
+        "/home/builder/.cache/x",
+        "a path of the machine that made it",
+    ]);
+}
+
+#[test]
 fn a_part_judged_into_merge_then_into_merge_spacy_is_checked_and_built() {
     let made = Made::with_two_merges(2);
     for number in 1..=2 {

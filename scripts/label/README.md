@@ -544,9 +544,13 @@ licence differs from the manifest's, that an exclusion names, or whose generator
 machine that made it in any file it writes. In a cell the kit fills, a JSON cell or a listing too, that is any
 absolute path. A word's `form` and the adjudicator's `reason` quote the corpus, which has paths such as
 `/etc/hosts`, `/tmp/cache` or `/home/NAME/.cache`, so there it is only a path in a handoff's working
-directory or under this machine's own home, temp directory (unless that is a bare `/tmp`) or checkout. It drops and counts, and does not refuse, a
-sentence whose repository became reserved after the draw or whose text is now a gold sentence's, one that is a
-repeat, and one the owner rejected in the audit. The batch ships the runs that the words it kept name, with the
+directory (`deslag-handoff-`) or under the home, temp directory (unless that is a bare `/tmp`) or checkout of
+the machine that builds. Only `silver build` and `silver build --check-part` (so the preflight that `status`
+prints) scan for that machine's own paths, and they run where the part was labelled. `silver check` does not,
+so that a batch gets the same verdict on every machine; it refuses the handoff directory and any rooted path
+in a cell the kit fills. The build drops and counts, and does not refuse, a sentence whose repository became
+reserved after the draw or whose text is now a gold sentence's, one that is a repeat, and one the owner
+rejected in the audit. The batch ships the runs that the words it kept name, with the
 voters', and the agent record of those, worked out after the drops.
 
 The batch, `silver/NAME/`:
@@ -604,7 +608,8 @@ and `audit/` against the manifest, and a word with no `Prov=`; the audit scored 
 `DATASHEET.md` rendered again byte for byte.
 `record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The
 rules are frozen once a batch is live: a changed rule is a new version, with the old rules kept beside it, so a
-batch that passes once passes forever.
+batch that passes once passes forever. The check reads nothing of the machine it runs on (not `HOME`, not the
+temp directory, not the checkout), so it gives the same verdict on every machine.
 `tools/exam/tests/silver-fixture/` is a small batch, committed, that a unit test holds to them; regenerate it
 with `DESLAG_REGENERATE_SILVER_FIXTURE=1 cargo test -p deslag-exam --test silver_batch
 regenerate_the_committed_fixture_batch -- --ignored` only when a new version comes.

@@ -354,8 +354,10 @@ test-python: preflight
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
 
 # The silver batches of the unpacked image, which need no checkout but the voters' snapshot each carries:
-# `silver check` takes each batch, the retired ones too, against what it recorded, so a batch that passed
-# once passes forever; `silver standing` holds the live ones to the two rules that never lapse, no
+# `silver check` takes each batch, the retired ones too, against what it recorded and nothing of the
+# machine it runs on, so a batch that passed once passes forever, on any machine. (The paths of the
+# machine that made a batch are scanned for only where it is made, by `silver build` and `silver build
+# --check-part`.) `silver standing` holds the live ones to the two rules that never lapse, no
 # repository that is reserved now and no fixture that is excluded now, and says how to clear a failure.
 # Both pass when the image has no silver/. test-blobs runs it, after the fetch.
 test-silver: preflight fetch-blobs

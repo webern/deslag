@@ -78,7 +78,7 @@ struct ConfigFile {
     /// The deslag that last onboarded or updated this config, as a release such as "0.0.1". When
     /// it is missing the config is taken to be from 0.0.1. It may not be later than the deslag
     /// that reads the file.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "stamp_text")]
     #[expect(
         dead_code,
         reason = "read from `Head` before this parse; here for the schema"
@@ -86,10 +86,14 @@ struct ConfigFile {
     deslag_version: Option<String>,
 }
 
-/// The two keys that decide whether deslag can read a config at all, read before the rest.
+/// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
+/// can read it at all, and the place of `md`.
 ///
 /// It refuses no unknown key, so a config from a later deslag, which may hold keys this one has
 /// never heard of, reports that it is from a later deslag and not the first of those keys.
+///
+/// `md` is here for the config written as a JSON array, which serde reads by position. The fields
+/// must be in the order of [`ConfigFile`]'s, or the array reads differently in the two structs.
 #[derive(Debug, Deserialize)]
 struct Head {
     #[serde(default)]
@@ -170,8 +174,17 @@ impl Config {
         };
 
         // The versions come first, so a config from a later deslag says so, whatever else in it
-        // this deslag does not know.
-        let head: Head = deserialize(text, format).map_err(parse_error)?;
+        // this deslag does not know. When the head cannot be read, the error is the whole file's,
+        // which words it best; the head's own stands only if the file reads.
+        let head: Head = match deserialize(text, format) {
+            Ok(head) => head,
+            Err(head_error) => {
+                let error = deserialize::<ConfigFile>(text, format)
+                    .err()
+                    .unwrap_or(head_error);
+                return Err(parse_error(error));
+            }
+        };
         match head.schema_version {
             Some(found) if found > SCHEMA_VERSION => {
                 return Err(Error::SchemaVersion {

@@ -519,6 +519,12 @@ class RedirectTests(unittest.TestCase):
     """The real transport against two local servers: the first redirects, the second must never be
     reached, least of all with the key."""
 
+    @staticmethod
+    def drain(handler):
+        """Read the request body before replying. Closing a socket that still holds unread data
+        sends a reset, not a close, and on macOS the client can get the reset before the reply."""
+        handler.rfile.read(int(handler.headers.get("Content-Length") or 0))
+
     def serve(self, handler):
         server = http.server.HTTPServer(("127.0.0.1", 0), handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -529,9 +535,11 @@ class RedirectTests(unittest.TestCase):
     def setUp(self):
         self.reached = []
         reached = self.reached
+        drain = self.drain
 
         class Elsewhere(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
+                drain(self)
                 reached.append(("POST", self.headers.get("Authorization")))
                 self.send_response(200)
                 self.end_headers()
@@ -547,6 +555,7 @@ class RedirectTests(unittest.TestCase):
 
         class Redirecting(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
+                drain(self)
                 self.send_response(self.server.code)
                 self.send_header("Location", target)
                 self.end_headers()

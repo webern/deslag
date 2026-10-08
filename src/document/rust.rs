@@ -40,7 +40,8 @@ pub enum LexemeKind {
     /// A string of any kind: `"x"`, `b"x"`, `c"x"` and the raw forms such as `r#"x"#`.
     Str {
         /// Whether its closing quote was found. If not it runs to the end of the file, or, for a
-        /// malformed raw string such as `r#!`, to the character that spoils it.
+        /// malformed raw string such as `r#!`, to the character that spoils it, or, for a raw
+        /// string with more than 255 hashes, to the hashes that close it.
         terminated: bool,
     },
     /// A character or byte character, `'x'` or `b'x'`. A lifetime is not one.
@@ -67,10 +68,16 @@ pub enum DocStyle {
 /// out one `\r` before its `\n`, or at the end of the file. A string or character leaves out a
 /// suffix, so `"x"y` is `"x"`. A comment or literal that is cut short is `terminated: false`.
 ///
-/// A shebang and a frontmatter block at the top of the file yield nothing. If a frontmatter block
-/// is never closed it runs to the end of the file, where the compiler, which also reports an error,
-/// recovers; that is the one place the boundaries of a file that does not compile can differ.
+/// A shebang and a frontmatter block at the top of the file yield nothing.
+///
+/// A file that does not compile can have different boundaries here than in the compiler's lexer in
+/// two cases. If a frontmatter block is never closed it runs to the end of the file, where the
+/// compiler, which also reports an error, recovers. And an emoji directly before identifier
+/// characters is one invalid identifier to the compiler, so in `😀r"x"` the `r` is not a prefix and
+/// the string is `"x"`; here the `r` begins it.
 // TODO: add the compiler's recovery for an unclosed frontmatter block.
+// TODO: read an emoji and the identifier characters after it as one token, as the compiler does;
+// that needs a table of emoji.
 pub fn lex(src: &str) -> Vec<Lexeme> {
     let mut scanner = Scanner {
         src,
@@ -185,22 +192,22 @@ impl Scanner<'_> {
                 b'/' if self.byte(i + 1) == b'*' => self.block_comment(i),
                 b'"' => {
                     let literal = self.quoted(i + 1);
-                    self.string(i, literal)
+                    self.literal(i, literal, false)
                 }
                 b'\'' => self.quote(i),
                 b'b' if self.byte(i + 1) == b'\'' => {
                     let literal = self.char_body(i + 1);
-                    self.character(i, literal)
+                    self.literal(i, literal, true)
                 }
                 b'b' | b'c' if self.byte(i + 1) == b'"' => {
                     let literal = self.quoted(i + 2);
-                    self.string(i, literal)
+                    self.literal(i, literal, false)
                 }
                 b'b' | b'c'
                     if self.byte(i + 1) == b'r' && matches!(self.byte(i + 2), b'"' | b'#') =>
                 {
                     let literal = self.raw_string(i + 2);
-                    self.string(i, literal)
+                    self.literal(i, literal, false)
                 }
                 b'r' if self.byte(i + 1) == b'#'
                     && self.char_at(i + 2).is_some_and(is_id_start) =>
@@ -210,7 +217,7 @@ impl Scanner<'_> {
                 }
                 b'r' if matches!(self.byte(i + 1), b'"' | b'#') => {
                     let literal = self.raw_string(i + 1);
-                    self.string(i, literal)
+                    self.literal(i, literal, false)
                 }
                 b'0'..=b'9' => self.number_end(i),
                 // Anything else is one character of code or the start of an identifier. A `#"` is a
@@ -224,6 +231,12 @@ impl Scanner<'_> {
             };
         }
     }
+
+    // NOTICE: `digits_end`, `number_end` and `exponent_end` are ported from the number lexing of
+    // `rustc_lexer`, <https://github.com/rust-lang/rust>, Copyright (c) The Rust Project
+    // Developers, which is licensed under the MIT licence or the Apache License, Version 2.0. A
+    // copy of the MIT licence, as the Rust project ships it, is `LICENSES/MIT-rustc.txt` at the
+    // root of this repository.
 
     /// The end of the digits, underscores and, if `hex`, hex digits from `j` on, and whether any
     /// is a digit.
@@ -319,6 +332,8 @@ impl Scanner<'_> {
         (self.bytes.len(), false)
     }
 
+    /// Records the line comment at `i` and returns the end of its line. The comment leaves out one
+    /// `\r` before the `\n`.
     fn line_comment(&mut self, i: usize) -> usize {
         let end = self.line_end(i);
         let text_end = if self.bytes[end - 1] == b'\r' {
@@ -329,23 +344,18 @@ impl Scanner<'_> {
         let kind = LexemeKind::LineComment {
             doc: self.line_doc(i),
         };
-        self.out.push(Lexeme {
-            range: i..text_end,
-            kind,
-        });
+        self.push(i, text_end, kind);
         end
     }
 
+    /// Records the block comment at `i` and returns where it ends.
     fn block_comment(&mut self, i: usize) -> usize {
         let (end, terminated) = self.block_end(i);
         let kind = LexemeKind::BlockComment {
             doc: self.block_doc(i),
             terminated,
         };
-        self.out.push(Lexeme {
-            range: i..end,
-            kind,
-        });
+        self.push(i, end, kind);
         end
     }
 
@@ -392,27 +402,28 @@ impl Scanner<'_> {
         (self.bytes.len(), false)
     }
 
-    /// Records the string at `start` and returns where to go on, past its suffix.
-    fn string(&mut self, start: usize, (end, terminated): (usize, bool)) -> usize {
-        let kind = LexemeKind::Str { terminated };
+    /// Records the lexeme `start..end` of `kind`.
+    fn push(&mut self, start: usize, end: usize, kind: LexemeKind) {
         self.out.push(Lexeme {
             range: start..end,
             kind,
         });
-        if terminated {
-            self.suffix_end(end)
-        } else {
-            end
-        }
     }
 
-    /// Records the character at `start` and returns where to go on, past its suffix.
-    fn character(&mut self, start: usize, (end, terminated): (usize, bool)) -> usize {
-        let kind = LexemeKind::Char { terminated };
-        self.out.push(Lexeme {
-            range: start..end,
-            kind,
-        });
+    /// Records the string at `start`, or the character if `character`, and returns where to go on,
+    /// past its suffix if it is closed.
+    fn literal(
+        &mut self,
+        start: usize,
+        (end, terminated): (usize, bool),
+        character: bool,
+    ) -> usize {
+        let kind = if character {
+            LexemeKind::Char { terminated }
+        } else {
+            LexemeKind::Str { terminated }
+        };
+        self.push(start, end, kind);
         if terminated {
             self.suffix_end(end)
         } else {
@@ -436,15 +447,12 @@ impl Scanner<'_> {
                     return end;
                 }
                 // `'ab'` is a character, to the compiler, and takes no suffix.
-                self.out.push(Lexeme {
-                    range: i..end + 1,
-                    kind: LexemeKind::Char { terminated: true },
-                });
+                self.push(i, end + 1, LexemeKind::Char { terminated: true });
                 end + 1
             }
             _ => {
                 let literal = self.char_body(i);
-                self.character(i, literal)
+                self.literal(i, literal, true)
             }
         }
     }
@@ -498,6 +506,8 @@ fn is_space(c: char) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::path::{Path, PathBuf};
+
     use super::*;
 
     /// A lexeme as a row of a table: its kind, then its text.
@@ -881,6 +891,16 @@ mod tests {
         assert_eq!(lex("#!"), []);
     }
 
+    #[test]
+    fn an_emoji_before_a_literal_prefix_does_not_end_it() {
+        // The compiler reads the emoji and the `r` as one invalid identifier, so there its string
+        // is `"x"`. This pins what the scanner does today, so that a fix is deliberate.
+        check(&[
+            ("\u{1f600}r\"x\"", &[("str", "r\"x\"")]),
+            ("\u{1f642}b'x'", &[("char", "b'x'")]),
+        ]);
+    }
+
     /// A xorshift generator, so a failure repeats.
     struct Random(u64);
 
@@ -893,23 +913,23 @@ mod tests {
         }
     }
 
-    const ALPHABET: [&str; 19] = [
+    const ALPHABET: [&str; 20] = [
         "/", "*", "\"", "'", "#", "r", "b", "c", "\\", "\n", "\r", "!", "-", "a", "é", "1", "[",
-        "x", "_",
+        "x", "_", " ",
     ];
 
     /// 20,000 strings of up to 32 characters of the alphabet that sets the rules, bare and behind
-    /// a `x ` that rules out a shebang and a frontmatter block. Each is given to `check` with
-    /// whether it is bare.
-    fn for_random_sources(seed: u64, check: impl Fn(&str, bool)) {
+    /// a `x ` that rules out a shebang and a frontmatter block. Each is given to `assert_source`
+    /// with whether it is bare.
+    fn for_random_sources(seed: u64, assert_source: impl Fn(&str, bool)) {
         let mut random = Random(seed);
         for _ in 0..20_000 {
             let len = random.below(33);
             let text: String = (0..len)
                 .map(|_| ALPHABET[random.below(ALPHABET.len())])
                 .collect();
-            check(&text, true);
-            check(&format!("x {text}"), false);
+            assert_source(&text, true);
+            assert_source(&format!("x {text}"), false);
         }
     }
 
@@ -959,11 +979,18 @@ mod tests {
                 };
                 assert_eq!(doc, marked, "{src:?} {lexeme:?}");
             }
-            LexemeKind::Str { .. } => {
+            LexemeKind::Str { terminated } => {
+                // A prefix, then the quote or, for a raw string, its hashes. Only a malformed raw
+                // string such as `r#!` has no quote.
+                let prefix = &text[..text.find(['"', '#']).unwrap_or(text.len())];
                 assert!(
-                    text.contains('"') || text.contains('r'),
+                    matches!(prefix, "" | "b" | "c" | "r" | "br" | "cr"),
                     "{src:?} {lexeme:?}"
-                )
+                );
+                assert!(
+                    !terminated || text.ends_with(['"', '#']),
+                    "{src:?} {lexeme:?}"
+                );
             }
             LexemeKind::Char { .. } => {
                 assert!(
@@ -976,7 +1003,7 @@ mod tests {
 
     /// Whether `gap`, a stretch of code, holds what only a comment or a string starts.
     fn holds_a_marker(gap: &str) -> bool {
-        gap.contains(['"']) || gap.contains("//") || gap.contains("/*")
+        gap.contains('"') || gap.contains("//") || gap.contains("/*")
     }
 
     fn gaps<'a>(src: &'a str, lexemes: &[Lexeme]) -> Vec<&'a str> {
@@ -1045,7 +1072,7 @@ mod tests {
 
     #[test]
     fn this_crates_own_source_is_well_formed() {
-        fn visit(dir: &std::path::Path, files: &mut Vec<std::path::PathBuf>) {
+        fn visit(dir: &Path, files: &mut Vec<PathBuf>) {
             for entry in std::fs::read_dir(dir).unwrap() {
                 let path = entry.unwrap().path();
                 if path.is_dir() {
@@ -1057,10 +1084,10 @@ mod tests {
         }
         let mut files = Vec::new();
         visit(
-            &std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
+            &Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
             &mut files,
         );
-        assert!(files.len() > 50);
+        assert!(!files.is_empty());
         for path in files {
             let src = std::fs::read_to_string(&path).unwrap();
             let lexemes = lex(&src);

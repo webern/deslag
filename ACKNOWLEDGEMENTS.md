@@ -248,11 +248,18 @@ while training. NLTK's code is not in the repository beyond the template list.
 ## rustc_lexer
 
 - URL: https://github.com/rust-lang/rust/tree/master/compiler/rustc_lexer
-- Licence: MIT OR Apache-2.0
-- Studied at: the published copy `ra-ap-rustc_lexer` 0.176.0, read 2026-10-08
+- Licence: MIT, taken from the dual licence MIT OR Apache-2.0, copied as the Rust project ships it
+  to `LICENSES/MIT-rustc.txt`
+- Copyright: "Copyright (c) The Rust Project Developers"
+- Studied at: the published copy `ra-ap-rustc_lexer` 0.176.0, from commit
+  [4ddbc06e](https://github.com/rust-lang/rust/tree/4ddbc06ea09abcda34f80baf31cc9bc2686b0ae6), read
+  2026-10-08
 
-Code was ported in part: `src/document/rust.rs` follows the compiler's lexer rule by rule to find
-where comments, strings and characters begin and end, among them how a lifetime is told from a
-character, how raw strings close, the suffix of a literal, and the shebang and frontmatter at the
-top of a file. The scanner is written afresh in a different shape, a single pass over bytes that
-returns only those boundaries, and `tools/sweep` checks it against the real lexer.
+The scanner in `src/document/rust.rs` is written afresh, in a different shape: a single pass over
+bytes that returns only the boundaries of comments, strings and characters. It follows the
+compiler's lexer rule by rule, among them how a lifetime is told from a character, how raw strings
+close, the suffix of a literal, and the shebang and frontmatter at the top of a file.
+`tools/sweep` checks it against the real lexer.
+
+Its number lexing is ported, as a modified adaptation under MIT: the functions `digits_end`,
+`number_end` and `exponent_end`, with the notice in that file.

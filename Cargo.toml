@@ -12,8 +12,10 @@ keywords = ["markdown", "lint", "linter", "prose", "cli"]
 categories = ["development-tools", "command-line-utilities"]
 include = [
     "/src/**/*.rs", "/src/**/*.md", "/src/**/*.toml", "/src/**/*.txt", "/build.rs", "/Cargo.toml", "/Cargo.lock", "/LICENSE", "/README.md",
-    # The notices of the sources of src/tag/lexicon.txt, which each source requires on every copy.
+    # The notices of the sources of src/tag/lexicon.txt, which each source requires on every copy,
+    # and of the rustc_lexer number lexing ported into src/document/rust.rs.
     "/LICENSES/AGID.txt", "/LICENSES/Moby.txt", "/LICENSES/SCOWL.txt", "/LICENSES/WordNet.txt",
+    "/LICENSES/MIT-rustc.txt",
 ]
 
 [dependencies]

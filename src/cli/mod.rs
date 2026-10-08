@@ -11,7 +11,7 @@ use crate::changelog::{current_release, parse_release};
 #[command(
     name = "deslag",
     version,
-    about = "A linter for LLM-authored Markdown.",
+    about = "A linter for LLM-authored prose.",
     long_about = None,
 )]
 pub struct Cli {
@@ -23,7 +23,7 @@ pub struct Cli {
 /// What deslag can be asked to do.
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    /// Check every Markdown file in the repo against the lints the config turns on
+    /// Check every file the config selects against the lints it turns on
     Check(CheckArgs),
     /// Make the edits the lints name where they are provably safe, then check as `check` does
     Fix(FixArgs),

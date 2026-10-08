@@ -112,8 +112,8 @@ impl Lint {
         }
     }
 
-    /// How the tally of a run describes the files this lint failed, as in `2 of 9 Markdown files
-    /// over budget`.
+    /// How the tally of a run describes the files this lint failed, as in `2 of 9 files over
+    /// budget`.
     fn tally(self) -> &'static str {
         match self {
             Lint::MaxSizeBytes => "over budget",
@@ -340,7 +340,7 @@ impl Finding {
 /// What one run of `deslag check` found.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
-    /// The path of each Markdown file examined, including the ones no lint had settings for.
+    /// The path of each file examined, including the ones no lint had settings for.
     pub scanned: Vec<String>,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,
@@ -386,16 +386,11 @@ impl Report {
                 .iter()
                 .filter(|finding| finding.violation.lint() == *lint)
                 .count();
-            (failed > 0).then(|| {
-                format!(
-                    "deslag: {failed} of {scanned} Markdown files {}.",
-                    lint.tally()
-                )
-            })
+            (failed > 0).then(|| format!("deslag: {failed} of {scanned} files {}.", lint.tally()))
         });
         let change = self.change.iter().map(|change| {
             format!(
-                "deslag: {} of {scanned} Markdown files changed since {}; findings outside the \
+                "deslag: {} of {scanned} files changed since {}; findings outside the \
                  change are not shown.",
                 change.files_changed, change.base
             )

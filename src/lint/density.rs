@@ -1,4 +1,4 @@
-//! `density`: a Markdown file must not hold walls of text.
+//! `density`: a file must not hold walls of text.
 //!
 //! The unit is a **block**: a paragraph, or the text of a list item that has no paragraph of its
 //! own, as in a tight list. Its length is the characters a reader sees: text and code spans, and one

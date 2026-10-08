@@ -1,4 +1,4 @@
-//! `max_size_bytes`: a Markdown file must not be larger than its byte budget.
+//! `max_size_bytes`: a file must not be larger than its byte budget.
 //!
 //! The budget comes from, most specific first, the `max_size_bytes` key in the file's own
 //! frontmatter, then the settings the config resolves for the file. A file with neither has no

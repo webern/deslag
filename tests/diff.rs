@@ -117,7 +117,7 @@ fn only_what_the_change_added_is_reported() {
     assert!(!stderr(&output).contains("line 3"));
     assert_eq!(
         last_line(&output),
-        "deslag: 1 of 2 Markdown files changed since main; findings outside the change are not \
+        "deslag: 1 of 2 files changed since main; findings outside the change are not \
          shown."
     );
     // The whole tree still fails on both.
@@ -794,7 +794,7 @@ fn all_change(case: &Path, args: &[String]) {
     let mut expected = stderr(&whole);
     if code(&whole) == 1 {
         expected.push_str(&format!(
-            "deslag: {scanned} of {scanned} Markdown files changed since HEAD~1; findings \
+            "deslag: {scanned} of {scanned} files changed since HEAD~1; findings \
              outside the change are not shown.\n"
         ));
     }

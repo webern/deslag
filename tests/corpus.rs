@@ -510,7 +510,7 @@ fn run_case(case: &Case, fixtures: &[Fixture]) {
         );
         assert!(
             stderr.contains(&format!(
-                "deslag: {} of {markdown_count} Markdown files over budget.",
+                "deslag: {} of {markdown_count} files over budget.",
                 expected.len()
             )),
             "{}: wrong tally\nstderr:\n{stderr}",
@@ -625,7 +625,7 @@ fn the_whole_corpus_is_held_to_its_budgets() {
     assert_eq!(code(&output), 1, "stderr:\n{stderr}");
     assert!(
         stderr.contains(&format!(
-            "deslag: {} of {} Markdown files over budget.",
+            "deslag: {} of {} files over budget.",
             expected.len(),
             fixtures.len()
         )),
@@ -690,7 +690,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
     assert_eq!(code(&output), 1, "stderr:\n{stderr}");
     assert!(
         stderr.contains(&format!(
-            "deslag: {} of {} Markdown files over-emphasized.",
+            "deslag: {} of {} files over-emphasized.",
             expected.len(),
             fixtures.len()
         )),
@@ -962,7 +962,7 @@ fn the_corpus_banned_characters_agree_with_the_library() {
     assert_eq!(code(&output), 1, "stderr:\n{stderr}");
     assert!(
         stderr.contains(&format!(
-            "deslag: {} of {} Markdown files with banned characters.",
+            "deslag: {} of {} files with banned characters.",
             expected.len(),
             fixtures.len()
         )),
@@ -1295,7 +1295,7 @@ fn the_corpus_density_reports_agree_with_the_library() {
     assert_eq!(code(&output), 1, "stderr:\n{stderr}");
     assert!(
         stderr.contains(&format!(
-            "deslag: {files} of {} Markdown files with dense text.",
+            "deslag: {files} of {} files with dense text.",
             fixtures.len()
         )),
         "stderr:\n{stderr}"

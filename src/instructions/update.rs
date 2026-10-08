@@ -71,7 +71,7 @@ pub fn update_text(changelog: &Changelog, from: &Version, to: &Version, start: S
             ));
             if let Some(all) = entry.update_does_all() {
                 let edit = if all {
-                    "You do not need to edit the config by hand for this change."
+                    "`deslag update` makes this change, or prints the edit when it cannot."
                 } else {
                     "You need to edit the config by hand for this change."
                 };
@@ -277,7 +277,7 @@ Delete the key.
 
 A key moved
 
-You do not need to edit the config by hand for this change.
+`deslag update` makes this change, or prints the edit when it cannot.
 
 Run update.
 
@@ -318,9 +318,10 @@ Pass the flag.
 ## Finish
 
 Offer each new lint to the person, with what it fails. Turn on the ones they choose by adding its
-table to the config. Once they have chosen, set `deslag_version` to "0.3.0" at the top level of the
-config, so these entries are not shown again. If the person cannot be asked now, change nothing,
-not even `deslag_version`, and tell them what is new.
+table to the config. Once they have chosen, run `deslag update --to 0.3.0`, adding your
+`--config-path` if any. It sets `deslag_version` to "0.3.0", ending this list, and edits renamed or
+removed settings. If the person cannot be asked now, change nothing, not even `deslag_version`, and
+tell them what is new.
 "#;
 
     const JSON: &str = r##"{

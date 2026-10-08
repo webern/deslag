@@ -80,6 +80,12 @@ lints.max_size_bytes.value = 8000
 setting and gives its default. `deslag explain <PATH>...` prints the settings a file gets, and where
 each one comes from.
 
+`deslag update` is the one command that writes the config. It renames or deletes a setting that a
+release renamed or removed, and keeps the file's comments and layout. It sets `deslag_version` only
+when `deslag instructions update` has nothing new to tell; `--to <version>` sets it regardless, and
+`--dry-run` writes nothing. A YAML or JSON config gets its stamp, but a renamed or removed setting
+in one is refused, with the edit printed for you to make.
+
 ## Build
 
 - `make help` lists the targets.

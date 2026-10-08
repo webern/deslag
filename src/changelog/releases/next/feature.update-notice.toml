@@ -10,6 +10,6 @@ deslag: note: this config was last updated by deslag 0.0.1, and this is 0.0.2; t
 ```
 
 Exit codes and standard output do not change. Run `deslag instructions update` and do what it
-says. Setting `deslag_version` to the running version ends the note, so set it once the person has
-chosen what to turn on.
+says. Once the person has chosen what to turn on, `deslag update --to <the running version>` sets
+`deslag_version` and ends the note.
 '''

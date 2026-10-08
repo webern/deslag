@@ -1,6 +1,6 @@
 kind = "breaking"
 id = "md.lints.banned_phrases.groups.signposts"
-update_does_all = false
+update_does_all = true
 summary = "The signposts phrase group was removed, and the setting is ignored"
 onboarding = '''
 The `signposts` group of `banned_phrases` no longer exists. A config that still sets

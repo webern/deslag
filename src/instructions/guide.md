@@ -93,4 +93,6 @@ of the repository, so run it there.
 If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.
 
 When a command prints a note saying the config was last updated by an older deslag, run
-`deslag instructions update` and do what it says.
+`deslag instructions update` and do what it says. When it warns that a setting was renamed or
+removed, run `deslag update`: it makes that edit in the config, or prints the edit it cannot make.
+It records `deslag_version` only when nothing is new, so it never turns on what nobody chose.

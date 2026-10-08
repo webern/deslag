@@ -2966,6 +2966,22 @@ class LicenceTests(Base):
         with self.assertRaisesRegex(label.ConfigError, "judge has no `license_checked`"):
             self.runner(FakeTransport(answer_all), config=config).judge("merge", [("one", False), ("two", False)])
 
+    def test_a_model_with_no_licence_or_no_card_starts_no_run(self):
+        for key in ("license", "license_url"):
+            config = copy.deepcopy(CONFIG)
+            del config["models"]["two"][key]
+            transport = FakeTransport(answer_all)
+            with self.assertRaisesRegex(label.ConfigError, f"two has no `{key}` in models of .*voters.json"):
+                self.runner(transport, config=config).tag("two")
+            self.assertEqual((transport.gets, transport.posts), ([], []), "nothing is looked up or asked")
+            self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "two")))
+        config = copy.deepcopy(CONFIG)
+        config["external"]["spacy"]["license"] = " "
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        with self.assertRaisesRegex(label.ConfigError, "spacy has no `license` in external"):
+            label.register(self.runner(None, config=config), "spacy", source, "en-core-web-trf", None, None)
+
     def test_a_run_is_not_continued_when_voters_json_or_the_licence_changed(self):
         def stop(body, count):
             if count >= 2:

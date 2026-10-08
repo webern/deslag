@@ -399,9 +399,10 @@ is not built. `status` exits 0 whatever the verdict.
 
 Licences. Every model of `voters.json`, and every outside tagger under `external` (spaCy), has `license`,
 `license_url` (the model card, `https://`) and `license_checked` (the date the card was read), and may have a
-`license_note`; `voters.json` is refused without them. A run copies `license` and `license_checked` into its
-`run.json` and `runs.tsv`, with `voters_sha256`, the sha256 of `voters.json` at its start; no run starts, and
-`register` records none, for a model with no `license_checked`. `register` also requires an `external` entry
+`license_note`; a field that is there and is empty, or a `license_url` that is not `https://`, has `voters.json`
+refused. A run copies `license` and `license_checked` into its `run.json` and `runs.tsv`, with `voters_sha256`,
+the sha256 of `voters.json` at its start; no run starts, and `register` records none, for a model or tagger
+that lacks any of the three. `register` also requires an `external` entry
 of that name whose `model` is the `--model` given. A continued run is refused if any of the three would
 now differ.
 

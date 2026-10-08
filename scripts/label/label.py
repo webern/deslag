@@ -863,13 +863,14 @@ class Runner:
     def licence(self, name, entry, where):
         """`license`, `license_checked` and the sha256 of voters.json, for the record of a run of the
         model or outside tagger `name`, whose entry of voters.json is `entry` (`where` says which).
-        ConfigError if the entry has no `license_checked`: no run starts without a licence read and
-        dated."""
-        if not entry or not str(entry.get("license_checked") or "").strip():
+        ConfigError if the entry lacks any of `license`, `license_url` and `license_checked`: no run
+        starts without a licence, where it was read, and when."""
+        missing = [key for key in LICENSE_KEYS if not entry or not str(entry.get(key) or "").strip()]
+        if missing:
             raise ConfigError(
-                f"{name} has no `license_checked` in {where} of {self.config_path}: a run records the licence "
-                f"of what made it and the date that licence was read, so read it, and give `license`, "
-                f"`license_url` and `license_checked` there, before a run starts"
+                f"{name} has no {', '.join(f'`{key}`' for key in missing)} in {where} of {self.config_path}: a run "
+                f"records the licence of what made it and the date that licence was read, so read it, and give "
+                f"`license`, `license_url` and `license_checked` there, before a run starts"
             )
         return {
             "license": entry.get("license"), "license_checked": entry["license_checked"],

@@ -1,13 +1,18 @@
-//! What changed in each release of deslag, written by hand in `src/changelog.toml` and read once.
+//! What changed in each release of deslag, written by hand as one file per entry under
+//! `src/changelog/releases/` and read once.
 //!
-//! A release holds entries of four kinds: a new lint, a new setting, a new feature and a breaking
-//! change. Each carries a summary of one line and onboarding text for an agent to act on. The
-//! unreleased release is called `next`, is last in the file, and is renamed to its version by the
-//! change that releases it. Every comparison of versions goes through [`Version`], where `next`
-//! sorts above every release.
+//! A release is a directory named for its version, or `next` for the one in the making, and holds a
+//! file per entry. An entry is one of four kinds: a new lint, a new setting, a new feature and a
+//! breaking change. Each carries a summary of one line and onboarding text for an agent to act on.
+//! `next/` is permanent: the change that releases moves its entries into a directory named for the
+//! version. `build.rs` lists the files and [`Changelog::from_files`] holds every rule about them.
+//! Every comparison of versions goes through [`Version`], where `next` sorts above every release.
 
+#[cfg(test)]
+mod listing;
 mod version;
 
+use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
 use serde::{Deserialize, Serialize};
@@ -19,38 +24,45 @@ pub(crate) use version::{current_release, parse_release};
 /// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
 pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
 
-/// The changelog as written, which `include_str!` embeds in the binary.
-const CHANGELOG: &str = include_str!("../changelog.toml");
+/// Where the changelog's files are, from the root of the crate. A path in a message starts here.
+const ROOT: &str = "src/changelog/releases";
 
-/// The changelog, parsed once.
+/// The directory of the release in the making, and the one that holds the README.
+const NEXT: &str = "next";
+
+/// The file in [`NEXT`] that says how to add an entry.
+const README: &str = "README.md";
+
+/// Every file under [`ROOT`] as its path inside it and its text, listed by `build.rs`.
+const FILES: &[(&str, &str)] = include!(concat!(env!("OUT_DIR"), "/changelog_files.rs"));
+
+/// The changelog, read once.
 pub fn changelog() -> &'static Changelog {
-    static PARSED: LazyLock<Changelog> =
-        LazyLock::new(|| Changelog::parse(CHANGELOG).expect("changelog.toml parses"));
+    static PARSED: LazyLock<Changelog> = LazyLock::new(|| {
+        Changelog::from_files(FILES.iter().copied())
+            .unwrap_or_else(|error| panic!("the embedded changelog is invalid: {error}"))
+    });
     &PARSED
 }
 
 /// Every release, oldest first.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq)]
 pub struct Changelog {
-    /// The releases, in the order the file lists them.
-    #[serde(rename = "release")]
+    /// The releases by version, `next` last. A release has at least one entry.
     pub releases: Vec<Release>,
 }
 
 /// One release and what it added.
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Debug, PartialEq)]
 pub struct Release {
     /// The release's version, or `next`.
     pub version: Version,
-    /// What it added.
-    #[serde(rename = "entry", default)]
+    /// What it added, by kind in the order of [`Kind`], then by id.
     pub entries: Vec<Entry>,
 }
 
 /// One thing a release added. The `kind` key of an entry says which, and which other keys it has.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, PartialEq, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Entry {
     /// A new lint.
@@ -116,10 +128,138 @@ pub enum Kind {
     Feature,
 }
 
+/// A file of the changelog that breaks one of its rules, and which rule.
+#[derive(Debug, PartialEq, thiserror::Error)]
+#[error("{ROOT}/{path}: {problem}")]
+pub struct FileError {
+    /// The file, or the one that is missing, as a path inside the changelog's directory.
+    pub path: String,
+    /// What is wrong with it and what to do.
+    pub problem: String,
+}
+
+impl FileError {
+    fn new(path: &str, problem: impl Into<String>) -> FileError {
+        FileError {
+            path: path.to_string(),
+            problem: problem.into(),
+        }
+    }
+}
+
 impl Changelog {
-    /// Reads a changelog from `text`.
-    pub fn parse(text: &str) -> Result<Changelog, toml::de::Error> {
-        toml::from_str(text)
+    /// Reads a changelog from its files, each as its path inside the changelog's directory and
+    /// its text, such as `("next/feature.json.toml", "kind = ...")`. This holds every rule about
+    /// what the directory may hold, and an error names the file that breaks one:
+    ///
+    /// - a file is in a release directory, named `X.Y.Z` or `next`, and in no deeper one;
+    /// - it is a `.toml` file of one entry, or `README.md` in `next`, which must be there;
+    /// - its name is the entry's [`file_name`](Entry::file_name) and has only `a-z`, `0-9`, `_`,
+    ///   `.` and `-`;
+    /// - its id is not empty;
+    /// - a kind and id are in one file across all releases, compared by file name.
+    ///
+    /// Releases come out oldest first and the entries of a release by kind, then id.
+    pub fn from_files<'a>(
+        files: impl IntoIterator<Item = (&'a str, &'a str)>,
+    ) -> Result<Changelog, FileError> {
+        let mut files: Vec<_> = files.into_iter().collect();
+        files.sort();
+
+        let mut releases: BTreeMap<Version, Vec<Entry>> = BTreeMap::new();
+        let mut seen: BTreeMap<String, &str> = BTreeMap::new();
+        let mut has_readme = false;
+        for (path, text) in files {
+            let parts: Vec<&str> = path.split('/').collect();
+            let [directory, name] = parts[..] else {
+                let problem = if parts.len() == 1 {
+                    "a file belongs in a release directory such as next/"
+                } else {
+                    "a release directory holds files and no directory"
+                };
+                return Err(FileError::new(path, problem));
+            };
+            let version = if directory == NEXT {
+                Version::Next
+            } else {
+                parse_release(directory)
+                    .map(Version::Release)
+                    .map_err(|_| {
+                        FileError::new(
+                            path,
+                            format!("{directory:?} is neither a version like 1.2.3 nor \"{NEXT}\""),
+                        )
+                    })?
+            };
+            if name == README {
+                if directory != NEXT {
+                    return Err(FileError::new(path, format!("only {NEXT}/ has a {README}")));
+                }
+                has_readme = true;
+                continue;
+            }
+            if !name.ends_with(".toml") {
+                return Err(FileError::new(path, "not a .toml file of one entry"));
+            }
+            if !name
+                .chars()
+                .all(|c| matches!(c, 'a'..='z' | '0'..='9' | '_' | '.' | '-'))
+            {
+                return Err(FileError::new(
+                    path,
+                    "a file name has only the characters a-z, 0-9, _, . and -",
+                ));
+            }
+            let entry: Entry = toml::from_str(text).map_err(|error| {
+                FileError::new(path, format!("not one entry, which a file holds: {error}"))
+            })?;
+            if entry.id().is_empty() {
+                return Err(FileError::new(
+                    path,
+                    "the id is empty: give the entry an id",
+                ));
+            }
+            if name != entry.file_name() {
+                return Err(FileError::new(
+                    path,
+                    format!(
+                        "this holds the {} `{}`, so the file is named {}: rename it",
+                        entry.kind().name(),
+                        entry.id(),
+                        entry.file_name()
+                    ),
+                ));
+            }
+            // Keyed on the file name, which drops the `[]` of a setting's id, so ids that differ
+            // only by it are one entry too.
+            if let Some(first) = seen.insert(entry.file_name(), path) {
+                return Err(FileError::new(
+                    path,
+                    format!(
+                        "the {} `{}` has the file name {name}, which {ROOT}/{first} has too: an entry \
+                         is in one file across all releases",
+                        entry.kind().name(),
+                        entry.id()
+                    ),
+                ));
+            }
+            releases.entry(version).or_default().push(entry);
+        }
+        if !has_readme {
+            return Err(FileError::new(
+                &format!("{NEXT}/{README}"),
+                "missing: it says how to add an entry, and the release moves only the .toml files",
+            ));
+        }
+
+        let releases = releases
+            .into_iter()
+            .map(|(version, mut entries)| {
+                entries.sort_by(|a, b| (a.kind(), a.id()).cmp(&(b.kind(), b.id())));
+                Release { version, entries }
+            })
+            .collect();
+        Ok(Changelog { releases })
     }
 
     /// The releases after `version`, oldest first. The bound is exclusive: a config at a version
@@ -131,7 +271,7 @@ impl Changelog {
     }
 
     /// The entries of the releases after `from`, up to and including `to`, each with its release:
-    /// oldest release first, and an entry's place in the file within a release.
+    /// oldest release first, and an entry's place in its release within one.
     ///
     /// This is what a config last updated by `from` has not seen of the deslag `to`. Both bounds
     /// are versions of deslag that exist, so `to` is a release, and `next`, which sorts above every
@@ -166,7 +306,30 @@ impl Changelog {
     }
 }
 
+impl Kind {
+    /// The kind as the `kind` key and the entry's file name spell it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Kind::Breaking => "breaking",
+            Kind::Lint => "lint",
+            Kind::Setting => "setting",
+            Kind::Feature => "feature",
+        }
+    }
+}
+
 impl Entry {
+    /// The name of the entry's file: `<kind>.<id>.toml`, with the `[]` of a setting's id left out
+    /// because a glob reads it as a class of characters. The id stays unique without it, since a
+    /// node of the schema is a list or a table and never both.
+    pub fn file_name(&self) -> String {
+        format!(
+            "{}.{}.toml",
+            self.kind().name(),
+            self.id().replace("[]", "")
+        )
+    }
+
     /// Which kind of entry this is.
     pub fn kind(&self) -> Kind {
         match self {
@@ -223,42 +386,52 @@ impl Entry {
 mod tests {
     use super::*;
 
-    const SMALL: &str = r#"
-[[release]]
-version = "0.1.0"
-[[release.entry]]
-kind = "lint"
-id = "density"
-keys = ["message"]
-summary = "Fails walls of text"
-onboarding = "Turn it on."
-
-[[release]]
-version = "0.2.0"
-[[release.entry]]
+    /// The files of a small changelog: two releases and `next`, entries out of order on purpose.
+    const SMALL: &[(&str, &str)] = &[
+        ("next/README.md", "How to add an entry."),
+        (
+            "next/feature.json.toml",
+            r#"
+kind = "feature"
+id = "json"
+summary = "Prints JSON"
+onboarding = "Pass the flag."
+"#,
+        ),
+        (
+            "0.2.0/lint.list_growth.toml",
+            r#"
 kind = "lint"
 id = "list_growth"
 keys = []
 summary = "Fails growing lists"
 onboarding = "Turn it on."
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.2.0/breaking.rename.toml",
+            r#"
 kind = "breaking"
 id = "rename"
 update_does_all = true
 summary = "A key moved"
 onboarding = "Run update."
-
-[[release]]
-version = "next"
-[[release.entry]]
-kind = "feature"
-id = "json"
-summary = "Prints JSON"
-onboarding = "Pass the flag."
-"#;
+"#,
+        ),
+        (
+            "0.1.0/lint.density.toml",
+            r#"
+kind = "lint"
+id = "density"
+keys = ["message"]
+summary = "Fails walls of text"
+onboarding = "Turn it on."
+"#,
+        ),
+    ];
 
     fn small() -> Changelog {
-        Changelog::parse(SMALL).expect("a changelog")
+        Changelog::from_files(SMALL.iter().copied()).expect("a changelog")
     }
 
     fn version(text: &str) -> Version {
@@ -305,13 +478,13 @@ onboarding = "Pass the flag."
             ids_between(&changelog, "0.0.9", "0.2.0"),
             [
                 pair("0.1.0", "density"),
-                pair("0.2.0", "list_growth"),
                 pair("0.2.0", "rename"),
+                pair("0.2.0", "list_growth"),
             ]
         );
         assert_eq!(
             ids_between(&changelog, "0.1.0", "0.2.0"),
-            [pair("0.2.0", "list_growth"), pair("0.2.0", "rename")]
+            [pair("0.2.0", "rename"), pair("0.2.0", "list_growth")]
         );
         assert!(ids_between(&changelog, "0.2.0", "0.2.0").is_empty());
         assert!(ids_between(&changelog, "0.2.0", "0.1.0").is_empty());
@@ -341,8 +514,8 @@ onboarding = "Pass the flag."
             kinds,
             [
                 (Kind::Lint, None),
-                (Kind::Lint, None),
                 (Kind::Breaking, Some(true)),
+                (Kind::Lint, None),
                 (Kind::Feature, None),
             ]
         );
@@ -381,16 +554,99 @@ onboarding = "Pass the flag."
     #[test]
     fn an_entry_with_a_key_of_another_kind_is_refused() {
         let text = r#"
-[[release]]
-version = "next"
-[[release.entry]]
 kind = "feature"
 id = "json"
 keys = ["a"]
 summary = "Prints JSON"
 onboarding = "Pass the flag."
 "#;
-        assert!(Changelog::parse(text).is_err());
+        let files = [("next/README.md", ""), ("next/feature.json.toml", text)];
+        assert!(Changelog::from_files(files).is_err());
+    }
+
+    #[test]
+    fn the_entries_of_a_release_are_by_kind_then_id_whatever_order_the_files_come_in() {
+        let mut files = SMALL.to_vec();
+        files.reverse();
+        assert_eq!(Changelog::from_files(files), Ok(small()));
+        let changelog = small();
+        let ids: Vec<&str> = changelog.releases[1]
+            .entries
+            .iter()
+            .map(Entry::id)
+            .collect();
+        assert_eq!(ids, ["rename", "list_growth"]);
+    }
+
+    /// The order of the files' paths puts `feature` before `lint` and `setting`, and the order of
+    /// the kinds puts it last, so only sorting the entries by kind can give the second.
+    #[test]
+    fn a_release_lists_its_entries_by_kind_and_not_by_file_path() {
+        let entry = |kind: &str, id: &str| {
+            let keys = if kind == "lint" { "keys = []\n" } else { "" };
+            let does_all = if kind == "breaking" {
+                "update_does_all = true\n"
+            } else {
+                ""
+            };
+            format!(
+                "kind = \"{kind}\"\nid = \"{id}\"\n{keys}{does_all}summary = \"s\"\n\
+                 onboarding = \"o\"\n"
+            )
+        };
+        let names = [
+            "feature.f",
+            "lint.l",
+            "lint.k",
+            "setting.s",
+            "breaking.b",
+            "feature.e",
+        ];
+        let texts: Vec<(String, String)> = names
+            .iter()
+            .map(|name| {
+                let (kind, id) = name.split_once('.').expect("a kind and an id");
+                (format!("next/{name}.toml"), entry(kind, id))
+            })
+            .collect();
+        let mut files: Vec<(&str, &str)> = texts
+            .iter()
+            .map(|(path, text)| (path.as_str(), text.as_str()))
+            .collect();
+        files.push(("next/README.md", ""));
+
+        let changelog = Changelog::from_files(files).expect("a changelog");
+        let order: Vec<(Kind, &str)> = changelog.releases[0]
+            .entries
+            .iter()
+            .map(|entry| (entry.kind(), entry.id()))
+            .collect();
+        assert_eq!(
+            order,
+            [
+                (Kind::Breaking, "b"),
+                (Kind::Lint, "k"),
+                (Kind::Lint, "l"),
+                (Kind::Setting, "s"),
+                (Kind::Feature, "e"),
+                (Kind::Feature, "f"),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_file_name_drops_the_brackets_of_a_setting() {
+        let entry: Entry = toml::from_str(
+            "kind = \"setting\"\nid = \"md.overrides[].globs\"\nsummary = \"s\"\nonboarding = \"o\"\n",
+        )
+        .expect("an entry");
+        assert_eq!(entry.file_name(), "setting.md.overrides.globs.toml");
+    }
+
+    #[test]
+    fn a_release_with_only_a_readme_is_no_release() {
+        let changelog = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
+        assert!(changelog.releases.is_empty());
     }
 
     #[test]

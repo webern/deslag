@@ -17,6 +17,7 @@ globs = [
   "/docs/design/*.asbuilt.md",
   "/scripts/blobstore/blobs.md",
   "/src/instructions/**/*.md",
+  "/src/changelog/releases/next/README.md",
 ]
 
 [md.lints.max_emphasis]

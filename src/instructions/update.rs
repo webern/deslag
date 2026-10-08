@@ -136,7 +136,7 @@ struct Item<'a> {
 }
 
 /// The entries of the range, in the order they print: by kind, and by release and place in the
-/// file within a kind.
+/// release within a kind.
 fn ordered<'a>(
     changelog: &'a Changelog,
     from: &'a Version,
@@ -174,24 +174,30 @@ fn piece(name: &str) -> &'static str {
 mod tests {
     use super::*;
 
-    const CHANGELOG: &str = r#"
-[[release]]
-version = "0.0.1"
-[[release.entry]]
+    const FILES: &[(&str, &str)] = &[
+        ("next/README.md", ""),
+        (
+            "0.0.1/lint.density.toml",
+            r#"
 kind = "lint"
 id = "density"
 keys = []
 summary = "Fails walls of text"
 onboarding = "Turn it on."
-
-[[release]]
-version = "0.2.0"
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.2.0/setting.md.globs.toml",
+            r#"
 kind = "setting"
 id = "md.globs"
 summary = "Chooses the files"
 onboarding = "Set `md.globs`."
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.2.0/lint.list_growth.toml",
+            r#"
 kind = "lint"
 id = "list_growth"
 keys = []
@@ -203,53 +209,61 @@ Turn it on.
 [md.lints.list_growth]
 ```
 """
-
-[[release]]
-version = "0.3.0"
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.3.0/feature.json.toml",
+            r#"
 kind = "feature"
 id = "json"
 summary = "Prints JSON"
 onboarding = "Pass the flag."
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.3.0/breaking.rename.toml",
+            r#"
 kind = "breaking"
 id = "rename"
 update_does_all = true
 summary = "A key moved"
 onboarding = "Run update."
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.3.0/breaking.drop.toml",
+            r#"
 kind = "breaking"
 id = "drop"
 update_does_all = false
 summary = "A key went"
 onboarding = "Delete the key."
-[[release.entry]]
+"#,
+        ),
+        (
+            "0.3.0/lint.repo_layout.toml",
+            r#"
 kind = "lint"
 id = "repo_layout"
 keys = []
 summary = "Fails a false layout"
 onboarding = "Turn it on."
-
-[[release]]
-version = "next"
-[[release.entry]]
+"#,
+        ),
+        (
+            "next/feature.later.toml",
+            r#"
 kind = "feature"
 id = "later"
 summary = "Not yet released"
 onboarding = "Wait."
-"#;
+"#,
+        ),
+    ];
 
     const TEXT: &str = r#"# What is new in deslag 0.3.0, since 0.0.1
 
 ## Breaking
-
-### `rename` (0.3.0)
-
-A key moved
-
-You do not need to edit the config by hand for this change.
-
-Run update.
 
 ### `drop` (0.3.0)
 
@@ -258,6 +272,14 @@ A key went
 You need to edit the config by hand for this change.
 
 Delete the key.
+
+### `rename` (0.3.0)
+
+A key moved
+
+You do not need to edit the config by hand for this change.
+
+Run update.
 
 ## New lints
 
@@ -308,18 +330,18 @@ not even `deslag_version`, and tell them what is new.
     {
       "version": "0.3.0",
       "kind": "breaking",
-      "id": "rename",
-      "summary": "A key moved",
-      "onboarding": "Run update.",
-      "update_does_all": true
-    },
-    {
-      "version": "0.3.0",
-      "kind": "breaking",
       "id": "drop",
       "summary": "A key went",
       "onboarding": "Delete the key.",
       "update_does_all": false
+    },
+    {
+      "version": "0.3.0",
+      "kind": "breaking",
+      "id": "rename",
+      "summary": "A key moved",
+      "onboarding": "Run update.",
+      "update_does_all": true
     },
     {
       "version": "0.2.0",
@@ -354,7 +376,7 @@ not even `deslag_version`, and tell them what is new.
 "##;
 
     fn changelog() -> Changelog {
-        Changelog::parse(CHANGELOG).expect("a changelog")
+        Changelog::from_files(FILES.iter().copied()).expect("a changelog")
     }
 
     fn version(text: &str) -> Version {
@@ -465,9 +487,8 @@ not even `deslag_version`, and tell them what is new.
     }
 
     #[test]
-    fn a_release_with_no_entries_is_nothing_to_tell() {
-        let changelog =
-            Changelog::parse("[[release]]\nversion = \"0.1.0\"\n").expect("a changelog");
+    fn a_range_with_no_entries_is_nothing_to_tell() {
+        let changelog = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
         assert_eq!(
             notice(&version("0.0.1"), &version("0.1.0"), &changelog),
             None

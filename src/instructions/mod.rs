@@ -77,28 +77,35 @@ fn section(lint: Lint) -> &'static str {
 mod tests {
     use super::*;
 
-    const CHANGELOG: &str = r#"
-[[release]]
-version = "0.2.0"
-[[release.entry]]
+    const FILES: &[(&str, &str)] = &[
+        ("next/README.md", ""),
+        (
+            "0.2.0/lint.density.toml",
+            r#"
 kind = "lint"
 id = "density"
 keys = []
 summary = "Fails walls of text"
 onboarding = "Turn it on."
-
-[[release]]
-version = "next"
-[[release.entry]]
+"#,
+        ),
+        (
+            "next/lint.list_growth.toml",
+            r#"
 kind = "lint"
 id = "list_growth"
 keys = []
 summary = "Fails growing lists"
 onboarding = "Turn it on."
-"#;
+"#,
+        ),
+    ];
 
     fn since_in_test_changelog(lint: Lint) -> Option<String> {
-        since(&Changelog::parse(CHANGELOG).expect("a changelog"), lint)
+        since(
+            &Changelog::from_files(FILES.iter().copied()).expect("a changelog"),
+            lint,
+        )
     }
 
     #[test]

@@ -1,0 +1,16 @@
+kind = "feature"
+id = "instructions-update"
+summary = "Prints what is new since the release the config was updated by"
+onboarding = '''
+`deslag instructions update` prints the breaking changes, lints, settings and features that
+releases added after the config's `deslag_version`, up to the deslag running, as Markdown for an
+agent. It does not change any file. Each entry says which release added it.
+
+A new lint is off until the config turns it on, so offer each one to the person and add the table of
+the ones they choose. Once they have chosen, set `deslag_version` to the running version. If the
+person cannot be asked now, change nothing, `deslag_version` included, and tell them what is new.
+
+`--since 0.0.1` shows what is new since a release instead, and `--format json` prints the same
+entries as JSON. With no config, it shows everything since 0.0.1 and says so. `--since` and
+`--config-path` do not go together.
+'''

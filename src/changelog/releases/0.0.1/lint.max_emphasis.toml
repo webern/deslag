@@ -1,0 +1,13 @@
+kind = "lint"
+id = "max_emphasis"
+keys = ["free_spans", "max_percent", "message"]
+summary = "Fails a file with too much bold, italics and capitals"
+onboarding = '''
+`max_emphasis` fails a file with more bold, italics and capitals than it allows.
+
+```toml
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1
+```
+'''

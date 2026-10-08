@@ -1,0 +1,14 @@
+kind = "lint"
+id = "repo_layout"
+keys = ["heading", "max_entries", "max_width", "message", "min_entries"]
+summary = "Fails a file without a short, true index of the repository"
+onboarding = '''
+`repo_layout` fails a file without a short, true index of the repository, one `path  <- what it
+holds` line per entry. It suits AGENTS.md alone, so turn it on in an override.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.repo_layout = { min_entries = 5, max_entries = 15 }
+```
+'''

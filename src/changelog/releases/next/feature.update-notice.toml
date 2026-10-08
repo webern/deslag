@@ -1,0 +1,15 @@
+kind = "feature"
+id = "update-notice"
+summary = "Says on stderr when the config was last updated by an older deslag"
+onboarding = '''
+When a release after the config's `deslag_version` has added something, `check`, `fix` and
+`explain` print one note on standard error, under every `--format`:
+
+```text
+deslag: note: this config was last updated by deslag 0.0.1, and this is 0.0.2; to read what is new, run deslag instructions update, which changes no file
+```
+
+Exit codes and standard output do not change. Run `deslag instructions update` and do what it
+says. Setting `deslag_version` to the running version ends the note, so set it once the person has
+chosen what to turn on.
+'''

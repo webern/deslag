@@ -31,7 +31,8 @@ deslag/
 `make help` lists the targets. Run `make ci-fast` before a push; GitHub runs `make ci`.
 `make test-blobs` fetches the corpus's big tier first; see `scripts/blobstore/blobs.md`. The
 `/deslag-build-doctrine` skill governs the Makefile, `scripts/`, CI and dependencies; read it before
-changing any of them.
+changing any of them. A change that adds a lint, setting, feature or migration adds a file under
+`src/changelog/releases/next/`; its README says how.
 
 ## Skills
 

@@ -2239,7 +2239,7 @@ class RoundThreeTests(Base):
         self.assertEqual(
             (models["deepseek"]["provider"], models["deepseek"]["provider_fallback"]),
             ("gmicloud/fp8", ["streamlake/fp8"]), "deepinfra/fp8 loops until max_tokens: no fallback to it")
-        self.assertEqual(models["qwen"]["provider_fallback"], ["parasail/fp8"])
+        self.assertEqual(models["qwen"]["provider_fallback"], [], "no other qwen endpoint lists bf16")
         self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
 
     def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):

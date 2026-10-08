@@ -93,8 +93,8 @@ falls back from there to the ones after it; a complete run at another endpoint i
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
 refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
 is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
-`streamlake/fp8`. qwen's `parasail/fp8` is below its `bf16` pin, so it is skipped until the pin is
-relaxed.
+`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is below its
+pin, so a failed qwen run stops for the owner.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),

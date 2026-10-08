@@ -68,20 +68,22 @@ impl Scan {
                 return Err(refuse("has a block scalar (`|` or `>`) in its value"));
             }
             let end = member.value_end(text);
-            let range = if member.flow {
+            let ranges = if member.flow {
                 self.flow_cut(text, index, end)
             } else {
-                block_cut(text, member, end)
+                block_cut(text, member, end).map(|range| vec![range])
             }
             .map_err(|what| refuse(&what))?;
-            deleted.touched.push(Touch {
-                lines: line_of(text, range.start)..=line_of(text, range.end.max(1) - 1),
-                kind: TouchKind::Member,
-            });
-            deleted.splices.push(Splice {
-                range,
-                with: String::new(),
-            });
+            for range in ranges {
+                deleted.touched.push(Touch {
+                    lines: line_of(text, range.start)..=line_of(text, range.end.max(1) - 1),
+                    kind: TouchKind::Member,
+                });
+                deleted.splices.push(Splice {
+                    range,
+                    with: String::new(),
+                });
+            }
 
             if !member.flow
                 && let Some(parent) = self.emptied(index, targets)?
@@ -136,8 +138,10 @@ impl Scan {
         }
     }
 
-    /// The bytes that cut the member at `index` out of a flow map, whose value ends at `end`.
-    fn flow_cut(&self, text: &str, index: usize, end: usize) -> Result<Range<usize>, String> {
+    /// The bytes that cut the member at `index` out of a flow map, whose value ends at `end`: one
+    /// range, or two when the comma before the last member is on a line of its own, apart from the
+    /// member by a comment.
+    fn flow_cut(&self, text: &str, index: usize, end: usize) -> Result<Vec<Range<usize>>, String> {
         let member = &self.members[index];
         let bytes = text.as_bytes();
         if text[..member.key.start]
@@ -156,21 +160,32 @@ impl Scan {
                 if !matches!(bytes.get(tail), None | Some(b'\n' | b'\r' | b'#')) {
                     stop = tail;
                 }
-                Ok(whole_lines_or(text, member.key.start, stop))
+                Ok(vec![whole_lines_or(text, member.key.start, stop)])
             }
             Some(b'}') => match self.previous(index) {
-                None => Ok(whole_lines_or(text, member.key.start, end)),
+                None => Ok(vec![whole_lines_or(text, member.key.start, end)]),
                 Some(previous) => {
                     // The last member takes the comma before it, which follows the member before.
                     let comma = skip(text, previous.value_end(text), &[' ', '\t', '\r', '\n']);
-                    if bytes.get(comma) != Some(&b',')
-                        || !text[comma + 1..member.key.start].trim().is_empty()
-                    {
-                        return Err(
-                            "is not right after a comma (there is a comment before it)".to_string()
-                        );
+                    if bytes.get(comma) != Some(&b',') {
+                        return Err("is not right after a comma".to_string());
                     }
-                    Ok(comma..end)
+                    let gap = &text[comma + 1..member.key.start];
+                    if gap.trim().is_empty() {
+                        let cut = comma..end;
+                        return Ok(vec![cut]);
+                    }
+                    // Comments in the gap stay, so the comma and the member go apart.
+                    if gap
+                        .lines()
+                        .any(|line| !(line.trim().is_empty() || line.trim().starts_with('#')))
+                    {
+                        return Err("is not right after a comma".to_string());
+                    }
+                    Ok(vec![
+                        comma..comma + 1,
+                        whole_lines_or(text, member.key.start, end),
+                    ])
                 }
             },
             Some(b'#') => Err("has a comment between its value and its comma".to_string()),

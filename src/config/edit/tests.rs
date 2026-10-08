@@ -1255,6 +1255,15 @@ fn a_yaml_flow_member_goes_with_one_comma() {
             "{\n        # about\n         # drop\n        insistence: false\n      }",
         ),
         ("{\n        signposts: true\n      }", "{\n      }"),
+        // The comma before the last member is on a line with a comment, and the comment stays.
+        (
+            "{\n        insistence: false, # c\n        signposts: true\n      }",
+            "{\n        insistence: false # c\n      }",
+        ),
+        (
+            "{\n        insistence: false,\n        # about\n        signposts: true}",
+            "{\n        insistence: false\n        # about\n        }",
+        ),
     ] {
         deletes("yaml", &flow(before), &flow(after));
     }
@@ -1412,8 +1421,8 @@ fn what_a_yaml_or_json_delete_cannot_do_safely_is_refused_and_nothing_is_edited(
         (
             "a comment between a member and its comma",
             "yaml",
-            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {\n        insistence: false, # c\n        signposts: true}\n".to_string(),
-            "comment before it",
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {\n        signposts: true # c\n        , insistence: false}\n".to_string(),
+            "a comment between its value and its comma",
         ),
         (
             "an alias",

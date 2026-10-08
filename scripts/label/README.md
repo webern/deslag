@@ -93,7 +93,7 @@ run at, for the primary and every alternative alike. A model without `quantizati
 holds an alternative to the primary's quantisation or a more precise one instead. One run has one provider, and never
 changes it. The run moves to the next endpoint for any failure that belongs to the endpoint: a 429
 or 5xx still coming after its waits (`rate_limit_attempts` for a 429), a timeout still coming after its
-waits, any other HTTP error that is not about the key (not 401, 402 or 413; a 404 is what OpenRouter
+waits while the endpoint listing answers, any other HTTP error that is not about the key (not 401, 402 or 413; a 404 is what OpenRouter
 answers when `data_collection: deny` rules a provider out), a reply that is not JSON, a storm of cut-off
 replies, a refusal by the provider, a reply from another provider than the pinned one, a reply that used
 reasoning tokens with reasoning off, and an endpoint that is no longer in the listing as pinned (gone, its
@@ -103,7 +103,8 @@ tags from it), says so in one line on stderr, and starts a new run of the voter 
 next endpoint of the list that passes the listing's checks; that run asks every batch afresh. An
 endpoint that cannot be asked at all is skipped without a run, and said so. A 401, 402 or 413 is about
 the key, the credit or the request, so it stops the run. A network error here (connection refused, DNS, a
-dropped connection) is no endpoint's fault: it switches nothing, stops the run with exit 2 and keeps it,
+dropped connection, or a timeout through every wait when the endpoint listing, asked once more, does not
+answer either) is no endpoint's fault: it switches nothing, stops the run with exit 2 and keeps it,
 and the same command continues it once the network is back. If every endpoint fails it stops with exit 2
 (exit 5 when the last run ended `failed`), naming each and why; every run is abandoned, the last too, so
 the same command (with or without `--again`) starts a new run at the first endpoint and replays nothing

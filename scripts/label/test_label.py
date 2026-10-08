@@ -2893,6 +2893,48 @@ class RoundThreeTests(Base):
         self.assertEqual(len([p for p in transport.posts if p["provider"]["order"] == ["host/fp8"]]), 8,
                          "http_attempts, as for any retryable failure")
 
+    def test_a_timeout_with_the_listing_unreachable_is_our_network_and_stops_the_run_in_place(self):
+        config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
+
+        class Blackhole(FakeTransport):
+            def get(self, url, timeout):
+                if self.posts:
+                    self.gets.append(url)
+                    raise openrouter.Retryable(openrouter.TIMEOUT)
+                return super().get(url, timeout)
+
+        def respond(body, count):
+            if count == 1:
+                return answer_all(body)
+            raise openrouter.Retryable(openrouter.TIMEOUT)
+
+        transport = Blackhole(respond, WIDE_LISTING)
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(transport, config=config).tag("one")
+        self.assertTrue(caught.exception.local)
+        self.assertEqual({p["provider"]["order"][0] for p in transport.posts}, {"host/fp8"}, "no walk")
+        self.assertEqual(len(transport.posts), 1 + 8, "one batch answered, then http_attempts timeouts")
+        self.assertEqual(len(transport.gets), 2, "the listing once for the pin, once after the timeouts")
+        meta = json.loads(label.read(self.run_json("one", "r1")))
+        self.assertFalse(meta.get("abandoned"), "the run is kept for a rerun to continue")
+        self.assertFalse(os.path.exists(self.run_json("one", "r2")))
+
+    def test_a_timeout_with_the_listing_answering_is_the_endpoints_even_when_the_listing_is_an_error(self):
+        config = with_fallbacks(one=["alt/fp8"])
+
+        class Answering(FakeTransport):
+            def get(self, url, timeout):
+                super().get(url, timeout)
+                if self.posts:
+                    raise openrouter.Retryable("HTTP 503")
+                return copy.deepcopy(self.listing)
+
+        transport = Answering(
+            lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(openrouter.TIMEOUT))
+            if body["provider"]["order"][0] == "host/fp8" else answer_all(body), WIDE_LISTING)
+        self.moved_on(transport, config, "timeout")
+        self.assertEqual(len(transport.gets), 2, "asked once after the timeouts, not again at the next endpoint")
+
     def test_a_timeout_everywhere_stops_the_voter_after_the_last_endpoint_and_says_it_may_be_the_network(self):
         config = with_fallbacks(one=["alt/fp8"])
         down = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(openrouter.TIMEOUT)), WIDE_LISTING)

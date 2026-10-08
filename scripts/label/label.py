@@ -990,6 +990,19 @@ class Runner:
             self.listings[model] = data
         return self.listings[model]
 
+    def listing_answers(self, model):
+        """Whether OpenRouter answers a fresh request for the endpoint listing of `model`, asked once with
+        no wait and no cache. Run after the calls to an endpoint all timed out: if the listing does not
+        answer either, the network here is the likelier cause, and the endpoint is not blamed. An error
+        status or a body that is not JSON is an answer."""
+        try:
+            self.transport.get(openrouter.endpoints_url(model), self.settings["timeout_s"])
+        except openrouter.Retryable as error:
+            return error.owned or error.status is not None
+        except openrouter.ApiError:
+            return True
+        return True
+
     def pin(self, name, tag=None):
         """(config, endpoint) for `name` at the endpoint tagged `tag`: its own `provider` by default, or
         one of its `provider_fallback`. An alternative is held to the model's `quantizations`, as the
@@ -1307,7 +1320,8 @@ class Runner:
         A retryable failure, a cut-off reply and a refusal each spend from the endpoint's failure budget.
         What stops the run: a failure that is the endpoint's own through every wait, or a refusal,
         raises EndpointExhausted for the caller to switch endpoint; a network error here raises it
-        `local`, and the run stops where it is; a reply cut off raises CutOff for the caller to ask in
+        `local`, and the run stops where it is, as it does for a timeout through every wait when the
+        endpoint listing does not answer either; a reply cut off raises CutOff for the caller to ask in
         halves."""
         if is_handoff(config):
             return self.ask_handoff(meta, endpoint, config, system, user, kind)
@@ -1353,9 +1367,9 @@ class Runner:
                 raise
             raise self.endpoint_fault(meta, endpoint, error) from None
         except openrouter.RetriesExhausted as error:
-            # A timeout that no wait got past is the endpoint's, unless every endpoint of the model
-            # fails the same way (see [Runner.fall_back]): only the endpoints can tell.
-            local = not error.owned and error.reason != openrouter.TIMEOUT
+            # A timeout through every wait is the endpoint's if OpenRouter still answers for the model's
+            # listing, and the network here if it does not.
+            local = not error.owned and (error.reason != openrouter.TIMEOUT or not self.listing_answers(config["model"]))
             raise EndpointExhausted(
                 f"{what}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"],
                 run, error.reason, local=local,

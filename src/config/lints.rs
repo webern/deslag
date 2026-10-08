@@ -593,8 +593,8 @@ impl Merge for BannedPhrases {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PhraseGroups {
-    /// The `signposts` group, which no longer exists: a config that still sets it is read, with a
-    /// warning, and the setting does nothing.
+    /// The `signposts` group, which no longer exists. A config may still set it, so it is read;
+    /// the redirect for it warns and clears it, and the setting does nothing.
     #[serde(default, skip_serializing)]
     #[schemars(skip)]
     pub signposts: Option<bool>,
@@ -654,6 +654,11 @@ pub struct Density {
     /// `{max_item_chars}` in it are replaced with the file's path and its limits.
     #[serde(default)]
     pub message: Option<String>,
+    /// Read by the unit tests' rename of this setting, to `max_paragraph_chars`.
+    #[cfg(test)]
+    #[serde(default, skip_serializing)]
+    #[schemars(skip)]
+    pub max_paragraph_len: Option<u64>,
 }
 
 impl Density {

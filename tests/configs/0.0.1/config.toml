@@ -1,0 +1,70 @@
+schema_version = 1
+
+[md]
+globs = ["docs/*.md"]
+
+[md.lints.max_size_bytes]
+value = 20000
+message = "{path} is over {max_size_bytes} bytes"
+
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1.5
+message = "{path} has too much emphasis"
+
+[md.lints.repo_layout]
+heading = "Layout"
+min_entries = 1
+max_entries = 15
+max_width = 100
+message = "{path} needs a layout"
+
+[md.lints.banned_chars]
+allow = ["é"]
+message = "{path} has a banned character"
+
+[md.lints.banned_chars.ban]
+"¤" = "write the currency's name"
+
+[md.lints.banned_chars.groups]
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true
+emoji = false
+
+[md.lints.banned_phrases]
+allow = ["not silently ignored"]
+message = "{path} has a banned phrase"
+
+[md.lints.banned_phrases.ban]
+"in order to" = "write to"
+
+[md.lints.banned_phrases.groups]
+signposts = false
+insistence = true
+metaphors = true
+precision = true
+
+[md.lints.density]
+max_paragraph_chars = 600
+max_item_chars = 300
+message = "{path} has a dense block"
+
+[md.lints.list_growth]
+message = "{path} has more list items"
+
+[md.lints.verbs_no_nouns]
+message = "{path} negates an object"
+
+[[md.overrides]]
+globs = ["docs/note.md"]
+lints.max_size_bytes.value = 8000
+lints.banned_phrases.groups.signposts = true

@@ -1,0 +1,9 @@
+kind = "breaking"
+id = "md.lints.banned_phrases.groups.signposts"
+update_does_all = false
+summary = "The signposts phrase group was removed, and the setting is ignored"
+onboarding = '''
+The `signposts` group of `banned_phrases` no longer exists. A config that still sets
+`banned_phrases.groups.signposts`, in `[md.lints]` or in an override, loads with a warning and the
+setting does nothing. Delete the key; no other setting needs to change.
+'''

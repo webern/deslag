@@ -34,6 +34,7 @@
 
 pub mod lints;
 pub mod md;
+pub mod redirect;
 pub mod search;
 
 use std::num::NonZeroU32;
@@ -52,15 +53,29 @@ pub use lints::{
     MdLints, Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use md::MdConfig;
+pub use redirect::{REDIRECTS, Redirect};
 pub use search::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
 };
 
 /// The config schema this build of deslag reads.
 ///
-/// `schema_version` is incremented only by a change that an existing config must be migrated to
-/// survive, such as a renamed or restructured key. A key being added does not count. A config
-/// written for a later schema than this is refused rather than half understood.
+/// A key being added does not change it, and neither does a rename or a removal: those are a
+/// [`Redirect`], which reads the old key, warns, and keeps the version. A bump is for a change a
+/// redirect cannot carry, such as a value that changes shape. A config written for a later schema
+/// than this is refused rather than half understood.
+///
+/// No schema older than this one exists, so nothing migrates. The first bump is made like this:
+///
+/// - a module freezes the old struct path, from `ConfigFile` down to the changed lint, with a
+///   `From` into the current `ConfigFile`;
+/// - `Config::parse` matches on the probe's `schema_version`, between the stamp check and the typed
+///   parse, and reads the old text through the frozen path;
+/// - it warns once, naming the schema it read;
+/// - a `breaking` changelog entry names the version.
+///
+/// The text is still read typed, never through an untyped document. The configs under
+/// `tests/configs/` keep loading.
 pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::MIN;
 
 /// The config file as it is written on disk.
@@ -211,16 +226,9 @@ impl Config {
             _ => {}
         }
 
-        let file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
+        let mut file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
 
-        let warnings = file
-            .md
-            .removed_settings()
-            .into_iter()
-            .map(|setting| {
-                format!("{path_string}: `{setting}` was removed, and the setting is ignored")
-            })
-            .collect();
+        let warnings = redirect::apply(&mut file.md, &path_string)?;
         let md = MdConfig::compile(file.md, &path_string)?;
 
         Ok(Config {

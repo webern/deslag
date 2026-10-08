@@ -279,7 +279,8 @@ The loop, one pass of `judge` at a time:
    without the prompt) and `cwd` (the rule for the working directory). Every later call must report the same
    model. A round refuses to start if `agent.json` is there and differs from what it would write. Exit 0 when
    every request has its reply; 2 when a call failed a check, the round's final checks failed or the round
-   was refused; 6 when a process wrote no reply (run handoff-run again); 130 on an interrupt.
+   was refused; 7 when a call met the Claude plan's usage limit (wait for the reset, then run handoff-run
+   again); 6 when a process wrote no reply (run handoff-run again); 130 on an interrupt.
 4. The same `judge` command, run again once handoff-run has returned, reads the replies. A reply is read only
    with an `agent.json` that has every key, `safe_mode` true, the argument list handoff-run uses now, the tools
    `Read,Write`, a `model_reported` that is the pinned model (or a dated version) and the template's current
@@ -295,7 +296,9 @@ item stays pending (its request is still listed by `handoff`, and the pass exits
 again. A pass that stops on an error leaves every request file as it was; the requests no longer asked for are
 removed by a pass that reaches its end.
 
-A call that no process answers (one that fails a check each time it is run, say) can be given up:
+A call that no process answers (one that fails a check each time it is run, say) can be given up. A call
+stopped by the Claude plan's usage limit is never one: it keeps no reply, it is not a failed check, and it is
+answered once the limit resets (below). To give a call up:
 `label.py handoff-run --dir D --into M --give-up CALL --reason TEXT` (`--give-up` may be given more than once)
 runs no process and writes `<call>.given-up.json` beside the request: the call, its request's hash, the run,
 the reason and the date. It refuses a call that is not waiting for a reply, and `--give-up` without a reason
@@ -407,6 +410,15 @@ skipped, the one assertion that may be. After each call it reads `claude --versi
 when it cannot be read (a read that times out once is not an update); a version that changed, or that could
 not be read, fails the call (`version_unchanged`), its reply is not kept, and the round stops: no call that
 has not started is made.
+
+A call stopped by the Claude plan's usage limit is told apart from a failed check, from its stream: an
+assistant message that wraps the API's refusal with `api_error` `usage_limit_reached` (or that says "You've
+hit your ... limit" or "usage limit reached"), a `rate_limit_event` that says `rejected`, or a result that is an
+error and says so. Its line says `usage limit`, it keeps no reply, the round stops there, and handoff-run exits
+7 and says to wait for the limit to reset and run it again. Its calls are still waiting then, and are never
+ones to give up. Only the checks the stop itself fails (`process_finished`, `model_reported_matches`,
+`one_model_id`, `model_matches_agent_json`) may fail with it: a call that also failed a check of its
+confinement, or of the version, is a failed call.
 
 The round fails closed. Its replies are staged (`.incoming`) and nothing reads them until its final checks
 pass: git shows the tree clean outside `.label/` (a git that cannot say counts as a change), the checkout is

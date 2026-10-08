@@ -171,6 +171,15 @@ QUARANTINE = "quarantine"
 # reads, and the next round moves what it finds so named to quarantine.
 STAGED = ".incoming"
 
+# The exit code of a round in which a call met the Claude plan's usage limit: wait for the reset and
+# run handoff-run again. Such a call keeps no reply, and is never one to give up.
+EXIT_USAGE_LIMIT = 7
+
+# The checks a call stopped by the Claude plan's usage limit fails on that account alone: it did not end
+# well, did not say its model last, and its refusal is a message of no model. A call that failed any
+# other check failed, whatever stopped it.
+USAGE_LIMIT_FAILS = frozenset({"process_finished", "model_reported_matches", "one_model_id", "model_matches_agent_json"})
+
 # How many times `claude --version` is read before it counts as unreadable, and the pause between: a
 # read that times out once is not an update.
 VERSION_TRIES = 3
@@ -2579,7 +2588,8 @@ class HandoffRound:
     Only a call that passes every check and wrote a reply has it copied into the run's folder, and
     then under a staged name (STAGED), which nothing reads: [place] renames the round's replies into
     place once its final checks pass, and [quarantine] moves them out when they do not. A call after
-    which the version changed stops the round: no later call is made. `agent.json` is written by the first call that passes, with the model it reported,
+    which the version changed, or that met the Claude plan's usage limit, stops the round: no later
+    call is made. `agent.json` is written by the first call that passes, with the model it reported,
     which every later call must report too."""
 
     def __init__(self, folder, model, claude, version):
@@ -2593,6 +2603,8 @@ class HandoffRound:
         self.staged = []
         # What `claude --version` said after a call, when it was not `version`: the round stops.
         self.changed_version = None
+        # Set when a call met the plan's usage limit: the round stops.
+        self.limited = False
         # Set when the round's final checks begin: a call still running then stages nothing.
         self.closed = False
         self.lock = threading.Lock()
@@ -2615,12 +2627,14 @@ class HandoffRound:
         self.agent = saved
 
     def answer(self, path, request):
-        """Puts one request to a confined process. Returns (call, `answered`, `no reply`, `failed` or
-        `not run`, the names of the checks that failed, and a note: for a call that failed, the model
-        ids it named, which say why `one_model_id` failed when it does)."""
+        """Puts one request to a confined process. Returns (call, `answered`, `no reply`, `usage
+        limit`, `failed` or `not run`, the names of the checks that failed, and a note: for a call that
+        failed, the model ids it named, which say why `one_model_id` failed when it does)."""
         call = request["call"]
         if self.changed_version is not None:
             return call, "not run", [], f"the round stopped: claude --version said {self.changed_version}"
+        if self.limited:
+            return call, "not run", [], "the round stopped at the Claude plan's usage limit"
         try:
             work = confine.workdir("deslag-handoff-")
         except confine.Unconfined:
@@ -2644,6 +2658,10 @@ class HandoffRound:
                     write_atomic(self.agent_path, json.dumps(self.agent, indent=2) + "\n")
                 found["model_matches_agent_json"] = self.agent is not None and (stream.init or {}).get("model") == self.agent["model_reported"]
                 failed = [name for name, ok in found.items() if not ok]
+                if failed and set(failed) <= USAGE_LIMIT_FAILS and confine.usage_limited(stream):
+                    # Not a fault of the call: no call passes until the limit resets.
+                    self.limited = True
+                    return call, "usage limit", [], "the Claude plan's usage limit; wait for its reset"
                 if failed:
                     named = sorted({str(found) for found in stream.models()})
                     return call, "failed", failed, (
@@ -2679,7 +2697,8 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     were put in place writes into the lock of the parts what it does not hold yet.
 
     Exit 0 when every request has its reply, 2 when a call failed a check, the final checks failed or
-    anything was refused, and EXIT_HANDOFF when a process wrote no reply (run it again); an
+    anything was refused, EXIT_USAGE_LIMIT when a call met the Claude plan's usage limit (wait for the
+    reset and run it again), and EXIT_HANDOFF when a process wrote no reply (run it again); an
     interrupt exits 130, and a call that raised exits 2 for an error this tool names or 1 for any other.
     With `--give-up CALL`, it runs no process
     and records that the call is given up instead (see [give_up_requests])."""
@@ -2731,7 +2750,7 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
             file=sys.stderr,
         )
     say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
-    counts = {"answered": 0, "no reply": 0, "failed": 0, "not run": 0}
+    counts = {"answered": 0, "no reply": 0, "usage limit": 0, "failed": 0, "not run": 0}
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel)
     why = None
     placed = []
@@ -2795,10 +2814,19 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
         pin_parts_lock(directory, "handoff-run", held)
     say(
         f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
-        f"{counts['failed']} failed a check; `judge` run again reads the replies"
+        f"{counts['usage limit']} stopped by the usage limit, {counts['failed']} failed a check; `judge` run again "
+        f"reads the replies"
     )
+    if counts["usage limit"]:
+        print(
+            f"label: the Claude plan's usage limit stopped the round; its calls keep no reply and are not given up. "
+            f"Wait for the limit to reset, then run handoff-run again",
+            file=sys.stderr,
+        )
     if counts["failed"]:
         return 2
+    if counts["usage limit"]:
+        return EXIT_USAGE_LIMIT
     return EXIT_HANDOFF if counts["no reply"] else 0
 
 

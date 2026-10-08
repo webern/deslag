@@ -56,6 +56,10 @@ KEPT_PREFIXES = ("LC_", "ANTHROPIC_")
 # How a refused tool call reads in its tool_result, in `-p` mode with nobody to ask.
 REFUSAL = re.compile(r"permission", re.I)
 
+# How the text of a call stopped by the Claude plan's usage limit reads: "You've hit your session limit
+# · resets 3pm" in Claude Code 2.1.294, "Claude AI usage limit reached|<time>" in earlier versions.
+USAGE_LIMIT_TEXT = re.compile(r"\byou(?:'|\u2019)ve hit your [\w ]*limit\b|\busage limit reached\b", re.I)
+
 
 class Unconfined(Exception):
     """The process cannot be run confined here: no temp directory outside every repository, or no
@@ -247,6 +251,28 @@ class Stream:
         text = (self.result or {}).get("result")
         lines = [line.strip() for line in text.splitlines() if line.strip()] if isinstance(text, str) else []
         return lines[-1].strip("`*\"'. ") if lines else None
+
+
+def usage_limited(stream):
+    """Whether the call whose stream is `stream` was stopped by the Claude plan's usage limit, which
+    no call can pass until the limit resets: an assistant message wraps the API's refusal with
+    `api_error` `usage_limit_reached`, a `rate_limit_event` says `rejected`, or the text of an API
+    error message, or of a result that is an error, says the limit was hit. A model's own words
+    are not read."""
+    texts = []
+    for event in stream.events:
+        kind = event.get("type")
+        if kind == "assistant" and event.get("api_error") == "usage_limit_reached":
+            return True
+        if kind == "rate_limit_event" and isinstance(event.get("rate_limit_info"), dict):
+            if event["rate_limit_info"].get("status") == "rejected":
+                return True
+        message = event.get("message")
+        if kind == "assistant" and (event.get("error") or event.get("is_api_error_message")) and isinstance(message, dict):
+            texts.extend(block.get("text") for block in message.get("content") or [] if isinstance(block, dict))
+    if stream.result is not None and stream.result.get("is_error"):
+        texts.append(stream.result.get("result"))
+    return any(isinstance(text, str) and USAGE_LIMIT_TEXT.search(text) for text in texts)
 
 
 def same_model(named, model):

@@ -4528,6 +4528,23 @@ denials = []
 count = [0]
 
 
+def hit_limit():
+    # The Claude plan's usage limit, met on a request to the API: an assistant message that wraps the
+    # refusal, with `api_error` when the version gives it, and a result that is an error.
+    said = SETUP.get("limit_text", "You've hit your session limit \u00b7 resets 3pm (Europe/Madrid)")
+    refusal = {"type": "assistant", "message": {"model": "<synthetic>", "content": [{"type": "text", "text": said}]},
+               "error": "rate_limit"}
+    if SETUP["usage_limit"] == "api_error":
+        refusal.update(is_api_error_message=True, api_error_status=429, api_error="usage_limit_reached")
+    emit(refusal)
+    emit({"type": "result", "subtype": "success", "is_error": True, "result": said, "permission_denials": denials})
+    sys.exit(1)
+
+
+if SETUP.get("usage_limit") and not SETUP.get("limit_late"):
+    hit_limit()
+
+
 def tool(name, path, content=None):
     count[0] += 1
     ident = "toolu_%d" % count[0]
@@ -4580,6 +4597,9 @@ if "control" in request:
 else:
     for path in SETUP.get("also_read", []):
         tool("Read", path)
+    if SETUP.get("usage_limit"):
+        # The limit met later in the call, after its reads.
+        hit_limit()
     if SETUP.get("dirty"):
         with open(SETUP["dirty"], "w") as handle:
             handle.write("changed\n")
@@ -5114,6 +5134,51 @@ class ConfinementTests(Base):
         self.fake()
         self.assertEqual(self.handoff_run(), 0)
         self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_a_call_stopped_by_the_usage_limit_says_so_keeps_no_reply_and_stops_the_round(self):
+        self.waiting(PartsGold(3))
+        self.assertEqual(self.probe(), 0)
+        for setup in ({"usage_limit": "api_error"}, {"usage_limit": "text", "limit_text": "Claude AI usage limit reached|1760000000"}):
+            os.remove(self.log)
+            self.fake(**setup)
+            self.out.clear()
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(self.handoff_run("--parallel", "1"), label.EXIT_USAGE_LIMIT, setup)
+            self.assertEqual(len(self.calls()), 1, "no call after the limit")
+            self.assertIn("  part-01: usage limit; the Claude plan's usage limit; wait for its reset", self.out)
+            self.assertIn("  part-02: not run; the round stopped at the Claude plan's usage limit", self.out)
+            self.assertFalse(any("failed (" in line for line in self.out), "it is not a failed check")
+            self.assertIn("1 stopped by the usage limit, 0 failed a check", self.out[-1])
+            self.assertIn("Wait for the limit to reset, then run handoff-run again", err.getvalue())
+            self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3, "no reply is kept")
+            self.assertEqual(self.quarantined(), [])
+        # A call that met the limit after it broke its confinement is a failed call, not a wait.
+        self.fake(usage_limit="api_error", limit_late=True, also_read=[os.path.join(self.root, "calls.jsonl")], read_anything=True)
+        self.out.clear()
+        self.assertEqual(self.handoff_run("--parallel", "1"), 2)
+        self.assertTrue(any("part-01: failed (" in line and "paths_inside_cwd" in line for line in self.out), self.out)
+        # After the reset the same command answers them.
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_the_usage_limit_is_read_from_the_refusal_and_never_from_the_models_words(self):
+        def stream(*events):
+            return confine.Stream("".join(json.dumps(event) + "\n" for event in events))
+
+        said = {"type": "assistant", "message": {"model": "claude-opus-5-5", "content": [{"type": "text", "text": "usage limit reached"}]}}
+        ended = {"type": "result", "is_error": False, "result": "You've hit your session limit"}
+        self.assertFalse(confine.usage_limited(stream(said, ended)))
+        self.assertTrue(confine.usage_limited(stream({"type": "assistant", "message": {}, "api_error": "usage_limit_reached"})))
+        self.assertTrue(confine.usage_limited(stream({"type": "rate_limit_event", "rate_limit_info": {"status": "rejected"}})))
+        self.assertFalse(confine.usage_limited(stream({"type": "rate_limit_event", "rate_limit_info": {"status": "allowed_warning"}})))
+        self.assertTrue(confine.usage_limited(stream({**ended, "is_error": True})))
+        self.assertTrue(confine.usage_limited(stream({**said, "error": "rate_limit"})))
+        # A throttle that is not the plan's limit is a failed call, which a later round may pass.
+        throttled = {**said, "error": "rate_limit"}
+        throttled["message"] = {"content": [{"type": "text", "text": "API Error: Request rejected (429) \u00b7 this may be a temporary capacity issue"}]}
+        self.assertFalse(confine.usage_limited(stream(throttled)))
 
     def kill_round(self, gold, hang_from):
         """handoff-run, `--parallel 1`, in a child process killed with SIGKILL once the call numbered

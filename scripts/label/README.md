@@ -507,7 +507,7 @@ Make targets. None is in `test` or `ci`, and none but `test-silver` and `test-co
 else. The draw and the build read their numbers from `SILVER_*` variables (`make help`, and the top of the
 Makefile), so the run can change them.
 
-- `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 9 --mix ... --per-file 3
+- `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 10 --mix ... --per-file 3
   --per-repo 12`. Reads the big tier and calls no model.
 - `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
   at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so

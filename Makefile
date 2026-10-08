@@ -44,10 +44,10 @@ LABEL_REPORT_FLAGS ?=
 # by the owner's choice; SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
 SILVER_DIR ?= .label/silver
 SILVER_PREFIX ?= sa
-SILVER_PARTS ?= 9
-SILVER_MIX ?= 1050,650,350,250,850,550,280,220,40,30,15,15
+SILVER_PARTS ?= 10
+SILVER_MIX ?= 1175,725,390,280,950,615,310,245,45,35,15,15
 SILVER_DRAW_FLAGS ?= --per-file 3 --per-repo 12
-SILVER_MERGE ?= merge
+SILVER_MERGE ?= merge-spacy
 SILVER_NAME ?=
 SILVER_DRAFT_DIR ?= $(SILVER_DIR)/draft
 SILVER_BATCH_DIR ?= $(SILVER_DIR)/batch

@@ -1,0 +1,31 @@
+# The corpus of real C and C++ that `make test-scanners` sweeps with deslag-sweep. It is not a crate
+# to build: it names five `-sys` crates, whose bundled C and C++ sources are the corpus, and the
+# Cargo.lock beside it pins them and everything they pull in. `scripts/crates/fetch.sh` vendors the
+# lock into .crates/c/vendor. Its own `[workspace]` keeps cargo from taking it for a member of the
+# root workspace.
+#
+# Dependabot watches the root only, so this lock stays put until someone changes it. A change is a
+# deliberate pull request: bump a pin, run `cargo update --manifest-path scripts/crates/c/Cargo.toml`,
+# and `make test-scanners` proves the scanner again on the new files. The crates are pinned with `=`
+# so that nothing moves unseen.
+[package]
+name = "deslag-c-corpus"
+version = "0.0.0"
+edition = "2024"
+description = "Names the crates whose C and C++ sources are the sweep's corpus. Never built or published."
+license = "MIT"
+publish = false
+
+[workspace]
+
+[dependencies]
+# Big plain C, with line splices. It pulls in libz-sys, zlib, which the lock then pins too.
+curl-sys = { version = "=0.4.90", default-features = false }
+# Dense with characters and strings.
+onig_sys = { version = "=69.9.3", default-features = false }
+# Clean C.
+lzma-sys = { version = "=0.1.20", default-features = false }
+# C++17, with raw strings.
+wabt-sys = { version = "=0.8.0", default-features = false }
+# Plain C++.
+leveldb-sys = { version = "=2.0.9", default-features = false }

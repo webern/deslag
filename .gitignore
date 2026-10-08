@@ -23,8 +23,8 @@ test/output/
 # ledger of what it spent is in there too, and make clean-label keeps it; see scripts/label/README.md
 .label/
 
-# the crates of Cargo.lock that make fetch-crates vendors for make test-scanners, and the scratch
-# directory it builds them in; see scripts/crates/fetch.sh
+# the crates of Cargo.lock and of scripts/crates/c/Cargo.lock that make fetch-crates vendors for make
+# test-scanners, and the scratch directory it builds them in; see scripts/crates/fetch.sh
 .crates/
 .crates.new.*/
 

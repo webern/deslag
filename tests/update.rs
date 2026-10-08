@@ -442,7 +442,7 @@ fn what_cannot_be_cut_from_a_yaml_or_json_config_is_refused_whole_with_the_edits
             "yaml",
             explicit,
             Some(6),
-            "shares its line",
+            "an explicit `?` key",
         ),
     ] {
         let repo = repo_with(extension, &text);

@@ -159,8 +159,8 @@ impl Edit {
             None => path.to_string(),
         };
         let unfound = "deslag could not find its line: it is set through an alias or a merge key, \
-                       or in a list written by position, where a JSON list needs null in its \
-                       place";
+                       under a key written with an escape deslag does not read, or in a list \
+                       written by position, where a JSON list needs null in its place";
         let table = |place: &Option<String>| match place {
             Some(place) => format!(" in `{place}`"),
             None => String::new(),
@@ -314,9 +314,14 @@ fn splice(text: &str, mut splices: Vec<Splice>) -> Result<String, String> {
     Ok(text)
 }
 
-/// The line of byte `offset` of `text`, counting from 1.
+/// The line of byte `offset` of `text`, counting from 1. It counts bytes, so an offset inside a
+/// character, such as the one before the end of a text that ends in `á`, is a line like any other.
 fn line_of(text: &str, offset: usize) -> usize {
-    text[..offset.min(text.len())].matches('\n').count() + 1
+    text.as_bytes()[..offset.min(text.len())]
+        .iter()
+        .filter(|&&byte| byte == b'\n')
+        .count()
+        + 1
 }
 
 /// `edits` with the stamp last and the others in the order of the file, the ones with no line
@@ -376,13 +381,24 @@ thread_local! {
         const { std::cell::Cell::new(None) };
 }
 
+/// Takes the damage off when it is dropped, whether `run` returned or panicked, so that a test that
+/// fails inside [`with_wrong_edit`] does not damage the tests that run after it on the same thread.
+#[cfg(test)]
+struct Undamaged;
+
+#[cfg(test)]
+impl Drop for Undamaged {
+    fn drop(&mut self) {
+        WRONG_EDIT.set(None);
+    }
+}
+
 /// Runs `run` with the text of every plan made on this thread passed through `wrong` first.
 #[cfg(test)]
 pub(crate) fn with_wrong_edit<T>(wrong: Damage, run: impl FnOnce() -> T) -> T {
+    let _undamaged = Undamaged;
     WRONG_EDIT.set(Some(wrong));
-    let result = run();
-    WRONG_EDIT.set(None);
-    result
+    run()
 }
 
 /// The edits for a YAML or JSON config: each removed key it sets deleted, and the stamp.
@@ -523,11 +539,15 @@ fn redirects(
         ));
     }
     if unfound {
-        return Err(refuse(
-            "it is set where deslag cannot find the key (through an alias, or in a list written \
-             by position), so it will not edit the file"
-                .to_string(),
-        ));
+        return Err(refuse(if scan.unread_key {
+            "a key of the file is written with an escape that deslag does not read, and it may \
+             be a key it needs to find, so it will not edit the file"
+                .to_string()
+        } else {
+            "it is set where deslag cannot find the key (in a list written by position), so it \
+             will not edit the file"
+                .to_string()
+        }));
     }
     let targets: Vec<usize> = found.iter().map(|(_, index)| *index).collect();
     let deleted = scan
@@ -585,6 +605,9 @@ struct Scan {
     /// Whether the file has an alias or a merge key (`<<`), through which the loader may read a key
     /// that has no place of its own here.
     aliased: bool,
+    /// Whether a key is double-quoted with an escape that only YAML has, so the scan has its text as
+    /// written and cannot say which key it is.
+    unread_key: bool,
 }
 
 impl Scan {

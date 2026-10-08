@@ -10,10 +10,14 @@
 //! - **Flow YAML and JSON**: the member and one comma, the one after it or, for the last member,
 //!   the one before it. A member alone on its lines takes the lines. An emptied object stays `{}`.
 //!
+//! A key on the last line of a file with no final line ending takes the line ending before it, and
+//! the blank lines above it, so that the file still ends without one.
+//!
 //! A key is refused, with the reason, when cutting it is not plainly safe: an anchor or a tag on
-//! the key, a block scalar in its value, anything else on its lines, a comment in the gap where
-//! its comma is. Whatever passes here is checked again by [`super::checked`], which loads the
-//! result and reads it line by line, so a mistake here is a refusal and never a written file.
+//! the key, an explicit `?`, a block scalar in its value, anything else on its lines, a comment in
+//! the gap where its comma is. Whatever passes here is checked again by [`super::checked`], which
+//! loads the result and reads it line by line, so a mistake here is a refusal and never a written
+//! file.
 
 use std::ops::Range;
 
@@ -67,6 +71,9 @@ impl Scan {
             if member.raw {
                 return Err(refuse("has a block scalar (`|` or `>`) in its value"));
             }
+            if follows_question_mark(text, member.key.start) {
+                return Err(refuse("is an explicit `?` key"));
+            }
             let end = member.value_end(text);
             let ranges = if member.flow {
                 self.flow_cut(text, index, end)
@@ -76,7 +83,7 @@ impl Scan {
             .map_err(|what| refuse(&what))?;
             for range in ranges {
                 deleted.touched.push(Touch {
-                    lines: line_of(text, range.start)..=line_of(text, range.end.max(1) - 1),
+                    lines: first_line(text, &range)..=line_of(text, range.end.max(1) - 1),
                     kind: TouchKind::Member,
                 });
                 deleted.splices.push(Splice {
@@ -139,17 +146,11 @@ impl Scan {
     }
 
     /// The bytes that cut the member at `index` out of a flow map, whose value ends at `end`: one
-    /// range, or two when the comma before the last member is on a line of its own, apart from the
-    /// member by a comment.
+    /// range, or two when the comma before the last member is apart from it by a comment or a
+    /// blank line, which stay.
     fn flow_cut(&self, text: &str, index: usize, end: usize) -> Result<Vec<Range<usize>>, String> {
         let member = &self.members[index];
         let bytes = text.as_bytes();
-        if text[..member.key.start]
-            .trim_end_matches([' ', '\t', '\r', '\n'])
-            .ends_with('?')
-        {
-            return Err("is an explicit `?` key".to_string());
-        }
         let after = skip(text, end, &[' ', '\t', '\r', '\n']);
         match bytes.get(after) {
             Some(b',') => {
@@ -167,20 +168,29 @@ impl Scan {
                 Some(previous) => {
                     // The last member takes the comma before it, which follows the member before.
                     let comma = skip(text, previous.value_end(text), &[' ', '\t', '\r', '\n']);
-                    if bytes.get(comma) != Some(&b',') {
-                        return Err("is not right after a comma".to_string());
+                    match bytes.get(comma) {
+                        Some(b',') => {}
+                        Some(b'#') => {
+                            return Err("follows a member that has a comment between its value \
+                                        and its comma"
+                                .to_string());
+                        }
+                        _ => return Err("is not right after a comma".to_string()),
                     }
                     let gap = &text[comma + 1..member.key.start];
-                    if gap.trim().is_empty() {
+                    if gap.trim().is_empty() && !has_blank_line(gap) {
                         let cut = comma..end;
                         return Ok(vec![cut]);
                     }
-                    // Comments in the gap stay, so the comma and the member go apart.
+                    // Comments and blank lines in the gap stay, so the comma and the member go
+                    // apart.
                     if gap
                         .lines()
                         .any(|line| !(line.trim().is_empty() || line.trim().starts_with('#')))
                     {
-                        return Err("is not right after a comma".to_string());
+                        return Err("has something between the comma before it and itself that \
+                                    is not a comment"
+                            .to_string());
                     }
                     Ok(vec![
                         comma..comma + 1,
@@ -194,6 +204,15 @@ impl Scan {
     }
 }
 
+/// Whether `gap`, the text between a comma and the member after it, holds a blank line of its own.
+fn has_blank_line(gap: &str) -> bool {
+    let pieces: Vec<&str> = gap.split('\n').collect();
+    pieces.len() > 2
+        && pieces[1..pieces.len() - 1]
+            .iter()
+            .any(|line| line.trim().is_empty())
+}
+
 /// The bytes that cut a block member, which starts at the key and whose value ends at `end`: its
 /// lines.
 fn block_cut(text: &str, member: &Member, end: usize) -> Result<Range<usize>, String> {
@@ -202,11 +221,7 @@ fn block_cut(text: &str, member: &Member, end: usize) -> Result<Range<usize>, St
         .bytes()
         .all(|byte| byte == b' ')
     {
-        return Err(
-            "shares its line with something before it, such as a dash or an explicit \
-                    `?` key"
-                .to_string(),
-        );
+        return Err("shares its line with something before it, such as a dash".to_string());
     }
     let stop = line_end(text, end);
     let rest = text[end..stop].trim();
@@ -216,21 +231,51 @@ fn block_cut(text: &str, member: &Member, end: usize) -> Result<Range<usize>, St
     Ok(lines(text, start, stop))
 }
 
+/// The first line a cut touches. A cut that starts with the line break that ends the line before
+/// it, as the cut of a last line with no final line ending does, leaves that line alone.
+fn first_line(text: &str, cut: &Range<usize>) -> usize {
+    let rest = &text[cut.start..cut.end];
+    let skip = if rest.starts_with("\r\n") {
+        2
+    } else {
+        usize::from(rest.starts_with('\n'))
+    };
+    line_of(text, cut.start + skip.min(rest.len().saturating_sub(1)))
+}
+
 /// The lines from the one that starts at `start` to the one whose line ending is at `stop`, as
 /// bytes. The last line of a file that has no final line ending takes the ending of the line
-/// before it, so the file still ends without one.
+/// before it, so the file still ends without one; and when blank lines are before it, they go
+/// too, since no text keeps them and also ends without a line ending: the line ending the last
+/// blank line would be the file's final one.
 fn lines(text: &str, start: usize, stop: usize) -> Range<usize> {
     if stop < text.len() {
         return start..stop + 1;
     }
     let mut from = start;
     if from > 0 {
-        from -= 1;
-        if from > 0 && text.as_bytes()[from - 1] == b'\r' {
-            from -= 1;
+        from = break_before(text, from);
+        // A blank line above has a line above it, or this would cut the file down to nothing.
+        loop {
+            let begin = line_start(text, from);
+            if begin == 0 || !text[begin..from].trim().is_empty() {
+                break;
+            }
+            from = break_before(text, begin);
         }
     }
     from..text.len()
+}
+
+/// Where the line break that ends the line before the one starting at `start` begins: the `\n`, or
+/// the `\r\n`.
+fn break_before(text: &str, start: usize) -> usize {
+    let newline = start - 1;
+    if newline > 0 && text.as_bytes()[newline - 1] == b'\r' {
+        newline - 1
+    } else {
+        newline
+    }
 }
 
 /// `from..to`, widened to the whole lines when nothing else is on them: only blanks before `from`
@@ -273,6 +318,27 @@ fn seal(text: &str, parent: &Member) -> Result<Splice, String> {
         range: at..at,
         with: " {}".to_string(),
     })
+}
+
+/// Whether the last thing before the key at `at`, past blanks and comments, is a `?`: the key is
+/// written after an explicit `?`, on its line or on one below it. This is the one place a `?` is
+/// looked for, for a block key and a flow member alike.
+fn follows_question_mark(text: &str, at: usize) -> bool {
+    for line in text[..at].lines().rev() {
+        // A comment starts at a `#` that begins the line or follows a blank.
+        let code = line
+            .char_indices()
+            .find(|&(index, c)| c == '#' && (index == 0 || line[..index].ends_with([' ', '\t'])))
+            .map_or(line, |(index, _)| &line[..index]);
+        let code = code.trim_end();
+        if !code.is_empty() {
+            // The `?` is a token of its own: `why?` at the end of a plain value is not one.
+            return code.strip_suffix('?').is_some_and(|before| {
+                before.is_empty() || before.ends_with([' ', '\t', '{', '[', ','])
+            });
+        }
+    }
+    false
 }
 
 /// The first byte at or after `from` that is not in `skipped`.

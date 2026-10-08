@@ -50,6 +50,7 @@ pub(super) fn scan(text: &str) -> Result<Scan, String> {
     let mut stack: Vec<Frame> = Vec::new();
     let mut braced = false;
     let mut aliased = false;
+    let mut unread_key = false;
     // Where the last scalar, alias or closing brace or bracket that was read ends.
     let mut last_end = 0;
     let mut root: Option<bool> = None;
@@ -78,7 +79,12 @@ pub(super) fn scan(text: &str) -> Result<Scan, String> {
                         path, key, flow, ..
                     }) if key.is_none() => {
                         // A key. Its text is read back from the file, so an escape in it is read.
-                        let name = key_text(&text[range.clone()], style);
+                        let name = key_text(&text[range.clone()], style).unwrap_or_else(|| {
+                            // An escape only YAML has: the key is kept as written, and nothing
+                            // can say whether it is the one a redirect names.
+                            unread_key = true;
+                            text[range.clone()].to_string()
+                        });
                         // `<<` merges another map in, whatever the file does with it.
                         aliased |= name == "<<";
                         last_end = range.end;
@@ -210,6 +216,7 @@ pub(super) fn scan(text: &str) -> Result<Scan, String> {
         members,
         braced,
         aliased,
+        unread_key,
     })
 }
 
@@ -222,11 +229,12 @@ fn done(stack: &mut [Frame]) {
     }
 }
 
-/// The text of a key written as `written`.
-fn key_text(written: &str, style: ScalarStyle) -> String {
+/// The text of a key written as `written`, or `None` for a double-quoted key whose escapes are
+/// not JSON's, which YAML has more of (`\x70`).
+fn key_text(written: &str, style: ScalarStyle) -> Option<String> {
     match style {
-        ScalarStyle::Plain => written.to_string(),
-        ScalarStyle::SingleQuoted => written.trim_matches('\'').replace("''", "'"),
-        _ => serde_json::from_str::<String>(written).unwrap_or_else(|_| written.to_string()),
+        ScalarStyle::Plain => Some(written.to_string()),
+        ScalarStyle::SingleQuoted => Some(written.trim_matches('\'').replace("''", "'")),
+        _ => serde_json::from_str::<String>(written).ok(),
     }
 }

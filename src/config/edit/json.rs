@@ -27,6 +27,7 @@ pub(super) fn scan(text: &str) -> Result<Scan, String> {
         members: scanner.members,
         braced: true,
         aliased: false,
+        unread_key: false,
     })
 }
 

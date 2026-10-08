@@ -250,7 +250,7 @@ while training. NLTK's code is not in the repository beyond the template list.
 - URL: https://github.com/rust-lang/rust/tree/master/compiler/rustc_lexer
 - Licence: MIT, taken from the dual licence MIT OR Apache-2.0, copied as the Rust project ships it
   to `LICENSES/MIT-rustc.txt`
-- Copyright: "Copyright (c) The Rust Project Developers"
+- Copyright: "Copyright (c) The Rust Project Contributors"
 - Studied at: the published copy `ra-ap-rustc_lexer` 0.176.0, from commit
   [4ddbc06e](https://github.com/rust-lang/rust/tree/4ddbc06ea09abcda34f80baf31cc9bc2686b0ae6), read
   2026-10-08

@@ -89,6 +89,13 @@ pub fn lex(src: &str) -> Vec<Lexeme> {
     scanner.out
 }
 
+/// What a quoted literal is, which decides the kind of its lexeme.
+#[derive(Clone, Copy)]
+enum Quoted {
+    Str,
+    Char,
+}
+
 /// The state of one [`lex`]. Every offset is a byte offset into `src`, and every method that takes
 /// one is given a character boundary and returns one.
 struct Scanner<'a> {
@@ -192,22 +199,22 @@ impl Scanner<'_> {
                 b'/' if self.byte(i + 1) == b'*' => self.block_comment(i),
                 b'"' => {
                     let literal = self.quoted(i + 1);
-                    self.literal(i, literal, false)
+                    self.literal(i, literal, Quoted::Str)
                 }
                 b'\'' => self.quote(i),
                 b'b' if self.byte(i + 1) == b'\'' => {
                     let literal = self.char_body(i + 1);
-                    self.literal(i, literal, true)
+                    self.literal(i, literal, Quoted::Char)
                 }
                 b'b' | b'c' if self.byte(i + 1) == b'"' => {
                     let literal = self.quoted(i + 2);
-                    self.literal(i, literal, false)
+                    self.literal(i, literal, Quoted::Str)
                 }
                 b'b' | b'c'
                     if self.byte(i + 1) == b'r' && matches!(self.byte(i + 2), b'"' | b'#') =>
                 {
                     let literal = self.raw_string(i + 2);
-                    self.literal(i, literal, false)
+                    self.literal(i, literal, Quoted::Str)
                 }
                 b'r' if self.byte(i + 1) == b'#'
                     && self.char_at(i + 2).is_some_and(is_id_start) =>
@@ -217,7 +224,7 @@ impl Scanner<'_> {
                 }
                 b'r' if matches!(self.byte(i + 1), b'"' | b'#') => {
                     let literal = self.raw_string(i + 1);
-                    self.literal(i, literal, false)
+                    self.literal(i, literal, Quoted::Str)
                 }
                 b'0'..=b'9' => self.number_end(i),
                 // Anything else is one character of code or the start of an identifier. A `#"` is a
@@ -234,7 +241,7 @@ impl Scanner<'_> {
 
     // NOTICE: `digits_end`, `number_end` and `exponent_end` are ported from the number lexing of
     // `rustc_lexer`, <https://github.com/rust-lang/rust>, Copyright (c) The Rust Project
-    // Developers, which is licensed under the MIT licence or the Apache License, Version 2.0. A
+    // Contributors, which is licensed under the MIT licence or the Apache License, Version 2.0. A
     // copy of the MIT licence, as the Rust project ships it, is `LICENSES/MIT-rustc.txt` at the
     // root of this repository.
 
@@ -410,18 +417,12 @@ impl Scanner<'_> {
         });
     }
 
-    /// Records the string at `start`, or the character if `character`, and returns where to go on,
-    /// past its suffix if it is closed.
-    fn literal(
-        &mut self,
-        start: usize,
-        (end, terminated): (usize, bool),
-        character: bool,
-    ) -> usize {
-        let kind = if character {
-            LexemeKind::Char { terminated }
-        } else {
-            LexemeKind::Str { terminated }
+    /// Records the literal of `quoted` at `start`, and returns where to go on, past its suffix if
+    /// it is closed.
+    fn literal(&mut self, start: usize, (end, terminated): (usize, bool), quoted: Quoted) -> usize {
+        let kind = match quoted {
+            Quoted::Str => LexemeKind::Str { terminated },
+            Quoted::Char => LexemeKind::Char { terminated },
         };
         self.push(start, end, kind);
         if terminated {
@@ -452,7 +453,7 @@ impl Scanner<'_> {
             }
             _ => {
                 let literal = self.char_body(i);
-                self.literal(i, literal, true)
+                self.literal(i, literal, Quoted::Char)
             }
         }
     }

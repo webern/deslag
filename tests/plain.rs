@@ -109,6 +109,7 @@ fn a_marker_of_another_class_after_a_blank_line_opens_another_list() {
     // Without the blank line the lists are flat: the item is a sibling.
     assert_eq!(outline("- a\n* b"), "ul\n  li\n    p a\n  li\n    p b");
     assert_eq!(outline("- a\n  - b"), "ul\n  li\n    p a\n  li\n    p b");
+    assert_eq!(outline("1. a\n2) b"), "ol 1\n  li\n    p a\n  li\n    p b");
 }
 
 #[test]
@@ -197,6 +198,12 @@ fn a_crlf_is_one_line_ending_and_trailing_space_is_in_the_break() {
     assert_eq!(points("a \t\r\nb"), vec![(PointKind::SoftBreak, " \t\r\n")]);
     assert_eq!(points("a  \n b"), vec![(PointKind::SoftBreak, "  \n")]);
     assert_eq!(points("a\r\n\r\nb"), vec![(PointKind::Gap, "\r\n\r\n")]);
+}
+
+#[test]
+fn a_lone_cr_is_content() {
+    assert_eq!(outline("a\rb\nc"), "p a\rb / c");
+    assert_eq!(outline("\ra\n\rb"), "p \ra / \rb");
 }
 
 #[test]

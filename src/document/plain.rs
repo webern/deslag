@@ -5,16 +5,17 @@
 //! - A blank line parts paragraphs. A line break inside one is a soft break.
 //! - A line that opens with `-`, `*` or `+`, or with up to nine digits and a `.` or `)`, and then
 //!   a space and text, opens a list item. A number other than 1 does not interrupt a paragraph.
-//!   Lists are flat: an item at any indent is a sibling of the one before it. A line that is not
-//!   indented further than the item's marker continues the item's paragraph, unless a blank line
-//!   or raw text came before it.
+//!   Lists are flat: an item at any indent is a sibling of the one before it. A line indented less
+//!   than two columns past the item's text continues the item's paragraph, unless a blank line or
+//!   raw text came before it.
 //! - A line indented two or more columns past its paragraph, or past its container after a blank
 //!   line, opens a raw run: code, a diagram or a table, which no lint reads. The run goes on over
 //!   lines indented as far, markers and interior blank lines included.
 //!
-//! Every piece is one line's content, borrowed, so no piece holds or touches a line ending. A tab
-//! counts to the next multiple of four columns. A `\r\n` is one line ending. The baseline, the least
-//! indent of any line, is column zero.
+//! Every piece is the content of one line, borrowed: from its first byte that is not a space or tab
+//! to its last that is not a space, tab or CR. No piece holds or touches a `\n` or a `\r\n`, which
+//! are the line endings. A lone `\r` is content. A tab counts to the next multiple of four columns.
+//! The baseline, the least indent of any line, is column zero.
 
 use std::borrow::Cow;
 use std::ops::Range;
@@ -28,8 +29,8 @@ const RAW: usize = 2;
 
 /// Reads `source` into blocks, pieces and points.
 pub(super) fn read(source: &str) -> Document<'_> {
-    let lines = lines(source);
-    let baseline = lines
+    let source_lines = lines(source);
+    let baseline = source_lines
         .iter()
         .filter(|line| !line.blank)
         .map(|line| line.indent)
@@ -45,7 +46,7 @@ pub(super) fn read(source: &str) -> Document<'_> {
         pieces: Vec::new(),
         points: Vec::new(),
     };
-    for line in &lines {
+    for line in &source_lines {
         reader.line(line);
     }
     reader.close_leaf();
@@ -251,24 +252,23 @@ impl<'a> Reader<'a> {
             content: marker.column,
             blocks: Vec::new(),
         };
-        let sibling = self
-            .list
-            .as_ref()
-            .is_some_and(|list| !blank || list.class == marker.class);
-        if sibling {
-            let list = self.list.as_mut().expect("a list was found open");
-            list.tight &= !blank;
-            let before = std::mem::replace(&mut list.item, item);
-            add(&mut list.items, &mut self.points, before.into_block());
-        } else {
-            self.close_list();
-            self.list = Some(OpenList {
-                start: marker.number,
-                class: marker.class,
-                tight: true,
-                items: Vec::new(),
-                item,
-            });
+        // After a blank line, only a marker of the list's class joins it.
+        match self.list.as_mut() {
+            Some(list) if !blank || list.class == marker.class => {
+                list.tight &= !blank;
+                let before = std::mem::replace(&mut list.item, item);
+                add(&mut list.items, &mut self.points, before.into_block());
+            }
+            _ => {
+                self.close_list();
+                self.list = Some(OpenList {
+                    start: marker.number,
+                    class: marker.class,
+                    tight: true,
+                    items: Vec::new(),
+                    item,
+                });
+            }
         }
         self.leaf = Some(Leaf {
             raw: false,
@@ -289,7 +289,8 @@ impl<'a> Reader<'a> {
             }
             let column = leaf.column;
             self.close_leaf();
-            return self.open(true, column, line, blank);
+            self.open(true, column, line, blank);
+            return;
         }
         if self
             .list
@@ -309,7 +310,8 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// Starts a paragraph at `column`, or a raw run indented past it, with `line`.
+    /// Starts a paragraph at `column`, or a raw run indented past it, with `line`. A blank line
+    /// before it, inside the open list, makes the list loose.
     fn open(&mut self, raw: bool, column: usize, line: &Line, blank: bool) {
         if let Some(list) = self.list.as_mut().filter(|_| blank) {
             list.tight = false;

@@ -1312,7 +1312,7 @@ fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
             let mut problems = Vec::new();
             for dir in &dirs {
                 let loaded = silver::layout::Batch::load(dir)?;
-                match silver::check::check(&loaded) {
+                match silver::check::check(&loaded, &silver::table::Machine::here()) {
                     Ok(done) => println!(
                         "silver check: {} passes: {} sentences, {} words, {} parts, {} runs{}",
                         loaded.name,

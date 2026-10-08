@@ -628,7 +628,7 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
     batch.files.insert(layout::DATASHEET.to_string(), page);
 
     // What was written is checked before it is written.
-    let checked = check::check(&batch)?;
+    let checked = check::check(&batch, &env.machine)?;
     batch.write(args.out)?;
     let mut report = String::new();
     for part in &parts {

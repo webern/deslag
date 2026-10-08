@@ -24,7 +24,7 @@ use deslag_exam::tagger::Context;
 
 use super::layout;
 use super::runs::{self, Facts, Runs, VotersJson};
-use super::table::{Cells, Tsv, absolute_paths_in};
+use super::table::{Machine, Tsv, machine_paths};
 use crate::data::{self, Meta, Sample, read_text};
 use crate::exclude::{Exclusion, Repos, Reserved, Texts};
 use crate::labelling::GOLD_PREFIXES;
@@ -113,6 +113,8 @@ pub struct Env {
     pub voters: VotersJson,
     /// The bytes of `voters.json`.
     pub voters_bytes: Vec<u8>,
+    /// The directories of this machine, which no word of a part may name.
+    pub machine: Machine,
 }
 
 /// Where `Env` reads from.
@@ -187,6 +189,7 @@ impl Env {
             fixtures,
             voters: VotersJson::parse(&voters_shown, &voters_bytes)?,
             voters_bytes,
+            machine: Machine::here(),
         })
     }
 }
@@ -756,14 +759,7 @@ impl Part {
         };
         // Nothing the part ships may hold a path of the maker's.
         for (path, text) in part.shipped(&part.kept_ids()) {
-            let kind = if path.ends_with(".json") {
-                Cells::Json
-            } else if path.ends_with(".tsv") {
-                Cells::Tabs
-            } else {
-                Cells::Lines
-            };
-            for found in absolute_paths_in(&text, kind) {
+            for found in machine_paths(&path, &text, &env.machine) {
                 problems.push(Error::load(
                     &path,
                     Place::File,
@@ -771,7 +767,11 @@ impl Part {
                 ));
             }
         }
-        for found in absolute_paths_in(&part.runs.only(&part.used).render(), Cells::Tabs) {
+        for found in machine_paths(
+            &runs_shown,
+            &part.runs.only(&part.used).render(),
+            &env.machine,
+        ) {
             problems.push(Error::load(
                 &runs_shown,
                 Place::File,
@@ -779,9 +779,10 @@ impl Part {
             ));
         }
         for (run, text) in &part.listings {
-            for found in absolute_paths_in(text, Cells::Json) {
+            let shown = format!("listings/{run}.json");
+            for found in machine_paths(&shown, text, &env.machine) {
                 problems.push(Error::load(
-                    &format!("listings/{run}.json"),
+                    &shown,
                     Place::File,
                     format!("it holds `{found}`, a path of the machine that made it"),
                 ));

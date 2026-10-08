@@ -493,8 +493,11 @@ version is not a version, an outside tagger other than spaCy; a merge with fewer
 `Prov=` says (an agreed word names the runs of at least `min_voters` model voters of its part, an adjudicated
 word the run of its answer in `adjudicated.tsv`, an adjudicator's); at the preflight, a value the lock of the
 parts holds otherwise; a fixture the image lacks or whose content, commit, URL or licence differs from the manifest's,
-that an exclusion names, or whose generator is banned; and an absolute path in any file it writes, in a JSON
-cell or a listing too. It drops and counts, and does not refuse, a sentence whose repository became reserved
+that an exclusion names, or whose generator is banned; and a path of the machine that made it in any file it
+writes. In a cell the kit fills, a JSON cell or a listing too, that is any absolute path. A word's `form` and
+the adjudicator's `reason` quote the corpus, which has paths such as `/etc/hosts`, so there it is only a path
+under `/home/NAME/`, `/Users/NAME/` or `/tmp/`, a handoff's working directory, or this machine's home, temp
+directory or checkout. It drops and counts, and does not refuse, a sentence whose repository became reserved
 after the draw or whose text is now a gold sentence's, one that is a repeat, and one the owner rejected in the
 audit. The batch ships the runs that the words it kept name, with the voters', and the agent record of those,
 worked out after the drops.

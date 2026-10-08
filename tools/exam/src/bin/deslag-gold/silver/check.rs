@@ -22,7 +22,10 @@
 //!   its part's voters, at least `min_voters` of them of model voters, for an agreed word, and the
 //!   adjudicator's run that its part's `adjudicated.tsv` gives for an adjudicated one;
 //! - each part's tables name sentences of the manifest and runs of `runs.tsv`;
-//! - no file but the CoNLL-U text holds a path of the machine that made it;
+//! - no file but the CoNLL-U text holds a path of the machine that made it: in a cell the kit
+//!   fills, no absolute path at all; in the words of a part's tables, a `form` or a `reason`,
+//!   which may quote the corpus's paths, none under a home directory, `/tmp/`, a handoff's
+//!   working directory, or the home, temp directory or checkout of the machine running the check;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
 //!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
 //!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance;
@@ -40,7 +43,7 @@ use super::layout::{self, Batch};
 use super::part::{MIN_MODEL_VOTERS, Vouchers};
 use super::runs::{self, Runs, VotersJson};
 use super::score;
-use super::table::{Cells, Tsv, absolute_paths_in, is_sha256, sha256_hex};
+use super::table::{Machine, Tsv, is_sha256, machine_paths, sha256_hex};
 use crate::assemble;
 use crate::code::Code;
 use crate::problems::Problems;
@@ -152,7 +155,7 @@ fn allowed(path: &str, parts: &[usize]) -> bool {
 }
 
 /// Checks `batch`.
-pub fn check(batch: &Batch) -> Result<Checked, Problems> {
+pub fn check(batch: &Batch, machine: &Machine) -> Result<Checked, Problems> {
     let mut problems: Vec<Error> = Vec::new();
     let parts = batch.part_numbers();
 
@@ -700,17 +703,10 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
 
     // Paths of the maker's machine, in every file but the CoNLL-U text and the sheet.
     for (path, text) in &batch.files {
-        let kind =
-            if path.ends_with(".conllu") || path == layout::DATASHEET || path == layout::TEMPLATE {
-                continue;
-            } else if path.ends_with(".json") {
-                Cells::Json
-            } else if path.ends_with(".tsv") {
-                Cells::Tabs
-            } else {
-                Cells::Lines
-            };
-        for found in absolute_paths_in(text, kind) {
+        if path.ends_with(".conllu") || path == layout::DATASHEET || path == layout::TEMPLATE {
+            continue;
+        }
+        for found in machine_paths(path, text, machine) {
             problems.push(Error::load(
                 path,
                 Place::File,
@@ -1002,7 +998,7 @@ mod tests {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/silver-fixture/2026-01-01-fixture");
         let batch = Batch::load(&dir).expect("the committed batch loads");
-        let checked = check(&batch).unwrap_or_else(|problems| {
+        let checked = check(&batch, &Machine::here()).unwrap_or_else(|problems| {
             panic!(
                 "the committed batch fails version {} of the rules:\n{}",
                 super::super::kit::CHECK_VERSION,

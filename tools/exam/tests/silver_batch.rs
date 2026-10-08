@@ -401,6 +401,46 @@ fn a_changed_checkout_voters_json_does_not_fail_a_batch_built_under_the_old_one(
         .refused(&["began under a voters.json of sha256"]);
 }
 
+/// The checkout these tests run in, as its links resolve.
+fn checkout() -> String {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap()
+        .display()
+        .to_string()
+}
+
+#[test]
+fn a_reason_may_quote_a_path_of_the_corpus_but_not_one_of_this_machine() {
+    let made = Made::new();
+    let quoted = "part of the path /etc/hosts";
+    made.edit(1, "merge/adjudicated.tsv", |text| {
+        text.replacen("the guide says so", quoted, 1)
+    });
+    made.check_part(1).ok();
+    made.build(NAME, &[]).ok();
+    let dir = made.out(NAME);
+    assert!(read(&dir, "parts/01/adjudicated.tsv").contains(quoted));
+    check(&made, &dir).ok();
+
+    // The checkout's own path, at the preflight and in a built batch.
+    let leaked = format!("{}/tests/gold/dev.conllu", checkout());
+    made.edit(1, "merge/adjudicated.tsv", |text| {
+        text.replacen(quoted, &leaked, 1)
+    });
+    made.check_part(1)
+        .refused(&[&leaked, "a path of the machine that made it"]);
+    edit(&dir, "parts/01/adjudicated.tsv", |text| {
+        text.replacen(quoted, &format!("it read {leaked}"), 1)
+    });
+    check(&made, &dir).refused(&[
+        "parts/01/adjudicated.tsv",
+        &leaked,
+        "a path of the machine that made it",
+    ]);
+}
+
 /// An edit of a batch and what `silver check` must say of it: a name, the edit, what stderr holds.
 type Case = (&'static str, Box<dyn Fn(&Path)>, Vec<&'static str>);
 

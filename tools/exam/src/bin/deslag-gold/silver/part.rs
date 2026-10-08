@@ -923,7 +923,12 @@ impl Vouchers {
                         "it is agreed and names run {other}, which is not a voter's run of its part"
                     ));
                 }
-                let models = named.iter().filter(|run| self.voters[**run]).count();
+                // A run named twice is one voter.
+                let models = named
+                    .iter()
+                    .filter(|run| self.voters[**run])
+                    .collect::<BTreeSet<_>>()
+                    .len();
                 (models < self.min_voters).then(|| {
                     format!(
                         "it is agreed by the runs of {models} model voters, and min_voters is {}",

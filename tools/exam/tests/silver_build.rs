@@ -398,6 +398,11 @@ fn a_word_whose_runs_are_not_what_its_provenance_says_is_refused() {
             "it is agreed by the runs of 0 model voters, and min_voters is 3",
         ],
     );
+    // Agreed by one model voter whose run is named three times.
+    refused(
+        relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=agree|Runs=r1,r1,r1,r4"),
+        &["it is agreed by the runs of 1 model voters, and min_voters is 3"],
+    );
     // Agreed by runs the part does not have.
     refused(
         relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=agree|Runs=r1,r2,r3,r9"),

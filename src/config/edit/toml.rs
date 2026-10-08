@@ -19,7 +19,7 @@ use std::ops::RangeInclusive;
 use semver::Version;
 use toml_edit::{Decor, Document, DocumentMut, InlineTable, Item, Table, TableLike, Value};
 
-use super::{Edit, Plan, Refusal, Spot, StampAt, Touch, in_file_order, line_of};
+use super::{Edit, Plan, Refusal, Spot, StampAt, Touch, TouchKind, in_file_order, line_of};
 use crate::config::Config;
 use crate::config::redirect::{Redirect, Used};
 
@@ -621,13 +621,12 @@ pub(super) fn edit(
         .iter()
         .map(|found| Touch {
             lines: found.line..=found.last_line,
-            key: true,
+            kind: TouchKind::Key,
         })
-        .chain(
-            stamp_to
-                .and(stamp_lines)
-                .map(|lines| Touch { lines, key: false }),
-        )
+        .chain(stamp_to.and(stamp_lines).map(|lines| Touch {
+            lines,
+            kind: TouchKind::Stamp,
+        }))
         .collect();
 
     let refuse = |reason: String| Refusal::of(reason, path, &edits);

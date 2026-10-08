@@ -26,6 +26,7 @@ pub(super) fn scan(text: &str) -> Result<Scan, String> {
     Ok(Scan {
         members: scanner.members,
         braced: true,
+        aliased: false,
     })
 }
 
@@ -104,12 +105,18 @@ impl Scanner<'_> {
                     let index = self.members.len();
                     self.members.push(Member {
                         path: member_path.clone(),
+                        end: key.end,
                         key,
                         line,
                         value: None,
+                        empty: false,
+                        flow: true,
+                        decorated: false,
+                        raw: false,
                     });
                     let value = self.value(&member_path, depth + 1)?;
                     self.members[index].value = value;
+                    self.members[index].end = self.at;
                     self.space();
                     match self.peek() {
                         Some(b',') => self.at += 1,

@@ -11,13 +11,14 @@
 //!
 //! - the stamp: the old stamp line with only its quoted value changed, or the one line that holds
 //!   the new key and its value, or the line of `schema_version` with only that key put in beside it;
-//! - a key that was sealed as `= {}` because the delete left its parent empty;
+//! - a key that was sealed as `= {}` because the delete left its parent empty, or in YAML the
+//!   line of that parent with ` {}` put in after its colon;
 //! - a renamed key;
 //! - a line an edit changed in one place.
 
 use semver::Version;
 
-use super::{Edit, StampAt, Touch};
+use super::{Edit, StampAt, Touch, TouchKind};
 
 /// The most lines a diff may differ by. Edits change a few lines each, so a text that differs by
 /// more is not the result of the edits.
@@ -122,7 +123,7 @@ pub(super) fn only_the_edits_changed(
             }
             continue;
         }
-        if sealed(&old_lines, line.content, touched) {
+        if sealed(&old_lines, line.content, touched) || parent_sealed(&old_lines, line, touched) {
             continue;
         }
         if !renamed.is_empty()
@@ -132,7 +133,8 @@ pub(super) fn only_the_edits_changed(
         {
             continue;
         }
-        if line.content.trim().is_empty() || !changed_in_one_place(&old_lines, line, touched) {
+        if line.content.trim().is_empty() || !changed_in_one_place(&old_lines, line, touched, stamp)
+        {
             return Err(shown());
         }
     }
@@ -169,8 +171,9 @@ fn is_blank(line: &str) -> bool {
     line.trim().is_empty()
 }
 
-/// For each line of `old`, whether an edit may take it away: a key's own lines, the comment lines
-/// right above them, and the run of blank lines on each side. The stamp's lines only.
+/// For each line of `old`, whether an edit may take it away: a TOML key's own lines, the comment
+/// lines right above them, and the run of blank lines on each side; a YAML or JSON key's own lines
+/// only, and the stamp's lines only.
 fn removable(old: &[Line<'_>], touched: &[Touch]) -> Vec<bool> {
     let mut may = vec![false; old.len()];
     for touch in touched {
@@ -180,7 +183,7 @@ fn removable(old: &[Line<'_>], touched: &[Touch]) -> Vec<bool> {
         let first = (touch.lines.start() - 1).min(old.len() - 1);
         let last = (touch.lines.end() - 1).min(old.len() - 1);
         let (mut from, mut to) = (first, last);
-        if touch.key {
+        if touch.kind == TouchKind::Key {
             while from > 0 && is_comment(old[from - 1].content) {
                 from -= 1;
             }
@@ -246,7 +249,7 @@ fn stamp_line(
     let quoted = format!("\"{to}\"");
     let mut stamp_lines = touched
         .iter()
-        .filter(|touch| !touch.key)
+        .filter(|touch| touch.kind == TouchKind::Stamp)
         .flat_map(|touch| touch.lines.clone())
         .filter_map(|number| old.get(number - 1));
     if matches!(at, StampAt::Key(_)) {
@@ -353,35 +356,123 @@ fn sealed(old: &[Line<'_>], line: &str, touched: &[Touch]) -> bool {
     let Some(path) = squeezed_line.strip_suffix("={}") else {
         return false;
     };
-    touched.iter().filter(|touch| touch.key).any(|touch| {
-        old.get(touch.lines.start() - 1)
-            .and_then(|before| before.content.split_once('='))
-            .map(|(key, _)| squeezed(key))
-            .and_then(|key| key.rsplit_once('.').map(|(parent, _)| parent.to_string()))
-            .is_some_and(|parent| parent == path)
-    })
+    touched
+        .iter()
+        .filter(|touch| touch.kind == TouchKind::Key)
+        .any(|touch| {
+            old.get(touch.lines.start() - 1)
+                .and_then(|before| before.content.split_once('='))
+                .map(|(key, _)| squeezed(key))
+                .and_then(|key| key.rsplit_once('.').map(|(parent, _)| parent.to_string()))
+                .is_some_and(|parent| parent == path)
+        })
 }
 
-/// Whether `line` is one of the touched keys' lines of `old` with a few stretches taken out or put
-/// in: at most one for each edit that is for that line. It ends as that line did.
-fn changed_in_one_place(old: &[Line<'_>], line: Line<'_>, touched: &[Touch]) -> bool {
-    touched.iter().filter(|touch| touch.key).any(|touch| {
-        let places = touched
-            .iter()
-            .filter(|other| {
-                other.key
+/// Whether `line` is the line of a table a delete emptied, with ` {}` put in once and nothing else
+/// changed.
+fn parent_sealed(old: &[Line<'_>], line: Line<'_>, touched: &[Touch]) -> bool {
+    touched
+        .iter()
+        .filter(|touch| touch.kind == TouchKind::Parent)
+        .flat_map(|touch| touch.lines.clone())
+        .filter_map(|number| old.get(number - 1))
+        .any(|before| {
+            before.end == line.end
+                && (0..=before.content.len()).any(|at| {
+                    before.content.is_char_boundary(at)
+                        && line.content
+                            == format!("{} {{}}{}", &before.content[..at], &before.content[at..])
+                })
+        })
+}
+
+/// Whether `line` is one of the lines of `old` that a YAML, JSON or TOML key is cut from, with a
+/// few stretches taken out or put in: at most one for each edit that is for that line. It ends as
+/// that line did.
+///
+/// A minified file has the stamp and a key on one line. The stamp is then taken out of `line` (or
+/// put back in the old line) first, as [`stamp_line`] would have it, and the rest is the key's cut.
+fn changed_in_one_place(
+    old: &[Line<'_>],
+    line: Line<'_>,
+    touched: &[Touch],
+    stamp: Option<(Option<&Version>, &Version, StampAt)>,
+) -> bool {
+    let cuts = |kind| matches!(kind, TouchKind::Key | TouchKind::Member);
+    touched
+        .iter()
+        .filter(|touch| cuts(touch.kind))
+        .any(|touch| {
+            let overlapping = |other: &&Touch| {
+                other.kind != TouchKind::Parent
                     && other.lines.start() <= touch.lines.end()
                     && touch.lines.start() <= other.lines.end()
-            })
-            .count()
-            .max(1);
-        touch.lines.clone().any(|number| {
-            old.get(number - 1).is_some_and(|before| {
-                (before.end == line.end || before.end.is_empty() || line.end.is_empty())
-                    && stretches_apart(before.content, line.content, places)
+            };
+            let places = touched.iter().filter(overlapping).count().max(1);
+            // The stamp's edit is on this line too, besides the cuts.
+            let stamped = touched
+                .iter()
+                .filter(overlapping)
+                .any(|other| other.kind == TouchKind::Stamp);
+            touch.lines.clone().any(|number| {
+                let Some(before) = old.get(number - 1) else {
+                    return false;
+                };
+                if !(before.end == line.end || before.end.is_empty() || line.end.is_empty()) {
+                    return false;
+                }
+                if stretches_apart(before.content, line.content, places) {
+                    return true;
+                }
+                let (Some((from, to, at)), true) = (stamp, stamped) else {
+                    return false;
+                };
+                let quoted = format!("\"{to}\"");
+                let (olds, news) = match at {
+                    StampAt::Key(_) => (with_stamp_value(before.content, from, &quoted), vec![]),
+                    _ => (vec![], without_stamp_member(line.content, &quoted)),
+                };
+                olds.iter()
+                    .any(|old| stretches_apart(old, line.content, places - 1))
+                    || news
+                        .iter()
+                        .any(|new| stretches_apart(before.content, new, places - 1))
             })
         })
-    })
+}
+
+/// `before` with the value of its `deslag_version`, which was `from`, written as `quoted`.
+fn with_stamp_value(before: &str, from: Option<&Version>, quoted: &str) -> Vec<String> {
+    let written: Vec<String> = match from {
+        Some(from) => vec![format!("\"{from}\""), format!("'{from}'"), from.to_string()],
+        None => ["null", "Null", "NULL", "~"].map(String::from).to_vec(),
+    };
+    written
+        .iter()
+        .filter(|written| before.contains(written.as_str()))
+        .map(|written| before.replacen(written.as_str(), quoted, 1))
+        .collect()
+}
+
+/// `line` with the member `deslag_version: quoted`, and the comma before it, taken out; one text
+/// for each place it could be.
+fn without_stamp_member(line: &str, quoted: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for (at, _) in line.match_indices("deslag_version") {
+        let head = &line[..at];
+        let head = head.strip_suffix(['"', '\'']).unwrap_or(head);
+        let start = match head.trim_end_matches([' ', '\t']).strip_suffix(',') {
+            Some(before) => before.len(),
+            None => head.len(),
+        };
+        let Some(end) = line[at..].find(quoted).map(|i| at + i + quoted.len()) else {
+            continue;
+        };
+        if is_stamp_member(&line[start..end], quoted, true) {
+            found.push(format!("{}{}", &line[..start], &line[end..]));
+        }
+    }
+    found
 }
 
 /// Whether the longer of `a` and `b` becomes the shorter by taking out at most `most` stretches of
@@ -393,7 +484,10 @@ fn stretches_apart(a: &str, b: &str, most: usize) -> bool {
         (b, a)
     };
     let (long, short): (Vec<char>, Vec<char>) = (long.chars().collect(), short.chars().collect());
-    if most <= 1 {
+    if most == 0 {
+        return long == short;
+    }
+    if most == 1 {
         let before = long.iter().zip(&short).take_while(|(l, s)| l == s).count();
         let after = long
             .iter()
@@ -554,7 +648,10 @@ mod tests {
     }
 
     fn touch(lines: std::ops::RangeInclusive<usize>) -> Touch {
-        Touch { lines, key: true }
+        Touch {
+            lines,
+            kind: TouchKind::Key,
+        }
     }
 
     fn only_the_edits(

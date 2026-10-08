@@ -1,0 +1,30 @@
+# Outside the root workspace, on purpose: the root `Cargo.toml` lists this directory in
+# `[workspace] exclude`, so a workspace build never builds it and it keeps its own `Cargo.lock`.
+# It needs a newer Rust than deslag (tree-sitter declares 1.90, deslag stays at 1.85), and it
+# compiles C (tree-sitter-c builds its parser from C source). Run it with
+# `cargo run --release --manifest-path tools/sweep/Cargo.toml -- <rust|c> <root>...`.
+[package]
+name = "deslag-sweep"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.90"
+description = "Checks deslag's comment scanners against real tokenizers. Never published."
+license = "MIT"
+publish = false
+
+[dependencies]
+ra-ap-rustc_lexer = "0.176.0"
+sha2 = "0.11.0"
+tree-sitter = "0.27.0"
+tree-sitter-c = "0.24.2"
+# ra-ap-rustc_lexer 0.176.0 asserts at compile time that unicode-ident and unicode-properties
+# 0.1.4 carry the same Unicode version, and unicode-ident 1.0.25 and later carry a newer one, so it
+# fails to build (E0080) against them. Drop this line when unicode-properties publishes a release
+# with that Unicode version. It is a manifest line, not `cargo update --precise`, so that a
+# `cargo update` cannot undo it. Dependabot does not watch this directory, since it would propose
+# lifting the pin every week.
+unicode-ident = "=1.0.24"
+
+# Copied from the root workspace, which this crate cannot inherit from.
+[lints.rust]
+missing_docs = "warn"

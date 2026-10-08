@@ -87,12 +87,13 @@ CARGO_FLAGS ?=
         generate-spacy publish-blobs build-label
 
 help:
-	@echo "build            build deslag and the crates under tools/ with the debug profile"
+	@echo "build            build deslag and the workspace crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
-	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
-	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
-	@echo "                 tests change"
+	@echo "test             run every Rust test in the workspace that needs no network, doctests included,"
+	@echo "                 and the exam's gates and the owner set's metrics; not tools/sweep, which is"
+	@echo "                 outside the workspace, and not test-python, which runs when the scripts it tests"
+	@echo "                 change"
 	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, and"
 	@echo "                 fail if tagging takes over its budget of the time to read it; needs the network, so"
 	@echo "                 not in test"
@@ -172,7 +173,8 @@ help:
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
-	@echo "                 tools/*/tests/golden from what deslag-corpus and deslag-exam print"
+	@echo "                 tools/{corpus,exam}/tests/golden from what deslag-corpus and deslag-exam print;"
+	@echo "                 not tools/sweep, which is outside the workspace: DESLAG_FIX_GOLDEN=1 cargo test there"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed before a build can succeed"
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"

@@ -1,0 +1,70 @@
+corpus = "sha256:922148d1308932a1fb1e422e3c33aa0fd43d798dbb2b17fd5faa4e6697f853e7"
+lock = "sha256:3c4fca838aa51116c87a5c784f4fee2550d8a0b1f270b9ca4294e57bba325f8c"
+lang = "c"
+oracles = ["tree-sitter 0.27.0", "tree-sitter-c 0.24.2"]
+scanner = true
+files = 6
+bytes = 739
+skipped_large = 0
+skipped_not_utf8 = 0
+unclean_files = 2
+
+[clean.comment]
+oracle = 6
+scanner = 6
+agree = 2
+kind_differs = 0
+end_differs = 1
+only_oracle = 3
+only_scanner = 3
+oracle_blind = 0
+
+[clean.str]
+oracle = 7
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 7
+only_scanner = 0
+oracle_blind = 0
+
+[clean.char]
+oracle = 4
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 4
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.comment]
+oracle = 2
+scanner = 1
+agree = 1
+kind_differs = 0
+end_differs = 0
+only_oracle = 1
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.str]
+oracle = 1
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 1
+only_scanner = 0
+oracle_blind = 0
+
+[unclean.char]
+oracle = 0
+scanner = 0
+agree = 0
+kind_differs = 0
+end_differs = 0
+only_oracle = 0
+only_scanner = 0
+oracle_blind = 0

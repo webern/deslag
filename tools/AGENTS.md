@@ -1,6 +1,6 @@
 # tools
 
-Two crates that are never published. They depend on `deslag`; it depends on neither.
+Crates that are never published. `deslag` depends on none of them.
 
 ## Repository layout
 
@@ -13,6 +13,7 @@ tools/
   exam/                     <- deslag-exam: grades taggers on gold sets and the tic list
   exam/src/bin/deslag-gold/ <- deslag-gold: makes, reviews and assembles the gold sets
   exam/tests/               <- its tests; golden/ holds what its commands print
+  sweep/                    <- deslag-sweep: scanners vs lexers; compiles C
 ```
 
 ## Rules

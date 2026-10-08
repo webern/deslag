@@ -1,0 +1,9 @@
+char *a = "a // is not a comment, nor is /* this */";
+char *b = "adjacent" "strings";
+wchar_t *c = L"wide";
+char *d = u8"utf eight";
+char *e = "escaped \" quote";
+char f = 'x';
+char g = '\'';
+char h = '"';
+wchar_t i = L'w';

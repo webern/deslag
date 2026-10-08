@@ -6,8 +6,9 @@ use crate::lexer::{Kind, Lexed, Lexer, Span, bom_len, trim_carriage_return};
 
 /// Reads Rust source with `ra-ap-rustc_lexer` and reports it to the contract of [`Lexer`].
 ///
-/// A byte order mark and a shebang line are skipped before tokenizing, as the compiler does. A
-/// literal is cut at its suffix, so `"x"suffix` is the string `"x"`. The lexer never fails, so the
+/// A byte order mark and a shebang line are skipped before tokenizing, as the compiler does, and
+/// the file is lexed whole, so a cargo-script frontmatter block is one token and holds no comments,
+/// strings or chars. A literal is cut at its suffix, so `"x"suffix` is the string `"x"`. The lexer never fails, so the
 /// result is always clean.
 #[derive(Debug, Default)]
 pub struct RustOracle;
@@ -17,7 +18,7 @@ impl Lexer for RustOracle {
         let mut offset = bom_len(src);
         offset += strip_shebang(&src[offset..]).unwrap_or(0);
         let mut spans = Vec::new();
-        for token in tokenize(&src[offset..], FrontmatterAllowed::No) {
+        for token in tokenize(&src[offset..], FrontmatterAllowed::Yes) {
             let start = offset;
             let end = start + token.len as usize;
             offset = end;
@@ -179,6 +180,12 @@ mod tests {
         let lexed = RustOracle.lex(src);
         assert_eq!(lexed.spans[0].range, 13..20);
         assert_eq!(spans("#![allow(unused)] // c"), [(Kind::Comment, "// c")]);
+    }
+
+    #[test]
+    fn a_frontmatter_block_holds_no_strings_chars_or_comments() {
+        let src = "#!/usr/bin/env -S cargo +nightly -Zscript\n---\nx = \"1\" # it's toml\n---\nfn main() { /* c */ }\n";
+        assert_eq!(spans(src), [(Kind::Comment, "/* c */")]);
     }
 
     #[test]

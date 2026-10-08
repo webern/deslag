@@ -8,8 +8,8 @@
 //! file's text and counts. [`report`] owns what is printed. A further check can sit beside
 //! [`check::LexCheck`] without touching the other two.
 //!
-//! The crate is outside deslag's workspace: it needs a newer Rust, a C compiler and its own
-//! lockfile. See its `Cargo.toml`.
+//! The crate is outside deslag's workspace: it needs a newer Rust, a C compiler for the C oracle and
+//! its own lockfile. See its `Cargo.toml`.
 
 pub mod c;
 pub mod check;
@@ -42,6 +42,18 @@ pub fn sweep(
     scanner: Option<Box<dyn Lexer>>,
 ) -> Result<Report, Error> {
     let corpus = Corpus::walk(roots, lang.extensions())?;
+    if corpus.files.is_empty() {
+        let roots: Vec<String> = roots
+            .iter()
+            .map(|root| root.display().to_string())
+            .collect();
+        let extensions: Vec<String> = lang.extensions().iter().map(|e| format!(".{e}")).collect();
+        return Err(Error::Root(format!(
+            "no {} files under {}",
+            extensions.join(" or "),
+            roots.join(", ")
+        )));
+    }
     let mut check = LexCheck::new(lang.oracle()?, scanner);
     let summary = corpus.read(|label, text| check.file(label, text))?;
     Report::new(lang, Lock::own(), summary, check)

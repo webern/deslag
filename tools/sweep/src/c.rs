@@ -17,6 +17,11 @@ const OPAQUE: &str = "preproc_arg";
 /// The grammar keeps the argument of a preprocessor directive, such as the body of `#define`, as
 /// one `preproc_arg` node and does not look inside it. Those ranges are `blind`. A source with a
 /// syntax error is not `clean`. That includes C++, which this grammar cannot parse.
+///
+/// Because a `#define` body is opaque, the oracle finds few strings and chars in header files, where
+/// most of them sit in macro bodies. Agreement on strings and chars means little over a corpus of
+/// headers: cite it from `.c` files, or with the macro bodies lexed again. Comments are found
+/// everywhere but inside a body, and a comment in a body is a node of its own.
 pub struct COracle {
     parser: Parser,
 }

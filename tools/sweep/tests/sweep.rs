@@ -2,7 +2,8 @@
 //! with none, over the fixtures in `tests/fixtures/`.
 //!
 //! The golden files hold what the sweep prints, lock digest included, so they change whenever
-//! `Cargo.lock` does. Rerun with `BLESS=1` to rewrite them, and read the diff.
+//! `Cargo.lock` does. Rerun with `DESLAG_FIX_GOLDEN=1` to rewrite them, and read the diff. `make fix-golden` does not
+//! reach this crate, which is outside the workspace.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -45,17 +46,17 @@ fn fixtures(name: &str) -> PathBuf {
     manifest_dir().join("tests/fixtures").join(name)
 }
 
-/// Compares `actual` with the golden file `name`, or rewrites it when `BLESS` is set.
+/// Compares `actual` with the golden file `name`, or rewrites it when `DESLAG_FIX_GOLDEN` is set.
 fn assert_golden(name: &str, actual: &str) {
     let path = manifest_dir().join("tests/golden").join(name);
-    if std::env::var_os("BLESS").is_some() {
+    if std::env::var_os("DESLAG_FIX_GOLDEN").is_some() {
         std::fs::write(&path, actual).unwrap();
         return;
     }
     let expected = std::fs::read_to_string(&path).unwrap_or_default();
     assert_eq!(
         actual, expected,
-        "{name} differs from what the sweep prints; rerun with BLESS=1 to rewrite it"
+        "{name} differs from what the sweep prints; rerun with DESLAG_FIX_GOLDEN=1 to rewrite it"
     );
 }
 
@@ -168,6 +169,10 @@ fn a_run_that_cannot_happen_exits_2() {
         &["go", "tests/fixtures/rust"][..],
         &["rust", "tests/fixtures/no-such-directory"][..],
         &["rust", "tests/fixtures/rust/empty.rs"][..],
+        // A directory with no file of the language, and roots that overlap.
+        &["rust", "tests/fixtures/c"][..],
+        &["rust", "tests/fixtures/rust", "tests/fixtures/rust/../rust"][..],
+        &["rust", "tests/fixtures", "tests/fixtures/rust"][..],
     ] {
         let output = Command::new(bin)
             .current_dir(manifest_dir())
@@ -178,4 +183,27 @@ fn a_run_that_cannot_happen_exits_2() {
         assert!(output.stdout.is_empty(), "{args:?}");
         assert!(!output.stderr.is_empty(), "{args:?}");
     }
+}
+
+#[test]
+fn a_corpus_with_no_file_of_the_language_says_so() {
+    let output = Command::new(env!("CARGO_BIN_EXE_deslag-sweep"))
+        .current_dir(manifest_dir())
+        .args(["rust", "tests/fixtures/c"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "deslag-sweep: no .rs files under tests/fixtures/c\n"
+    );
+}
+
+#[test]
+fn differences_in_unclean_files_are_named_on_stderr() {
+    let report = sweep(Lang::C, &[fixtures("c")], Some(Box::new(Naive))).unwrap();
+    let count = report.unclean_text();
+    assert!(count.ends_with(" differences in unclean files, which the exit code does not count\n"));
+    let clean = sweep(Lang::C, &[fixtures("c")], Some(Lang::C.oracle().unwrap())).unwrap();
+    assert!(clean.unclean_text().is_empty());
 }

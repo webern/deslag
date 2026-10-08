@@ -13,7 +13,7 @@ tools/
   exam/                     <- deslag-exam: grades taggers on gold sets and the tic list
   exam/src/bin/deslag-gold/ <- deslag-gold: makes, reviews and assembles the gold sets
   exam/tests/               <- its tests; golden/ holds what its commands print
-  sweep/                    <- deslag-sweep: scanners vs lexers; needs cc
+  sweep/                    <- deslag-sweep: scanners vs lexers; compiles C
 ```
 
 ## Rules

@@ -83,9 +83,18 @@ impl Tally {
     /// The differences in files the oracle read cleanly. A difference in a file it could not read
     /// is reported but is not held against the scanner.
     pub fn differences(&self) -> u64 {
+        self.differences_in(Health::Clean)
+    }
+
+    /// The differences in files the oracle could not read. They are not in [`Tally::differences`].
+    pub fn unclean_differences(&self) -> u64 {
+        self.differences_in(Health::Unclean)
+    }
+
+    fn differences_in(&self, health: Health) -> u64 {
         Kind::ALL
             .into_iter()
-            .map(|kind| self.get(Health::Clean, kind).differences())
+            .map(|kind| self.get(health, kind).differences())
             .sum()
     }
 }

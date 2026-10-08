@@ -54,14 +54,26 @@ impl Corpus {
     /// Walks each root for files with one of `extensions`.
     ///
     /// Symbolic links are not followed, and directories named `target` or `.git` are not entered.
+    /// A root that is the same as another, or inside it, is an error.
     /// The result does not depend on the order of `roots`, nor on the directory order of the disk.
     pub fn walk(roots: &[PathBuf], extensions: &[&str]) -> Result<Self, Error> {
         let mut files = Vec::new();
+        let mut walked: Vec<PathBuf> = Vec::new();
         for root in roots {
             let root = fs::canonicalize(root).map_err(|source| Error::Io {
                 path: root.display().to_string(),
                 source,
             })?;
+            if let Some(other) = walked
+                .iter()
+                .find(|other| root.starts_with(other) || other.starts_with(&root))
+            {
+                return Err(Error::Root(format!(
+                    "{} and {} overlap; a file would be counted twice",
+                    other.display(),
+                    root.display()
+                )));
+            }
             let name = root
                 .file_name()
                 .ok_or_else(|| Error::Root(format!("{}: a root needs a name", root.display())))?
@@ -71,6 +83,7 @@ impl Corpus {
                 return Err(Error::Root(format!("{}: not a directory", root.display())));
             }
             collect(&root, &name, extensions, &mut files)?;
+            walked.push(root);
         }
         files.sort_by(|a, b| a.label.cmp(&b.label));
         if let Some(pair) = files.windows(2).find(|pair| pair[0].label == pair[1].label) {

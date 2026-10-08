@@ -117,12 +117,22 @@ fn pairing(oracle: &Span, scanner: &Span) -> Option<Bucket> {
     }
 }
 
+/// Whether `list`, from `from` on, holds a span that starts where `span` does and has the range
+/// of `span`.
+fn has_same_range_ahead(list: &[&Span], from: usize, span: &Span) -> bool {
+    list[from.min(list.len())..]
+        .iter()
+        .take_while(|other| other.range.start == span.range.start)
+        .any(|other| other.range == span.range)
+}
+
 /// Compares the oracle's spans with the scanner's, both in any order.
 ///
 /// Spans are merged in order of `(start, end, kind)`. Two equal spans agree. Two over one range
 /// with different kinds, or of one kind from one start with different ends, are one pair that
-/// differs in one way. Every other span stands alone, and a scanner span inside one of the
-/// oracle's `blind` ranges is `OracleBlind` and not `OnlyScanner`.
+/// differs in one way, unless one of the two has a span of exactly its range further along on the
+/// other side, and then it stands alone and waits for that span. Every other span stands alone, and
+/// a scanner span inside one of the oracle's `blind` ranges is `OracleBlind` and not `OnlyScanner`.
 pub fn compare(oracle: &[Span], scanner: &[Span], blind: &[Range<usize>]) -> Vec<Pair> {
     let (oracle, scanner, blind) = (sorted(oracle), sorted(scanner), merged(blind));
     let mut pairs = Vec::new();
@@ -134,7 +144,17 @@ pub fn compare(oracle: &[Span], scanner: &[Span], blind: &[Range<usize>]) -> Vec
             (Some(_), None) => true,
             (None, Some(_)) => false,
             (Some(a), Some(b)) => {
-                if let Some(bucket) = pairing(a, b) {
+                let bucket = pairing(a, b);
+                // A scanner that emits two spans from one start must not have its first, shorter one
+                // pair with the oracle's span when its second one agrees with it, and the same for
+                // two oracle spans. The span without a match stands alone.
+                let scanner_has_better =
+                    bucket == Some(Bucket::EndDiffers) && has_same_range_ahead(&scanner, s + 1, a);
+                let oracle_has_better =
+                    bucket == Some(Bucket::EndDiffers) && has_same_range_ahead(&oracle, o + 1, b);
+                if scanner_has_better || oracle_has_better {
+                    oracle_has_better
+                } else if let Some(bucket) = bucket {
                     pairs.push(Pair {
                         bucket,
                         oracle: Some((*a).clone()),
@@ -143,8 +163,9 @@ pub fn compare(oracle: &[Span], scanner: &[Span], blind: &[Range<usize>]) -> Vec
                     o += 1;
                     s += 1;
                     continue;
+                } else {
+                    key(a) < key(b)
                 }
-                key(a) < key(b)
             }
         };
         if oracle_first {
@@ -191,6 +212,26 @@ mod tests {
             .iter()
             .map(|pair| pair.bucket)
             .collect()
+    }
+
+    #[test]
+    fn two_scanner_spans_from_one_start_leave_the_one_that_agrees_alone_to_agree() {
+        let oracle = [span(0, 10, Kind::Comment)];
+        let scanner = [span(0, 3, Kind::Comment), span(0, 10, Kind::Comment)];
+        assert_eq!(
+            buckets(&oracle, &scanner, &[]),
+            [Bucket::OnlyScanner, Bucket::Agree]
+        );
+    }
+
+    #[test]
+    fn two_oracle_spans_from_one_start_leave_the_one_that_agrees_alone_to_agree() {
+        let oracle = [span(0, 3, Kind::Comment), span(0, 10, Kind::Comment)];
+        let scanner = [span(0, 10, Kind::Comment)];
+        assert_eq!(
+            buckets(&oracle, &scanner, &[]),
+            [Bucket::OnlyOracle, Bucket::Agree]
+        );
     }
 
     #[test]

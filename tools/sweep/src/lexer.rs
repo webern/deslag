@@ -9,7 +9,8 @@
 //! The contract:
 //!
 //! - Offsets are into the file as read, byte order mark included.
-//! - A line comment ends before its line terminator, so a trailing `\r` is not part of it.
+//! - A line comment ends before its line terminator, so a trailing `\r` is not part of it. A `\r`
+//!   that ends the file, as in `// tail\r`, is trimmed the same way.
 //! - A block comment runs from the outer `/*` to the outer `*/`, nesting included, or to the end of
 //!   the file if it is unterminated.
 //! - A string or character literal includes its prefix and quotes and excludes a suffix.

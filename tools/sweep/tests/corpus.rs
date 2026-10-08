@@ -187,3 +187,26 @@ fn a_root_that_is_missing_or_a_file_is_refused() {
         Err(Error::Root(_))
     ));
 }
+
+#[test]
+fn a_root_inside_another_or_given_twice_is_refused() {
+    let base = scratch("overlap").join("repo");
+    write(&base.join("src/document/a.rs"), b"");
+    let walk = |roots: &[PathBuf]| Corpus::walk(roots, &["rs"]);
+    let inner = base.join("src/document");
+    assert!(matches!(
+        walk(&[base.join("src"), inner.clone()]),
+        Err(Error::Root(_))
+    ));
+    assert!(matches!(
+        walk(&[inner.clone(), base.join("src")]),
+        Err(Error::Root(_))
+    ));
+    assert!(matches!(
+        walk(&[inner.clone(), inner.clone()]),
+        Err(Error::Root(_))
+    ));
+    // Siblings whose names share a prefix do not overlap.
+    write(&base.join("src2/b.rs"), b"");
+    assert!(walk(&[base.join("src"), base.join("src2")]).is_ok());
+}

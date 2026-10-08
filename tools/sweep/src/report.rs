@@ -94,6 +94,17 @@ impl Report {
         out
     }
 
+    /// One line for stderr when the scanner differs in files the oracle could not read, which the
+    /// exit code leaves out. Empty when there are none.
+    pub fn unclean_text(&self) -> String {
+        match self.tally.unclean_differences() {
+            0 => String::new(),
+            count => format!(
+                "{count} differences in unclean files, which the exit code does not count\n"
+            ),
+        }
+    }
+
     /// The samples, for stderr: a line for each, grouped by bucket named as the counts are.
     pub fn samples_text(&self) -> String {
         let mut out = String::new();

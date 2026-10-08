@@ -1,7 +1,7 @@
 # Outside the root workspace, on purpose: the root `Cargo.toml` lists this directory in
 # `[workspace] exclude`, so a workspace build never builds it and it keeps its own `Cargo.lock`.
-# It needs a newer Rust than deslag (tree-sitter declares 1.90, deslag stays at 1.85) and a C
-# compiler (tree-sitter-c compiles its parser from C). Run it with
+# It needs a newer Rust than deslag (tree-sitter declares 1.90, deslag stays at 1.85), and it
+# compiles C (tree-sitter-c builds its parser from C source). Run it with
 # `cargo run --release --manifest-path tools/sweep/Cargo.toml -- <rust|c> <root>...`.
 [package]
 name = "deslag-sweep"

@@ -16,7 +16,9 @@ fn main() -> ExitCode {
         Ok(report) => {
             // A closed pipe is the reader's choice and not a failure to sweep.
             let _ = std::io::stdout().write_all(report.to_toml().as_bytes());
-            let _ = std::io::stderr().write_all(report.samples_text().as_bytes());
+            let mut stderr = std::io::stderr();
+            let _ = stderr.write_all(report.samples_text().as_bytes());
+            let _ = stderr.write_all(report.unclean_text().as_bytes());
             ExitCode::from(report.exit_code())
         }
         Err(error) => {

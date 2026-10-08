@@ -18,6 +18,9 @@
 //! - `manifest.tsv` splits by repository as the assembler does, and `sources.tsv` agrees with it;
 //! - every `Runs=` id has a row in `runs.tsv` and every row is named, and the runs meet the rules
 //!   of [`runs::check`] against `record/voters.json`;
+//! - `min_voters` is at least three, and each word's `Runs=` is what its `Prov=` says: the runs of
+//!   its part's voters, at least `min_voters` of them of model voters, for an agreed word, and the
+//!   adjudicator's run that its part's `adjudicated.tsv` gives for an adjudicated one;
 //! - each part's tables name sentences of the manifest and runs of `runs.tsv`;
 //! - no file but the CoNLL-U text holds a path of the machine that made it;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
@@ -33,6 +36,7 @@ use deslag_exam::error::{Error, Place};
 use super::datasheet;
 use super::kit::Kit;
 use super::layout::{self, Batch};
+use super::part::{MIN_MODEL_VOTERS, Vouchers};
 use super::runs::{self, Runs, VotersJson};
 use super::score;
 use super::table::{Cells, Tsv, absolute_paths_in, is_sha256, sha256_hex};
@@ -393,6 +397,7 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
         }
     }
     let mut min_voters_seen = BTreeSet::new();
+    let mut vouchers: BTreeMap<String, Vouchers> = BTreeMap::new();
     for number in &parts {
         let path = format!("{}/voters.tsv", layout::part(*number));
         let table = Tsv::parse(
@@ -401,12 +406,25 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
             Some(&["letter", "voter", "base_only", "run"]),
         )?;
         min_voters_seen.insert(table.head("min_voters").unwrap_or("").to_string());
+        let adjudicated_path = format!("{}/adjudicated.tsv", layout::part(*number));
+        let adjudicated = match batch.get(&adjudicated_path) {
+            Some(text) => Some(Tsv::parse(&adjudicated_path, text, None)?),
+            None => None,
+        };
+        let min_voters = table
+            .head("min_voters")
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(0);
+        vouchers.insert(
+            format!("{number:02}"),
+            Vouchers::new(&table, min_voters, adjudicated.as_ref()),
+        );
         let model_voters = table.rows.iter().filter(|row| row[2] != "yes").count();
-        if model_voters < 3 {
+        if model_voters < MIN_MODEL_VOTERS {
             problems.push(Error::load(
                 &path,
                 Place::File,
-                format!("{model_voters} model voters; silver needs three"),
+                format!("{model_voters} model voters; silver needs {MIN_MODEL_VOTERS}"),
             ));
         }
         if !table
@@ -438,6 +456,46 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
             Place::File,
             "the parts' min_voters are not the kit's",
         ));
+    }
+    if kit
+        .get("min_voters")
+        .parse::<usize>()
+        .is_ok_and(|n| n < MIN_MODEL_VOTERS)
+    {
+        problems.push(Error::load(
+            layout::KIT,
+            Place::File,
+            format!(
+                "min_voters is {}; silver needs a word agreed by at least {MIN_MODEL_VOTERS} model voters",
+                kit.get("min_voters")
+            ),
+        ));
+    }
+    // Each word is vouched for by the runs its provenance says.
+    let adjudicator = |run: &str| run_table.row(run).is_some() && run_table.get(run, "role") == "adjudicator";
+    for block in &silver {
+        let id = block.comment("sent_id").map_or("", |c| c.value.as_str());
+        let Some(found) = vouchers.get(rows.get(id).map_or("", |row| manifest.cell(row, "part"))) else {
+            continue;
+        };
+        for (at, line) in block.lines.iter().enumerate() {
+            if score::misc_value(&line.misc, "Kind") != Some("Word") {
+                continue;
+            }
+            let (Some(prov), Some(named)) = (
+                score::misc_value(&line.misc, "Prov"),
+                score::misc_value(&line.misc, "Runs"),
+            ) else {
+                continue;
+            };
+            if let Some(why) = found.word(id, at + 1, prov, named, adjudicator) {
+                problems.push(Problems::sentence(
+                    layout::SILVER,
+                    id,
+                    format!("word {} `{}`: {why}", at + 1, line.form),
+                ));
+            }
+        }
     }
     for id in run_table.ids() {
         if !used.contains(id) {
@@ -659,10 +717,9 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
     }
 
     // The audit.
+    // A batch with no audit is a draft: `standing` refuses it as live.
     if audit_has == 3 {
         audit_rules(batch, &kit, &silver, &drops, &mut problems)?;
-    } else if kit.get("archive_sha256") != "-" || kit.get("audit_bar") != "-" {
-        // A batch with no audit has no bar and no archive; `standing` refuses it as live.
     }
 
     if !problems.is_empty() {

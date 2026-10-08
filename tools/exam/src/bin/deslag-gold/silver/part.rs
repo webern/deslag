@@ -627,6 +627,25 @@ impl Part {
         problems.extend(run_problems);
         let voters = voter_rules(&merge, &runs, env, &merge_dir, &mut problems);
         used_runs.extend(voters.0.iter().map(|(_, _, run)| run.clone()));
+        let vouchers = Vouchers::new(&merge.voters, voters.1, merge.adjudicated.as_ref());
+        for (id, (block, _)) in &labelled {
+            for (at, line) in block.lines.iter().enumerate() {
+                let (Some(prov), Some(named)) = (misc_of(&line.misc, "Prov"), misc_of(&line.misc, "Runs")) else {
+                    continue;
+                };
+                if misc_of(&line.misc, "Kind") != Some("Word") {
+                    continue;
+                }
+                let adjudicator = |run: &str| runs.row(run).is_some() && runs.get(run, "role") == "adjudicator";
+                if let Some(why) = vouchers.word(id, at + 1, prov, named, adjudicator) {
+                    problems.push(Problems::sentence(
+                        &labelled_shown,
+                        id,
+                        format!("word {} `{}`: {why}", at + 1, line.form),
+                    ));
+                }
+            }
+        }
         let facts = match runs::check(&runs_shown, &runs, &used_runs, &env.voters) {
             Ok(facts) => facts,
             Err(found) => {
@@ -733,7 +752,10 @@ impl Part {
         ] {
             if let Some(table) = table {
                 let mut cut = table.clone();
-                cut.rows.retain(|row| keep.contains(&row[1]));
+                let at = table
+                    .column("sent_id")
+                    .expect("read_merge keeps only a table with a `sent_id` column");
+                cut.rows.retain(|row| keep.contains(&row[at]));
                 out.insert(format!("{dir}/{name}"), cut.render());
             }
         }
@@ -754,6 +776,110 @@ impl Part {
         }
         out.insert(format!("{dir}/unsettled.tsv"), counts);
         out
+    }
+}
+
+/// What vouches for the words of one part: the runs of its voters, `min_voters`, and the run of
+/// each answer of its adjudicator. A word of the part is vouched for when
+///
+/// - `Prov=agree` names in `Runs=` only runs of the part's voters, at least `min_voters` of them of
+///   model voters (spaCy votes on the part of speech alone and does not count), and no other run;
+/// - `Prov=adjudicated` names in `Runs=` the one run that the part's `adjudicated.tsv` gives for
+///   its answer about that word (`sent_id` and `token`), and that run is an adjudicator's.
+///
+/// So a batch's `voters.tsv`, `adjudicated.tsv` and `runs.tsv` say who made each word, and a
+/// word cannot claim agreement it did not have.
+pub(super) struct Vouchers {
+    /// Each voter's run, and whether it is a model voter's.
+    voters: BTreeMap<String, bool>,
+    /// The fewest model voters an agreed word needs.
+    min_voters: usize,
+    /// The run of each answer, by sentence and token; `None` when the table has no `run` column.
+    answers: Option<BTreeMap<(String, usize), String>>,
+}
+
+impl Vouchers {
+    /// From the rows of a `voters.tsv` (`letter`, `voter`, `base_only`, `run` first), its
+    /// `min_voters`, and the part's `adjudicated.tsv`, if it has one.
+    pub(super) fn new(voters: &Tsv, min_voters: usize, adjudicated: Option<&Tsv>) -> Vouchers {
+        let answers = match adjudicated {
+            None => Some(BTreeMap::new()),
+            Some(table) => match (
+                table.column("sent_id"),
+                table.column("token"),
+                table.column("run"),
+            ) {
+                (Some(id), Some(token), Some(run)) => Some(
+                    table
+                        .rows
+                        .iter()
+                        .filter_map(|row| {
+                            Some(((row[id].clone(), row[token].parse().ok()?), row[run].clone()))
+                        })
+                        .collect(),
+                ),
+                _ => None,
+            },
+        };
+        Vouchers {
+            voters: voters
+                .rows
+                .iter()
+                .map(|row| (row[3].clone(), row[2] != "yes"))
+                .collect(),
+            min_voters,
+            answers,
+        }
+    }
+
+    /// Why word `token` (from 1) of sentence `id`, of provenance `prov` and runs `runs`, is not
+    /// vouched for, if it is not. `adjudicator` says whether a run is an adjudicator's.
+    pub(super) fn word(
+        &self,
+        id: &str,
+        token: usize,
+        prov: &str,
+        runs: &str,
+        adjudicator: impl Fn(&str) -> bool,
+    ) -> Option<String> {
+        let named: Vec<&str> = runs.split(',').collect();
+        match prov {
+            "agree" => {
+                if let Some(other) = named.iter().find(|run| !self.voters.contains_key(**run)) {
+                    return Some(format!(
+                        "it is agreed and names run {other}, which is not a voter's run of its part"
+                    ));
+                }
+                let models = named.iter().filter(|run| self.voters[**run]).count();
+                (models < self.min_voters).then(|| {
+                    format!(
+                        "it is agreed by the runs of {models} model voters, and min_voters is {}",
+                        self.min_voters
+                    )
+                })
+            }
+            "adjudicated" => {
+                let Some(answers) = &self.answers else {
+                    return Some(
+                        "it is adjudicated, and its part's adjudicated.tsv has no `run` column to say by whom"
+                            .to_string(),
+                    );
+                };
+                let Some(run) = answers.get(&(id.to_string(), token)) else {
+                    return Some(format!(
+                        "it is adjudicated, and its part's adjudicated.tsv has no answer for {id}.{token}"
+                    ));
+                };
+                if named != [run.as_str()] {
+                    return Some(format!(
+                        "it is adjudicated and names runs {runs}, and the answer for {id}.{token} is run {run}'s"
+                    ));
+                }
+                (!adjudicator(run))
+                    .then(|| format!("it is adjudicated by run {run}, which is not an adjudicator's"))
+            }
+            _ => None,
+        }
     }
 }
 

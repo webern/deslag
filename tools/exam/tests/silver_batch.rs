@@ -457,6 +457,89 @@ fn edits() -> Vec<Case> {
         ["has no `Runs=`"]
     );
     case!(
+        "an agreed word that names spaCy's run alone",
+        |d| edit(d, "silver.conllu", |t| t.replacen(
+            "Prov=agree|Runs=r1,r2,r3,r4",
+            "Prov=agree|Runs=r4",
+            1
+        )),
+        [
+            "silver.conllu",
+            "it is agreed by the runs of 0 model voters, and min_voters is 3"
+        ]
+    );
+    case!(
+        "an agreed word that names another part's runs",
+        |d| edit(d, "silver.conllu", |t| t.replacen(
+            "Prov=agree|Runs=r1,r2,r3,r4",
+            "Prov=agree|Runs=r6,r7,r8,r9",
+            1
+        )),
+        ["names run r6, which is not a voter's run of its part"]
+    );
+    case!(
+        "an adjudicated word that says it was agreed",
+        |d| edit(d, "silver.conllu", |t| t.replacen(
+            "Prov=adjudicated|Runs=r5",
+            "Prov=agree|Runs=r5",
+            1
+        )),
+        ["names run r5, which is not a voter's run of its part"]
+    );
+    case!(
+        "an agreed word that says it was adjudicated",
+        |d| edit(d, "silver.conllu", |t| t.replacen(
+            "Prov=agree|Runs=r1,r2,r3,r4",
+            "Prov=adjudicated|Runs=r5",
+            1
+        )),
+        ["it is adjudicated, and its part's adjudicated.tsv has no answer for s0001.2"]
+    );
+    case!(
+        "an adjudicated word that names a voter's run",
+        |d| edit(d, "silver.conllu", |t| t.replacen(
+            "Prov=adjudicated|Runs=r5",
+            "Prov=adjudicated|Runs=r1",
+            1
+        )),
+        ["it is adjudicated and names runs r1, and the answer for s0001.1 is run r5's"]
+    );
+    case!(
+        "an answer whose run is a voter's",
+        |d| {
+            edit(d, "parts/01/adjudicated.tsv", |t| t.replace("\tr5\n", "\tr1\n"));
+            edit(d, "silver.conllu", |t| t.replacen(
+                "Prov=adjudicated|Runs=r5",
+                "Prov=adjudicated|Runs=r1",
+                1
+            ));
+        },
+        ["it is adjudicated by run r1, which is not an adjudicator's"]
+    );
+    case!(
+        "a min_voters below three",
+        |d| {
+            edit(d, "record/kit.tsv", |t| t.replace("min_voters\t3", "min_voters\t2"));
+            for part in ["01", "02"] {
+                edit(d, &format!("parts/{part}/voters.tsv"), |t| t
+                    .replace("# min_voters = 3", "# min_voters = 2"));
+            }
+        },
+        [
+            "record/kit.tsv",
+            "min_voters is 2; silver needs a word agreed by at least 3 model voters"
+        ]
+    );
+    case!(
+        "an adjudicator run under another voters.json",
+        |d| edit(d, "runs.tsv", |t| {
+            let sha = sha256(read(d, "record/voters.json").as_bytes());
+            let row = t.lines().find(|l| l.starts_with("r5\t")).unwrap().to_string();
+            t.replacen(&row, &row.replacen(&sha, &"0".repeat(64), 1), 1)
+        }),
+        ["run r5 began under a voters.json of sha256 000"]
+    );
+    case!(
         "a word with an illegal code",
         |d| edit(d, "silver.conllu", |t| t.replacen(
             "\tNOUN\t_\tNumber=Sing",

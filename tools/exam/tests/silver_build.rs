@@ -244,6 +244,39 @@ fn a_word_with_no_provenance_or_no_run_is_refused() {
 }
 
 #[test]
+fn a_word_whose_runs_are_not_what_its_provenance_says_is_refused() {
+    let relabel = |from: &'static str, to: &'static str| {
+        move |made: &Made| {
+            made.edit(1, "merge/labelled.conllu", |text| text.replacen(from, to, 1))
+        }
+    };
+    // Agreed by spaCy alone, which votes on the part of speech and is no model voter.
+    refused(
+        relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=agree|Runs=r4"),
+        &["word 2 `", "it is agreed by the runs of 0 model voters, and min_voters is 3"],
+    );
+    // Agreed by runs the part does not have.
+    refused(
+        relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=agree|Runs=r1,r2,r3,r9"),
+        &["names run r9, which is not a voter's run of its part"],
+    );
+    // An adjudicated word that says it was agreed, and the other way round.
+    refused(
+        relabel("Prov=adjudicated|Runs=r5", "Prov=agree|Runs=r5"),
+        &["names run r5, which is not a voter's run of its part"],
+    );
+    refused(
+        relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=adjudicated|Runs=r5"),
+        &["its part's adjudicated.tsv has no answer for s0001.2"],
+    );
+    // An answer claimed by a voter's run.
+    refused(
+        relabel("Prov=adjudicated|Runs=r5", "Prov=adjudicated|Runs=r1"),
+        &["the answer for s0001.1 is run r5's"],
+    );
+}
+
+#[test]
 fn a_word_with_no_part_of_speech_is_refused() {
     refused(
         |made| {
@@ -951,13 +984,14 @@ fn the_same_part_twice_is_refused() {
 }
 
 #[test]
-fn parts_with_other_voters_are_refused() {
+fn a_part_whose_words_do_not_meet_its_min_voters_is_refused() {
+    // Its words were agreed by three model voters; a part that says four is not what its words say.
     let made = two_parts();
     made.edit(2, "merge/voters.tsv", |text| {
         text.replace("# min_voters = 3", "# min_voters = 4")
     });
     made.build("2026-10-08-voters", &[])
-        .refused(&["part 02 has other voters than part 01"]);
+        .refused(&["it is agreed by the runs of 3 model voters, and min_voters is 4"]);
 }
 
 #[test]

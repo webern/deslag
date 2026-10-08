@@ -427,7 +427,9 @@ pub fn compute(batch: &Batch) -> Result<Value, Problems> {
         json!({"present": false})
     };
 
-    let partial = !drops.rows.is_empty();
+    // A part's `agreement.txt` is its merge's, over every sentence it was dealt, so it is not the
+    // agreement of the batch when a sentence was dropped or left out unsettled.
+    let partial = !drops.rows.is_empty() || unsettled_sentences > 0;
     let parts: Vec<String> = batch
         .part_numbers()
         .iter()

@@ -228,6 +228,18 @@ fn parts_become_a_batch_with_every_file_of_the_layout_and_it_checks() {
     let sheet = read(&dir, "DATASHEET.md");
     assert!(sheet.starts_with(&format!("# Silver set {NAME}\n")));
     assert!(!sheet.contains("{{"), "{sheet}");
+    // Part 02 left a sentence out unsettled and nothing was dropped: each part's agreement.txt is
+    // still its merge's, over the sentence left out too, and the sheet says so.
+    assert!(read(&dir, "record/drops.tsv").lines().count() == 1);
+    assert!(
+        read(&dir, "record/datasheet.json").contains("\"agreement_after_drops\": \"no\""),
+        "{}",
+        read(&dir, "record/datasheet.json")
+    );
+    assert!(
+        sheet.contains("the dropped and the unsettled ones among them"),
+        "{sheet}"
+    );
     // The same parts give the same bytes.
     made.build("2026-10-08-again", &[]).ok();
     let again = tree_bytes(&made.out("2026-10-08-again"));

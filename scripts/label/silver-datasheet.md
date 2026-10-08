@@ -113,8 +113,9 @@ Sentences each voter gave no answer for, summed over the parts:
 {{table abstentions}}
 
 {{#unless agreement_after_drops}}
-`agreement.txt` in each part is the merge's own: it counts every sentence of the part, the dropped
-ones among them. The figures above are for the sentences kept.
+The abstentions above, and `agreement.txt` in each part, are the merges' own: they count every
+sentence of a part, the dropped and the unsettled ones among them. The other figures above are for
+the sentences kept.
 {{/unless}}
 
 ## What was left out

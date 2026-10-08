@@ -303,7 +303,10 @@ class Urllib:
             with _OPENER.open(request, timeout=timeout) as handle:
                 return json.loads(handle.read().decode("utf-8"))
         except urllib.error.HTTPError as error:
-            text = error.read(ERROR_BODY_READ).decode("utf-8", "replace")
+            try:
+                text = error.read(ERROR_BODY_READ).decode("utf-8", "replace")
+            finally:
+                error.close()
             if error.code in RETRYABLE:
                 reason = f"HTTP {error.code}"
                 source = limit_source(text) if error.code == 429 else None

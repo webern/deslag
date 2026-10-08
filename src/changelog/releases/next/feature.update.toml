@@ -1,0 +1,28 @@
+kind = "feature"
+id = "update"
+summary = "Edits renamed or removed settings in the config, and records the version"
+onboarding = '''
+`deslag update` is the one command that writes the config. It loads the config the way `check`
+does, then edits its text and keeps its comments, order and spacing, in these steps:
+
+- It makes the edit for every setting that was renamed or removed and is still in the file: it
+  renames the key, or deletes it. That is the fix for a warning that a setting was renamed or
+  removed.
+- It sets the top-level `deslag_version` to the running release, but only when nothing is new
+  between the config's `deslag_version` and the running release. Otherwise it leaves the stamp
+  alone and says to run `deslag instructions update`. That way fixing a warning never turns on
+  something nobody chose.
+- `deslag update --to <version>`, where the version is the running release, sets the stamp
+  regardless. `deslag instructions update` ends with this command, for once the person has chosen
+  what to turn on.
+
+It turns nothing on and does not look at git. It writes nothing unless the new text loads with no
+warning, sets the same things and carries the stamp it should; otherwise it exits 2, writes
+nothing and prints each edit to make by hand, with its file and line. A TOML config is edited. In a
+YAML or JSON config deslag sets the stamp, but a renamed or removed setting is refused with its
+edit printed, for you to make before running the command again.
+
+`--dry-run` prints the edits it would make and writes nothing. `--config-path` names the config
+file. A config with nothing to do is reported current, and the exit code is 0. A config that is
+read-only is refused like any other, since it is usually read-only on purpose.
+'''

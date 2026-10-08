@@ -253,7 +253,7 @@ fn signposts_in_a_section_and_an_override_warns_once_in_every_language() {
             config.warnings(),
             [format!(
                 "deslag.{extension}: `md.lints.banned_phrases.groups.signposts` was removed, and \
-                 the setting is ignored; delete it from the config"
+                 the setting is ignored; delete it from the config, or run deslag update"
             )],
             "{text}"
         );
@@ -310,7 +310,7 @@ fn the_warning_prints_once_and_the_run_exits_0() {
     assert!(
         said.starts_with("deslag: warning: ")
             && said.contains("deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed")
-            && said.ends_with("; delete it from the config\n"),
+            && said.ends_with("; delete it from the config, or run deslag update\n"),
         "{said}"
     );
 }

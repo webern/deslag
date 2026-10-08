@@ -31,6 +31,9 @@ pub enum Command {
     Explain(ExplainArgs),
     /// Print how to set deslag up in a repo, written for an agent to follow
     Instructions(InstructionsArgs),
+    /// Edit the config for this deslag: rename or delete the settings it renamed or removed, and
+    /// record the version once nothing is new
+    Update(ConfigUpdateArgs),
 }
 
 /// How `deslag check` and `deslag fix` read the config and what they print.
@@ -141,6 +144,22 @@ pub struct UpdateArgs {
     pub format: UpdateFormat,
 }
 
+/// Arguments to `deslag update`.
+#[derive(Debug, Args)]
+pub struct ConfigUpdateArgs {
+    /// Edit this config file instead of the one in the canonical locations
+    #[arg(long, value_name = "PATH")]
+    pub config_path: Option<PathBuf>,
+    /// Say what would be edited and write nothing
+    #[arg(long)]
+    pub dry_run: bool,
+    /// Set `deslag_version` to this release, which must be the one running, even though it has
+    /// entries the config has not seen; `deslag instructions update` ends with this command, for
+    /// once the person has chosen. Without it the version is recorded only when nothing is new
+    #[arg(long, value_name = "VERSION", value_parser = running_release)]
+    pub to: Option<semver::Version>,
+}
+
 /// What `deslag instructions update` prints.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum UpdateFormat {
@@ -158,6 +177,19 @@ fn release_no_newer_than_this_deslag(text: &str) -> Result<semver::Version, Stri
     if release > current {
         return Err(format!(
             "{release} is newer than this deslag, {current}; upgrade deslag"
+        ));
+    }
+    Ok(release)
+}
+
+/// The release `--to` names, which must be the one running: there is no moving a config to another.
+fn running_release(text: &str) -> Result<semver::Version, String> {
+    let release = parse_release(text).map_err(|error| error.to_string())?;
+    let current = current_release();
+    if release != current {
+        return Err(format!(
+            "{release} is not the release running, {current}: the version a config is updated to \
+             is the one that updates it"
         ));
     }
     Ok(release)

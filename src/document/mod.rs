@@ -326,6 +326,17 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// The text the lints read at `range`, a range of the file on characters: as the reader was
+    /// given it, with no gaps. In a Markdown file that is the file as written, entities and escapes
+    /// included, not what they render as.
+    ///
+    /// # Panics
+    ///
+    /// If `range` is not on characters of the file.
+    pub fn text(&self, range: Range<usize>) -> Cow<'_, str> {
+        text(self.source, range)
+    }
+
     /// Where `range` is: a range of bytes of the source that starts and ends on characters.
     pub fn locate(&self, range: Range<usize>) -> Location {
         let last = self.source[range.clone()]
@@ -422,6 +433,12 @@ impl<'a> Document<'a> {
             .iter()
             .filter(move |span| span.range.end >= range.end)
     }
+}
+
+/// The body of [`Document::text`], for the readers of the second layer, which hold the fields of a
+/// document and not the document.
+fn text(source: &str, range: Range<usize>) -> Cow<'_, str> {
+    Cow::Borrowed(&source[range])
 }
 
 /// The byte order mark, which opens some files and is not part of their text.

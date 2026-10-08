@@ -91,7 +91,7 @@ pub fn check(document: &Document<'_>, settings: Option<&VerbsNoNouns>) -> Option
             let range = tokens[0].range.start..tokens[tokens.len() - 1].range.end;
             Match {
                 location: document.locate(range.clone()),
-                quote: quote(&document.source[range]),
+                quote: quote(&document.text(range)),
             }
         })
         .collect();

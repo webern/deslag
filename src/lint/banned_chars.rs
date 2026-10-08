@@ -319,8 +319,9 @@ pub fn scan(document: &Document<'_>) -> Vec<Found> {
             .iter()
             .filter(|piece| matches!(piece.kind, PieceKind::Text | PieceKind::Html));
         for piece in written {
-            // The source, not the piece's text, so that an entity is read as it is written.
-            for (at, ch) in document.source[piece.range.clone()].char_indices() {
+            // The text of the file, not the piece's, so that an entity is read as it is written.
+            // Its offsets are the file's, as the file is the text.
+            for (at, ch) in document.text(piece.range.clone()).char_indices() {
                 let offset = piece.range.start + at;
                 if !ch.is_ascii() && !(offset == 0 && ch == '\u{FEFF}') {
                     found.push(Found {

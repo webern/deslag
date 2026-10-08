@@ -63,15 +63,14 @@ impl Rows<'_, '_> {
             let token = &self.tokens[at];
             let between = |next: &Token<'_>| {
                 let (end, start) = (token.range.end, next.range.start);
-                self.source.get(end..start.max(end)).unwrap_or_default()
+                super::text(self.source, end..start.max(end))
             };
             ended = match token.kind {
                 TokenKind::Punctuation if is_terminal(&token.text) => true,
                 TokenKind::Punctuation if ended && is_closing(&token.text) => {
                     let before = &self.tokens[at - 1];
-                    self.source
-                        .get(before.range.end..token.range.start)
-                        .is_some_and(|between| !between.contains(char::is_whitespace))
+                    !super::text(self.source, before.range.end..token.range.start)
+                        .contains(char::is_whitespace)
                 }
                 _ => false,
             };

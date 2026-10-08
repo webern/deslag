@@ -107,7 +107,7 @@ fn own_text(document: &Document<'_>, item: &Block<'_>) -> String {
             .filter(|child| !matches!(child.kind, BlockKind::List { .. })),
         _ => None,
     };
-    own.map(|block| quote(&document.source[block.range.clone()]))
+    own.map(|block| quote(&document.text(block.range.clone())))
         .unwrap_or_default()
 }
 

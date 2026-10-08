@@ -152,8 +152,9 @@ mod tests {
             .find(&document)
             .map(|range| {
                 let tokens = &document.tokens[range];
-                document.source[tokens[0].range.start..tokens[tokens.len() - 1].range.end]
-                    .to_string()
+                document
+                    .text(tokens[0].range.start..tokens[tokens.len() - 1].range.end)
+                    .into_owned()
             })
             .collect()
     }
@@ -301,8 +302,9 @@ mod tests {
             .find(document)
             .map(|range| {
                 let tokens = &document.tokens[range];
-                document.source[tokens[0].range.start..tokens[tokens.len() - 1].range.end]
-                    .to_string()
+                document
+                    .text(tokens[0].range.start..tokens[tokens.len() - 1].range.end)
+                    .into_owned()
             })
             .collect()
     }

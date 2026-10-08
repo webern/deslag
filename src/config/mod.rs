@@ -316,14 +316,6 @@ impl Config {
         &self.sections
     }
 
-    /// The first section that selects `rel_path`, a repo-relative `/`-separated path, if one does.
-    /// It does not notice a second: [`Config::sole_section_for`] does.
-    pub fn section_for(&self, rel_path: &str) -> Option<&Section> {
-        self.sections
-            .iter()
-            .find(|section| section.selects(rel_path))
-    }
-
     /// The section that selects `rel_path`, if one does. A file is read one way, so two sections
     /// selecting it is an error.
     pub fn sole_section_for(&self, rel_path: &str) -> Result<Option<&Section>, Error> {
@@ -350,17 +342,20 @@ impl Config {
     /// that selects it, else the section that reads files of its extension, else `[md]`, which
     /// reads whatever it is given. A file of an extension that a section reads, when the config has
     /// no such section, is an error: reading it as Markdown would be a mistake.
-    pub fn section_to_read(&self, rel_path: &str) -> Result<&Section, Error> {
+    pub(crate) fn section_to_read(&self, rel_path: &str) -> Result<&Section, Error> {
         if let Some(section) = self.sole_section_for(rel_path)? {
             return Ok(section);
         }
         let extension = Path::new(rel_path)
             .extension()
             .and_then(|text| text.to_str());
-        let Some((name, extension)) = SECTION_EXTENSIONS.iter().find_map(|(name, extensions)| {
-            let found = extensions.iter().find(|found| Some(**found) == extension)?;
-            Some((name, found))
-        }) else {
+        let Some(extension) = extension else {
+            return Ok(self.md());
+        };
+        let Some((name, _)) = SECTION_EXTENSIONS
+            .iter()
+            .find(|(_, extensions)| extensions.contains(&extension))
+        else {
             return Ok(self.md());
         };
         self.sections

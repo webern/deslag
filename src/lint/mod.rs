@@ -502,7 +502,7 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
 /// run here, so a file one selects is an error. A path no section selects is read by the section
-/// for its extension, as [`Config::section_to_read`] says, and else as `[md]` reads a file.
+/// for its extension, such as `[rust]` for `.rs`, and else as `[md]` reads a file.
 pub fn check_file(
     config: &Config,
     relative: &str,

@@ -281,6 +281,7 @@ The loop, one pass of `judge` at a time:
    every request has its reply; 2 when a call failed a check, the round's final checks failed or the round
    was refused; 7 when a call met the Claude plan's usage limit (wait for the reset, then run handoff-run
    again); 6 when a process wrote no reply (run handoff-run again); 130 on an interrupt.
+   When one round has both a failed call and a usage limit, 2 wins.
 4. The same `judge` command, run again once handoff-run has returned, reads the replies. A reply is read only
    with an `agent.json` that has every key, `safe_mode` true, the argument list handoff-run uses now, the tools
    `Read,Write`, a `model_reported` that is the pinned model (or a dated version) and the template's current

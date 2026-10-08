@@ -1,5 +1,5 @@
 """The initial tagger a Brill learner starts from, which is a parameter of the learner: any class
-with this shape will do, and PR-shapes can start from deslag's own tagger the same way.
+with this shape will do, and a later learner can start from deslag's own tagger the same way.
 
     Initial.fit(sentences) -> an initial tagger, from conllu.Sentences with `forms` and `tags`
     tagger.tag(forms)      -> the UD tag of each form, as a list of names

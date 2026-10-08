@@ -3665,8 +3665,8 @@ BOTH_CONFIG["models"]["opus"] = HANDOFF_CONFIG["models"]["opus"]
 
 
 class HandoffTests(Base):
-    """The adjudicator as a handoff model: requests written as files, a coordinator's subagents (here, a
-    fake that writes the files between passes) answer them, and the same command goes on."""
+    """The adjudicator as a handoff model: requests written as files, the person running the labelling
+    answers them (here, a fake that writes the files between passes), and the same command goes on."""
 
     def setUp(self):
         super().setUp()
@@ -3702,7 +3702,7 @@ class HandoffTests(Base):
         label.write(os.path.join(self.folder(run), "agent.json"), json.dumps(self.agent(**more)))
 
     def answer(self, answers=None, run="r3"):
-        """What the coordinator's subagents do: for each request without a reply, write the reply to the
+        """What answering the requests does: for each request without a reply, write the reply to the
         path the request names. `answers` maps an item to its answer line; the default answers every one."""
         wrote = []
         for path in self.requests(run):
@@ -3871,7 +3871,7 @@ class HandoffTests(Base):
             self.pass_()
         first = self.run_json("opus", "r3")["agent"]
         self.assertEqual(first, self.agent())
-        # The coordinator upgrades Claude Code between rounds and rewrites agent.json.
+        # The person running the labelling upgrades Claude Code between rounds and rewrites agent.json.
         self.write_agent(version="9.9.9")
         self.answer()
         spent = self.ledger().total()

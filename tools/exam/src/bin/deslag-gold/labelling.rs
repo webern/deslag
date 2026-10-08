@@ -1,4 +1,4 @@
-//! `deslag-gold draw`: the sentences PR-labelkit sends to labellers and silver is made from.
+//! `deslag-gold draw`: the sentences sent to labellers, which silver is made from.
 //!
 //! It is the gold draw's machinery (tier by context quotas, caps per file and per repository, a
 //! seed) with differences. It has no holdout, and its rows are `unlabelled`. Its ids are the

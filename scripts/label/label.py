@@ -1089,7 +1089,7 @@ class Runner:
     def clear_unanswered_requests(self, meta):
         """Removes the request files of the run that have no reply beside them and were not asked for
         in this pass: a pass writes the requests it needs afresh, so one that is no longer asked for,
-        such as one of an older worklist, is not left for the coordinator to answer. A request with its
+        such as one of an older worklist, is not left for anyone to answer. A request with its
         reply stays, and so does every request of a pass that did not get to the end (it stopped on an
         error), since the requests it had yet to write are not known."""
         folder = self.handoff_dir(meta)

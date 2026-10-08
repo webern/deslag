@@ -646,7 +646,7 @@ generate-silver-draw: build-label fetch-blobs
 # its own (they lock the sample directory and the ledger, which a test shows), then spaCy tags it and is
 # recorded as a run. Needs OPENROUTER_API_KEY; MAX_USD caps the ledger over every checkout; LABEL_FLAGS reach
 # label.py tag, so LABEL_FLAGS="--limit 1" is a smoke run and --dry-run sends nothing. A voter that fails is
-# named, and spaCy does not run. Then the coordinator drives `label.py status --dir $(SILVER_DIR)/part-NN`, the
+# named, and spaCy does not run. Then the person running the labelling drives `label.py status --dir $(SILVER_DIR)/part-NN`, the
 # judge step and handoff-run for Opus, and `deslag-gold silver build --check-part`.
 generate-silver-part: build-label fetch-spacy
 	@case "$(PART)" in [0-9][0-9]) ;; *) echo "PART=NN names the part, as two digits, like PART=01" >&2; exit 2;; esac

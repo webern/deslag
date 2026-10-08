@@ -3,7 +3,7 @@
 `label.py` has open-weight models tag sentences through OpenRouter and has Claude settle the words
 they disagree on. It does every step that is a call to a model. Reading, comparing and grading is
 `deslag-gold`'s, in Rust. Nothing in the build, the tests or CI runs it; the `generate-label-*`
-targets do. Standard library only. The design is `design/pr-00123-labelkit.md` in the ops repository.
+targets do. Standard library only.
 
 ## The pilot, step by step
 

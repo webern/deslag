@@ -412,6 +412,20 @@ mod tests {
         assert!(message.contains("md.overrides[1].lints"), "{message}");
     }
 
+    /// A section younger than the rename never had the old key, so there both keys set is the same
+    /// "unknown key" as the old key alone, not a both-set error.
+    #[test]
+    fn both_set_in_a_younger_section_is_an_unknown_key() {
+        let text = "schema_version = 1\n\
+                    [rust.lints.density]\nmax_paragraph_len = 1\nmax_paragraph_chars = 2\n";
+        let message = load("toml", text).expect_err("both set").to_string();
+        assert!(
+            message.contains("unknown key `rust.lints.density.max_paragraph_len`")
+                && message.contains("[rust] never had it"),
+            "{message}"
+        );
+    }
+
     /// An anchor and a merge key can bring the old key under a map that sets the new.
     #[test]
     fn a_yaml_merge_key_bringing_the_old_key_under_the_new_is_both_set() {

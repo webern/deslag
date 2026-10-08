@@ -49,7 +49,11 @@ SILVER_MIX ?= 1050,650,350,250,850,550,280,220,40,30,15,15
 SILVER_DRAW_FLAGS ?= --per-file 3 --per-repo 12
 SILVER_MERGE ?= merge
 SILVER_NAME ?=
+SILVER_DRAFT_DIR ?= $(SILVER_DIR)/draft
 SILVER_BATCH_DIR ?= $(SILVER_DIR)/batch
+# Where generate-silver-assemble writes: the draft the audit is drawn from, or with --audit the batch, so
+# that the audited build does not meet the draft's directory.
+SILVER_OUT = $(if $(findstring --audit,$(SILVER_BUILD_FLAGS)),$(SILVER_BATCH_DIR),$(SILVER_DRAFT_DIR))
 SILVER_ANNOTATIONS_LICENSE ?= MIT
 SILVER_BUILD_FLAGS ?=
 # The part generate-silver-part labels, as two digits.
@@ -216,10 +220,11 @@ help:
 	@echo "generate-percept train the perceptron on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-silver-assemble"
-	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, into"
-	@echo "                 SILVER_BATCH_DIR/SILVER_NAME ($(SILVER_BATCH_DIR)), and check it; the labels' licence"
-	@echo "                 is SILVER_ANNOTATIONS_LICENSE ($(SILVER_ANNOTATIONS_LICENSE)); SILVER_BUILD_FLAGS reach"
-	@echo "                 silver build (--audit DIR --archive-sha256 SHA for the final build); calls no model"
+	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, and check"
+	@echo "                 it: a draft into SILVER_DRAFT_DIR/SILVER_NAME ($(SILVER_DRAFT_DIR)), or, when"
+	@echo "                 SILVER_BUILD_FLAGS has --audit DIR --archive-sha256 SHA, the batch into"
+	@echo "                 SILVER_BATCH_DIR/SILVER_NAME ($(SILVER_BATCH_DIR)); the labels' licence is"
+	@echo "                 SILVER_ANNOTATIONS_LICENSE ($(SILVER_ANNOTATIONS_LICENSE)); calls no model"
 	@echo "generate-silver-draw"
 	@echo "                 draw the silver set's sentences once, dealt into SILVER_PARTS parts under $(SILVER_DIR);"
 	@echo "                 reads the big tier; calls no model"
@@ -652,7 +657,7 @@ generate-silver-assemble: build-label fetch-blobs
 	@[ -n "$(SILVER_ANNOTATIONS_LICENSE)" ] || { echo "SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, which the owner chooses; it is MIT unless set" >&2; exit 2; }
 	@[ -n "$(SILVER_PART_DIRS)" ] || { echo "no draw under $(SILVER_DIR); run generate-silver-draw first" >&2; exit 1; }
 	$(GOLD_BIN) silver build --name $(SILVER_NAME) $(foreach dir,$(SILVER_PART_DIRS),--part $(dir):$(SILVER_MERGE)) \
-	    --annotations-license "$(SILVER_ANNOTATIONS_LICENSE)" --out $(SILVER_BATCH_DIR)/$(SILVER_NAME) $(SILVER_BUILD_FLAGS)
+	    --annotations-license "$(SILVER_ANNOTATIONS_LICENSE)" --out $(SILVER_OUT)/$(SILVER_NAME) $(SILVER_BUILD_FLAGS)
 
 # The silver set, drawn once and dealt into SILVER_PARTS parts, $(SILVER_DIR)/part-01 and on, each a draw of its
 # own with the same mix to within a sentence. The sentences of an earlier draw are left out with

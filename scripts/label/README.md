@@ -468,10 +468,11 @@ Makefile), so the run can change them.
   at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so `LABEL_FLAGS="--limit 1"` is a smoke run. A
   voter that fails is named, and spaCy does not run. The Opus round is steps 3 and 4 above, driven by hand.
 - `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
-  `.label/silver`, into `SILVER_BATCH_DIR/NAME` (`.label/silver/batch/NAME`; the draft goes in
-  `SILVER_BATCH_DIR=.label/silver/draft`, since a build never writes over a batch). The labels are published
-  under `SILVER_ANNOTATIONS_LICENSE`, MIT unless set: the owner's choice, which the datasheet states.
-  `SILVER_BUILD_FLAGS` reach it.
+  `.label/silver`. Without `--audit` in `SILVER_BUILD_FLAGS` it writes the draft, into
+  `SILVER_DRAFT_DIR/NAME` (`.label/silver/draft/NAME`); with `SILVER_BUILD_FLAGS="--audit DIR --archive-sha256
+  SHA"` the batch, into `SILVER_BATCH_DIR/NAME` (`.label/silver/batch/NAME`), since a build never writes over
+  a directory that has files. The labels are published under `SILVER_ANNOTATIONS_LICENSE`, MIT unless set:
+  the owner's choice, which the datasheet states.
 - `make test-silver`, which `make test-blobs` runs: `silver check` and `silver standing` over the unpacked
   image. Both pass when it has no `silver/`.
 - `make test-confinement`: the probe above.

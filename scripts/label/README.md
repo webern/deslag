@@ -93,8 +93,10 @@ falls back from there to the ones after it; a complete run at another endpoint i
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
 refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
 is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
-`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is below its
-pin, so a failed qwen run stops for the owner.
+`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is
+below its pin. When DeepInfra fails it, `tag` has no endpoint to switch to and exits 2 (5 when the last run ended
+`failed`), naming the endpoint and why. Running the command again continues the run at DeepInfra, and `--again`
+starts a new run there; nothing in the kit decides when to stop trying.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
@@ -337,6 +339,10 @@ Each part is a sample of its own. With `D` the part's directory and `M` its merg
    adjudicator's requests and exits 6; `label.py handoff-run --dir D --into M` answers them; the same `judge`
    command run again reads them. Repeat until `judge` exits 0.
 4. `label.py status --dir D --into M [--max-usd USD]`, at any point (below).
+
+The silver run takes step 3 twice per part, both times with `--trains yes`: into `merge` with the model
+voters, then into `merge-spacy` with `--spacy`, which settles from `merge` (`--settle-from` defaults to it).
+`silver build` assembles `merge-spacy` (`SILVER_MERGE` in the Makefile), and `status` reads it in a part.
 
 The lock of the parts. The parts of one draw are assembled into one batch, so they are labelled alike: at one
 deslag commit, from one draw, by one set of voters with one prompt and guide each, judged by one adjudicator

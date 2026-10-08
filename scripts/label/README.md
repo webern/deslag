@@ -265,8 +265,10 @@ The loop, one pass of `judge` at a time:
    claude -p --safe-mode --model claude-opus-5-5 --tools Read,Write --strict-mcp-config --no-session-persistence --permission-mode acceptEdits --output-format stream-json --verbose "<prompt>" </dev/null
    ```
 
-   then checks the call, copies a reply that passed every check to `<call>.<12 hex of request_sha256>.reply.txt`
-   in the run's folder, and removes the directory. `--tools Read,Write` gives the process those two tools and
+   then checks the call, copies a reply that passed every check into the run's folder, and removes the
+   directory. The reply is staged as `<call>.<12 hex of request_sha256>.reply.txt.incoming`, which nothing
+   reads, and renamed to `<call>.<12 hex of request_sha256>.reply.txt` once the round's final checks pass
+   (see Silver). `--tools Read,Write` gives the process those two tools and
    no shell; `--strict-mcp-config` with no `--mcp-config` gives it no MCP server, since the request holds
    sentences from the corpus, which may read like instructions; `--safe-mode` gives it no `CLAUDE.md`, skill,
    hook or plugin; `--permission-mode acceptEdits` lets it write inside its directory without a prompt, which
@@ -276,8 +278,8 @@ The loop, one pass of `judge` at a time:
    (`Read,Write`), `prompt_sha256` (the template's), `safe_mode` (true), `args` (the argument list above,
    without the prompt) and `cwd` (the rule for the working directory). Every later call must report the same
    model. A round refuses to start if `agent.json` is there and differs from what it would write. Exit 0 when
-   every request has its reply, 6 when a process wrote none (run handoff-run again), 2 when a call failed a
-   check or the round was refused.
+   every request has its reply; 2 when a call failed a check, the round's final checks failed or the round
+   was refused; 6 when a process wrote no reply (run handoff-run again); 130 on an interrupt.
 4. The same `judge` command, run again once handoff-run has returned, reads the replies. A reply is read only
    with an `agent.json` that has every key, `safe_mode` true, the argument list handoff-run uses now, the tools
    `Read,Write`, a `model_reported` that is the pinned model (or a dated version) and the template's current
@@ -401,13 +403,26 @@ only those two tools. So the working directory is the boundary, and handoff-run 
 handoff-run refuses to start without a passing probe stamp for the Claude Code installed now and the
 argument list it uses, or when `git status --porcelain` shows a change outside `.label/`. A stamp passes only
 with every assertion of this probe true, and no other: all 21 below, or 20 with `user_claude_md_absent`
-skipped, the one assertion that may be. After each call it reads `claude --version` again; a version that
-changed fails the call (`version_unchanged`), its reply is not copied, and the round stops: no call that has
-not started is made. The round fails closed. However it ends, with a version that changed, a call that
-raised or an interrupt (the calls running are waited for, the rest cancelled), it looks at the tree again,
-and unless git shows it clean outside `.label/` and the version did not change, every reply the round copied
-is moved out of the run's folder to `.label/quarantine/<run>-<random>/`, where nothing reads them but they
-are not lost, and it exits 2. A git that cannot say whether the tree is clean counts as a change.
+skipped, the one assertion that may be. After each call it reads `claude --version` again, up to three times
+when it cannot be read (a read that times out once is not an update); a version that changed, or that could
+not be read, fails the call (`version_unchanged`), its reply is not kept, and the round stops: no call that
+has not started is made.
+
+The round fails closed. Its replies are staged (`.incoming`) and nothing reads them until its final checks
+pass: git shows the tree clean outside `.label/` (a git that cannot say counts as a change), the checkout is
+at the commit the round began at (a pull or checkout during the round is a change), and Claude Code stayed
+the version the stamp is for, during the round and after it. A version that could not be read after a call,
+and reads the round's version again after the round, is not a change: the replies of the calls that passed
+are kept. Then the replies are renamed into place, and the round writes the lock of the parts if it is a
+part's. Otherwise every staged reply is moved to `.label/quarantine/<run>-<random>/`, where nothing reads
+them but they are not lost, its calls stay waiting, and handoff-run exits 2. This holds however the round
+ends: every call finished, a version that changed, a call that raised (exit 2 or 1) or an interrupt (exit
+130; the calls running are waited for, the rest cancelled). A round that is killed (SIGTERM, SIGKILL, a
+closed terminal) runs no final check, and leaves its replies staged, where `judge` does not read them;
+`status` counts them, and the next round moves them to quarantine before it starts and asks their calls
+again. Nothing puts a quarantined reply back. When the cause is known to be harmless, moving the files back
+into the run's folder by hand under their names (`mv .label/quarantine/<run>-<random>/*.reply.txt
+D/M/handoff/<run>/`) makes `judge` read them, under the same checks as any reply.
 
 The probe. `label.py probe-confinement [--claude PATH] [--keep]` (`make test-confinement`) runs one call as
 handoff-run runs it, in a scratch tree of its own under the system temp directory, and removes the tree

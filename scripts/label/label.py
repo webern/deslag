@@ -162,9 +162,19 @@ AGENT_KEYS = (
     "args", "cwd",
 )
 
-# Where `handoff-run` moves the replies of a round that did not end with a tree shown clean, in this
+# Where `handoff-run` moves the replies of a round that did not end with its final checks passed, in this
 # checkout's `.label`: out of the run's folder, so none is read, and kept, since each was paid for.
 QUARANTINE = "quarantine"
+
+# What a reply of a round is named until the round's final checks pass: `<reply name>.incoming`, beside
+# where it goes. `judge` reads only the reply name, so a round killed before its end leaves nothing it
+# reads, and the next round moves what it finds so named to quarantine.
+STAGED = ".incoming"
+
+# How many times `claude --version` is read before it counts as unreadable, and the pause between: a
+# read that times out once is not an update.
+VERSION_TRIES = 3
+VERSION_PAUSE_S = 5
 
 # The stamp of the confinement probe, in this checkout's `.label`: without one that passed for the
 # Claude Code installed now and the argument list handoff-run uses, handoff-run makes no call.
@@ -2371,9 +2381,29 @@ def pending_requests(directory, into, warn=None):
 
 
 def given_up_calls(directory, into):
-    """How many calls of the latest handoff run in `<directory>/<into>/handoff` were given up."""
+    """How many calls of the latest handoff run in `<directory>/<into>/handoff` are given up: a record
+    whose request is not since rewritten (see [read_given_up]) and that no reply came after, which
+    `judge` would read instead. A request `judge` no longer asks for is removed, so its record is held to
+    its own hash."""
     folder = latest_handoff(directory, into)
-    return len([name for name in os.listdir(folder) if name.endswith(GIVEN_UP)]) if folder else 0
+    count = 0
+    for name in os.listdir(folder) if folder else []:
+        if not name.endswith(GIVEN_UP):
+            continue
+        call = name[: -len(GIVEN_UP)]
+        try:
+            record = json.loads(read(os.path.join(folder, name)))
+        except ValueError:
+            record = None
+        if not isinstance(record, dict):
+            raise GoldError(f"{os.path.join(folder, name)} is not a JSON object; `handoff-run --give-up` writes it")
+        digest = str(record.get("request_sha256"))
+        request = os.path.join(folder, f"{call}.request.json")
+        if os.path.isfile(request) and read_given_up(folder, call, json.loads(read(request)).get("request_sha256")) is None:
+            continue
+        if read_reply(os.path.join(folder, f"{call}.{digest[:12]}.reply.txt")) is None:
+            count += 1
+    return count
 
 
 def check_into(into):
@@ -2522,18 +2552,35 @@ def handoff_request(path, model):
     return request
 
 
+UNREADABLE = "nothing that could be read"
+
+
+def read_version(claude):
+    """`claude --version` ([confine.version]), read again up to VERSION_TRIES times when it cannot be
+    read; UNREADABLE when it never can."""
+    for attempt in range(VERSION_TRIES):
+        if attempt:
+            time.sleep(VERSION_PAUSE_S)
+        try:
+            return confine.version(claude)
+        except confine.Unconfined:
+            continue
+    return UNREADABLE
+
+
 class HandoffRound:
     """One round of handoff-run: each request still unanswered, put to a confined claude process.
 
     For a request: a new empty working directory (see [confine.workdir]); the request copied into
     it, with `reply_path` naming a file in the same directory (the request's hash is of its model and
     messages, so it is the same); `prompts/handoff-agent.md` filled with the copy's path; the process
-    run from there; its checks ([confine.checks]), and `claude --version` read again, which must still
-    be the version the round began with; the directory removed. Only a call that passes every check
-    and wrote a reply has it copied to the request's reply name in the run's folder. A call after
-    which the version changed stops the round: no later call is made.
-    `agent.json` is written by the first call that passes, with the model it reported, which every
-    later call must report too."""
+    run from there; its checks ([confine.checks]), and `claude --version` read again (see
+    [read_version]), which must still be the version the round began with; the directory removed.
+    Only a call that passes every check and wrote a reply has it copied into the run's folder, and
+    then under a staged name (STAGED), which nothing reads: [place] renames the round's replies into
+    place once its final checks pass, and [quarantine] moves them out when they do not. A call after
+    which the version changed stops the round: no later call is made. `agent.json` is written by the first call that passes, with the model it reported,
+    which every later call must report too."""
 
     def __init__(self, folder, model, claude, version):
         self.folder = folder
@@ -2543,9 +2590,11 @@ class HandoffRound:
         self.args = confine.arguments(model)
         self.agent_path = os.path.join(folder, "agent.json")
         self.agent = None
-        self.copied = []
+        self.staged = []
         # What `claude --version` said after a call, when it was not `version`: the round stops.
         self.changed_version = None
+        # Set when the round's final checks begin: a call still running then stages nothing.
+        self.closed = False
         self.lock = threading.Lock()
 
     def check_agent(self):
@@ -2566,9 +2615,9 @@ class HandoffRound:
         self.agent = saved
 
     def answer(self, path, request):
-        """Puts one request to a confined process. Returns (call, `answered`, `no reply` or
-        `failed`, the names of the checks that failed, and for a call that failed, the model ids it
-        named, which say why `one_model_id` failed when it does)."""
+        """Puts one request to a confined process. Returns (call, `answered`, `no reply`, `failed` or
+        `not run`, the names of the checks that failed, and a note: for a call that failed, the model
+        ids it named, which say why `one_model_id` failed when it does)."""
         call = request["call"]
         if self.changed_version is not None:
             return call, "not run", [], f"the round stopped: claude --version said {self.changed_version}"
@@ -2585,10 +2634,7 @@ class HandoffRound:
             reply = confine.regular_text(os.path.join(work, request["reply_name"]))
             # The stamp holds for the version it was made with: Claude Code updated during the call is
             # not that version, so its reply is not copied, and the round stops.
-            try:
-                now = confine.version(self.claude)
-            except confine.Unconfined:
-                now = "nothing that could be read"
+            now = read_version(self.claude)
             found["version_unchanged"] = now == self.version
             with self.lock:
                 if now != self.version and self.changed_version is None:
@@ -2605,9 +2651,11 @@ class HandoffRound:
                     )
                 if reply is None:
                     return call, "no reply", [], ""
-                target = os.path.join(self.folder, request["reply_name"])
+                if self.closed:
+                    return call, "not run", [], "the round had ended, so its reply is not kept"
+                target = os.path.join(self.folder, request["reply_name"] + STAGED)
                 write_atomic(target, reply)
-                self.copied.append(target)
+                self.staged.append(target)
                 return call, "answered", [], ""
         finally:
             shutil.rmtree(work, ignore_errors=True)
@@ -2619,14 +2667,22 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     probe stamp for the Claude Code installed now and these arguments; in a part of a draw, at a
     commit that is not clean or when the commit, the draw, that Claude Code or these arguments are
     not the lock's (see [check_parts_lock]); with an `agent.json` that differs from what it would
-    write; or when `git status` shows a change outside `.label/`. The round fails closed: an
-    interrupt or a call that raises stops it (no call not yet started is made), and unless `git
-    status` then shows the tree clean outside `.label/`, the replies it copied are moved to
-    quarantine (see [quarantine]) and it fails. A round whose replies were kept writes into the lock
-    of the parts what it does not hold yet.
-    Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
-    call failed a check or anything was refused. With `--give-up CALL`, it runs no process and records
-    that the call is given up instead (see [give_up_requests])."""
+    write; or when `git status` shows a change outside `.label/`. Replies a round killed before its
+    end left staged are moved to quarantine first, and their calls asked again.
+
+    The round fails closed: an interrupt or a call that raised stops it (no call not yet started is
+    made), and its replies, staged until then, are put in place only when its final checks pass:
+    `git status` shows the tree clean outside `.label/`, the commit is the one it began at, and
+    Claude Code is the version it began with, during the round and after it (a read of `claude
+    --version` that failed during the round and reads that version after it is not a change).
+    Otherwise they are moved to quarantine (see [quarantine]) and it exits 2. A round whose replies
+    were put in place writes into the lock of the parts what it does not hold yet.
+
+    Exit 0 when every request has its reply, 2 when a call failed a check, the final checks failed or
+    anything was refused, and EXIT_HANDOFF when a process wrote no reply (run it again); an
+    interrupt exits 130, and a call that raised exits 2 for an error this tool names or 1 for any other.
+    With `--give-up CALL`, it runs no process
+    and records that the call is given up instead (see [give_up_requests])."""
     directory = guard.check_dir(arguments.dir)
     check_into(arguments.into)
     if arguments.parallel < 1:
@@ -2666,10 +2722,19 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
         )
     # A temp directory inside a repository is refused now, before any call, not call by call.
     os.rmdir(confine.workdir("deslag-handoff-"))
+    left = sorted(glob.glob(os.path.join(glob.escape(folder), "*" + STAGED)))
+    if left:
+        moved = quarantine(folder, left)
+        print(
+            f"label: {len(moved)} replies a round left staged, never checked at its end (it was killed), are moved to "
+            f"{os.path.dirname(moved[0])}, where nothing reads them, and their calls are asked again",
+            file=sys.stderr,
+        )
     say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
     counts = {"answered": 0, "no reply": 0, "failed": 0, "not run": 0}
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel)
     why = None
+    placed = []
     try:
         try:
             futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
@@ -2679,15 +2744,28 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
                 say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else "") + (f"; {note}" if note else ""))
         finally:
             # An interrupt or a call that raised stops the round: no call that has not started
-            # starts, and the ones running are waited for, so nothing is copied after the check.
+            # starts, and the ones running are waited for.
             pool.shutdown(wait=True, cancel_futures=True)
     finally:
-        # The round fails closed, however it ended: its replies stay in the run's folder only when
-        # git shows the tree clean after it, and a git that cannot say counts as a change; and only
-        # when Claude Code stayed the version the stamp is for.
+        # The round fails closed, however it ended: its staged replies go into place only when git
+        # shows the tree clean after it (a git that cannot say counts as a change), at the commit it
+        # began at, and when Claude Code stayed the version the stamp is for. A call still running
+        # past this point, after a second interrupt, stages nothing.
+        with round_.lock:
+            round_.closed = True
+            staged = list(round_.staged)
         whys = []
-        if round_.changed_version is not None:
+        after = read_version(claude)
+        if round_.changed_version not in (None, UNREADABLE) or (round_.changed_version == UNREADABLE and after != version):
             whys.append(f"`claude --version` said {round_.changed_version} during the round, which began with {version}")
+        elif round_.changed_version == UNREADABLE:
+            print(
+                f"label: `claude --version` could not be read after a call, and says {version} after the round, so "
+                f"Claude Code did not change: the replies of the calls that passed are kept",
+                file=sys.stderr,
+            )
+        if after != version and round_.changed_version is None:
+            whys.append(f"`claude --version` says {after} after the round, which began with {version}")
         try:
             changes = tree_changes(REPO)
             if changes:
@@ -2697,18 +2775,23 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
                 )
         except GoldError as error:
             whys.append(f"whether the tree is clean after the round is not known ({error})")
+        now = deslag_commit()
+        if now != commit:
+            whys.append(f"the checkout is at {now} after the round, which began at {commit}")
         why = "; and ".join(whys) or None
         if why is not None:
-            moved = quarantine(round_)
+            moved = quarantine(folder, staged)
             print(
                 f"label: {why}, so the {len(moved)} replies of this round"
                 + (f" are moved to {os.path.dirname(moved[0])}, where nothing reads them," if moved else "")
                 + " and none is read",
                 file=sys.stderr,
             )
+        else:
+            placed = place(staged)
     if why is not None:
         return 2
-    if round_.copied:
+    if placed:
         pin_parts_lock(directory, "handoff-run", held)
     say(
         f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
@@ -2719,20 +2802,30 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     return EXIT_HANDOFF if counts["no reply"] else 0
 
 
-def quarantine(round_):
-    """Moves the replies `round_` copied into its run's folder to a new folder under
-    `.label/quarantine/`, named for the run: out of the folder judge reads, so none is read, and not
-    deleted, since each was paid for. Returns the paths they were moved to."""
-    if not round_.copied:
+def place(staged):
+    """Renames each reply in `staged` from its staged name to the reply name `judge` reads. Returns the
+    names they now have."""
+    placed = []
+    for path in staged:
+        placed.append(path[: -len(STAGED)])
+        os.replace(path, placed[-1])
+    return placed
+
+
+def quarantine(folder, staged):
+    """Moves the replies `staged` in the run's folder `folder` to a new folder under
+    `.label/quarantine/`, named for the run, under their reply names: out of the folder judge reads,
+    so none is read, and not deleted, since each was paid for. Returns the paths they were moved to."""
+    if not staged:
         return []
     base = os.path.join(guard.root(), QUARANTINE)
     os.makedirs(base, exist_ok=True)
-    target = tempfile.mkdtemp(prefix=f"{os.path.basename(round_.folder)}-", dir=base)
+    target = tempfile.mkdtemp(prefix=f"{os.path.basename(folder)}-", dir=base)
     moved = []
-    for path in round_.copied:
-        moved.append(os.path.join(target, os.path.basename(path)))
+    for path in staged:
+        name = os.path.basename(path)
+        moved.append(os.path.join(target, name[: -len(STAGED)] if name.endswith(STAGED) else name))
         os.replace(path, moved[-1])
-    round_.copied = []
     return moved
 
 
@@ -3026,6 +3119,9 @@ def command_status(arguments, config, transport=None, gold=None, say=print):
         ]
         present = sum(read_reply(os.path.join(folder, reply)) is not None for reply in replies)
         line += f"; {len(waiting)} requests waiting, {present} replies present"
+        staged = len(glob.glob(os.path.join(glob.escape(folder), "*" + STAGED))) if folder else 0
+        if staged:
+            line += f", {staged} replies staged by a round that did not end (the next round moves them to quarantine)"
         given_up = given_up_calls(directory, into)
         if given_up:
             line += f", {given_up} calls given up"

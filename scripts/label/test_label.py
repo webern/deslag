@@ -9,6 +9,7 @@ sets or the corpus.
 import contextlib
 import copy
 import email.utils
+import glob
 import hashlib
 import http.server
 import io
@@ -17,6 +18,7 @@ import multiprocessing
 import os
 import re
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -296,6 +298,10 @@ class Base(unittest.TestCase):
         commit = unittest.mock.patch.object(label, "deslag_commit", return_value=COMMIT)
         commit.start()
         self.addCleanup(commit.stop)
+        # A `claude --version` that cannot be read is read again after this pause: none in a test.
+        pause = unittest.mock.patch.object(label, "VERSION_PAUSE_S", 0)
+        pause.start()
+        self.addCleanup(pause.stop)
         self.said = []
         self.slept = []
         self.warned = []
@@ -4577,6 +4583,11 @@ else:
     if SETUP.get("dirty"):
         with open(SETUP["dirty"], "w") as handle:
             handle.write("changed\n")
+    if SETUP.get("hang_from") and SETUP.get("log"):
+        # From the call of this number on, never come back: a round killed while it waits.
+        with open(SETUP["log"]) as handle:
+            if sum(1 for _ in handle) >= SETUP["hang_from"]:
+                time.sleep(300)
     time.sleep(SETUP.get("sleep", 0))
     items = sorted(set(re.findall(r"^(d\d+\.\d+): ", request["messages"][1]["content"], re.M)))
     if not SETUP.get("no_reply"):
@@ -5103,6 +5114,117 @@ class ConfinementTests(Base):
         self.fake()
         self.assertEqual(self.handoff_run(), 0)
         self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def kill_round(self, gold, hang_from):
+        """handoff-run, `--parallel 1`, in a child process killed with SIGKILL once the call numbered
+        `hang_from`, which never returns, has started and a reply of an earlier call is staged: a round
+        whose final checks never run. Returns the staged replies it left."""
+        self.waiting(gold)
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.fake(hang_from=hang_from)
+        folder = self.folder_of()
+        child = os.fork()
+        if child == 0:
+            code = 99
+            try:
+                os.setpgid(0, 0)
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    code = self.handoff_run("--parallel", "1")
+            finally:
+                os._exit(code)
+        deadline = time.time() + 60
+        staged = []
+        while time.time() < deadline:
+            staged = glob.glob(os.path.join(folder, "*" + label.STAGED))
+            if len(self.calls()) >= hang_from and len(staged) == hang_from - 1:
+                break
+            time.sleep(0.05)
+        os.killpg(child, signal.SIGKILL)
+        _, status = os.waitpid(child, 0)
+        self.assertTrue(os.WIFSIGNALED(status), "the round was killed, not ended")
+        self.assertEqual(len(staged), hang_from - 1, self.calls())
+        return staged
+
+    def test_a_round_killed_before_its_end_leaves_no_reply_that_judge_reads(self):
+        staged = self.kill_round(PartsGold(3), 2)
+        folder = self.folder_of()
+        self.assertEqual([name for name in os.listdir(folder) if name.endswith(".reply.txt")], [], "nothing in place")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3)
+        with self.assertRaises(label.HandoffWait) as waited:
+            self.judge()
+        self.assertEqual(len(waited.exception.waiting), 3, "judge reads no staged reply")
+        said = []
+        label.command_status(label.parser().parse_args(["status", "--dir", self.dir, "--gold-bin", "/nonexistent"]),
+                             copy.deepcopy(HANDOFF_CONFIG), say=said.append)
+        self.assertTrue(any("1 replies staged by a round that did not end" in line for line in said), said)
+        # The next round moves them to quarantine and asks their calls again.
+        self.fake()
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertIn("1 replies a round left staged, never checked at its end (it was killed), are moved to", err.getvalue())
+        self.assertEqual(self.quarantined(), [os.path.basename(staged[0]).split(".")[0]])
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(glob.glob(os.path.join(folder, "*" + label.STAGED)), [])
+
+    def version_reads(self, fails):
+        """A patch of `confine.version` whose reads numbered in `fails` (from 1) cannot be read."""
+        real = confine.version
+        reads = []
+
+        def read(claude):
+            reads.append(claude)
+            if len(reads) in fails:
+                raise confine.Unconfined("claude --version timed out")
+            return real(claude)
+
+        return unittest.mock.patch.object(confine, "version", side_effect=read)
+
+    def test_a_version_read_that_fails_once_is_read_again_and_is_no_change(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        # Reads: 1 at the start, 2 to 4 after the first three calls, 5 the read again, 6 and 7 after.
+        with self.version_reads({4}):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.quarantined(), [])
+
+    def test_a_version_unreadable_after_a_call_and_readable_after_the_round_keeps_the_calls_that_passed(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        err = io.StringIO()
+        with self.version_reads({4, 5, 6}), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2, self.out)
+        self.assertIn("  part-03: failed (version_unchanged)", "\n".join(self.out))
+        self.assertIn("  part-04: not run; the round stopped: claude --version said nothing that could be read", self.out)
+        self.assertIn("could not be read after a call, and says 2.1.293 after the round", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2, "the replies of parts 1 and 2 are kept")
+        self.assertEqual(self.quarantined(), [])
+        # Unreadable from the second call on and after the round too, it fails closed: the reply of the
+        # call that passed before is moved to quarantine.
+        err = io.StringIO()
+        with self.version_reads(set(range(3, 20))), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2, self.out)
+        self.assertIn("said nothing that could be read during the round, which began with 2.1.293", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2)
+        self.assertEqual(self.quarantined(), ["part-03"])
+
+    def test_a_round_during_which_the_checkout_moved_reads_none_of_its_replies(self):
+        self.waiting(PartsGold(2))
+        self.assertEqual(self.probe(), 0)
+        commits = []
+
+        def commit():
+            commits.append(1)
+            return COMMIT if len(commits) == 1 else "f" * 40
+
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "deslag_commit", side_effect=commit), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn(f"the checkout is at {'f' * 40} after the round, which began at {COMMIT}", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2)
+        self.assertEqual(self.quarantined(), ["part-01", "part-02"])
 
     def test_an_agent_json_that_differs_from_what_this_round_would_write_is_refused(self):
         pending = self.waiting(PartsGold(2))

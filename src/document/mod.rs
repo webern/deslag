@@ -16,6 +16,7 @@
 //! only the edits it can prove leave the document reading as it did.
 
 mod edit;
+mod map;
 mod markdown;
 mod sentences;
 mod tokens;
@@ -27,6 +28,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
+pub use map::{Mapped, Segment, SegmentKind, SourceMap};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 ///

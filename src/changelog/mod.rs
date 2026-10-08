@@ -13,7 +13,11 @@ use std::sync::LazyLock;
 use serde::Deserialize;
 
 use crate::Lint;
+pub(crate) use version::current_release;
 pub use version::{ParseError, Version};
+
+/// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
+pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
 
 /// The changelog as written, which `include_str!` embeds in the binary.
 const CHANGELOG: &str = include_str!("../changelog.toml");

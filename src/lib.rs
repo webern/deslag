@@ -128,6 +128,19 @@ pub enum Error {
         supported: NonZeroU32,
     },
 
+    /// The config was last updated by a later deslag than this one.
+    #[error(
+        "{path} was last updated by deslag {stamp}, and this is deslag {current}; upgrade deslag"
+    )]
+    NewerStamp {
+        /// The config file.
+        path: String,
+        /// The `deslag_version` the file declares.
+        stamp: semver::Version,
+        /// The version of this deslag.
+        current: semver::Version,
+    },
+
     /// A glob pattern in the config is not a valid pattern.
     #[error("invalid glob pattern {pattern:?} in {path}")]
     Glob {

@@ -6,6 +6,7 @@
 //!
 //! ```toml
 //! schema_version = 1
+//! deslag_version = "0.0.1"
 //!
 //! [md]
 //! globs = ["*.md"]
@@ -24,6 +25,10 @@
 //!
 //! The same shape may be written in YAML or JSON instead; the file's extension says which.
 //!
+//! `schema_version` is the format of the file. `deslag_version` is the release of deslag that last
+//! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
+//! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
+//!
 //! [`search`] finds the file, [`md`] holds the `[md]` section, and [`lints`] the settings of each
 //! lint.
 
@@ -36,9 +41,11 @@ use std::path::{Path, PathBuf};
 
 use schemars::JsonSchema;
 use schemars::generate::SchemaSettings;
-use serde::Deserialize;
+use serde::de::{DeserializeOwned, IgnoredAny};
+use serde::{Deserialize, Deserializer};
 
 use crate::Error;
+use crate::changelog::{BASELINE, Version, current_release};
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, ListGrowth, MaxEmphasis, MaxSizeBytes,
@@ -68,6 +75,43 @@ struct ConfigFile {
     /// The Markdown section.
     #[serde(default)]
     md: md::MdFile,
+    /// The deslag that last onboarded or updated this config, as a release such as "0.0.1". When
+    /// it is missing the config is taken to be from 0.0.1. It may not be later than the deslag
+    /// that reads the file.
+    #[serde(default, deserialize_with = "stamp_text")]
+    #[expect(
+        dead_code,
+        reason = "read from `Head` before this parse; here for the schema"
+    )]
+    deslag_version: Option<String>,
+}
+
+/// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
+/// can read it at all, and the place of `md`.
+///
+/// It refuses no unknown key, so a config from a later deslag, which may hold keys this one has
+/// never heard of, reports that it is from a later deslag and not the first of those keys.
+///
+/// `md` is here for the config written as a JSON array, which serde reads by position. The fields
+/// must be in the order of [`ConfigFile`]'s, or the array reads differently in the two structs.
+#[derive(Debug, Deserialize)]
+struct Head {
+    #[serde(default)]
+    schema_version: Option<NonZeroU32>,
+    /// Never read. It holds the place of `md` in `ConfigFile`, so a config written as a JSON
+    /// array, which serde reads by position, lines up with it.
+    #[serde(default)]
+    #[expect(dead_code, reason = "holds a position, never read")]
+    md: Option<IgnoredAny>,
+    #[serde(default, deserialize_with = "stamp_text")]
+    deslag_version: Option<String>,
+}
+
+/// The `deslag_version` key as text, with an error that names the key whatever the language.
+fn stamp_text<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    Option::<String>::deserialize(deserializer).map_err(|error| {
+        serde::de::Error::custom(format!("deslag_version must be a string: {error}"))
+    })
 }
 
 /// The JSON schema of the config file, which describes every key it may hold. It serves TOML and
@@ -80,11 +124,11 @@ pub fn schema() -> serde_json::Value {
         .to_value()
 }
 
-/// `text` read as a [`ConfigFile`] written in `format`.
-fn deserialize(
+/// `text` read as a `T` written in `format`.
+fn deserialize<T: DeserializeOwned>(
     text: &str,
     format: ConfigFormat,
-) -> Result<ConfigFile, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<T, Box<dyn std::error::Error + Send + Sync>> {
     Ok(match format {
         ConfigFormat::Toml => toml::from_str(text)?,
         ConfigFormat::Yaml => serde_saphyr::from_str(text)?,
@@ -98,6 +142,7 @@ pub struct Config {
     path: PathBuf,
     source: ConfigSource,
     schema_version: NonZeroU32,
+    stamp: Option<semver::Version>,
     md: MdConfig,
     warnings: Vec<String>,
 }
@@ -123,18 +168,50 @@ impl Config {
         let format = ConfigFormat::of(&path).ok_or_else(|| Error::ConfigFormat {
             path: path_string.clone(),
         })?;
-        let file: ConfigFile = deserialize(text, format).map_err(|source| Error::Parse {
+        let parse_error = |source| Error::Parse {
             path: path_string.clone(),
             source,
-        })?;
+        };
 
-        if file.schema_version > SCHEMA_VERSION {
-            return Err(Error::SchemaVersion {
-                path: path_string,
-                found: file.schema_version,
-                supported: SCHEMA_VERSION,
-            });
+        // The versions come first, so a config from a later deslag says so, whatever else in it
+        // this deslag does not know. When the head cannot be read, the error is the whole file's,
+        // which words it best; the head's own stands only if the file reads.
+        let head: Head = match deserialize(text, format) {
+            Ok(head) => head,
+            Err(head_error) => {
+                let error = deserialize::<ConfigFile>(text, format)
+                    .err()
+                    .unwrap_or(head_error);
+                return Err(parse_error(error));
+            }
+        };
+        match head.schema_version {
+            Some(found) if found > SCHEMA_VERSION => {
+                return Err(Error::SchemaVersion {
+                    path: path_string,
+                    found,
+                    supported: SCHEMA_VERSION,
+                });
+            }
+            _ => {}
         }
+        let stamp = head
+            .deslag_version
+            .map(|text| parse_stamp(&text, &path_string))
+            .transpose()?;
+        let current = current_release();
+        match &stamp {
+            Some(stamp) if *stamp > current => {
+                return Err(Error::NewerStamp {
+                    path: path_string,
+                    stamp: stamp.clone(),
+                    current,
+                });
+            }
+            _ => {}
+        }
+
+        let file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
 
         let warnings = file
             .md
@@ -150,6 +227,7 @@ impl Config {
             path,
             source,
             schema_version: file.schema_version,
+            stamp,
             md,
             warnings,
         })
@@ -170,6 +248,17 @@ impl Config {
         self.schema_version
     }
 
+    /// The deslag version the file declares, if it declares one.
+    pub fn stamp(&self) -> Option<&semver::Version> {
+        self.stamp.as_ref()
+    }
+
+    /// The release of deslag this config was last updated by: its stamp, or the baseline release
+    /// when it has none. Never [`Version::Next`].
+    pub fn deslag_version(&self) -> Version {
+        Version::Release(self.stamp.clone().unwrap_or(BASELINE))
+    }
+
     /// What the file holds that deslag reads and ignores, one line each, for the command line to
     /// print.
     pub fn warnings(&self) -> &[String] {
@@ -180,4 +269,19 @@ impl Config {
     pub fn md(&self) -> &MdConfig {
         &self.md
     }
+}
+
+/// The release a `deslag_version` of `text` names. A pre-release or build part is refused: a
+/// stamp is a release, and `0.0.1+x` would order above `0.0.1`.
+fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
+    semver::Version::parse(text)
+        .ok()
+        .filter(|version| version.pre.is_empty() && version.build.is_empty())
+        .ok_or_else(|| Error::Setting {
+            path: path.to_string(),
+            message: format!(
+                "deslag_version {text:?} is not a release version such as \"0.0.1\", which has \
+                 no pre-release or build part"
+            ),
+        })
 }

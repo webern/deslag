@@ -26,12 +26,15 @@ pub struct ParseError {
     source: semver::Error,
 }
 
+/// The version of the running deslag as a release.
+pub(crate) fn current_release() -> semver::Version {
+    semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version is semver")
+}
+
 impl Version {
     /// The version of the running deslag, which is never [`Version::Next`].
     pub fn current() -> Version {
-        Version::Release(
-            semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version is semver"),
-        )
+        Version::Release(current_release())
     }
 }
 

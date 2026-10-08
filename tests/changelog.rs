@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::SchemaPaths;
-use deslag::changelog::{Changelog, Entry, Version, changelog};
+use deslag::changelog::{BASELINE, Changelog, Entry, Version, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::{Config, ConfigSource, Lint, check_file};
@@ -186,6 +186,16 @@ fn no_entry_names_a_path_or_block_the_schema_refuses() {
     }
 }
 
+/// A config with no `deslag_version` is taken to be from the first release, so the lints it can
+/// have are the ones that release lists.
+#[test]
+fn the_baseline_is_the_first_release() {
+    assert_eq!(
+        changelog().releases.first().map(|release| &release.version),
+        Some(&Version::Release(BASELINE))
+    );
+}
+
 #[test]
 fn versions_strictly_increase_and_next_is_last() {
     for pair in changelog().releases.windows(2) {
@@ -233,6 +243,17 @@ fn no_release_is_left_as_next() {
             .all(|release| release.version != Version::Next),
         "src/changelog.toml still has a `next` release: replace `next` with the version in \
          Cargo.toml"
+    );
+}
+
+#[test]
+#[ignore = "fails while the crate version has a pre-release or build part"]
+fn the_crate_version_is_a_release() {
+    let version = semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version");
+    assert!(
+        version.pre.is_empty() && version.build.is_empty(),
+        "Cargo.toml has the version {version}: a release writes its version as the config stamp, \
+         and a stamp may not have a pre-release or build part"
     );
 }
 

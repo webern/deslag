@@ -111,8 +111,9 @@ help:
 	@echo "check-doc        build the docs with warnings denied"
 	@echo "check-fmt        rustfmt in check mode"
 	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
-	@echo "check-release    fail while src/changelog.toml has a next release; the release change renames it, so"
-	@echo "                 not part of check, and the release workflow runs it"
+	@echo "check-release    fail while src/changelog.toml has a next release, or the crate version is a pre-release"
+	@echo "                 or has a build part; the release change fixes both, so not part of check, and the"
+	@echo "                 release workflow runs it"
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
@@ -346,9 +347,10 @@ check-fmt: preflight
 check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 
-# Fails while src/changelog.toml has a `next` release. The change that bumps the version in
-# Cargo.toml renames it, so `check` cannot run this. It runs every ignored test in
-# tests/changelog.rs: those are the release-time checks, so a new one there rides along.
+# Fails while src/changelog.toml has a `next` release, and while the crate version is a pre-release
+# or has a build part: a release is X.Y.Z. The change that bumps the version in Cargo.toml fixes
+# both, so `check` cannot run this. It runs every ignored test in tests/changelog.rs: those are the
+# release-time checks, so a new one there rides along.
 check-release: preflight
 	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored
 

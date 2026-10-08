@@ -2926,6 +2926,13 @@ class StatusTests(Base):
             f"{self.dir}:merge` prints them"
         ))
         self.assertNotIn("problem", said[-1], "the problems themselves are not printed")
+        # A relative --gold-bin names a file from where the caller is, though it runs from the checkout's root.
+        os.remove(binary + ".refuse")
+        here = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, here)
+        self.assertEqual(self.status("--gold-bin", os.path.join(".", "fake-gold"))[-1], "preflight (merge): ok")
+        os.chdir(here)
         with unittest.mock.patch.object(label, "find_binary", return_value=None):
             self.assertIn("not run (deslag-gold is not built", self.status()[-1])
         missing = os.path.join(self.root, "no-such-gold")
@@ -5018,6 +5025,20 @@ class ConfinementTests(Base):
         label.write(path, json.dumps({**good, "assertions": fewer, "skipped": {"user_claude_md_absent": "no file"}}))
         label.check_stamp("2.1.293", args)
         self.assertEqual(set(good["assertions"]), set(confine.ASSERTIONS))
+
+    def test_a_probe_that_makes_other_assertions_than_this_one_fails_whatever_they_say(self):
+        real = confine.probe
+
+        def fewer(*args, **kwargs):
+            results, skipped, seen = real(*args, **kwargs)
+            del results["decoy_holdout_read_refused"]
+            return results, skipped, seen
+
+        with unittest.mock.patch.object(confine, "probe", side_effect=fewer):
+            self.assertEqual(self.probe(), 2, self.out)
+        self.assertTrue(all(self.stamp()["assertions"].values()), "every assertion it made is true")
+        self.assertEqual(self.stamp()["verdict"], "fail")
+        self.assertIn("verdict: fail", self.out[-1])
 
     def test_claude_code_updated_during_a_round_stops_it_and_reads_none_of_its_replies(self):
         self.waiting(PartsGold(3))

@@ -9,14 +9,12 @@
 //! applied, and the result is read again, until a pass makes no edit. Each fixable lint's edit
 //! removes a place it objects to and adds none, so the passes end; if they do not, a lint breaks
 //! that promise, which is an error. Every file is worked out before any is written, and one that
-//! changed is written once, through a temp file beside it that then takes its place.
+//! changed is written once, by [`write::replace`](crate::write::replace).
 //!
 //! [`Violation::edits`]: crate::Violation::edits
 //! [`Document::apply`]: crate::Document::apply
 
 use std::fmt;
-use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::Error;
@@ -102,7 +100,7 @@ pub fn fix(
         for (file, outcome) in &fixes {
             if let Outcome::Read { text, fixed, .. } = outcome {
                 if !fixed.is_empty() {
-                    write(file, text)?;
+                    crate::write::replace(&file.absolute, text.as_bytes())?;
                 }
             }
         }
@@ -270,33 +268,4 @@ fn grouped<'m, K: PartialEq>(items: impl Iterator<Item = (&'m Mark, K)>) -> Vec<
             (key, on_lines(&lines))
         })
         .collect()
-}
-
-/// Writes `text` over `file` through a temp file beside it that takes its place, so that the file
-/// is either as it was or wholly rewritten, with its permissions kept.
-fn write(file: &RepoFile, text: &str) -> Result<(), Error> {
-    let failed = |source| Error::Write {
-        path: file.absolute.display().to_string(),
-        source,
-    };
-    let permissions = fs::metadata(&file.absolute).map_err(failed)?.permissions();
-    let name = file.absolute.file_name().unwrap_or_default();
-    // Hidden, and never Markdown, so a walk that meets one left behind skips it.
-    let temp = file.absolute.with_file_name(format!(
-        ".{}.deslag-fix-{}",
-        name.to_string_lossy(),
-        std::process::id()
-    ));
-    let written = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&temp)
-        .and_then(|mut out| out.write_all(text.as_bytes()))
-        .and_then(|()| fs::set_permissions(&temp, permissions))
-        .and_then(|()| fs::rename(&temp, &file.absolute));
-    if written.is_err() {
-        // The temp file may never have been made; either way the original stands.
-        let _ = fs::remove_file(&temp);
-    }
-    written.map_err(failed)
 }

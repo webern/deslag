@@ -14,7 +14,7 @@ main. Just make sure you follow the guidelines given here and in the skills!
 deslag/
   Makefile             <- every build, test and check; `make help` lists the targets
   src/lib.rs           <- the library's error type and module list; src/main.rs and src/cli/ wrap it
-  src/config/          <- the config schema, and finding the config file
+  src/config/          <- the config schema, finding the file, `deslag update`; writes: src/write.rs
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
   src/document/        <- blocks, tokens, sentences for the lints; scans Rust comments and strings
   src/parse/           <- the keys a file declares in its frontmatter, such as its byte budget

@@ -26,6 +26,14 @@ KEY_VARIABLE = "OPENROUTER_API_KEY"
 # The reply was not JSON: a gateway page or half a body, which an endpoint sent, so it is its own.
 NOT_JSON = "the reply was not JSON"
 
+# The reason of a call that timed out. A timeout with no answer may be the network here or the
+# endpoint; see [Retryable.owned].
+TIMEOUT = "timeout"
+
+# HTTP statuses that are about the key, the credit or the size of the request, so that no other
+# endpoint of the model would answer differently. Any other 4xx is taken to be the endpoint's.
+KEY_STATUSES = {401, 402, 413}
+
 # HTTP statuses worth asking again for: the request timed out, or the service was busy or down. 520 to
 # 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
 RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
@@ -58,6 +66,15 @@ class HttpError(ApiError):
         self.status = status
         self.body = body
         self.category = f"HTTP {status}"
+
+
+class ListingMismatch(ApiError):
+    """The endpoint listing does not have what a voter pins: no such endpoint, another quantisation,
+    or a parameter it lacks. The endpoint cannot be asked, and the next one may be."""
+
+    def __init__(self, message, category):
+        super().__init__(message)
+        self.category = category
 
 
 class ProviderMismatch(ApiError):
@@ -134,9 +151,9 @@ def weakest(quantizations):
 def pinned_endpoint(listing, config, at_least=None):
     """The endpoint of `listing` (the models/<id>/endpoints JSON) that `config` pins, checked.
 
-    Raises ApiError when the listing has no such endpoint, when its quantisation is not one the
-    config allows, or when it does not support a parameter the body will send. With `at_least`, a
-    quantisation, the endpoint's must be that or a more precise one, and the config's own
+    Raises ListingMismatch (an ApiError) when the listing has no such endpoint, when its quantisation
+    is not one the config allows, or when it does not support a parameter the body will send. With
+    `at_least`, a quantisation, the endpoint's must be that or a more precise one, and the config's own
     `quantizations` is not looked at: this is how an alternative endpoint is checked. A floor that is
     not a known quantisation (`unknown`, say) asks for nothing.
     """
@@ -144,29 +161,31 @@ def pinned_endpoint(listing, config, at_least=None):
     found = [endpoint for endpoint in endpoints if endpoint.get("tag") == config["provider"]]
     if not found:
         tags = ", ".join(sorted(str(endpoint.get("tag")) for endpoint in endpoints))
-        raise ApiError(
-            f"{config['model']} has no endpoint tagged `{config['provider']}`; the listing has: {tags}"
+        raise ListingMismatch(
+            f"{config['model']} has no endpoint tagged `{config['provider']}`; the listing has: {tags}",
+            "missing from the listing",
         )
     endpoint = found[0]
     allowed = config.get("quantizations")
     if at_least in QUANT_RANK:
         have = QUANT_RANK.get(endpoint.get("quantization"))
         if have is None or have < QUANT_RANK[at_least]:
-            raise ApiError(
+            raise ListingMismatch(
                 f"{config['model']} at `{config['provider']}` is {endpoint.get('quantization')}, "
-                f"which is not {at_least} or better"
+                f"which is not {at_least} or better", "quantization changed",
             )
     elif at_least is None and allowed and endpoint.get("quantization") not in allowed:
-        raise ApiError(
+        raise ListingMismatch(
             f"{config['model']} at `{config['provider']}` is {endpoint.get('quantization')}, "
-            f"and voters.json pins {', '.join(allowed)}"
+            f"and voters.json pins {', '.join(allowed)}", "quantization changed",
         )
     sent = parameters_sent(request_body(config, "", ""))
     lacking = [name for name in sent if name not in endpoint.get("supported_parameters", [])]
     if lacking:
-        raise ApiError(
+        raise ListingMismatch(
             f"`{config['provider']}` for {config['model']} does not support {', '.join(lacking)}, "
-            f"and the request requires every parameter it sends; set it to null in voters.json"
+            f"and the request requires every parameter it sends; set it to null in voters.json",
+            "parameter not supported",
         )
     return endpoint
 
@@ -297,10 +316,10 @@ class Urllib:
                 raise Retryable(reason, retry_after(error.headers), error.code) from None
             raise HttpError(error.code, text[:500]) from None
         except (socket.timeout, TimeoutError):
-            raise Retryable("timeout") from None
+            raise Retryable(TIMEOUT) from None
         except urllib.error.URLError as error:
             if isinstance(error.reason, (socket.timeout, TimeoutError)):
-                raise Retryable("timeout") from None
+                raise Retryable(TIMEOUT) from None
             raise Retryable(f"could not connect, {type(error.reason).__name__}") from None
         except (http.client.HTTPException, OSError) as error:
             # A connection reset or a reply cut short: what was sent may have been billed, and the
@@ -315,11 +334,12 @@ class Retryable(Exception):
     status or an exception type, safe to print. `after` is the wait in seconds the server asked for,
     and `status` the HTTP status, if there was one (read from a reason `HTTP 429` if not given).
 
-    `owned` says whose failure it is. An answer from the endpoint, HTTP 429 or 5xx, or a reply that
-    is not JSON, is the endpoint's own, and another endpoint of the model may do better. Nothing
-    else is: a connection refused, a name that does not resolve, a timeout with no answer, a dropped
-    connection and a 408 or 425 are as likely to be the network here, or OpenRouter, as the endpoint,
-    and every endpoint would fail the same way."""
+    `owned` says whose failure it is. An answer from the endpoint, HTTP 408, 425, 429 or 5xx, or a
+    reply that is not JSON, is the endpoint's own, and another endpoint of the model may do better.
+    Nothing else is: a connection refused, a name that does not resolve and a dropped connection are
+    as likely to be the network here, or OpenRouter, as the endpoint, and every endpoint would fail
+    the same way. A timeout with no answer is in between: it is not owned, but a caller that sees
+    other endpoints answer may take it for the endpoint's (see [Runner.ask])."""
 
     def __init__(self, reason, after=None, status=None):
         super().__init__(reason)
@@ -332,7 +352,7 @@ class Retryable(Exception):
     @property
     def owned(self):
         if self.status is not None:
-            return self.status == 429 or self.status >= 500
+            return self.status in (408, 425, 429) or self.status >= 500
         return str(self) == NOT_JSON
 
 

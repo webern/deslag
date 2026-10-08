@@ -41,9 +41,10 @@ a sentence after that abstains on it. Money: ledger.py, a reservation before eve
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
 describes it, with the licence voters.json gives its model, the date that licence was read (no run
 starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is
-asked again in halves; an endpoint that keeps failing (HTTP 429 or 5xx, replies cut off on both
-halves of a split, a provider refusal) is abandoned for the next one in voters.json's
-`provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
+asked again in halves; an endpoint that keeps failing (HTTP 429, 5xx or timeouts, an HTTP error
+that is not about the key, replies cut off on both halves of a split, a provider refusal, a reply from
+another provider, an endpoint the listing no longer has as pinned) is abandoned for the next one in
+voters.json's `provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
 halving and switching draw on one budget of failed calls (`failure_budget`); a voter run on which more
 than a quarter of the sentences abstain ends `failed`; an item the adjudicator never settles leaves
 its sentence out of the labels unless `--strict`. The ledger and the run ids are in a state directory
@@ -831,21 +832,25 @@ class EndpointExhausted(openrouter.ApiError):
     """A call failed in a way that stops a run. The run stays saved; `name`, `tag`, `role` and `run`
     say whose endpoint it was, `reason` how it failed.
 
-    Three kinds. By default the failure is the endpoint's own (HTTP 429 or 5xx through every wait, a
-    provider refusal): the next endpoint may do better. With `cutoff`, cut-offs dominate the run (see
+    Three kinds. By default the failure is the endpoint's own: the next endpoint may do better. That is
+    HTTP 429 or 5xx through every wait, a timeout through every wait, any other HTTP error that is not
+    about the key (not 401, 402 or 413), a provider refusal, a reply from another provider or one that
+    used reasoning with reasoning off, and an endpoint the listing no longer has as pinned (`run` is then
+    the run that was to be continued, or None). With `cutoff`, cut-offs dominate the run (see
     [Runner.lose_batch]), or the endpoint cut off every part of the adjudicator's: it cannot do the
-    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network error here (a
-    connection refused, a name that does not resolve, a timeout with no answer): every endpoint would
+    job, and with no next endpoint the run ends `failed`. With `local`, the failure is a network error
+    here (a connection refused, a name that does not resolve, a dropped connection): every endpoint would
     fail the same, so the run stops where it is and a rerun continues it.
 
-    Once every endpoint of the model has failed, `tried` lists them with their reasons and `skipped`
-    those that did not pass the listing's checks. `failed` is set when the run was marked failed."""
+    Once every endpoint of the model has failed, `tried` lists them in order with their reasons, those
+    that did not pass the listing's checks too (`not tried, ...`). `failed` is set when the run was
+    marked failed."""
 
     def __init__(self, message, name, tag, role, run, reason, local=False, cutoff=False):
         super().__init__(message)
         self.name, self.tag, self.role, self.run, self.reason = name, tag, role, run, reason
         self.local, self.cutoff = local, cutoff
-        self.tried, self.skipped = [], []
+        self.tried = []
         self.failed = False
 
 
@@ -1007,7 +1012,7 @@ class Runner:
 
     def next_endpoint(self, name, tag):
         """(the next endpoint after `tag` in `name`'s order that passes its checks now, or None; the
-        ones skipped, each with why)."""
+        ones skipped, each with why, as a fixed phrase)."""
         config = self.config["models"][name]
         order = [config["provider"], *config.get("provider_fallback", [])]
         later = order[order.index(tag) + 1 :] if tag in order else order
@@ -1015,8 +1020,8 @@ class Runner:
         for candidate in later:
             try:
                 self.pin(name, candidate)
-            except openrouter.ApiError as error:
-                skipped.append((candidate, str(error)))
+            except openrouter.ListingMismatch as error:
+                skipped.append((candidate, error.category))
                 continue
             return candidate, skipped
         return None, skipped
@@ -1075,7 +1080,14 @@ class Runner:
             config, pinned = self.config["models"][name], dict(CLAUDE_CODE_ENDPOINT)
             price_in = price_out = None
         else:
-            config, pinned = self.pin(name, endpoint or (saved or {}).get("endpoint"))
+            wanted = endpoint or (saved or {}).get("endpoint")
+            try:
+                config, pinned = self.pin(name, wanted)
+            except openrouter.ListingMismatch as error:
+                tag = wanted or self.config["models"][name]["provider"]
+                raise EndpointExhausted(
+                    f"{name}: {error}", name, tag, role, resume, error.category
+                ) from None
             price_in, price_out = openrouter.prices(pinned)
         run = resume or self.ledger.new_run()
         meta = {
@@ -1185,31 +1197,47 @@ class Runner:
     def fall_back(self, error, tried):
         """After a call failed in a way that stops a run (see EndpointExhausted). A network error here
         is raised as it is: the run stays, for a rerun to continue, and no other endpoint is tried. An
-        endpoint's own failure abandons its run and returns the next endpoint of the model that passes
-        the listing's checks, saying so in one line. When there is none, raises `error` with what was
-        tried: that run stays as it is, for a rerun to continue, unless the endpoint cut replies off on
-        every try, which ends it `failed`."""
+        endpoint's own failure abandons its run, if it had one, and returns the next endpoint of the
+        model that passes the listing's checks, saying so in one line. When there is none, every endpoint has failed: raises `error` with what was
+        tried, in order, the skipped ones too, and the last run is abandoned as the others were, so
+        that a rerun starts again at the first endpoint and does not replay what failed. A run that
+        ends `failed`, the endpoint having cut replies off on every try, stays so."""
         if error.local:
             raise error
         tried.append((error.tag, error.reason))
         following, skipped = self.next_endpoint(error.name, error.tag)
+        tried.extend((tag, f"not tried, {why}") for tag, why in skipped)
         if following is None:
-            error.tried, error.skipped = tried, skipped
+            error.tried = tried
             if error.cutoff:
                 self.fail(error.name, error.run, f"{error.tag}: {error.reason}")
                 error.failed = True
-            else:
-                # The last run stays, for a rerun; `status` and `runs.tsv` say which endpoints failed and why.
-                every = "every endpoint failed: " + "; ".join(f"{tag}: {reason}" for tag, reason in tried)
-                self.update_run(error.name, error.run, stopped_because=" ".join(redacted(every).split())[:600])
-                self.write_runs()
+            elif error.run:
+                self.abandon(error.name, error.run, self.every_failed(error.name, tried))
             raise error
-        self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}")
-        self.warn(
-            f"label: {error.name} {error.run}: {error.tag} kept failing ({error.reason}); the run is "
-            f"abandoned and a new run starts at {following}"
-        )
+        passed = "".join(f"; {tag} was not tried, {why}" for tag, why in skipped)
+        if error.run:
+            self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}{passed}")
+            self.warn(
+                f"label: {error.name} {error.run}: {error.tag} kept failing ({error.reason}); the run is "
+                f"abandoned and a new run starts at {following}{passed}"
+            )
+        else:
+            self.warn(
+                f"label: {error.name}: {error.tag} cannot be asked ({error.reason}); a run starts at "
+                f"{following}{passed}"
+            )
         return following
+
+    def every_failed(self, name, tried):
+        """The reason a run ends with when no endpoint is left: `every endpoint failed: TAG: why; ...`, in
+        the order of the model's list. A walk that began after the first endpoint (`--endpoint`, or a run
+        continued at another) says from where."""
+        config = self.config["models"][name]
+        first = config["provider"]
+        head = "every endpoint failed" if tried[0][0] == first else f"every endpoint from {tried[0][0]} on failed"
+        text = f"{head}: " + "; ".join(f"{tag}: {why}" for tag, why in tried)
+        return " ".join(redacted(text).split())[:600]
 
     def recheck(self, meta, endpoint, config, kind, request_sha256):
         """Whether a reply saved by an earlier invocation is used. It is only if the record saved
@@ -1240,19 +1268,21 @@ class Runner:
         except ValueError:
             return
         if isinstance(saved, dict) and saved.get("request_sha256") == request_sha256 and saved.get("reason"):
-            cut = saved.get("cutoff") or "cut off at max_tokens" in saved["reason"]
             note = " (refused when it was paid for; it is not asked again for the same request)"
-            if saved.get("refusal"):
-                raise self.endpoint_fault(meta, endpoint, openrouter.ProviderRefused(saved["reason"] + note))
-            error = openrouter.CutOff if cut else openrouter.ProviderMismatch if saved.get("mismatch") else openrouter.ApiError
-            raise error(saved["reason"] + note)
+            if saved.get("cutoff") or "cut off at max_tokens" in saved["reason"]:
+                raise openrouter.CutOff(saved["reason"] + note)
+            error = openrouter.ApiError(saved["reason"] + note)
+            error.category = saved.get("category") or "provider refusal"
+            raise self.endpoint_fault(meta, endpoint, error)
 
     def endpoint_fault(self, meta, endpoint, error):
-        """The EndpointExhausted that a provider's refusal is: the endpoint's own failure, which makes
-        the runner try the next endpoint of the model."""
+        """The EndpointExhausted that a failure of the endpoint's own is, other than one through the
+        waits: an HTTP error that is not about the key, a provider's refusal, a reply from another
+        provider, a reply that used reasoning with reasoning off. The runner tries the next endpoint of
+        the model. Its reason is the error's fixed `category`."""
         return EndpointExhausted(
             f"{meta['name']} {meta['run']}: {error}, at {endpoint['tag']}", meta["name"], endpoint["tag"],
-            meta["role"], meta["run"], "provider refusal",
+            meta["role"], meta["run"], error.category,
         )
 
     def ask(self, meta, endpoint, config, system, user, kind):
@@ -1301,7 +1331,7 @@ class Runner:
             ident = self.ledger.reserve(self.max_usd, worst, note=f"{kind}: reserved at worst case", **where)
             try:
                 return self.transport.post(url, body, key, self.settings["timeout_s"]), ident
-            except openrouter.Retryable:
+            except (openrouter.Retryable, openrouter.HttpError):
                 self.budget.spend(what)
                 raise
 
@@ -1312,11 +1342,16 @@ class Runner:
             # The provider's text is kept beside the run, and in no message, status or reason.
             write(self.raw(name, run, f"{kind}.http-error.json"), json.dumps(
                 {"status": error.status, "request_sha256": request_sha256, "body": error.body}, indent=2) + "\n")
-            raise
+            if error.status in openrouter.KEY_STATUSES:
+                raise
+            raise self.endpoint_fault(meta, endpoint, error) from None
         except openrouter.RetriesExhausted as error:
+            # A timeout that no wait got past is the endpoint's, unless every endpoint of the model
+            # fails the same way (see [Runner.fall_back]): only the endpoints can tell.
+            local = not error.owned and error.reason != openrouter.TIMEOUT
             raise EndpointExhausted(
                 f"{what}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"],
-                run, error.reason, local=not error.owned,
+                run, error.reason, local=local,
             ) from None
         seconds = self.clock() - started
         try:
@@ -1365,11 +1400,10 @@ class Runner:
             handle.write(json.dumps(record) + "\n")
         if refused is not None:
             self.reject(meta, kind, request_sha256, response, refused)
-            if isinstance(refused, (openrouter.CutOff, openrouter.ProviderRefused)):
-                self.budget.spend(what)
-            if isinstance(refused, openrouter.ProviderRefused):
-                raise self.endpoint_fault(meta, endpoint, refused) from None
-            raise refused
+            self.budget.spend(what)
+            if isinstance(refused, openrouter.CutOff):
+                raise refused
+            raise self.endpoint_fault(meta, endpoint, refused) from None
         for stale in (f"{kind}.rejected.json", f"{kind}.http-error.json"):
             if os.path.isfile(self.raw(name, run, stale)):
                 os.remove(self.raw(name, run, stale))
@@ -1574,9 +1608,8 @@ class Runner:
         """Saves a reply that was refused, with the hash of its request, so that a rerun of the same
         request raises the same refusal and pays for nothing."""
         write(self.raw(meta["name"], meta["run"], f"{kind}.rejected.json"), json.dumps({
-            "reason": str(error), "mismatch": isinstance(error, openrouter.ProviderMismatch),
+            "reason": str(error), "category": error.category,
             "cutoff": isinstance(error, openrouter.CutOff),
-            "refusal": isinstance(error, openrouter.ProviderRefused),
             "request_sha256": request_sha256, "response": response,
         }, indent=2) + "\n")
 
@@ -1777,13 +1810,13 @@ class Runner:
         `limit`, is never continued but by name, and never continues a full run. `endpoint` is a tag
         among the voter's `provider_fallback` for a new run.
 
-        When the endpoint itself keeps failing (429 or 5xx through every wait, a provider refusal,
-        replies cut off on both halves of a split), its run is abandoned and a new run starts at the
-        next endpoint of `provider_fallback` that passes the listing's checks; a run never changes
-        endpoint. A network error here stops the run, which stays as it is. Only when every endpoint
-        has failed does it raise EndpointExhausted, the last run left as it is, or `failed` if it was
-        the cut-offs that failed it. The failed calls of all of it, every wait, halving and switch,
-        come out of one budget (BudgetSpent).
+        When the endpoint itself keeps failing (see EndpointExhausted), its run is abandoned and a new
+        run starts at the next endpoint of `provider_fallback` that passes the listing's checks; a run
+        never changes endpoint. An endpoint that fails the listing's checks when it is to start is
+        skipped, with no run. A network error here stops the run, which stays as it is. Only when every
+        endpoint has failed does it raise EndpointExhausted, every run abandoned (so that a rerun starts
+        at the first endpoint), or the last `failed` if it was the cut-offs that failed it. The failed
+        calls of all of it, every wait, halving and switch, come out of one budget (BudgetSpent).
 
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
         `failed`, not complete: RunFailed, and nothing continues it.
@@ -2317,10 +2350,9 @@ def make_runner(arguments, config, transport=None, gold=None):
 
 def stop_for_endpoint(error):
     """Exit 2 for a call that stopped a run (see EndpointExhausted), and exit 5 for a run it ended
-    `failed`. A network error here keeps the run, and says to run the command again; for a model
-    every endpoint of which failed, the runs of the earlier endpoints were abandoned as each failed
-    and the last is kept as it is, for the same command to continue it later, and `--again` starts a
-    new run at the model's first endpoint."""
+    `failed`. A network error here keeps the run, and says to run the command again. For a model
+    every endpoint of which failed, every run was abandoned as its endpoint failed, so the same
+    command starts a new run at the model's first endpoint (`--again` does the same)."""
     print(redacted(f"label: {error}"), file=sys.stderr)
     if error.local:
         print(
@@ -2333,20 +2365,23 @@ def stop_for_endpoint(error):
     if error.failed:
         print(
             f"label: every endpoint of {error.name} failed ({tried}); {error.run} at {error.tag} is marked "
-            f"failed and is not continued; --again starts a new run at the first endpoint",
+            f"failed and is not continued; running the command again starts a new run at the first endpoint",
             file=sys.stderr,
         )
         code = EXIT_FAILED
     else:
         print(
-            f"label: every endpoint of {error.name} failed ({tried}); the earlier runs are abandoned and "
-            f"{error.run} at {error.tag} is kept: running the command again continues it, and --again "
-            f"starts a new run at the first endpoint",
+            f"label: every endpoint of {error.name} failed ({tried}); every run of it is abandoned, and "
+            f"running the command again starts a new run at the first endpoint",
             file=sys.stderr,
         )
         code = 2
-    for tag, why in error.skipped:
-        print(f"label: {tag} was not tried: {why}", file=sys.stderr)
+    if all(why == openrouter.TIMEOUT for tag, why in error.tried if not why.startswith("not tried")):
+        print(
+            f"label: every call that was tried timed out, which the network here can cause as well as the "
+            f"endpoints; check it before running the command again",
+            file=sys.stderr,
+        )
     return code
 
 

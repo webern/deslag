@@ -89,17 +89,25 @@ model, in order, each at a quantisation the model's `quantizations` lists (check
 it is used; any other endpoint is skipped), so `quantizations` is the one statement of what the voter may
 run at, for the primary and every alternative alike. A model without `quantizations` (mistral, claude)
 holds an alternative to the primary's quantisation or a more precise one instead. One run has one provider, and never
-changes it. The run moves to the next endpoint only for the endpoint's own failures: a 429 or 5xx
-still coming after its waits (`rate_limit_attempts` for a 429), a reply that is not JSON, a storm of cut-off replies, or a refusal by
-the provider (a reply from another provider than the pinned one). Then `tag` or `judge` marks that
-run abandoned in its `run.json` (it stays on disk; nothing continues it, and a merge takes no tags
-from it), says so in one line on stderr, and starts a new run of the voter or the adjudicator at the
-next endpoint of the list that passes the listing's checks; that run asks every batch afresh. A
-network error here (connection refused, DNS, a timeout with no answer) is no endpoint's fault: it
-switches nothing, stops the run with exit 2 and keeps it, and the same command continues it once the
-network is back. If every endpoint fails it stops with exit 2 (exit 5 when the last run ended
-`failed`), naming each and why; the earlier runs stay abandoned and the last is kept, so the same
-command continues it later, and `--again` starts a new run at the first endpoint. `--endpoint TAG`
+changes it. The run moves to the next endpoint for any failure that belongs to the endpoint: a 429
+or 5xx still coming after its waits (`rate_limit_attempts` for a 429), a timeout still coming after its
+waits, any other HTTP error that is not about the key (not 401, 402 or 413; a 404 is what OpenRouter
+answers when `data_collection: deny` rules a provider out), a reply that is not JSON, a storm of cut-off
+replies, a refusal by the provider, a reply from another provider than the pinned one, a reply that used
+reasoning tokens with reasoning off, and an endpoint that is no longer in the listing as pinned (gone, its
+tag changed, its quantisation outside `quantizations`, or a parameter dropped). Then `tag` or `judge`
+marks that run abandoned in its `run.json` (it stays on disk; nothing continues it, and a merge takes no
+tags from it), says so in one line on stderr, and starts a new run of the voter or the adjudicator at the
+next endpoint of the list that passes the listing's checks; that run asks every batch afresh. An
+endpoint that cannot be asked at all is skipped without a run, and said so. A 401, 402 or 413 is about
+the key, the credit or the request, so it stops the run. A network error here (connection refused, DNS, a
+dropped connection) is no endpoint's fault: it switches nothing, stops the run with exit 2 and keeps it,
+and the same command continues it once the network is back. If every endpoint fails it stops with exit 2
+(exit 5 when the last run ended `failed`), naming each and why; every run is abandoned, the last too, so
+the same command (with or without `--again`) starts a new run at the first endpoint and replays nothing
+that was refused. If every endpoint timed out, the network here may be the cause, and the message says so.
+A run's `run.json` and `runs.tsv` row record the endpoint it used, and the quantisation, whichever
+endpoint that was. `--endpoint TAG`
 (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
 falls back from there to the ones after it; a complete run at another endpoint is not continued by it,
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
@@ -118,8 +126,8 @@ only bf16 endpoint of its model, then six fp8 endpoints (`mancer`, `parasail`, `
 `akashml`, `ionstream`), so its `quantizations` are fp8 and bf16: calibration measures bf16, which nearly every
 part uses, and a part that falls back is labelled at fp8, recorded per run and in the datasheet. hy3:
 `tencent/fp8`, then `atlas-cloud/fp8` and `gmicloud/bf16`. When every endpoint fails, `tag` exits 2 (5 when the
-last run ended `failed`), naming each endpoint and why. Running the command again continues the last run, and
-`--again` walks the list from the top; nothing in the kit decides when to stop trying. A failure of the whole
+last run ended `failed`), naming each endpoint and why. Running the command again walks the list from the
+top; nothing in the kit decides when to stop trying. A failure of the whole
 model, an outage of every provider, still stops a run, and a voter cannot change in the middle of one.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
@@ -207,7 +215,7 @@ Exit codes: 6 a handoff judge is waiting on its replies (below); 0 done (a voter
 `tag` reports and the merge counts per voter, unless more than `abstain_limit` abstained, which is exit
 5; a sentence fewer than three model voters answered goes to the adjudicator whole); 1 an unexpected
 error, printed as its type and place only; 2 refused, bad config, an API error, the network down, or
-every endpoint of a model failing (the run is kept); 3 adjudicator items still open after the retries,
+every endpoint of a model failing (a rerun starts again at the first); 3 adjudicator items still open after the retries,
 with `--strict` only; 4 the cap stopped it; 5 a run ended `failed` (too many abstentions, or a cut-off
 storm with no endpoint left).
 
@@ -513,7 +521,7 @@ draw (the merge the assembler reads) and `merge` in any other sample:
 ```
 sample: 500 sentences, /path/to/.label/silver/part-01
 voter deepseek: r41 complete, 10 of 10 batches, 2 abstaining, $0.3120
-voter qwen: r42 stopped (every endpoint failed: deepinfra/bf16: HTTP 429 (upstream_provider_shared_pool); parasail/fp8: HTTP 429), 6 of 10 batches, - abstaining, $0.1874; 1 run abandoned
+voter qwen: r43 abandoned (every endpoint failed: deepinfra/bf16: HTTP 429 (upstream_provider_shared_pool); mancer/fp8: HTTP 404; parasail/fp8: HTTP 429), 0 of 10 batches, - abstaining, $0.1874; 3 runs abandoned
 voter hy3: no run
 spacy: r44 complete
 adjudicator opus (merge): r45 stopped, $0.0000; 3 requests waiting, 9 replies present

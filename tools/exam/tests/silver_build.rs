@@ -1003,6 +1003,62 @@ fn a_path_of_the_makers_machine_in_a_file_the_part_ships_is_refused() {
 }
 
 #[test]
+fn a_part_judged_into_merge_then_into_merge_spacy_is_checked_and_built() {
+    let made = Made::with_two_merges(2);
+    for number in 1..=2 {
+        // Two adjudicator runs, one agent record, and the answers of both in the second merge.
+        let runs = made.read(number, "runs.tsv");
+        let judges: Vec<&str> = runs
+            .lines()
+            .filter(|line| line.split('\t').nth(2) == Some("adjudicator"))
+            .collect();
+        assert_eq!(judges.len(), 2, "{runs}");
+        let first = made.run(number, 4);
+        let second = made.run(number, 5);
+        let settled = made.read(number, "merge-spacy/adjudicated.tsv");
+        assert!(
+            settled
+                .lines()
+                .any(|line| line.contains(&format!("\t{first}"))),
+            "the answer of the first merge keeps its run: {settled}"
+        );
+        assert!(
+            settled
+                .lines()
+                .any(|line| line.contains(&format!("\t{second}"))),
+            "the word spaCy disputes is answered by the second run: {settled}"
+        );
+        made.check_part(number).ok();
+    }
+    assert!(made.spec(1).ends_with(":merge-spacy"));
+    // Only `merge-spacy` is read: the plain merge is not shipped.
+    made.build("two", &[]).ok();
+    let out = made.out("two");
+    let silver = fs::read_to_string(out.join("silver.conllu")).unwrap();
+    assert!(
+        silver.contains(&format!("Runs={}", made.run(1, 4))),
+        "{silver}"
+    );
+    assert!(
+        silver.contains(&format!("Runs={}", made.run(1, 5))),
+        "{silver}"
+    );
+    let runs = fs::read_to_string(out.join("runs.tsv")).unwrap();
+    for run in [
+        made.run(1, 4),
+        made.run(1, 5),
+        made.run(2, 4),
+        made.run(2, 5),
+    ] {
+        assert!(
+            runs.lines()
+                .any(|line| line.starts_with(&format!("{run}\t"))),
+            "{runs}"
+        );
+    }
+}
+
+#[test]
 fn the_voters_file_of_a_merge_may_hold_paths_because_a_batch_ships_it_without_them() {
     let made = Made::with(1);
     let voters = made.read(1, "merge/voters.tsv");

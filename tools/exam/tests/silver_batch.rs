@@ -1037,8 +1037,8 @@ fn check_scores_the_audit_again_and_matches_its_labels_to_silver() {
                 // The last, since the first block holds the file's header too.
                 let last = read(d, "audit/queue.conllu")
                     .lines()
-                    .filter_map(|line| line.strip_prefix("# sent_id = ").map(str::to_string))
-                    .last()
+                    .rev()
+                    .find_map(|line| line.strip_prefix("# sent_id = ").map(str::to_string))
                     .unwrap();
                 for name in ["audit/queue.conllu", "audit/labels.conllu"] {
                     edit(d, name, |t| without_sentence(t, &last));

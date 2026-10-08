@@ -16,7 +16,7 @@ deslag/
   src/lib.rs           <- the library's error type and module list; src/main.rs and src/cli/ wrap it
   src/config/          <- the config schema, finding the file, `deslag update`; writes: src/write.rs
   src/glob/            <- the repo walk and glob patterns, not tied to any file type
-  src/document/        <- blocks, tokens, sentences for the lints; scans Rust comments and strings
+  src/document/        <- blocks, tokens, sentences for lints; scans Rust, C, C++ comments, strings
   src/parse/           <- the keys a file declares in its frontmatter, such as its byte budget
   src/lint/            <- running the lints; one module per lint, e.g. max_size_bytes.rs
   tests/               <- tests, see `tests/AGENTS.md`

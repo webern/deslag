@@ -54,15 +54,15 @@ jobs:
           path: .blobs
           key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
 
-      # .crates is Cargo.lock's crates vendored, with the stamp that says so, so a hit means
-      # fetch-crates touches nothing. Keyed on the lock, with no restore keys: another lock's
-      # crates are fetched again anyway. A second corpus lock, vendored under .crates by another
-      # fetch-crates call, must join the key.
+      # .crates is the crates of Cargo.lock and of scripts/crates/c/Cargo.lock vendored, with the
+      # stamps that say so, so a hit means fetch-crates touches nothing. Keyed on both locks, with no
+      # restore keys: another lock's crates are fetched again anyway. A further corpus lock,
+      # vendored under .crates by another fetch-crates call, must join the key.
       - name: Cache the vendored crates
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
         with:
           path: .crates
-          key: crates-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          key: crates-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'scripts/crates/c/Cargo.lock') }}
 
       # blobs.sh reads the package with gh's token, which here is the workflow token. make ci is
       # not everything: python.yml runs make test-python when the scripts it tests change.

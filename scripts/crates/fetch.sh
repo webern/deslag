@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 #
 # Vendors every crate a Cargo.lock names into a directory under .crates at the repo root, for the
-# sweep to read as its corpus of real Rust: `deslag-sweep rust .crates/vendor`. `make test-scanners`
-# runs it; the build and the other tests do not read it.
+# sweep to read as its corpus of real code: `deslag-sweep rust .crates/vendor`, and the C and C++
+# crates of scripts/crates/c, `deslag-sweep c .crates/c/vendor`. `make test-scanners` runs it; the
+# build and the other tests do not read it.
 #
 #   fetch.sh fetch <manifest> <dest>
 #
 # <manifest> is a Cargo.toml, and the Cargo.lock beside it is the lock. <dest> is the directory to
 # vendor into. Both are paths from the repo root, and <dest> must be under .crates, so that
-# `make clean-crates` removes it. The Makefile passes Cargo.toml and .crates/vendor. A second corpus
-# is one more call with its own manifest and <dest>. The sweep labels a corpus by the basename of
+# `make clean-crates` removes it. The Makefile passes Cargo.toml and .crates/vendor, and
+# scripts/crates/c/Cargo.toml and .crates/c/vendor. A further corpus is one more call with its own
+# manifest and <dest>. The sweep labels a corpus by the basename of
 # its root, so <dest> is what names it in the sweep's report.
 #
 # `cargo vendor --locked --versioned-dirs` runs unless <dest> is already that. <dest>.stamp is a
@@ -41,7 +43,7 @@ fail() {
 Error in:
 $SELF
 
-The crates a Cargo.lock names are an External Asset: the sweep reads them as real Rust, to check the
+The crates a Cargo.lock names are an External Asset: the sweep reads them as real code, to check the
 comment scanners against. Nothing in the build needs them. A failure has occurred in the script
 that vendors them; they are pinned by the Cargo.lock beside the manifest.
 

@@ -15,6 +15,7 @@
 //! at those offsets, never a change to the layers written back out, and [`Document::apply`] makes
 //! only the edits it can prove leave the document reading as it did.
 
+pub mod cpp;
 mod edit;
 mod map;
 mod markdown;

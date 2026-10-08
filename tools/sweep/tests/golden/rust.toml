@@ -1,5 +1,5 @@
 corpus = "sha256:614f498dd7b6b7e4f2a1cedd85a7bf88a6ffa5e9fac611bc7966d603b4d205c4"
-lock = "sha256:703ffe7ab84c9488a57d7d059d9cb21f2753bc3e6b50e2ad471806c8a37a0d43"
+lock = "sha256:401838127c2564c7da0318a4610084ad61dd4f78909a822e1aa976df50f2592a"
 lang = "rust"
 oracles = ["ra-ap-rustc_lexer 0.176.0"]
 scanner = true

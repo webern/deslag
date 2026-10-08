@@ -87,7 +87,7 @@ fn a_naive_scanner_differs_from_the_c_oracle() {
 #[test]
 fn an_oracle_checked_against_itself_agrees() {
     // The oracle as the scanner: every span agrees, whatever the file, so exit 0.
-    for (lang, root) in [(Lang::Rust, "rust"), (Lang::C, "c")] {
+    for (lang, root) in [(Lang::Rust, "rust"), (Lang::C, "c"), (Lang::Cpp, "cpp")] {
         let scanner = lang.oracle().unwrap();
         let report = sweep(lang, &[fixtures(root)], Some(scanner)).unwrap();
         assert_eq!(report.exit_code(), 0, "{root}");
@@ -132,15 +132,33 @@ fn the_rust_oracle_alone_matches_its_golden_stdout() {
 }
 
 #[test]
-fn the_c_oracle_alone_matches_its_golden_stdout() {
+fn the_c_sweep_matches_its_golden_stdout() {
     let output = Command::new(env!("CARGO_BIN_EXE_deslag-sweep"))
         .current_dir(manifest_dir())
         .args(["c", "tests/fixtures/c"])
         .output()
         .unwrap();
     assert_eq!(output.status.code(), Some(0));
-    assert!(output.stderr.is_empty());
+    // The macro bodies of the fixtures are blind to the oracle, and stderr names them.
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(!stderr.is_empty());
+    assert!(
+        stderr.lines().all(|line| line.contains(".oracle_blind ")),
+        "{stderr}"
+    );
     assert_golden("c.toml", std::str::from_utf8(&output.stdout).unwrap());
+}
+
+#[test]
+fn the_cpp_sweep_matches_its_golden_stdout() {
+    let output = Command::new(env!("CARGO_BIN_EXE_deslag-sweep"))
+        .current_dir(manifest_dir())
+        .args(["cpp", "tests/fixtures/cpp"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(0));
+    assert!(output.stderr.is_empty());
+    assert_golden("cpp.toml", std::str::from_utf8(&output.stdout).unwrap());
 }
 
 #[test]

@@ -14,8 +14,6 @@ use ra_ap_rustc_lexer::{
 #[test]
 fn the_rust_scanner_is_wired_in() {
     assert!(Lang::Rust.scanner().is_some());
-    // C has none until its own change lands; this is the one assertion to move then.
-    assert!(Lang::C.scanner().is_none());
 }
 
 fn doc(style: Option<LexerDocStyle>) -> Option<DocStyle> {

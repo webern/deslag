@@ -1167,7 +1167,7 @@ class Runner:
         for the harness. A run that failed or was abandoned has its own reason."""
         if isinstance(error, RunFailed):
             return
-        why = " ".join(redacted(str(error)).split())[:300]
+        why = " ".join(redacted(getattr(error, "category", None) or str(error)).split())[:300]
         self.update_run(name, run, stopped_because=why)
 
     def abandon(self, name, run, why):
@@ -1308,6 +1308,11 @@ class Runner:
         started = self.clock()
         try:
             (response, ident), retries = openrouter.with_retries(attempt, **self.retrying(what))
+        except openrouter.HttpError as error:
+            # The provider's text is kept beside the run, and in no message, status or reason.
+            write(self.raw(name, run, f"{kind}.http-error.json"), json.dumps(
+                {"status": error.status, "request_sha256": request_sha256, "body": error.body}, indent=2) + "\n")
+            raise
         except openrouter.RetriesExhausted as error:
             raise EndpointExhausted(
                 f"{what}: {error}, at {endpoint['tag']}", name, endpoint["tag"], meta["role"],
@@ -1341,7 +1346,7 @@ class Runner:
                     f"{kind}: the reply was cut off at max_tokens ({config['max_tokens']}); it is not used"
                 )
             if reply.reasoning_tokens and config.get("reasoning") == {"enabled": False}:
-                raise openrouter.ApiError(
+                raise openrouter.ReasoningUsed(
                     f"{kind}: the reply used {reply.reasoning_tokens} reasoning tokens with reasoning "
                     f"off, so it is not the call that was asked for"
                 )
@@ -1365,9 +1370,9 @@ class Runner:
             if isinstance(refused, openrouter.ProviderRefused):
                 raise self.endpoint_fault(meta, endpoint, refused) from None
             raise refused
-        rejected = self.raw(name, run, f"{kind}.rejected.json")
-        if os.path.isfile(rejected):
-            os.remove(rejected)
+        for stale in (f"{kind}.rejected.json", f"{kind}.http-error.json"):
+            if os.path.isfile(self.raw(name, run, stale)):
+                os.remove(self.raw(name, run, stale))
         write(self.raw(name, run, f"{kind}.response.json"), json.dumps(response, indent=2) + "\n")
         # The reply, then the record that vouches for it, each whole or not there at all: a reply
         # with no record, as a crash between the two leaves, is asked again, never kept.

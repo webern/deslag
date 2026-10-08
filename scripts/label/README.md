@@ -523,7 +523,10 @@ preflight (merge): refused, 1 line on stderr (exit 2); `deslag-gold silver build
 
 A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it and, when that is
 not a plain `complete`, its reason as `runs.tsv` gives it, in parentheses (for a run that stopped because
-every endpoint of its model failed, each endpoint and why), the batches with
+every endpoint of its model failed, each endpoint and why; a reason is an HTTP status, an endpoint tag, a
+`limit_source` token or one of a few fixed phrases such as `provider refusal`, and never text a provider
+wrote: the body of an HTTP error is saved beside the run as `<call>.http-error.json`, and a refused reply as
+`<call>.rejected.json`), the batches with
 an answer saved of the batches the run asks (`batches` in its `run.json`), the sentences that abstain after
 its retries (`abstaining`, written when it ends; `-` before), its dollars from the ledger, and, after a
 `;`, how many of the voter's runs in the sample were abandoned for the next endpoint (nothing when none

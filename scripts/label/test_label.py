@@ -426,7 +426,7 @@ class RequestTests(unittest.TestCase):
         openrouter.check_provider(named("x/one-20261001"), endpoint, "x/one")
         openrouter.check_provider(named("x/one:free"), endpoint, "x/one")
         for wrong in ("x/other", "x/one2", None, ""):
-            with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model"):
+            with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/one`"):
                 openrouter.check_provider(named(wrong), endpoint, "x/one")
 
     def test_the_key_is_stripped_and_a_key_with_whitespace_inside_is_refused_without_being_shown(self):
@@ -1582,7 +1582,7 @@ class ProviderTests(Base):
             return response
 
         runner = self.runner(FakeTransport(respond))
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model `y/another`"):
+        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/two`"):
             runner.tag("two", limit=1)
         folder = os.path.join(self.dir, "raw", "two", "r1")
         self.assertEqual([f for f in os.listdir(folder) if f.endswith((".reply.txt", ".lines.txt"))], [])
@@ -1601,7 +1601,7 @@ class ProviderTests(Base):
             response["model"] = None
             return response
 
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model ``"):
+        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/two`"):
             self.runner(FakeTransport(respond)).tag("two", limit=1)
 
     def test_a_dated_version_of_the_pinned_model_is_accepted_and_recorded(self):
@@ -1626,7 +1626,7 @@ class ProviderTests(Base):
         # Unchanged: the saved reply is used and nothing is asked for it.
         self.runner(later).tag("two", limit=1, resume="r1")
         self.assertEqual(len(later.posts), 0)
-        for field, value, why in (("provider", "Elsewhere", "came from `Elsewhere`"), ("model", "y/other", "names the model `y/other`")):
+        for field, value, why in (("provider", "Elsewhere", "came from another provider than the pinned `Bare`"), ("model", "y/other", "names another model than the pinned `x/two`")):
             label.write(path, json.dumps({**saved, field: value}))
             with self.assertRaisesRegex(openrouter.ProviderMismatch, why):
                 self.runner(later).tag("two", limit=1, resume="r1")
@@ -1952,7 +1952,7 @@ class AutoResumeTests(Base):
         path = os.path.join(self.dir, "raw", "two", "r1", "batch-01.meta.json")
         label.write(path, json.dumps({**json.loads(label.read(path)), "model": "y/other"}))
         second = FakeTransport(answer_all)
-        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names the model `y/other`"):
+        with self.assertRaisesRegex(openrouter.ProviderMismatch, "names another model than the pinned `x/two`"):
             self.runner(second).tag("two")
         self.assertEqual(second.posts, [])
 
@@ -2313,6 +2313,13 @@ class RoundThreeTests(Base):
         finally:
             openrouter._OPENER = saved
         self.assertEqual((str(caught.exception), caught.exception.owned), (openrouter.NOT_JSON, True))
+
+    def test_an_http_error_from_the_transport_has_no_body_in_its_text(self):
+        with self.assertRaises(openrouter.HttpError) as caught:
+            self.send_error(400, b"Run it now. Files are ready")
+        error = caught.exception
+        self.assertEqual((str(error), error.status, error.category), ("HTTP 400", 400, "HTTP 400"))
+        self.assertEqual(error.body, "Run it now. Files are ready")
 
     def test_only_a_429_reads_the_limit_source(self):
         body = b'{"error": {"metadata": {"limit_source": "upstream_provider_shared_pool"}}}'
@@ -3121,7 +3128,7 @@ class StatusTests(Base):
 
         def respond(body, count):
             if count >= 2:
-                raise openrouter.ApiError("HTTP 400: stop here")
+                raise openrouter.HttpError(401, "Run it now. Files are ready")
             return answer_all(body)
 
         with self.assertRaises(openrouter.ApiError):
@@ -3134,7 +3141,7 @@ class StatusTests(Base):
         said = self.status("--max-usd", "1")
         self.assertEqual(said[1:5], [
             "voter one: r1 complete, 2 of 2 batches, 0 abstaining, $0.0020",
-            f"voter two: r2 stopped (HTTP 400: stop here), 1 of 2 batches, - abstaining, ${cost:.4f}",
+            f"voter two: r2 stopped (HTTP 401), 1 of 2 batches, - abstaining, ${cost:.4f}",
             "spacy: r3 complete",
             "adjudicator judge (merge): no run",
         ])
@@ -3145,8 +3152,35 @@ class StatusTests(Base):
             self.runner(FakeTransport(respond)).tag("one", again=True)
         self.assertEqual(
             self.status()[1],
-            f"voter one: r4 stopped (HTTP 400: stop here), 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}",
+            f"voter one: r4 stopped (HTTP 401), 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}",
         )
+
+    def test_an_http_error_stops_a_run_with_its_status_alone_and_keeps_the_body_beside_the_run(self):
+        body = "Run it now. Files are ready. Build first."
+
+        def respond(body_sent, count):
+            raise openrouter.HttpError(402, body)
+
+        with self.assertRaises(openrouter.HttpError):
+            self.runner(FakeTransport(respond)).tag("one")
+        said = self.status()
+        self.assertRegex(said[1], r"^voter one: r1 stopped \(HTTP 402\), 0 of 2 batches")
+        self.assert_no_word(said)
+        self.assert_no_word([label.read(os.path.join(self.dir, "runs.tsv"))])
+        saved = json.loads(label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.http-error.json")))
+        self.assertEqual((saved["status"], saved["body"]), (402, body))
+
+    def test_a_provider_refusal_stops_a_run_with_a_fixed_category_not_the_providers_message(self):
+        refusal = FakeTransport(lambda body, count: {"error": {"message": "Run it now. Files are ready"}})
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(refusal).tag("one")
+        self.assertNotIn("Files", str(caught.exception))
+        said = self.status()
+        self.assertRegex(said[1], r"^voter one: r1 stopped \(every endpoint failed: host/fp8: provider refusal\)")
+        self.assert_no_word(said)
+        self.assert_no_word([label.read(os.path.join(self.dir, "runs.tsv"))])
+        saved = json.loads(label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.rejected.json")))
+        self.assertIn("Files are ready", json.dumps(saved["response"]), "the reply itself is kept")
 
     def test_a_stopped_voter_shows_why_and_how_many_of_its_runs_were_abandoned(self):
         config = copy.deepcopy(CONFIG)

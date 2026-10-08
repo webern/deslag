@@ -40,11 +40,36 @@ QUANT_RANK = {"int4": 0, "fp4": 0, "fp6": 1, "int8": 2, "fp8": 2, "bf16": 3, "fp
 
 
 class ApiError(Exception):
-    """A call that failed for a reason asking again will not fix. Never holds the key."""
+    """A call that failed for a reason asking again will not fix. Never holds the key.
+
+    `category`, when a class or an instance has one, is a short fixed phrase for the failure: all that
+    `status`, `runs.tsv` and a stop's reason say of it. Nothing a provider wrote goes into a message
+    or a category; the body of a reply that was refused is saved beside the run, where it can be read."""
+
+    category = None
+
+
+class HttpError(ApiError):
+    """An HTTP status that asking again will not fix (a 4xx other than the retryable ones). The message
+    and the category are the status alone; the provider's text is in `body`, which nothing prints."""
+
+    def __init__(self, status, body=""):
+        super().__init__(f"HTTP {status}")
+        self.status = status
+        self.body = body
+        self.category = f"HTTP {status}"
 
 
 class ProviderMismatch(ApiError):
     """A reply from a provider other than the one pinned."""
+
+    category = "reply from another provider"
+
+
+class ReasoningUsed(ApiError):
+    """A reply that spent reasoning tokens although the request turned reasoning off."""
+
+    category = "reasoning used with reasoning off"
 
 
 class CutOff(ApiError):
@@ -54,6 +79,8 @@ class CutOff(ApiError):
 class ProviderRefused(ApiError):
     """The provider refused the request: an error body in place of a completion, or a reply whose
     finish reason is `content_filter`. It belongs to the endpoint, so another endpoint may answer."""
+
+    category = "provider refusal"
 
 
 def endpoints_url(model):
@@ -187,9 +214,7 @@ def parse_reply(response):
     """A Reply from a chat completion's JSON. Its cost is the usage's own, and None when the reply
     gives none, which the ledger books at the call's worst case."""
     if "error" in response and not response.get("choices"):
-        error = response["error"]
-        message = error.get("message") if isinstance(error, dict) else error
-        raise ProviderRefused(f"the API answered with an error: {message}")
+        raise ProviderRefused("the API answered with an error in place of a completion")
     choices = response.get("choices") or []
     if not choices:
         raise ApiError("the reply has no choices")
@@ -218,13 +243,11 @@ def check_names(provider, reply_model, endpoint, model=None):
     wanted = str(endpoint.get("provider_name", "")).lower()
     got = str(provider or "").lower()
     if got != wanted:
-        raise ProviderMismatch(
-            f"the reply came from `{provider}`, and the pinned provider is `{endpoint.get('provider_name')}`"
-        )
+        raise ProviderMismatch(f"the reply came from another provider than the pinned `{endpoint.get('provider_name')}`")
     if model is not None:
         named = str(reply_model or "")
         if not (named == model or named.startswith((model + "-", model + ":"))):
-            raise ProviderMismatch(f"the reply names the model `{named}`, and the pinned model is `{model}`")
+            raise ProviderMismatch(f"the reply names another model than the pinned `{model}`")
 
 
 class _Refuse(urllib.request.HTTPRedirectHandler):
@@ -272,7 +295,7 @@ class Urllib:
                 if source:
                     reason += f" ({source})"
                 raise Retryable(reason, retry_after(error.headers), error.code) from None
-            raise ApiError(f"HTTP {error.code}: {text[:500]}") from None
+            raise HttpError(error.code, text[:500]) from None
         except (socket.timeout, TimeoutError):
             raise Retryable("timeout") from None
         except urllib.error.URLError as error:

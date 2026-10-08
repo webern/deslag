@@ -1,7 +1,7 @@
 //! The Rust oracle, `ra-ap-rustc_lexer`, the compiler's own lexer, and the adapter of deslag's
 //! scanner.
 
-use deslag::document::rust::{self, LexemeKind};
+use crate::deslag_rust::{self, LexemeKind};
 use ra_ap_rustc_lexer::{FrontmatterAllowed, LiteralKind, TokenKind, strip_shebang, tokenize};
 
 use crate::lexer::{Kind, Lexed, Lexer, Span, bom_len, trim_carriage_return};
@@ -74,7 +74,7 @@ impl Lexer for RustOracle {
     }
 }
 
-/// Reports deslag's Rust scanner, [`rust::lex`], to the contract of [`Lexer`]. It does not
+/// Reports deslag's Rust scanner, [`deslag_rust::lex`], to the contract of [`Lexer`]. It does not
 /// normalise anything: its ranges are compared as they are, and the scanner is never blind and
 /// always clean.
 #[derive(Debug, Default)]
@@ -82,7 +82,7 @@ pub struct DeslagRust;
 
 impl Lexer for DeslagRust {
     fn lex(&mut self, src: &str) -> Lexed {
-        let spans = rust::lex(src)
+        let spans = deslag_rust::lex(src)
             .into_iter()
             .map(|lexeme| Span {
                 range: lexeme.range,

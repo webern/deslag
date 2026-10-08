@@ -352,9 +352,9 @@ fn part_runs(
     rows.push(common(
         run(2),
         "voter",
-        "gemma",
-        model("gemma"),
-        "parasail/fp8",
+        "hy3",
+        model("hy3"),
+        "tencent/fp8",
         "fp8",
         "Apache-2.0",
     ));
@@ -556,8 +556,8 @@ impl Made {
             changes.push((sentences.len() - 1, 1));
         }
         self.gold_in(dir, &["batches"]).ok();
-        for (index, name) in ["deepseek", "qwen", "gemma"].into_iter().enumerate() {
-            let text = if name == "gemma" {
+        for (index, name) in ["deepseek", "qwen", "hy3"].into_iter().enumerate() {
+            let text = if name == "hy3" {
                 compact(&sentences, &changes, "V.fi")
             } else {
                 compact(&sentences, &[], "N.s")
@@ -587,7 +587,7 @@ impl Made {
         .unwrap();
         // With two merges the first has the model voters alone; spaCy votes in the second.
         let mut first_merge = vec![
-            "merge", "--voter", "deepseek", "--voter", "qwen", "--voter", "gemma",
+            "merge", "--voter", "deepseek", "--voter", "qwen", "--voter", "hy3",
         ];
         if !two {
             first_merge.extend(["--voter", "spacy", "--base-only", "spacy"]);
@@ -626,7 +626,7 @@ impl Made {
                     "--voter",
                     "qwen",
                     "--voter",
-                    "gemma",
+                    "hy3",
                     "--voter",
                     "spacy",
                     "--base-only",
@@ -763,7 +763,7 @@ impl Made {
         });
     }
 
-    /// The id of run `n` (0 voter deepseek, 1 qwen, 2 gemma, 3 spaCy, 4 the adjudicator) of part
+    /// The id of run `n` (0 voter deepseek, 1 qwen, 2 hy3, 3 spaCy, 4 the adjudicator) of part
     /// `number`.
     pub fn run(&self, number: usize, n: usize) -> String {
         format!("r{}", 1 + (number - 1) * self.stride + n)

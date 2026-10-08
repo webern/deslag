@@ -102,12 +102,24 @@ command continues it later, and `--again` starts a new run at the first endpoint
 (one voter for `tag`; the adjudicator for `judge`) starts a run at an endpoint the model lists, and
 falls back from there to the ones after it; a complete run at another endpoint is not continued by it,
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
-refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
-is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
-`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is
-below its pin. When DeepInfra fails it, `tag` has no endpoint to switch to and exits 2 (5 when the last run ended
-`failed`), naming the endpoint and why. Running the command again continues the run at DeepInfra, and `--again`
-starts a new run there; nothing in the kit decides when to stop trying.
+refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`.
+
+Each voter lists every endpoint of its model that may run, from OpenRouter's endpoint listing of
+2026-10-08 (`GET /api/v1/models/<id>/endpoints`): the pin first, the rest by the listing's uptime of the day.
+An endpoint is listed if its quantisation is in the voter's `quantizations`, it supports every parameter the
+voter sends, it is not Fireworks, it is not known bad (DeepInfra's DeepSeek runs every reply to `max_tokens`),
+and it is one OpenRouter lists as keeping no data (`GET /api/v1/endpoints/zdr`) or one a run or screening
+has already answered through, since every request says `data_collection: deny`. `quantizations` is the one
+statement of what a voter may run at, the pin and every alternative alike; nothing below it runs, and
+`silver build` and `silver check` hold a run to it by membership. deepseek: `gmicloud/fp8`, then
+`siliconflow/fp8`, `parasail/fp8`, `novita/fp8`, `streamlake/fp8`, `mancer/fp8`. qwen: `deepinfra/bf16`, the
+only bf16 endpoint of its model, then six fp8 endpoints (`mancer`, `parasail`, `coreweave`, `venice`,
+`akashml`, `ionstream`), so its `quantizations` are fp8 and bf16: calibration measures bf16, which nearly every
+part uses, and a part that falls back is labelled at fp8, recorded per run and in the datasheet. hy3:
+`tencent/fp8`, then `atlas-cloud/fp8` and `gmicloud/bf16`. When every endpoint fails, `tag` exits 2 (5 when the
+last run ended `failed`), naming each endpoint and why. Running the command again continues the last run, and
+`--again` walks the list from the top; nothing in the kit decides when to stop trying. A failure of the whole
+model, an outage of every provider, still stops a run, and a voter cannot change in the middle of one.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
@@ -133,8 +145,14 @@ word of the sample: the words of a sentence left out count as wrong in the pipel
 `--versus` rival's, if it left sentences out too), and the report says how many sentences and words.
 The voters' and the adjudicator's lines are graded on the words they answered, as before.
 
-Voters. After the pilot Mistral was swapped for Gemma (`voters` is deepseek, qwen, gemma; `mistral`
-stays in `models`, its pilot runs being on record). Only a model that is a voter now has a run that a
+Voters. After the pilot Mistral was swapped for Gemma (`mistral` stays in `models`, its pilot runs being on
+record). On 2026-10-08 Gemma was swapped for Tencent Hy3 (`hy3`, Apache-2.0, `tencent/hy3`), so `voters` is
+deepseek, qwen, hy3 and `gemma` stays in `models`, its runs being on record. The silver run had labelled parts
+01 to 05 and stopped for two hours at part 06: Gemma 4 31B returned HTTP 429 at every OpenRouter endpoint,
+with `limit_source: upstream_provider_shared_pool`, a pool of the provider's that other keys share. The
+stall was the model's pool and not an endpoint's, so only another model got past it. A swap is one line of
+`voters`, and a new voter or a new endpoint is a new commit, which the lock of the parts refuses in the
+middle of a run: so every acceptable endpoint of each voter is listed up front (Endpoints). Only a model that is a voter now has a run that a
 rerun continues: a run of a model since dropped, stopped or stray, is never taken up again but by
 `--resume rN`. `judge` refuses a voter whose `tags/<voter>.conllu` was written by a run that did not
 finish (a smoke run, one that stopped or failed), since a run writes that file, and the report refuses a
@@ -495,7 +513,7 @@ draw (the merge the assembler reads) and `merge` in any other sample:
 sample: 500 sentences, /path/to/.label/silver/part-01
 voter deepseek: r41 complete, 10 of 10 batches, 2 abstaining, $0.3120
 voter qwen: r42 stopped (every endpoint failed: deepinfra/bf16: HTTP 429 (upstream_provider_shared_pool); parasail/fp8: HTTP 429), 6 of 10 batches, - abstaining, $0.1874; 1 run abandoned
-voter gemma: no run
+voter hy3: no run
 spacy: r44 complete
 adjudicator opus (merge): r45 stopped, $0.0000; 3 requests waiting, 9 replies present
 ledger: $5.1003 booked, $2.8997 left under --max-usd 8

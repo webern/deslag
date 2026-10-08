@@ -1,6 +1,6 @@
 {
-  "note": "The voters, the other models defined and the adjudicator, pinned. The adjudicator is `opus`, Claude Opus 5.5 run as confined Claude Code processes through files (`transport: handoff`); `claude`, Sonnet 5.5 through OpenRouter, stays defined, its pilot runs being on record, and `judge --adjudicator claude` picks it for one merge. After the pilot gemma replaced mistral as the third voter (mistral stays defined, its runs being on record). `voters` and `adjudicator` name entries of `models`, so swapping a voter is one line there. `provider` is the tag the OpenRouter endpoint listing gives the endpoint (models/<id>/endpoints), and the runner checks the listing at run time: the endpoint must exist, have the quantisation pinned here, and support every parameter sent. `temperature` and `reasoning` are sent only when not null, since the request requires every parameter it sends: Mistral's endpoint lists no `reasoning`, and the Anthropic route lists no `temperature`. `reasoning` is passed through as OpenRouter's object; the adjudicator thinks at low effort, and `max_tokens` (16000) includes the thinking. `provider_fallback` lists other pinned endpoints of the same model, in order, at the same quantisation or a more precise one than `provider`'s listing gives. When an endpoint fails in a way that is its own (HTTP 429 or 5xx through every wait, replies cut off on both halves of a split, a provider refusal) the runner abandons that run and starts a new one at the next endpoint, which asks every batch afresh; a run never changes endpoint. A network error here (connection refused, DNS, a timeout with no answer) is no endpoint's fault: the run stops and a rerun continues it. `--endpoint TAG` starts a run at a listed endpoint by hand. `settings.failure_budget` (40) is the most calls that may fail in one step, across every wait, halving and switch; `settings.abstain_limit` (0.25) is the share of a voter run's sentences that may abstain before the run ends failed. deepseek's fallback is `streamlake/fp8` alone: DeepInfra's DeepSeek runs every reply to `max_tokens`. qwen has no fallback: no other endpoint of its model lists bf16, and an fp8 one is below its pin, which the runner refuses and `silver build` would refuse in a run. Pins from the listings of 2026-10-07. Every model has `license` (an SPDX id for an open-weight model), `license_url` (its model card, or for Claude the terms) and `license_checked`, the date its licence was last read, without which no run of it starts: a run copies the licence and the date into its `run.json` and `runs.tsv`, with the sha256 of this file. `external` holds the same for spaCy, which `register` records. The voters' cards (deepseek, qwen, gemma) and spaCy's (the model card and spaCy's LICENSE) were read again, and give that licence, on 2026-10-08.",
-  "voters": ["deepseek", "qwen", "gemma"],
+  "note": "The voters, the other models defined and the adjudicator, pinned. The adjudicator is `opus`, Claude Opus 5.5 run as confined Claude Code processes through files (`transport: handoff`); `claude`, Sonnet 5.5 through OpenRouter, stays defined, its pilot runs being on record, and `judge --adjudicator claude` picks it for one merge. After the pilot gemma replaced mistral as the third voter (mistral stays defined, its runs being on record). On 2026-10-08 hy3 (Tencent Hy3) replaced gemma: Gemma 4 31B returned HTTP 429 at every endpoint (`limit_source: upstream_provider_shared_pool`, a pool of the provider's that other keys share) and stalled the silver run at part 06; gemma stays defined, its runs being on record. `voters` and `adjudicator` name entries of `models`, so swapping a voter is one line there. `provider` is the tag the OpenRouter endpoint listing gives the endpoint (models/<id>/endpoints), and the runner checks the listing at run time: the endpoint must exist, have the quantisation pinned here, and support every parameter sent. `temperature` and `reasoning` are sent only when not null, since the request requires every parameter it sends: Mistral's endpoint lists no `reasoning`, and the Anthropic route lists no `temperature`. `reasoning` is passed through as OpenRouter's object; the adjudicator thinks at low effort, and `max_tokens` (16000) includes the thinking. `provider_fallback` lists every other endpoint of the same model that may run, in order after the pin by the listing's uptime of the day: at a quantisation in `quantizations`, supporting every parameter sent, not Fireworks, and not known bad; a model without `quantizations` (mistral) has alternatives at the same quantisation or a more precise one than `provider`'s listing gives, and `quantizations` is the one statement of what a voter may run at, for the pin and every alternative alike. When an endpoint fails in a way that is its own (HTTP 429 or 5xx through every wait, replies cut off on both halves of a split, a provider refusal) the runner abandons that run and starts a new one at the next endpoint, which asks every batch afresh; a run never changes endpoint. A network error here (connection refused, DNS, a timeout with no answer) is no endpoint's fault: the run stops and a rerun continues it. `--endpoint TAG` starts a run at a listed endpoint by hand. `settings.rate_limit_attempts` (4) is how many times a call that gets HTTP 429 is asked at one endpoint, where `http_attempts` (8) is the count for any other failure: a 429 whose `Retry-After` is longer than `longest_wait_s`, or the fourth, is the endpoint's own failure at once. `settings.failure_budget` (40) is the most calls that may fail in one step, across every wait, halving and switch; `settings.abstain_limit` (0.25) is the share of a voter run's sentences that may abstain before the run ends failed. deepseek's list leaves out DeepInfra's endpoint, which runs every reply to `max_tokens`. qwen's `quantizations` are fp8 and bf16: no other endpoint of its model lists bf16, so DeepInfra's bf16 is first and the fp8 endpoints follow, and a part that falls back is labelled at fp8, recorded per run. Endpoints left out of every list: Fireworks, a quantisation outside the voter's `quantizations` (fp4, fp16, `unknown`), and one that OpenRouter's list of zero-data-retention endpoints (endpoints/zdr) does not hold and that no run or screening has answered through with `data_collection: deny` (alibaba/fp8 and baidu/fp8 for deepseek, chutes/fp8 for qwen), since the listing says nothing of a provider's policy and OpenRouter refuses an endpoint that the request's `data_collection: deny` rules out. Pins and fallbacks from the listings of 2026-10-08. Every model has `license` (an SPDX id for an open-weight model), `license_url` (its model card, or for Claude the terms) and `license_checked`, the date its licence was last read, without which no run of it starts: a run copies the licence and the date into its `run.json` and `runs.tsv`, with the sha256 of this file. `external` holds the same for spaCy, which `register` records. The voters' cards (deepseek, qwen, gemma, hy3) and spaCy's (the model card and spaCy's LICENSE) were read again, and give that licence, on 2026-10-08.",
+  "voters": ["deepseek", "qwen", "hy3"],
   "adjudicator": "opus",
   "external": {
     "spacy": {
@@ -21,6 +21,7 @@
     "longest_wait_s": 120,
     "max_wait_s": 600,
     "pause_s": 1.0,
+    "rate_limit_attempts": 4,
     "failure_budget": 40,
     "abstain_limit": 0.25
   },
@@ -28,7 +29,7 @@
     "deepseek": {
       "model": "deepseek/deepseek-v4-flash",
       "provider": "gmicloud/fp8",
-      "provider_fallback": ["streamlake/fp8"],
+      "provider_fallback": ["siliconflow/fp8", "parasail/fp8", "novita/fp8", "streamlake/fp8", "mancer/fp8"],
       "quantizations": ["fp8"],
       "temperature": 0,
       "reasoning": {"enabled": false},
@@ -40,8 +41,8 @@
     "qwen": {
       "model": "qwen/qwen3.8-27b",
       "provider": "deepinfra/bf16",
-      "provider_fallback": [],
-      "quantizations": ["bf16"],
+      "provider_fallback": ["mancer/fp8", "parasail/fp8", "coreweave/fp8", "venice/fp8", "akashml/fp8", "ionstream/fp8"],
+      "quantizations": ["fp8", "bf16"],
       "temperature": 0,
       "reasoning": {"enabled": false},
       "max_tokens": 6000,
@@ -60,6 +61,18 @@
       "license_url": "https://huggingface.co/mistralai/Mistral-Large-3-675B-Instruct-2512",
       "license_checked": "2026-10-04",
       "license_note": "the card is matched to OpenRouter's `mistralai/mistral-large-2512` by name and date (Mistral Large 3, 2512), since OpenRouter's id names no card"
+    },
+    "hy3": {
+      "model": "tencent/hy3",
+      "provider": "tencent/fp8",
+      "provider_fallback": ["atlas-cloud/fp8", "gmicloud/bf16"],
+      "quantizations": ["fp8", "bf16"],
+      "temperature": 0,
+      "reasoning": {"enabled": false},
+      "max_tokens": 6000,
+      "license": "Apache-2.0",
+      "license_url": "https://huggingface.co/tencent/Hy3",
+      "license_checked": "2026-10-08"
     },
     "gemma": {
       "model": "google/gemma-4-31b-it",

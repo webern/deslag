@@ -361,11 +361,15 @@ class RequestTests(unittest.TestCase):
 
     def test_the_shipped_config_loads_and_pins_every_voter_to_one_endpoint(self):
         config = label.load_config()
-        self.assertEqual(config["voters"], ["deepseek", "qwen", "gemma"])
+        self.assertEqual(config["voters"], ["deepseek", "qwen", "hy3"])
         self.assertIn("mistral", config["models"], "mistral stays defined: its pilot runs are on record")
-        gemma = config["models"]["gemma"]
-        self.assertEqual((gemma["provider"], gemma["quantizations"], gemma["provider_fallback"]),
-                         ("parasail/fp8", ["fp8"], ["deepinfra/fp8"]))
+        self.assertIn("gemma", config["models"], "gemma stays defined: its runs are on record")
+        hy3 = config["models"]["hy3"]
+        self.assertEqual(
+            (hy3["model"], hy3["provider"], hy3["quantizations"], hy3["temperature"], hy3["reasoning"], hy3["max_tokens"]),
+            ("tencent/hy3", "tencent/fp8", ["fp8", "bf16"], 0, {"enabled": False}, 6000))
+        self.assertEqual((hy3["license"], hy3["license_url"]), ("Apache-2.0", "https://huggingface.co/tencent/Hy3"))
+        self.assertRegex(hy3["license_checked"], r"^\d{4}-\d{2}-\d{2}$")
         for name in [*config["voters"], "claude"]:
             model = config["models"][name]
             self.assertIn("/", model["model"])
@@ -2344,11 +2348,26 @@ class RoundThreeTests(Base):
 
     def test_the_shipped_config_lists_the_alternative_endpoints(self):
         models = label.load_config()["models"]
-        self.assertEqual(
-            (models["deepseek"]["provider"], models["deepseek"]["provider_fallback"]),
-            ("gmicloud/fp8", ["streamlake/fp8"]), "deepinfra/fp8 loops until max_tokens: no fallback to it")
-        self.assertEqual(models["qwen"]["provider_fallback"], [], "no other qwen endpoint lists bf16")
+        self.assertEqual(models["deepseek"]["provider"], "gmicloud/fp8")
+        self.assertNotIn("deepinfra/fp8", models["deepseek"]["provider_fallback"], "it loops until max_tokens")
+        self.assertIn("streamlake/fp8", models["deepseek"]["provider_fallback"])
+        self.assertEqual(models["qwen"]["quantizations"], ["fp8", "bf16"], "no other qwen endpoint lists bf16")
+        self.assertEqual(models["qwen"]["provider"], "deepinfra/bf16", "calibration measures what nearly every part uses")
         self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
+
+    def test_every_voters_endpoints_are_at_a_quantization_it_lists_and_none_is_fireworks(self):
+        models = label.load_config()["models"]
+        for name in label.load_config()["voters"]:
+            model = models[name]
+            tags = [model["provider"], *model["provider_fallback"]]
+            self.assertGreaterEqual(len(tags), 2, f"{name} has a second endpoint")
+            self.assertEqual(len(set(tags)), len(tags), name)
+            for tag in tags:
+                provider, _, quantization = tag.partition("/")
+                self.assertIn(quantization, model["quantizations"], f"{name}: {tag} is not at a listed quantization")
+                self.assertNotIn("fireworks", provider.lower(), name)
+            self.assertEqual(model["provider"], tags[0], "the pin is first")
+        self.assertNotIn("deepinfra/fp8", models["deepseek"]["provider_fallback"])
 
     def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):
         for bad in ("alt/fp8", [3], ["alt/fp8", "alt/fp8"], ["host/fp8"]):

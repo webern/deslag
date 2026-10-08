@@ -392,7 +392,7 @@ fn a_changed_checkout_voters_json_does_not_fail_a_batch_built_under_the_old_one(
         serde_json::from_str(&fs::read_to_string(&made.voters).unwrap()).unwrap();
     value["models"]["deepseek"]["provider"] = "elsewhere/fp8".into();
     value["models"]["qwen"]["license_checked"] = "2027-01-01".into();
-    value["voters"] = serde_json::json!(["mistral", "qwen", "gemma"]);
+    value["voters"] = serde_json::json!(["mistral", "qwen", "hy3"]);
     fs::write(&made.voters, serde_json::to_string_pretty(&value).unwrap()).unwrap();
     let said = check(&made, &dir).ok();
     assert!(said.out.contains("passes"), "{}", said.out);

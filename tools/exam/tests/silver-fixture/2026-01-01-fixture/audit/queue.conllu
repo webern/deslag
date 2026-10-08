@@ -1,0 +1,122 @@
+# exam.tokens = deslag
+# exam.silver = yes
+# sent_id = s0001
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0001
+# text = Renamed property VerificationUrl -> VerificationUri and changed type from string to Uri
+1	Renamed	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+2	property	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+3	VerificationUrl	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+4	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+5	>	_	SYM	_	_	_	_	_	Prov=owner|Kind=Symbol
+6	VerificationUri	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+7	and	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+8	changed	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+9	type	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+10	from	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+11	string	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+12	to	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+13	Uri	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+
+# sent_id = s0002
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0002
+# text = Bay Area apps are 0/14 on interviews while Midwest is 2/8 — you're being filtered out as a non-local Mizzou student in the Bay Area pool.
+1	Bay	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+2	Area	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+3	apps	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+4	are	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+5	0	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+7	14	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number
+8	on	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+9	interviews	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+10	while	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+11	Midwest	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+12	is	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+13	2	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number|SpaceAfter=No
+14	/	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+15	8	_	NUM	_	_	_	_	_	Prov=owner|Kind=Number
+16	—	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+17	you're	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+18	being	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+19	filtered	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+20	out	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+21	as	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+22	a	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+23	non	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+24	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+25	local	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+26	Mizzou	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+27	student	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+28	in	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+29	the	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+30	Bay	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+31	Area	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+32	pool	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+33	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0003
+# owner_reviewed = 2026-10-20
+# exam.context = list-item
+# pick_id = s0003
+# text = The models have been trained on English case law and the library has been built with the peculiarities of the legal system of England and Wales in mind.
+1	The	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+2	models	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+3	have	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+4	been	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+5	trained	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+6	on	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+7	English	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+8	case	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+9	law	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+10	and	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+11	the	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+12	library	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+13	has	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+14	been	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+15	built	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+16	with	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+17	the	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+18	peculiarities	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+19	of	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+20	the	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+21	legal	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+22	system	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+23	of	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+24	England	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+25	and	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+26	Wales	_	DET	_	_	_	_	_	Prov=owner|Kind=Word
+27	in	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+28	mind	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+29	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+
+# sent_id = s0008
+# owner_reviewed = 2026-10-20
+# exam.context = prose
+# pick_id = s0008
+# text = Skip platforms with apps < 3 (too noisy) or list them in a separate "low-volume" footnote.
+1	Skip	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+2	platforms	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+3	with	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+4	apps < 3	_	X	_	_	_	_	_	Prov=owner|Kind=Code
+5	(	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+6	too	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+7	noisy	_	DET	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+8	)	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+9	or	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word
+10	list	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word
+11	them	_	VERB	_	VerbForm=Fin	_	_	_	Prov=owner|Kind=Word
+12	in	_	VERB	_	VerbForm=Inf	_	_	_	Prov=owner|Kind=Word
+13	a	_	ADJ	_	_	_	_	_	Prov=owner|Kind=Word
+14	separate	_	NOUN	_	Number=Plur	_	_	_	Prov=owner|Kind=Word
+15	"	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+16	low	_	DET	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+17	-	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation|SpaceAfter=No
+18	volume	_	ADV	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+19	"	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+20	footnote	_	ADP	_	_	_	_	_	Prov=owner|Kind=Word|SpaceAfter=No
+21	.	_	PUNCT	_	_	_	_	_	Prov=owner|Kind=Punctuation
+

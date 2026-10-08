@@ -15,11 +15,22 @@ in Rust. See README.md in this directory for the steps.
     label.py cost     --dir .label/draw500
     label.py handoff  --dir .label/dev [--into merge]
     label.py handoff-agent (--request PATH | --sha256)
+    label.py handoff-run --dir .label/silver/part-01 --into merge [--parallel 6] [--claude PATH]
+                         [--give-up CALL ... --reason TEXT]
+    label.py probe-confinement [--claude PATH] [--keep]
+    label.py lock     --dir .label/silver/part-01 [--reset --reason TEXT]
+    label.py status   --dir .label/silver/part-01 [--into merge] [--max-usd 8]
     label.py spend
 
 The directory is one sample, under this checkout's `.label`: a skeleton made from the dev or owner
 gold, or a draw for labelling; nothing else is accepted (guard.py, an allow-list, checked on real
-paths before a file is opened), and the Rust stages check it again.
+paths before a file is opened), and the Rust stages check it again. A part of a draw dealt into parts
+is a draw for labelling like any other.
+
+The handoff adjudicator (`opus`) is not called by the runner: `judge` writes a request file per call,
+and `handoff-run` answers each with a `claude -p --safe-mode` process confined to an empty working
+directory (confine.py), once `probe-confinement` has shown, for the Claude Code installed, that such a
+process reads and writes nothing outside it.
 
 Every call is one batch of about 50 sentences. The system prompt is the annotation guide, which the
 Rust tools compile in, and the notes in prompts/preamble.md; the request pins one endpoint of one
@@ -28,17 +39,25 @@ begin `id:`, has `deslag-gold read-tags --check` keep the good ones, and asks ag
 sentences that failed, quoting the validator's message, at most twice; a voter with no good line for
 a sentence after that abstains on it. Money: ledger.py, a reservation before every POST. Provenance:
 each run gets an id, unique across the checkout, `Runs=` in the labels names it, and `runs.tsv`
-describes it. A reply cut off at max_tokens is asked again in halves; an endpoint that keeps failing
-(HTTP 429 or 5xx, replies cut off on both halves of a split, a provider refusal) is abandoned for the
-next one in voters.json's `provider_fallback`, but a network error here stops the run so that it can
-be continued; backoff, halving and switching draw on one budget of failed calls (`failure_budget`); a
-voter run on which more than a quarter of the sentences abstain ends `failed`; an item the adjudicator
-never settles leaves its sentence out of the labels unless `--strict`. The ledger and the run ids are
-in a state directory shared by every checkout (ledger.py). No error the runner prints shows the key.
+describes it, with the licence voters.json gives its model, the date that licence was read (no run
+starts without one) and the sha256 of voters.json at its start. A reply cut off at max_tokens is
+asked again in halves; an endpoint that keeps failing (HTTP 429 or 5xx, replies cut off on both
+halves of a split, a provider refusal) is abandoned for the next one in voters.json's
+`provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
+halving and switching draw on one budget of failed calls (`failure_budget`); a voter run on which more
+than a quarter of the sentences abstain ends `failed`; an item the adjudicator never settles leaves
+its sentence out of the labels unless `--strict`. The ledger and the run ids are in a state directory
+shared by every checkout (ledger.py), and the files voters share in a sample directory are written
+under its lock, so the voters of one sample can be tagged at once, each in a process of its own.
+`status` prints where a sample stands, in counts and run ids only. No error the runner prints shows
+the key.
 """
 
 import argparse
+import concurrent.futures
+import contextlib
 import datetime
+import fcntl
 import glob
 import hashlib
 import json
@@ -46,11 +65,15 @@ import math
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 import traceback
 
+import confine
 import guard
 import ledger as ledger_module
 import openrouter
@@ -65,8 +88,14 @@ RUN_COLUMNS = (
     "run", "state_id", "role", "name", "status", "reason", "model", "provider", "endpoint", "quantization",
     "price_in_per_m", "price_out_per_m", "date", "prompt_sha256", "guide_sha256", "calls", "retries",
     "prompt_tokens", "completion_tokens", "reasoning_tokens", "cost_usd", "seconds", "sentences",
-    "listing", "reply_model", "model_version", "deslag_commit", "settings",
+    "listing", "reply_model", "model_version", "license", "license_checked", "voters_sha256", "deslag_commit",
+    "settings",
 )
+
+# What voters.json says of a model's licence, and of an outside tagger's in `external`: the licence (an
+# SPDX id for an open-weight model), the model card or terms, and the date the licence was last read. A
+# run copies `license` and `license_checked` into its record, and no run starts without the date.
+LICENSE_KEYS = ("license", "license_url", "license_checked")
 
 # Optional settings, in seconds: the first wait after a failed call, the longest single wait, the most
 # a call waits in all, and the pause after each call made, which keeps a voter under a rate limit.
@@ -112,9 +141,56 @@ HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
 
 # Written in a merge directory: which adjudicator answers its items, for a merge that settles from it.
 ADJUDICATOR_RECORD = "adjudicator.json"
+# The lock file of a sample directory, which processes working in it at once take before they write
+# the files they share: the batches and `runs.tsv`.
+SAMPLE_LOCK = "label.lock"
+# The lock of a draw dealt into parts, beside the part directories (`.label/silver/lock.json`): the deslag
+# commit, the draw, the voters, `min_voters`, each model's prompt and guide hashes and the Claude Code of
+# the adjudicator that the first part was labelled with, which every later step of every part must match
+# (see [check_parts_lock] and [pin_parts_lock]). `deslag-gold silver build --check-part` holds a part to it
+# too. Only a step that counts writes it: a finished run at a clean commit, never a smoke run or a refused one.
+PARTS_LOCK = "lock.json"
+# Beside the lock: each reset of it, as a JSON line with the date, the reason, the lock as it was and the runs
+# each part held then (see [reset_parts_lock]). A lock is never removed without a line here.
+LOCK_RESETS = "lock-resets.jsonl"
 
-# What `handoff/<run>/agent.json` must say about the agents that made the replies.
-AGENT_KEYS = ("harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256")
+# What `handoff/<run>/agent.json` must say about the agents that made the replies: `handoff-run` writes
+# it, and a reply is read only if it says `safe_mode: true`, the tools Read and Write, and the argument
+# list handoff-run uses now (see [Runner.read_agent]).
+AGENT_KEYS = (
+    "harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256", "safe_mode",
+    "args", "cwd",
+)
+
+# Where `handoff-run` moves the replies of a round that did not end with its final checks passed, in this
+# checkout's `.label`: out of the run's folder, so none is read, and kept, since each was paid for.
+QUARANTINE = "quarantine"
+
+# What a reply of a round is named until the round's final checks pass: `<reply name>.incoming`, beside
+# where it goes. `judge` reads only the reply name, so a round killed before its end leaves nothing it
+# reads, and the next round moves what it finds so named to quarantine.
+STAGED = ".incoming"
+
+# The exit code of a round in which a call met the Claude plan's usage limit: wait for the reset and
+# run handoff-run again. Such a call keeps no reply, and is never one to give up.
+EXIT_USAGE_LIMIT = 7
+
+# The checks a call stopped by the Claude plan's usage limit fails on that account alone: it did not end
+# well, did not say its model last, and its refusal is a message of no model. A call that failed any
+# other check failed, whatever stopped it.
+USAGE_LIMIT_FAILS = frozenset({"process_finished", "model_reported_matches", "one_model_id", "model_matches_agent_json"})
+
+# How many times `claude --version` is read before it counts as unreadable, and the pause between: a
+# read that times out once is not an update.
+VERSION_TRIES = 3
+VERSION_PAUSE_S = 5
+
+# The stamp of the confinement probe, in this checkout's `.label`: without one that passed for the
+# Claude Code installed now and the argument list handoff-run uses, handoff-run makes no call.
+STAMP = "confinement.json"
+
+# A reply file's name as `judge` makes it: `<call>.<12 hex of the request's sha256>.reply.txt`.
+REPLY_NAME = re.compile(r"[A-Za-z0-9_\-]+\.[0-9a-f]{12}\.reply\.txt")
 
 # The endpoint of a handoff model: not an OpenRouter listing, so a record of its own.
 CLAUDE_CODE_ENDPOINT = {"tag": "claude-code", "provider_name": "claude-code"}
@@ -127,6 +203,11 @@ HANDOFF_NOTE = (
 
 # What a handoff `ask` gives back when the reply is not there yet.
 PENDING = object()
+
+# Beside a handoff request, the record that the person running the labelling gave the call up
+# (`handoff-run --give-up CALL --reason TEXT`): `<call>.given-up.json`, with the call, the request's
+# hash, the reason and the date. See [Runner.ask_handoff].
+GIVEN_UP = ".given-up.json"
 
 
 class ConfigError(Exception):
@@ -182,7 +263,40 @@ def load_config(path=CONFIG):
             raise ConfigError(f"{path}: settings.{key} must be a number, not below 0")
     if config["settings"]["abstain_limit"] > 1:
         raise ConfigError(f"{path}: settings.abstain_limit is a share of the sentences, at most 1")
+    for name, model in config["models"].items():
+        check_license(path, f"models.{name}", model)
+    external = config.get("external", {})
+    if not isinstance(external, dict):
+        raise ConfigError(f"{path}: `external` must be an object of outside taggers")
+    for name, entry in external.items():
+        if not isinstance(entry, dict) or not isinstance(entry.get("model"), str) or not entry["model"].strip():
+            raise ConfigError(f"{path}: external.{name} must be an object with a `model`")
+        check_license(path, f"external.{name}", entry)
     return config
+
+
+def check_license(path, where, entry):
+    """Refuses a licence field of voters.json that is not a string with text in it, a `license_url`
+    that is not https, or a `license_checked` that is not a date `YYYY-MM-DD`. A field left out is
+    not refused here: a run of that model is (see [Runner.licence])."""
+    for key in (*LICENSE_KEYS, "license_note"):
+        if key in entry and (not isinstance(entry[key], str) or not entry[key].strip()):
+            raise ConfigError(f"{path}: {where}.{key} must be a string, not empty")
+    if "license_url" in entry and not entry["license_url"].startswith("https://"):
+        raise ConfigError(f"{path}: {where}.license_url must be an https URL")
+    if "license_checked" in entry:
+        try:
+            ok = re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry["license_checked"]) and datetime.date.fromisoformat(entry["license_checked"])
+        except ValueError:
+            ok = False
+        if not ok:
+            raise ConfigError(f"{path}: {where}.license_checked must be a date, YYYY-MM-DD, not `{entry['license_checked']}`")
+
+
+def file_sha256(path):
+    """The sha256 of the bytes of the file at `path`."""
+    with open(path, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
 
 
 def read(path):
@@ -192,7 +306,7 @@ def read(path):
 
 def read_reply(path, warn=None):
     """The text of a handoff reply file, stripped, or None when the item has no usable reply: the file
-    is not there, is empty, or is not valid UTF-8 (a subagent can write any bytes). Nothing is raised
+    is not there, is empty, or is not valid UTF-8 (a process can write any bytes). Nothing is raised
     for a bad file; `warn`, if given, is told its name and what is wrong, and the item stays pending."""
     try:
         with open(path, "rb") as handle:
@@ -234,7 +348,7 @@ def handoff_template_sha256():
 
 
 def fill_handoff(request_path):
-    """The prompt of one handoff subagent: the template with `{request}` replaced by the path of its
+    """The prompt of one handoff process: the template with `{request}` replaced by the path of its
     request file."""
     return re.sub(r"\{request\}", lambda _: request_path, read(HANDOFF_TEMPLATE))
 
@@ -413,7 +527,8 @@ def run_status(meta):
 def run_reason(meta, status):
     """Why a run has the status `runs.tsv` gives it, in a few words: for `abandoned` and `failed` what
     ended it, for `smoke` its limit, for `stopped` what stopped it, and for a `complete` adjudicator run
-    that finished with words left out, how many items were open. `-` for a plain `complete`."""
+    that finished with words left out, how many items were open, and how many handoff calls were
+    given up. `-` for a plain `complete`."""
     if status == "abandoned":
         return meta.get("abandoned_because") or "no reason recorded"
     if status == "failed":
@@ -422,9 +537,12 @@ def run_reason(meta, status):
         return f"a smoke run: --limit {meta.get('limit')} batches, never a full run"
     if status == "stopped":
         return meta.get("stopped_because") or "stopped before its end; no reason was recorded"
+    said = []
     if status == "complete" and meta.get("finished") and meta.get("open_items"):
-        return f"{meta['open_items']} items open"
-    return "-"
+        said.append(f"{meta['open_items']} items open")
+    if status == "complete" and meta.get("given_up"):
+        said.append(f"{len(meta['given_up'])} handoff calls given up")
+    return ", ".join(said) or "-"
 
 
 def write_atomic(path, text):
@@ -448,6 +566,257 @@ def write_atomic(path, text):
         pass
     finally:
         os.close(descriptor)
+
+
+@contextlib.contextmanager
+def locked(path):
+    """An exclusive lock on the file `path` for the block, waited for: what keeps two processes from
+    rewriting a file they share at once. The lock goes with the process, so a kill leaves none held."""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "a", encoding="utf-8") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
+def json_lines(path):
+    """The objects of the JSON lines file `path`. A last line that is not whole, as a process still
+    appending to it may leave for a moment, is skipped; a bad line anywhere else is an error."""
+    lines = [line for line in read(path).splitlines(keepends=True) if line.strip()]
+    rows = []
+    for number, line in enumerate(lines, 1):
+        try:
+            rows.append(json.loads(line))
+        except ValueError:
+            if number == len(lines) and not line.endswith("\n"):
+                break
+            raise
+    return rows
+
+
+# ---------------------------------------------------------------------------------------------
+# the lock of a draw dealt into parts
+
+
+def parts_lock_path(directory):
+    """The lock of the draw that the checked sample `directory` is a part of: PARTS_LOCK in the
+    directory that holds the part directories. None when the sample is not a part of a draw (its
+    manifest says no `# part = k of N`), which has no lock."""
+    header = guard.draw_header(directory)
+    if header is None or "part" not in header:
+        return None
+    return os.path.join(os.path.dirname(directory), PARTS_LOCK)
+
+
+def draw_values(directory):
+    """What the lock holds of the draw: its manifest's header without `part`, which is the same in
+    every part."""
+    return {key: value for key, value in guard.draw_header(directory).items() if key != "part"}
+
+
+def read_parts_lock(path):
+    """The lock at `path` as a dict, or {} if there is none yet. GoldError if it is not a JSON object."""
+    if not os.path.isfile(path):
+        return {}
+    try:
+        lock = json.loads(read(path))
+    except ValueError:
+        lock = None
+    if not isinstance(lock, dict):
+        raise GoldError(
+            f"{path} is not a JSON object; it is the lock of the parts of a draw, so restore it, or reset it "
+            f"with `label.py lock --dir PART --reset --reason TEXT`, which records what it held"
+        )
+    return lock
+
+
+def shown_value(value):
+    """A value of the lock as a message shows it: a string or a number as it is, anything else as JSON."""
+    if value is None:
+        return "nothing"
+    if isinstance(value, (str, int)):
+        return str(value)
+    return json.dumps(value)
+
+
+def lock_differences(lock, known):
+    """The fields of `known` that `lock` holds with another value, as (field, the lock's value, this
+    value): `deslag_commit`, `draw.<key>`, `voters`, `adjudicator`, `min_voters`,
+    `models.<name>.<hash>` and `agent.<key>`. A field the lock does not hold yet is not a difference."""
+    found = []
+    for key, value in known.items():
+        if key not in lock:
+            continue
+        held = lock[key]
+        if key == "models":
+            for name, hashes in value.items():
+                for hash_key, digest in hashes.items() if name in held else ():
+                    if held[name].get(hash_key) != digest:
+                        found.append((f"models.{name}.{hash_key}", held[name].get(hash_key), digest))
+        elif isinstance(value, dict) and isinstance(held, dict):
+            for inner in sorted({*value, *held}):
+                if value.get(inner) != held.get(inner):
+                    found.append((f"{key}.{inner}", held.get(inner), value.get(inner)))
+        elif held != value:
+            found.append((key, held, value))
+    return found
+
+
+# What puts back each field of the lock without a reset.
+PUT_BACK = (
+    "Put back what changed: `git checkout` of the locked commit, which brings back voters.json and the "
+    "prompts with it, or `claude install VERSION` for the locked Claude Code. A change that is meant needs "
+    "`label.py lock --dir PART --reset --reason TEXT`, which records the old lock and says which parts were "
+    "labelled under it; each of those is then held to the new lock at its preflight, and is labelled again "
+    "where it differs (for the adjudicator's Claude Code alone, `judge --again` and `handoff-run` on it)"
+)
+
+
+def refuse_lock_differences(path, what, found):
+    """GoldError for the differences `found` between the lock at `path` and what `what` would record."""
+    if not found:
+        return
+    listed = "; ".join(
+        f"`{field}` is {shown_value(held)} in the lock and {shown_value(value)} here" for field, held, value in found
+    )
+    raise GoldError(
+        f"{path}: {what} differs from what the lock of the parts holds: {listed}. The parts of one draw are labelled "
+        f"at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model "
+        f"and one Claude Code, so that the batch made of them can be assembled; nothing was asked. {PUT_BACK}"
+    )
+
+
+def is_clean_commit(commit):
+    """Whether `commit`, as [deslag_commit] gives it, is a commit with no change to the tracked files."""
+    return bool(re.fullmatch(r"[0-9a-f]{40}", commit or ""))
+
+
+def check_parts_lock(directory, what, known):
+    """Holds the sample `directory`, when it is a part of a draw, to the lock of the parts before a step
+    asks anything: refuses (GoldError) a `deslag_commit` in `known` that is `-dirty` or `unknown`, since
+    the preflight refuses a run made at one, and a field of `known` that the lock holds with another
+    value. Writes nothing (see [pin_parts_lock]). A sample that is not a part is left alone."""
+    path = parts_lock_path(directory)
+    if path is None:
+        return
+    commit = known.get("deslag_commit")
+    if "deslag_commit" in known and not is_clean_commit(commit):
+        raise GoldError(
+            f"{what}: this checkout is at {commit}, and a part of a draw is labelled only at a commit with no "
+            f"change to its tracked files, since the preflight refuses a run made at any other; nothing was asked. "
+            f"Commit the change or put it back (`git status` shows it), then run it again"
+        )
+    with locked(os.path.join(os.path.dirname(path), SAMPLE_LOCK)):
+        refuse_lock_differences(path, what, lock_differences(read_parts_lock(path), known))
+
+
+def pin_parts_lock(directory, what, known):
+    """Writes into the lock of the parts the fields of `known` it does not hold yet, once a step of the
+    part `directory` has done what counts: a voter's run finished, not a smoke run; an outside
+    tagger's run registered; a merge judged to its labels; a round of handoff-run whose replies were
+    kept. So the first such step writes the lock, and each later one adds what it is the first to know.
+    A step that is refused, fails or stops writes nothing. Refuses (GoldError) a field the lock holds
+    with another value, which a step of another part may have written since this one began. Read and
+    written under a lock of its folder, since the voters of a part are tagged at once. A sample that is
+    not a part is left alone."""
+    path = parts_lock_path(directory)
+    if path is None:
+        return
+    if not is_clean_commit(known.get("deslag_commit")):
+        return
+    with locked(os.path.join(os.path.dirname(path), SAMPLE_LOCK)):
+        lock = read_parts_lock(path)
+        refuse_lock_differences(path, what, lock_differences(lock, known))
+        merged = dict(lock)
+        for key, value in known.items():
+            if key == "models":
+                merged["models"] = {**value, **lock.get("models", {})}
+            elif key not in lock:
+                merged[key] = value
+        if merged != lock:
+            write_atomic(path, json.dumps(merged, indent=2, sort_keys=True) + "\n")
+
+
+def part_runs(folder):
+    """The parts of a draw in `folder`, the directory that holds its lock, and the runs each holds: a
+    dict of the part directory's name to its runs, as `<name> <run>`, in order."""
+    found = {}
+    for name in sorted(os.listdir(folder)):
+        directory = os.path.join(folder, name)
+        if not os.path.isfile(os.path.join(directory, "sample.conllu")) or parts_lock_path(directory) is None:
+            continue
+        runs = []
+        for record in glob.glob(os.path.join(directory, "raw", "*", "*", "run.json")):
+            run = os.path.basename(os.path.dirname(record))
+            runs.append((os.path.basename(os.path.dirname(os.path.dirname(record))), run))
+        found[name] = [f"{who} {run}" for who, run in sorted(runs, key=lambda pair: (natural_run(pair[1]), pair[0]))]
+    return found
+
+
+def natural_run(run):
+    """A run id's number, for ordering `r2` before `r10`."""
+    digits = re.sub(r"\D", "", run)
+    return int(digits) if digits else 0
+
+
+def reset_parts_lock(directory, reason, say):
+    """`lock --reset --reason TEXT`: ends the lock of the parts of the draw that `directory` is a part of.
+    The lock as it was, the reason, the date and the runs each part holds are appended to LOCK_RESETS
+    beside it, and only then is `lock.json` removed, so the next step that counts writes a new one. Says
+    which parts hold runs made under the old lock: each is held to the new one at its preflight."""
+    path = parts_lock_path(directory)
+    if path is None:
+        raise GoldError(f"{directory} is not a part of a draw, which is what has a lock")
+    reason = " ".join((reason or "").split())
+    if not reason:
+        raise ConfigError("--reset needs --reason TEXT, why the lock is reset, which the log of resets keeps")
+    folder = os.path.dirname(path)
+    log = os.path.join(folder, LOCK_RESETS)
+    with locked(os.path.join(folder, SAMPLE_LOCK)):
+        if not os.path.isfile(path):
+            raise GoldError(f"there is no {path} to reset; the next step that counts writes one")
+        try:
+            held = json.loads(read(path))
+        except ValueError:
+            held = read(path)
+        runs = part_runs(folder)
+        entry = {"date": now(), "reason": reason, "lock": held, "parts": runs}
+        with open(log, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.remove(path)
+    say(f"{path} is reset ({reason}); what it held is the last line of {log}")
+    labelled = {name: found for name, found in runs.items() if found}
+    if not labelled:
+        say("no part holds a run yet")
+        return 0
+    say("these parts hold runs made under the old lock, and each is held to the new one at its preflight:")
+    for name, found in labelled.items():
+        say(f"  {name}: {', '.join(found)}")
+    say("the next step that counts writes the new lock from its own values")
+    return 0
+
+
+def command_lock(arguments, config, transport=None, gold=None, say=print):
+    """`lock`: prints the lock of the parts of the draw that `--dir` is a part of, and how many times it was
+    reset; with `--reset --reason TEXT`, resets it (see [reset_parts_lock])."""
+    directory = guard.check_dir(arguments.dir)
+    if arguments.reset:
+        return reset_parts_lock(directory, arguments.reason, say)
+    if arguments.reason is not None:
+        raise ConfigError("--reason says why the lock is reset, so it goes with --reset")
+    path = parts_lock_path(directory)
+    if path is None:
+        raise GoldError(f"{directory} is not a part of a draw, which is what has a lock")
+    log = os.path.join(os.path.dirname(path), LOCK_RESETS)
+    resets = len([line for line in read(log).splitlines() if line.strip()]) if os.path.isfile(log) else 0
+    lock = read_parts_lock(path)
+    say(f"{path}: " + (json.dumps(lock, indent=2, sort_keys=True) if lock else "none yet; the next step that counts writes it"))
+    say(f"reset {resets} times" + (f"; {log} says when and why" if resets else ""))
+    return 0
 
 
 class EndpointExhausted(openrouter.ApiError):
@@ -528,9 +897,11 @@ def fresh_cut(total=0):
 
 class Runner:
     def __init__(self, directory, config, prompts, transport, gold, max_usd,
-                 sleep=time.sleep, clock=time.monotonic, say=print, warn=None):
+                 sleep=time.sleep, clock=time.monotonic, say=print, warn=None, config_path=CONFIG):
         self.dir = guard.check_dir(directory)
         self.config = config
+        # The voters.json the config was read from: its sha256 goes into the record of each run.
+        self.config_path = config_path
         self.prompts = prompts
         self.transport = transport
         self.gold = gold
@@ -554,6 +925,27 @@ class Runner:
 
     def raw(self, name, run, *more):
         return os.path.join(self.dir, "raw", name, run, *more)
+
+    def prompt_hashes(self):
+        """The hashes a run of a model records of what it is told: the prompts and the guide."""
+        return {"prompt_sha256": self.prompts.sha256, "guide_sha256": self.prompts.guide_sha256}
+
+    def lock_fields(self, **known):
+        """What a step of this sample holds to the lock of the parts: the commit and the draw, which every
+        step knows, and `known`."""
+        return {"deslag_commit": self.commit, "draw": draw_values(self.dir), **known}
+
+    def check_lock(self, what, **known):
+        """[check_parts_lock] for this sample, before a step asks anything. Nothing for a sample that is
+        not a part of a draw."""
+        if parts_lock_path(self.dir) is not None:
+            check_parts_lock(self.dir, what, self.lock_fields(**known))
+
+    def pin_lock(self, what, **known):
+        """[pin_parts_lock] for this sample, once a step has done what counts. Nothing for a sample that
+        is not a part of a draw."""
+        if parts_lock_path(self.dir) is not None:
+            pin_parts_lock(self.dir, what, self.lock_fields(**known))
 
     def retrying(self, what, **extra):
         """with_retries' arguments from the settings, and a one-line log of each wait: what is being
@@ -615,7 +1007,27 @@ class Runner:
             return candidate, skipped
         return None, skipped
 
-    CHANGED = ("prompt_sha256", "request", "model", "endpoint", "limit", "scope")
+    CHANGED = (
+        "prompt_sha256", "request", "model", "endpoint", "limit", "scope", "license", "license_checked",
+        "voters_sha256",
+    )
+
+    def licence(self, name, entry, where):
+        """`license`, `license_checked` and the sha256 of voters.json, for the record of a run of the
+        model or outside tagger `name`, whose entry of voters.json is `entry` (`where` says which).
+        ConfigError if the entry lacks any of `license`, `license_url` and `license_checked`: no run
+        starts without a licence, where it was read, and when."""
+        missing = [key for key in LICENSE_KEYS if not entry or not str(entry.get(key) or "").strip()]
+        if missing:
+            raise ConfigError(
+                f"{name} has no {', '.join(f'`{key}`' for key in missing)} in {where} of {self.config_path}: a run "
+                f"records the licence of what made it and the date that licence was read, so read it, and give "
+                f"`license`, `license_url` and `license_checked` there, before a run starts"
+            )
+        return {
+            "license": entry.get("license"), "license_checked": entry["license_checked"],
+            "voters_sha256": file_sha256(self.config_path),
+        }
 
     def start_run(self, name, role, resume=None, limit=None, scope=None, endpoint=None):
         """Allocates a run id from the ledger, or takes `resume`, which must be a run of this voter
@@ -624,8 +1036,10 @@ class Runner:
         adjudicator run) are recorded too.
 
         A run that is continued keeps its record as it was written: it is refused if the prompt, the
-        request settings, the model, the endpoint, the limit or the scope would now be other than it
-        recorded, since it would then claim what it did not do, and a run has one of each."""
+        request settings, the model, the endpoint, the limit, the scope, the licence or the bytes of
+        voters.json would now be other than it recorded, since it would then claim what it did not do,
+        and a run has one of each. A model with no `license_checked` starts no run (see [Runner.licence])."""
+        licence = self.licence(name, self.config["models"][name], "models")
         saved = None
         if resume:
             if not os.path.isfile(self.raw(name, resume, "run.json")):
@@ -660,7 +1074,7 @@ class Runner:
             "guide_sha256": self.prompts.guide_sha256, "sentences": sentence_count(self.dir),
             "listing": "-" if handoff else f"listings/{run}.json", "endpoint_record": pinned,
             "model_version": "-" if handoff else listing_version(pinned), "deslag_commit": self.commit,
-            "limit": limit, "scope": scope,
+            "limit": limit, "scope": scope, **licence,
             "request": {
                 key: config.get(key)
                 for key in ("temperature", "temperature_note", "reasoning", "max_tokens")
@@ -964,7 +1378,7 @@ class Runner:
     def clear_unanswered_requests(self, meta):
         """Removes the request files of the run that have no reply beside them and were not asked for
         in this pass: a pass writes the requests it needs afresh, so one that is no longer asked for,
-        such as one of an older worklist, is not left for the coordinator to answer. A request with its
+        such as one of an older worklist, is not left for anyone to answer. A request with its
         reply stays, and so does every request of a pass that did not get to the end (it stopped on an
         error), since the requests it had yet to write are not known."""
         folder = self.handoff_dir(meta)
@@ -980,10 +1394,12 @@ class Runner:
                     os.remove(request)
 
     def read_agent(self, meta, config):
-        """The `agent.json` the coordinator wrote beside a handoff run's replies, checked: every key
-        in AGENT_KEYS is given, the model the agents report is the pinned one (or a dated version of
-        it), and the prompt it records is the template in the repository now. ApiError if not: no
-        reply is read without a record of who made it."""
+        """The `agent.json` that `handoff-run` wrote beside a handoff run's replies, checked: every key
+        in AGENT_KEYS is given, `safe_mode` is true, the argument list is the one handoff-run uses now,
+        the tools are Read and Write, the model the process reported is the pinned one (or a dated
+        version of it), and the prompt it records is the template in the repository now. ApiError if
+        not: no reply is read without a record of who made it. In a part of a draw whose lock holds
+        the adjudicator's Claude Code, its version and argument list must be the lock's (GoldError)."""
         path = os.path.join(self.handoff_dir(meta), "agent.json")
         if not os.path.isfile(path):
             raise openrouter.ApiError(
@@ -997,12 +1413,23 @@ class Runner:
         missing = [key for key in AGENT_KEYS if not isinstance(agent, dict) or not str(agent.get(key) or "").strip()]
         if missing:
             raise openrouter.ApiError(f"{path} lacks {', '.join(missing)}")
+        if agent["safe_mode"] is not True or agent["args"] != confine.arguments(config["model"]):
+            raise openrouter.ApiError(
+                f"{path} does not record the confined process handoff-run starts (`safe_mode: true` and its argument "
+                f"list, {shlex.join(confine.arguments(config['model']))}); a reply is read only from one"
+            )
+        if agent["tools"] != ",".join(confine.TOOLS) or not isinstance(agent["cwd"], str):
+            raise openrouter.ApiError(f"{path} records other tools than {','.join(confine.TOOLS)}, or no rule for the working directory")
         openrouter.check_names(CLAUDE_CODE_ENDPOINT["provider_name"], agent["model_reported"], CLAUDE_CODE_ENDPOINT, config["model"])
         if agent["prompt_sha256"] != handoff_template_sha256():
             raise openrouter.ApiError(
                 f"{path} records another agent prompt than prompts/handoff-agent.md has now (sha256 "
                 f"{handoff_template_sha256()}); the replies were not made by this definition"
             )
+        lock = parts_lock_path(self.dir)
+        if lock is not None:
+            held = {"agent": {"version": agent["version"], "args": agent["args"]}}
+            refuse_lock_differences(lock, f"{path}", lock_differences(read_parts_lock(lock), held))
         return {key: agent[key] for key in agent}
 
     def ask_handoff(self, meta, endpoint, config, system, user, kind):
@@ -1016,7 +1443,10 @@ class Runner:
         `agent.json` first (see [Runner.read_agent]) and is booked in the ledger at 0, without the cap.
         With no reply the request is written to `<kind>.request.json`, the call is added to the waiting
         ones and PENDING is returned: nothing is asked, retried, switched or counted against the
-        failure budget, and nothing is booked."""
+        failure budget, and nothing is booked. A call given up for this very request (see
+        [read_given_up]) is answered with nothing, so its items stay open: the retries ask them
+        again, in other calls, and those still open after them are left out of the labels as
+        unsettled. It is recorded in `run.json` and said (see [Runner.give_up])."""
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
         saved_meta = self.raw(name, run, f"{kind}.meta.json")
@@ -1037,6 +1467,10 @@ class Runner:
             if re.fullmatch(rf"{re.escape(kind)}\.[0-9a-f]{{12}}\.reply\.txt", other) and other != reply_name:
                 self.warn(f"label: {name} {run} {kind}: {other} answers an older request, so it is not read")
         text = self.reply_text(reply_path)
+        given_up = None if text else read_given_up(folder, kind, request_sha256)
+        if given_up is not None:
+            self.give_up(meta, kind, request_sha256, given_up)
+            return ""
         if not text:
             request_path = os.path.join(folder, f"{kind}.request.json")
             write_atomic(request_path, json.dumps({
@@ -1086,6 +1520,23 @@ class Runner:
         }, indent=2) + "\n")
         return text + "\n"
 
+    def give_up(self, meta, kind, request_sha256, record):
+        """Records in `run.json` that the call `kind` of a handoff run was given up, with the request's
+        hash, the reason and the date the record gives, once, and says so on every pass that reads it."""
+        name, run = meta["name"], meta["run"]
+        entries = list(meta.get("given_up") or [])
+        if not any(entry["call"] == kind and entry["request_sha256"] == request_sha256 for entry in entries):
+            entries.append({
+                "call": kind, "request_sha256": request_sha256, "reason": record.get("reason"),
+                "date": record.get("date"),
+            })
+            self.update_run(name, run, given_up=entries)
+            meta["given_up"] = entries
+        self.say(
+            f"{name} {run} {kind}: given up ({record.get('reason')}), so it is answered with nothing and its items "
+            f"stay open; the retries ask them again, and those never settled are left out as unsettled"
+        )
+
     def stop_for_handoff(self, meta):
         """Raises HandoffWait if any call of this pass had no reply: the requests are written, and
         nothing is checked until the replies are. The requests that are no longer asked for are removed
@@ -1113,7 +1564,7 @@ class Runner:
         calls = []
         path = os.path.join(os.path.dirname(run_json), "calls.jsonl")
         if os.path.isfile(path):
-            calls = [json.loads(line) for line in read(path).splitlines() if line.strip()]
+            calls = json_lines(path)
         row = {key: "-" if meta.get(key) is None else meta[key] for key in RUN_COLUMNS}
         row["status"] = run_status(meta)
         row["reason"] = run_reason(meta, row["status"])
@@ -1145,33 +1596,41 @@ class Runner:
         return row
 
     def write_runs(self):
-        """Rebuilds `runs.tsv` from every run recorded under raw/, in the order of the ids."""
-        rows = []
-        base = os.path.join(self.dir, "raw")
-        if os.path.isdir(base):
-            for name in sorted(os.listdir(base)):
-                for run in os.listdir(os.path.join(base, name)):
-                    path = os.path.join(base, name, run, "run.json")
-                    if os.path.isfile(path):
-                        rows.append(self.run_row(path))
-        rows.sort(key=lambda row: int(row["run"][1:]))
-        lines = ["\t".join(RUN_COLUMNS)]
-        for row in rows:
-            lines.append("\t".join(str(row[column]).replace("\t", " ").replace("\n", " ") for column in RUN_COLUMNS))
-        write(os.path.join(self.dir, "runs.tsv"), "\n".join(lines) + "\n")
+        """Rebuilds `runs.tsv` from every run recorded under raw/, in the order of the ids. The runs are
+        read and the table written under the sample's lock, and the table is replaced whole, so voters
+        tagged at once in processes of their own leave the table of the latest state, and a reader
+        never sees half of one."""
+        with locked(os.path.join(self.dir, SAMPLE_LOCK)):
+            rows = []
+            base = os.path.join(self.dir, "raw")
+            if os.path.isdir(base):
+                for name in sorted(os.listdir(base)):
+                    for run in os.listdir(os.path.join(base, name)):
+                        path = os.path.join(base, name, run, "run.json")
+                        if os.path.isfile(path):
+                            rows.append(self.run_row(path))
+            rows.sort(key=lambda row: int(row["run"][1:]))
+            lines = ["\t".join(RUN_COLUMNS)]
+            for row in rows:
+                lines.append("\t".join(str(row[column]).replace("\t", " ").replace("\n", " ") for column in RUN_COLUMNS))
+            write_atomic(os.path.join(self.dir, "runs.tsv"), "\n".join(lines) + "\n")
         return rows
 
     # -- tagging
 
     def batch_files(self):
-        """The batches of the sample as it is now: always written afresh, since a sample drawn again
-        would otherwise be asked about with the old batches' sentences."""
+        """The batches of the sample as it is now, as (path, text) pairs: always written afresh, since a
+        sample drawn again would otherwise be asked about with the old batches' sentences. They are
+        written and read under the sample's lock, and the run asks the texts read then, so voters tagged
+        at once in processes of their own never ask a batch while another process rewrites it."""
         folder = os.path.join(self.dir, "batches")
-        for stale in os.listdir(folder) if os.path.isdir(folder) else []:
-            if re.fullmatch(r"batch-\d+\.txt", stale):
-                os.remove(os.path.join(folder, stale))
-        self.gold.batches(self.dir, self.settings["batch_size"])
-        return [os.path.join(folder, f) for f in numbered(os.listdir(folder)) if re.fullmatch(r"batch-\d+\.txt", f)]
+        with locked(os.path.join(self.dir, SAMPLE_LOCK)):
+            for stale in os.listdir(folder) if os.path.isdir(folder) else []:
+                if re.fullmatch(r"batch-\d+\.txt", stale):
+                    os.remove(os.path.join(folder, stale))
+            self.gold.batches(self.dir, self.settings["batch_size"])
+            names = [f for f in numbered(os.listdir(folder)) if re.fullmatch(r"batch-\d+\.txt", f)]
+            return [(os.path.join(folder, f), read(os.path.join(folder, f))) for f in names]
 
     def problems(self, name, ids):
         """The validator's messages for `ids`, as the lines the retry quotes."""
@@ -1303,14 +1762,27 @@ class Runner:
         come out of one budget (BudgetSpent).
 
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
-        `failed`, not complete: RunFailed, and nothing continues it."""
+        `failed`, not complete: RunFailed, and nothing continues it.
+
+        In a part of a draw, nothing is asked unless the commit is clean and it, the draw, the voters,
+        the adjudicator and this voter's prompt and guide are the lock's (see [check_parts_lock]); a run
+        that finishes, and is not a smoke run, writes into the lock what it does not hold yet."""
+        held = dict(
+            voters=list(self.config["voters"]), adjudicator=self.config["adjudicator"],
+            models={name: self.prompt_hashes()},
+        )
+        self.check_lock(f"tag --voter {name}", **held)
         tried = []
         self.budget = FailureBudget(self.settings["failure_budget"])
         while True:
             try:
-                return self.tag_run(name, limit, resume, again, endpoint)
+                done = self.tag_run(name, limit, resume, again, endpoint)
+                break
             except EndpointExhausted as error:
                 endpoint, resume, again = self.fall_back(error, tried), None, True
+        if limit is None:
+            self.pin_lock(f"tag --voter {name}", **held)
+        return done
 
     def tag_run(self, name, limit, resume, again, endpoint):
         if resume is None and not again and limit is None:
@@ -1324,10 +1796,11 @@ class Runner:
         if limit is not None:
             batches = batches[:limit]
         self.cut = fresh_cut(len(batches))
+        if meta.get("batches") != len(batches):
+            self.update_run(name, run, batches=len(batches))
         self.say(f"{name} {run}: {len(batches)} batches to {config['model']} at {endpoint['tag']}")
         try:
-            for number, path in enumerate(batches, 1):
-                text = read(path)
+            for number, (_, text) in enumerate(batches, 1):
                 self.ask_lines(
                     meta, endpoint, config,
                     lambda part: self.prompts.fill("voter-task.md", batch="\n".join(part) + "\n"),
@@ -1357,6 +1830,7 @@ class Runner:
             self.report_cut_offs(meta, config)
             if limit is None:
                 total = meta["sentences"]
+                self.update_run(name, run, abstaining=len(open_lines))
                 if len(open_lines) > self.settings["abstain_limit"] * total:
                     why = (
                         f"{len(open_lines)} of {total} sentences abstain after the retries, more than "
@@ -1662,7 +2136,12 @@ class Runner:
 
         An item still open after the adjudicator's retries does not stop the finish, unless `strict`:
         the word is left out of `labelled.conllu` with its whole sentence, `unsettled.tsv` lists it,
-        and the items are returned for the caller to count."""
+        and the items are returned for the caller to count.
+
+        In a part of a draw, nothing is merged or asked unless the commit is clean and it, the draw, the
+        model voters, the adjudicator, `min_voters` and the adjudicator's prompt and guide are the lock's
+        (see [check_parts_lock]); a merge judged to its labels writes into the lock what it does not hold
+        yet, with the Claude Code of a handoff adjudicator's run."""
         settled = self.settle_path(into, settle_from) if settle_from is not None else None
         if settle_from is not None:
             self.check_settle_adjudicator(settle_from)
@@ -1670,6 +2149,12 @@ class Runner:
             if not base_only:
                 self.check_tags_run(name)
         scope = self.judge_scope(into, voters, settle_from, same_votes, min_voters)
+        adjudicator = self.config["adjudicator"]
+        held = dict(
+            voters=[name for name, base_only in voters if not base_only], adjudicator=adjudicator,
+            min_voters=scope["min_voters"], models={adjudicator: self.prompt_hashes()},
+        )
+        self.check_lock("judge", **held)
         if not again and resume is None:
             done = self.finished_run(into, scope, trains)
             if done:
@@ -1707,6 +2192,10 @@ class Runner:
                 self.config["adjudicator"], adjudicator_run, finished=True, open_items=len(open_items), trains=trains
             )
             self.write_runs()
+            agent = json.loads(read(self.raw(adjudicator, adjudicator_run, "run.json"))).get("agent")
+            if agent:
+                held["agent"] = {"version": agent["version"], "args": agent["args"]}
+        self.pin_lock("judge", **held)
         return open_items
 
 
@@ -1733,7 +2222,16 @@ def stamp_runs(text, run):
 
 def register(runner, name, path, model, version, seconds):
     """Records a run made by something that is not an API, such as spaCy: stamps `Runs=` onto its
-    file, writes it as tags/<name>.conllu, and describes the run in runs.tsv. Costs nothing."""
+    file, writes it as tags/<name>.conllu, and describes the run in runs.tsv. Costs nothing. `name`
+    must be an entry of `external` in voters.json, naming `model`, whose licence and the date it was
+    read the run records."""
+    entry = runner.config.get("external", {}).get(name)
+    if entry is None:
+        raise ConfigError(f"`{name}` is not in `external` of {runner.config_path}, which says the licence of each outside tagger")
+    if entry["model"] != model:
+        raise ConfigError(f"external.{name} of {runner.config_path} is the model `{entry['model']}`, not `{model}`")
+    licence = runner.licence(name, entry, "external")
+    runner.check_lock(f"register --name {name}")
     path = guard.check_file(path, runner.dir)
     run = runner.ledger.new_run()
     text = read(path)
@@ -1744,7 +2242,7 @@ def register(runner, name, path, model, version, seconds):
         "endpoint": "local", "quantization": version or "-", "price_in_per_m": 0.0,
         "price_out_per_m": 0.0, "date": now(), "prompt_sha256": "-",
         "guide_sha256": "-", "sentences": sentences, "listing": "-",
-        "deslag_commit": runner.commit, "model_version": version or "-",
+        "deslag_commit": runner.commit, "model_version": version or "-", **licence,
     }
     write_atomic(runner.raw(name, run, "run.json"), json.dumps(meta, indent=2) + "\n")
     write(runner.raw(name, run, "source.conllu"), text)
@@ -1755,6 +2253,7 @@ def register(runner, name, path, model, version, seconds):
         }) + "\n")
     write(os.path.join(runner.dir, "tags", f"{name}.conllu"), stamp_runs(text, run))
     runner.write_runs()
+    runner.pin_lock(f"register --name {name}")
     return run
 
 
@@ -1835,41 +2334,98 @@ def report_handoff_wait(error, arguments):
     for kind, request, reply in error.waiting:
         print(f"label:   {kind}: {request}", file=sys.stderr)
     print(
-        f"label: write handoff/{error.run}/agent.json (see README.md), have an agent answer each request "
-        f"into the reply path it names (`label.py handoff-agent --request PATH` prints its prompt), and run "
-        f"the same command again once every agent of the round has returned; "
-        f"`label.py handoff --dir {arguments.dir} --into {arguments.into}` lists the requests still unanswered",
+        f"label: `label.py handoff-run --dir {arguments.dir} --into {arguments.into}` answers each request with a "
+        f"confined claude process and writes handoff/{error.run}/agent.json (see README.md); run the same command "
+        f"again once it has returned; `label.py handoff --dir {arguments.dir} --into {arguments.into}` lists the "
+        f"requests still unanswered",
         file=sys.stderr,
     )
     return EXIT_HANDOFF
 
 
-def pending_requests(directory, into, warn=None):
-    """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
-    yet, in the order of their numbers: what the coordinator still has to have answered."""
+def read_given_up(folder, call, request_sha256):
+    """The record that the call `call` of the handoff run in `folder` was given up, if it gives up this
+    request, the one whose hash is `request_sha256`; None if the call was not given up, or a request
+    since rewritten was. GoldError if the file is not a JSON object."""
+    path = os.path.join(folder, f"{call}{GIVEN_UP}")
+    if not os.path.isfile(path):
+        return None
+    try:
+        record = json.loads(read(path))
+    except ValueError:
+        record = None
+    if not isinstance(record, dict):
+        raise GoldError(f"{path} is not a JSON object; `handoff-run --give-up` writes it")
+    return record if record.get("request_sha256") == request_sha256 else None
+
+
+def latest_handoff(directory, into):
+    """The folder of the latest handoff run in `<directory>/<into>/handoff`, or None."""
     base = os.path.join(directory, into, "handoff")
     runs = [name for name in os.listdir(base) if re.fullmatch(r"r\d+", name)] if os.path.isdir(base) else []
-    if not runs:
+    return os.path.join(base, max(runs, key=lambda name: int(name[1:]))) if runs else None
+
+
+def pending_requests(directory, into, warn=None):
+    """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
+    yet and were not given up, in the order of their numbers: what is still to be answered."""
+    folder = latest_handoff(directory, into)
+    if folder is None:
         return []
-    folder = os.path.join(base, max(runs, key=lambda name: int(name[1:])))
     pending = []
     for name in numbered(os.listdir(folder)):
         if not name.endswith(".request.json"):
             continue
         request = os.path.join(folder, name)
         try:
-            reply = os.path.join(folder, json.loads(read(request))["reply_name"])
-        except (ValueError, KeyError):
+            saved = json.loads(read(request))
+            reply = os.path.join(folder, saved["reply_name"])
+        except (ValueError, KeyError, TypeError):
             raise GoldError(f"{request} is not a request file this runner wrote") from None
+        if read_given_up(folder, str(saved.get("call")), saved.get("request_sha256")) is not None:
+            continue
         if read_reply(reply, warn) is None:
             pending.append(request)
     return pending
 
 
+def given_up_calls(directory, into):
+    """How many calls of the latest handoff run in `<directory>/<into>/handoff` are given up: a record
+    whose request is not since rewritten (see [read_given_up]) and that no reply came after, which
+    `judge` would read instead. A request `judge` no longer asks for is removed, so its record is held to
+    its own hash."""
+    folder = latest_handoff(directory, into)
+    count = 0
+    for name in os.listdir(folder) if folder else []:
+        if not name.endswith(GIVEN_UP):
+            continue
+        call = name[: -len(GIVEN_UP)]
+        try:
+            record = json.loads(read(os.path.join(folder, name)))
+        except ValueError:
+            record = None
+        if not isinstance(record, dict):
+            raise GoldError(f"{os.path.join(folder, name)} is not a JSON object; `handoff-run --give-up` writes it")
+        digest = str(record.get("request_sha256"))
+        request = os.path.join(folder, f"{call}.request.json")
+        if os.path.isfile(request) and read_given_up(folder, call, json.loads(read(request)).get("request_sha256")) is None:
+            continue
+        if read_reply(os.path.join(folder, f"{call}.{digest[:12]}.reply.txt")) is None:
+            count += 1
+    return count
+
+
+def check_into(into):
+    """`into`, which must be a plain directory name."""
+    if not re.fullmatch(r"[A-Za-z0-9_\-]+", into):
+        raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{into}`")
+    return into
+
+
 def command_handoff(arguments, config, transport=None, gold=None):
     directory = guard.check_dir(arguments.dir)
-    if not re.fullmatch(r"[A-Za-z0-9_\-]+", arguments.into):
-        raise GoldError(f"--into is a plain directory name, letters, digits, `-` and `_`, not `{arguments.into}`")
+    check_into(arguments.into)
+
     def warned(text):
         print(text, file=sys.stderr)
 
@@ -1893,6 +2449,477 @@ def command_handoff_agent(arguments, config, transport=None, gold=None):
     return 0
 
 
+# ---------------------------------------------------------------------------------------------
+# the handoff answered by confined claude processes, and the probe of their confinement
+
+
+def stamp_path():
+    """Where the stamp of the confinement probe is: `confinement.json` in this checkout's `.label`."""
+    return os.path.join(guard.root(), STAMP)
+
+
+def handoff_model(config):
+    """The model id of the handoff adjudicator: `adjudicator` if it is one, or else the one handoff
+    model of voters.json."""
+    if is_handoff(config["models"][config["adjudicator"]]):
+        return config["models"][config["adjudicator"]]["model"]
+    found = [model["model"] for model in config["models"].values() if is_handoff(model)]
+    if len(found) != 1:
+        raise ConfigError(f"voters.json defines {len(found)} handoff models; the probe needs one")
+    return found[0]
+
+
+def check_stamp(version, args):
+    """Refuses a round of handoff-run unless the probe's stamp says it passed, every check true, for
+    the Claude Code installed now (`version`) and the argument list about to be used, with the
+    assertions of this probe (confine.ASSERTIONS, of which only those in confine.SKIPPABLE may be
+    skipped)."""
+    path = stamp_path()
+    again = "`label.py probe-confinement` (make test-confinement) writes it again"
+    if not os.path.isfile(path):
+        raise GoldError(f"there is no {path}: no handoff call is made before the confinement probe has passed; {again}")
+    try:
+        stamp = json.loads(read(path))
+    except ValueError:
+        raise GoldError(f"{path} is not JSON; {again}") from None
+    if not isinstance(stamp, dict):
+        raise GoldError(f"{path} is not a probe's stamp, which is a JSON object; {again}")
+    checks = stamp.get("assertions")
+    if stamp.get("verdict") != "pass" or not isinstance(checks, dict) or not checks or not all(v is True for v in checks.values()):
+        raise GoldError(f"{path} does not record a probe that passed; {again}")
+    skipped = stamp.get("skipped", {})
+    if (
+        not isinstance(skipped, dict) or set(skipped) - set(confine.SKIPPABLE) or set(checks) & set(skipped)
+        or set(checks) | set(skipped) != set(confine.ASSERTIONS)
+    ):
+        raise GoldError(
+            f"{path} records other assertions than this probe makes ({len(confine.ASSERTIONS)}, of which only "
+            f"{', '.join(confine.SKIPPABLE)} may be skipped); {again}"
+        )
+    if stamp.get("claude_code_version") != version:
+        raise GoldError(
+            f"{path} records Claude Code {stamp.get('claude_code_version')}, and `claude --version` says {version} now: "
+            f"the probe holds for the version it ran; {again}"
+        )
+    if stamp.get("args") != args:
+        raise GoldError(f"{path} records another argument list than handoff-run uses now ({shlex.join(args)}); {again}")
+
+
+def tree_changes(repo):
+    """The paths `git status --porcelain` shows changed or new in the checkout `repo`, outside
+    `.label/`. GoldError if git cannot say."""
+    done = subprocess.run(
+        ["git", "--no-optional-locks", "-C", repo, "status", "--porcelain", "-z", "--untracked-files=all"],
+        capture_output=True, check=False,
+    )
+    if done.returncode != 0:
+        why = (done.stderr.decode("utf-8", "replace").strip().splitlines() or ["no reason given"])[0]
+        raise GoldError(f"git status failed in {repo}, so whether its tree is clean is not known: {why}")
+    entries = done.stdout.decode("utf-8", "replace").split("\0")
+    paths = []
+    at = 0
+    while at < len(entries):
+        entry = entries[at]
+        at += 1
+        if not entry:
+            continue
+        paths.append(entry[3:])
+        if entry[0] in "RC" and at < len(entries):
+            # A rename or copy is followed by the path it came from.
+            paths.append(entries[at])
+            at += 1
+    label = guard.LABEL_DIR
+    return [path for path in paths if path != label and not path.startswith(label + "/")]
+
+
+def agent_record(version, model_reported, args):
+    """What `agent.json` says of the processes handoff-run starts."""
+    return {
+        "harness": "claude-code", "version": version, "agent_type": "claude -p --safe-mode",
+        "model_reported": model_reported, "effort": "default", "tools": ",".join(confine.TOOLS),
+        "prompt_sha256": handoff_template_sha256(), "safe_mode": True, "args": list(args), "cwd": confine.CWD_RULE,
+    }
+
+
+def handoff_request(path, model):
+    """The request file at `path`, checked to be one `judge` wrote for `model`: its hash is of its
+    model and messages, and its reply name is `<call>.<12 hex of that>.reply.txt`. GoldError if not,
+    since the reply is copied to the folder under that name."""
+    try:
+        request = json.loads(read(path))
+    except ValueError:
+        raise GoldError(f"{path} is not JSON") from None
+    if not isinstance(request, dict):
+        raise GoldError(f"{path} is not a request file this runner wrote")
+    digest = hashlib.sha256(canonical_json({"model": request.get("model"), "messages": request.get("messages")}).encode("utf-8")).hexdigest()
+    name = str(request.get("reply_name"))
+    if (
+        request.get("model") != model or request.get("request_sha256") != digest
+        or name != f"{request.get('call')}.{digest[:12]}.reply.txt" or not REPLY_NAME.fullmatch(name)
+    ):
+        raise GoldError(f"{path} is not a request this runner wrote for {model}: its hash, model or reply name is not its own")
+    return request
+
+
+UNREADABLE = "nothing that could be read"
+
+
+def read_version(claude):
+    """`claude --version` ([confine.version]), read again up to VERSION_TRIES times when it cannot be
+    read; UNREADABLE when it never can."""
+    for attempt in range(VERSION_TRIES):
+        if attempt:
+            time.sleep(VERSION_PAUSE_S)
+        try:
+            return confine.version(claude)
+        except confine.Unconfined:
+            continue
+    return UNREADABLE
+
+
+class HandoffRound:
+    """One round of handoff-run: each request still unanswered, put to a confined claude process.
+
+    For a request: a new empty working directory (see [confine.workdir]); the request copied into
+    it, with `reply_path` naming a file in the same directory (the request's hash is of its model and
+    messages, so it is the same); `prompts/handoff-agent.md` filled with the copy's path; the process
+    run from there; its checks ([confine.checks]), and `claude --version` read again (see
+    [read_version]), which must still be the version the round began with; the directory removed.
+    Only a call that passes every check and wrote a reply has it copied into the run's folder, and
+    then under a staged name (STAGED), which nothing reads: [place] renames the round's replies into
+    place once its final checks pass, and [quarantine] moves them out when they do not. A call after
+    which the version changed, or that met the Claude plan's usage limit, stops the round: no later
+    call is made. `agent.json` is written by the first call that passes, with the model it reported,
+    which every later call must report too."""
+
+    def __init__(self, folder, model, claude, version):
+        self.folder = folder
+        self.model = model
+        self.claude = claude
+        self.version = version
+        self.args = confine.arguments(model)
+        self.agent_path = os.path.join(folder, "agent.json")
+        self.agent = None
+        self.staged = []
+        # What `claude --version` said after a call, when it was not `version`: the round stops.
+        self.changed_version = None
+        # Set when a call met the plan's usage limit: the round stops.
+        self.limited = False
+        # Set when the round's final checks begin: a call still running then stages nothing.
+        self.closed = False
+        self.lock = threading.Lock()
+
+    def check_agent(self):
+        """Refuses the round if `agent.json` is there and says other than this round would write."""
+        if not os.path.isfile(self.agent_path):
+            return
+        try:
+            saved = json.loads(read(self.agent_path))
+        except ValueError:
+            raise GoldError(f"{self.agent_path} is not JSON") from None
+        expected = agent_record(self.version, saved.get("model_reported") if isinstance(saved, dict) else None, self.args)
+        if saved != expected:
+            differing = sorted(key for key in {*saved, *expected} if saved.get(key) != expected.get(key)) if isinstance(saved, dict) else ["all"]
+            raise GoldError(
+                f"{self.agent_path} differs from what this round would write (in {', '.join(differing)}), and a run has one "
+                f"agent; `judge --again` starts a new run"
+            )
+        self.agent = saved
+
+    def answer(self, path, request):
+        """Puts one request to a confined process. Returns (call, `answered`, `no reply`, `usage
+        limit`, `failed` or `not run`, the names of the checks that failed, and a note: for a call that
+        failed, the model ids it named, which say why `one_model_id` failed when it does)."""
+        call = request["call"]
+        if self.changed_version is not None:
+            return call, "not run", [], f"the round stopped: claude --version said {self.changed_version}"
+        if self.limited:
+            return call, "not run", [], "the round stopped at the Claude plan's usage limit"
+        try:
+            work = confine.workdir("deslag-handoff-")
+        except confine.Unconfined:
+            return call, "failed", ["workdir_outside_repositories"], ""
+        try:
+            copy = os.path.join(work, os.path.basename(path))
+            write(copy, json.dumps({**request, "reply_path": os.path.join(work, request["reply_name"])}, indent=2) + "\n")
+            code, out = confine.run(self.claude, self.args, fill_handoff(copy), work)
+            stream = confine.Stream(out)
+            found = confine.checks(stream, code, self.model, work)
+            reply = confine.regular_text(os.path.join(work, request["reply_name"]))
+            # The stamp holds for the version it was made with: Claude Code updated during the call is
+            # not that version, so its reply is not copied, and the round stops.
+            now = read_version(self.claude)
+            found["version_unchanged"] = now == self.version
+            with self.lock:
+                if now != self.version and self.changed_version is None:
+                    self.changed_version = now
+                if all(found.values()) and self.agent is None:
+                    self.agent = agent_record(self.version, stream.init["model"], self.args)
+                    write_atomic(self.agent_path, json.dumps(self.agent, indent=2) + "\n")
+                found["model_matches_agent_json"] = self.agent is not None and (stream.init or {}).get("model") == self.agent["model_reported"]
+                failed = [name for name, ok in found.items() if not ok]
+                if failed and set(failed) <= USAGE_LIMIT_FAILS and confine.usage_limited(stream):
+                    # Not a fault of the call: no call passes until the limit resets.
+                    self.limited = True
+                    return call, "usage limit", [], "the Claude plan's usage limit; wait for its reset"
+                if failed:
+                    named = sorted({str(found) for found in stream.models()})
+                    return call, "failed", failed, (
+                        f"models named: init {(stream.init or {}).get('model')}; assistant messages {', '.join(named) or 'none'}"
+                    )
+                if reply is None:
+                    return call, "no reply", [], ""
+                if self.closed:
+                    return call, "not run", [], "the round had ended, so its reply is not kept"
+                target = os.path.join(self.folder, request["reply_name"] + STAGED)
+                write_atomic(target, reply)
+                self.staged.append(target)
+                return call, "answered", [], ""
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
+
+def command_handoff_run(arguments, config, transport=None, gold=None, say=print):
+    """`handoff-run`: answers the requests of a handoff judge still unanswered, each with a confined
+    claude process, `--parallel` at once (see [HandoffRound]). Refuses to start without a passing
+    probe stamp for the Claude Code installed now and these arguments; in a part of a draw, at a
+    commit that is not clean or when the commit, the draw, that Claude Code or these arguments are
+    not the lock's (see [check_parts_lock]); with an `agent.json` that differs from what it would
+    write; or when `git status` shows a change outside `.label/`. Replies a round killed before its
+    end left staged are moved to quarantine first, and their calls asked again.
+
+    The round fails closed: an interrupt or a call that raised stops it (no call not yet started is
+    made), and its replies, staged until then, are put in place only when its final checks pass:
+    `git status` shows the tree clean outside `.label/`, the commit is the one it began at, and
+    Claude Code is the version it began with, during the round and after it (a read of `claude
+    --version` that failed during the round and reads that version after it is not a change).
+    Otherwise they are moved to quarantine (see [quarantine]) and it exits 2. A round whose replies
+    were put in place writes into the lock of the parts what it does not hold yet.
+
+    Exit 0 when every request has its reply, 2 when a call failed a check, the final checks failed or
+    anything was refused, EXIT_USAGE_LIMIT when a call met the Claude plan's usage limit (wait for the
+    reset and run it again), and EXIT_HANDOFF when a process wrote no reply (run it again); an
+    interrupt exits 130, and a call that raised exits 2 for an error this tool names or 1 for any other.
+    With `--give-up CALL`, it runs no process
+    and records that the call is given up instead (see [give_up_requests])."""
+    directory = guard.check_dir(arguments.dir)
+    check_into(arguments.into)
+    if arguments.parallel < 1:
+        raise ConfigError("--parallel is how many processes run at once, at least 1")
+    if arguments.give_up:
+        return give_up_requests(directory, arguments.into, arguments.give_up, arguments.reason, say)
+    if arguments.reason is not None:
+        raise ConfigError("--reason says why a call is given up, so it goes with --give-up")
+    pending = pending_requests(directory, arguments.into, lambda text: print(text, file=sys.stderr))
+    if not pending:
+        say(f"no request of {arguments.into} is waiting for a reply")
+        return 0
+    folder = os.path.dirname(pending[0])
+    run = os.path.basename(folder)
+    records = glob.glob(os.path.join(directory, "raw", "*", run, "run.json"))
+    meta = json.loads(read(records[0])) if len(records) == 1 else {}
+    if meta.get("transport") != HANDOFF or meta.get("name") not in config["models"] or not is_handoff(config["models"][meta["name"]]):
+        raise GoldError(f"{run} is not the run of a handoff model of voters.json, so its requests are not answered here")
+    model = meta["model"]
+    requests = {path: handoff_request(path, model) for path in pending}
+    claude = confine.find_claude(arguments.claude)
+    version = confine.version(claude)
+    check_stamp(version, confine.arguments(model))
+    commit = deslag_commit()
+    held = {
+        "deslag_commit": commit, "draw": draw_values(directory) if parts_lock_path(directory) else None,
+        "agent": {"version": version, "args": confine.arguments(model)},
+    }
+    check_parts_lock(directory, "handoff-run", held)
+    round_ = HandoffRound(folder, model, claude, version)
+    round_.check_agent()
+    changes = tree_changes(REPO)
+    if changes:
+        raise GoldError(
+            f"git status shows {len(changes)} changes outside .label/ in {REPO} ({', '.join(changes[:5])}); a round starts "
+            f"only from a clean tree, so that a change after it is the round's"
+        )
+    # A temp directory inside a repository is refused now, before any call, not call by call.
+    os.rmdir(confine.workdir("deslag-handoff-"))
+    left = sorted(glob.glob(os.path.join(glob.escape(folder), "*" + STAGED)))
+    if left:
+        moved = quarantine(folder, left)
+        print(
+            f"label: {len(moved)} replies a round left staged, never checked at its end (it was killed), are moved to "
+            f"{os.path.dirname(moved[0])}, where nothing reads them, and their calls are asked again",
+            file=sys.stderr,
+        )
+    say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
+    counts = {"answered": 0, "no reply": 0, "usage limit": 0, "failed": 0, "not run": 0}
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel)
+    why = None
+    placed = []
+    try:
+        try:
+            futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
+            for future in concurrent.futures.as_completed(futures):
+                call, outcome, failed, note = future.result()
+                counts[outcome] += 1
+                say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else "") + (f"; {note}" if note else ""))
+        finally:
+            # An interrupt or a call that raised stops the round: no call that has not started
+            # starts, and the ones running are waited for.
+            pool.shutdown(wait=True, cancel_futures=True)
+    finally:
+        # The round fails closed, however it ended: its staged replies go into place only when git
+        # shows the tree clean after it (a git that cannot say counts as a change), at the commit it
+        # began at, and when Claude Code stayed the version the stamp is for. A call still running
+        # past this point, after a second interrupt, stages nothing.
+        with round_.lock:
+            round_.closed = True
+            staged = list(round_.staged)
+        whys = []
+        after = read_version(claude)
+        if round_.changed_version not in (None, UNREADABLE) or (round_.changed_version == UNREADABLE and after != version):
+            whys.append(f"`claude --version` said {round_.changed_version} during the round, which began with {version}")
+        elif round_.changed_version == UNREADABLE:
+            print(
+                f"label: `claude --version` could not be read after a call, and says {version} after the round, so "
+                f"Claude Code did not change: the replies of the calls that passed are kept",
+                file=sys.stderr,
+            )
+        if after != version and round_.changed_version is None:
+            whys.append(f"`claude --version` says {after} after the round, which began with {version}")
+        try:
+            changes = tree_changes(REPO)
+            if changes:
+                whys.append(
+                    f"after the round git status shows {len(changes)} changes outside .label/ in {REPO} "
+                    f"({', '.join(changes[:5])})"
+                )
+        except GoldError as error:
+            whys.append(f"whether the tree is clean after the round is not known ({error})")
+        now = deslag_commit()
+        if now != commit:
+            whys.append(f"the checkout is at {now} after the round, which began at {commit}")
+        why = "; and ".join(whys) or None
+        if why is not None:
+            moved = quarantine(folder, staged)
+            print(
+                f"label: {why}, so the {len(moved)} replies of this round"
+                + (f" are moved to {os.path.dirname(moved[0])}, where nothing reads them," if moved else "")
+                + " and none is read",
+                file=sys.stderr,
+            )
+        else:
+            placed = place(staged)
+    if why is not None:
+        return 2
+    if placed:
+        pin_parts_lock(directory, "handoff-run", held)
+    say(
+        f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
+        f"{counts['usage limit']} stopped by the usage limit, {counts['failed']} failed a check; `judge` run again "
+        f"reads the replies"
+    )
+    if counts["usage limit"]:
+        print(
+            f"label: the Claude plan's usage limit stopped the round; its calls keep no reply and are not given up. "
+            f"Wait for the limit to reset, then run handoff-run again",
+            file=sys.stderr,
+        )
+    if counts["failed"]:
+        return 2
+    if counts["usage limit"]:
+        return EXIT_USAGE_LIMIT
+    return EXIT_HANDOFF if counts["no reply"] else 0
+
+
+def place(staged):
+    """Renames each reply in `staged` from its staged name to the reply name `judge` reads. Returns the
+    names they now have."""
+    placed = []
+    for path in staged:
+        placed.append(path[: -len(STAGED)])
+        os.replace(path, placed[-1])
+    return placed
+
+
+def quarantine(folder, staged):
+    """Moves the replies `staged` in the run's folder `folder` to a new folder under
+    `.label/quarantine/`, named for the run, under their reply names: out of the folder judge reads,
+    so none is read, and not deleted, since each was paid for. Returns the paths they were moved to."""
+    if not staged:
+        return []
+    base = os.path.join(guard.root(), QUARANTINE)
+    os.makedirs(base, exist_ok=True)
+    target = tempfile.mkdtemp(prefix=f"{os.path.basename(folder)}-", dir=base)
+    moved = []
+    for path in staged:
+        name = os.path.basename(path)
+        moved.append(os.path.join(target, name[: -len(STAGED)] if name.endswith(STAGED) else name))
+        os.replace(path, moved[-1])
+    return moved
+
+
+def give_up_requests(directory, into, calls, reason, say):
+    """`handoff-run --give-up CALL --reason TEXT`: records that each call named, a request of the latest
+    handoff run of `into` still waiting for its reply, is given up, in `<call>.given-up.json` beside the
+    request (the call, the request's hash, the reason, the date), and runs no process. The next `judge`
+    answers it with nothing (see [Runner.ask_handoff]). Refuses a call that is not waiting, and an empty
+    reason."""
+    reason = " ".join((reason or "").split())
+    if not reason:
+        raise ConfigError("--give-up needs --reason TEXT, why the call is given up, which the run's run.json records")
+    waiting = {}
+    for path in pending_requests(directory, into):
+        request = json.loads(read(path))
+        waiting[str(request.get("call"))] = (path, request)
+    unknown = [call for call in calls if call not in waiting]
+    if unknown:
+        raise GoldError(
+            f"no request of {into} that is waiting for a reply is the call {', '.join(unknown)}; the calls waiting "
+            f"are {', '.join(waiting) or 'none'} (`label.py handoff` lists their files)"
+        )
+    for call in dict.fromkeys(calls):
+        path, request = waiting[call]
+        write_atomic(os.path.join(os.path.dirname(path), f"{call}{GIVEN_UP}"), json.dumps({
+            "call": call, "request_sha256": request["request_sha256"], "run": request.get("run"),
+            "reason": reason, "date": now(),
+        }, indent=2) + "\n")
+        say(f"{call}: given up ({reason})")
+    say(
+        f"`judge` run again answers each call given up with nothing: its items stay open, the retries ask them "
+        f"again, those never settled are left out of {into}/labelled.conllu and listed in {into}/unsettled.tsv "
+        f"(with --strict, judge exits 3 instead), and the run's run.json records the calls given up"
+    )
+    return 0
+
+
+def command_probe_confinement(arguments, config, transport=None, gold=None, say=print):
+    """`probe-confinement`: [confine.probe], with the model of the handoff adjudicator, and the
+    stamp it writes in this checkout's `.label`, whether it passed or not. Prints each check and its
+    result and the model ids the process named, never what the process wrote. Exit 0 when it passed,
+    2 when it did not."""
+    claude = confine.find_claude(arguments.claude)
+    model = handoff_model(config)
+    version = confine.version(claude)
+    args = confine.arguments(model)
+    say(f"probe: claude {version}, {shlex.join(args)}")
+    results, skipped, seen = confine.probe(claude, model, arguments.keep, say)
+    results["version_unchanged"] = confine.version(claude) == version
+    for name, ok in results.items():
+        say(f"  {name}: {'true' if ok else 'false'}")
+    for name, why in skipped.items():
+        say(f"  {name}: skipped, {why}")
+    say(f"  models named: init {seen['init']}; assistant messages {', '.join(seen['assistant']) or 'none'}")
+    # A probe whose assertions are not this module's set is no pass, whatever they say.
+    complete = set(results) | set(skipped) == set(confine.ASSERTIONS) and not set(skipped) - set(confine.SKIPPABLE)
+    verdict = "pass" if complete and all(results.values()) else "fail"
+    stamp = {
+        "claude_code_version": version, "args": args, "date": now()[:10], "time": now(), "verdict": verdict,
+        "assertions": results, "skipped": skipped, "models_seen": seen,
+    }
+    write_atomic(stamp_path(), json.dumps(stamp, indent=2) + "\n")
+    say(f"verdict: {verdict}; {stamp_path()} written")
+    return 0 if verdict == "pass" else 2
+
+
 def command_tag(arguments, config, transport=None, gold=None):
     names = arguments.voter or config["voters"]
     for name in names:
@@ -1904,7 +2931,7 @@ def command_tag(arguments, config, transport=None, gold=None):
     if arguments.dry_run:
         batches = runner.batch_files()
         model = config["models"][names[0]]
-        user = runner.prompts.fill("voter-task.md", batch=read(batches[0]))
+        user = runner.prompts.fill("voter-task.md", batch=batches[0][1])
         body = openrouter.request_body(model, runner.prompts.system, user)
         shown = json.loads(json.dumps(body))
         shown["messages"][0]["content"] = f"<{len(runner.prompts.system)} characters of guide and notes>"
@@ -2013,6 +3040,127 @@ def command_spend(arguments, config, transport=None, gold=None):
     return 0
 
 
+def latest_record(directory, name, role, into=None):
+    """The (id, `run.json`) of the latest run of `name` in `role` in the sample `directory`, whatever
+    became of it, or (None, None); for an adjudicator, only a run for the merge `into`."""
+    found = []
+    for path in glob.glob(os.path.join(directory, "raw", glob.escape(name), "r*", "run.json")):
+        run = os.path.basename(os.path.dirname(path))
+        if not re.fullmatch(r"r\d+", run):
+            continue
+        meta = json.loads(read(path))
+        if meta.get("role") == role and (into is None or (meta.get("scope") or {}).get("into") == into):
+            found.append((int(run[1:]), run, meta))
+    if not found:
+        return None, None
+    _, run, meta = max(found, key=lambda item: item[0])
+    return run, meta
+
+
+def batches_done(directory, name, run):
+    """How many batches of a voter's run have an answer saved for all their sentences: the `batch-NN`
+    asks whose `*.lines.txt` is saved whole or, for one cut off and asked again in halves, for both
+    halves, each whole or in halves in turn. A batch with a half still to ask, or a sentence cut off
+    even alone, is not counted."""
+    folder = os.path.join(directory, "raw", name, run)
+    saved = {f[: -len(".lines.txt")] for f in os.listdir(folder) if f.endswith(".lines.txt")}
+
+    def done(kind):
+        if kind in saved:
+            return True
+        split = any(other.startswith(kind + "-") for other in saved)
+        return split and done(f"{kind}-a") and done(f"{kind}-b")
+
+    batches = {found.group(1) for found in (re.match(r"(batch-\d+)(?:-[ab])*$", kind) for kind in saved) if found}
+    return len([kind for kind in batches if done(kind)])
+
+
+def preflight(directory, into, binary):
+    """The verdict of `deslag-gold silver build --check-part <directory>:<into>` on the part, run from
+    the checkout's root, in a few words and a count, never the problems themselves, which may quote a
+    sentence. `not run` when there is no merge yet, or no deslag-gold to run."""
+    if not os.path.isfile(os.path.join(directory, into, "voters.tsv")):
+        return f"not run (no merge in {into} yet)"
+    if not binary:
+        return "not run (deslag-gold is not built; `make build-label` builds it, or give --gold-bin)"
+    env = {key: value for key, value in os.environ.items() if key != openrouter.KEY_VARIABLE}
+    if os.sep in binary:
+        binary = os.path.abspath(binary)
+    try:
+        # From the checkout's root, where the paths --check-part reads by default are.
+        done = subprocess.run(
+            [binary, "silver", "build", "--check-part", f"{directory}:{into}"],
+            capture_output=True, text=True, check=False, env=env, cwd=REPO,
+        )
+    except OSError as error:
+        return f"not run ({binary} could not be run: {error.strerror or type(error).__name__})"
+    if done.returncode == 0:
+        return "ok"
+    problems = len([line for line in done.stderr.splitlines() if line.strip()])
+    return (
+        f"refused, {problems} line{'' if problems == 1 else 's'} on stderr (exit {done.returncode}); "
+        f"`deslag-gold silver build --check-part {directory}:{into}` prints {'it' if problems == 1 else 'them'}"
+    )
+
+
+def command_status(arguments, config, transport=None, gold=None, say=print):
+    """Where the labelling of one sample stands, in counts and run ids only, never a tag or a word: per
+    voter its latest run, what became of it, its batches answered of all, the sentences it abstains on
+    and its dollars; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
+    handoff adjudicator, the requests waiting and the replies present; the ledger's total and what is
+    left under `--max-usd`; and the verdict of the part's preflight. It reads, and writes nothing in
+    the sample directory."""
+    directory = guard.check_dir(arguments.dir)
+    into = check_into(arguments.into)
+    book = ledger_module.open_ledger(guard.root())
+    say(f"sample: {sentence_count(directory)} sentences, {directory}")
+    current = len([
+        f for f in os.listdir(os.path.join(directory, "batches")) if re.fullmatch(r"batch-\d+\.txt", f)
+    ]) if os.path.isdir(os.path.join(directory, "batches")) else None
+    for name in config["voters"]:
+        run, meta = latest_record(directory, name, "voter")
+        if run is None:
+            say(f"voter {name}: no run")
+            continue
+        of = meta.get("batches")
+        if of is None:
+            of = current if meta.get("limit") is None and current is not None else "?"
+        abstaining = meta.get("abstaining")
+        say(
+            f"voter {name}: {run} {run_status(meta)}, {batches_done(directory, name, run)} of {of} batches, "
+            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}"
+        )
+    for name in sorted(config.get("external") or {}):
+        run, meta = latest_record(directory, name, "external")
+        say(f"{name}: {run} {run_status(meta)}" if run else f"{name}: not registered")
+    record = os.path.join(directory, into, ADJUDICATOR_RECORD)
+    adjudicator = json.loads(read(record))["name"] if os.path.isfile(record) else config["adjudicator"]
+    run, meta = latest_record(directory, adjudicator, "adjudicator", into)
+    line = f"adjudicator {adjudicator} ({into}): "
+    line += f"{run} {run_status(meta)}, ${book.run_cost(run):.4f}" if run else "no run"
+    if is_handoff(config["models"].get(adjudicator, {})):
+        waiting = pending_requests(directory, into)
+        folder = latest_handoff(directory, into)
+        replies = [
+            json.loads(read(os.path.join(folder, name)))["reply_name"]
+            for name in (os.listdir(folder) if folder else []) if name.endswith(".request.json")
+        ]
+        present = sum(read_reply(os.path.join(folder, reply)) is not None for reply in replies)
+        line += f"; {len(waiting)} requests waiting, {present} replies present"
+        staged = len(glob.glob(os.path.join(glob.escape(folder), "*" + STAGED))) if folder else 0
+        if staged:
+            line += f", {staged} replies staged by a round that did not end (the next round moves them to quarantine)"
+        given_up = given_up_calls(directory, into)
+        if given_up:
+            line += f", {given_up} calls given up"
+    say(line)
+    total = book.total()
+    left = "" if arguments.max_usd is None else f", ${max(arguments.max_usd - total, 0.0):.4f} left under --max-usd {arguments.max_usd:g}"
+    say(f"ledger: ${total:.4f} booked{left}")
+    say(f"preflight ({into}): {preflight(directory, into, arguments.gold_bin or find_binary('deslag-gold'))}")
+    return 0
+
+
 def parser():
     main = argparse.ArgumentParser(description="Labels sentences with models through OpenRouter. See README.md.")
     commands = main.add_subparsers(dest="command", required=True)
@@ -2061,7 +3209,8 @@ def parser():
     judge.add_argument(
         "--adjudicator", metavar="NAME",
         help="a model of voters.json to adjudicate this merge, in place of its `adjudicator`: `opus` is handed "
-        "to Claude Code subagents through files (exit 6 while it waits), `claude` is Sonnet through OpenRouter",
+        "to confined Claude Code processes through files (exit 6 while it waits; handoff-run answers), `claude` is "
+        "Sonnet through OpenRouter",
     )
     judge.add_argument(
         "--trains", choices=("yes", "no"), default="no",
@@ -2090,11 +3239,53 @@ def parser():
     handoff.set_defaults(handler=command_handoff)
 
     agent = commands.add_parser(
-        "handoff-agent", help="print the prompt of the subagent for one request file, or the template's sha256"
+        "handoff-agent", help="print the prompt of the process for one request file, or the template's sha256"
     )
     agent.add_argument("--request", metavar="PATH", help="a `<call>.request.json` that `judge` wrote")
     agent.add_argument("--sha256", action="store_true", help="print the sha256 of the template, for agent.json")
     agent.set_defaults(handler=command_handoff_agent)
+
+    answered = commands.add_parser(
+        "handoff-run", help="answer the requests of a handoff judge, each with a confined `claude -p --safe-mode`"
+    )
+    answered.add_argument("--dir", required=True, help="the sample directory, under .label")
+    answered.add_argument("--into", required=True, help="the merge directory under --dir the judge wrote to")
+    answered.add_argument("--parallel", type=int, default=6, help="how many processes run at once (default 6)")
+    answered.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
+    answered.add_argument(
+        "--give-up", action="append", metavar="CALL",
+        help="run no process, and record that this call (`part-01`, `retry-1-01`), still waiting, is given up: judge "
+        "then leaves its items open; give it again for another call",
+    )
+    answered.add_argument("--reason", metavar="TEXT", help="why the calls of --give-up are given up, for run.json")
+    answered.set_defaults(handler=command_handoff_run)
+
+    probe = commands.add_parser(
+        "probe-confinement", help="check that a claude process run as handoff-run runs it is confined, and stamp it"
+    )
+    probe.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
+    probe.add_argument("--keep", action="store_true", help="keep the scratch tree, and print where it is")
+    probe.set_defaults(handler=command_probe_confinement)
+
+    locks = commands.add_parser(
+        "lock", help="print the lock of the parts of a draw, or reset it with a reason that is kept"
+    )
+    locks.add_argument("--dir", required=True, help="a part of the draw, under .label")
+    locks.add_argument(
+        "--reset", action="store_true",
+        help="end the lock: what it held, the reason and the runs of each part go into lock-resets.jsonl beside "
+        "it, and the next step that counts writes a new one",
+    )
+    locks.add_argument("--reason", metavar="TEXT", help="why the lock is reset, for lock-resets.jsonl")
+    locks.set_defaults(handler=command_lock)
+
+    status = commands.add_parser(
+        "status", help="where the labelling of one sample stands, in counts and run ids, never a tag or a word"
+    )
+    common(status, False)
+    status.add_argument("--into", default="merge", help="the merge directory under --dir (default merge)")
+    status.add_argument("--max-usd", type=float, help="the cap, to print what is left under it")
+    status.set_defaults(handler=command_status)
 
     spend = commands.add_parser("spend", help="print the ledger's cumulative total")
     spend.set_defaults(handler=command_spend)
@@ -2112,7 +3303,7 @@ def main(argv=None, transport=None, gold=None):
     try:
         config = load_config()
         return arguments.handler(arguments, config, transport, gold)
-    except (guard.Refused, ConfigError, GoldError, openrouter.ApiError, ledger_module.CapExceeded) as error:
+    except (guard.Refused, ConfigError, GoldError, openrouter.ApiError, ledger_module.CapExceeded, confine.Unconfined) as error:
         print(redacted(f"label: {error}"), file=sys.stderr)
         return 2
     except KeyboardInterrupt:

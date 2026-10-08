@@ -96,6 +96,13 @@ impl Exclusion {
         key == file.sha256 || key == file.path
     }
 
+    /// Whether the list names the fixture at `path` with content of `sha256`.
+    pub fn lists(&self, path: &str, sha256: &str) -> bool {
+        self.keys
+            .iter()
+            .any(|(key, _)| key == sha256 || key == path)
+    }
+
     /// `files` without the listed ones, and how many were removed. An entry that names no file
     /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
@@ -439,6 +446,28 @@ impl Texts {
         Ok(texts)
     }
 
+    /// The texts of the sentences of the CoNLL-U files `paths`, by their `# text`: live silver's
+    /// `silver.conllu`.
+    pub fn conllu(paths: &[PathBuf]) -> Result<Texts, Error> {
+        let mut texts = Texts::default();
+        for path in paths {
+            let shown = path.display().to_string();
+            for block in conllu::read(&shown, &crate::data::read_text(path)?)? {
+                let text = block.comment("text").ok_or_else(|| {
+                    Error::load(&shown, Place::File, "a sentence has no `# text`")
+                })?;
+                texts.add(&text.value);
+            }
+        }
+        Ok(texts)
+    }
+
+    /// This set and the texts of `other`.
+    pub fn with(mut self, other: Texts) -> Texts {
+        self.keys.extend(other.keys);
+        self
+    }
+
     /// The sentences of the skeletons `paths`, the `sample.conllu` of earlier draws, and their
     /// ids.
     pub fn draws(paths: &[PathBuf]) -> Result<(Texts, Vec<String>), Error> {
@@ -475,6 +504,11 @@ impl Texts {
     pub fn has(&self, toks: &[Tok]) -> bool {
         let text: String = toks.iter().map(|tok| tok.form.as_str()).collect();
         self.keys.contains(&Texts::normal(&text))
+    }
+
+    /// Whether `text` is one of the texts.
+    pub fn has_text(&self, text: &str) -> bool {
+        self.keys.contains(&Texts::normal(text))
     }
 
     /// How many distinct texts it holds.

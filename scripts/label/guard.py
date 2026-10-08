@@ -13,6 +13,11 @@ symlinks and `..` followed, and checks before it opens any sample file. It accep
   `unlabelled`. The header `exam.from` only says which gold to generate from; text under that header
   proves nothing, so a hand-made file, a hard link or a copy of anything else is refused.
 
+A draw dealt into parts (`deslag-gold draw --parts N`) writes each part as a draw for labelling in a
+directory `part-01` to `part-NN`, whose header adds `# part = k of N` and `# tag_version = V`, the tag
+VERSION of the draw. A header with `part` must give both, in that form; a directory named `part-NN`
+must say it is part NN; and the sample and the manifest, where both say one of the keys, must agree.
+
 A skeleton of a holdout gold says `# exam.split = holdout`, and is refused wherever it is. The gold
 flow's own `sample.conllu` mixes holdout in and keeps the split in its manifest; it is neither of the
 above and is refused. Files with more than one hard link are refused: the targets write fresh ones.
@@ -23,6 +28,7 @@ by every stage that reads it.
 
 import hashlib
 import os
+import re
 import subprocess
 import tempfile
 
@@ -122,6 +128,15 @@ def _manifest(path):
     return header, splits
 
 
+def draw_header(directory):
+    """The `key = value` pairs of the header of the manifest in the checked sample directory
+    `directory`, or None when it has no manifest (a skeleton of a gold)."""
+    manifest = os.path.join(directory, "manifest.tsv")
+    if not os.path.isfile(manifest):
+        return None
+    return _manifest(manifest)[0]
+
+
 def _own_file(real, name):
     """The real path of `name` in the directory `real`, which must be a file that is in it."""
     path = os.path.join(real, name)
@@ -132,6 +147,34 @@ def _own_file(real, name):
     if os.stat(linked).st_nlink > 1:
         raise Refused(f"{path}: it is a hard link, and the labelling flow reads only files its targets wrote")
     return linked
+
+
+def _check_part(real, header, says):
+    """Checks the part header of a draw for labelling in the directory `real`, from its manifest's
+    `header` and its sample's `says`: none at all for a draw that was not dealt into parts, unless the
+    directory is named `part-NN`; otherwise `part = k of N` with k from 1 to N, k being NN in a
+    directory so named, and a `tag_version`."""
+    values = {}
+    for key in ("part", "tag_version"):
+        found = {value for value in (header.get(key), says.get(key)) if value is not None}
+        if len(found) > 1:
+            raise Refused(f"{real}: sample.conllu and manifest.tsv give different values of `{key}`")
+        values[key] = found.pop() if found else None
+    named = re.fullmatch(r"part-(\d+)", os.path.basename(real))
+    if values["part"] is None:
+        if named:
+            raise Refused(
+                f"{real}: a directory named {os.path.basename(real)} is a part of a draw, and its header does "
+                f"not say `# part = k of N`, as `deslag-gold draw --parts N` writes it"
+            )
+        return
+    found = re.fullmatch(r"(\d+) of (\d+)", values["part"])
+    if not found or not 1 <= int(found.group(1)) <= int(found.group(2)):
+        raise Refused(f"{real}: `# part = {values['part']}` is not `k of N` with k from 1 to N")
+    if named and int(named.group(1)) != int(found.group(1)):
+        raise Refused(f"{real}: the directory is part {int(named.group(1))}, and its header says part {values['part']}")
+    if not values["tag_version"]:
+        raise Refused(f"{real}: a part of a draw says the tag VERSION of its draw (`# tag_version = V`), and this one does not")
 
 
 def check_dir(directory):
@@ -167,6 +210,7 @@ def check_dir(directory):
                 f"{manifest}: only a draw for labelling is read from a directory with a manifest: it says "
                 f"`draw = for labelling` and every row is `unlabelled`"
             )
+        _check_part(real, header, says)
     elif says.get("exam.from") not in GOLDS:
         raise Refused(
             f"{sample}: it does not say it was made from tests/gold/dev.conllu or owner.conllu "

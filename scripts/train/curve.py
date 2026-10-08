@@ -13,7 +13,7 @@ The first --set is the one the learner tunes its confidence on (the treebank's d
 other set is only graded. Per point and set it writes DIR/curve/LEARNER-N.SET.import.conllu and
 `.run.json`, and DIR/curve.txt holds the table.
 
-The shuffle is the one rule PR-brill reuses: CURVE_SEED seeds `random.Random`, which shuffles the
+The shuffle is the one rule the Brill learner reuses: CURVE_SEED seeds `random.Random`, which shuffles the
 sentences once, in the order the training files list them, and a point is a prefix of that order.
 """
 

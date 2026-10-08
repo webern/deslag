@@ -54,7 +54,7 @@ const SIDECAR_LABELS: &[&str] = &["human", "llm", "mixed", "unknown"];
 
 /// The licences a fixture may be quoted under: permissive ones whose only condition on quoting
 /// is attribution, which the sidecar carries. A dual licence is written `A OR B`.
-const LICENSES: &[&str] = &[
+pub const LICENSES: &[&str] = &[
     "MIT",
     "MIT-0",
     "Apache-2.0",

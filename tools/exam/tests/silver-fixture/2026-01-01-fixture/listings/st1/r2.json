@@ -1,0 +1,1 @@
+{"model": "qwen/qwen3.8-27b", "endpoints": [{"tag": "deepinfra/bf16", "quantization": "bf16"}]}

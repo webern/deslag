@@ -1,0 +1,501 @@
+{
+  "abstentions": {
+    "columns": [
+      "voter",
+      "sentences with no answer"
+    ],
+    "rows": [
+      [
+        "deepseek",
+        "0"
+      ],
+      [
+        "gemma",
+        "0"
+      ],
+      [
+        "qwen",
+        "0"
+      ],
+      [
+        "spacy",
+        "0"
+      ]
+    ]
+  },
+  "adjudicated_words": 2,
+  "adjudicator": "opus",
+  "agreed_share": "97.3",
+  "agreed_words": 71,
+  "agreement": {
+    "columns": [
+      "group",
+      "sentences",
+      "words",
+      "agreed words",
+      "adjudicated words",
+      "agreed %"
+    ],
+    "rows": [
+      [
+        "all",
+        "4",
+        "73",
+        "71",
+        "2",
+        "97.3"
+      ]
+    ]
+  },
+  "agreement_after_drops": "no",
+  "agreement_by_cell": {
+    "columns": [
+      "group",
+      "sentences",
+      "words",
+      "agreed words",
+      "adjudicated words",
+      "agreed %"
+    ],
+    "rows": [
+      [
+        "human / list-item",
+        "1",
+        "28",
+        "28",
+        "0",
+        "100.0"
+      ],
+      [
+        "llm / list-item",
+        "1",
+        "24",
+        "23",
+        "1",
+        "95.8"
+      ],
+      [
+        "llm / prose",
+        "1",
+        "14",
+        "14",
+        "0",
+        "100.0"
+      ],
+      [
+        "mixed / list-item",
+        "1",
+        "7",
+        "6",
+        "1",
+        "85.7"
+      ]
+    ]
+  },
+  "agreement_by_context": {
+    "columns": [
+      "group",
+      "sentences",
+      "words",
+      "agreed words",
+      "adjudicated words",
+      "agreed %"
+    ],
+    "rows": [
+      [
+        "list-item",
+        "3",
+        "59",
+        "57",
+        "2",
+        "96.6"
+      ],
+      [
+        "prose",
+        "1",
+        "14",
+        "14",
+        "0",
+        "100.0"
+      ]
+    ]
+  },
+  "agreement_by_tier": {
+    "columns": [
+      "group",
+      "sentences",
+      "words",
+      "agreed words",
+      "adjudicated words",
+      "agreed %"
+    ],
+    "rows": [
+      [
+        "human",
+        "1",
+        "28",
+        "28",
+        "0",
+        "100.0"
+      ],
+      [
+        "llm",
+        "2",
+        "38",
+        "37",
+        "1",
+        "97.4"
+      ],
+      [
+        "mixed",
+        "1",
+        "7",
+        "6",
+        "1",
+        "85.7"
+      ]
+    ]
+  },
+  "annotations_license": "CC-BY-4.0",
+  "audit": {
+    "accepted": "yes",
+    "bar": "95.0",
+    "code": "84.9 [83.7, 85.7]",
+    "met": "no",
+    "pos": "84.9 [83.7, 85.7]",
+    "prefilled": 0,
+    "present": true,
+    "rejected": 1,
+    "sentences": 4,
+    "table": {
+      "columns": [
+        "group",
+        "words",
+        "part of speech",
+        "whole code"
+      ],
+      "rows": [
+        [
+          "all",
+          "73",
+          "84.9 [83.7, 85.7]",
+          "84.9 [83.7, 85.7]"
+        ],
+        [
+          "prov=agree",
+          "71",
+          "87.3 [85.7, 92.7]",
+          "87.3 [85.7, 92.7]"
+        ],
+        [
+          "prov=adjudicated",
+          "2",
+          "0.0 [0.0, 0.0]",
+          "0.0 [0.0, 0.0]"
+        ],
+        [
+          "context=list-item",
+          "59",
+          "84.7 [83.3, 85.7]",
+          "84.7 [83.3, 85.7]"
+        ],
+        [
+          "context=prose",
+          "14",
+          "85.7 [85.7, 85.7]",
+          "85.7 [85.7, 85.7]"
+        ],
+        [
+          "prefilled=no",
+          "73",
+          "84.9 [83.5, 85.7]",
+          "84.9 [83.5, 85.7]"
+        ]
+      ]
+    },
+    "words": 73
+  },
+  "calibration": [
+    {
+      "name": "dev",
+      "table": {
+        "columns": [
+          "name",
+          "pos",
+          "pos_low",
+          "pos_high",
+          "words"
+        ],
+        "rows": [
+          [
+            "pipeline",
+            "97.1",
+            "96.2",
+            "97.9",
+            "1210"
+          ]
+        ]
+      }
+    }
+  ],
+  "check_version": "1",
+  "deslag_commit": "0123456789abcdef0123456789abcdef01234567",
+  "draw": {
+    "columns": [
+      "setting",
+      "value"
+    ],
+    "rows": [
+      [
+        "parts",
+        "01, 02 of 2"
+      ],
+      [
+        "seed",
+        "0x6465736c6167"
+      ],
+      [
+        "corpus",
+        "tests/corpus tree"
+      ],
+      [
+        "per tier quotas",
+        "prose:2 list-item:1 heading:0 table-cell:0"
+      ],
+      [
+        "draw",
+        "for labelling, split unlabelled, ids s0001 on"
+      ],
+      [
+        "limits",
+        "per file 2, per repo 4, words at least 2, tokens at most 60"
+      ],
+      [
+        "exclude",
+        "sha256 827d096d92f3deeaa0e8070d79f45beb176768e57a958a1cd325f5f4b754b048, 0 fixtures"
+      ],
+      [
+        "exclude repos",
+        "1 repositories and 3 of tests/corpus, 0 fixtures"
+      ],
+      [
+        "exclude silver",
+        "0 live batches, 0 texts"
+      ],
+      [
+        "tag_version",
+        "11"
+      ]
+    ]
+  },
+  "draw_source": "tests/corpus tree",
+  "dropped": {
+    "columns": [
+      "reason",
+      "sentences"
+    ],
+    "rows": [
+      [
+        "audit rejected",
+        "1"
+      ],
+      [
+        "gold text",
+        "1"
+      ],
+      [
+        "reserved repository",
+        "2"
+      ]
+    ]
+  },
+  "dropped_count": 4,
+  "files": 3,
+  "has_calibration": true,
+  "labellers": {
+    "columns": [
+      "name",
+      "role",
+      "model",
+      "licence",
+      "licence read",
+      "endpoint",
+      "quantisation",
+      "runs"
+    ],
+    "rows": [
+      [
+        "deepseek",
+        "voter",
+        "deepseek/deepseek-v4-flash",
+        "MIT",
+        "2026-10-04",
+        "gmicloud/fp8",
+        "fp8",
+        "2"
+      ],
+      [
+        "gemma",
+        "voter",
+        "google/gemma-4-31b-it",
+        "Apache-2.0",
+        "2026-10-04",
+        "parasail/fp8",
+        "fp8",
+        "2"
+      ],
+      [
+        "opus",
+        "adjudicator",
+        "claude-opus-5-5",
+        "Anthropic Commercial Terms (adjudicator, D2a)",
+        "2026-10-04",
+        "claude-code",
+        "-",
+        "2"
+      ],
+      [
+        "qwen",
+        "voter",
+        "qwen/qwen3.8-27b",
+        "Apache-2.0",
+        "2026-10-04",
+        "deepinfra/bf16",
+        "bf16",
+        "2"
+      ],
+      [
+        "spacy",
+        "external",
+        "en-core-web-trf",
+        "MIT",
+        "2026-10-04",
+        "local",
+        "-",
+        "2"
+      ]
+    ]
+  },
+  "lengths": {
+    "columns": [
+      "words in the sentence",
+      "sentences"
+    ],
+    "rows": [
+      [
+        "fewer than 2",
+        "0"
+      ],
+      [
+        "2 to 3",
+        "0"
+      ],
+      [
+        "4 to 7",
+        "1"
+      ],
+      [
+        "8 or more",
+        "3"
+      ]
+    ]
+  },
+  "licenses": {
+    "columns": [
+      "licence",
+      "sentences",
+      "repositories"
+    ],
+    "rows": [
+      [
+        "Apache-2.0",
+        "1",
+        "1"
+      ],
+      [
+        "MIT",
+        "3",
+        "2"
+      ]
+    ]
+  },
+  "min_voters": "3",
+  "most_from_one_file": 2,
+  "most_from_one_repository": 2,
+  "name": "2026-01-01-fixture",
+  "origins": {
+    "columns": [
+      "origin",
+      "words",
+      "% of words"
+    ],
+    "rows": [
+      [
+        "English",
+        "73",
+        "100.0"
+      ]
+    ]
+  },
+  "parts": "01, 02 of 2",
+  "repositories": 3,
+  "sentences": 4,
+  "sources_rows": 3,
+  "tag_version": "11",
+  "tiers": {
+    "columns": [
+      "tier",
+      "sentences",
+      "train",
+      "tune",
+      "repositories",
+      "files"
+    ],
+    "rows": [
+      [
+        "human",
+        "1",
+        "1",
+        "0",
+        "1",
+        "1"
+      ],
+      [
+        "llm",
+        "2",
+        "2",
+        "0",
+        "1",
+        "1"
+      ],
+      [
+        "mixed",
+        "1",
+        "0",
+        "1",
+        "1",
+        "1"
+      ]
+    ]
+  },
+  "tokens": 96,
+  "train": 3,
+  "tune": 1,
+  "unsettled": {
+    "columns": [
+      "tier / context",
+      "sentences",
+      "words"
+    ],
+    "rows": [
+      [
+        "mixed / prose",
+        "1",
+        "1"
+      ]
+    ]
+  },
+  "unsettled_sentences": 1,
+  "unsettled_words": 1,
+  "words": 73
+}

@@ -1,0 +1,118 @@
+# exam.tokens = deslag
+# exam.silver = yes
+# sent_id = s0001
+# exam.context = list-item
+# pick_id = s0001
+# text = Renamed property VerificationUrl -> VerificationUri and changed type from string to Uri
+1	Renamed	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|Runs=r5
+2	property	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	VerificationUrl	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+4	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+5	>	_	SYM	_	_	_	_	_	Kind=Symbol|Prov=kind
+6	VerificationUri	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+7	and	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+8	changed	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+9	type	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	from	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	string	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+12	to	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	Uri	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+
+# sent_id = s0002
+# exam.context = list-item
+# pick_id = s0002
+# text = Bay Area apps are 0/14 on interviews while Midwest is 2/8 — you're being filtered out as a non-local Mizzou student in the Bay Area pool.
+1	Bay	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=adjudicated|Runs=r10
+2	Area	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+3	apps	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+4	are	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+5	0	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+6	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+7	14	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+8	on	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+9	interviews	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+10	while	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+11	Midwest	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+12	is	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+13	2	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind|SpaceAfter=No
+14	/	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+15	8	_	NUM	_	_	_	_	_	Kind=Number|Prov=kind
+16	—	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+17	you're	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+18	being	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+19	filtered	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+20	out	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+21	as	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+22	a	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+23	non	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+24	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+25	local	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+26	Mizzou	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+27	student	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+28	in	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+29	the	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+30	Bay	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+31	Area	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9
+32	pool	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r6,r7,r8,r9|SpaceAfter=No
+33	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0003
+# exam.context = list-item
+# pick_id = s0003
+# text = The models have been trained on English case law and the library has been built with the peculiarities of the legal system of England and Wales in mind.
+1	The	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+2	models	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	have	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+4	been	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+5	trained	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+6	on	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+7	English	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+8	case	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+9	law	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	and	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	the	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+12	library	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	has	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+14	been	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+15	built	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+16	with	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+17	the	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+18	peculiarities	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+19	of	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+20	the	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+21	legal	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+22	system	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+23	of	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+24	England	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+25	and	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+26	Wales	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+27	in	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+28	mind	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+29	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+
+# sent_id = s0008
+# exam.context = prose
+# pick_id = s0008
+# text = Skip platforms with apps < 3 (too noisy) or list them in a separate "low-volume" footnote.
+1	Skip	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+2	platforms	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+3	with	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+4	apps < 3	_	X	_	_	_	_	_	Kind=Code|Prov=kind
+5	(	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+6	too	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+7	noisy	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+8	)	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+9	or	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+10	list	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+11	them	_	NOUN	_	Number=Sing	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+12	in	_	VERB	_	VerbForm=Inf	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+13	a	_	ADJ	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+14	separate	_	NOUN	_	Number=Plur	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4
+15	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+16	low	_	DET	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+17	-	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind|SpaceAfter=No
+18	volume	_	ADV	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+19	"	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+20	footnote	_	ADP	_	_	_	_	_	Kind=Word|Prov=agree|Runs=r1,r2,r3,r4|SpaceAfter=No
+21	.	_	PUNCT	_	_	_	_	_	Kind=Punctuation|Prov=kind
+

@@ -135,13 +135,16 @@ pub struct Skipped {
     pub gold_text: usize,
     /// Its normalised text is that of a sentence of an earlier draw; a draw for labelling only.
     pub earlier: usize,
+    /// Its normalised text is that of a sentence silver holds; a gold draw only.
+    pub silver: usize,
 }
 
 /// What the draw is for.
 #[derive(Clone, Copy)]
 pub enum Mode<'a> {
-    /// The gold set: dev and holdout, with no check against other texts.
-    Gold,
+    /// The gold set: dev and holdout, leaving out the texts silver holds (none for a draw that
+    /// checks against no other text).
+    Gold(&'a Texts),
     /// Sentences to label.
     Labelling(Labelling<'a>),
 }
@@ -363,7 +366,7 @@ struct Pick {
 fn split_of(split: usize, mode: Mode<'_>) -> Option<Split> {
     match (split, mode) {
         (_, Mode::Labelling(_)) => None,
-        (0, Mode::Gold) => Some(Split::Dev),
+        (0, Mode::Gold(_)) => Some(Split::Dev),
         _ => Some(Split::Holdout),
     }
 }
@@ -413,13 +416,20 @@ pub fn draw(
             }
             files_read[tier_at] += 1;
             let mut found = candidates(file.text, settings, &mut skipped);
-            if let Mode::Labelling(labelling) = mode {
-                let before = found.len();
-                found.retain(|cand| !labelling.gold.has(&cand.toks));
-                skipped.gold_text += before - found.len();
-                let before = found.len();
-                found.retain(|cand| !labelling.earlier.has(&cand.toks));
-                skipped.earlier += before - found.len();
+            match mode {
+                Mode::Labelling(labelling) => {
+                    let before = found.len();
+                    found.retain(|cand| !labelling.gold.has(&cand.toks));
+                    skipped.gold_text += before - found.len();
+                    let before = found.len();
+                    found.retain(|cand| !labelling.earlier.has(&cand.toks));
+                    skipped.earlier += before - found.len();
+                }
+                Mode::Gold(silver) => {
+                    let before = found.len();
+                    found.retain(|cand| !silver.has(&cand.toks));
+                    skipped.silver += before - found.len();
+                }
             }
             shuffle(&mut found, &mut rng);
             let cell_of = |cand: &Candidate| {
@@ -494,7 +504,7 @@ pub fn draw(
     let mut rows = Vec::with_capacity(picks.len());
     for (index, pick) in picks.into_iter().enumerate() {
         let prefix = match mode {
-            Mode::Gold => "g",
+            Mode::Gold(_) => "g",
             Mode::Labelling(labelling) => labelling.prefix,
         };
         let id = format!("{prefix}{:04}", index + 1);
@@ -541,7 +551,7 @@ pub fn draw(
         ("corpus", corpus.to_string()),
         ("per tier quotas", quotas),
         match mode {
-            Mode::Gold => ("holdout per tier", settings.holdout.to_string()),
+            Mode::Gold(_) => ("holdout per tier", settings.holdout.to_string()),
             Mode::Labelling(labelling) => (
                 "draw",
                 format!(
@@ -586,10 +596,11 @@ pub fn capacity(files: &[File<'_>], settings: &Settings, mode: Mode<'_>) -> [[us
         let mut repos: BTreeMap<&str, [usize; 5]> = BTreeMap::new();
         for file in order {
             let mut found = candidates(file.text, settings, &mut skipped);
-            if let Mode::Labelling(labelling) = mode {
-                found.retain(|cand| {
+            match mode {
+                Mode::Labelling(labelling) => found.retain(|cand| {
                     !labelling.gold.has(&cand.toks) && !labelling.earlier.has(&cand.toks)
-                });
+                }),
+                Mode::Gold(silver) => found.retain(|cand| !silver.has(&cand.toks)),
             }
             found.retain(|cand| seen.insert(key(&cand.toks)));
             let mut per_context = [0usize; 5];
@@ -964,7 +975,13 @@ Ok.
     #[test]
     fn a_draw_fills_every_quota_and_splits_each_tier_the_same_way() {
         let owned = corpus(40);
-        let outcome = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let outcome = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         let rows = &outcome.sample.manifest.rows;
         assert_eq!(rows.len(), 30);
         assert_eq!(outcome.sample.sents.len(), 30);
@@ -993,17 +1010,41 @@ Ok.
     #[test]
     fn the_same_seed_gives_the_same_sample_and_another_seed_gives_another() {
         let owned = corpus(40);
-        let first = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
-        let again = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let first = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
+        let again = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         assert_eq!(first.sample.sents, again.sample.sents);
         assert_eq!(first.sample.manifest, again.sample.manifest);
         let other = Settings { seed: 7, ..small() };
-        let other = draw(&files(&owned), "hand-made", &other, Mode::Gold).unwrap();
+        let other = draw(
+            &files(&owned),
+            "hand-made",
+            &other,
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         assert_ne!(first.sample.manifest.rows, other.sample.manifest.rows);
         // The order of the files given does not matter, since they are sorted by path first.
         let mut reversed = owned.clone();
         reversed.reverse();
-        let reversed = draw(&files(&reversed), "hand-made", &small(), Mode::Gold).unwrap();
+        let reversed = draw(
+            &files(&reversed),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         assert_eq!(first.sample.sents, reversed.sample.sents);
     }
 
@@ -1011,7 +1052,13 @@ Ok.
     fn a_draw_with_files_excluded_takes_nothing_from_them() {
         use crate::exclude::Exclusion;
         let owned = corpus(40);
-        let first = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let first = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         let used: BTreeSet<&str> = first
             .sample
             .manifest
@@ -1035,20 +1082,26 @@ Ok.
         let list = Exclusion::parse("list", &list).unwrap();
         let (kept, dropped) = list.apply("list", files(&owned)).unwrap();
         assert_eq!(dropped, used.len());
-        let second = draw(&kept, "hand-made", &small(), Mode::Gold).unwrap();
+        let second = draw(&kept, "hand-made", &small(), Mode::Gold(&Texts::default())).unwrap();
         assert_eq!(second.sample.manifest.rows.len(), 30);
         for (_, meta) in &second.sample.manifest.rows {
             assert!(!used.contains(meta.file.as_str()), "{}", meta.file);
         }
         // The draw over what is kept is itself repeatable.
-        let again = draw(&kept, "hand-made", &small(), Mode::Gold).unwrap();
+        let again = draw(&kept, "hand-made", &small(), Mode::Gold(&Texts::default())).unwrap();
         assert_eq!(second.sample.manifest, again.sample.manifest);
     }
 
     #[test]
     fn ids_say_nothing_of_the_tier() {
         let owned = corpus(40);
-        let outcome = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let outcome = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         let ids: Vec<&str> = outcome.sample.sents.iter().map(|s| s.id.as_str()).collect();
         let expect: Vec<String> = (1..=30).map(|n| format!("g{n:04}")).collect();
         assert_eq!(ids, expect.iter().map(String::as_str).collect::<Vec<_>>());
@@ -1074,7 +1127,13 @@ Ok.
             per_repo: 3,
             ..small()
         };
-        let outcome = draw(&files(&owned), "hand-made", &settings, Mode::Gold).unwrap();
+        let outcome = draw(
+            &files(&owned),
+            "hand-made",
+            &settings,
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         let mut by_file: BTreeMap<&str, usize> = BTreeMap::new();
         let mut by_repo: BTreeMap<&str, usize> = BTreeMap::new();
         for (_, meta) in &outcome.sample.manifest.rows {
@@ -1090,7 +1149,13 @@ Ok.
         let owned = corpus(40);
         for seed in [1, 2, 3, 4, 5] {
             let settings = Settings { seed, ..small() };
-            let outcome = draw(&files(&owned), "hand-made", &settings, Mode::Gold).unwrap();
+            let outcome = draw(
+                &files(&owned),
+                "hand-made",
+                &settings,
+                Mode::Gold(&Texts::default()),
+            )
+            .unwrap();
             let mut split_of: BTreeMap<&str, Option<Split>> = BTreeMap::new();
             for (_, meta) in &outcome.sample.manifest.rows {
                 let first = *split_of.entry(meta.file.as_str()).or_insert(meta.split);
@@ -1190,7 +1255,13 @@ Ok.
         );
         assert!(manifest.contains("\tunlabelled\t"));
         // A gold draw has the eight columns alone.
-        let gold_draw = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let gold_draw = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         assert!(gold_draw.sample.manifest.render().contains("\tbytes\n"));
         // A gold file the draw would have taken everything from leaves it short, never silent.
         let all = Texts::of(Tier::ALL.iter().flat_map(|tier| {
@@ -1239,7 +1310,13 @@ Ok.
             assert!(!earlier.has(&sent.toks), "{}", sent.text());
         }
         // A gold draw's ids are as they were.
-        let gold_draw = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let gold_draw = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         assert_eq!(gold_draw.sample.sents[0].id, "g0001");
     }
 
@@ -1251,7 +1328,7 @@ Ok.
             per_repo: 3,
             ..small()
         };
-        let got = capacity(&files(&owned), &settings, Mode::Gold);
+        let got = capacity(&files(&owned), &settings, Mode::Gold(&Texts::default()));
         let heading = Context::ALL
             .iter()
             .position(|context| *context == Context::Heading)
@@ -1270,7 +1347,7 @@ Ok.
                 per_repo: 100,
                 ..small()
             },
-            Mode::Gold,
+            Mode::Gold(&Texts::default()),
         );
         assert!(more[0][4] > got[0][4]);
     }
@@ -1356,7 +1433,13 @@ Ok.
     fn a_corpus_with_too_few_files_for_two_splits_names_the_split_that_is_short() {
         // One file per tier holds everything, but a file goes to one split only.
         let owned = corpus(1);
-        let error = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap_err();
+        let error = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap_err();
         assert!(error.to_string().contains("for "), "{error}");
         assert!(["dev", "holdout"].contains(&error.split.unwrap().name()));
     }
@@ -1384,7 +1467,13 @@ Ok.
             holdout: 0,
             ..small()
         };
-        let error = draw(&files(&owned), "hand-made", &settings, Mode::Gold).unwrap_err();
+        let error = draw(
+            &files(&owned),
+            "hand-made",
+            &settings,
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap_err();
         // One tier took the sentence, and the next could not take it again.
         assert_eq!(error.tier, Tier::Llm);
         assert_eq!(error.got, 0);
@@ -1393,7 +1482,13 @@ Ok.
     #[test]
     fn a_corpus_that_cannot_fill_a_quota_is_an_error_naming_it() {
         let owned = corpus(1);
-        let error = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap_err();
+        let error = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap_err();
         let message = error.to_string();
         assert!(message.contains("tier has"), "{message}");
         assert!(message.contains("were asked for"), "{message}");
@@ -1402,7 +1497,13 @@ Ok.
     #[test]
     fn the_exam_reads_the_sample_back_as_it_is() {
         let owned = corpus(40);
-        let outcome = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let outcome = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         check_with_exam(&outcome.sample.sents).unwrap();
     }
 
@@ -1417,7 +1518,13 @@ Ok.
     #[test]
     fn the_counts_name_every_tier_and_context() {
         let owned = corpus(40);
-        let outcome = draw(&files(&owned), "hand-made", &small(), Mode::Gold).unwrap();
+        let outcome = draw(
+            &files(&owned),
+            "hand-made",
+            &small(),
+            Mode::Gold(&Texts::default()),
+        )
+        .unwrap();
         let shown = Counts(&outcome).to_string();
         assert!(shown.starts_with("sampled 30 sentences"), "{shown}");
         for tier in Tier::ALL.iter().copied() {

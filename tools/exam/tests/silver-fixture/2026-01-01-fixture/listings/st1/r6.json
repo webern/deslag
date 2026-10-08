@@ -1,0 +1,1 @@
+{"model": "deepseek/deepseek-v4-flash", "endpoints": [{"tag": "gmicloud/fp8", "quantization": "fp8"}]}

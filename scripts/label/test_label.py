@@ -9,6 +9,7 @@ sets or the corpus.
 import contextlib
 import copy
 import email.utils
+import glob
 import hashlib
 import http.server
 import io
@@ -17,13 +18,17 @@ import multiprocessing
 import os
 import re
 import shutil
+import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import threading
+import time
 import unittest
 import unittest.mock
 
+import confine
 import guard
 import label
 import ledger
@@ -48,16 +53,26 @@ LISTING = {
     }
 }
 
+# The commit the tests' runs are made at: a clean one, whatever the state of the checkout they run in,
+# since a part of a draw is labelled only at a clean commit.
+COMMIT = "c0" * 20
+
+# What voters.json says of each model's licence; a run copies it into its record.
+LICENSED = {"license": "MIT", "license_url": "https://example.org/card", "license_checked": "2026-10-01"}
+
 CONFIG = {
     "voters": ["one", "two"],
     "adjudicator": "judge",
     "settings": {"batch_size": 2, "per_part": 60, "retries": 2, "http_attempts": 3, "timeout_s": 5},
     "models": {
         "one": {"model": "x/one", "provider": "host/fp8", "quantizations": ["fp8"], "temperature": 0,
-                "reasoning": {"enabled": False}, "max_tokens": 1000},
-        "two": {"model": "x/two", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000},
-        "judge": {"model": "x/judge", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000},
+                "reasoning": {"enabled": False}, "max_tokens": 1000, **LICENSED},
+        "two": {"model": "x/two", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000,
+                **LICENSED, "license": "Apache-2.0"},
+        "judge": {"model": "x/judge", "provider": "bare", "temperature": None, "reasoning": None, "max_tokens": 1000,
+                  **LICENSED, "license": "Terms"},
     },
+    "external": {"spacy": {"model": "en-core-web-trf", **LICENSED}},
 }
 
 SENTENCES = [("d1", ["Run", "it", "now", "."]), ("d2", ["Files", "are", "ready", "."]),
@@ -280,6 +295,13 @@ class Base(unittest.TestCase):
         self.saved_generator = guard.GENERATOR
         self.addCleanup(setattr, guard, "GENERATOR", guard.GENERATOR)
         guard.GENERATOR = lambda name: skeleton().replace("= dev", f"= {name}").encode()
+        commit = unittest.mock.patch.object(label, "deslag_commit", return_value=COMMIT)
+        commit.start()
+        self.addCleanup(commit.stop)
+        # A `claude --version` that cannot be read is read again after this pause: none in a test.
+        pause = unittest.mock.patch.object(label, "VERSION_PAUSE_S", 0)
+        pause.start()
+        self.addCleanup(pause.stop)
         self.said = []
         self.slept = []
         self.warned = []
@@ -588,6 +610,20 @@ class PromptTests(unittest.TestCase):
 
 
 DRAW_HEAD = "# draw = for labelling, 3 sentences\nsent_id\tsplit\ttier\tcontext\tfile\trepo\tlicense\tbytes\n"
+DRAW_ROWS = "".join(f"{sent_id}\tunlabelled\thuman\tprose\tf.md\to/r\tMIT\t0-1\n" for sent_id, _ in SENTENCES)
+
+
+def make_part(label_root, number, of, tag_version="0.0.1", folder=None, sample_says=None, manifest_says=None):
+    """A part of a draw by hand, as `deslag-gold draw --parts` writes one: `<label_root>/silver/part-NN`
+    (or `folder`) with a sample and a manifest whose headers add `part = k of N` and `tag_version`.
+    `sample_says` and `manifest_says` replace those two lines in one file; an empty string drops them."""
+    directory = folder or os.path.join(label_root, "silver", f"part-{number:02d}")
+    lines = f"# part = {number} of {of}\n# tag_version = {tag_version}\n"
+    sample = skeleton().replace("# exam.from = dev\n", lines if sample_says is None else sample_says)
+    label.write(os.path.join(directory, "sample.conllu"), sample)
+    label.write(os.path.join(directory, "manifest.tsv"),
+                (lines if manifest_says is None else manifest_says) + DRAW_HEAD + DRAW_ROWS)
+    return directory
 
 
 class GuardTests(Base):
@@ -674,6 +710,61 @@ class GuardTests(Base):
             with self.assertRaisesRegex(guard.Refused, why):
                 guard.check_dir(self.dir)
 
+    def test_a_part_of_a_draw_is_a_draw_for_labelling_and_its_header_must_be_whole(self):
+        part = make_part(self.label_root, 3, 12)
+        self.assertEqual(guard.check_dir(part), part)
+        # The keys may be in the manifest alone, or the sample alone.
+        make_part(self.label_root, 3, 12, sample_says="")
+        guard.check_dir(part)
+        make_part(self.label_root, 3, 12, manifest_says="")
+        guard.check_dir(part)
+        # A draw not dealt into parts, in a directory of another name, needs neither.
+        plain = make_part(self.label_root, 1, 1, folder=os.path.join(self.label_root, "draw"), sample_says="", manifest_says="")
+        guard.check_dir(plain)
+        for says, why in (
+            ("", "does not say `# part = k of N`"),
+            ("# part = 2 of 12\n# tag_version = 0.0.1\n", "the directory is part 3"),
+            ("# part = 13 of 12\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = 0 of 12\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = third\n# tag_version = 0.0.1\n", "is not `k of N`"),
+            ("# part = 3 of 12\n", "tag VERSION"),
+            ("# part = 3 of 12\n# tag_version =\n", "tag VERSION"),
+        ):
+            make_part(self.label_root, 3, 12, sample_says="", manifest_says=says)
+            with self.assertRaisesRegex(guard.Refused, re.escape(why)):
+                guard.check_dir(part)
+        make_part(self.label_root, 3, 12, sample_says="# part = 3 of 12\n# tag_version = 0.0.2\n")
+        with self.assertRaisesRegex(guard.Refused, "different values of `tag_version`"):
+            guard.check_dir(part)
+        # A part is still a draw for labelling: a row that is not unlabelled is refused as before.
+        make_part(self.label_root, 3, 12)
+        label.write(os.path.join(part, "manifest.tsv"),
+                    "# part = 3 of 12\n# tag_version = 0.0.1\n" + DRAW_HEAD + DRAW_ROWS.replace("unlabelled", "dev", 1))
+        with self.assertRaisesRegex(guard.Refused, "only a draw for labelling"):
+            guard.check_dir(part)
+
+    def test_a_part_is_a_plain_dir_for_tag_judge_and_handoff(self):
+        part = make_part(self.label_root, 2, 4)
+        gold = FakeGold()
+        for name in ("one", "two"):
+            run, left = self.runner(FakeTransport(answer_all), gold=gold, directory=part).tag(name)
+            self.assertEqual(left, [])
+        self.assertTrue(os.path.isfile(os.path.join(part, "tags", "one.conllu")))
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        judged = self.runner(settles, gold=gold, directory=part)
+        self.assertEqual(judged.judge("merge", [("one", False), ("two", False)]), {})
+        self.assertTrue(os.path.isfile(os.path.join(part, "merge", "labelled.conllu")))
+        config = copy.deepcopy(HANDOFF_CONFIG)
+        # Another adjudicator is another labelling of the parts, which starts without the lock.
+        os.remove(os.path.join(self.label_root, "silver", label.PARTS_LOCK))
+        with self.assertRaises(label.HandoffWait):
+            self.runner(None, gold=gold, config=config, directory=part).judge("merge-opus", [("one", False), ("two", False)])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            label.command_handoff(label.parser().parse_args(["handoff", "--dir", part, "--into", "merge-opus"]), config)
+        self.assertEqual(len(out.getvalue().splitlines()), 1)
+        self.assertTrue(out.getvalue().startswith(os.path.join(part, "merge-opus", "handoff")))
+
     def test_a_symlinked_directory_or_file_is_judged_by_where_it_really_is(self):
         outside = os.path.join(self.root, "outside")
         label.write(os.path.join(outside, "sample.conllu"), skeleton())
@@ -743,6 +834,191 @@ class GuardTests(Base):
             code = label.main(["tag", "--dir", other, "--max-usd", "1"], transport=FakeTransport(answer_all), gold=FakeGold())
         self.assertEqual(code, 2)
         self.assertIn("holdout", err.getvalue())
+
+
+class PartsLockTests(Base):
+    """The lock of a draw dealt into parts, `.label/silver/lock.json`: the first run of the first part
+    writes it, each step adds what it is the first to know, and a step of any part whose commit, draw,
+    voters, `min_voters` or hashes differ from it is refused before anything is asked."""
+
+    def setUp(self):
+        super().setUp()
+        self.gold = FakeGold()
+        self.lock_path = os.path.join(self.label_root, "silver", label.PARTS_LOCK)
+
+    def lock(self):
+        return json.loads(label.read(self.lock_path))
+
+    def part(self, number, **more):
+        return make_part(self.label_root, number, 3, **more)
+
+    def tag(self, directory, name, transport=None, **patch):
+        runner = self.runner(transport or FakeTransport(answer_all), gold=self.gold, directory=directory)
+        for key, value in patch.items():
+            setattr(runner, key, value)
+        return runner, runner.tag(name)
+
+    def test_the_first_tag_of_a_part_writes_the_lock_and_later_steps_add_to_it(self):
+        part = self.part(1)
+        runner, _ = self.tag(part, "one")
+        hashes = {"prompt_sha256": runner.prompts.sha256, "guide_sha256": runner.prompts.guide_sha256}
+        self.assertEqual(self.lock(), {
+            "deslag_commit": runner.commit,
+            "draw": {"tag_version": "0.0.1", "draw": "for labelling, 3 sentences"},
+            "voters": ["one", "two"], "adjudicator": "judge", "models": {"one": hashes},
+        })
+        self.assertTrue(label.read(self.lock_path).startswith('{\n  "adjudicator": "judge",'), "sorted keys")
+        self.tag(part, "two")
+        source = os.path.join(part, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None, directory=part), "spacy", source, "en-core-web-trf", None, None)
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        self.assertEqual(self.runner(settles, gold=self.gold, directory=part).judge("merge", [("one", False), ("two", False)]), {})
+        lock = self.lock()
+        self.assertEqual(lock["models"], {"one": hashes, "two": hashes, "judge": hashes})
+        self.assertEqual(lock["min_voters"], 3)
+        self.assertNotIn("agent", lock, "only handoff-run knows the Claude Code")
+
+    def test_a_part_tagged_at_another_commit_is_refused_naming_the_field_and_both_values(self):
+        runner, _ = self.tag(self.part(1), "one")
+        transport = FakeTransport(answer_all)
+        later = self.part(2)
+        with self.assertRaisesRegex(
+            label.GoldError, rf"`deslag_commit` is {runner.commit} in the lock and {'f' * 40} here.*`git checkout` of the locked commit.*lock --dir PART --reset --reason TEXT"
+        ):
+            self.tag(later, "one", transport, commit="f" * 40)
+        self.assertEqual(transport.posts, [], "nothing is asked")
+        self.assertFalse(os.path.exists(os.path.join(later, "raw")), "no run is started")
+        source = os.path.join(later, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        moved = self.runner(None, directory=later)
+        moved.commit = "f" * 40
+        with self.assertRaisesRegex(label.GoldError, "register --name spacy differs .*`deslag_commit`"):
+            label.register(moved, "spacy", source, "en-core-web-trf", None, None)
+
+    def test_a_changed_prompt_or_guide_is_refused_for_a_voter_of_another_part(self):
+        self.tag(self.part(1), "one")
+        later = self.part(2)
+        for key, field in (("sha256", "models.one.prompt_sha256"), ("guide_sha256", "models.one.guide_sha256")):
+            prompts = label.Prompts()
+            setattr(prompts, key, "0" * 64)
+            with self.assertRaisesRegex(label.GoldError, rf"`{re.escape(field)}` is [0-9a-f]{{64}} in the lock and {'0' * 64} here"):
+                self.tag(later, "one", prompts=prompts)
+        # Another voter is not a difference: the lock learns its hashes.
+        self.tag(later, "two")
+        self.assertEqual(sorted(self.lock()["models"]), ["one", "two"])
+
+    def test_a_part_of_another_draw_is_refused(self):
+        self.tag(self.part(1), "one")
+        with self.assertRaisesRegex(label.GoldError, "`draw.tag_version` is 0.0.1 in the lock and 0.0.2 here"):
+            self.tag(self.part(2, tag_version="0.0.2"), "one")
+
+    def test_a_judge_with_another_min_voters_or_adjudicator_is_refused_before_the_merge(self):
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        voters = [("one", False), ("two", False)]
+        for number in (1, 2):
+            for name in ("one", "two"):
+                self.tag(self.part(number), name)
+        self.runner(settles, gold=self.gold, directory=self.part(1)).judge("merge", voters)
+        merges = len([call for call in self.gold.calls if call[0] == "merge"])
+        with self.assertRaisesRegex(label.GoldError, "`min_voters` is 3 in the lock and 2 here"):
+            self.runner(settles, gold=self.gold, directory=self.part(2)).judge("merge", voters, min_voters=2)
+        config = copy.deepcopy(BOTH_CONFIG)
+        config["adjudicator"] = "opus"
+        with self.assertRaisesRegex(label.GoldError, "`adjudicator` is judge in the lock and opus here"):
+            self.runner(None, gold=self.gold, config=config, directory=self.part(2)).judge("merge", voters)
+        self.assertEqual(len([call for call in self.gold.calls if call[0] == "merge"]), merges, "nothing is merged")
+
+    def test_a_lock_that_is_not_json_is_refused(self):
+        label.write(self.lock_path, "not json\n")
+        with self.assertRaisesRegex(label.GoldError, "is not a JSON object"):
+            self.tag(self.part(1), "one")
+
+    def test_a_sample_that_is_not_a_part_has_no_lock(self):
+        self.tag(self.dir, "one")
+        found = [name for _, _, names in os.walk(self.label_root) for name in names if name == label.PARTS_LOCK]
+        self.assertEqual(found, [])
+
+    def test_a_part_is_labelled_only_at_a_clean_commit(self):
+        part = self.part(1)
+        source = os.path.join(part, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        for commit in (COMMIT + "-dirty", "unknown"):
+            transport = FakeTransport(answer_all)
+            with self.assertRaisesRegex(label.GoldError, rf"this checkout is at {commit}, and a part of a draw is labelled only"):
+                self.tag(part, "one", transport, commit=commit)
+            self.assertEqual(transport.posts, [], "nothing is asked")
+            runner = self.runner(None, directory=part)
+            runner.commit = commit
+            with self.assertRaisesRegex(label.GoldError, "register --name spacy: this checkout is at"):
+                label.register(runner, "spacy", source, "en-core-web-trf", None, None)
+        self.assertFalse(os.path.exists(os.path.join(part, "raw")), "no run is started")
+        self.assertFalse(os.path.exists(self.lock_path))
+        # A sample that is not a part is not held to it.
+        self.tag(self.dir, "one", commit=COMMIT + "-dirty")
+
+    def test_a_smoke_run_or_a_refused_or_stopped_one_never_writes_the_lock(self):
+        part = self.part(1)
+        # A smoke run, with a limit.
+        runner = self.runner(FakeTransport(answer_all), gold=self.gold, directory=part)
+        runner.tag("one", limit=1)
+        self.assertFalse(os.path.exists(self.lock_path), "a smoke run writes no lock")
+        # A run refused for a model with no licence date.
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["one"]["license_checked"]
+        with self.assertRaises(label.ConfigError):
+            self.runner(FakeTransport(answer_all), gold=self.gold, config=config, directory=part).tag("one")
+        # A run stopped by the cap.
+        with self.assertRaises(ledger.CapExceeded):
+            self.runner(FakeTransport(answer_all), max_usd=0.0001, gold=self.gold, directory=part).tag("two")
+        self.assertFalse(os.path.exists(self.lock_path), "a refused or stopped run writes no lock")
+        # So a full run with another guide is not refused by what they ran with.
+        prompts = label.Prompts()
+        prompts.guide_sha256 = "0" * 64
+        self.tag(part, "one", prompts=prompts)
+        self.assertEqual(self.lock()["models"]["one"]["guide_sha256"], "0" * 64)
+
+    def test_a_reset_keeps_the_old_lock_and_its_reason_and_names_the_parts_labelled_under_it(self):
+        first, second = self.part(1), self.part(2)
+        self.tag(first, "one")
+        old = self.lock()
+        said = []
+        reset = label.parser().parse_args(["lock", "--dir", second, "--reset", "--reason", "the guide was fixed"])
+        self.assertEqual(label.command_lock(reset, CONFIG, say=said.append), 0)
+        self.assertFalse(os.path.exists(self.lock_path))
+        log = os.path.join(os.path.dirname(self.lock_path), label.LOCK_RESETS)
+        entry, = [json.loads(line) for line in label.read(log).splitlines()]
+        self.assertEqual(entry["lock"], old)
+        self.assertEqual(entry["reason"], "the guide was fixed")
+        self.assertEqual(entry["parts"], {"part-01": ["one r1"], "part-02": []})
+        self.assertRegex(entry["date"], r"^\d{4}-\d{2}-\d{2}T")
+        self.assertIn("  part-01: one r1", said)
+        self.assertTrue(any("held to the new one at its preflight" in line for line in said), said)
+        # The next step that counts writes a new lock from its own values.
+        prompts = label.Prompts()
+        prompts.guide_sha256 = "0" * 64
+        self.tag(second, "one", prompts=prompts)
+        self.assertEqual(self.lock()["models"]["one"]["guide_sha256"], "0" * 64)
+        # Printed, with how many resets the log holds.
+        said.clear()
+        shown = label.parser().parse_args(["lock", "--dir", first])
+        self.assertEqual(label.command_lock(shown, CONFIG, say=said.append), 0)
+        self.assertIn("0" * 64, said[0])
+        self.assertTrue(said[1].startswith("reset 1 times"), said)
+        # A reset needs a reason and a lock; a reason needs a reset.
+        for argv, error, needle in (
+            (["--reset"], label.ConfigError, "--reset needs --reason TEXT"),
+            (["--reset", "--reason", "  "], label.ConfigError, "--reset needs --reason TEXT"),
+            (["--reason", "x"], label.ConfigError, "goes with --reset"),
+        ):
+            with self.assertRaisesRegex(error, needle):
+                label.command_lock(label.parser().parse_args(["lock", "--dir", first, *argv]), CONFIG, say=said.append)
+        label.command_lock(reset, CONFIG, say=said.append)
+        with self.assertRaisesRegex(label.GoldError, "there is no .*lock.json to reset"):
+            label.command_lock(reset, CONFIG, say=said.append)
+        self.assertEqual(len(label.read(log).splitlines()), 2, "a refused reset adds no line")
+        with self.assertRaisesRegex(label.GoldError, "is not a part of a draw"):
+            label.command_lock(label.parser().parse_args(["lock", "--dir", self.dir]), CONFIG, say=said.append)
 
 
 class MoneyTests(Base):
@@ -1098,6 +1374,109 @@ class LedgerTests(Base):
         ids = [results.get(timeout=5) for _ in range(4)]
         self.assertEqual(len(set(ids)), 4)
         self.assertTrue(set(ids).isdisjoint({"r1", "r2", "r3"}))
+
+
+class SlowGold(FakeGold):
+    """FakeGold whose `batches` works as deslag-gold's does, slowly: it removes every batch file there,
+    failing on one another process removed first, then writes each batch after a pause. It also fails
+    when another process is inside it at the same time, which the sample's lock is there to prevent."""
+
+    def batches(self, directory, size):
+        self.calls.append("batches")
+        busy = os.path.join(directory, "batches.busy")
+        try:
+            os.close(os.open(busy, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+        except FileExistsError:
+            raise label.GoldError("another process is writing the batches") from None
+        try:
+            folder = os.path.join(directory, "batches")
+            for name in os.listdir(folder) if os.path.isdir(folder) else []:
+                if re.fullmatch(r"batch-\d+\.txt", name):
+                    os.remove(os.path.join(folder, name))
+            for number in range(0, len(SENTENCES), size):
+                time.sleep(0.05)
+                text = "".join(batch_line(*sent) + "\n" for sent in SENTENCES[number : number + size])
+                label.write(os.path.join(folder, f"batch-{number // size + 1:02d}.txt"), text)
+        finally:
+            os.remove(busy)
+
+
+def _tag_once(directory, name, config, barrier, results):
+    """A process of the concurrent tagging: wait for the others, then `tag --voter name`, as a make
+    target running the voters at once would."""
+
+    def respond(body, count):
+        time.sleep(0.02)
+        return answer_all(body)
+
+    barrier.wait()
+    arguments = label.parser().parse_args(["tag", "--dir", directory, "--max-usd", "10", "--voter", name, "--again"])
+    try:
+        with open(os.devnull, "w", encoding="utf-8") as quiet, contextlib.redirect_stdout(quiet):
+            code = label.command_tag(arguments, config, FakeTransport(respond), SlowGold())
+        results.put((name, code, ""))
+    except Exception as error:  # noqa: BLE001 - the parent reports it
+        results.put((name, None, f"{type(error).__name__}: {error}"))
+
+
+class ConcurrentTagTests(Base):
+    """Three voters tagged at once on one sample, each in a process of its own: the run ids and the
+    ledger are locked in the state directory, each voter writes its own files, and the files they share,
+    the batches and `runs.tsv`, are written under the sample's lock."""
+
+    def test_three_voters_tagged_at_once_on_one_sample_each_finish_one_run(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["three"] = {**config["models"]["one"], "model": "x/three"}
+        config["voters"] = ["one", "two", "three"]
+        config["settings"].update(pause_s=0, backoff_s=0)
+        context = multiprocessing.get_context("fork")
+        # Each round runs every voter afresh (`--again`), and three rounds give a race three chances.
+        for round_ in range(3):
+            barrier, results = context.Barrier(3), context.Queue()
+            workers = [
+                context.Process(target=_tag_once, args=(self.dir, name, config, barrier, results))
+                for name in config["voters"]
+            ]
+            for worker in workers:
+                worker.start()
+            outcome = sorted(results.get(timeout=60) for _ in workers)
+            for worker in workers:
+                worker.join(30)
+            self.assertEqual(outcome, [("one", 0, ""), ("three", 0, ""), ("two", 0, "")], f"round {round_}")
+            lines = label.read(os.path.join(self.dir, "runs.tsv")).splitlines()
+            self.assertEqual(lines[0].split("\t"), list(label.RUN_COLUMNS))
+            self.assertTrue(all(len(line.split("\t")) == len(label.RUN_COLUMNS) for line in lines[1:]))
+            rows = self.runs_rows()
+            self.assertEqual(len(rows), 3 * (round_ + 1), "every run of every round is a row")
+            latest = rows[-3:]
+            self.assertEqual(sorted(row["name"] for row in latest), ["one", "three", "two"])
+            self.assertEqual(len({row["run"] for row in rows}), len(rows), "no two runs share an id")
+            self.assertEqual({row["status"] for row in latest}, {"complete"})
+            for row in latest:
+                # Two batches of the three sentences, each one call at $0.001.
+                self.assertEqual((row["calls"], row["cost_usd"]), ("2", "0.00200000"), row["name"])
+                self.assertEqual(json.loads(label.read(self.run_json(row["name"], row["run"])))["batches"], 2)
+                tags = label.read(os.path.join(self.dir, "tags", f"{row['name']}.conllu"))
+                self.assertEqual(re.findall(r"sent_id = (\S+)", tags), ["d1", "d2", "d3"])
+            calls = [row for row in self.ledger().booked().values() if row["state"] != "run"]
+            self.assertEqual(len(calls), 6 * (round_ + 1))
+            self.assertEqual({row["state"] for row in calls}, {"settled"}, "every call booked was settled")
+            self.assertAlmostEqual(self.ledger().total(), 0.006 * (round_ + 1))
+
+    def test_a_calls_file_another_process_is_appending_to_is_read_without_its_last_part_line(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        path = os.path.join(self.dir, "raw", "one", "r1", "calls.jsonl")
+        whole = label.read(path)
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write('{"kind": "batch-03", "retr')
+        rows = self.runner(None).write_runs()
+        self.assertEqual(rows[0]["calls"], 2, "the line still being written is not a call yet")
+        label.write(path, '{"kind": "batch-01", "retr\n' + whole)
+        with self.assertRaises(ValueError, msg="a bad line that is not the last is an error"):
+            self.runner(None).write_runs()
+
+    def run_json(self, name, run):
+        return os.path.join(self.dir, "raw", name, run, "run.json")
 
 
 class KeySafetyTests(Base):
@@ -1603,9 +1982,10 @@ class RoundThreeTests(Base):
         before = label.read(self.run_json("two", "r1"))
         self.runner(FakeTransport(answer_all)).tag("two")
         saved = json.loads(label.read(self.run_json("two", "r1")))
-        self.assertEqual({key: value for key, value in saved.items() if key != "complete"},
+        self.assertEqual({key: value for key, value in saved.items() if key not in ("complete", "abstaining")},
                          {key: value for key, value in json.loads(before).items()})
         self.assertTrue(saved["complete"])
+        self.assertEqual(saved["abstaining"], 0, "the end of a run adds how many sentences abstain")
 
     def test_a_run_is_refused_when_continuing_would_change_its_prompt_or_settings(self):
         with self.assertRaises(openrouter.ApiError):
@@ -2326,14 +2706,14 @@ class ProvenanceTests(Base):
     def test_register_records_the_commit_too(self):
         source = os.path.join(self.dir, "spacy.conllu")
         label.write(source, "# sent_id = d1\n")
-        label.register(self.runner(None), "spacy", source, "en_core_web_trf", "3.8.0", None)
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
         self.assertRegex(self.runs_rows()[0]["deslag_commit"], r"^([0-9a-f]{40}(-dirty)?|unknown)$")
 
     def test_register_refuses_a_file_outside_the_sample_directory(self):
         outside = os.path.join(self.root, "spacy.conllu")
         label.write(outside, "# sent_id = d1\n")
         with self.assertRaises(guard.Refused):
-            label.register(self.runner(None), "spacy", outside, "m", None, None)
+            label.register(self.runner(None), "spacy", outside, "en-core-web-trf", None, None)
 
 
 class SettledTests(Base):
@@ -2436,6 +2816,143 @@ class SettledTests(Base):
         self.assertEqual(args.trains, "no")
 
 
+FAKE_GOLD_BIN = """#!/bin/sh
+# Stands in for deslag-gold's preflight: records its arguments, then passes or refuses as told.
+printf '%s\\n' "$@" > "$0.args"
+pwd > "$0.cwd"
+if [ -f "$0.refuse" ]; then
+    echo "first problem" >&2
+    echo "second problem" >&2
+    exit 2
+fi
+exit 0
+"""
+
+
+class StatusTests(Base):
+    """`status`: where one sample stands, in counts and run ids only."""
+
+    def status(self, *more, config=CONFIG):
+        said = []
+        arguments = label.parser().parse_args(["status", "--dir", self.dir, *more])
+        self.assertEqual(label.command_status(arguments, config, say=said.append), 0)
+        return said
+
+    def assert_no_word(self, said):
+        """Nothing printed is a word of the sample, or a tag."""
+        words = {form for _, forms in SENTENCES for form in forms if form.isalpha()}
+        for line in said:
+            self.assertFalse(words & set(re.findall(r"[A-Za-z]+", line)), line)
+            self.assertNotIn("N.s", line)
+
+    def test_a_sample_with_nothing_run_says_so(self):
+        said = self.status()
+        self.assertEqual(said[1:], [
+            "voter one: no run",
+            "voter two: no run",
+            "spacy: not registered",
+            "adjudicator judge (merge): no run",
+            "ledger: $0.0000 booked",
+            "preflight (merge): not run (no merge in merge yet)",
+        ])
+        self.assertEqual(said[0], f"sample: 3 sentences, {self.dir}")
+
+    def test_each_voter_shows_its_latest_run_its_batches_its_abstaining_and_its_dollars(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+
+        def respond(body, count):
+            if count >= 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond)).tag("two")
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
+        cost = self.ledger().run_cost("r2")
+        total = self.ledger().total()
+        said = self.status("--max-usd", "1")
+        self.assertEqual(said[1:5], [
+            "voter one: r1 complete, 2 of 2 batches, 0 abstaining, $0.0020",
+            f"voter two: r2 stopped, 1 of 2 batches, - abstaining, ${cost:.4f}",
+            "spacy: r3 complete",
+            "adjudicator judge (merge): no run",
+        ])
+        self.assertEqual(said[5], f"ledger: ${total:.4f} booked, ${1 - total:.4f} left under --max-usd 1")
+        self.assert_no_word(said)
+        # A later run of a voter is the one shown, whatever became of it.
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(respond)).tag("one", again=True)
+        self.assertEqual(self.status()[1], f"voter one: r4 stopped, 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}")
+
+    def test_a_run_made_before_runs_recorded_their_batches_is_shown_against_the_batches_there(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        path = os.path.join(self.dir, "raw", "one", "r1", "run.json")
+        saved = json.loads(label.read(path))
+        del saved["batches"], saved["abstaining"]
+        label.write(path, json.dumps(saved))
+        self.assertEqual(self.status()[1], "voter one: r1 complete, 2 of 2 batches, - abstaining, $0.0020")
+
+    def test_a_batch_asked_again_in_halves_is_answered_only_once_both_halves_are(self):
+        folder = os.path.join(self.dir, "raw", "one", "r1")
+        os.makedirs(folder)
+        saved = ["batch-01", "batch-02-a", "batch-03-a", "batch-03-b-a", "batch-04-a", "retry-1-01"]
+        for kind in saved:
+            label.write(os.path.join(folder, f"{kind}.lines.txt"), "d1: N.s\n")
+        self.assertEqual(label.batches_done(self.dir, "one", "r1"), 1, "batch-01 only")
+        for kind in ("batch-02-b", "batch-03-b-b", "batch-04-b-a"):
+            label.write(os.path.join(folder, f"{kind}.lines.txt"), "d1: N.s\n")
+        self.assertEqual(label.batches_done(self.dir, "one", "r1"), 3, "batch-04-b-b is still to ask")
+
+    def test_the_adjudicator_shown_is_the_one_the_merge_records(self):
+        label.write(os.path.join(self.dir, "other", label.ADJUDICATOR_RECORD), json.dumps({"name": "two", "model": "x/two"}))
+        self.assertIn("adjudicator two (other): no run", self.status("--into", "other"))
+
+    def test_the_preflight_is_run_on_the_part_and_prints_its_verdict_and_a_count(self):
+        binary = os.path.join(self.root, "fake-gold")
+        label.write(binary, FAKE_GOLD_BIN)
+        os.chmod(binary, 0o755)
+        label.write(os.path.join(self.dir, "merge", "voters.tsv"), "sent_id\n")
+        said = self.status("--gold-bin", binary)
+        self.assertEqual(said[-1], "preflight (merge): ok")
+        self.assertEqual(label.read(binary + ".args").splitlines(),
+                         ["silver", "build", "--check-part", f"{self.dir}:merge"])
+        self.assertEqual(label.read(binary + ".cwd").strip(), os.path.realpath(label.REPO), "run from the checkout's root")
+        label.write(binary + ".refuse", "")
+        said = self.status("--gold-bin", binary)
+        self.assertEqual(said[-1], (
+            f"preflight (merge): refused, 2 lines on stderr (exit 2); `deslag-gold silver build --check-part "
+            f"{self.dir}:merge` prints them"
+        ))
+        self.assertNotIn("problem", said[-1], "the problems themselves are not printed")
+        # A relative --gold-bin names a file from where the caller is, though it runs from the checkout's root.
+        os.remove(binary + ".refuse")
+        here = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, here)
+        self.assertEqual(self.status("--gold-bin", os.path.join(".", "fake-gold"))[-1], "preflight (merge): ok")
+        os.chdir(here)
+        with unittest.mock.patch.object(label, "find_binary", return_value=None):
+            self.assertIn("not run (deslag-gold is not built", self.status()[-1])
+        missing = os.path.join(self.root, "no-such-gold")
+        self.assertEqual(self.status("--gold-bin", missing)[-1],
+                         f"preflight (merge): not run ({missing} could not be run: No such file or directory)")
+
+    def test_status_writes_nothing_in_the_sample_directory(self):
+        self.runner(FakeTransport(answer_all)).tag("one")
+        before = {
+            os.path.join(folder, name): os.stat(os.path.join(folder, name)).st_mtime_ns
+            for folder, _, names in os.walk(self.dir) for name in names
+        }
+        self.status()
+        after = {
+            os.path.join(folder, name): os.stat(os.path.join(folder, name)).st_mtime_ns
+            for folder, _, names in os.walk(self.dir) for name in names
+        }
+        self.assertEqual(after, before)
+
+
 class OutsideTaggerTests(Base):
     def test_register_stamps_runs_onto_the_word_lines_and_describes_the_run(self):
         source = os.path.join(self.dir, "spacy.conllu")
@@ -2444,14 +2961,14 @@ class OutsideTaggerTests(Base):
                 "2\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation\n\n")
         label.write(source, text)
         runner = self.runner(None)
-        run = label.register(runner, "spacy", source, "en_core_web_trf", "3.8.0", 12.5)
+        run = label.register(runner, "spacy", source, "en-core-web-trf", "3.8.0", 12.5)
         self.assertEqual(run, "r1")
         written = label.read(os.path.join(self.dir, "tags", "spacy.conllu"))
         self.assertIn("Kind=Word|Runs=r1|SpaceAfter=No|Conf=Likely", written)
         self.assertIn("Kind=Punctuation\n", written, "a token that is not a word has no run")
         row = self.runs_rows()[0]
         self.assertEqual((row["role"], row["model"], row["provider"], row["cost_usd"]),
-                         ("external", "en_core_web_trf", "local", "0.00000000"))
+                         ("external", "en-core-web-trf", "local", "0.00000000"))
         self.assertEqual(row["seconds"], "12.5")
 
     def test_cost_is_dollars_and_minutes_per_thousand_sentences(self):
@@ -2463,6 +2980,163 @@ class OutsideTaggerTests(Base):
         # Two calls at $0.30 for three sentences: $0.60 per 3, so $200 per 1000.
         self.assertEqual(row[:4], ["r1", "voter", "two", "complete"])
         self.assertEqual(row[6], "200.0000")
+
+
+class LicenceTests(Base):
+    """Each run records the licence of what made it, the date that licence was read, and the sha256 of
+    the voters.json it started with; no run starts for a model whose licence has no date."""
+
+    def setUp(self):
+        super().setUp()
+        self.voters_file = os.path.join(self.root, "voters.json")
+        label.write(self.voters_file, json.dumps(CONFIG))
+
+    def runner(self, transport, config=None, **more):
+        made = super().runner(transport, config=config, **more)
+        made.config_path = self.voters_file
+        return made
+
+    def write_config(self, config):
+        path = os.path.join(self.root, "check.json")
+        label.write(path, json.dumps(config))
+        return path
+
+    def test_the_shipped_config_dates_the_licence_of_every_model_and_of_spacy(self):
+        config = label.load_config()
+        for name, model in config["models"].items():
+            for key in label.LICENSE_KEYS:
+                self.assertTrue(model.get(key), f"{name} has no {key}")
+            self.assertTrue(model["license_url"].startswith("https://"))
+        for name in config["voters"]:
+            self.assertIn(config["models"][name]["license"], ("MIT", "Apache-2.0"), name)
+        spacy = config["external"]["spacy"]
+        self.assertEqual((spacy["model"], spacy["license"]), ("en-core-web-trf", "MIT"))
+        self.assertRegex(spacy["license_checked"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertIn("--model en-core-web-trf", label.read(os.path.join(label.HERE, "spacy.sh")),
+                      "spacy.sh registers the model that `external` names")
+
+    def test_load_config_refuses_a_licence_field_that_is_not_a_string_or_a_date(self):
+        shipped = label.load_config()
+        cases = [
+            (("models", "qwen", "license_checked"), "2026-13-01", "must be a date"),
+            (("models", "qwen", "license_checked"), "last week", "must be a date"),
+            (("models", "qwen", "license"), 5, "must be a string"),
+            (("models", "qwen", "license"), " ", "must be a string"),
+            (("models", "qwen", "license_url"), "http://example.org", "must be an https URL"),
+            (("external", "spacy", "license_checked"), "2026-10-7", "must be a date"),
+            (("external", "spacy", "model"), "", "must be an object with a `model`"),
+        ]
+        for (top, name, key), value, message in cases:
+            config = copy.deepcopy(shipped)
+            config[top][name][key] = value
+            with self.assertRaisesRegex(label.ConfigError, message):
+                label.load_config(self.write_config(config))
+        config = copy.deepcopy(shipped)
+        config["external"] = ["spacy"]
+        with self.assertRaisesRegex(label.ConfigError, "`external` must be an object"):
+            label.load_config(self.write_config(config))
+        # A model with no licence loads; a run of it is what is refused.
+        config = copy.deepcopy(shipped)
+        for key in label.LICENSE_KEYS:
+            del config["models"]["mistral"][key]
+        label.load_config(self.write_config(config))
+
+    def test_a_run_records_the_licence_and_the_sha256_of_voters_json(self):
+        self.runner(FakeTransport(answer_all)).tag("two")
+        meta = json.loads(label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json")))
+        with open(self.voters_file, "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()
+        self.assertEqual((meta["license"], meta["license_checked"], meta["voters_sha256"]),
+                         ("Apache-2.0", "2026-10-01", digest))
+        columns = label.read(os.path.join(self.dir, "runs.tsv")).splitlines()[0].split("\t")
+        at = columns.index("model_version")
+        self.assertEqual(columns[at + 1 : at + 4], ["license", "license_checked", "voters_sha256"])
+        row = self.runs_rows()[0]
+        self.assertEqual((row["license"], row["license_checked"], row["voters_sha256"]), ("Apache-2.0", "2026-10-01", digest))
+
+    def test_a_model_with_no_license_checked_starts_no_run(self):
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["two"]["license_checked"]
+        transport = FakeTransport(answer_all)
+        with self.assertRaisesRegex(label.ConfigError, "two has no `license_checked` in models of .*voters.json"):
+            self.runner(transport, config=config).tag("two")
+        self.assertEqual((transport.gets, transport.posts), ([], []), "nothing is looked up or asked")
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "two")))
+        self.assertEqual([row for row in self.ledger().rows() if row["state"] == "run" and row["run"] == "r1"], [],
+                         "no run id is taken")
+        out, err = io.StringIO(), io.StringIO()
+        with unittest.mock.patch.object(label, "load_config", return_value=config), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = label.main(["tag", "--dir", self.dir, "--max-usd", "1", "--voter", "two"], transport, FakeGold())
+        self.assertEqual(code, 2)
+        self.assertIn("two has no `license_checked`", err.getvalue())
+        # The adjudicator is held to the same.
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all)).tag(name)
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["judge"]["license_checked"]
+        with self.assertRaisesRegex(label.ConfigError, "judge has no `license_checked`"):
+            self.runner(FakeTransport(answer_all), config=config).judge("merge", [("one", False), ("two", False)])
+
+    def test_a_model_with_no_licence_or_no_card_starts_no_run(self):
+        for key in ("license", "license_url"):
+            config = copy.deepcopy(CONFIG)
+            del config["models"]["two"][key]
+            transport = FakeTransport(answer_all)
+            with self.assertRaisesRegex(label.ConfigError, f"two has no `{key}` in models of .*voters.json"):
+                self.runner(transport, config=config).tag("two")
+            self.assertEqual((transport.gets, transport.posts), ([], []), "nothing is looked up or asked")
+            self.assertFalse(os.path.exists(os.path.join(self.dir, "raw", "two")))
+        config = copy.deepcopy(CONFIG)
+        config["external"]["spacy"]["license"] = " "
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        with self.assertRaisesRegex(label.ConfigError, "spacy has no `license` in external"):
+            label.register(self.runner(None, config=config), "spacy", source, "en-core-web-trf", None, None)
+
+    def test_a_run_is_not_continued_when_voters_json_or_the_licence_changed(self):
+        def stop(body, count):
+            if count >= 2:
+                raise openrouter.ApiError("HTTP 400: stop here")
+            return answer_all(body)
+
+        with self.assertRaises(openrouter.ApiError):
+            self.runner(FakeTransport(stop)).tag("two")
+        before = label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json"))
+        saved = label.read(self.voters_file)
+        label.write(self.voters_file, saved + " ")
+        with self.assertRaisesRegex(openrouter.ApiError, "other voters_sha256 than it would have now"):
+            self.runner(FakeTransport(answer_all)).tag("two")
+        label.write(self.voters_file, saved)
+        config = copy.deepcopy(CONFIG)
+        config["models"]["two"]["license_checked"] = "2026-10-05"
+        with self.assertRaisesRegex(openrouter.ApiError, "other license_checked than it would have now"):
+            self.runner(FakeTransport(answer_all), config=config).tag("two")
+        config["models"]["two"]["license_checked"] = "2026-10-01"
+        config["models"]["two"]["license"] = "MIT"
+        with self.assertRaisesRegex(openrouter.ApiError, "other license than it would have now"):
+            self.runner(FakeTransport(answer_all), config=config).tag("two")
+        self.assertEqual(label.read(os.path.join(self.dir, "raw", "two", "r1", "run.json")), before)
+        # As it was, the run goes on and keeps its record.
+        self.runner(FakeTransport(answer_all)).tag("two")
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["complete"])
+
+    def test_register_records_the_licence_of_its_external_entry_and_refuses_without_one(self):
+        source = os.path.join(self.dir, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", "3.8.0", None)
+        row = self.runs_rows()[0]
+        self.assertEqual((row["license"], row["license_checked"]), ("MIT", "2026-10-01"))
+        self.assertEqual(len(row["voters_sha256"]), 64)
+        with self.assertRaisesRegex(label.ConfigError, "is the model `en-core-web-trf`, not `en_core_web_sm`"):
+            label.register(self.runner(None), "spacy", source, "en_core_web_sm", None, None)
+        with self.assertRaisesRegex(label.ConfigError, "`stanza` is not in `external`"):
+            label.register(self.runner(None), "stanza", source, "en-core-web-trf", None, None)
+        config = copy.deepcopy(CONFIG)
+        del config["external"]["spacy"]["license_checked"]
+        with self.assertRaisesRegex(label.ConfigError, "spacy has no `license_checked` in external"):
+            label.register(self.runner(None, config=config), "spacy", source, "en-core-web-trf", None, None)
+        self.assertEqual(len(self.runs_rows()), 1, "a refused register records no run")
 
 
 class RoundFourTests(Base):
@@ -2810,7 +3484,7 @@ class RoundFourTests(Base):
         self.assertEqual(self.statuses(), [("r1", "stopped")])
         source = os.path.join(self.dir, "spacy.conllu")
         label.write(source, "# sent_id = d1\n1\tRun\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n\n")
-        label.register(self.runner(None), "spacy", source, "model", None, None)
+        label.register(self.runner(None), "spacy", source, "en-core-web-trf", None, None)
         self.assertEqual(self.statuses(), [("r1", "stopped"), ("r2", "complete")])
 
     def test_run_json_is_written_by_a_temporary_file_and_a_rename(self):
@@ -3213,7 +3887,7 @@ class RoundFourTests(Base):
                 for number in range(1, 121):
                     label.write(os.path.join(directory, "batches", f"batch-{number:02d}.txt"), "d1: 1 x\n")
 
-        files = self.runner(None, gold=Many()).batch_files()
+        files = [path for path, _ in self.runner(None, gold=Many()).batch_files()]
         self.assertEqual([os.path.basename(f) for f in files][:3] + [os.path.basename(files[-1])],
                          ["batch-01.txt", "batch-02.txt", "batch-03.txt", "batch-120.txt"])
         self.assertEqual([int(re.search(r"\d+", os.path.basename(f)).group()) for f in files], list(range(1, 121)))
@@ -3221,15 +3895,17 @@ class RoundFourTests(Base):
 
 HANDOFF_CONFIG = copy.deepcopy(CONFIG)
 HANDOFF_CONFIG["adjudicator"] = "opus"
-HANDOFF_CONFIG["models"]["opus"] = {"model": "claude-opus-5-5", "provider": "claude-code", "transport": "handoff"}
+HANDOFF_CONFIG["models"]["opus"] = {
+    "model": "claude-opus-5-5", "provider": "claude-code", "transport": "handoff", **LICENSED, "license": "Terms",
+}
 # The default adjudicator through OpenRouter, with `opus` also defined, to be named by `--adjudicator`.
 BOTH_CONFIG = copy.deepcopy(CONFIG)
 BOTH_CONFIG["models"]["opus"] = HANDOFF_CONFIG["models"]["opus"]
 
 
 class HandoffTests(Base):
-    """The adjudicator as a handoff model: requests written as files, a coordinator's subagents (here, a
-    fake that writes the files between passes) answer them, and the same command goes on."""
+    """The adjudicator as a handoff model: requests written as files, the person running the labelling
+    answers them (here, a fake that writes the files between passes), and the same command goes on."""
 
     def setUp(self):
         super().setUp()
@@ -3258,15 +3934,14 @@ class HandoffTests(Base):
 
     @staticmethod
     def agent(**more):
-        return {"harness": "claude-code", "version": "2.1.0", "agent_type": "general-purpose",
-                "model_reported": "claude-opus-5-5", "effort": "high",
-                "tools": "Read,Write", "prompt_sha256": label.handoff_template_sha256(), **more}
+        """The agent.json handoff-run writes."""
+        return {**label.agent_record("2.1.0", "claude-opus-5-5", confine.arguments("claude-opus-5-5")), **more}
 
     def write_agent(self, run="r3", **more):
         label.write(os.path.join(self.folder(run), "agent.json"), json.dumps(self.agent(**more)))
 
     def answer(self, answers=None, run="r3"):
-        """What the coordinator's subagents do: for each request without a reply, write the reply to the
+        """What answering the requests does: for each request without a reply, write the reply to the
         path the request names. `answers` maps an item to its answer line; the default answers every one."""
         wrote = []
         for path in self.requests(run):
@@ -3284,6 +3959,100 @@ class HandoffTests(Base):
 
     def run_row(self, role="adjudicator"):
         return [row for row in self.runs_rows() if row["role"] == role][-1]
+
+    def give_up(self, *calls, reason="it fails a check every time"):
+        """`handoff-run --give-up CALL ... --reason REASON`."""
+        more = [arg for call in calls for arg in ("--give-up", call)]
+        if reason is not None:
+            more += ["--reason", reason]
+        arguments = label.parser().parse_args(["handoff-run", "--dir", self.dir, "--into", "merge", *more])
+        return label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.said.append)
+
+    def waiting_on(self):
+        """The calls a pass of the judge waits on."""
+        with self.assertRaises(label.HandoffWait) as caught:
+            self.pass_()
+        return [kind for kind, _, _ in caught.exception.waiting]
+
+    def test_a_call_given_up_is_answered_with_nothing_and_its_items_are_asked_again(self):
+        self.assertEqual(self.waiting_on(), ["part-01"])
+        sha = json.loads(label.read(self.requests()[0]))["request_sha256"]
+        self.assertEqual(self.give_up("part-01"), 0)
+        record = json.loads(label.read(os.path.join(self.folder(), "part-01.given-up.json")))
+        self.assertEqual((record["call"], record["request_sha256"], record["reason"]),
+                         ("part-01", sha, "it fails a check every time"))
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [], "a call given up waits no more")
+        self.assertEqual(self.waiting_on(), ["retry-1-01"], "its items are asked again in the retry")
+        self.assertTrue(any("part-01: given up (it fails a check every time)" in line for line in self.said), self.said)
+        self.answer()
+        self.write_agent()
+        self.assertEqual(self.pass_(), {})
+        given = self.run_json("opus", "r3")["given_up"]
+        self.assertEqual(given, [{"call": "part-01", "request_sha256": sha, "reason": "it fails a check every time",
+                                  "date": record["date"]}])
+        self.assertEqual((self.run_row()["status"], self.run_row()["reason"]), ("complete", "1 handoff calls given up"))
+        self.assertEqual(self.ledger().total(), self.spent, "nothing is booked for a call given up")
+
+    def test_calls_given_up_through_the_retries_leave_their_items_unsettled_and_counted(self):
+        for call in ("part-01", "retry-1-01", "retry-2-01"):
+            self.assertEqual(self.waiting_on(), [call])
+            self.assertEqual(self.give_up(call), 0)
+        arguments = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "1", "--strict"])
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            self.assertEqual(label.command_judge(arguments, copy.deepcopy(HANDOFF_CONFIG), self.transport, self.gold), 3)
+        self.assertIn("2 items are still open", err.getvalue())
+        self.assertNotIn(("finish", "merge"), self.gold.calls, "--strict finishes nothing")
+        self.assertEqual(sorted(self.pass_()), ["d1.2", "d2.3"])
+        self.assertTrue(self.gold.left_open, "the finish leaves the items open, unsettled")
+        self.assertEqual([entry["call"] for entry in self.run_json("opus", "r3")["given_up"]],
+                         ["part-01", "retry-1-01", "retry-2-01"])
+        self.assertEqual((self.run_row()["status"], self.run_row()["reason"]),
+                         ("complete", "2 items open, 3 handoff calls given up"))
+        said = []
+        label.command_status(label.parser().parse_args(["status", "--dir", self.dir]), HANDOFF_CONFIG, say=said.append)
+        self.assertIn("adjudicator opus (merge): r3 complete, $0.0000; 0 requests waiting, 0 replies present, "
+                      "3 calls given up", said)
+
+    def test_only_a_call_waiting_is_given_up_and_only_with_a_reason(self):
+        self.waiting_on()
+        with self.assertRaisesRegex(label.GoldError, "the call part-09; the calls waiting are part-01"):
+            self.give_up("part-09")
+        with self.assertRaisesRegex(label.ConfigError, "--give-up needs --reason"):
+            self.give_up("part-01", reason=None)
+        with self.assertRaisesRegex(label.ConfigError, "--give-up needs --reason"):
+            self.give_up("part-01", reason="  ")
+        arguments = label.parser().parse_args(["handoff-run", "--dir", self.dir, "--into", "merge", "--reason", "x"])
+        with self.assertRaisesRegex(label.ConfigError, "goes with --give-up"):
+            label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.said.append)
+        self.assertEqual([name for name in os.listdir(self.folder()) if name.endswith(label.GIVEN_UP)], [])
+
+    def test_a_call_given_up_for_an_older_request_is_not_given_up(self):
+        self.waiting_on()
+        self.assertEqual(self.give_up("part-01"), 0)
+        path = os.path.join(self.folder(), "part-01.given-up.json")
+        record = json.loads(label.read(path))
+        record["request_sha256"] = "0" * 64
+        label.write(path, json.dumps(record))
+        self.assertEqual(self.waiting_on(), ["part-01"], "a new request of the call is asked")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.assertNotIn("given_up", self.run_json("opus", "r3"))
+
+    def test_status_counts_the_requests_waiting_and_the_replies_present(self):
+        def status():
+            said = []
+            arguments = label.parser().parse_args(["status", "--dir", self.dir])
+            label.command_status(arguments, HANDOFF_CONFIG, say=said.append)
+            return [line for line in said if line.startswith("adjudicator")]
+
+        self.assertEqual(status(), ["adjudicator opus (merge): no run; 0 requests waiting, 0 replies present"])
+        with self.assertRaises(label.HandoffWait):
+            self.pass_()
+        waiting = len(self.requests())
+        self.assertGreater(waiting, 0)
+        self.assertEqual(status(), [f"adjudicator opus (merge): r3 stopped, $0.0000; {waiting} requests waiting, 0 replies present"])
+        self.answer()
+        self.assertEqual(status(), [f"adjudicator opus (merge): r3 stopped, $0.0000; 0 requests waiting, {waiting} replies present"])
 
     def test_a_pass_writes_every_request_then_waits_without_a_call_a_key_or_a_booking(self):
         before = self.ledger().total()
@@ -3382,6 +4151,12 @@ class HandoffTests(Base):
             ({"tools": ""}, "lacks tools"),
             ({"model_reported": "claude-sonnet-5-5"}, "claude-opus-5-5"),
             ({"prompt_sha256": "0" * 64}, "another agent prompt"),
+            ({"safe_mode": False}, "lacks safe_mode"),
+            ({"safe_mode": "yes"}, "does not record the confined process"),
+            ({"args": ["-p", "--model", "claude-opus-5-5", "--tools", "Read,Write"]}, "does not record the confined process"),
+            ({"args": []}, "lacks args"),
+            ({"cwd": ""}, "lacks cwd"),
+            ({"tools": "Read,Write,Bash"}, "other tools"),
         ]
         for more, message in cases:
             self.write_agent(**more)
@@ -3413,7 +4188,7 @@ class HandoffTests(Base):
             self.pass_()
         first = self.run_json("opus", "r3")["agent"]
         self.assertEqual(first, self.agent())
-        # The coordinator upgrades Claude Code between rounds and rewrites agent.json.
+        # The person running the labelling upgrades Claude Code between rounds and rewrites agent.json.
         self.write_agent(version="9.9.9")
         self.answer()
         spent = self.ledger().total()
@@ -3719,6 +4494,889 @@ class HandoffTests(Base):
             judges = [line for line in done.stdout.splitlines() if "label.py judge" in line]
             self.assertTrue(judges, done.stdout + done.stderr)
             self.assertTrue(all("--adjudicator claude" in line for line in judges), judges)
+
+
+# A stand-in for `claude`: no network, no login, no model. `--version` prints SETUP's version; a call
+# reads the request its prompt names and answers it, through tool events as Claude Code's stream-json
+# shows them. It refuses a Read or Write outside its working directory, as `-p` mode does, unless SETUP
+# says to read or write anything (the leaking fakes). SETUP also sets its tools, MCP servers, model and
+# last line, a file it changes outside any tool (`dirty`), a sleep, whether it writes its reply, and a
+# log of each call (its arguments, working directory, environment and stdin, and when it ran).
+FAKE_CLAUDE = r'''#!PYTHON
+import json, os, re, sys, time
+
+SETUP = json.loads(SETUP_JSON)
+
+
+def emit(event):
+    sys.stdout.write(json.dumps(event) + "\n")
+    sys.stdout.flush()
+
+
+def inside(path):
+    real, here = os.path.realpath(path), os.path.realpath(os.getcwd())
+    return real == here or real.startswith(here + os.sep)
+
+
+if sys.argv[1:] == ["--version"]:
+    print(SETUP["version"] + " (Claude Code)")
+    sys.exit(0)
+args, prompt = sys.argv[1:-1], sys.argv[-1]
+stdin = sys.stdin.read()
+started = time.time()
+if SETUP.get("log"):
+    with open(SETUP["log"], "a") as handle:
+        handle.write(json.dumps({"args": args, "cwd": os.getcwd(), "listing": sorted(os.listdir(".")),
+                                 "env": dict(os.environ), "stdin": stdin, "prompt": prompt}) + "\n")
+model = SETUP.get("model", "claude-opus-5-5")
+emit({"type": "system", "subtype": "init", "cwd": os.getcwd(), "tools": SETUP.get("tools", ["Read", "Write"]),
+      "mcp_servers": SETUP.get("mcp_servers", []), "model": model, "permissionMode": "acceptEdits"})
+denials = []
+count = [0]
+
+
+def hit_limit():
+    # The Claude plan's usage limit, met on a request to the API: an assistant message that wraps the
+    # refusal, with `api_error` when the version gives it, and a result that is an error.
+    said = SETUP.get("limit_text", "You've hit your session limit \u00b7 resets 3pm (Europe/Madrid)")
+    refusal = {"type": "assistant", "message": {"model": "<synthetic>", "content": [{"type": "text", "text": said}]},
+               "error": "rate_limit"}
+    if SETUP["usage_limit"] == "api_error":
+        refusal.update(is_api_error_message=True, api_error_status=429, api_error="usage_limit_reached")
+    emit(refusal)
+    emit({"type": "result", "subtype": "success", "is_error": True, "result": said, "permission_denials": denials})
+    sys.exit(1)
+
+
+if SETUP.get("usage_limit") and not SETUP.get("limit_late"):
+    hit_limit()
+
+
+def tool(name, path, content=None):
+    count[0] += 1
+    ident = "toolu_%d" % count[0]
+    entry = {"file_path": path} if content is None else {"file_path": path, "content": content}
+    emit({"type": "assistant", "message": {"model": model, "content": [{"type": "tool_use", "id": ident, "name": name, "input": entry}]}})
+    if not (inside(path) or SETUP.get("read_anything" if name == "Read" else "write_anything")):
+        denials.append({"tool_name": name, "tool_use_id": ident, "tool_input": entry})
+        said = "Claude requested permissions to %s %s, but you haven't granted it yet." % ("read from" if name == "Read" else "write to", path)
+        emit({"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": ident, "is_error": True, "content": said}]}})
+        return None
+    if name == "Read":
+        with open(path) as handle:
+            result = handle.read()
+    else:
+        with open(path, "w") as handle:
+            handle.write(content)
+        result = "File created successfully at: " + path
+    emit({"type": "user", "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": ident, "content": result}]}})
+    return result
+
+
+request = json.loads(tool("Read", re.search(r"(/\S+\.request\.json)", prompt).group(1)))
+if SETUP.get("garbage"):
+    sys.stdout.write("not an event\n")
+if SETUP.get("bash"):
+    # A tool it was not given, used all the same.
+    count[0] += 1
+    emit({"type": "assistant", "message": {"model": model, "content": [
+        {"type": "tool_use", "id": "toolu_bash", "name": "Bash", "input": {"command": "ls"}}]}})
+    emit({"type": "user", "message": {"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "toolu_bash", "content": "request.json"}]}})
+if "control" in request:
+    lines = [] if SETUP.get("no_control") else [request["control"]]
+    for path in [] if SETUP.get("skip_decoys") else request["read"]:
+        got = tool("Read", path)
+        lines.append(path + (": refused" if got is None else ": read, " + got.splitlines()[0]))
+    if not SETUP.get("skip_write"):
+        lines.append("write: " + ("refused" if tool("Write", request["write"], "written\n") is None else "written"))
+    if SETUP.get("quote_claude_md"):
+        with open(os.path.join(os.path.dirname(os.getcwd()), "CLAUDE.md")) as handle:
+            lines.append(handle.readline().strip())
+    else:
+        lines.append("no CLAUDE.md")
+    if SETUP.get("quote_user_claude_md"):
+        home = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.environ["HOME"], ".claude")
+        with open(os.path.join(home, "CLAUDE.md")) as handle:
+            lines.append(handle.readline().strip())
+    if not SETUP.get("no_reply"):
+        tool("Write", request["reply_path"], "\n".join(lines) + "\n")
+else:
+    for path in SETUP.get("also_read", []):
+        tool("Read", path)
+    if SETUP.get("usage_limit"):
+        # The limit met later in the call, after its reads.
+        hit_limit()
+    if SETUP.get("dirty"):
+        with open(SETUP["dirty"], "w") as handle:
+            handle.write("changed\n")
+    if SETUP.get("hang_from") and SETUP.get("log"):
+        # From the call of this number on, never come back: a round killed while it waits.
+        with open(SETUP["log"]) as handle:
+            if sum(1 for _ in handle) >= SETUP["hang_from"]:
+                time.sleep(300)
+    time.sleep(SETUP.get("sleep", 0))
+    items = sorted(set(re.findall(r"^(d\d+\.\d+): ", request["messages"][1]["content"], re.M)))
+    if not SETUP.get("no_reply"):
+        tool("Write", request["reply_path"], "".join(item + ": J | a word\n" for item in items))
+if SETUP.get("log"):
+    with open(SETUP["log"] + ".times", "a") as handle:
+        handle.write(json.dumps([started, time.time()]) + "\n")
+if SETUP.get("update_to"):
+    # Claude Code updating itself during the call: `--version` says the new version from now on.
+    with open(sys.argv[0]) as handle:
+        source = handle.read()
+    with open(sys.argv[0], "w") as handle:
+        handle.write(source.replace('"version": "%s"' % SETUP["version"], '"version": "%s"' % SETUP["update_to"]))
+emit({"type": "result", "subtype": "success", "is_error": bool(SETUP.get("is_error")),
+      "result": SETUP.get("final", model), "permission_denials": denials})
+sys.exit(SETUP.get("exit_code", 0))
+'''
+
+
+def fake_claude(folder, **setup):
+    """The fake at `<folder>/claude`, made executable, with SETUP `setup`; its path."""
+    setup.setdefault("version", "2.1.293")
+    path = os.path.join(folder, "claude")
+    label.write(path, FAKE_CLAUDE.replace("#!PYTHON", "#!" + sys.executable).replace("SETUP_JSON", repr(json.dumps(setup))))
+    os.chmod(path, 0o755)
+    return path
+
+
+class PartsGold(FakeGold):
+    """FakeGold with one disputed item in each of `parts` worklist parts."""
+
+    def __init__(self, parts):
+        super().__init__()
+        self.dispute = ["d1.2", "d2.3", "d3.2", "d1.3", "d2.2", "d1.4"][:parts]
+
+    def merge(self, directory, into, *args, **more):
+        out = super().merge(directory, into, *args, **more)
+        folder = os.path.join(directory, into)
+        os.remove(os.path.join(folder, "worklist-01.txt"))
+        for number, item in enumerate(self.dispute, 1):
+            label.write(os.path.join(folder, f"worklist-{number:02d}.txt"), f"Adjudicate.\n\nSlots:\n{item}: \n")
+        return out
+
+
+class ConfinementTests(Base):
+    """`handoff-run` and `probe-confinement` with a fake `claude`, in a checkout of their own (a git
+    repository the test makes), with a home whose CLAUDE.md the probe must not see leak."""
+
+    def setUp(self):
+        super().setUp()
+        self.bin = os.path.join(self.root, "bin")
+        os.makedirs(self.bin)
+        self.log = os.path.join(self.root, "calls.jsonl")
+        self.home = os.path.join(self.root, "home")
+        label.write(os.path.join(self.home, ".claude", "CLAUDE.md"), "# Home rules of the tester\n\nNever quote this.\n")
+        self.checkout = os.path.join(self.root, "checkout")
+        os.makedirs(self.checkout)
+        # A global `commit.gpgsign = true` would ask for a key the test does not have.
+        commit = ["-c", "user.name=t", "-c", "user.email=t@example.org", "-c", "commit.gpgsign=false"]
+        for command in (["init", "-q"], ["add", "-A"], [*commit, "commit", "-q", "--allow-empty", "-m", "start"]):
+            subprocess.run(["git", "-C", self.checkout, *command], check=True, capture_output=True)
+        self.temp = os.path.join(self.root, "temp")
+        os.makedirs(self.temp)
+        for name, value in (("HOME", self.home), ("CLAUDE_CONFIG_DIR", None)):
+            saved = os.environ.get(name)
+            self.addCleanup(lambda name=name, saved=saved: os.environ.pop(name, None) if saved is None else os.environ.__setitem__(name, saved))
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+        for patch in (unittest.mock.patch.object(label, "REPO", self.checkout),
+                      unittest.mock.patch.object(tempfile, "tempdir", self.temp)):
+            patch.start()
+            self.addCleanup(patch.stop)
+        self.out = []
+        self.gold = FakeGold()
+
+    def fake(self, **setup):
+        setup.setdefault("log", self.log)
+        return fake_claude(self.bin, **setup)
+
+    def probe(self, *more, **setup):
+        claude = self.fake(**setup)
+        arguments = label.parser().parse_args(["probe-confinement", "--claude", claude, *more])
+        return label.command_probe_confinement(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append)
+
+    def stamp(self):
+        return json.loads(label.read(os.path.join(self.label_root, "confinement.json")))
+
+    def waiting(self, gold=None):
+        """A handoff judge that wrote its requests and waits: the voters tagged, the judge passed once."""
+        self.gold = gold or self.gold
+        for name in ("one", "two"):
+            self.runner(FakeTransport(answer_all), gold=self.gold).tag(name)
+        with self.assertRaises(label.HandoffWait):
+            self.judge()
+        return label.pending_requests(self.dir, "merge")
+
+    def judge(self):
+        return self.runner(None, gold=self.gold, config=copy.deepcopy(HANDOFF_CONFIG)).judge("merge", [("one", False), ("two", False)])
+
+    def handoff_run(self, *more, claude=None):
+        arguments = label.parser().parse_args(
+            ["handoff-run", "--dir", self.dir, "--into", "merge", "--claude", claude or os.path.join(self.bin, "claude"), *more]
+        )
+        return label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append)
+
+    def calls(self):
+        return [json.loads(line) for line in label.read(self.log).splitlines()] if os.path.isfile(self.log) else []
+
+    def left_in_temp(self):
+        return sorted(os.listdir(self.temp))
+
+    # -- the probe
+
+    def test_an_honest_process_passes_the_probe_and_the_stamp_records_it(self):
+        home = confine.snapshot(self.home, os.path.join(self.root, "none"))
+        self.assertEqual(self.probe(), 0, self.out)
+        stamp = self.stamp()
+        self.assertEqual(stamp["verdict"], "pass")
+        self.assertEqual(stamp["claude_code_version"], "2.1.293")
+        self.assertEqual(stamp["args"], confine.arguments("claude-opus-5-5"))
+        self.assertRegex(stamp["date"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertEqual(stamp["skipped"], {})
+        self.assertEqual(stamp["models_seen"], {"init": "claude-opus-5-5", "assistant": ["claude-opus-5-5"]})
+        expected = {
+            "stream_json", "init_tools_read_write", "init_no_mcp_server", "one_model_id", "process_finished",
+            "model_reported_matches", "only_read_write_used", "reply_written", "control_quoted",
+            "decoy_plain_read_refused", "decoy_plain_marker_absent", "decoy_holdout_read_refused",
+            "decoy_holdout_marker_absent", "decoy_blobs_read_refused", "decoy_blobs_marker_absent",
+            "outside_write_refused", "outside_file_absent", "scratch_unchanged_outside_cwd",
+            "ancestor_claude_md_absent", "user_claude_md_absent", "version_unchanged",
+        }
+        self.assertEqual(set(stamp["assertions"]), expected)
+        self.assertTrue(all(value is True for value in stamp["assertions"].values()), stamp)
+        printed = "\n".join(self.out)
+        for name in expected:
+            self.assertIn(f"  {name}: true", printed)
+        self.assertNotRegex(printed, r"DECOY-|CONTROL-|Scratch notes|Home rules", "no marker or transcript is printed")
+        self.assertEqual(self.left_in_temp(), [], "the scratch tree is removed")
+        self.assertEqual(confine.snapshot(self.home, os.path.join(self.root, "none")), home, "nothing under the home is written")
+        call, = self.calls()
+        self.assertEqual(call["args"], confine.arguments("claude-opus-5-5"))
+        self.assertEqual(os.path.basename(call["cwd"]), "cwd")
+        self.assertEqual(call["listing"], ["probe.request.json"])
+
+    def test_the_probe_request_carries_the_control_on_its_first_line_and_names_no_claude_md(self):
+        self.assertEqual(self.probe("--keep"), 0, self.out)
+        scratch, = self.left_in_temp()
+        scratch = os.path.join(self.temp, scratch)
+        self.assertTrue(any(scratch in line for line in self.out), "--keep says where the tree is")
+        request = label.read(os.path.join(scratch, "cwd", "probe.request.json"))
+        self.assertRegex(request.splitlines()[0], r'^\{"control": "CONTROL-[0-9a-f]{16}",$')
+        parsed = json.loads(request)
+        self.assertEqual(parsed["reply_path"], os.path.join(scratch, "cwd", "probe.reply.txt"))
+        self.assertEqual(parsed["read"], [os.path.join(scratch, "decoy.txt"),
+                                          os.path.join(scratch, "repo", "tests", "gold", "holdout-decoy.txt"),
+                                          os.path.join(scratch, "blobs", ".blobs", "unpacked", "decoy.txt")])
+        self.assertEqual(parsed["write"], os.path.join(scratch, "outside-write.txt"))
+        self.assertNotIn("Scratch notes", request)
+        self.assertNotIn("Home rules", request)
+        self.assertTrue(label.read(os.path.join(scratch, "CLAUDE.md")).startswith("# Scratch notes "))
+        events = [json.loads(line) for line in label.read(os.path.join(scratch, "stream.jsonl")).splitlines()]
+        self.assertEqual([events[0]["type"], events[-1]["type"]], ["system", "result"], "--keep keeps the stream")
+        shutil.rmtree(scratch)
+
+    def test_a_process_that_reads_a_decoy_fails_the_probe(self):
+        self.assertEqual(self.probe(read_anything=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertEqual(self.stamp()["verdict"], "fail")
+        for name in ("plain", "holdout", "blobs"):
+            self.assertFalse(checks[f"decoy_{name}_read_refused"])
+            self.assertFalse(checks[f"decoy_{name}_marker_absent"])
+        self.assertTrue(checks["outside_write_refused"])
+        self.assertIn("verdict: fail", self.out[-1])
+        self.assertNotRegex("\n".join(self.out), r"DECOY-")
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_process_that_writes_outside_fails_the_probe(self):
+        self.assertEqual(self.probe(write_anything=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertFalse(checks["outside_write_refused"])
+        self.assertFalse(checks["outside_file_absent"])
+        self.assertFalse(checks["scratch_unchanged_outside_cwd"])
+        self.assertTrue(checks["decoy_plain_read_refused"])
+
+    def test_a_process_with_an_mcp_server_or_a_third_tool_fails_the_probe(self):
+        self.assertEqual(self.probe(mcp_servers=[{"name": "claude.ai Gmail", "status": "connected"}]), 2)
+        self.assertFalse(self.stamp()["assertions"]["init_no_mcp_server"])
+        self.assertTrue(self.stamp()["assertions"]["init_tools_read_write"])
+        self.assertEqual(self.probe(tools=["Read", "Write", "Bash"]), 2)
+        self.assertFalse(self.stamp()["assertions"]["init_tools_read_write"])
+        self.assertEqual(self.probe(model="claude-sonnet-5-5", final="claude-sonnet-5-5"), 2)
+        self.assertFalse(self.stamp()["assertions"]["one_model_id"])
+        self.assertEqual(self.stamp()["models_seen"], {"init": "claude-sonnet-5-5", "assistant": ["claude-sonnet-5-5"]})
+        self.assertIn("  models named: init claude-sonnet-5-5; assistant messages claude-sonnet-5-5", self.out)
+        self.assertEqual(self.probe(final="I am Claude"), 2)
+        self.assertFalse(self.stamp()["assertions"]["model_reported_matches"])
+
+    def test_a_process_given_a_claude_md_fails_the_probe(self):
+        self.assertEqual(self.probe(quote_claude_md=True), 2)
+        checks = self.stamp()["assertions"]
+        self.assertFalse(checks["ancestor_claude_md_absent"])
+        self.assertTrue(checks["user_claude_md_absent"])
+
+    def test_each_misbehaviour_fails_the_probe_on_the_assertion_that_names_it(self):
+        # Each fake misbehaves in one way, and the assertions it must make false; every other one holds.
+        cases = [
+            ({"garbage": True}, ["stream_json"]),
+            ({"exit_code": 1}, ["process_finished"]),
+            ({"is_error": True}, ["process_finished"]),
+            ({"bash": True}, ["only_read_write_used"]),
+            ({"no_reply": True}, ["reply_written", "control_quoted"]),
+            ({"no_control": True}, ["control_quoted"]),
+            ({"quote_user_claude_md": True}, ["user_claude_md_absent"]),
+            ({"update_to": "2.1.294"}, ["version_unchanged"]),
+            ({"skip_decoys": True}, ["decoy_plain_read_refused", "decoy_holdout_read_refused", "decoy_blobs_read_refused"]),
+            ({"skip_write": True}, ["outside_write_refused"]),
+        ]
+        for setup, failed in cases:
+            with self.subTest(setup=setup):
+                self.out = []
+                self.assertEqual(self.probe(**setup), 2, self.out)
+                stamp = self.stamp()
+                self.assertEqual(stamp["verdict"], "fail")
+                self.assertEqual(stamp["skipped"], {})
+                self.assertEqual(sorted(name for name, ok in stamp["assertions"].items() if not ok), sorted(failed))
+                for name in failed:
+                    self.assertIn(f"  {name}: false", self.out)
+                self.assertEqual(self.out[-1], f"verdict: fail; {label.stamp_path()} written")
+                self.assertEqual(self.left_in_temp(), [])
+
+    def test_with_no_user_claude_md_that_check_is_skipped_with_a_note(self):
+        os.remove(os.path.join(self.home, ".claude", "CLAUDE.md"))
+        self.assertEqual(self.probe(), 0, self.out)
+        self.assertNotIn("user_claude_md_absent", self.stamp()["assertions"])
+        self.assertIn("user_claude_md_absent", self.stamp()["skipped"])
+        self.assertTrue(any("user_claude_md_absent: skipped" in line for line in self.out))
+        self.assertFalse(os.path.exists(os.path.join(self.home, ".claude", "CLAUDE.md")), "the probe makes no CLAUDE.md there")
+
+    def test_the_process_gets_a_scrubbed_environment_and_no_stdin(self):
+        os.environ["CLAUDE_EFFORT"] = "max"
+        os.environ["CLAUDE_CODE_MESSAGING_SOCKET"] = "/tmp/socket"
+        os.environ["ANTHROPIC_BASE_URL"] = "https://example.org"
+        self.addCleanup(lambda: [os.environ.pop(name, None) for name in ("CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "ANTHROPIC_BASE_URL")])
+        with unittest.mock.patch.object(confine.subprocess, "run", wraps=subprocess.run) as ran:
+            self.assertEqual(self.probe(), 0, self.out)
+        # What the kit passes is held to the allow-list. What the process sees is not: the operating
+        # system adds names of its own to every process (macOS adds `__CF_USER_TEXT_ENCODING`).
+        passed, = [call.kwargs["env"] for call in ran.call_args_list if call.args[0][1:2] == ["-p"]]
+        for name in passed:
+            self.assertTrue(name in confine.KEPT or name.startswith(confine.KEPT_PREFIXES) or name == "DISABLE_AUTOUPDATER", name)
+        env = self.calls()[0]["env"]
+        self.assertEqual({name: env.get(name) for name in passed}, passed, "the process sees what was passed")
+        self.assertEqual(env["DISABLE_AUTOUPDATER"], "1")
+        self.assertEqual(env["HOME"], self.home)
+        self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://example.org")
+        for name in ("OPENROUTER_API_KEY", "CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "CLAUDECODE",
+                     guard.ROOT_VARIABLE, ledger.STATE_VARIABLE):
+            self.assertNotIn(name, passed)
+            self.assertNotIn(name, env)
+        self.assertEqual(self.calls()[0]["stdin"], "")
+
+    def test_the_environment_keeps_the_login_and_drops_the_rest(self):
+        kept = confine.environment({
+            "HOME": "/h", "PATH": "/bin", "LC_ALL": "C.UTF-8", "TERM": "xterm", "ANTHROPIC_API_KEY": "k",
+            "CLAUDE_CONFIG_DIR": "/c", "CLAUDE_CODE_OAUTH_TOKEN": "t", "CLAUDE_EFFORT": "max", "CLAUDECODE": "1",
+            "CLAUDE_CODE_SESSION_ID": "s", "OPENROUTER_API_KEY": "o", "SSH_AUTH_SOCK": "/s",
+        })
+        self.assertEqual(sorted(kept), ["ANTHROPIC_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CONFIG_DIR",
+                                        "DISABLE_AUTOUPDATER", "HOME", "LC_ALL", "PATH", "TERM"])
+
+    def test_the_fake_on_path_is_the_claude_found_by_default(self):
+        self.fake()
+        saved = os.environ["PATH"]
+        os.environ["PATH"] = self.bin + os.pathsep + saved
+        self.addCleanup(os.environ.__setitem__, "PATH", saved)
+        self.assertEqual(shutil.which("claude"), os.path.join(self.bin, "claude"))
+        arguments = label.parser().parse_args(["probe-confinement"])
+        self.assertEqual(label.command_probe_confinement(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.out.append), 0)
+        self.assertEqual(len(self.calls()), 1, "the fake answered, not another claude")
+
+    # -- handoff-run
+
+    def test_handoff_run_answers_each_request_and_the_judge_then_finishes(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        call, = self.calls()
+        self.assertEqual(call["args"], confine.arguments("claude-opus-5-5"))
+        self.assertEqual(call["listing"], ["part-01.request.json"], "the working directory holds the request alone")
+        self.assertTrue(call["cwd"].startswith(self.temp + os.sep))
+        self.assertEqual(call["prompt"], label.read(label.HANDOFF_TEMPLATE).replace("{request}", os.path.join(call["cwd"], "part-01.request.json")))
+        self.assertEqual(self.left_in_temp(), [], "the working directory is removed")
+        request = json.loads(label.read(pending[0]))
+        self.assertEqual(label.read(request["reply_path"]), "d1.2: J | a word\nd2.3: J | a word\n")
+        agent = json.loads(label.read(os.path.join(os.path.dirname(pending[0]), "agent.json")))
+        self.assertEqual(agent, {
+            "harness": "claude-code", "version": "2.1.293", "agent_type": "claude -p --safe-mode",
+            "model_reported": "claude-opus-5-5", "effort": "default", "tools": "Read,Write",
+            "prompt_sha256": label.handoff_template_sha256(), "safe_mode": True,
+            "args": confine.arguments("claude-opus-5-5"), "cwd": confine.CWD_RULE,
+        })
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.judge(), {})
+        run = json.loads(label.read(os.path.join(self.dir, "raw", "opus", "r3", "run.json")))
+        self.assertEqual(run["agent"], agent)
+        self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "labelled.conllu")))
+        self.assertEqual(self.handoff_run(), 0)
+        self.assertIn("no request of merge is waiting", self.out[-1])
+
+    def test_handoff_run_refuses_without_a_passing_stamp_for_this_version_and_these_arguments(self):
+        self.waiting()
+        self.fake()
+        with self.assertRaisesRegex(label.GoldError, "there is no .*confinement.json"):
+            self.handoff_run()
+        self.assertEqual(self.probe(read_anything=True), 2)
+        with self.assertRaisesRegex(label.GoldError, "does not record a probe that passed"):
+            self.handoff_run()
+        self.assertEqual(self.probe(), 0)
+        self.fake(version="2.1.294")
+        with self.assertRaisesRegex(label.GoldError, "records Claude Code 2.1.293, and `claude --version` says 2.1.294"):
+            self.handoff_run()
+        self.fake()
+        stamp = self.stamp()
+        stamp["args"] = [arg for arg in stamp["args"] if arg != "--safe-mode"]
+        label.write(os.path.join(self.label_root, "confinement.json"), json.dumps(stamp))
+        with self.assertRaisesRegex(label.GoldError, "another argument list"):
+            self.handoff_run()
+        self.assertEqual(self.probe(), 0)
+        stamp = self.stamp()
+        stamp["assertions"]["decoy_plain_read_refused"] = False
+        label.write(os.path.join(self.label_root, "confinement.json"), json.dumps(stamp))
+        with self.assertRaisesRegex(label.GoldError, "does not record a probe that passed"):
+            self.handoff_run()
+        self.assertEqual([call for call in self.calls() if "part-01.request.json" in call["prompt"]], [],
+                         "no handoff call was made")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+
+    def test_handoff_run_holds_claude_codes_version_to_the_lock_of_the_parts(self):
+        config = copy.deepcopy(HANDOFF_CONFIG)
+
+        def waiting_part(number):
+            self.dir = make_part(self.label_root, number, 2)
+            for name in ("one", "two"):
+                self.runner(FakeTransport(answer_all), gold=self.gold, config=config).tag(name)
+            with self.assertRaises(label.HandoffWait):
+                self.judge()
+
+        waiting_part(1)
+        self.assertEqual(self.probe(), 0)
+        lock_path = os.path.join(self.label_root, "silver", label.PARTS_LOCK)
+        # A round that keeps no reply does not count, and writes no agent into the lock.
+        self.fake(no_reply=True)
+        self.assertEqual(self.handoff_run(), label.EXIT_HANDOFF, self.out)
+        self.assertNotIn("agent", json.loads(label.read(lock_path)))
+        # Nor does a round at a commit with changes, which is refused before any call.
+        before = len(self.calls())
+        with unittest.mock.patch.object(label, "deslag_commit", return_value=COMMIT + "-dirty"), \
+                self.assertRaisesRegex(label.GoldError, "handoff-run: this checkout is at .*-dirty"):
+            self.handoff_run()
+        self.assertEqual(len(self.calls()), before)
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        lock = json.loads(label.read(lock_path))
+        self.assertEqual(lock["agent"], {"version": "2.1.293", "args": confine.arguments("claude-opus-5-5")})
+        self.assertEqual(self.judge(), {})
+        # Claude Code updated itself between the parts, and the probe passed again on the new version.
+        waiting_part(2)
+        self.assertEqual(self.probe(version="2.1.294"), 0)
+        before = len(self.calls())
+        with self.assertRaisesRegex(label.GoldError, "`agent.version` is 2.1.293 in the lock and 2.1.294 here"):
+            self.handoff_run()
+        self.assertEqual(len(self.calls()), before, "no call was made")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        # A reply read by judge is held to the lock as well.
+        self.fake()
+        self.assertEqual(self.probe(), 0)
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        lock["agent"]["version"] = "2.1.0"
+        label.write(lock_path, json.dumps(lock))
+        with self.assertRaisesRegex(label.GoldError, "agent.json differs .*`agent.version` is 2.1.0 in the lock and 2.1.293 here"):
+            self.judge()
+
+    def test_a_stamp_is_held_to_the_assertions_of_this_probe(self):
+        self.assertEqual(self.probe(), 0)
+        args = confine.arguments("claude-opus-5-5")
+        good = self.stamp()
+        label.check_stamp("2.1.293", args)
+        path = os.path.join(self.label_root, "confinement.json")
+
+        def refused(stamp, needle):
+            label.write(path, json.dumps(stamp))
+            with self.assertRaisesRegex(label.GoldError, needle):
+                label.check_stamp("2.1.293", args)
+
+        refused([], "is not a probe's stamp")
+        refused({**good, "assertions": {"x": True}}, "records other assertions than this probe makes")
+        fewer = dict(good["assertions"])
+        del fewer["version_unchanged"]
+        refused({**good, "assertions": fewer}, "other assertions")
+        refused({**good, "assertions": fewer, "skipped": {"version_unchanged": "no reason"}}, "other assertions")
+        refused({**good, "skipped": None}, "other assertions")
+        # The user's CLAUDE.md is the one check a pass may skip, when there is none to look for.
+        fewer = dict(good["assertions"])
+        del fewer["user_claude_md_absent"]
+        label.write(path, json.dumps({**good, "assertions": fewer, "skipped": {"user_claude_md_absent": "no file"}}))
+        label.check_stamp("2.1.293", args)
+        self.assertEqual(set(good["assertions"]), set(confine.ASSERTIONS))
+
+    def test_a_probe_that_makes_other_assertions_than_this_one_fails_whatever_they_say(self):
+        real = confine.probe
+
+        def fewer(*args, **kwargs):
+            results, skipped, seen = real(*args, **kwargs)
+            del results["decoy_holdout_read_refused"]
+            return results, skipped, seen
+
+        with unittest.mock.patch.object(confine, "probe", side_effect=fewer):
+            self.assertEqual(self.probe(), 2, self.out)
+        self.assertTrue(all(self.stamp()["assertions"].values()), "every assertion it made is true")
+        self.assertEqual(self.stamp()["verdict"], "fail")
+        self.assertIn("verdict: fail", self.out[-1])
+
+    def test_claude_code_updated_during_a_round_stops_it_and_reads_none_of_its_replies(self):
+        self.waiting(PartsGold(3))
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.fake(update_to="2.1.294")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2)
+        self.assertEqual(len(self.calls()), 1, "no call after the update")
+        self.assertTrue(any(line.startswith("  part-01: failed (version_unchanged") for line in self.out), self.out)
+        self.assertIn("  part-02: not run; the round stopped: claude --version said 2.1.294", self.out)
+        self.assertIn("`claude --version` said 2.1.294 during the round, which began with 2.1.293", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3, "no reply is copied")
+        self.assertFalse(os.path.exists(os.path.join(self.folder_of(), "agent.json")))
+
+    def folder_of(self):
+        """The folder of the latest handoff run of the merge."""
+        return label.latest_handoff(self.dir, "merge")
+
+    def test_handoff_run_refuses_a_tree_that_is_not_clean_outside_label_and_fails_one_changed_by_the_round(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        label.write(os.path.join(self.checkout, "notes.txt"), "a change\n")
+        with self.assertRaisesRegex(label.GoldError, "git status shows 1 changes outside .label/ .*notes.txt"):
+            self.handoff_run()
+        os.remove(os.path.join(self.checkout, "notes.txt"))
+        # A change under .label/ is the labelling's own, and is not one.
+        label.write(os.path.join(self.checkout, ".label", "scratch.txt"), "x\n")
+        self.fake(dirty=os.path.join(self.checkout, "escaped.txt"))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn("after the round git status shows 1 changes", err.getvalue())
+        self.assertIn("escaped.txt", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1, "the reply of the round is taken out")
+        self.assertEqual(self.quarantined(), ["part-01"], "and kept in quarantine")
+
+    def quarantined(self):
+        """The calls whose replies are in quarantine."""
+        base = os.path.join(self.label_root, label.QUARANTINE)
+        names = [name for folder, _, names in os.walk(base) for name in names] if os.path.isdir(base) else []
+        return sorted(name.split(".")[0] for name in names)
+
+    def test_a_round_stopped_by_a_call_that_raised_makes_no_more_calls_and_checks_the_tree(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        real = confine.run
+        made = []
+
+        def run(*args, **more):
+            made.append(args)
+            if len(made) == 1:
+                raise PermissionError("not allowed")
+            return real(*args, **more)
+
+        with unittest.mock.patch.object(confine, "run", side_effect=run), self.assertRaises(PermissionError):
+            self.handoff_run("--parallel", "1")
+        self.assertLessEqual(len(made), 2, "the calls not yet started are not made")
+        # The tree is clean, so a reply copied before the stop is kept, and the rest are still waiting.
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 4 - (len(made) - 1))
+        self.assertEqual(self.quarantined(), [])
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_round_after_which_git_cannot_say_whether_the_tree_is_clean_reads_none_of_its_replies(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        real = label.tree_changes
+        seen = []
+
+        def changes(repo):
+            seen.append(repo)
+            if len(seen) > 1:
+                raise label.GoldError("git status failed in the checkout")
+            return real(repo)
+
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "tree_changes", side_effect=changes), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn("whether the tree is clean after the round is not known (git status failed", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.assertEqual(self.quarantined(), ["part-01"])
+
+    def test_a_call_that_fails_a_check_has_no_reply_copied_and_says_which_check(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        reply = json.loads(label.read(pending[0]))["reply_path"]
+        agent = os.path.join(os.path.dirname(pending[0]), "agent.json")
+        for setup, failed in (
+            ({"also_read": [os.path.join(self.root, "calls.jsonl")]}, "no_tool_refused"),
+            ({"tools": ["Read", "Write", "Bash"]}, "init_tools_read_write"),
+            ({"mcp_servers": [{"name": "x", "status": "connected"}]}, "init_no_mcp_server"),
+            ({"final": "claude-opus-5-5\nwith a word more"}, "model_reported_matches"),
+            # A read outside its directory that the permission layer let through.
+            ({"also_read": [os.path.join(self.root, "calls.jsonl")], "read_anything": True}, "paths_inside_cwd"),
+            ({"model": "claude-sonnet-5-5", "final": "claude-sonnet-5-5"}, "one_model_id"),
+        ):
+            self.fake(**setup)
+            self.out.clear()
+            self.assertEqual(self.handoff_run(), 2, setup)
+            self.assertFalse(os.path.exists(reply), setup)
+            self.assertFalse(os.path.exists(agent), "agent.json is written by a call that passed, only")
+            self.assertTrue(any(f"part-01: failed (" in line and failed in line for line in self.out), self.out)
+            self.assertTrue(any("0 answered" in line and "1 failed" in line for line in self.out), self.out)
+        self.assertIn("  part-01: failed (one_model_id, model_matches_agent_json); models named: init "
+                      "claude-sonnet-5-5; assistant messages claude-sonnet-5-5", self.out)
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_call_that_writes_no_reply_leaves_its_request_pending(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        self.fake(no_reply=True)
+        self.assertEqual(self.handoff_run(), label.EXIT_HANDOFF)
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_a_call_stopped_by_the_usage_limit_says_so_keeps_no_reply_and_stops_the_round(self):
+        self.waiting(PartsGold(3))
+        self.assertEqual(self.probe(), 0)
+        for setup in ({"usage_limit": "api_error"}, {"usage_limit": "text", "limit_text": "Claude AI usage limit reached|1760000000"}):
+            os.remove(self.log)
+            self.fake(**setup)
+            self.out.clear()
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(self.handoff_run("--parallel", "1"), label.EXIT_USAGE_LIMIT, setup)
+            self.assertEqual(len(self.calls()), 1, "no call after the limit")
+            self.assertIn("  part-01: usage limit; the Claude plan's usage limit; wait for its reset", self.out)
+            self.assertIn("  part-02: not run; the round stopped at the Claude plan's usage limit", self.out)
+            self.assertFalse(any("failed (" in line for line in self.out), "it is not a failed check")
+            self.assertIn("1 stopped by the usage limit, 0 failed a check", self.out[-1])
+            self.assertIn("Wait for the limit to reset, then run handoff-run again", err.getvalue())
+            self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3, "no reply is kept")
+            self.assertEqual(self.quarantined(), [])
+        # A call that met the limit after it broke its confinement is a failed call, not a wait.
+        self.fake(usage_limit="api_error", limit_late=True, also_read=[os.path.join(self.root, "calls.jsonl")], read_anything=True)
+        self.out.clear()
+        self.assertEqual(self.handoff_run("--parallel", "1"), 2)
+        self.assertTrue(any("part-01: failed (" in line and "paths_inside_cwd" in line for line in self.out), self.out)
+        # After the reset the same command answers them.
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_the_usage_limit_is_read_from_the_refusal_and_never_from_the_models_words(self):
+        def stream(*events):
+            return confine.Stream("".join(json.dumps(event) + "\n" for event in events))
+
+        said = {"type": "assistant", "message": {"model": "claude-opus-5-5", "content": [{"type": "text", "text": "usage limit reached"}]}}
+        ended = {"type": "result", "is_error": False, "result": "You've hit your session limit"}
+        self.assertFalse(confine.usage_limited(stream(said, ended)))
+        self.assertTrue(confine.usage_limited(stream({"type": "assistant", "message": {}, "api_error": "usage_limit_reached"})))
+        self.assertTrue(confine.usage_limited(stream({"type": "rate_limit_event", "rate_limit_info": {"status": "rejected"}})))
+        self.assertFalse(confine.usage_limited(stream({"type": "rate_limit_event", "rate_limit_info": {"status": "allowed_warning"}})))
+        self.assertTrue(confine.usage_limited(stream({**ended, "is_error": True})))
+        self.assertTrue(confine.usage_limited(stream({**said, "error": "rate_limit"})))
+        # A throttle that is not the plan's limit is a failed call, which a later round may pass.
+        throttled = {**said, "error": "rate_limit"}
+        throttled["message"] = {"content": [{"type": "text", "text": "API Error: Request rejected (429) \u00b7 this may be a temporary capacity issue"}]}
+        self.assertFalse(confine.usage_limited(stream(throttled)))
+
+    def kill_round(self, gold, hang_from):
+        """handoff-run, `--parallel 1`, in a child process killed with SIGKILL once the call numbered
+        `hang_from`, which never returns, has started and a reply of an earlier call is staged: a round
+        whose final checks never run. Returns the staged replies it left."""
+        self.waiting(gold)
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.fake(hang_from=hang_from)
+        folder = self.folder_of()
+        child = os.fork()
+        if child == 0:
+            code = 99
+            try:
+                os.setpgid(0, 0)
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    code = self.handoff_run("--parallel", "1")
+            finally:
+                os._exit(code)
+        deadline = time.time() + 60
+        staged = []
+        while time.time() < deadline:
+            staged = glob.glob(os.path.join(folder, "*" + label.STAGED))
+            if len(self.calls()) >= hang_from and len(staged) == hang_from - 1:
+                break
+            time.sleep(0.05)
+        os.killpg(child, signal.SIGKILL)
+        _, status = os.waitpid(child, 0)
+        self.assertTrue(os.WIFSIGNALED(status), "the round was killed, not ended")
+        self.assertEqual(len(staged), hang_from - 1, self.calls())
+        return staged
+
+    def test_a_round_killed_before_its_end_leaves_no_reply_that_judge_reads(self):
+        staged = self.kill_round(PartsGold(3), 2)
+        folder = self.folder_of()
+        self.assertEqual([name for name in os.listdir(folder) if name.endswith(".reply.txt")], [], "nothing in place")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3)
+        with self.assertRaises(label.HandoffWait) as waited:
+            self.judge()
+        self.assertEqual(len(waited.exception.waiting), 3, "judge reads no staged reply")
+        said = []
+        label.command_status(label.parser().parse_args(["status", "--dir", self.dir, "--gold-bin", "/nonexistent"]),
+                             copy.deepcopy(HANDOFF_CONFIG), say=said.append)
+        self.assertTrue(any("1 replies staged by a round that did not end" in line for line in said), said)
+        # The next round moves them to quarantine and asks their calls again.
+        self.fake()
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertIn("1 replies a round left staged, never checked at its end (it was killed), are moved to", err.getvalue())
+        self.assertEqual(self.quarantined(), [os.path.basename(staged[0]).split(".")[0]])
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(glob.glob(os.path.join(folder, "*" + label.STAGED)), [])
+
+    def version_reads(self, fails):
+        """A patch of `confine.version` whose reads numbered in `fails` (from 1) cannot be read."""
+        real = confine.version
+        reads = []
+
+        def read(claude):
+            reads.append(claude)
+            if len(reads) in fails:
+                raise confine.Unconfined("claude --version timed out")
+            return real(claude)
+
+        return unittest.mock.patch.object(confine, "version", side_effect=read)
+
+    def test_a_version_read_that_fails_once_is_read_again_and_is_no_change(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        # Reads: 1 at the start, 2 to 4 after the first three calls, 5 the read again, 6 and 7 after.
+        with self.version_reads({4}):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.quarantined(), [])
+
+    def test_a_version_unreadable_after_a_call_and_readable_after_the_round_keeps_the_calls_that_passed(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        err = io.StringIO()
+        with self.version_reads({4, 5, 6}), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2, self.out)
+        self.assertIn("  part-03: failed (version_unchanged)", "\n".join(self.out))
+        self.assertIn("  part-04: not run; the round stopped: claude --version said nothing that could be read", self.out)
+        self.assertIn("could not be read after a call, and says 2.1.293 after the round", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2, "the replies of parts 1 and 2 are kept")
+        self.assertEqual(self.quarantined(), [])
+        # Unreadable from the second call on and after the round too, it fails closed: the reply of the
+        # call that passed before is moved to quarantine.
+        err = io.StringIO()
+        with self.version_reads(set(range(3, 20))), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2, self.out)
+        self.assertIn("said nothing that could be read during the round, which began with 2.1.293", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2)
+        self.assertEqual(self.quarantined(), ["part-03"])
+
+    def test_a_round_during_which_the_checkout_moved_reads_none_of_its_replies(self):
+        self.waiting(PartsGold(2))
+        self.assertEqual(self.probe(), 0)
+        commits = []
+
+        def commit():
+            commits.append(1)
+            return COMMIT if len(commits) == 1 else "f" * 40
+
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "deslag_commit", side_effect=commit), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn(f"the checkout is at {'f' * 40} after the round, which began at {COMMIT}", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 2)
+        self.assertEqual(self.quarantined(), ["part-01", "part-02"])
+
+    def test_an_agent_json_that_differs_from_what_this_round_would_write_is_refused(self):
+        pending = self.waiting(PartsGold(2))
+        self.assertEqual(self.probe(), 0)
+        agent_path = os.path.join(os.path.dirname(pending[0]), "agent.json")
+        label.write(agent_path, json.dumps({**label.agent_record("2.1.0", "claude-opus-5-5", confine.arguments("claude-opus-5-5"))}))
+        with self.assertRaisesRegex(label.GoldError, r"differs from what this round would write \(in version\)"):
+            self.handoff_run()
+        label.write(agent_path, json.dumps(label.agent_record("2.1.293", "claude-opus-5-5", confine.arguments("claude-opus-5-5"))))
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+
+    def test_a_request_whose_reply_name_was_changed_is_refused(self):
+        pending = self.waiting()
+        self.assertEqual(self.probe(), 0)
+        request = json.loads(label.read(pending[0]))
+        request["reply_name"] = "../../../elsewhere.reply.txt"
+        label.write(pending[0], json.dumps(request))
+        with self.assertRaisesRegex(label.GoldError, "is not a request this runner wrote"):
+            self.handoff_run()
+
+    def test_a_temp_directory_inside_a_repository_is_refused(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        inner = os.path.join(self.checkout, "tmp")
+        os.makedirs(inner)
+        with unittest.mock.patch.object(tempfile, "tempdir", inner):
+            with self.assertRaisesRegex(confine.Unconfined, "is inside the repository"):
+                self.handoff_run()
+            self.assertEqual(os.listdir(inner), [])
+        err = io.StringIO()
+        with unittest.mock.patch.object(tempfile, "tempdir", inner), \
+                unittest.mock.patch.object(label, "load_config", return_value=copy.deepcopy(HANDOFF_CONFIG)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = label.main(["probe-confinement", "--claude", os.path.join(self.bin, "claude")])
+        self.assertEqual(code, 2)
+        self.assertIn("is inside the repository", err.getvalue())
+
+    def test_handoff_run_runs_its_calls_in_parallel(self):
+        pending = self.waiting(PartsGold(4))
+        self.assertEqual(len(pending), 4)
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        os.remove(self.log + ".times")
+        self.fake(sleep=0.5)
+        started = time.monotonic()
+        self.assertEqual(self.handoff_run("--parallel", "3"), 0, self.out)
+        self.assertLess(time.monotonic() - started, 4 * 0.5 + 1.5)
+        times = [json.loads(line) for line in label.read(self.log + ".times").splitlines()]
+        self.assertEqual(len(times), 4)
+        most = max(sum(1 for start, end in times if start <= moment < end) for moment, _ in times)
+        self.assertGreaterEqual(most, 2, "calls overlap")
+        self.assertLessEqual(most, 3, "--parallel 3 runs three at once at most")
+        self.assertEqual(len({call["cwd"] for call in self.calls()}), 4, "each call has a directory of its own")
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [])
+        self.assertEqual(self.judge(), {})
+
+    def test_main_exits_2_for_a_refused_round_and_says_why(self):
+        self.waiting()
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "load_config", return_value=copy.deepcopy(HANDOFF_CONFIG)), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            code = label.main(["handoff-run", "--dir", self.dir, "--into", "merge", "--claude", self.fake()])
+        self.assertEqual(code, 2)
+        self.assertIn("confinement.json", err.getvalue())
 
 
 def gold_text():

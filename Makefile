@@ -35,6 +35,32 @@ LABEL_TAG_FLAGS ?=
 LABEL_INTO ?= merge
 LABEL_REPORT_FLAGS ?=
 
+# The silver set's run (scripts/label/README.md, Silver). SILVER_DIR holds the draw's parts, part-01 to
+# part-NN; SILVER_PREFIX, SILVER_PARTS, SILVER_MIX and SILVER_DRAW_FLAGS are the draw
+# (generate-silver-draw); SILVER_MERGE is the merge directory inside each part that `finish --trains yes`
+# wrote; SILVER_NAME, as YYYY-MM-DD-slug, names the batch, whose draft, which the audit is drawn from, goes
+# in SILVER_DRAFT_DIR/SILVER_NAME and whose audited build in SILVER_BATCH_DIR/SILVER_NAME, since a batch is
+# never written over another; SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, MIT
+# by the owner's choice; SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
+SILVER_DIR ?= .label/silver
+SILVER_PREFIX ?= sa
+SILVER_PARTS ?= 9
+SILVER_MIX ?= 1050,650,350,250,850,550,280,220,40,30,15,15
+SILVER_DRAW_FLAGS ?= --per-file 3 --per-repo 12
+SILVER_MERGE ?= merge
+SILVER_NAME ?=
+SILVER_DRAFT_DIR ?= $(SILVER_DIR)/draft
+SILVER_BATCH_DIR ?= $(SILVER_DIR)/batch
+# Where generate-silver-assemble writes: the draft the audit is drawn from, or with --audit the batch, so
+# that the audited build does not meet the draft's directory.
+SILVER_OUT = $(if $(findstring --audit,$(SILVER_BUILD_FLAGS)),$(SILVER_BATCH_DIR),$(SILVER_DRAFT_DIR))
+SILVER_ANNOTATIONS_LICENSE ?= MIT
+SILVER_BUILD_FLAGS ?=
+# The part generate-silver-part labels, as two digits.
+PART ?=
+# The parts of the draw there are, in order; expanded when a recipe uses it, after the draw.
+SILVER_PART_DIRS = $(patsubst %/manifest.tsv,%,$(sort $(wildcard $(SILVER_DIR)/part-*/manifest.tsv)))
+
 # The treebank's dev file, in the release ewt.lock pins.
 EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en_ewt-ud-dev.conllu
 
@@ -44,9 +70,9 @@ CARGO_FLAGS ?=
 
 .PHONY: help \
         build build-batches build-release \
-        test test-blobs test-brill test-brill-deslag test-brill-percept test-ewt test-exam \
-        test-label test-owner test-percept test-python test-spacy test-ticlist-brill-deslag \
-        test-ticlist-brill-percept test-ticlist-percept \
+        test test-blobs test-brill test-brill-deslag test-brill-percept test-confinement test-ewt \
+        test-exam test-label test-owner test-percept test-python test-silver test-spacy \
+        test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
         check-typos \
         clean clean-blobs clean-ewt clean-harper clean-label clean-spacy clean-train \
@@ -57,7 +83,8 @@ CARGO_FLAGS ?=
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
         generate-label-report-dev generate-label-report-owner generate-label-spacy \
-        generate-percept generate-spacy publish-blobs build-label
+        generate-percept generate-silver-assemble generate-silver-draw generate-silver-part \
+        generate-spacy publish-blobs build-label
 
 help:
 	@echo "build            build deslag and the crates under tools/ with the debug profile"
@@ -66,8 +93,9 @@ help:
 	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
 	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
 	@echo "                 tests change"
-	@echo "test-blobs       fetch the corpus's big tier, test it, and fail if tagging takes over its budget"
-	@echo "                 of the time to read it; needs the network, so not in test"
+	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, and"
+	@echo "                 fail if tagging takes over its budget of the time to read it; needs the network, so"
+	@echo "                 not in test"
 	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag, its initial tagger and the perceptron;"
 	@echo "                 generates first, so minutes, not in test or ci; run test-percept first for the"
@@ -80,6 +108,11 @@ help:
 	@echo "test-brill-percept"
 	@echo "                 the same for the Brill tagger that starts from the perceptron, a diagnostic; trains"
 	@echo "                 the perceptron first, then five more for the folds, so about five minutes"
+	@echo "test-confinement"
+	@echo "                 run the real claude as handoff-run runs it, and fail unless it is confined: it reads"
+	@echo "                 no decoy outside its directory, writes none outside it, sees no CLAUDE.md and answers"
+	@echo "                 the request it was given; stamps .label/confinement.json; needs claude and its login,"
+	@echo "                 so not in test or ci; run it before any Opus round"
 	@echo "test-ewt         fail if deslag's tagger scores under the pinned counts on the treebank's dev"
 	@echo "                 set; fetches the treebank, so the network, and not in test or ci"
 	@echo "test-exam        fail if the golden tag stream changed, or deslag's tagger is under a gate on"
@@ -95,6 +128,9 @@ help:
 	@echo "test-python      test how batches are built and published, how sentences are labelled with models, and"
 	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
 	@echo "                 in test or ci: its own workflow runs it when they change"
+	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
+	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
+	@echo "                 runs it"
 	@echo "test-spacy       score spaCy on the treebank's dev set with deslag-exam; generates the import"
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-ticlist-brill-deslag"
@@ -184,6 +220,19 @@ help:
 	@echo "                 --spacy; needs the sets tagged first, and fetches spaCy; minutes"
 	@echo "generate-percept train the perceptron on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
+	@echo "generate-silver-assemble"
+	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, and check"
+	@echo "                 it: a draft into SILVER_DRAFT_DIR/SILVER_NAME ($(SILVER_DRAFT_DIR)), or, when"
+	@echo "                 SILVER_BUILD_FLAGS has --audit DIR --archive-sha256 SHA, the batch into"
+	@echo "                 SILVER_BATCH_DIR/SILVER_NAME ($(SILVER_BATCH_DIR)); the labels' licence is"
+	@echo "                 SILVER_ANNOTATIONS_LICENSE ($(SILVER_ANNOTATIONS_LICENSE)); calls no model"
+	@echo "generate-silver-draw"
+	@echo "                 draw the silver set's sentences once, dealt into SILVER_PARTS parts under $(SILVER_DIR);"
+	@echo "                 reads the big tier; calls no model"
+	@echo "generate-silver-part"
+	@echo "                 PART=NN: have the three voters tag part NN at once, then spaCy; needs OPENROUTER_API_KEY;"
+	@echo "                 MAX_USD caps the ledger; LABEL_FLAGS reach label.py tag; the Opus round after it is"
+	@echo "                 label.py judge and handoff-run"
 	@echo "generate-spacy   tag the treebank's dev set with spaCy into .spacy, for deslag-exam's --import;"
 	@echo "                 fetches the treebank and spaCy first; minutes, so not in ci"
 	@echo "publish-blobs    push .blobs/unpacked as the next image and pin it in blobs.lock"
@@ -219,7 +268,7 @@ test: preflight test-exam
 # offline and with no login. The time that follows prints how long reading and
 # tagging the tier take, and fails if tagging's share of reading is over the
 # budget of the profile built (40.0% in debug, which is what ci runs).
-test-blobs: preflight fetch-blobs
+test-blobs: preflight fetch-blobs test-silver
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
 
@@ -240,6 +289,13 @@ test-brill-deslag: generate-brill-deslag
 
 test-brill-percept: generate-brill-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill-percept
+
+# The probe of the confinement the Opus rounds rely on, with the real claude and the invocation handoff-run
+# uses: decoys outside its directory, a write outside it, the user's CLAUDE.md, and a control marker in its
+# own request. It stamps .label/confinement.json, which handoff-run reads, and fails unless every assertion
+# holds. Needs claude on PATH and its login, so not in test or ci; run it before the first Opus round.
+test-confinement: preflight
+	python3 $(LABEL)/label.py probe-confinement
 
 # The treebank's dev set against the counts tests/gold/gates.toml pins for deslag's tagger. Any
 # drop fails. Not part of test or ci: it needs the network to fetch the treebank.
@@ -296,6 +352,15 @@ test-python: preflight
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
+
+# The silver batches of the unpacked image, which need no checkout but the voters' snapshot each carries:
+# `silver check` takes each batch, the retired ones too, against what it recorded, so a batch that passed
+# once passes forever; `silver standing` holds the live ones to the two rules that never lapse, no
+# repository that is reserved now and no fixture that is excluded now, and says how to clear a failure.
+# Both pass when the image has no silver/. test-blobs runs it, after the fetch.
+test-silver: preflight fetch-blobs
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver check
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver standing
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
 # scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
@@ -581,6 +646,38 @@ generate-label-spacy: build-label fetch-spacy
 # minute or two.
 generate-percept: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate
+
+# Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug), the merge of each
+# part being $(SILVER_MERGE). Sentences whose repository became reserved after the draw, or whose text is a
+# gold sentence's, are dropped and counted. The batch is written only when `silver check` passes on it, and
+# never over another. The first build is the draft the audit is drawn from, in
+# $(SILVER_DRAFT_DIR)/$(SILVER_NAME); the final one adds SILVER_BUILD_FLAGS="--audit $(SILVER_DIR)/audit
+# --archive-sha256 SHA", and --noise NAME=FILE for each calibration report, and goes in
+# $(SILVER_BATCH_DIR)/$(SILVER_NAME). Calls no model.
+generate-silver-assemble: build-label fetch-blobs
+	@[ -n "$(SILVER_NAME)" ] || { echo "SILVER_NAME=YYYY-MM-DD-slug names the batch" >&2; exit 2; }
+	@[ -n "$(SILVER_ANNOTATIONS_LICENSE)" ] || { echo "SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, which the owner chooses; it is MIT unless set" >&2; exit 2; }
+	@[ -n "$(SILVER_PART_DIRS)" ] || { echo "no draw under $(SILVER_DIR); run generate-silver-draw first" >&2; exit 1; }
+	$(GOLD_BIN) silver build --name $(SILVER_NAME) $(foreach dir,$(SILVER_PART_DIRS),--part $(dir):$(SILVER_MERGE)) \
+	    --annotations-license "$(SILVER_ANNOTATIONS_LICENSE)" --out $(SILVER_OUT)/$(SILVER_NAME) $(SILVER_BUILD_FLAGS)
+
+# The silver set, drawn once and dealt into SILVER_PARTS parts, $(SILVER_DIR)/part-01 and on, each a draw of its
+# own with the same mix to within a sentence. The sentences of an earlier draw are left out with
+# SILVER_DRAW_FLAGS="--per-file 3 --per-repo 12 --exclude-draws FILE". Reads the big tier and calls no model.
+# Until the batch is published, rank and queue leave the parts' repositories out of an owner's queue.
+generate-silver-draw: build-label fetch-blobs
+	$(GOLD_BIN) draw --dir $(SILVER_DIR) --prefix $(SILVER_PREFIX) --parts $(SILVER_PARTS) --mix $(SILVER_MIX) $(SILVER_DRAW_FLAGS)
+
+# One part of the silver draw, PART=NN, labelled by $(LABEL)/silver-part.sh: the voters of
+# $(LABEL)/voters.json tag it at once, each in a process of its own (they lock the sample directory and the
+# ledger, which a test shows), then spaCy tags it and is recorded as a run. Needs OPENROUTER_API_KEY; MAX_USD
+# caps the ledger over every checkout; LABEL_FLAGS reach label.py tag, so LABEL_FLAGS="--limit 1" is a smoke
+# run, which never writes the lock of the parts, and --dry-run sends nothing; with either, spaCy does not
+# run. A voter that fails is named, and spaCy does not run. Then the person
+# running the labelling drives `label.py status --dir $(SILVER_DIR)/part-NN`, the judge step and handoff-run
+# for Opus, and `deslag-gold silver build --check-part`.
+generate-silver-part: build-label fetch-spacy
+	$(LABEL)/silver-part.sh "$(SILVER_DIR)" "$(PART)" "$(MAX_USD)" "$(GOLD_BIN)" $(LABEL_FLAGS)
 
 # The exam's file-import path, run on the treebank's dev set: deslag's own tokens go to spaCy, and
 # its tags come back as .spacy/ewt-dev.import.conllu, for `deslag-exam score --import`. Nothing in

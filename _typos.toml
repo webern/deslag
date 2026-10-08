@@ -3,13 +3,15 @@
 # its fixtures by path, and so quote the names of those repositories and their files. The tagger's
 # lexicon is generated from word lists, which hold misspellings and rare words by design, and the
 # notices of its sources are copied unchanged. A review queue quotes corpus sentences, and so does
-# the owner's file once they are moved there.
+# the owner's file once they are moved there, and so does the committed silver batch that the
+# check's unit test reads.
 
 [files]
 extend-exclude = [
     "tests/corpus",
     "tests/gold/queue",
     "tests/gold/owner.conllu",
+    "tools/exam/tests/silver-fixture",
     "tests/golden/*.txt",
     "src/tag/lexicon.txt",
     "LICENSES/AGID.txt",

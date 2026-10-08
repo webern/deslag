@@ -28,6 +28,7 @@ mod problems;
 mod review;
 mod sample;
 mod screen;
+mod silver;
 mod terminal;
 mod voters;
 mod web;
@@ -45,7 +46,7 @@ use deslag_exam::tagger::Context;
 use deslag_exam::words::Words;
 
 use crate::data::{Provenance, Sample, read_text, write_text};
-use crate::exclude::{Exclusion, Repos};
+use crate::exclude::{Exclusion, Repos, Texts};
 use crate::merge::{Answers, NAMES};
 use crate::problems::Problems;
 use crate::sample::{Counts, File, Settings};
@@ -136,6 +137,8 @@ enum Command {
         /// model. They are drawn from unless this is given.
         #[arg(long)]
         without_declared: bool,
+        #[command(flatten)]
+        held: SilverArgs,
     },
     /// Writes the batches the blind tagger reads to `batches/batch-NN.txt`: only numbered
     /// sentences in the annotation guide's input format, with no tier, split or file.
@@ -312,6 +315,19 @@ enum Command {
     /// Picks sentences of a finished labelling merge at random by a seed into a review queue, for
     /// the owner to check the labels: `<into>/audit.conllu` unless `--out` says another. The
     /// labels, `Prov=` and `Runs=` are in the queue, and each sentence is its own `pick_id`.
+    ///
+    /// With `--blind --from silver.conllu --out DIR` the same draw is made from a silver batch's
+    /// file, and `DIR/queue.conllu` has no UPOS, FEATS, `Prov=` or `Runs=`, with silver's labels
+    /// of those sentences in `DIR/labels.conllu`. The review pre-fills deslag's readings at
+    /// Likely and above, as for `owner.conllu`. Its home is `.label/silver/audit/`, then `audit/`
+    /// in the batch, and never the gold directory: the queues there reserve their repositories.
+    /// It refuses a `DIR` that holds either file already, so a queue being reviewed is never
+    /// written over, and it writes both or neither.
+    ///
+    /// With `--score --queue Q --labels L` the reviewed queue is scored against silver's labels:
+    /// the part of speech and the whole code, with intervals, by how silver labelled the word and
+    /// by context, the words left at deslag's pre-fill, the rejected sentences, and met or not
+    /// against `--bar`. `score.tsv` goes beside the queue unless `--out` says another file.
     Audit {
         /// The directory the merge was written to.
         #[arg(long, default_value = "merge", value_parser = parse_name)]
@@ -322,9 +338,33 @@ enum Command {
         /// The seed, decimal or `0x` hex. The default is the bytes of `deslag`.
         #[arg(long, default_value = "0x6465736c6167", value_parser = parse_seed)]
         seed: u64,
-        /// Where the queue goes.
+        /// Where the queue goes; with `--blind` a directory, with `--score` the score's file.
         #[arg(long)]
         out: Option<PathBuf>,
+        /// Draw a blind audit of a silver batch.
+        #[arg(long, requires = "from", conflicts_with = "score")]
+        blind: bool,
+        /// With `--blind`: the batch's `silver.conllu`.
+        #[arg(long, requires = "blind")]
+        from: Option<PathBuf>,
+        /// Score a reviewed blind queue.
+        #[arg(long, requires_all = ["queue", "labels"])]
+        score: bool,
+        /// With `--score`: the queue the owner reviewed.
+        #[arg(long, requires = "score")]
+        queue: Option<PathBuf>,
+        /// With `--score`: silver's labels of the queue's sentences.
+        #[arg(long, requires = "score")]
+        labels: Option<PathBuf>,
+        /// With `--score`: the bar on the part of speech, in percent, such as `95.0`.
+        #[arg(long, requires = "score")]
+        bar: Option<f64>,
+    },
+    /// The silver set: sentences that models labelled, put together into a batch that the training
+    /// reader may read and CI can check without a model. See `scripts/label/README.md`.
+    Silver {
+        #[command(subcommand)]
+        command: SilverCommand,
     },
     /// Puts the agreed and the adjudicated words together and writes `dev.conllu`,
     /// `holdout.conllu`, their empty `.disputes.tsv` files, `adjudication.tsv` and `manifest.tsv`.
@@ -395,6 +435,13 @@ enum Command {
         /// model.
         #[arg(long)]
         without_declared: bool,
+        /// Deal the one draw into this many parts, `part-01` to `part-NN` under `--dir`, each a
+        /// complete draw for labelling (`sample.conllu`, `manifest.tsv` with the draw's header
+        /// and `part = k of N`). The sentences of each tier and context go round the parts in the
+        /// draw's seeded order, so every part has the same mix to within one sentence, and the
+        /// draw is the one `--parts` would not have dealt: same caps, same checks, same sentences.
+        #[arg(long)]
+        parts: Option<usize>,
     },
     /// Ranks the corpus's sentences by how unsure deslag is, as the review will show them, and
     /// writes `rank.tsv` to the working directory. Reads the big tier, or `tests/corpus` when it
@@ -467,6 +514,96 @@ enum Command {
     },
 }
 
+/// What `silver` does.
+#[derive(Subcommand)]
+enum SilverCommand {
+    /// Puts labelled parts together into the batch `--out`, or with `--check-part DIR:MERGE`
+    /// only checks one part, which is what each gate of the labelling runs.
+    ///
+    /// A part is DIR, a directory `draw --parts` dealt with the labelling's `runs.tsv` in it, and
+    /// MERGE, the name of the merge inside it that `finish --trains yes` made. The batch is
+    /// written to `--out`, a directory named `--name`, only when `silver check` passes on it.
+    Build(Box<SilverBuild>),
+    /// Checks batches against what they recorded, never against this checkout. With no `--batch`
+    /// it checks every batch under `--silver`, the retired ones too, and passes when there is none.
+    Check {
+        /// The silver root of the unpacked image.
+        #[arg(long, default_value = ".blobs/unpacked/silver")]
+        silver: PathBuf,
+        /// A batch directory to check, as often as wanted.
+        #[arg(long)]
+        batch: Vec<PathBuf>,
+    },
+    /// Holds each live batch to today's gold and corpus: no reserved repository, no gold text, no
+    /// excluded fixture, and an audit that met its bar or was accepted.
+    Standing {
+        /// The `voters.json` of this checkout.
+        #[arg(long, default_value = "scripts/label/voters.json")]
+        voters: PathBuf,
+        /// The small tier.
+        #[arg(long, default_value = "tests/corpus")]
+        tests_corpus: PathBuf,
+        #[command(flatten)]
+        pool: Pool,
+    },
+}
+
+/// The arguments of `silver build`.
+#[derive(clap::Args)]
+struct SilverBuild {
+    /// Check this one part: every fault one part can have is reported. A part that passes is held
+    /// to the lock of the parts of its draw, `lock.json` beside the part directories, which is
+    /// written if there is none yet; nothing else is written.
+    #[arg(
+        long,
+        value_name = "DIR:MERGE",
+        conflicts_with_all = ["name", "part", "out", "audit"]
+    )]
+    check_part: Option<silver::part::Spec>,
+    /// The batch's name, which is its directory's: `YYYY-MM-DD-slug`.
+    #[arg(long, value_parser = parse_name, required_unless_present = "check_part")]
+    name: Option<String>,
+    /// A part to put in the batch, `DIR:MERGE`, as often as there are parts.
+    #[arg(long, value_name = "DIR:MERGE", required_unless_present = "check_part")]
+    part: Vec<silver::part::Spec>,
+    /// The directory of the batch to write.
+    #[arg(long, required_unless_present = "check_part")]
+    out: Option<PathBuf>,
+    /// The owner's reviewed audit: a directory with `queue.conllu` and `labels.conllu`, as
+    /// `audit --blind` wrote them and the review answered. His rejections are dropped.
+    #[arg(long, requires = "archive_sha256")]
+    audit: Option<PathBuf>,
+    /// The sha256 of the archive of what stays on the machine that made the batch.
+    #[arg(long)]
+    archive_sha256: Option<String>,
+    /// The bar on the audit's part of speech, in percent. A bar under 95.0 needs the owner's
+    /// acceptance.
+    #[arg(long, default_value_t = 95.0)]
+    bar: f64,
+    /// The owner's words accepting an audit that falls short: below its bar, with a bar under
+    /// 95.0, or of fewer than 50 sentences, reviewed and rejected. Kept in `record/`; without them
+    /// such a batch is refused by `check`, or for a score under the bar by `standing`.
+    #[arg(long, requires = "audit")]
+    accept_below_bar: Option<String>,
+    /// A calibration report, `NAME=FILE`: a `report.tsv`, numbers only.
+    #[arg(long, value_name = "NAME=FILE")]
+    noise: Vec<String>,
+    /// The licence the annotations are published under.
+    #[arg(long, required_unless_present = "check_part")]
+    annotations_license: Option<String>,
+    /// The datasheet template, copied into `record/`.
+    #[arg(long, default_value = "scripts/label/silver-datasheet.md")]
+    template: PathBuf,
+    /// The `voters.json` the runs were made under, copied into `record/`.
+    #[arg(long, default_value = "scripts/label/voters.json")]
+    voters: PathBuf,
+    /// The small tier, whose repositories no silver sentence may be of.
+    #[arg(long, default_value = "tests/corpus")]
+    tests_corpus: PathBuf,
+    #[command(flatten)]
+    pool: Pool,
+}
+
 /// Where `rank`, `queue` and `draw` read from and what they leave out.
 #[derive(clap::Args)]
 struct Pool {
@@ -489,6 +626,35 @@ struct Pool {
     /// to the reserved set and never replace any of it.
     #[arg(long, num_args = 1..)]
     exclude_repos: Vec<PathBuf>,
+    #[command(flatten)]
+    held: SilverArgs,
+}
+
+/// Where the silver that a draw from the corpus leaves out is.
+#[derive(clap::Args)]
+struct SilverArgs {
+    /// The silver batches of the unpacked image. `rank`, `queue` and `sample` leave out every
+    /// repository a live batch's manifest names and every text its sentences have, and `draw`
+    /// every text; the counts are printed, so a fetch that did not happen shows as zero. A batch
+    /// the retired list names is not left out.
+    #[arg(long, default_value = ".blobs/unpacked/silver")]
+    silver: PathBuf,
+    /// The batches retired from silver: batch, date and reason. It must be there when the image
+    /// holds a silver batch.
+    #[arg(long, default_value = silver::live::RETIRED_PATH)]
+    silver_retired: PathBuf,
+    /// Silver being labelled: a directory of `part-NN` draws. `rank`, `queue` and `sample` leave
+    /// out the repositories of their manifests and the texts of their samples, so gold drawn
+    /// while silver is made is clear of it.
+    #[arg(long, default_value = ".label/silver")]
+    silver_parts: PathBuf,
+}
+
+impl SilverArgs {
+    /// What silver holds back, read from these paths.
+    fn read(&self) -> Result<silver::live::Held, Error> {
+        silver::live::Held::read(&self.silver, &self.silver_retired, &self.silver_parts)
+    }
 }
 
 /// A seed written in decimal or as `0x` and hex.
@@ -555,6 +721,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             min_words,
             max_tokens,
             without_declared,
+            held,
         } => {
             if mix.len() != 4 {
                 return Err(Error::load(
@@ -579,9 +746,10 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 &corpus,
                 tree.as_deref(),
                 exclude.as_deref(),
-                &RepoCut {
+                RepoCut {
                     files: &exclude_repos,
                     reserved: reserved.then_some(gold_dir.as_path()),
+                    held: held.read()?,
                 },
                 &settings,
                 without_declared,
@@ -599,6 +767,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             min_words,
             max_tokens,
             without_declared,
+            parts,
         } => {
             // Four counts are the quota of every tier; twelve give each tier its own.
             if mix.len() != 4 && mix.len() != 12 {
@@ -636,10 +805,12 @@ fn run(cli: Cli) -> Result<(), Problems> {
                     prefix: &prefix,
                     exclude_draws: &exclude_draws,
                     without_declared,
+                    parts,
                 },
                 &settings,
             )
         }
+        Command::Silver { command } => silver_stage(command),
         Command::Rank {
             from,
             per_repo,
@@ -735,7 +906,31 @@ fn run(cli: Cli) -> Result<(), Problems> {
             count,
             seed,
             out,
-        } => audit_stage(&dir, &into, count, seed, out.as_deref()),
+            blind,
+            from,
+            score,
+            queue,
+            labels,
+            bar,
+        } => {
+            if blind {
+                let from = from.expect("clap requires --from with --blind");
+                let out = out.ok_or_else(|| {
+                    Error::load(
+                        "--out",
+                        Place::File,
+                        "`--blind` needs --out, the directory of the audit",
+                    )
+                })?;
+                audit_blind_stage(&from, count, seed, &out)
+            } else if score {
+                let queue = queue.expect("clap requires --queue with --score");
+                let labels = labels.expect("clap requires --labels with --score");
+                audit_score_stage(&queue, &labels, bar, out.as_deref())
+            } else {
+                audit_stage(&dir, &into, count, seed, out.as_deref())
+            }
+        }
         Command::Assemble {
             out,
             blind,
@@ -817,12 +1012,12 @@ pub(crate) fn corpus_files(
     }
 }
 
-/// The repositories a draw leaves out: those the files name, and the reserved ones when a gold
-/// directory is given.
-#[derive(Clone, Copy)]
+/// What a draw leaves out: the repositories the files name, the reserved ones when a gold
+/// directory is given, and the repositories and texts silver holds.
 struct RepoCut<'a> {
     files: &'a [PathBuf],
     reserved: Option<&'a Path>,
+    held: silver::live::Held,
 }
 
 fn sample_stage(
@@ -830,17 +1025,24 @@ fn sample_stage(
     corpus: &Path,
     tree: Option<&Path>,
     exclude: Option<&Path>,
-    cut: &RepoCut<'_>,
+    cut: RepoCut<'_>,
     settings: &Settings,
     without_declared: bool,
 ) -> Result<(), Problems> {
     let RepoCut {
         files: exclude_repos,
         reserved,
-    } = *cut;
+        held:
+            silver::live::Held {
+                repos: silver_repos,
+                texts: silver_texts,
+                line: silver_line,
+            },
+    } = cut;
+    let holds_silver = silver_repos.len() > 0 || silver_texts.len() > 0;
     // A fixture that does not load is not named when repositories are being left out, since it
     // may belong to one of them.
-    let hide = reserved.is_some() || !exclude_repos.is_empty();
+    let hide = reserved.is_some() || !exclude_repos.is_empty() || silver_repos.len() > 0;
     let (fixtures, note) = corpus_files(corpus, tree, without_declared, hide)?;
     let files = files_of(&fixtures);
     let mut excluded = None;
@@ -855,23 +1057,39 @@ fn sample_stage(
         None => files,
     };
     let mut repos_dropped = None;
-    let files = if exclude_repos.is_empty() && reserved.is_none() {
+    let files = if exclude_repos.is_empty() && reserved.is_none() && silver_repos.len() == 0 {
         files
     } else {
         let mut repos = Repos::read(exclude_repos)?;
         if let Some(gold_dir) = reserved {
             repos = repos.with(Repos::reserved(gold_dir, &[])?);
         }
+        let repos = repos.with(silver_repos);
         let (kept, dropped) = repos.drop(files);
         repos_dropped = Some((repos.len(), dropped));
         kept
     };
-    let mut outcome =
-        sample::draw(&files, &note, settings, sample::Mode::Gold).map_err(Error::from)?;
+    println!("{silver_line}");
+    let mut outcome = sample::draw(&files, &note, settings, sample::Mode::Gold(&silver_texts))
+        .map_err(Error::from)?;
+    println!(
+        "left out {} sentences with the text of a sentence silver holds",
+        outcome.skipped.silver
+    );
     if let Some((repos, dropped)) = repos_dropped {
         outcome.sample.manifest.header.push((
             "exclude repos".to_string(),
             format!("{repos} repositories, {dropped} fixtures"),
+        ));
+    }
+    if holds_silver {
+        outcome.sample.manifest.header.push((
+            "exclude silver".to_string(),
+            format!(
+                "{} texts, {} sentences",
+                silver_texts.len(),
+                outcome.skipped.silver
+            ),
         ));
     }
     if let Some((list, dropped)) = &excluded {
@@ -958,28 +1176,200 @@ fn offer(
     except: &[&Path],
 ) -> Result<pick::Offer, Problems> {
     let files = files_of(fixtures);
-    let (files, listed, repos, by_repo) = leave_out(from, files, except)?;
+    let left = leave_out(from, files, except)?;
     println!(
-        "left out {listed} fixtures of the exclusion list and {by_repo} files of {repos} repositories"
+        "left out {} fixtures of the exclusion list and {} files of {} repositories",
+        left.listed, left.by_repo, left.repos
     );
-    let offer = pick::rank(&files)?;
+    println!("{}", left.silver);
+    let mut offer = pick::rank(&left.files)?;
+    let before = offer.rows.len();
+    offer.rows.retain(|row| !left.silver_texts.has(&row.toks));
+    println!(
+        "left out {} sentences with the text of a sentence silver holds",
+        before - offer.rows.len()
+    );
     println!("{}", offer.dropped);
     Ok(offer)
 }
 
-/// `files` without the fixtures of the list and the files of the reserved repositories and of
-/// those `--exclude-repos` adds: what is left, and how many of each were dropped.
+/// What `rank` and `queue` left out of the files offered, as counts.
+struct LeftOut<'a> {
+    files: Vec<File<'a>>,
+    /// Fixtures of the exclusion list.
+    listed: usize,
+    /// Repositories left out, silver's among them.
+    repos: usize,
+    /// Files of those repositories.
+    by_repo: usize,
+    /// The line that says how much silver was left out.
+    silver: String,
+    /// The texts silver holds, whose sentences are not offered.
+    silver_texts: Texts,
+}
+
+/// `files` without the fixtures of the list and the files of the reserved repositories, of those
+/// `--exclude-repos` adds, and of silver, live batches and parts being labelled: what is left, and
+/// how many of each were dropped. Silver's texts come back with them, for the sentences.
 fn leave_out<'a>(
     from: &Pool,
     files: Vec<File<'a>>,
     except: &[&Path],
-) -> Result<(Vec<File<'a>>, usize, usize, usize), Error> {
+) -> Result<LeftOut<'a>, Error> {
     let shown = from.exclude.display().to_string();
     let list = Exclusion::parse(&shown, &read_text(&from.exclude)?)?;
     let (files, listed) = list.drop(files);
-    let repos = Repos::reserved(&from.gold_dir, except)?.with(Repos::read(&from.exclude_repos)?);
+    let held = from.held.read()?;
+    let repos = Repos::reserved(&from.gold_dir, except)?
+        .with(Repos::read(&from.exclude_repos)?)
+        .with(held.repos);
     let (files, by_repo) = repos.drop(files);
-    Ok((files, listed, repos.len(), by_repo))
+    Ok(LeftOut {
+        files,
+        listed,
+        repos: repos.len(),
+        by_repo,
+        silver: held.line,
+        silver_texts: held.texts,
+    })
+}
+
+/// `silver build`, `silver check` and `silver standing`.
+fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
+    match command {
+        SilverCommand::Build(build) => {
+            let SilverBuild {
+                check_part,
+                name,
+                part,
+                out,
+                audit,
+                archive_sha256,
+                bar,
+                accept_below_bar,
+                noise,
+                annotations_license,
+                template,
+                voters,
+                tests_corpus,
+                pool,
+            } = *build;
+            let env = silver::part::Env::read(&silver::part::EnvArgs {
+                pool: &pool,
+                tests_corpus: &tests_corpus,
+                voters: &voters,
+            })?;
+            if let Some(spec) = check_part {
+                print!("{}", silver::build::check_part(&spec, &env)?);
+                return Ok(());
+            }
+            if accept_below_bar
+                .as_deref()
+                .is_some_and(|words| words.trim().is_empty())
+            {
+                return Err(Error::load(
+                    "--accept-below-bar",
+                    Place::File,
+                    "it is empty; the owner accepts an audit that falls short in words, which record/ keeps",
+                )
+                .into());
+            }
+            let mut named = Vec::new();
+            for entry in &noise {
+                let (label, file) = entry.split_once('=').ok_or_else(|| {
+                    Error::load(
+                        "--noise",
+                        Place::File,
+                        format!("`{entry}` is not NAME=FILE"),
+                    )
+                })?;
+                parse_name(label).map_err(|why| Error::load("--noise", Place::File, why))?;
+                named.push((label.to_string(), PathBuf::from(file)));
+            }
+            let report = silver::build::build(
+                &silver::build::Args {
+                    name: name.as_deref().unwrap_or_default(),
+                    parts: &part,
+                    audit: audit.as_deref(),
+                    archive_sha256: archive_sha256.as_deref(),
+                    bar,
+                    accept: accept_below_bar.as_deref(),
+                    noise: &named,
+                    annotations_license: annotations_license.as_deref().unwrap_or_default(),
+                    template: &template,
+                    out: out.as_deref().unwrap_or(Path::new("")),
+                },
+                &env,
+            )?;
+            print!("{report}");
+            Ok(())
+        }
+        SilverCommand::Check { silver, batch } => {
+            let dirs: Vec<PathBuf> = if batch.is_empty() {
+                silver::live::batches(&silver)?
+                    .into_iter()
+                    .map(|name| silver.join(name))
+                    .collect()
+            } else {
+                batch
+            };
+            if dirs.is_empty() {
+                println!(
+                    "silver check: no silver batch in {}; nothing to check",
+                    silver.display()
+                );
+                return Ok(());
+            }
+            let mut problems = Vec::new();
+            for dir in &dirs {
+                let loaded = silver::layout::Batch::load(dir)?;
+                match silver::check::check(&loaded, &silver::table::Machine::here()) {
+                    Ok(done) => println!(
+                        "silver check: {} passes: {} sentences, {} words, {} parts, {} runs{}",
+                        loaded.name,
+                        done.sentences,
+                        done.words,
+                        done.parts,
+                        done.runs,
+                        if done.audit {
+                            ", audited"
+                        } else {
+                            ", no audit"
+                        }
+                    ),
+                    Err(found) => problems.extend(
+                        found
+                            .0
+                            .into_iter()
+                            .map(|error| Error::load(&loaded.name, Place::File, error.to_string())),
+                    ),
+                }
+            }
+            Problems::check(problems, ())
+        }
+        SilverCommand::Standing {
+            voters,
+            tests_corpus,
+            pool,
+        } => {
+            let live = silver::live::Live::read(&pool.held.silver, &pool.held.silver_retired)?;
+            if live.names.is_empty() {
+                println!(
+                    "silver standing: no live silver batch in {} ({} retired); nothing to hold",
+                    pool.held.silver.display(),
+                    live.retired.len()
+                );
+                return Ok(());
+            }
+            let env = silver::part::Env::read(&silver::part::EnvArgs {
+                pool: &pool,
+                tests_corpus: &tests_corpus,
+                voters: &voters,
+            })?;
+            print!("{}", silver::standing::standing(&live, &env)?);
+            Ok(())
+        }
+    }
 }
 
 fn rank_stage(dir: &Path, from: &Pool, per_repo: usize, top: usize) -> Result<(), Problems> {
@@ -2051,8 +2441,83 @@ fn audit_stage(
         seed,
     )?;
     let target = out.map_or_else(|| dir.join(into).join("audit.conllu"), Path::to_path_buf);
+    refuse_gold_dir(&target)?;
     write_text(&target, &queue)?;
     println!("wrote {count} sentences to {}", target.display());
+    Ok(())
+}
+
+/// Refuses `target`, a path an audit would write, when it is in the gold directory: a queue there
+/// reserves its sentences' repositories, and silver's audit is of silver's own.
+fn refuse_gold_dir(target: &Path) -> Result<(), Error> {
+    let golds = data::gold_dir();
+    if labelling::in_gold_dir(target, &golds) {
+        return Err(Error::load(
+            &target.display().to_string(),
+            Place::File,
+            "an audit does not go in the gold directory, where every queue reserves the repositories \
+             of its sentences; give a path under `.label`",
+        ));
+    }
+    Ok(())
+}
+
+/// `audit --blind`: the queue and silver's labels of the same sentences, in `out`.
+fn audit_blind_stage(from: &Path, count: usize, seed: u64, out: &Path) -> Result<(), Problems> {
+    data::refuse_holdout(&data::real_path(from)?)?;
+    refuse_gold_dir(out)?;
+    let targets = [out.join("queue.conllu"), out.join("labels.conllu")];
+    for target in &targets {
+        if target.exists() {
+            return Err(Error::load(
+                &target.display().to_string(),
+                Place::File,
+                "it is there already, and a blind audit never writes over a queue that may be under review; give another --out, or remove it",
+            )
+            .into());
+        }
+    }
+    let (queue, labels) =
+        pilot::audit_blind(&from.display().to_string(), &read_text(from)?, count, seed)?;
+    // Both files are written beside their names first, so a failure leaves neither.
+    let partial = |target: &Path| target.with_extension("conllu.partial");
+    for (target, text) in targets.iter().zip([&queue, &labels]) {
+        write_text(&partial(target), text)?;
+    }
+    for target in &targets {
+        std::fs::rename(partial(target), target).map_err(|source| Error::Io {
+            path: target.display().to_string(),
+            source,
+        })?;
+    }
+    println!(
+        "wrote {count} sentences to {} and silver's labels of them to {}",
+        out.join("queue.conllu").display(),
+        out.join("labels.conllu").display()
+    );
+    Ok(())
+}
+
+/// `audit --score`: the reviewed queue against silver's labels.
+fn audit_score_stage(
+    queue: &Path,
+    labels: &Path,
+    bar: Option<f64>,
+    out: Option<&Path>,
+) -> Result<(), Problems> {
+    let target = out.map_or_else(|| queue.with_file_name("score.tsv"), Path::to_path_buf);
+    refuse_gold_dir(&target)?;
+    let scored = silver::score::score(
+        &queue.display().to_string(),
+        &read_text(queue)?,
+        &labels.display().to_string(),
+        &read_text(labels)?,
+        0,
+        bar,
+    )?;
+    write_text(&target, &scored.tsv())?;
+    print!("{}", scored.report());
+    println!("wrote {}", target.display());
     Ok(())
 }
 

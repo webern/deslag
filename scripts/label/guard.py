@@ -128,6 +128,15 @@ def _manifest(path):
     return header, splits
 
 
+def draw_header(directory):
+    """The `key = value` pairs of the header of the manifest in the checked sample directory
+    `directory`, or None when it has no manifest (a skeleton of a gold)."""
+    manifest = os.path.join(directory, "manifest.tsv")
+    if not os.path.isfile(manifest):
+        return None
+    return _manifest(manifest)[0]
+
+
 def _own_file(real, name):
     """The real path of `name` in the directory `real`, which must be a file that is in it."""
     path = os.path.join(real, name)

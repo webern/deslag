@@ -742,6 +742,8 @@ class GuardTests(Base):
         self.assertEqual(judged.judge("merge", [("one", False), ("two", False)]), {})
         self.assertTrue(os.path.isfile(os.path.join(part, "merge", "labelled.conllu")))
         config = copy.deepcopy(HANDOFF_CONFIG)
+        # Another adjudicator is another labelling of the parts, which starts without the lock.
+        os.remove(os.path.join(self.label_root, "silver", label.PARTS_LOCK))
         with self.assertRaises(label.HandoffWait):
             self.runner(None, gold=gold, config=config, directory=part).judge("merge-opus", [("one", False), ("two", False)])
         out = io.StringIO()
@@ -819,6 +821,110 @@ class GuardTests(Base):
             code = label.main(["tag", "--dir", other, "--max-usd", "1"], transport=FakeTransport(answer_all), gold=FakeGold())
         self.assertEqual(code, 2)
         self.assertIn("holdout", err.getvalue())
+
+
+class PartsLockTests(Base):
+    """The lock of a draw dealt into parts, `.label/silver/lock.json`: the first run of the first part
+    writes it, each step adds what it is the first to know, and a step of any part whose commit, draw,
+    voters, `min_voters` or hashes differ from it is refused before anything is asked."""
+
+    def setUp(self):
+        super().setUp()
+        self.gold = FakeGold()
+        self.lock_path = os.path.join(self.label_root, "silver", label.PARTS_LOCK)
+
+    def lock(self):
+        return json.loads(label.read(self.lock_path))
+
+    def part(self, number, **more):
+        return make_part(self.label_root, number, 3, **more)
+
+    def tag(self, directory, name, transport=None, **patch):
+        runner = self.runner(transport or FakeTransport(answer_all), gold=self.gold, directory=directory)
+        for key, value in patch.items():
+            setattr(runner, key, value)
+        return runner, runner.tag(name)
+
+    def test_the_first_tag_of_a_part_writes_the_lock_and_later_steps_add_to_it(self):
+        part = self.part(1)
+        runner, _ = self.tag(part, "one")
+        hashes = {"prompt_sha256": runner.prompts.sha256, "guide_sha256": runner.prompts.guide_sha256}
+        self.assertEqual(self.lock(), {
+            "deslag_commit": runner.commit,
+            "draw": {"tag_version": "0.0.1", "draw": "for labelling, 3 sentences"},
+            "voters": ["one", "two"], "adjudicator": "judge", "models": {"one": hashes},
+        })
+        self.assertTrue(label.read(self.lock_path).startswith('{\n  "adjudicator": "judge",'), "sorted keys")
+        self.tag(part, "two")
+        source = os.path.join(part, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        label.register(self.runner(None, directory=part), "spacy", source, "en-core-web-trf", None, None)
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        self.assertEqual(self.runner(settles, gold=self.gold, directory=part).judge("merge", [("one", False), ("two", False)]), {})
+        lock = self.lock()
+        self.assertEqual(lock["models"], {"one": hashes, "two": hashes, "judge": hashes})
+        self.assertEqual(lock["min_voters"], 3)
+        self.assertNotIn("agent", lock, "only handoff-run knows the Claude Code")
+
+    def test_a_part_tagged_at_another_commit_is_refused_naming_the_field_and_both_values(self):
+        runner, _ = self.tag(self.part(1), "one")
+        transport = FakeTransport(answer_all)
+        later = self.part(2)
+        with self.assertRaisesRegex(
+            label.GoldError, rf"`deslag_commit` is {runner.commit} in the lock and {'f' * 40} here.*remove the lock"
+        ):
+            self.tag(later, "one", transport, commit="f" * 40)
+        self.assertEqual(transport.posts, [], "nothing is asked")
+        self.assertFalse(os.path.exists(os.path.join(later, "raw")), "no run is started")
+        source = os.path.join(later, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        moved = self.runner(None, directory=later)
+        moved.commit = "f" * 40
+        with self.assertRaisesRegex(label.GoldError, "register --name spacy differs .*`deslag_commit`"):
+            label.register(moved, "spacy", source, "en-core-web-trf", None, None)
+
+    def test_a_changed_prompt_or_guide_is_refused_for_a_voter_of_another_part(self):
+        self.tag(self.part(1), "one")
+        later = self.part(2)
+        for key, field in (("sha256", "models.one.prompt_sha256"), ("guide_sha256", "models.one.guide_sha256")):
+            prompts = label.Prompts()
+            setattr(prompts, key, "0" * 64)
+            with self.assertRaisesRegex(label.GoldError, rf"`{re.escape(field)}` is [0-9a-f]{{64}} in the lock and {'0' * 64} here"):
+                self.tag(later, "one", prompts=prompts)
+        # Another voter is not a difference: the lock learns its hashes.
+        self.tag(later, "two")
+        self.assertEqual(sorted(self.lock()["models"]), ["one", "two"])
+
+    def test_a_part_of_another_draw_is_refused(self):
+        self.tag(self.part(1), "one")
+        with self.assertRaisesRegex(label.GoldError, "`draw.tag_version` is 0.0.1 in the lock and 0.0.2 here"):
+            self.tag(self.part(2, tag_version="0.0.2"), "one")
+
+    def test_a_judge_with_another_min_voters_or_adjudicator_is_refused_before_the_merge(self):
+        settles = FakeTransport(lambda body, count: chat("d1.2: J | a word\nd2.3: J | a word", provider="Bare"))
+        voters = [("one", False), ("two", False)]
+        for number in (1, 2):
+            for name in ("one", "two"):
+                self.tag(self.part(number), name)
+        self.runner(settles, gold=self.gold, directory=self.part(1)).judge("merge", voters)
+        merges = len([call for call in self.gold.calls if call[0] == "merge"])
+        with self.assertRaisesRegex(label.GoldError, "`min_voters` is 3 in the lock and 2 here"):
+            self.runner(settles, gold=self.gold, directory=self.part(2)).judge("merge", voters, min_voters=2)
+        config = copy.deepcopy(BOTH_CONFIG)
+        config["adjudicator"] = "opus"
+        with self.assertRaisesRegex(label.GoldError, "`adjudicator` is judge in the lock and opus here"):
+            self.runner(None, gold=self.gold, config=config, directory=self.part(2)).judge("merge", voters)
+        self.assertEqual(len([call for call in self.gold.calls if call[0] == "merge"]), merges, "nothing is merged")
+
+    def test_a_lock_that_is_not_json_is_refused(self):
+        label.write(self.lock_path, "not json\n")
+        with self.assertRaisesRegex(label.GoldError, "is not a JSON object"):
+            self.tag(self.part(1), "one")
+
+    def test_a_sample_that_is_not_a_part_has_no_lock(self):
+        self.tag(self.dir, "one")
+        found = [name for _, _, names in os.walk(self.label_root) for name in names if name == label.PARTS_LOCK]
+        self.assertEqual(found, [])
 
 
 class MoneyTests(Base):
@@ -4555,6 +4661,40 @@ class ConfinementTests(Base):
         self.assertEqual([call for call in self.calls() if "part-01.request.json" in call["prompt"]], [],
                          "no handoff call was made")
         self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+
+    def test_handoff_run_holds_claude_codes_version_to_the_lock_of_the_parts(self):
+        config = copy.deepcopy(HANDOFF_CONFIG)
+
+        def waiting_part(number):
+            self.dir = make_part(self.label_root, number, 2)
+            for name in ("one", "two"):
+                self.runner(FakeTransport(answer_all), gold=self.gold, config=config).tag(name)
+            with self.assertRaises(label.HandoffWait):
+                self.judge()
+
+        waiting_part(1)
+        self.assertEqual(self.probe(), 0)
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        lock_path = os.path.join(self.label_root, "silver", label.PARTS_LOCK)
+        lock = json.loads(label.read(lock_path))
+        self.assertEqual(lock["agent"], {"version": "2.1.293", "args": confine.arguments("claude-opus-5-5")})
+        self.assertEqual(self.judge(), {})
+        # Claude Code updated itself between the parts, and the probe passed again on the new version.
+        waiting_part(2)
+        self.assertEqual(self.probe(version="2.1.294"), 0)
+        before = len(self.calls())
+        with self.assertRaisesRegex(label.GoldError, "`agent.version` is 2.1.293 in the lock and 2.1.294 here"):
+            self.handoff_run()
+        self.assertEqual(len(self.calls()), before, "no call was made")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        # A reply read by judge is held to the lock as well.
+        self.fake()
+        self.assertEqual(self.probe(), 0)
+        self.assertEqual(self.handoff_run(), 0, self.out)
+        lock["agent"]["version"] = "2.1.0"
+        label.write(lock_path, json.dumps(lock))
+        with self.assertRaisesRegex(label.GoldError, "agent.json differs .*`agent.version` is 2.1.0 in the lock and 2.1.293 here"):
+            self.judge()
 
     def test_handoff_run_refuses_a_tree_that_is_not_clean_outside_label_and_fails_one_changed_by_the_round(self):
         self.waiting()

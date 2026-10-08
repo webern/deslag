@@ -141,6 +141,11 @@ ADJUDICATOR_RECORD = "adjudicator.json"
 # The lock file of a sample directory, which processes working in it at once take before they write
 # the files they share: the batches and `runs.tsv`.
 SAMPLE_LOCK = "label.lock"
+# The lock of a draw dealt into parts, beside the part directories (`.label/silver/lock.json`): the deslag
+# commit, the draw, the voters, `min_voters`, each model's prompt and guide hashes and the Claude Code of
+# the adjudicator that the first part was labelled with, which every later step of every part must match
+# (see [hold_parts_lock]). `deslag-gold silver build --check-part` holds a part to it too.
+PARTS_LOCK = "lock.json"
 
 # What `handoff/<run>/agent.json` must say about the agents that made the replies: `handoff-run` writes
 # it, and a reply is read only if it says `safe_mode: true`, the tools Read and Write, and the argument
@@ -552,6 +557,111 @@ def json_lines(path):
     return rows
 
 
+# ---------------------------------------------------------------------------------------------
+# the lock of a draw dealt into parts
+
+
+def parts_lock_path(directory):
+    """The lock of the draw that the checked sample `directory` is a part of: PARTS_LOCK in the
+    directory that holds the part directories. None when the sample is not a part of a draw (its
+    manifest says no `# part = k of N`), which has no lock."""
+    header = guard.draw_header(directory)
+    if header is None or "part" not in header:
+        return None
+    return os.path.join(os.path.dirname(directory), PARTS_LOCK)
+
+
+def draw_values(directory):
+    """What the lock holds of the draw: its manifest's header without `part`, which is the same in
+    every part."""
+    return {key: value for key, value in guard.draw_header(directory).items() if key != "part"}
+
+
+def read_parts_lock(path):
+    """The lock at `path` as a dict, or {} if there is none yet. GoldError if it is not a JSON object."""
+    if not os.path.isfile(path):
+        return {}
+    try:
+        lock = json.loads(read(path))
+    except ValueError:
+        lock = None
+    if not isinstance(lock, dict):
+        raise GoldError(
+            f"{path} is not a JSON object; it is the lock of the parts of a draw, which the first run of the first "
+            f"part wrote, so restore it, or remove it and label every part again"
+        )
+    return lock
+
+
+def shown_value(value):
+    """A value of the lock as a message shows it: a string or a number as it is, anything else as JSON."""
+    if value is None:
+        return "nothing"
+    if isinstance(value, (str, int)):
+        return str(value)
+    return json.dumps(value)
+
+
+def lock_differences(lock, known):
+    """The fields of `known` that `lock` holds with another value, as (field, the lock's value, this
+    value): `deslag_commit`, `draw.<key>`, `voters`, `adjudicator`, `min_voters`,
+    `models.<name>.<hash>` and `agent.<key>`. A field the lock does not hold yet is not a difference."""
+    found = []
+    for key, value in known.items():
+        if key not in lock:
+            continue
+        held = lock[key]
+        if key == "models":
+            for name, hashes in value.items():
+                for hash_key, digest in hashes.items() if name in held else ():
+                    if held[name].get(hash_key) != digest:
+                        found.append((f"models.{name}.{hash_key}", held[name].get(hash_key), digest))
+        elif isinstance(value, dict) and isinstance(held, dict):
+            for inner in sorted({*value, *held}):
+                if value.get(inner) != held.get(inner):
+                    found.append((f"{key}.{inner}", held.get(inner), value.get(inner)))
+        elif held != value:
+            found.append((key, held, value))
+    return found
+
+
+def refuse_lock_differences(path, what, found):
+    """GoldError for the differences `found` between the lock at `path` and what `what` would record."""
+    if not found:
+        return
+    listed = "; ".join(
+        f"`{field}` is {shown_value(held)} in the lock and {shown_value(value)} here" for field, held, value in found
+    )
+    raise GoldError(
+        f"{path}: {what} differs from what the lock of the parts holds: {listed}. The parts of one draw are labelled "
+        f"at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model "
+        f"and one Claude Code, so that the batch made of them can be assembled; nothing was asked. Put back what "
+        f"changed (the commit, voters.json, the prompts, Claude Code), or remove the lock and label every part again"
+    )
+
+
+def hold_parts_lock(directory, what, known):
+    """Holds the sample `directory`, when it is a part of a draw, to the lock of the parts: refuses
+    (GoldError) when a field of `known` that the lock holds has another value, and writes the fields
+    the lock does not hold yet, so the first run of the first part writes it and each later step adds
+    what it is the first to know. Read and written under a lock of its folder, since the voters of a
+    part are tagged at once. A sample that is not a part is left alone."""
+    path = parts_lock_path(directory)
+    if path is None:
+        return
+    with locked(os.path.join(os.path.dirname(path), SAMPLE_LOCK)):
+        lock = read_parts_lock(path)
+        refuse_lock_differences(path, what, lock_differences(lock, known))
+        merged = dict(lock)
+        for key, value in known.items():
+            if key == "models":
+                merged["models"] = {**value, **lock.get("models", {})}
+            elif key not in lock:
+                merged[key] = value
+        if merged != lock:
+            write_atomic(path, json.dumps(merged, indent=2, sort_keys=True) + "\n")
+
+
 class EndpointExhausted(openrouter.ApiError):
     """A call failed in a way that stops a run. The run stays saved; `name`, `tag`, `role` and `run`
     say whose endpoint it was, `reason` how it failed.
@@ -658,6 +768,17 @@ class Runner:
 
     def raw(self, name, run, *more):
         return os.path.join(self.dir, "raw", name, run, *more)
+
+    def prompt_hashes(self):
+        """The hashes a run of a model records of what it is told: the prompts and the guide."""
+        return {"prompt_sha256": self.prompts.sha256, "guide_sha256": self.prompts.guide_sha256}
+
+    def hold_lock(self, what, **known):
+        """[hold_parts_lock] for this sample, with the commit and the draw, which every step knows, and
+        `known`. Nothing for a sample that is not a part of a draw."""
+        if parts_lock_path(self.dir) is None:
+            return
+        hold_parts_lock(self.dir, what, {"deslag_commit": self.commit, "draw": draw_values(self.dir), **known})
 
     def retrying(self, what, **extra):
         """with_retries' arguments from the settings, and a one-line log of each wait: what is being
@@ -1109,7 +1230,8 @@ class Runner:
         in AGENT_KEYS is given, `safe_mode` is true, the argument list is the one handoff-run uses now,
         the tools are Read and Write, the model the process reported is the pinned one (or a dated
         version of it), and the prompt it records is the template in the repository now. ApiError if
-        not: no reply is read without a record of who made it."""
+        not: no reply is read without a record of who made it. In a part of a draw whose lock holds
+        the adjudicator's Claude Code, its version and argument list must be the lock's (GoldError)."""
         path = os.path.join(self.handoff_dir(meta), "agent.json")
         if not os.path.isfile(path):
             raise openrouter.ApiError(
@@ -1136,6 +1258,10 @@ class Runner:
                 f"{path} records another agent prompt than prompts/handoff-agent.md has now (sha256 "
                 f"{handoff_template_sha256()}); the replies were not made by this definition"
             )
+        lock = parts_lock_path(self.dir)
+        if lock is not None:
+            held = {"agent": {"version": agent["version"], "args": agent["args"]}}
+            refuse_lock_differences(lock, f"{path}", lock_differences(read_parts_lock(lock), held))
         return {key: agent[key] for key in agent}
 
     def ask_handoff(self, meta, endpoint, config, system, user, kind):
@@ -1444,7 +1570,14 @@ class Runner:
         come out of one budget (BudgetSpent).
 
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
-        `failed`, not complete: RunFailed, and nothing continues it."""
+        `failed`, not complete: RunFailed, and nothing continues it.
+
+        In a part of a draw, nothing is asked unless the commit, the draw, the voters, the adjudicator
+        and this voter's prompt and guide are the lock's (see [hold_parts_lock])."""
+        self.hold_lock(
+            f"tag --voter {name}", voters=list(self.config["voters"]), adjudicator=self.config["adjudicator"],
+            models={name: self.prompt_hashes()},
+        )
         tried = []
         self.budget = FailureBudget(self.settings["failure_budget"])
         while True:
@@ -1805,7 +1938,11 @@ class Runner:
 
         An item still open after the adjudicator's retries does not stop the finish, unless `strict`:
         the word is left out of `labelled.conllu` with its whole sentence, `unsettled.tsv` lists it,
-        and the items are returned for the caller to count."""
+        and the items are returned for the caller to count.
+
+        In a part of a draw, nothing is merged or asked unless the commit, the draw, the model voters,
+        the adjudicator, `min_voters` and the adjudicator's prompt and guide are the lock's (see
+        [hold_parts_lock])."""
         settled = self.settle_path(into, settle_from) if settle_from is not None else None
         if settle_from is not None:
             self.check_settle_adjudicator(settle_from)
@@ -1813,6 +1950,11 @@ class Runner:
             if not base_only:
                 self.check_tags_run(name)
         scope = self.judge_scope(into, voters, settle_from, same_votes, min_voters)
+        adjudicator = self.config["adjudicator"]
+        self.hold_lock(
+            "judge", voters=[name for name, base_only in voters if not base_only], adjudicator=adjudicator,
+            min_voters=scope["min_voters"], models={adjudicator: self.prompt_hashes()},
+        )
         if not again and resume is None:
             done = self.finished_run(into, scope, trains)
             if done:
@@ -1885,6 +2027,7 @@ def register(runner, name, path, model, version, seconds):
     if entry["model"] != model:
         raise ConfigError(f"external.{name} of {runner.config_path} is the model `{entry['model']}`, not `{model}`")
     licence = runner.licence(name, entry, "external")
+    runner.hold_lock(f"register --name {name}")
     path = guard.check_file(path, runner.dir)
     run = runner.ledger.new_run()
     text = read(path)
@@ -2234,8 +2377,10 @@ class HandoffRound:
 def command_handoff_run(arguments, config, transport=None, gold=None, say=print):
     """`handoff-run`: answers the requests of a handoff judge still unanswered, each with a confined
     claude process, `--parallel` at once (see [HandoffRound]). Refuses to start without a passing
-    probe stamp for the Claude Code installed now and these arguments, with an `agent.json` that
-    differs from what it would write, or when `git status` shows a change outside `.label/`; and after
+    probe stamp for the Claude Code installed now and these arguments; in a part of a draw, when the
+    commit, the draw, that Claude Code or these arguments are not the lock's (see [hold_parts_lock]);
+    with an `agent.json` that differs from what it would write; or when `git status` shows a change
+    outside `.label/`; and after
     the round, if the tree has changed outside `.label/`, it removes the replies it copied and fails.
     Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
     call failed a check or anything was refused."""
@@ -2258,6 +2403,11 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     claude = confine.find_claude(arguments.claude)
     version = confine.version(claude)
     check_stamp(version, confine.arguments(model))
+    if parts_lock_path(directory) is not None:
+        hold_parts_lock(directory, "handoff-run", {
+            "deslag_commit": deslag_commit(), "draw": draw_values(directory),
+            "agent": {"version": version, "args": confine.arguments(model)},
+        })
     round_ = HandoffRound(folder, model, claude, version)
     round_.check_agent()
     changes = tree_changes(REPO)

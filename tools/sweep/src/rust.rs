@@ -17,39 +17,52 @@ impl Lexer for RustOracle {
     fn lex(&mut self, src: &str) -> Lexed {
         let mut offset = bom_len(src);
         offset += strip_shebang(&src[offset..]).unwrap_or(0);
+        let mut frontmatter = FrontmatterAllowed::Yes;
         let mut spans = Vec::new();
-        for token in tokenize(&src[offset..], FrontmatterAllowed::Yes) {
-            let start = offset;
-            let end = start + token.len as usize;
-            offset = end;
-            let span = match token.kind {
-                TokenKind::LineComment { .. } => Span {
-                    range: trim_carriage_return(src, start..end),
-                    kind: Kind::Comment,
-                },
-                TokenKind::BlockComment { .. } => Span {
-                    range: start..end,
-                    kind: Kind::Comment,
-                },
-                TokenKind::Literal { kind, suffix_start } => {
-                    let kind = match kind {
-                        LiteralKind::Int { .. } | LiteralKind::Float { .. } => continue,
-                        LiteralKind::Char { .. } | LiteralKind::Byte { .. } => Kind::Char,
-                        LiteralKind::Str { .. }
-                        | LiteralKind::ByteStr { .. }
-                        | LiteralKind::CStr { .. }
-                        | LiteralKind::RawStr { .. }
-                        | LiteralKind::RawByteStr { .. }
-                        | LiteralKind::RawCStr { .. } => Kind::Str,
-                    };
-                    Span {
-                        range: start..start + suffix_start as usize,
-                        kind,
+        'restart: loop {
+            for token in tokenize(&src[offset..], frontmatter) {
+                let start = offset;
+                let end = start + token.len as usize;
+                offset = end;
+                let span = match token.kind {
+                    TokenKind::LineComment { .. } => Span {
+                        range: trim_carriage_return(src, start..end),
+                        kind: Kind::Comment,
+                    },
+                    TokenKind::BlockComment { .. } => Span {
+                        range: start..end,
+                        kind: Kind::Comment,
+                    },
+                    TokenKind::Literal { kind, suffix_start } => {
+                        let kind = match kind {
+                            LiteralKind::Int { .. } | LiteralKind::Float { .. } => continue,
+                            LiteralKind::Char { .. } | LiteralKind::Byte { .. } => Kind::Char,
+                            LiteralKind::Str { .. }
+                            | LiteralKind::ByteStr { .. }
+                            | LiteralKind::CStr { .. }
+                            | LiteralKind::RawStr { .. }
+                            | LiteralKind::RawByteStr { .. }
+                            | LiteralKind::RawCStr { .. } => Kind::Str,
+                        };
+                        Span {
+                            range: start..start + suffix_start as usize,
+                            kind,
+                        }
                     }
-                }
-                _ => continue,
-            };
-            spans.push(span);
+                    // The lexer reports `#"` and `##` as one two-byte token, for the reserved
+                    // guarded strings of edition 2024. The compiler's parser undoes that: the
+                    // `#` is code, and lexing goes on right after it. Without that, the `"`
+                    // would be swallowed and the string would start at the next quote.
+                    TokenKind::GuardedStrPrefix => {
+                        offset = start + 1;
+                        frontmatter = FrontmatterAllowed::No;
+                        continue 'restart;
+                    }
+                    _ => continue,
+                };
+                spans.push(span);
+            }
+            break;
         }
         Lexed {
             spans,
@@ -140,6 +153,40 @@ mod tests {
                 (Kind::Char, "b'x'"),
                 (Kind::Char, r"b'\''"),
             ]
+        );
+    }
+
+    #[test]
+    fn a_hash_before_a_quote_is_code_and_the_string_starts_at_the_quote() {
+        // The lexer reports `#"` as one token. The compiler splits it, so the string is `"x"`.
+        assert_eq!(
+            spans("#\"x\"# // c"),
+            [(Kind::Str, "\"x\""), (Kind::Comment, "// c")]
+        );
+        assert_eq!(
+            spans("let a = #\"x\"; /* c */"),
+            [(Kind::Str, "\"x\""), (Kind::Comment, "/* c */")]
+        );
+    }
+
+    #[test]
+    fn two_hashes_before_a_quote_leave_the_string_in_place() {
+        // `##` and `#"` are both guarded prefix tokens. Each is split after its first `#`.
+        assert_eq!(
+            spans("##\"x\" // c"),
+            [(Kind::Str, "\"x\""), (Kind::Comment, "// c")]
+        );
+        assert_eq!(
+            spans("###\"x\" // c"),
+            [(Kind::Str, "\"x\""), (Kind::Comment, "// c")]
+        );
+    }
+
+    #[test]
+    fn a_raw_string_next_to_a_plain_one_is_not_a_guarded_prefix() {
+        assert_eq!(
+            spans(r##"r#"a"# + "b""##),
+            [(Kind::Str, r##"r#"a"#"##), (Kind::Str, r#""b""#)]
         );
     }
 

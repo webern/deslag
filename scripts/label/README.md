@@ -479,21 +479,24 @@ Makefile), so the run can change them.
 The assembler. `deslag-gold silver build --name NAME --part DIR:MERGE ... [--audit DIR --archive-sha256 SHA]
 --out DIR` puts the parts together and writes the batch to `--out` only when `silver check` passes on what it
 wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, which writes no file but the lock
-of the parts, and is what
-`label.py status` runs; run it after each part, so a fault shows after one part and not at assembly. It
-refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has no `part` and
-`tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id twice with
-different rows or under two `state_id`s, one that is not `complete`, or with no row; runs at more than one
-deslag commit, or one that is `-dirty`; two prompt or guide hashes for one model; a voter at an endpoint that
-`voters.json` does not list for its model, a labeller whose licence is not MIT or Apache-2.0, an adjudicator
-other than `opus` without its `agent.json`, an outside tagger other than spaCy; a merge with fewer than three
-model voters, `min_voters` under 3, no spaCy, or other voters than another part's; a fixture the image lacks
-or whose content, commit, URL or licence differs from the manifest's, that an exclusion names, or whose
-generator is banned; and an absolute path in any file it writes, in a JSON cell or a listing too. It drops
-and counts, and does not refuse, a sentence whose repository became reserved after the draw or whose text is
-now a gold sentence's, one that is a repeat, and one the owner rejected in the audit. The batch ships the
-runs that the words it kept name, with the voters', and the agent record of those, worked out after the
-drops.
+of the parts, and is what `label.py status` runs; run it after each part, so a fault shows after one part and
+not at assembly. It refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has
+no `part` and `tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id
+twice with different rows or under two `state_id`s, one that is not `complete`, or with no row; runs at more
+than one deslag commit, or one that is `-dirty`; two prompt or guide hashes for one model; a voter at an
+endpoint that `voters.json` does not list for its model, a labeller whose licence is not MIT or Apache-2.0, a
+run of any role with no `voters_sha256`, an adjudicator other than `opus` without its `agent.json`, an agent
+record whose harness, type, working-directory rule or arguments are not the confined process's or whose
+version is not a version, an outside tagger other than spaCy; a merge with fewer than three model voters,
+`min_voters` under 3, no spaCy, or other voters than another part's; a word whose `Runs=` is not what its
+`Prov=` says (an agreed word names the runs of at least `min_voters` model voters of its part, an adjudicated
+word the run of its answer in `adjudicated.tsv`, an adjudicator's); at the preflight, a value the lock of the
+parts holds otherwise; a fixture the image lacks or whose content, commit, URL or licence differs from the manifest's,
+that an exclusion names, or whose generator is banned; and an absolute path in any file it writes, in a JSON
+cell or a listing too. It drops and counts, and does not refuse, a sentence whose repository became reserved
+after the draw or whose text is now a gold sentence's, one that is a repeat, and one the owner rejected in the
+audit. The batch ships the runs that the words it kept name, with the voters', and the agent record of those,
+worked out after the drops.
 
 The batch, `silver/NAME/`:
 
@@ -540,10 +543,11 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
    low bar or a small audit, and `silver standing` refuses those and a score under the bar.
 
 The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes each batch against what it
-recorded and never against the checkout: `Runs=` against `runs.tsv`; endpoints against `record/voters.json`
-(so a later change to `voters.json` does not fail a batch); licences against the `runs.tsv` columns;
-`agent.json`'s keys; one deslag commit; the manifest against the sentences; every `sent_id` of `parts/` and
-`audit/` against the manifest, and a word with no `Prov=`; the audit scored again and compared with
+recorded and never against the checkout: `Runs=` against `runs.tsv` and against the word's `Prov=`, as the
+assembler holds it, with `min_voters` at least 3; endpoints against `record/voters.json` (so a later change to
+`voters.json` does not fail a batch); licences against the `runs.tsv` columns; `agent.json`'s keys and the
+confined process's values; one deslag commit; the manifest against the sentences; every `sent_id` of `parts/`
+and `audit/` against the manifest, and a word with no `Prov=`; the audit scored again and compared with
 `score.tsv`, and held to the bar and size above; `datasheet.json` computed again from the files, and
 `DATASHEET.md` rendered again byte for byte.
 `record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The

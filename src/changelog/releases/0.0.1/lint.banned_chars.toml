@@ -1,0 +1,12 @@
+kind = "lint"
+id = "banned_chars"
+keys = ["allow", "ban", "groups.arrows", "groups.box_drawing", "groups.bullets", "groups.checks", "groups.dashes", "groups.ellipsis", "groups.emoji", "groups.invisible", "groups.math", "groups.quotes", "groups.section", "groups.spaces", "message"]
+summary = "Fails a file holding characters agents write and people rarely do"
+onboarding = '''
+`banned_chars` fails a file holding characters agents write and people rarely do, such as the em
+dash. The empty table bans the default groups.
+
+```toml
+[md.lints.banned_chars]
+```
+'''

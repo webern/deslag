@@ -1,0 +1,8 @@
+kind = "setting"
+id = "schema_version"
+summary = "The version of the config file's format"
+onboarding = '''
+`schema_version` is the first key of every config and names the format of the file, not the
+version of deslag. Write `schema_version = 1`; deslag refuses a config whose format it does not
+know.
+'''

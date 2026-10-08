@@ -1,5 +1,5 @@
-//! Tests for `src/changelog.toml`, which says what each release of deslag added. A failure names
-//! the entry to add or fix.
+//! Tests for `src/changelog/releases/`, which says what each release of deslag added in a file per
+//! entry. A failure names the file to add or fix.
 
 mod common;
 
@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::SchemaPaths;
-use deslag::changelog::{BASELINE, Changelog, Entry, Version, changelog};
+use deslag::changelog::{BASELINE, Changelog, Entry, FileError, Version, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::{Config, ConfigSource, Lint, check_file};
@@ -46,7 +46,7 @@ fn key_path(paths: &SchemaPaths, id: &str, key: &str) -> String {
     SchemaPaths::fold(&path)
 }
 
-/// The ids of the `lint` entries, in file order.
+/// The ids of the `lint` entries, release by release.
 fn lint_entry_ids() -> Vec<&'static str> {
     entries()
         .filter(|(_, entry)| matches!(entry, Entry::Lint { .. }))
@@ -95,27 +95,52 @@ fn stale(entry: &Entry, paths: &SchemaPaths) -> Option<String> {
     None
 }
 
-#[test]
-fn every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint() {
-    let ids = lint_entry_ids();
+/// What is wrong with `ids`, the ids of the `lint` entries: a lint with not one entry, and an entry
+/// that is no lint. Each message names the file to add or fix.
+fn lint_entry_problems(ids: &[&str]) -> Vec<String> {
+    let mut problems = Vec::new();
     for lint in Lint::ALL {
         let count = ids.iter().filter(|id| **id == lint.id()).count();
-        assert_eq!(
-            count,
-            1,
-            "lint `{}` has {count} changelog entries, not one: add a `lint` entry for `{}` under \
-             the `next` release in src/changelog.toml, which its header says how to start",
-            lint.id(),
-            lint.id()
-        );
+        if count != 1 {
+            problems.push(format!(
+                "lint `{}` has {count} changelog entries, not one: add \
+                 src/changelog/releases/next/lint.{}.toml, which next/README.md says how to write",
+                lint.id(),
+                lint.id()
+            ));
+        }
     }
     let known: BTreeSet<&str> = Lint::ALL.iter().map(|lint| lint.id()).collect();
     for id in ids {
-        assert!(
-            known.contains(id),
-            "the `lint` entry `{id}` in src/changelog.toml is not a lint: fix its id"
-        );
+        if !known.contains(id) {
+            problems.push(format!(
+                "the `lint` entry `{id}` in src/changelog/releases/ is not a lint: fix its id and \
+                 the name of its file"
+            ));
+        }
     }
+    problems
+}
+
+#[test]
+fn every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint() {
+    let problems = lint_entry_problems(&lint_entry_ids());
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
+/// Taking an entry file away fails the check, and the message names the file to put back.
+#[test]
+fn a_lint_with_no_entry_file_fails_and_names_the_file_to_add() {
+    let ids: Vec<&str> = lint_entry_ids()
+        .into_iter()
+        .filter(|id| *id != "density")
+        .collect();
+    let problems = lint_entry_problems(&ids);
+    assert_eq!(problems.len(), 1, "{problems:?}");
+    assert!(
+        problems[0].contains("src/changelog/releases/next/lint.density.toml"),
+        "{problems:?}"
+    );
 }
 
 /// The leaves of the schema that no entry of `changelog` covers. A `setting` covers its own path
@@ -138,16 +163,35 @@ fn uncovered(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
     paths.leaves.difference(&covered).cloned().collect()
 }
 
+/// The files to add for the leaves of the schema that no entry of `changelog` covers, as the paths
+/// inside `src/changelog/releases/`.
+fn files_to_add(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
+    uncovered(changelog, paths)
+        .iter()
+        .map(|path| format!("next/setting.{}.toml", path.replace("[]", "")))
+        .collect()
+}
+
 #[test]
 fn every_setting_in_the_schema_has_an_entry() {
     let paths = SchemaPaths::of(&schema());
-    let uncovered = uncovered(changelog(), &paths);
+    let to_add = files_to_add(changelog(), &paths);
     assert!(
-        uncovered.is_empty(),
-        "{uncovered:?} is in the config schema and in no changelog entry: add a `setting` entry \
-         with the path as its `id` under the `next` release in src/changelog.toml, which its \
-         header says how to start (a new lint lists its settings in `keys` instead)"
+        to_add.is_empty(),
+        "the config schema has settings in no changelog entry: add {to_add:?} under \
+         src/changelog/releases/, each a `setting` entry whose `id` is the path, which \
+         next/README.md says how to write (a new lint lists its settings in `keys` instead)"
     );
+}
+
+/// With every entry file gone, the settings of the schema all fail, and each message names a file.
+#[test]
+fn a_setting_with_no_entry_file_fails_and_names_the_file_to_add() {
+    let paths = SchemaPaths::of(&schema());
+    let none = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
+    let to_add = files_to_add(&none, &paths);
+    assert!(to_add.contains(&"next/setting.md.globs.toml".to_string()));
+    assert!(to_add.contains(&"next/setting.md.overrides.globs.toml".to_string()));
 }
 
 /// A table that is a setting covers the keys it lists and no others, and a setting that holds a
@@ -155,14 +199,18 @@ fn every_setting_in_the_schema_has_an_entry() {
 #[test]
 fn a_setting_covers_its_own_path_and_its_keys_only() {
     let setting = |id: &str, keys: &str| {
-        format!(
-            "[[release]]\nversion = \"next\"\n[[release.entry]]\nkind = \"setting\"\nid = \"{id}\"\n\
-             {keys}summary = \"A setting\"\nonboarding = \"Set it.\"\n"
-        )
+        let text = format!(
+            "kind = \"setting\"\nid = \"{id}\"\n{keys}summary = \"A setting\"\n\
+             onboarding = \"Set it.\"\n"
+        );
+        let name = format!("next/setting.{}.toml", id.replace("[]", ""));
+        (name, text)
     };
     let paths = SchemaPaths::of(&schema());
-    let uncovered =
-        |text: String| uncovered(&Changelog::parse(&text).expect("a changelog"), &paths);
+    let uncovered = |(name, text): (String, String)| {
+        let files = [("next/README.md", ""), (name.as_str(), text.as_str())];
+        uncovered(&Changelog::from_files(files).expect("a changelog"), &paths)
+    };
 
     let value_only = uncovered(setting("md.globs", ""));
     assert!(!value_only.contains(&"md.globs".to_string()));
@@ -196,37 +244,18 @@ fn the_baseline_is_the_first_release() {
     );
 }
 
+/// No release is above the crate version. A release with no entries has no directory, so the crate
+/// version may have none of its own.
 #[test]
-fn versions_strictly_increase_and_next_is_last() {
-    for pair in changelog().releases.windows(2) {
-        assert!(
-            pair[0].version < pair[1].version,
-            "release {} comes after {} in src/changelog.toml: releases go oldest first, each \
-             once, with `next` last",
-            pair[1].version,
-            pair[0].version
-        );
-    }
-}
-
-#[test]
-fn the_crate_version_has_a_release_and_none_is_above_it() {
+fn no_release_is_above_the_crate_version() {
     let current = Version::current();
-    let released: Vec<&Version> = changelog()
-        .releases
-        .iter()
-        .map(|release| &release.version)
-        .filter(|version| **version != Version::Next)
-        .collect();
-    assert!(
-        released.contains(&&current),
-        "src/changelog.toml has no release {current}, the version in Cargo.toml: the change that \
-         bumps Cargo.toml replaces `next` with the new version"
-    );
-    for version in released {
+    for release in &changelog().releases {
         assert!(
-            *version <= current,
-            "src/changelog.toml has release {version}, above {current}, the version in Cargo.toml"
+            release.version <= current || release.version == Version::Next,
+            "src/changelog/releases/ has a directory {}, above {current}, the version in \
+             Cargo.toml: the change that bumps Cargo.toml moves the entries of next/ into a \
+             directory named for the new version",
+            release.version
         );
     }
 }
@@ -234,15 +263,19 @@ fn the_crate_version_has_a_release_and_none_is_above_it() {
 /// The ignored tests in this file are the release-time checks. `make check-release` runs all of
 /// them, and the release workflow calls it after `make ci`.
 #[test]
-#[ignore = "fails until the release change replaces `next` with the version"]
-fn no_release_is_left_as_next() {
+#[ignore = "fails until the release change moves the entries out of next/"]
+fn next_holds_no_entry() {
+    let left: Vec<String> = changelog()
+        .releases
+        .iter()
+        .filter(|release| release.version == Version::Next)
+        .flat_map(|release| &release.entries)
+        .map(Entry::file_name)
+        .collect();
     assert!(
-        changelog()
-            .releases
-            .iter()
-            .all(|release| release.version != Version::Next),
-        "src/changelog.toml still has a `next` release: replace `next` with the version in \
-         Cargo.toml"
+        left.is_empty(),
+        "src/changelog/releases/next/ still holds {left:?}: move them into a directory named for \
+         the version in Cargo.toml with `git mv next/*.toml <version>/`, and leave next/README.md"
     );
 }
 
@@ -305,16 +338,13 @@ fn every_onboarding_config_runs_clean_and_a_lints_turns_on_only_it() {
 }
 
 #[test]
-fn every_catalogue_phrase_arrives_in_a_release_or_next() {
-    let releases: Vec<&Version> = changelog()
-        .releases
-        .iter()
-        .map(|release| &release.version)
-        .collect();
+fn every_catalogue_phrase_arrives_in_next_or_a_release_no_later_than_the_crate() {
+    let current = Version::current();
     for entry in &CATALOGUE.entries {
         assert!(
-            entry.since == Version::Next || releases.contains(&&entry.since),
-            "the phrase {:?} arrives in {}, which is no release in src/changelog.toml",
+            entry.since == Version::Next || entry.since <= current,
+            "the phrase {:?} arrives in {}, which is after {current}, the version in Cargo.toml: \
+             use `next` or a release that exists",
             entry.phrase,
             entry.since
         );
@@ -344,4 +374,158 @@ fn every_entry_meets_the_rules_of_the_repo() {
             );
         }
     }
+}
+
+// What the changelog's directory may hold, and the failure each rule gives.
+
+/// An entry of the feature `id`, as a file holds it.
+fn feature(id: &str) -> String {
+    format!(
+        "kind = \"feature\"\nid = \"{id}\"\nsummary = \"A feature\"\nonboarding = \"Use it.\"\n"
+    )
+}
+
+const README: (&str, &str) = ("next/README.md", "How to add an entry.");
+
+/// The error from reading `files` with a README, which must be there for anything else to be read.
+fn refused(files: &[(&str, &str)]) -> FileError {
+    let all = [&[README], files].concat();
+    Changelog::from_files(all).expect_err("the files are refused")
+}
+
+/// Asserts that `files` fail at `path`, in a message with `words`, and that the message starts
+/// with the path from the root of the repo.
+#[track_caller]
+fn assert_refused(files: &[(&str, &str)], path: &str, words: &str) {
+    let error = refused(files);
+    assert_eq!(error.path, path, "{error}");
+    assert!(error.problem.contains(words), "{error}");
+    assert!(
+        error
+            .to_string()
+            .starts_with(&format!("src/changelog/releases/{path}: ")),
+        "{error}"
+    );
+}
+
+#[test]
+fn files_that_follow_the_rules_are_read() {
+    let json = feature("json");
+    let setting = "kind = \"setting\"\nid = \"md.overrides[].globs\"\nsummary = \"s\"\n\
+                   onboarding = \"o\"\n";
+    let changelog = Changelog::from_files([
+        README,
+        ("0.1.0/feature.json.toml", &json),
+        ("next/setting.md.overrides.globs.toml", setting),
+    ])
+    .expect("a changelog");
+    assert_eq!(changelog.releases.len(), 2);
+}
+
+#[test]
+fn a_file_named_other_than_its_entry_is_refused_with_the_name_it_should_have() {
+    let json = feature("json");
+    assert_refused(
+        &[("next/feature.other.toml", &json)],
+        "next/feature.other.toml",
+        "feature.json.toml",
+    );
+    // The kind is part of the name, and so is every dot of the id.
+    assert_refused(
+        &[("next/lint.json.toml", &json)],
+        "next/lint.json.toml",
+        "feature.json.toml",
+    );
+}
+
+#[test]
+fn a_name_outside_the_charset_is_refused() {
+    for id in ["Json", "a b", "x\u{e9}", "a_B"] {
+        let name = format!("next/feature.{id}.toml");
+        let text = feature(id);
+        let error = refused(&[(&name, &text)]);
+        assert_eq!(error.path, name, "{error}");
+        assert!(error.problem.contains("a-z"), "{error}");
+    }
+}
+
+#[test]
+fn an_entry_in_two_releases_is_refused_with_both_paths() {
+    let json = feature("json");
+    assert_refused(
+        &[
+            ("0.1.0/feature.json.toml", &json),
+            ("next/feature.json.toml", &json),
+        ],
+        "next/feature.json.toml",
+        "0.1.0/feature.json.toml",
+    );
+}
+
+#[test]
+fn a_file_holding_two_entries_is_refused() {
+    let two = format!("{}\n[[entry]]\n{}", feature("a"), feature("b"));
+    assert_refused(
+        &[("next/feature.a.toml", &two)],
+        "next/feature.a.toml",
+        "one entry",
+    );
+    let twice = format!("{}{}", feature("a"), feature("a"));
+    assert_refused(
+        &[("next/feature.a.toml", &twice)],
+        "next/feature.a.toml",
+        "one entry",
+    );
+}
+
+#[test]
+fn a_file_that_is_not_an_entry_of_a_release_directory_is_refused() {
+    let json = feature("json");
+    assert_refused(
+        &[("next/sub/feature.json.toml", &json)],
+        "next/sub/feature.json.toml",
+        "no directory",
+    );
+    assert_refused(
+        &[("feature.json.toml", &json)],
+        "feature.json.toml",
+        "release directory",
+    );
+    assert_refused(&[("next/notes.txt", "x")], "next/notes.txt", ".toml");
+    assert_refused(
+        &[("next/feature.json.md", &json)],
+        "next/feature.json.md",
+        ".toml",
+    );
+    assert_refused(&[("0.1.0/README.md", "x")], "0.1.0/README.md", "only next/");
+}
+
+#[test]
+fn a_directory_that_is_neither_a_release_nor_next_is_refused() {
+    let json = feature("json");
+    for directory in [
+        "v0.1.0",
+        "0.1",
+        "0.1.0-rc.1",
+        "0.1.0+build",
+        "Next",
+        "latest",
+        "",
+    ] {
+        let path = format!("{directory}/feature.json.toml");
+        assert_refused(&[(&path, &json)], &path, "neither a version");
+    }
+}
+
+#[test]
+fn a_missing_readme_in_next_is_refused_with_the_path_to_add() {
+    let json = feature("json");
+    let error =
+        Changelog::from_files([("0.1.0/feature.json.toml", json.as_str())]).expect_err("no README");
+    assert_eq!(error.path, "next/README.md", "{error}");
+    assert!(
+        error
+            .to_string()
+            .starts_with("src/changelog/releases/next/README.md: ")
+    );
 }

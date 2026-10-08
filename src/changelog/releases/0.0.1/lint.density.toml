@@ -1,0 +1,12 @@
+kind = "lint"
+id = "density"
+keys = ["max_item_chars", "max_paragraph_chars", "message"]
+summary = "Fails walls of text: long paragraphs and list items"
+onboarding = '''
+`density` fails a file with a paragraph or a list item that is too long. The empty table sets the
+default limits.
+
+```toml
+[md.lints.density]
+```
+'''

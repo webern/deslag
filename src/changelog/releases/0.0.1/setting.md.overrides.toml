@@ -1,0 +1,16 @@
+kind = "setting"
+id = "md.overrides"
+keys = ["globs", "lints"]
+summary = "Sets lints for the files a list of globs matches"
+onboarding = '''
+An `[[md.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
+globs match, on top of the tables under `[md.lints]`. Use one when a file needs another limit, not
+to loosen a limit for every file. An override can turn a lint on or change its settings, but it
+cannot turn off a lint that a wider table turned on.
+
+```toml
+[[md.overrides]]
+globs = ["/AGENTS.md"]
+lints.max_size_bytes.value = 8000
+```
+'''

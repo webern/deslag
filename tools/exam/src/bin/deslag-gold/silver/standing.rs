@@ -9,8 +9,13 @@
 //!   `tests/gold/exclude.tsv`.
 //!
 //! And it holds the batch to its audit: a live batch has a score, and a score below the bar needs
-//! the owner's acceptance in `record/`. The gold-side tools leave silver out of what they draw, so
-//! a failure here means a hand edit of the gold, or a licence found wrong in a fixture.
+//! the owner's acceptance in `record/`.
+//!
+//! `rank`, `queue` and `sample` leave out the repositories and the texts of live silver and of
+//! the parts being labelled, texts compared by their letters and digits as here. So gold they draw
+//! does not fail this; a failure means the gold or the exclusion list changed some other way: a
+//! sentence added by hand, a draw in a checkout that had not fetched the image's silver, or a
+//! licence found wrong in a fixture.
 //!
 //! There are two ways out, and the message names them: undo the change to gold, or retire the
 //! batch by naming it in `scripts/blobstore/silver-retired.tsv`. A retired batch is skipped here;
@@ -29,7 +34,7 @@ use super::table::Tsv;
 use crate::problems::Problems;
 
 /// The ways out, said once.
-const WAYS_OUT: &str = "to clear it, undo the change to the gold or the exclusion list (the gold-side tools leave silver out, so this means a hand edit), or retire the batch by adding it to scripts/blobstore/silver-retired.tsv";
+const WAYS_OUT: &str = "to clear it, undo the change to the gold or the exclusion list (rank, queue and sample leave silver out, so it came some other way), or retire the batch by adding it to scripts/blobstore/silver-retired.tsv";
 
 /// How many sentence ids or fixtures a problem names.
 const NAMED: usize = 3;

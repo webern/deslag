@@ -20,6 +20,45 @@ fn manifest_of(repos: &[&str]) -> String {
     out
 }
 
+/// The texts of `rank.tsv` in `dir`, by repository.
+fn rank_texts(dir: &Path) -> Vec<(String, String)> {
+    fs::read_to_string(dir.join("rank.tsv"))
+        .unwrap()
+        .lines()
+        .skip(1)
+        .map(|line| {
+            let cells: Vec<&str> = line.split('\t').collect();
+            (cells[3].to_string(), cells[12].to_string())
+        })
+        .collect()
+}
+
+/// A `silver.conllu` of one sentence of `text`, its words split at spaces.
+fn silver_of(text: &str) -> String {
+    let mut out = format!("# sent_id = x1\n# text = {text}\n");
+    for (at, word) in text.split_whitespace().enumerate() {
+        out.push_str(&format!(
+            "{}\t{word}\t_\tNOUN\t_\t_\t_\t_\t_\tKind=Word|Prov=agree|Runs=r1\n",
+            at + 1
+        ));
+    }
+    out.push('\n');
+    out
+}
+
+/// A part's `sample.conllu` of one sentence of `text`, its words split at spaces.
+fn sample_of(text: &str) -> String {
+    let mut out = String::from("# sent_id = p1\n");
+    for (at, word) in text.split_whitespace().enumerate() {
+        out.push_str(&format!(
+            "{}\t{word}\t_\t_\t_\t_\t_\t_\t_\tKind=Word\n",
+            at + 1
+        ));
+    }
+    out.push('\n');
+    out
+}
+
 fn rank_repos(dir: &Path) -> std::collections::BTreeSet<String> {
     fs::read_to_string(dir.join("rank.tsv"))
         .unwrap()
@@ -86,17 +125,38 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
     let said = String::from_utf8_lossy(&run.stdout).into_owned();
     assert!(
         said.contains(
-            "left out 0 repositories of 0 live silver batches (0 retired, not left out) and 0 of 0 silver parts being labelled"
+            "left out 0 repositories and 0 texts of 0 live silver batches (0 retired, not left out), \
+             and 0 repositories and 0 texts of 0 silver parts being labelled"
         ),
         "{said}"
     );
+    assert!(
+        said.contains("left out 0 sentences with the text of a sentence silver holds"),
+        "{said}"
+    );
     assert!(rank_repos(&none).contains(&repos[0]) && rank_repos(&none).contains(&repos[1]));
+    // A text of repository 2 and one of repository 3, which silver will hold from elsewhere.
+    let all_texts = rank_texts(&none);
+    let text_of = |repo: &str| {
+        all_texts
+            .iter()
+            .find(|(of, text)| of == repo && text.split_whitespace().count() > 2)
+            .map(|(_, text)| text.clone())
+            .unwrap()
+    };
+    let (two, three) = (text_of(&repos[2]), text_of(&repos[3]));
 
-    // A live batch names repository 0 and a part being labelled names repository 1.
+    // A live batch names repository 0 and holds repository 2's text, in upper case, and a part
+    // being labelled names repository 1 and holds repository 3's.
     fs::create_dir_all(silver.join("2026-10-20-a")).unwrap();
     fs::write(
         silver.join("2026-10-20-a/manifest.tsv"),
         manifest_of(&[&repos[0].to_uppercase()]),
+    )
+    .unwrap();
+    fs::write(
+        silver.join("2026-10-20-a/silver.conllu"),
+        silver_of(&two.to_uppercase()),
     )
     .unwrap();
     fs::create_dir_all(parts.join("part-01")).unwrap();
@@ -105,6 +165,7 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
         manifest_of(&[&repos[1]]),
     )
     .unwrap();
+    fs::write(parts.join("part-01/sample.conllu"), sample_of(&three)).unwrap();
     // A batch in the image and no retired list could hide a retirement: an error.
     let run = rank(&work.path().join("no-list"));
     assert_eq!(run.status.code(), Some(2));
@@ -119,7 +180,10 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
     );
     let said = String::from_utf8_lossy(&run.stdout).into_owned();
     assert!(
-        said.contains("left out 1 repositories of 1 live silver batches (0 retired, not left out) and 1 of 1 silver parts being labelled"),
+        said.contains(
+            "left out 1 repositories and 1 texts of 1 live silver batches (0 retired, not left out), \
+             and 1 repositories and 1 texts of 1 silver parts being labelled"
+        ),
         "{said}"
     );
     let left = rank_repos(&out);
@@ -130,6 +194,23 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
     assert!(
         left.contains(&repos[2]) && left.contains(&repos[3]),
         "{left:?}"
+    );
+    // The texts silver holds are not offered, from whatever repository.
+    let texts = rank_texts(&out);
+    assert!(
+        texts.iter().all(|(_, text)| text != &two && text != &three),
+        "a text silver holds is offered"
+    );
+    let gone = all_texts
+        .iter()
+        .filter(|(_, text)| text == &two || text == &three)
+        .count();
+    assert!(gone >= 2);
+    assert!(
+        said.contains(&format!(
+            "left out {gone} sentences with the text of a sentence silver holds"
+        )),
+        "{said}"
     );
     assert!(
         !said.contains(&repos[0]) && !said.contains("2026-10-20-a"),
@@ -204,12 +285,163 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
         manifest_of(&[&repos[1]]),
     )
     .unwrap();
+    fs::write(
+        parts.join("part-02/sample.conllu"),
+        sample_of("Zzqx unseen words"),
+    )
+    .unwrap();
     let run = run_queue(&picks);
     assert_eq!(run.status.code(), Some(2));
     assert!(
-        String::from_utf8_lossy(&run.stdout).contains("and 1 of 1 silver parts being labelled"),
+        String::from_utf8_lossy(&run.stdout)
+            .contains("and 1 repositories and 1 texts of 1 silver parts being labelled"),
         "{}",
         String::from_utf8_lossy(&run.stdout)
+    );
+    // Nor a sentence whose text a part holds, from another repository.
+    fs::write(
+        parts.join("part-02/manifest.tsv"),
+        manifest_of(&["somewhere/else"]),
+    )
+    .unwrap();
+    let held_text = held_row.split('\t').nth(12).unwrap();
+    fs::write(parts.join("part-02/sample.conllu"), sample_of(held_text)).unwrap();
+    let run = run_queue(&picks);
+    assert_eq!(
+        run.status.code(),
+        Some(2),
+        "{}",
+        String::from_utf8_lossy(&run.stdout)
+    );
+    assert!(
+        String::from_utf8_lossy(&run.stderr)
+            .contains("no such sentence among those the ranking may offer"),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    // A part without its sample holds back nothing that can be checked: an error, not a pass.
+    fs::remove_file(parts.join("part-02/sample.conllu")).unwrap();
+    assert_eq!(run_queue(&picks).status.code(), Some(2));
+}
+
+#[test]
+fn a_gold_sample_leaves_out_the_repositories_and_texts_of_silver() {
+    let work = tempfile::tempdir().unwrap();
+    let root = work.path().join("tree");
+    wide_tree(&root, 6);
+    let silver = work.path().join("silver");
+    let parts = work.path().join("parts");
+    let retired = work.path().join("retired.tsv");
+    fs::write(&retired, "batch\tdate\treason\n").unwrap();
+    let sample = |out: &Path| {
+        gold(
+            out,
+            &[
+                "sample",
+                "--tree",
+                root.to_str().unwrap(),
+                "--mix",
+                "4,2,0,0",
+                "--holdout-per-tier",
+                "2",
+                "--silver",
+                silver.to_str().unwrap(),
+                "--silver-retired",
+                retired.to_str().unwrap(),
+                "--silver-parts",
+                parts.to_str().unwrap(),
+            ],
+        )
+    };
+    // The rows of a sample: repository and text, by id.
+    let drawn = |out: &Path| -> Vec<(String, String)> {
+        let repos: Vec<String> = manifest_rows(&out.join("manifest.tsv"))
+            .into_iter()
+            .map(|row| row[5].clone())
+            .collect();
+        let texts: Vec<String> = fs::read_to_string(out.join("sample.conllu"))
+            .unwrap()
+            .lines()
+            .filter_map(|line| line.strip_prefix("# text = "))
+            .map(str::to_string)
+            .collect();
+        assert_eq!(repos.len(), texts.len());
+        repos.into_iter().zip(texts).collect()
+    };
+    let first = work.path().join("first");
+    let run = sample(&first);
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    let said = String::from_utf8_lossy(&run.stdout).into_owned();
+    assert!(
+        said.contains("left out 0 repositories and 0 texts of 0 live silver batches"),
+        "{said}"
+    );
+    let before = drawn(&first);
+    // A live batch names the repository of the first sentence and holds the text of a sentence
+    // of another repository, and a part being labelled holds a third sentence's text.
+    let (held_repo, _) = before[0].clone();
+    let others: Vec<&(String, String)> = before
+        .iter()
+        .filter(|(repo, text)| *repo != held_repo && text.split_whitespace().count() > 2)
+        .collect();
+    let (batch_text, part_text) = (others[0].1.clone(), others[others.len() - 1].1.clone());
+    fs::create_dir_all(silver.join("2026-10-20-a")).unwrap();
+    fs::write(
+        silver.join("2026-10-20-a/manifest.tsv"),
+        manifest_of(&[&held_repo]),
+    )
+    .unwrap();
+    fs::write(
+        silver.join("2026-10-20-a/silver.conllu"),
+        silver_of(&batch_text),
+    )
+    .unwrap();
+    fs::create_dir_all(parts.join("part-01")).unwrap();
+    fs::write(
+        parts.join("part-01/manifest.tsv"),
+        manifest_of(&["somewhere/else"]),
+    )
+    .unwrap();
+    fs::write(parts.join("part-01/sample.conllu"), sample_of(&part_text)).unwrap();
+    let second = work.path().join("second");
+    let run = sample(&second);
+    assert!(
+        run.status.success(),
+        "{}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    let said = String::from_utf8_lossy(&run.stdout).into_owned();
+    assert!(
+        said.contains(
+            "left out 1 repositories and 1 texts of 1 live silver batches (0 retired, not left out), \
+             and 1 repositories and 1 texts of 1 silver parts being labelled"
+        ),
+        "{said}"
+    );
+    assert!(
+        said.contains("sentences with the text of a sentence silver holds")
+            && !said.contains("left out 0 sentences with the text"),
+        "{said}"
+    );
+    let after = drawn(&second);
+    assert!(
+        after.iter().all(|(repo, _)| *repo != held_repo),
+        "a repository silver holds is in the gold sample"
+    );
+    assert!(
+        after
+            .iter()
+            .all(|(_, text)| *text != batch_text && *text != part_text),
+        "a text silver holds is in the gold sample"
+    );
+    let manifest = fs::read_to_string(second.join("manifest.tsv")).unwrap();
+    assert!(
+        manifest.contains("# exclude silver = 2 texts, "),
+        "{manifest}"
     );
 }
 

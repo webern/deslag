@@ -1,11 +1,13 @@
 //! Which silver batches are live, and what they hold that other draws must leave out.
 //!
 //! A batch is live when its directory is under the silver root of the unpacked image and
-//! `scripts/blobstore/silver-retired.tsv` does not name it. `rank` and `queue` leave out every
-//! repository a live batch's `manifest.tsv` names, and every repository of a part still being
-//! labelled (`.label/silver/part-NN/manifest.tsv`), so a queue drawn while silver is made is clear
-//! of it too. A labelling draw leaves out the texts of live silver. Each prints how many it left
-//! out, so a fetch that did not happen shows as zero.
+//! `scripts/blobstore/silver-retired.tsv` does not name it. `rank`, `queue` and `sample` leave out
+//! every repository a live batch's `manifest.tsv` names and every text its `silver.conllu` holds,
+//! and the repositories and texts of each part still being labelled (`.label/silver/part-NN/`,
+//! its `manifest.tsv` and `sample.conllu`), so gold drawn while silver is made is clear of it too:
+//! texts are compared as [`Texts`] compares them, by letters and digits. A labelling draw leaves
+//! out the texts of live silver. Each prints how many it left out, so a fetch that did not happen
+//! shows as zero.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -226,24 +228,52 @@ pub fn part_dirs(dir: &Path) -> Vec<PathBuf> {
     found
 }
 
-/// The repositories of the parts under `dir` and how many parts there are.
-pub fn parts_repos(dir: &Path) -> Result<(Repos, usize), Error> {
-    let parts = part_dirs(dir);
-    let mut all = Repos::default();
-    for part in &parts {
-        all = all.with(Repos::read(&[part.join(MANIFEST)])?);
-    }
-    Ok((all, parts.len()))
+/// The file of a part that holds its sentences.
+pub const PART_SAMPLE: &str = "sample.conllu";
+
+/// What gold drawn from the corpus leaves out to be clear of silver: the repositories and texts
+/// of the live batches and of the parts being labelled.
+pub struct Held {
+    /// The repositories.
+    pub repos: Repos,
+    /// The texts.
+    pub texts: Texts,
+    /// What was left out, as one line of counts.
+    pub line: String,
 }
 
-/// What a command that leaves silver out says about it, as one line of counts.
-pub fn left_out_line(live: &Live, repos: usize, parts: usize, part_repos: usize) -> String {
-    format!(
-        "left out {repos} repositories of {} live silver batches ({} retired, not left out) and \
-         {part_repos} of {parts} silver parts being labelled",
-        live.names.len(),
-        live.retired.len()
-    )
+impl Held {
+    /// The live batches under `root`, less those `retired` lists, and the parts under `parts`.
+    /// A live batch or a part without its manifest or its sentences is an error: it would hold
+    /// back nothing.
+    pub fn read(root: &Path, retired: &Path, parts: &Path) -> Result<Held, Error> {
+        let live = Live::read(root, retired)?;
+        let live_repos = live.repos()?;
+        let live_texts = live.texts()?;
+        let dirs = part_dirs(parts);
+        let mut part_repos = Repos::default();
+        for dir in &dirs {
+            part_repos = part_repos.with(Repos::read(&[dir.join(MANIFEST)])?);
+        }
+        let samples: Vec<PathBuf> = dirs.iter().map(|dir| dir.join(PART_SAMPLE)).collect();
+        let (part_texts, _) = Texts::draws(&samples)?;
+        let line = format!(
+            "left out {} repositories and {} texts of {} live silver batches ({} retired, not left out), \
+             and {} repositories and {} texts of {} silver parts being labelled",
+            live_repos.len(),
+            live_texts.len(),
+            live.names.len(),
+            live.retired.len(),
+            part_repos.len(),
+            part_texts.len(),
+            dirs.len()
+        );
+        Ok(Held {
+            repos: live_repos.with(part_repos),
+            texts: live_texts.with(part_texts),
+            line,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -312,6 +342,5 @@ mod tests {
         let live = Live::read(&root, &list).unwrap();
         assert_eq!(live.names, ["2026-10-21-b"]);
         assert_eq!(live.retired, ["2026-10-20-a"]);
-        assert!(left_out_line(&live, 3, 2, 5).contains("3 repositories of 1 live silver batches"));
     }
 }

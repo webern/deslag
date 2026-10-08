@@ -344,7 +344,7 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
     let (earlier, earlier_ids) = Texts::draws(inputs.exclude_draws)?;
     // Live silver's texts are left out as an earlier draw's are: a sentence labelled once is not
     // drawn to be labelled again.
-    let live = Live::read(&from.silver, &from.silver_retired)?;
+    let live = Live::read(&from.held.silver, &from.held.silver_retired)?;
     let held = live.texts()?;
     let silver = (live.names.len(), held.len());
     let earlier = earlier.with(held);

@@ -499,13 +499,16 @@ regenerate_the_committed_fixture_batch -- --ignored` only when a new version com
 `deslag-gold silver standing` holds each live batch to what changes outside it: no repository it names is
 reserved by today's `tests/gold` or `tests/corpus/`, no sentence of it is a gold sentence's text, no fixture
 it quotes is excluded now, and its audit met the bar or the owner accepted the score. A failure names the two
-ways out: undo the gold change (the gold-side tools leave silver out, so this means a hand edit), or retire
-the batch by adding a row (batch, date, reason) to `scripts/blobstore/silver-retired.tsv`. `standing` skips
-retired batches and `check` does not.
+ways out: undo the gold change (`rank`, `queue` and `sample` leave silver out, so it came some other way: a
+sentence added by hand, or a draw in a checkout that had not fetched the image's silver), or retire the batch
+by adding a row (batch, date, reason) to `scripts/blobstore/silver-retired.tsv`. `standing` skips retired
+batches and `check` does not.
 
-`rank` and `queue` leave out the repositories of every live silver batch and of every `part-NN/manifest.tsv`
-under `.label/silver`, and `draw` the text of every live batch's sentences, so an owner's queue drawn while
-silver is made, or after, is clear of it.
+`rank`, `queue` and `sample` leave out the repositories and the texts of every live silver batch and of every
+part being labelled under `.label/silver` (its `manifest.tsv` and `sample.conllu`), texts compared by their
+letters and digits, and `draw` the texts of every live batch's sentences, so an owner's queue or a gold sample
+drawn while silver is made, or after, is clear of it. Each prints how many repositories, texts and sentences
+it left out.
 
 ## Money
 

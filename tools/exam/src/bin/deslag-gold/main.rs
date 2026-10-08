@@ -46,7 +46,7 @@ use deslag_exam::tagger::Context;
 use deslag_exam::words::Words;
 
 use crate::data::{Provenance, Sample, read_text, write_text};
-use crate::exclude::{Exclusion, Repos};
+use crate::exclude::{Exclusion, Repos, Texts};
 use crate::merge::{Answers, NAMES};
 use crate::problems::Problems;
 use crate::sample::{Counts, File, Settings};
@@ -137,6 +137,8 @@ enum Command {
         /// model. They are drawn from unless this is given.
         #[arg(long)]
         without_declared: bool,
+        #[command(flatten)]
+        held: SilverArgs,
     },
     /// Writes the batches the blind tagger reads to `batches/batch-NN.txt`: only numbered
     /// sentences in the annotation guide's input format, with no tier, split or file.
@@ -619,20 +621,35 @@ struct Pool {
     /// to the reserved set and never replace any of it.
     #[arg(long, num_args = 1..)]
     exclude_repos: Vec<PathBuf>,
-    /// The silver batches of the unpacked image. `rank` and `queue` leave out every repository
-    /// a live batch's manifest names, and `draw` every text its sentences have; the counts are
-    /// printed, so a fetch that did not happen shows as zero. A batch the retired list names is
-    /// not left out.
+    #[command(flatten)]
+    held: SilverArgs,
+}
+
+/// Where the silver that a draw from the corpus leaves out is.
+#[derive(clap::Args)]
+struct SilverArgs {
+    /// The silver batches of the unpacked image. `rank`, `queue` and `sample` leave out every
+    /// repository a live batch's manifest names and every text its sentences have, and `draw`
+    /// every text; the counts are printed, so a fetch that did not happen shows as zero. A batch
+    /// the retired list names is not left out.
     #[arg(long, default_value = ".blobs/unpacked/silver")]
     silver: PathBuf,
     /// The batches retired from silver: batch, date and reason. It must be there when the image
     /// holds a silver batch.
     #[arg(long, default_value = silver::live::RETIRED_PATH)]
     silver_retired: PathBuf,
-    /// Silver being labelled: a directory of `part-NN` draws. `rank` and `queue` leave out the
-    /// repositories of their manifests, so a queue drawn while silver is made is clear of it.
+    /// Silver being labelled: a directory of `part-NN` draws. `rank`, `queue` and `sample` leave
+    /// out the repositories of their manifests and the texts of their samples, so gold drawn
+    /// while silver is made is clear of it.
     #[arg(long, default_value = ".label/silver")]
     silver_parts: PathBuf,
+}
+
+impl SilverArgs {
+    /// What silver holds back, read from these paths.
+    fn read(&self) -> Result<silver::live::Held, Error> {
+        silver::live::Held::read(&self.silver, &self.silver_retired, &self.silver_parts)
+    }
 }
 
 /// A seed written in decimal or as `0x` and hex.
@@ -699,6 +716,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             min_words,
             max_tokens,
             without_declared,
+            held,
         } => {
             if mix.len() != 4 {
                 return Err(Error::load(
@@ -729,6 +747,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 },
                 &settings,
                 without_declared,
+                held.read()?,
             )
         }
         Command::Draw {
@@ -1004,14 +1023,21 @@ fn sample_stage(
     cut: &RepoCut<'_>,
     settings: &Settings,
     without_declared: bool,
+    held: silver::live::Held,
 ) -> Result<(), Problems> {
     let RepoCut {
         files: exclude_repos,
         reserved,
     } = *cut;
+    let silver::live::Held {
+        repos: silver_repos,
+        texts: silver_texts,
+        line: silver_line,
+    } = held;
+    let holds_silver = silver_repos.len() > 0 || silver_texts.len() > 0;
     // A fixture that does not load is not named when repositories are being left out, since it
     // may belong to one of them.
-    let hide = reserved.is_some() || !exclude_repos.is_empty();
+    let hide = reserved.is_some() || !exclude_repos.is_empty() || silver_repos.len() > 0;
     let (fixtures, note) = corpus_files(corpus, tree, without_declared, hide)?;
     let files = files_of(&fixtures);
     let mut excluded = None;
@@ -1026,23 +1052,39 @@ fn sample_stage(
         None => files,
     };
     let mut repos_dropped = None;
-    let files = if exclude_repos.is_empty() && reserved.is_none() {
+    let files = if exclude_repos.is_empty() && reserved.is_none() && silver_repos.len() == 0 {
         files
     } else {
         let mut repos = Repos::read(exclude_repos)?;
         if let Some(gold_dir) = reserved {
             repos = repos.with(Repos::reserved(gold_dir, &[])?);
         }
+        let repos = repos.with(silver_repos);
         let (kept, dropped) = repos.drop(files);
         repos_dropped = Some((repos.len(), dropped));
         kept
     };
-    let mut outcome =
-        sample::draw(&files, &note, settings, sample::Mode::Gold).map_err(Error::from)?;
+    println!("{silver_line}");
+    let mut outcome = sample::draw(&files, &note, settings, sample::Mode::Gold(&silver_texts))
+        .map_err(Error::from)?;
+    println!(
+        "left out {} sentences with the text of a sentence silver holds",
+        outcome.skipped.silver
+    );
     if let Some((repos, dropped)) = repos_dropped {
         outcome.sample.manifest.header.push((
             "exclude repos".to_string(),
             format!("{repos} repositories, {dropped} fixtures"),
+        ));
+    }
+    if holds_silver {
+        outcome.sample.manifest.header.push((
+            "exclude silver".to_string(),
+            format!(
+                "{} texts, {} sentences",
+                silver_texts.len(),
+                outcome.skipped.silver
+            ),
         ));
     }
     if let Some((list, dropped)) = &excluded {
@@ -1135,7 +1177,13 @@ fn offer(
         left.listed, left.by_repo, left.repos
     );
     println!("{}", left.silver);
-    let offer = pick::rank(&left.files)?;
+    let mut offer = pick::rank(&left.files)?;
+    let before = offer.rows.len();
+    offer.rows.retain(|row| !left.silver_texts.has(&row.toks));
+    println!(
+        "left out {} sentences with the text of a sentence silver holds",
+        before - offer.rows.len()
+    );
     println!("{}", offer.dropped);
     Ok(offer)
 }
@@ -1151,11 +1199,13 @@ struct LeftOut<'a> {
     by_repo: usize,
     /// The line that says how much silver was left out.
     silver: String,
+    /// The texts silver holds, whose sentences are not offered.
+    silver_texts: Texts,
 }
 
 /// `files` without the fixtures of the list and the files of the reserved repositories, of those
 /// `--exclude-repos` adds, and of silver, live batches and parts being labelled: what is left, and
-/// how many of each were dropped.
+/// how many of each were dropped. Silver's texts come back with them, for the sentences.
 fn leave_out<'a>(
     from: &Pool,
     files: Vec<File<'a>>,
@@ -1164,21 +1214,18 @@ fn leave_out<'a>(
     let shown = from.exclude.display().to_string();
     let list = Exclusion::parse(&shown, &read_text(&from.exclude)?)?;
     let (files, listed) = list.drop(files);
-    let live = silver::live::Live::read(&from.silver, &from.silver_retired)?;
-    let held = live.repos()?;
-    let (in_parts, parts) = silver::live::parts_repos(&from.silver_parts)?;
-    let line = silver::live::left_out_line(&live, held.len(), parts, in_parts.len());
+    let held = from.held.read()?;
     let repos = Repos::reserved(&from.gold_dir, except)?
         .with(Repos::read(&from.exclude_repos)?)
-        .with(held)
-        .with(in_parts);
+        .with(held.repos);
     let (files, by_repo) = repos.drop(files);
     Ok(LeftOut {
         files,
         listed,
         repos: repos.len(),
         by_repo,
-        silver: line,
+        silver: held.line,
+        silver_texts: held.texts,
     })
 }
 
@@ -1289,11 +1336,11 @@ fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
             tests_corpus,
             pool,
         } => {
-            let live = silver::live::Live::read(&pool.silver, &pool.silver_retired)?;
+            let live = silver::live::Live::read(&pool.held.silver, &pool.held.silver_retired)?;
             if live.names.is_empty() {
                 println!(
                     "silver standing: no live silver batch in {} ({} retired); nothing to hold",
-                    pool.silver.display(),
+                    pool.held.silver.display(),
                     live.retired.len()
                 );
                 return Ok(());

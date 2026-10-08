@@ -4980,6 +4980,8 @@ class ConfinementTests(Base):
             ({"tools": ["Read", "Write", "Bash"]}, "init_tools_read_write"),
             ({"mcp_servers": [{"name": "x", "status": "connected"}]}, "init_no_mcp_server"),
             ({"final": "claude-opus-5-5\nwith a word more"}, "model_reported_matches"),
+            # A read outside its directory that the permission layer let through.
+            ({"also_read": [os.path.join(self.root, "calls.jsonl")], "read_anything": True}, "paths_inside_cwd"),
             ({"model": "claude-sonnet-5-5", "final": "claude-sonnet-5-5"}, "one_model_id"),
         ):
             self.fake(**setup)

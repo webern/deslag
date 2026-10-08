@@ -2,8 +2,8 @@
 //! with none, over the fixtures in `tests/fixtures/`.
 //!
 //! The golden files hold what the sweep prints, lock digest included, so they change whenever
-//! `Cargo.lock` does. Rerun with `DESLAG_FIX_GOLDEN=1` to rewrite them, and read the diff. `make fix-golden` does not
-//! reach this crate, which is outside the workspace.
+//! `Cargo.lock` does. Rerun with `DESLAG_FIX_GOLDEN=1`, or `make fix-golden`, to rewrite them, and read the
+//! diff.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

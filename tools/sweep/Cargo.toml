@@ -3,6 +3,18 @@
 # It needs a newer Rust than deslag (tree-sitter declares 1.90, deslag stays at 1.85), and it
 # compiles C (tree-sitter-c builds its parser from C source). Run it with
 # `cargo run --release --manifest-path tools/sweep/Cargo.toml -- <rust|c> <root>...`.
+#
+# It depends on deslag by path, so its `Cargo.lock` carries deslag's graph, and CI builds it with
+# `--locked`. Dependabot bumps the root `Cargo.lock` only, so this one falls behind it. To bring it
+# up to date, copy the root lock over it and build without `--locked`, which adds what only the
+# sweep needs and drops what it does not:
+#
+#     cp Cargo.lock tools/sweep/Cargo.lock
+#     cargo build --manifest-path tools/sweep/Cargo.toml
+#
+# Everything then sits at its root version but `unicode-ident`, which the pin below holds back. A
+# new requirement on `unicode-ident` in deslag's `Cargo.toml` that `=1.0.24` does not satisfy fails
+# this build: lift the pin first, or lower the requirement.
 [package]
 name = "deslag-sweep"
 version = "0.0.0"
@@ -13,6 +25,7 @@ license = "MIT"
 publish = false
 
 [dependencies]
+deslag = { path = "../.." }
 ra-ap-rustc_lexer = "0.176.0"
 sha2 = "0.11.0"
 tree-sitter = "0.27.0"

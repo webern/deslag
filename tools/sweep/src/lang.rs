@@ -3,7 +3,7 @@
 use crate::Error;
 use crate::c::COracle;
 use crate::lexer::Lexer;
-use crate::rust::RustOracle;
+use crate::rust::{DeslagRust, RustOracle};
 
 /// A language the sweep can check.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -57,8 +57,11 @@ impl Lang {
     }
 
     /// deslag's scanner for this language, if it has one yet.
-    // TODO: return the adapter of each language's scanner as its change lands.
+    // TODO: return the adapter of C's scanner when it lands.
     pub fn scanner(self) -> Option<Box<dyn Lexer>> {
-        None
+        match self {
+            Lang::Rust => Some(Box::new(DeslagRust)),
+            Lang::C => None,
+        }
     }
 }

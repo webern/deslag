@@ -1,5 +1,5 @@
 corpus = "sha256:922148d1308932a1fb1e422e3c33aa0fd43d798dbb2b17fd5faa4e6697f853e7"
-lock = "sha256:3c4fca838aa51116c87a5c784f4fee2550d8a0b1f270b9ca4294e57bba325f8c"
+lock = "sha256:be96eafbc8706c1cdab1bdafd21b05ceffb6591683f26f8f906f679285da7531"
 lang = "c"
 oracles = ["tree-sitter 0.27.0", "tree-sitter-c 0.24.2"]
 scanner = false

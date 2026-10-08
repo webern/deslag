@@ -1,5 +1,7 @@
-//! The Rust oracle: `ra-ap-rustc_lexer`, the compiler's own lexer.
+//! The Rust oracle, `ra-ap-rustc_lexer`, the compiler's own lexer, and the adapter of deslag's
+//! scanner.
 
+use deslag::document::rust::{self, LexemeKind};
 use ra_ap_rustc_lexer::{FrontmatterAllowed, LiteralKind, TokenKind, strip_shebang, tokenize};
 
 use crate::lexer::{Kind, Lexed, Lexer, Span, bom_len, trim_carriage_return};
@@ -64,6 +66,35 @@ impl Lexer for RustOracle {
             }
             break;
         }
+        Lexed {
+            spans,
+            blind: Vec::new(),
+            clean: true,
+        }
+    }
+}
+
+/// Reports deslag's Rust scanner, [`rust::lex`], to the contract of [`Lexer`]. It does not
+/// normalise anything: its ranges are compared as they are, and the scanner is never blind and
+/// always clean.
+#[derive(Debug, Default)]
+pub struct DeslagRust;
+
+impl Lexer for DeslagRust {
+    fn lex(&mut self, src: &str) -> Lexed {
+        let spans = rust::lex(src)
+            .into_iter()
+            .map(|lexeme| Span {
+                range: lexeme.range,
+                kind: match lexeme.kind {
+                    LexemeKind::LineComment { .. } | LexemeKind::BlockComment { .. } => {
+                        Kind::Comment
+                    }
+                    LexemeKind::Str { .. } => Kind::Str,
+                    LexemeKind::Char { .. } => Kind::Char,
+                },
+            })
+            .collect();
         Lexed {
             spans,
             blind: Vec::new(),
@@ -238,6 +269,30 @@ mod tests {
     #[test]
     fn the_result_is_always_clean_and_never_blind() {
         let lexed = RustOracle.lex("\"unterminated /*");
+        assert!(lexed.clean);
+        assert!(lexed.blind.is_empty());
+    }
+
+    #[test]
+    fn the_adapter_reports_deslags_scanner_unchanged() {
+        // Comments of both forms, a string and a char, and a lifetime, which is none of them; a `\r` is
+        // left out of the line comment.
+        let src = "// a\r\n/* b */ \"c\" 'd' 'e";
+        let lexed = DeslagRust.lex(src);
+        let found: Vec<_> = lexed
+            .spans
+            .iter()
+            .map(|span| (span.kind, &src[span.range.clone()]))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (Kind::Comment, "// a"),
+                (Kind::Comment, "/* b */"),
+                (Kind::Str, "\"c\""),
+                (Kind::Char, "'d'"),
+            ]
+        );
         assert!(lexed.clean);
         assert!(lexed.blind.is_empty());
     }

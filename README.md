@@ -83,8 +83,9 @@ each one comes from.
 `deslag update` is the one command that writes the config. It renames or deletes a setting that a
 release renamed or removed, and keeps the file's comments and layout. It sets `deslag_version` only
 when `deslag instructions update` has nothing new to tell; `--to <version>` sets it regardless, and
-`--dry-run` writes nothing. A YAML or JSON config gets its stamp, but a renamed or removed setting
-in one is refused, with the edit printed for you to make.
+`--dry-run` writes nothing. In a YAML or JSON config it deletes a removed setting too, and leaves an
+emptied table as `{}`; a renamed setting there, a YAML file with an alias or a merge key, and a key
+it cannot cut safely are refused, with the edit printed for you to make.
 
 ## Build
 

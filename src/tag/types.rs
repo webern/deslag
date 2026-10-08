@@ -244,8 +244,8 @@ impl Features {
     }
 }
 
-/// How far a tagger stands behind its best guess. Deliberately not `Ord`: [`Confidence::ALL`] runs
-/// most confident first, and [`Confidence::at_least`] compares.
+/// How far a tagger stands behind its best guess. It is not `Ord`: [`Confidence::ALL`] runs most
+/// confident first, and [`Confidence::at_least`] compares.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum Confidence {

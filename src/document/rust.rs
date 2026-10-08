@@ -830,7 +830,7 @@ mod tests {
             ),
             // The compiler takes `'ab'` as a character with no suffix, so a C string follows.
             ("'ab'c\"x\"", &[("char", "'ab'"), ("str", "c\"x\"")]),
-            // A number's suffix has to start like an identifier, so `·` ends it.
+            // A number's suffix has to start like an identifier, so U+00B7 ends it.
             (
                 "1·r\"x\" 1e٣r\"x\" 0xA٣r\"x\"",
                 &[("str", "r\"x\""), ("str", "r\"x\""), ("str", "r\"x\"")],

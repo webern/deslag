@@ -4734,16 +4734,22 @@ class ConfinementTests(Base):
         os.environ["CLAUDE_CODE_MESSAGING_SOCKET"] = "/tmp/socket"
         os.environ["ANTHROPIC_BASE_URL"] = "https://example.org"
         self.addCleanup(lambda: [os.environ.pop(name, None) for name in ("CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "ANTHROPIC_BASE_URL")])
-        self.assertEqual(self.probe(), 0, self.out)
+        with unittest.mock.patch.object(confine.subprocess, "run", wraps=subprocess.run) as ran:
+            self.assertEqual(self.probe(), 0, self.out)
+        # What the kit passes is held to the allow-list. What the process sees is not: the operating
+        # system adds names of its own to every process (macOS adds `__CF_USER_TEXT_ENCODING`).
+        passed, = [call.kwargs["env"] for call in ran.call_args_list if call.args[0][1:2] == ["-p"]]
+        for name in passed:
+            self.assertTrue(name in confine.KEPT or name.startswith(confine.KEPT_PREFIXES) or name == "DISABLE_AUTOUPDATER", name)
         env = self.calls()[0]["env"]
+        self.assertEqual({name: env.get(name) for name in passed}, passed, "the process sees what was passed")
         self.assertEqual(env["DISABLE_AUTOUPDATER"], "1")
         self.assertEqual(env["HOME"], self.home)
         self.assertEqual(env["ANTHROPIC_BASE_URL"], "https://example.org")
         for name in ("OPENROUTER_API_KEY", "CLAUDE_EFFORT", "CLAUDE_CODE_MESSAGING_SOCKET", "CLAUDECODE",
                      guard.ROOT_VARIABLE, ledger.STATE_VARIABLE):
+            self.assertNotIn(name, passed)
             self.assertNotIn(name, env)
-        for name in env:
-            self.assertTrue(name in confine.KEPT or name.startswith(confine.KEPT_PREFIXES) or name == "DISABLE_AUTOUPDATER", name)
         self.assertEqual(self.calls()[0]["stdin"], "")
 
     def test_the_environment_keeps_the_login_and_drops_the_rest(self):

@@ -413,11 +413,14 @@ Makefile), so the run can change them.
 
 - `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 9 --mix ... --per-file 3
   --per-repo 12`. Reads the big tier and calls no model.
-- `make generate-silver-part PART=NN`: the voters of `voters.json` tag `part-NN` at once, each in a process of
-  its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so `LABEL_FLAGS="--limit 1"` is a smoke run. A
+- `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
+  at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so `LABEL_FLAGS="--limit 1"` is a smoke run. A
   voter that fails is named, and spaCy does not run. The Opus round is steps 3 and 4 above, driven by hand.
 - `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
-  `.label/silver`, into `.label/silver/batch/NAME`. `SILVER_BUILD_FLAGS` reach it.
+  `.label/silver`, into `SILVER_BATCH_DIR/NAME` (`.label/silver/batch/NAME`; the draft goes in
+  `SILVER_BATCH_DIR=.label/silver/draft`, since a build never writes over a batch). The labels are published
+  under `SILVER_ANNOTATIONS_LICENSE`, MIT unless set: the owner's choice, which the datasheet states.
+  `SILVER_BUILD_FLAGS` reach it.
 - `make test-silver`, which `make test-blobs` runs: `silver check` and `silver standing` over the unpacked
   image. Both pass when it has no `silver/`.
 - `make test-confinement`: the probe above.
@@ -465,8 +468,8 @@ The batch, `silver/NAME/`:
 
 The audit. The batch holds its own: the owner's answers are part of what it is checked against.
 
-1. `silver build` with no `--audit`: a draft in `.label/silver/batch/NAME`.
-2. `deslag-gold audit --blind --from .label/silver/batch/NAME/silver.conllu --out .label/silver/audit` draws 50
+1. `silver build` with no `--audit`: a draft in `.label/silver/draft/NAME`.
+2. `deslag-gold audit --blind --from .label/silver/draft/NAME/silver.conllu --out .label/silver/audit` draws 50
    sentences at random and writes `queue.conllu` with no UPOS, FEATS, `Prov=` or `Runs=`, and `labels.conllu`
    with silver's labels of them. The directory is never under `tests/gold/`, whose queues reserve their
    repositories; `audit` refuses a path there.
@@ -476,7 +479,7 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
    or has a sentence neither reviewed nor rejected. It prints silver's accuracy on the part of speech and on
    the whole code with sentence-bootstrap intervals, by agreed and adjudicated words and by context, the
    words left at deslag's pre-fill, the rejected sentences, and met or not against the bar.
-5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA`, with `--accept-below-bar "HIS WORDS"`
+5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`, with `--accept-below-bar "HIS WORDS"`
    only if the owner accepts a score under the bar: the rejected sentences leave `silver.conllu` and are counted
    in `record/drops.tsv`, and the datasheet leads with the score.
 

@@ -36,10 +36,12 @@ LABEL_INTO ?= merge
 LABEL_REPORT_FLAGS ?=
 
 # The silver set's run (scripts/label/README.md, Silver). SILVER_DIR holds the draw's parts, part-01 to
-# part-NN, and the batch the assembler writes under batch/; SILVER_PREFIX, SILVER_PARTS, SILVER_MIX and
-# SILVER_DRAW_FLAGS are the draw (generate-silver-draw); SILVER_MERGE is the merge directory inside each
-# part that `finish --trains yes` wrote; SILVER_NAME, as YYYY-MM-DD-slug, names the batch, and
-# SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
+# part-NN; SILVER_PREFIX, SILVER_PARTS, SILVER_MIX and SILVER_DRAW_FLAGS are the draw
+# (generate-silver-draw); SILVER_MERGE is the merge directory inside each part that `finish --trains yes`
+# wrote; SILVER_NAME, as YYYY-MM-DD-slug, names the batch, which goes in SILVER_BATCH_DIR/SILVER_NAME
+# (SILVER_BATCH_DIR=$(SILVER_DIR)/draft for the draft the audit is drawn from, since a batch is never
+# written over another); SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, MIT by
+# the owner's choice; SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
 SILVER_DIR ?= .label/silver
 SILVER_PREFIX ?= sa
 SILVER_PARTS ?= 9
@@ -47,6 +49,8 @@ SILVER_MIX ?= 1050,650,350,250,850,550,280,220,40,30,15,15
 SILVER_DRAW_FLAGS ?= --per-file 3 --per-repo 12
 SILVER_MERGE ?= merge
 SILVER_NAME ?=
+SILVER_BATCH_DIR ?= $(SILVER_DIR)/batch
+SILVER_ANNOTATIONS_LICENSE ?= MIT
 SILVER_BUILD_FLAGS ?=
 # The part generate-silver-part labels, as two digits.
 PART ?=
@@ -213,8 +217,9 @@ help:
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
 	@echo "generate-silver-assemble"
 	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, into"
-	@echo "                 $(SILVER_DIR)/batch/SILVER_NAME, and check it; SILVER_BUILD_FLAGS reach silver build"
-	@echo "                 (--audit DIR --archive-sha256 SHA for the final build); calls no model"
+	@echo "                 SILVER_BATCH_DIR/SILVER_NAME ($(SILVER_BATCH_DIR)), and check it; the labels' licence"
+	@echo "                 is SILVER_ANNOTATIONS_LICENSE ($(SILVER_ANNOTATIONS_LICENSE)); SILVER_BUILD_FLAGS reach"
+	@echo "                 silver build (--audit DIR --archive-sha256 SHA for the final build); calls no model"
 	@echo "generate-silver-draw"
 	@echo "                 draw the silver set's sentences once, dealt into SILVER_PARTS parts under $(SILVER_DIR);"
 	@echo "                 reads the big tier; calls no model"
@@ -261,22 +266,6 @@ test-blobs: preflight fetch-blobs test-silver
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
 
-# The silver batches of the unpacked image, which need no checkout but the voters' snapshot each carries:
-# `silver check` takes each batch, the retired ones too, against what it recorded, so a batch that passed
-# once passes forever; `silver standing` holds the live ones to the two rules that never lapse, no
-# repository that is reserved now and no fixture that is excluded now, and says how to clear a failure.
-# Both pass when the image has no silver/. test-blobs runs it, after the fetch.
-test-silver: preflight fetch-blobs
-	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver check
-	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver standing
-
-# The probe of the confinement the Opus rounds rely on, with the real claude and the invocation handoff-run
-# uses: decoys outside its directory, a write outside it, the user's CLAUDE.md, and a control marker in its
-# own request. It stamps .label/confinement.json, which handoff-run reads, and fails unless every assertion
-# holds. Needs claude on PATH and its login, so not in test or ci; run it before the first Opus round.
-test-confinement: preflight
-	python3 $(LABEL)/label.py probe-confinement
-
 # The Brill tagger's unit tests, then the exam's full report on the dev and owner sets for it and for its
 # initial tagger, and `compare` against deslag's tagger, the initial tagger and, if test-percept
 # ran, the perceptron, from the import files generate-brill wrote. The runs are saved beside them.
@@ -294,6 +283,13 @@ test-brill-deslag: generate-brill-deslag
 
 test-brill-percept: generate-brill-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-brill-percept
+
+# The probe of the confinement the Opus rounds rely on, with the real claude and the invocation handoff-run
+# uses: decoys outside its directory, a write outside it, the user's CLAUDE.md, and a control marker in its
+# own request. It stamps .label/confinement.json, which handoff-run reads, and fails unless every assertion
+# holds. Needs claude on PATH and its login, so not in test or ci; run it before the first Opus round.
+test-confinement: preflight
+	python3 $(LABEL)/label.py probe-confinement
 
 # The treebank's dev set against the counts tests/gold/gates.toml pins for deslag's tagger. Any
 # drop fails. Not part of test or ci: it needs the network to fetch the treebank.
@@ -350,6 +346,15 @@ test-python: preflight
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
+
+# The silver batches of the unpacked image, which need no checkout but the voters' snapshot each carries:
+# `silver check` takes each batch, the retired ones too, against what it recorded, so a batch that passed
+# once passes forever; `silver standing` holds the live ones to the two rules that never lapse, no
+# repository that is reserved now and no fixture that is excluded now, and says how to clear a failure.
+# Both pass when the image has no silver/. test-blobs runs it, after the fetch.
+test-silver: preflight fetch-blobs
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver check
+	cargo run $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold -- silver standing
 
 # The exam's full report for spaCy on the treebank's dev set: the import file from generate-spacy,
 # scored on deslag's own tokens. The saved run goes beside it, for `deslag-exam compare`. Not part
@@ -635,6 +640,20 @@ generate-label-spacy: build-label fetch-spacy
 generate-percept: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate
 
+# Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug) in
+# $(SILVER_BATCH_DIR)/$(SILVER_NAME), the merge of each part being $(SILVER_MERGE). Sentences whose repository
+# became reserved after the draw, or whose text is a gold sentence's, are dropped and counted. The batch is
+# written only when `silver check` passes on it, and never over another. The first build is the draft the
+# audit is drawn from, SILVER_BATCH_DIR=$(SILVER_DIR)/draft; the final one adds
+# SILVER_BUILD_FLAGS="--audit $(SILVER_DIR)/audit --archive-sha256 SHA", and --noise NAME=FILE for each
+# calibration report. Calls no model.
+generate-silver-assemble: build-label fetch-blobs
+	@[ -n "$(SILVER_NAME)" ] || { echo "SILVER_NAME=YYYY-MM-DD-slug names the batch" >&2; exit 2; }
+	@[ -n "$(SILVER_ANNOTATIONS_LICENSE)" ] || { echo "SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, which the owner chooses; it is MIT unless set" >&2; exit 2; }
+	@[ -n "$(SILVER_PART_DIRS)" ] || { echo "no draw under $(SILVER_DIR); run generate-silver-draw first" >&2; exit 1; }
+	$(GOLD_BIN) silver build --name $(SILVER_NAME) $(foreach dir,$(SILVER_PART_DIRS),--part $(dir):$(SILVER_MERGE)) \
+	    --annotations-license "$(SILVER_ANNOTATIONS_LICENSE)" --out $(SILVER_BATCH_DIR)/$(SILVER_NAME) $(SILVER_BUILD_FLAGS)
+
 # The silver set, drawn once and dealt into SILVER_PARTS parts, $(SILVER_DIR)/part-01 and on, each a draw of its
 # own with the same mix to within a sentence. The sentences of an earlier draw are left out with
 # SILVER_DRAW_FLAGS="--per-file 3 --per-repo 12 --exclude-draws FILE". Reads the big tier and calls no model.
@@ -642,38 +661,15 @@ generate-percept: preflight fetch-ewt
 generate-silver-draw: build-label fetch-blobs
 	$(GOLD_BIN) draw --dir $(SILVER_DIR) --prefix $(SILVER_PREFIX) --parts $(SILVER_PARTS) --mix $(SILVER_MIX) $(SILVER_DRAW_FLAGS)
 
-# One part of the silver draw, PART=NN: the voters of $(LABEL)/voters.json tag it at once, each in a process of
-# its own (they lock the sample directory and the ledger, which a test shows), then spaCy tags it and is
-# recorded as a run. Needs OPENROUTER_API_KEY; MAX_USD caps the ledger over every checkout; LABEL_FLAGS reach
-# label.py tag, so LABEL_FLAGS="--limit 1" is a smoke run and --dry-run sends nothing. A voter that fails is
-# named, and spaCy does not run. Then the person running the labelling drives `label.py status --dir $(SILVER_DIR)/part-NN`, the
-# judge step and handoff-run for Opus, and `deslag-gold silver build --check-part`.
+# One part of the silver draw, PART=NN, labelled by $(LABEL)/silver-part.sh: the voters of
+# $(LABEL)/voters.json tag it at once, each in a process of its own (they lock the sample directory and the
+# ledger, which a test shows), then spaCy tags it and is recorded as a run. Needs OPENROUTER_API_KEY; MAX_USD
+# caps the ledger over every checkout; LABEL_FLAGS reach label.py tag, so LABEL_FLAGS="--limit 1" is a smoke
+# run and --dry-run sends nothing. A voter that fails is named, and spaCy does not run. Then the person
+# running the labelling drives `label.py status --dir $(SILVER_DIR)/part-NN`, the judge step and handoff-run
+# for Opus, and `deslag-gold silver build --check-part`.
 generate-silver-part: build-label fetch-spacy
-	@case "$(PART)" in [0-9][0-9]) ;; *) echo "PART=NN names the part, as two digits, like PART=01" >&2; exit 2;; esac
-	@[ -f "$(SILVER_DIR)/part-$(PART)/sample.conllu" ] || { echo "no draw at $(SILVER_DIR)/part-$(PART); run generate-silver-draw first" >&2; exit 1; }
-	@voters=$$(python3 -c 'import json, sys; print(" ".join(json.load(open(sys.argv[1]))["voters"]))' $(LABEL)/voters.json) || exit 1; \
-	pids=""; names=""; \
-	for voter in $$voters; do \
-	    python3 $(LABEL)/label.py tag --dir $(SILVER_DIR)/part-$(PART) --voter $$voter --max-usd $(MAX_USD) \
-	        --gold-bin $(GOLD_BIN) $(LABEL_FLAGS) & \
-	    pids="$$pids $$!"; names="$$names $$voter"; \
-	done; \
-	failed=""; set -- $$names; \
-	for pid in $$pids; do wait $$pid || failed="$$failed $$1"; shift; done; \
-	[ -z "$$failed" ] || { echo "the voters that failed:$$failed" >&2; exit 1; }
-	$(LABEL)/spacy.sh $(SILVER_DIR)/part-$(PART)
-
-# Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug) in
-# $(SILVER_DIR)/batch/$(SILVER_NAME), the merge of each part being $(SILVER_MERGE). Sentences whose repository became
-# reserved after the draw, or whose text is a gold sentence's, are dropped and counted. The batch is written
-# only when `silver check` passes on it. The first build has no audit; the final one adds
-# SILVER_BUILD_FLAGS="--audit $(SILVER_DIR)/audit --archive-sha256 SHA", and --noise NAME=FILE for each calibration
-# report. Calls no model.
-generate-silver-assemble: build-label fetch-blobs
-	@[ -n "$(SILVER_NAME)" ] || { echo "SILVER_NAME=YYYY-MM-DD-slug names the batch" >&2; exit 2; }
-	@[ -n "$(SILVER_PART_DIRS)" ] || { echo "no draw under $(SILVER_DIR); run generate-silver-draw first" >&2; exit 1; }
-	$(GOLD_BIN) silver build --name $(SILVER_NAME) $(foreach dir,$(SILVER_PART_DIRS),--part $(dir):$(SILVER_MERGE)) \
-	    --out $(SILVER_DIR)/batch/$(SILVER_NAME) $(SILVER_BUILD_FLAGS)
+	$(LABEL)/silver-part.sh "$(SILVER_DIR)" "$(PART)" "$(MAX_USD)" "$(GOLD_BIN)" $(LABEL_FLAGS)
 
 # The exam's file-import path, run on the treebank's dev set: deslag's own tokens go to spaCy, and
 # its tags come back as .spacy/ewt-dev.import.conllu, for `deslag-exam score --import`. Nothing in

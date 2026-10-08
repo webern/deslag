@@ -66,6 +66,7 @@ mod tests {
         assert_eq!(lock.version("unicode-ident"), Some("1.0.24"));
         assert_eq!(lock.version("tree-sitter"), Some("0.27.0"));
         assert_eq!(lock.version("tree-sitter-c"), Some("0.24.2"));
+        assert_eq!(lock.version("tree-sitter-cpp"), Some("0.23.4"));
     }
 
     #[test]

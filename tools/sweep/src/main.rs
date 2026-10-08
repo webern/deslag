@@ -1,4 +1,4 @@
-//! `deslag-sweep <rust|c> <root>...`: see the library for what it checks.
+//! `deslag-sweep <rust|c|cpp> <root>...`: see the library for what it checks.
 //!
 //! Exit 0 when the scanner and the oracle agree, or there is no scanner yet. Exit 1 when they
 //! differ. Exit 2 when it could not run.

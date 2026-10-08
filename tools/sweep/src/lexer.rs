@@ -10,9 +10,10 @@
 //!
 //! - Offsets are into the file as read, byte order mark included.
 //! - A line comment ends before its line terminator, so a trailing `\r` is not part of it. A `\r`
-//!   that ends the file, as in `// tail\r`, is trimmed the same way.
-//! - A block comment runs from the outer `/*` to the outer `*/`, nesting included, or to the end of
-//!   the file if it is unterminated.
+//!   that ends the file, as in `// tail\r`, is trimmed the same way. A lone `\r` is a line end to
+//!   the C and C++ scanner and not to the tree-sitter adapters.
+//! - A block comment runs from the outer `/*` to the outer `*/`, nesting included in Rust, or to
+//!   the end of the file if it is unterminated. A block comment does not nest in C and C++.
 //! - A string or character literal includes its prefix and quotes and excludes a suffix.
 //! - Doc comments are comments. Whether a comment is a doc comment is not compared.
 

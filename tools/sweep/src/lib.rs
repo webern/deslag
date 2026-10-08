@@ -8,13 +8,13 @@
 //! file's text and counts. [`report`] owns what is printed. A further check can sit beside
 //! [`check::LexCheck`] without touching the other two.
 //!
-//! The crate is outside deslag's workspace: it needs a newer Rust, a C compiler for the C oracle and
-//! its own lockfile. See its `Cargo.toml`.
+//! The crate is outside deslag's workspace: it needs a newer Rust, a C compiler for the C and C++
+//! oracles and its own lockfile. See its `Cargo.toml`.
 
-pub mod c;
 pub mod check;
 pub mod compare;
 pub mod corpus;
+pub mod cpp;
 mod digest;
 mod error;
 pub mod lang;
@@ -22,6 +22,7 @@ pub mod lexer;
 pub mod lock;
 pub mod report;
 pub mod rust;
+pub mod ts;
 
 // deslag's Rust scanner, compiled from its source file so that this crate shares no dependencies
 // with deslag. It uses `std` and `unicode-ident`, which this crate pins. Not a doc comment: the
@@ -31,6 +32,12 @@ pub mod rust;
 #[allow(dead_code)]
 #[path = "../../../src/document/rust.rs"]
 pub mod deslag_rust;
+
+// deslag's C and C++ scanner, compiled the same way. It uses `std` alone.
+// TODO: remove dead_code guard if the sweep ever uses every item the scanner exports.
+#[allow(dead_code)]
+#[path = "../../../src/document/cpp.rs"]
+pub mod deslag_cpp;
 
 use std::path::PathBuf;
 
@@ -78,7 +85,7 @@ pub struct Args {
 }
 
 /// The usage message.
-pub const USAGE: &str = "usage: deslag-sweep <rust|c> <root>...";
+pub const USAGE: &str = "usage: deslag-sweep <rust|c|cpp> <root>...";
 
 impl Args {
     /// Parses the arguments after the program name.

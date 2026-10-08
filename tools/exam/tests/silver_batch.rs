@@ -1241,14 +1241,17 @@ fn a_live_batch_with_no_retired_list_is_an_error_and_not_a_pass() {
 const FIXTURE: &str = "tests/silver-fixture/2026-01-01-fixture";
 
 /// Writes the committed fixture batch again: `DESLAG_REGENERATE_SILVER_FIXTURE=1 cargo test -p
-/// deslag-exam --test silver_batch regenerate_the_committed_fixture_batch`. The unit test
-/// `the_committed_batch_still_passes_the_frozen_rules` in `silver/check.rs` reads it. Do this only
-/// when a new check version is added, so that version 1 is still held to the batch it passed once.
+/// deslag-exam --test silver_batch regenerate_the_committed_fixture_batch -- --ignored`. The unit
+/// test `the_committed_batch_still_passes_the_frozen_rules` in `silver/check.rs` reads it. Do this
+/// only when a new check version is added, so that version 1 is still held to the batch it passed
+/// once.
 #[test]
+#[ignore = "writes the committed fixture; run it by name with --ignored"]
 fn regenerate_the_committed_fixture_batch() {
-    if std::env::var_os("DESLAG_REGENERATE_SILVER_FIXTURE").is_none() {
-        return;
-    }
+    assert!(
+        std::env::var_os("DESLAG_REGENERATE_SILVER_FIXTURE").is_some(),
+        "set DESLAG_REGENERATE_SILVER_FIXTURE=1 to write the committed fixture"
+    );
     let (made, draft) = built();
     let audit = audit_of(&made, &draft, &["s0004"], false);
     let noise = made.root.join("dev.tsv");

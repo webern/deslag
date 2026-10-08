@@ -494,7 +494,7 @@ rules are frozen once a batch is live: a changed rule is a new version, with the
 batch that passes once passes forever.
 `tools/exam/tests/silver-fixture/` is a small batch, committed, that a unit test holds to them; regenerate it
 with `DESLAG_REGENERATE_SILVER_FIXTURE=1 cargo test -p deslag-exam --test silver_batch
-regenerate_the_committed_fixture_batch` only when a new version comes.
+regenerate_the_committed_fixture_batch -- --ignored` only when a new version comes.
 
 `deslag-gold silver standing` holds each live batch to what changes outside it: no repository it names is
 reserved by today's `tests/gold` or `tests/corpus/`, no sentence of it is a gold sentence's text, no fixture

@@ -2719,17 +2719,24 @@ def batches_done(directory, name, run):
 
 
 def preflight(directory, into, binary):
-    """The verdict of `deslag-gold silver build --check-part <directory>:<into>` on the part, in a few
-    words and a count, never the problems themselves, which may quote a sentence."""
+    """The verdict of `deslag-gold silver build --check-part <directory>:<into>` on the part, run from
+    the checkout's root, in a few words and a count, never the problems themselves, which may quote a
+    sentence. `not run` when there is no merge yet, or no deslag-gold to run."""
     if not os.path.isfile(os.path.join(directory, into, "voters.tsv")):
         return f"not run (no merge in {into} yet)"
     if not binary:
         return "not run (deslag-gold is not built; `make build-label` builds it, or give --gold-bin)"
     env = {key: value for key, value in os.environ.items() if key != openrouter.KEY_VARIABLE}
-    done = subprocess.run(
-        [binary, "silver", "build", "--check-part", f"{directory}:{into}"],
-        capture_output=True, text=True, check=False, env=env,
-    )
+    if os.sep in binary:
+        binary = os.path.abspath(binary)
+    try:
+        # From the checkout's root, where the paths --check-part reads by default are.
+        done = subprocess.run(
+            [binary, "silver", "build", "--check-part", f"{directory}:{into}"],
+            capture_output=True, text=True, check=False, env=env, cwd=REPO,
+        )
+    except OSError as error:
+        return f"not run ({binary} could not be run: {error.strerror or type(error).__name__})"
     if done.returncode == 0:
         return "ok"
     problems = len([line for line in done.stderr.splitlines() if line.strip()])

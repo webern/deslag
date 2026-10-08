@@ -2725,6 +2725,7 @@ class SettledTests(Base):
 FAKE_GOLD_BIN = """#!/bin/sh
 # Stands in for deslag-gold's preflight: records its arguments, then passes or refuses as told.
 printf '%s\\n' "$@" > "$0.args"
+pwd > "$0.cwd"
 if [ -f "$0.refuse" ]; then
     echo "first problem" >&2
     echo "second problem" >&2
@@ -2812,6 +2813,7 @@ class StatusTests(Base):
         self.assertEqual(said[-1], "preflight (merge): ok")
         self.assertEqual(label.read(binary + ".args").splitlines(),
                          ["silver", "build", "--check-part", f"{self.dir}:merge"])
+        self.assertEqual(label.read(binary + ".cwd").strip(), os.path.realpath(label.REPO), "run from the checkout's root")
         label.write(binary + ".refuse", "")
         said = self.status("--gold-bin", binary)
         self.assertEqual(said[-1], (
@@ -2821,6 +2823,9 @@ class StatusTests(Base):
         self.assertNotIn("problem", said[-1], "the problems themselves are not printed")
         with unittest.mock.patch.object(label, "find_binary", return_value=None):
             self.assertIn("not run (deslag-gold is not built", self.status()[-1])
+        missing = os.path.join(self.root, "no-such-gold")
+        self.assertEqual(self.status("--gold-bin", missing)[-1],
+                         f"preflight (merge): not run ({missing} could not be run: No such file or directory)")
 
     def test_status_writes_nothing_in_the_sample_directory(self):
         self.runner(FakeTransport(answer_all)).tag("one")

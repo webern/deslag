@@ -18,9 +18,8 @@ pub(super) const EXTENSIONS: &[&str] = &["rs"];
 pub const DEFAULT_GLOBS: &[&str] = &["*.rs"];
 
 /// The kinds of comment `[rust]` can read.
-///
-/// The variants carry no doc comments of their own, which would turn the schema's list of values
-/// into a list of branches. The `surfaces` key says what each is.
+// The variants carry no doc comments of their own, which would turn the schema's list of values
+// into a list of branches. The `surfaces` key says what each is.
 #[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 enum RustSurface {

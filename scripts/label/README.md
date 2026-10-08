@@ -471,7 +471,8 @@ output, `stream.jsonl`. Run it again whenever Claude Code changes: handoff-run r
 version.
 
 Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids
-only, never a tag or a word, and writes nothing in `D`:
+only, never a tag or a word, and writes nothing in `D`. Without `--into` it reads `merge-spacy` in a part of a
+draw (the merge the assembler reads) and `merge` in any other sample:
 
 ```
 sample: 500 sentences, /path/to/.label/silver/part-01

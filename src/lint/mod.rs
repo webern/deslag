@@ -92,8 +92,6 @@ impl Lint {
     }
 
     /// The least of a document that it runs on.
-    // TODO: remove the dead_code guard when the load check of the `[rust]` section calls it.
-    #[allow(dead_code)]
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
@@ -482,13 +480,14 @@ pub(crate) fn selected<'c>(
     root: &Path,
     config: &'c Config,
 ) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
-    Ok(glob::walk(root)?
+    glob::walk(root)?
         .into_iter()
-        .filter_map(|file| {
-            let section = config.section_for(&file.relative)?;
-            Some((file, section))
+        .filter_map(|file| match config.sole_section_for(&file.relative) {
+            Ok(Some(section)) => Some(Ok((file, section))),
+            Ok(None) => None,
+            Err(error) => Some(Err(error)),
         })
-        .collect())
+        .collect()
 }
 
 /// The bytes of `file`.
@@ -502,8 +501,8 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// Runs every lint over one file, in a run with no base: `relative` is its path from the repo
 /// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
-/// run here, so a file one selects is an error. A path no section selects is read as `[md]` reads
-/// a file.
+/// run here, so a file one selects is an error. A path no section selects is read by the section
+/// for its extension, as [`Config::section_to_read`] says, and else as `[md]` reads a file.
 pub fn check_file(
     config: &Config,
     relative: &str,
@@ -511,7 +510,7 @@ pub fn check_file(
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
     let text = String::from_utf8_lossy(contents);
-    let section = config.section_for(relative).unwrap_or_else(|| config.md());
+    let section = config.section_to_read(relative)?;
     Ok(check_text(config, section, relative, contents, &text, dir, None)?.1)
 }
 

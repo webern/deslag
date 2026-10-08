@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::document::{Token, TokenKind};
+use crate::lint::Lint;
 
 /// Laying a more specific set of settings over a less specific one.
 pub trait Merge {
@@ -64,6 +65,20 @@ pub struct Lints {
 }
 
 impl Lints {
+    /// Whether `lint` has a table here, which is what turns it on.
+    pub(crate) fn is_on(&self, lint: Lint) -> bool {
+        match lint {
+            Lint::MaxSizeBytes => self.max_size_bytes.is_some(),
+            Lint::MaxEmphasis => self.max_emphasis.is_some(),
+            Lint::RepoLayout => self.repo_layout.is_some(),
+            Lint::BannedChars => self.banned_chars.is_some(),
+            Lint::BannedPhrases => self.banned_phrases.is_some(),
+            Lint::Density => self.density.is_some(),
+            Lint::ListGrowth => self.list_growth.is_some(),
+            Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
+        }
+    }
+
     /// Why these settings are unusable, or `None` when they are fine.
     pub fn invalid(&self) -> Option<String> {
         self.max_emphasis

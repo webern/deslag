@@ -182,11 +182,13 @@ fn chosen<'c>(
         let file = glob::find(&canonical, path).map_err(problem)?;
         let Ok(index) = selected.binary_search_by(|(found, _)| found.relative.cmp(&file.relative))
         else {
-            return Err(problem(if config.section_for(&file.relative).is_some() {
-                "it is ignored, so deslag check never reads it".to_string()
-            } else {
-                "[md] does not select it".to_string()
-            }));
+            return Err(problem(
+                if config.sole_section_for(&file.relative)?.is_some() {
+                    "it is ignored, so deslag check never reads it".to_string()
+                } else {
+                    "no section selects it".to_string()
+                },
+            ));
         };
         chosen.push(selected[index].clone());
     }

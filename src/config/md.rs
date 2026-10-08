@@ -35,6 +35,7 @@ impl MdFile {
         Parts {
             globs: self.globs,
             default_globs: DEFAULT_GLOBS,
+            extensions: None,
             stack: Stack::new(Reader::Markdown),
             lints: self.lints,
             overrides: self.overrides,

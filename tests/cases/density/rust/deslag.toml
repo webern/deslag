@@ -1,0 +1,4 @@
+schema_version = 1
+
+[rust.lints.density]
+max_paragraph_chars = 60

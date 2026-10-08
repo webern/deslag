@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nsrc/lib.rs has 3 verbs with no-nouns.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"ships no binary\"\n  line 3: \"has no runtime\"\n  line 6: \"requires no configuration\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 14,
+          "end": 29,
+          "line": 1,
+          "column": 15,
+          "end_line": 1,
+          "end_column": 30,
+          "note": "\"ships no binary\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 39,
+          "end": 53,
+          "line": 3,
+          "column": 8,
+          "end_line": 3,
+          "end_column": 22,
+          "note": "\"has no runtime\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 102,
+          "end": 127,
+          "line": 6,
+          "column": 16,
+          "end_line": 6,
+          "end_column": 41,
+          "note": "\"requires no configuration\""
+        }
+      ]
+    }
+  ]
+}

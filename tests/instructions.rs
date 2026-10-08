@@ -277,6 +277,8 @@ fn the_schema_refuses_what_deslag_refuses() {
         "schema_version = 1\n[md.lints.density]\nmax_item_chars = 0",
         "schema_version = 1\n[md.lints.banned_chars.groups]\ndash = false",
         "schema_version = 1\n[[md.overrides]]\nlints.density = {}",
+        "schema_version = 1\n[rust]\nsurfaces = [\"docstring\"]",
+        "schema_version = 1\n[rust]\nstrings = []",
     ] {
         assert!(toml_misfit(text).is_some(), "the schema accepts {text:?}");
         let repo = Repo::new();

@@ -1,8 +1,8 @@
 //! The config: its shape, and the settings it gives each file.
 //!
-//! The file is versioned, then split into one section per kind of file deslag lints. Today there
-//! is one, `[md]`. A section says which files it covers, the settings of each lint for all of
-//! them, and overrides for the files matching a pattern:
+//! The file is versioned, then split into one section per kind of file deslag lints: `[md]`, and
+//! `[rust]` for the comments of Rust files. A section says which files it covers, the settings of
+//! each lint for all of them, and overrides for the files matching a pattern:
 //!
 //! ```toml
 //! schema_version = 1
@@ -29,14 +29,15 @@
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
-//! [`search`] finds the file, [`section`] compiles a section and [`md`] holds the `[md]` section,
-//! and [`lints`] the settings of each lint. [`update`] is the one thing that writes a config, and
-//! [`edit`] makes the edits to its text.
+//! [`search`] finds the file, [`section`] compiles a section, [`md`] and [`rust`] hold the sections
+//! of those names, and [`lints`] the settings of each lint. [`update`] is the one thing that writes
+//! a config, and [`edit`] makes the edits to its text.
 
 pub mod edit;
 pub mod lints;
 pub mod md;
 pub mod redirect;
+pub mod rust;
 pub mod search;
 pub mod section;
 pub mod update;
@@ -61,6 +62,9 @@ pub use search::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
 };
 pub use section::Section;
+
+/// The sections other than `[md]`, each with the extensions of the files it reads.
+const SECTION_EXTENSIONS: &[(&str, &[&str])] = &[(rust::NAME, rust::EXTENSIONS)];
 
 /// The config schema this build of deslag reads.
 ///
@@ -103,6 +107,9 @@ struct ConfigFile {
         reason = "read from `Head` before this parse; here for the schema"
     )]
     deslag_version: Option<String>,
+    /// The Rust section. A config without one reads no Rust file.
+    #[serde(default)]
+    rust: Option<rust::RustFile>,
 }
 
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
@@ -126,6 +133,10 @@ struct Head {
     md: Option<IgnoredAny>,
     #[serde(default, deserialize_with = "stamp_text")]
     deslag_version: Option<String>,
+    /// Never read. It holds the place of `rust` in `ConfigFile`.
+    #[serde(default)]
+    #[expect(dead_code, reason = "holds a position, never read")]
+    rust: Option<IgnoredAny>,
 }
 
 /// The `deslag_version` key as text, with an error that names the key whatever the language.
@@ -244,6 +255,7 @@ impl Config {
 
         // The one list of sections: redirects move settings in it, then it is compiled.
         let mut written = vec![(md::NAME, file.md.into_parts())];
+        written.extend(file.rust.map(|rust| (rust::NAME, rust.into_parts())));
         let applied = redirect::apply(&mut written, &path_string)?;
         let sections = written
             .into_iter()
@@ -304,11 +316,62 @@ impl Config {
         &self.sections
     }
 
-    /// The section that selects `rel_path`, a repo-relative `/`-separated path, if one does.
+    /// The first section that selects `rel_path`, a repo-relative `/`-separated path, if one does.
+    /// It does not notice a second: [`Config::sole_section_for`] does.
     pub fn section_for(&self, rel_path: &str) -> Option<&Section> {
         self.sections
             .iter()
             .find(|section| section.selects(rel_path))
+    }
+
+    /// The section that selects `rel_path`, if one does. A file is read one way, so two sections
+    /// selecting it is an error.
+    pub fn sole_section_for(&self, rel_path: &str) -> Result<Option<&Section>, Error> {
+        let mut selecting = self
+            .sections
+            .iter()
+            .filter(|section| section.selects(rel_path));
+        let first = selecting.next();
+        match (first, selecting.next()) {
+            (Some(first), Some(second)) => Err(Error::Setting {
+                path: self.path.display().to_string(),
+                message: format!(
+                    "{rel_path} is selected by both [{}] and [{}]; narrow their globs so that \
+                     one of them selects it",
+                    first.name(),
+                    second.name()
+                ),
+            }),
+            _ => Ok(first),
+        }
+    }
+
+    /// The section to read `rel_path` with when it is named on its own, as `check_file` is: the one
+    /// that selects it, else the section that reads files of its extension, else `[md]`, which
+    /// reads whatever it is given. A file of an extension that a section reads, when the config has
+    /// no such section, is an error: reading it as Markdown would be a mistake.
+    pub fn section_to_read(&self, rel_path: &str) -> Result<&Section, Error> {
+        if let Some(section) = self.sole_section_for(rel_path)? {
+            return Ok(section);
+        }
+        let extension = Path::new(rel_path)
+            .extension()
+            .and_then(|text| text.to_str());
+        let Some((name, extension)) = SECTION_EXTENSIONS.iter().find_map(|(name, extensions)| {
+            let found = extensions.iter().find(|found| Some(**found) == extension)?;
+            Some((name, found))
+        }) else {
+            return Ok(self.md());
+        };
+        self.sections
+            .iter()
+            .find(|section| section.name() == *name)
+            .ok_or_else(|| Error::Setting {
+                path: self.path.display().to_string(),
+                message: format!(
+                    "no section reads .{extension} files; add a [{name}] section to the config"
+                ),
+            })
     }
 
     /// The `[md]` section, which every config has.
@@ -346,5 +409,15 @@ mod tests {
         assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
         assert_eq!(load_json("[1, {}]").stamp(), None);
         assert_eq!(load_json("[1]").sections().len(), 1);
+    }
+
+    /// A section added after `deslag_version` keeps the positions of an array written before it.
+    #[test]
+    fn a_json_array_reads_the_rust_section_after_the_stamp() {
+        let config = load_json(r#"[1, {}, "0.0.1", {"lints": {"density": {}}}]"#);
+        assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
+        let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
+        assert_eq!(names, ["md", "rust"]);
+        assert!(config.sections()[1].lints_for("a.rs").density.is_some());
     }
 }

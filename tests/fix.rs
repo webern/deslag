@@ -420,7 +420,7 @@ fn a_path_check_does_not_read_is_an_error_and_nothing_is_written() {
             "ignored.md",
             "it is ignored, so deslag check never reads it",
         ),
-        ("notes.txt", "[md] does not select it"),
+        ("notes.txt", "no section selects it"),
     ] {
         let output = repo.run(&["fix", "README.md", path]);
         assert_eq!(

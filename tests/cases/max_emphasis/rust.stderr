@@ -1,0 +1,14 @@
+ERROR: deslag detected over-emphasis!
+
+src/lib.rs has 3 emphasized spans covering 22.98% of its prose. The limit is 5% of its prose, or 1 span whatever their share.
+
+Bold, italics and ALL CAPS stop working when there is this much of them: the reader learns to skip them. Take the emphasis off all but the few words a reader would get wrong without it. Where something matters, say why in plain words instead of raising your voice.
+
+Do not move the emphasis into headings, code spans or other formatting to get past this check, and do not change the limits. Only a human can tell you to do that, and I am a linter, not a human.
+
+The emphasized spans:
+  line 1: **bold**
+  line 1: *italic*
+  line 1: **another**
+
+deslag: 1 of 1 files over-emphasized.

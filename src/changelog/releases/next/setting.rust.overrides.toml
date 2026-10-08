@@ -1,0 +1,16 @@
+kind = "setting"
+id = "rust.overrides"
+keys = ["globs", "lints"]
+summary = "Sets lints for the Rust files a list of globs matches"
+onboarding = '''
+An `[[rust.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
+globs match, on top of the tables under `[rust.lints]`. Its globs narrow the section's, so they
+need not end in `.rs`. An override can turn a lint on or change its settings, but it cannot turn off
+a lint that a wider table turned on.
+
+```toml
+[[rust.overrides]]
+globs = ["/src/tag/**"]
+lints.banned_phrases = {}
+```
+'''

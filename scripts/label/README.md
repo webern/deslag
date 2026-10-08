@@ -293,6 +293,17 @@ item stays pending (its request is still listed by `handoff`, and the pass exits
 again. A pass that stops on an error leaves every request file as it was; the requests no longer asked for are
 removed by a pass that reaches its end.
 
+A call that no process answers (one that fails a check each time it is run, say) can be given up:
+`label.py handoff-run --dir D --into M --give-up CALL --reason TEXT` (`--give-up` may be given more than once)
+runs no process and writes `<call>.given-up.json` beside the request: the call, its request's hash, the run,
+the reason and the date. It refuses a call that is not waiting for a reply, and `--give-up` without a reason
+or `--reason` without `--give-up`. The next pass of `judge` answers the call with nothing and says so: its
+items stay open, the retry rounds ask them again, and those never settled are left out of `labelled.conllu` and
+listed in `unsettled.tsv`, or, with `--strict`, judge exits 3. The run's `run.json` records each call given up
+under `given_up` (call, `request_sha256`, reason, date), its reason in `runs.tsv` counts them, and so does
+`status`. A record holds for the request whose hash it gives: a call asked again with other messages is not
+given up.
+
 The request is `{"model", "messages": [system, user], "request_sha256", "call", "run", "reply_name",
 "reply_path"}`; the hash is the sha256 of the canonical JSON (sorted keys, no spaces) of `model` and
 `messages`. A reply is named for the hash of the request it answers, so a reply to an older request (a worklist
@@ -321,6 +332,30 @@ Each part is a sample of its own. With `D` the part's directory and `M` its merg
    command run again reads them. Repeat until `judge` exits 0.
 4. `label.py status --dir D --into M [--max-usd USD]`, at any point (below).
 
+The lock of the parts. The parts of one draw are assembled into one batch, so they are labelled alike: at one
+deslag commit, from one draw, by one set of voters with one prompt and guide each, judged by one adjudicator
+with one `min_voters`, and with one Claude Code. `lock.json` beside the part directories
+(`.label/silver/lock.json`) holds what the first part was labelled with: `deslag_commit` (the checkout's
+commit as a run records it, with `-dirty` when tracked files have changes), `draw` (the part's manifest header
+without `part`), `voters`, `adjudicator`, `min_voters`, `models` (for each voter and the adjudicator, its
+`prompt_sha256` and `guide_sha256`, as its `run.json` records them) and `agent` (the Claude Code `version` and
+the `args` of handoff-run). Only a directory whose manifest says `# part = k of N` has a lock; another sample
+has none. The lock is filled as the steps run, each writing the fields it is the first to know, under a lock
+of its folder, since the voters of a part run at once:
+
+- `tag` knows the commit, the draw, the voters of `voters.json`, the adjudicator and the voter's model;
+- `register` knows the commit and the draw;
+- `judge` knows the commit, the draw, the voters it judges, the adjudicator, `min_voters` and the adjudicator's
+  model;
+- `handoff-run` knows the commit, the draw and the agent, after the probe's stamp is checked;
+- `judge`, reading the replies, holds `agent.json`'s version and args to the lock's `agent`.
+
+A step that knows a field the lock holds with another value refuses before any call is made or any process
+started, naming the lock, the field (`deslag_commit`, `draw.tag_version`, `models.qwen.prompt_sha256`,
+`agent.version`, ...) and both values. Put back what changed (the commit, `voters.json`, a prompt or guide,
+Claude Code); or, to start the draw over with the new ones, remove `lock.json` and label every part again.
+`deslag-gold silver build --check-part` holds a part to the same lock.
+
 Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
 and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription
 login still works. `--safe-mode` also ignores permission rules given with `--settings`. In `-p` mode a read
@@ -330,10 +365,14 @@ only those two tools. So the working directory is the boundary, and handoff-run 
 - from a new empty directory under the system temp directory, refused if it or a directory above it holds
   `.git`, and removed after the call;
 - with stdin closed and an environment of `HOME`, `PATH`, `TERM`, the locale (`LANG`, `LANGUAGE`, `LC_*`),
-  `CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_*`, plus `DISABLE_AUTOUPDATER=1` so that Claude
-  Code does not update itself between the probe and a call. Nothing else of the caller's environment is
-  passed: a parent Claude Code session sets variables for its children (its effort, its messaging socket)
-  that would change what the process does or give it a channel out of its directory;
+  `CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_*`, plus `DISABLE_AUTOUPDATER=1`, so that the
+  process does not update Claude Code during its call. That reaches only the process: any other Claude Code on
+  the machine, such as the session that runs handoff-run, can still update the installed `claude` between the
+  probe and a call, or during a round. Turn auto-update off there too, in its settings (`"autoUpdates":
+  false`, or `DISABLE_AUTOUPDATER=1` in its `env`); handoff-run checks the version after every call
+  (below). Nothing else of the caller's environment is passed: a parent Claude Code session sets variables for
+  its children (its effort, its messaging socket) that would change what the process does or give it a
+  channel out of its directory;
 - with `--output-format stream-json --verbose`, whose events are read for the checks every call is held to:
   the init event lists exactly the tools Read and Write and no MCP server; it and every assistant message
   name the pinned model; the process exits 0 with a result that is not an error, whose last line is the model
@@ -342,8 +381,15 @@ only those two tools. So the working directory is the boundary, and handoff-run 
   model ids it named, and the round exits 2.
 
 handoff-run refuses to start without a passing probe stamp for the Claude Code installed now and the
-argument list it uses, or when `git status --porcelain` shows a change outside `.label/`. After the round it
-looks again; a change outside `.label/` then removes every reply the round copied, and it exits 2.
+argument list it uses, or when `git status --porcelain` shows a change outside `.label/`. A stamp passes only
+with every assertion of this probe true, and no other: all 21 below, or 20 with `user_claude_md_absent`
+skipped, the one assertion that may be. After each call it reads `claude --version` again; a version that
+changed fails the call (`version_unchanged`), its reply is not copied, and the round stops: no call that has
+not started is made. The round fails closed. However it ends, with a version that changed, a call that
+raised or an interrupt (the calls running are waited for, the rest cancelled), it looks at the tree again,
+and unless git shows it clean outside `.label/` and the version did not change, every reply the round copied
+is moved out of the run's folder to `.label/quarantine/<run>-<random>/`, where nothing reads them but they
+are not lost, and it exits 2. A git that cannot say whether the tree is clean counts as a change.
 
 The probe. `label.py probe-confinement [--claude PATH] [--keep]` (`make test-confinement`) runs one call as
 handoff-run runs it, in a scratch tree of its own under the system temp directory, and removes the tree
@@ -371,9 +417,10 @@ tried, so that a refusal is seen. The probe passes only when every assertion hol
 It writes the stamp `.label/confinement.json`, pass or fail: `claude_code_version`, `args` (without the
 prompt), `date`, `time`, `verdict`, `assertions` (each name, true or false), `skipped` and `models_seen`
 (the model the init event named and those the assistant messages named). It prints each assertion and the
-model ids, never what the process wrote, and exits 0 on a pass, 2 otherwise. With `--keep` the kept tree
-also holds the process's output, `stream.jsonl`. Run it again whenever Claude
-Code changes: handoff-run refuses a stamp for another version.
+model ids, never what the process wrote, and exits 0 on a pass, 2 otherwise. A probe whose assertions are
+not this set, all held or skipped as above, is no pass. With `--keep` the kept tree also holds the process's
+output, `stream.jsonl`. Run it again whenever Claude Code changes: handoff-run refuses a stamp for another
+version.
 
 Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids
 only, never a tag or a word, and writes nothing in `D`:

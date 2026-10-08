@@ -9,8 +9,9 @@ directory, outside any repository, made for the call and removed after it, with 
 the file the call is about.
 
 The process gets the environment it needs to log in and no more ([environment]), with
-`DISABLE_AUTOUPDATER=1`, so that Claude Code does not update itself between the probe and a call. Its
-output is `--output-format stream-json --verbose`: one JSON event per line, whose `system`/`init`
+`DISABLE_AUTOUPDATER=1`, so that it does not update Claude Code during its call. That reaches only the
+process, not another Claude Code on the machine, which may still update the installed one: the
+version is read again after each call, and a change fails it. Its output is `--output-format stream-json --verbose`: one JSON event per line, whose `system`/`init`
 event says the tools it has, the MCP servers it connected and its model, and whose `result` event
 says how it ended and which tool calls were refused ([Stream]).
 """

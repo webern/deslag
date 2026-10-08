@@ -744,13 +744,13 @@ fn run(cli: Cli) -> Result<(), Problems> {
                 &corpus,
                 tree.as_deref(),
                 exclude.as_deref(),
-                &RepoCut {
+                RepoCut {
                     files: &exclude_repos,
                     reserved: reserved.then_some(gold_dir.as_path()),
+                    held: held.read()?,
                 },
                 &settings,
                 without_declared,
-                held.read()?,
             )
         }
         Command::Draw {
@@ -1010,12 +1010,12 @@ pub(crate) fn corpus_files(
     }
 }
 
-/// The repositories a draw leaves out: those the files name, and the reserved ones when a gold
-/// directory is given.
-#[derive(Clone, Copy)]
+/// What a draw leaves out: the repositories the files name, the reserved ones when a gold
+/// directory is given, and the repositories and texts silver holds.
 struct RepoCut<'a> {
     files: &'a [PathBuf],
     reserved: Option<&'a Path>,
+    held: silver::live::Held,
 }
 
 fn sample_stage(
@@ -1023,20 +1023,20 @@ fn sample_stage(
     corpus: &Path,
     tree: Option<&Path>,
     exclude: Option<&Path>,
-    cut: &RepoCut<'_>,
+    cut: RepoCut<'_>,
     settings: &Settings,
     without_declared: bool,
-    held: silver::live::Held,
 ) -> Result<(), Problems> {
     let RepoCut {
         files: exclude_repos,
         reserved,
-    } = *cut;
-    let silver::live::Held {
-        repos: silver_repos,
-        texts: silver_texts,
-        line: silver_line,
-    } = held;
+        held:
+            silver::live::Held {
+                repos: silver_repos,
+                texts: silver_texts,
+                line: silver_line,
+            },
+    } = cut;
     let holds_silver = silver_repos.len() > 0 || silver_texts.len() > 0;
     // A fixture that does not load is not named when repositories are being left out, since it
     // may belong to one of them.

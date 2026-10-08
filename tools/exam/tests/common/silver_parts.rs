@@ -156,8 +156,21 @@ fn skeleton(path: &Path) -> Vec<Skeleton> {
     out
 }
 
-/// The compact lines of a voter that tags every word a noun, except the words `change` names
-/// (sentence index, word number from 1) which it tags `code`.
+/// The codes the voters agree on, word by word round a sentence, and spaCy's UPOS and FEATS of
+/// each: several tags, so that a batch and its audit are not all nouns. The first word of a
+/// sentence is a singular noun.
+const CYCLE: [(&str, &str, &str); 7] = [
+    ("N.s", "NOUN", "Number=Sing"),
+    ("V.in", "VERB", "VerbForm=Inf"),
+    ("J", "ADJ", "_"),
+    ("N.p", "NOUN", "Number=Plur"),
+    ("D", "DET", "_"),
+    ("R", "ADV", "_"),
+    ("P", "ADP", "_"),
+];
+
+/// The compact lines of a voter that tags the words round [`CYCLE`], except the words `change`
+/// names (sentence index, word number from 1) which it tags `code`.
 fn compact(sentences: &[Skeleton], change: &[(usize, usize)], code: &str) -> String {
     let mut out = String::new();
     for (at, sentence) in sentences.iter().enumerate() {
@@ -171,7 +184,7 @@ fn compact(sentences: &[Skeleton], change: &[(usize, usize)], code: &str) -> Str
                     if change.contains(&(at, word)) {
                         code
                     } else {
-                        "N.s"
+                        CYCLE[(word - 1) % CYCLE.len()].0
                     }
                 } else {
                     "_"
@@ -188,13 +201,18 @@ fn outside(sentences: &[Skeleton], run: &str) -> String {
     let mut out = String::new();
     for sentence in sentences {
         out.push_str(&format!("# sent_id = {}\n", sentence.id));
+        let mut word = 0;
         for cells in &sentence.lines {
             let kind = cells[9]
                 .split('|')
                 .find_map(|entry| entry.strip_prefix("Kind="))
                 .unwrap();
             let (upos, feats) = match kind {
-                "Word" => ("NOUN", "Number=Sing"),
+                "Word" => {
+                    word += 1;
+                    let (_, upos, feats) = CYCLE[(word - 1) % CYCLE.len()];
+                    (upos, feats)
+                }
                 "Punctuation" => ("PUNCT", "_"),
                 "Symbol" => ("SYM", "_"),
                 _ => ("X", "_"),

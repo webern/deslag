@@ -1,13 +1,13 @@
 # silver audit score, owner against silver
-# sentences = 7
+# sentences = 4
 # rejected = 1
 # prefilled = 0
 # bar = 95.0
-# met = yes
+# met = no
 group	words	pos	pos_low	pos_high	code	code_low	code_high
-all	127	100.00	100.00	100.00	100.00	100.00	100.00
-prov=agree	125	100.00	100.00	100.00	100.00	100.00	100.00
-prov=adjudicated	2	100.00	100.00	100.00	100.00	100.00	100.00
-context=list-item	59	100.00	100.00	100.00	100.00	100.00	100.00
-context=prose	68	100.00	100.00	100.00	100.00	100.00	100.00
-prefilled=no	127	100.00	100.00	100.00	100.00	100.00	100.00
+all	73	84.93	83.72	85.71	84.93	83.72	85.71
+prov=agree	71	87.32	85.71	92.68	87.32	85.71	92.68
+prov=adjudicated	2	0.00	0.00	0.00	0.00	0.00	0.00
+context=list-item	59	84.75	83.33	85.71	84.75	83.33	85.71
+context=prose	14	85.71	85.71	85.71	85.71	85.71	85.71
+prefilled=no	73	84.93	83.54	85.71	84.93	83.54	85.71

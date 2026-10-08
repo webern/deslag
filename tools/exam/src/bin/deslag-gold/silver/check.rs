@@ -991,8 +991,9 @@ fn audit_rules(
 mod tests {
     use super::*;
 
-    /// The batch `tests/silver-fixture/` holds was assembled once, with an audit, an owner's
-    /// rejection and a calibration table, and these rules have passed it since. It is never
+    /// The batch `tests/silver-fixture/` holds was assembled once, with an audit the owner
+    /// differs from, an owner's rejection, sentences dropped for a reserved repository and a gold
+    /// text, an acceptance and a calibration table, and these rules have passed it since. It is never
     /// rebuilt to suit a rule: a rule that stops passing it has changed, and changing a rule
     /// needs a new check version. `regenerate_the_committed_fixture_batch` in
     /// `tests/silver_batch.rs` writes it again, for the day a new version is added.
@@ -1016,14 +1017,38 @@ mod tests {
         assert_eq!(
             checked,
             Checked {
-                sentences: 7,
-                words: 127,
+                sentences: 4,
+                words: 73,
                 parts: 2,
                 runs: 10,
                 audit: true
             }
         );
         assert_eq!(batch.name, "2026-01-01-fixture");
+        // The fixture is thick enough to hold the rules to something: several tags, drops for
+        // more than one reason, and an audit whose intervals are not a point.
+        let tags: BTreeSet<&str> = batch
+            .get(layout::SILVER)
+            .unwrap()
+            .lines()
+            .filter(|line| !line.starts_with('#') && line.contains("Kind=Word"))
+            .filter_map(|line| line.split('\t').nth(3))
+            .collect();
+        assert!(tags.len() >= 5, "{tags:?}");
+        let drops = Tsv::parse(layout::DROPS, batch.get(layout::DROPS).unwrap(), None).unwrap();
+        let reasons: BTreeSet<&str> = drops.rows.iter().map(|row| row[2].as_str()).collect();
+        assert!(reasons.len() >= 3, "{reasons:?}");
+        let score = Tsv::parse(
+            layout::AUDIT_SCORE,
+            batch.get(layout::AUDIT_SCORE).unwrap(),
+            None,
+        )
+        .unwrap();
+        let all = &score.rows[0];
+        assert!(
+            all[3] != all[4],
+            "the interval of all words is a point: {all:?}"
+        );
         let kit = Kit::parse(batch.get(layout::KIT).unwrap()).unwrap();
         assert_eq!(kit.get("check_version"), "1");
     }

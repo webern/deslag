@@ -1391,7 +1391,47 @@ fn regenerate_the_committed_fixture_batch() {
         "set DESLAG_REGENERATE_SILVER_FIXTURE=1 to write the committed fixture"
     );
     let (made, draft) = built();
-    let audit = audit_of(&made, &draft, &["s0004"], false);
+    // The owner rejects a sentence and differs from silver on some words, so the score has real
+    // intervals.
+    let audit = audit_of(&made, &draft, &["s0004"], true);
+    // After the draw, the gold took the text of one sentence and the repository of another, so
+    // the batch drops sentences for three reasons.
+    let rows = read(&draft, "manifest.tsv");
+    let repo = rows
+        .lines()
+        .find(|line| line.starts_with("s0007\t"))
+        .and_then(|line| line.split('\t').nth(5))
+        .unwrap()
+        .to_string();
+    let manifest = made.gold.join("dev.manifest.tsv");
+    let mut text = fs::read_to_string(&manifest).unwrap();
+    text.push_str(&format!("g2\tdev\thuman\tprose\tx.md\t{repo}\tMIT\t0-1\n"));
+    fs::write(&manifest, text).unwrap();
+    let block: String = read(&draft, "silver.conllu")
+        .split("\n\n")
+        .find(|block| block.contains("# sent_id = s0006\n"))
+        .unwrap()
+        .lines()
+        .filter(|line| line.starts_with("# text") || !line.starts_with('#'))
+        .map(|line| {
+            if line.starts_with('#') {
+                return line.to_string();
+            }
+            let mut cells: Vec<&str> = line.split('\t').collect();
+            let misc: Vec<&str> = cells[9]
+                .split('|')
+                .filter(|entry| !entry.starts_with("Runs="))
+                .collect();
+            let misc = misc.join("|");
+            cells[9] = &misc;
+            cells.join("\t")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let dev = made.gold.join("dev.conllu");
+    let mut text = fs::read_to_string(&dev).unwrap();
+    text.push_str(&format!("# sent_id = g0900\n{block}\n\n"));
+    fs::write(&dev, text).unwrap();
     let noise = made.root.join("dev.tsv");
     fs::write(
         &noise,
@@ -1410,7 +1450,7 @@ fn regenerate_the_committed_fixture_batch() {
             "--noise",
             &format!("dev={}", noise.display()),
             "--accept-below-bar",
-            "An audit of seven sentences, accepted for the fixture.",
+            "A small audit under its bar, accepted for the fixture.",
         ],
     )
     .ok();

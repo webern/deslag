@@ -5,8 +5,8 @@ part of speech and a code of deslag's guide, three models voting and a stronger 
 the words they disagreed on. The labels are a model's. They train a tagger and are never a
 grade: dev, holdout and `owner.conllu` stay the only gold.
 
-- 7 sentences, 127 words, 157 tokens, from 5 repositories
-  and 5 files.
+- 4 sentences, 73 words, 96 tokens, from 3 repositories
+  and 3 files.
 - Parts 01, 02 of 2 of one draw, from tests/corpus tree.
 - Made by deslag at commit `0123456789abcdef0123456789abcdef01234567`, tag version 11, checked by rules of
   version 1.
@@ -14,27 +14,27 @@ grade: dev, holdout and `owner.conllu` stay the only gold.
 
 ## How right it is
 
-The owner reviewed 7 sentences of this batch, drawn at random and shown
+The owner reviewed 4 sentences of this batch, drawn at random and shown
 without the labels, and rejected 1 (personal data or not English), which are
-not counted. Against his labels on 127 words, silver's part of speech is right in
-100.0 [100.0, 100.0] percent (the point and a 95% interval, from a bootstrap over sentences) and its
-whole code in 100.0 [100.0, 100.0] percent.
+not counted. Against his labels on 73 words, silver's part of speech is right in
+84.9 [83.7, 85.7] percent (the point and a 95% interval, from a bootstrap over sentences) and its
+whole code in 84.9 [83.7, 85.7] percent.
 0 of those words were left at deslag's own pre-filled reading, which anchors
 him and flatters silver where he agrees.
 
-The bar on the part of speech was 95.0; met: yes. The
+The bar on the part of speech was 95.0; met: no. The
 owner accepted an audit that falls short (a score under the bar, a bar under 95.0, or fewer than 50
 sentences), in `record/audit-accepted.txt`. The bar is a drift alarm and not proof of
 quality.
 
 | group | words | part of speech | whole code |
 | --- | --- | --- | --- |
-| all | 127 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
-| prov=agree | 125 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
-| prov=adjudicated | 2 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
-| context=list-item | 59 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
-| context=prose | 68 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
-| prefilled=no | 127 | 100.0 [100.0, 100.0] | 100.0 [100.0, 100.0] |
+| all | 73 | 84.9 [83.7, 85.7] | 84.9 [83.7, 85.7] |
+| prov=agree | 71 | 87.3 [85.7, 92.7] | 87.3 [85.7, 92.7] |
+| prov=adjudicated | 2 | 0.0 [0.0, 0.0] | 0.0 [0.0, 0.0] |
+| context=list-item | 59 | 84.7 [83.3, 85.7] | 84.7 [83.3, 85.7] |
+| context=prose | 14 | 85.7 [85.7, 85.7] | 85.7 [85.7, 85.7] |
+| prefilled=no | 73 | 84.9 [83.5, 85.7] | 84.9 [83.5, 85.7] |
 
 ## Two other measures, which are brackets
 
@@ -71,8 +71,8 @@ for each repository in `sources.tsv`, with the permalinks of the licence files t
 
 | licence | sentences | repositories |
 | --- | --- | --- |
-| Apache-2.0 | 3 | 2 |
-| MIT | 4 | 3 |
+| Apache-2.0 | 1 | 1 |
+| MIT | 3 | 2 |
 
 The corpus draws sentences of `llm` files whose maker is declared by a publisher, and the
 generator's licence is recorded in `manifest.tsv` (`model`, `model_license`) for every such
@@ -118,15 +118,15 @@ saw the words and what each voter said. A sentence with a word nobody settled is
 
 ## Agreement
 
-Of 127 words, 125 were agreed and 2 adjudicated
-(98.4 percent agreed).
+Of 73 words, 71 were agreed and 2 adjudicated
+(97.3 percent agreed).
 
 By tier:
 
 | group | sentences | words | agreed words | adjudicated words | agreed % |
 | --- | --- | --- | --- | --- | --- |
-| human | 3 | 73 | 73 | 0 | 100.0 |
-| llm | 3 | 47 | 46 | 1 | 97.9 |
+| human | 1 | 28 | 28 | 0 | 100.0 |
+| llm | 2 | 38 | 37 | 1 | 97.4 |
 | mixed | 1 | 7 | 6 | 1 | 85.7 |
 
 By context:
@@ -134,7 +134,7 @@ By context:
 | group | sentences | words | agreed words | adjudicated words | agreed % |
 | --- | --- | --- | --- | --- | --- |
 | list-item | 3 | 59 | 57 | 2 | 96.6 |
-| prose | 4 | 68 | 68 | 0 | 100.0 |
+| prose | 1 | 14 | 14 | 0 | 100.0 |
 
 Sentences each voter gave no answer for, summed over the parts:
 
@@ -156,6 +156,8 @@ Sentences were left out of the batch, and the files in `parts/` keep only the ro
 | reason | sentences |
 | --- | --- |
 | audit rejected | 1 |
+| gold text | 1 |
+| reserved repository | 2 |
 
 Sentences with a word the adjudicator never settled, which the audit and the agreement figures
 above therefore lean away from (silver, and its audit, lean toward easier sentences):
@@ -172,9 +174,8 @@ By tier and context:
 | group | sentences | words | agreed words | adjudicated words | agreed % |
 | --- | --- | --- | --- | --- | --- |
 | human / list-item | 1 | 28 | 28 | 0 | 100.0 |
-| human / prose | 2 | 45 | 45 | 0 | 100.0 |
 | llm / list-item | 1 | 24 | 23 | 1 | 95.8 |
-| llm / prose | 2 | 23 | 23 | 0 | 100.0 |
+| llm / prose | 1 | 14 | 14 | 0 | 100.0 |
 | mixed / list-item | 1 | 7 | 6 | 1 | 85.7 |
 
 By tier, with the split by repository (a repository is wholly `train` or wholly `tune`; the
@@ -182,11 +183,11 @@ By tier, with the split by repository (a repository is wholly `train` or wholly 
 
 | tier | sentences | train | tune | repositories | files |
 | --- | --- | --- | --- | --- | --- |
-| human | 3 | 3 | 0 | 2 | 2 |
-| llm | 3 | 3 | 0 | 2 | 2 |
+| human | 1 | 1 | 0 | 1 | 1 |
+| llm | 2 | 2 | 0 | 1 | 1 |
 | mixed | 1 | 0 | 1 | 1 | 1 |
 
-6 sentences train and 1 tune. The most sentences from one file are
+3 sentences train and 1 tune. The most sentences from one file are
 2, and from one repository 2.
 
 By length of the sentence in words:
@@ -196,13 +197,13 @@ By length of the sentence in words:
 | fewer than 2 | 0 |
 | 2 to 3 | 0 |
 | 4 to 7 | 1 |
-| 8 or more | 6 |
+| 8 or more | 3 |
 
 By the origin of the word:
 
 | origin | words | % of words |
 | --- | --- | --- |
-| English | 127 | 100.0 |
+| English | 73 | 100.0 |
 
 ## Lineage
 

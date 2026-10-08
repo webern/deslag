@@ -524,28 +524,28 @@ Makefile), so the run can change them.
 
 The assembler. `deslag-gold silver build --name NAME --part DIR:MERGE ... [--audit DIR --archive-sha256 SHA]
 --out DIR` puts the parts together and writes the batch to `--out` only when `silver check` passes on what it
-wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, which writes no file but the lock
-of the parts, and is what `label.py status` runs; run it after each part, so a fault shows after one part and
-not at assembly. It refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has
-no `part` and `tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id
-twice with different rows or under two `state_id`s, one that is not `complete`, or with no row; runs at more
-than one deslag commit, or one that is `-dirty`; two prompt or guide hashes for one model; a voter at an
-endpoint that `voters.json` does not list for its model, a labeller whose licence is not MIT or Apache-2.0, a
-run of any role with no `voters_sha256`, an adjudicator other than `opus` without its `agent.json`, an agent
-record whose harness, type, working-directory rule or arguments are not the confined process's or whose
-version is not a version, an outside tagger other than spaCy; a merge with fewer than three model voters,
-`min_voters` under 3, no spaCy, or other voters than another part's; a word whose `Runs=` is not what its
-`Prov=` says (an agreed word names the runs of at least `min_voters` model voters of its part, an adjudicated
-word the run of its answer in `adjudicated.tsv`, an adjudicator's); at the preflight, a value the lock of the
-parts holds otherwise; a fixture the image lacks or whose content, commit, URL or licence differs from the manifest's,
-that an exclusion names, or whose generator is banned; and a path of the machine that made it in any file it
-writes. In a cell the kit fills, a JSON cell or a listing too, that is any absolute path. A word's `form` and
-the adjudicator's `reason` quote the corpus, which has paths such as `/etc/hosts`, so there it is only a path
-under `/home/NAME/`, `/Users/NAME/` or `/tmp/`, a handoff's working directory, or this machine's home, temp
-directory or checkout. It drops and counts, and does not refuse, a sentence whose repository became reserved
-after the draw or whose text is now a gold sentence's, one that is a repeat, and one the owner rejected in the
-audit. The batch ships the runs that the words it kept name, with the voters', and the agent record of those,
-worked out after the drops.
+wrote. `silver build --check-part DIR:MERGE` is the preflight of one part, which writes no file but the lock of
+the parts, and is what `label.py status` runs; run it after each part, so a fault shows after one part and not
+at assembly. It refuses what one part can get wrong: a draw header that is not `exam.trains = yes` or has no
+`part` and `tag_version`; a sentence id of dev, `owner.conllu` or a gold flow, or an id twice; a run id twice
+with different rows or under two `state_id`s, one that is not `complete`, or with no row; runs at more than one
+deslag commit, or one that is not a clean commit's 40 hex digits (`-dirty`, `unknown`); two prompt or guide
+hashes for one model; a voter at an endpoint that `voters.json` does not list for its model, a labeller whose
+licence is not MIT or Apache-2.0, a run of any role with no `voters_sha256`, an adjudicator other than `opus`
+without its `agent.json`, an agent record whose harness, type, working-directory rule or arguments are not the
+confined process's or whose version is not a version, an outside tagger other than spaCy; a merge with fewer
+than three model voters, `min_voters` under 3, no spaCy, or other voters than another part's; a word whose
+`Runs=` is not what its `Prov=` says (an agreed word names the runs of at least `min_voters` model voters of
+its part, an adjudicated word the run of its answer in `adjudicated.tsv`, an adjudicator's); at the preflight,
+a value the lock of the parts holds otherwise; a fixture the image lacks or whose content, commit, URL or
+licence differs from the manifest's, that an exclusion names, or whose generator is banned; and a path of the
+machine that made it in any file it writes. In a cell the kit fills, a JSON cell or a listing too, that is any
+absolute path. A word's `form` and the adjudicator's `reason` quote the corpus, which has paths such as
+`/etc/hosts`, so there it is only a path under `/home/NAME/`, `/Users/NAME/` or `/tmp/`, a handoff's working
+directory, or this machine's home, temp directory or checkout. It drops and counts, and does not refuse, a
+sentence whose repository became reserved after the draw or whose text is now a gold sentence's, one that is a
+repeat, and one the owner rejected in the audit. The batch ships the runs that the words it kept name, with the
+voters', and the agent record of those, worked out after the drops.
 
 The batch, `silver/NAME/`:
 

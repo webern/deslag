@@ -392,9 +392,13 @@ pub fn check(
             ));
         }
         let commit = get("deslag_commit");
-        if matches!(commit, "" | "-") || commit.ends_with("-dirty") {
+        let clean = commit.len() == 40
+            && commit
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
+        if !clean {
             bad(format!(
-                "run {run} was made at `{commit}`; a run is at a clean commit of deslag"
+                "run {run} was made at `{commit}`; a run is at a clean commit of deslag, named by its 40 hex digits"
             ));
         }
         commits.insert(commit.to_string());
@@ -621,6 +625,9 @@ fn shown(value: &serde_json::Value) -> String {
 mod tests {
     use super::*;
 
+    /// The clean commit the runs are made at.
+    pub const COMMIT: &str = "0123456789abcdef0123456789abcdef01234567";
+
     /// A `voters.json` with three voters, spaCy and a confined adjudicator.
     pub fn voters_json() -> String {
         r#"{
@@ -676,7 +683,7 @@ mod tests {
                 },
             ),
             ("license_checked", "2026-10-04"),
-            ("deslag_commit", "abc1234"),
+            ("deslag_commit", COMMIT),
         ] {
             cells.insert(key, value.to_string());
         }
@@ -730,7 +737,7 @@ mod tests {
     #[test]
     fn runs_made_as_the_rules_want_pass_and_give_the_facts() {
         let facts = checked(&[]).unwrap();
-        assert_eq!(facts.commit, "abc1234");
+        assert_eq!(facts.commit, COMMIT);
         assert_eq!(facts.agent_sha256.len(), 64);
         assert_eq!(facts.models["spacy"], "en-core-web-trf");
         assert_eq!(facts.models["gemma"], "vendor-c/model-c");
@@ -739,12 +746,20 @@ mod tests {
     #[test]
     fn every_rule_about_the_runs_has_its_refusal() {
         says(&[("r1", &[("status", "failed")])], "only a complete run");
+        let dirty = format!("{COMMIT}-dirty");
+        for commit in [
+            dirty.as_str(),
+            "-",
+            "unknown",
+            "abc1234",
+            &COMMIT.to_uppercase(),
+        ] {
+            says(&[("r2", &[("deslag_commit", commit)])], "clean commit");
+        }
         says(
-            &[("r2", &[("deslag_commit", "abc1234-dirty")])],
-            "clean commit",
+            &[("r2", &[("deslag_commit", &"f".repeat(40))])],
+            "2 commits",
         );
-        says(&[("r2", &[("deslag_commit", "-")])], "clean commit");
-        says(&[("r2", &[("deslag_commit", "def5678")])], "2 commits");
         // Two prompts for one model.
         says(
             &[

@@ -90,7 +90,10 @@ fn lock_shown(value: Option<&serde_json::Value>) -> String {
 /// Holds `part`, in `dir`, to the lock of the parts of its draw ([`super::part::PARTS_LOCK`] in the
 /// directory that holds `dir`), as `label.py` holds each run to it: a field the lock holds must
 /// have the part's value, every key of its `draw` among them, and a field it does not hold yet is
-/// written into it, so the first part to pass writes the lock if no run did. A line for the
+/// written into it, so the first part to pass writes the lock if no run did. After a reset (the
+/// lock is gone and [`super::part::PARTS_LOCK_RESETS`] is beside it) it writes nothing: a part
+/// labelled before the reset would put its old values back as the new lock, and the next step on
+/// the new values would be refused; the next `label.py` step that counts writes it. A line for the
 /// report, or a problem naming each field, the lock's value and the part's.
 fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
     let path = dir
@@ -99,6 +102,11 @@ fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
         .join(super::part::PARTS_LOCK);
     let shown = path.display().to_string();
     let found = path.exists();
+    if !found && path.with_file_name(super::part::PARTS_LOCK_RESETS).exists() {
+        return Ok(format!(
+            "no lock of the parts, {shown}, which was reset; this preflight does not write it, and the next `label.py` step that counts does\n"
+        ));
+    }
     let lock: serde_json::Value = if found {
         let text = read_text(&path).map_err(|error| Problems(vec![error]))?;
         match serde_json::from_str::<serde_json::Value>(&text) {

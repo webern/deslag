@@ -40,6 +40,10 @@ pub const MIN_MODEL_VOTERS: usize = 3;
 /// step first knows it; `silver build --check-part` holds each part to it.
 pub const PARTS_LOCK: &str = "lock.json";
 
+/// The log of resets of the lock of the parts, beside it. `label.py lock --reset` appends to it
+/// before it removes the lock, so a draw whose lock is missing and whose log is there was reset.
+pub const PARTS_LOCK_RESETS: &str = "lock-resets.jsonl";
+
 /// A field of the lock of the parts, as its keys from the top, and its value.
 pub type LockField = (Vec<String>, serde_json::Value);
 

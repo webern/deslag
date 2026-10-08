@@ -145,6 +145,39 @@ fn a_part_whose_claude_code_is_not_the_locks_is_refused_at_its_preflight() {
     ]);
 }
 
+#[test]
+fn a_preflight_after_a_lock_reset_writes_no_lock_so_the_new_values_can_be() {
+    let made = two_parts();
+    let lock = made.root.join(".label/silver/lock.json");
+    let log = made.root.join(".label/silver/lock-resets.jsonl");
+    made.check_part(1).ok();
+    let old = fs::read_to_string(&lock).unwrap();
+    // `label.py lock --reset` appends the lock to the log, then removes it.
+    fs::write(&log, format!("{}\n", old.replace('\n', " "))).unwrap();
+    fs::remove_file(&lock).unwrap();
+    // Part 1 was labelled under the old lock; its preflight must not put the old values back.
+    let said = made.check_part(1).ok();
+    assert!(said.out.contains("was reset"), "{}", said.out);
+    assert!(!lock.exists(), "the preflight wrote the old lock back");
+    // The next step on the new values, as `label.py` takes it: it writes the lock when there is none.
+    let mut agent = common::silver_parts::agent();
+    agent["version"] = "2.1.294".into();
+    made.set_run(
+        2,
+        "r10",
+        "settings",
+        &serde_json::json!({ "agent": agent }).to_string(),
+    );
+    let mut new: serde_json::Value = serde_json::from_str(&old).unwrap();
+    new["agent"]["version"] = "2.1.294".into();
+    assert!(!lock.exists());
+    fs::write(&lock, new.to_string()).unwrap();
+    made.check_part(2).ok();
+    // And the part labelled under the old values is now the one that is refused.
+    made.check_part(1)
+        .refused(&["`agent.version` is 2.1.294 in the lock and 2.1.293 in this part"]);
+}
+
 /// A change to the lock of the parts.
 type LockEdit = Box<dyn Fn(&mut serde_json::Value)>;
 

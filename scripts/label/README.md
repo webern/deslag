@@ -377,7 +377,8 @@ adjudicator's Claude Code changed, `judge --again` and `handoff-run` on that par
 `deslag-gold silver build --check-part` holds a part that passes to the same lock, field by field from the
 part's own files (its runs' commit, its manifest header, `voters.tsv`, `adjudicator.json`, its runs' hashes
 and agent record), refuses it the same way, and adds the fields the lock lacks: the first part to pass its
-preflight writes the lock if no step has.
+preflight writes the lock if no step has, except after a reset: with `lock-resets.jsonl` beside and no
+`lock.json`, it holds a part to nothing and writes nothing, so the next `label.py` step writes the new lock.
 
 Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
 and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription

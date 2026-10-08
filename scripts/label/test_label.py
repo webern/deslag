@@ -3827,6 +3827,84 @@ class HandoffTests(Base):
     def run_row(self, role="adjudicator"):
         return [row for row in self.runs_rows() if row["role"] == role][-1]
 
+    def give_up(self, *calls, reason="it fails a check every time"):
+        """`handoff-run --give-up CALL ... --reason REASON`."""
+        more = [arg for call in calls for arg in ("--give-up", call)]
+        if reason is not None:
+            more += ["--reason", reason]
+        arguments = label.parser().parse_args(["handoff-run", "--dir", self.dir, "--into", "merge", *more])
+        return label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.said.append)
+
+    def waiting_on(self):
+        """The calls a pass of the judge waits on."""
+        with self.assertRaises(label.HandoffWait) as caught:
+            self.pass_()
+        return [kind for kind, _, _ in caught.exception.waiting]
+
+    def test_a_call_given_up_is_answered_with_nothing_and_its_items_are_asked_again(self):
+        self.assertEqual(self.waiting_on(), ["part-01"])
+        sha = json.loads(label.read(self.requests()[0]))["request_sha256"]
+        self.assertEqual(self.give_up("part-01"), 0)
+        record = json.loads(label.read(os.path.join(self.folder(), "part-01.given-up.json")))
+        self.assertEqual((record["call"], record["request_sha256"], record["reason"]),
+                         ("part-01", sha, "it fails a check every time"))
+        self.assertEqual(label.pending_requests(self.dir, "merge"), [], "a call given up waits no more")
+        self.assertEqual(self.waiting_on(), ["retry-1-01"], "its items are asked again in the retry")
+        self.assertTrue(any("part-01: given up (it fails a check every time)" in line for line in self.said), self.said)
+        self.answer()
+        self.write_agent()
+        self.assertEqual(self.pass_(), {})
+        given = self.run_json("opus", "r3")["given_up"]
+        self.assertEqual(given, [{"call": "part-01", "request_sha256": sha, "reason": "it fails a check every time",
+                                  "date": record["date"]}])
+        self.assertEqual((self.run_row()["status"], self.run_row()["reason"]), ("complete", "1 handoff calls given up"))
+        self.assertEqual(self.ledger().total(), self.spent, "nothing is booked for a call given up")
+
+    def test_calls_given_up_through_the_retries_leave_their_items_unsettled_and_counted(self):
+        for call in ("part-01", "retry-1-01", "retry-2-01"):
+            self.assertEqual(self.waiting_on(), [call])
+            self.assertEqual(self.give_up(call), 0)
+        arguments = label.parser().parse_args(["judge", "--dir", self.dir, "--max-usd", "1", "--strict"])
+        err = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(err):
+            self.assertEqual(label.command_judge(arguments, copy.deepcopy(HANDOFF_CONFIG), self.transport, self.gold), 3)
+        self.assertIn("2 items are still open", err.getvalue())
+        self.assertNotIn(("finish", "merge"), self.gold.calls, "--strict finishes nothing")
+        self.assertEqual(sorted(self.pass_()), ["d1.2", "d2.3"])
+        self.assertTrue(self.gold.left_open, "the finish leaves the items open, unsettled")
+        self.assertEqual([entry["call"] for entry in self.run_json("opus", "r3")["given_up"]],
+                         ["part-01", "retry-1-01", "retry-2-01"])
+        self.assertEqual((self.run_row()["status"], self.run_row()["reason"]),
+                         ("complete", "2 items open, 3 handoff calls given up"))
+        said = []
+        label.command_status(label.parser().parse_args(["status", "--dir", self.dir]), HANDOFF_CONFIG, say=said.append)
+        self.assertIn("adjudicator opus (merge): r3 complete, $0.0000; 0 requests waiting, 0 replies present, "
+                      "3 calls given up", said)
+
+    def test_only_a_call_waiting_is_given_up_and_only_with_a_reason(self):
+        self.waiting_on()
+        with self.assertRaisesRegex(label.GoldError, "the call part-09; the calls waiting are part-01"):
+            self.give_up("part-09")
+        with self.assertRaisesRegex(label.ConfigError, "--give-up needs --reason"):
+            self.give_up("part-01", reason=None)
+        with self.assertRaisesRegex(label.ConfigError, "--give-up needs --reason"):
+            self.give_up("part-01", reason="  ")
+        arguments = label.parser().parse_args(["handoff-run", "--dir", self.dir, "--into", "merge", "--reason", "x"])
+        with self.assertRaisesRegex(label.ConfigError, "goes with --give-up"):
+            label.command_handoff_run(arguments, copy.deepcopy(HANDOFF_CONFIG), say=self.said.append)
+        self.assertEqual([name for name in os.listdir(self.folder()) if name.endswith(label.GIVEN_UP)], [])
+
+    def test_a_call_given_up_for_an_older_request_is_not_given_up(self):
+        self.waiting_on()
+        self.assertEqual(self.give_up("part-01"), 0)
+        path = os.path.join(self.folder(), "part-01.given-up.json")
+        record = json.loads(label.read(path))
+        record["request_sha256"] = "0" * 64
+        label.write(path, json.dumps(record))
+        self.assertEqual(self.waiting_on(), ["part-01"], "a new request of the call is asked")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.assertNotIn("given_up", self.run_json("opus", "r3"))
+
     def test_status_counts_the_requests_waiting_and_the_replies_present(self):
         def status():
             said = []

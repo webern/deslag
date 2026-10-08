@@ -16,6 +16,7 @@ in Rust. See README.md in this directory for the steps.
     label.py handoff  --dir .label/dev [--into merge]
     label.py handoff-agent (--request PATH | --sha256)
     label.py handoff-run --dir .label/silver/part-01 --into merge [--parallel 6] [--claude PATH]
+                         [--give-up CALL ... --reason TEXT]
     label.py probe-confinement [--claude PATH] [--keep]
     label.py status   --dir .label/silver/part-01 [--into merge] [--max-usd 8]
     label.py spend
@@ -173,6 +174,11 @@ HANDOFF_NOTE = (
 
 # What a handoff `ask` gives back when the reply is not there yet.
 PENDING = object()
+
+# Beside a handoff request, the record that the person running the labelling gave the call up
+# (`handoff-run --give-up CALL --reason TEXT`): `<call>.given-up.json`, with the call, the request's
+# hash, the reason and the date. See [Runner.ask_handoff].
+GIVEN_UP = ".given-up.json"
 
 
 class ConfigError(Exception):
@@ -492,7 +498,8 @@ def run_status(meta):
 def run_reason(meta, status):
     """Why a run has the status `runs.tsv` gives it, in a few words: for `abandoned` and `failed` what
     ended it, for `smoke` its limit, for `stopped` what stopped it, and for a `complete` adjudicator run
-    that finished with words left out, how many items were open. `-` for a plain `complete`."""
+    that finished with words left out, how many items were open, and how many handoff calls were
+    given up. `-` for a plain `complete`."""
     if status == "abandoned":
         return meta.get("abandoned_because") or "no reason recorded"
     if status == "failed":
@@ -501,9 +508,12 @@ def run_reason(meta, status):
         return f"a smoke run: --limit {meta.get('limit')} batches, never a full run"
     if status == "stopped":
         return meta.get("stopped_because") or "stopped before its end; no reason was recorded"
+    said = []
     if status == "complete" and meta.get("finished") and meta.get("open_items"):
-        return f"{meta['open_items']} items open"
-    return "-"
+        said.append(f"{meta['open_items']} items open")
+    if status == "complete" and meta.get("given_up"):
+        said.append(f"{len(meta['given_up'])} handoff calls given up")
+    return ", ".join(said) or "-"
 
 
 def write_atomic(path, text):
@@ -1275,7 +1285,10 @@ class Runner:
         `agent.json` first (see [Runner.read_agent]) and is booked in the ledger at 0, without the cap.
         With no reply the request is written to `<kind>.request.json`, the call is added to the waiting
         ones and PENDING is returned: nothing is asked, retried, switched or counted against the
-        failure budget, and nothing is booked."""
+        failure budget, and nothing is booked. A call given up for this very request (see
+        [read_given_up]) is answered with nothing, so its items stay open: the retries ask them
+        again, in other calls, and those still open after them are left out of the labels as
+        unsettled. It is recorded in `run.json` and said (see [Runner.give_up])."""
         name, run = meta["name"], meta["run"]
         saved = self.raw(name, run, f"{kind}.reply.txt")
         saved_meta = self.raw(name, run, f"{kind}.meta.json")
@@ -1296,6 +1309,10 @@ class Runner:
             if re.fullmatch(rf"{re.escape(kind)}\.[0-9a-f]{{12}}\.reply\.txt", other) and other != reply_name:
                 self.warn(f"label: {name} {run} {kind}: {other} answers an older request, so it is not read")
         text = self.reply_text(reply_path)
+        given_up = None if text else read_given_up(folder, kind, request_sha256)
+        if given_up is not None:
+            self.give_up(meta, kind, request_sha256, given_up)
+            return ""
         if not text:
             request_path = os.path.join(folder, f"{kind}.request.json")
             write_atomic(request_path, json.dumps({
@@ -1344,6 +1361,23 @@ class Runner:
             "transport": HANDOFF,
         }, indent=2) + "\n")
         return text + "\n"
+
+    def give_up(self, meta, kind, request_sha256, record):
+        """Records in `run.json` that the call `kind` of a handoff run was given up, with the request's
+        hash, the reason and the date the record gives, once, and says so on every pass that reads it."""
+        name, run = meta["name"], meta["run"]
+        entries = list(meta.get("given_up") or [])
+        if not any(entry["call"] == kind and entry["request_sha256"] == request_sha256 for entry in entries):
+            entries.append({
+                "call": kind, "request_sha256": request_sha256, "reason": record.get("reason"),
+                "date": record.get("date"),
+            })
+            self.update_run(name, run, given_up=entries)
+            meta["given_up"] = entries
+        self.say(
+            f"{name} {run} {kind}: given up ({record.get('reason')}), so it is answered with nothing and its items "
+            f"stay open; the retries ask them again, and those never settled are left out as unsettled"
+        )
 
     def stop_for_handoff(self, meta):
         """Raises HandoffWait if any call of this pass had no reply: the requests are written, and
@@ -2138,6 +2172,22 @@ def report_handoff_wait(error, arguments):
     return EXIT_HANDOFF
 
 
+def read_given_up(folder, call, request_sha256):
+    """The record that the call `call` of the handoff run in `folder` was given up, if it gives up this
+    request, the one whose hash is `request_sha256`; None if the call was not given up, or a request
+    since rewritten was. GoldError if the file is not a JSON object."""
+    path = os.path.join(folder, f"{call}{GIVEN_UP}")
+    if not os.path.isfile(path):
+        return None
+    try:
+        record = json.loads(read(path))
+    except ValueError:
+        record = None
+    if not isinstance(record, dict):
+        raise GoldError(f"{path} is not a JSON object; `handoff-run --give-up` writes it")
+    return record if record.get("request_sha256") == request_sha256 else None
+
+
 def latest_handoff(directory, into):
     """The folder of the latest handoff run in `<directory>/<into>/handoff`, or None."""
     base = os.path.join(directory, into, "handoff")
@@ -2147,7 +2197,7 @@ def latest_handoff(directory, into):
 
 def pending_requests(directory, into, warn=None):
     """The request files of the latest handoff run in `<directory>/<into>/handoff` that have no reply
-    yet, in the order of their numbers: what is still to be answered."""
+    yet and were not given up, in the order of their numbers: what is still to be answered."""
     folder = latest_handoff(directory, into)
     if folder is None:
         return []
@@ -2157,12 +2207,21 @@ def pending_requests(directory, into, warn=None):
             continue
         request = os.path.join(folder, name)
         try:
-            reply = os.path.join(folder, json.loads(read(request))["reply_name"])
-        except (ValueError, KeyError):
+            saved = json.loads(read(request))
+            reply = os.path.join(folder, saved["reply_name"])
+        except (ValueError, KeyError, TypeError):
             raise GoldError(f"{request} is not a request file this runner wrote") from None
+        if read_given_up(folder, str(saved.get("call")), saved.get("request_sha256")) is not None:
+            continue
         if read_reply(reply, warn) is None:
             pending.append(request)
     return pending
+
+
+def given_up_calls(directory, into):
+    """How many calls of the latest handoff run in `<directory>/<into>/handoff` were given up."""
+    folder = latest_handoff(directory, into)
+    return len([name for name in os.listdir(folder) if name.endswith(GIVEN_UP)]) if folder else 0
 
 
 def check_into(into):
@@ -2383,11 +2442,16 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     outside `.label/`; and after
     the round, if the tree has changed outside `.label/`, it removes the replies it copied and fails.
     Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
-    call failed a check or anything was refused."""
+    call failed a check or anything was refused. With `--give-up CALL`, it runs no process and records
+    that the call is given up instead (see [give_up_requests])."""
     directory = guard.check_dir(arguments.dir)
     check_into(arguments.into)
     if arguments.parallel < 1:
         raise ConfigError("--parallel is how many processes run at once, at least 1")
+    if arguments.give_up:
+        return give_up_requests(directory, arguments.into, arguments.give_up, arguments.reason, say)
+    if arguments.reason is not None:
+        raise ConfigError("--reason says why a call is given up, so it goes with --give-up")
     pending = pending_requests(directory, arguments.into, lambda text: print(text, file=sys.stderr))
     if not pending:
         say(f"no request of {arguments.into} is waiting for a reply")
@@ -2443,6 +2507,40 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     if counts["failed"]:
         return 2
     return EXIT_HANDOFF if counts["no reply"] else 0
+
+
+def give_up_requests(directory, into, calls, reason, say):
+    """`handoff-run --give-up CALL --reason TEXT`: records that each call named, a request of the latest
+    handoff run of `into` still waiting for its reply, is given up, in `<call>.given-up.json` beside the
+    request (the call, the request's hash, the reason, the date), and runs no process. The next `judge`
+    answers it with nothing (see [Runner.ask_handoff]). Refuses a call that is not waiting, and an empty
+    reason."""
+    reason = " ".join((reason or "").split())
+    if not reason:
+        raise ConfigError("--give-up needs --reason TEXT, why the call is given up, which the run's run.json records")
+    waiting = {}
+    for path in pending_requests(directory, into):
+        request = json.loads(read(path))
+        waiting[str(request.get("call"))] = (path, request)
+    unknown = [call for call in calls if call not in waiting]
+    if unknown:
+        raise GoldError(
+            f"no request of {into} that is waiting for a reply is the call {', '.join(unknown)}; the calls waiting "
+            f"are {', '.join(waiting) or 'none'} (`label.py handoff` lists their files)"
+        )
+    for call in dict.fromkeys(calls):
+        path, request = waiting[call]
+        write_atomic(os.path.join(os.path.dirname(path), f"{call}{GIVEN_UP}"), json.dumps({
+            "call": call, "request_sha256": request["request_sha256"], "run": request.get("run"),
+            "reason": reason, "date": now(),
+        }, indent=2) + "\n")
+        say(f"{call}: given up ({reason})")
+    say(
+        f"`judge` run again answers each call given up with nothing: its items stay open, the retries ask them "
+        f"again, those never settled are left out of {into}/labelled.conllu and listed in {into}/unsettled.tsv "
+        f"(with --strict, judge exits 3 instead), and the run's run.json records the calls given up"
+    )
+    return 0
 
 
 def command_probe_confinement(arguments, config, transport=None, gold=None, say=print):
@@ -2685,6 +2783,9 @@ def command_status(arguments, config, transport=None, gold=None, say=print):
         ]
         present = sum(read_reply(os.path.join(folder, reply)) is not None for reply in replies)
         line += f"; {len(waiting)} requests waiting, {present} replies present"
+        given_up = given_up_calls(directory, into)
+        if given_up:
+            line += f", {given_up} calls given up"
     say(line)
     total = book.total()
     left = "" if arguments.max_usd is None else f", ${max(arguments.max_usd - total, 0.0):.4f} left under --max-usd {arguments.max_usd:g}"
@@ -2784,6 +2885,12 @@ def parser():
     answered.add_argument("--into", required=True, help="the merge directory under --dir the judge wrote to")
     answered.add_argument("--parallel", type=int, default=6, help="how many processes run at once (default 6)")
     answered.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
+    answered.add_argument(
+        "--give-up", action="append", metavar="CALL",
+        help="run no process, and record that this call (`part-01`, `retry-1-01`), still waiting, is given up: judge "
+        "then leaves its items open; give it again for another call",
+    )
+    answered.add_argument("--reason", metavar="TEXT", help="why the calls of --give-up are given up, for run.json")
     answered.set_defaults(handler=command_handoff_run)
 
     probe = commands.add_parser(

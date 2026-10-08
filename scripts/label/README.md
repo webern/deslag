@@ -391,9 +391,10 @@ only those two tools. So the working directory is the boundary, and handoff-run 
   `CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_OAUTH_TOKEN` and `ANTHROPIC_*`, plus `DISABLE_AUTOUPDATER=1`, so that the
   process does not update Claude Code during its call. That reaches only the process: any other Claude Code on
   the machine, such as the session that runs handoff-run, can still update the installed `claude` between the
-  probe and a call, or during a round. Turn auto-update off there too, in its settings (`"autoUpdates":
-  false`, or `DISABLE_AUTOUPDATER=1` in its `env`); handoff-run checks the version after every call
-  (below). Nothing else of the caller's environment is passed: a parent Claude Code session sets variables for
+  probe and a call, or during a round. Turn auto-update off there too, with `DISABLE_AUTOUPDATER=1` in the
+  `env` of its settings (whether `"autoUpdates": false` stops the updater of a native install is not known,
+  so it is not relied on); handoff-run checks the version after every call (below). Nothing else of the
+  caller's environment is passed: a parent Claude Code session sets variables for
   its children (its effort, its messaging socket) that would change what the process does or give it a
   channel out of its directory;
 - with `--output-format stream-json --verbose`, whose events are read for the checks every call is held to:

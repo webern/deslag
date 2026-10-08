@@ -38,10 +38,10 @@ LABEL_REPORT_FLAGS ?=
 # The silver set's run (scripts/label/README.md, Silver). SILVER_DIR holds the draw's parts, part-01 to
 # part-NN; SILVER_PREFIX, SILVER_PARTS, SILVER_MIX and SILVER_DRAW_FLAGS are the draw
 # (generate-silver-draw); SILVER_MERGE is the merge directory inside each part that `finish --trains yes`
-# wrote; SILVER_NAME, as YYYY-MM-DD-slug, names the batch, which goes in SILVER_BATCH_DIR/SILVER_NAME
-# (SILVER_BATCH_DIR=$(SILVER_DIR)/draft for the draft the audit is drawn from, since a batch is never
-# written over another); SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, MIT by
-# the owner's choice; SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
+# wrote; SILVER_NAME, as YYYY-MM-DD-slug, names the batch, whose draft, which the audit is drawn from, goes
+# in SILVER_DRAFT_DIR/SILVER_NAME and whose audited build in SILVER_BATCH_DIR/SILVER_NAME, since a batch is
+# never written over another; SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, MIT
+# by the owner's choice; SILVER_BUILD_FLAGS reach `silver build`, such as --audit, --archive-sha256 and --noise.
 SILVER_DIR ?= .label/silver
 SILVER_PREFIX ?= sa
 SILVER_PARTS ?= 9
@@ -645,13 +645,13 @@ generate-label-spacy: build-label fetch-spacy
 generate-percept: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate
 
-# Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug) in
-# $(SILVER_BATCH_DIR)/$(SILVER_NAME), the merge of each part being $(SILVER_MERGE). Sentences whose repository
-# became reserved after the draw, or whose text is a gold sentence's, are dropped and counted. The batch is
-# written only when `silver check` passes on it, and never over another. The first build is the draft the
-# audit is drawn from, SILVER_BATCH_DIR=$(SILVER_DIR)/draft; the final one adds
-# SILVER_BUILD_FLAGS="--audit $(SILVER_DIR)/audit --archive-sha256 SHA", and --noise NAME=FILE for each
-# calibration report. Calls no model.
+# Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug), the merge of each
+# part being $(SILVER_MERGE). Sentences whose repository became reserved after the draw, or whose text is a
+# gold sentence's, are dropped and counted. The batch is written only when `silver check` passes on it, and
+# never over another. The first build is the draft the audit is drawn from, in
+# $(SILVER_DRAFT_DIR)/$(SILVER_NAME); the final one adds SILVER_BUILD_FLAGS="--audit $(SILVER_DIR)/audit
+# --archive-sha256 SHA", and --noise NAME=FILE for each calibration report, and goes in
+# $(SILVER_BATCH_DIR)/$(SILVER_NAME). Calls no model.
 generate-silver-assemble: build-label fetch-blobs
 	@[ -n "$(SILVER_NAME)" ] || { echo "SILVER_NAME=YYYY-MM-DD-slug names the batch" >&2; exit 2; }
 	@[ -n "$(SILVER_ANNOTATIONS_LICENSE)" ] || { echo "SILVER_ANNOTATIONS_LICENSE is the licence the labels are published under, which the owner chooses; it is MIT unless set" >&2; exit 2; }

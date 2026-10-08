@@ -64,10 +64,9 @@ pub enum LexemeKind {
 /// too, since the preprocessor lexes both. An unterminated raw string runs to the end of the file,
 /// in a directive too. A `'` between digits, as in `1'000`, is a digit separator and not a
 /// character, and a number is read as the preprocessor reads it, so `1e+'a'` is a number and an
-/// unterminated character. Raw strings and the prefixes `L`, `u`, `U`
-/// and `u8` are read in every file. Inside `#include`, `#include_next`, `#import` and `#embed`, and
-/// after `__has_include` and its kin, `<a//b>` is a header name and holds no comment, and `"a//b"`
-/// is a [`LexemeKind::Str`].
+/// unterminated character. Raw strings and the prefixes `L`, `u`, `U` and `u8` are read in every
+/// file. Inside `#include`, `#include_next`, `#import` and `#embed`, and after `__has_include` and
+/// its kin, `<a//b>` is a header name and holds no comment, and `"a//b"` is a [`LexemeKind::Str`].
 ///
 /// A compiler's mode can change what a file lexes to, and this follows the mode in which a program
 /// that compiles in both C and C++ means the same. C before C23 has no digit separator, so there

@@ -28,14 +28,10 @@ pub mod ts;
 // with deslag. It uses `std` and `unicode-ident`, which this crate pins. Not a doc comment: the
 // file has its own, and its intra-doc links would resolve here, in this module's parent, if an
 // outer one joined it.
-// TODO: remove dead_code guard if the sweep ever uses every item the scanner exports.
-#[allow(dead_code)]
 #[path = "../../../src/document/rust.rs"]
 pub mod deslag_rust;
 
 // deslag's C and C++ scanner, compiled the same way. It uses `std` alone.
-// TODO: remove dead_code guard if the sweep ever uses every item the scanner exports.
-#[allow(dead_code)]
 #[path = "../../../src/document/cpp.rs"]
 pub mod deslag_cpp;
 

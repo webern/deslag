@@ -198,8 +198,19 @@ const MAX_DELIMITER: usize = 16;
 fn reach_raw_strings(src: &str, blind: Vec<Range<usize>>) -> Vec<Range<usize>> {
     let mut reached: Vec<Range<usize>> = Vec::new();
     for mut range in blind {
+        // Whatever an earlier range reached has been read, so a range that starts inside it goes on
+        // from its end. One that reached the end of the file has swallowed the rest of the ranges.
         let mut from = range.start;
-        while let Some(found) = src[from..range.end].find("R\"") {
+        if let Some(last) = reached.last() {
+            if last.end == src.len() {
+                break;
+            }
+            from = from.max(last.end);
+        }
+        while from < range.end {
+            let Some(found) = src[from..range.end].find("R\"") else {
+                break;
+            };
             let quote = from + found + 1;
             from = quote + 1;
             let Some(delimiter) = raw_delimiter(src, quote) else {
@@ -207,12 +218,16 @@ fn reach_raw_strings(src: &str, blind: Vec<Range<usize>>) -> Vec<Range<usize>> {
             };
             let open = quote + 1 + delimiter.len();
             let close = format!("){delimiter}\"");
-            let end = src[open + 1..]
-                .find(&close)
-                .map_or(src.len(), |n| open + 1 + n + close.len());
-            let end = src[end..].find(['\n', '\r']).map_or(src.len(), |n| end + n);
+            let Some(found) = src[open + 1..].find(&close) else {
+                range.end = src.len();
+                break;
+            };
+            // The body of a raw string holds no other, so go on from its close.
+            from = open + 1 + found + close.len();
+            let end = src[from..]
+                .find(['\n', '\r'])
+                .map_or(src.len(), |n| from + n);
             range.end = range.end.max(end);
-            from = open + 1;
         }
         match reached.last_mut() {
             Some(last) if range.start < last.end => last.end = last.end.max(range.end),
@@ -348,6 +363,20 @@ mod tests {
         assert_eq!(lexed.blind.len(), 1);
         assert_eq!(lexed.blind[0], 0..src.len());
         assert!(lexed.spans.is_empty());
+    }
+
+    #[test]
+    fn many_directives_that_open_a_raw_string_never_closed_are_read_in_linear_time() {
+        // The first one swallows the file. A scan that went on through each of these, to the end of
+        // the file for a close, would be cubic.
+        let src = "#define X R\"(a\n".repeat(5_000);
+        let started = std::time::Instant::now();
+        let lexed = TreeSitter::new(Grammar::Cpp).unwrap().lex(&src);
+        assert_eq!(lexed.blind.len(), 1);
+        assert_eq!(lexed.blind[0], 0..src.len());
+        assert!(lexed.spans.is_empty());
+        let elapsed = started.elapsed();
+        assert!(elapsed.as_millis() < 500, "{elapsed:?}");
     }
 
     #[test]

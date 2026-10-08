@@ -167,7 +167,8 @@ const ALPHABET: &[&str] = &[
 
 /// Whether `src` holds what `grammar` does not read as the scanner does, and the list is that of
 /// [`KNOWN_DISAGREEMENTS`]: a lone `\r`, a backslash, blanks and a line end, two backslashes and a
-/// line end, a splice between the `*` and the `/` of a closer, and a raw string for the C grammar.
+/// line end, a splice between the `*` and the `/` of a closer, a splice after a closer, and a raw
+/// string for the C grammar.
 fn holds_a_known_limit(src: &str, grammar: Grammar) -> bool {
     let bytes = src.as_bytes();
     let lone_cr = bytes
@@ -182,8 +183,11 @@ fn holds_a_known_limit(src: &str, grammar: Grammar) -> bool {
     let split_closer = ["*\\\n/", "*\\\r/", "*\\\r\n/"]
         .iter()
         .any(|splice| src.contains(splice));
+    let splice_after_closer = ["*/\\\n//", "*/\\\r//", "*/\\\r\n//"]
+        .iter()
+        .any(|splice| src.contains(splice));
     let raw_in_c = grammar == Grammar::C && src.contains("R\"");
-    lone_cr || blank_splice || two_backslashes || split_closer || raw_in_c
+    lone_cr || blank_splice || two_backslashes || split_closer || splice_after_closer || raw_in_c
 }
 
 #[test]

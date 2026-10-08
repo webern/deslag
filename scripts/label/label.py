@@ -2786,14 +2786,21 @@ def latest_record(directory, name, role, into=None):
 
 
 def batches_done(directory, name, run):
-    """How many batches of a voter's run have an answer saved: the `batch-NN` asks, whole or in halves,
-    among its `*.lines.txt`."""
+    """How many batches of a voter's run have an answer saved for all their sentences: the `batch-NN`
+    asks whose `*.lines.txt` is saved whole or, for one cut off and asked again in halves, for both
+    halves, each whole or in halves in turn. A batch with a half still to ask, or a sentence cut off
+    even alone, is not counted."""
     folder = os.path.join(directory, "raw", name, run)
-    return len({
-        found.group(1)
-        for found in (re.match(r"(batch-\d+)(?:-[ab])*\.lines\.txt$", f) for f in os.listdir(folder))
-        if found
-    })
+    saved = {f[: -len(".lines.txt")] for f in os.listdir(folder) if f.endswith(".lines.txt")}
+
+    def done(kind):
+        if kind in saved:
+            return True
+        split = any(other.startswith(kind + "-") for other in saved)
+        return split and done(f"{kind}-a") and done(f"{kind}-b")
+
+    batches = {found.group(1) for found in (re.match(r"(batch-\d+)(?:-[ab])*$", kind) for kind in saved) if found}
+    return len([kind for kind in batches if done(kind)])
 
 
 def preflight(directory, into, binary):

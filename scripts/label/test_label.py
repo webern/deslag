@@ -2800,6 +2800,17 @@ class StatusTests(Base):
         label.write(path, json.dumps(saved))
         self.assertEqual(self.status()[1], "voter one: r1 complete, 2 of 2 batches, - abstaining, $0.0020")
 
+    def test_a_batch_asked_again_in_halves_is_answered_only_once_both_halves_are(self):
+        folder = os.path.join(self.dir, "raw", "one", "r1")
+        os.makedirs(folder)
+        saved = ["batch-01", "batch-02-a", "batch-03-a", "batch-03-b-a", "batch-04-a", "retry-1-01"]
+        for kind in saved:
+            label.write(os.path.join(folder, f"{kind}.lines.txt"), "d1: N.s\n")
+        self.assertEqual(label.batches_done(self.dir, "one", "r1"), 1, "batch-01 only")
+        for kind in ("batch-02-b", "batch-03-b-b", "batch-04-b-a"):
+            label.write(os.path.join(folder, f"{kind}.lines.txt"), "d1: N.s\n")
+        self.assertEqual(label.batches_done(self.dir, "one", "r1"), 3, "batch-04-b-b is still to ask")
+
     def test_the_adjudicator_shown_is_the_one_the_merge_records(self):
         label.write(os.path.join(self.dir, "other", label.ADJUDICATOR_RECORD), json.dumps({"name": "two", "model": "x/two"}))
         self.assertIn("adjudicator two (other): no run", self.status("--into", "other"))

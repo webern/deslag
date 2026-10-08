@@ -51,6 +51,10 @@ LISTING = {
     }
 }
 
+# The commit the tests' runs are made at: a clean one, whatever the state of the checkout they run in,
+# since a part of a draw is labelled only at a clean commit.
+COMMIT = "c0" * 20
+
 # What voters.json says of each model's licence; a run copies it into its record.
 LICENSED = {"license": "MIT", "license_url": "https://example.org/card", "license_checked": "2026-10-01"}
 
@@ -289,6 +293,9 @@ class Base(unittest.TestCase):
         self.saved_generator = guard.GENERATOR
         self.addCleanup(setattr, guard, "GENERATOR", guard.GENERATOR)
         guard.GENERATOR = lambda name: skeleton().replace("= dev", f"= {name}").encode()
+        commit = unittest.mock.patch.object(label, "deslag_commit", return_value=COMMIT)
+        commit.start()
+        self.addCleanup(commit.stop)
         self.said = []
         self.slept = []
         self.warned = []
@@ -871,7 +878,7 @@ class PartsLockTests(Base):
         transport = FakeTransport(answer_all)
         later = self.part(2)
         with self.assertRaisesRegex(
-            label.GoldError, rf"`deslag_commit` is {runner.commit} in the lock and {'f' * 40} here.*remove the lock"
+            label.GoldError, rf"`deslag_commit` is {runner.commit} in the lock and {'f' * 40} here.*`git checkout` of the locked commit.*lock --dir PART --reset --reason TEXT"
         ):
             self.tag(later, "one", transport, commit="f" * 40)
         self.assertEqual(transport.posts, [], "nothing is asked")
@@ -925,6 +932,87 @@ class PartsLockTests(Base):
         self.tag(self.dir, "one")
         found = [name for _, _, names in os.walk(self.label_root) for name in names if name == label.PARTS_LOCK]
         self.assertEqual(found, [])
+
+    def test_a_part_is_labelled_only_at_a_clean_commit(self):
+        part = self.part(1)
+        source = os.path.join(part, "spacy.conllu")
+        label.write(source, "# sent_id = d1\n1\tRun\t_\tVERB\t_\t_\t_\t_\t_\tKind=Word\n\n")
+        for commit in (COMMIT + "-dirty", "unknown"):
+            transport = FakeTransport(answer_all)
+            with self.assertRaisesRegex(label.GoldError, rf"this checkout is at {commit}, and a part of a draw is labelled only"):
+                self.tag(part, "one", transport, commit=commit)
+            self.assertEqual(transport.posts, [], "nothing is asked")
+            runner = self.runner(None, directory=part)
+            runner.commit = commit
+            with self.assertRaisesRegex(label.GoldError, "register --name spacy: this checkout is at"):
+                label.register(runner, "spacy", source, "en-core-web-trf", None, None)
+        self.assertFalse(os.path.exists(os.path.join(part, "raw")), "no run is started")
+        self.assertFalse(os.path.exists(self.lock_path))
+        # A sample that is not a part is not held to it.
+        self.tag(self.dir, "one", commit=COMMIT + "-dirty")
+
+    def test_a_smoke_run_or_a_refused_or_stopped_one_never_writes_the_lock(self):
+        part = self.part(1)
+        # A smoke run, with a limit.
+        runner = self.runner(FakeTransport(answer_all), gold=self.gold, directory=part)
+        runner.tag("one", limit=1)
+        self.assertFalse(os.path.exists(self.lock_path), "a smoke run writes no lock")
+        # A run refused for a model with no licence date.
+        config = copy.deepcopy(CONFIG)
+        del config["models"]["one"]["license_checked"]
+        with self.assertRaises(label.ConfigError):
+            self.runner(FakeTransport(answer_all), gold=self.gold, config=config, directory=part).tag("one")
+        # A run stopped by the cap.
+        with self.assertRaises(ledger.CapExceeded):
+            self.runner(FakeTransport(answer_all), max_usd=0.0001, gold=self.gold, directory=part).tag("two")
+        self.assertFalse(os.path.exists(self.lock_path), "a refused or stopped run writes no lock")
+        # So a full run with another guide is not refused by what they ran with.
+        prompts = label.Prompts()
+        prompts.guide_sha256 = "0" * 64
+        self.tag(part, "one", prompts=prompts)
+        self.assertEqual(self.lock()["models"]["one"]["guide_sha256"], "0" * 64)
+
+    def test_a_reset_keeps_the_old_lock_and_its_reason_and_names_the_parts_labelled_under_it(self):
+        first, second = self.part(1), self.part(2)
+        self.tag(first, "one")
+        old = self.lock()
+        said = []
+        reset = label.parser().parse_args(["lock", "--dir", second, "--reset", "--reason", "the guide was fixed"])
+        self.assertEqual(label.command_lock(reset, CONFIG, say=said.append), 0)
+        self.assertFalse(os.path.exists(self.lock_path))
+        log = os.path.join(os.path.dirname(self.lock_path), label.LOCK_RESETS)
+        entry, = [json.loads(line) for line in label.read(log).splitlines()]
+        self.assertEqual(entry["lock"], old)
+        self.assertEqual(entry["reason"], "the guide was fixed")
+        self.assertEqual(entry["parts"], {"part-01": ["one r1"], "part-02": []})
+        self.assertRegex(entry["date"], r"^\d{4}-\d{2}-\d{2}T")
+        self.assertIn("  part-01: one r1", said)
+        self.assertTrue(any("held to the new one at its preflight" in line for line in said), said)
+        # The next step that counts writes a new lock from its own values.
+        prompts = label.Prompts()
+        prompts.guide_sha256 = "0" * 64
+        self.tag(second, "one", prompts=prompts)
+        self.assertEqual(self.lock()["models"]["one"]["guide_sha256"], "0" * 64)
+        # Printed, with how many resets the log holds.
+        said.clear()
+        shown = label.parser().parse_args(["lock", "--dir", first])
+        self.assertEqual(label.command_lock(shown, CONFIG, say=said.append), 0)
+        self.assertIn("0" * 64, said[0])
+        self.assertTrue(said[1].startswith("reset 1 times"), said)
+        # A reset needs a reason and a lock; a reason needs a reset.
+        for argv, error, needle in (
+            (["--reset"], label.ConfigError, "--reset needs --reason TEXT"),
+            (["--reset", "--reason", "  "], label.ConfigError, "--reset needs --reason TEXT"),
+            (["--reason", "x"], label.ConfigError, "goes with --reset"),
+        ):
+            with self.assertRaisesRegex(error, needle):
+                label.command_lock(label.parser().parse_args(["lock", "--dir", first, *argv]), CONFIG, say=said.append)
+        label.command_lock(reset, CONFIG, say=said.append)
+        with self.assertRaisesRegex(label.GoldError, "there is no .*lock.json to reset"):
+            label.command_lock(reset, CONFIG, say=said.append)
+        self.assertEqual(len(label.read(log).splitlines()), 2, "a refused reset adds no line")
+        with self.assertRaisesRegex(label.GoldError, "is not a part of a draw"):
+            label.command_lock(label.parser().parse_args(["lock", "--dir", self.dir]), CONFIG, say=said.append)
 
 
 class MoneyTests(Base):
@@ -4841,8 +4929,19 @@ class ConfinementTests(Base):
 
         waiting_part(1)
         self.assertEqual(self.probe(), 0)
-        self.assertEqual(self.handoff_run(), 0, self.out)
         lock_path = os.path.join(self.label_root, "silver", label.PARTS_LOCK)
+        # A round that keeps no reply does not count, and writes no agent into the lock.
+        self.fake(no_reply=True)
+        self.assertEqual(self.handoff_run(), label.EXIT_HANDOFF, self.out)
+        self.assertNotIn("agent", json.loads(label.read(lock_path)))
+        # Nor does a round at a commit with changes, which is refused before any call.
+        before = len(self.calls())
+        with unittest.mock.patch.object(label, "deslag_commit", return_value=COMMIT + "-dirty"), \
+                self.assertRaisesRegex(label.GoldError, "handoff-run: this checkout is at .*-dirty"):
+            self.handoff_run()
+        self.assertEqual(len(self.calls()), before)
+        self.fake()
+        self.assertEqual(self.handoff_run(), 0, self.out)
         lock = json.loads(label.read(lock_path))
         self.assertEqual(lock["agent"], {"version": "2.1.293", "args": confine.arguments("claude-opus-5-5")})
         self.assertEqual(self.judge(), {})

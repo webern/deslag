@@ -141,7 +141,7 @@ fn a_part_whose_claude_code_is_not_the_locks_is_refused_at_its_preflight() {
     made.check_part(2).refused(&[
         "lock.json",
         "`agent.version` is 2.1.293 in the lock and 2.1.294 in this part",
-        "remove the lock and label every part again",
+        "label.py lock --dir PART --reset --reason TEXT",
     ]);
 }
 

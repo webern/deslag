@@ -335,29 +335,44 @@ Each part is a sample of its own. With `D` the part's directory and `M` its merg
 The lock of the parts. The parts of one draw are assembled into one batch, so they are labelled alike: at one
 deslag commit, from one draw, by one set of voters with one prompt and guide each, judged by one adjudicator
 with one `min_voters`, and with one Claude Code. `lock.json` beside the part directories
-(`.label/silver/lock.json`) holds what the first part was labelled with: `deslag_commit` (the checkout's
-commit as a run records it, with `-dirty` when tracked files have changes), `draw` (the part's manifest header
-without `part`), `voters`, `adjudicator`, `min_voters`, `models` (for each voter and the adjudicator, its
-`prompt_sha256` and `guide_sha256`, as its `run.json` records them) and `agent` (the Claude Code `version` and
-the `args` of handoff-run). Only a directory whose manifest says `# part = k of N` has a lock; another sample
-has none. The lock is filled as the steps run, each writing the fields it is the first to know, under a lock
-of its folder, since the voters of a part run at once:
+(`.label/silver/lock.json`) holds what the parts are labelled with: `deslag_commit` (the checkout's commit),
+`draw` (the part's manifest header without `part`), `voters`, `adjudicator`, `min_voters`, `models` (for each
+voter and the adjudicator, its `prompt_sha256` and `guide_sha256`, as its `run.json` records them) and `agent`
+(the Claude Code `version` and the `args` of handoff-run). Only a directory whose manifest says `# part = k of
+N` has a lock; another sample has none.
 
-- `tag` knows the commit, the draw, the voters of `voters.json`, the adjudicator and the voter's model;
-- `register` knows the commit and the draw;
-- `judge` knows the commit, the draw, the voters it judges, the adjudicator, `min_voters` and the adjudicator's
-  model;
-- `handoff-run` knows the commit, the draw and the agent, after the probe's stamp is checked;
-- `judge`, reading the replies, holds `agent.json`'s version and args to the lock's `agent`.
+A part is labelled only at a clean commit: `tag`, `register`, `judge` and `handoff-run` refuse a checkout whose
+tracked files have changes (`-dirty`) or whose commit git cannot give (`unknown`) before any call, since the
+preflight refuses a run made at one. Commit a change such as the licence dates of `voters.json` before the
+first part. Each step holds what it knows to the lock before any call is made or any process started, and
+refuses a field the lock holds with another value, naming the lock, the field (`deslag_commit`,
+`draw.tag_version`, `models.qwen.prompt_sha256`, `agent.version`, ...) and both values. Only a step that counts
+writes into the lock, the fields it does not hold yet, under a lock of its folder, since the voters of a part
+run at once:
 
-A step that knows a field the lock holds with another value refuses before any call is made or any process
-started, naming the lock, the field (`deslag_commit`, `draw.tag_version`, `models.qwen.prompt_sha256`,
-`agent.version`, ...) and both values. Put back what changed (the commit, `voters.json`, a prompt or guide,
-Claude Code); or, to start the draw over with the new ones, remove `lock.json` and label every part again.
+- `tag`, when its run finishes, not a smoke run with `--limit`: the commit, the draw, the voters of
+  `voters.json`, the adjudicator and the voter's model;
+- `register`, once the run is recorded: the commit and the draw;
+- `judge`, once the merge is judged to its labels: the commit, the draw, the voters it judges, the
+  adjudicator, `min_voters`, the adjudicator's model, and the agent of a handoff adjudicator's run;
+- `handoff-run`, after a round whose replies were put in place: the commit, the draw and the agent;
+- `judge`, reading the replies, holds `agent.json`'s version and args to the lock's `agent`, and writes nothing.
+
+A step that is refused, fails or stops, and a smoke run, never writes the lock. So the first step that counts
+writes it, and each later one adds what it is the first to know.
+
+When a step is refused, put back what changed: `git checkout` of the locked commit (which brings back
+`voters.json`, the prompts and the guide of that commit), or `claude install VERSION` for the locked Claude Code.
+A change that is meant needs a reset: `label.py lock --dir D --reset --reason TEXT` appends the lock as it was,
+the reason, the date and the runs each part holds to `lock-resets.jsonl` beside it, removes `lock.json`, and
+names the parts that hold runs made under the old lock. The next step that counts writes a new lock. Each part
+named is held to the new lock at its preflight and is labelled again where it differs; when only the
+adjudicator's Claude Code changed, `judge --again` and `handoff-run` on that part are enough. `label.py lock
+--dir D` prints the lock and how many times it was reset. A lock is never removed by hand.
 `deslag-gold silver build --check-part` holds a part that passes to the same lock, field by field from the
 part's own files (its runs' commit, its manifest header, `voters.tsv`, `adjudicator.json`, its runs' hashes
 and agent record), refuses it the same way, and adds the fields the lock lacks: the first part to pass its
-preflight writes the lock if no run has.
+preflight writes the lock if no step has.
 
 Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
 and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription
@@ -465,8 +480,10 @@ Makefile), so the run can change them.
 - `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 9 --mix ... --per-file 3
   --per-repo 12`. Reads the big tier and calls no model.
 - `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
-  at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so `LABEL_FLAGS="--limit 1"` is a smoke run. A
-  voter that fails is named, and spaCy does not run. The Opus round is steps 3 and 4 above, driven by hand.
+  at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so
+  `LABEL_FLAGS="--limit 1"` is a smoke run, and `--dry-run` sends nothing; with either, spaCy does not run, so
+  that nothing writes the lock. A voter that fails is named, and spaCy does not run. The Opus round is steps 3
+  and 4 above, driven by hand.
 - `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
   `.label/silver`. Without `--audit` in `SILVER_BUILD_FLAGS` it writes the draft, into
   `SILVER_DRAFT_DIR/NAME` (`.label/silver/draft/NAME`); with `SILVER_BUILD_FLAGS="--audit DIR --archive-sha256

@@ -2,8 +2,9 @@
 #
 # Labels one part of the silver draw: the voters of voters.json tag it at once, each in a process of its
 # own (they lock the sample directory and the ledger), then spaCy tags it and is recorded as a run. A voter
-# that fails is named, and spaCy does not run. It is the recipe of `make generate-silver-part`; nothing in
-# the build, the tests or CI runs it.
+# that fails is named, and spaCy does not run. With --limit (a smoke run) or --dry-run among the flags,
+# spaCy does not run either: its run would count, and write the lock of the parts. It is the recipe of
+# `make generate-silver-part`; nothing in the build, the tests or CI runs it.
 #
 #   silver-part.sh SILVER_DIR PART MAX_USD GOLD_BIN [FLAGS...]
 #
@@ -45,4 +46,12 @@ for AT in "${!PIDS[@]}"; do
 done
 [[ -z "$FAILED" ]] || { echo "silver-part.sh: the voters that failed:$FAILED" >&2; exit 1; }
 
+for FLAG in "$@"; do
+    case "$FLAG" in
+        --limit|--limit=*|--dry-run)
+            echo "silver-part.sh: $FLAG is not a full run of the voters, so spaCy is not run"
+            exit 0
+            ;;
+    esac
+done
 "$HERE/spacy.sh" "$DIR"

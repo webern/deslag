@@ -107,7 +107,7 @@ fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
                 return Err(Problems(vec![Error::load(
                     &shown,
                     Place::File,
-                    "it is not a JSON object; it is the lock of the parts of a draw, so restore it, or remove it and label every part again",
+                    "it is not a JSON object; it is the lock of the parts of a draw, so restore it, or reset it with `label.py lock --dir PART --reset --reason TEXT`, which records what it held",
                 )]));
             }
         }
@@ -123,7 +123,7 @@ fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
             &shown,
             Place::File,
             format!(
-                "`{field}` is {} in the lock and {} in this part; the parts of one draw are labelled at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model and one Claude Code, so that their batch can be assembled. Put back what changed, or remove the lock and label every part again",
+                "`{field}` is {} in the lock and {} in this part; the parts of one draw are labelled at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model and one Claude Code, so that their batch can be assembled. Label this part again as the lock has it; or, if the change is meant, `label.py lock --dir PART --reset --reason TEXT` records the old lock and names the parts labelled under it, each of which is then held to the new one",
                 lock_shown(held),
                 lock_shown(here)
             ),

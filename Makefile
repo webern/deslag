@@ -670,7 +670,8 @@ generate-silver-draw: build-label fetch-blobs
 # $(LABEL)/voters.json tag it at once, each in a process of its own (they lock the sample directory and the
 # ledger, which a test shows), then spaCy tags it and is recorded as a run. Needs OPENROUTER_API_KEY; MAX_USD
 # caps the ledger over every checkout; LABEL_FLAGS reach label.py tag, so LABEL_FLAGS="--limit 1" is a smoke
-# run and --dry-run sends nothing. A voter that fails is named, and spaCy does not run. Then the person
+# run, which never writes the lock of the parts, and --dry-run sends nothing; with either, spaCy does not
+# run. A voter that fails is named, and spaCy does not run. Then the person
 # running the labelling drives `label.py status --dir $(SILVER_DIR)/part-NN`, the judge step and handoff-run
 # for Opus, and `deslag-gold silver build --check-part`.
 generate-silver-part: build-label fetch-spacy

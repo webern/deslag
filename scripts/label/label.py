@@ -18,6 +18,7 @@ in Rust. See README.md in this directory for the steps.
     label.py handoff-run --dir .label/silver/part-01 --into merge [--parallel 6] [--claude PATH]
                          [--give-up CALL ... --reason TEXT]
     label.py probe-confinement [--claude PATH] [--keep]
+    label.py lock     --dir .label/silver/part-01 [--reset --reason TEXT]
     label.py status   --dir .label/silver/part-01 [--into merge] [--max-usd 8]
     label.py spend
 
@@ -146,8 +147,12 @@ SAMPLE_LOCK = "label.lock"
 # The lock of a draw dealt into parts, beside the part directories (`.label/silver/lock.json`): the deslag
 # commit, the draw, the voters, `min_voters`, each model's prompt and guide hashes and the Claude Code of
 # the adjudicator that the first part was labelled with, which every later step of every part must match
-# (see [hold_parts_lock]). `deslag-gold silver build --check-part` holds a part to it too.
+# (see [check_parts_lock] and [pin_parts_lock]). `deslag-gold silver build --check-part` holds a part to it
+# too. Only a step that counts writes it: a finished run at a clean commit, never a smoke run or a refused one.
 PARTS_LOCK = "lock.json"
+# Beside the lock: each reset of it, as a JSON line with the date, the reason, the lock as it was and the runs
+# each part held then (see [reset_parts_lock]). A lock is never removed without a line here.
+LOCK_RESETS = "lock-resets.jsonl"
 
 # What `handoff/<run>/agent.json` must say about the agents that made the replies: `handoff-run` writes
 # it, and a reply is read only if it says `safe_mode: true`, the tools Read and Write, and the argument
@@ -602,8 +607,8 @@ def read_parts_lock(path):
         lock = None
     if not isinstance(lock, dict):
         raise GoldError(
-            f"{path} is not a JSON object; it is the lock of the parts of a draw, which the first run of the first "
-            f"part wrote, so restore it, or remove it and label every part again"
+            f"{path} is not a JSON object; it is the lock of the parts of a draw, so restore it, or reset it "
+            f"with `label.py lock --dir PART --reset --reason TEXT`, which records what it held"
         )
     return lock
 
@@ -640,6 +645,16 @@ def lock_differences(lock, known):
     return found
 
 
+# What puts back each field of the lock without a reset.
+PUT_BACK = (
+    "Put back what changed: `git checkout` of the locked commit, which brings back voters.json and the "
+    "prompts with it, or `claude install VERSION` for the locked Claude Code. A change that is meant needs "
+    "`label.py lock --dir PART --reset --reason TEXT`, which records the old lock and says which parts were "
+    "labelled under it; each of those is then held to the new lock at its preflight, and is labelled again "
+    "where it differs (for the adjudicator's Claude Code alone, `judge --again` and `handoff-run` on it)"
+)
+
+
 def refuse_lock_differences(path, what, found):
     """GoldError for the differences `found` between the lock at `path` and what `what` would record."""
     if not found:
@@ -650,19 +665,47 @@ def refuse_lock_differences(path, what, found):
     raise GoldError(
         f"{path}: {what} differs from what the lock of the parts holds: {listed}. The parts of one draw are labelled "
         f"at one deslag commit, with one draw, one set of voters, one `min_voters`, one prompt and guide per model "
-        f"and one Claude Code, so that the batch made of them can be assembled; nothing was asked. Put back what "
-        f"changed (the commit, voters.json, the prompts, Claude Code), or remove the lock and label every part again"
+        f"and one Claude Code, so that the batch made of them can be assembled; nothing was asked. {PUT_BACK}"
     )
 
 
-def hold_parts_lock(directory, what, known):
-    """Holds the sample `directory`, when it is a part of a draw, to the lock of the parts: refuses
-    (GoldError) when a field of `known` that the lock holds has another value, and writes the fields
-    the lock does not hold yet, so the first run of the first part writes it and each later step adds
-    what it is the first to know. Read and written under a lock of its folder, since the voters of a
-    part are tagged at once. A sample that is not a part is left alone."""
+def is_clean_commit(commit):
+    """Whether `commit`, as [deslag_commit] gives it, is a commit with no change to the tracked files."""
+    return bool(re.fullmatch(r"[0-9a-f]{40}", commit or ""))
+
+
+def check_parts_lock(directory, what, known):
+    """Holds the sample `directory`, when it is a part of a draw, to the lock of the parts before a step
+    asks anything: refuses (GoldError) a `deslag_commit` in `known` that is `-dirty` or `unknown`, since
+    the preflight refuses a run made at one, and a field of `known` that the lock holds with another
+    value. Writes nothing (see [pin_parts_lock]). A sample that is not a part is left alone."""
     path = parts_lock_path(directory)
     if path is None:
+        return
+    commit = known.get("deslag_commit")
+    if "deslag_commit" in known and not is_clean_commit(commit):
+        raise GoldError(
+            f"{what}: this checkout is at {commit}, and a part of a draw is labelled only at a commit with no "
+            f"change to its tracked files, since the preflight refuses a run made at any other; nothing was asked. "
+            f"Commit the change or put it back (`git status` shows it), then run it again"
+        )
+    with locked(os.path.join(os.path.dirname(path), SAMPLE_LOCK)):
+        refuse_lock_differences(path, what, lock_differences(read_parts_lock(path), known))
+
+
+def pin_parts_lock(directory, what, known):
+    """Writes into the lock of the parts the fields of `known` it does not hold yet, once a step of the
+    part `directory` has done what counts: a voter's run finished, not a smoke run; an outside
+    tagger's run registered; a merge judged to its labels; a round of handoff-run whose replies were
+    kept. So the first such step writes the lock, and each later one adds what it is the first to know.
+    A step that is refused, fails or stops writes nothing. Refuses (GoldError) a field the lock holds
+    with another value, which a step of another part may have written since this one began. Read and
+    written under a lock of its folder, since the voters of a part are tagged at once. A sample that is
+    not a part is left alone."""
+    path = parts_lock_path(directory)
+    if path is None:
+        return
+    if not is_clean_commit(known.get("deslag_commit")):
         return
     with locked(os.path.join(os.path.dirname(path), SAMPLE_LOCK)):
         lock = read_parts_lock(path)
@@ -675,6 +718,86 @@ def hold_parts_lock(directory, what, known):
                 merged[key] = value
         if merged != lock:
             write_atomic(path, json.dumps(merged, indent=2, sort_keys=True) + "\n")
+
+
+def part_runs(folder):
+    """The parts of a draw in `folder`, the directory that holds its lock, and the runs each holds: a
+    dict of the part directory's name to its runs, as `<name> <run>`, in order."""
+    found = {}
+    for name in sorted(os.listdir(folder)):
+        directory = os.path.join(folder, name)
+        if not os.path.isfile(os.path.join(directory, "sample.conllu")) or parts_lock_path(directory) is None:
+            continue
+        runs = []
+        for record in glob.glob(os.path.join(directory, "raw", "*", "*", "run.json")):
+            run = os.path.basename(os.path.dirname(record))
+            runs.append((os.path.basename(os.path.dirname(os.path.dirname(record))), run))
+        found[name] = [f"{who} {run}" for who, run in sorted(runs, key=lambda pair: (natural_run(pair[1]), pair[0]))]
+    return found
+
+
+def natural_run(run):
+    """A run id's number, for ordering `r2` before `r10`."""
+    digits = re.sub(r"\D", "", run)
+    return int(digits) if digits else 0
+
+
+def reset_parts_lock(directory, reason, say):
+    """`lock --reset --reason TEXT`: ends the lock of the parts of the draw that `directory` is a part of.
+    The lock as it was, the reason, the date and the runs each part holds are appended to LOCK_RESETS
+    beside it, and only then is `lock.json` removed, so the next step that counts writes a new one. Says
+    which parts hold runs made under the old lock: each is held to the new one at its preflight."""
+    path = parts_lock_path(directory)
+    if path is None:
+        raise GoldError(f"{directory} is not a part of a draw, which is what has a lock")
+    reason = " ".join((reason or "").split())
+    if not reason:
+        raise ConfigError("--reset needs --reason TEXT, why the lock is reset, which the log of resets keeps")
+    folder = os.path.dirname(path)
+    log = os.path.join(folder, LOCK_RESETS)
+    with locked(os.path.join(folder, SAMPLE_LOCK)):
+        if not os.path.isfile(path):
+            raise GoldError(f"there is no {path} to reset; the next step that counts writes one")
+        try:
+            held = json.loads(read(path))
+        except ValueError:
+            held = read(path)
+        runs = part_runs(folder)
+        entry = {"date": now(), "reason": reason, "lock": held, "parts": runs}
+        with open(log, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, sort_keys=True) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.remove(path)
+    say(f"{path} is reset ({reason}); what it held is the last line of {log}")
+    labelled = {name: found for name, found in runs.items() if found}
+    if not labelled:
+        say("no part holds a run yet")
+        return 0
+    say("these parts hold runs made under the old lock, and each is held to the new one at its preflight:")
+    for name, found in labelled.items():
+        say(f"  {name}: {', '.join(found)}")
+    say("the next step that counts writes the new lock from its own values")
+    return 0
+
+
+def command_lock(arguments, config, transport=None, gold=None, say=print):
+    """`lock`: prints the lock of the parts of the draw that `--dir` is a part of, and how many times it was
+    reset; with `--reset --reason TEXT`, resets it (see [reset_parts_lock])."""
+    directory = guard.check_dir(arguments.dir)
+    if arguments.reset:
+        return reset_parts_lock(directory, arguments.reason, say)
+    if arguments.reason is not None:
+        raise ConfigError("--reason says why the lock is reset, so it goes with --reset")
+    path = parts_lock_path(directory)
+    if path is None:
+        raise GoldError(f"{directory} is not a part of a draw, which is what has a lock")
+    log = os.path.join(os.path.dirname(path), LOCK_RESETS)
+    resets = len([line for line in read(log).splitlines() if line.strip()]) if os.path.isfile(log) else 0
+    lock = read_parts_lock(path)
+    say(f"{path}: " + (json.dumps(lock, indent=2, sort_keys=True) if lock else "none yet; the next step that counts writes it"))
+    say(f"reset {resets} times" + (f"; {log} says when and why" if resets else ""))
+    return 0
 
 
 class EndpointExhausted(openrouter.ApiError):
@@ -788,12 +911,22 @@ class Runner:
         """The hashes a run of a model records of what it is told: the prompts and the guide."""
         return {"prompt_sha256": self.prompts.sha256, "guide_sha256": self.prompts.guide_sha256}
 
-    def hold_lock(self, what, **known):
-        """[hold_parts_lock] for this sample, with the commit and the draw, which every step knows, and
-        `known`. Nothing for a sample that is not a part of a draw."""
-        if parts_lock_path(self.dir) is None:
-            return
-        hold_parts_lock(self.dir, what, {"deslag_commit": self.commit, "draw": draw_values(self.dir), **known})
+    def lock_fields(self, **known):
+        """What a step of this sample holds to the lock of the parts: the commit and the draw, which every
+        step knows, and `known`."""
+        return {"deslag_commit": self.commit, "draw": draw_values(self.dir), **known}
+
+    def check_lock(self, what, **known):
+        """[check_parts_lock] for this sample, before a step asks anything. Nothing for a sample that is
+        not a part of a draw."""
+        if parts_lock_path(self.dir) is not None:
+            check_parts_lock(self.dir, what, self.lock_fields(**known))
+
+    def pin_lock(self, what, **known):
+        """[pin_parts_lock] for this sample, once a step has done what counts. Nothing for a sample that
+        is not a part of a draw."""
+        if parts_lock_path(self.dir) is not None:
+            pin_parts_lock(self.dir, what, self.lock_fields(**known))
 
     def retrying(self, what, **extra):
         """with_retries' arguments from the settings, and a one-line log of each wait: what is being
@@ -1612,19 +1745,25 @@ class Runner:
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
         `failed`, not complete: RunFailed, and nothing continues it.
 
-        In a part of a draw, nothing is asked unless the commit, the draw, the voters, the adjudicator
-        and this voter's prompt and guide are the lock's (see [hold_parts_lock])."""
-        self.hold_lock(
-            f"tag --voter {name}", voters=list(self.config["voters"]), adjudicator=self.config["adjudicator"],
+        In a part of a draw, nothing is asked unless the commit is clean and it, the draw, the voters,
+        the adjudicator and this voter's prompt and guide are the lock's (see [check_parts_lock]); a run
+        that finishes, and is not a smoke run, writes into the lock what it does not hold yet."""
+        held = dict(
+            voters=list(self.config["voters"]), adjudicator=self.config["adjudicator"],
             models={name: self.prompt_hashes()},
         )
+        self.check_lock(f"tag --voter {name}", **held)
         tried = []
         self.budget = FailureBudget(self.settings["failure_budget"])
         while True:
             try:
-                return self.tag_run(name, limit, resume, again, endpoint)
+                done = self.tag_run(name, limit, resume, again, endpoint)
+                break
             except EndpointExhausted as error:
                 endpoint, resume, again = self.fall_back(error, tried), None, True
+        if limit is None:
+            self.pin_lock(f"tag --voter {name}", **held)
+        return done
 
     def tag_run(self, name, limit, resume, again, endpoint):
         if resume is None and not again and limit is None:
@@ -1980,9 +2119,10 @@ class Runner:
         the word is left out of `labelled.conllu` with its whole sentence, `unsettled.tsv` lists it,
         and the items are returned for the caller to count.
 
-        In a part of a draw, nothing is merged or asked unless the commit, the draw, the model voters,
-        the adjudicator, `min_voters` and the adjudicator's prompt and guide are the lock's (see
-        [hold_parts_lock])."""
+        In a part of a draw, nothing is merged or asked unless the commit is clean and it, the draw, the
+        model voters, the adjudicator, `min_voters` and the adjudicator's prompt and guide are the lock's
+        (see [check_parts_lock]); a merge judged to its labels writes into the lock what it does not hold
+        yet, with the Claude Code of a handoff adjudicator's run."""
         settled = self.settle_path(into, settle_from) if settle_from is not None else None
         if settle_from is not None:
             self.check_settle_adjudicator(settle_from)
@@ -1991,10 +2131,11 @@ class Runner:
                 self.check_tags_run(name)
         scope = self.judge_scope(into, voters, settle_from, same_votes, min_voters)
         adjudicator = self.config["adjudicator"]
-        self.hold_lock(
-            "judge", voters=[name for name, base_only in voters if not base_only], adjudicator=adjudicator,
+        held = dict(
+            voters=[name for name, base_only in voters if not base_only], adjudicator=adjudicator,
             min_voters=scope["min_voters"], models={adjudicator: self.prompt_hashes()},
         )
+        self.check_lock("judge", **held)
         if not again and resume is None:
             done = self.finished_run(into, scope, trains)
             if done:
@@ -2032,6 +2173,10 @@ class Runner:
                 self.config["adjudicator"], adjudicator_run, finished=True, open_items=len(open_items), trains=trains
             )
             self.write_runs()
+            agent = json.loads(read(self.raw(adjudicator, adjudicator_run, "run.json"))).get("agent")
+            if agent:
+                held["agent"] = {"version": agent["version"], "args": agent["args"]}
+        self.pin_lock("judge", **held)
         return open_items
 
 
@@ -2067,7 +2212,7 @@ def register(runner, name, path, model, version, seconds):
     if entry["model"] != model:
         raise ConfigError(f"external.{name} of {runner.config_path} is the model `{entry['model']}`, not `{model}`")
     licence = runner.licence(name, entry, "external")
-    runner.hold_lock(f"register --name {name}")
+    runner.check_lock(f"register --name {name}")
     path = guard.check_file(path, runner.dir)
     run = runner.ledger.new_run()
     text = read(path)
@@ -2089,6 +2234,7 @@ def register(runner, name, path, model, version, seconds):
         }) + "\n")
     write(os.path.join(runner.dir, "tags", f"{name}.conllu"), stamp_runs(text, run))
     runner.write_runs()
+    runner.pin_lock(f"register --name {name}")
     return run
 
 
@@ -2470,12 +2616,14 @@ class HandoffRound:
 def command_handoff_run(arguments, config, transport=None, gold=None, say=print):
     """`handoff-run`: answers the requests of a handoff judge still unanswered, each with a confined
     claude process, `--parallel` at once (see [HandoffRound]). Refuses to start without a passing
-    probe stamp for the Claude Code installed now and these arguments; in a part of a draw, when the
-    commit, the draw, that Claude Code or these arguments are not the lock's (see [hold_parts_lock]);
-    with an `agent.json` that differs from what it would write; or when `git status` shows a change
-    outside `.label/`. The round fails closed: an interrupt or a call that raises stops it (no call
-    not yet started is made), and unless `git status` then shows the tree clean outside `.label/`,
-    the replies it copied are moved to quarantine (see [quarantine]) and it fails.
+    probe stamp for the Claude Code installed now and these arguments; in a part of a draw, at a
+    commit that is not clean or when the commit, the draw, that Claude Code or these arguments are
+    not the lock's (see [check_parts_lock]); with an `agent.json` that differs from what it would
+    write; or when `git status` shows a change outside `.label/`. The round fails closed: an
+    interrupt or a call that raises stops it (no call not yet started is made), and unless `git
+    status` then shows the tree clean outside `.label/`, the replies it copied are moved to
+    quarantine (see [quarantine]) and it fails. A round whose replies were kept writes into the lock
+    of the parts what it does not hold yet.
     Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
     call failed a check or anything was refused. With `--give-up CALL`, it runs no process and records
     that the call is given up instead (see [give_up_requests])."""
@@ -2502,11 +2650,12 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     claude = confine.find_claude(arguments.claude)
     version = confine.version(claude)
     check_stamp(version, confine.arguments(model))
-    if parts_lock_path(directory) is not None:
-        hold_parts_lock(directory, "handoff-run", {
-            "deslag_commit": deslag_commit(), "draw": draw_values(directory),
-            "agent": {"version": version, "args": confine.arguments(model)},
-        })
+    commit = deslag_commit()
+    held = {
+        "deslag_commit": commit, "draw": draw_values(directory) if parts_lock_path(directory) else None,
+        "agent": {"version": version, "args": confine.arguments(model)},
+    }
+    check_parts_lock(directory, "handoff-run", held)
     round_ = HandoffRound(folder, model, claude, version)
     round_.check_agent()
     changes = tree_changes(REPO)
@@ -2559,6 +2708,8 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
             )
     if why is not None:
         return 2
+    if round_.copied:
+        pin_parts_lock(directory, "handoff-run", held)
     say(
         f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
         f"{counts['failed']} failed a check; `judge` run again reads the replies"
@@ -2991,6 +3142,18 @@ def parser():
     probe.add_argument("--claude", metavar="PATH", help="the claude to run; default the first on PATH")
     probe.add_argument("--keep", action="store_true", help="keep the scratch tree, and print where it is")
     probe.set_defaults(handler=command_probe_confinement)
+
+    locks = commands.add_parser(
+        "lock", help="print the lock of the parts of a draw, or reset it with a reason that is kept"
+    )
+    locks.add_argument("--dir", required=True, help="a part of the draw, under .label")
+    locks.add_argument(
+        "--reset", action="store_true",
+        help="end the lock: what it held, the reason and the runs of each part go into lock-resets.jsonl beside "
+        "it, and the next step that counts writes a new one",
+    )
+    locks.add_argument("--reason", metavar="TEXT", help="why the lock is reset, for lock-resets.jsonl")
+    locks.set_defaults(handler=command_lock)
 
     status = commands.add_parser(
         "status", help="where the labelling of one sample stands, in counts and run ids, never a tag or a word"

@@ -3,7 +3,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize, Serializer};
 
 /// A released version, or the one not released yet.
 ///
@@ -26,6 +26,26 @@ pub struct ParseError {
     source: semver::Error,
 }
 
+/// A string that is not a release: not semver, or semver with a pre-release or build part.
+#[derive(Debug, thiserror::Error)]
+#[error(
+    "{text:?} is not a release version such as \"0.0.1\", which has no pre-release or build part"
+)]
+pub(crate) struct NotARelease {
+    text: String,
+}
+
+/// The release `text` names. A release is `X.Y.Z`: a config's stamp is one, and `0.0.1+x` would
+/// order above `0.0.1`, so a pre-release or build part is refused. `next` is no release.
+pub(crate) fn parse_release(text: &str) -> Result<semver::Version, NotARelease> {
+    semver::Version::parse(text)
+        .ok()
+        .filter(|version| version.pre.is_empty() && version.build.is_empty())
+        .ok_or_else(|| NotARelease {
+            text: text.to_string(),
+        })
+}
+
 /// The version of the running deslag as a release.
 pub(crate) fn current_release() -> semver::Version {
     semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version is semver")
@@ -44,6 +64,12 @@ impl fmt::Display for Version {
             Version::Release(version) => version.fmt(f),
             Version::Next => f.write_str("next"),
         }
+    }
+}
+
+impl Serialize for Version {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
     }
 }
 

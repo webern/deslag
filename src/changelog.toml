@@ -16,8 +16,12 @@
 #   Markdown for an agent: what it does and how to use it.
 #   """
 #
-# The PR that bumps the version in Cargo.toml renames `next` to that version; `make check-release`
-# fails while `next` remains.
+# The PR that bumps the version in Cargo.toml renames `next` to that version and edits no test and
+# no case config; `make check-release` fails while `next` remains. An unstamped config is taken to
+# be from 0.0.1, so from the first release after that one `deslag check` prints the note that the
+# config is behind. The tests do not see it: `stderr` in tests/common/mod.rs leaves out that line,
+# and the tests about the note ask for `raw_stderr`. This repository's own config,
+# .agents/deslag.toml, is unstamped, so `make check-deslag` then prints the note and still exits 0.
 #
 # `id` is a lint's id, a setting's path in the config schema, or a short name for a feature or a
 # breaking change. A `lint` entry lists in `keys` the settings its table had when it arrived, each
@@ -25,7 +29,8 @@
 # lists `globs` and `lints`, which stand for `md.overrides[].globs` and `md.overrides[].lints`. A
 # setting that holds a value has no `keys`. A setting covers its own path and its listed keys, so
 # a key added to a table later gets a `setting` entry of its own, under the release that adds it.
-# A `breaking` entry says in `update_does_all` whether `deslag update` does the whole job.
+# A `breaking` entry says in `update_does_all` whether a config can be brought up to date without
+# the person editing it.
 # `onboarding` is Markdown for an agent: what the thing does and the table that turns it on. Its
 # fenced TOML must fit the schema.
 
@@ -215,4 +220,39 @@ as `next` or a pre-release.
 ```toml
 deslag_version = "0.0.1"
 ```
+'''
+
+[[release.entry]]
+kind = "feature"
+id = "instructions-update"
+summary = "Prints what is new since the release the config was updated by"
+onboarding = '''
+`deslag instructions update` prints the breaking changes, lints, settings and features that
+releases added after the config's `deslag_version`, up to the deslag running, as Markdown for an
+agent. It does not change any file. Each entry says which release added it.
+
+A new lint is off until the config turns it on, so offer each one to the person and add the table of
+the ones they choose. Once they have chosen, set `deslag_version` to the running version. If the
+person cannot be asked now, change nothing, `deslag_version` included, and tell them what is new.
+
+`--since 0.0.1` shows what is new since a release instead, and `--format json` prints the same
+entries as JSON. With no config, it shows everything since 0.0.1 and says so. `--since` and
+`--config-path` do not go together.
+'''
+
+[[release.entry]]
+kind = "feature"
+id = "update-notice"
+summary = "Says on stderr when the config was last updated by an older deslag"
+onboarding = '''
+When a release after the config's `deslag_version` has added something, `check`, `fix` and
+`explain` print one note on standard error, under every `--format`:
+
+```text
+deslag: note: this config was last updated by deslag 0.0.1, and this is 0.0.2; to read what is new, run deslag instructions update, which changes no file
+```
+
+Exit codes and standard output do not change. Run `deslag instructions update` and do what it
+says. Setting `deslag_version` to the running version ends the note, so set it once the person has
+chosen what to turn on.
 '''

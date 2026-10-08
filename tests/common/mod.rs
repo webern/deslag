@@ -107,9 +107,49 @@ pub fn stdout(output: &Output) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned()
 }
 
-/// Standard error as a string.
+/// Standard error as a string, without the note that the config was last updated by an older
+/// deslag.
+///
+/// Whether that note prints for a config with no `deslag_version` depends on the release the crate
+/// is at, so a test that is not about it must not see it, or a release would need an edit to every
+/// test that writes a config and expects a quiet run. The tests about the note ask for
+/// [`raw_stderr`].
 pub fn stderr(output: &Output) -> String {
+    without_notice(&raw_stderr(output))
+}
+
+/// Standard error as a string, the note included.
+pub fn raw_stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
+}
+
+/// The line the running deslag prints, ahead of its report, for a config last updated by `stamp`:
+/// the note, and a newline.
+pub fn notice(stamp: &str) -> String {
+    format!(
+        "deslag: note: this config was last updated by deslag {stamp}, and this is {}; to read \
+         what is new, run deslag instructions update, which changes no file\n",
+        env!("CARGO_PKG_VERSION")
+    )
+}
+
+/// `text` without the lines that are [`notice`] for some release, and nothing else.
+pub fn without_notice(text: &str) -> String {
+    text.split_inclusive('\n')
+        .filter(|line| !is_notice(line))
+        .collect()
+}
+
+/// Whether `line`, newline included, is [`notice`] for a config stamped with some release.
+fn is_notice(line: &str) -> bool {
+    let start = "deslag: note: this config was last updated by deslag ";
+    let Some((stamp, _)) = line
+        .strip_prefix(start)
+        .and_then(|rest| rest.split_once(", and this is "))
+    else {
+        return false;
+    };
+    semver::Version::parse(stamp).is_ok() && line == notice(stamp)
 }
 
 /// The exit code, or -1 when a signal killed the process.

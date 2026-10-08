@@ -45,7 +45,7 @@ use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 use crate::Error;
-use crate::changelog::{BASELINE, Version, current_release};
+use crate::changelog::{BASELINE, Version, current_release, parse_release};
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, ListGrowth, MaxEmphasis, MaxSizeBytes,
@@ -271,17 +271,11 @@ impl Config {
     }
 }
 
-/// The release a `deslag_version` of `text` names. A pre-release or build part is refused: a
-/// stamp is a release, and `0.0.1+x` would order above `0.0.1`.
+/// The release a `deslag_version` of `text` names, by the parser `--since` uses, so the two cannot
+/// disagree about what a release is.
 fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
-    semver::Version::parse(text)
-        .ok()
-        .filter(|version| version.pre.is_empty() && version.build.is_empty())
-        .ok_or_else(|| Error::Setting {
-            path: path.to_string(),
-            message: format!(
-                "deslag_version {text:?} is not a release version such as \"0.0.1\", which has \
-                 no pre-release or build part"
-            ),
-        })
+    parse_release(text).map_err(|error| Error::Setting {
+        path: path.to_string(),
+        message: format!("deslag_version {error}"),
+    })
 }

@@ -84,6 +84,10 @@ lints.max_size_bytes.value = 5000
 globs = ["/src/instructions/lints.md", "/src/instructions/lints/*.md"]
 lints.max_size_bytes.value = 800
 
+[[md.overrides]]
+globs = ["/src/instructions/update.md"]
+lints.max_size_bytes.value = 1000
+
 # corpus.asbuilt.md declares its own budget in its frontmatter.
 [[md.overrides]]
 globs = ["/docs/design/corpus.md"]

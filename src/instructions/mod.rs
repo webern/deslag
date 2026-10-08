@@ -2,11 +2,16 @@
 //!
 //! The guide is Markdown written for an agent. The facts it takes from the code, such as where the
 //! config may be, are filled in when it is printed so the two cannot drift. The lints are a topic
-//! of their own, a file per lint, so the guide does not grow with each new lint.
+//! of their own, a file per lint, so the guide does not grow with each new lint. What is new since
+//! the release a config was last updated by is another, and the notice that points at it.
+
+mod update;
 
 use crate::Lint;
 use crate::changelog::{Changelog, Version, changelog};
 use crate::config::{CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION};
+
+pub use update::{Start, notice, update_json, update_text};
 
 /// The guide as written, placeholders and all.
 const GUIDE: &str = include_str!("guide.md");

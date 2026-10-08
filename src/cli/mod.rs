@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
+use crate::changelog::{current_release, parse_release};
+
 /// The `deslag` command line.
 #[derive(Debug, Parser)]
 #[command(
@@ -115,4 +117,48 @@ pub enum Topic {
     ConfigSchema,
     /// Print the JSON schema of what `deslag check --format json` prints
     OutputSchema,
+    /// Print what is new in this deslag since the release the config was last updated by
+    Update(UpdateArgs),
+}
+
+/// Arguments to `deslag instructions update`.
+#[derive(Debug, Args)]
+pub struct UpdateArgs {
+    /// Show what is new since this release, such as 0.0.1, instead of since the config's
+    /// `deslag_version`
+    #[arg(
+        long,
+        value_name = "VERSION",
+        value_parser = release_no_newer_than_this_deslag,
+        conflicts_with = "config_path"
+    )]
+    pub since: Option<semver::Version>,
+    /// Read the config from this file instead of the canonical locations
+    #[arg(long, value_name = "PATH")]
+    pub config_path: Option<PathBuf>,
+    /// What to print on standard output
+    #[arg(long, value_enum, default_value_t = UpdateFormat::Text)]
+    pub format: UpdateFormat,
+}
+
+/// What `deslag instructions update` prints.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum UpdateFormat {
+    /// Markdown for an agent to follow
+    Text,
+    /// One JSON document with the same entries, for a program
+    Json,
+}
+
+/// The release `--since` names, which may not be newer than this deslag: nothing is known of what
+/// a later one adds.
+fn release_no_newer_than_this_deslag(text: &str) -> Result<semver::Version, String> {
+    let release = parse_release(text).map_err(|error| error.to_string())?;
+    let current = current_release();
+    if release > current {
+        return Err(format!(
+            "{release} is newer than this deslag, {current}; upgrade deslag"
+        ));
+    }
+    Ok(release)
 }

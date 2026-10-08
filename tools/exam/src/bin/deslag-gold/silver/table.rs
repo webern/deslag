@@ -173,9 +173,9 @@ pub fn paths_in(cell: &str) -> Vec<String> {
     found
 }
 
-/// The directories of the machine that runs the kit: its home, its temp directory and the
-/// checkout the kit was built from, each as it is named and as its links resolve. No word of a
-/// batch may name a path under one of them.
+/// The directories of the machine that runs the kit: its home, its temp directory (unless that is a
+/// bare `/tmp`) and the checkout the kit was built from, each as it is named and as its links
+/// resolve. No word of a batch may name a path under one of them.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Machine {
     /// The directories, absolute, without a closing `/`.
@@ -190,7 +190,6 @@ impl Machine {
         if let Some(home) = std::env::var_os("HOME") {
             dirs.push(PathBuf::from(home));
         }
-        dirs.push(std::env::temp_dir());
         let mut machine = Machine::default();
         for dir in dirs {
             machine.add(&dir.to_string_lossy());
@@ -198,6 +197,12 @@ impl Machine {
                 machine.add(&real.to_string_lossy());
             }
         }
+        let temp = std::env::temp_dir();
+        let real = temp.canonicalize().ok();
+        machine.add_temp_dir(
+            &temp.to_string_lossy(),
+            real.as_deref().map(Path::to_string_lossy).as_deref(),
+        );
         // The checkout is named by `..`, so only its resolved name is a place.
         if let Ok(real) = checkout.canonicalize() {
             machine.add(&real.to_string_lossy());
@@ -215,6 +220,28 @@ impl Machine {
         machine
     }
 
+    /// Adds the system temp directory `named`, and `real`, the name its links resolve to, when it names
+    /// this machine: one with a directory of its own below the top, as macOS's `/var/folders/ab/cd/T`
+    /// or a `TMPDIR` of a build, and not a bare `/tmp`, which every machine has and a corpus quotes.
+    /// A bare `/tmp` is not added under its resolved name either (macOS's `/private/tmp`): it is the
+    /// same place.
+    fn add_temp_dir(&mut self, named: &str, real: Option<&str>) {
+        if !Machine::is_deep(named) {
+            return;
+        }
+        self.add(named);
+        if let Some(real) = real.filter(|real| Machine::is_deep(real)) {
+            self.add(real);
+        }
+    }
+
+    /// Whether `dir` has a directory of its own below the top.
+    fn is_deep(dir: &str) -> bool {
+        dir.trim_end_matches('/')
+            .trim_start_matches('/')
+            .contains('/')
+    }
+
     /// Adds `dir` when it is absolute and is not the root.
     fn add(&mut self, dir: &str) {
         let dir = dir.trim_end_matches('/');
@@ -225,10 +252,10 @@ impl Machine {
 }
 
 /// The places in `text`, words the kit did not choose, that tell of the machine that made a
-/// batch: a path under a home directory (`/home/NAME/` or `/Users/NAME/`), under `/tmp/`, in a
-/// handoff's working directory (`deslag-handoff-`), or under one of `machine`'s directories. A
-/// path such as `/etc/hosts`, which the corpus quotes and an adjudicator's reason may quote, is
-/// not one: it says nothing of the machine.
+/// batch: a path under one of `machine`'s directories, or in a handoff's working directory
+/// (`deslag-handoff-`). A path of the corpus that any machine could have, such as `/etc/hosts`,
+/// `/tmp/cache` or `/home/NAME/.cache`, which an adjudicator's reason may quote, is not one: it says
+/// nothing of the machine.
 pub fn leaks_in(text: &str, machine: &Machine) -> Vec<String> {
     let mut found: Vec<String> = Vec::new();
     let mut add = |at: usize| {
@@ -248,23 +275,9 @@ pub fn leaks_in(text: &str, machine: &Machine) -> Vec<String> {
         let after = text[at..].trim_start_matches(['.', ':', '!', '?', ',']);
         !after.chars().next().is_some_and(names)
     };
-    let home = |rest: &str, top: &str| {
-        rest.strip_prefix(top).is_some_and(|rest| {
-            rest.split_once('/')
-                .is_some_and(|(user, _)| !user.is_empty() && user.chars().all(names))
-        })
-    };
-    for (at, _) in text.match_indices('/') {
-        let rest = &text[at..];
-        if starts(at)
-            && (home(rest, "/home/") || home(rest, "/Users/") || rest.starts_with("/tmp/"))
-        {
-            add(at);
-        }
-    }
     for dir in &machine.dirs {
-        // A directory one level down, such as `/tmp` or `/root`, tells of the machine only with
-        // a path under it: a reason may say "under /tmp".
+        // A directory one level down, such as `/root`, tells of the machine only with a path
+        // under it: a reason may say "under /root".
         let deep = dir[1..].contains('/');
         for (at, _) in text.match_indices(dir.as_str()) {
             let end = at + dir.len();
@@ -434,7 +447,12 @@ mod tests {
                 "item\tsent_id\tform\tfinal\treason\trun\ns1.1\ts1\t{form}\tN.s\t{reason}\tr5\n"
             )
         };
-        let machine = Machine::with(&["/opt/build/deslag", "/var/folders/ab/T"]);
+        let machine = Machine::with(&[
+            "/opt/build/deslag",
+            "/var/folders/ab/T",
+            "/home/builder",
+            "/Users/builder",
+        ]);
         for path in ["parts/01/adjudicated.tsv", "parts/01/worklist.tsv"] {
             for clean in [
                 table("part of the path /etc/hosts", "/etc/hosts"),
@@ -442,6 +460,13 @@ mod tests {
                 table("left /noun/verb/adj split, see ~/.bashrc", "x"),
                 table("under /tmp so, and /var/tmp/x", "x"),
                 table("not /opt/build/deslagx/y nor /opt/build", "x"),
+                // The shapes of any machine's temp and home directories are the corpus's.
+                table("a word such as /tmp/cache", "/tmp/cache"),
+                table("I read /tmp/x/request.json, so", "x"),
+                table("see file:///tmp/x/y", "x"),
+                table("in /home/matt/notes", "x"),
+                table("in (/Users/matt/x)", "x"),
+                table("not /home/builders/x", "/home/me/.label/x"),
             ] {
                 assert!(
                     machine_paths(path, &clean, &machine).is_empty(),
@@ -450,22 +475,23 @@ mod tests {
             }
             for (dirty, wanted) in [
                 (
-                    table("I read /tmp/x/request.json, so", "x"),
-                    "/tmp/x/request.json",
-                ),
-                (table("in /home/matt/notes", "x"), "/home/matt/notes"),
-                (table("in (/Users/matt/x)", "x"), "/Users/matt/x"),
-                (table("see file:///tmp/x/y", "x"), "file:///tmp/x/y"),
-                (table("x", "/home/me/.label/x"), "/home/me/.label/x"),
-                (
                     table("in /opt/build/deslag/.label/silver", "x"),
                     "/opt/build/deslag/.label/silver",
                 ),
                 (table("at /opt/build/deslag.", "x"), "/opt/build/deslag"),
                 (table("in /var/folders/ab/T/x", "x"), "/var/folders/ab/T/x"),
                 (
+                    table("in /home/builder/.cache", "x"),
+                    "/home/builder/.cache",
+                ),
+                (table("x", "/Users/builder/x"), "/Users/builder/x"),
+                (
                     table("read deslag-handoff-x/request.json", "x"),
                     "deslag-handoff-x/request.json",
+                ),
+                (
+                    table("I read /tmp/deslag-handoff-x/request.json, so", "x"),
+                    "/tmp/deslag-handoff-x/request.json",
                 ),
             ] {
                 assert_eq!(
@@ -475,11 +501,39 @@ mod tests {
                 );
             }
         }
-        // The same words in a cell the kit fills are a path all the same.
-        let runs = "run\treason\nr1\tpart of the path /etc/hosts\n";
+        // The same words in a cell the kit fills are a path all the same, whoever's they are.
+        let runs = "run\treason\nr1\tpart of the path /etc/hosts\nr2\tread /tmp/cache\n";
         assert_eq!(
             machine_paths("runs.tsv", runs, &machine),
-            vec!["/etc/hosts"]
+            vec!["/etc/hosts", "/tmp/cache"]
+        );
+    }
+
+    #[test]
+    fn a_bare_system_temp_directory_is_no_place_of_this_machine() {
+        let mut machine = Machine::default();
+        machine.add_temp_dir("/tmp", None);
+        machine.add_temp_dir("/tmp/", None);
+        machine.add_temp_dir("/", None);
+        // macOS names `/tmp` and resolves it to `/private/tmp`: the same place, so neither.
+        machine.add_temp_dir("/tmp", Some("/private/tmp"));
+        assert_eq!(machine, Machine::default());
+        machine.add_temp_dir(
+            "/var/folders/ab/cd/T/",
+            Some("/private/var/folders/ab/cd/T"),
+        );
+        machine.add_temp_dir("/tmp/build-7", None);
+        assert_eq!(
+            leaks_in(
+                "a /var/folders/ab/cd/T/x and /private/var/folders/ab/cd/T/y and /tmp/build-7/z \
+                 but /tmp/cache and /private/tmp/cache",
+                &machine
+            ),
+            vec![
+                "/var/folders/ab/cd/T/x",
+                "/private/var/folders/ab/cd/T/y",
+                "/tmp/build-7/z"
+            ]
         );
     }
 

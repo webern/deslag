@@ -93,8 +93,10 @@ falls back from there to the ones after it; a complete run at another endpoint i
 so it starts a new run (one already complete at that endpoint is left as it is); a run continued at another endpoint than it recorded is
 refused. A run at an alternative records its endpoint in `run.json` and `runs.tsv`. deepseek's primary
 is `gmicloud/fp8` (DeepInfra's DeepSeek loops until `max_tokens`, so it is not a fallback), then
-`streamlake/fp8`. qwen's `parasail/fp8` is below its `bf16` pin, so it is skipped until the pin is
-relaxed.
+`streamlake/fp8`. qwen has no fallback: no other endpoint of its model lists `bf16`, and `parasail/fp8` is
+below its pin. When DeepInfra fails it, `tag` has no endpoint to switch to and exits 2 (5 when the last run ended
+`failed`), naming the endpoint and why. Running the command again continues the run at DeepInfra, and `--again`
+starts a new run there; nothing in the kit decides when to stop trying.
 
 Cut-off replies. A reply cut off at `max_tokens` is a bad reply, not a stop: it is not saved, and the
 batch's sentences are asked again in halves, each ask a new booked call (`batch-02-a`, `batch-02-a-b`),
@@ -338,6 +340,10 @@ Each part is a sample of its own. With `D` the part's directory and `M` its merg
    command run again reads them. Repeat until `judge` exits 0.
 4. `label.py status --dir D --into M [--max-usd USD]`, at any point (below).
 
+The silver run takes step 3 twice per part, both times with `--trains yes`: into `merge` with the model
+voters, then into `merge-spacy` with `--spacy`, which settles from `merge` (`--settle-from` defaults to it).
+`silver build` assembles `merge-spacy` (`SILVER_MERGE` in the Makefile), and `status` reads it in a part.
+
 The lock of the parts. The parts of one draw are assembled into one batch, so they are labelled alike: at one
 deslag commit, from one draw, by one set of voters with one prompt and guide each, judged by one adjudicator
 with one `min_voters`, and with one Claude Code. `lock.json` beside the part directories
@@ -471,7 +477,8 @@ output, `stream.jsonl`. Run it again whenever Claude Code changes: handoff-run r
 version.
 
 Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids
-only, never a tag or a word, and writes nothing in `D`:
+only, never a tag or a word, and writes nothing in `D`. Without `--into` it reads `merge-spacy` in a part of a
+draw (the merge the assembler reads) and `merge` in any other sample:
 
 ```
 sample: 500 sentences, /path/to/.label/silver/part-01
@@ -507,7 +514,7 @@ Make targets. None is in `test` or `ci`, and none but `test-silver` and `test-co
 else. The draw and the build read their numbers from `SILVER_*` variables (`make help`, and the top of the
 Makefile), so the run can change them.
 
-- `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 9 --mix ... --per-file 3
+- `make generate-silver-draw`: `deslag-gold draw --dir .label/silver --prefix sa --parts 10 --mix ... --per-file 3
   --per-repo 12`. Reads the big tier and calls no model.
 - `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
   at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so
@@ -543,10 +550,14 @@ a value the lock of the parts holds otherwise; a fixture the image lacks or whos
 licence differs from the manifest's, that an exclusion names, or whose generator is banned; and a path of the
 machine that made it in any file it writes. In a cell the kit fills, a JSON cell or a listing too, that is any
 absolute path. A word's `form` and the adjudicator's `reason` quote the corpus, which has paths such as
-`/etc/hosts`, so there it is only a path under `/home/NAME/`, `/Users/NAME/` or `/tmp/`, a handoff's working
-directory, or this machine's home, temp directory or checkout. It drops and counts, and does not refuse, a
-sentence whose repository became reserved after the draw or whose text is now a gold sentence's, one that is a
-repeat, and one the owner rejected in the audit. The batch ships the runs that the words it kept name, with the
+`/etc/hosts`, `/tmp/cache` or `/home/NAME/.cache`, so there it is only a path in a handoff's working
+directory (`deslag-handoff-`) or under the home, temp directory (unless that is a bare `/tmp`) or checkout of
+the machine that builds. Only `silver build` and `silver build --check-part` (so the preflight that `status`
+prints) scan for that machine's own paths, and they run where the part was labelled. `silver check` does not,
+so that a batch gets the same verdict on every machine; it refuses the handoff directory and any rooted path
+in a cell the kit fills. The build drops and counts, and does not refuse, a sentence whose repository became
+reserved after the draw or whose text is now a gold sentence's, one that is a repeat, and one the owner
+rejected in the audit. The batch ships the runs that the words it kept name, with the
 voters', and the agent record of those, worked out after the drops.
 
 The batch, `silver/NAME/`:
@@ -604,7 +615,8 @@ and `audit/` against the manifest, and a word with no `Prov=`; the audit scored 
 `DATASHEET.md` rendered again byte for byte.
 `record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The
 rules are frozen once a batch is live: a changed rule is a new version, with the old rules kept beside it, so a
-batch that passes once passes forever.
+batch that passes once passes forever. The check reads nothing of the machine it runs on (not `HOME`, not the
+temp directory, not the checkout), so it gives the same verdict on every machine.
 `tools/exam/tests/silver-fixture/` is a small batch, committed, that a unit test holds to them; regenerate it
 with `DESLAG_REGENERATE_SILVER_FIXTURE=1 cargo test -p deslag-exam --test silver_batch
 regenerate_the_committed_fixture_batch -- --ignored` only when a new version comes.

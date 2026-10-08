@@ -102,7 +102,8 @@ pub fn sha256(bytes: &[u8]) -> String {
 }
 
 /// A tree for the pool, a small tier, a gold directory that reserves nothing, and `parts` parts of
-/// a draw that were labelled.
+/// a draw that were labelled: with one merge, `merge`, that spaCy votes in, or with two as the run
+/// makes them, `merge` of the model voters and `merge-spacy` settled from it.
 pub struct Made {
     _tmp: tempfile::TempDir,
     /// Where everything is; the commands run here.
@@ -123,6 +124,10 @@ pub struct Made {
     pub voters: PathBuf,
     /// The part directories, in order.
     pub parts: Vec<PathBuf>,
+    /// The merge directory of each part that the assembler reads.
+    merge: &'static str,
+    /// The runs of each part: five, or six with a second adjudicator run.
+    stride: usize,
 }
 
 /// A sentence of a skeleton: its id, and for each token its kind.
@@ -196,10 +201,11 @@ fn compact(sentences: &[Skeleton], change: &[(usize, usize)], code: &str) -> Str
     out
 }
 
-/// spaCy's CoNLL-U of the sentences, with its run.
-fn outside(sentences: &[Skeleton], run: &str) -> String {
+/// spaCy's CoNLL-U of the sentences, with its run, except that it takes each word `change` names
+/// (sentence index, word number from 1) for a singular noun.
+fn outside(sentences: &[Skeleton], run: &str, change: &[(usize, usize)]) -> String {
     let mut out = String::new();
-    for sentence in sentences {
+    for (at, sentence) in sentences.iter().enumerate() {
         out.push_str(&format!("# sent_id = {}\n", sentence.id));
         let mut word = 0;
         for cells in &sentence.lines {
@@ -210,7 +216,11 @@ fn outside(sentences: &[Skeleton], run: &str) -> String {
             let (upos, feats) = match kind {
                 "Word" => {
                     word += 1;
-                    let (_, upos, feats) = CYCLE[(word - 1) % CYCLE.len()];
+                    let (_, upos, feats) = if change.contains(&(at, word)) {
+                        CYCLE[0]
+                    } else {
+                        CYCLE[(word - 1) % CYCLE.len()]
+                    };
                     (upos, feats)
                 }
                 "Punctuation" => ("PUNCT", "_"),
@@ -273,11 +283,12 @@ pub fn agent() -> serde_json::Value {
 }
 
 /// The rows of the runs of one part: three voters, spaCy and the adjudicator, with ids from
-/// `first`. Each is `(set of cells)`.
+/// `first`, and with `two` merges the adjudicator's second run. Each is `(set of cells)`.
 fn part_runs(
     voters_sha: &str,
     voters: &serde_json::Value,
     first: usize,
+    two: bool,
 ) -> Vec<Vec<(String, String)>> {
     let run = |offset: usize| format!("r{}", first + offset);
     let model = |name: &str| {
@@ -370,7 +381,27 @@ fn part_runs(
         "settings".to_string(),
         serde_json::json!({"agent": agent()}).to_string(),
     ));
-    rows.push(judge);
+    if two {
+        // The second run asks about the one word spaCy disputes, in the merge spaCy votes in: its
+        // own id, day, size and settings, as a run of its own has.
+        let mut again = judge.clone();
+        let mut set = |key: &str, value: &str| {
+            let cell = again.iter_mut().find(|(k, _)| k == key).unwrap();
+            cell.1 = value.to_string();
+        };
+        set("run", &run(5));
+        set("date", "2026-10-09");
+        set("sentences", "1");
+        set(
+            "settings",
+            &serde_json::json!({"agent": agent(), "into": "merge-spacy", "spacy": true})
+                .to_string(),
+        );
+        rows.push(judge);
+        rows.push(again);
+    } else {
+        rows.push(judge);
+    }
     rows
 }
 
@@ -389,6 +420,21 @@ impl Made {
 
     /// [Made::with], drawing `mix` from `per_tier` fixtures of each tier.
     pub fn with_mix(parts: usize, mix: &str, per_tier: usize) -> Made {
+        Made::build_with(parts, mix, per_tier, false)
+    }
+
+    /// [Made::with], each part judged as the run judges it: into `merge` by the model voters, then
+    /// into `merge-spacy`, which spaCy votes in and which is settled from `merge`. spaCy takes
+    /// the second word of the first sentence for a noun where the models agree on a verb, so the
+    /// adjudicator is asked a second time, in a run of its own, and the assembler reads
+    /// `merge-spacy`. This stands in for `label.py judge` and `judge --into merge-spacy --spacy`
+    /// (settled from `merge`, with other voters), driving `deslag-gold merge`, `read-answers` and
+    /// `finish` directly.
+    pub fn with_two_merges(parts: usize) -> Made {
+        Made::build_with(parts, "2,1,0,0", 6, true)
+    }
+
+    fn build_with(parts: usize, mix: &str, per_tier: usize, two: bool) -> Made {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         let tree = root.join("tree");
@@ -415,6 +461,8 @@ impl Made {
             retired,
             voters,
             parts: Vec::new(),
+            merge: if two { "merge-spacy" } else { "merge" },
+            stride: if two { 6 } else { 5 },
         };
         let label = root.join(".label").join("silver");
         let out = Command::new(env!("CARGO_BIN_EXE_deslag-gold"))
@@ -435,7 +483,7 @@ impl Made {
         let voters_json: serde_json::Value = serde_json::from_slice(&voters_bytes).unwrap();
         for number in 1..=parts {
             let dir = label.join(format!("part-{number:02}"));
-            made.label(&dir, number, parts, &voters_sha, &voters_json);
+            made.label(&dir, number, parts, &voters_sha, &voters_json, two);
             made.parts.push(dir);
         }
         made
@@ -494,11 +542,13 @@ impl Made {
         of: usize,
         voters_sha: &str,
         voters: &serde_json::Value,
+        two: bool,
     ) {
         let sentences = skeleton(&dir.join("sample.conllu"));
         assert!(sentences.len() >= 3, "a part needs three sentences");
-        let first_run = 1 + (number - 1) * 5;
-        let runs = part_runs(voters_sha, voters, first_run);
+        let first_run = 1 + (number - 1) * self.stride;
+        let runs = part_runs(voters_sha, voters, first_run, two);
+        let spacy_differs = if two { vec![(0, 2)] } else { Vec::new() };
         // The voters. The third model voter calls the first word of the first sentence a verb,
         // and in the last part the first word of the last sentence too.
         let mut changes = vec![(0, 1)];
@@ -532,26 +582,17 @@ impl Made {
         }
         fs::write(
             dir.join("tags").join("spacy.conllu"),
-            outside(&sentences, &format!("r{}", first_run + 3)),
+            outside(&sentences, &format!("r{}", first_run + 3), &spacy_differs),
         )
         .unwrap();
-        self.gold_in(
-            dir,
-            &[
-                "merge",
-                "--voter",
-                "deepseek",
-                "--voter",
-                "qwen",
-                "--voter",
-                "gemma",
-                "--voter",
-                "spacy",
-                "--base-only",
-                "spacy",
-            ],
-        )
-        .ok();
+        // With two merges the first has the model voters alone; spaCy votes in the second.
+        let mut first_merge = vec![
+            "merge", "--voter", "deepseek", "--voter", "qwen", "--voter", "gemma",
+        ];
+        if !two {
+            first_merge.extend(["--voter", "spacy", "--base-only", "spacy"]);
+        }
+        self.gold_in(dir, &first_merge).ok();
         // The adjudicator answers the first item, and the last part's second one is left open.
         let judge = format!("r{}", first_run + 4);
         let item = format!("{}.{}", sentences[0].id, token_of(&sentences[0], 1));
@@ -569,6 +610,52 @@ impl Made {
             ],
         )
         .ok();
+        // The second merge settles from the first what the adjudicator answered there, and asks it
+        // for the one word spaCy disputes that the models agreed on.
+        if two {
+            self.gold_in(
+                dir,
+                &[
+                    "merge",
+                    "--into",
+                    "merge-spacy",
+                    "--settled",
+                    dir.join("merge").join("adjudicated.tsv").to_str().unwrap(),
+                    "--voter",
+                    "deepseek",
+                    "--voter",
+                    "qwen",
+                    "--voter",
+                    "gemma",
+                    "--voter",
+                    "spacy",
+                    "--base-only",
+                    "spacy",
+                ],
+            )
+            .ok();
+            let spacy_item = format!("{}.{}", sentences[0].id, token_of(&sentences[0], 2));
+            let again = dir.join("answers-spacy.txt");
+            fs::write(
+                &again,
+                format!("{spacy_item}: V.in | the models agree it is a verb\n"),
+            )
+            .unwrap();
+            self.gold_in(
+                dir,
+                &[
+                    "read-answers",
+                    "--check",
+                    "--into",
+                    "merge-spacy",
+                    "--answers",
+                    again.to_str().unwrap(),
+                    "--run",
+                    &format!("r{}", first_run + 5),
+                ],
+            )
+            .ok();
+        }
         // The run table and the listings of the voters, then the finish.
         let mut table = format!("{}\n", RUN_COLUMNS.join("\t"));
         for cells in &runs {
@@ -602,23 +689,32 @@ impl Made {
                 .unwrap();
             }
         }
-        self.gold_in(
-            dir,
-            &[
-                "finish",
-                "--trains",
-                "yes",
-                "--runs",
-                dir.join("runs.tsv").to_str().unwrap(),
-                "--leave-open",
-            ],
-        )
-        .ok();
-        fs::write(
-            dir.join("merge").join("adjudicator.json"),
-            "{\n  \"name\": \"opus\",\n  \"model\": \"claude-opus-5-5\"\n}\n",
-        )
-        .unwrap();
+        let merges: &[&str] = if two {
+            &["merge", "merge-spacy"]
+        } else {
+            &["merge"]
+        };
+        for merge in merges {
+            self.gold_in(
+                dir,
+                &[
+                    "finish",
+                    "--into",
+                    merge,
+                    "--trains",
+                    "yes",
+                    "--runs",
+                    dir.join("runs.tsv").to_str().unwrap(),
+                    "--leave-open",
+                ],
+            )
+            .ok();
+            fs::write(
+                dir.join(merge).join("adjudicator.json"),
+                "{\n  \"name\": \"opus\",\n  \"model\": \"claude-opus-5-5\"\n}\n",
+            )
+            .unwrap();
+        }
     }
 
     /// The part `number`'s directory, from 1.
@@ -626,9 +722,9 @@ impl Made {
         &self.parts[number - 1]
     }
 
-    /// `DIR:merge` for the part `number`.
+    /// `DIR:merge` for the part `number`, or `DIR:merge-spacy` when the parts were judged twice.
     pub fn spec(&self, number: usize) -> String {
-        format!("{}:merge", self.part(number).display())
+        format!("{}:{}", self.part(number).display(), self.merge)
     }
 
     /// The text of `name` in part `number`.
@@ -670,7 +766,7 @@ impl Made {
     /// The id of run `n` (0 voter deepseek, 1 qwen, 2 gemma, 3 spaCy, 4 the adjudicator) of part
     /// `number`.
     pub fn run(&self, number: usize, n: usize) -> String {
-        format!("r{}", 1 + (number - 1) * 5 + n)
+        format!("r{}", 1 + (number - 1) * self.stride + n)
     }
 
     /// The ids of the sentences of part `number`, in the draw's order.
@@ -701,6 +797,15 @@ impl Made {
 
     /// `silver build --check-part SPEC`.
     pub fn check_spec(&self, spec: &str) -> Ran {
+        self.check_spec_with(spec, &[])
+    }
+
+    /// [Made::check_part] with more environment, such as the `HOME` the check takes for its own.
+    pub fn check_part_with(&self, number: usize, env: &[(&str, &str)]) -> Ran {
+        self.check_spec_with(&self.spec(number), env)
+    }
+
+    fn check_spec_with(&self, spec: &str, env: &[(&str, &str)]) -> Ran {
         let mut args: Vec<String> = ["silver", "build", "--check-part", spec]
             .into_iter()
             .map(str::to_string)
@@ -708,7 +813,7 @@ impl Made {
         args.extend(self.pool_args());
         args.extend(self.corpus_args());
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
-        self.gold(&args)
+        self.gold_with(&args, env)
     }
 
     /// The small tier and the `voters.json` to check against.
@@ -737,8 +842,31 @@ impl Made {
         self.build_parts(name, &parts, extra)
     }
 
+    /// [Made::build] with more environment, such as the `HOME` of the machine that builds.
+    pub fn build_env(&self, name: &str, extra: &[&str], env: &[(&str, &str)]) -> Ran {
+        let parts: Vec<String> = (1..=self.parts.len()).map(|n| self.spec(n)).collect();
+        self.build_parts_with(name, &parts, extra, env)
+    }
+
+    /// `silver check --batch DIR` of the batch built as `name`, with more environment, such as the
+    /// `HOME` of the machine that checks.
+    pub fn check_batch_with(&self, name: &str, env: &[(&str, &str)]) -> Ran {
+        let out = self.out(name);
+        self.gold_with(&["silver", "check", "--batch", out.to_str().unwrap()], env)
+    }
+
     /// `silver build` of the given parts.
     pub fn build_parts(&self, name: &str, parts: &[String], extra: &[&str]) -> Ran {
+        self.build_parts_with(name, parts, extra, &[])
+    }
+
+    fn build_parts_with(
+        &self,
+        name: &str,
+        parts: &[String],
+        extra: &[&str],
+        env: &[(&str, &str)],
+    ) -> Ran {
         let out = self.out(name);
         let mut args: Vec<String> = ["silver", "build", "--name", name, "--out"]
             .into_iter()
@@ -759,7 +887,7 @@ impl Made {
         args.extend(self.corpus_args());
         args.extend(extra.iter().map(|arg| arg.to_string()));
         let args: Vec<&str> = args.iter().map(String::as_str).collect();
-        self.gold(&args)
+        self.gold_with(&args, env)
     }
 }
 

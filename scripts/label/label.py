@@ -141,6 +141,9 @@ HANDOFF_TEMPLATE = os.path.join(PROMPTS, "handoff-agent.md")
 
 # Written in a merge directory: which adjudicator answers its items, for a merge that settles from it.
 ADJUDICATOR_RECORD = "adjudicator.json"
+# The merge that a part of a silver draw is assembled from, the one spaCy votes in (the silver build's
+# default `SILVER_MERGE` in the Makefile): what `status` reads in a part when it is not told otherwise.
+PART_MERGE = "merge-spacy"
 # The lock file of a sample directory, which processes working in it at once take before they write
 # the files they share: the batches and `runs.tsv`.
 SAMPLE_LOCK = "label.lock"
@@ -3103,6 +3106,13 @@ def preflight(directory, into, binary):
     )
 
 
+def status_merge(directory):
+    """The merge `status` reads when `--into` is not given: `merge-spacy` in a part of a draw, whose
+    preflight is made on the merge spaCy votes in (the one the assembler reads), and `merge` in any
+    other sample."""
+    return PART_MERGE if parts_lock_path(directory) else "merge"
+
+
 def command_status(arguments, config, transport=None, gold=None, say=print):
     """Where the labelling of one sample stands, in counts and run ids only, never a tag or a word: per
     voter its latest run, what became of it, its batches answered of all, the sentences it abstains on
@@ -3111,7 +3121,7 @@ def command_status(arguments, config, transport=None, gold=None, say=print):
     left under `--max-usd`; and the verdict of the part's preflight. It reads, and writes nothing in
     the sample directory."""
     directory = guard.check_dir(arguments.dir)
-    into = check_into(arguments.into)
+    into = check_into(arguments.into or status_merge(directory))
     book = ledger_module.open_ledger(guard.root())
     say(f"sample: {sentence_count(directory)} sentences, {directory}")
     current = len([
@@ -3283,7 +3293,10 @@ def parser():
         "status", help="where the labelling of one sample stands, in counts and run ids, never a tag or a word"
     )
     common(status, False)
-    status.add_argument("--into", default="merge", help="the merge directory under --dir (default merge)")
+    status.add_argument(
+        "--into",
+        help=f"the merge directory under --dir (default {PART_MERGE} in a part of a draw, merge otherwise)",
+    )
     status.add_argument("--max-usd", type=float, help="the cap, to print what is left under it")
     status.set_defaults(handler=command_status)
 

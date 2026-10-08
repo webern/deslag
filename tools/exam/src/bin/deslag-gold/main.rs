@@ -1323,7 +1323,9 @@ fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
             let mut problems = Vec::new();
             for dir in &dirs {
                 let loaded = silver::layout::Batch::load(dir)?;
-                match silver::check::check(&loaded, &silver::table::Machine::here()) {
+                // No machine: a batch is read the same on every machine. The paths of the machine
+                // that made it are refused where it is made, by `silver build` and `--check-part`.
+                match silver::check::check(&loaded, &silver::table::Machine::default()) {
                     Ok(done) => println!(
                         "silver check: {} passes: {} sentences, {} words, {} parts, {} runs{}",
                         loaded.name,

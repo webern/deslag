@@ -412,7 +412,7 @@ fn checkout() -> String {
 }
 
 #[test]
-fn a_reason_may_quote_a_path_of_the_corpus_but_not_one_of_this_machine() {
+fn a_reason_may_quote_a_path_of_the_corpus_but_the_preflight_refuses_one_of_this_machine() {
     let made = Made::new();
     let quoted = "part of the path /etc/hosts";
     made.edit(1, "merge/adjudicated.tsv", |text| {
@@ -424,7 +424,8 @@ fn a_reason_may_quote_a_path_of_the_corpus_but_not_one_of_this_machine() {
     assert!(read(&dir, "parts/01/adjudicated.tsv").contains(quoted));
     check(&made, &dir).ok();
 
-    // The checkout's own path, at the preflight and in a built batch.
+    // The checkout's own path is refused at the preflight, where the part is made. The check of a
+    // built batch reads nothing of the machine, so it passes the same words, here and elsewhere.
     let leaked = format!("{}/tests/gold/dev.conllu", checkout());
     made.edit(1, "merge/adjudicated.tsv", |text| {
         text.replacen(quoted, &leaked, 1)
@@ -434,9 +435,19 @@ fn a_reason_may_quote_a_path_of_the_corpus_but_not_one_of_this_machine() {
     edit(&dir, "parts/01/adjudicated.tsv", |text| {
         text.replacen(quoted, &format!("it read {leaked}"), 1)
     });
+    check(&made, &dir).ok();
+
+    // A handoff's working directory is refused by the check on every machine.
+    edit(&dir, "parts/01/adjudicated.tsv", |text| {
+        text.replacen(
+            &format!("it read {leaked}"),
+            "it read deslag-handoff-x/request.json",
+            1,
+        )
+    });
     check(&made, &dir).refused(&[
         "parts/01/adjudicated.tsv",
-        &leaked,
+        "deslag-handoff-x/request.json",
         "a path of the machine that made it",
     ]);
 }

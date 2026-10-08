@@ -2239,7 +2239,7 @@ class RoundThreeTests(Base):
         self.assertEqual(
             (models["deepseek"]["provider"], models["deepseek"]["provider_fallback"]),
             ("gmicloud/fp8", ["streamlake/fp8"]), "deepinfra/fp8 loops until max_tokens: no fallback to it")
-        self.assertEqual(models["qwen"]["provider_fallback"], ["parasail/fp8"])
+        self.assertEqual(models["qwen"]["provider_fallback"], [], "no other qwen endpoint lists bf16")
         self.assertEqual(models["mistral"]["provider_fallback"], ["mistral/eu"])
 
     def test_provider_fallback_must_be_a_list_of_tags_that_does_not_repeat_the_pin(self):
@@ -2908,6 +2908,32 @@ class StatusTests(Base):
     def test_the_adjudicator_shown_is_the_one_the_merge_records(self):
         label.write(os.path.join(self.dir, "other", label.ADJUDICATOR_RECORD), json.dumps({"name": "two", "model": "x/two"}))
         self.assertIn("adjudicator two (other): no run", self.status("--into", "other"))
+
+    def fake_gold(self):
+        binary = os.path.join(self.root, "fake-gold")
+        label.write(binary, FAKE_GOLD_BIN)
+        os.chmod(binary, 0o755)
+        return binary
+
+    def test_status_of_a_part_reads_merge_spacy_unless_told_otherwise(self):
+        self.dir = make_part(self.label_root, 1, 10)
+        binary = self.fake_gold()
+        for merge in ("merge", "merge-spacy"):
+            label.write(os.path.join(self.dir, merge, "voters.tsv"), "sent_id\n")
+        said = self.status("--gold-bin", binary)
+        self.assertEqual(said[-1], "preflight (merge-spacy): ok")
+        self.assertIn("adjudicator judge (merge-spacy): no run", said)
+        self.assertEqual(label.read(binary + ".args").splitlines(),
+                         ["silver", "build", "--check-part", f"{self.dir}:merge-spacy"])
+        said = self.status("--gold-bin", binary, "--into", "merge")
+        self.assertEqual(said[-1], "preflight (merge): ok")
+        self.assertEqual(label.read(binary + ".args").splitlines(),
+                         ["silver", "build", "--check-part", f"{self.dir}:merge"])
+
+    def test_status_of_a_sample_that_is_not_a_part_reads_merge(self):
+        binary = self.fake_gold()
+        label.write(os.path.join(self.dir, "merge", "voters.tsv"), "sent_id\n")
+        self.assertEqual(self.status("--gold-bin", binary)[-1], "preflight (merge): ok")
 
     def test_the_preflight_is_run_on_the_part_and_prints_its_verdict_and_a_count(self):
         binary = os.path.join(self.root, "fake-gold")

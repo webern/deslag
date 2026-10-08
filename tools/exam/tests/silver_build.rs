@@ -1003,6 +1003,217 @@ fn a_path_of_the_makers_machine_in_a_file_the_part_ships_is_refused() {
 }
 
 #[test]
+fn a_reason_quoting_a_path_that_any_machine_has_is_not_refused() {
+    let made = Made::with(1);
+    made.edit(1, "merge/adjudicated.tsv", |text| {
+        text.replace(
+            "\tthe guide says so\t",
+            "\tthe text quotes /tmp/cache, /home/someone/.cache and /Users/someone/x\t",
+        )
+    });
+    made.check_part(1).ok();
+    made.build("quoted", &[]).ok();
+}
+
+#[test]
+fn a_reason_naming_the_building_machines_own_places_is_refused() {
+    let checkout = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap();
+    let reason = |words: &str| {
+        let words = words.to_string();
+        move |text: &str| text.replace("\tthe guide says so\t", &format!("\t{words}\t"))
+    };
+    // The home directory and the temp directory of the machine that runs the check. Their paths are
+    // made up for the test, and handed to the check as its environment.
+    let env = [("HOME", "/home/builder"), ("TMPDIR", "/var/tmp/build-7")];
+    for (words, found) in [
+        ("it read /home/builder/.cache/x", "/home/builder/.cache/x"),
+        ("it read /var/tmp/build-7/x.json", "/var/tmp/build-7/x.json"),
+        (
+            &format!("it read {}/tests/x", checkout.display()),
+            &format!("{}/tests/x", checkout.display()),
+        ),
+        (
+            "it read deslag-handoff-x/request.json",
+            "deslag-handoff-x/request.json",
+        ),
+    ] {
+        let made = Made::with(1);
+        made.edit(1, "merge/adjudicated.tsv", reason(words));
+        made.check_part_with(1, &env)
+            .refused(&[found, "a path of the machine that made it"]);
+    }
+    // A home named with a closing slash is the same home.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/builder/.cache/x"),
+    );
+    made.check_part_with(1, &[("HOME", "/home/builder/")])
+        .refused(&[
+            "/home/builder/.cache/x",
+            "a path of the machine that made it",
+        ]);
+    // Not the home of someone else, and not the bare temp directory.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/other/.cache and /tmp/cache and /var/tmp/x"),
+    );
+    made.check_part_with(1, &env).ok();
+}
+
+#[test]
+fn a_structured_field_refuses_any_rooted_path_even_one_a_reason_may_quote() {
+    // The same path that a reason may quote, in a cell the kit fills.
+    refused(
+        |made| {
+            made.set_run(1, "r1", "listing", "/tmp/cache");
+        },
+        &["/tmp/cache", "a path of the machine that made it"],
+    );
+    refused(
+        |made| {
+            made.write(
+                1,
+                "merge/adjudicator.json",
+                "{\"name\": \"opus\", \"model\": \"claude-opus-5-5\", \"dir\": \"/etc/cache\"}\n",
+            )
+        },
+        &["/etc/cache", "a path of the machine that made it"],
+    );
+}
+
+#[test]
+fn a_batch_built_on_one_machine_passes_the_check_on_another() {
+    let reason = |words: &str| {
+        let words = words.to_string();
+        move |text: &str| text.replace("\tthe guide says so\t", &format!("\t{words}\t"))
+    };
+    let builder = [("HOME", "/home/builder"), ("TMPDIR", "/var/tmp/build-7")];
+    let runner = [("HOME", "/home/runner"), ("TMPDIR", "/var/tmp/runner-1")];
+    // The reason quotes the home of a machine that checks later, as CI documents do.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("the log shows /home/runner/work/x/y and /Users/runner/z"),
+    );
+    // It passes where it is built, and is refused where the quoted home is the builder's own.
+    made.check_part_with(1, &builder).ok();
+    made.check_part_with(1, &runner).refused(&[
+        "/home/runner/work/x/y",
+        "a path of the machine that made it",
+    ]);
+    made.build_env("one", &[], &builder).ok();
+    // The batch says the same on every machine: the check does not read the machine it runs on.
+    for (env, name) in [
+        (&builder[..], "the builder"),
+        (&runner[..], "a runner"),
+        (&[("HOME", "/Users/runner")][..], "a mac"),
+        (&[][..], "the machine of the test"),
+    ] {
+        let said = made.check_batch_with("one", env).ok();
+        assert!(said.out.contains("one passes"), "{name}: {}", said.out);
+    }
+    // The builder's own home is refused when the batch is built, so it never reaches a batch.
+    let made = Made::with(1);
+    made.edit(
+        1,
+        "merge/adjudicated.tsv",
+        reason("it read /home/builder/.cache/x"),
+    );
+    made.build_env("two", &[], &builder).refused(&[
+        "/home/builder/.cache/x",
+        "a path of the machine that made it",
+    ]);
+}
+
+#[test]
+fn a_part_judged_into_merge_then_into_merge_spacy_is_checked_and_built() {
+    let made = Made::with_two_merges(2);
+    for number in 1..=2 {
+        // Two adjudicator runs, one agent record, and the answers of both in the second merge.
+        let runs = made.read(number, "runs.tsv");
+        let judges: Vec<&str> = runs
+            .lines()
+            .filter(|line| line.split('\t').nth(2) == Some("adjudicator"))
+            .collect();
+        assert_eq!(judges.len(), 2, "{runs}");
+        let first = made.run(number, 4);
+        let second = made.run(number, 5);
+        let settled = made.read(number, "merge-spacy/adjudicated.tsv");
+        assert!(
+            settled
+                .lines()
+                .any(|line| line.contains(&format!("\t{first}"))),
+            "the answer of the first merge keeps its run: {settled}"
+        );
+        assert!(
+            settled
+                .lines()
+                .any(|line| line.contains(&format!("\t{second}"))),
+            "the word spaCy disputes is answered by the second run: {settled}"
+        );
+        let rows: Vec<Vec<&str>> = judges
+            .iter()
+            .map(|line| line.split('\t').collect())
+            .collect();
+        assert_ne!(rows[0], rows[1], "the two runs are different runs: {runs}");
+        made.check_part(number).ok();
+    }
+    assert!(made.spec(1).ends_with(":merge-spacy"));
+    // Only `merge-spacy` is read: the plain merge is not shipped.
+    made.build("two", &[]).ok();
+    let out = made.out("two");
+    for number in 1..=2 {
+        let plain = made.read(number, "merge/adjudicated.tsv");
+        let shipped =
+            fs::read_to_string(out.join(format!("parts/{number:02}/adjudicated.tsv"))).unwrap();
+        let spacy = made.read(number, "merge-spacy/adjudicated.tsv");
+        assert_eq!(shipped, spacy, "part {number} ships merge-spacy's answers");
+        assert!(
+            shipped
+                .lines()
+                .any(|line| line.contains(&format!("\t{}", made.run(number, 5)))),
+            "the second run's answer is shipped: {shipped}"
+        );
+        assert!(
+            !plain
+                .lines()
+                .any(|line| line.contains(&format!("\t{}", made.run(number, 5)))),
+            "the plain merge never had the second run's answer: {plain}"
+        );
+    }
+    let silver = fs::read_to_string(out.join("silver.conllu")).unwrap();
+    assert!(
+        silver.contains(&format!("Runs={}", made.run(1, 4))),
+        "{silver}"
+    );
+    assert!(
+        silver.contains(&format!("Runs={}", made.run(1, 5))),
+        "{silver}"
+    );
+    let runs = fs::read_to_string(out.join("runs.tsv")).unwrap();
+    for run in [
+        made.run(1, 4),
+        made.run(1, 5),
+        made.run(2, 4),
+        made.run(2, 5),
+    ] {
+        assert!(
+            runs.lines()
+                .any(|line| line.starts_with(&format!("{run}\t"))),
+            "{runs}"
+        );
+    }
+}
+
+#[test]
 fn the_voters_file_of_a_merge_may_hold_paths_because_a_batch_ships_it_without_them() {
     let made = Made::with(1);
     let voters = made.read(1, "merge/voters.tsv");

@@ -4445,18 +4445,33 @@ def tool(name, path, content=None):
 
 
 request = json.loads(tool("Read", re.search(r"(/\S+\.request\.json)", prompt).group(1)))
+if SETUP.get("garbage"):
+    sys.stdout.write("not an event\n")
+if SETUP.get("bash"):
+    # A tool it was not given, used all the same.
+    count[0] += 1
+    emit({"type": "assistant", "message": {"model": model, "content": [
+        {"type": "tool_use", "id": "toolu_bash", "name": "Bash", "input": {"command": "ls"}}]}})
+    emit({"type": "user", "message": {"role": "user", "content": [
+        {"type": "tool_result", "tool_use_id": "toolu_bash", "content": "request.json"}]}})
 if "control" in request:
-    lines = [request["control"]]
-    for path in request["read"]:
+    lines = [] if SETUP.get("no_control") else [request["control"]]
+    for path in [] if SETUP.get("skip_decoys") else request["read"]:
         got = tool("Read", path)
         lines.append(path + (": refused" if got is None else ": read, " + got.splitlines()[0]))
-    lines.append("write: " + ("refused" if tool("Write", request["write"], "written\n") is None else "written"))
+    if not SETUP.get("skip_write"):
+        lines.append("write: " + ("refused" if tool("Write", request["write"], "written\n") is None else "written"))
     if SETUP.get("quote_claude_md"):
         with open(os.path.join(os.path.dirname(os.getcwd()), "CLAUDE.md")) as handle:
             lines.append(handle.readline().strip())
     else:
         lines.append("no CLAUDE.md")
-    tool("Write", request["reply_path"], "\n".join(lines) + "\n")
+    if SETUP.get("quote_user_claude_md"):
+        home = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.environ["HOME"], ".claude")
+        with open(os.path.join(home, "CLAUDE.md")) as handle:
+            lines.append(handle.readline().strip())
+    if not SETUP.get("no_reply"):
+        tool("Write", request["reply_path"], "\n".join(lines) + "\n")
 else:
     for path in SETUP.get("also_read", []):
         tool("Read", path)
@@ -4476,8 +4491,9 @@ if SETUP.get("update_to"):
         source = handle.read()
     with open(sys.argv[0], "w") as handle:
         handle.write(source.replace('"version": "%s"' % SETUP["version"], '"version": "%s"' % SETUP["update_to"]))
-emit({"type": "result", "subtype": "success", "is_error": False, "result": SETUP.get("final", model),
-      "permission_denials": denials})
+emit({"type": "result", "subtype": "success", "is_error": bool(SETUP.get("is_error")),
+      "result": SETUP.get("final", model), "permission_denials": denials})
+sys.exit(SETUP.get("exit_code", 0))
 '''
 
 
@@ -4664,6 +4680,33 @@ class ConfinementTests(Base):
         checks = self.stamp()["assertions"]
         self.assertFalse(checks["ancestor_claude_md_absent"])
         self.assertTrue(checks["user_claude_md_absent"])
+
+    def test_each_misbehaviour_fails_the_probe_on_the_assertion_that_names_it(self):
+        # Each fake misbehaves in one way, and the assertions it must make false; every other one holds.
+        cases = [
+            ({"garbage": True}, ["stream_json"]),
+            ({"exit_code": 1}, ["process_finished"]),
+            ({"is_error": True}, ["process_finished"]),
+            ({"bash": True}, ["only_read_write_used"]),
+            ({"no_reply": True}, ["reply_written", "control_quoted"]),
+            ({"no_control": True}, ["control_quoted"]),
+            ({"quote_user_claude_md": True}, ["user_claude_md_absent"]),
+            ({"update_to": "2.1.294"}, ["version_unchanged"]),
+            ({"skip_decoys": True}, ["decoy_plain_read_refused", "decoy_holdout_read_refused", "decoy_blobs_read_refused"]),
+            ({"skip_write": True}, ["outside_write_refused"]),
+        ]
+        for setup, failed in cases:
+            with self.subTest(setup=setup):
+                self.out = []
+                self.assertEqual(self.probe(**setup), 2, self.out)
+                stamp = self.stamp()
+                self.assertEqual(stamp["verdict"], "fail")
+                self.assertEqual(stamp["skipped"], {})
+                self.assertEqual(sorted(name for name, ok in stamp["assertions"].items() if not ok), sorted(failed))
+                for name in failed:
+                    self.assertIn(f"  {name}: false", self.out)
+                self.assertEqual(self.out[-1], f"verdict: fail; {label.stamp_path()} written")
+                self.assertEqual(self.left_in_temp(), [])
 
     def test_with_no_user_claude_md_that_check_is_skipped_with_a_note(self):
         os.remove(os.path.join(self.home, ".claude", "CLAUDE.md"))

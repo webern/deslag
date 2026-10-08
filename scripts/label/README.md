@@ -581,10 +581,14 @@ labels says `# exam.silver = yes`, and `own` refuses it.
 ## Tests
 
 `make test-python` runs `test_label.py`: a stand-in for OpenRouter, the real `deslag-gold`, no network
-and no key. The handoff-run and probe tests put a fake `claude` on `PATH`, a script that writes the
-stream-json events a real one would and can be told to misbehave (another tool, an MCP server, a read
-outside its directory, a change to the checkout), in a temporary `HOME` and a temporary git checkout; no
-test runs the real `claude`, which only `probe-confinement` does. Three voters are tagged at once in
+and no key. The handoff-run and probe tests run a fake `claude`, given by `--claude` (one test finds it
+on `PATH` instead), in a temporary `HOME` and a temporary git checkout. It is a script that writes the
+stream-json events a real one would, and it can be told to misbehave in each way a probe assertion
+names: a line that is not an event, a nonzero exit or an error result, a call of the Bash tool it was
+not given, an MCP server, another model, a read or a write outside its directory, a decoy or the write
+outside left untried, no reply or no control in it, a CLAUDE.md quoted, a change to the checkout, and
+an update of itself, after which `--version` says another version. No test runs the real `claude`,
+which only `probe-confinement` does. Three voters are tagged at once in
 processes of their own, against a stand-in for `deslag-gold batches` that fails if two processes are in it
 at once.
 

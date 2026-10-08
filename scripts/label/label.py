@@ -1195,6 +1195,11 @@ class Runner:
             if error.cutoff:
                 self.fail(error.name, error.run, f"{error.tag}: {error.reason}")
                 error.failed = True
+            else:
+                # The last run stays, for a rerun; `status` and `runs.tsv` say which endpoints failed and why.
+                every = "every endpoint failed: " + "; ".join(f"{tag}: {reason}" for tag, reason in tried)
+                self.update_run(error.name, error.run, stopped_because=" ".join(redacted(every).split())[:600])
+                self.write_runs()
             raise error
         self.abandon(error.name, error.run, f"{error.tag} kept failing: {error.reason}")
         self.warn(
@@ -3068,6 +3073,15 @@ def latest_record(directory, name, role, into=None):
     return run, meta
 
 
+def abandoned_runs(directory, name):
+    """How many of the voter `name`'s runs in the sample `directory` were abandoned for the next endpoint."""
+    count = 0
+    for path in glob.glob(os.path.join(directory, "raw", glob.escape(name), "r*", "run.json")):
+        meta = json.loads(read(path))
+        count += meta.get("role") == "voter" and bool(meta.get("abandoned"))
+    return count
+
+
 def batches_done(directory, name, run):
     """How many batches of a voter's run have an answer saved for all their sentences: the `batch-NN`
     asks whose `*.lines.txt` is saved whole or, for one cut off and asked again in halves, for both
@@ -3123,8 +3137,9 @@ def status_merge(directory):
 
 def command_status(arguments, config, transport=None, gold=None, say=print):
     """Where the labelling of one sample stands, in counts and run ids only, never a tag or a word: per
-    voter its latest run, what became of it, its batches answered of all, the sentences it abstains on
-    and its dollars; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
+    voter its latest run, what became of it and, when that is not a plain `complete`, why (the reason
+    `runs.tsv` gives: endpoint tags and counts), its batches answered of all, the sentences it abstains
+    on, its dollars and how many of its runs were abandoned; the outside taggers' runs; the adjudicator's latest run for the merge and, for a
     handoff adjudicator, the requests waiting and the replies present; the ledger's total and what is
     left under `--max-usd`; and the verdict of the part's preflight. It reads, and writes nothing in
     the sample directory."""
@@ -3144,9 +3159,14 @@ def command_status(arguments, config, transport=None, gold=None, say=print):
         if of is None:
             of = current if meta.get("limit") is None and current is not None else "?"
         abstaining = meta.get("abstaining")
+        status = run_status(meta)
+        reason = run_reason(meta, status)
+        why = "" if reason == "-" else f" ({' '.join(reason.split())})"
+        gave_up = abandoned_runs(directory, name)
+        runs = "" if not gave_up else f"; {gave_up} run{'s' if gave_up != 1 else ''} abandoned"
         say(
-            f"voter {name}: {run} {run_status(meta)}, {batches_done(directory, name, run)} of {of} batches, "
-            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}"
+            f"voter {name}: {run} {status}{why}, {batches_done(directory, name, run)} of {of} batches, "
+            f"{'-' if abstaining is None else abstaining} abstaining, ${book.run_cost(run):.4f}{runs}"
         )
     for name in sorted(config.get("external") or {}):
         run, meta = latest_record(directory, name, "external")

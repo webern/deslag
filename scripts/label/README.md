@@ -494,7 +494,7 @@ draw (the merge the assembler reads) and `merge` in any other sample:
 ```
 sample: 500 sentences, /path/to/.label/silver/part-01
 voter deepseek: r41 complete, 10 of 10 batches, 2 abstaining, $0.3120
-voter qwen: r42 stopped, 6 of 10 batches, - abstaining, $0.1874
+voter qwen: r42 stopped (every endpoint failed: deepinfra/bf16: HTTP 429 (upstream_provider_shared_pool); parasail/fp8: HTTP 429), 6 of 10 batches, - abstaining, $0.1874; 1 run abandoned
 voter gemma: no run
 spacy: r44 complete
 adjudicator opus (merge): r45 stopped, $0.0000; 3 requests waiting, 9 replies present
@@ -502,9 +502,13 @@ ledger: $5.1003 booked, $2.8997 left under --max-usd 8
 preflight (merge): refused, 1 line on stderr (exit 2); `deslag-gold silver build --check-part /path/to/.label/silver/part-01:merge` prints it
 ```
 
-A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it, the batches with
+A voter's line is its latest run, whatever became of it: its status as `runs.tsv` gives it and, when that is
+not a plain `complete`, its reason as `runs.tsv` gives it, in parentheses (for a run that stopped because
+every endpoint of its model failed, each endpoint and why), the batches with
 an answer saved of the batches the run asks (`batches` in its `run.json`), the sentences that abstain after
-its retries (`abstaining`, written when it ends; `-` before), and its dollars from the ledger. The
+its retries (`abstaining`, written when it ends; `-` before), its dollars from the ledger, and, after a
+`;`, how many of the voter's runs in the sample were abandoned for the next endpoint (nothing when none
+were). The
 adjudicator is the one the merge's `adjudicator.json` records, or `voters.json`'s. The preflight is
 `deslag-gold silver build --check-part D:M`; its line is `ok`, `refused` with the number of lines it
 printed (never the lines, which may quote a sentence), or `not run` before the merge or when `deslag-gold`
@@ -530,14 +534,18 @@ Makefile), so the run can change them.
 - `make generate-silver-part PART=NN`: `silver-part.sh`, in which the voters of `voters.json` tag `part-NN`
   at once, each in a process of its own, then `spacy.sh`. `LABEL_FLAGS` reach `label.py tag`, so
   `LABEL_FLAGS="--limit 1"` is a smoke run, and `--dry-run` sends nothing; with either, spaCy does not run, so
-  that nothing writes the lock. A voter that fails is named, and spaCy does not run. The Opus round is steps 3
-  and 4 above, driven by hand.
+  that nothing writes the lock. A voter that fails is named with its exit code (`the voters that failed: qwen
+  (exit 2) hy3 (exit 5)`; the codes are above), and spaCy does not run. The Opus round is steps 3 and 4
+  above, driven by hand.
 - `make generate-silver-assemble SILVER_NAME=YYYY-MM-DD-slug`: `silver build` over every `part-NN` under
   `.label/silver`. Without `--audit` in `SILVER_BUILD_FLAGS` it writes the draft, into
   `SILVER_DRAFT_DIR/NAME` (`.label/silver/draft/NAME`); with `SILVER_BUILD_FLAGS="--audit DIR --archive-sha256
   SHA"` the batch, into `SILVER_BATCH_DIR/NAME` (`.label/silver/batch/NAME`), since a build never writes over
   a directory that has files. The labels are published under `SILVER_ANNOTATIONS_LICENSE`, MIT unless set:
   the owner's choice, which the datasheet states.
+- make reports any failure of a recipe as 2, whatever the exit code of the command in it (`Error N` in its
+  output names that code). A driver that branches on `judge`'s exit code, 6 for a wait on the harness,
+  calls `label.py judge` itself and not `make generate-label-judge-dev` or `-owner`.
 - `make test-silver`, which `make test-blobs` runs: `silver check` and `silver standing` over the unpacked
   image. Both pass when it has no `silver/`.
 - `make test-confinement`: the probe above.

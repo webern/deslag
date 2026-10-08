@@ -3046,7 +3046,7 @@ class StatusTests(Base):
         said = self.status("--max-usd", "1")
         self.assertEqual(said[1:5], [
             "voter one: r1 complete, 2 of 2 batches, 0 abstaining, $0.0020",
-            f"voter two: r2 stopped, 1 of 2 batches, - abstaining, ${cost:.4f}",
+            f"voter two: r2 stopped (HTTP 400: stop here), 1 of 2 batches, - abstaining, ${cost:.4f}",
             "spacy: r3 complete",
             "adjudicator judge (merge): no run",
         ])
@@ -3055,7 +3055,43 @@ class StatusTests(Base):
         # A later run of a voter is the one shown, whatever became of it.
         with self.assertRaises(openrouter.ApiError):
             self.runner(FakeTransport(respond)).tag("one", again=True)
-        self.assertEqual(self.status()[1], f"voter one: r4 stopped, 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}")
+        self.assertEqual(
+            self.status()[1],
+            f"voter one: r4 stopped (HTTP 400: stop here), 1 of 2 batches, - abstaining, ${self.ledger().run_cost('r4'):.4f}",
+        )
+
+    def test_a_stopped_voter_shows_why_and_how_many_of_its_runs_were_abandoned(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["one"]["provider_fallback"] = ["alt/fp8"]
+        config["models"]["one"]["quantizations"] = ["fp8", "bf16"]
+        reason = "HTTP 429 (upstream_provider_shared_pool)"
+        down = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable(reason)), WIDE_LISTING)
+        with self.assertRaises(label.EndpointExhausted):
+            self.runner(down, config=config).tag("one")
+        said = self.status(config=config)
+        cost = self.ledger().run_cost("r2")
+        self.assertRegex(
+            said[1],
+            rf"^voter one: r2 stopped \(every endpoint failed: host/fp8: {re.escape(reason)}; alt/fp8: {re.escape(reason)}\), "
+            rf"0 of 2 batches, - abstaining, \${cost:.4f}; 1 run abandoned$",
+        )
+        self.assert_no_word(said)
+        self.assertEqual(said[2], "voter two: no run")
+        self.assertIn("every endpoint failed: host/fp8: " + reason, label.read(os.path.join(self.dir, "runs.tsv")))
+
+    def test_a_voter_that_completed_after_abandoning_a_run_says_how_many(self):
+        config = copy.deepcopy(CONFIG)
+        config["models"]["one"]["provider_fallback"] = ["alt/fp8"]
+        config["models"]["one"]["quantizations"] = ["fp8", "bf16"]
+
+        def respond(body, count):
+            if body["provider"]["order"] == ["host/fp8"]:
+                raise openrouter.Retryable("HTTP 429")
+            return answer_all(body)
+
+        self.runner(FakeTransport(respond, WIDE_LISTING), config=config).tag("one")
+        self.assertEqual(self.status(config=config)[1],
+                         f"voter one: r2 complete, 2 of 2 batches, 0 abstaining, ${self.ledger().run_cost('r2'):.4f}; 1 run abandoned")
 
     def test_a_run_made_before_runs_recorded_their_batches_is_shown_against_the_batches_there(self):
         self.runner(FakeTransport(answer_all)).tag("one")
@@ -5721,6 +5757,58 @@ class EndToEndTests(Base):
         said = gold.merge(self.dir, "merge", [("one", False), ("two", False)], 60, min_voters=2)
         self.assertRegex(said, r"(?i)abstain")
         self.assertTrue(os.path.isfile(os.path.join(self.dir, "merge", "worklist.tsv")))
+
+
+class SilverPartScriptTests(unittest.TestCase):
+    """`silver-part.sh` run over a stand-in `label.py`, `voters.json` and `spacy.sh` in a temporary
+    folder, so it needs no key, no network and no model."""
+
+    def setUp(self):
+        self.root = os.path.realpath(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root)
+        self.here = os.path.join(self.root, "kit")
+        os.makedirs(self.here)
+        shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "silver-part.sh"), self.here)
+        label.write(os.path.join(self.here, "voters.json"), json.dumps({"voters": ["deepseek", "qwen", "hy3"]}))
+        # The stand-in exits with the code its `--voter` is given in the CODES environment variable.
+        label.write(os.path.join(self.here, "label.py"), (
+            "import json, os, sys\n"
+            "voter = sys.argv[sys.argv.index('--voter') + 1]\n"
+            "sys.exit(json.loads(os.environ.get('CODES', '{}')).get(voter, 0))\n"
+        ))
+        self.spacy_ran = os.path.join(self.root, "spacy-ran")
+        label.write(os.path.join(self.here, "spacy.sh"), f"#!/usr/bin/env bash\ntouch '{self.spacy_ran}'\n")
+        os.chmod(os.path.join(self.here, "spacy.sh"), 0o755)
+        self.silver = os.path.join(self.root, "silver")
+        label.write(os.path.join(self.silver, "part-01", "sample.conllu"), "")
+
+    def run_script(self, codes, *flags):
+        return subprocess.run(
+            ["bash", os.path.join(self.here, "silver-part.sh"), self.silver, "01", "5", "gold-bin", *flags],
+            capture_output=True, text=True, env={**os.environ, "CODES": json.dumps(codes)}, check=False,
+        )
+
+    def test_every_voter_that_failed_is_named_with_its_exit_code_and_spacy_does_not_run(self):
+        done = self.run_script({"qwen": 2, "hy3": 5})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("silver-part.sh: the voters that failed: qwen (exit 2) hy3 (exit 5)", done.stderr)
+        self.assertNotIn("deepseek", done.stderr)
+        self.assertFalse(os.path.exists(self.spacy_ran))
+
+    def test_a_voter_that_hit_the_cap_is_named_with_4(self):
+        done = self.run_script({"deepseek": 4})
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("the voters that failed: deepseek (exit 4)", done.stderr)
+
+    def test_when_no_voter_fails_spacy_runs(self):
+        done = self.run_script({})
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue(os.path.exists(self.spacy_ran))
+
+    def test_a_smoke_run_does_not_run_spacy(self):
+        done = self.run_script({}, "--limit", "1")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertFalse(os.path.exists(self.spacy_ran))
 
 
 if __name__ == "__main__":

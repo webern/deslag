@@ -107,7 +107,7 @@ struct ConfigFile {
         reason = "read from `Head` before this parse; here for the schema"
     )]
     deslag_version: Option<String>,
-    /// The Rust section. A config without one does not read a Rust file.
+    /// The Rust section. A config without one does not read any Rust file.
     #[serde(default)]
     rust: Option<rust::RustFile>,
 }
@@ -115,8 +115,8 @@ struct ConfigFile {
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
 /// can read it at all, and the place of each section.
 ///
-/// It does not refuse an unknown key, so a config from a later deslag, which may hold keys this one
-/// has never heard of, reports that it is from a later deslag and not the first of those keys.
+/// It does not refuse any unknown key, so a config from a later deslag, which may hold keys this
+/// one has never heard of, reports that it is from a later deslag and not the first of those keys.
 ///
 /// The sections are here for the config written as a JSON array, which serde reads by position.
 /// The fields must be in the order of [`ConfigFile`]'s, or the array reads differently in the two

@@ -246,10 +246,10 @@ impl Merge for MaxEmphasis {
 }
 
 /// `lints.repo_layout`: a file must have a section, under `heading`, whose first code block lists
-/// between `min_entries` and `max_entries` paths that exist, in lines at most `max_width` wide.
+/// between `min_entries` and `max_entries` paths that exist, in lines up to `max_width` wide.
 ///
 /// Unlike the other lints, the table itself turns the check on: a file it applies to must have
-/// the section even when the table does not set a field.
+/// the section even when the table does not set any field.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RepoLayout {

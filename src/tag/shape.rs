@@ -525,7 +525,7 @@ mod tests {
         assert_guess("FROBZ", Noun, SINGULAR, &[Noun, ProperNoun]);
         assert_guess("FZ", Noun, SINGULAR, &[Noun, ProperNoun]);
         assert_guess("FROBZs", Noun, Features::PLURAL, &[Noun, ProperNoun]);
-        // A lone capital is no acronym and does not have a shape, but may be a name.
+        // A lone capital is not an acronym and does not have a shape, but may be a name.
         let lone = guess("Q");
         assert_eq!(lone.tag, Noun);
         assert_eq!(lone.kept, set(&[Noun, Verb, Adjective, ProperNoun]));

@@ -522,7 +522,7 @@ pub(super) fn mark(
 /// The origin of the word at `at`, given the origins `tokens` already hold for the words before it.
 ///
 /// It runs on every word of every document, so a plain lower-case word, which most are, is read
-/// once as bytes and stops at the neighbour and name checks, and it looks at a
+/// once as bytes and does not go past the neighbour and name checks, and it looks at a
 /// neighbour's kind, which lives in the token, before its text, which does not.
 #[inline(never)]
 fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {

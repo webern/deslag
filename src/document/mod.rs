@@ -219,7 +219,8 @@ pub enum SpanKind<'a> {
     Series,
 }
 
-/// A place between tokens or blocks that does not take room among them but stands for whitespace.
+/// A place between tokens or blocks that does not take up room among them but stands for
+/// whitespace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Point {
     /// What kind of place it is.

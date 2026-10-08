@@ -67,6 +67,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -155,6 +156,10 @@ AGENT_KEYS = (
     "harness", "version", "agent_type", "model_reported", "effort", "tools", "prompt_sha256", "safe_mode",
     "args", "cwd",
 )
+
+# Where `handoff-run` moves the replies of a round that did not end with a tree shown clean, in this
+# checkout's `.label`: out of the run's folder, so none is read, and kept, since each was paid for.
+QUARANTINE = "quarantine"
 
 # The stamp of the confinement probe, in this checkout's `.label`: without one that passed for the
 # Claude Code installed now and the argument list handoff-run uses, handoff-run makes no call.
@@ -2439,8 +2444,9 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     probe stamp for the Claude Code installed now and these arguments; in a part of a draw, when the
     commit, the draw, that Claude Code or these arguments are not the lock's (see [hold_parts_lock]);
     with an `agent.json` that differs from what it would write; or when `git status` shows a change
-    outside `.label/`; and after
-    the round, if the tree has changed outside `.label/`, it removes the replies it copied and fails.
+    outside `.label/`. The round fails closed: an interrupt or a call that raises stops it (no call
+    not yet started is made), and unless `git status` then shows the tree clean outside `.label/`,
+    the replies it copied are moved to quarantine (see [quarantine]) and it fails.
     Exit 0 when every request has its reply, 6 when a process wrote none (run it again), 2 when a
     call failed a check or anything was refused. With `--give-up CALL`, it runs no process and records
     that the call is given up instead (see [give_up_requests])."""
@@ -2484,21 +2490,40 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     os.rmdir(confine.workdir("deslag-handoff-"))
     say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
     counts = {"answered": 0, "no reply": 0, "failed": 0}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel) as pool:
-        futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
-        for future in concurrent.futures.as_completed(futures):
-            call, outcome, failed, note = future.result()
-            counts[outcome] += 1
-            say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else "") + (f"; {note}" if note else ""))
-    changes = tree_changes(REPO)
-    if changes:
-        for target in round_.copied:
-            os.remove(target)
-        print(
-            f"label: after the round git status shows {len(changes)} changes outside .label/ in {REPO} "
-            f"({', '.join(changes[:5])}), so the {len(round_.copied)} replies of this round are removed and none is read",
-            file=sys.stderr,
-        )
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel)
+    why = None
+    try:
+        try:
+            futures = [pool.submit(round_.answer, path, request) for path, request in requests.items()]
+            for future in concurrent.futures.as_completed(futures):
+                call, outcome, failed, note = future.result()
+                counts[outcome] += 1
+                say(f"  {call}: {outcome}" + (f" ({', '.join(failed)})" if failed else "") + (f"; {note}" if note else ""))
+        finally:
+            # An interrupt or a call that raised stops the round: no call that has not started
+            # starts, and the ones running are waited for, so nothing is copied after the check.
+            pool.shutdown(wait=True, cancel_futures=True)
+    finally:
+        # The round fails closed, however it ended: its replies stay in the run's folder only when
+        # git shows the tree clean after it, and a git that cannot say counts as a change.
+        try:
+            changes = tree_changes(REPO)
+            if changes:
+                why = (
+                    f"after the round git status shows {len(changes)} changes outside .label/ in {REPO} "
+                    f"({', '.join(changes[:5])})"
+                )
+        except GoldError as error:
+            why = f"whether the tree is clean after the round is not known ({error})"
+        if why is not None:
+            moved = quarantine(round_)
+            print(
+                f"label: {why}, so the {len(moved)} replies of this round"
+                + (f" are moved to {os.path.dirname(moved[0])}, where nothing reads them," if moved else "")
+                + " and none is read",
+                file=sys.stderr,
+            )
+    if why is not None:
         return 2
     say(
         f"{meta['name']} {run}: {counts['answered']} answered, {counts['no reply']} with no reply written, "
@@ -2507,6 +2532,23 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     if counts["failed"]:
         return 2
     return EXIT_HANDOFF if counts["no reply"] else 0
+
+
+def quarantine(round_):
+    """Moves the replies `round_` copied into its run's folder to a new folder under
+    `.label/quarantine/`, named for the run: out of the folder judge reads, so none is read, and not
+    deleted, since each was paid for. Returns the paths they were moved to."""
+    if not round_.copied:
+        return []
+    base = os.path.join(guard.root(), QUARANTINE)
+    os.makedirs(base, exist_ok=True)
+    target = tempfile.mkdtemp(prefix=f"{os.path.basename(round_.folder)}-", dir=base)
+    moved = []
+    for path in round_.copied:
+        moved.append(os.path.join(target, os.path.basename(path)))
+        os.replace(path, moved[-1])
+    round_.copied = []
+    return moved
 
 
 def give_up_requests(directory, into, calls, reason, say):

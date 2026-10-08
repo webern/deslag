@@ -4794,7 +4794,53 @@ class ConfinementTests(Base):
             self.assertEqual(self.handoff_run(), 2)
         self.assertIn("after the round git status shows 1 changes", err.getvalue())
         self.assertIn("escaped.txt", err.getvalue())
-        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1, "the reply of the round is removed")
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1, "the reply of the round is taken out")
+        self.assertEqual(self.quarantined(), ["part-01"], "and kept in quarantine")
+
+    def quarantined(self):
+        """The calls whose replies are in quarantine."""
+        base = os.path.join(self.label_root, label.QUARANTINE)
+        names = [name for folder, _, names in os.walk(base) for name in names] if os.path.isdir(base) else []
+        return sorted(name.split(".")[0] for name in names)
+
+    def test_a_round_stopped_by_a_call_that_raised_makes_no_more_calls_and_checks_the_tree(self):
+        self.waiting(PartsGold(4))
+        self.assertEqual(self.probe(), 0)
+        real = confine.run
+        made = []
+
+        def run(*args, **more):
+            made.append(args)
+            if len(made) == 1:
+                raise PermissionError("not allowed")
+            return real(*args, **more)
+
+        with unittest.mock.patch.object(confine, "run", side_effect=run), self.assertRaises(PermissionError):
+            self.handoff_run("--parallel", "1")
+        self.assertLessEqual(len(made), 2, "the calls not yet started are not made")
+        # The tree is clean, so a reply copied before the stop is kept, and the rest are still waiting.
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 4 - (len(made) - 1))
+        self.assertEqual(self.quarantined(), [])
+        self.assertEqual(self.left_in_temp(), [])
+
+    def test_a_round_after_which_git_cannot_say_whether_the_tree_is_clean_reads_none_of_its_replies(self):
+        self.waiting()
+        self.assertEqual(self.probe(), 0)
+        real = label.tree_changes
+        seen = []
+
+        def changes(repo):
+            seen.append(repo)
+            if len(seen) > 1:
+                raise label.GoldError("git status failed in the checkout")
+            return real(repo)
+
+        err = io.StringIO()
+        with unittest.mock.patch.object(label, "tree_changes", side_effect=changes), contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run(), 2)
+        self.assertIn("whether the tree is clean after the round is not known (git status failed", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 1)
+        self.assertEqual(self.quarantined(), ["part-01"])
 
     def test_a_call_that_fails_a_check_has_no_reply_copied_and_says_which_check(self):
         pending = self.waiting()

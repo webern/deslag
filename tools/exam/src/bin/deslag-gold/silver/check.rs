@@ -472,10 +472,12 @@ pub fn check(batch: &Batch) -> Result<Checked, Problems> {
         ));
     }
     // Each word is vouched for by the runs its provenance says.
-    let adjudicator = |run: &str| run_table.row(run).is_some() && run_table.get(run, "role") == "adjudicator";
+    let adjudicator =
+        |run: &str| run_table.row(run).is_some() && run_table.get(run, "role") == "adjudicator";
     for block in &silver {
         let id = block.comment("sent_id").map_or("", |c| c.value.as_str());
-        let Some(found) = vouchers.get(rows.get(id).map_or("", |row| manifest.cell(row, "part"))) else {
+        let Some(found) = vouchers.get(rows.get(id).map_or("", |row| manifest.cell(row, "part")))
+        else {
             continue;
         };
         for (at, line) in block.lines.iter().enumerate() {

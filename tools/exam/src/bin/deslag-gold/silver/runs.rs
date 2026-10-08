@@ -576,7 +576,11 @@ fn agent_rules(bad: &mut impl FnMut(String), run: &str, model: &str, agent: &ser
     if !agent["prompt_sha256"].as_str().is_some_and(is_sha256) {
         bad(format!("run {run}: its agent record has no prompt sha256"));
     }
-    for (key, wanted) in [("harness", AGENT_HARNESS), ("agent_type", AGENT_TYPE), ("cwd", AGENT_CWD)] {
+    for (key, wanted) in [
+        ("harness", AGENT_HARNESS),
+        ("agent_type", AGENT_TYPE),
+        ("cwd", AGENT_CWD),
+    ] {
         if agent[key].as_str() != Some(wanted) {
             bad(format!(
                 "run {run}: its agent record says {key} `{}`, and a confined call's is `{wanted}`",
@@ -784,7 +788,8 @@ mod tests {
         let unsafe_agent = row("r5", &[]).replace("\"safe_mode\":true", "\"safe_mode\":false");
         let cells: Vec<&str> = unsafe_agent.split('\t').collect();
         says(&[("r5", &[("settings", cells[30])])], "safe_mode true");
-        let other_tools = row("r5", &[]).replace("\"tools\":\"Read,Write\"", "\"tools\":\"Read,Write,Bash\"");
+        let other_tools =
+            row("r5", &[]).replace("\"tools\":\"Read,Write\"", "\"tools\":\"Read,Write,Bash\"");
         let cells: Vec<&str> = other_tools.split('\t').collect();
         says(&[("r5", &[("settings", cells[30])])], "other tools");
         says(
@@ -793,13 +798,37 @@ mod tests {
         );
         // The agent record is held by value: its arguments, version, working directory and kind.
         for (from, to, part) in [
-            ("\"--strict-mcp-config\",", "", "a confined call of vendor-d/judge is `-p --safe-mode"),
-            ("\"--verbose\"", "\"--verbose\",\"--add-dir\",\"/\"", "--add-dir"),
-            ("\"version\":\"2.1.293\"", "\"version\":\"latest\"", "version `latest`"),
-            ("\"version\":\"2.1.293\"", "\"version\":\"2.1 .293\"", "not a version"),
+            (
+                "\"--strict-mcp-config\",",
+                "",
+                "a confined call of vendor-d/judge is `-p --safe-mode",
+            ),
+            (
+                "\"--verbose\"",
+                "\"--verbose\",\"--add-dir\",\"/\"",
+                "--add-dir",
+            ),
+            (
+                "\"version\":\"2.1.293\"",
+                "\"version\":\"latest\"",
+                "version `latest`",
+            ),
+            (
+                "\"version\":\"2.1.293\"",
+                "\"version\":\"2.1 .293\"",
+                "not a version",
+            ),
             ("outside any repository", "anywhere", "says cwd"),
-            ("\"claude -p --safe-mode\"", "\"claude -p\"", "says agent_type `claude -p`"),
-            ("\"harness\":\"claude-code\"", "\"harness\":\"other\"", "says harness `other`"),
+            (
+                "\"claude -p --safe-mode\"",
+                "\"claude -p\"",
+                "says agent_type `claude -p`",
+            ),
+            (
+                "\"harness\":\"claude-code\"",
+                "\"harness\":\"other\"",
+                "says harness `other`",
+            ),
         ] {
             let changed = row("r5", &[]).replacen(from, to, 1);
             assert_ne!(changed, row("r5", &[]), "{from}");
@@ -813,7 +842,16 @@ mod tests {
         for good in ["2.1.293", "2.1", "10.0.0-beta.1", "2.1.293+build"] {
             assert!(is_version(good), "{good}");
         }
-        for bad in ["", "2", "latest", "2..1", ".2.1", "2.1 .3", "v2.1.293", "2.1.293 (Claude Code)"] {
+        for bad in [
+            "",
+            "2",
+            "latest",
+            "2..1",
+            ".2.1",
+            "2.1 .3",
+            "v2.1.293",
+            "2.1.293 (Claude Code)",
+        ] {
             assert!(!is_version(bad), "{bad}");
         }
     }

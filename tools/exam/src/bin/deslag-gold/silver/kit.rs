@@ -179,10 +179,7 @@ mod tests {
         let error = Kit::parse(&other).unwrap_err().to_string();
         assert!(error.contains("knows only 1"), "{error}");
         // A kit of another version, with other keys, is refused for its version, not its keys.
-        let later = format!(
-            "{}new_key\t1\n",
-            other.replace("min_voters\t3\n", "")
-        );
+        let later = format!("{}new_key\t1\n", other.replace("min_voters\t3\n", ""));
         let error = Kit::parse(&later).unwrap_err().to_string();
         assert!(error.contains("knows only 1"), "{error}");
         let short = kit.render().replace("min_voters\t3\n", "");

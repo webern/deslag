@@ -247,13 +247,18 @@ fn a_word_with_no_provenance_or_no_run_is_refused() {
 fn a_word_whose_runs_are_not_what_its_provenance_says_is_refused() {
     let relabel = |from: &'static str, to: &'static str| {
         move |made: &Made| {
-            made.edit(1, "merge/labelled.conllu", |text| text.replacen(from, to, 1))
+            made.edit(1, "merge/labelled.conllu", |text| {
+                text.replacen(from, to, 1)
+            })
         }
     };
     // Agreed by spaCy alone, which votes on the part of speech and is no model voter.
     refused(
         relabel("Prov=agree|Runs=r1,r2,r3,r4", "Prov=agree|Runs=r4"),
-        &["word 2 `", "it is agreed by the runs of 0 model voters, and min_voters is 3"],
+        &[
+            "word 2 `",
+            "it is agreed by the runs of 0 model voters, and min_voters is 3",
+        ],
     );
     // Agreed by runs the part does not have.
     refused(

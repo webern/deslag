@@ -535,22 +535,25 @@ fn edits() -> Vec<Case> {
     case!(
         "an answer whose run is a voter's",
         |d| {
-            edit(d, "parts/01/adjudicated.tsv", |t| t.replace("\tr5\n", "\tr1\n"));
-            edit(d, "silver.conllu", |t| t.replacen(
-                "Prov=adjudicated|Runs=r5",
-                "Prov=adjudicated|Runs=r1",
-                1
-            ));
+            edit(d, "parts/01/adjudicated.tsv", |t| {
+                t.replace("\tr5\n", "\tr1\n")
+            });
+            edit(d, "silver.conllu", |t| {
+                t.replacen("Prov=adjudicated|Runs=r5", "Prov=adjudicated|Runs=r1", 1)
+            });
         },
         ["it is adjudicated by run r1, which is not an adjudicator's"]
     );
     case!(
         "a min_voters below three",
         |d| {
-            edit(d, "record/kit.tsv", |t| t.replace("min_voters\t3", "min_voters\t2"));
+            edit(d, "record/kit.tsv", |t| {
+                t.replace("min_voters\t3", "min_voters\t2")
+            });
             for part in ["01", "02"] {
-                edit(d, &format!("parts/{part}/voters.tsv"), |t| t
-                    .replace("# min_voters = 3", "# min_voters = 2"));
+                edit(d, &format!("parts/{part}/voters.tsv"), |t| {
+                    t.replace("# min_voters = 3", "# min_voters = 2")
+                });
             }
         },
         [
@@ -562,7 +565,11 @@ fn edits() -> Vec<Case> {
         "an adjudicator run under another voters.json",
         |d| edit(d, "runs.tsv", |t| {
             let sha = sha256(read(d, "record/voters.json").as_bytes());
-            let row = t.lines().find(|l| l.starts_with("r5\t")).unwrap().to_string();
+            let row = t
+                .lines()
+                .find(|l| l.starts_with("r5\t"))
+                .unwrap()
+                .to_string();
             t.replacen(&row, &row.replacen(&sha, &"0".repeat(64), 1), 1)
         }),
         ["run r5 began under a voters.json of sha256 000"]
@@ -761,7 +768,10 @@ fn edits() -> Vec<Case> {
             "\tthe guide says so\t",
             "\tI read /tmp/deslag-handoff-x/request.json and the guide says so\t"
         )),
-        ["parts/01/adjudicated.tsv", "/tmp/deslag-handoff-x/request.json"]
+        [
+            "parts/01/adjudicated.tsv",
+            "/tmp/deslag-handoff-x/request.json"
+        ]
     );
     case!(
         "numbers that are not the files'",

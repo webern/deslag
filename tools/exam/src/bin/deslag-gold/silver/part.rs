@@ -630,13 +630,16 @@ impl Part {
         let vouchers = Vouchers::new(&merge.voters, voters.1, merge.adjudicated.as_ref());
         for (id, (block, _)) in &labelled {
             for (at, line) in block.lines.iter().enumerate() {
-                let (Some(prov), Some(named)) = (misc_of(&line.misc, "Prov"), misc_of(&line.misc, "Runs")) else {
+                let (Some(prov), Some(named)) =
+                    (misc_of(&line.misc, "Prov"), misc_of(&line.misc, "Runs"))
+                else {
                     continue;
                 };
                 if misc_of(&line.misc, "Kind") != Some("Word") {
                     continue;
                 }
-                let adjudicator = |run: &str| runs.row(run).is_some() && runs.get(run, "role") == "adjudicator";
+                let adjudicator =
+                    |run: &str| runs.row(run).is_some() && runs.get(run, "role") == "adjudicator";
                 if let Some(why) = vouchers.word(id, at + 1, prov, named, adjudicator) {
                     problems.push(Problems::sentence(
                         &labelled_shown,
@@ -814,7 +817,10 @@ impl Vouchers {
                         .rows
                         .iter()
                         .filter_map(|row| {
-                            Some(((row[id].clone(), row[token].parse().ok()?), row[run].clone()))
+                            Some((
+                                (row[id].clone(), row[token].parse().ok()?),
+                                row[run].clone(),
+                            ))
                         })
                         .collect(),
                 ),
@@ -875,8 +881,9 @@ impl Vouchers {
                         "it is adjudicated and names runs {runs}, and the answer for {id}.{token} is run {run}'s"
                     ));
                 }
-                (!adjudicator(run))
-                    .then(|| format!("it is adjudicated by run {run}, which is not an adjudicator's"))
+                (!adjudicator(run)).then(|| {
+                    format!("it is adjudicated by run {run}, which is not an adjudicator's")
+                })
             }
             _ => None,
         }

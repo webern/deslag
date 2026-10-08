@@ -430,8 +430,14 @@ fn a_blind_audit_hides_silvers_labels_and_keeps_them_beside_the_queue() {
         "{}",
         String::from_utf8_lossy(&over.stderr)
     );
-    assert_eq!(fs::read_to_string(out.join("queue.conllu")).unwrap(), reviewing);
-    assert_eq!(fs::read_to_string(out.join("labels.conllu")).unwrap(), labels);
+    assert_eq!(
+        fs::read_to_string(out.join("queue.conllu")).unwrap(),
+        reviewing
+    );
+    assert_eq!(
+        fs::read_to_string(out.join("labels.conllu")).unwrap(),
+        labels
+    );
     let labels_only = work.path().join("labels-only");
     fs::create_dir_all(&labels_only).unwrap();
     fs::write(labels_only.join("labels.conllu"), &labels).unwrap();

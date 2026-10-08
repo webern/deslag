@@ -45,7 +45,7 @@ asked again in halves; an endpoint that keeps failing (HTTP 429, 5xx or timeouts
 that is not about the key, replies cut off on both halves of a split, a provider refusal, a reply from
 another provider, an endpoint the listing no longer has as pinned) is abandoned for the next one in
 voters.json's `provider_fallback`, but a network error here stops the run so that it can be continued; backoff,
-halving and switching draw on one budget of failed calls (`failure_budget`); a voter run on which more
+halving and refusals draw on one budget of failed calls for each endpoint (`failure_budget`); a voter run on which more
 than a quarter of the sentences abstain ends `failed`; an item the adjudicator never settles leaves
 its sentence out of the labels unless `--strict`. The ledger and the run ids are in a state directory
 shared by every checkout (ledger.py), and the files voters share in a sample directory are written
@@ -104,9 +104,10 @@ LICENSE_KEYS = ("license", "license_url", "license_checked")
 # number, at least 1), where `http_attempts` is the count for any other failure.
 SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0, "rate_limit_attempts": 4}
 
-# The failure limits. `failure_budget` is how many calls may fail in one step (one voter's `tag`, or
-# one `judge`), across every wait, every halving and every endpoint it switches to: a POST that failed
-# with a retryable error, or whose reply was cut off or refused. `abstain_limit` is the share of a
+# The failure limits. `failure_budget` is how many calls may fail at one endpoint in one step (one
+# voter's `tag`, or one `judge`), across every wait and every halving, and it starts over at each
+# endpoint the step switches to: a POST that failed with a retryable error, or whose reply was cut off
+# or refused. `abstain_limit` is the share of a
 # run's sentences that may abstain before the run ends `failed` instead of complete.
 LIMIT_DEFAULTS = {"failure_budget": 40, "abstain_limit": 0.25}
 
@@ -870,7 +871,7 @@ class BatchLost(Exception):
 
 
 class BudgetSpent(openrouter.ApiError):
-    """More calls failed in one step than `failure_budget` allows. The run is kept as it is."""
+    """More calls failed at one endpoint of a step than `failure_budget` allows. The run is kept as it is."""
 
 
 class RunFailed(openrouter.ApiError):
@@ -882,11 +883,14 @@ class RunFailed(openrouter.ApiError):
 
 
 class FailureBudget:
-    """The failed calls of one step, counted together whatever failed them: a retryable error that
-    backoff waits out, a reply cut off that halving asks again, a provider refusal that makes the
-    runner switch endpoint. Each is a POST that was booked and may have been billed. One bad endpoint
-    therefore cannot turn into thousands of calls by any of the three: past `limit` the step stops
-    with BudgetSpent. A call answered from a saved reply is not a POST and is not counted."""
+    """The failed calls at one endpoint of a step, counted together whatever failed them: a retryable
+    error that backoff waits out, a reply cut off that halving asks again, a provider refusal that
+    makes the runner switch endpoint. Each is a POST that was booked and may have been billed. One bad
+    endpoint therefore cannot turn into thousands of calls by any of the three: past `limit` the step
+    stops with BudgetSpent. The runner starts a new budget at each endpoint it switches to, so that a
+    step is never stopped before it has tried every endpoint of the model; a step costs at most `limit`
+    failed calls for each endpoint listed. A call answered from a saved reply is not a POST and is not
+    counted."""
 
     def __init__(self, limit):
         self.limit = limit
@@ -1227,6 +1231,9 @@ class Runner:
                 f"label: {error.name}: {error.tag} cannot be asked ({error.reason}); a run starts at "
                 f"{following}{passed}"
             )
+        # The budget is the endpoint's: a voter must get to try every endpoint it lists, and an endpoint
+        # that burns calls is still stopped by its own.
+        self.budget = FailureBudget(self.settings["failure_budget"])
         return following
 
     def every_failed(self, name, tried):
@@ -1297,7 +1304,7 @@ class Runner:
         Every call that was answered, a refused reply too, is a row of `calls.jsonl`, so that the
         run's calls, tokens and seconds are what its dollars paid for.
 
-        A retryable failure, a cut-off reply and a refusal each spend from the step's failure budget.
+        A retryable failure, a cut-off reply and a refusal each spend from the endpoint's failure budget.
         What stops the run: a failure that is the endpoint's own through every wait, or a refusal,
         raises EndpointExhausted for the caller to switch endpoint; a network error here raises it
         `local`, and the run stops where it is; a reply cut off raises CutOff for the caller to ask in
@@ -1816,7 +1823,8 @@ class Runner:
         skipped, with no run. A network error here stops the run, which stays as it is. Only when every
         endpoint has failed does it raise EndpointExhausted, every run abandoned (so that a rerun starts
         at the first endpoint), or the last `failed` if it was the cut-offs that failed it. The failed
-        calls of all of it, every wait, halving and switch, come out of one budget (BudgetSpent).
+        calls at an endpoint, every wait and halving, come out of one budget for it (BudgetSpent), which
+        starts over at the next endpoint.
 
         A run on which more than `abstain_limit` of the sentences abstain after the retries ends
         `failed`, not complete: RunFailed, and nothing continues it.
@@ -1955,7 +1963,7 @@ class Runner:
         same `scope`: the merge directory, the voters, the spaCy mode. A run that ends with items
         open is not complete, so a rerun continues it, with every saved reply used again. An endpoint
         that keeps failing is fallen back from as `tag` does: its run is abandoned, and a new one
-        starts at the next endpoint, within one budget of failed calls.
+        starts at the next endpoint, each with its own budget of failed calls.
 
         A part whose reply was cut off leaves its items open, and they are asked again in parts half
         the size, as a voter's batch is halved: each retry round halves the size of the retry parts

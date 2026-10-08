@@ -3852,22 +3852,37 @@ class RoundFourTests(Base):
         self.assertEqual([p["provider"]["order"] for p in transport.posts], [["host/fp8"]] * 3 + [["alt/fp8"]])
         self.assertEqual(self.statuses(), [("r1", "abandoned"), ("r2", "complete")])
 
-    def test_backoff_halving_and_switching_draw_on_one_budget(self):
+    def test_backoff_and_halving_draw_on_one_budget_for_each_endpoint(self):
         config = with_fallbacks(one=["alt/fp8", "alt2/bf16"])
-        config["settings"]["failure_budget"] = 4
+        config["settings"]["failure_budget"] = 2
         busy = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")), WIDE_LISTING)
-        with self.assertRaisesRegex(label.BudgetSpent, "budget of 4"):
+        with self.assertRaisesRegex(label.BudgetSpent, "budget of 2"):
             self.runner(busy, config=config).tag("one")
-        self.assertEqual(len(busy.posts), 5, "three attempts at the first endpoint, two at the next, then it stops")
-        # Cut-off calls come out of the same budget.
+        self.assertEqual(len(busy.posts), 3, "the third failed attempt at the first endpoint is past its budget")
+        # Cut-off calls come out of the same budget as the attempts of a retryable error.
         config = self.batches_of(3)
         config["settings"]["failure_budget"] = 2
         cut = FakeTransport(self.cut_off)
         with self.assertRaisesRegex(label.BudgetSpent, "budget of 2"):
             self.runner(cut, config=config).tag("two")
         self.assertEqual(len(cut.posts), 3)
-        self.assertEqual(self.statuses()[-1], ("r3", "stopped"))
-        self.assertEqual(self.runner(None).incomplete_run("two"), "r3", "the run is kept")
+        self.assertEqual(self.statuses()[-1], ("r2", "stopped"))
+        self.assertEqual(self.runner(None).incomplete_run("two"), "r2", "the run is kept")
+
+    def test_the_budget_starts_over_at_each_endpoint_so_a_voter_tries_every_one_it_lists(self):
+        tags = ["alt/fp8", "alt2/bf16", "low2/bf16"]
+        config = with_fallbacks(one=tags)
+        config["settings"]["failure_budget"] = 3
+        listing = copy.deepcopy(WIDE_LISTING)
+        listing["data"]["endpoints"].append(
+            {**listing["data"]["endpoints"][-2], "tag": "low2/bf16", "provider_name": "Low2"})
+        busy = FakeTransport(lambda body, count: (_ for _ in ()).throw(openrouter.Retryable("HTTP 503")), listing)
+        with self.assertRaises(label.EndpointExhausted) as caught:
+            self.runner(busy, config=config).tag("one")
+        self.assertEqual([tag for tag, _ in caught.exception.tried], ["host/fp8", *tags])
+        self.assertEqual([p["provider"]["order"][0] for p in busy.posts],
+                         [t for t in ("host/fp8", *tags) for _ in range(3)], "three asks at each of four endpoints")
+        self.assertEqual([row["status"] for row in self.runs_rows()], ["abandoned"] * 4)
 
     def test_the_budget_is_new_for_each_step_and_a_saved_refusal_costs_none(self):
         config = self.batches_of(3)

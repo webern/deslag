@@ -75,10 +75,12 @@ booked if it fails. Each wait is one line on stderr: the voter, run and batch, t
 `rate_limit_attempts` for a 429, else of `http_attempts`), the HTTP
 status or exception type, and the wait; never a header or a body.
 
-Failure limit. Backoff, halving and endpoint switching share one budget, `failure_budget` (40 in
-`voters.json`): the number of POSTs that failed in one step (one voter's `tag`, or one `judge`) with a
-retryable error, a cut-off reply or a provider refusal, counted across every wait, every half and every
-endpoint tried. Past it the step stops with exit 2 and the run is kept for a rerun to continue. A
+Failure limit. Backoff, halving and refusals share one budget for each endpoint, `failure_budget` (40 in
+`voters.json`): the number of POSTs that failed at one endpoint in one step (one voter's `tag`, or one
+`judge`) with a retryable error, a cut-off reply or a provider refusal, counted across every wait and every
+half. The budget starts over at each endpoint the step switches to, so a step is never stopped before it has
+tried every endpoint of its model (the most it can spend is `failure_budget` failed calls for each endpoint
+listed). Past it at one endpoint the step stops with exit 2 and the run is kept for a rerun to continue. A
 run that keeps failing cannot end `complete`. The rule is simple: a voter run on which more than
 `abstain_limit` (25%) of its sentences abstain after the retries ends `failed`, and so does a run
 where a cut-off storm leaves no endpoint to switch to (below). A `failed` run is never continued, its

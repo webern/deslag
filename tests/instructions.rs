@@ -9,7 +9,7 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::resolve;
 use common::{Repo, code, stderr, stdout};
 use deslag::Lint;
-use deslag::changelog::{Version, changelog};
+use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
@@ -114,8 +114,15 @@ fn the_schema_has_the_stamp_as_an_optional_string() {
     let stamp = &root["properties"]["deslag_version"];
     assert_eq!(stamp["type"], serde_json::json!(["string", "null"]));
     assert!(stamp.get("pattern").is_none(), "{stamp}");
+    // The sentence that says what a missing stamp means, wherever the doc comment wraps it.
     let description = stamp["description"].as_str().expect("a description");
-    assert!(description.contains("0.0.1"), "{description}");
+    let description = description.split_whitespace().collect::<Vec<_>>().join(" ");
+    assert!(
+        description.contains(&format!(
+            "When it is missing the config is taken to be from {BASELINE}."
+        )),
+        "{description}"
+    );
     assert_eq!(root["required"], serde_json::json!(["schema_version"]));
 }
 

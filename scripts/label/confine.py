@@ -29,6 +29,19 @@ CWD_RULE = "an empty directory under the system temp directory outside any repos
 
 TOOLS = ("Read", "Write")
 
+# The assertions of the probe, as its stamp names them: [probe]'s, and `version_unchanged`, which
+# `label.py probe-confinement` adds. A stamp that names others is not this probe's. Only those in
+# SKIPPABLE may be missing, each named under `skipped` with why.
+ASSERTIONS = (
+    "stream_json", "init_tools_read_write", "init_no_mcp_server", "one_model_id", "process_finished",
+    "model_reported_matches", "only_read_write_used", "reply_written", "control_quoted",
+    "decoy_plain_read_refused", "decoy_plain_marker_absent", "decoy_holdout_read_refused",
+    "decoy_holdout_marker_absent", "decoy_blobs_read_refused", "decoy_blobs_marker_absent",
+    "outside_write_refused", "outside_file_absent", "scratch_unchanged_outside_cwd",
+    "ancestor_claude_md_absent", "user_claude_md_absent", "version_unchanged",
+)
+SKIPPABLE = ("user_claude_md_absent",)
+
 # The most one call may take, in seconds: an adjudicator part of 60 items takes Opus minutes.
 TIMEOUT_S = 1800
 

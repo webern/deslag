@@ -4454,6 +4454,12 @@ else:
 if SETUP.get("log"):
     with open(SETUP["log"] + ".times", "a") as handle:
         handle.write(json.dumps([started, time.time()]) + "\n")
+if SETUP.get("update_to"):
+    # Claude Code updating itself during the call: `--version` says the new version from now on.
+    with open(sys.argv[0]) as handle:
+        source = handle.read()
+    with open(sys.argv[0], "w") as handle:
+        handle.write(source.replace('"version": "%s"' % SETUP["version"], '"version": "%s"' % SETUP["update_to"]))
 emit({"type": "result", "subtype": "success", "is_error": False, "result": SETUP.get("final", model),
       "permission_denials": denials})
 '''
@@ -4778,6 +4784,50 @@ class ConfinementTests(Base):
         label.write(lock_path, json.dumps(lock))
         with self.assertRaisesRegex(label.GoldError, "agent.json differs .*`agent.version` is 2.1.0 in the lock and 2.1.293 here"):
             self.judge()
+
+    def test_a_stamp_is_held_to_the_assertions_of_this_probe(self):
+        self.assertEqual(self.probe(), 0)
+        args = confine.arguments("claude-opus-5-5")
+        good = self.stamp()
+        label.check_stamp("2.1.293", args)
+        path = os.path.join(self.label_root, "confinement.json")
+
+        def refused(stamp, needle):
+            label.write(path, json.dumps(stamp))
+            with self.assertRaisesRegex(label.GoldError, needle):
+                label.check_stamp("2.1.293", args)
+
+        refused([], "is not a probe's stamp")
+        refused({**good, "assertions": {"x": True}}, "records other assertions than this probe makes")
+        fewer = dict(good["assertions"])
+        del fewer["version_unchanged"]
+        refused({**good, "assertions": fewer}, "other assertions")
+        refused({**good, "assertions": fewer, "skipped": {"version_unchanged": "no reason"}}, "other assertions")
+        # The user's CLAUDE.md is the one check a pass may skip, when there is none to look for.
+        fewer = dict(good["assertions"])
+        del fewer["user_claude_md_absent"]
+        label.write(path, json.dumps({**good, "assertions": fewer, "skipped": {"user_claude_md_absent": "no file"}}))
+        label.check_stamp("2.1.293", args)
+        self.assertEqual(set(good["assertions"]), set(confine.ASSERTIONS))
+
+    def test_claude_code_updated_during_a_round_stops_it_and_reads_none_of_its_replies(self):
+        self.waiting(PartsGold(3))
+        self.assertEqual(self.probe(), 0)
+        os.remove(self.log)
+        self.fake(update_to="2.1.294")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(self.handoff_run("--parallel", "1"), 2)
+        self.assertEqual(len(self.calls()), 1, "no call after the update")
+        self.assertTrue(any(line.startswith("  part-01: failed (version_unchanged") for line in self.out), self.out)
+        self.assertIn("  part-02: not run; the round stopped: claude --version said 2.1.294", self.out)
+        self.assertIn("`claude --version` said 2.1.294 during the round, which began with 2.1.293", err.getvalue())
+        self.assertEqual(len(label.pending_requests(self.dir, "merge")), 3, "no reply is copied")
+        self.assertFalse(os.path.exists(os.path.join(self.folder_of(), "agent.json")))
+
+    def folder_of(self):
+        """The folder of the latest handoff run of the merge."""
+        return label.latest_handoff(self.dir, "merge")
 
     def test_handoff_run_refuses_a_tree_that_is_not_clean_outside_label_and_fails_one_changed_by_the_round(self):
         self.waiting()

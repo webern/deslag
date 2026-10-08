@@ -2285,7 +2285,9 @@ def handoff_model(config):
 
 def check_stamp(version, args):
     """Refuses a round of handoff-run unless the probe's stamp says it passed, every check true, for
-    the Claude Code installed now (`version`) and the argument list about to be used."""
+    the Claude Code installed now (`version`) and the argument list about to be used, with the
+    assertions of this probe (confine.ASSERTIONS, of which only those in confine.SKIPPABLE may be
+    skipped)."""
     path = stamp_path()
     again = "`label.py probe-confinement` (make test-confinement) writes it again"
     if not os.path.isfile(path):
@@ -2294,9 +2296,20 @@ def check_stamp(version, args):
         stamp = json.loads(read(path))
     except ValueError:
         raise GoldError(f"{path} is not JSON; {again}") from None
-    checks = stamp.get("assertions") if isinstance(stamp, dict) else None
+    if not isinstance(stamp, dict):
+        raise GoldError(f"{path} is not a probe's stamp, which is a JSON object; {again}")
+    checks = stamp.get("assertions")
     if stamp.get("verdict") != "pass" or not isinstance(checks, dict) or not checks or not all(v is True for v in checks.values()):
         raise GoldError(f"{path} does not record a probe that passed; {again}")
+    skipped = stamp.get("skipped") or {}
+    if (
+        not isinstance(skipped, dict) or set(skipped) - set(confine.SKIPPABLE) or set(checks) & set(skipped)
+        or set(checks) | set(skipped) != set(confine.ASSERTIONS)
+    ):
+        raise GoldError(
+            f"{path} records other assertions than this probe makes ({len(confine.ASSERTIONS)}, of which only "
+            f"{', '.join(confine.SKIPPABLE)} may be skipped); {again}"
+        )
     if stamp.get("claude_code_version") != version:
         raise GoldError(
             f"{path} records Claude Code {stamp.get('claude_code_version')}, and `claude --version` says {version} now: "
@@ -2368,8 +2381,10 @@ class HandoffRound:
     For a request: a new empty working directory (see [confine.workdir]); the request copied into
     it, with `reply_path` naming a file in the same directory (the request's hash is of its model and
     messages, so it is the same); `prompts/handoff-agent.md` filled with the copy's path; the process
-    run from there; its checks ([confine.checks]); the directory removed. Only a call that passes
-    every check and wrote a reply has it copied to the request's reply name in the run's folder.
+    run from there; its checks ([confine.checks]), and `claude --version` read again, which must still
+    be the version the round began with; the directory removed. Only a call that passes every check
+    and wrote a reply has it copied to the request's reply name in the run's folder. A call after
+    which the version changed stops the round: no later call is made.
     `agent.json` is written by the first call that passes, with the model it reported, which every
     later call must report too."""
 
@@ -2382,6 +2397,8 @@ class HandoffRound:
         self.agent_path = os.path.join(folder, "agent.json")
         self.agent = None
         self.copied = []
+        # What `claude --version` said after a call, when it was not `version`: the round stops.
+        self.changed_version = None
         self.lock = threading.Lock()
 
     def check_agent(self):
@@ -2406,6 +2423,8 @@ class HandoffRound:
         `failed`, the names of the checks that failed, and for a call that failed, the model ids it
         named, which say why `one_model_id` failed when it does)."""
         call = request["call"]
+        if self.changed_version is not None:
+            return call, "not run", [], f"the round stopped: claude --version said {self.changed_version}"
         try:
             work = confine.workdir("deslag-handoff-")
         except confine.Unconfined:
@@ -2417,7 +2436,16 @@ class HandoffRound:
             stream = confine.Stream(out)
             found = confine.checks(stream, code, self.model, work)
             reply = confine.regular_text(os.path.join(work, request["reply_name"]))
+            # The stamp holds for the version it was made with: Claude Code updated during the call is
+            # not that version, so its reply is not copied, and the round stops.
+            try:
+                now = confine.version(self.claude)
+            except confine.Unconfined:
+                now = "nothing that could be read"
+            found["version_unchanged"] = now == self.version
             with self.lock:
+                if now != self.version and self.changed_version is None:
+                    self.changed_version = now
                 if all(found.values()) and self.agent is None:
                     self.agent = agent_record(self.version, stream.init["model"], self.args)
                     write_atomic(self.agent_path, json.dumps(self.agent, indent=2) + "\n")
@@ -2489,7 +2517,7 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
     # A temp directory inside a repository is refused now, before any call, not call by call.
     os.rmdir(confine.workdir("deslag-handoff-"))
     say(f"{meta['name']} {run}: {len(requests)} requests to claude {version}, {arguments.parallel} at once")
-    counts = {"answered": 0, "no reply": 0, "failed": 0}
+    counts = {"answered": 0, "no reply": 0, "failed": 0, "not run": 0}
     pool = concurrent.futures.ThreadPoolExecutor(max_workers=arguments.parallel)
     why = None
     try:
@@ -2505,16 +2533,21 @@ def command_handoff_run(arguments, config, transport=None, gold=None, say=print)
             pool.shutdown(wait=True, cancel_futures=True)
     finally:
         # The round fails closed, however it ended: its replies stay in the run's folder only when
-        # git shows the tree clean after it, and a git that cannot say counts as a change.
+        # git shows the tree clean after it, and a git that cannot say counts as a change; and only
+        # when Claude Code stayed the version the stamp is for.
+        whys = []
+        if round_.changed_version is not None:
+            whys.append(f"`claude --version` said {round_.changed_version} during the round, which began with {version}")
         try:
             changes = tree_changes(REPO)
             if changes:
-                why = (
+                whys.append(
                     f"after the round git status shows {len(changes)} changes outside .label/ in {REPO} "
                     f"({', '.join(changes[:5])})"
                 )
         except GoldError as error:
-            why = f"whether the tree is clean after the round is not known ({error})"
+            whys.append(f"whether the tree is clean after the round is not known ({error})")
+        why = "; and ".join(whys) or None
         if why is not None:
             moved = quarantine(round_)
             print(
@@ -2602,7 +2635,9 @@ def command_probe_confinement(arguments, config, transport=None, gold=None, say=
     for name, why in skipped.items():
         say(f"  {name}: skipped, {why}")
     say(f"  models named: init {seen['init']}; assistant messages {', '.join(seen['assistant']) or 'none'}")
-    verdict = "pass" if all(results.values()) else "fail"
+    # A probe whose assertions are not this module's set is no pass, whatever they say.
+    complete = set(results) | set(skipped) == set(confine.ASSERTIONS) and not set(skipped) - set(confine.SKIPPABLE)
+    verdict = "pass" if complete and all(results.values()) else "fail"
     stamp = {
         "claude_code_version": version, "args": args, "date": now()[:10], "time": now(), "verdict": verdict,
         "assertions": results, "skipped": skipped, "models_seen": seen,

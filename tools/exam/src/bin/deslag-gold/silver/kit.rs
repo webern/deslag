@@ -58,6 +58,10 @@ impl Kit {
                 ));
             }
         }
+        // The version first: a kit of another version has other keys, and should say so.
+        if rows.contains_key("check_version") {
+            Kit { rows: rows.clone() }.version()?;
+        }
         for key in KEYS {
             if !rows.contains_key(key) {
                 return Err(Error::load(KIT, Place::File, format!("it has no `{key}`")));
@@ -172,11 +176,14 @@ mod tests {
         assert!(kit.problems().is_empty());
         assert_eq!(kit.version().unwrap(), 1);
         let other = kit.render().replace("check_version\t1", "check_version\t2");
-        let error = Kit::parse(&other)
-            .unwrap()
-            .version()
-            .unwrap_err()
-            .to_string();
+        let error = Kit::parse(&other).unwrap_err().to_string();
+        assert!(error.contains("knows only 1"), "{error}");
+        // A kit of another version, with other keys, is refused for its version, not its keys.
+        let later = format!(
+            "{}new_key\t1\n",
+            other.replace("min_voters\t3\n", "")
+        );
+        let error = Kit::parse(&later).unwrap_err().to_string();
         assert!(error.contains("knows only 1"), "{error}");
         let short = kit.render().replace("min_voters\t3\n", "");
         assert!(

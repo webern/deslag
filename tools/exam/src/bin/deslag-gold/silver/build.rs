@@ -655,7 +655,7 @@ fn sources(manifest: &Tsv, env: &Env) -> Tsv {
         columns: SOURCES_COLUMNS.map(String::from).to_vec(),
         rows: Vec::new(),
     };
-    for (repo, rows) in repos {
+    for rows in repos.into_values() {
         let list = |column: &str| -> Vec<String> {
             let set: BTreeSet<&str> = rows.iter().map(|row| manifest.cell(row, column)).collect();
             set.into_iter().map(str::to_string).collect()
@@ -693,7 +693,6 @@ fn sources(manifest: &Tsv, env: &Env) -> Tsv {
             count("llm").to_string(),
             count("mixed").to_string(),
         ]);
-        let _ = repo;
     }
     table
 }

@@ -267,7 +267,7 @@ impl<'a> Document<'a> {
     /// the text they change.
     fn reads_as(&self, edits: &[&Edit]) -> bool {
         let text = splice(self.source, 0, edits);
-        let edited = (self.reader)(&text);
+        let edited = self.stack.read(&text);
         self.shape(edits) == edited.shape(&[])
     }
 
@@ -277,7 +277,7 @@ impl<'a> Document<'a> {
     /// prose as written.
     fn shape<'d>(&'d self, edits: &[&Edit]) -> Vec<Shape<'d, 'a>> {
         // Naming every field makes a new one a compile error until it is weighed here. Tokens and
-        // sentences are made from the rest; the lines and the reader are not what a file reads
+        // sentences are made from the rest; the lines and the stack are not what a file reads
         // as.
         let Document {
             source: _,
@@ -288,7 +288,7 @@ impl<'a> Document<'a> {
             tokens: _,
             sentences: _,
             lines: _,
-            reader: _,
+            stack: _,
         } = self;
         let mut shape = Vec::new();
         for (block, ancestors) in self.walk() {

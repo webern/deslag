@@ -119,8 +119,8 @@ fn left_out(lint: Lint) -> bool {
 }
 
 /// The config at `explicit`, or else the one `deslag` finds in the repository at `root`, less the
-/// lints that judge a change: it is read again, their tables are taken out of `[md.lints]` and
-/// each override, and what is left is parsed as JSON.
+/// lints that judge a change: it is read again, their tables are taken out of each section's
+/// `lints` and each override, and what is left is parsed as JSON.
 pub fn load_config(root: &Path, explicit: Option<&Path>) -> Result<LintConfig, Problem> {
     let problem = |error: &dyn std::fmt::Display| Problem(format!("the config: {error}"));
     let loaded = Config::load(root, explicit).map_err(|error| problem(&error))?;
@@ -145,10 +145,13 @@ pub fn load_config(root: &Path, explicit: Option<&Path>) -> Result<LintConfig, P
             }
         }
     };
-    strip(value.pointer_mut("/md/lints"));
-    if let Some(Value::Array(overrides)) = value.pointer_mut("/md/overrides") {
-        for entry in overrides {
-            strip(entry.get_mut("lints"));
+    for section in loaded.sections() {
+        let name = section.name();
+        strip(value.pointer_mut(&format!("/{name}/lints")));
+        if let Some(Value::Array(overrides)) = value.pointer_mut(&format!("/{name}/overrides")) {
+            for entry in overrides {
+                strip(entry.get_mut("lints"));
+            }
         }
     }
     if !removed {
@@ -177,7 +180,7 @@ pub fn lints(
     let docs: Vec<&Doc> = filters
         .apply(corpus)
         .into_iter()
-        .filter(|doc| every_file || config.md().selects(&doc.source_path))
+        .filter(|doc| every_file || config.section_for(&doc.source_path).is_some())
         .collect();
     let checked = in_chunks(&docs, 32, |chunk| {
         chunk

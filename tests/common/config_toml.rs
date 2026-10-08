@@ -25,21 +25,22 @@ pub fn toml_blocks(text: &str) -> Vec<&str> {
         .collect()
 }
 
-/// The lints the config `text` turns on, under `[md.lints]` or in an override.
+/// The lints the config `text` turns on, under the `lints` of any section or in its overrides.
 pub fn lints_turned_on(text: &str) -> BTreeSet<String> {
-    let config: toml::Value = toml::from_str(text).expect("valid TOML");
-    let md = config.get("md");
-    let overrides = md
-        .and_then(|md| md.get("overrides"))
-        .and_then(toml::Value::as_array)
-        .into_iter()
-        .flatten()
-        .filter_map(|entry| entry.get("lints"));
-    md.and_then(|md| md.get("lints"))
-        .into_iter()
-        .chain(overrides)
-        .flat_map(|lints| lints.as_table().expect("a lints table").keys().cloned())
-        .collect()
+    let config: toml::Table = toml::from_str(text).expect("valid TOML");
+    let mut turned_on = BTreeSet::new();
+    for section in config.values().filter_map(toml::Value::as_table) {
+        let overrides = section
+            .get("overrides")
+            .and_then(toml::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(|entry| entry.get("lints"));
+        for lints in section.get("lints").into_iter().chain(overrides) {
+            turned_on.extend(lints.as_table().expect("a lints table").keys().cloned());
+        }
+    }
+    turned_on
 }
 
 /// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else.

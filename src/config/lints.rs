@@ -5,7 +5,7 @@
 //! resolved by [`Merge`], from the least specific source to the most.
 //!
 //! The settings serialize back to the keys a config would hold, which is how
-//! [`MdLints::toml_tables`] shows them. A lint or group left unset is left out, so the schema's
+//! [`Lints::toml_tables`] shows them. A lint or group left unset is left out, so the schema's
 //! default for a `lints` or `groups` table is an empty table rather than one of nulls.
 
 use std::collections::BTreeMap;
@@ -33,11 +33,10 @@ impl<T: Merge + Clone> Merge for Option<T> {
     }
 }
 
-/// The lints that apply to Markdown files: the `lints` table of the `[md]` section and of each
-/// `[[md.overrides]]` entry.
+/// The settings of each lint: the `lints` table of a section and of each of its overrides.
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
-pub struct MdLints {
+pub struct Lints {
     /// The byte budget.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_size_bytes: Option<MaxSizeBytes>,
@@ -64,7 +63,7 @@ pub struct MdLints {
     pub verbs_no_nouns: Option<VerbsNoNouns>,
 }
 
-impl MdLints {
+impl Lints {
     /// Why these settings are unusable, or `None` when they are fine.
     pub fn invalid(&self) -> Option<String> {
         self.max_emphasis
@@ -93,12 +92,12 @@ impl MdLints {
     ///
     /// A field left unset takes the default the schema gives it, if it has one, so the table
     /// holds what the lint runs with. The names come from the schema too, so every field of
-    /// `MdLints` is listed, and a lint is on when it serializes to a table.
+    /// `Lints` is listed, and a lint is on when it serializes to a table.
     pub fn toml_tables(&self) -> Result<Vec<(String, Option<toml::Table>)>, toml::ser::Error> {
         let schema = SchemaSettings::draft07()
             .with(|settings| settings.inline_subschemas = true)
             .into_generator()
-            .into_root_schema_for::<MdLints>();
+            .into_root_schema_for::<Lints>();
         let mut set = toml::Table::try_from(self)?;
         let lints = schema
             .get("properties")
@@ -142,7 +141,7 @@ fn fill_defaults(table: &mut toml::Table, schema: &Value) {
     }
 }
 
-impl Merge for MdLints {
+impl Merge for Lints {
     fn merge(&mut self, over: &Self) {
         self.max_size_bytes.merge(&over.max_size_bytes);
         self.max_emphasis.merge(&over.max_emphasis);

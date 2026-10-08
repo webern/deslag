@@ -22,6 +22,7 @@ mod markdown;
 mod plain;
 pub mod rust;
 mod sentences;
+mod stack;
 mod tokens;
 
 use std::borrow::Cow;
@@ -32,10 +33,13 @@ use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
 pub(crate) use map::Gathered;
+pub(crate) use stack::Need;
+pub use stack::{Reader, Stack};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 ///
-/// It is not `PartialEq`: its reader is a function, whose address says nothing.
+/// It is not `PartialEq`: two readings of a file are compared by their shape, which
+/// [`Document::apply`] proves.
 #[derive(Debug, Clone)]
 pub struct Document<'a> {
     /// The file as written.
@@ -56,7 +60,7 @@ pub struct Document<'a> {
     lines: Vec<usize>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
     /// with to prove it. The later layers are made from the first, so they need no reading.
-    reader: fn(&str) -> Document<'_>,
+    stack: Stack,
 }
 
 /// A block: a paragraph, a heading, a list, a code block and the like.
@@ -295,13 +299,13 @@ pub struct Sentence {
 impl<'a> Document<'a> {
     /// Reads `source` as Markdown.
     pub fn markdown(source: &'a str) -> Document<'a> {
-        markdown::read(source).finish()
+        Stack::new(Reader::Markdown).document(source)
     }
 
     /// Reads `source` as plain text, such as the text of a `//` comment: paragraphs, bulleted and
     /// numbered items, and raw runs of indented lines.
     pub fn plain(source: &'a str) -> Document<'a> {
-        plain::read(source).finish()
+        Stack::new(Reader::Plain).document(source)
     }
 
     /// Fills the later layers from the first: tokens, sentences and what the tagger reads.
@@ -313,9 +317,9 @@ impl<'a> Document<'a> {
     }
 
     /// A document of `source` whose first layer a reader has filled, with no tokens or sentences.
-    /// `reader` is that reader, which fills the first layer of any source the same way.
+    /// `stack` is what read it, which fills the first layer of any source the same way.
     fn new(
-        reader: fn(&str) -> Document<'_>,
+        stack: Stack,
         source: &'a str,
         blocks: Vec<Block<'a>>,
         pieces: Vec<Piece<'a>>,
@@ -334,7 +338,7 @@ impl<'a> Document<'a> {
             tokens: Vec::new(),
             sentences: Vec::new(),
             lines,
-            reader,
+            stack,
         }
     }
 

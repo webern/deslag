@@ -12,6 +12,7 @@ use deslag::changelog::{BASELINE, Changelog, Entry, FileError, Version, changelo
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::{Config, ConfigSource, Lint, check_file};
+use serde_json::json;
 
 /// The longest a summary may be, in characters.
 const SUMMARY_MAX: usize = 72;
@@ -55,6 +56,16 @@ fn lint_entries() -> Vec<(String, &'static str)> {
         .collect()
 }
 
+/// Where the key `key` of the lint `id` is in the schema: once in each section, since every
+/// section takes the same lints.
+fn lint_paths(paths: &SchemaPaths, id: &str, key: &str) -> Vec<String> {
+    paths
+        .sections()
+        .iter()
+        .map(|section| format!("{section}.lints.{id}.{key}"))
+        .collect()
+}
+
 /// Why `entry` no longer fits the config: a path it names is not in the schema, or a block of
 /// TOML in its onboarding is not a valid config. `None` when it still fits.
 fn stale(entry: &Entry, paths: &SchemaPaths) -> Option<String> {
@@ -62,7 +73,9 @@ fn stale(entry: &Entry, paths: &SchemaPaths) -> Option<String> {
     match entry {
         Entry::Lint { keys, .. } => {
             for key in keys {
-                if !paths.leaves.contains(&format!("md.lints.{name}.{key}")) {
+                let live =
+                    (lint_paths(paths, name, key).iter()).all(|path| paths.leaves.contains(path));
+                if !live {
                     return Some(format!(
                         "lint `{name}` lists the key `{key}`, which is not a setting"
                     ));
@@ -152,7 +165,7 @@ fn uncovered(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
     for (_, entry) in entries_in(changelog) {
         match entry {
             Entry::Lint { id, keys, .. } => {
-                covered.extend(keys.iter().map(|key| format!("md.lints.{id}.{key}")));
+                covered.extend(keys.iter().flat_map(|key| lint_paths(paths, id, key)));
             }
             Entry::Setting { id, keys, .. } => {
                 covered.insert(id.clone());
@@ -172,11 +185,13 @@ fn files_to_add(changelog: &Changelog, paths: &SchemaPaths) -> Vec<String> {
         .filter(|(_, entry)| matches!(entry, Entry::Lint { .. }))
         .map(|(_, entry)| entry.id())
         .collect();
+    let sections = paths.sections();
     uncovered(changelog, paths)
         .iter()
         .filter(|path| {
-            let lint = path
-                .strip_prefix("md.lints.")
+            let lint = sections
+                .iter()
+                .find_map(|section| path.strip_prefix(&format!("{section}.lints.")))
                 .and_then(|rest| rest.split_once('.'))
                 .map(|(lint, _)| lint);
             lint.is_none_or(|lint| lints.contains(lint))
@@ -309,6 +324,128 @@ fn a_setting_covers_its_own_path_and_its_keys_only() {
 
     let other_key = uncovered(setting("md.overrides", "keys = [\"lints\"]\n"));
     assert!(other_key.contains(&"md.overrides[].globs".to_string()));
+}
+
+/// A schema with two sections, `md` and `x`, which take the same lints and the same overrides.
+fn two_sections() -> SchemaPaths {
+    let lints = json!({ "$ref": "#/definitions/Lints" });
+    let globs = json!({ "type": "array", "items": { "type": "string" } });
+    let section = json!({
+        "type": "object",
+        "properties": {
+            "globs": globs,
+            "lints": lints,
+            "overrides": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": { "globs": globs, "lints": lints },
+                },
+            },
+        },
+    });
+    let root = json!({
+        "type": "object",
+        "properties": {
+            "md": { "$ref": "#/definitions/Section" },
+            "x": { "$ref": "#/definitions/Section" },
+        },
+        "definitions": {
+            "Section": section,
+            "Lints": {
+                "type": "object",
+                "properties": { "density": {
+                    "type": "object",
+                    "properties": {
+                        "max_item_chars": { "type": "integer" },
+                        "message": { "type": "string" },
+                    },
+                } },
+            },
+        },
+    });
+    SchemaPaths::of(&root)
+}
+
+/// A changelog holding one `lint` entry for `density`, listing `keys`.
+fn density_entry(keys: &str) -> Changelog {
+    let text = format!(
+        "kind = \"lint\"\nid = \"density\"\nkeys = [{keys}]\nsummary = \"Fails walls of text\"\n\
+         onboarding = \"Set it.\"\n"
+    );
+    Changelog::from_files([("next/README.md", ""), ("next/lint.density.toml", &text)])
+        .expect("a changelog")
+}
+
+/// The sections are the schema's, an override's lints fold onto its own section's, and a `lint`
+/// entry covers its keys in every section.
+#[test]
+fn a_lint_entry_covers_its_keys_in_every_section_of_the_schema() {
+    let paths = two_sections();
+    assert_eq!(paths.sections(), ["md", "x"]);
+    assert!(paths.leaves.contains("x.lints.density.message"));
+    assert!(
+        !paths
+            .all
+            .iter()
+            .any(|path| path.contains("overrides[].lints"))
+    );
+    assert_eq!(
+        SchemaPaths::fold("x.overrides[].lints.density.message"),
+        "x.lints.density.message"
+    );
+
+    let whole = density_entry(r#""max_item_chars", "message""#);
+    assert_eq!(
+        uncovered(&whole, &paths),
+        [
+            "md.globs",
+            "md.overrides[].globs",
+            "x.globs",
+            "x.overrides[].globs"
+        ]
+    );
+
+    let cut = density_entry(r#""max_item_chars""#);
+    assert_eq!(
+        files_to_add(&cut, &paths),
+        [
+            "next/setting.md.globs.toml",
+            "next/setting.md.lints.density.message.toml",
+            "next/setting.md.overrides.globs.toml",
+            "next/setting.x.globs.toml",
+            "next/setting.x.lints.density.message.toml",
+            "next/setting.x.overrides.globs.toml",
+        ]
+    );
+}
+
+/// The keys of a lint with no entry are left to the entry the lint lacks, in every section.
+#[test]
+fn a_lint_with_no_entry_is_let_off_in_every_section() {
+    let paths = two_sections();
+    let none = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
+    let to_add = files_to_add(&none, &paths);
+    assert!(
+        to_add.iter().all(|file| !file.contains(".lints.")),
+        "{to_add:?}"
+    );
+}
+
+/// The lints a config turns on are read from every section and from its overrides.
+#[test]
+fn lints_turned_on_reads_every_section() {
+    let config = "schema_version = 1\n[md.lints.density]\n[x.lints.max_emphasis]\n\
+                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\n";
+    assert_eq!(
+        lints_turned_on(config),
+        BTreeSet::from(["density", "max_emphasis", "banned_chars"].map(String::from))
+    );
+}
+
+#[test]
+fn the_schema_has_one_section() {
+    assert!(SchemaPaths::of(&schema()).sections().contains(&"md"));
 }
 
 #[test]

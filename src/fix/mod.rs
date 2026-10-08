@@ -19,7 +19,7 @@ use std::path::{Path, PathBuf};
 
 use crate::Error;
 use crate::change::Change;
-use crate::config::Config;
+use crate::config::{Config, Section};
 use crate::document::{Edit, Refusal};
 use crate::glob::{self, RepoFile};
 use crate::lint::{self, Mark, on_lines};
@@ -81,11 +81,11 @@ pub fn fix(
     change: Option<&Change>,
 ) -> Result<Vec<FileFix>, Error> {
     let mut fixes = Vec::new();
-    for file in chosen(root, config, paths)? {
+    for (file, section) in chosen(root, config, paths)? {
         let outcome = match String::from_utf8(lint::read(&file)?) {
             Ok(text) => {
                 let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, &file.relative, text, dir, change)?
+                passes(config, section, &file.relative, text, dir, change)?
             }
             Err(_) => Outcome::NotUtf8,
         };
@@ -157,9 +157,14 @@ impl FileFix {
     }
 }
 
-/// The files to fix: each that `paths` names, or, when it names none, every file the config
-/// selects. A path to a file that `deslag check` would not check is an error.
-fn chosen(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<Vec<RepoFile>, Error> {
+/// The files to fix, each with the section that selects it: each that `paths` names, or, when it
+/// names none, every file the config selects. A path to a file that `deslag check` would not check
+/// is an error.
+fn chosen<'c>(
+    root: &Path,
+    config: &'c Config,
+    paths: &[PathBuf],
+) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
     let selected = lint::selected(root, config)?;
     if paths.is_empty() {
         return Ok(selected);
@@ -175,9 +180,9 @@ fn chosen(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<Vec<RepoFil
             problem,
         };
         let file = glob::find(&canonical, path).map_err(problem)?;
-        let Ok(index) = selected.binary_search_by(|found| found.relative.cmp(&file.relative))
+        let Ok(index) = selected.binary_search_by(|(found, _)| found.relative.cmp(&file.relative))
         else {
-            return Err(problem(if config.md().selects(&file.relative) {
+            return Err(problem(if config.section_for(&file.relative).is_some() {
                 "it is ignored, so deslag check never reads it".to_string()
             } else {
                 "[md] does not select it".to_string()
@@ -185,8 +190,8 @@ fn chosen(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<Vec<RepoFil
         };
         chosen.push(selected[index].clone());
     }
-    chosen.sort_by(|left, right| left.relative.cmp(&right.relative));
-    chosen.dedup_by(|left, right| left.relative == right.relative);
+    chosen.sort_by(|(left, _), (right, _)| left.relative.cmp(&right.relative));
+    chosen.dedup_by(|(left, _), (right, _)| left.relative == right.relative);
     Ok(chosen)
 }
 
@@ -194,6 +199,7 @@ fn chosen(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<Vec<RepoFil
 /// edit.
 fn passes(
     config: &Config,
+    section: &Section,
     relative: &str,
     mut text: String,
     dir: &Path,
@@ -206,8 +212,15 @@ fn passes(
     let mut fixed = Vec::new();
     let mut bound = None;
     for pass in 0.. {
-        let (document, findings) =
-            lint::check_text(config, relative, text.as_bytes(), &text, dir, change)?;
+        let (document, findings) = lint::check_text(
+            config,
+            section,
+            relative,
+            text.as_bytes(),
+            &text,
+            dir,
+            change,
+        )?;
         let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
             .iter()
             .flat_map(|finding| finding.violation.edits())

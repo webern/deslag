@@ -20,7 +20,7 @@
 use std::borrow::Cow;
 use std::ops::Range;
 
-use super::{Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind};
+use super::{Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Stack};
 
 /// Tab stops are this many columns apart.
 const TAB: usize = 4;
@@ -28,7 +28,7 @@ const TAB: usize = 4;
 const RAW: usize = 2;
 
 /// Reads `source` into blocks, pieces and points.
-pub(super) fn read(source: &str) -> Document<'_> {
+pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
     let source_lines = lines(source);
     let baseline = source_lines
         .iter()
@@ -60,7 +60,7 @@ pub(super) fn read(source: &str) -> Document<'_> {
     } = reader;
     // A gap is recorded when the block after it ends, after the breaks inside that block.
     points.sort_by_key(|point| point.range.start);
-    Document::new(read, source, top, pieces, Vec::new(), points)
+    Document::new(stack.clone(), source, top, pieces, Vec::new(), points)
 }
 
 /// One line of the source.

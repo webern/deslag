@@ -5,7 +5,9 @@ use std::ops::Range;
 
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
 
-use super::{Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind};
+use super::{
+    Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind, Stack,
+};
 
 /// The extensions deslag reads Markdown with. Frontmatter is read as a metadata block, so its
 /// closing `---` never turns the line above it into a heading.
@@ -18,7 +20,7 @@ fn options() -> Options {
 }
 
 /// Reads `source` into blocks, pieces, spans and points.
-pub(super) fn read(source: &str) -> Document<'_> {
+pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
     let mut reader = Reader {
         source,
         top: Vec::new(),
@@ -41,7 +43,7 @@ pub(super) fn read(source: &str) -> Document<'_> {
     } = reader;
     // A gap is recorded when the block after it ends, after the breaks inside that block.
     points.sort_by_key(|point| point.range.start);
-    Document::new(read, source, top, pieces, spans, points)
+    Document::new(stack.clone(), source, top, pieces, spans, points)
 }
 
 /// A block whose end has not been read yet.

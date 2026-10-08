@@ -1,10 +1,11 @@
 //! `deslag explain`: the settings the config gives a file, and the layers they come from.
 //!
-//! A file's settings are the `[md]` section's `lints`, then each override that matches it in the
-//! order [`MdConfig::overrides_for`](crate::config::MdConfig::overrides_for) gives, then a budget
-//! in the file's own frontmatter. For each file this names the config, says whether the walk skips
-//! the file and whether `[md]` selects it, lists the overrides and the frontmatter budget, and
-//! shows every lint's settings as TOML, whatever language the config is written in.
+//! A file's settings are the `lints` of the section that selects it, then each override that
+//! matches it in the order
+//! [`Section::overrides_for`](crate::config::Section::overrides_for) gives, then a budget in the
+//! file's own frontmatter. For each file this names the config, says whether the walk skips the
+//! file and whether a section selects it, lists the overrides and the frontmatter budget, and shows
+//! every lint's settings as TOML, whatever language the config is written in.
 
 use std::path::{Path, PathBuf};
 
@@ -48,19 +49,18 @@ fn block(
     skipped: bool,
 ) -> Result<String, Error> {
     let relative = &file.relative;
-    let md = config.md();
     let mut out = format!("# {relative}\n# config: {}\n", config_path.display());
     if skipped {
         out.push_str("# ignored: yes, so deslag check never reads it\n");
         return Ok(out);
     }
-    if !md.selects(relative) {
+    let Some(section) = config.section_for(relative) else {
         out.push_str("# selected by [md]: no\n");
         return Ok(out);
-    }
-    out.push_str("# selected by [md]: yes\n");
+    };
+    out.push_str(&format!("# selected by [{}]: yes\n", section.name()));
 
-    let overrides = md.overrides_for(relative);
+    let overrides = section.overrides_for(relative);
     if overrides.is_empty() {
         out.push_str("# overrides: none\n");
     } else {
@@ -77,7 +77,7 @@ fn block(
         out.push_str(&format!("#   override {}: globs = {globs}\n", index + 1));
     }
 
-    let mut lints = md.lints_for(relative);
+    let mut lints = section.lints_for(relative);
     let contents = std::fs::read(&file.absolute).map_err(|source| Error::Read {
         path: file.absolute.display().to_string(),
         source,

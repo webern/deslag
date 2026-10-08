@@ -4,7 +4,7 @@
 use std::collections::BTreeMap;
 
 use deslag::Document;
-use deslag::config::{BannedChars, CharGroups, MdLints, Merge};
+use deslag::config::{BannedChars, CharGroups, Lints, Merge};
 use deslag::lint::banned_chars::{GROUPS, check, scan};
 
 /// The characters `scan` finds in `text`, with their lines.
@@ -35,8 +35,7 @@ fn chars(banned: &[(char, String, Vec<usize>)]) -> Vec<char> {
 
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> BannedChars {
-    let lints: MdLints =
-        toml::from_str(&format!("[banned_chars]\n{toml}")).expect("valid settings");
+    let lints: Lints = toml::from_str(&format!("[banned_chars]\n{toml}")).expect("valid settings");
     lints.banned_chars.expect("a banned_chars table")
 }
 

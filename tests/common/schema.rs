@@ -141,7 +141,7 @@ pub fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<S
 
 /// The property paths of a schema, with `[]` for an array's items: `md.overrides[].globs`.
 ///
-/// An override's `lints` table is the same table as `md.lints`, so its paths are folded onto
+/// An override's `lints` table is the same table as its section's, so its paths are folded onto
 /// `md.lints`, and a setting appears once however many places the config takes it.
 pub struct SchemaPaths {
     /// Every path, containers included.
@@ -161,9 +161,26 @@ impl SchemaPaths {
         paths
     }
 
-    /// `path` with an override's `lints` table folded onto `md.lints`.
+    /// The sections of the config: each top-level key with a `lints` table under it.
+    pub fn sections(&self) -> Vec<&str> {
+        self.all
+            .iter()
+            .filter_map(|path| path.strip_suffix(".lints"))
+            .filter(|section| !section.contains('.'))
+            .collect()
+    }
+
+    /// `path` with the `lints` table of a section's override folded onto the section's.
     pub fn fold(path: &str) -> String {
-        path.replacen("md.overrides[].lints", "md.lints", 1)
+        match path.split_once('.') {
+            Some((section, rest)) => match rest.strip_prefix("overrides[].lints") {
+                Some(tail) if tail.is_empty() || tail.starts_with('.') => {
+                    format!("{section}.lints{tail}")
+                }
+                _ => path.to_string(),
+            },
+            None => path.to_string(),
+        }
     }
 
     /// `schema` reduced to the one schema it stands for: its `$ref` followed, and the one branch

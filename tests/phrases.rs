@@ -2,13 +2,13 @@
 //! and which settings are refused. The reports are pinned by the cases.
 
 use deslag::Document;
-use deslag::config::{BannedPhrases, MdLints, Merge, PhraseGroups};
+use deslag::config::{BannedPhrases, Lints, Merge, PhraseGroups};
 use deslag::document::{Token, TokenKind};
 use deslag::lint::banned_phrases::{CATALOGUE, GROUPS, check, folded};
 
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> BannedPhrases {
-    let lints: MdLints =
+    let lints: Lints =
         toml::from_str(&format!("[banned_phrases]\n{toml}")).expect("valid settings");
     lints.banned_phrases.expect("a banned_phrases table")
 }

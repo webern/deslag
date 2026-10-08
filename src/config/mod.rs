@@ -29,14 +29,16 @@
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
-//! [`search`] finds the file, [`md`] holds the `[md]` section, and [`lints`] the settings of each
-//! lint. [`update`] is the one thing that writes a config, and [`edit`] makes the edits to its text.
+//! [`search`] finds the file, [`section`] compiles a section and [`md`] holds the `[md]` section,
+//! and [`lints`] the settings of each lint. [`update`] is the one thing that writes a config, and
+//! [`edit`] makes the edits to its text.
 
 pub mod edit;
 pub mod lints;
 pub mod md;
 pub mod redirect;
 pub mod search;
+pub mod section;
 pub mod update;
 
 use std::num::NonZeroU32;
@@ -51,14 +53,14 @@ use crate::Error;
 use crate::changelog::{BASELINE, Version, current_release, parse_release};
 
 pub use lints::{
-    BannedChars, BannedPhrases, CharGroups, Density, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    MdLints, Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
+    BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
+    Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
-pub use md::MdConfig;
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
 };
+pub use section::Section;
 
 /// The config schema this build of deslag reads.
 ///
@@ -104,13 +106,15 @@ struct ConfigFile {
 }
 
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
-/// can read it at all, and the place of `md`.
+/// can read it at all, and the place of each section.
 ///
 /// It refuses no unknown key, so a config from a later deslag, which may hold keys this one has
 /// never heard of, reports that it is from a later deslag and not the first of those keys.
 ///
-/// `md` is here for the config written as a JSON array, which serde reads by position. The fields
-/// must be in the order of [`ConfigFile`]'s, or the array reads differently in the two structs.
+/// The sections are here for the config written as a JSON array, which serde reads by position.
+/// The fields must be in the order of [`ConfigFile`]'s, or the array reads differently in the two
+/// structs. A section that is added goes after `deslag_version`, in both, so that an array written
+/// before it keeps its positions.
 #[derive(Debug, Deserialize)]
 struct Head {
     #[serde(default)]
@@ -160,7 +164,7 @@ pub struct Config {
     source: ConfigSource,
     schema_version: NonZeroU32,
     stamp: Option<semver::Version>,
-    md: MdConfig,
+    sections: Vec<Section>,
     warnings: Vec<String>,
     redirected: Vec<Used>,
 }
@@ -236,17 +240,22 @@ impl Config {
             _ => {}
         }
 
-        let mut file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
+        let file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
 
-        let applied = redirect::apply(&mut file.md, &path_string)?;
-        let md = MdConfig::compile(file.md, &path_string)?;
+        // The one list of sections: redirects move settings in it, then it is compiled.
+        let mut written = vec![(md::NAME, file.md.into_parts())];
+        let applied = redirect::apply(&mut written, &path_string)?;
+        let sections = written
+            .into_iter()
+            .map(|(name, parts)| Section::compile(name, parts, &path_string))
+            .collect::<Result<Vec<_>, Error>>()?;
 
         Ok(Config {
             path,
             source,
             schema_version: file.schema_version,
             stamp,
-            md,
+            sections,
             warnings: applied.warnings,
             redirected: applied.used,
         })
@@ -290,9 +299,24 @@ impl Config {
         &self.redirected
     }
 
-    /// The `[md]` section.
-    pub fn md(&self) -> &MdConfig {
-        &self.md
+    /// Every section, in the order of the config.
+    pub fn sections(&self) -> &[Section] {
+        &self.sections
+    }
+
+    /// The section that selects `rel_path`, a repo-relative `/`-separated path, if one does.
+    pub fn section_for(&self, rel_path: &str) -> Option<&Section> {
+        self.sections
+            .iter()
+            .find(|section| section.selects(rel_path))
+    }
+
+    /// The `[md]` section, which every config has.
+    pub fn md(&self) -> &Section {
+        self.sections
+            .iter()
+            .find(|section| section.name() == md::NAME)
+            .expect("every config compiles the [md] section")
     }
 }
 
@@ -303,4 +327,24 @@ fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
         path: path.to_string(),
         message: format!("deslag_version {error}"),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn load_json(text: &str) -> Config {
+        Config::parse(text, PathBuf::from("deslag.json"), ConfigSource::Explicit)
+            .unwrap_or_else(|error| panic!("{text}: {error}"))
+    }
+
+    /// A config written as a JSON array is read by position, in `Head` and in `ConfigFile`. A field
+    /// in one and not in the other, or in another order, moves the stamp.
+    #[test]
+    fn a_json_array_reads_the_stamp_where_head_and_the_file_agree_it_is() {
+        let config = load_json(r#"[1, {}, "0.0.1"]"#);
+        assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
+        assert_eq!(load_json("[1, {}]").stamp(), None);
+        assert_eq!(load_json("[1]").sections().len(), 1);
+    }
 }

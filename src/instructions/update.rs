@@ -130,7 +130,7 @@ struct Item<'a> {
     summary: &'a str,
     /// Markdown for an agent: what it does and how to turn it on.
     onboarding: &'a str,
-    /// Whether `deslag update` does the whole job; given only for a breaking change.
+    /// Whether no hand edit of the config is needed; given only for a breaking change.
     #[serde(skip_serializing_if = "Option::is_none")]
     update_does_all: Option<bool>,
 }

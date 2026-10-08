@@ -90,7 +90,7 @@ pub enum Entry {
     Breaking {
         /// A short name for the change.
         id: String,
-        /// Whether `deslag update` does the whole job of adapting a config to it.
+        /// Whether a config can be adapted to it without the person editing the config by hand.
         update_does_all: bool,
         /// What changed, in one line.
         summary: String,
@@ -177,8 +177,8 @@ impl Entry {
         }
     }
 
-    /// For a breaking change, whether `deslag update` does the whole job of adapting a config to
-    /// it. `None` for an entry of another kind.
+    /// For a breaking change, whether a config can be adapted to it without the person editing the
+    /// config by hand. `None` for an entry of another kind.
     pub fn update_does_all(&self) -> Option<bool> {
         match self {
             Entry::Breaking {

@@ -29,7 +29,8 @@
 # lists `globs` and `lints`, which stand for `md.overrides[].globs` and `md.overrides[].lints`. A
 # setting that holds a value has no `keys`. A setting covers its own path and its listed keys, so
 # a key added to a table later gets a `setting` entry of its own, under the release that adds it.
-# A `breaking` entry says in `update_does_all` whether `deslag update` does the whole job.
+# A `breaking` entry says in `update_does_all` whether a config can be brought up to date without
+# the person editing it.
 # `onboarding` is Markdown for an agent: what the thing does and the table that turns it on. Its
 # fenced TOML must fit the schema.
 

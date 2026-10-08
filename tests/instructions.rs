@@ -515,7 +515,7 @@ fn the_json_holds_the_entries_of_the_text() {
                 "{key} of {entry}"
             );
         }
-        // Only a breaking change says whether `deslag update` does the whole job.
+        // Only a breaking change says whether the config needs a hand edit.
         assert_eq!(
             entry.get("update_does_all").is_some(),
             kind == "breaking",

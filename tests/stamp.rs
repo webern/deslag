@@ -285,6 +285,77 @@ fn a_warning_and_the_notice_both_print_once_the_warning_first() {
     }
 }
 
+/// A missing stamp means the baseline release, for the notice as for everything else: whatever
+/// release the running deslag is, the commands say the same to a config with no stamp as to one
+/// stamped with the baseline, and say nothing to one stamped with the running version. This reads
+/// standard error raw, because `stderr` leaves the notice out of every other test, so a notice
+/// printed for every unstamped config would pass them all.
+#[test]
+fn a_missing_stamp_gets_what_the_baseline_stamp_gets_from_every_command() {
+    let stamped = BASELINE.to_string();
+    let running = env!("CARGO_PKG_VERSION");
+    let runs: [&[&str]; 4] = [
+        &["check"],
+        &["check", "--format", "json"],
+        &["fix"],
+        &["explain", "AGENTS.md"],
+    ];
+    let run = |language: &str, stamp: Option<&str>, args: &[&str]| {
+        let repo = Repo::new();
+        repo.write(
+            &format!("deslag.{language}"),
+            &config(language, 1, stamp.map(quoted).as_deref(), false),
+        );
+        repo.write("AGENTS.md", "# A\n");
+        repo.run(args)
+    };
+    for language in LANGUAGES {
+        for args in runs {
+            let missing = run(language, None, args);
+            let baseline = run(language, Some(&stamped), args);
+            let current = run(language, Some(running), args);
+            assert_eq!(code(&missing), 0, "{language} {args:?}");
+            assert_eq!(
+                raw_stderr(&missing),
+                raw_stderr(&baseline),
+                "{language} {args:?}"
+            );
+            assert_eq!(
+                common::stdout(&missing),
+                common::stdout(&baseline),
+                "{language} {args:?}"
+            );
+            assert!(
+                !raw_stderr(&current).contains("last updated by"),
+                "{language} {args:?}: {}",
+                raw_stderr(&current)
+            );
+        }
+    }
+}
+
+/// Through the binary, for a config older than every release: `raw_stderr` holds the notice and
+/// `stderr` holds nothing. And `stderr` removes the notice and no other note.
+#[test]
+fn stderr_drops_the_notice_the_binary_prints_and_raw_stderr_keeps_it() {
+    let output = check_output("toml", &config("toml", 1, Some(&quoted(OLDER)), false));
+    assert_eq!(code(&output), 0);
+    assert_eq!(raw_stderr(&output), notice(OLDER));
+    assert_eq!(stderr(&output), "");
+
+    // Another note on standard error stays, whatever order the two come in.
+    let other = "deslag: note: some other note\n";
+    for said in [
+        format!("{other}{}", notice(OLDER)),
+        format!("{}{other}", notice(OLDER)),
+    ] {
+        let mut mixed = output.clone();
+        mixed.stderr = said.clone().into_bytes();
+        assert_eq!(raw_stderr(&mixed), said);
+        assert_eq!(stderr(&mixed), other);
+    }
+}
+
 /// `stderr` leaves out the notice for any stamp and nothing that only looks like it.
 #[test]
 fn stderr_leaves_out_the_notice_and_nothing_else() {

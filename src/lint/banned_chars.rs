@@ -319,13 +319,12 @@ pub fn scan(document: &Document<'_>) -> Vec<Found> {
             .iter()
             .filter(|piece| matches!(piece.kind, PieceKind::Text | PieceKind::Html));
         for piece in written {
-            // The text of the file, not the piece's, so that an entity is read as it is written.
-            // Its offsets are the file's, as the file is the text.
-            for (at, ch) in document.text(piece.range.clone()).char_indices() {
-                let offset = piece.range.start + at;
-                if !ch.is_ascii() && !(offset == 0 && ch == '\u{FEFF}') {
+            // The text of the file, not the piece's, so that an entity is read as it is written,
+            // with the range of the file that holds each character.
+            for (range, ch) in document.chars(piece.range.clone()) {
+                if !ch.is_ascii() && !(range.start == 0 && ch == '\u{FEFF}') {
                     found.push(Found {
-                        location: document.locate(offset..offset + ch.len_utf8()),
+                        location: document.locate(range),
                         ch,
                     });
                 }

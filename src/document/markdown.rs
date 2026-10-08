@@ -9,18 +9,32 @@ use super::{
     Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind, Stack,
 };
 
-/// The extensions deslag reads Markdown with. Frontmatter is read as a metadata block, so its
-/// closing `---` never turns the line above it into a heading.
+/// The extensions deslag reads Markdown with, but for frontmatter.
 fn options() -> Options {
     Options::ENABLE_TABLES
         | Options::ENABLE_FOOTNOTES
         | Options::ENABLE_STRIKETHROUGH
         | Options::ENABLE_TASKLISTS
-        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
 }
 
-/// Reads `source` into blocks, pieces, spans and points.
+/// Reads `source` into blocks, pieces, spans and points. Frontmatter is read as a metadata block,
+/// so its closing `---` never turns the line above it into a heading.
 pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
+    read_with(
+        stack,
+        source,
+        options() | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS,
+    )
+}
+
+/// Reads `source` as the text of a doc comment: as [`read`], but a pair of `---` lines is not
+/// metadata. The pulldown-cmark option takes any such pair for a block, not only one at the start,
+/// and rustdoc does not read it, so a rule and a heading are what the pair makes.
+pub(super) fn read_doc<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
+    read_with(stack, source, options())
+}
+
+fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'a> {
     let mut reader = Reader {
         source,
         top: Vec::new(),
@@ -29,7 +43,7 @@ pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
         spans: Vec::new(),
         points: Vec::new(),
     };
-    for (event, range) in Parser::new_ext(source, options()).into_offset_iter() {
+    for (event, range) in Parser::new_ext(source, options).into_offset_iter() {
         reader.read(event, range);
     }
     reader.end_implicit();

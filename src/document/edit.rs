@@ -6,9 +6,12 @@
 //! 1. It lies in a text piece of a block of prose, written as it reads (no entity or escape), and
 //!    outside any URL. Frontmatter and HTML are kept raw, so no reading of the result could show
 //!    an edit there to be safe.
+//!    In a comment of a code file the prefix of a line, the line break between two lines and the
+//!    close of a block comment are not text either, so an edit that reaches one is refused.
 //! 2. It covers whole grapheme clusters, alone or with the edits beside it, so it leaves no
 //!    variation selector or combining mark behind.
-//! 3. Its replacement holds no control character, so no line starts or ends.
+//! 3. Its replacement holds no control character, so no line starts or ends, and, in a block
+//!    comment, nothing that would read as `/*` or `*/`.
 //! 4. The document's own reader, reading the result, finds the same blocks, spans, line breaks and
 //!    pieces, and the same text in them but for the edits. Tokens and sentences are made from
 //!    these, so they need no comparing.
@@ -54,11 +57,17 @@ pub enum Refusal {
     /// It is elsewhere outside the text of prose as written: in code, in markup, or in an entity
     /// or escape.
     Markup,
+    /// It reaches the syntax of a comment of a code file, such as the `///` that starts a line, a
+    /// line break between two lines, or a `*/`, and not only the text.
+    Gap,
     /// It covers part of a grapheme cluster and not the rest, as an edit to an emoji that leaves
     /// its variation selector would.
     Grapheme,
     /// Its replacement holds a control character, such as a line break.
     Control,
+    /// Its replacement would be read as the syntax of the comment it lies in, such as the `*/`
+    /// that ends a block comment.
+    Syntax,
     /// Reading the result finds a different document: a block, a span, a line break or the text
     /// around the edit changes.
     Structure,
@@ -71,11 +80,17 @@ impl fmt::Display for Refusal {
             Refusal::Html => "it is in HTML, which is not prose",
             Refusal::Url => "it is in a URL",
             Refusal::Markup => "it is in code, markup, an entity or an escape, not in prose",
+            Refusal::Gap => {
+                "it reaches the markers between the lines of a comment, which are not text"
+            }
             Refusal::Grapheme => {
                 "it is drawn as one with the character beside it, which the edit would leave \
                  behind"
             }
             Refusal::Control => "the replacement holds a control character",
+            Refusal::Syntax => {
+                "the replacement would be read as the syntax of the comment it is in, such as `*/`"
+            }
             Refusal::Structure => {
                 "the edit changes how the file reads, as when a line comes to start a list or a \
                  code block, so reword it"
@@ -99,6 +114,8 @@ enum Shape<'d, 'a> {
     Piece(PieceKind, &'d str),
     /// A line break inside a block.
     Break(PointKind),
+    /// The bytes around the text of a comment of a code file, region by region.
+    Carrier(Vec<&'d str>),
 }
 
 impl<'a> Document<'a> {
@@ -137,12 +154,18 @@ impl<'a> Document<'a> {
         let mut refused: Vec<Option<Refusal>> = edits
             .iter()
             .map(|edit| {
-                self.refusal_at(&parts, &edit.range).or_else(|| {
-                    edit.replacement
-                        .chars()
-                        .any(char::is_control)
-                        .then_some(Refusal::Control)
-                })
+                self.refusal_at(&parts, &edit.range)
+                    .or_else(|| {
+                        edit.replacement
+                            .chars()
+                            .any(char::is_control)
+                            .then_some(Refusal::Control)
+                    })
+                    .or_else(|| {
+                        (self.region_at(&edit.range))
+                            .is_some_and(|region| !region.carrier.accepts(&edit.replacement))
+                            .then_some(Refusal::Syntax)
+                    })
             })
             .collect();
 
@@ -241,6 +264,9 @@ impl<'a> Document<'a> {
         parts: &[(Range<usize>, Option<Refusal>)],
         range: &Range<usize>,
     ) -> Option<Refusal> {
+        if (self.region_at(range)).is_some_and(|region| region.carrier.touches_syntax(range)) {
+            return Some(Refusal::Gap);
+        }
         let before = parts.partition_point(|(part, _)| part.start <= range.start);
         let inside = before
             .checked_sub(1)
@@ -280,7 +306,7 @@ impl<'a> Document<'a> {
         // sentences are made from the rest; the lines and the stack are not what a file reads
         // as.
         let Document {
-            source: _,
+            source,
             blocks: _,
             pieces,
             spans: _,
@@ -288,6 +314,7 @@ impl<'a> Document<'a> {
             tokens: _,
             sentences: _,
             lines: _,
+            regions,
             stack: _,
         } = self;
         let mut shape = Vec::new();
@@ -333,6 +360,11 @@ impl<'a> Document<'a> {
         }
         // The reader may split prose at other places, or drop a piece an edit emptied.
         shape.retain(|step| !matches!(step, Shape::Text(text) if text.is_empty()));
+        shape.extend(
+            regions
+                .iter()
+                .map(|region| Shape::Carrier(region.carrier.bytes(source))),
+        );
         shape
     }
 }

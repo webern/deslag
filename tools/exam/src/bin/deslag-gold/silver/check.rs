@@ -24,7 +24,8 @@
 //! - each part's tables name sentences of the manifest and runs of `runs.tsv`;
 //! - no file but the CoNLL-U text holds a path of the machine that made it;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
-//!   are silver's own words;
+//!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
+//!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance;
 //! - `record/datasheet.json` is computed again from these files and equals the file, and
 //!   `DATASHEET.md` is rendered again from `record/`'s template and equals the file.
 
@@ -918,7 +919,19 @@ fn audit_rules(
     ) {
         Ok(scored) => {
             if batch.need(layout::AUDIT_SCORE)? != scored.tsv() {
-                problems.push(Error::load(layout::AUDIT_SCORE, Place::File, "it is not what the stored queue and labels score; the file was edited or the audit changed"));
+                problems.push(Error::load(layout::AUDIT_SCORE, Place::File, "it is not what the stored queue and labels score; the file was edited, the audit changed, or the scoring code changed"));
+            }
+            if batch.get(layout::ACCEPTED).is_none() {
+                for short in score::short_of(bar, scored.sentences, scored.rejected) {
+                    problems.push(Error::load(
+                        layout::AUDIT_SCORE,
+                        Place::File,
+                        format!(
+                            "the audit: {short}, and {} holds no acceptance by the owner",
+                            layout::ACCEPTED
+                        ),
+                    ));
+                }
             }
         }
         Err(found) => problems.extend(found.0),

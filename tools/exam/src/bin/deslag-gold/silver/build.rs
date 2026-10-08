@@ -38,7 +38,8 @@ pub struct Args<'a> {
     pub archive_sha256: Option<&'a str>,
     /// The bar on the audit's part of speech, in percent.
     pub bar: f64,
-    /// The owner's words accepting an audit below its bar.
+    /// The owner's words accepting an audit that falls short: below its bar, with a bar under
+    /// 95.0, or of fewer than 50 sentences.
     pub accept: Option<&'a str>,
     /// Calibration reports, `NAME=FILE`, numbers only.
     pub noise: &'a [(String, PathBuf)],

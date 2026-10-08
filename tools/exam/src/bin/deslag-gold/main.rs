@@ -574,10 +574,13 @@ struct SilverBuild {
     /// The sha256 of the archive of what stays on the machine that made the batch.
     #[arg(long)]
     archive_sha256: Option<String>,
-    /// The bar on the audit's part of speech, in percent.
+    /// The bar on the audit's part of speech, in percent. A bar under 95.0 needs the owner's
+    /// acceptance.
     #[arg(long, default_value_t = 95.0)]
     bar: f64,
-    /// The owner's words accepting an audit below its bar, kept in `record/`.
+    /// The owner's words accepting an audit that falls short: below its bar, with a bar under
+    /// 95.0, or of fewer than 50 sentences, reviewed and rejected. Kept in `record/`; without them
+    /// such a batch is refused by `check`, or for a score under the bar by `standing`.
     #[arg(long, requires = "audit")]
     accept_below_bar: Option<String>,
     /// A calibration report, `NAME=FILE`: a `report.tsv`, numbers only.

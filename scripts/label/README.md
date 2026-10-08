@@ -461,7 +461,7 @@ The batch, `silver/NAME/`:
 - `record/`: what the batch is checked against forever: `kit.tsv` (deslag commit, tag VERSION, image digest,
   the archive sha256, `check_version`), `voters.json` as it was at the run, `datasheet.tmpl.md`,
   `datasheet.json`, `drops.tsv` (what was dropped and why, by sentence id), `agent.json`, and
-  `audit-accepted.txt` when the owner accepted a score under the bar (`--accept-below-bar`).
+  `audit-accepted.txt` when the owner accepted an audit that falls short (`--accept-below-bar`).
 - `DATASHEET.md`, rendered from `record/datasheet.tmpl.md` and `record/datasheet.json`. The template is
   `scripts/label/silver-datasheet.md`, with `{{path}}`, `{{table path}}`, `{{#if}}`, `{{#unless}}` and
   `{{#each}}`; a batch carries the one it was rendered with.
@@ -472,23 +472,28 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
 2. `deslag-gold audit --blind --from .label/silver/draft/NAME/silver.conllu --out .label/silver/audit` draws 50
    sentences at random and writes `queue.conllu` with no UPOS, FEATS, `Prov=` or `Runs=`, and `labels.conllu`
    with silver's labels of them. The directory is never under `tests/gold/`, whose queues reserve their
-   repositories; `audit` refuses a path there.
+   repositories; `audit` refuses a path there, and a directory that holds a queue or labels already, which may
+   be under review.
 3. The owner reviews `queue.conllu` in `deslag-gold web`. The review pre-fills deslag's readings at Likely and
    above, as for `owner.conllu`, and he may reject a sentence.
 4. `deslag-gold audit --score --queue Q --labels L --bar 95.0` refuses a queue that is not `exam.silver = yes`
    or has a sentence neither reviewed nor rejected. It prints silver's accuracy on the part of speech and on
    the whole code with sentence-bootstrap intervals, by agreed and adjudicated words and by context, the
    words left at deslag's pre-fill, the rejected sentences, and met or not against the bar.
-5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`, with `--accept-below-bar "HIS WORDS"`
-   only if the owner accepts a score under the bar: the rejected sentences leave `silver.conllu` and are counted
-   in `record/drops.tsv`, and the datasheet leads with the score.
+5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`: the
+   rejected sentences leave `silver.conllu` and are counted in `record/drops.tsv`, and the datasheet leads with
+   the score. A batch is held to a bar of at least 95.0 and an audit of at least 50 sentences, reviewed and
+   rejected together; one that falls short of either, or whose score is under its bar, needs the owner's words,
+   `--accept-below-bar "HIS WORDS"`, kept in `record/audit-accepted.txt`. Without them `silver check` refuses a
+   low bar or a small audit, and `silver standing` refuses those and a score under the bar.
 
 The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes each batch against what it
 recorded and never against the checkout: `Runs=` against `runs.tsv`; endpoints against `record/voters.json`
 (so a later change to `voters.json` does not fail a batch); licences against the `runs.tsv` columns;
 `agent.json`'s keys; one deslag commit; the manifest against the sentences; every `sent_id` of `parts/` and
 `audit/` against the manifest, and a word with no `Prov=`; the audit scored again and compared with
-`score.tsv`; `datasheet.json` computed again from the files, and `DATASHEET.md` rendered again byte for byte.
+`score.tsv`, and held to the bar and size above; `datasheet.json` computed again from the files, and
+`DATASHEET.md` rendered again byte for byte.
 `record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The
 rules are frozen once a batch is live: a changed rule is a new version, with the old rules kept beside it, so a
 batch that passes once passes forever.
@@ -498,7 +503,9 @@ regenerate_the_committed_fixture_batch -- --ignored` only when a new version com
 
 `deslag-gold silver standing` holds each live batch to what changes outside it: no repository it names is
 reserved by today's `tests/gold` or `tests/corpus/`, no sentence of it is a gold sentence's text, no fixture
-it quotes is excluded now, and its audit met the bar or the owner accepted the score. A failure names the two
+it quotes is excluded now, and its audit met a bar of at least 95.0 over at least 50 sentences, or the owner
+accepted it. A reader of silver for training must hold a batch to the same: read only a live batch that
+stands, never a retired one or one with no audit. A failure names the two
 ways out: undo the gold change (`rank`, `queue` and `sample` leave silver out, so it came some other way: a
 sentence added by hand, or a draw in a checkout that had not fetched the image's silver), or retire the batch
 by adding a row (batch, date, reason) to `scripts/blobstore/silver-retired.tsv`. `standing` skips retired

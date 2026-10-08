@@ -24,8 +24,9 @@ whole code in {{audit.code}} percent.
 him and flatters silver where he agrees.
 
 The bar on the part of speech was {{audit.bar}}; met: {{audit.met}}.{{#if audit.accepted}} The
-owner accepted a score under the bar, in `record/audit-accepted.txt`.{{/if}} The bar is a drift
-alarm and not proof of quality.
+owner accepted an audit that falls short (a score under the bar, a bar under 95.0, or fewer than 50
+sentences), in `record/audit-accepted.txt`.{{/if}} The bar is a drift alarm and not proof of
+quality.
 
 {{table audit.table}}
 {{/if}}

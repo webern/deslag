@@ -166,7 +166,7 @@
   },
   "annotations_license": "CC-BY-4.0",
   "audit": {
-    "accepted": "no",
+    "accepted": "yes",
     "bar": "95.0",
     "code": "100.0 [100.0, 100.0]",
     "met": "yes",

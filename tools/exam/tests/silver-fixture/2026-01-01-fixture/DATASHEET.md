@@ -22,8 +22,10 @@ whole code in 100.0 [100.0, 100.0] percent.
 0 of those words were left at deslag's own pre-filled reading, which anchors
 him and flatters silver where he agrees.
 
-The bar on the part of speech was 95.0; met: yes. The bar is a drift
-alarm and not proof of quality.
+The bar on the part of speech was 95.0; met: yes. The
+owner accepted an audit that falls short (a score under the bar, a bar under 95.0, or fewer than 50
+sentences), in `record/audit-accepted.txt`. The bar is a drift alarm and not proof of
+quality.
 
 | group | words | part of speech | whole code |
 | --- | --- | --- | --- |
@@ -143,8 +145,9 @@ Sentences each voter gave no answer for, summed over the parts:
 | qwen | 0 |
 | spacy | 0 |
 
-`agreement.txt` in each part is the merge's own: it counts every sentence of the part, the dropped
-ones among them. The figures above are for the sentences kept.
+The abstentions above, and `agreement.txt` in each part, are the merges' own: they count every
+sentence of a part, the dropped and the unsettled ones among them. The other figures above are for
+the sentences kept.
 
 ## What was left out
 

@@ -366,10 +366,15 @@ impl Made {
     /// disagrees on, which the adjudicator answers; the last part also has a disputed word in its
     /// last sentence that the adjudicator never answers, so that sentence is left out unsettled.
     pub fn with(parts: usize) -> Made {
+        Made::with_mix(parts, "2,1,0,0", 6)
+    }
+
+    /// [Made::with], drawing `mix` from `per_tier` fixtures of each tier.
+    pub fn with_mix(parts: usize, mix: &str, per_tier: usize) -> Made {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path().to_path_buf();
         let tree = root.join("tree");
-        wide_tree(&tree, 6);
+        wide_tree(&tree, per_tier);
         let small = other_small(&root);
         let gold = quiet_gold(&root);
         let exclude = root.join("exclude.tsv");
@@ -401,7 +406,7 @@ impl Made {
             .args(made.pool_args())
             .args(["--tests-corpus"])
             .arg(&made.small)
-            .args(["--mix", "2,1,0,0", "--parts", &parts.to_string(), "--dir"])
+            .args(["--mix", mix, "--parts", &parts.to_string(), "--dir"])
             .arg(&label)
             .output()
             .unwrap();

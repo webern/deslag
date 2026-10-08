@@ -8,8 +8,11 @@
 //! - no fixture it quotes has since been excluded, by a later corpus batch or by
 //!   `tests/gold/exclude.tsv`.
 //!
-//! And it holds the batch to its audit: a live batch has a score, and a score below the bar needs
-//! the owner's acceptance in `record/`.
+//! And it holds the batch to its audit: a live batch has a score, and a score below the bar, a
+//! bar under 95.0 or an audit of fewer than 50 sentences (reviewed and rejected) needs the owner's
+//! acceptance in `record/`. A reader of silver for training must hold a batch to the same: refuse
+//! a retired batch, one with no audit, and one whose audit falls short without that acceptance,
+//! and read only `exam.trains = yes`.
 //!
 //! `rank`, `queue` and `sample` leave out the repositories and the texts of live silver and of
 //! the parts being labelled, texts compared by their letters and digits as here. So gold they draw
@@ -143,14 +146,32 @@ pub fn standing(live: &Live, env: &Env) -> Result<String, Problems> {
             None => bad("it has no audit score".to_string()),
             Some(text) => {
                 let score = Tsv::parse(layout::AUDIT_SCORE, text, None)?;
+                let accepted = batch.get(layout::ACCEPTED).is_some();
                 match score.head("met") {
                     Some("yes") => {}
-                    Some("no") if batch.get(layout::ACCEPTED).is_some() => {}
+                    Some("no") if accepted => {}
                     Some("no") => bad(
                         "its audit is below the bar and record/ holds no acceptance by the owner"
                             .to_string(),
                     ),
                     _ => bad("its audit score has no verdict on a bar".to_string()),
+                }
+                let count = |key: &str| {
+                    score
+                        .head(key)
+                        .and_then(|value| value.parse::<usize>().ok())
+                        .unwrap_or(0)
+                };
+                let bar = score
+                    .head("bar")
+                    .and_then(|value| value.parse::<f64>().ok());
+                if !accepted {
+                    for short in super::score::short_of(bar, count("sentences"), count("rejected"))
+                    {
+                        bad(format!(
+                            "its audit falls short: {short}, and record/ holds no acceptance by the owner"
+                        ));
+                    }
                 }
             }
         }

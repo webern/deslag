@@ -25,12 +25,23 @@ fn set_cell(dir: &Path, name: &str, id: &str, column: usize, value: &str) {
     });
 }
 
+/// The fewest sentences an audit holds without the owner's acceptance.
+const LEAST_SENTENCES: usize = 50;
+
 /// The name of the batch every test builds.
 const NAME: &str = "2026-10-08-fixture";
 
 /// Two parts, built into a batch.
 fn built() -> (Made, PathBuf) {
     let made = Made::new();
+    made.build(NAME, &[]).ok();
+    let dir = made.out(NAME);
+    (made, dir)
+}
+
+/// Two parts big enough for an audit of 50 sentences, built into a batch.
+fn built_big() -> (Made, PathBuf) {
+    let made = Made::with_mix(2, "12,6,0,0", 12);
     made.build(NAME, &[]).ok();
     let dir = made.out(NAME);
     (made, dir)
@@ -833,13 +844,15 @@ fn check_refuses_each_edit_of_a_built_batch() {
 fn audit_of(made: &Made, dir: &Path, reject: &[&str], disagree: bool) -> PathBuf {
     let out = made.root.join("audit");
     let _ = fs::remove_dir_all(&out);
+    let held = read(dir, "silver.conllu").matches("# sent_id").count();
+    let count = held.min(LEAST_SENTENCES).to_string();
     made.gold(&[
         "audit",
         "--blind",
         "--from",
         dir.join("silver.conllu").to_str().unwrap(),
         "--count",
-        "8",
+        &count,
         "--out",
         out.to_str().unwrap(),
     ])
@@ -874,6 +887,19 @@ fn audit_of(made: &Made, dir: &Path, reject: &[&str], disagree: bool) -> PathBuf
     out
 }
 
+/// The CoNLL-U `text` without the sentence `id`.
+fn without_sentence(text: &str, id: &str) -> String {
+    let header = format!("# sent_id = {id}\n");
+    let mut out: String = text
+        .split_inclusive("\n\n")
+        .filter(|block| !block.contains(&header))
+        .collect();
+    if !out.ends_with('\n') {
+        out.push('\n');
+    }
+    out
+}
+
 /// The archive hash every audited build is given.
 fn archive() -> String {
     sha256(b"the archive of what stays on the machine")
@@ -894,7 +920,7 @@ fn build_audited(made: &Made, name: &str, audit: &Path, extra: &[&str]) -> Ran {
 
 #[test]
 fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
-    let (made, draft) = built();
+    let (made, draft) = built_big();
     let audit = audit_of(&made, &draft, &["s0004"], false);
     let said = build_audited(&made, "2026-10-08-audited", &audit, &[]).ok();
     assert!(
@@ -917,7 +943,7 @@ fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
         read(&dir, "audit/queue.conllu")
             .matches("# sent_id")
             .count(),
-        7
+        LEAST_SENTENCES - 1
     );
     // Silver's labels of those sentences are silver's own words.
     let silver = read(&dir, "silver.conllu");
@@ -936,12 +962,12 @@ fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
     );
     assert!(kit.contains("\naudit_bar\t95.0\n"), "{kit}");
     let sheet = read(&dir, "DATASHEET.md");
-    assert!(sheet.contains("The owner reviewed 7 sentences"), "{sheet}");
+    assert!(sheet.contains("The owner reviewed 49 sentences"), "{sheet}");
     // It checks, and the check scores the audit again.
     let said = check(&made, &dir).ok();
     assert!(
         said.out
-            .contains("7 sentences, 127 words, 2 parts, 10 runs, audited"),
+            .contains("52 sentences, 617 words, 2 parts, 9 runs, audited"),
         "{}",
         said.out
     );
@@ -949,7 +975,7 @@ fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
 
 #[test]
 fn check_scores_the_audit_again_and_matches_its_labels_to_silver() {
-    let (made, draft) = built();
+    let (made, draft) = built_big();
     let audit = audit_of(&made, &draft, &[], false);
     build_audited(&made, "2026-10-08-audited", &audit, &[]).ok();
     let dir = made.out("2026-10-08-audited");
@@ -994,6 +1020,36 @@ fn check_scores_the_audit_again_and_matches_its_labels_to_silver() {
             vec!["s0097", "the manifest does not hold it"],
         ),
         (
+            "a bar under 95.0 with no acceptance",
+            Box::new(|d| {
+                edit(d, "record/kit.tsv", |t| {
+                    t.replace("audit_bar\t95.0", "audit_bar\t90.0")
+                })
+            }),
+            vec![
+                "its bar is 90.0, under the 95.0",
+                "holds no acceptance by the owner",
+            ],
+        ),
+        (
+            "an audit of 49 sentences with no acceptance",
+            Box::new(|d| {
+                // The last, since the first block holds the file's header too.
+                let last = read(d, "audit/queue.conllu")
+                    .lines()
+                    .filter_map(|line| line.strip_prefix("# sent_id = ").map(str::to_string))
+                    .last()
+                    .unwrap();
+                for name in ["audit/queue.conllu", "audit/labels.conllu"] {
+                    edit(d, name, |t| without_sentence(t, &last));
+                }
+            }),
+            vec![
+                "it holds 49 sentences, reviewed and rejected, fewer than the 50",
+                "holds no acceptance by the owner",
+            ],
+        ),
+        (
             "an audit_bar that is gone",
             Box::new(|d| {
                 edit(d, "record/kit.tsv", |t| {
@@ -1022,7 +1078,7 @@ fn check_scores_the_audit_again_and_matches_its_labels_to_silver() {
 
 #[test]
 fn an_audit_that_met_its_bar_keeps_a_live_batch_standing() {
-    let (made, draft) = built();
+    let (made, draft) = built_big();
     let audit = audit_of(&made, &draft, &[], false);
     build_audited(&made, "2026-10-08-audited", &audit, &[]).ok();
     make_live(&made, &made.out("2026-10-08-audited"));
@@ -1050,7 +1106,7 @@ fn a_live_batch_with_no_audit_does_not_stand_and_the_message_names_the_ways_out(
 
 #[test]
 fn an_audit_below_its_bar_needs_the_owners_acceptance() {
-    let (made, draft) = built();
+    let (made, draft) = built_big();
     let audit = audit_of(&made, &draft, &[], true);
     let said = build_audited(&made, "2026-10-08-low", &audit, &[]).ok();
     assert!(
@@ -1098,7 +1154,43 @@ fn an_audit_below_its_bar_needs_the_owners_acceptance() {
     make_live(&made, &accepted);
     standing(&made).ok();
     // The datasheet says so.
-    assert!(read(&accepted, "DATASHEET.md").contains("accepted a score under the bar"));
+    assert!(read(&accepted, "DATASHEET.md").contains("accepted an audit that falls short"));
+}
+
+#[test]
+fn a_small_audit_or_a_low_bar_needs_the_owners_acceptance() {
+    // Eight sentences, all agreed with: the audit meets its bar but is too small to vouch alone.
+    let (made, draft) = built();
+    let audit = audit_of(&made, &draft, &[], false);
+    build_audited(&made, "2026-10-08-small", &audit, &[]).refused(&[
+        "it holds 8 sentences, reviewed and rejected, fewer than the 50",
+        "holds no acceptance by the owner",
+    ]);
+    build_audited(&made, "2026-10-08-low", &audit, &["--bar", "90"]).refused(&[
+        "its bar is 90.0, under the 95.0",
+        "holds no acceptance by the owner",
+    ]);
+    // The owner's words let it through check and standing.
+    build_audited(
+        &made,
+        "2026-10-08-small",
+        &audit,
+        &[
+            "--accept-below-bar",
+            "A small first audit. Matt, 2026-10-09",
+        ],
+    )
+    .ok();
+    let small = made.out("2026-10-08-small");
+    check(&made, &small).ok();
+    let live = make_live(&made, &small);
+    standing(&made).ok();
+    // Without them, standing refuses it too, whatever check would say.
+    fs::remove_file(live.join("record/audit-accepted.txt")).unwrap();
+    standing(&made).refused(&[
+        "its audit falls short: it holds 8 sentences",
+        "holds no acceptance by the owner",
+    ]);
 }
 
 #[test]
@@ -1110,7 +1202,7 @@ fn an_acceptance_without_an_audit_is_refused() {
 
 /// A live, audited batch, and the made parts it came from.
 fn live_audited() -> (Made, PathBuf) {
-    let (made, draft) = built();
+    let (made, draft) = built_big();
     let audit = audit_of(&made, &draft, &[], false);
     build_audited(&made, "2026-10-08-audited", &audit, &[]).ok();
     let live = make_live(&made, &made.out("2026-10-08-audited"));
@@ -1317,6 +1409,8 @@ fn regenerate_the_committed_fixture_batch() {
             &archive,
             "--noise",
             &format!("dev={}", noise.display()),
+            "--accept-below-bar",
+            "An audit of seven sentences, accepted for the fixture.",
         ],
     )
     .ok();

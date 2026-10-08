@@ -27,6 +27,34 @@ use crate::code::Code;
 use crate::pilot::SILVER_KEY;
 use crate::problems::Problems;
 
+/// The least bar an audit of a batch is held to, on the part of speech, in percent (decision D2).
+pub const LEAST_BAR: f64 = 95.0;
+
+/// The fewest sentences an audit of a batch holds, those reviewed and those rejected together
+/// (decision D2).
+pub const LEAST_SENTENCES: usize = 50;
+
+/// What an audit against `bar` of `reviewed` and `rejected` sentences lacks of the rules a batch
+/// is held to without the owner's acceptance: a bar of at least [`LEAST_BAR`] and at least
+/// [`LEAST_SENTENCES`] sentences. Empty when it lacks nothing.
+pub fn short_of(bar: Option<f64>, reviewed: usize, rejected: usize) -> Vec<String> {
+    let mut out = Vec::new();
+    match bar {
+        Some(bar) if bar >= LEAST_BAR => {}
+        Some(bar) => out.push(format!(
+            "its bar is {bar:.1}, under the {LEAST_BAR:.1} a batch is held to"
+        )),
+        None => out.push("it has no bar".to_string()),
+    }
+    let sentences = reviewed + rejected;
+    if sentences < LEAST_SENTENCES {
+        out.push(format!(
+            "it holds {sentences} sentences, reviewed and rejected, fewer than the {LEAST_SENTENCES} a batch is held to"
+        ));
+    }
+    out
+}
+
 /// The columns of `score.tsv` after the group's name.
 pub const COLUMNS: [&str; 8] = [
     "group",

@@ -1782,6 +1782,34 @@ class PatienceTests(Base):
         self.assertEqual(len(transport.posts), 1)
         self.assertEqual([seconds for seconds in self.slept if seconds != 1.0], [], "no wait")
 
+    def test_the_endpoint_listing_waits_out_a_rate_limit_it_has_nowhere_else_to_go_with(self):
+        class Limited(FakeTransport):
+            limited = 6
+
+            def get(self, url, timeout):
+                if self.limited:
+                    self.limited -= 1
+                    raise openrouter.Retryable("HTTP 429", after=45.0 if self.limited == 3 else None)
+                return super().get(url, timeout)
+
+        transport = Limited(answer_all)
+        self.runner(transport).tag("two", limit=1)
+        self.assertEqual(len(transport.posts), 1)
+        waits = [seconds for seconds in self.slept if seconds != 1.0]
+        self.assertEqual(len(waits), 6, "six rate limits, past the four a call to an endpoint is given")
+        self.assertTrue(any(wait >= 45.0 for wait in waits), "a Retry-After is honoured")
+
+    def test_the_endpoint_listing_gives_up_after_http_attempts_of_rate_limits(self):
+        class Limited(FakeTransport):
+            def get(self, url, timeout):
+                self.gets.append(url)
+                raise openrouter.Retryable("HTTP 429")
+
+        transport = Limited(answer_all)
+        with self.assertRaisesRegex(openrouter.ApiError, "HTTP 429, after 8 attempts"):
+            self.runner(transport).tag("two", limit=1)
+        self.assertEqual((len(transport.gets), transport.posts), (8, []))
+
     def test_a_server_error_that_asks_for_a_long_wait_still_waits_for_it(self):
         transport = self.refusing(1, "HTTP 503", after=300.0)
         self.runner(transport).tag("two", limit=1)

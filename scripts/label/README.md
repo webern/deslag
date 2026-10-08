@@ -69,7 +69,8 @@ error body of a 429 gives OpenRouter's `limit_source` (`error.metadata.limit_sou
 `HTTP 429 (upstream_provider_shared_pool)` is a pool of the provider's that other keys share, so switch
 endpoint or model; a source that names a limit on this key means wait. Only that field
 is read, and only a short token of lower-case letters and `_` is kept; without it the reason is
-`HTTP 429`. Each attempt books its worst case before it is sent and stays
+`HTTP 429`. The GET of an endpoint listing has no other endpoint to move to, so a 429 there is
+asked again like a 5xx, up to `http_attempts` and `max_wait_s`. Each attempt books its worst case before it is sent and stays
 booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt (of
 `rate_limit_attempts` for a 429, else of `http_attempts`), the HTTP
 status or exception type, and the wait; never a header or a body.

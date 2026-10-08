@@ -955,9 +955,12 @@ class Runner:
         if parts_lock_path(self.dir) is not None:
             pin_parts_lock(self.dir, what, self.lock_fields(**known))
 
-    def retrying(self, what, **extra):
+    def retrying(self, what, moves_on=True, **extra):
         """with_retries' arguments from the settings, and a one-line log of each wait: what is being
-        asked, which attempt of how many, the status or exception type, the wait. No header or body."""
+        asked, which attempt of how many, the status or exception type, the wait. No header or body.
+        A call that `moves_on` to another endpoint when one keeps answering HTTP 429 asks it at most
+        `rate_limit_attempts` times; one with no other endpoint to move to (the endpoint listing) waits
+        a 429 out as it does a 5xx."""
         settings = self.settings
 
         def log(attempt, attempts, reason, wait):
@@ -966,14 +969,14 @@ class Runner:
         return dict(
             attempts=settings["http_attempts"], sleep=self.sleep, base=settings["backoff_s"],
             max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log,
-            rate_limit_attempts=settings["rate_limit_attempts"], **extra,
+            rate_limit_attempts=settings["rate_limit_attempts"] if moves_on else None, **extra,
         )
 
     def listing(self, model):
         if model not in self.listings:
             data, _ = openrouter.with_retries(
                 lambda: self.transport.get(openrouter.endpoints_url(model), self.settings["timeout_s"]),
-                **self.retrying(f"listing of {model}"),
+                **self.retrying(f"listing of {model}", moves_on=False),
             )
             self.listings[model] = data
         return self.listings[model]

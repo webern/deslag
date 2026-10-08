@@ -28,6 +28,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
+pub(crate) use map::Gathered;
 pub use map::{Mapped, Segment, SegmentKind, SourceMap};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
@@ -425,67 +426,6 @@ impl<'a> Document<'a> {
 
 /// The byte order mark, which opens some files and is not part of their text.
 const BYTE_ORDER_MARK: char = '\u{FEFF}';
-
-/// Text gathered from pieces of a source, such as a block's pieces, that can say where a stretch of
-/// itself is in the source.
-pub(crate) struct Gathered<'a> {
-    source: &'a str,
-    /// The text gathered so far.
-    pub(crate) text: String,
-    /// Where each piece starts in `text`, where it is in the source, and whether the source holds
-    /// it as written: an entity, or a line break read as a space, is not.
-    pieces: Vec<(usize, Range<usize>, bool)>,
-}
-
-impl<'a> Gathered<'a> {
-    /// No text yet, from pieces of `source`.
-    pub(crate) fn new(source: &'a str) -> Gathered<'a> {
-        Gathered {
-            source,
-            text: String::new(),
-            pieces: Vec::new(),
-        }
-    }
-
-    /// Adds `text`, which is what the source's bytes at `range` read as.
-    pub(crate) fn push(&mut self, text: &str, range: Range<usize>) {
-        if text.is_empty() {
-            return;
-        }
-        let as_written = self.source[range.clone()] == *text;
-        self.pieces.push((self.text.len(), range, as_written));
-        self.text.push_str(text);
-    }
-
-    /// Where the source holds `range`, a range of bytes of the text that is not empty and starts and
-    /// ends on characters. Inside a piece held as written the answer is exact; a range that starts or
-    /// ends inside another piece takes all of that piece.
-    pub(crate) fn source_range(&self, range: Range<usize>) -> Range<usize> {
-        let piece = |at: usize| {
-            let index = self.pieces.partition_point(|(from, ..)| *from <= at) - 1;
-            &self.pieces[index]
-        };
-        let (from, source, as_written) = piece(range.start);
-        let start = if *as_written {
-            source.start + (range.start - from)
-        } else {
-            source.start
-        };
-        let (from, source, as_written) = piece(range.end - 1);
-        let end = if *as_written {
-            source.start + (range.end - from)
-        } else {
-            source.end
-        };
-        start..end
-    }
-
-    /// Forgets the text gathered so far.
-    pub(crate) fn clear(&mut self) {
-        self.text.clear();
-        self.pieces.clear();
-    }
-}
 
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly
 /// inside `range`.

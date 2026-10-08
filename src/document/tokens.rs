@@ -13,7 +13,7 @@ use std::ops::Range;
 
 use unicode_segmentation::UnicodeSegmentation;
 
-use super::{Block, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind};
+use super::{Block, Body, Document, Gathered, Piece, PieceKind, Point, PointKind, Span, SpanKind};
 use super::{Token, TokenKind};
 use crate::tag::Origin;
 
@@ -41,17 +41,14 @@ impl<'a> Token<'a> {
     /// Splits `text`, read as plain prose rather than Markdown, by the rules that split a stretch
     /// of a block: into words, numbers, marks and bare URLs. Each range is an offset into `text`.
     pub fn split(text: &'a str) -> Vec<Token<'a>> {
-        let mut run = Run::default();
-        run.push(
-            text,
-            &Piece {
-                kind: PieceKind::Text,
-                range: 0..text.len(),
-                text: Cow::Borrowed(text),
-            },
-        );
+        let mut run = Run::new(text);
+        run.push(&Piece {
+            kind: PieceKind::Text,
+            range: 0..text.len(),
+            text: Cow::Borrowed(text),
+        });
         let mut tokens = Vec::new();
-        run.flush(text, &mut tokens);
+        run.flush(&mut tokens);
         tokens
     }
 
@@ -90,10 +87,10 @@ impl<'a> Rows<'_, 'a> {
         let mut wholes = self.wholes(range).into_iter().peekable();
         // The image or URL whose token was made last.
         let mut made: Option<&Span<'a>> = None;
-        let mut run = Run::default();
+        let mut run = Run::new(self.source);
         for piece in pieces {
             while let Some(whole) = wholes.next_if(|whole| whole.range.start <= piece.range.start) {
-                run.flush(self.source, out);
+                run.flush(out);
                 out.push(self.whole(whole, pieces));
                 made = Some(whole);
             }
@@ -102,19 +99,19 @@ impl<'a> Rows<'_, 'a> {
             }
             let kind = match piece.kind {
                 PieceKind::Text => {
-                    if let Some(last) = run.pieces.last() {
-                        if self.breaks(last.source.end..piece.range.start) {
-                            run.flush(self.source, out);
+                    if let Some(end) = run.end {
+                        if self.breaks(end..piece.range.start) {
+                            run.flush(out);
                         }
                     }
-                    run.push(self.source, piece);
+                    run.push(piece);
                     continue;
                 }
                 PieceKind::Code => TokenKind::Code,
                 PieceKind::Html => TokenKind::Html,
                 PieceKind::FootnoteReference => TokenKind::Footnote,
             };
-            run.flush(self.source, out);
+            run.flush(out);
             out.push(Token {
                 kind,
                 range: piece.range.clone(),
@@ -123,7 +120,7 @@ impl<'a> Rows<'_, 'a> {
                 origin: Origin::English,
             });
         }
-        run.flush(self.source, out);
+        run.flush(out);
         for whole in wholes {
             out.push(self.whole(whole, pieces));
         }
@@ -188,78 +185,56 @@ impl<'a> Rows<'_, 'a> {
 }
 
 /// A stretch of text pieces, joined, waiting to be split into words.
-#[derive(Default)]
-struct Run {
-    text: String,
-    pieces: Vec<RunPiece>,
+struct Run<'a> {
+    /// The joined text, and where it is in the source.
+    gathered: Gathered<'a>,
+    /// Where the last piece pushed ends in the source, empty pieces too, until the run is flushed.
+    end: Option<usize>,
 }
 
-/// Where a piece of a run is, in the run and in the source.
-struct RunPiece {
-    /// Where it starts in the run's text.
-    at: usize,
-    /// Where it is in the source.
-    source: Range<usize>,
-    /// Whether its text is its source as written, byte for byte, as it is unless it holds an
-    /// entity such as `&amp;`.
-    as_written: bool,
-}
+impl<'a> Run<'a> {
+    /// An empty run of pieces of `source`.
+    fn new(source: &'a str) -> Run<'a> {
+        Run {
+            gathered: Gathered::new(source),
+            end: None,
+        }
+    }
 
-impl Run {
-    fn push(&mut self, source: &str, piece: &Piece<'_>) {
-        self.pieces.push(RunPiece {
-            at: self.text.len(),
-            source: piece.range.clone(),
-            as_written: source[piece.range.clone()] == *piece.text,
-        });
-        self.text.push_str(&piece.text);
+    fn push(&mut self, piece: &Piece<'_>) {
+        self.end = Some(piece.range.end);
+        self.gathered.push(&piece.text, piece.range.clone());
     }
 
     /// Adds the run's tokens to `out`, and starts over.
-    fn flush<'a>(&mut self, source: &'a str, out: &mut Vec<Token<'a>>) {
+    fn flush(&mut self, out: &mut Vec<Token<'a>>) {
         let mut from = 0;
-        for url in urls(&self.text) {
-            self.words(source, from..url.start, out);
-            let range = self.source_of(url.clone());
+        for url in urls(&self.gathered.text) {
+            self.words(from..url.start, out);
+            let range = self.gathered.source_range(url.clone());
             out.push(token(
-                source,
+                self.gathered.source,
                 TokenKind::Url,
                 range,
-                &self.text[url.clone()],
+                &self.gathered.text[url.clone()],
             ));
             from = url.end;
         }
-        self.words(source, from..self.text.len(), out);
-        self.text.clear();
-        self.pieces.clear();
+        self.words(from..self.gathered.text.len(), out);
+        self.gathered.clear();
+        self.end = None;
     }
 
     /// Adds the tokens of the run's text in `range` to `out`.
-    fn words<'a>(&self, source: &'a str, range: Range<usize>, out: &mut Vec<Token<'a>>) {
-        for (at, segment) in self.text[range.clone()].split_word_bound_indices() {
+    fn words(&self, range: Range<usize>, out: &mut Vec<Token<'a>>) {
+        for (at, segment) in self.gathered.text[range.clone()].split_word_bound_indices() {
             let Some(kind) = classify(segment) else {
                 continue;
             };
             let start = range.start + at;
-            let text = self.source_of(start..start + segment.len());
-            out.push(token(source, kind, text, segment));
+            let text = self.gathered.source_range(start..start + segment.len());
+            out.push(token(self.gathered.source, kind, text, segment));
         }
-    }
-
-    /// Where the run's text in `range` is in the source. A piece that is not as written maps
-    /// whole.
-    fn source_of(&self, range: Range<usize>) -> Range<usize> {
-        let first = &self.pieces[self.pieces.partition_point(|piece| piece.at <= range.start) - 1];
-        let last = &self.pieces[self.pieces.partition_point(|piece| piece.at < range.end) - 1];
-        let start = match first.as_written {
-            true => first.source.start + (range.start - first.at),
-            false => first.source.start,
-        };
-        let end = match last.as_written {
-            true => last.source.start + (range.end - last.at),
-            false => last.source.end,
-        };
-        start..end
     }
 }
 

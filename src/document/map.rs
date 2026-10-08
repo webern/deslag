@@ -5,6 +5,8 @@
 //! written some other way, such as an entity ([`SegmentKind::Escaped`]), or not written at all
 //! ([`SegmentKind::Synthetic`]). [`SourceMap::to_file`] turns a range of the inner text into a range
 //! of the outer text and says whether an edit to it would be an edit to the file.
+//!
+//! [`Gathered`] builds a map as it gathers text from pieces of a source.
 
 use std::ops::Range;
 
@@ -282,6 +284,45 @@ fn join(parts: &mut Vec<Part>, kind: SegmentKind, len: usize, outer: Range<usize
                 return;
             }
         }
+    }
+}
+
+/// Text gathered from pieces of a source, such as a block's pieces, that can say where a stretch of
+/// itself is in the source.
+pub(crate) struct Gathered<'a> {
+    pub(crate) source: &'a str,
+    /// The text gathered so far.
+    pub(crate) text: String,
+    /// Where each stretch of `text` is in `source`.
+    map: SourceMap,
+}
+
+impl<'a> Gathered<'a> {
+    /// No text yet, from pieces of `source`.
+    pub(crate) fn new(source: &'a str) -> Gathered<'a> {
+        Gathered {
+            source,
+            text: String::new(),
+            map: SourceMap::default(),
+        }
+    }
+
+    /// Adds `text`, which is what the source's bytes at `range` read as.
+    pub(crate) fn push(&mut self, text: &str, range: Range<usize>) {
+        self.map.push_text(self.source, range, text);
+        self.text.push_str(text);
+    }
+
+    /// Where the source holds `range`, a range of bytes of the text that starts and ends on
+    /// characters, as [`SourceMap::to_file`] says.
+    pub(crate) fn source_range(&self, range: Range<usize>) -> Range<usize> {
+        self.map.to_file(range).range
+    }
+
+    /// Forgets the text gathered so far.
+    pub(crate) fn clear(&mut self) {
+        self.text.clear();
+        self.map.clear();
     }
 }
 

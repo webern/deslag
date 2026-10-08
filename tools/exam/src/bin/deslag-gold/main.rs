@@ -319,6 +319,8 @@ enum Command {
     /// of those sentences in `DIR/labels.conllu`. The review pre-fills deslag's readings at
     /// Likely and above, as for `owner.conllu`. Its home is `.label/silver/audit/`, then `audit/`
     /// in the batch, and never the gold directory: the queues there reserve their repositories.
+    /// It refuses a `DIR` that holds either file already, so a queue being reviewed is never
+    /// written over, and it writes both or neither.
     ///
     /// With `--score --queue Q --labels L` the reviewed queue is scored against silver's labels:
     /// the part of speech and the whole code, with intervals, by how silver labelled the word and
@@ -2401,10 +2403,30 @@ fn refuse_gold_dir(target: &Path) -> Result<(), Error> {
 fn audit_blind_stage(from: &Path, count: usize, seed: u64, out: &Path) -> Result<(), Problems> {
     data::refuse_holdout(&data::real_path(from)?)?;
     refuse_gold_dir(out)?;
+    let targets = [out.join("queue.conllu"), out.join("labels.conllu")];
+    for target in &targets {
+        if target.exists() {
+            return Err(Error::load(
+                &target.display().to_string(),
+                Place::File,
+                "it is there already, and a blind audit never writes over a queue that may be under review; give another --out, or remove it",
+            )
+            .into());
+        }
+    }
     let (queue, labels) =
         pilot::audit_blind(&from.display().to_string(), &read_text(from)?, count, seed)?;
-    write_text(&out.join("queue.conllu"), &queue)?;
-    write_text(&out.join("labels.conllu"), &labels)?;
+    // Both files are written beside their names first, so a failure leaves neither.
+    let partial = |target: &Path| target.with_extension("conllu.partial");
+    for (target, text) in targets.iter().zip([&queue, &labels]) {
+        write_text(&partial(target), text)?;
+    }
+    for target in &targets {
+        std::fs::rename(partial(target), target).map_err(|source| Error::Io {
+            path: target.display().to_string(),
+            source,
+        })?;
+    }
     println!(
         "wrote {count} sentences to {} and silver's labels of them to {}",
         out.join("queue.conllu").display(),

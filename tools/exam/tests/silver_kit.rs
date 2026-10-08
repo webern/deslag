@@ -420,6 +420,24 @@ fn a_blind_audit_hides_silvers_labels_and_keeps_them_beside_the_queue() {
         ids(&fs::read_to_string(other.join("queue.conllu")).unwrap())
     );
 
+    // A queue under review is never written over, nor are silver's labels beside it.
+    let reviewing = format!("{queue}# owner_reviewed = 2026-10-20\n");
+    fs::write(out.join("queue.conllu"), &reviewing).unwrap();
+    let over = run(&out, "8");
+    assert_eq!(over.status.code(), Some(2));
+    assert!(
+        String::from_utf8_lossy(&over.stderr).contains("never writes over a queue"),
+        "{}",
+        String::from_utf8_lossy(&over.stderr)
+    );
+    assert_eq!(fs::read_to_string(out.join("queue.conllu")).unwrap(), reviewing);
+    assert_eq!(fs::read_to_string(out.join("labels.conllu")).unwrap(), labels);
+    let labels_only = work.path().join("labels-only");
+    fs::create_dir_all(&labels_only).unwrap();
+    fs::write(labels_only.join("labels.conllu"), &labels).unwrap();
+    assert_eq!(run(&labels_only, "7").status.code(), Some(2));
+    assert!(!labels_only.join("queue.conllu").exists());
+
     // More sentences than the file has is an error and writes nothing.
     let none = work.path().join("none");
     let mut many = args(&none, "7");

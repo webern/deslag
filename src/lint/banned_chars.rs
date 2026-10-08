@@ -553,8 +553,7 @@ const DEFAULT_ADVICE: &str = "This repo writes in plain characters, and each of 
     plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a \
     colon, parentheses or a new sentence.\n\
     \n\
-    Code blocks and code spans are not checked, so a diagram may use these characters inside a \
-    fenced code block.\n\
+    Code is not checked, so a diagram may use these characters in a code block.\n\
     \n\
     Do not write the characters as HTML entities, and do not change the config to get past this \
     check. Only a human can tell you to do that, and I am a linter, not a human.";

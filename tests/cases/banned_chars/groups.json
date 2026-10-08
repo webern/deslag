@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "banned_chars",
-      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 6 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2192 rightwards arrow \"→\"; write `->`\n  line 3: U+1F389 emoji \"🎉\"; delete it\n  line 5: U+2500 box-drawing character \"─\"; write `-`",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 6 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2192 rightwards arrow \"→\"; write `->`\n  line 3: U+1F389 emoji \"🎉\"; delete it\n  line 5: U+2500 box-drawing character \"─\"; write `-`",
       "marks": [
         {
           "kind": "occurrence",
@@ -73,7 +73,7 @@
     {
       "path": "docs/diagram.md",
       "lint": "banned_chars",
-      "report": "ERROR: deslag detected banned characters!\n\ndocs/diagram.md has 1 banned character.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode blocks and code spans are not checked, so a diagram may use these characters inside a fenced code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+1F389 emoji \"🎉\"; delete it",
+      "report": "ERROR: deslag detected banned characters!\n\ndocs/diagram.md has 1 banned character.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+1F389 emoji \"🎉\"; delete it",
       "marks": [
         {
           "kind": "occurrence",

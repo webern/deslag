@@ -20,21 +20,43 @@ fn load(extension: &str, text: &str) -> Result<Config, deslag::Error> {
 
 // The table, tested as a whole.
 
-/// `value` set at `path`, a schema path with `md.lints` for the section or, with `over`, for the
-/// first override, as a whole config.
-fn config_with(path: &str, value: &Value, over: bool) -> Value {
-    let rest = path
-        .strip_prefix("md.lints.")
-        .expect("a setting of md.lints");
-    let nested = rest
-        .rsplit('.')
-        .fold(value.clone(), |inner, key| json!({ key: inner }));
+/// `into` with the maps of `from` folded in, deeply.
+fn merged(into: &mut Value, from: Value) {
+    match (into, from) {
+        (Value::Object(into), Value::Object(from)) => {
+            for (key, inner) in from {
+                merged(into.entry(key).or_insert(Value::Null), inner);
+            }
+        }
+        (into, from) => *into = from,
+    }
+}
+
+/// Each of `settings` set to its value, each a schema path with `md.lints` for the section or,
+/// with `over`, for the first override, as a whole config.
+fn config_with_all(settings: &[(&str, &Value)], over: bool) -> Value {
+    let mut nested = Value::Null;
+    for (path, value) in settings {
+        let rest = path
+            .strip_prefix("md.lints.")
+            .expect("a setting of md.lints");
+        merged(
+            &mut nested,
+            rest.rsplit('.')
+                .fold((*value).clone(), |inner, key| json!({ key: inner })),
+        );
+    }
     let md = if over {
         json!({ "overrides": [{ "globs": ["a.md"], "lints": nested }] })
     } else {
         json!({ "lints": nested })
     };
     json!({ "schema_version": 1, "md": md })
+}
+
+/// `value` set at `path`, as a whole config.
+fn config_with(path: &str, value: &Value, over: bool) -> Value {
+    config_with_all(&[(path, value)], over)
 }
 
 /// `config` written in the language of `extension`.
@@ -53,6 +75,8 @@ fn yaml(value: &Value, depth: usize) -> String {
         Value::Object(map) => map
             .iter()
             .map(|(key, inner)| match inner {
+                // Written `key:` an empty map would read as null, which is no table at all.
+                Value::Object(map) if map.is_empty() => format!("{pad}{key}: {{}}\n"),
                 Value::Object(_) => format!("{pad}{key}:\n{}", yaml(inner, depth + 1)),
                 Value::Array(items) if items.iter().all(Value::is_object) => {
                     let items: String = items
@@ -69,6 +93,14 @@ fn yaml(value: &Value, depth: usize) -> String {
             .collect(),
         _ => unreachable!("a config is a map"),
     }
+}
+
+#[test]
+fn the_yaml_helper_writes_an_empty_map_as_a_map() {
+    let config = json!({ "md": { "lints": { "density": {} } } });
+    assert_eq!(yaml(&config, 0), "md:\n  lints:\n    density: {}\n");
+    let loaded: Value = serde_saphyr::from_str(&yaml(&config, 0)).expect("YAML");
+    assert_eq!(loaded, config);
 }
 
 /// The settings `config` compiles to, for `a.md`.
@@ -110,6 +142,37 @@ fn each_redirect_old_set_compiles_equal_to_new_set_or_neither_and_warns_once() {
                     let empty = compiled(extension, &config_with(parent, &json!({}), over)).1;
                     assert_eq!(old, empty, "{name}");
                 }
+            }
+        }
+    }
+}
+
+/// A table that sets the old path and the new one is an error that names both and the table, for
+/// every entry that has a new path, so no entry overwrites silently.
+#[test]
+fn each_redirect_with_a_new_path_refuses_a_table_that_sets_both() {
+    for redirect in REDIRECTS {
+        let Some(new) = redirect.new else { continue };
+        let example: Value = serde_json::from_str(redirect.example).expect("JSON");
+        for over in [false, true] {
+            let place = if over {
+                "md.overrides[0].lints"
+            } else {
+                "md.lints"
+            };
+            let both = config_with_all(&[(redirect.old, &example), (new, &example)], over);
+            for extension in ["toml", "yaml", "json"] {
+                let name = format!("{} {extension} over={over}", redirect.old);
+                let error = load(extension, &written(&both, extension))
+                    .err()
+                    .unwrap_or_else(|| panic!("{name}: both set loaded"));
+                let message = error.to_string();
+                assert!(
+                    message.contains(&format!("`{}`", redirect.old))
+                        && message.contains(&format!("`{new}`"))
+                        && message.contains(place),
+                    "{name}: {message}"
+                );
             }
         }
     }
@@ -190,7 +253,7 @@ fn signposts_in_a_section_and_an_override_warns_once_in_every_language() {
             config.warnings(),
             [format!(
                 "deslag.{extension}: `md.lints.banned_phrases.groups.signposts` was removed, and \
-                 the setting is ignored; run deslag instructions update"
+                 the setting is ignored; delete it from the config"
             )],
             "{text}"
         );
@@ -247,7 +310,7 @@ fn the_warning_prints_once_and_the_run_exits_0() {
     assert!(
         said.starts_with("deslag: warning: ")
             && said.contains("deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed")
-            && said.ends_with("; run deslag instructions update\n"),
+            && said.ends_with("; delete it from the config\n"),
         "{said}"
     );
 }

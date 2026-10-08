@@ -1,6 +1,5 @@
 {
   "schema_version": 1,
-  "deslag_version": "0.0.1",
   "md": {
     "globs": [
       "docs/*.md"

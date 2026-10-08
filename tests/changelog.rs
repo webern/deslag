@@ -378,6 +378,7 @@ fn next_holds_no_entry() {
 fn the_newest_frozen_configs_name_every_setting() {
     let (release, directory) = common::frozen::releases().pop().expect("a frozen release");
     let paths = SchemaPaths::of(&schema());
+    let mut left_out = Vec::new();
     for extension in common::frozen::EXTENSIONS {
         let value = common::frozen::value(&common::frozen::config(&directory, extension));
         let missing: Vec<_> = paths
@@ -385,13 +386,19 @@ fn the_newest_frozen_configs_name_every_setting() {
             .iter()
             .filter(|leaf| !common::frozen::names(&value, leaf))
             .collect();
-        assert!(
-            missing.is_empty(),
-            "tests/configs/{release}/config.{extension} leaves out {missing:?}: the release \
-             change adds a directory named for the new version, with a config in each language \
-             that sets every setting, and edits no older one"
-        );
+        if !missing.is_empty() {
+            left_out.push(format!(
+                "tests/configs/{release}/config.{extension} leaves out {missing:?}"
+            ));
+        }
     }
+    assert!(
+        left_out.is_empty(),
+        "{}\n\nthe release change adds a directory named for the new version, with a config in \
+         each language that sets every setting, and its lines in tests/configs/hashes. It edits \
+         no older config and no test",
+        left_out.join("\n")
+    );
 }
 
 #[test]

@@ -42,7 +42,11 @@ the person editing it.
 
 A setting that is renamed or removed is a redirect in `src/config/redirect.rs`, which keeps the old
 key working with a warning. Each redirect has one `breaking` entry whose id is the old path, filed
-under `next/`. Renaming also edits the old entry of the setting, as the last section says.
+under `next/`. Renaming also edits the old entry of the setting, as Releasing says.
+
+Removing a setting edits every released entry that names the key: change its `keys` and blocks in
+place, as a rename does, and delete the `setting` entry for the removed path. The changelog tests
+refuse a released entry that lists a key that is no longer a setting.
 
 `onboarding` is Markdown for an agent: what the thing does and the table that turns it on. Its
 fenced TOML must fit the schema.
@@ -58,12 +62,18 @@ Renaming `next/` itself is wrong: git then files the new entry of an open branch
 that shipped. The release does not edit a test or a case config. `make check-release` fails while
 `next/` holds an entry.
 
+The release also adds `tests/configs/<version>/`, with a config in each language that sets every
+setting the schema has, and one line for each of the three files in `tests/configs/hashes`. It
+leaves every older directory and its lines as they are: frozen configs are never edited, and a
+renamed or removed setting is a redirect instead. `make check-release` fails, naming the leaves,
+while the newest directory leaves one out; the failing hash test prints the line to add.
+
 An unstamped config is taken to be from 0.0.1, so from the first release after that one
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in
 `tests/common/mod.rs` leaves out that line, and the tests about the note ask for `raw_stderr`.
 This repository's own config, `.agents/deslag.toml`, is unstamped, so `make check-deslag` then
 prints the note and still exits 0.
 
-A released entry changes only when a later change renames what it names. That change edits the
-entry in place, its id, its `keys`, its blocks and its file name, so an agent onboards to the
-key that is live.
+A released entry changes only when a later change renames or removes what it names. That change
+edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent onboards to
+the key that is live.

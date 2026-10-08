@@ -28,6 +28,26 @@ pub struct Redirect {
 /// A table that sets both the old and the new path.
 struct BothSet;
 
+/// Moves a renamed setting from `old` to `new`, and says whether `old` was set. Every rename's
+/// `moves` calls this, so the rule that a table setting both is an error lives here alone.
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the first real rename calls it; remove this attribute then"
+    )
+)]
+fn rename<T>(old: &mut Option<T>, new: &mut Option<T>) -> Result<bool, BothSet> {
+    match (old.is_some(), new.is_some()) {
+        (false, _) => Ok(false),
+        (true, true) => Err(BothSet),
+        (true, false) => {
+            *new = old.take();
+            Ok(true)
+        }
+    }
+}
+
 /// Every redirect, in the order they are applied.
 pub const REDIRECTS: &[Redirect] = &[Redirect {
     old: "md.lints.banned_phrases.groups.signposts",
@@ -51,16 +71,10 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
         let Some(density) = lints.density.as_mut() else {
             return Ok(false);
         };
-        let Some(value) = density.max_paragraph_len.take() else {
-            return Ok(false);
-        };
-        match density.max_paragraph_chars {
-            Some(_) => Err(BothSet),
-            None => {
-                density.max_paragraph_chars = Some(value);
-                Ok(true)
-            }
-        }
+        rename(
+            &mut density.max_paragraph_len,
+            &mut density.max_paragraph_chars,
+        )
     },
 };
 
@@ -69,10 +83,14 @@ impl Redirect {
     pub fn warning(&self, config_path: &str) -> String {
         let old = self.old;
         let said = match self.new {
-            Some(new) => format!("`{old}` was renamed to `{new}`, and is read as the new setting"),
-            None => format!("`{old}` was removed, and the setting is ignored"),
+            Some(new) => format!("`{old}` was renamed to `{new}`; rename it in the config"),
+            None => {
+                format!(
+                    "`{old}` was removed, and the setting is ignored; delete it from the config"
+                )
+            }
         };
-        format!("{config_path}: {said}; run deslag instructions update")
+        format!("{config_path}: {said}")
     }
 }
 
@@ -182,8 +200,7 @@ mod tests {
                 old.warnings()[0],
                 format!(
                     "deslag.{extension}: `md.lints.density.max_paragraph_len` was renamed to \
-                     `md.lints.density.max_paragraph_chars`, and is read as the new setting; run \
-                     deslag instructions update"
+                     `md.lints.density.max_paragraph_chars`; rename it in the config"
                 )
             );
             assert!(new.warnings().is_empty());
@@ -211,6 +228,34 @@ mod tests {
                 "{extension}: {message}"
             );
         }
+    }
+
+    #[test]
+    fn rename_moves_the_old_value_and_says_so() {
+        let (mut old, mut new) = (Some(1), None);
+        assert!(matches!(rename(&mut old, &mut new), Ok(true)));
+        assert_eq!((old, new), (None, Some(1)));
+    }
+
+    #[test]
+    fn rename_with_neither_set_changes_nothing() {
+        let (mut old, mut new): (Option<u8>, Option<u8>) = (None, None);
+        assert!(matches!(rename(&mut old, &mut new), Ok(false)));
+        assert_eq!((old, new), (None, None));
+    }
+
+    #[test]
+    fn rename_with_only_the_new_set_leaves_it_alone() {
+        let (mut old, mut new) = (None, Some(2));
+        assert!(matches!(rename(&mut old, &mut new), Ok(false)));
+        assert_eq!((old, new), (None, Some(2)));
+    }
+
+    #[test]
+    fn rename_with_both_set_is_an_error_and_overwrites_nothing() {
+        let (mut old, mut new) = (Some(1), Some(2));
+        assert!(matches!(rename(&mut old, &mut new), Err(BothSet)));
+        assert_eq!((old, new), (Some(1), Some(2)));
     }
 
     #[test]

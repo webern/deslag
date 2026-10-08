@@ -740,6 +740,14 @@ fn edits() -> Vec<Case> {
         ["/tmp/x"]
     );
     case!(
+        "a path in the middle of the adjudicator's reason",
+        |d| edit(d, "parts/01/adjudicated.tsv", |t| t.replace(
+            "\tthe guide says so\t",
+            "\tI read /tmp/deslag-handoff-x/request.json and the guide says so\t"
+        )),
+        ["parts/01/adjudicated.tsv", "/tmp/deslag-handoff-x/request.json"]
+    );
+    case!(
         "numbers that are not the files'",
         |d| edit(d, "record/datasheet.json", |t| t.replacen(
             "\"sentences\": 8",

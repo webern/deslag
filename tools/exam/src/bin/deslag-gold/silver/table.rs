@@ -127,17 +127,54 @@ pub fn is_absolute_path(cell: &str) -> bool {
     cell.starts_with('/') || cell.starts_with('~') || drive
 }
 
-/// The cells of `text`, a table, a JSON file or any other text, that are absolute paths. For a
-/// table that is each tab-separated cell; for JSON each string; the caller picks by `kind`.
+/// The absolute paths in `cell`: the whole cell if it is one, and each word of it that is one, so
+/// that a path in the middle of free text, such as an adjudicator's reason, is found too. A word
+/// is cut at spaces, quotes, brackets and the marks around them; it is a path when it starts with
+/// `~/`, with a drive letter, a colon and a slash, or with `/` and a name and holds a second `/`,
+/// so a word like `and/or` or a lone `/` is not one.
+pub fn paths_in(cell: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    if is_absolute_path(cell) {
+        found.push(cell.trim().to_string());
+    }
+    let cut = |c: char| {
+        c.is_whitespace()
+            || matches!(
+                c,
+                '"' | '\'' | '`' | '(' | ')' | '[' | ']' | '{' | '}' | '<' | '>' | ',' | ';' | '='
+            )
+    };
+    for word in cell.split(cut).filter(|word| !word.is_empty()) {
+        let word = word.trim_end_matches(['.', ':', '!', '?']);
+        let rooted = word.strip_prefix('/').is_some_and(|rest| {
+            rest.split_once('/').is_some_and(|(first, _)| {
+                !first.is_empty()
+                    && first
+                        .chars()
+                        .all(|c| c.is_alphanumeric() || matches!(c, '.' | '-' | '_'))
+            })
+        });
+        let mut chars = word.chars();
+        let drive = chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+            && chars.next() == Some(':')
+            && matches!(chars.next(), Some('\\' | '/'));
+        if (rooted || word.starts_with("~/") || drive) && !found.iter().any(|f| f == word) {
+            found.push(word.to_string());
+        }
+    }
+    found
+}
+
+/// The cells of `text`, a table, a JSON file or any other text, that are or hold absolute paths
+/// (see [paths_in]). For a table that is each tab-separated cell; for JSON each string; the caller
+/// picks by `kind`.
 pub fn absolute_paths_in(text: &str, kind: Cells) -> Vec<String> {
     let mut found = BTreeSet::new();
     match kind {
         Cells::Tabs => {
             for line in text.lines().filter(|line| !line.starts_with('#')) {
                 for cell in line.split('\t') {
-                    if is_absolute_path(cell) {
-                        found.insert(cell.trim().to_string());
-                    }
+                    found.extend(paths_in(cell));
                     // A cell may hold JSON, as `runs.tsv`'s settings do.
                     let cell = cell.trim();
                     if cell.starts_with(['{', '[']) {
@@ -150,9 +187,7 @@ pub fn absolute_paths_in(text: &str, kind: Cells) -> Vec<String> {
             // Header values are cells too.
             for line in text.lines().filter_map(|line| line.strip_prefix('#')) {
                 if let Some((_, value)) = line.split_once('=') {
-                    if is_absolute_path(value) {
-                        found.insert(value.trim().to_string());
-                    }
+                    found.extend(paths_in(value));
                 }
             }
         }
@@ -163,9 +198,7 @@ pub fn absolute_paths_in(text: &str, kind: Cells) -> Vec<String> {
         }
         Cells::Lines => {
             for line in text.lines() {
-                if is_absolute_path(line) {
-                    found.insert(line.trim().to_string());
-                }
+                found.extend(paths_in(line));
             }
         }
     }
@@ -186,17 +219,11 @@ pub enum Cells {
 /// Every string of `value`, keys included, that is an absolute path, in `found`.
 fn strings_of(value: &serde_json::Value, found: &mut BTreeSet<String>) {
     match value {
-        serde_json::Value::String(text) => {
-            if is_absolute_path(text) {
-                found.insert(text.trim().to_string());
-            }
-        }
+        serde_json::Value::String(text) => found.extend(paths_in(text)),
         serde_json::Value::Array(items) => items.iter().for_each(|item| strings_of(item, found)),
         serde_json::Value::Object(map) => {
             for (key, item) in map {
-                if is_absolute_path(key) {
-                    found.insert(key.trim().to_string());
-                }
+                found.extend(paths_in(key));
                 strings_of(item, found);
             }
         }
@@ -238,6 +265,32 @@ mod tests {
             Cells::Tabs,
         );
         assert_eq!(found, vec!["/tmp/x"]);
+    }
+
+    #[test]
+    fn a_path_in_the_middle_of_free_text_is_found() {
+        let reason = "I read /tmp/deslag-handoff-x/request.json, and the guide says so";
+        assert_eq!(paths_in(reason), vec!["/tmp/deslag-handoff-x/request.json"]);
+        assert_eq!(paths_in("see (~/notes/x.md)."), vec!["~/notes/x.md"]);
+        assert_eq!(paths_in("at C:\\work\\x now"), vec!["C:\\work\\x"]);
+        assert_eq!(paths_in("in \"/home/me/.label\""), vec!["/home/me/.label"]);
+        for clean in [
+            "a noun and/or a verb",
+            "it is N.s / V.fi",
+            "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash",
+            "deepseek/deepseek-v4-flash at gmicloud/fp8",
+            "half 1/2 of it",
+            "",
+        ] {
+            assert!(paths_in(clean).is_empty(), "{clean}");
+        }
+        let found = absolute_paths_in(
+            "item\treason\ns1.1\tthe file /home/me/x/y.md says so\n",
+            Cells::Tabs,
+        );
+        assert_eq!(found, vec!["/home/me/x/y.md"]);
+        let found = absolute_paths_in(r#"{"note": "kept at /var/lib/x"}"#, Cells::Json);
+        assert_eq!(found, vec!["/var/lib/x"]);
     }
 
     #[test]

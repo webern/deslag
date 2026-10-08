@@ -10,9 +10,10 @@ What is new in deslag {to}, since {from}
 ## Closing
 
 Offer each new lint to the person, with what it fails. Turn on the ones they choose by adding its
-table to the config. Once they have chosen, set `deslag_version` to "{to}" at the top level of the
-config, so these entries are not shown again. If the person cannot be asked now, change nothing,
-not even `deslag_version`, and tell them what is new.
+table to the config. Once they have chosen, run `deslag update --to {to}`, adding your
+`--config-path` if any. It sets `deslag_version` to "{to}", ending this list, and edits renamed or
+removed settings. If the person cannot be asked now, change nothing, not even `deslag_version`, and
+tell them what is new.
 
 ## Current
 

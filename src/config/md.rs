@@ -51,7 +51,7 @@ struct OverrideFile {
 }
 
 /// An override with its patterns compiled.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Override {
     /// The files it applies to.
     pub patterns: Vec<Pattern>,
@@ -59,8 +59,9 @@ pub struct Override {
     pub lints: MdLints,
 }
 
-/// The `[md]` section, compiled.
-#[derive(Debug)]
+/// The `[md]` section, compiled. Two are equal when they select and set the same: the patterns
+/// compare by the text they were written as.
+#[derive(Debug, PartialEq)]
 pub struct MdConfig {
     globs: Vec<Pattern>,
     lints: MdLints,

@@ -4,6 +4,7 @@ subsystems:
   - cli
   - instructions
   - fix
+  - write
 max_size_bytes: 8192
 ---
 # deslag: as built

@@ -15,12 +15,19 @@ pub use walk::{RepoFile, find, relative_slash_path, walk};
 
 use globset::{GlobBuilder, GlobMatcher};
 
-/// A compiled glob pattern.
+/// A compiled glob pattern. Two are equal when they were written as the same text.
 #[derive(Debug, Clone)]
 pub struct Pattern {
     text: String,
     anchored: bool,
     matcher: GlobMatcher,
+}
+
+impl PartialEq for Pattern {
+    fn eq(&self, other: &Self) -> bool {
+        // The rest is derived from the text.
+        self.text == other.text
+    }
 }
 
 impl Pattern {
@@ -93,4 +100,19 @@ pub fn best_match(patterns: &[Pattern], rel_path: &str) -> Option<Specificity> {
         .filter(|pattern| pattern.matches(rel_path))
         .map(Pattern::specificity)
         .max()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn patterns_are_equal_when_written_alike() {
+        let pattern = |text| Pattern::new(text).expect("a pattern");
+        assert_eq!(pattern("docs/*.md"), pattern("docs/*.md"));
+        assert_ne!(pattern("docs/*.md"), pattern("docs/**.md"));
+        // The same files by another spelling are still another pattern: the config is compared as
+        // written, so that an edit to a pattern shows.
+        assert_ne!(pattern("/a.md"), pattern("a.md"));
+    }
 }

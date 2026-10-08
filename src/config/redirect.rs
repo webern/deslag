@@ -7,13 +7,15 @@
 //! error. A section and an override may differ: the override still wins.
 //!
 //! [`REDIRECTS`] is the contract. It is data as well as code, so that `deslag update` can write
-//! the same edit into a file. Each entry has a `breaking` changelog entry whose id is its old path.
+//! the same edit into a file: `in_force` is the list it walks. Each entry has a `breaking`
+//! changelog entry whose id is its old path.
 
 use crate::Error;
 use crate::config::lints::MdLints;
 use crate::config::md::MdFile;
 
 /// A setting that was renamed or removed.
+#[derive(Debug)]
 pub struct Redirect {
     /// The old setting's path in the config schema, as a changelog `id` writes it.
     pub old: &'static str,
@@ -83,10 +85,15 @@ impl Redirect {
     pub fn warning(&self, config_path: &str) -> String {
         let old = self.old;
         let said = match self.new {
-            Some(new) => format!("`{old}` was renamed to `{new}`; rename it in the config"),
+            Some(new) => {
+                format!(
+                    "`{old}` was renamed to `{new}`; rename it in the config, or run deslag update"
+                )
+            }
             None => {
                 format!(
-                    "`{old}` was removed, and the setting is ignored; delete it from the config"
+                    "`{old}` was removed, and the setting is ignored; delete it from the config, \
+                     or run deslag update"
                 )
             }
         };
@@ -95,22 +102,46 @@ impl Redirect {
 }
 
 /// The redirects in force: the table, and the test rename when testing.
-fn in_force() -> impl Iterator<Item = &'static Redirect> {
+pub(crate) fn in_force() -> impl Iterator<Item = &'static Redirect> {
     let table = REDIRECTS.iter();
     #[cfg(test)]
     let table = table.chain(std::iter::once(&TEST_RENAME));
     table
 }
 
-/// Moves every old setting in `file` to its new path, and returns one warning for each redirect
-/// that `file` used, however many tables set it.
-pub(super) fn apply(file: &mut MdFile, config_path: &str) -> Result<Vec<String>, Error> {
-    let mut warnings = Vec::new();
+/// A redirect that a config used, and where.
+#[derive(Debug)]
+pub struct Used {
+    /// The redirect.
+    pub redirect: &'static Redirect,
+    /// Each `lints` table that set the old path, named by its place in the config: `md.lints`, or
+    /// `md.overrides[2].lints`.
+    pub places: Vec<String>,
+}
+
+/// What [`apply`] found `file` using.
+pub(super) struct Applied {
+    /// One warning for each redirect that `file` used, however many tables set it.
+    pub(super) warnings: Vec<String>,
+    /// The redirects that `file` used, in the order of the warnings.
+    pub(super) used: Vec<Used>,
+}
+
+/// Moves every old setting in `file` to its new path.
+pub(super) fn apply(file: &mut MdFile, config_path: &str) -> Result<Applied, Error> {
+    let mut applied = Applied {
+        warnings: Vec::new(),
+        used: Vec::new(),
+    };
     for redirect in in_force() {
-        let mut used = false;
+        let mut places = Vec::new();
         for (place, lints) in file.lints_tables() {
             match (redirect.moves)(lints) {
-                Ok(moved) => used |= moved,
+                Ok(moved) => {
+                    if moved {
+                        places.push(place);
+                    }
+                }
                 Err(BothSet) => {
                     let new = redirect.new.unwrap_or("its replacement");
                     return Err(Error::Setting {
@@ -124,11 +155,12 @@ pub(super) fn apply(file: &mut MdFile, config_path: &str) -> Result<Vec<String>,
                 }
             }
         }
-        if used {
-            warnings.push(redirect.warning(config_path));
+        if !places.is_empty() {
+            applied.warnings.push(redirect.warning(config_path));
+            applied.used.push(Used { redirect, places });
         }
     }
-    Ok(warnings)
+    Ok(applied)
 }
 
 #[cfg(test)]
@@ -200,7 +232,7 @@ mod tests {
                 old.warnings()[0],
                 format!(
                     "deslag.{extension}: `md.lints.density.max_paragraph_len` was renamed to \
-                     `md.lints.density.max_paragraph_chars`; rename it in the config"
+                     `md.lints.density.max_paragraph_chars`; rename it in the config, or run deslag update"
                 )
             );
             assert!(new.warnings().is_empty());

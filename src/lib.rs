@@ -20,7 +20,8 @@
 //! and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the formats a
 //! machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and the
 //! document proves safe. [`change`] asks git what a change did, which the lints that judge a change
-//! read and [`Report::within`] narrows a run to.
+//! read and [`Report::within`] narrows a run to. [`mod@write`] replaces a file whole, as `fix` and
+//! `deslag update` do.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -38,6 +39,7 @@ pub mod lint;
 pub mod output;
 pub mod parse;
 pub mod tag;
+pub mod write;
 
 pub use change::Change;
 pub use config::{Config, ConfigSource};
@@ -191,7 +193,16 @@ pub enum Error {
         problem: String,
     },
 
-    /// A fixed file could not be written.
+    /// `deslag update` cannot make the change to the config, and has written nothing.
+    #[error("cannot update {path}: {problem}")]
+    Update {
+        /// The config file.
+        path: String,
+        /// Why not, with the edits to make by hand and the command to run again when it has them.
+        problem: String,
+    },
+
+    /// A file could not be written.
     #[error("cannot write {path}")]
     Write {
         /// The file that could not be written.

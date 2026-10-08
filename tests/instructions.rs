@@ -466,10 +466,8 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
         assert!(text.contains(heading), "{heading}");
     }
     assert!(
-        text.contains(&format!(
-            "set `deslag_version` to \"{current}\" at the top level"
-        )),
-        "the closing names the version to set"
+        text.contains(&format!("run `deslag update --to {current}`")),
+        "the closing names the command that records the version"
     );
     // `next` is not in the range: its entries would head their sections with `(next)`.
     assert!(!text.contains("(next)"));

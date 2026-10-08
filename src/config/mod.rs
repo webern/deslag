@@ -30,12 +30,14 @@
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
 //! [`search`] finds the file, [`md`] holds the `[md]` section, and [`lints`] the settings of each
-//! lint.
+//! lint. [`update`] is the one thing that writes a config, and [`edit`] makes the edits to its text.
 
+pub mod edit;
 pub mod lints;
 pub mod md;
 pub mod redirect;
 pub mod search;
+pub mod update;
 
 use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
@@ -53,7 +55,7 @@ pub use lints::{
     MdLints, Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use md::MdConfig;
-pub use redirect::{REDIRECTS, Redirect};
+pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
 };
@@ -160,6 +162,7 @@ pub struct Config {
     stamp: Option<semver::Version>,
     md: MdConfig,
     warnings: Vec<String>,
+    redirected: Vec<Used>,
 }
 
 impl Config {
@@ -168,13 +171,20 @@ impl Config {
     /// `explicit` is a `--config-path`: when it is given, it is the only place looked at, and it
     /// is resolved against the current directory.
     pub fn load(root: &Path, explicit: Option<&Path>) -> Result<Config, Error> {
+        Config::load_text(root, explicit).map(|(config, _)| config)
+    }
+
+    /// Finds and loads the config as [`Config::load`] does, and gives the text it was read from too,
+    /// for a caller that edits it.
+    pub fn load_text(root: &Path, explicit: Option<&Path>) -> Result<(Config, String), Error> {
         let (path, source) = search::find(root, explicit)?;
 
         let text = std::fs::read_to_string(&path).map_err(|source| Error::Read {
             path: path.display().to_string(),
             source,
         })?;
-        Config::parse(&text, path, source)
+        let config = Config::parse(&text, path, source)?;
+        Ok((config, text))
     }
 
     /// Parses `text`, the contents of the config at `path`, in the language its extension names.
@@ -228,7 +238,7 @@ impl Config {
 
         let mut file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
 
-        let warnings = redirect::apply(&mut file.md, &path_string)?;
+        let applied = redirect::apply(&mut file.md, &path_string)?;
         let md = MdConfig::compile(file.md, &path_string)?;
 
         Ok(Config {
@@ -237,7 +247,8 @@ impl Config {
             schema_version: file.schema_version,
             stamp,
             md,
-            warnings,
+            warnings: applied.warnings,
+            redirected: applied.used,
         })
     }
 
@@ -271,6 +282,12 @@ impl Config {
     /// print.
     pub fn warnings(&self) -> &[String] {
         &self.warnings
+    }
+
+    /// The redirects the file used, each with the tables that set it: the settings it names that
+    /// were renamed or removed.
+    pub fn redirected(&self) -> &[Used] {
+        &self.redirected
     }
 
     /// The `[md]` section.

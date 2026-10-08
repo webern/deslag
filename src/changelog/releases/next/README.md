@@ -75,9 +75,13 @@ add.
 An unstamped config is taken to be from 0.0.1, so from the first release after that one
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in
 `tests/common/mod.rs` leaves out that line, and the tests about the note ask for `raw_stderr`.
-This repository's own config, `.agents/deslag.toml`, is unstamped, so `make check-deslag` then
-prints the note and still exits 0.
 
-A released entry changes only when a later change renames or removes what it names. That change
-edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent onboards to
-the key that is live.
+This repository's own config, `.agents/deslag.toml`, is stamped, and the stamp is written by
+`deslag update`. After a release `make check-deslag` prints the note and still exits 0, until
+someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
+
+A released entry changes in two cases. One is a later change that renames or removes what it names:
+that change edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent
+onboards to the key that is live. The other is a later change that makes `deslag update` do what the
+entry asks the person to do by hand: it sets the entry's `update_does_all` to `true`, and edits
+nothing else.

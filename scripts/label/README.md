@@ -61,8 +61,17 @@ connection is asked again, up to
 `backoff_s` (5 s) to at most `longest_wait_s` (120 s), with jitter, or the `Retry-After` or
 `X-RateLimit-Reset` the server gave if that is longer. This is separate from asking again for a bad
 reply. A `Retry-After` longer than what is left of `max_wait_s` stops the call at once, without
-waiting, and the run stays resumable. Each attempt books its worst case before it is sent and stays
-booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt, the HTTP
+waiting, and the run stays resumable. A 429 is asked fewer times: `rate_limit_attempts` (4), about 35 s
+of waiting in all, and a 429 whose `Retry-After` is longer than `longest_wait_s` gives up at once, since
+the limits that last (a provider's shared pool closed for hours) outlast any wait and the next endpoint is
+seconds away. Either way the endpoint has failed on its own and the run moves on (Endpoints). When the
+error body of a 429 gives OpenRouter's `limit_source` (`error.metadata.limit_source`), the reason names it:
+`HTTP 429 (upstream_provider_shared_pool)` is a pool of the provider's that other keys share, so switch
+endpoint or model; a source that names a limit on this key means wait. Only that field
+is read, and only a short token of lower-case letters and `_` is kept; without it the reason is
+`HTTP 429`. Each attempt books its worst case before it is sent and stays
+booked if it fails. Each wait is one line on stderr: the voter, run and batch, the attempt (of
+`rate_limit_attempts` for a 429, else of `http_attempts`), the HTTP
 status or exception type, and the wait; never a header or a body.
 
 Failure limit. Backoff, halving and endpoint switching share one budget, `failure_budget` (40 in
@@ -75,10 +84,12 @@ where a cut-off storm leaves no endpoint to switch to (below). A `failed` run is
 tags are not merged, and `tag` exits 5.
 
 Endpoints. A model in `voters.json` may list `provider_fallback`: other pinned endpoints of the same
-model, in order, each at the quantisation of `provider`'s listing or a more precise one (checked from
-the listing when it is used; an endpoint below that is skipped). One run has one provider, and never
+model, in order, each at a quantisation the model's `quantizations` lists (checked from the listing when
+it is used; any other endpoint is skipped), so `quantizations` is the one statement of what the voter may
+run at, for the primary and every alternative alike. A model without `quantizations` (mistral, claude)
+holds an alternative to the primary's quantisation or a more precise one instead. One run has one provider, and never
 changes it. The run moves to the next endpoint only for the endpoint's own failures: a 429 or 5xx
-still coming after every wait, a reply that is not JSON, a storm of cut-off replies, or a refusal by
+still coming after its waits (`rate_limit_attempts` for a 429), a reply that is not JSON, a storm of cut-off replies, or a refusal by
 the provider (a reply from another provider than the pinned one). Then `tag` or `judge` marks that
 run abandoned in its `run.json` (it stays on disk; nothing continues it, and a merge takes no tags
 from it), says so in one line on stderr, and starts a new run of the voter or the adjudicator at the

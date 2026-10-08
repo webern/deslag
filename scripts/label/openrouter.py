@@ -30,6 +30,9 @@ NOT_JSON = "the reply was not JSON"
 # 524 are the gateway's (Cloudflare's) own, and 529 is "overloaded".
 RETRYABLE = {408, 425, 429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529}
 
+# The most of an error body that is read, to look for a 429's `limit_source`.
+ERROR_BODY_READ = 65536
+
 # Quantisations from least to most precise; those in one tier count as the same.
 QUANT_RANK = {"int4": 0, "fp4": 0, "fp6": 1, "int8": 2, "fp8": 2, "bf16": 3, "fp16": 3, "fp32": 4}
 
@@ -260,10 +263,14 @@ class Urllib:
             with _OPENER.open(request, timeout=timeout) as handle:
                 return json.loads(handle.read().decode("utf-8"))
         except urllib.error.HTTPError as error:
-            text = error.read().decode("utf-8", "replace")[:500]
+            text = error.read(ERROR_BODY_READ).decode("utf-8", "replace")
             if error.code in RETRYABLE:
-                raise Retryable(f"HTTP {error.code}", retry_after(error.headers), error.code) from None
-            raise ApiError(f"HTTP {error.code}: {text}") from None
+                reason = f"HTTP {error.code}"
+                source = limit_source(text) if error.code == 429 else None
+                if source:
+                    reason += f" ({source})"
+                raise Retryable(reason, retry_after(error.headers), error.code) from None
+            raise ApiError(f"HTTP {error.code}: {text[:500]}") from None
         except (socket.timeout, TimeoutError):
             raise Retryable("timeout") from None
         except urllib.error.URLError as error:
@@ -293,7 +300,7 @@ class Retryable(Exception):
         super().__init__(reason)
         self.after = after
         if status is None:
-            found = re.fullmatch(r"HTTP (\d{3})", str(reason))
+            found = re.fullmatch(r"HTTP (\d{3})(?: \([a-z_]+\))?", str(reason))
             status = int(found.group(1)) if found else None
         self.status = status
 
@@ -315,6 +322,21 @@ class RetriesExhausted(ApiError):
         self.status = status
         self.reason = reason
         self.owned = owned
+
+
+def limit_source(text):
+    """What OpenRouter says limited a 429, from the `limit_source` of the error body's `metadata`
+    (`upstream_provider_shared_pool` for a pool of the provider's that other keys share, say), or
+    None. Only that field is read, and only a short token of lower-case letters and `_` is taken; the
+    rest of the body is never kept or shown."""
+    try:
+        body = json.loads(text)
+        found = body["error"]["metadata"]["limit_source"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    if isinstance(found, str) and re.fullmatch(r"[a-z_]{1,40}", found):
+        return found
+    return None
 
 
 def retry_after(headers, now=time.time):
@@ -344,21 +366,41 @@ def retry_after(headers, now=time.time):
 
 
 def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, longest=120.0,
-                 rng=random.random, on_retry=None):
+                 rng=random.random, on_retry=None, rate_limit_attempts=None):
     """`call()`, asked again after a Retryable, up to `attempts` times in all, as long as the waits
     add up to `max_wait` seconds. A wait is `base` doubled each time, at most `longest`, with jitter
     (half to all of it), or what the server asked for, with up to a second of jitter, if that is
     longer. `on_retry(attempt, attempts, reason, wait)` is told of each wait before it. Returns
-    (result, how many asks were repeated)."""
+    (result, how many asks were repeated).
+
+    With `rate_limit_attempts`, a call that gets HTTP 429 is asked at most that many times, and a 429
+    that asks for a wait longer than `longest` gives up at once: a rate limit that lasts is not one a
+    wait of minutes will outlast, and another endpoint may answer now. Both are RetriesExhausted, as
+    any other failure through the waits is. Told of a 429's wait, `on_retry` is given the 429 count
+    and `rate_limit_attempts` in place of the attempt and `attempts`."""
     waited = 0.0
+    limited = 0
     for attempt in range(attempts):
         try:
             return call(), attempt
         except Retryable as error:
+            if error.status == 429:
+                limited += 1
             if attempt + 1 == attempts:
                 raise RetriesExhausted(
                     f"{error}, after {attempts} attempts and {waited:.0f} s of waiting", error.status, str(error), error.owned
                 ) from None
+            if rate_limit_attempts is not None and error.status == 429:
+                if limited >= rate_limit_attempts:
+                    raise RetriesExhausted(
+                        f"{error}, after {limited} attempts and {waited:.0f} s of waiting, the most a rate limit is asked",
+                        error.status, str(error), error.owned,
+                    ) from None
+                if error.after is not None and error.after > longest:
+                    raise RetriesExhausted(
+                        f"{error}, with a wait of {error.after:.0f} s asked for, more than the {longest:.0f} s allowed",
+                        error.status, str(error), error.owned,
+                    ) from None
             wait = min(longest, base * (2 ** attempt))
             wait = wait * (0.5 + 0.5 * rng())
             if error.after is not None:
@@ -371,7 +413,10 @@ def with_retries(call, attempts, sleep=time.sleep, base=5.0, max_wait=600.0, lon
                     error.owned,
                 ) from None
             if on_retry:
-                on_retry(attempt + 1, attempts, str(error), wait)
+                if rate_limit_attempts is not None and error.status == 429:
+                    on_retry(limited, rate_limit_attempts, str(error), wait)
+                else:
+                    on_retry(attempt + 1, attempts, str(error), wait)
             sleep(wait)
             waited += wait
     raise AssertionError("unreachable")

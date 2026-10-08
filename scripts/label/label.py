@@ -97,9 +97,11 @@ RUN_COLUMNS = (
 # run copies `license` and `license_checked` into its record, and no run starts without the date.
 LICENSE_KEYS = ("license", "license_url", "license_checked")
 
-# Optional settings, in seconds: the first wait after a failed call, the longest single wait, the most
-# a call waits in all, and the pause after each call made, which keeps a voter under a rate limit.
-SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0}
+# Optional settings: in seconds, the first wait after a failed call, the longest single wait, the most
+# a call waits in all, and the pause after each call made, which keeps a voter under a rate limit; and
+# `rate_limit_attempts`, how many times a call that gets HTTP 429 is asked at one endpoint (a whole
+# number, at least 1), where `http_attempts` is the count for any other failure.
+SETTING_DEFAULTS = {"backoff_s": 5, "longest_wait_s": 120, "max_wait_s": 600, "pause_s": 1.0, "rate_limit_attempts": 4}
 
 # The failure limits. `failure_budget` is how many calls may fail in one step (one voter's `tag`, or
 # one `judge`), across every wait, every halving and every endpoint it switches to: a POST that failed
@@ -258,7 +260,10 @@ def load_config(path=CONFIG):
             raise ConfigError(f"{path}: settings.{key} must be a whole number")
     for key, default in SETTING_DEFAULTS.items():
         value = config["settings"].setdefault(key, default)
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        if key == "rate_limit_attempts":
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ConfigError(f"{path}: settings.{key} must be a whole number, at least 1")
+        elif isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
             raise ConfigError(f"{path}: settings.{key} must be a number of seconds, not below 0")
     for key, default in LIMIT_DEFAULTS.items():
         value = config["settings"].setdefault(key, default)
@@ -960,7 +965,8 @@ class Runner:
 
         return dict(
             attempts=settings["http_attempts"], sleep=self.sleep, base=settings["backoff_s"],
-            max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log, **extra,
+            max_wait=settings["max_wait_s"], longest=settings["longest_wait_s"], on_retry=log,
+            rate_limit_attempts=settings["rate_limit_attempts"], **extra,
         )
 
     def listing(self, model):
@@ -974,8 +980,10 @@ class Runner:
 
     def pin(self, name, tag=None):
         """(config, endpoint) for `name` at the endpoint tagged `tag`: its own `provider` by default, or
-        one of its `provider_fallback`, which must be the same model at the same quantisation or a more
-        precise one than the primary's listing gives. The config returned pins that endpoint."""
+        one of its `provider_fallback`. An alternative is held to the model's `quantizations`, as the
+        primary is, so that `quantizations` is the one statement of what the voter may run at. A model
+        without `quantizations` (mistral, claude) holds an alternative to the same quantisation as the
+        primary's listing gives, or a more precise one. The config returned pins that endpoint."""
         config = self.config["models"][name]
         primary = config["provider"]
         listing = self.listing(config["model"])
@@ -984,12 +992,12 @@ class Runner:
         if tag not in config.get("provider_fallback", []):
             known = ", ".join([primary, *config.get("provider_fallback", [])])
             raise ConfigError(f"`{tag}` is not an endpoint of {name} in voters.json; it has {known}")
-        alternative = {key: value for key, value in config.items() if key != "quantizations"}
-        alternative["provider"] = tag
-        floor = openrouter.listed_quantization(listing, primary)
-        if floor not in openrouter.QUANT_RANK:
-            floor = openrouter.weakest(config.get("quantizations"))
-        endpoint = openrouter.pinned_endpoint(listing, alternative, at_least=floor)
+        alternative = {**config, "provider": tag}
+        if config.get("quantizations"):
+            endpoint = openrouter.pinned_endpoint(listing, alternative)
+        else:
+            floor = openrouter.listed_quantization(listing, primary)
+            endpoint = openrouter.pinned_endpoint(listing, alternative, at_least=floor)
         if endpoint.get("quantization"):
             alternative["quantizations"] = [endpoint["quantization"]]
         return alternative, endpoint

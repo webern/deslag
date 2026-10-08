@@ -22,7 +22,7 @@ use serde::Serialize;
 
 use crate::Error;
 use crate::change::{self, Change};
-use crate::config::Config;
+use crate::config::{Config, Section};
 use crate::document::{Document, Edit, Location};
 use crate::glob::{self, RepoFile};
 
@@ -441,26 +441,39 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         ..Report::default()
     };
 
-    for file in selected(root, config)? {
+    for (file, section) in selected(root, config)? {
         report.scanned.push(file.relative.clone());
 
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
         let text = String::from_utf8_lossy(&contents);
-        let (_, findings) = check_text(config, &file.relative, &contents, &text, dir, change)?;
+        let (_, findings) = check_text(
+            config,
+            section,
+            &file.relative,
+            &contents,
+            &text,
+            dir,
+            change,
+        )?;
         report.findings.extend(findings);
     }
 
     Ok(report)
 }
 
-/// Every file under `root` that the config selects: the files [`check_repo`] checks, and so the
-/// only ones a fix may touch.
-pub(crate) fn selected(root: &Path, config: &Config) -> Result<Vec<RepoFile>, Error> {
-    let md = config.md();
+/// Every file under `root` that the config selects, each with the section that selects it: the
+/// files [`check_repo`] checks, and so the only ones a fix may touch.
+pub(crate) fn selected<'c>(
+    root: &Path,
+    config: &'c Config,
+) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
     Ok(glob::walk(root)?
         .into_iter()
-        .filter(|file| md.selects(&file.relative))
+        .filter_map(|file| {
+            let section = config.section_for(&file.relative)?;
+            Some((file, section))
+        })
         .collect())
 }
 
@@ -475,7 +488,8 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// Runs every lint over one file, in a run with no base: `relative` is its path from the repo
 /// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
-/// run here, so a file one selects is an error.
+/// run here, so a file one selects is an error. A path no section selects is read as `[md]` reads
+/// a file.
 pub fn check_file(
     config: &Config,
     relative: &str,
@@ -483,7 +497,8 @@ pub fn check_file(
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
     let text = String::from_utf8_lossy(contents);
-    Ok(check_text(config, relative, contents, &text, dir, None)?.1)
+    let section = config.section_for(relative).unwrap_or_else(|| config.md());
+    Ok(check_text(config, section, relative, contents, &text, dir, None)?.1)
 }
 
 /// A file as it was at the base of a run, which a lint that judges a change compares it with.
@@ -497,19 +512,20 @@ pub struct Before<'a> {
     pub file: &'a change::File,
 }
 
-/// Runs every lint over one file, as [`check_file`] does, given `text`, its `contents` decoded,
-/// and the run's `change`, which the lints that judge one need. Returns the document the lints
-/// read with what they found, for a caller that edits it: this is where a file's reader is chosen,
-/// so a fix reads a file as the check does.
+/// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
+/// `text`, its `contents` decoded, and the run's `change`, which the lints that judge one need.
+/// Returns the document the lints read with what they found, for a caller that edits it: the
+/// section's stack reads the file, so a fix reads a file as the check does.
 pub(crate) fn check_text<'a>(
     config: &Config,
+    section: &Section,
     relative: &str,
     contents: &[u8],
     text: &'a str,
     dir: &Path,
     change: Option<&Change>,
 ) -> Result<(Document<'a>, Vec<Finding>), Error> {
-    let lints = config.md().lints_for(relative);
+    let lints = section.lints_for(relative);
     let contradiction = lints.contradiction().or_else(|| {
         lints
             .banned_chars
@@ -539,11 +555,11 @@ pub(crate) fn check_text<'a>(
     let before = base_text.as_ref().and_then(|(change, base_text)| {
         Some(Before {
             merge_base: &change.merge_base,
-            document: Document::markdown(base_text),
+            document: section.stack.document(base_text),
             file: change.files.get(relative)?,
         })
     });
-    let document = Document::markdown(text);
+    let document = section.stack.document(text);
 
     let mut findings = Vec::new();
     for lint in Lint::ALL {

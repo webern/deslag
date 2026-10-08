@@ -744,9 +744,9 @@ fn update_md_meets_its_budget() {
     let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
     let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
     let file = "src/instructions/update.md";
-    assert!(config.md().selects(file), "{file} is not linted");
-    let budget = config
-        .md()
+    let section = config.section_for(file);
+    let section = section.unwrap_or_else(|| panic!("{file} is not linted"));
+    let budget = section
         .lints_for(file)
         .max_size_bytes
         .and_then(|lint| lint.value)

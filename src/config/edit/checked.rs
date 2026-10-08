@@ -67,7 +67,7 @@ pub(super) fn check(
             new.warnings().join("; ")
         )));
     }
-    if new.schema_version() != old.schema_version() || new.md() != old.md() {
+    if new.schema_version() != old.schema_version() || new.sections() != old.sections() {
         return Err(refuse(
             "the edited config does not set what the old one did".to_string(),
         ));

@@ -207,38 +207,20 @@ fn a_setting_with_no_entry_file_fails_and_names_the_file_to_add() {
     assert!(to_add.contains(&"next/setting.md.overrides.globs.toml".to_string()));
 }
 
-/// The embedded changelog's files from the disk, as paths inside `src/changelog/releases/`,
-/// without the one at `skip`. A hidden file or directory is left out, as `build.rs` leaves it.
-fn files_on_disk(skip: &str) -> Vec<(String, String)> {
-    let visible = |path: &Path| {
-        let name = path.file_name().and_then(|name| name.to_str());
-        name.map(|name| !name.starts_with('.'))
-            .expect("a UTF-8 name")
-    };
+/// The files of the embedded changelog, as paths inside `src/changelog/releases/` and their text
+/// read from the disk, each passed through `edit`, which returns `None` to leave a file out. The
+/// files are the ones the embedded changelog has, so a leftover in the checkout is not among them.
+fn files_on_disk(edit: impl Fn(&str, String) -> Option<String>) -> Vec<(String, String)> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/changelog/releases");
-    let mut files = Vec::new();
-    for release in std::fs::read_dir(&root).expect("the releases directory") {
-        let release = release.expect("a directory entry").path();
-        if !visible(&release) {
-            continue;
-        }
-        for file in std::fs::read_dir(&release).expect("a release directory") {
-            let file = file.expect("a directory entry").path();
-            if !visible(&file) {
-                continue;
-            }
-            let name = |path: &Path| path.file_name().and_then(|n| n.to_str()).map(String::from);
-            let path = format!(
-                "{}/{}",
-                name(&release).expect("a name"),
-                name(&file).expect("a name")
-            );
-            if path != skip {
-                files.push((path, std::fs::read_to_string(&file).expect("a file")));
-            }
-        }
-    }
-    files
+    let paths = entries()
+        .map(|(version, entry)| format!("{version}/{}", entry.file_name()))
+        .chain(["next/README.md".to_string()]);
+    paths
+        .filter_map(|path| {
+            let text = std::fs::read_to_string(root.join(&path)).expect("a file");
+            edit(&path, text).map(|text| (path, text))
+        })
+        .collect()
 }
 
 /// Without the entry of a lint, the settings of its table are not asked for as `setting` files:
@@ -246,7 +228,7 @@ fn files_on_disk(skip: &str) -> Vec<(String, String)> {
 #[test]
 fn a_lint_with_no_entry_does_not_ask_for_setting_files_for_its_keys() {
     let paths = SchemaPaths::of(&schema());
-    let owned = files_on_disk("0.0.1/lint.density.toml");
+    let owned = files_on_disk(|path, text| (path != "0.0.1/lint.density.toml").then_some(text));
     let files = owned
         .iter()
         .map(|(path, text)| (path.as_str(), text.as_str()));
@@ -270,6 +252,31 @@ fn a_lint_with_no_entry_does_not_ask_for_setting_files_for_its_keys() {
         problems[0].contains("src/changelog/releases/next/lint.density.toml"),
         "{problems:?}"
     );
+}
+
+/// With the entry of a lint, a setting of its table that the entry's `keys` leaves out is asked for
+/// as a `setting` file: only a lint with no entry is let off.
+#[test]
+fn a_lint_with_an_entry_asks_for_a_setting_file_for_a_key_it_does_not_list() {
+    let paths = SchemaPaths::of(&schema());
+    let owned = files_on_disk(|path, text| {
+        if path == "0.0.1/lint.density.toml" {
+            let cut = text.replace(r#", "message"]"#, "]");
+            assert_ne!(cut, text, "density lists `message` last");
+            return Some(cut);
+        }
+        Some(text)
+    });
+    let files = owned
+        .iter()
+        .map(|(path, text)| (path.as_str(), text.as_str()));
+    let cut = Changelog::from_files(files).expect("a changelog");
+
+    assert_eq!(
+        files_to_add(&cut, &paths),
+        ["next/setting.md.lints.density.message.toml"]
+    );
+    assert_eq!(files_to_add(changelog(), &paths), Vec::<String>::new());
 }
 
 /// A table that is a setting covers the keys it lists and no others, and a setting that holds a
@@ -569,7 +576,7 @@ fn ids_that_differ_only_by_brackets_are_the_same_entry_across_releases() {
             ("next/setting.a.b.toml", &table),
         ],
         "next/setting.a.b.toml",
-        "0.1.0/setting.a.b.toml",
+        "which src/changelog/releases/0.1.0/setting.a.b.toml has too",
     );
 }
 

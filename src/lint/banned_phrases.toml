@@ -4,7 +4,7 @@
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
 # they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the release the entry
 # first ships in, or `next` for the unreleased one; tests/changelog.rs holds it to `next` or a
-# release no later than the crate version, which src/changelog/releases/ has the entries of.
+# release no later than the crate version; each release is a directory of src/changelog/releases/.
 
 measured_on = "ghcr.io/webern/deslag-blobs:v6@sha256:d075cbb39f05adb38eedef319a1bd57a1726c0f7d1ae168c75caea65cc16472a"
 

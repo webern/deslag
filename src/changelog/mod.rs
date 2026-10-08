@@ -8,6 +8,8 @@
 //! version. `build.rs` lists the files and [`Changelog::from_files`] holds every rule about them.
 //! Every comparison of versions goes through [`Version`], where `next` sorts above every release.
 
+#[cfg(test)]
+mod listing;
 mod version;
 
 use std::collections::BTreeMap;
@@ -234,7 +236,7 @@ impl Changelog {
                 return Err(FileError::new(
                     path,
                     format!(
-                        "the {} `{}` has the file name {name}, which {first} has too: an entry \
+                        "the {} `{}` has the file name {name}, which {ROOT}/{first} has too: an entry \
                          is in one file across all releases",
                         entry.kind().name(),
                         entry.id()

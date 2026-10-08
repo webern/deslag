@@ -1362,7 +1362,7 @@ class Runner:
         except openrouter.HttpError as error:
             # The provider's text is kept beside the run, and in no message, status or reason.
             write(self.raw(name, run, f"{kind}.http-error.json"), json.dumps(
-                {"status": error.status, "request_sha256": request_sha256, "body": error.body}, indent=2) + "\n")
+                {"status": error.status, "request_sha256": request_sha256, "body": redacted(error.body)}, indent=2) + "\n")
             if error.status in openrouter.KEY_STATUSES:
                 raise
             raise self.endpoint_fault(meta, endpoint, error) from None

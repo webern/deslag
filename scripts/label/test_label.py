@@ -2860,6 +2860,17 @@ class RoundThreeTests(Base):
                 self.assertEqual([p["provider"]["order"] for p in transport.posts], [["host/fp8"]], "no other endpoint")
                 self.assertEqual([row["status"] for row in self.runs_rows()], ["stopped"])
 
+    def test_the_saved_body_of_an_http_error_does_not_hold_the_key(self):
+        def fault(sent):
+            raise openrouter.HttpError(401, f"Invalid key {self.KEY} for this request")
+
+        transport = self.faulty({"host/fp8"}, fault)
+        with self.assertRaises(openrouter.HttpError):
+            self.runner(transport, config=with_fallbacks(one=["alt/fp8"])).tag("one")
+        text = label.read(os.path.join(self.dir, "raw", "one", "r1", "batch-01.http-error.json"))
+        self.assertNotIn(self.KEY, text)
+        self.assertIn("<key>", text)
+
     def test_a_reply_from_another_provider_moves_to_the_next_endpoint(self):
         config = with_fallbacks(one=["alt/fp8"])
         transport = self.faulty({"host/fp8"}, lambda body: chat("d1: N.s", provider="Elsewhere"))

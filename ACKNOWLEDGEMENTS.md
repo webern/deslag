@@ -244,3 +244,22 @@ template (a feature with several positions holds when any of them has the value)
 The trainer is written afresh in the same indexed shape, with counts in place of NLTK's
 per-position tables, and applies each rule left to right where NLTK applies it everywhere at once
 while training. NLTK's code is not in the repository beyond the template list.
+
+## rustc_lexer
+
+- URL: https://github.com/rust-lang/rust/tree/master/compiler/rustc_lexer
+- Licence: MIT, taken from the dual licence MIT OR Apache-2.0, copied as the Rust project ships it
+  to `LICENSES/MIT-rustc.txt`
+- Copyright: "Copyright (c) The Rust Project Contributors"
+- Studied at: the published copy `ra-ap-rustc_lexer` 0.176.0, from commit
+  [4ddbc06e](https://github.com/rust-lang/rust/tree/4ddbc06ea09abcda34f80baf31cc9bc2686b0ae6), read
+  2026-10-08
+
+The scanner in `src/document/rust.rs` is written afresh, in a different shape: a single pass over
+bytes that returns only the boundaries of comments, strings and characters. It follows the
+compiler's lexer rule by rule, among them how a lifetime is told from a character, how raw strings
+close, the suffix of a literal, and the shebang and frontmatter at the top of a file.
+`tools/sweep` checks it against the real lexer.
+
+Its number lexing is ported, as a modified adaptation under MIT: the functions `digits_end`,
+`number_end` and `exponent_end`, with the notice in that file.

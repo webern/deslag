@@ -1,7 +1,7 @@
 //! What a lexer is, for this crate: every comment, string and character literal of a source, as
 //! byte ranges.
 //!
-//! The oracles (real tokenizers) and, later, deslag's own scanners both implement [`Lexer`]. The
+//! The oracles (real tokenizers) and deslag's own scanners both implement [`Lexer`]. The
 //! trait belongs to this crate, the consumer, and not to deslag. An oracle adapter normalises what
 //! its tokenizer reports to the contract below; a scanner adapter does not, so the comparison
 //! cannot hide a scanner's mistake.

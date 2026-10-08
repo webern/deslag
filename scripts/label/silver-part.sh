@@ -39,8 +39,9 @@ for VOTER in $VOTERS; do
     NAMES+=("$VOTER")
 done
 
-# Every voter is waited for, so that each one that failed is named with its exit code (2 stopped and a
-# rerun continues it, 4 the cap, 5 failed; see README.md), not only the first.
+# Every voter is waited for, so that each one that failed is named with its exit code (2 stopped: a
+# rerun continues it, or starts at the first endpoint if every endpoint failed; 4 the cap, 5 failed; see
+# README.md), not only the first.
 FAILED=""
 for AT in "${!PIDS[@]}"; do
     CODE=0

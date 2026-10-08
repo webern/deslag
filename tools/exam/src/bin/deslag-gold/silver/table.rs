@@ -198,10 +198,11 @@ impl Machine {
             }
         }
         let temp = std::env::temp_dir();
-        machine.add_temp(&temp.to_string_lossy());
-        if let Ok(real) = temp.canonicalize() {
-            machine.add_temp(&real.to_string_lossy());
-        }
+        let real = temp.canonicalize().ok();
+        machine.add_temp_dir(
+            &temp.to_string_lossy(),
+            real.as_deref().map(Path::to_string_lossy).as_deref(),
+        );
         // The checkout is named by `..`, so only its resolved name is a place.
         if let Ok(real) = checkout.canonicalize() {
             machine.add(&real.to_string_lossy());
@@ -219,17 +220,26 @@ impl Machine {
         machine
     }
 
-    /// Adds the system temp directory `dir` when it names this machine: one with a directory of its
-    /// own below the top, as macOS's `/var/folders/ab/cd/T` or a `TMPDIR` of a build, and not a bare
-    /// `/tmp`, which every machine has and a corpus quotes.
-    fn add_temp(&mut self, dir: &str) {
-        if dir
-            .trim_end_matches('/')
+    /// Adds the system temp directory `named`, and `real`, the name its links resolve to, when it names
+    /// this machine: one with a directory of its own below the top, as macOS's `/var/folders/ab/cd/T`
+    /// or a `TMPDIR` of a build, and not a bare `/tmp`, which every machine has and a corpus quotes.
+    /// A bare `/tmp` is not added under its resolved name either (macOS's `/private/tmp`): it is the
+    /// same place.
+    fn add_temp_dir(&mut self, named: &str, real: Option<&str>) {
+        if !Machine::is_deep(named) {
+            return;
+        }
+        self.add(named);
+        if let Some(real) = real.filter(|real| Machine::is_deep(real)) {
+            self.add(real);
+        }
+    }
+
+    /// Whether `dir` has a directory of its own below the top.
+    fn is_deep(dir: &str) -> bool {
+        dir.trim_end_matches('/')
             .trim_start_matches('/')
             .contains('/')
-        {
-            self.add(dir);
-        }
     }
 
     /// Adds `dir` when it is absolute and is not the root.
@@ -502,18 +512,28 @@ mod tests {
     #[test]
     fn a_bare_system_temp_directory_is_no_place_of_this_machine() {
         let mut machine = Machine::default();
-        machine.add_temp("/tmp");
-        machine.add_temp("/tmp/");
-        machine.add_temp("/");
+        machine.add_temp_dir("/tmp", None);
+        machine.add_temp_dir("/tmp/", None);
+        machine.add_temp_dir("/", None);
+        // macOS names `/tmp` and resolves it to `/private/tmp`: the same place, so neither.
+        machine.add_temp_dir("/tmp", Some("/private/tmp"));
         assert_eq!(machine, Machine::default());
-        machine.add_temp("/var/folders/ab/cd/T/");
-        machine.add_temp("/tmp/build-7");
+        machine.add_temp_dir(
+            "/var/folders/ab/cd/T/",
+            Some("/private/var/folders/ab/cd/T"),
+        );
+        machine.add_temp_dir("/tmp/build-7", None);
         assert_eq!(
             leaks_in(
-                "a /var/folders/ab/cd/T/x and /tmp/build-7/y but /tmp/cache",
+                "a /var/folders/ab/cd/T/x and /private/var/folders/ab/cd/T/y and /tmp/build-7/z \
+                 but /tmp/cache and /private/tmp/cache",
                 &machine
             ),
-            vec!["/var/folders/ab/cd/T/x", "/tmp/build-7/y"]
+            vec![
+                "/var/folders/ab/cd/T/x",
+                "/private/var/folders/ab/cd/T/y",
+                "/tmp/build-7/z"
+            ]
         );
     }
 

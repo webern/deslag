@@ -176,7 +176,7 @@ pub fn measure(document: &Document<'_>) -> Measure {
             Span {
                 location: document.locate(span.range.clone()),
                 kind,
-                quote: quote(&document.source[span.range.clone()]),
+                quote: quote(&document.text(span.range.clone())),
                 chars,
             }
         }));

@@ -577,3 +577,31 @@ pub(crate) fn check_text<'a>(
     }
     Ok((document, findings))
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::path::Path;
+
+    /// A lint reads and quotes the file through `Document::text`, which knows where a range is in
+    /// the text the lints read, and never slices `Document::source` itself.
+    #[test]
+    fn no_lint_slices_the_source() {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint");
+        let slices = [concat!("source", "["), concat!("source", ".get(")];
+        for entry in fs::read_dir(&dir).expect("src/lint/ is readable") {
+            let path = entry.expect("an entry of src/lint/").path();
+            if path.extension().is_none_or(|extension| extension != "rs") {
+                continue;
+            }
+            let code = fs::read_to_string(&path).expect("a lint is readable");
+            for slice in slices {
+                assert!(
+                    !code.contains(slice),
+                    "{} holds `{slice}`; read through `Document::text`",
+                    path.display()
+                );
+            }
+        }
+    }
+}

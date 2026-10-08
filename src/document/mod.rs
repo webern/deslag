@@ -16,6 +16,7 @@
 //! only the edits it can prove leave the document reading as it did.
 
 mod edit;
+mod map;
 mod markdown;
 mod sentences;
 mod tokens;
@@ -27,6 +28,7 @@ use schemars::JsonSchema;
 use serde::Serialize;
 
 pub use edit::{Applied, Edit, Refusal};
+pub(crate) use map::Gathered;
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 ///
@@ -323,6 +325,16 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// The file's text at `range`, as it is written. In a Markdown file an entity such as `&amp;`
+    /// is the entity, not the character it stands for.
+    ///
+    /// # Panics
+    ///
+    /// If `range` is not on characters of the file.
+    pub(crate) fn text(&self, range: Range<usize>) -> Cow<'_, str> {
+        text(self.source, range)
+    }
+
     /// Where `range` is: a range of bytes of the source that starts and ends on characters.
     pub fn locate(&self, range: Range<usize>) -> Location {
         let last = self.source[range.clone()]
@@ -421,69 +433,14 @@ impl<'a> Document<'a> {
     }
 }
 
+/// The body of [`Document::text`], for the readers of the second layer, which hold the fields of a
+/// document and not the document.
+fn text(source: &str, range: Range<usize>) -> Cow<'_, str> {
+    Cow::Borrowed(&source[range])
+}
+
 /// The byte order mark, which opens some files and is not part of their text.
 const BYTE_ORDER_MARK: char = '\u{FEFF}';
-
-/// Text gathered from pieces of a source, such as a block's pieces, that can say where a stretch of
-/// itself is in the source.
-pub(crate) struct Gathered<'a> {
-    source: &'a str,
-    /// The text gathered so far.
-    pub(crate) text: String,
-    /// Where each piece starts in `text`, where it is in the source, and whether the source holds
-    /// it as written: an entity, or a line break read as a space, is not.
-    pieces: Vec<(usize, Range<usize>, bool)>,
-}
-
-impl<'a> Gathered<'a> {
-    /// No text yet, from pieces of `source`.
-    pub(crate) fn new(source: &'a str) -> Gathered<'a> {
-        Gathered {
-            source,
-            text: String::new(),
-            pieces: Vec::new(),
-        }
-    }
-
-    /// Adds `text`, which is what the source's bytes at `range` read as.
-    pub(crate) fn push(&mut self, text: &str, range: Range<usize>) {
-        if text.is_empty() {
-            return;
-        }
-        let as_written = self.source[range.clone()] == *text;
-        self.pieces.push((self.text.len(), range, as_written));
-        self.text.push_str(text);
-    }
-
-    /// Where the source holds `range`, a range of bytes of the text that is not empty and starts and
-    /// ends on characters. Inside a piece held as written the answer is exact; a range that starts or
-    /// ends inside another piece takes all of that piece.
-    pub(crate) fn source_range(&self, range: Range<usize>) -> Range<usize> {
-        let piece = |at: usize| {
-            let index = self.pieces.partition_point(|(from, ..)| *from <= at) - 1;
-            &self.pieces[index]
-        };
-        let (from, source, as_written) = piece(range.start);
-        let start = if *as_written {
-            source.start + (range.start - from)
-        } else {
-            source.start
-        };
-        let (from, source, as_written) = piece(range.end - 1);
-        let end = if *as_written {
-            source.start + (range.end - from)
-        } else {
-            source.end
-        };
-        start..end
-    }
-
-    /// Forgets the text gathered so far.
-    pub(crate) fn clear(&mut self) {
-        self.text.clear();
-        self.pieces.clear();
-    }
-}
 
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly
 /// inside `range`.
@@ -521,5 +478,43 @@ impl<'d, 'a> Iterator for Walk<'d, 'a> {
             }
             return Some((block, ancestors));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn text_is_a_markdown_entity_as_written() {
+        let source = "Fish &mdash; chips &amp; peas.\n";
+        let document = Document::markdown(source);
+        let start = source.find("&mdash;").unwrap();
+
+        let text = document.text(start..start + "&mdash;".len());
+
+        assert_eq!(text, "&mdash;");
+        assert_eq!(text.len(), 7);
+        assert!(matches!(text, Cow::Borrowed(_)));
+    }
+
+    #[test]
+    fn text_is_a_range_of_many_byte_characters() {
+        let source = "Crème brûlée — naïve 😀 fun.\n";
+        let document = Document::markdown(source);
+        let start = source.find('è').unwrap();
+        let end = source.find("ve").unwrap() + 2;
+
+        assert_eq!(document.text(start..end), "ème brûlée — naïve");
+        assert_eq!(document.text(0..source.len()), source);
+        assert_eq!(document.text(start..start), "");
+    }
+
+    #[test]
+    #[should_panic]
+    fn text_panics_inside_a_character() {
+        let source = "Crème.\n";
+        let inside = source.find('è').unwrap() + 1;
+        Document::markdown(source).text(0..inside);
     }
 }

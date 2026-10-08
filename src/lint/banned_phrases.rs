@@ -51,12 +51,13 @@ impl Match {
         let mut quote = String::new();
         for (index, token) in tokens.iter().enumerate() {
             let parted = index > 0
-                && document.source[tokens[index - 1].range.end..token.range.start]
+                && document
+                    .text(tokens[index - 1].range.end..token.range.start)
                     .contains(char::is_whitespace);
             if parted {
                 quote.push(' ');
             }
-            quote.push_str(&document.source[token.range.clone()]);
+            quote.push_str(&document.text(token.range.clone()));
         }
         let last = &tokens[tokens.len() - 1];
         Match {

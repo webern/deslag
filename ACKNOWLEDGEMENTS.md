@@ -244,3 +244,15 @@ template (a feature with several positions holds when any of them has the value)
 The trainer is written afresh in the same indexed shape, with counts in place of NLTK's
 per-position tables, and applies each rule left to right where NLTK applies it everywhere at once
 while training. NLTK's code is not in the repository beyond the template list.
+
+## rustc_lexer
+
+- URL: https://github.com/rust-lang/rust/tree/master/compiler/rustc_lexer
+- Licence: MIT OR Apache-2.0
+- Studied at: the published copy `ra-ap-rustc_lexer` 0.176.0, read 2026-10-08
+
+Code was ported in part: `src/document/rust.rs` follows the compiler's lexer rule by rule to find
+where comments, strings and characters begin and end, among them how a lifetime is told from a
+character, how raw strings close, the suffix of a literal, and the shebang and frontmatter at the
+top of a file. The scanner is written afresh in a different shape, a single pass over bytes that
+returns only those boundaries, and `tools/sweep` checks it against the real lexer.

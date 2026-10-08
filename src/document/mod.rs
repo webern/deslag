@@ -19,6 +19,7 @@ mod edit;
 mod map;
 mod markdown;
 mod plain;
+pub mod rust;
 mod sentences;
 mod tokens;
 

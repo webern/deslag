@@ -589,7 +589,8 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
    the score. A batch is held to a bar of at least 95.0 and an audit of at least 50 sentences, reviewed and
    rejected together; one that falls short of either, or whose score is under its bar, needs the owner's words,
    `--accept-below-bar "HIS WORDS"`, kept in `record/audit-accepted.txt`. Without them `silver check` refuses a
-   low bar or a small audit, and `silver standing` refuses those and a score under the bar.
+   low bar or a small audit, and `silver standing` refuses those and a score under the bar. An empty acceptance
+   accepts nothing: `silver build` refuses one, and `silver check` an empty file.
 
 The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes each batch against what it
 recorded and never against the checkout: `Runs=` against `runs.tsv` and against the word's `Prov=`, as the

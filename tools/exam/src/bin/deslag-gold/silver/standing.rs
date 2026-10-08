@@ -146,7 +146,7 @@ pub fn standing(live: &Live, env: &Env) -> Result<String, Problems> {
             None => bad("it has no audit score".to_string()),
             Some(text) => {
                 let score = Tsv::parse(layout::AUDIT_SCORE, text, None)?;
-                let accepted = batch.get(layout::ACCEPTED).is_some();
+                let accepted = batch.accepted();
                 match score.head("met") {
                     Some("yes") => {}
                     Some("no") if accepted => {}

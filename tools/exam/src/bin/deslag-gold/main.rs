@@ -1263,6 +1263,17 @@ fn silver_stage(command: SilverCommand) -> Result<(), Problems> {
                 print!("{}", silver::build::check_part(&spec, &env)?);
                 return Ok(());
             }
+            if accept_below_bar
+                .as_deref()
+                .is_some_and(|words| words.trim().is_empty())
+            {
+                return Err(Error::load(
+                    "--accept-below-bar",
+                    Place::File,
+                    "it is empty; the owner accepts an audit that falls short in words, which record/ keeps",
+                )
+                .into());
+            }
             let mut named = Vec::new();
             for entry in &noise {
                 let (label, file) = entry.split_once('=').ok_or_else(|| {

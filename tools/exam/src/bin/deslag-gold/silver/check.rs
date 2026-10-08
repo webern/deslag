@@ -28,7 +28,8 @@
 //!   working directory, or the home, temp directory or checkout of the machine running the check;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
 //!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
-//!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance;
+//!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance, in words (an
+//!   empty one is refused);
 //! - `record/datasheet.json` is computed again from these files and equals the file, and
 //!   `DATASHEET.md` is rendered again from `record/`'s template and equals the file.
 
@@ -917,7 +918,14 @@ fn audit_rules(
             if batch.need(layout::AUDIT_SCORE)? != scored.tsv() {
                 problems.push(Error::load(layout::AUDIT_SCORE, Place::File, "it is not what the stored queue and labels score; the file was edited, the audit changed, or the scoring code changed"));
             }
-            if batch.get(layout::ACCEPTED).is_none() {
+            if batch.get(layout::ACCEPTED).is_some() && !batch.accepted() {
+                problems.push(Error::load(
+                    layout::ACCEPTED,
+                    Place::File,
+                    "it is empty; the owner's acceptance of an audit that falls short is in words",
+                ));
+            }
+            if !batch.accepted() {
                 for short in score::short_of(bar, scored.sentences, scored.rejected) {
                     problems.push(Error::load(
                         layout::AUDIT_SCORE,

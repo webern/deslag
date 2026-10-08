@@ -1225,6 +1225,20 @@ fn a_small_audit_or_a_low_bar_needs_the_owners_acceptance() {
     check(&made, &small).ok();
     let live = make_live(&made, &small);
     standing(&made).ok();
+    // An empty acceptance accepts nothing: build refuses one, and check and standing an emptied file.
+    build_audited(
+        &made,
+        "2026-10-08-empty",
+        &audit,
+        &["--accept-below-bar", " "],
+    )
+    .refused(&["--accept-below-bar", "it is empty"]);
+    fs::write(live.join("record/audit-accepted.txt"), "\n").unwrap();
+    check(&made, &live).refused(&["audit-accepted.txt", "it is empty"]);
+    standing(&made).refused(&[
+        "its audit falls short: it holds 8 sentences",
+        "holds no acceptance by the owner",
+    ]);
     // Without them, standing refuses it too, whatever check would say.
     fs::remove_file(live.join("record/audit-accepted.txt")).unwrap();
     standing(&made).refused(&[

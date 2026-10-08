@@ -69,6 +69,13 @@ impl Batch {
         self.files.get(path).map(String::as_str)
     }
 
+    /// Whether the batch holds the owner's acceptance of its audit: [ACCEPTED] with words in it.
+    /// An empty file accepts nothing.
+    pub fn accepted(&self) -> bool {
+        self.get(ACCEPTED)
+            .is_some_and(|text| !text.trim().is_empty())
+    }
+
     /// The text of `path`, or a problem that says it is missing.
     pub fn need(&self, path: &str) -> Result<&str, Error> {
         self.get(path)

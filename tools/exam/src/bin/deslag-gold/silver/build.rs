@@ -662,7 +662,7 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
             args.bar,
             met.unwrap_or_default()
         ));
-        if batch.get(layout::ACCEPTED).is_none() && text.contains("# met = no") {
+        if !batch.accepted() && text.contains("# met = no") {
             report.push_str(
                 "the audit is below its bar and the batch has no owner acceptance: `silver standing` will refuse it as live\n",
             );

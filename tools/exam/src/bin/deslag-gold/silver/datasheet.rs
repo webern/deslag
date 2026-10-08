@@ -420,7 +420,7 @@ pub fn compute(batch: &Batch) -> Result<Value, Problems> {
             "prefilled": scored.prefilled,
             "bar": bar.map_or("-".to_string(), |bar| format!("{bar:.1}")),
             "met": match scored.met() { Some(true) => "yes", Some(false) => "no", None => "-" },
-            "accepted": if batch.get(layout::ACCEPTED).is_some() { "yes" } else { "no" },
+            "accepted": if batch.accepted() { "yes" } else { "no" },
             "table": table(&["group", "words", "part of speech", "whole code"], rows),
         })
     } else {

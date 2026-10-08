@@ -6,6 +6,7 @@
 
 SCRIPTS := scripts
 BLOBSTORE := $(SCRIPTS)/blobstore
+CRATES := $(SCRIPTS)/crates
 EWT := $(SCRIPTS)/ewt
 HARPER := $(SCRIPTS)/harper
 SPACY := $(SCRIPTS)/spacy
@@ -68,18 +69,25 @@ EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en
 # Cargo.lock fails there instead of being rewritten.
 CARGO_FLAGS ?=
 
+# The sweep under tools/sweep is outside the workspace, with a manifest and a lock of its own, so each
+# gate that covers the workspace takes a second cargo line for it. It builds into the same target
+# directory, so the CI cache of target/ holds its build too. Pass it CARGO_FLAGS and never a profile
+# of the workspace, such as --profile fast, which it lacks.
+SWEEP := --manifest-path tools/sweep/Cargo.toml
+SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
+
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-confinement test-ewt \
-        test-exam test-label test-owner test-percept test-python test-silver test-spacy \
+        test-exam test-label test-owner test-percept test-python test-scanners test-silver test-spacy \
         test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
         check-typos \
-        clean clean-blobs clean-ewt clean-harper clean-label clean-spacy clean-train \
+        clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight install \
-        fetch-blobs fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
+        fetch-blobs fetch-crates fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
         generate-label-report-dev generate-label-report-owner generate-label-spacy \
@@ -87,13 +95,12 @@ CARGO_FLAGS ?=
         generate-spacy publish-blobs build-label
 
 help:
-	@echo "build            build deslag and the workspace crates under tools/ with the debug profile"
+	@echo "build            build deslag and the crates under tools/ with the debug profile"
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
-	@echo "test             run every Rust test in the workspace that needs no network, doctests included,"
-	@echo "                 and the exam's gates and the owner set's metrics; not tools/sweep, which is"
-	@echo "                 outside the workspace, and not test-python, which runs when the scripts it tests"
-	@echo "                 change"
+	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
+	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
+	@echo "                 tests change"
 	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, and"
 	@echo "                 fail if tagging takes over its budget of the time to read it; needs the network, so"
 	@echo "                 not in test"
@@ -129,6 +136,9 @@ help:
 	@echo "test-python      test how batches are built and published, how sentences are labelled with models, and"
 	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
 	@echo "                 in test or ci: its own workflow runs it when they change"
+	@echo "test-scanners    fetch the crates Cargo.lock names, then sweep deslag's src and tools and those crates"
+	@echo "                 with deslag-sweep, and fail on any non-zero exit; prints the sweep's TOML; needs the"
+	@echo "                 network, so not in test; ci runs it"
 	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
 	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
 	@echo "                 runs it"
@@ -154,6 +164,7 @@ help:
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
+	@echo "clean-crates     remove the vendored crates"
 	@echo "clean-ewt        remove the fetched treebank"
 	@echo "clean-harper     remove the fetched Harper model"
 	@echo "clean-label      remove what the generate-label-* targets wrote under .label; the ledger of what they"
@@ -161,11 +172,11 @@ help:
 	@echo "                 .label/ledger.tsv stays too, to be imported once)"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
-	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs, with"
-	@echo "                 --locked; not test-python, which the python workflow runs"
+	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs,"
+	@echo "                 test-scanners, with --locked; not test-python, which the python workflow runs"
 	@echo "ci-fast          the gate to run before a push, about 20 seconds warm: preflight, check, the"
-	@echo "                 exam's gates, the owner set's metrics and the Rust tests but the slowest, at once;"
-	@echo "                 ci runs the rest"
+	@echo "                 exam's gates, the owner set's metrics, deslag-sweep's tests and the Rust tests but the"
+	@echo "                 slowest, at once; ci runs the rest"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
 	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
 	@echo "                 file of list_growth; fetches the image first, needs the network, so not in fix"
@@ -173,12 +184,13 @@ help:
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
-	@echo "                 tools/{corpus,exam}/tests/golden from what deslag-corpus and deslag-exam print;"
-	@echo "                 not tools/sweep, which is outside the workspace: DESLAG_FIX_GOLDEN=1 cargo test there"
+	@echo "                 tools/*/tests/golden from what deslag-corpus, deslag-exam and deslag-sweep print"
 	@echo "fix-test-output  rewrite the .stderr and .json files of tests/cases"
 	@echo "preflight        report what must be installed before a build can succeed"
 	@echo "install          install what preflight reports missing, where cargo can; the rest by hand"
 	@echo "fetch-blobs      unpack the image $(BLOBSTORE)/blobs.lock pins into .blobs/unpacked"
+	@echo "fetch-crates     vendor the crates Cargo.lock names into .crates/vendor, for test-scanners to sweep;"
+	@echo "                 needs the network"
 	@echo "fetch-ewt        fetch the UD English Web Treebank that $(EWT)/ewt.lock pins into .ewt"
 	@echo "fetch-harper     fetch the Harper tagger model that $(HARPER)/harper.lock pins into .harper"
 	@echo "fetch-spacy      install the spaCy and model $(SPACY)/requirements.lock pins into .spacy; a few GB"
@@ -244,6 +256,7 @@ help:
 
 build: preflight
 	cargo build $(CARGO_FLAGS) --workspace --all-features
+	cargo build $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
 # Harvests, stages and packs each batch a manifest names into .blobs/unpacked,
 # completing a seed first, and fails unless it comes to what the manifest
@@ -265,6 +278,7 @@ build-release: preflight
 
 test: preflight test-exam
 	cargo test $(CARGO_FLAGS) --workspace --all-features
+	cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
 # The big tier's tests are ignored by a plain cargo test, so that test runs
 # offline and with no login. The time that follows prints how long reading and
@@ -355,6 +369,14 @@ test-python: preflight
 	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
 
+# Sweeps deslag's own source and the vendored crates of Cargo.lock with deslag-sweep, which checks the
+# comment scanners against the real lexers, and fails on any non-zero exit: the scanners differ from a
+# lexer, or the sweep cannot run. It prints the sweep's TOML, so a log shows what was swept. Both runs
+# are debug builds. Needs the network for the crates, so not in test; ci runs it.
+test-scanners: preflight fetch-crates
+	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust src tools
+	cargo run $(CARGO_FLAGS) --quiet $(SWEEP) $(SWEEP_TARGET) -- rust .crates/vendor
+
 # The silver batches of the unpacked image, which need no checkout but the voters' snapshot each carries:
 # `silver check` takes each batch, the retired ones too, against what it recorded and nothing of the
 # machine it runs on, so a batch that passed once passes forever, on any machine. (The paths of the
@@ -397,6 +419,7 @@ check: check-fmt check-clippy check-deslag check-doc check-typos
 
 check-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets -- -D warnings
+	cargo clippy $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --all-targets -- -D warnings
 
 # The debug build of deslag, run against .agents/deslag.toml. list_growth judges
 # the change from where origin/main and HEAD meet, which is empty on main.
@@ -406,9 +429,11 @@ check-deslag: preflight
 # rustdoc has warnings of its own, broken links say, that clippy never sees.
 check-doc: preflight
 	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_FLAGS) --workspace --all-features --no-deps
+	RUSTDOCFLAGS="-D warnings" cargo doc $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --no-deps
 
 check-fmt: preflight
 	cargo fmt -- --check
+	cargo fmt $(SWEEP) -- --check
 
 # Builds from the packaged crate, which catches a file that `exclude` dropped
 # but the build needs. Too slow for `check`; the release workflow runs it.
@@ -429,12 +454,16 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
-clean: clean-blobs clean-ewt clean-harper clean-label clean-spacy clean-train
+clean: clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train
 	cargo clean
 
 # .blobs is what fetch-blobs unpacks and .tools is where blobs.sh installs crane.
 clean-blobs:
 	rm -rf .blobs .tools
+
+# .crates is what fetch-crates vendors, and .crates.new.* what a killed fetch leaves.
+clean-crates:
+	rm -rf .crates .crates.new.*
 
 # .ewt is what fetch-ewt downloads, and .ewt.new.* what a killed fetch leaves.
 clean-ewt:
@@ -467,7 +496,7 @@ clean-train:
 # A target-specific variable reaches the prerequisites, so every cargo call
 # under ci is --locked.
 ci: CARGO_FLAGS += --locked
-ci: preflight check build test test-blobs
+ci: preflight check build test test-blobs test-scanners
 
 # The pre-push gate. Preflight stays first, as in every gate: it costs nothing and
 # is how a new machine or worktree learns what it lacks. The gates and
@@ -479,19 +508,23 @@ ci-fast: preflight check
 	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
 	@CARGO_FLAGS="$(CARGO_FLAGS) --profile fast" $(SCRIPTS)/owner-score.sh --metrics
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-fast.sh
+	cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
 fix: fix-fmt fix-clippy fix-golden fix-test-output
 
 fix-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets --fix --allow-dirty --allow-staged
+	cargo clippy $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --all-targets --fix --allow-dirty --allow-staged
 
 fix-fmt: preflight
 	cargo fmt
+	cargo fmt $(SWEEP)
 
 # Accepts whatever the lints find and deslag-corpus prints now, so read the diff
 # before committing it.
 fix-golden: preflight
 	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --workspace --all-features --test golden
+	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
 # What the publish-blobs workflow runs after it publishes, so a new image leaves the branch green: the
 # catalogue's counts and measured_on, and the golden file of list_growth, which names the batch of each
@@ -522,6 +555,11 @@ install:
 # $(BLOBSTORE)/blobs.md. A stamp that matches the lock is the whole check.
 fetch-blobs:
 	@$(BLOBSTORE)/blobs.sh fetch
+
+# The crates Cargo.lock names, vendored for test-scanners; see $(CRATES)/fetch.sh. A stamp that matches
+# the lock is the whole check.
+fetch-crates:
+	@$(CRATES)/fetch.sh fetch
 
 # The treebank the exam grades on, from the release $(EWT)/ewt.lock pins. Nothing in ci reads it. A
 # stamp that matches the lock is the whole check.

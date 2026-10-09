@@ -380,7 +380,7 @@ fn sealed(old: &[Line<'_>], line: &str, touched: &[Touch]) -> bool {
 
 /// The line of each table a delete emptied, with the added line that is that line sealed: the
 /// index into `old` and the index into `new`. A line is in one pair at most, so a table is sealed
-/// once, and a line that was not sealed has no partner and may not go.
+/// once, and a line that was not sealed lacks a partner and may not go.
 fn seals(
     old: &[Line<'_>],
     new: &[Line<'_>],
@@ -408,8 +408,8 @@ fn seals(
 /// Whether `after` is the line of a table, `before`, with ` {}` put in once and nothing else
 /// changed.
 fn seals_line(before: Line<'_>, after: Line<'_>) -> bool {
-    // The last line of a file with no final line ending has no ending, and it is that line with
-    // any: `Line` compares them the same way.
+    // The last line of a file that does not end in a line ending has an empty ending, and it is
+    // that line with any: `Line` compares them the same way.
     (before.end == after.end || before.end.is_empty() || after.end.is_empty())
         && (0..=before.content.len()).any(|at| {
             before.content.is_char_boundary(at)

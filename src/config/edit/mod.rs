@@ -603,7 +603,7 @@ struct Scan {
     /// Whether the top-level map is written in braces.
     braced: bool,
     /// Whether the file has an alias or a merge key (`<<`), through which the loader may read a key
-    /// that has no place of its own here.
+    /// that does not have a place of its own here.
     aliased: bool,
     /// Whether a key is double-quoted with an escape that only YAML has, so the scan has its text as
     /// written and cannot say which key it is.
@@ -612,10 +612,12 @@ struct Scan {
 
 impl Scan {
     /// Every table that sets the setting at `old`, a schema path such as
-    /// `md.lints.density.max_paragraph_len`, in the section or an override: the table's place, as
-    /// the loader names it, the key's index in `members`, and where the key is.
+    /// `md.lints.density.max_paragraph_len`, in its section or one of that section's overrides.
+    /// A redirect is for the section its old path begins with, so the section is read from the
+    /// path, and a section added later does not change this function. Each is the table's place as the
+    /// loader names it, the key's index in `members`, and where the key is.
     fn spots_of(&self, old: &str) -> Vec<(String, usize, Spot)> {
-        let Some(rest) = old.strip_prefix("md.lints.") else {
+        let Some((section, rest)) = old.split_once(".lints.") else {
             return Vec::new();
         };
         let rest: Vec<&str> = rest.split('.').collect();
@@ -628,17 +630,17 @@ impl Scan {
                         .zip(&rest)
                         .all(|(part, name)| key(part, name))
             };
-            if path.len() < 2 || !key(&path[0], "md") {
+            if path.len() < 2 || !key(&path[0], section) {
                 return None;
             }
             if key(&path[1], "lints") && tail(2) {
-                return Some("md.lints".to_string());
+                return Some(format!("{section}.lints"));
             }
             match (path.get(2), path.get(3)) {
                 (Some(Part::Index(index)), Some(lints))
                     if key(&path[1], "overrides") && key(lints, "lints") && tail(4) =>
                 {
-                    Some(format!("md.overrides[{index}].lints"))
+                    Some(format!("{section}.overrides[{index}].lints"))
                 }
                 _ => None,
             }

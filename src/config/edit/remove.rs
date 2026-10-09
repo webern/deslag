@@ -38,7 +38,7 @@ impl Member {
         }
     }
 
-    /// Where its value ends in `text`, with the colon of a key that has no value: `key:` is the
+    /// Where its value ends in `text`, with the colon of a key that does not have a value: `key:` is the
     /// parser's empty value, placed at the key.
     fn value_end(&self, text: &str) -> usize {
         if !self.empty {
@@ -244,7 +244,7 @@ fn first_line(text: &str, cut: &Range<usize>) -> usize {
 }
 
 /// The lines from the one that starts at `start` to the one whose line ending is at `stop`, as
-/// bytes. The last line of a file that has no final line ending takes the ending of the line
+/// bytes. The last line of a file that does not have a final line ending takes the ending of the line
 /// before it, so the file still ends without one; and when blank lines are before it, they go
 /// too, since no text keeps them and also ends without a line ending: the line ending the last
 /// blank line would be the file's final one.

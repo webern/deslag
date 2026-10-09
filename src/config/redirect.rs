@@ -84,6 +84,42 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
     },
 };
 
+/// A removal in `[rust]`, which no release has, so that the unit tests can see the editor find a
+/// removed key in a section other than `[md]`. It is in force only inside [`with_rust_removal`].
+#[cfg(test)]
+pub(super) static TEST_RUST_REMOVAL: Redirect = Redirect {
+    old: "rust.lints.banned_phrases.groups.signposts",
+    new: None,
+    example: "true",
+    moves: |lints| {
+        Ok(lints
+            .banned_phrases
+            .as_mut()
+            .is_some_and(|phrases| phrases.groups.signposts.take().is_some()))
+    },
+};
+
+#[cfg(test)]
+thread_local! {
+    static RUST_REMOVAL_IN_FORCE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Puts the test removal in `[rust]` in force on this thread while `run` runs. It is first in the
+/// list, so a config that sets `signposts` in `[rust]` and not in `[md]` has it moved before the
+/// removal in `[md]` takes it for an unknown key; one that sets it in `[md]` does not load.
+#[cfg(test)]
+pub(crate) fn with_rust_removal<T>(run: impl FnOnce() -> T) -> T {
+    struct Off;
+    impl Drop for Off {
+        fn drop(&mut self) {
+            RUST_REMOVAL_IN_FORCE.set(false);
+        }
+    }
+    let _off = Off;
+    RUST_REMOVAL_IN_FORCE.set(true);
+    run()
+}
+
 impl Redirect {
     /// The section the old path is in, and the old path inside that section's `lints` table.
     fn split(&self) -> (&'static str, &'static str) {
@@ -112,11 +148,15 @@ impl Redirect {
     }
 }
 
-/// The redirects in force: the table, and the test rename when testing.
+/// The redirects in force: the table, and the test rename and the test removal in `[rust]` when
+/// testing.
 pub(crate) fn in_force() -> impl Iterator<Item = &'static Redirect> {
     let table = REDIRECTS.iter();
     #[cfg(test)]
-    let table = table.chain(std::iter::once(&TEST_RENAME));
+    let table = std::iter::once(&TEST_RUST_REMOVAL)
+        .filter(|_| RUST_REMOVAL_IN_FORCE.get())
+        .chain(table)
+        .chain(std::iter::once(&TEST_RENAME));
     table
 }
 

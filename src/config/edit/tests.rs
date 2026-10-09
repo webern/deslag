@@ -1107,7 +1107,7 @@ fn deletes(extension: &str, before: &str, after: &str) {
             "{before:?} does not use the key"
         );
         assert!(new.warnings().is_empty(), "{got:?}");
-        assert_eq!(old.md(), new.md(), "{got:?}");
+        assert_eq!(old.sections(), new.sections(), "{got:?}");
         let again = run(extension, &got, None).expect("a second pass");
         assert!(again.edits.is_empty(), "{got:?}");
         assert_eq!(again.text.as_str(), got);
@@ -2110,4 +2110,155 @@ fn a_test_that_panics_inside_with_wrong_edit_leaves_the_editor_undamaged() {
     assert!(panicked.is_err());
     assert!(WRONG_EDIT.get().is_none(), "the damage was not taken off");
     assert!(run("yaml", &yaml, None).is_ok());
+}
+
+// The `[rust]` section.
+
+/// `[md]` and `[rust]` side by side, each with a table of its own and an override, with the removed
+/// key set in `[rust]` only: the section and its override.
+const RUST_TOML: &str = "schema_version = 1\n\
+    [md.lints.density]\nmax_item_chars = 300\n\n\
+    [rust.lints.banned_phrases.groups]\n# keep this one off\ninsistence = false\n\
+    signposts = true # was allowed here\n\n\
+    [[rust.overrides]]\nglobs = [\"src/*.rs\"]\n\
+    lints.banned_phrases.groups.signposts = true\nlints.density.max_item_chars = 200\n";
+
+const RUST_YAML: &str = "schema_version: 1\nmd:\n  lints:\n    density: {max_item_chars: 300}\n\
+    rust:\n  lints:\n    banned_phrases:\n      groups:\n        # keep this one off\n\
+    \x20       insistence: false\n        signposts: true # was allowed here\n  overrides:\n\
+    \x20   - globs: [\"src/*.rs\"]\n      lints:\n        banned_phrases:\n          groups:\n\
+    \x20           signposts: true # only this\n        density: {max_item_chars: 200}\n";
+
+const RUST_JSON: &str = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"density\": {\"max_item_chars\": 300}}},\n\
+    \x20 \"rust\": {\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": false,\n\
+    \x20     \"signposts\": true\n    }}},\n    \"overrides\": [\n\
+    \x20     {\"globs\": [\"src/*.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}, \"density\": {\"max_item_chars\": 200}}}\n\
+    \x20   ]\n  }\n}\n";
+
+#[test]
+fn a_removed_key_in_the_rust_section_and_its_override_is_deleted_in_every_language() {
+    crate::config::redirect::with_rust_removal(|| {
+        deletes(
+            "toml",
+            RUST_TOML,
+            "schema_version = 1\n[md.lints.density]\nmax_item_chars = 300\n\n\
+             [rust.lints.banned_phrases.groups]\n# keep this one off\ninsistence = false\n\n\
+             [[rust.overrides]]\nglobs = [\"src/*.rs\"]\n\
+             lints.banned_phrases.groups = {}\nlints.density.max_item_chars = 200\n",
+        );
+        deletes(
+            "yaml",
+            RUST_YAML,
+            "schema_version: 1\nmd:\n  lints:\n    density: {max_item_chars: 300}\n\
+             rust:\n  lints:\n    banned_phrases:\n      groups:\n        # keep this one off\n\
+             \x20       insistence: false\n  overrides:\n    - globs: [\"src/*.rs\"]\n      lints:\n\
+             \x20       banned_phrases:\n          groups: {}\n        density: {max_item_chars: 200}\n",
+        );
+        deletes(
+            "json",
+            RUST_JSON,
+            "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"density\": {\"max_item_chars\": 300}}},\n\
+             \x20 \"rust\": {\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": false\n\
+             \x20   }}},\n    \"overrides\": [\n\
+             \x20     {\"globs\": [\"src/*.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {}}, \"density\": {\"max_item_chars\": 200}}}\n\
+             \x20   ]\n  }\n}\n",
+        );
+    });
+}
+
+#[test]
+fn the_loader_names_the_rust_tables_a_removed_key_is_read_from() {
+    crate::config::redirect::with_rust_removal(|| {
+        for (extension, text) in [
+            ("toml", RUST_TOML),
+            ("yaml", RUST_YAML),
+            ("json", RUST_JSON),
+        ] {
+            let places: Vec<String> = load(extension, text)
+                .redirected()
+                .iter()
+                .flat_map(|used| used.places.clone())
+                .collect();
+            assert_eq!(
+                places,
+                ["rust.lints", "rust.overrides[0].lints"],
+                "{extension}"
+            );
+        }
+    });
+}
+
+#[test]
+fn a_removed_key_in_a_rust_table_is_refused_with_its_edit_when_it_cannot_be_cut() {
+    // The override reads its `groups` through an alias, which the scan does not follow, so no
+    // table of `[rust]` can be edited and the file is refused whole.
+    let aliased = "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups: &g\n\
+        \x20       signposts: true\n  overrides:\n    - globs: [\"src/*.rs\"]\n      lints:\n\
+        \x20       banned_phrases:\n          groups: *g\n";
+    crate::config::redirect::with_rust_removal(|| {
+        let refusal = run("yaml", aliased, None).expect_err("an alias");
+        assert!(refusal.reason.contains("alias"), "{refusal:?}");
+        assert_eq!(refusal.todo.len(), 2, "{refusal:?}");
+        assert!(
+            refusal.todo[0].contains("rust.lints") && refusal.todo[1].contains("rust.overrides[0]"),
+            "{refusal:?}"
+        );
+    });
+}
+
+#[test]
+fn the_removed_key_set_in_the_rust_section_is_an_unknown_key_where_the_loader_reads_it() {
+    // A redirect is for the section its old path names. `[rust]` came after the setting was
+    // removed, so there it was never a setting, and no editor is asked to cut it.
+    for (extension, text) in [
+        (
+            "toml",
+            "schema_version = 1\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"rust\": {\"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}}",
+        ),
+    ] {
+        let path = PathBuf::from(format!("deslag.{extension}"));
+        let error = Config::parse(text, path, ConfigSource::Explicit).expect_err(extension);
+        let said = error.to_string();
+        assert!(
+            said.contains("rust.lints.banned_phrases.groups.signposts")
+                && said.contains("[rust] never had it"),
+            "{extension}: {said}"
+        );
+    }
+}
+
+#[test]
+fn a_setting_is_looked_for_in_the_section_its_path_names_and_in_no_other() {
+    let yaml = "md:\n  lints:\n    x:\n      y: 1\nrust:\n  lints:\n    x:\n      y: 1\n  overrides:\n\
+        \x20   - lints:\n        x:\n          y: 2\ndocs:\n  lints:\n    x:\n      y: 3\n";
+    let json = "{\"md\": {\"lints\": {\"x\": {\"y\": 1}}}, \"rust\": {\"lints\": {\"x\": {\"y\": 1}}, \
+        \"overrides\": [{\"lints\": {\"x\": {\"y\": 2}}}]}, \"docs\": {\"lints\": {\"x\": {\"y\": 3}}}}";
+    for scan in [
+        yaml::scan(yaml).expect("YAML"),
+        json::scan(json).expect("JSON"),
+    ] {
+        let places = |old: &str| -> Vec<String> {
+            scan.spots_of(old)
+                .into_iter()
+                .map(|(place, ..)| place)
+                .collect()
+        };
+        assert_eq!(places("md.lints.x.y"), ["md.lints"]);
+        assert_eq!(
+            places("rust.lints.x.y"),
+            ["rust.lints", "rust.overrides[0].lints"]
+        );
+        // A section no one has heard of is found by its name alone.
+        assert_eq!(places("docs.lints.x.y"), ["docs.lints"]);
+        assert!(places("rust.lints.x.z").is_empty());
+        assert!(places("rust.globs").is_empty());
+    }
 }

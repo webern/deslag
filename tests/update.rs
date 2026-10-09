@@ -375,6 +375,95 @@ fn the_settings_a_yaml_or_json_config_gets_are_the_same_after_the_delete() {
     }
 }
 
+/// A config with a `[rust]` section, in each language, whose `[md]` section sets the removed key in
+/// the section and in an override. The `[rust]` section holds a table and an override of its own.
+const WITH_RUST: [(&str, &str); 3] = [
+    (
+        "toml",
+        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true # off\ninsistence = true\n\n\
+         [rust]\nglobs = [\"src/*.rs\"]\n# Rust comments are prose.\n\
+         [rust.lints.banned_phrases.groups]\ninsistence = false # on\n\n\
+         [[rust.overrides]]\nglobs = [\"src/lib.rs\"]\nlints.density.max_item_chars = 200\n",
+    ),
+    (
+        "yaml",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: true\n\
+         rust:\n  globs: [\"src/*.rs\"]\n  # Rust comments are prose.\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false # on\n  overrides:\n\
+         \x20   - globs: [\"src/lib.rs\"]\n      lints:\n        density: {max_item_chars: 200}\n",
+    ),
+    (
+        "json",
+        "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": true\n  }}}},\n\
+         \x20 \"rust\": {\n    \"globs\": [\"src/*.rs\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\"insistence\": false}}},\n\
+         \x20   \"overrides\": [{\"globs\": [\"src/lib.rs\"], \"lints\": {\"density\": {\"max_item_chars\": 200}}}]\n  }\n}\n",
+    ),
+];
+
+#[test]
+fn a_config_with_a_rust_section_has_the_removed_key_deleted_and_the_rust_section_left_alone() {
+    for (extension, text) in WITH_RUST {
+        let repo = repo_with(extension, text);
+        repo.write(
+            "src/lib.rs",
+            "//! A short note about the crate.\npub fn f() {}\n",
+        );
+        let explain = |repo: &Repo| {
+            let output = repo.run(&["explain", "README.md", "src/lib.rs"]);
+            assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+            stdout(&output)
+        };
+        let before = explain(&repo);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        let after = read(&repo, extension);
+        let (gone, added) = lines_changed(text, &after);
+        assert_eq!(gone.len(), 1, "{extension}: {gone:?}");
+        assert!(gone[0].contains("signposts"), "{extension}: {gone:?}");
+        assert_eq!(added.len(), 1, "{extension}: {added:?}");
+        assert!(
+            added[0].contains("deslag_version"),
+            "{extension}: {added:?}"
+        );
+        assert_eq!(explain(&repo), before, "{extension}");
+        let check = repo.check();
+        assert_eq!(
+            (code(&check), said(&check)),
+            (0, String::new()),
+            "{extension}"
+        );
+    }
+}
+
+#[test]
+fn the_removed_key_in_a_rust_section_is_refused_by_the_loader_and_nothing_is_written() {
+    // `[rust]` came after the setting was removed, so there it is an unknown key and the config does
+    // not load: `update` exits 2 with the file as it was, in each language.
+    for (extension, text) in [
+        (
+            "toml",
+            "schema_version = 1\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"rust\": {\"overrides\": [{\"globs\": [\"a.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]}}\n",
+        ),
+    ] {
+        let repo = repo_with(extension, text);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 2, "{extension}: {}", said(&output));
+        let message = said(&output);
+        assert!(
+            message.contains("groups.signposts") && message.contains("[rust] never had it"),
+            "{extension}: {message}"
+        );
+        assert_eq!(read(&repo, extension), text, "{extension}");
+    }
+}
+
 #[test]
 fn dry_run_lists_the_yaml_and_json_edits_a_real_run_makes_and_writes_nothing() {
     for (extension, text) in [("yaml", YAML_SIGNPOSTS), ("json", JSON_SIGNPOSTS)] {

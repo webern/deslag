@@ -87,27 +87,28 @@ enum Step<'a> {
     Index(usize),
 }
 
-/// Where in `md` a `lints` table is: the section's, or an override's.
+/// Where a `lints` table is: the section's, or one of its overrides', in the section called
+/// `section` (`md`, `rust`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Place {
-    Section,
-    Override(usize),
+    Section(&'static str),
+    Override(&'static str, usize),
 }
 
 impl Place {
     /// The place as the loader names it.
     fn label(self) -> String {
         match self {
-            Place::Section => "md.lints".to_string(),
-            Place::Override(index) => format!("md.overrides[{index}].lints"),
+            Place::Section(section) => format!("{section}.lints"),
+            Place::Override(section, index) => format!("{section}.overrides[{index}].lints"),
         }
     }
 
     fn steps(self) -> Vec<Step<'static>> {
         match self {
-            Place::Section => vec![Step::Key("md"), Step::Key("lints")],
-            Place::Override(index) => vec![
-                Step::Key("md"),
+            Place::Section(section) => vec![Step::Key(section), Step::Key("lints")],
+            Place::Override(section, index) => vec![
+                Step::Key(section),
                 Step::Key("overrides"),
                 Step::Index(index),
                 Step::Key("lints"),
@@ -197,29 +198,30 @@ fn table_ref<'a>(root: &'a Table, steps: &[Step<'_>]) -> Option<&'a dyn TableLik
     }
 }
 
-/// Every place `doc` has a `lints` table at.
-fn places(root: &Table) -> Vec<Place> {
-    let mut found = vec![Place::Section];
-    let overrides = table_ref(root, &[Step::Key("md")])
-        .and_then(|md| md.get("overrides"))
+/// Every place the section called `section` has a `lints` table at.
+fn places(root: &Table, section: &'static str) -> Vec<Place> {
+    let mut found = vec![Place::Section(section)];
+    let overrides = table_ref(root, &[Step::Key(section)])
+        .and_then(|section| section.get("overrides"))
         .map(|item| match item {
             Item::ArrayOfTables(array) => array.len(),
             Item::Value(Value::Array(array)) => array.len(),
             _ => 0,
         })
         .unwrap_or(0);
-    found.extend((0..overrides).map(Place::Override));
+    found.extend((0..overrides).map(|index| Place::Override(section, index)));
     found
 }
 
-/// The keys of `old`, a schema path in `md.lints`: all but the last, and the last.
-fn split(old: &str) -> Result<(Vec<&str>, &str), String> {
-    let rest = old.strip_prefix("md.lints.").ok_or_else(|| {
-        format!("`{old}` is not a setting of `md.lints`, and deslag edits only those")
+/// The section of `old`, a schema path in some section's `lints` such as `md.lints.density.x`, and
+/// its keys inside `lints`: all but the last, and the last.
+fn split(old: &str) -> Result<(&str, Vec<&str>, &str), String> {
+    let (section, rest) = old.split_once(".lints.").ok_or_else(|| {
+        format!("`{old}` is not a setting in the `lints` of a section, and deslag edits only those")
     })?;
     let mut keys: Vec<&str> = rest.split('.').collect();
     let leaf = keys.pop().ok_or_else(|| format!("`{old}` names no key"))?;
-    Ok((keys, leaf))
+    Ok((section, keys, leaf))
 }
 
 /// Where the redirect's old key is set, found in the text as it was.
@@ -251,8 +253,8 @@ fn find(root: &Table, text: &str, used: &[Used]) -> Result<Vec<Found>, String> {
     let mut found = Vec::new();
     for used in used {
         let redirect = used.redirect;
-        let (parents, leaf) = split(redirect.old)?;
-        for place in places(root) {
+        let (section, parents, leaf) = split(redirect.old)?;
+        for place in places(root, section) {
             let mut steps = place.steps();
             steps.extend(parents.iter().map(|key| Step::Key(key)));
             let Some(table) = table_ref(root, &steps) else {
@@ -365,7 +367,7 @@ fn cut(mut text: String, count: usize) -> Option<String> {
 /// Deletes the key of `found`. A key on its own line is not removed from the tree: it is marked, so
 /// that the line goes from the text and everything above it stays where it is.
 fn delete(root: &mut Table, found: &Found, lines: &[&str], marks: &mut usize) -> Option<()> {
-    let (parents, leaf) = split(found.redirect.old).ok()?;
+    let (_, parents, leaf) = split(found.redirect.old).ok()?;
     let mut steps = found.place.steps();
     steps.extend(parents.iter().map(|key| Step::Key(key)));
 
@@ -454,8 +456,12 @@ fn seal(root: &mut Table, steps: &[Step<'_>], decor: Decor) -> Option<()> {
 
 /// Renames the key of `found` to the leaf of the redirect's new path, in the table that path names.
 fn rename(root: &mut Table, found: &Found, new: &str) -> Option<()> {
-    let (old_parents, old_leaf) = split(found.redirect.old).ok()?;
-    let (new_parents, new_leaf) = split(new).ok()?;
+    let (section, old_parents, old_leaf) = split(found.redirect.old).ok()?;
+    let (new_section, new_parents, new_leaf) = split(new).ok()?;
+    // A key moves inside its section's tables, which is all the rename knows how to do.
+    if section != new_section {
+        return None;
+    }
     let place = found.place.steps();
     let place_len = place.len();
     let mut old_steps = place.clone();
@@ -688,7 +694,7 @@ mod tests {
         let mut document: DocumentMut = text.parse().expect("TOML");
         let found = Found {
             redirect: &TEST_RENAME,
-            place: Place::Section,
+            place: Place::Section("md"),
             line: 0,
             last_line: 0,
             alone: false,
@@ -725,11 +731,15 @@ mod tests {
     fn a_setting_outside_the_lints_is_an_error_to_report_and_not_a_panic() {
         assert_eq!(
             split("md.lints.density.max_item_chars"),
-            Ok((vec!["density"], "max_item_chars"))
+            Ok(("md", vec!["density"], "max_item_chars"))
+        );
+        assert_eq!(
+            split("rust.lints.banned_phrases.groups.signposts"),
+            Ok(("rust", vec!["banned_phrases", "groups"], "signposts"))
         );
         let error = split("md.globs").expect_err("not a lint setting");
         assert!(
-            error.contains("`md.globs` is not a setting of `md.lints`"),
+            error.contains("`md.globs` is not a setting in the `lints` of a section"),
             "{error}"
         );
     }
@@ -740,7 +750,24 @@ mod tests {
             .parse()
             .expect("TOML");
         let inline: DocumentMut = "[md]\noverrides = [{}, {}, {}]\n".parse().expect("TOML");
-        assert_eq!(places(tables.as_table()).len(), 3);
-        assert_eq!(places(inline.as_table()).len(), 4);
+        assert_eq!(places(tables.as_table(), "md").len(), 3);
+        assert_eq!(places(inline.as_table(), "md").len(), 4);
+        // Another section's tables are its own, and a section the file does not have has one place.
+        assert_eq!(places(tables.as_table(), "rust").len(), 1);
+        let rust: DocumentMut = "[[rust.overrides]]\n[[rust.overrides]]\n"
+            .parse()
+            .expect("TOML");
+        let labels: Vec<String> = places(rust.as_table(), "rust")
+            .into_iter()
+            .map(Place::label)
+            .collect();
+        assert_eq!(
+            labels,
+            [
+                "rust.lints",
+                "rust.overrides[0].lints",
+                "rust.overrides[1].lints"
+            ]
+        );
     }
 }

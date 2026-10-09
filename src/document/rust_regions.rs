@@ -353,7 +353,7 @@ mod tests {
     }
 
     #[test]
-    fn a_first_or_last_line_of_only_stars_in_a_block_is_a_gap_as_rustc_trims_it() {
+    fn a_first_or_last_line_of_only_stars_and_space_in_a_block_is_a_gap() {
         assert_eq!(texts("/*****\n * a\n * b\n *****/"), [plain("a\nb")]);
         assert_eq!(texts("/*!****\n * a\n ****/"), [doc("a")]);
         assert_eq!(texts("/*!\n * a\n **/"), [doc("a")]);

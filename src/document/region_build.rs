@@ -5,11 +5,12 @@
 //! 1. The marker and the least indent of the region's lines, a space or a tab counting for one,
 //!    are stripped from every line. A line of nothing but whitespace does not have text.
 //! 2. A block comment of more than one line loses a first line and a last line of nothing but `*`
-//!    and whitespace, as `rustc` trims them (`vertical_trim`; it lets only one character of any
-//!    kind lead the last line, and here any indent may). Then it loses a blank first line and a
-//!    blank last line, which is not `rustc`'s rule: Markdown and plain text ignore them. Then it
-//!    loses a `*` gutter if every line but the first has one, as `rustc` trims it
-//!    (`horizontal_trim`). Then rule 1 applies.
+//!    and whitespace. `rustc` trims such a line only when it is nothing but `*` (`vertical_trim`);
+//!    allowing whitespace around the stars is a deliberate difference, so that an indented banner
+//!    such as ` ****/` loses its stars. Then it loses a blank first line and a blank last line,
+//!    which is not `rustc`'s rule: Markdown and plain text ignore them. Then it loses a `*` gutter
+//!    if every line but the first has one, as `rustc` trims it (`horizontal_trim`). Then rule 1
+//!    applies.
 //!
 //! The text of every line is a verbatim piece of the file, and every other byte is in a line's
 //! prefix or ending, or in the close of a block, so `Carrier::encode` writes the region back as it

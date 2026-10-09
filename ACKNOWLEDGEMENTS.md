@@ -274,7 +274,13 @@ Its number lexing is ported, as a modified adaptation under MIT: the functions `
   [ae0fe511](https://github.com/rust-lang/rust/tree/ae0fe511b15ab760d7e963b13389d1bc2ab42b18), read
   2026-10-08
 
-Code was not ported. The reader of Rust comments in `src/document/rust_regions.rs` follows two of
-rustdoc's rules, written afresh: the unindent of doc comment lines, by the least indent of a space
-or tab over the lines that are not blank, and the trim of a block doc comment, which drops a gutter
-of `*` that every line holds. It leaves out the rest of what rustdoc does to a doc comment.
+Code was not ported. `src/document/region_build.rs`, which the readers of Rust and of C and C++
+comments share, follows three of rustdoc's rules, written afresh:
+
+- The unindent of doc comment lines, by the least indent of a space or tab over the lines that are
+  not blank.
+- The trim of a block comment, which drops a gutter of `*` that every line holds.
+- The trim of a block comment's first and last line when they hold only stars. Here a line may also
+  hold whitespace around the stars.
+
+It leaves out the rest of what rustdoc does to a doc comment.

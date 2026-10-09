@@ -11,7 +11,7 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::resolve;
 use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::Lint;
-use deslag::changelog::{BASELINE, Version, changelog};
+use deslag::changelog::{BASELINE, Entry, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
@@ -396,7 +396,10 @@ fn each_lint_section_says_when_its_lint_arrived() {
     }
 }
 
-/// A release older than every release, which puts the first one in the range of a stamp.
+/// A release older than every release, which puts the first one in the range of a stamp. It is no
+/// newer than any deslag, so a config stamped with it loads under whatever version the crate is at;
+/// what is new to it depends on that version, so a test asks [`news`] and states what it expects
+/// from the answer. `src/instructions/update.rs` holds the exact text, for a changelog it makes.
 const OLDER: &str = "0.0.0";
 
 /// A repo whose config is stamped `stamp`.
@@ -463,21 +466,26 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
     );
 
     let current = env!("CARGO_PKG_VERSION");
-    assert!(text.starts_with(&format!(
-        "# What is new in deslag {current}, since {OLDER}\n"
-    )));
-    // The first release is in the range, with a section for each of its kinds.
-    for heading in [
-        "## New lints",
-        "## New settings",
-        "### `max_size_bytes` (0.0.1)",
-    ] {
-        assert!(text.contains(heading), "{heading}");
+    let new = news(&release(OLDER));
+    if new.is_empty() {
+        assert!(text.starts_with("Nothing is new"), "{text}");
+    } else {
+        assert!(
+            text.starts_with(&format!(
+                "# What is new in deslag {current}, since {OLDER}\n"
+            )),
+            "{text}"
+        );
+        assert!(
+            text.contains(&format!("run `deslag update --to {current}`")),
+            "the closing names the command that records the version"
+        );
     }
-    assert!(
-        text.contains(&format!("run `deslag update --to {current}`")),
-        "the closing names the command that records the version"
-    );
+    // Each entry of the range is listed under its release.
+    for (version, entry) in new.entries() {
+        let heading = format!("### `{}` ({version})\n", entry.id());
+        assert!(text.contains(&heading), "{heading}");
+    }
     // `next` is not in the range: its entries would head their sections with `(next)`.
     assert!(!text.contains("(next)"));
 }
@@ -513,7 +521,8 @@ fn the_json_holds_the_entries_of_the_text() {
             )
         })
         .collect();
-    assert!(!printed.is_empty());
+    let new = news(&release(OLDER));
+    assert_eq!(printed.len(), new.entries().len() + new.phrases().len());
     assert_eq!(printed, headings(&text));
     for entry in entries {
         let kind = entry["kind"].as_str().expect("a kind");
@@ -716,14 +725,23 @@ fn with_no_config_the_topic_says_so_and_prints_what_since_the_baseline_prints() 
     assert_eq!(raw_stderr(&no_stamp), "");
 
     let baseline = BASELINE.to_string();
-    let since = update(&none, &["--since", &baseline]);
     let (said, rest) = stdout(&no_config)
         .split_once("\n\n")
         .map(|(said, rest)| (said.to_string(), rest.to_string()))
         .expect("a note and the text");
     assert!(said.starts_with("No deslag config was found"), "{said}");
     assert!(said.contains(&baseline), "{said}");
-    assert_eq!(rest, stdout(&since));
+    let from = Version::Release(BASELINE);
+    assert_eq!(
+        rest,
+        update_text(&news(&from), &from, &Version::current(), Start::Since)
+    );
+    // `--since` refuses a release newer than the running deslag, so the baseline is only asked for
+    // when the running one has reached it.
+    if from <= Version::current() {
+        let since = update(&none, &["--since", &baseline]);
+        assert_eq!(rest, stdout(&since));
+    }
     assert!(!stdout(&no_stamp).contains("No deslag config"));
 
     // The JSON has no note: it starts from the baseline either way.
@@ -790,7 +808,8 @@ fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
             .map(str::to_string)
     };
 
-    // The catalogue holds phrases the stamp 0.0.0 keeps off, and the lint's default groups are on.
+    // The catalogue holds phrases the stamp keeps off, and the lint's default groups are on. Whether
+    // the running release has shipped any since OLDER depends on the release.
     let phrases = Repo::new();
     phrases.write(
         "deslag.toml",
@@ -799,27 +818,35 @@ fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
              [md.lints.banned_phrases]\n"
         ),
     );
-    let line_with = line(&update(&phrases, &[])).expect("a line");
-    let start =
-        format!("Moving `deslag_version` to {current} turns on these phrases in this config: `");
-    assert!(line_with.starts_with(&start), "{line_with}");
-    assert!(
-        line_with.ends_with("To see what they would flag, search the text for them, or move the stamp by hand, run `check` and put it back."),
-        "{line_with}"
+    // With nothing new there is no closing at all, and the topic says the config is current.
+    let new = news(&release(OLDER));
+    let no_phrase = format!(
+        "Moving `deslag_version` to {current} turns on no phrase in this config. Nothing \
+         else `check` finds depends on `deslag_version`, so there is nothing to compare. \
+         Only the note that the config is behind goes."
     );
+    let line_with = line(&update(&phrases, &[]));
+    if new.is_empty() {
+        assert_eq!(line_with, None);
+    } else if new.phrases().is_empty() {
+        assert_eq!(line_with.as_deref(), Some(no_phrase.as_str()));
+    } else {
+        let line_with = line_with.expect("a line");
+        let start = format!(
+            "Moving `deslag_version` to {current} turns on these phrases in this config: `"
+        );
+        assert!(line_with.starts_with(&start), "{line_with}");
+        assert!(
+            line_with.ends_with("To see what they would flag, search the text for them, or move the stamp by hand, run `check` and put it back."),
+            "{line_with}"
+        );
+    }
 
     // A config that does not turn the lint on has none of them turned on.
     let none = update(&stamped(OLDER), &[]);
     assert_eq!(
         line(&none).as_deref(),
-        Some(
-            format!(
-                "Moving `deslag_version` to {current} turns on no phrase in this config. Nothing \
-                 else `check` finds depends on `deslag_version`, so there is nothing to compare. \
-                 Only the note that the config is behind goes."
-            )
-            .as_str()
-        )
+        (!new.is_empty()).then_some(no_phrase.as_str())
     );
 
     // With `--since`, or with no config, no config was read.
@@ -838,15 +865,29 @@ fn a_lint_the_config_already_turns_on_is_marked() {
              [md.lints.max_size_bytes]\nvalue = 100\n"
         ),
     );
+    // The lint arrived in some release after OLDER, or the running release is OLDER and nothing is
+    // listed.
+    let new = news(&release(OLDER));
+    let listed = new
+        .entries()
+        .iter()
+        .find(|(_, entry)| matches!(entry, Entry::Lint { .. }) && entry.id() == "max_size_bytes");
+    let marked: &[&str] = if listed.is_some() {
+        &["max_size_bytes"]
+    } else {
+        &[]
+    };
     let text = stdout(&update(&repo, &[]));
-    let heading = "### `max_size_bytes` (0.0.1)\n";
-    let entry = text.split(heading).nth(1).expect("the lint is listed");
-    let entry = entry.split("\n### ").next().expect("an entry");
-    assert!(
-        entry.contains("\nThis config already has a `max_size_bytes` table.\n"),
-        "{entry}"
-    );
-    assert_eq!(marks(&text), ["max_size_bytes"], "{text}");
+    if let Some((version, _)) = listed {
+        let heading = format!("### `max_size_bytes` ({version})\n");
+        let entry = text.split(&heading).nth(1).expect("the lint is listed");
+        let entry = entry.split("\n### ").next().expect("an entry");
+        assert!(
+            entry.contains("\nThis config already has a `max_size_bytes` table.\n"),
+            "{entry}"
+        );
+    }
+    assert_eq!(marks(&text), marked, "{text}");
 
     let json: Value =
         serde_json::from_str(&stdout(&update(&repo, &["--format", "json"]))).expect("JSON");
@@ -857,7 +898,7 @@ fn a_lint_the_config_already_turns_on_is_marked() {
         .filter(|entry| entry["already_set"] == true)
         .map(|entry| entry["id"].as_str().expect("an id"))
         .collect();
-    assert_eq!(set, ["max_size_bytes"]);
+    assert_eq!(set, marked);
 
     // `--since` reads no config, so it marks nothing.
     let since = update(&repo, &["--since", OLDER]);
@@ -881,6 +922,24 @@ fn the_readme_example_config_loads() {
     let example = toml_blocks(&readme)[0];
     assert!(example.contains("\ndeslag_version = \""), "{example}");
     assert_eq!(toml_misfit(example), None);
-    Config::parse(example, "deslag.toml".into(), ConfigSource::Explicit).expect("a config");
+    // The stamp is a sample, and it has to be a release that exists: it loads as the newest release
+    // in the changelog, so a stamp above that one fails. It runs as this version, whatever it is.
+    let newest = changelog()
+        .releases
+        .iter()
+        .filter_map(|release| match &release.version {
+            Version::Release(version) => Some(version),
+            Version::Next => None,
+        })
+        .max()
+        .cloned()
+        .unwrap_or(BASELINE);
+    Config::parse_at(
+        example,
+        "deslag.toml".into(),
+        ConfigSource::Explicit,
+        &newest,
+    )
+    .expect("a config");
     assert_runs_clean(example);
 }

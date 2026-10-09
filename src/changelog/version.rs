@@ -47,7 +47,7 @@ pub(crate) fn parse_release(text: &str) -> Result<semver::Version, NotARelease> 
 }
 
 /// The version of the running deslag as a release.
-pub(crate) fn current_release() -> semver::Version {
+pub fn current_release() -> semver::Version {
     semver::Version::parse(env!("CARGO_PKG_VERSION")).expect("the crate version is semver")
 }
 

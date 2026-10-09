@@ -13,6 +13,10 @@ pub mod schema;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+use deslag::changelog::{Version, changelog};
+use deslag::lint::banned_phrases::CATALOGUE;
+use deslag::news::News;
+
 /// A throwaway directory used as a repository root, removed when it goes out of scope.
 pub struct Repo {
     _dir: tempfile::TempDir,
@@ -132,6 +136,21 @@ pub fn notice(stamp: &str) -> String {
          what is new, run deslag instructions update, which changes no file\n",
         env!("CARGO_PKG_VERSION")
     )
+}
+
+/// What the running deslag prints, ahead of its report, for a config last updated by `stamp`: the
+/// [`notice`] when the changelog or the catalogue holds something after `stamp`, up to the running
+/// version, and nothing when it holds nothing. Which of the two is true depends on the release the
+/// crate is at, so a test asks the library what is new, as the binary does, and states what it
+/// expects from that. The words of the notice stay written out in [`notice`].
+pub fn notice_for(stamp: &str) -> String {
+    let from = Version::Release(stamp.parse().expect("a release"));
+    let news = News::between(changelog(), &CATALOGUE, &from, &Version::current());
+    if news.is_empty() {
+        String::new()
+    } else {
+        notice(stamp)
+    }
 }
 
 /// `text` without the lines that are [`notice`] for some release, and nothing else.

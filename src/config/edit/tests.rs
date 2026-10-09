@@ -9,9 +9,15 @@ fn release(text: &str) -> Version {
     Version::parse(text).expect("a version")
 }
 
+/// The release these tests run as. The stamps they write are older than it, whatever version the
+/// crate is at.
+fn running() -> Version {
+    release("1.0.0")
+}
+
 fn load(extension: &str, text: &str) -> Config {
     let path = PathBuf::from(format!("deslag.{extension}"));
-    Config::parse(text, path, ConfigSource::Explicit)
+    Config::parse_at(text, path, ConfigSource::Explicit, &running())
         .unwrap_or_else(|error| panic!("{extension}: {error:#}\n{text}"))
 }
 

@@ -43,10 +43,27 @@ pub fn lints_turned_on(text: &str) -> BTreeSet<String> {
     turned_on
 }
 
-/// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else.
+/// `config` with the stamp of its `deslag_version` line, if it has one, set to the running version.
+/// The stamp an example in the docs shows is a sample, and a deslag refuses a stamp newer than
+/// itself, so what an example is run as does not depend on the version the crate is at.
+pub fn stamped_as_running(config: &str) -> String {
+    config
+        .split_inclusive('\n')
+        .map(|line| {
+            if line.starts_with("deslag_version = ") {
+                format!("deslag_version = \"{}\"\n", env!("CARGO_PKG_VERSION"))
+            } else {
+                line.to_string()
+            }
+        })
+        .collect()
+}
+
+/// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else. A
+/// stamp in `config` is run as the running version ([`stamped_as_running`]).
 pub fn assert_runs_clean(config: &str) {
     let repo = Repo::new();
-    repo.write("deslag.toml", config);
+    repo.write("deslag.toml", &stamped_as_running(config));
     let output = repo.check();
     assert_eq!(
         (code(&output), stderr(&output)),

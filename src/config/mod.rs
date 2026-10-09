@@ -206,6 +206,7 @@ pub struct Config {
     source: ConfigSource,
     schema_version: NonZeroU32,
     stamp: Option<semver::Version>,
+    running: semver::Version,
     sections: Vec<Section>,
     warnings: Vec<String>,
     redirected: Vec<Used>,
@@ -223,18 +224,39 @@ impl Config {
     /// Finds and loads the config as [`Config::load`] does, and gives the text it was read from too,
     /// for a caller that edits it.
     pub fn load_text(root: &Path, explicit: Option<&Path>) -> Result<(Config, String), Error> {
+        Config::load_text_at(root, explicit, &current_release())
+    }
+
+    /// [`Config::load_text`] for a deslag whose release is `running`.
+    pub fn load_text_at(
+        root: &Path,
+        explicit: Option<&Path>,
+        running: &semver::Version,
+    ) -> Result<(Config, String), Error> {
         let (path, source) = search::find(root, explicit)?;
 
         let text = std::fs::read_to_string(&path).map_err(|source| Error::Read {
             path: path.display().to_string(),
             source,
         })?;
-        let config = Config::parse(&text, path, source)?;
+        let config = Config::parse_at(&text, path, source, running)?;
         Ok((config, text))
     }
 
     /// Parses `text`, the contents of the config at `path`, in the language its extension names.
     pub fn parse(text: &str, path: PathBuf, source: ConfigSource) -> Result<Config, Error> {
+        Config::parse_at(text, path, source, &current_release())
+    }
+
+    /// [`Config::parse`] for a deslag whose release is `running`, which is what a stamp may not be
+    /// newer than. The binary is always the release it was built as; a caller that asks what some
+    /// other release would do passes that release, and nothing is read from the environment.
+    pub fn parse_at(
+        text: &str,
+        path: PathBuf,
+        source: ConfigSource,
+        running: &semver::Version,
+    ) -> Result<Config, Error> {
         let path_string = path.display().to_string();
         let format = ConfigFormat::of(&path).ok_or_else(|| Error::ConfigFormat {
             path: path_string.clone(),
@@ -270,13 +292,12 @@ impl Config {
             .deslag_version
             .map(|text| parse_stamp(&text, &path_string))
             .transpose()?;
-        let current = current_release();
         match &stamp {
-            Some(stamp) if *stamp > current => {
+            Some(stamp) if stamp > running => {
                 return Err(Error::NewerStamp {
                     path: path_string,
                     stamp: stamp.clone(),
-                    current,
+                    current: running.clone(),
                 });
             }
             _ => {}
@@ -300,6 +321,7 @@ impl Config {
             source,
             schema_version: file.schema_version,
             stamp,
+            running: running.clone(),
             sections,
             warnings: applied.warnings,
             redirected: applied.used,
@@ -324,6 +346,11 @@ impl Config {
     /// The deslag version the file declares, if it declares one.
     pub fn stamp(&self) -> Option<&semver::Version> {
         self.stamp.as_ref()
+    }
+
+    /// The release of deslag that read this file, which its stamp may not be newer than.
+    pub fn running(&self) -> &semver::Version {
+        &self.running
     }
 
     /// The release of deslag this config was last updated by: its stamp, or the baseline release
@@ -440,9 +467,17 @@ mod tests {
     use crate::config::section::Parts;
     use crate::document::{Fences, Reader, Stack};
 
+    /// Reads `text` as a deslag of release 1.0.0 would, so that the stamps written here are never
+    /// newer than the reader, whatever version the crate is at.
     fn load_json(text: &str) -> Config {
-        Config::parse(text, PathBuf::from("deslag.json"), ConfigSource::Explicit)
-            .unwrap_or_else(|error| panic!("{text}: {error}"))
+        let running = semver::Version::new(1, 0, 0);
+        Config::parse_at(
+            text,
+            PathBuf::from("deslag.json"),
+            ConfigSource::Explicit,
+            &running,
+        )
+        .unwrap_or_else(|error| panic!("{text}: {error}"))
     }
 
     /// A config written as a JSON array is read by position, in `Head` and in `ConfigFile`. A field

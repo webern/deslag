@@ -94,8 +94,9 @@ An unstamped config is taken to be from 0.0.1, so from the first release after t
 `tests/common/mod.rs` leaves out that line, and the tests about the note ask for `raw_stderr`.
 
 `make check-release` runs the ignored tests of `tests/changelog.rs`. They fail while `next/` holds
-an entry, a phrase is left at `since = "next"`, the crate version has a pre-release or build part, or
-the newest frozen configs leave out a setting.
+an entry, a phrase is left at `since = "next"`, the crate version has a pre-release or build part, a
+release directory, a frozen directory or a phrase is above the crate version, or the newest frozen
+configs leave out a setting. No other test depends on the value of the crate version.
 
 A test lints the entries and every file the repo's config selects with each phrase above its stamp
 banned, so the change that adds a phrase also rewords the text that uses it, and the release has

@@ -393,6 +393,8 @@ globs = ["*.md"]
 
 [cpp]
 surfaces = ["comment"]
+
+[toml]
 "#;
 
 /// What `deslag explain` prints after the lint tables of `path` in `repo`.
@@ -466,6 +468,40 @@ fn a_cpp_file_lists_only_the_surfaces_it_is_read_for() {
 }
 
 #[test]
+fn a_toml_file_reads_its_comments_as_plain() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    repo.write(
+        "Cargo.toml",
+        "# Package notes.\n[package]\nname = \"x\" # the name\n",
+    );
+    let (_, stdout, _) = explain(&repo, &["Cargo.toml"]);
+    assert!(
+        stdout.contains("# selected by [toml]: yes\n# reads: comment as plain\n"),
+        "{stdout}"
+    );
+    assert_eq!(
+        regions_of(&repo, "Cargo.toml"),
+        "# prose regions: 2\n\
+         #   1:1-1:17 comment plain \"Package notes.\"\n\
+         #   3:12-3:22 comment plain \"the name\"\n"
+    );
+}
+
+#[test]
+fn a_section_that_reads_no_surface_says_it_reads_nothing() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = 1\n[rust]\nsurfaces = []\n");
+    repo.write("src/lib.rs", "//! Docs.\n// note\n");
+    let (_, stdout, _) = explain(&repo, &["src/lib.rs"]);
+    assert!(
+        stdout.contains("# selected by [rust]: yes\n# reads: nothing\n"),
+        "{stdout}"
+    );
+    assert_eq!(regions_of(&repo, "src/lib.rs"), "# prose regions: none\n");
+}
+
+#[test]
 fn a_markdown_file_lists_the_comments_of_its_fences_as_their_readers_read_them() {
     let repo = Repo::new();
     repo.write("deslag.toml", CODE);
@@ -487,6 +523,20 @@ fn a_markdown_file_lists_the_comments_of_its_fences_as_their_readers_read_them()
 }
 
 #[test]
+fn a_fenced_cpp_doc_comment_is_plain() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    repo.write(
+        "a.md",
+        "Prose.\n\n```cpp\n/** Fenced doxygen. */\nint a;\n```\n",
+    );
+    assert_eq!(
+        regions_of(&repo, "a.md"),
+        "# prose regions: 1\n#   4:1-4:23 doc_comment plain \"Fenced doxygen.\"\n"
+    );
+}
+
+#[test]
 fn the_reads_line_of_markdown_follows_the_fences_setting() {
     let repo = Repo::new();
     repo.write(
@@ -494,6 +544,14 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
         "schema_version = 1\n[md]\nfences.languages = []\n",
     );
     repo.write("a.md", "```rust\n// fenced\n```\n");
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
+    assert_eq!(regions_of(&repo, "a.md"), "");
+
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences.surfaces = []\n",
+    );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
     assert_eq!(regions_of(&repo, "a.md"), "");

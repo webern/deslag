@@ -18,6 +18,7 @@
 pub mod cpp;
 mod cpp_regions;
 mod edit;
+mod fence;
 mod lift;
 mod map;
 mod markdown;

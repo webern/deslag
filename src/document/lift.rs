@@ -23,8 +23,7 @@ pub(super) struct Layers<'a> {
 }
 
 /// Reads the text of `region` as `markup` and lifts what it finds into the coordinates of `source`,
-/// the file. The Markdown of a doc comment does not read fences, which bounds how deep regions
-/// nest.
+/// the file. The Markdown of a doc comment does not read fences, which bounds how deep regions nest.
 ///
 /// A text that is not as the file holds it, like a line break read as a space, is owned by the
 /// piece. A point whose end is a line break takes in the gap after it too, up to the next text,
@@ -210,7 +209,9 @@ impl<'a> Document<'a> {
     /// points take them in at the offset the region starts at, and the blocks of prose after it
     /// move down the pieces row. Tokens and sentences are not made yet, so they need no moving.
     ///
-    /// The region goes in among the top-level blocks, which are not nested in one another.
+    /// A region in the text of a fenced code block goes into that block, at any depth, and replaces
+    /// the lines of code it held as its body, which a lint that reads code never sees again. Any
+    /// other region goes in among the top-level blocks, which are not nested in one another.
     pub(super) fn merge(&mut self, layers: Layers<'a>) {
         let Layers {
             mut block,
@@ -222,12 +223,24 @@ impl<'a> Document<'a> {
         let first = self
             .pieces
             .partition_point(|piece| piece.range.start < start);
-        shift(std::slice::from_mut(&mut block), first);
+        shift(std::slice::from_mut(&mut block), 0, first);
         let at = self
             .blocks
             .partition_point(|block| block.range.start < start);
-        shift(&mut self.blocks[at..], pieces.len());
-        self.blocks.insert(at, block);
+        // The block before `at` may hold the region, and have blocks of prose after it.
+        let held = at.saturating_sub(1);
+        shift(&mut self.blocks[held..], start, pieces.len());
+        let fence = at
+            .checked_sub(1)
+            .and_then(|before| fence_in(&mut self.blocks[before], start));
+        match fence {
+            Some(Block {
+                body: Body::Blocks(inside),
+                ..
+            }) => inside.push(block),
+            Some(fence) => fence.body = Body::Blocks(vec![block]),
+            None => self.blocks.insert(at, block),
+        }
         self.pieces.splice(first..first, pieces);
         let at = self.spans.partition_point(|span| span.range.start < start);
         self.spans.splice(at..at, spans);
@@ -238,14 +251,32 @@ impl<'a> Document<'a> {
     }
 }
 
+/// The block of code that `block` is or holds, if one holds the byte `at`.
+fn fence_in<'b, 'a>(block: &'b mut Block<'a>, at: usize) -> Option<&'b mut Block<'a>> {
+    if !block.range.contains(&at) {
+        return None;
+    }
+    if matches!(block.kind, BlockKind::Code { .. }) {
+        return Some(block);
+    }
+    let Body::Blocks(children) = &mut block.body else {
+        return None;
+    };
+    let inside = children.partition_point(|child| child.range.start <= at);
+    fence_in(&mut children[inside.checked_sub(1)?], at)
+}
+
 /// Moves the pieces row ranges of the blocks of prose in `blocks` and in the blocks they hold up
-/// by `by`.
-fn shift(blocks: &mut [Block<'_>], by: usize) {
+/// by `by`, if they start at `from` or after. A block is placed by where it starts in the file,
+/// not by its pieces: an empty cell before the region has the pieces `first..first` too.
+fn shift(blocks: &mut [Block<'_>], from: usize, by: usize) {
     for block in blocks {
         match &mut block.body {
-            Body::Blocks(children) => shift(children, by),
-            Body::Text { pieces, .. } => *pieces = pieces.start + by..pieces.end + by,
-            Body::Raw(_) | Body::Empty => {}
+            Body::Blocks(children) => shift(children, from, by),
+            Body::Text { pieces, .. } if block.range.start >= from => {
+                *pieces = pieces.start + by..pieces.end + by;
+            }
+            Body::Text { .. } | Body::Raw(_) | Body::Empty => {}
         }
     }
 }
@@ -253,7 +284,7 @@ fn shift(blocks: &mut [Block<'_>], by: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::{PieceKind, PointKind, Surface};
+    use crate::document::{Fences, Language, PieceKind, PointKind, Surface};
 
     fn stack() -> Stack {
         let surfaces = vec![Surface::DocComment, Surface::Comment];
@@ -362,5 +393,73 @@ mod tests {
             })
             .collect();
         assert_eq!(rows, [&(0..1), &(1..3), &(3..4)]);
+    }
+
+    /// The text of the pieces of each block of prose of `document`, in the order of the file.
+    fn prose(document: &Document<'_>) -> Vec<String> {
+        document
+            .walk()
+            .filter(|(block, _)| matches!(block.body, Body::Text { .. }))
+            .map(|(block, _)| {
+                let pieces = document.pieces_of(block);
+                pieces.iter().map(|piece| piece.text.as_ref()).collect()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_region_in_a_fence_moves_the_prose_after_it_wherever_that_sits() {
+        let fences = Fences {
+            languages: vec![Language::Rust],
+            surfaces: vec![Surface::Comment],
+        };
+        let stack = Stack::new(Reader::Markdown { fences });
+        // After the fence: a paragraph in its item, a later item, a table, a top-level paragraph.
+        let source = "| a | b |\n|---|---|\n| c |   |\n\n- first\n\n  ```rust\n  // one\n  fn a() {}\n  // two\n  ```\n\n  in the item\n\n- second\n\n| d |\n|---|\n| e |\n\ntop\n";
+        let document = stack.read(source);
+
+        assert_eq!(document.regions.len(), 2);
+        assert_eq!(
+            prose(&document),
+            [
+                "a",
+                "b",
+                "c",
+                "",
+                "first",
+                "one",
+                "two",
+                "in the item",
+                "second",
+                "d",
+                "e",
+                "top"
+            ]
+        );
+        // The pieces row is in the order of the file, and each block's pieces are inside it.
+        assert!(
+            document
+                .pieces
+                .windows(2)
+                .all(|pair| pair[0].range.end <= pair[1].range.start)
+        );
+        for (block, _) in document.walk() {
+            for piece in document.pieces_of(block) {
+                assert!(
+                    block.range.start <= piece.range.start && piece.range.end <= block.range.end
+                );
+            }
+        }
+        // An empty cell just before the fence has the pieces the fence's comment will have.
+        let source = "- x\n\n  | a |\n  |---|\n  |   |\n\n  ```rust\n  // c\n  ```\n";
+        let cell = stack.read(source);
+        assert_eq!(prose(&cell), ["x", "a", "", "c"]);
+        let rows: Vec<Range<usize>> = (cell.walk())
+            .filter_map(|(block, _)| match &block.body {
+                Body::Text { pieces, .. } => Some(pieces.clone()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(rows, [0..1, 1..2, 2..2, 2..3]);
     }
 }

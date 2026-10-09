@@ -81,6 +81,17 @@ pub(crate) enum Carrier {
         /// any blank line before it.
         close: Range<usize>,
     },
+    /// The lines of a fenced code block in Markdown. It is a step of reading the comments in the
+    /// block, which are regions of their own, and no region holds it.
+    Fence {
+        /// From the start of the block to the start of its first line: the opener.
+        open: Range<usize>,
+        /// Its lines of code. The line break of the last is not here, but in `close`.
+        frame: Frame,
+        /// From the end of the last line's text to the end of the block: the closer, or nothing
+        /// when the block is not closed.
+        close: Range<usize>,
+    },
 }
 
 /// The lines of a carrier.
@@ -141,11 +152,12 @@ impl Region {
 }
 
 impl Carrier {
-    /// The lines, and what follows the last of them.
-    fn parts(&self) -> (&Frame, Option<&Range<usize>>) {
+    /// What comes before the lines, the lines, and what follows the last of them.
+    fn parts(&self) -> (Option<&Range<usize>>, &Frame, Option<&Range<usize>>) {
         match self {
-            Carrier::LineComment(frame) => (frame, None),
-            Carrier::BlockComment { frame, close } => (frame, Some(close)),
+            Carrier::LineComment(frame) => (None, frame, None),
+            Carrier::BlockComment { frame, close } => (None, frame, Some(close)),
+            Carrier::Fence { open, frame, close } => (Some(open), frame, Some(close)),
         }
     }
 
@@ -153,8 +165,11 @@ impl Carrier {
     /// holds it. A line the region had keeps its bytes around it and a new one is written from the
     /// template, so the region's own text encodes to the bytes it was read from.
     pub fn encode(&self, source: &str, inner: &str) -> String {
-        let (frame, close) = self.parts();
+        let (open, frame, close) = self.parts();
         let mut out = String::with_capacity(inner.len() * 2);
+        if let Some(open) = open {
+            out.push_str(&source[open.clone()]);
+        }
         for (at, line) in inner.split('\n').enumerate() {
             if at > 0 {
                 out.push_str(frame.ending(source, at - 1));
@@ -176,19 +191,44 @@ impl Carrier {
     /// Only reading the result again proves an edit.
     pub fn accepts(&self, fragment: &str) -> bool {
         match self {
-            Carrier::LineComment(_) => true,
+            Carrier::LineComment(_) | Carrier::Fence { .. } => true,
             Carrier::BlockComment { .. } => !fragment.contains("/*") && !fragment.contains("*/"),
         }
     }
 
-    /// The bytes of the file that are not the region's text: each line's prefix and ending, and the
-    /// close.
+    /// The bytes of the file that are not the region's text: the opener, each line's prefix and
+    /// ending, and the close.
     fn syntax(&self) -> impl Iterator<Item = &Range<usize>> {
-        let (frame, close) = self.parts();
+        let (open, frame, close) = self.parts();
         let lines = frame.lines.iter();
-        lines
-            .flat_map(|line| [&line.prefix, &line.ending])
+        open.into_iter()
+            .chain(lines.flat_map(|line| [&line.prefix, &line.ending]))
             .chain(close)
+    }
+
+    /// The syntax of a region read from the text of a fenced block, as the file holds it. `map`
+    /// says where each byte of the block's text is in the file, `fence` is the [`Carrier::Fence`]
+    /// of the block, and `at` is where the region is in the file.
+    ///
+    /// Each line keeps its text, which lies in one line of the block. The bytes the block puts
+    /// between two lines of text, such as the `> ` of a quote or the `\r` of a CRLF, are the
+    /// ending of the line before. A line that is written new takes the block's prefix before its
+    /// own, and the block's line break.
+    pub fn compose(&self, map: &SourceMap, fence: &Carrier, at: &Range<usize>) -> Carrier {
+        let (_, outer, _) = fence.parts();
+        let (_, frame, _) = self.parts();
+        let mut end = at.start;
+        let frame = frame.compose(map, &outer.template, &mut end);
+        match self {
+            Carrier::LineComment(_) => Carrier::LineComment(frame),
+            Carrier::BlockComment { .. } => Carrier::BlockComment {
+                frame,
+                close: end..at.end,
+            },
+            Carrier::Fence { .. } => {
+                unreachable!("a block of code is not read from a block of code")
+            }
+        }
     }
 
     /// Whether `range` of the file holds any byte that is not the region's text.
@@ -205,6 +245,29 @@ impl Carrier {
 }
 
 impl Frame {
+    /// These lines of a region read from the text of a fenced block, as the file holds them, from
+    /// `end`, which becomes the end of the last. `outer` is the block's template.
+    fn compose(&self, map: &SourceMap, outer: &Template, end: &mut usize) -> Frame {
+        let file = |at: usize| map.to_file(at..at).range.start;
+        let mut lines = Vec::with_capacity(self.lines.len());
+        for line in &self.lines {
+            let prefix = *end..file(line.prefix.end).max(*end);
+            let text = prefix.end + line.ending.start - line.prefix.end;
+            let ending = text..if line.ending.is_empty() {
+                text
+            } else {
+                file(line.ending.end).max(text)
+            };
+            *end = ending.end;
+            lines.push(CarrierLine { prefix, ending });
+        }
+        let template = Template {
+            prefix: format!("{}{}", outer.prefix, self.template.prefix),
+            ending: outer.ending.clone(),
+        };
+        Frame { lines, template }
+    }
+
     /// The prefix of line `at`, of a blank line if `blank`.
     fn prefix<'x>(&'x self, source: &'x str, at: usize, blank: bool) -> &'x str {
         match self.lines.get(at) {

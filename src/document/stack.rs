@@ -1,7 +1,7 @@
 //! How a file is read into a [`Document`]: which reader, and what it needs to read again.
 
 use super::region::Markup;
-use super::{Document, Surface, cpp_regions, markdown, plain, rust_regions};
+use super::{Document, Surface, cpp_regions, fence, plain, rust_regions};
 
 /// A language whose code, fenced in Markdown, is read for its comments.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,7 +92,7 @@ impl Stack {
     /// not need.
     pub(crate) fn read<'a>(&self, source: &'a str) -> Document<'a> {
         match &self.outer {
-            Reader::Markdown { .. } => markdown::read(self, source),
+            Reader::Markdown { fences } => fence::read(self, fences, source),
             Reader::Plain => plain::read(self, source),
             Reader::Rust { surfaces } => rust_regions::read(self, surfaces, source),
             Reader::Cpp { surfaces } => cpp_regions::read(self, surfaces, source),

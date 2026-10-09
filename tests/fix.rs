@@ -35,6 +35,10 @@ fn refused(text: &str, from: &str, to: &str) -> Vec<Option<Refusal>> {
     replace(text, from, to).1
 }
 
+/// What `deslag fix` prints when it reports on no file.
+const NOTHING: &str = "deslag fixed nothing: fix replaces only the characters that `banned_chars` names, \
+                       and no file holds one it can replace.\n\n";
+
 /// A repo with the default config and `README.md` holding `text`.
 fn repo_with(text: &str) -> Repo {
     let repo = Repo::new();
@@ -328,7 +332,7 @@ fn a_file_with_nothing_to_fix_is_not_written() {
     let fixed = inode();
     assert_ne!(before, fixed, "a fixed file takes the place of the old one");
     let again = repo.run(&["fix"]);
-    assert_eq!((code(&again), stderr(&again)), (0, String::new()));
+    assert_eq!((code(&again), stderr(&again)), (0, NOTHING.to_string()));
     assert_eq!(inode(), fixed);
 }
 
@@ -445,4 +449,45 @@ fn a_path_check_does_not_read_is_an_error_and_nothing_is_written() {
         assert_eq!(read(&repo, "README.md"), text.as_bytes());
     }
     assert_eq!(read(&elsewhere, "outside.md"), text.as_bytes());
+}
+
+#[test]
+fn a_run_that_reports_on_no_file_says_so_before_the_check() {
+    let repo = repo_with("# Notes\n\nPlain words.\n");
+    let output = repo.run(&["fix"]);
+    assert_eq!((code(&output), stderr(&output)), (0, NOTHING.to_string()));
+    assert_eq!(stdout(&output), "");
+
+    // A dry run says what it would have done, and the exit code and the JSON stay those of check.
+    let dry = repo.run(&["fix", "--dry-run"]);
+    assert_eq!(
+        (code(&dry), stderr(&dry)),
+        (0, NOTHING.replace("fixed", "would fix"))
+    );
+    let json = repo.run(&["fix", "--format", "json"]);
+    assert_eq!(
+        stdout(&json),
+        stdout(&repo.run(&["check", "--format", "json"]))
+    );
+
+    // The line comes before the check's report, which a failing lint still prints.
+    repo.write(
+        "deslag.toml",
+        &format!("{CONFIG}\n[md.lints.density]\nmax_paragraph_chars = 5\n"),
+    );
+    let output = repo.run(&["fix"]);
+    assert_eq!(code(&output), 1);
+    assert!(stderr(&output).starts_with(NOTHING), "{}", stderr(&output));
+    assert!(stderr(&output).contains("ERROR: deslag detected"));
+}
+
+#[test]
+fn a_file_with_only_places_left_is_not_a_run_that_reported_on_no_file() {
+    let repo = repo_with("# Notes\n\nA line that ends\n\u{2014} and starts with a dash.\n");
+    let output = repo.run(&["fix"]);
+    assert!(
+        !stderr(&output).contains("fixed nothing"),
+        "{}",
+        stderr(&output)
+    );
 }

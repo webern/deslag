@@ -11,6 +11,9 @@
 //! breaks that promise, which is an error. Every file is worked out before any is written, and one
 //! that changed is written once, by [`write::replace`](crate::write::replace).
 //!
+//! A run with nothing to report about any file says so in one line, [`nothing_fixed`], so that
+//! silence is not all an agent has to read.
+//!
 //! [`Violation::edits`]: crate::Violation::edits
 //! [`Document::apply`]: crate::Document::apply
 
@@ -112,6 +115,17 @@ pub fn fix(
             outcome,
         })
         .collect())
+}
+
+/// What `deslag fix` prints when it reports on no file, with no trailing newline. Fix edits only
+/// the characters `banned_chars` names, and says so, so that a run that changed nothing is not
+/// taken for one that failed to look. `dry_run` says nothing would have been written.
+pub fn nothing_fixed(dry_run: bool) -> String {
+    let did = if dry_run { "would fix" } else { "fixed" };
+    format!(
+        "deslag {did} nothing: fix replaces only the characters that `banned_chars` names, and no \
+         file holds one it can replace."
+    )
 }
 
 impl FileFix {

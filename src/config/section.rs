@@ -257,14 +257,16 @@ impl Section {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::Reader;
+    use crate::document::{Fences, Reader};
 
     fn parts(overrides: usize) -> Parts {
         Parts {
             globs: None,
             default_globs: &["*.md"],
             extensions: None,
-            stack: Stack::new(Reader::Markdown),
+            stack: Stack::new(Reader::Markdown {
+                fences: Fences::default(),
+            }),
             lints: Lints::default(),
             overrides: (0..overrides)
                 .map(|_| OverrideFile {

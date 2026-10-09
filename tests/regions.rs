@@ -2,7 +2,7 @@
 //! them, and what `Document::apply` makes of an edit to one.
 
 use deslag::Document;
-use deslag::document::{BlockKind, Edit, Reader, Refusal, Stack, Surface};
+use deslag::document::{BlockKind, Edit, Fences, Reader, Refusal, Stack, Surface};
 use deslag::lint::banned_chars;
 
 const BOTH: [Surface; 2] = [Surface::DocComment, Surface::Comment];
@@ -102,7 +102,10 @@ fn a_pair_of_dash_lines_in_a_doc_comment_is_a_rule_and_a_heading_and_not_frontma
         ]
     );
     // A Markdown file keeps reading the pair as frontmatter.
-    let file = Stack::new(Reader::Markdown).document("para\n\n---\nfoo\n---\nafter\n");
+    let file = Stack::new(Reader::Markdown {
+        fences: Fences::default(),
+    })
+    .document("para\n\n---\nfoo\n---\nafter\n");
     assert!(
         file.walk()
             .any(|(block, _)| block.kind == BlockKind::Frontmatter)

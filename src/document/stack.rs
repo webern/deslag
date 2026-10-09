@@ -3,11 +3,34 @@
 use super::region::Markup;
 use super::{Document, Surface, cpp_regions, markdown, plain, rust_regions};
 
+/// A language whose code, fenced in Markdown, is read for its comments.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Language {
+    /// Rust.
+    Rust,
+    /// C and C++.
+    Cpp,
+}
+
+/// The fenced code in Markdown that is read for its comments, as a [`Reader::Rust`] or a
+/// [`Reader::Cpp`] reads a file. The default reads none. The Markdown of a doc comment does not
+/// read fences, so the comments in a fence hold no fence of their own.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Fences {
+    /// The languages read. A fence is of the language its info string names.
+    pub languages: Vec<Language>,
+    /// The kinds of comment to read in them.
+    pub surfaces: Vec<Surface>,
+}
+
 /// A kind of text a document can be read from.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Reader {
-    /// Markdown, with its frontmatter.
-    Markdown,
+    /// Markdown, with its frontmatter, and the comments of the code in the `fences` it reads.
+    Markdown {
+        /// Which fenced code to read.
+        fences: Fences,
+    },
     /// Plain text, such as the text of a comment.
     Plain,
     /// A Rust file: the comments of the `surfaces` it is read for, each as a region of prose.
@@ -28,7 +51,9 @@ impl Reader {
     /// C++ comment is plain, a doc comment too: Markdown reads a diagram in one as prose.
     pub(crate) fn markup(&self, surface: Surface) -> Markup {
         match (self, surface) {
-            (Reader::Markdown, _) | (Reader::Rust { .. }, Surface::DocComment) => Markup::Markdown,
+            (Reader::Markdown { .. }, _) | (Reader::Rust { .. }, Surface::DocComment) => {
+                Markup::Markdown
+            }
             (Reader::Plain, _)
             | (Reader::Rust { .. }, Surface::Comment)
             | (Reader::Cpp { .. }, _) => Markup::Plain,
@@ -67,7 +92,7 @@ impl Stack {
     /// not need.
     pub(crate) fn read<'a>(&self, source: &'a str) -> Document<'a> {
         match &self.outer {
-            Reader::Markdown => markdown::read(self, source),
+            Reader::Markdown { .. } => markdown::read(self, source),
             Reader::Plain => plain::read(self, source),
             Reader::Rust { surfaces } => rust_regions::read(self, surfaces, source),
             Reader::Cpp { surfaces } => cpp_regions::read(self, surfaces, source),
@@ -85,7 +110,7 @@ impl Stack {
     /// the file.
     pub(crate) fn provides(&self, need: Need) -> bool {
         match (&self.outer, need) {
-            (Reader::Markdown, _) => true,
+            (Reader::Markdown { .. }, _) => true,
             (Reader::Plain, Need::Sentences | Need::Text) => true,
             (Reader::Plain, Need::File | Need::Structure) => false,
             (Reader::Rust { surfaces } | Reader::Cpp { surfaces }, _) => surfaces
@@ -121,7 +146,7 @@ impl Stack {
     /// What this stack reads, for a message: the surfaces of a code file, or the format.
     pub(crate) fn reads(&self) -> String {
         match &self.outer {
-            Reader::Markdown => "Markdown".to_string(),
+            Reader::Markdown { .. } => "Markdown".to_string(),
             Reader::Plain => "plain text".to_string(),
             Reader::Rust { surfaces } | Reader::Cpp { surfaces } => match surfaces.as_slice() {
                 [] => "no surface".to_string(),
@@ -147,7 +172,10 @@ mod tests {
     #[test]
     fn read_gives_the_first_layer_and_document_every_layer() {
         let source = "One sentence here. Another follows.\n";
-        for outer in [Reader::Markdown, Reader::Plain] {
+        let markdown = Reader::Markdown {
+            fences: Fences::default(),
+        };
+        for outer in [markdown, Reader::Plain] {
             let stack = Stack::new(outer.clone());
             let first = stack.read(source);
             let whole = stack.document(source);
@@ -170,7 +198,9 @@ mod tests {
         assert_eq!(document.stack, stack);
         assert_eq!(
             Document::markdown("x\n").stack,
-            Stack::new(Reader::Markdown)
+            Stack::new(Reader::Markdown {
+                fences: Fences::default()
+            })
         );
     }
 
@@ -212,7 +242,13 @@ mod tests {
         }
         assert!(!cpp(&[]).provides(Need::Text));
         for (reader, surface, markup) in [
-            (Reader::Markdown, Surface::Comment, Markup::Markdown),
+            (
+                Reader::Markdown {
+                    fences: Fences::default(),
+                },
+                Surface::Comment,
+                Markup::Markdown,
+            ),
             (Reader::Plain, Surface::DocComment, Markup::Plain),
             (
                 Reader::Rust { surfaces: vec![] },

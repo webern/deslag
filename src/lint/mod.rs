@@ -671,7 +671,7 @@ mod tests {
     use std::path::Path;
 
     use super::{Lint, decode};
-    use crate::document::{Reader, Stack};
+    use crate::document::{Fences, Reader, Stack};
 
     /// A valid file reads as it is. An invalid byte is one `$` wherever it falls, so the text is
     /// as long as the bytes: alone, in front of a multi-byte character, cut off at the end, or
@@ -697,7 +697,9 @@ mod tests {
     /// that need them cannot run on it.
     #[test]
     fn markdown_provides_every_need_and_plain_text_only_prose() {
-        let markdown = Stack::new(Reader::Markdown);
+        let markdown = Stack::new(Reader::Markdown {
+            fences: Fences::default(),
+        });
         let plain = Stack::new(Reader::Plain);
         let refused: Vec<Lint> = Lint::ALL
             .into_iter()

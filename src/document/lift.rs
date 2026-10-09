@@ -8,7 +8,9 @@ use std::ops::Range;
 
 use super::markdown;
 use super::region::{Markup, Region};
-use super::{Block, BlockKind, Body, Document, Piece, Point, Reader, Span, SpanKind, Stack};
+use super::{
+    Block, BlockKind, Body, Document, Fences, Piece, Point, Reader, Span, SpanKind, Stack,
+};
 
 /// The first layer of one region, in the coordinates of the file.
 pub(super) struct Layers<'a> {
@@ -21,14 +23,20 @@ pub(super) struct Layers<'a> {
 }
 
 /// Reads the text of `region` as `markup` and lifts what it finds into the coordinates of `source`,
-/// the file.
+/// the file. The Markdown of a doc comment does not read fences, which bounds how deep regions
+/// nest.
 ///
 /// A text that is not as the file holds it, like a line break read as a space, is owned by the
 /// piece. A point whose end is a line break takes in the gap after it too, up to the next text,
 /// so that a soft break covers the end of a line and the prefix of the next.
 pub(super) fn lift<'a>(source: &'a str, region: &Region, markup: Markup) -> Layers<'a> {
     let inner = match markup {
-        Markup::Markdown => markdown::read_doc(&Stack::new(Reader::Markdown), &region.inner),
+        Markup::Markdown => {
+            let reader = Reader::Markdown {
+                fences: Fences::default(),
+            };
+            markdown::read_doc(&Stack::new(reader), &region.inner)
+        }
         Markup::Plain => Stack::new(Reader::Plain).read(&region.inner),
     };
     let lifter = Lifter { source, region };

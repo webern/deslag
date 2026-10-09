@@ -42,7 +42,7 @@ pub(crate) use map::Gathered;
 use region::Region;
 pub use region::Surface;
 pub(crate) use stack::Need;
-pub use stack::{Reader, Stack};
+pub use stack::{Fences, Language, Reader, Stack};
 
 /// A file read into blocks, pieces, spans, points, tokens and sentences.
 ///
@@ -319,7 +319,10 @@ pub struct Sentence {
 impl<'a> Document<'a> {
     /// Reads `source` as Markdown.
     pub fn markdown(source: &'a str) -> Document<'a> {
-        Stack::new(Reader::Markdown).document(source)
+        Stack::new(Reader::Markdown {
+            fences: Fences::default(),
+        })
+        .document(source)
     }
 
     /// Reads `source` as plain text, such as the text of a `//` comment: paragraphs, bulleted and

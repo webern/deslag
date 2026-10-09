@@ -24,8 +24,8 @@ use std::ops::Range;
 use super::region::{Region, Surface};
 use super::region_build::{Row, block_region, line_region, line_start, whole_line};
 use super::rust::{DocStyle, Lexeme, LexemeKind, lex};
-use super::skip::{Language, List};
-use super::{Document, Stack};
+use super::skip::List;
+use super::{Document, Language, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.

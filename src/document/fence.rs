@@ -19,7 +19,7 @@ use super::lift::lift;
 use super::map::{SegmentKind, SourceMap};
 use super::region::{Carrier, CarrierLine, Frame, Region, Template};
 use super::region_build::line_start;
-use super::skip::{self, List};
+use super::skip::List;
 use super::{
     Block, BlockKind, Body, Document, Fences, Language, Reader, Stack, Surface, cpp_regions,
     markdown, rust_regions,
@@ -80,7 +80,7 @@ impl Language {
                 let reader = Reader::Rust {
                     surfaces: surfaces_of,
                 };
-                let lists = |surface| List::new(skip::Language::Rust, reader.markup(surface));
+                let lists = |surface| List::new(Language::Rust, reader.markup(surface));
                 let regions = rust_regions::regions(text, surfaces, lists);
                 (reader, regions)
             }
@@ -88,7 +88,7 @@ impl Language {
                 let reader = Reader::Cpp {
                     surfaces: surfaces_of,
                 };
-                let lists = |surface| List::new(skip::Language::Cpp, reader.markup(surface));
+                let lists = |surface| List::new(Language::Cpp, reader.markup(surface));
                 let regions = cpp_regions::regions(text, surfaces, lists);
                 (reader, regions)
             }

@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nsrc/lib.rs has 4 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 2: U+2500 box-drawing character \"─\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 21,
+          "end": 24,
+          "line": 2,
+          "column": 4,
+          "end_line": 2,
+          "end_column": 5,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 24,
+          "end": 27,
+          "line": 2,
+          "column": 5,
+          "end_line": 2,
+          "end_column": 6,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 34,
+          "end": 37,
+          "line": 2,
+          "column": 13,
+          "end_line": 2,
+          "end_column": 14,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 37,
+          "end": 40,
+          "line": 2,
+          "column": 14,
+          "end_line": 2,
+          "end_column": 15,
+          "note": "U+2500 box-drawing character \"─\"; write `-`"
+        }
+      ]
+    }
+  ]
+}

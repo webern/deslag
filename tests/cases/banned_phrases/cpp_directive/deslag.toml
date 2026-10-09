@@ -1,0 +1,6 @@
+schema_version = 1
+
+[cpp.lints.banned_phrases.ban]
+"delve into" = "say what you found instead"
+"nolint" = "write the reason in plain words"
+"fallthrough" = ""

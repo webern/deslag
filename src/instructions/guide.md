@@ -64,8 +64,9 @@ file that fails, then a tally, and exits 1. A clean run prints nothing and exits
 deslag could not run, as with a bad config: fix the setup, not the Markdown.
 
 For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
-file's size today stops it from growing; a budget below it asks for cuts. Where one file needs a
-different limit, propose an override for it rather than loosening the limit for every file.
+file's size today stops it from growing: add 10%, and at least 500 bytes for a small file. A budget
+below it asks for cuts. Where one file needs a different limit, propose an override for it rather
+than loosening the limit for every file.
 
 ## 5. Fix the files
 

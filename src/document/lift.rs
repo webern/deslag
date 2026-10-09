@@ -7,7 +7,7 @@ use std::borrow::Cow;
 use std::ops::Range;
 
 use super::markdown;
-use super::region::{Region, Surface};
+use super::region::{Markup, Region};
 use super::{Block, BlockKind, Body, Document, Piece, Point, Reader, Span, SpanKind, Stack};
 
 /// The first layer of one region, in the coordinates of the file.
@@ -20,16 +20,16 @@ pub(super) struct Layers<'a> {
     points: Vec<Point>,
 }
 
-/// Reads the text of `region` with the reader of its surface and lifts what it finds into the
-/// coordinates of `source`, the file.
+/// Reads the text of `region` as `markup` and lifts what it finds into the coordinates of `source`,
+/// the file.
 ///
 /// A text that is not as the file holds it, like a line break read as a space, is owned by the
 /// piece. A point whose end is a line break takes in the gap after it too, up to the next text,
 /// so that a soft break covers the end of a line and the prefix of the next.
-pub(super) fn lift<'a>(source: &'a str, region: &Region) -> Layers<'a> {
-    let inner = match region.surface {
-        Surface::DocComment => markdown::read_doc(&Stack::new(Reader::Markdown), &region.inner),
-        Surface::Comment => Stack::new(Reader::Plain).read(&region.inner),
+pub(super) fn lift<'a>(source: &'a str, region: &Region, markup: Markup) -> Layers<'a> {
+    let inner = match markup {
+        Markup::Markdown => markdown::read_doc(&Stack::new(Reader::Markdown), &region.inner),
+        Markup::Plain => Stack::new(Reader::Plain).read(&region.inner),
     };
     let lifter = Lifter { source, region };
     Layers {
@@ -179,6 +179,25 @@ impl SpanKind<'_> {
 }
 
 impl<'a> Document<'a> {
+    /// The first layer of a code file whose comments are `regions`, in the order of the file: each
+    /// is read as the markup the stack's reader gives its surface, and merged in.
+    pub(super) fn of_regions(stack: &Stack, source: &'a str, regions: Vec<Region>) -> Document<'a> {
+        let mut document = Document::new(
+            stack.clone(),
+            source,
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        );
+        for region in regions {
+            let markup = stack.markup(region.surface);
+            document.merge(lift(source, &region, markup));
+            document.regions.push(region);
+        }
+        document
+    }
+
     /// Adds the layers of one region at their place in the file. The rows of pieces, spans and
     /// points take them in at the offset the region starts at, and the blocks of prose after it
     /// move down the pieces row. Tokens and sentences are not made yet, so they need no moving.
@@ -226,7 +245,7 @@ fn shift(blocks: &mut [Block<'_>], by: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::{PieceKind, PointKind};
+    use crate::document::{PieceKind, PointKind, Surface};
 
     fn stack() -> Stack {
         let surfaces = vec![Surface::DocComment, Surface::Comment];
@@ -315,7 +334,7 @@ mod tests {
             Vec::new(),
         );
         for at in [0, 2, 1] {
-            inserted.merge(lift(source, &whole.regions[at]));
+            inserted.merge(lift(source, &whole.regions[at], Markup::Markdown));
         }
 
         assert_eq!(inserted.blocks, whole.blocks);

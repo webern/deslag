@@ -1,6 +1,7 @@
 //! How a file is read into a [`Document`]: which reader, and what it needs to read again.
 
-use super::{Document, Surface, markdown, plain, rust_regions};
+use super::region::Markup;
+use super::{Document, Surface, cpp_regions, markdown, plain, rust_regions};
 
 /// A kind of text a document can be read from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,6 +15,25 @@ pub enum Reader {
         /// The kinds of comment to read. The rest of the file is not read.
         surfaces: Vec<Surface>,
     },
+    /// A C or C++ file: the comments of the `surfaces` it is read for, each as a region of prose.
+    Cpp {
+        /// The kinds of comment to read. The rest of the file is not read.
+        surfaces: Vec<Surface>,
+    },
+}
+
+impl Reader {
+    /// What reads the text of a region of `surface`, which is fixed by the reader and the surface
+    /// and by nothing else. A Rust doc comment is Markdown and its other comments are plain. A C or
+    /// C++ comment is plain, a doc comment too: Markdown reads a diagram in one as prose.
+    pub(crate) fn markup(&self, surface: Surface) -> Markup {
+        match (self, surface) {
+            (Reader::Markdown, _) | (Reader::Rust { .. }, Surface::DocComment) => Markup::Markdown,
+            (Reader::Plain, _)
+            | (Reader::Rust { .. }, Surface::Comment)
+            | (Reader::Cpp { .. }, _) => Markup::Plain,
+        }
+    }
 }
 
 /// The least of a document that a lint runs on.
@@ -63,18 +83,27 @@ impl Stack {
             Reader::Markdown => markdown::read(self, source),
             Reader::Plain => plain::read(self, source),
             Reader::Rust { surfaces } => rust_regions::read(self, surfaces, source),
+            Reader::Cpp { surfaces } => cpp_regions::read(self, surfaces, source),
         }
+    }
+
+    /// What reads the text of a region of `surface`.
+    pub(crate) fn markup(&self, surface: Surface) -> Markup {
+        self.outer.markup(surface)
     }
 
     /// Whether a document read with this stack has what `need` asks for. Markdown has all of it.
     /// Plain text is prose, so it has sentences and text, but no blocks of Markdown, and it is no
-    /// file of its own. A code file has what any of its surfaces gives, and is never the file.
+    /// file of its own. A code file has what the markup of any of its surfaces gives, and is never
+    /// the file.
     pub(crate) fn provides(&self, need: Need) -> bool {
         match (&self.outer, need) {
             (Reader::Markdown, _) => true,
             (Reader::Plain, Need::Sentences | Need::Text) => true,
             (Reader::Plain, Need::File | Need::Structure) => false,
-            (Reader::Rust { surfaces }, _) => surfaces.iter().any(|surface| surface.provides(need)),
+            (Reader::Rust { surfaces } | Reader::Cpp { surfaces }, _) => surfaces
+                .iter()
+                .any(|surface| self.markup(*surface).provides(need)),
         }
     }
 
@@ -83,7 +112,7 @@ impl Stack {
         match &self.outer {
             Reader::Markdown => "Markdown".to_string(),
             Reader::Plain => "plain text".to_string(),
-            Reader::Rust { surfaces } => match surfaces.as_slice() {
+            Reader::Rust { surfaces } | Reader::Cpp { surfaces } => match surfaces.as_slice() {
                 [] => "no surface".to_string(),
                 [only] => format!("the {} surface", only.name()),
                 several => {
@@ -152,6 +181,63 @@ mod tests {
         assert!(!comments.provides(Need::Structure));
         assert!(!both.provides(Need::File));
         assert!(!rust(&[]).provides(Need::Text));
+    }
+
+    #[test]
+    fn what_a_code_file_provides_follows_the_markup_of_its_surfaces_and_not_the_surfaces() {
+        let cpp = |surfaces: &[Surface]| {
+            Stack::new(Reader::Cpp {
+                surfaces: surfaces.to_vec(),
+            })
+        };
+        for surfaces in [
+            &[Surface::DocComment][..],
+            &[Surface::Comment],
+            &[Surface::DocComment, Surface::Comment],
+        ] {
+            let stack = cpp(surfaces);
+            assert!(stack.provides(Need::Sentences) && stack.provides(Need::Text));
+            assert!(!stack.provides(Need::Structure) && !stack.provides(Need::File));
+        }
+        assert!(!cpp(&[]).provides(Need::Text));
+        for (reader, surface, markup) in [
+            (Reader::Markdown, Surface::Comment, Markup::Markdown),
+            (Reader::Plain, Surface::DocComment, Markup::Plain),
+            (
+                Reader::Rust { surfaces: vec![] },
+                Surface::DocComment,
+                Markup::Markdown,
+            ),
+            (
+                Reader::Rust { surfaces: vec![] },
+                Surface::Comment,
+                Markup::Plain,
+            ),
+            (
+                Reader::Cpp { surfaces: vec![] },
+                Surface::DocComment,
+                Markup::Plain,
+            ),
+            (
+                Reader::Cpp { surfaces: vec![] },
+                Surface::Comment,
+                Markup::Plain,
+            ),
+        ] {
+            assert_eq!(reader.markup(surface), markup, "{reader:?} {surface:?}");
+        }
+    }
+
+    #[test]
+    fn a_stack_of_the_cpp_reader_reads_the_comments_and_keeps_its_surfaces() {
+        let stack = Stack::new(Reader::Cpp {
+            surfaces: vec![Surface::DocComment],
+        });
+        let document = stack.document("/// a\n// b\nint x; ///< c\n");
+
+        assert_eq!(document.regions.len(), 2);
+        assert_eq!(document.stack, stack);
+        assert_eq!(stack.reads(), "the doc_comment surface");
     }
 
     #[test]

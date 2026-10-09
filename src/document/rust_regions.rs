@@ -1,7 +1,7 @@
 //! Reads the comments of a Rust file as regions of prose.
 //!
-//! [`lex`] finds the comments. This module groups and trims them as rustdoc does, which is three
-//! rules and no more:
+//! [`lex`] finds the comments. This module groups them as rustdoc does, and `region_build` trims
+//! them:
 //!
 //! 1. Whole-line `//` comments of one kind at one column, on consecutive lines, are one run, and a
 //!    run is one region. `///`, `//!` and `//` are three kinds. An attribute between two doc lines
@@ -10,11 +10,8 @@
 //!    it, as in a doctest wrapped by `#[cfg_attr(.., doc = "# fn main() {")]`, and read one run at
 //!    a time the code would be taken for prose and the prose for code. A comment that follows code
 //!    on its line is a region of its own.
-//! 2. The marker and the least indent of the region's lines, a space or a tab counting for one,
-//!    are stripped from every line. A line of nothing but whitespace does not have text.
-//! 3. A block comment loses a `*` gutter if every line but the first has one, as `rustc` trims it
-//!    (`horizontal_trim`). A blank first line and a blank last line are dropped too, which is not
-//!    `rustc`'s rule: Markdown ignores them. Then rule 2 applies.
+//! 2. The marker and the least indent of the region's lines are stripped from every line.
+//! 3. A block comment loses a `*` gutter, and a first or last line of only `*`.
 //!
 //! Fenced code and hidden `# ` lines are left to the Markdown reader, which makes them code. A
 //! region with no text, such as `///` alone, is skipped.
@@ -24,28 +21,15 @@
 
 use std::ops::Range;
 
-use super::lift::lift;
-use super::map::{SegmentKind, SourceMap};
-use super::region::{Carrier, CarrierLine, Frame, Region, Surface, Template};
+use super::region::{Region, Surface};
+use super::region_build::{Row, block_region, line_region, line_start, whole_line};
 use super::rust::{DocStyle, Lexeme, LexemeKind, lex};
 use super::{Document, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
-    let mut document = Document::new(
-        stack.clone(),
-        source,
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
-    );
-    for region in regions(source, surfaces) {
-        document.merge(lift(source, &region));
-        document.regions.push(region);
-    }
-    document
+    Document::of_regions(stack, source, regions(source, surfaces))
 }
 
 /// The regions of `source` of the surfaces asked for, in the order of the file.
@@ -60,16 +44,17 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
                 at = next;
                 surfaces
                     .contains(&surface(doc))
-                    .then(|| line_region(source, doc, &lines))
+                    .then(|| rust_line_region(source, doc, &lines))
             }
             LexemeKind::BlockComment {
                 doc,
                 terminated: true,
             } => {
                 at += 1;
-                surfaces
-                    .contains(&surface(doc))
-                    .then(|| block_region(source, lexeme.range.clone(), doc))
+                surfaces.contains(&surface(doc)).then(|| {
+                    let marker = if doc.is_some() { 3 } else { 2 };
+                    block_region(source, surface(doc), lexeme.range.clone(), marker)
+                })
             }
             _ => {
                 at += 1;
@@ -87,22 +72,6 @@ fn surface(doc: Option<DocStyle>) -> Surface {
         Some(_) => Surface::DocComment,
         None => Surface::Comment,
     }
-}
-
-/// The offset where the line holding `at` starts, after a byte order mark.
-fn line_start(source: &str, at: usize) -> usize {
-    match source[..at].rfind('\n') {
-        Some(newline) => newline + 1,
-        None if source.starts_with('\u{feff}') => '\u{feff}'.len_utf8(),
-        None => 0,
-    }
-}
-
-/// Whether only spaces and tabs come before `at` on its line.
-fn whole_line(source: &str, at: usize) -> bool {
-    source[line_start(source, at)..at]
-        .bytes()
-        .all(|b| matches!(b, b' ' | b'\t'))
 }
 
 /// The line comments of the run that `lexemes[first]` starts, as ranges, and the index of the
@@ -198,26 +167,15 @@ fn only_attributes(source: &str, gap: Range<usize>, inside: &[Lexeme], attribute
     depth == 0
 }
 
-/// One line of a comment, before the text is cut from it.
-struct Row {
-    /// Where the line starts, or the comment does on its first line.
-    lead: usize,
-    /// The line after its marker or gutter, up to the end of its text.
-    rest: Range<usize>,
-    /// The line break after it, which the last line has none of.
-    ending: Range<usize>,
-}
-
 /// The region of a run of line comments: `//`, `///` or `//!`.
-fn line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> Option<Region> {
+fn rust_line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> Option<Region> {
     let marker = if doc.is_some() { 3 } else { 2 };
-    let first = lines[0].start;
     let rows: Vec<Row> = lines
         .iter()
         .enumerate()
         .map(|(at, line)| Row {
             lead: if at == 0 {
-                first
+                line.start
             } else {
                 line_start(source, line.start)
             },
@@ -227,188 +185,7 @@ fn line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> O
             }),
         })
         .collect();
-    // A trailing comment's new lines take the indent of its line, not the code before it.
-    let before = &source[line_start(source, first)..first];
-    let indent = &before[..before.len() - before.trim_start_matches([' ', '\t']).len()];
-    let template = format!("{indent}{} ", &source[first..first + marker]);
-    let outer = first..lines[lines.len() - 1].end;
-    let (inner, map, frame) = build(source, &rows, Some(template))?;
-    let carrier = Carrier::LineComment(frame);
-    Some(region(source, doc, outer, inner, map, carrier))
-}
-
-/// The region of a block comment: `/* */`, `/** */` or `/*! */`.
-fn block_region(source: &str, outer: Range<usize>, doc: Option<DocStyle>) -> Option<Region> {
-    let body = outer.start + if doc.is_some() { 3 } else { 2 }..outer.end - 2;
-    let mut rows = Vec::new();
-    let mut at = body.start;
-    let mut lines = source[body].split('\n').peekable();
-    while let Some(line) = lines.next() {
-        let last = lines.peek().is_none();
-        let end = at + line.len() - usize::from(!last && line.ends_with('\r'));
-        let ending = if last {
-            end..end
-        } else {
-            end..at + line.len() + 1
-        };
-        rows.push(Row {
-            lead: at,
-            rest: at..end,
-            ending,
-        });
-        at += line.len() + 1;
-    }
-
-    // A blank first line and a blank last line are gap, if there is more than one line.
-    let blank = |row: &Row| source[row.rest.clone()].trim().is_empty();
-    let many = rows.len() > 1;
-    let from = usize::from(many && blank(&rows[0]));
-    let to = rows.len() - usize::from(many && blank(&rows[rows.len() - 1]));
-    let closed_here = to == rows.len();
-    let kept = rows.get_mut(from..to).filter(|kept| !kept.is_empty())?;
-    kept[0].lead = outer.start;
-    if closed_here {
-        // The line that holds the `*/` ends before the ASCII whitespace in front of it. Any other
-        // whitespace, such as a no-break space, is text.
-        let last = &mut kept[kept.len() - 1];
-        let text = source[last.rest.clone()].trim_end_matches(|c: char| c.is_ascii_whitespace());
-        last.rest.end = last.rest.start + text.len();
-    }
-    gutter(source, kept);
-
-    let (inner, map, frame) = build(source, kept, None)?;
-    let close = kept[kept.len() - 1].rest.end..outer.end;
-    let carrier = Carrier::BlockComment { frame, close };
-    Some(region(source, doc, outer, inner, map, carrier))
-}
-
-/// Takes the gutter off the `rows` of a block comment: if every row but the first, which follows
-/// the opener, holds a `*` after nothing but whitespace, at one column, then the whitespace and the
-/// `*` are not text. Blank rows at either end do not count, and one between does.
-fn gutter(source: &str, rows: &mut [Row]) {
-    let blank = |row: &Row| source[row.rest.clone()].trim().is_empty();
-    let star = |row: &Row| {
-        let text = &source[row.rest.clone()];
-        let column = text.bytes().position(|b| !matches!(b, b' ' | b'\t'))?;
-        (text.as_bytes()[column] == b'*').then_some(column)
-    };
-    let starts_with_star = star(&rows[0]).is_some();
-    let skipped = usize::from(!starts_with_star);
-    let candidates = &mut rows[skipped..];
-    let Some(first) = candidates.iter().position(|row| !blank(row)) else {
-        return;
-    };
-    let last = candidates
-        .iter()
-        .rposition(|row| !blank(row))
-        .unwrap_or(first);
-    let candidates = &mut candidates[first..=last];
-    let Some(column) = star(&candidates[0]) else {
-        return;
-    };
-    if candidates.iter().all(|row| star(row) == Some(column)) {
-        for row in candidates {
-            row.rest.start += column + 1;
-        }
-    }
-}
-
-/// The text of the `rows` with their least indent stripped, where each byte of it is in the file,
-/// and the bytes around it. A row with nothing but whitespace does not have text. `prefix` is what
-/// a new line starts with; if none, the gutter and indent of the rows, which a block comment has.
-fn build(source: &str, rows: &[Row], prefix: Option<String>) -> Option<(String, SourceMap, Frame)> {
-    let text = |row: &Row| &source[row.rest.clone()];
-    let indent = |row: &Row| {
-        text(row)
-            .bytes()
-            .take_while(|b| matches!(b, b' ' | b'\t'))
-            .count()
-    };
-    let least = rows
-        .iter()
-        .filter(|row| !text(row).trim().is_empty())
-        .map(indent)
-        .min()
-        .unwrap_or(0);
-    let mut inner = String::new();
-    let mut map = SourceMap::default();
-    let mut lines = Vec::with_capacity(rows.len());
-    for (at, row) in rows.iter().enumerate() {
-        let start = if text(row).trim().is_empty() {
-            row.rest.end
-        } else {
-            row.rest.start + least
-        };
-        if start < row.rest.end {
-            inner.push_str(&source[start..row.rest.end]);
-            map.push(
-                SegmentKind::Verbatim,
-                row.rest.end - start,
-                start..row.rest.end,
-            );
-        }
-        let ending = if at + 1 == rows.len() {
-            row.rest.end..row.rest.end
-        } else {
-            inner.push('\n');
-            map.push(SegmentKind::Synthetic, 1, row.rest.end..row.rest.end);
-            row.ending.clone()
-        };
-        lines.push(CarrierLine {
-            prefix: row.lead..start,
-            ending,
-        });
-    }
-    if inner.trim().is_empty() {
-        return None;
-    }
-    // `max_by_key` keeps the last of equals, so a tie, and a region of one line, is `\n`.
-    let ending = ["\r\n", "\n"]
-        .into_iter()
-        .max_by_key(|ending| {
-            lines
-                .iter()
-                .filter(|line| source[line.ending.clone()] == **ending)
-                .count()
-        })
-        .unwrap_or("\n");
-    let prefix = prefix.unwrap_or_else(|| {
-        // A line after the first has the gutter and indent of a new line. With no such line, those
-        // of a first line that starts after a line break.
-        let first = &source[lines[0].prefix.clone()];
-        let after_break = first.rfind('\n').map(|at| &first[at + 1..]);
-        let second = lines.get(1).map(|line| &source[line.prefix.clone()]);
-        second.or(after_break).unwrap_or("").to_string()
-    });
-    let template = Template {
-        prefix,
-        ending: ending.to_string(),
-    };
-    Some((inner, map, Frame { lines, template }))
-}
-
-/// A region of `source` at `outer`. Its carrier must write its text as the file holds it, which
-/// every debug build checks.
-fn region(
-    source: &str,
-    doc: Option<DocStyle>,
-    outer: Range<usize>,
-    inner: String,
-    map: SourceMap,
-    carrier: Carrier,
-) -> Region {
-    debug_assert_eq!(
-        carrier.encode(source, &inner),
-        source[outer.clone()],
-        "the carrier does not write the region it was read from"
-    );
-    Region {
-        surface: surface(doc),
-        outer,
-        inner,
-        map,
-        carrier,
-    }
+    line_region(source, surface(doc), marker, &rows)
 }
 
 #[cfg(test)]
@@ -573,6 +350,18 @@ mod tests {
         assert_eq!(texts("/**\n * a\n  * b\n */"), [doc("* a\n * b")]);
         // Nothing but gaps.
         assert_eq!(texts("/**/ /***/ /** */ /**\n*/ /* \n \n */"), []);
+    }
+
+    #[test]
+    fn a_first_or_last_line_of_only_stars_and_space_in_a_block_is_a_gap() {
+        assert_eq!(texts("/*****\n * a\n * b\n *****/"), [plain("a\nb")]);
+        assert_eq!(texts("/*!****\n * a\n ****/"), [doc("a")]);
+        assert_eq!(texts("/*!\n * a\n **/"), [doc("a")]);
+        assert_eq!(texts("  /****\n   * a\n   ****/"), [plain("a")]);
+        // The blank line before the close is the gap, not the line of the gutter before it.
+        assert_eq!(texts("/**\n * a\n *\n */"), [doc("a\n")]);
+        // A single line is neither the top nor the bottom.
+        assert_eq!(texts("/***/ /*****/"), [plain("**")]);
     }
 
     #[test]

@@ -36,8 +36,8 @@ pub struct FileFix {
 /// What became of a file.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Outcome {
-    /// It is not valid UTF-8, so it was left as it is: its findings' offsets are into the text
-    /// decoded from it, not into its bytes.
+    /// It is not valid UTF-8, so it was left as it is: an edit could not be written back without
+    /// changing bytes deslag does not understand.
     NotUtf8,
     /// It was read, and edited where the edits could be proven safe.
     Read {
@@ -122,8 +122,8 @@ impl FileFix {
         let (fixed, left) = match &self.outcome {
             Outcome::NotUtf8 => {
                 return format!(
-                    "deslag did not fix {path}: it is not valid UTF-8, so its findings do not \
-                     point at its bytes."
+                    "deslag did not fix {path}: it is not valid UTF-8, so an edit could not be \
+                     written back without changing bytes deslag does not understand."
                 );
             }
             Outcome::Read { fixed, left, .. } => (fixed, left),

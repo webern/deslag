@@ -14,6 +14,7 @@ pub mod pattern;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
 
+use std::borrow::Cow;
 use std::fmt;
 use std::path::Path;
 
@@ -458,7 +459,7 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
 
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
-        let text = String::from_utf8_lossy(&contents);
+        let text = decode(&contents);
         let (_, findings) = check_text(
             config,
             section,
@@ -498,6 +499,23 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
     })
 }
 
+/// `bytes` as the lints read them: the file's own text when it is valid UTF-8, else the text with
+/// each invalid byte replaced by one `$`, so an offset into the text is an offset into the file,
+/// and `$` is inert in every reader. A lossy decode would turn an invalid byte into three.
+/// [`check_repo`], [`check_file`] and `deslag explain` all read through this, and `fix` refuses a
+/// file that is not UTF-8.
+pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
+    if let Ok(text) = std::str::from_utf8(bytes) {
+        return Cow::Borrowed(text);
+    }
+    let mut text = String::with_capacity(bytes.len());
+    for chunk in bytes.utf8_chunks() {
+        text.push_str(chunk.valid());
+        text.extend(std::iter::repeat_n('$', chunk.invalid().len()));
+    }
+    Cow::Owned(text)
+}
+
 /// Runs every lint over one file, in a run with no base: `relative` is its path from the repo
 /// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
@@ -509,7 +527,7 @@ pub fn check_file(
     contents: &[u8],
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
-    let text = String::from_utf8_lossy(contents);
+    let text = decode(contents);
     let section = config.section_to_read(relative)?;
     Ok(check_text(config, section, relative, contents, &text, dir, None)?.1)
 }
@@ -609,11 +627,32 @@ pub(crate) fn check_text<'a>(
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
     use std::fs;
     use std::path::Path;
 
-    use super::Lint;
+    use super::{Lint, decode};
     use crate::document::{Reader, Stack};
+
+    /// A valid file reads as it is. An invalid byte is one `$` wherever it falls, so the text is
+    /// as long as the bytes: alone, in front of a multi-byte character, cut off at the end, or
+    /// inside a multi-byte sequence.
+    #[test]
+    fn decode_turns_each_invalid_byte_into_one_dollar() {
+        let cases: [(&[u8], &str); 5] = [
+            ("a \u{2014} b".as_bytes(), "a \u{2014} b"),
+            (b"a \xff b", "a $ b"),
+            (b"A \xff\xfe \xe2\x80\x94", "A $$ \u{2014}"),
+            (b"ab \xe2\x80", "ab $$"),
+            (b"a \xe2\x80b \xf0\x9f\x98", "a $$b $$$"),
+        ];
+        for (bytes, expected) in cases {
+            let text = decode(bytes);
+            assert_eq!(text, expected, "{bytes:?}");
+            assert_eq!(text.len(), bytes.len(), "{bytes:?}");
+        }
+        assert!(matches!(decode(b"plain"), Cow::Borrowed(_)));
+    }
 
     /// Markdown has what every lint needs. Plain text lacks the file and the blocks, so the lints
     /// that need them cannot run on it.

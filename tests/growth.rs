@@ -170,14 +170,15 @@ fn a_renamed_file_is_judged_against_its_old_name() {
     assert_fails(&judged, &line, &[7]);
 }
 
-/// A base given as a hash, short or full, is not named a second time beside itself.
+/// A base given as a hash, short or full, in either case, is not named a second time beside itself.
 #[test]
 fn a_base_given_as_a_hash_is_named_once() {
     let repo = repo(&[("a.md", "- one\n- two\n")]);
     repo.write("a.md", "- one\n- two\n- three\n");
     let short = git(repo.root(), &["rev-parse", "--short=7", "HEAD"]);
     let full = git(repo.root(), &["rev-parse", "HEAD"]);
-    for base in [short.trim(), full.trim()] {
+    let upper = short.trim().to_uppercase();
+    for base in [short.trim(), full.trim(), upper.as_str()] {
         let judged = judged(repo.root(), &["--base", base]);
         let line = format!(
             "a.md has 3 list items, 1 more than the 2 it had at {}.",

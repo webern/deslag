@@ -159,10 +159,14 @@ pub fn render(path: &str, over: &Over) -> String {
     report
 }
 
-/// Whether `rev` is the hash of `commit`, in full or abbreviated, so that the report need not
-/// give it twice. Git's shortest abbreviation is four digits.
+/// Whether `rev` is the hash of `commit`, in full or abbreviated, in either case, so that the
+/// report need not give it twice. Git's shortest abbreviation is four digits.
 fn names_by_hash(rev: &str, commit: &str) -> bool {
-    rev.len() >= 4 && rev.chars().all(|c| c.is_ascii_hexdigit()) && commit.starts_with(rev)
+    rev.len() >= 4
+        && rev.chars().all(|c| c.is_ascii_hexdigit())
+        && commit
+            .get(..rev.len())
+            .is_some_and(|start| start.eq_ignore_ascii_case(rev))
 }
 
 /// The places the report lists: each item on a line the change added, as evidence for a verdict

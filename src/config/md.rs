@@ -21,6 +21,7 @@ pub const DEFAULT_GLOBS: &[&str] = &["*.md"];
 enum FenceLanguage {
     Rust,
     Cpp,
+    Toml,
 }
 
 impl FenceLanguage {
@@ -28,6 +29,7 @@ impl FenceLanguage {
         match self {
             FenceLanguage::Rust => Language::Rust,
             FenceLanguage::Cpp => Language::Cpp,
+            FenceLanguage::Toml => Language::Toml,
         }
     }
 }
@@ -38,16 +40,16 @@ impl FenceLanguage {
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 struct FencesFile {
-    /// The languages whose fenced code is read: `rust` and `cpp`. A fence is of the language its
-    /// info string names by its first word, whatever the case: `rust`, `rs`, `cpp`, `c++`, `c`,
-    /// `h` and the C and C++ extensions. `[]` reads none.
+    /// The languages whose fenced code is read: `rust`, `cpp` and `toml`. A fence is of the
+    /// language its info string names by its first word, whatever the case: `rust`, `rs`, `cpp`,
+    /// `c++`, `c`, `h`, the C and C++ extensions and `toml`. `[]` reads none.
     #[serde(default)]
-    #[schemars(extend("default" = ["rust", "cpp"]))]
+    #[schemars(extend("default" = ["rust", "cpp", "toml"]))]
     languages: Option<Vec<FenceLanguage>>,
     /// The comments to read in a fence, for every language: `doc_comment` is the `///` and `//!`
     /// lines and the `/** */` and `/*! */` blocks, `comment` the other `//` lines and `/* */`
-    /// blocks. Each is read as it is in a file of its language. `[]` turns reading off, as
-    /// `languages = []` does.
+    /// blocks. Each is read as it is in a file of its language, and a `toml` fence has `comment`
+    /// only. `[]` turns reading off, as `languages = []` does.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
     surfaces: Option<Vec<CommentSurface>>,
@@ -200,7 +202,7 @@ mod tests {
         ));
         assert!(reads(
             "[md.fences]\nsurfaces = [\"doc_comment\"]\n",
-            &[Language::Rust, Language::Cpp],
+            &[Language::Rust, Language::Cpp, Language::Toml],
             &[Surface::DocComment]
         ));
         assert!(reads(

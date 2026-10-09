@@ -717,10 +717,15 @@ mod tests {
     #[test]
     fn a_hash_in_a_toml_string_in_a_fence_is_not_read() {
         let source =
-            "```TOML\ntitle = \"a # b\"\nraw = 'c # d'\nmulti = \"\"\"\n# e\n\"\"\"\n```\n";
+            "```TOML\ntitle = \"a # b\"\nraw = 'c # d'\nmulti = \"\"\"\n# e\n\"\"\"\n# kept\n```\n";
 
-        assert!(regions(source).is_empty());
-        assert_eq!(kinds(&all(), source), ["Code(TOML)"]);
+        // The comment after the strings is the one region. With the reader off, a TOML fence has
+        // none, so this fails if TOML leaves `Fences::all()`: "no regions" alone would not.
+        assert_eq!(regions(source), [("# kept", "kept".to_string())]);
+        assert_eq!(
+            kinds(&all(), source)[..2],
+            ["Code(TOML)", " Region(comment)"]
+        );
     }
 
     #[test]
@@ -744,12 +749,23 @@ mod tests {
 
     #[test]
     fn a_toml_fence_in_a_doc_comment_in_a_fence_is_not_read() {
-        let source = "```rust\n/// ```toml\n/// # inner\n/// ```\nfn f() {}\n```\n";
+        let source =
+            "```rust\n/// ```toml\n/// # inner\n/// ```\nfn f() {}\n```\n\n```toml\n# outer\n```\n";
 
-        assert_eq!(regions(source).len(), 1);
+        // Two regions: the doc comment, and the comment of the TOML fence at the top level. The
+        // fence inside the doc comment adds none, which is the depth bound. With the reader off
+        // the top-level fence yields nothing either, so the count shows the reader is on.
+        assert_eq!(regions(source).len(), 2);
         assert_eq!(
             kinds(&all(), source),
-            ["Code(rust)", " Region(doc_comment)", "  Code(toml)"]
+            [
+                "Code(rust)",
+                " Region(doc_comment)",
+                "  Code(toml)",
+                "Code(toml)",
+                " Region(comment)",
+                "  Paragraph"
+            ]
         );
     }
 

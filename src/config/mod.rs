@@ -335,17 +335,17 @@ impl Config {
             .iter()
             .filter(|section| section.selects(rel_path))
             .collect();
-        if selecting.len() < 2 {
-            return Ok(selecting.first().copied());
-        }
-        let names: Vec<String> = selecting
-            .iter()
-            .map(|section| format!("[{}]", section.name()))
-            .collect();
-        let who = match names.as_slice() {
-            [] | [_] => unreachable!("fewer than two sections returned above"),
-            [first, second] => format!("both {first} and {second}"),
-            [init @ .., last] => format!("{} and {last}", init.join(", ")),
+        let who = match selecting.as_slice() {
+            [] => return Ok(None),
+            [only] => return Ok(Some(*only)),
+            [first, second] => format!("both [{}] and [{}]", first.name(), second.name()),
+            [init @ .., last] => {
+                let init: Vec<String> = init
+                    .iter()
+                    .map(|section| format!("[{}]", section.name()))
+                    .collect();
+                format!("{} and [{}]", init.join(", "), last.name())
+            }
         };
         Err(Error::Setting {
             path: self.path.display().to_string(),

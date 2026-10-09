@@ -284,6 +284,8 @@ mod tests {
                 "unknown field",
             ),
             (format!("{base}[cpp]\ndirectives = [\"TODO\"]\n"), "label"),
+            (format!("{base}[toml]\nlines = [\"\"]\n"), "empty"),
+            (format!("{base}[toml]\ndirectives = [\"TODO\"]\n"), "label"),
             (
                 format!("{base}[rust]\ndirectives = [\"SAFETY\"]\n"),
                 "label",

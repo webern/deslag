@@ -271,10 +271,10 @@ mod tests {
     }
 
     #[test]
-    fn no_surface_reads_nothing() {
+    fn the_comment_surface_decides_whether_a_comment_is_read() {
         let skip = |surface| List::new(Language::Toml, stack().markup(surface));
         assert!(super::regions("# a\n", &[], skip).is_empty());
-        assert!(stack().document("# a\n").regions.len() == 1);
+        assert_eq!(stack().document("# a\n").regions.len(), 1);
     }
 
     #[test]

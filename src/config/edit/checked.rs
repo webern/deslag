@@ -59,7 +59,7 @@ pub(super) fn check(
     } = plan;
     let refuse = |reason: String| Refusal::of(reason, path, &edits);
 
-    let new = Config::parse(&text, old.path().to_path_buf(), old.source())
+    let new = Config::parse_at(&text, old.path().to_path_buf(), old.source(), old.running())
         .map_err(|error| refuse(format!("the edited config does not load: {error:#}")))?;
     if !new.warnings().is_empty() {
         return Err(refuse(format!(

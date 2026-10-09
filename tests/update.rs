@@ -13,17 +13,28 @@ use std::process::Output;
 use common::frozen::{self, EXTENSIONS};
 use common::schema::SchemaPaths;
 use common::{Repo, code, stderr, stdout};
-use deslag::changelog::Version;
+use deslag::changelog::{Version, changelog};
 use deslag::config::schema;
 use deslag::lint::banned_phrases::CATALOGUE;
+use deslag::news::News;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
 /// a bare `update` holds the stamp back once a release has entries after the config's, and a test
 /// must not turn on what the changelog holds.
 const CURRENT: &str = env!("CARGO_PKG_VERSION");
 
-/// A release before every release, so a stamp of it is behind a deslag with a changelog.
+/// A release before every release, so a stamp of it is behind a deslag with a changelog. No deslag
+/// is older than it, so it loads under whatever version the crate is at.
 const BEFORE_ALL: &str = "0.0.0";
+
+/// Whether a bare `update` holds a config stamped [`BEFORE_ALL`]: the running deslag has news for
+/// it. Which it does depends on the release the crate is at, so a test that shows the hold states
+/// what it expects of both answers. `src/config/update.rs` holds the hold against a changelog it
+/// makes.
+fn held() -> bool {
+    let from = Version::Release(BEFORE_ALL.parse().expect("a release"));
+    !News::between(changelog(), &CATALOGUE, &from, &Version::current()).is_empty()
+}
 
 /// Standard error, which `update` fills only with what it did, without the line that names the
 /// catalogue phrases a move of the stamp turns on. Which phrases those are depends on the
@@ -133,11 +144,12 @@ fn a_stamp_behind_a_release_with_entries_is_left_unless_told_to_move() {
         "{said_bare}"
     );
     assert!(!said_bare.contains("set deslag_version"), "{said_bare}");
-    assert!(
+    assert_eq!(
         said_bare.contains(&format!(
             "deslag_version stays {BEFORE_ALL}, because deslag {CURRENT} has news"
         )) && said_bare.contains("run deslag instructions update")
             && said_bare.contains(&format!("run deslag update --to {CURRENT}")),
+        held(),
         "{said_bare}"
     );
     assert_eq!(
@@ -145,21 +157,30 @@ fn a_stamp_behind_a_release_with_entries_is_left_unless_told_to_move() {
         format!("{text}[md.lints.banned_phrases.groups]\n")
     );
 
-    // `--to` moves it, keeping the comment on its line.
+    // `--to` moves it, keeping the comment on its line. A deslag with nothing after the stamp is
+    // already at the stamp, and there is nothing to move.
     let output = repo.run(&["update", "--to", CURRENT]);
     assert_eq!(code(&output), 0, "{}", said(&output));
-    assert_eq!(
-        said(&output),
-        format!(
-            "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")\n"
-        )
-    );
-    assert_eq!(
-        read(&repo, "toml"),
-        format!(
-            "schema_version = 1\ndeslag_version = \"{CURRENT}\" # pinned\n[md.lints.banned_phrases.groups]\n"
-        )
-    );
+    if held() {
+        assert_eq!(
+            said(&output),
+            format!(
+                "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")\n"
+            )
+        );
+        assert_eq!(
+            read(&repo, "toml"),
+            format!(
+                "schema_version = 1\ndeslag_version = \"{CURRENT}\" # pinned\n[md.lints.banned_phrases.groups]\n"
+            )
+        );
+    } else {
+        assert_eq!(said(&output), "deslag: deslag.toml is current\n");
+        assert_eq!(
+            read(&repo, "toml"),
+            format!("{text}[md.lints.banned_phrases.groups]\n")
+        );
+    }
 }
 
 #[test]
@@ -172,23 +193,30 @@ fn a_bare_update_with_nothing_else_to_do_still_says_to_read_what_is_new() {
     assert_eq!(code(&output), 0);
     let said = said(&output);
     assert_eq!(said.lines().count(), 1, "{said}");
-    assert!(
-        said.contains("stays 0.0.0") && !said.contains("is current"),
-        "{said}"
-    );
+    if held() {
+        assert!(
+            said.contains("stays 0.0.0") && !said.contains("is current"),
+            "{said}"
+        );
+    } else {
+        assert!(
+            said.contains("is current") && !said.contains("stays"),
+            "{said}"
+        );
+    }
 }
 
 #[test]
 fn a_to_that_is_not_the_running_release_exits_2_and_writes_nothing() {
     let repo = repo_with("toml", "schema_version = 1\n");
-    for to in [
-        "0.0.0",
-        "9.0.0",
-        "next",
-        "0.0.1-rc.1",
-        "0.0.1+x",
-        "nonsense",
-    ] {
+    let running = semver::Version::parse(CURRENT).expect("the crate version");
+    let newer = format!("{}.0.0", running.major + 1);
+    // No release is older than 0.0.0, so a deslag at it has none to refuse.
+    let older = (running != semver::Version::new(0, 0, 0)).then_some(BEFORE_ALL);
+    for to in older
+        .into_iter()
+        .chain([newer.as_str(), "next", "0.0.1-rc.1", "0.0.1+x", "nonsense"])
+    {
         let output = repo.run(&["update", "--to", to]);
         assert_eq!(code(&output), 2, "{to}: {}", said(&output));
         assert_eq!(stdout(&output), "");
@@ -673,7 +701,8 @@ fn a_file_with_nothing_to_edit_is_current_or_held_whatever_its_layout() {
     };
     let layouts: [&dyn Fn(&str) -> String; 2] = [&mixed, &spaced];
     for layout in layouts {
-        for (stamp, says) in [(CURRENT, "is current"), (BEFORE_ALL, "stays")] {
+        let behind = if held() { "stays" } else { "is current" };
+        for (stamp, says) in [(CURRENT, "is current"), (BEFORE_ALL, behind)] {
             let text = layout(stamp);
             let repo = repo_with("toml", &text);
             for args in [&["update"][..], &["update", "--dry-run"]] {
@@ -923,10 +952,31 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
         assert!(removed.is_empty(), "{name}: {removed:?}");
         assert_eq!(added, [format!("deslag_version = \"{CURRENT}\"")], "{name}");
 
+        // `check` says what it said of the config stamped by hand with the running version. A config
+        // with no stamp is taken to be from the baseline, and the move from there turns on the
+        // phrases of the releases between, which is what the catalogue's own tests are about.
+        let by_hand_repo = Repo::copy_of(&case);
+        let line = format!("deslag_version = \"{CURRENT}\"\n");
+        let stamped: String = text
+            .split_inclusive('\n')
+            .flat_map(|each| {
+                let stamp = each
+                    .starts_with("schema_version = ")
+                    .then_some(line.as_str());
+                [each, stamp.unwrap_or_default()]
+            })
+            .collect();
+        assert_ne!(stamped, text, "{name}: no schema_version line");
+        by_hand_repo.write("deslag.toml", &stamped);
+        let by_hand = by_hand_repo.check();
         let after = repo.check();
-        assert_eq!(code(&before), code(&after), "{name}");
-        assert_eq!(stdout(&before), stdout(&after), "{name}");
-        assert_eq!(common::stderr(&before), common::stderr(&after), "{name}");
+        assert_eq!(code(&by_hand), code(&after), "{name}");
+        assert_eq!(stdout(&by_hand), stdout(&after), "{name}");
+        // The messages name the temp directory each repo is in.
+        let said = |repo: &Repo, output: &Output| {
+            common::stderr(output).replace(&repo.root().display().to_string(), "<repo>")
+        };
+        assert_eq!(said(&by_hand_repo, &by_hand), said(&repo, &after), "{name}");
     }
     assert!(
         count - refused >= 40,
@@ -1001,7 +1051,8 @@ fn phrase_repo() -> Repo {
 fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() {
     let repo = phrase_repo();
     let shipped = shipped();
-    assert!(!shipped.is_empty());
+    // A deslag at the first release ships no phrase, and these steps then have none to show.
+    let any = !shipped.is_empty();
 
     // The stamp is before every phrase: only the `ban` phrase would report, and the text has none.
     let before = repo.check();
@@ -1012,7 +1063,7 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
     let topic = repo.run(&["instructions", "update"]);
     assert_eq!(code(&topic), 0);
     let topic = stdout(&topic);
-    assert!(topic.contains("## New phrases"), "{topic}");
+    assert_eq!(topic.contains("## New phrases"), any, "{topic}");
     for phrase in &shipped {
         assert!(
             topic.contains(&format!("### `{phrase}` (")),
@@ -1020,8 +1071,9 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
         );
     }
     let bare = repo.run(&["update"]);
-    assert!(
+    assert_eq!(
         said(&bare).contains(&format!("deslag_version stays {BEFORE_ALL}")),
+        held(),
         "{}",
         said(&bare)
     );
@@ -1029,7 +1081,7 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
 
     // `--dry-run` names them and moves nothing.
     let dry = raw_said(&repo.run(&["update", "--dry-run", "--to", CURRENT]));
-    assert!(dry.contains("would turn on these phrases"), "{dry}");
+    assert_eq!(dry.contains("would turn on these phrases"), any, "{dry}");
     assert_eq!(code(&repo.check()), 0);
 
     // `--to` names every phrase the move turns on, with its group.
@@ -1047,13 +1099,14 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
 
     // Now each fires, in the Markdown, under the override and in the comments of every section.
     let after = repo.check();
-    assert_eq!(code(&after), 1);
+    assert_eq!(code(&after), i32::from(any));
     let report = stderr(&after);
     let files = comment_files();
     let files = files.iter().map(|(_, file, _)| *file);
     for file in ["README.md", "docs/more.md"].into_iter().chain(files) {
-        assert!(
+        assert_eq!(
             report.contains(&format!("{file} has {} banned phrase", shipped.len())),
+            any,
             "{file}: {report}"
         );
     }

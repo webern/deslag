@@ -8,7 +8,6 @@ mod common;
 use common::frozen::{self, EXTENSIONS};
 use common::git::{commit, git};
 use common::{Repo, code, stderr};
-use deslag::changelog::Version;
 use deslag::config::REDIRECTS;
 use deslag::{Config, ConfigSource};
 
@@ -27,16 +26,13 @@ fn repo_with(path: &std::path::Path, extension: &str) -> Repo {
     repo
 }
 
+/// That no directory is above the crate version is `no_frozen_directory_is_above_the_crate_version`
+/// in `tests/changelog.rs`, a release-time check.
 #[test]
 fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
     let releases = frozen::releases();
     assert!(!releases.is_empty());
-    let current = Version::current();
-    for (release, directory) in releases {
-        assert!(
-            Version::Release(release.clone()) <= current,
-            "{directory:?} is above the crate version"
-        );
+    for (_, directory) in releases {
         let mut names: Vec<String> = std::fs::read_dir(&directory)
             .expect("readable")
             .map(|entry| {

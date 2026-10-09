@@ -76,6 +76,7 @@ edited in place only when a later change renames or removes what it names, or se
 `tests/changelog.rs` says what an entry must hold, and a failure names the file; it also holds that
 the repo's text does not hold a phrase above its stamp.
 
-Four `#[ignore]` tests are the release proof, run by `make check-release`: `next/` is empty, no
-phrase has `since = "next"`, the newest frozen config names every setting, and the crate version
-is `X.Y.Z`. `stderr` in `tests/common/mod.rs` drops the note and `raw_stderr` keeps it.
+Seven `#[ignore]` tests are the release proof, run by `make check-release`: `next/` is empty, no
+phrase has `since = "next"`, the newest frozen config names every setting, the crate version is
+`X.Y.Z`, and no release, frozen directory or phrase is above it. `stderr` in `tests/common/mod.rs`
+drops the note and `raw_stderr` keeps it.

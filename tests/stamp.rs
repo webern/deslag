@@ -10,7 +10,7 @@ mod common;
 use std::path::PathBuf;
 use std::process::Output;
 
-use common::{Repo, code, notice, raw_stderr, stderr, without_notice};
+use common::{Repo, code, notice, notice_for, raw_stderr, stderr, without_notice};
 use deslag::changelog::{BASELINE, Version};
 use deslag::{Config, ConfigSource};
 
@@ -23,6 +23,9 @@ fn newer() -> String {
     format!("{}.0.0", current.major + 1)
 }
 
+/// A release no newer than any deslag, so a config stamped with it loads under whatever version the
+/// crate is at. Whether the running deslag has news for it depends on that version: see
+/// [`notice_for`].
 const OLDER: &str = "0.0.0";
 
 /// A config in `language` with `schema_version` and, when given, a `deslag_version` of `stamp`,
@@ -158,7 +161,7 @@ fn an_older_stamp_loads_and_the_commands_print_the_notice() {
         let output = check_output(language, &text);
         assert_eq!(
             (code(&output), raw_stderr(&output)),
-            (0, notice(OLDER)),
+            (0, notice_for(OLDER)),
             "{language}"
         );
     }
@@ -204,10 +207,13 @@ fn the_notice_is_printed_once_by_every_command_and_format_and_changes_nothing_el
         assert_eq!(common::stdout(&older), common::stdout(&current), "{args:?}");
         assert_eq!(
             raw_stderr(&older),
-            format!("{}{}", notice(OLDER), raw_stderr(&current)),
+            format!("{}{}", notice_for(OLDER), raw_stderr(&current)),
             "{args:?}"
         );
-        assert_eq!(raw_stderr(&older).matches("last updated by").count(), 1);
+        assert_eq!(
+            raw_stderr(&older).matches("last updated by").count(),
+            notice_for(OLDER).matches("last updated by").count()
+        );
     }
 }
 
@@ -265,21 +271,18 @@ fn a_warning_and_the_notice_both_print_once_the_warning_first() {
         let output = repo.run(args);
         assert_eq!(code(&output), 0, "{args:?}");
         let said = raw_stderr(&output);
-        let mut lines = said.lines();
-        let first = lines.next().expect("a first line");
+        let first = said.lines().next().expect("a first line");
         assert!(
             first.starts_with("deslag: warning: ") && first.ends_with(warning),
             "{args:?}: {said}"
         );
-        assert_eq!(
-            lines.next().map(|line| format!("{line}\n")),
-            Some(notice(OLDER)),
-            "{args:?}: {said}"
-        );
+        // The notice follows the warning, when the running deslag has news for the stamp.
+        let rest = &said[first.len() + 1..];
+        assert!(rest.starts_with(&notice_for(OLDER)), "{args:?}: {said}");
         assert_eq!(said.matches("signposts").count(), 1, "{args:?}: {said}");
         assert_eq!(
             said.matches("last updated by").count(),
-            1,
+            notice_for(OLDER).matches("last updated by").count(),
             "{args:?}: {said}"
         );
     }
@@ -292,8 +295,14 @@ fn a_warning_and_the_notice_both_print_once_the_warning_first() {
 /// printed for every unstamped config would pass them all.
 #[test]
 fn a_missing_stamp_gets_what_the_baseline_stamp_gets_from_every_command() {
-    let stamped = BASELINE.to_string();
     let running = env!("CARGO_PKG_VERSION");
+    // The baseline, or the running release when that is older: a stamp may not be newer than the
+    // deslag that reads it.
+    let stamped = std::cmp::min(
+        BASELINE,
+        semver::Version::parse(running).expect("the crate version"),
+    )
+    .to_string();
     let runs: [&[&str]; 4] = [
         &["check"],
         &["check", "--format", "json"],
@@ -340,7 +349,7 @@ fn a_missing_stamp_gets_what_the_baseline_stamp_gets_from_every_command() {
 fn stderr_drops_the_notice_the_binary_prints_and_raw_stderr_keeps_it() {
     let output = check_output("toml", &config("toml", 1, Some(&quoted(OLDER)), false));
     assert_eq!(code(&output), 0);
-    assert_eq!(raw_stderr(&output), notice(OLDER));
+    assert_eq!(raw_stderr(&output), notice_for(OLDER));
     assert_eq!(stderr(&output), "");
 
     // Another note on standard error stays, whatever order the two come in.

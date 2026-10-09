@@ -96,6 +96,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 args.config_path.as_deref(),
                 args.dry_run,
                 args.to.as_ref(),
+                &deslag::changelog::current_release(),
                 changelog(),
                 &CATALOGUE,
             )?;

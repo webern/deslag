@@ -21,7 +21,7 @@ use std::path::Path;
 use semver::Version;
 
 use crate::Error;
-use crate::changelog::{self, Changelog, current_release};
+use crate::changelog::{self, Changelog};
 use crate::config::Config;
 use crate::config::edit::{self, Checked, Edit};
 use crate::lint::banned_phrases::{Catalogue, Entry as Phrase, folded};
@@ -157,9 +157,9 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
 }
 
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
-/// uses are made, and the stamp moves as the module says. `to`, when given, is the running version.
-/// `known` and `phrases` are the changelog and the catalogue that say whether anything lies
-/// between the stamp and the running version.
+/// uses are made, and the stamp moves as the module says. `running` is the release of deslag that
+/// is updating it, and `to`, when given, is that release. `known` and `phrases` are the changelog
+/// and the catalogue that say whether anything lies between the stamp and `running`.
 ///
 /// With `dry_run` the answer is the same and nothing is written.
 pub fn update(
@@ -167,14 +167,14 @@ pub fn update(
     explicit: Option<&Path>,
     dry_run: bool,
     to: Option<&Version>,
+    running: &Version,
     known: &Changelog,
     phrases: &Catalogue,
 ) -> Result<Update, Error> {
-    let (config, text) = Config::load_text(root, explicit)?;
+    let (config, text) = Config::load_text_at(root, explicit, running)?;
     let path = shown(root, config.path());
-    let running = current_release();
     let seen = config.deslag_version();
-    let now = changelog::Version::current();
+    let now = changelog::Version::Release(running.clone());
     let news = News::between(known, phrases, &seen, &now);
     let (stamp, held) = match to {
         Some(to) => (Some(to.clone()), None),
@@ -257,9 +257,10 @@ mod tests {
     use super::*;
     use crate::lint::banned_phrases::Catalogue;
 
-    /// The running release, which is what the stamp moves to.
+    /// The release these tests run as, which is what the stamp moves to. The crate's own version
+    /// is no part of what they check, so it is one the tests choose.
     fn running() -> Version {
-        current_release()
+        Version::new(0, 3, 0)
     }
 
     /// A changelog with no entry after the baseline, and one with an entry the stamp `0.0.0` has not
@@ -318,7 +319,15 @@ mod tests {
         to: Option<&Version>,
         known: &Changelog,
     ) -> Result<Update, Error> {
-        update(dir.path(), None, dry_run, to, known, &no_phrases())
+        update(
+            dir.path(),
+            None,
+            dry_run,
+            to,
+            &running(),
+            known,
+            &no_phrases(),
+        )
     }
 
     #[test]
@@ -382,6 +391,16 @@ mod tests {
         let done = run(&dir, false, None, &news()).expect("an update");
         assert!(done.edits.is_empty() && done.held.is_some(), "{done:?}");
         assert_eq!(fs::read_to_string(path).expect("a config"), text);
+        // It still says to read what is new, and does not call the config current.
+        let lines = done.lines();
+        assert_eq!(lines.len(), 1, "{lines:?}");
+        assert!(
+            lines[0].contains("deslag_version stays 0.0.0")
+                && lines[0].contains("run deslag instructions update")
+                && lines[0].contains(&format!("run deslag update --to {}", running()))
+                && !lines[0].contains("is current"),
+            "{lines:?}"
+        );
     }
 
     #[test]
@@ -389,6 +408,13 @@ mod tests {
         let (dir, path) = repo("schema_version = 1\ndeslag_version = \"0.0.0\" # pinned\n");
         let done = run(&dir, false, Some(&running()), &news()).expect("an update");
         assert_eq!(done.held, None);
+        assert_eq!(
+            done.lines(),
+            [format!(
+                "deslag.toml: set deslag_version to \"{}\" (it was \"0.0.0\")",
+                running()
+            )]
+        );
         assert_eq!(
             fs::read_to_string(path).expect("a config"),
             format!(
@@ -438,7 +464,16 @@ mod tests {
         let (dir, path) = repo(&text);
         let phrases = new_phrases();
 
-        let held = update(dir.path(), None, false, None, &nothing_new(), &phrases).expect("held");
+        let held = update(
+            dir.path(),
+            None,
+            false,
+            None,
+            &running(),
+            &nothing_new(),
+            &phrases,
+        )
+        .expect("held");
         assert!(held.held.is_some() && held.phrases.is_empty(), "{held:?}");
         assert_eq!(fs::read_to_string(&path).expect("a config"), text);
 
@@ -448,6 +483,7 @@ mod tests {
             None,
             true,
             Some(&sample),
+            &running(),
             &nothing_new(),
             &phrases,
         )
@@ -470,6 +506,7 @@ mod tests {
             None,
             false,
             Some(&sample),
+            &running(),
             &nothing_new(),
             &phrases,
         )
@@ -486,6 +523,7 @@ mod tests {
             None,
             false,
             Some(&sample),
+            &running(),
             &nothing_new(),
             &phrases,
         )
@@ -499,6 +537,7 @@ mod tests {
             None,
             true,
             Some(&sample),
+            &running(),
             &nothing_new(),
             &phrases,
         )
@@ -532,6 +571,7 @@ mod tests {
             None,
             true,
             Some(&to),
+            &running(),
             &nothing_new(),
             &catalogue_of(phrases),
         )

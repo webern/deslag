@@ -1181,8 +1181,8 @@ fn a_yaml_block_key_that_is_alone_leaves_its_table_empty_and_not_null() {
         "schema_version: 1\nmd:\n  lints:\n    banned_phrases: {}\n",
     );
     let off = load("yaml", "schema_version: 1\nmd:\n  lints: {}\n");
-    assert_eq!(load("yaml", &after).md(), on.md());
-    assert_ne!(load("yaml", &after).md(), off.md());
+    assert_eq!(load("yaml", &after).sections(), on.sections());
+    assert_ne!(load("yaml", &after).sections(), off.sections());
 }
 
 #[test]
@@ -1958,8 +1958,8 @@ fn a_block_key_on_the_last_line_with_no_final_newline_goes_with_the_blank_lines_
                 "{name}: the file gained a line ending"
             );
             assert_eq!(
-                load("yaml", &got).md(),
-                load("yaml", &before).md(),
+                load("yaml", &got).sections(),
+                load("yaml", &before).sections(),
                 "{name}"
             );
         }
@@ -2006,8 +2006,8 @@ fn a_block_key_on_the_last_line_with_no_final_newline_is_edited_when_the_line_en
             let got = edited("yaml", &before, None);
             assert_eq!(got, after, "{name}");
             assert_eq!(
-                load("yaml", &got).md(),
-                load("yaml", &before).md(),
+                load("yaml", &got).sections(),
+                load("yaml", &before).sections(),
                 "{name}"
             );
         }

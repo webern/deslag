@@ -704,6 +704,15 @@ mod tests {
     }
 
     #[test]
+    fn a_rename_to_another_section_is_not_done_and_leaves_the_text_alone() {
+        let text = "schema_version = 1\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
+                    [rust.lints.other]\nx = 1\n";
+        let (done, after) = move_to(text, "rust.lints.other.max_paragraph_chars");
+        assert_eq!(done, None);
+        assert_eq!(after, text);
+    }
+
+    #[test]
     fn a_rename_to_another_table_makes_the_table_and_moves_the_comments() {
         let text = "schema_version = 1\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
                     max_item_chars = 4\n";

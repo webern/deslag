@@ -24,7 +24,7 @@ src/
   glob/
     mod.rs            Pattern and its specificity
     walk.rs           the repo walk
-  explain/mod.rs      a file's settings, and where they come from
+  explain/mod.rs      a file's settings and regions
 ```
 
 ## The config
@@ -96,8 +96,8 @@ as the walk would, or says why it is no file in the repo.
 
 ## Explaining a file
 
-`deslag explain <PATH>...` prints a TOML document per file. Its comments name the config, whether
-the walk skips the file or a section selects it, the overrides `Section::overrides_for` finds, in
-merge order, and any frontmatter budget. Its tables are `Lints::toml_tables`: each lint on, with
-the schema's `default` for unset fields; one off is a comment. A path missing, not a file or outside
-the root is `Error::Explain`.
+`deslag explain <PATH>...` prints a TOML document per file. Comments name the config, why the
+walk skips the file or no section selects it, what the section reads, the `Section::overrides_for`
+overrides in merge order, and any frontmatter budget. Its tables are `Lints::toml_tables`: a lint
+on with its defaults, or off as a comment. `# prose regions` lists each comment read: range,
+surface, format, quote. A bad path is `Error::Explain`.

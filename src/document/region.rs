@@ -40,6 +40,14 @@ pub(crate) enum Markup {
 }
 
 impl Markup {
+    /// Its name as `deslag explain` prints it.
+    pub(crate) fn name(self) -> &'static str {
+        match self {
+            Markup::Markdown => "markdown",
+            Markup::Plain => "plain",
+        }
+    }
+
     /// Whether a text read with this has what `need` asks for. A region is never the file.
     pub(crate) fn provides(self, need: Need) -> bool {
         match need {
@@ -55,6 +63,9 @@ impl Markup {
 pub(crate) struct Region {
     /// What kind of comment it is.
     pub surface: Surface,
+    /// What reads its text. A Markdown file holds regions of several readers, so the surface of a
+    /// region does not say.
+    pub markup: Markup,
     /// Where it is in the file, from the first byte of its marker to the last of its text or its
     /// closing `*/`.
     pub outer: Range<usize>,
@@ -131,6 +142,7 @@ impl Region {
     pub(super) fn new(
         source: &str,
         surface: Surface,
+        markup: Markup,
         outer: Range<usize>,
         inner: String,
         map: SourceMap,
@@ -143,6 +155,7 @@ impl Region {
         );
         Region {
             surface,
+            markup,
             outer,
             inner,
             map,

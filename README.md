@@ -63,9 +63,10 @@ fixed, and why it left the rest, or in one line that it fixed nothing, then prin
 
 ## Configuration
 
-The config is TOML, YAML or JSON. `[md]` says which files are Markdown, each lint has its own table
-under `[md.lints]`, and an `[[md.overrides]]` entry changes the settings of the files its globs
-match:
+The config is TOML, YAML or JSON. `[md]` says which files are Markdown, and `[rust]`, `[cpp]` and
+`[toml]` say which source files have their comments linted. Each lint has its own table under a
+section's `lints`, such as `[md.lints]`, and an `[[md.overrides]]` entry changes the settings of the
+files its globs match:
 
 ```toml
 schema_version = 1
@@ -83,9 +84,15 @@ lints.max_size_bytes.value = 8000
 `banned_phrases` ban groups of characters and phrases, switched under their `groups` tables; most
 groups are on by default.
 
+A code section is opt-in: a config without one does not read those files, and a file belongs to one
+section. Rust doc comments are read as Markdown and every other comment as plain text. Licence text,
+banners and tool directives such as `@generated` are skipped, and no comment turns a lint off.
+`[md]` also reads the comments of Rust, C, C++ and TOML code fences in Markdown, and
+`fences.languages = []` under `[md]` turns that off.
+
 `deslag instructions config-schema` prints the config's JSON schema, which describes every lint and
-setting and gives its default. `deslag explain <PATH>...` prints the settings a file gets, and where
-each one comes from.
+setting and gives its default. `deslag explain <PATH>...` prints the settings a file gets, where each
+one comes from, and the comments it reads as prose.
 
 ## Updating
 

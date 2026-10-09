@@ -120,7 +120,7 @@ pub(super) struct List {
     file: &'static SkipFile,
     table: &'static Table,
     /// How the text is read.
-    markup: Markup,
+    pub(super) markup: Markup,
 }
 
 impl List {

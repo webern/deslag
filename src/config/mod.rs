@@ -73,6 +73,16 @@ const SECTION_EXTENSIONS: &[(&str, &[&str])] = &[
     (toml::NAME, toml::EXTENSIONS),
 ];
 
+/// The section other than `[md]` that reads files of the extension of `rel_path`, with the
+/// extension.
+fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
+    let extension = Path::new(rel_path).extension()?.to_str()?;
+    SECTION_EXTENSIONS
+        .iter()
+        .find(|(_, extensions)| extensions.contains(&extension))
+        .map(|(name, _)| (*name, extension))
+}
+
 /// The config schema this build of deslag reads.
 ///
 /// A key being added does not change it, and neither does a rename or a removal: those are a
@@ -375,27 +385,34 @@ impl Config {
         if let Some(section) = self.sole_section_for(rel_path)? {
             return Ok(section);
         }
-        let extension = Path::new(rel_path)
-            .extension()
-            .and_then(|text| text.to_str());
-        let Some(extension) = extension else {
-            return Ok(self.md());
-        };
-        let Some((name, _)) = SECTION_EXTENSIONS
-            .iter()
-            .find(|(_, extensions)| extensions.contains(&extension))
-        else {
+        let Some((name, extension)) = reading_section(rel_path) else {
             return Ok(self.md());
         };
         self.sections
             .iter()
-            .find(|section| section.name() == *name)
+            .find(|section| section.name() == name)
             .ok_or_else(|| Error::Setting {
                 path: self.path.display().to_string(),
                 message: format!(
                     "no section reads .{extension} files; add a [{name}] section to the config"
                 ),
             })
+    }
+
+    /// Why no section selects `rel_path`, as a line for `deslag explain` to print: the section
+    /// that reads files of its extension, and whether the config has it.
+    pub(crate) fn unselected(&self, rel_path: &str) -> String {
+        match reading_section(rel_path) {
+            None => "no section, so deslag check never reads it".to_string(),
+            Some((name, extension)) if self.sections.iter().any(|s| s.name() == name) => {
+                format!(
+                    "no section; [{name}] reads .{extension} files but its globs leave this one out"
+                )
+            }
+            Some((name, extension)) => {
+                format!("no section; add a [{name}] section to read .{extension} files")
+            }
+        }
     }
 
     /// The `[md]` section, which every config has.

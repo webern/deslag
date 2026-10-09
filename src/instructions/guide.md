@@ -1,14 +1,13 @@
 # Setting up deslag
 
-These instructions are for an agent setting up deslag {version} in a repository. Follow the steps
-in order.
+These instructions are for an agent setting up deslag {version} in a repository, or working in one
+that uses it. To set it up, follow the steps in order. In a repository with a config, you need
+steps 4 and 5.
 
-deslag lints Markdown. Each lint fails a file that breaks one rule the config sets, and its report
-tells the agent that wrote the file how to fix it. Every lint is off until the config turns it on.
-
-The human who owns the repository owns the limits. Propose them, show what each would fail, and let
-the human decide. Never raise a limit, or add an override or a frontmatter budget, only to make a
-check pass.
+deslag lints LLM-written prose. A lint fails a file that breaks one rule of the config, and its
+report tells the agent that wrote the file how to fix it. Every lint is off until the config turns
+it on. The human who owns the repository owns the limits: propose them, show what each would fail,
+and never raise one, or add an override, only to make a check pass.
 
 ## 1. Find the config
 
@@ -19,25 +18,37 @@ with one of the extensions {config_extensions}:
 {config_stems}
 ```
 
-If a config exists, read it: you are extending it, not writing it. If not, ask the human where it
-should go, and in which language. With no preference, write `deslag.toml` at the root.
+If a config exists, read it: you are extending it. If not, ask the human where it should go, and in
+which language. With no preference, write `deslag.toml` at the root.
 
 ## 2. Choose the files
 
-The `[md]` section lints every `*.md` file unless its `globs` say otherwise. A pattern holding a `/`
-matches the path from the root; one without matches the file name in any directory.
+`[md]` lints every `*.md` file unless its `globs` say otherwise. Start with the files agents write
+and read, such as AGENTS.md, CLAUDE.md, skills and design docs. Ask before adding files a human
+writes, such as README.md. It also reads the comments of Rust, C, C++ and TOML code fences in those
+files; `fences.languages = []` turns that off.
 
-Start with the files agents write and read, such as AGENTS.md, CLAUDE.md, skills and design docs.
-Ask before adding files a human writes, such as README.md. Once a lint covers a file, agents are
-told to rewrite it until it passes.
+`[rust]`, `[cpp]` and `[toml]` lint the comments of those source files; a config without the
+section does not read them. Offer one only where comments should meet the standard of prose. Rust
+doc comments are read as Markdown, other comments as plain text.
 
-A `[rust]` or `[cpp]` section holds the comments of source files to the same rules. Offer it only
-to a repository whose comments should meet the standard of its prose.
+Keep generated and vendored code out of the globs. A pattern with a `/` matches the path from the
+root, one without matches the file name anywhere, and `**` crosses directories. With no `globs`,
+every file of the kind is read.
+
+A glob cannot exclude, and an override cannot turn a lint off, so name the hand-written paths:
+`/src/**/*.rs` is too wide where `/src/proto` holds generated code. Find generated files with
+`grep -rlE '@generated|DO NOT EDIT' .`. Files that git ignores, or a `.ignore` file lists, are
+never read.
+
+deslag does not skip a generated file. It leaves out only licence text, banners and tool
+directives, such as the `@generated` line itself, and reads every other comment of the file. No
+marker suppresses a lint.
 
 ## 3. Write the config
 
 Run `deslag instructions lints`. It says what each lint fails and gives a table that turns it on.
-A config looks like this:
+`deslag instructions config-schema` prints the JSON schema with every setting and its default.
 
 ```toml
 schema_version = {schema_version}
@@ -54,54 +65,40 @@ globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
 ```
 
-Every lint also takes a `message`, which replaces the advice in its report. For every setting, its
-default and its meaning, run `deslag instructions config-schema`, which prints the config's JSON
-schema. TOML, YAML and JSON configs share it.
+In `[rust]`, `[cpp]` and `[toml]`, `max_size_bytes` and `repo_layout` are an error, since they need
+the whole file. `list_growth` is an error in `[cpp]` and `[toml]`, and in `[rust]` without the
+`doc_comment` surface. The rest read comments.
 
-## 4. Measure, then propose
+## 4. See what each file reads
+
+Run `deslag explain <PATH>...` on a hand-written file and on each generated or vendored file near
+the globs. It prints whether a section selects the path, or why not; a `# reads:` line; the
+matching overrides in the order they merge; the merged table of each lint; and `# prose regions`,
+the comments read, each with its line range and the start of its text. A generated file must not
+show as selected. Change the globs until every file reads as you mean.
+
+## 5. Measure, then fix
 
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
-no remote. `--base HEAD` judges only uncommitted work, so in a clean tree `list_growth` passes:
-never use it in CI or on a branch under review. deslag prints a report on standard error for each
-file that fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means
-deslag could not run, as with a bad config: fix the setup, not the Markdown.
+no remote. `--base HEAD` judges only uncommitted work, so `list_growth` passes in a clean tree:
+never use it in CI. A failing file gets a report on standard error and exit code 1; exit 2 means
+deslag could not run. Tell the human what each lint fails and propose a limit a little above the
+file's size: add 10%, at least 500 bytes. A file needing more gets an override.
 
-For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
-file's size today stops it from growing: add 10%, and at least 500 bytes for a small file. A budget
-below it asks for cuts. Where one file needs a different limit, propose an override for it rather
-than loosening the limit for every file.
+Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
+file or rephrase around a lint. `deslag fix [PATH]...` replaces banned characters where it can
+prove the text reads as before; `--dry-run` writes nothing. Ask before fixing a human's file.
 
-## 5. Fix the files
+## 6. CI, and the next agent
 
-Fix what fails in a file an agent wrote by following the advice in its report. `deslag fix <PATH>`
-fixes `banned_chars` alone: it replaces each banned character it can prove safe to replace and
-says why it left the others, or that it fixed nothing. Fix those, and every other failure,
-yourself. For a file a human wrote, show the human the report and ask first, before running
-`deslag fix` too. When every file passes, the config is done.
+Add `deslag check --base origin/main` where the repository runs its checks, with `fetch-depth: 0`
+in GitHub Actions. deslag is not on crates.io yet, so ask the human how to install it. `--format
+github` annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports
+only what a change touched; it misses some failures, so never upload its log.
 
-## 6. Run it in CI
+With the human's consent, add a line to AGENTS.md: "Run `deslag check --base origin/main` before
+you push, and fix what it reports."
 
-Add `deslag check --base origin/main` where the repository runs its other checks, such as a
-Makefile target or a CI job fetched with `fetch-depth: 0`, so a failure blocks a merge. deslag is
-not on crates.io yet, so ask the human how a CI job should install it.
-
-Until the tree passes, `--diff origin/main` in place of `--base origin/main` reports only what the
-change touched, which misses some failures, such as a path deleted from under an untouched layout.
-A `pull_request` job may run `--diff HEAD^1` with `fetch-depth: 2` instead.
-
-In a GitHub Actions job, `--format github` prints a workflow command per failing file, which GitHub
-shows as an annotation on it, and `--format sarif` prints a log to upload to code scanning. The
-report and the exit code do not change. Upload no log from a `--diff` run: code scanning closes the
-alerts it leaves out. Paths are relative to where deslag runs and GitHub reads them from the root
-of the repository, so run it there.
-
-## 7. Tell the next agent
-
-If it suits this project, add a note to AGENTS.md, after checking with the human. Give it the
-command and base of step 6, such as: "Run `deslag check --base origin/main` before you push, and
-fix what it reports."
-
-When a command prints a note saying the config was last updated by an older deslag, run
-`deslag instructions update` and do what it says. When it warns that a setting was renamed or
-removed, run `deslag update`: it makes that edit in the config, or prints the edit it cannot make.
-It records `deslag_version` only when nothing is new, so it never turns on what nobody chose.
+When a command notes that an older deslag last updated the config, run
+`deslag instructions update`, offer the human each new lint, and do what it says. When it warns
+that a setting was renamed or removed, run `deslag update`.

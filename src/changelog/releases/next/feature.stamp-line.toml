@@ -1,6 +1,6 @@
 kind = "feature"
 id = "stamp-line"
-summary = "Says which phrases moving the stamp turns on in this config"
+summary = "Says what moving the stamp turns on, and marks lints already set"
 onboarding = '''
 When `deslag instructions update` has read a config, its closing says what `deslag update --to`
 turns on in that config: the phrases the new stamp makes `deslag check` report, or that there are
@@ -11,4 +11,9 @@ compare. With some, it says how to see what they would flag.
 Tell the person what the line says before they choose. A new lint or setting stays off until the
 config names it, whatever the stamp. With `--since`, or with no config, the closing leaves the line
 out, because there is no config to read.
+
+The line is in the text only. In the JSON, an entry for a lint that some table of the config
+already has carries `"already_set": true` (the text says "This config already has a `name`
+table."), and the stamp line is left out; `deslag update --dry-run --to <version>` names the
+phrases.
 '''

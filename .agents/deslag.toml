@@ -97,7 +97,7 @@ lints.max_size_bytes.value = 17408
 
 [[md.overrides]]
 globs = ["/docs/design/catalog.md"]
-lints.max_size_bytes.value = 3333
+lints.max_size_bytes.value = 3522
 
 [[md.overrides]]
 globs = ["/docs/design/analysis.md"]

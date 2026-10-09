@@ -30,6 +30,9 @@ section of `src/changelog/releases/next/README.md` says. Write its `llm_files` a
 `make fix-catalog` sets them from the blob image that `make fetch-blobs` unpacks. The same change
 rewords the text that uses the phrase, because a test lints the repo with every phrase in force.
 
+`make fix-catalog` stops when a `human` file holds the phrase, which is the rule above: it is no
+candidate. If a corpus file in the tree holds it, run `make fix-golden` and read the diff.
+
 ## What CI checks
 
 - `make test-blobs` counts each entry's `llm` files and repositories on the image `blobs.lock`

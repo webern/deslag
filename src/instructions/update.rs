@@ -32,7 +32,8 @@ pub enum Start<'a> {
 }
 
 /// What a config that was read says about the range, so that the text can speak of this config
-/// and not of any config.
+/// and not of any config. It is public because the binary, a crate of its own, reads the config
+/// and hands this to [`Start`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Reading {
     /// The phrases that moving the stamp to the running version turns on in the config.

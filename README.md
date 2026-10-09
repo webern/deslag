@@ -101,7 +101,9 @@ error that says so, and the exit code does not change.
 agent. It is Markdown for either: the breaking changes, new lints, new settings and features that
 releases after the stamp added, then the phrases the stamp keeps off, each with how to keep it off.
 Read with a config, it also says which phrases moving the stamp turns on in that config, and marks a
-lint the config already has. `--format json` prints the same news as data. `--since <version>`
+lint the config already has. `--format json` prints the entries and phrases as data, a lint the
+config already has marked `"already_set": true`, and leaves out the line about the stamp;
+`deslag update --dry-run --to <version>` names the phrases that line would. `--since <version>`
 starts from a release you name and reads no config.
 
 To choose, add the table of each new lint you want to the config. Keep a phrase off by adding it to

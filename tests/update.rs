@@ -23,8 +23,22 @@ const CURRENT: &str = env!("CARGO_PKG_VERSION");
 /// A release before every release, so a stamp of it is behind a deslag with a changelog.
 const BEFORE_ALL: &str = "0.0.0";
 
-/// Standard error, which `update` fills only with what it did.
+/// Standard error, which `update` fills only with what it did, without the line that names the
+/// catalogue phrases a move of the stamp turns on. Which phrases those are depends on the
+/// catalogue, so a release that adds one would otherwise edit every test that moves a stamp; the
+/// tests about that line ask for [`raw_said`].
 fn said(output: &Output) -> String {
+    raw_said(output)
+        .split_inclusive('\n')
+        .filter(|line| {
+            !line.contains(": turned on these phrases, ")
+                && !line.contains(": would turn on these phrases, ")
+        })
+        .collect()
+}
+
+/// Standard error, every line of it.
+fn raw_said(output: &Output) -> String {
     common::raw_stderr(output)
 }
 
@@ -129,24 +143,14 @@ fn a_stamp_behind_a_release_with_entries_is_left_unless_told_to_move() {
         format!("{text}[md.lints.banned_phrases.groups]\n")
     );
 
-    // `--to` moves it, keeping the comment on its line, and names the phrases it turns on, which
-    // are the catalogue's and not this test's to list.
+    // `--to` moves it, keeping the comment on its line.
     let output = repo.run(&["update", "--to", CURRENT]);
     assert_eq!(code(&output), 0, "{}", said(&output));
-    let said_to = said(&output);
-    let mut lines = said_to.lines();
     assert_eq!(
-        lines.next(),
-        Some(
-            format!(
-                "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")"
-            )
-            .as_str()
+        said(&output),
+        format!(
+            "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")\n"
         )
-    );
-    assert!(
-        lines.all(|line| line.starts_with("deslag: deslag.toml: turned on these phrases")),
-        "{said_to}"
     );
     assert_eq!(
         read(&repo, "toml"),
@@ -997,14 +1001,14 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
     assert_eq!(code(&repo.check()), 0);
 
     // `--dry-run` names them and moves nothing.
-    let dry = said(&repo.run(&["update", "--dry-run", "--to", CURRENT]));
+    let dry = raw_said(&repo.run(&["update", "--dry-run", "--to", CURRENT]));
     assert!(dry.contains("would turn on these phrases"), "{dry}");
     assert_eq!(code(&repo.check()), 0);
 
     // `--to` names every phrase the move turns on, with its group.
     let moved = repo.run(&["update", "--to", CURRENT]);
     assert_eq!(code(&moved), 0, "{}", said(&moved));
-    let said_moved = said(&moved);
+    let said_moved = raw_said(&moved);
     for entry in CATALOGUE
         .entries
         .iter()

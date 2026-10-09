@@ -1,0 +1,154 @@
+name: bump-version
+
+# Run by hand from main with the exact version to release. It makes the release change with
+# `deslag-release prep`, checks it, and pushes it as the branch release/vX.Y.Z. The person or agent
+# running it then opens the pull request with `gh pr create`: a pull request this workflow opened
+# with the workflow token would get no CI run. The /deslag-release skill is the whole procedure.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Exact version WITHOUT a leading v, as X.Y.Z, e.g. 0.0.1"
+        required: true
+
+run-name: bump-version ${{ inputs.version }}
+
+# Two runs of this workflow never overlap, and a running one finishes.
+concurrency:
+  group: bump-version
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  # Read-only. Makes the change and checks it, then hands it to push as a patch.
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      VERSION: ${{ inputs.version }}
+
+    steps:
+      # Before anything reads the repository: the version is X.Y.Z, and this is main.
+      - name: Validate the inputs
+        run: |
+          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]{0,8})(\.(0|[1-9][0-9]{0,8})){2}$ ]]; then
+            echo "::error::version must be X.Y.Z with no leading v, no leading zero and no pre-release part."
+            exit 1
+          fi
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::This workflow must be run from main (ref was '$GITHUB_REF')."
+            exit 1
+          fi
+
+      # All history and tags: check-version refuses a shallow clone, and prep calls it.
+      - name: Get the source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      # make check-typos runs it.
+      - name: Install typos
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.26, 2026-10-06
+        with:
+          tool: typos
+
+      # The branch is pushed once. A branch left over from a run that failed is deleted by hand.
+      - name: Validate the branch is new
+        run: |
+          if git show-ref --verify --quiet "refs/remotes/origin/release/v$VERSION"; then
+            echo "::error::The branch release/v$VERSION exists. Close its pull request and delete it first."
+            exit 1
+          fi
+
+      - name: Validate the version
+        run: cargo run --locked --quiet -p deslag-release -- check-version "$VERSION"
+
+      - name: Make the release change
+        run: cargo run --locked --quiet -p deslag-release -- prep "$VERSION"
+
+      # The pull request's own CI runs make ci. Here the quick gate and the release gate.
+      - name: Check the change
+        run: make ci-fast check-release
+
+      # New files are untracked, so stage everything first.
+      - name: Make the patch
+        run: |
+          git add -A
+          git diff --cached --binary > "$RUNNER_TEMP/bump.patch"
+          if [ ! -s "$RUNNER_TEMP/bump.patch" ]; then
+            echo "::error::prep changed nothing."
+            exit 1
+          fi
+          git diff --cached --stat
+
+      - name: Upload the patch
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, 2026-04-10
+        with:
+          name: bump-patch
+          path: ${{ runner.temp }}/bump.patch
+          retention-days: 1
+          if-no-files-found: error
+
+  # The one job that writes. It runs nothing of the repository's: it applies the patch to the same
+  # commit, commits as whoever started the run, and pushes the branch.
+  push:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # Push the release branch.
+    env:
+      VERSION: ${{ inputs.version }}
+      ACTOR: ${{ github.actor }}
+      ACTOR_ID: ${{ github.actor_id }}
+
+    steps:
+      # The version names a branch and a commit, so this job checks it for itself.
+      - name: Validate the version
+        run: |
+          if [[ ! "$VERSION" =~ ^(0|[1-9][0-9]{0,8})(\.(0|[1-9][0-9]{0,8})){2}$ ]]; then
+            echo "::error::version must be X.Y.Z."
+            exit 1
+          fi
+
+      # The same commit verify patched. The token is not kept in the clone; the push passes it.
+      - name: Get the source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Download the patch
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, 2026-03-11
+        with:
+          name: bump-patch
+          path: ${{ runner.temp }}
+
+      # The author and committer are the person who started the run, by their noreply address, so a
+      # squash merge adds no co-author.
+      - name: Commit and push the branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git apply --index "$RUNNER_TEMP/bump.patch"
+          git -c user.name="$ACTOR" -c user.email="$ACTOR_ID+$ACTOR@users.noreply.github.com" \
+            commit --quiet -F - <<EOF
+          chore: release $VERSION
+
+          The change that releases $VERSION, made by \`deslag-release prep $VERSION\` and checked
+          with \`make ci-fast check-release\`.
+          EOF
+          # The helper is a shell function git runs later, so GH_TOKEN stays unexpanded here.
+          # shellcheck disable=SC2016
+          git -c credential.helper= \
+            -c credential.helper='!f() { echo username=x-access-token; echo "password=$GH_TOKEN"; }; f' \
+            push origin "HEAD:refs/heads/release/v$VERSION"
+          echo "Pushed release/v$VERSION. Open the pull request with gh pr create." >> "$GITHUB_STEP_SUMMARY"

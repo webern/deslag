@@ -240,7 +240,56 @@ impl<'a> Reader<'a> {
             return;
         }
         self.end_implicit();
+        if matches!(tag, TagEnd::Heading(_)) {
+            self.end_heading_text();
+        }
         self.close();
+    }
+
+    /// Ends the open heading's pieces and spans where its block ends.
+    ///
+    /// pulldown-cmark keeps a tab that closes an ATX heading in the range of the heading's last
+    /// text or code piece, and of an emphasis, strong or strikethrough span that ends the line,
+    /// but [`Reader::trim`] ends the block before the tab.
+    fn end_heading_text(&mut self) {
+        let Some(Open {
+            content: Content::Text { first, .. },
+            range,
+            ..
+        }) = self.open.last()
+        else {
+            return;
+        };
+        let (first, start, end) = (*first, range.start, self.trim(range.clone()).end);
+        let source = self.source;
+        while self.pieces[first..]
+            .last()
+            .is_some_and(|piece| piece.range.start >= end)
+        {
+            self.pieces.pop();
+        }
+        if let Some(piece) = self.pieces[first..]
+            .last_mut()
+            .filter(|piece| piece.range.end > end)
+        {
+            // The text of a character reference differs from its source bytes and does not hold
+            // the tab, so a piece cuts its text only when the text is its source bytes.
+            // TODO: drop this workaround once pulldown-cmark trims the tab, as CommonMark asks.
+            if *piece.text == source[piece.range.clone()] {
+                let kept = piece.text.len() - (piece.range.end - end);
+                match &mut piece.text {
+                    Cow::Borrowed(text) => *text = &text[..kept],
+                    Cow::Owned(text) => text.truncate(kept),
+                }
+            }
+            piece.range.end = end;
+        }
+        for span in self.spans.iter_mut().rev() {
+            if span.range.start < start {
+                break;
+            }
+            span.range.end = span.range.end.min(end);
+        }
     }
 
     /// Text: a line of a block that is not prose, or a piece of prose.

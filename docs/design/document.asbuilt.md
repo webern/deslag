@@ -7,9 +7,9 @@ max_size_bytes: 3000
 ---
 # The document: as built
 
-A reader turns a file into a `Document`, which every lint but the byte budget reads. A `Stack`
-(`stack.rs`) names the `Reader` for a section's files: Markdown, plain text, Rust, C and C++, or
-TOML. `lint::check_file` calls `Stack::document` once per file. The module docs hold the detail.
+A reader turns a file into a `Document`, which every lint but the byte budget reads. A `Stack` names
+the `Reader` for a section's files: Markdown, plain text, Rust, C and C++, or TOML.
+`lint::check_file` calls `Stack::document` once per file.
 
 ```
 src/
@@ -18,7 +18,7 @@ src/
     stack.rs          Stack, Reader, Fences, Language
     markdown.rs       Markdown, on pulldown-cmark
     plain.rs          plain text
-    fence.rs          the comments of fenced code in Markdown
+    fence.rs          comments of fenced code
     rust.rs cpp.rs    where the comments of a file are
     *_regions.rs      those comments, as regions, for rust cpp toml
     region.rs region_build.rs map.rs skip.rs skip.toml
@@ -35,10 +35,12 @@ Markdown is read whole: blocks nest as the Markdown does, hold pieces (the text 
 under spans of formatting, and break lines at points. Code, HTML and frontmatter blocks are raw.
 
 A code file is read as regions: each comment, or run of them, is a `Region` of prose with a
-`SourceMap` to its bytes in the file and a `Carrier` that writes text back as the file holds it.
-Markdown or plain text reads a region, and `lift` merges the results into one `Document`. A
-Markdown `Stack` also reads the comments of the fences its `Fences` names, as regions nested in the
-code block; a fence the file cannot map byte for byte stays code.
+`SourceMap` to its file bytes and a `Carrier` that writes text back as the file holds it.
+Markdown or plain text reads a region, and `lift` merges the results into one `Document`.
+
+A Markdown `Stack` also reads the comments of the fences its `Fences` names, as regions nested in
+the code block; a fence the file cannot map byte for byte stays code. Fences are Rust, C and C++,
+and TOML (`#` comments only); a doc comment's Markdown has none read.
 
 ## Tokens, sentences and locations
 

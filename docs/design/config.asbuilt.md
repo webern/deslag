@@ -64,10 +64,10 @@ The top level has a section per kind of file: `[md]`, and `[rust]`, `[cpp]` and 
 the comments of Rust, C and C++, and TOML files and select only files of their extensions. A config
 without them does not read such a file.
 
-A section has `globs` selecting its files, a `lints` table
-with a sub-table per lint, and `overrides`; `[md]` also has `fences`, which says which `languages`
-of fenced code have their comments read (`rust`, `cpp` and `toml` by default) and which `surfaces` of
-comment (`doc_comment` and `comment`), and no override changes it.
+A section has `globs` selecting its files, a `lints` table with a sub-table per lint, and
+`overrides`; `[md]` also has `fences`, which says which `languages` of fenced code (`rust`, `cpp`
+and `toml` by default) and which `surfaces` of comment (`doc_comment` and `comment`) are read, and
+no override changes it.
 
 Two sections selecting one file is an `Error::Setting`. Every field of a lint's settings is
 optional, and a value the lint cannot use, such as a `density` limit of 0 or a `ban` value holding

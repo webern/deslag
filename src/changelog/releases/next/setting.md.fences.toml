@@ -3,11 +3,12 @@ id = "md.fences"
 keys = ["languages", "surfaces"]
 summary = "Chooses which fenced code in Markdown has its comments read"
 onboarding = '''
-`md.fences.languages` lists the languages whose fenced code `[md]` reads for comments: `rust` and
-`cpp`. With no `languages`, both are read, and `[]` turns reading off. `md.fences.surfaces` lists the
-kinds of comment to read in them, `doc_comment` and `comment` as in `rust.surfaces`, one list for
-every language. With no `surfaces`, both are read, and `[]` turns reading off too. An unknown
-language is an error when the config loads, and `[[md.overrides]]` cannot set either key.
+`md.fences.languages` lists the languages whose fenced code `[md]` reads for comments: `rust`, `cpp`
+and `toml`. With no `languages`, all three are read, and `[]` turns reading off.
+`md.fences.surfaces` lists the kinds of comment to read in them, `doc_comment` and `comment` as in
+`rust.surfaces`, one list for every language; a `toml` fence has `comment` only. With no
+`surfaces`, both are read, and `[]` turns reading off too. An unknown language is an error when the
+config loads, and `[[md.overrides]]` cannot set either key.
 
 ```toml
 [md]

@@ -2,5 +2,5 @@ deslag: cannot parse [ROOT]/deslag.toml: TOML parse error at line 4, column 29
   |
 4 | fences.languages = ["rust", "python"]
   |                             ^^^^^^^^
-unknown variant `python`, expected `rust` or `cpp`
+unknown variant `python`, expected one of `rust`, `cpp`, `toml`
 

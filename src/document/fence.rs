@@ -67,6 +67,7 @@ impl Language {
             "rust" | "rs" => Some(Language::Rust),
             // The extensions that the section for C and C++ reads, and the names of the languages.
             "c" | "cpp" | "c++" | "cc" | "cxx" | "h" | "hh" | "hpp" | "hxx" => Some(Language::Cpp),
+            "toml" => Some(Language::Toml),
             _ => None,
         }
     }
@@ -289,7 +290,7 @@ mod tests {
 
     #[test]
     fn the_info_string_names_a_language_by_its_first_word() {
-        use Language::{Cpp, Rust};
+        use Language::{Cpp, Rust, Toml};
         for (info, language) in [
             ("rust", Some(Rust)),
             ("Rust", Some(Rust)),
@@ -319,6 +320,11 @@ mod tests {
             ("plaintext", None),
             ("objc", None),
             ("rustc", None),
+            ("toml", Some(Toml)),
+            ("TOML", Some(Toml)),
+            ("toml,ignore", Some(Toml)),
+            ("{.toml}", Some(Toml)),
+            ("tomlx", None),
             ("python", None),
         ] {
             assert_eq!(Language::named(info), language, "{info:?}");
@@ -690,6 +696,97 @@ mod tests {
     }
 
     #[test]
+    fn a_toml_fence_is_read_for_its_hash_comments_through_the_skip_list() {
+        let source = "```toml\n# one\n# two\nname = \"a\" # three\n# ====\n```\n";
+
+        assert_eq!(
+            regions(source),
+            [
+                ("# one\n# two", "one\ntwo".to_string()),
+                ("# three", "three".to_string())
+            ]
+        );
+        assert_eq!(
+            kinds(&all(), source)[..2],
+            ["Code(toml)", " Region(comment)"]
+        );
+        let toml = fences(&[Language::Toml], &[Surface::Comment]);
+        assert_eq!(kinds(&toml, source).len(), kinds(&all(), source).len());
+    }
+
+    #[test]
+    fn a_hash_in_a_toml_string_in_a_fence_is_not_read() {
+        let source =
+            "```TOML\ntitle = \"a # b\"\nraw = 'c # d'\nmulti = \"\"\"\n# e\n\"\"\"\n# kept\n```\n";
+
+        // The comment after the strings is the one region. With the reader off, a TOML fence has
+        // none, so this fails if TOML leaves `Fences::all()`: "no regions" alone would not.
+        assert_eq!(regions(source), [("# kept", "kept".to_string())]);
+        assert_eq!(
+            kinds(&all(), source)[..2],
+            ["Code(TOML)", " Region(comment)"]
+        );
+    }
+
+    #[test]
+    fn a_language_that_is_not_listed_leaves_a_toml_fence_unread() {
+        let source = "```rust\n// one\n```\n\n```toml\n# two\n```\n";
+        let rust = fences(&[Language::Rust], &BOTH);
+
+        assert_eq!(
+            kinds(&rust, source),
+            [
+                "Code(rust)",
+                " Region(comment)",
+                "  Paragraph",
+                "Code(toml)"
+            ]
+        );
+        assert_eq!(regions(source).len(), 2);
+        let docs = fences(&[Language::Toml], &[Surface::DocComment]);
+        assert_eq!(kinds(&docs, source), ["Code(rust)", "Code(toml)"]);
+    }
+
+    #[test]
+    fn a_toml_fence_in_a_doc_comment_in_a_fence_is_not_read() {
+        let source =
+            "```rust\n/// ```toml\n/// # inner\n/// ```\nfn f() {}\n```\n\n```toml\n# outer\n```\n";
+
+        // Two regions: the doc comment, and the comment of the TOML fence at the top level. The
+        // fence inside the doc comment adds none, which is the depth bound. With the reader off
+        // the top-level fence yields nothing either, so the count shows the reader is on.
+        assert_eq!(regions(source).len(), 2);
+        assert_eq!(
+            kinds(&all(), source),
+            [
+                "Code(rust)",
+                " Region(doc_comment)",
+                "  Code(toml)",
+                "Code(toml)",
+                " Region(comment)",
+                "  Paragraph"
+            ]
+        );
+    }
+
+    #[test]
+    fn a_toml_fence_with_crlf_keeps_the_return_out_of_the_comment() {
+        let source = "```toml\r\n# one\r\n# two\r\nkey = 1\r\n```\r\n";
+        let document = all().read(source);
+
+        assert_eq!(
+            regions(source),
+            [("# one\r\n# two", "one\ntwo".to_string())]
+        );
+        let region = &document.regions[0];
+        assert_eq!(
+            region.carrier.encode(source, "one\ntwo\nthree"),
+            "# one\r\n# two\r\n# three"
+        );
+        assert_eq!(fence(source).unwrap().text, "# one\n# two\nkey = 1");
+    }
+
+    #[test]
     fn the_markdown_of_a_doc_comment_in_a_fence_reads_no_fences() {
         let source = "```rust\n/// ```rust\n/// // inner\n/// ```\nfn f() {}\n```\n";
 
@@ -735,8 +832,9 @@ mod tests {
         println!("corpus: {tally:?}");
         assert!(tally.failures.is_empty(), "{:?}", tally.failures);
         // The fences read, none left as code, and the comments in them but the four that are
-        // nothing but `// ...`, which the skip list takes for a banner.
-        assert_eq!((tally.fences, tally.raw, tally.regions), (163, 0, 104));
+        // nothing but `// ...`, which the skip list takes for a banner. Of the 219 fences, 56 are
+        // TOML, and 15 of the regions are in them.
+        assert_eq!((tally.fences, tally.raw, tally.regions), (219, 0, 119));
     }
 
     /// The Markdown of the crates `make fetch-crates` vendors. Every fence that names a language

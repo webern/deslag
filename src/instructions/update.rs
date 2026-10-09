@@ -196,7 +196,7 @@ struct Item<'a> {
 fn keep_off(phrase: &Phrase) -> String {
     let group = phrase.group.group().name;
     format!(
-        "Every file whose `banned_phrases` table has the group `{group}` on, as it is by default, \
+        "Every file whose `banned_phrases` table has the group `{group}` on \
          fails on it once `deslag_version` reaches {}. To keep it, add `\"{}\"` to `allow` in the \
          table, or switch the group off with `groups.{group} = false`.",
         phrase.since, phrase.phrase
@@ -620,7 +620,7 @@ llm_repos = 1
         assert!(features < new_phrases && new_phrases < finish, "{text}");
         assert!(text.contains(
             "### `never silently` (0.3.0)\n\nsay what it does instead\n\nEvery file whose \
-             `banned_phrases` table has the group `insistence` on, as it is by default, fails on \
+             `banned_phrases` table has the group `insistence` on fails on \
              it once `deslag_version` reaches 0.3.0. To keep it, add `\"never silently\"` to \
              `allow` in the table, or switch the group off with `groups.insistence = false`.\n"
         ));

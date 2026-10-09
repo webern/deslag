@@ -62,7 +62,7 @@ pub const REDIRECTS: &[Redirect] = &[Redirect {
     old: "md.lints.banned_phrases.groups.signposts",
     new: None,
     reason: Some(
-        "its one phrase fell below the catalogue's floor of 40 repositories (#83) and nothing \
+        "its one phrase fell below the catalogue's floor of 40 repositories and nothing \
          replaces it",
     ),
     example: "true",
@@ -307,7 +307,7 @@ mod tests {
         assert_eq!(
             signposts.warning("deslag.toml"),
             "deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed, and the setting \
-             is ignored; its one phrase fell below the catalogue's floor of 40 repositories (#83) \
+             is ignored; its one phrase fell below the catalogue's floor of 40 repositories \
              and nothing replaces it; delete it from the config, or run deslag update"
         );
         assert_eq!(

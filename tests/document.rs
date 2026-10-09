@@ -489,3 +489,59 @@ fn an_empty_range_ends_where_it_starts() {
     let location = document.locate(text.len()..text.len());
     assert_eq!((location.line, location.column), (2, 3));
 }
+
+/// Each piece of `text` as written and as it renders, once every piece is checked to lie inside its
+/// block.
+fn pieces_inside_their_blocks(text: &str) -> Vec<(String, String)> {
+    let document = Document::markdown(text);
+    let mut pieces = Vec::new();
+    for (block, _) in document.walk() {
+        for piece in document.pieces_of(block) {
+            assert!(
+                block.range.start <= piece.range.start && piece.range.end <= block.range.end,
+                "piece {:?} outside block {:?} of kind {:?} in {text:?}",
+                piece.range,
+                block.range,
+                block.kind
+            );
+            pieces.push((
+                text[piece.range.clone()].to_string(),
+                piece.text.to_string(),
+            ));
+        }
+    }
+    pieces
+}
+
+#[test]
+fn the_tabs_that_end_a_heading_are_not_in_its_pieces() {
+    let rendered = |source: &str| {
+        pieces_inside_their_blocks(source)
+            .into_iter()
+            .map(|(_, text)| text)
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(rendered("#\t/*\t"), ["/", "*"]);
+    assert_eq!(rendered("# a\t\n"), ["a"]);
+    assert_eq!(rendered("# a \t \n"), ["a"]);
+    assert_eq!(rendered("# a\t\r\n"), ["a"]);
+    assert_eq!(rendered("> # a\t\n"), ["a"]);
+    assert_eq!(rendered("# `a`\t\n"), ["a"]);
+    assert_eq!(rendered("# [a](b)\t\n"), ["a"]);
+    assert_eq!(rendered("# a *b*\t\n# c\t\n"), ["a ", "b", "c"]);
+    // A tab in the middle of the text stays, and so does one a character reference writes.
+    assert_eq!(rendered("# a\tb\t\n"), ["a\tb"]);
+    assert_eq!(rendered("# a&#9;\t\n"), ["a", "\t"]);
+}
+
+#[test]
+fn a_heading_with_tabs_and_a_table_keeps_its_pieces_inside_its_blocks() {
+    for source in [
+        "#\t/*\t\n\n| a |\n|---|\n| b |\n",
+        "#\t/*\t\r\n\r\n| a |\r\n|---|\r\n| b |\r\n",
+        "| a |\n|---|\n| b |\n\n#\t/*\t",
+    ] {
+        let pieces = pieces_inside_their_blocks(source);
+        assert!(pieces.iter().any(|(written, _)| written == "*"));
+    }
+}

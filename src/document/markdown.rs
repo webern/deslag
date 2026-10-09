@@ -240,7 +240,43 @@ impl<'a> Reader<'a> {
             return;
         }
         self.end_implicit();
+        if matches!(tag, TagEnd::Heading(_)) {
+            self.end_heading_text();
+        }
         self.close();
+    }
+
+    /// Cuts from the heading that is open the tabs pulldown-cmark leaves in its last pieces. The
+    /// range it gives an ATX heading, and its last text or code span, runs past a tab that ends the
+    /// line, but [`Reader::trim`] ends the block before it.
+    fn end_heading_text(&mut self) {
+        let Some(Open {
+            content: Content::Text { first, .. },
+            range,
+            ..
+        }) = self.open.last()
+        else {
+            return;
+        };
+        let (first, end) = (*first, self.trim(range.clone()).end);
+        while self.pieces.len() > first && self.pieces[self.pieces.len() - 1].range.start >= end {
+            self.pieces.pop();
+        }
+        let Some(piece) = self.pieces[first..]
+            .last_mut()
+            .filter(|p| p.range.end > end)
+        else {
+            return;
+        };
+        // A piece that is the bytes it was written with ends in the same tab as its text.
+        if piece.text.len() == piece.range.len() {
+            let kept = piece.text.len() - (piece.range.end - end);
+            match &mut piece.text {
+                Cow::Borrowed(text) => *text = &text[..kept],
+                Cow::Owned(text) => text.truncate(kept),
+            }
+        }
+        piece.range.end = end;
     }
 
     /// Text: a line of a block that is not prose, or a piece of prose.

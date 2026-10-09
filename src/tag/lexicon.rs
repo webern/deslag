@@ -403,7 +403,7 @@ mod tests {
         // A form takes the rank of its lemma's part of speech: `saw` is the past of `see`.
         assert_eq!(word("saw").tag, Tag::Verb);
         assert_eq!(word("uses").tag, Tag::Verb);
-        // A name has no count of its own and ranks after the common readings.
+        // A name does not have a count of its own and ranks after the common readings.
         assert_eq!(word("march").kept.iter().next(), Some(Tag::Noun));
     }
 
@@ -417,7 +417,7 @@ mod tests {
             marked += 1;
             assert!(dominant(word), "{word}");
             // The marker is not part of the reading, and only a noun, verb, adjective or adverb
-            // that has no function word among its tags carries it.
+            // that does not have a function word among its tags carries it.
             let reading = parse(readings).unwrap();
             assert_eq!(
                 Some(reading),

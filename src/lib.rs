@@ -10,7 +10,7 @@
 //! 2. the most specific `[[md.overrides]]` entry in the [`config::Config`] that sets one;
 //! 3. the `[md.lints.max_size_bytes]` table of the config.
 //!
-//! A file with none of the three has no budget and is left alone. See the crate README and
+//! A file with none of the three does not have a budget and is left alone. See the crate README and
 //! `docs/design/` for the design.
 //!
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
@@ -72,7 +72,7 @@ pub enum Error {
         paths: String,
     },
 
-    /// The config file's extension names no language deslag reads.
+    /// The config file's extension does not name a language deslag reads.
     #[error("cannot tell the language of {path}: name it .toml, .yaml, .yml or .json")]
     ConfigFormat {
         /// The config file.
@@ -213,7 +213,7 @@ pub enum Error {
     },
 
     /// `--base` or `--diff` cannot read the change from its base: git is missing, the root is in
-    /// no work tree, or the base names no commit that shares history with HEAD.
+    /// no work tree, or the base does not name a commit that shares history with HEAD.
     #[error("cannot diff against {base}: {problem}")]
     Change {
         /// The base as given.

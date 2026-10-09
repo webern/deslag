@@ -56,8 +56,8 @@ impl Stack {
     }
 
     /// Reads `source` into the first layer only: blocks, pieces, spans and points. The tokens,
-    /// sentences and tags are left to [`Stack::document`], which a re-read to compare shapes has
-    /// no use for.
+    /// sentences and tags are left to [`Stack::document`], which a re-read to compare shapes does
+    /// not need.
     pub(crate) fn read<'a>(&self, source: &'a str) -> Document<'a> {
         match &self.outer {
             Reader::Markdown => markdown::read(self, source),

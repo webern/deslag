@@ -1,8 +1,9 @@
 //! The keys of a JSON config and their places, found by a scanner of its own.
 //!
-//! `serde_json` gives no position for a member that parsed, and writing a tree back out sorts the
-//! keys and rewrites escapes and big numbers, so the text is read here and edited by span. The
-//! scanner is for text that already loaded as a config: it knows JSON's grammar and nothing past it.
+//! `serde_json` does not give a position for a member that parsed, and writing a tree back out
+//! sorts the keys and rewrites escapes and big numbers, so the text is read here and edited by
+//! span. The scanner is for text that already loaded as a config: it knows JSON's grammar and
+//! nothing past it.
 
 use super::{Member, Part, Scan};
 

@@ -1,10 +1,10 @@
 //! `density`: a file must not hold walls of text.
 //!
-//! The unit is a **block**: a paragraph, or the text of a list item that has no paragraph of its
-//! own, as in a tight list. Its length is the characters a reader sees: text and code spans, and one
-//! for each line break inside it. Markup, link targets, HTML and image text are not counted. A
-//! paragraph inside a list item is held to the item's limit. Headings, tables, code blocks and
-//! frontmatter are not blocks, and a block of only whitespace is dropped.
+//! The unit is a **block**: a paragraph, or the text of a list item that does not have a paragraph
+//! of its own, as in a tight list. Its length is the characters a reader sees: text and code spans,
+//! and one for each line break inside it. Markup, link targets, HTML and image text are not
+//! counted. A paragraph inside a list item is held to the item's limit. Headings, tables, code
+//! blocks and frontmatter are not blocks, and a block of only whitespace is dropped.
 //!
 //! A file fails when a paragraph is longer than `max_paragraph_chars`, or a list item longer than
 //! `max_item_chars`, by default [`Density::DEFAULT_MAX_PARAGRAPH_CHARS`] and

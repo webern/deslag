@@ -293,7 +293,7 @@ impl SourceMap {
         self.segments.last().map_or(0, |last| last.inner.end)
     }
 
-    /// Whether the map tiles no text.
+    /// Whether the map does not tile any text.
     // TODO: remove the dead_code guard when the reader of fenced code uses it.
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
@@ -986,7 +986,7 @@ mod tests {
         assert_eq!(map.to_inner(5..9), 2..3);
         assert_eq!(map.to_inner(4..10), 1..4);
         assert_eq!(map.to_inner(3..11), 0..5);
-        // A range in the gap, or at a point, holds no text.
+        // A range in the gap, or at a point, does not hold text.
         assert_eq!(map.to_inner(6..8), 3..3);
         assert_eq!(map.to_inner(6..6), 3..3);
         assert_eq!(map.to_inner(0..3), 0..0);

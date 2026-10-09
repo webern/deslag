@@ -26,8 +26,8 @@ pub enum Start {
 /// The note `check`, `fix` and `explain` print on standard error, after `deslag: note: `, when a
 /// release after `stamp` up to `running` has entries, and `None` when the config has seen them all.
 ///
-/// It says that the command it names changes no file, because an agent that reads `update` as a
-/// command that rewrites files does not run it.
+/// It says that the command it names does not change any file, because an agent that reads `update`
+/// as a command that rewrites files does not run it.
 pub fn notice(stamp: &Version, running: &Version, changelog: &Changelog) -> Option<String> {
     changelog.between(stamp, running).next()?;
     Some(format!(

@@ -29,7 +29,7 @@
 //! and coordination cues (a noun before no word or beside a conjunction, after a noun or a numeral;
 //! a verb after a pronoun; an adjective after an adverb or a determiner; an adverb before no
 //! word), which test only whether the lexicon lacks a reading, not which of several is right.
-//! That is why a word with one reading needs no dominance mark.
+//! That is why a word with one reading does not need a dominance mark.
 //!
 //! Each cue was measured alone on EWT dev and the deslag dev gold set. Measured and dropped, under
 //! 93% on EWT dev: a verb after a verb, a verb before an adposition, a verb after an adverb.
@@ -301,7 +301,8 @@ mod tests {
 
     #[test]
     fn a_noun_after_a_determiner_or_a_possessive_is_already_sure_before_this_pass() {
-        // The noun-or-verb pass confirms it, so this pass has no cue for it and nothing is lost.
+        // The noun-or-verb pass confirms it, so this pass does not have a cue for it and nothing is
+        // lost.
         for text in ["the zebra they", "my zebra they", "its zebra they"] {
             assert_eq!(level(text, "zebra"), Confidence::Sure, "{text}");
         }
@@ -337,7 +338,7 @@ mod tests {
         // A capital is the proper-noun pass's business.
         assert_eq!(level("Zebra were they", "Zebra"), Confidence::Unsure);
         assert_eq!(level("they Zebra", "Zebra"), Confidence::Unsure);
-        // A word with several tags is `confirm`'s no business: `fine` is left as it was.
+        // A word with several tags is not `confirm`'s business: `fine` is left as it was.
         assert_eq!(level("the fine they", "fine"), Confidence::Unsure);
         // A word the tables do not have is `Unknown`, and stays so.
         assert_eq!(
@@ -366,7 +367,8 @@ mod tests {
 
     #[test]
     fn two_one_reading_words_vouch_for_each_other_only_where_a_cue_applies() {
-        // `giraffe` has no cue before a noun, so only `zebra` is confirmed, by the noun before it.
+        // `giraffe` does not have a cue before a noun, so only `zebra` is confirmed, by the noun
+        // before it.
         assert_eq!(
             level("they giraffe zebra they", "giraffe"),
             Confidence::Unsure

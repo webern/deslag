@@ -7,14 +7,14 @@ use serde::{Deserialize, Serialize, Serializer};
 
 /// A released version, or the one not released yet.
 ///
-/// [`Version::Next`] sorts above every release, so a comparison needs no special case for it. The
-/// variants are in that order on purpose: the derived `Ord` is the ordering.
+/// [`Version::Next`] sorts above every release, so a comparison does not need a special case for
+/// it. The variants are in that order on purpose: the derived `Ord` is the ordering.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 #[serde(try_from = "String")]
 pub enum Version {
     /// A released version, as a crate's semver.
     Release(semver::Version),
-    /// The release in the making, which has no number yet.
+    /// The release in the making, which does not have a number yet.
     Next,
 }
 

@@ -1,6 +1,6 @@
 //! Reads plain text, such as the text of a `//` comment, into the first layer of a [`Document`].
 //!
-//! Plain text has no markup, but writers use the habits of Markdown anyway:
+//! Plain text does not have markup, but writers use the habits of Markdown anyway:
 //!
 //! - A blank line parts paragraphs. A line break inside one is a soft break.
 //! - A line that opens with `-`, `*` or `+`, or with up to nine digits and a `.` or `)`, and then
@@ -280,7 +280,7 @@ impl<'a> Reader<'a> {
         });
     }
 
-    /// Reads a line that is not blank and opens no item.
+    /// Reads a line that is not blank and does not open an item.
     fn text(&mut self, line: &Line, blank: bool) {
         if let Some(leaf) = &mut self.leaf {
             if line.indent < leaf.column + RAW {

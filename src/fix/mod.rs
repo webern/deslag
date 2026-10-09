@@ -1,15 +1,15 @@
 //! `deslag fix`: making the edits the lints name, where the document proves them safe.
 //!
-//! Fix has no rules of its own. Each finding offers, through [`Violation::edits`], an edit for
-//! each place it points at or the lint's reason for none, and [`Document::apply`] makes only the
-//! edits it can prove leave the file reading as it did. Every other place is left as it is, and
+//! Fix does not have rules of its own. Each finding offers, through [`Violation::edits`], an edit
+//! for each place it points at or the lint's reason for none, and [`Document::apply`] makes only
+//! the edits it can prove leave the file reading as it did. Every other place is left as it is, and
 //! reported with the reason, for the agent to fix.
 //!
 //! A file is fixed in memory, in passes: it is read and linted as `check` would, the edits are
-//! applied, and the result is read again, until a pass makes no edit. Each fixable lint's edit
-//! removes a place it objects to and adds none, so the passes end; if they do not, a lint breaks
-//! that promise, which is an error. Every file is worked out before any is written, and one that
-//! changed is written once, by [`write::replace`](crate::write::replace).
+//! applied, and the result is read again, until a pass does not make an edit. Each fixable lint's
+//! edit removes a place it objects to and adds none, so the passes end; if they do not, a lint
+//! breaks that promise, which is an error. Every file is worked out before any is written, and one
+//! that changed is written once, by [`write::replace`](crate::write::replace).
 //!
 //! [`Violation::edits`]: crate::Violation::edits
 //! [`Document::apply`]: crate::Document::apply
@@ -53,7 +53,7 @@ pub enum Outcome {
 /// Why a place a finding points at was left for the agent.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Unfixed {
-    /// The lint names no edit there, for the reason it gives.
+    /// The lint does not name an edit there, for the reason it gives.
     Lint(&'static str),
     /// The document refused the lint's edit.
     Refused(Refusal),
@@ -197,8 +197,8 @@ fn chosen<'c>(
     Ok(chosen)
 }
 
-/// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one makes no
-/// edit.
+/// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one does not make
+/// an edit.
 fn passes(
     config: &Config,
     section: &Section,

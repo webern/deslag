@@ -18,7 +18,7 @@ pub struct Run {
     pub format_version: u32,
     /// The version of deslag that ran.
     pub deslag_version: String,
-    /// How many files the run examined, including the ones no lint had settings for.
+    /// How many files the run examined, including the ones for which no lint had settings.
     pub files_scanned: usize,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,

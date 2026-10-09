@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn that_is_a_pronoun_only_before_a_verb_or_an_auxiliary() {
-        // As the table has it, `that` has no features.
+        // As the table has it, `that` does not have features.
         let that = Reading {
             features: Features::NONE,
             ..word(&[Conjunction, Pronoun, Determiner])

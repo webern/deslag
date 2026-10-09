@@ -48,9 +48,9 @@ pub fn lints() -> String {
     text
 }
 
-/// The line that says which release of `changelog` `lint` arrived in. A lint with no entry gets no
-/// line: the library does not panic over a changelog it was built with, and the changelog tests
-/// name the entry to add.
+/// The line that says which release of `changelog` `lint` arrived in. A lint with no entry does not
+/// get a line: the library does not panic over a changelog it was built with, and the changelog
+/// tests name the entry to add.
 fn since(changelog: &Changelog, lint: Lint) -> Option<String> {
     changelog.arrived_in(lint).map(|arrived| match arrived {
         Version::Release(version) => format!("Since {version}."),

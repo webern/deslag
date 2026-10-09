@@ -2,8 +2,8 @@
 //!
 //! [`replace`] writes to a temp file beside the target and renames it into place. A target that is a
 //! symlink is followed, so the file it points at is the one replaced and the link stays a link.
-//! The permissions of the file it replaces carry over. The caller names no temp file and leaves
-//! none behind: when any step fails the temp file is removed and the original stands.
+//! The permissions of the file it replaces carry over. The caller does not name a temp file and
+//! leaves none behind: when any step fails the temp file is removed and the original stands.
 
 use std::fs;
 use std::io::Write;

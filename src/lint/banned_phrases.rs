@@ -2,15 +2,14 @@
 //!
 //! The phrases come in [`GROUPS`], each on by default and switched by the config, which may also
 //! ban more phrases, each with the advice its report gives. The groups' phrases are in
-//! `banned_phrases.toml`: each has no match in the corpus's `human` files and matches `llm` files
-//! of at least 40 repositories, counts that `make test-blobs` checks. A phrase in `ban` takes its
-//! advice from `ban`, whatever the groups say. The report names the group of each phrase it lists,
-//! so that a human can switch the group off. A
-//! phrase is split into tokens by the code that splits the document's prose, and matches the same
-//! row of tokens in one block of prose, whatever the case, the style of apostrophe, and the
-//! whitespace, line breaks and formatting between them. A code span, HTML, an image, a URL or a
-//! footnote reference is a token no phrase holds, so no match crosses one. Code blocks, HTML blocks
-//! and frontmatter hold no tokens.
+//! `banned_phrases.toml`: each does not match any `human` file of the corpus and matches `llm`
+//! files of at least 40 repositories, counts that `make test-blobs` checks. A phrase in `ban` takes
+//! its advice from `ban`, whatever the groups say. The report names the group of each phrase it
+//! lists, so that a human can switch the group off. A phrase is split into tokens by the code that
+//! splits the document's prose, and matches the same row of tokens in one block of prose, whatever
+//! the case, the style of apostrophe, and the whitespace, line breaks and formatting between them.
+//! A code span, HTML, an image, a URL or a footnote reference is a token no phrase holds, so no
+//! match crosses one. Code blocks, HTML blocks and frontmatter hold no tokens.
 //!
 //! A match that lies inside a match of an `allow` phrase is not reported. Of the rest, where two
 //! overlap, the one that starts first is reported, or the longer when both start at one token, so

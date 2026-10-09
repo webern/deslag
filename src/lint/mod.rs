@@ -45,7 +45,7 @@ pub enum Lint {
     Density,
     /// `list_growth`: what a change does to the count of list items.
     ListGrowth,
-    /// `verbs_no_nouns`: a verb negated through its object, as in "bakes no cakes".
+    /// `verbs_no_nouns`: a verb negated through its object, as in `bakes no cakes`.
     VerbsNoNouns,
 }
 
@@ -103,7 +103,7 @@ impl Lint {
         }
     }
 
-    /// The rule it holds a file to, in one sentence that names no kind of file.
+    /// The rule it holds a file to, in one sentence that does not name a kind of file.
     pub fn summary(self) -> &'static str {
         match self {
             Lint::MaxSizeBytes => "A file must not be larger than its byte budget.",
@@ -352,7 +352,7 @@ impl Finding {
 /// What one run of `deslag check` found.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
-    /// The path of each file examined, including the ones no lint had settings for.
+    /// The path of each file examined, including the ones for which no lint had settings.
     pub scanned: Vec<String>,
     /// The failures, sorted by path; one file's failures are in the order the lints ran.
     pub findings: Vec<Finding>,

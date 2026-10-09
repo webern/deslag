@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn a_tag_item_reads_only_the_best_guess() {
-        // The word keeps NOUN too, and has no features: neither is consulted.
+        // The word keeps NOUN too, and does not have features: neither is consulted.
         let mut document = unread("It ships fast.");
         for token in &mut document.tokens {
             if token.text == "ships" {

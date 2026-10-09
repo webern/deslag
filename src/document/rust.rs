@@ -447,7 +447,7 @@ impl Scanner<'_> {
                 if self.byte(end) != b'\'' {
                     return end;
                 }
-                // `'ab'` is a character, to the compiler, and takes no suffix.
+                // `'ab'` is a character, to the compiler, and does not take a suffix.
                 self.push(i, end + 1, LexemeKind::Char { terminated: true });
                 end + 1
             }
@@ -982,7 +982,7 @@ mod tests {
             }
             LexemeKind::Str { terminated } => {
                 // A prefix, then the quote or, for a raw string, its hashes. Only a malformed raw
-                // string such as `r#!` has no quote.
+                // string such as `r#!` does not have a quote.
                 let prefix = &text[..text.find(['"', '#']).unwrap_or(text.len())];
                 assert!(
                     matches!(prefix, "" | "b" | "c" | "r" | "br" | "cr"),

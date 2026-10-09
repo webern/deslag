@@ -178,8 +178,9 @@ impl Features {
     /// `Degree=Sup`.
     pub const SUPERLATIVE: Features = Features(1 << 13);
     /// A second word is fused on after the word the reading describes (`n't`, `'s`, `'re`, `'ll`,
-    /// `'m`, `'ve`, `'d`, or a possessive `'s`), and has no reading of its own. A lint that cares
-    /// which reads the token's text. Gold does not carry it and the exam does not score it.
+    /// `'m`, `'ve`, `'d`, or a possessive `'s`), and does not have a reading of its own. A lint
+    /// that cares which reads the token's text. Gold does not carry it and the exam does not score
+    /// it.
     pub const CONTRACTION: Features = Features(1 << 14);
 
     /// Every flag, in bit order.

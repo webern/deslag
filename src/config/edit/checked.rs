@@ -1,8 +1,8 @@
 //! The text that has been checked, and the check that makes it.
 //!
-//! [`Checked`] has no constructor outside this file: its field is private to this module, and
-//! [`check`] is the one function here that fills it. Whatever takes a `&Checked` to write a file is
-//! given text that this check passed.
+//! [`Checked`] does not have a constructor outside this file: its field is private to this module,
+//! and [`check`] is the one function here that fills it. Whatever takes a `&Checked` to write a
+//! file is given text that this check passed.
 
 use semver::Version;
 

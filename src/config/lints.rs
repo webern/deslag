@@ -246,10 +246,10 @@ impl Merge for MaxEmphasis {
 }
 
 /// `lints.repo_layout`: a file must have a section, under `heading`, whose first code block lists
-/// between `min_entries` and `max_entries` paths that exist, in lines no wider than `max_width`.
+/// between `min_entries` and `max_entries` paths that exist, in lines up to `max_width` wide.
 ///
 /// Unlike the other lints, the table itself turns the check on: a file it applies to must have
-/// the section even when the table sets no field.
+/// the section even when the table does not set any field.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct RepoLayout {
@@ -721,8 +721,8 @@ impl Merge for Density {
 /// `lints.list_growth`: a file fails when a change leaves it with more list items, at every depth,
 /// than it had at the base the run judges the change from.
 ///
-/// Like `repo_layout`, the table itself turns the check on. It sets no allowance: any number of
-/// items free with each change would let a list grow by that many with every change.
+/// Like `repo_layout`, the table itself turns the check on. It does not set an allowance: any
+/// number of items free with each change would let a list grow by that many with every change.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ListGrowth {
@@ -740,7 +740,7 @@ impl Merge for ListGrowth {
 }
 
 /// `lints.verbs_no_nouns`: a file fails when a sentence negates a verb through its object, as in
-/// "bakes no cakes".
+/// `bakes no cakes`.
 ///
 /// The table itself turns the check on. The words it excuses are the lint's, not the config's.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]

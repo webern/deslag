@@ -67,7 +67,8 @@ When a config was read, `Reading::of` marks each new lint the config already tur
 
 The change that bumps `Cargo.toml` moves the files of `next/` into a directory named for the
 version, sets `since = "next"` phrases to it, and adds `tests/configs/<version>/` when a setting
-arrived. Released entries change only by a rename or removal, edited in place, or `update_does_all`.
+arrived. A released entry is edited in place only when a later change renames or removes what it
+names, or sets its `update_does_all` to true.
 
 ## Tests
 
@@ -77,5 +78,4 @@ obey the repo's banned phrases, and the repo's text does not hold a phrase above
 
 Four `#[ignore]` tests are the release proof, run by `make check-release`: `next/` is empty, no
 phrase has `since = "next"`, the newest frozen config names every setting, and the crate version
-is `X.Y.Z`. `stderr` in `tests/common/mod.rs` drops the note and `raw_stderr` keeps it, so a
-release does not edit a test.
+is `X.Y.Z`. `stderr` in `tests/common/mod.rs` drops the note and `raw_stderr` keeps it.

@@ -171,8 +171,8 @@ fn reading_of<'a>(start: Start<'a>) -> Option<&'a Reading> {
 /// The line that says what moving the stamp turns on in the config: the phrases `reading` found,
 /// or that there are none, and then how to see what they flag, or that nothing else `check` finds
 /// depends on the stamp. `words` gives a piece of the fixed words with `{from}` and `{to}` filled.
-/// It speaks of the stamp's move alone, which is all the stamp does: a new lint or setting stays
-/// off until the config names it.
+/// It speaks of the stamp's move alone, which is all the stamp does: a new lint stays off until the
+/// config names it, and a new setting takes its default whatever the stamp.
 fn stamp_line(reading: &Reading, words: &dyn Fn(&str) -> String) -> String {
     let turned = if reading.turned_on.is_empty() {
         "no phrase in this config".to_string()

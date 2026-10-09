@@ -89,10 +89,12 @@ each one comes from.
 
 ## Updating
 
-Updating deslag turns on nothing the config did not choose. A new lint stays off until the config
-has its table, and a phrase added to a group of `banned_phrases` stays off until the config's
-`deslag_version` reaches the release that added it. That stamp is the deslag that last updated the
-config, and a config with none is taken to be from 0.0.1.
+The config chooses what runs. A new lint stays off until the config has its table, and a phrase
+added to a group of `banned_phrases` stays off until the config's `deslag_version` reaches the
+release that added it. A new setting takes its default when the config does not name it, and a
+default can be on, so a release can read more than the last did: the setting's entry in
+`deslag instructions update` says what it does and how to turn it off. The stamp is the deslag that
+last updated the config, and a config with none is taken to be from 0.0.1.
 
 When a release after the stamp has news, `check`, `fix` and `explain` print a note on standard
 error that says so, and the exit code does not change.
@@ -125,8 +127,8 @@ setting too, and leaves an emptied table as `{}`; a renamed setting there, a YAM
 or a merge key, and a key it cannot cut safely are refused, with the edit printed for you to make.
 
 Moving the stamp changes what `check` finds only through the phrases waiting for it. A renamed or
-removed setting is read whatever the stamp says, and a new lint or setting stays off until the
-config names it. `deslag update --to` names the phrases the move turns on: those whose group is on
+removed setting is read whatever the stamp says, a new lint stays off until the config names it,
+and a new setting takes its default whatever the stamp says. `deslag update --to` names the phrases the move turns on: those whose group is on
 in a table that neither allows nor bans them.
 
 To see what a waiting phrase would flag, search your text for it, or move the stamp by hand, run

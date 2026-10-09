@@ -1,0 +1,79 @@
+# What a comment holds that is not prose, which no lint reads. The config cannot add to this
+# list: a list an agent can grow is a list it can grow to pass.
+#
+# Every entry matches text that real code holds. A phrase is matched as written, with its case.
+
+# A paragraph, the lines between two blank lines, that holds one of these is licence text, all of
+# it, wherever it is in the file. A line that starts with one of `starts` does the same.
+[licence]
+starts = ["Copyright "]
+holds = [
+  "SPDX-License-Identifier",
+  "Copyright (C)",
+  "Copyright (c)",
+  "Copyright ©",
+  "All rights reserved",
+  "Permission is hereby granted",
+  "Permission is granted",
+  "use, copy, modify",
+  "Redistribution and use in source and binary forms",
+  "Redistributions of source code",
+  "Redistributions in binary form",
+  "Neither the name of",
+  "Licensed under the",
+  "except in compliance with the License",
+  "WITHOUT WARRANTY",
+  "WITHOUT WARRANTIES",
+  "WITHOUT ANY WARRANTY",
+  "\"AS IS\"",
+  "'as-is'",
+  "is free software",
+  "General Public License",
+  "Use of this source code is governed by",
+  "licensed as described in the file",
+  "THIS SOFTWARE IS PROVIDED",
+  "THE SOFTWARE IS PROVIDED",
+  "IN NO EVENT SHALL",
+  "MERCHANTABILITY",
+  "copyright notice",
+  "permission notice",
+  "in the public domain",
+  "into the public domain",
+  "to the public domain",
+  "This notice may not be removed",
+  "under the terms of the",
+]
+
+# A line that holds one of these is not prose, all of it, in every language.
+[markers]
+holds = ["@generated", "DO NOT EDIT", "SPDX-FileCopyrightText:"]
+# A line of three or more of one of these, and spaces, is a banner. It is plain text only, since
+# `---` and `***` are Markdown. The characters are ASCII: a rule drawn with box-drawing characters
+# is for `banned_chars`.
+rule = "=-*/#~_."
+
+# Rust has no table: rustc, clippy and rustfmt take attributes, which a comment does not hold.
+
+[cpp]
+# A line that holds one of these is not prose, all of it.
+lines = ["@(#)", "$Id", "-*-", "vim: set ", "IWYU pragma:"]
+# A directive at the start of a line may have a reason after one of these, and the reason is
+# prose. Without one, the line is not prose.
+separators = ["--", "-", ":"]
+# The name may be followed by `(...)` on the line, or digits, such as `VARARGS2`.
+directives = [
+  "NOLINT",
+  "NOLINTNEXTLINE",
+  "NOLINTBEGIN",
+  "NOLINTEND",
+  "NOTREACHED",
+  "ARGSUSED",
+  "VARARGS",
+  "FALLTHROUGH",
+  "fallthrough",
+  "Fallthrough",
+  "fall through",
+  "Fall through",
+  "clang-format off",
+  "clang-format on",
+]

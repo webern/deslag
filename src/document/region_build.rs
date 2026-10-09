@@ -12,14 +12,19 @@
 //!    if every line but the first has one, as `rustc` trims it (`horizontal_trim`). Then rule 1
 //!    applies.
 //!
+//! 3. A line that the skip list masks is cut as a blank line is, or, if only its start is masked, at
+//!    the end of that start. The indent is taken before the masks, so a line that is kept has the
+//!    text it has without them. A region of nothing but masked lines is no region.
+//!
 //! The text of every line is a verbatim piece of the file, and every other byte is in a line's
 //! prefix or ending, or in the close of a block, so `Carrier::encode` writes the region back as it
-//! was.
+//! was. A masked byte is in the prefix of its line.
 
 use std::ops::Range;
 
 use super::map::{SegmentKind, SourceMap};
 use super::region::{Carrier, CarrierLine, Frame, Region, Surface, Template};
+use super::skip::{List, Mask};
 
 /// The offset where the line holding `at` starts, after a byte order mark.
 pub(super) fn line_start(source: &str, at: usize) -> usize {
@@ -48,12 +53,13 @@ pub(super) struct Row {
 }
 
 /// The region of a run of line comments, as `rows`, each starting with a marker of `marker` bytes.
-/// The first row's `lead` is where the first comment starts.
+/// The first row's `lead` is where the first comment starts. `skip` says what is not prose in it.
 pub(super) fn line_region(
     source: &str,
     surface: Surface,
     marker: usize,
     rows: &[Row],
+    skip: List,
 ) -> Option<Region> {
     let first = rows[0].lead;
     // A trailing comment's new lines take the indent of its line, not the code before it.
@@ -61,7 +67,7 @@ pub(super) fn line_region(
     let indent = &before[..before.len() - before.trim_start_matches([' ', '\t']).len()];
     let template = format!("{indent}{} ", &source[first..first + marker]);
     let outer = first..rows[rows.len() - 1].rest.end;
-    let (inner, map, frame) = build(source, rows, Some(template))?;
+    let (inner, map, frame) = build(source, rows, Some(template), skip)?;
     let carrier = Carrier::LineComment(frame);
     Some(Region::new(source, surface, outer, inner, map, carrier))
 }
@@ -73,6 +79,7 @@ pub(super) fn block_region(
     surface: Surface,
     outer: Range<usize>,
     marker: usize,
+    skip: List,
 ) -> Option<Region> {
     let body = outer.start + marker..outer.end.checked_sub(2)?;
     if body.start > body.end {
@@ -123,7 +130,7 @@ pub(super) fn block_region(
     }
     gutter(source, kept);
 
-    let (inner, map, frame) = build(source, kept, None)?;
+    let (inner, map, frame) = build(source, kept, None, skip)?;
     let close = kept[kept.len() - 1].rest.end..outer.end;
     let carrier = Carrier::BlockComment { frame, close };
     Some(Region::new(source, surface, outer, inner, map, carrier))
@@ -163,7 +170,13 @@ fn gutter(source: &str, rows: &mut [Row]) {
 /// The text of the `rows` with their least indent stripped, where each byte of it is in the file,
 /// and the bytes around it. A row with nothing but whitespace does not have text. `prefix` is what
 /// a new line starts with; if none, the gutter and indent of the rows, which a block comment has.
-fn build(source: &str, rows: &[Row], prefix: Option<String>) -> Option<(String, SourceMap, Frame)> {
+/// `skip` masks the rows that are not prose.
+fn build(
+    source: &str,
+    rows: &[Row],
+    prefix: Option<String>,
+    skip: List,
+) -> Option<(String, SourceMap, Frame)> {
     let text = |row: &Row| &source[row.rest.clone()];
     let indent = |row: &Row| {
         text(row)
@@ -177,14 +190,31 @@ fn build(source: &str, rows: &[Row], prefix: Option<String>) -> Option<(String, 
         .map(indent)
         .min()
         .unwrap_or(0);
+    // Where the text of each row starts before any mask, which a new line's prefix is taken from.
+    let starts: Vec<usize> = rows
+        .iter()
+        .map(|row| {
+            if text(row).trim().is_empty() {
+                row.rest.end
+            } else {
+                row.rest.start + least
+            }
+        })
+        .collect();
+    let kept: Vec<Option<&str>> = rows
+        .iter()
+        .zip(&starts)
+        .map(|(row, &start)| (start < row.rest.end).then(|| &source[start..row.rest.end]))
+        .collect();
+    let masks = skip.mask(&kept);
     let mut inner = String::new();
     let mut map = SourceMap::default();
     let mut lines = Vec::with_capacity(rows.len());
     for (at, row) in rows.iter().enumerate() {
-        let start = if text(row).trim().is_empty() {
-            row.rest.end
-        } else {
-            row.rest.start + least
+        let start = match masks[at] {
+            Mask::Prose => starts[at],
+            Mask::Gap => row.rest.end,
+            Mask::Lead(bytes) => starts[at] + bytes,
         };
         if start < row.rest.end {
             inner.push_str(&source[start..row.rest.end]);
@@ -222,9 +252,10 @@ fn build(source: &str, rows: &[Row], prefix: Option<String>) -> Option<(String, 
     let prefix = prefix.unwrap_or_else(|| {
         // A line after the first has the gutter and indent of a new line. With no such line, those
         // of a first line that starts after a line break.
-        let first = &source[lines[0].prefix.clone()];
+        let before = |at: usize| &source[rows[at].lead..starts[at]];
+        let first = before(0);
         let after_break = first.rfind('\n').map(|at| &first[at + 1..]);
-        let second = lines.get(1).map(|line| &source[line.prefix.clone()]);
+        let second = (rows.len() > 1).then(|| before(1));
         second.or(after_break).unwrap_or("").to_string()
     });
     let template = Template {

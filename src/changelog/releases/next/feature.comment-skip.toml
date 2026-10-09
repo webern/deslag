@@ -1,0 +1,23 @@
+kind = "feature"
+id = "comment-skip"
+summary = "Leaves licence text, banners and tool directives in comments unlinted"
+onboarding = '''
+The `[rust]` and `[cpp]` sections do not lint some text that a comment holds but a person does not
+write as prose. Nothing in the config turns this off or adds to it, and a marker in a comment
+cannot suppress a lint.
+
+- Licence text. A paragraph of a comment, the lines between two blank lines, that holds a legal
+  phrase such as `All rights reserved` or `"AS IS"`, or a line that starts with `Copyright `,
+  wherever it is in the file.
+- Banners. A line of three or more of one ASCII rule character (`=-*/#~_.`) in a comment that is
+  read as plain text. A rule drawn with box-drawing characters is still read, and `banned_chars`
+  finds it.
+- Lines that tools read, such as `@generated` and `DO NOT EDIT` in either language, and in C and
+  C++ `NOLINT`, `fallthrough`, `IWYU pragma:` and editor mode lines. A directive at the start of
+  a line may have a reason after `--`, `-` or `:`, as in `NOLINT -- the reason`, and the reason is
+  linted.
+
+A line that is not linted reads as a blank line, so it ends a paragraph. A comment of nothing but
+such lines is not read at all. Labels such as `SAFETY:` and `TODO(name):` are words like any
+other, and the text after one is linted.
+'''

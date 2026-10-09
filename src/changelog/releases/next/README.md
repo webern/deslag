@@ -55,8 +55,9 @@ fenced TOML must fit the schema.
 
 ## Releasing
 
-The change that releases a version sets it in `Cargo.toml` and in the `deslag` entry of
-`Cargo.lock`, and moves the entries out of `next/`. In `src/changelog/releases/` the move is
+The change that releases a version sets it in `Cargo.toml` and in the `deslag` entry of the root
+`Cargo.lock`, and moves the entries out of `next/`. `tools/sweep/Cargo.lock` has no `deslag`
+package. In `src/changelog/releases/` the move is
 `mkdir <version> && git mv next/*.toml <version>/`, with the new version for `<version>`. The
 change leaves `next/` and this file where they are.
 
@@ -64,15 +65,23 @@ Renaming `next/` itself is wrong: git then files the new entry of an open branch
 that shipped. The release does not edit a test or a case config. `make check-release` fails while
 `next/` holds an entry.
 
-A release that adds a setting also adds `tests/configs/<version>/`, with a config in each
-language that sets every setting the schema has, and one line for each of the three files in
-`tests/configs/hashes`. A release that does not add a setting does not add a directory either: the
-newest one already names every setting.
+A release that adds a setting also adds `tests/configs/<version>/`. Copy the newest directory, and
+add to each of the three files every setting the schema gained since, the same in all three. Set
+`deslag_version` to the new version. If the newest directory has no `[rust]` or `[cpp]` section, as
+0.0.1 has none, write them by hand with every key they take. A release that does not add a setting
+does not add a directory: the newest one already names every setting.
 
-The release leaves every older directory and its lines as they are. Frozen configs are never
-edited, and a renamed or removed setting is a redirect instead. `make check-release` fails, naming
-the leaves, while the newest directory leaves one out; the failing hash test prints the line to
-add.
+`make check-release` fails, naming the leaves, while the newest directory leaves one out. A lint
+setting counts when any one section sets it, so `md.lints.density.max_item_chars` is met by the
+same key under `rust.lints`. The other keys count only in their own section: `rust.globs`, and
+`rust.overrides[].globs` for a list of overrides.
+
+Each config must load and pass `check --base HEAD` with no warning, so leave out a removed setting
+and set a renamed one by its new name. The three must compile to the same settings.
+
+The failing hash test prints a line to add to `tests/configs/hashes` for each file, in the order
+toml, yaml, json. The release leaves every older directory and its lines as they are. Frozen
+configs are never edited, and a renamed or removed setting is a redirect instead.
 
 An unstamped config is taken to be from 0.0.1, so from the first release after that one
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in
@@ -81,7 +90,8 @@ An unstamped config is taken to be from 0.0.1, so from the first release after t
 A phrase of the catalogue, `src/lint/banned_phrases.toml`, that arrives in a release is added with
 `since = "next"`, and the release sets it to the version, in the change that moves the entries.
 No stamp is `next`, so a phrase left there stays off for every config, and `make check-release`
-fails while one is left.
+fails while one is left. `grep 'since = "next"' src/lint/banned_phrases.toml` finds them; finding
+none is fine.
 
 A config reports a phrase only once its `deslag_version` has reached `since`, so the release does
 not move the stamp of `.agents/deslag.toml`. The repository moves its own as any config does, after
@@ -94,6 +104,11 @@ it, and the release has nothing to reword.
 This repository's own config, `.agents/deslag.toml`, is stamped, and the stamp is written by
 `deslag update`. After a release `make check-deslag` prints the note and still exits 0, until
 someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
+
+Before the release change is pushed, run `make ci-fast`, then `make check-release`. The second runs
+the ignored tests of `tests/changelog.rs`, which fail while `next/` holds an entry, a phrase is left
+at `since = "next"`, the crate version has a pre-release or build part, or the newest frozen
+configs leave out a setting.
 
 A released entry changes in two cases. One is a later change that renames or removes what it names:
 that change edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent

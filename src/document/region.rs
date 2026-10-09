@@ -10,12 +10,13 @@ use std::ops::Range;
 use super::map::SourceMap;
 use super::stack::Need;
 
-/// Where in a code file a region of prose is, which decides how it is read.
+/// Where in a code file a region of prose is. What reads its text is the code file's reader's
+/// choice, as `Reader::markup` answers it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Surface {
-    /// A doc comment: `///` and `//!` lines, and `/** */` and `/*! */` blocks. Read as Markdown.
+    /// A doc comment: `///` and `//!` lines, and `/** */` and `/*! */` blocks.
     DocComment,
-    /// Any other comment: `//` lines and `/* */` blocks. Read as plain text.
+    /// Any other comment: `//` lines and `/* */` blocks.
     Comment,
 }
 
@@ -27,12 +28,23 @@ impl Surface {
             Surface::Comment => "comment",
         }
     }
+}
 
-    /// Whether a document of this surface has what `need` asks for.
+/// What reads the text of a region, which decides what a document of it has.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Markup {
+    /// The Markdown reader: blocks and spans, and sentences in them.
+    Markdown,
+    /// The plain text reader: paragraphs and items, and sentences in them.
+    Plain,
+}
+
+impl Markup {
+    /// Whether a text read with this has what `need` asks for. A region is never the file.
     pub(crate) fn provides(self, need: Need) -> bool {
         match need {
             Need::File => false,
-            Need::Structure => self == Surface::DocComment,
+            Need::Structure => self == Markup::Markdown,
             Need::Sentences | Need::Text => true,
         }
     }

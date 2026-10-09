@@ -165,6 +165,32 @@ fn a_lint_setting_is_named_by_any_section_that_sets_it() {
     assert!(!frozen::names(&value, "x.globs"));
 }
 
+/// A hash is hex, and `typos` reads some pairs of its letters as a typo: the letters b and a, with
+/// digits around them, are a word it corrects. `_typos.toml` leaves `tests/configs/hashes` out, so
+/// that a release's lines pass `make check-typos` whatever they are. The same line in another file
+/// shows that `typos` flags it.
+#[test]
+fn typos_leaves_the_hash_lines_alone() {
+    // The pair is spelled out, so that this file does not flag itself.
+    let pair: String = ['b', 'a'].iter().collect();
+    let line = format!("9.9.9/config.toml 1c3{pair}9ab4de5f060\n");
+    let repo = Repo::new();
+    let config = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("_typos.toml");
+    repo.write(
+        "_typos.toml",
+        &std::fs::read_to_string(config).expect("_typos.toml"),
+    );
+    repo.write("tests/configs/hashes", &line);
+    repo.write("control.txt", &line);
+    let output = std::process::Command::new("typos")
+        .current_dir(repo.root())
+        .output()
+        .expect("typos runs: `make preflight` checks that it is installed");
+    let said = String::from_utf8_lossy(&output.stdout) + String::from_utf8_lossy(&output.stderr);
+    assert!(said.contains("control.txt"), "typos flags the line: {said}");
+    assert!(!said.contains("hashes"), "typos flags the hashes: {said}");
+}
+
 /// The hash is FNV-1a 64, whose published test values these are.
 #[test]
 fn the_hash_is_fnv_1a_64() {

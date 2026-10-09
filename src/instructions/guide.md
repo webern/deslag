@@ -70,9 +70,10 @@ different limit, propose an override for it rather than loosening the limit for 
 ## 5. Fix the files
 
 Fix what fails in a file an agent wrote by following the advice in its report. `deslag fix <PATH>`
-replaces each banned character it can prove safe to replace and says why it left the others: fix
-those, and every other failure, yourself. For a file a human wrote, show the human the report and
-ask first, before running `deslag fix` too. When every file passes, the config is done.
+fixes `banned_chars` alone: it replaces each banned character it can prove safe to replace and
+says why it left the others, or that it fixed nothing. Fix those, and every other failure,
+yourself. For a file a human wrote, show the human the report and ask first, before running
+`deslag fix` too. When every file passes, the config is done.
 
 ## 6. Run it in CI
 

@@ -57,8 +57,9 @@ and a new file has no earlier version to compare, so in a clean tree `list_growt
 branch it misses growth already committed. Never use it in CI or on a branch under review.
 
 `deslag fix [PATH]...` writes the replacements that `banned_chars` names, where it can prove the
-file reads as before apart from those characters. It says what it fixed, and why it left the rest,
-then prints what `deslag check` would and exits as it would. `--dry-run` writes nothing.
+file reads as before apart from those characters. No other lint has an edit. It says what it
+fixed, and why it left the rest, or in one line that it fixed nothing, then prints what
+`deslag check` would and exits as it would. `--dry-run` writes nothing.
 
 ## Configuration
 

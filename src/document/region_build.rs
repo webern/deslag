@@ -40,11 +40,11 @@ pub(super) fn whole_line(source: &str, at: usize) -> bool {
 /// One line of a comment, before the text is cut from it.
 pub(super) struct Row {
     /// Where the line starts, or the comment does on its first line.
-    pub lead: usize,
+    pub(super) lead: usize,
     /// The line after its marker or gutter, up to the end of its text.
-    pub rest: Range<usize>,
+    pub(super) rest: Range<usize>,
     /// The line break after it, which the last line has none of.
-    pub ending: Range<usize>,
+    pub(super) ending: Range<usize>,
 }
 
 /// The region of a run of line comments, as `rows`, each starting with a marker of `marker` bytes.

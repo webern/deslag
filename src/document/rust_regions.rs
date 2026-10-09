@@ -44,7 +44,7 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
                 at = next;
                 surfaces
                     .contains(&surface(doc))
-                    .then(|| line_region_of(source, doc, &lines))
+                    .then(|| rust_line_region(source, doc, &lines))
             }
             LexemeKind::BlockComment {
                 doc,
@@ -168,7 +168,7 @@ fn only_attributes(source: &str, gap: Range<usize>, inside: &[Lexeme], attribute
 }
 
 /// The region of a run of line comments: `//`, `///` or `//!`.
-fn line_region_of(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> Option<Region> {
+fn rust_line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> Option<Region> {
     let marker = if doc.is_some() { 3 } else { 2 };
     let rows: Vec<Row> = lines
         .iter()

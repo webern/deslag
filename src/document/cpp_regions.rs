@@ -36,9 +36,9 @@ pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> 
 
 /// The regions of `source` of the surfaces asked for, in the order of the file.
 pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
-    let comments: Vec<Comment<'_>> = lex(source)
+    let comments: Vec<Found<'_>> = lex(source)
         .iter()
-        .filter_map(|lexeme| Comment::new(source, lexeme))
+        .filter_map(|lexeme| Found::new(source, lexeme))
         .collect();
     let mut regions = Vec::new();
     let mut at = 0;
@@ -61,7 +61,7 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
 }
 
 /// A comment that is read, with the opener that tells what kind it is.
-struct Comment<'s> {
+struct Found<'s> {
     range: Range<usize>,
     /// Whether it is `/* */` and not `//`.
     block: bool,
@@ -69,16 +69,16 @@ struct Comment<'s> {
     marker: &'s str,
 }
 
-impl<'s> Comment<'s> {
+impl<'s> Found<'s> {
     /// The comment `lexeme` is, if it is one that is read.
-    fn new(source: &'s str, lexeme: &Lexeme) -> Option<Comment<'s>> {
+    fn new(source: &'s str, lexeme: &Lexeme) -> Option<Found<'s>> {
         let text = &source[lexeme.range.clone()];
         let (block, marker) = match lexeme.kind {
             LexemeKind::LineComment => (false, line_marker(text.as_bytes())?),
             LexemeKind::BlockComment { terminated: true } => (true, block_marker(text.as_bytes())?),
             _ => return None,
         };
-        Some(Comment {
+        Some(Found {
             range: lexeme.range.clone(),
             block,
             marker: &text[..marker],
@@ -123,11 +123,11 @@ fn block_marker(text: &[u8]) -> Option<usize> {
 }
 
 /// The index after the run that `comments[first]` starts. A block comment is a run of its own.
-fn run_end(source: &str, comments: &[Comment<'_>], first: usize) -> usize {
+fn run_end(source: &str, comments: &[Found<'_>], first: usize) -> usize {
     let column =
-        |comment: &Comment<'_>| comment.range.start - line_start(source, comment.range.start);
+        |comment: &Found<'_>| comment.range.start - line_start(source, comment.range.start);
     // A line of the same marker and column, with nothing but a line break between.
-    let joins = |last: &Comment<'_>, next: &Comment<'_>| {
+    let joins = |last: &Found<'_>, next: &Found<'_>| {
         let gap = &source[last.range.end..next.range.start];
         !next.block
             && next.marker == last.marker
@@ -152,7 +152,7 @@ fn run_end(source: &str, comments: &[Comment<'_>], first: usize) -> usize {
 
 /// The rows of a run of `//` comments: one for each physical line, since a comment that ends in a
 /// line splice goes on in the next.
-fn rows(source: &str, run: &[Comment<'_>]) -> Vec<Row> {
+fn rows(source: &str, run: &[Found<'_>]) -> Vec<Row> {
     let bytes = source.as_bytes();
     let marker = run[0].marker.len();
     let mut rows = Vec::new();

@@ -24,6 +24,14 @@ impl Language {
             Language::Toml => "toml",
         }
     }
+
+    /// Whether a fence of this language has comments of `surface`. TOML has no doc comments.
+    fn reads(self, surface: Surface) -> bool {
+        match self {
+            Language::Rust | Language::Cpp => true,
+            Language::Toml => surface == Surface::Comment,
+        }
+    }
 }
 
 /// The fenced code in Markdown that is read for its comments, as a [`Reader::Rust`], a
@@ -202,25 +210,43 @@ impl Stack {
     /// What this stack reads and with what, for `deslag explain`: each surface of a code file with
     /// the markup that reads it, and the fences that Markdown reads the comments of.
     pub(crate) fn reads_as(&self) -> String {
-        let surfaces = |surfaces: &[Surface]| {
-            let names: Vec<&str> = surfaces.iter().map(|surface| surface.name()).collect();
-            names.join(" and ")
-        };
         match &self.outer {
-            Reader::Markdown { fences }
-                if fences.languages.is_empty() || fences.surfaces.is_empty() =>
-            {
-                "markdown".to_string()
-            }
             Reader::Markdown { fences } => {
-                let languages: Vec<&str> = fences.languages.iter().map(|l| l.name()).collect();
-                format!(
-                    "markdown, and the {} of {} fences",
-                    surfaces(&fences.surfaces),
-                    languages.join(", ")
-                )
+                // Surfaces that the same languages read are named together. A language that
+                // reads nothing of a surface, such as the doc comment of TOML, is left out.
+                let mut groups: Vec<(Vec<&str>, Vec<&str>)> = Vec::new();
+                for surface in &fences.surfaces {
+                    let languages: Vec<&str> = fences
+                        .languages
+                        .iter()
+                        .filter(|language| language.reads(*surface))
+                        .map(|language| language.name())
+                        .collect();
+                    if languages.is_empty() {
+                        continue;
+                    }
+                    match groups.iter_mut().find(|(_, seen)| *seen == languages) {
+                        Some((names, _)) => names.push(surface.name()),
+                        None => groups.push((vec![surface.name()], languages)),
+                    }
+                }
+                let reads: Vec<String> = groups
+                    .iter()
+                    .map(|(surfaces, languages)| {
+                        format!(
+                            "the {} of {} fences",
+                            surfaces.join(" and "),
+                            languages.join(", ")
+                        )
+                    })
+                    .collect();
+                if reads.is_empty() {
+                    Markup::Markdown.name().to_string()
+                } else {
+                    format!("{}, and {}", Markup::Markdown.name(), reads.join(" and "))
+                }
             }
-            Reader::Plain => "plain".to_string(),
+            Reader::Plain => Markup::Plain.name().to_string(),
             Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces }
                 if surfaces.is_empty() =>
             {

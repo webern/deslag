@@ -97,7 +97,7 @@ const PATHS: &[&str] = &["docs/guide.md", "docs/intro.md", "README.md", "notes.t
 const EXPECTED: &str = r#"# docs/guide.md
 # config: deslag.toml
 # selected by [md]: yes
-# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
+# reads: markdown, and the doc_comment of rust, cpp fences and the comment of rust, cpp, toml fences
 # overrides, in the order they merge:
 #   override 2: globs = ["guide.md"]
 #   override 1: globs = ["/docs/**/*.md"]
@@ -143,7 +143,7 @@ min_entries = 5
 # docs/intro.md
 # config: deslag.toml
 # selected by [md]: yes
-# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
+# reads: markdown, and the doc_comment of rust, cpp fences and the comment of rust, cpp, toml fences
 # overrides, in the order they merge:
 #   override 1: globs = ["/docs/**/*.md"]
 
@@ -175,7 +175,7 @@ min_entries = 5
 # README.md
 # config: deslag.toml
 # selected by [md]: yes
-# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
+# reads: markdown, and the doc_comment of rust, cpp fences and the comment of rust, cpp, toml fences
 # overrides: none
 
 # banned_chars: off
@@ -262,7 +262,7 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
         "# AGENTS.md\n\
          # config: deslag.toml\n\
          # selected by [md]: yes\n\
-         # reads: markdown, and the doc_comment and comment of rust, cpp, toml fences\n\
+         # reads: markdown, and the doc_comment of rust, cpp fences and the comment of rust, cpp, toml fences\n\
          # overrides: none\n\
          # frontmatter: max_size_bytes = 300\n\
          \n\
@@ -565,6 +565,35 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
         stdout.contains("# reads: markdown, and the comment of rust fences\n"),
         "{stdout}"
     );
+
+    // Surfaces that the same languages read are named together.
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences.languages = [\"rust\", \"cpp\"]\n",
+    );
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(
+        stdout.contains("# reads: markdown, and the doc_comment and comment of rust, cpp fences\n"),
+        "{stdout}"
+    );
+
+    // TOML has no doc comments, so a fence of it reads only the comment surface, and nothing for
+    // a config that asks for the doc comment alone.
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\", \"comment\"] }\n",
+    );
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(
+        stdout.contains("# reads: markdown, and the comment of toml fences\n"),
+        "{stdout}"
+    );
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\"] }\n",
+    );
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
 }
 
 #[test]

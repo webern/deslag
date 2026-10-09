@@ -220,6 +220,21 @@ fn fix_writes_each_replacement_and_nothing_else() {
 }
 
 #[test]
+fn fix_edits_the_comments_of_a_fence_in_a_quote_and_in_a_list_item_and_leaves_the_code() {
+    let from = "> ```rust\r\n> // A \u{201C}one\u{201D}.\r\n> //\r\n> let s = \"\u{201C}\";\r\n> ```\r\n\
+                \n- Item\r\n\r\n  ```c\r\n  /* A \u{2014} b */\r\n  ```\r\n";
+    let to = "> ```rust\r\n> // A \"one\".\r\n> //\r\n> let s = \"\u{201C}\";\r\n> ```\r\n\
+              \n- Item\r\n\r\n  ```c\r\n  /* A - b */\r\n  ```\r\n";
+    let repo = repo_with(from);
+    let output = repo.run(&["fix"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert_eq!(
+        String::from_utf8(read(&repo, "README.md")).expect("UTF-8"),
+        to
+    );
+}
+
+#[test]
 fn fix_says_a_deletion_takes_out_only_the_character() {
     let repo = repo_with("# Notes\n\nA zero\u{200B} width space.\n");
     let output = repo.run(&["fix"]);

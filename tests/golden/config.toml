@@ -6,6 +6,11 @@
 
 schema_version = 1
 
+# Fenced code is not read, which keeps the golden files to the Markdown itself. tests/corpus.rs
+# runs the default, which reads it, over the same corpus.
+[md]
+fences.languages = []
+
 # Any budget between the smallest fixture and the largest splits the corpus. This one fails few,
 # which keeps the file short: its records barely move, since a fixture's bytes never change.
 [md.lints.max_size_bytes]

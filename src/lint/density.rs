@@ -3,8 +3,9 @@
 //! The unit is a **block**: a paragraph, or the text of a list item that does not have a paragraph
 //! of its own, as in a tight list. Its length is the characters a reader sees: text and code spans,
 //! and one for each line break inside it. Markup, link targets, HTML and image text are not
-//! counted. A paragraph inside a list item is held to the item's limit. Headings, tables, code
-//! blocks and frontmatter are not blocks, and a block of only whitespace is dropped.
+//! counted. A paragraph inside a list item is held to the item's limit, but not the paragraph of a
+//! comment in a fence in one: that is a paragraph. Headings, tables, code blocks and frontmatter
+//! are not blocks, and a block of only whitespace is dropped.
 //!
 //! A file fails when a paragraph is longer than `max_paragraph_chars`, or a list item longer than
 //! `max_item_chars`, by default [`Density::DEFAULT_MAX_PARAGRAPH_CHARS`] and
@@ -102,8 +103,12 @@ pub fn measure(document: &Document<'_>) -> Vec<Block> {
         if block.kind != BlockKind::Paragraph {
             continue;
         }
+        // A comment in a fence that sits in a list item is a paragraph of its own: the scan stops
+        // at the region.
         let in_item = ancestors
             .iter()
+            .rev()
+            .take_while(|ancestor| !matches!(ancestor.kind, BlockKind::Region { .. }))
             .any(|ancestor| matches!(ancestor.kind, BlockKind::Item { .. }));
         let kind = if in_item { Kind::Item } else { Kind::Paragraph };
         // An image's text describes it, and the reader does not see it.

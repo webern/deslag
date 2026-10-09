@@ -1,0 +1,6 @@
+schema_version = 1
+
+[md]
+fences.languages = ["rust", "python"]
+
+[md.lints.banned_chars]

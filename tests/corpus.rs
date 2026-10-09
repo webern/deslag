@@ -20,7 +20,7 @@ use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
 use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
-use deslag::document::Location;
+use deslag::document::{Fences, Language, Location, Reader, Stack, Surface};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
@@ -634,6 +634,19 @@ fn the_whole_corpus_is_held_to_its_budgets() {
     );
 }
 
+/// `text` read as the default `[md]` reads it, which is with the comments of the fenced code in
+/// every language deslag reads. The tests that compare a report with the library expect from this,
+/// and not from [`Document::markdown`], which reads no fences.
+fn default_md(text: &str) -> Document<'_> {
+    Stack::new(Reader::Markdown {
+        fences: Fences {
+            languages: vec![Language::Rust, Language::Cpp],
+            surfaces: vec![Surface::DocComment, Surface::Comment],
+        },
+    })
+    .document(text)
+}
+
 #[test]
 fn the_corpus_emphasis_reports_agree_with_the_library() {
     const FREE_SPANS: u64 = 2;
@@ -660,7 +673,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
         .zip(paths)
         .filter(|(fixture, _)| {
             let text = String::from_utf8_lossy(&fixture.bytes);
-            max_emphasis::check(&Document::markdown(&text), Some(&settings)).is_some()
+            max_emphasis::check(&default_md(&text), Some(&settings)).is_some()
         })
         .map(|(_, path)| path)
         .collect();
@@ -953,7 +966,7 @@ fn the_corpus_banned_characters_agree_with_the_library() {
         .zip(paths)
         .filter_map(|(fixture, path)| {
             let text = String::from_utf8_lossy(&fixture.bytes);
-            banned_chars::check(&Document::markdown(&text), Some(&settings))
+            banned_chars::check(&default_md(&text), Some(&settings))
                 .map(|over| (path, over.count()))
         })
         .collect();
@@ -978,7 +991,7 @@ fn the_corpus_banned_characters_agree_with_the_library() {
 }
 
 /// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 6467;
+const FIXED: usize = 6468;
 
 /// How many fixtures with banned characters it fixes whole.
 const FIXED_WHOLE: usize = 353;
@@ -1044,7 +1057,7 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
             continue;
         };
         let after = String::from_utf8(after).expect("fix writes UTF-8");
-        let mut places = banned_chars::check(&Document::markdown(text), Some(&settings))
+        let mut places = banned_chars::check(&default_md(text), Some(&settings))
             .map(|over| banned_chars::edits(&over))
             .unwrap_or_default();
         places.sort_by_key(|(mark, _)| mark.location.start);
@@ -1092,15 +1105,14 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
         fixed += made;
 
         // What is left is what check still finds, each place with a reason.
-        let mut remaining: Vec<usize> =
-            banned_chars::check(&Document::markdown(&after), Some(&settings))
-                .map(|over| {
-                    banned_chars::marks(&over)
-                        .into_iter()
-                        .map(|mark| mark.location.start)
-                        .collect()
-                })
-                .unwrap_or_default();
+        let mut remaining: Vec<usize> = banned_chars::check(&default_md(&after), Some(&settings))
+            .map(|over| {
+                banned_chars::marks(&over)
+                    .into_iter()
+                    .map(|mark| mark.location.start)
+                    .collect()
+            })
+            .unwrap_or_default();
         remaining.sort_unstable();
         let reported: Vec<usize> = left.iter().map(|(mark, _)| mark.location.start).collect();
         assert_eq!(
@@ -1282,7 +1294,7 @@ fn the_corpus_density_reports_agree_with_the_library() {
     let mut expected: Vec<(String, usize, usize)> = Vec::new();
     for (fixture, path) in fixtures.iter().zip(paths) {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        if let Some(over) = density::check(&Document::markdown(&text), Some(&settings)) {
+        if let Some(over) = density::check(&default_md(&text), Some(&settings)) {
             files += 1;
             expected.extend(
                 over.blocks

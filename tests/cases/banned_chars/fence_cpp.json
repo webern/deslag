@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 1 banned character.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 6: U+2192 rightwards arrow \"→\"; write `->`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 70,
+          "end": 73,
+          "line": 6,
+          "column": 25,
+          "end_line": 6,
+          "end_column": 26,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        }
+      ]
+    }
+  ]
+}

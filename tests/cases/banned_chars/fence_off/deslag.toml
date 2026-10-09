@@ -1,0 +1,6 @@
+schema_version = 1
+
+[md]
+fences.languages = []
+
+[md.lints.banned_chars]

@@ -3,8 +3,9 @@ id = "toml.surfaces"
 summary = "Chooses which comments of a TOML file the lints read"
 onboarding = '''
 `toml.surfaces` lists the kinds of comment to read. `comment` is the only one: the `#` comments,
-read as plain text. With no `surfaces`, `comment` is read, and an empty list reads nothing. TOML
-does not have doc comments, so `doc_comment` is an error here.
+read as plain text. With no `surfaces`, `comment` is read. An empty list reads nothing, which is an
+error while a lint that needs prose is on in `[toml]`. TOML does not have doc comments, so
+`doc_comment` is an error here.
 
 ```toml
 [toml]

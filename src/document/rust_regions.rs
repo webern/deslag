@@ -266,6 +266,17 @@ mod tests {
             []
         );
         assert_eq!(texts("/// ====\n/// a\n"), [doc("====\na")]);
+        // A Markdown paragraph is not a licence paragraph: a fence, or a tight list, stays whole.
+        let source = concat!(
+            "/// - provided \"AS IS\"\n/// - b\n///\n",
+            "/// ```text\n/// All rights reserved\n/// ```\n/// c\n"
+        );
+        assert_eq!(
+            texts(source),
+            [doc(
+                "- provided \"AS IS\"\n- b\n\n```text\nAll rights reserved\n```\nc"
+            )]
+        );
         assert_eq!(texts("// ── Tests ──\n"), [plain("── Tests ──")]);
         assert_eq!(texts("// NOLINT\n"), [plain("NOLINT")]);
         assert_eq!(

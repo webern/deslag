@@ -139,12 +139,16 @@ impl List {
     }
 
     /// The mask of each of `lines`, the lines of a comment with their indent cut and `None` for a
-    /// blank line.
+    /// blank line. The licence rule is for plain text: a paragraph of Markdown can hold a fence or
+    /// a tight list, and masking it would unbalance the one and swallow the other.
     pub(super) fn mask(&self, lines: &[Option<&str>]) -> Vec<Mask> {
         let mut masks: Vec<Mask> = lines
             .iter()
             .map(|line| line.map_or(Mask::Prose, |text| self.line(text)))
             .collect();
+        if self.markup != Markup::Plain {
+            return masks;
+        }
         let mut at = 0;
         for paragraph in lines.split(Option::is_none) {
             if self.is_licence(paragraph) {
@@ -349,6 +353,22 @@ mod tests {
         assert_eq!(cpp("NOLINT -- x\nAll rights reserved"), [Gap, Gap]);
     }
 
+    #[test]
+    fn a_markdown_paragraph_is_not_a_licence_paragraph() {
+        let text = concat!(
+            "- all of it is provided \"AS IS\"\n- and so on\n- and so on\n\n",
+            "```text\nAll rights reserved\n```"
+        );
+        let markdown = masks(Language::Rust, Markup::Markdown, text);
+        assert_eq!(markdown, [Mask::Prose; 7]);
+        let plain = masks(Language::Rust, Markup::Plain, text);
+        assert_eq!(plain[..3], [Mask::Gap; 3]);
+        // A marker line is still not prose in Markdown.
+        let text = "a\n@generated";
+        let markdown = masks(Language::Rust, Markup::Markdown, text);
+        assert_eq!(markdown, [Mask::Prose, Mask::Gap]);
+    }
+
     /// The files under `dir` with one of `extensions`, in order.
     fn files(dir: &Path, extensions: &[&str]) -> Vec<PathBuf> {
         let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)
@@ -430,7 +450,9 @@ mod tests {
                 assert_eq!(was.clone().count(), now.clone().count(), "{path:?}");
                 for (was, now) in was.zip(now) {
                     assert!(was.ends_with(now), "{path:?}: {was:?} became {now:?}");
-                    assert!(!list.is_licence(&[Some(now)]), "{path:?}: {now:?}");
+                    if list.markup == Markup::Plain {
+                        assert!(!list.is_licence(&[Some(now)]), "{path:?}: {now:?}");
+                    }
                     match (was == now, now.is_empty()) {
                         (true, _) => kept += 1,
                         (false, true) => cut += 1,

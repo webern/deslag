@@ -17,6 +17,10 @@ cannot suppress a lint.
   a line may have a reason after `--`, `-` or `:`, as in `NOLINT -- the reason`, and the reason is
   linted.
 
+The licence rule is for plain comments: `//` and `/* */` in Rust, and every comment in C and C++.
+A Markdown doc comment in Rust, `///` or `//!`, is never taken for licence text, since a paragraph
+of Markdown can hold a code fence or a list.
+
 A line that is not linted reads as a blank line, so it ends a paragraph. A comment of nothing but
 such lines is not read at all. Labels such as `SAFETY:` and `TODO(name):` are words like any
 other, and the text after one is linted.

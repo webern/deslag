@@ -16,7 +16,7 @@ of a TOML file has Markdown blocks. A file that `[md]` and `[toml]` both select 
 
 The section reads files ending in `.toml`. `Cargo.lock` and `Cargo.toml.orig` cannot be selected.
 With no `globs`, the section reads every `.toml` file, a `deslag.toml` config too. Fenced TOML in
-Markdown is not read.
+Markdown is read by `[md]`, through `fences`, and not by this section.
 
 ```toml
 [toml]

@@ -48,8 +48,8 @@ struct FencesFile {
     languages: Option<Vec<FenceLanguage>>,
     /// The comments to read in a fence, for every language: `doc_comment` is the `///` and `//!`
     /// lines and the `/** */` and `/*! */` blocks, `comment` the other `//` lines and `/* */`
-    /// blocks. Each is read as it is in a file of its language, and a `toml` fence has `comment`
-    /// only. `[]` turns reading off, as `languages = []` does.
+    /// blocks or, in a `toml` fence, the `#` lines. Each is read as it is in a file of its
+    /// language. `[]` turns reading off, as `languages = []` does.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
     surfaces: Option<Vec<CommentSurface>>,
@@ -206,6 +206,11 @@ mod tests {
             &[Surface::DocComment]
         ));
         assert!(reads(
+            "[md]\nfences.languages = [\"toml\"]\n",
+            &[Language::Toml],
+            &[Surface::DocComment, Surface::Comment]
+        ));
+        assert!(reads(
             "[md]\nfences.languages = []\n",
             &[],
             &[Surface::DocComment, Surface::Comment]
@@ -218,7 +223,8 @@ mod tests {
         assert!(
             said.contains("unknown variant `python`")
                 && said.contains("`rust`")
-                && said.contains("`cpp`"),
+                && said.contains("`cpp`")
+                && said.contains("`toml`"),
             "{said}"
         );
     }

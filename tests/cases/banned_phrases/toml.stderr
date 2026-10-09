@@ -1,0 +1,13 @@
+ERROR: deslag detected banned phrases!
+
+app.toml has 2 banned phrases.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "delve into"; say what you found instead
+  line 6: "It's worth noting"; delete it
+
+deslag: 1 of 3 files with banned phrases.

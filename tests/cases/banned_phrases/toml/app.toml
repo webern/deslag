@@ -1,0 +1,10 @@
+# Here we delve
+# into the build.
+[package]
+name = "parse"
+version = "0.1.0"
+description = "We delve into the parser." # It's worth noting that this is plain.
+
+[dependencies]
+# Keep this list short.
+util = { version = "1" }

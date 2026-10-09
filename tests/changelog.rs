@@ -292,7 +292,8 @@ fn a_lint_with_an_entry_asks_for_a_setting_file_for_a_key_it_does_not_list() {
         [
             "next/setting.cpp.lints.density.message.toml",
             "next/setting.md.lints.density.message.toml",
-            "next/setting.rust.lints.density.message.toml"
+            "next/setting.rust.lints.density.message.toml",
+            "next/setting.toml.lints.density.message.toml"
         ]
     );
     assert_eq!(files_to_add(changelog(), &paths), Vec::<String>::new());

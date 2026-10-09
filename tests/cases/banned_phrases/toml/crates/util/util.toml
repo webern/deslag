@@ -1,0 +1,4 @@
+[package]
+name = "util"
+version = "0.1.0"
+description = "It's worth noting that a string is not read."

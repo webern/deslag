@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [
+    {
+      "path": "include/parse.h",
+      "lint": "density",
+      "report": "ERROR: deslag detected dense text!\n\ninclude/parse.h has 1 paragraph longer than 60 characters.\n\nA long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.\n\nA line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe dense text:\n  line 1: a paragraph of 67 characters",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 16,
+          "end": 83,
+          "line": 1,
+          "column": 17,
+          "end_line": 1,
+          "end_column": 84,
+          "note": "a paragraph of 67 characters"
+        }
+      ]
+    },
+    {
+      "path": "src/parse.c",
+      "lint": "density",
+      "report": "ERROR: deslag detected dense text!\n\nsrc/parse.c has 3 paragraphs longer than 60 characters.\n\nA long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.\n\nA line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe dense text:\n  line 1: a paragraph of 101 characters\n  line 5: a paragraph of 103 characters\n  line 10: a paragraph of 112 characters",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 4,
+          "end": 109,
+          "line": 1,
+          "column": 5,
+          "end_line": 2,
+          "end_column": 36,
+          "note": "a paragraph of 101 characters"
+        },
+        {
+          "kind": "occurrence",
+          "start": 131,
+          "end": 237,
+          "line": 5,
+          "column": 4,
+          "end_line": 6,
+          "end_column": 35,
+          "note": "a paragraph of 103 characters"
+        },
+        {
+          "kind": "occurrence",
+          "start": 263,
+          "end": 378,
+          "line": 10,
+          "column": 4,
+          "end_line": 11,
+          "end_column": 48,
+          "note": "a paragraph of 112 characters"
+        }
+      ]
+    }
+  ]
+}

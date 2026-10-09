@@ -1,0 +1,25 @@
+ERROR: deslag detected verbs with no-nouns!
+
+include/parse.h has 1 verb with a no-noun.
+
+This repo negates the verb: write "does not ship X", not "ships no X". Negate the verb, or drop the absolute claim if it is not true. Swapping in "zero", "without", "lacks" or "free of" is the same sentence and does not fix it.
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 1: "returns no value"
+
+ERROR: deslag detected verbs with no-nouns!
+
+src/parse.c has 3 verbs with no-nouns.
+
+This repo negates the verb: write "does not ship X", not "ships no X". Negate the verb, or drop the absolute claim if it is not true. Swapping in "zero", "without", "lacks" or "free of" is the same sentence and does not fix it.
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 1: "ships no binary"
+  line 4: "requires no configuration"
+  line 8: "has no runtime"
+
+deslag: 2 of 3 files with verbs negated through their objects.

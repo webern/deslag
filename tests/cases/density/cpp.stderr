@@ -1,0 +1,25 @@
+ERROR: deslag detected dense text!
+
+include/parse.h has 1 paragraph longer than 60 characters.
+
+A long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.
+
+A line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The dense text:
+  line 1: a paragraph of 67 characters
+
+ERROR: deslag detected dense text!
+
+src/parse.c has 3 paragraphs longer than 60 characters.
+
+A long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.
+
+A line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The dense text:
+  line 1: a paragraph of 101 characters
+  line 5: a paragraph of 103 characters
+  line 10: a paragraph of 112 characters
+
+deslag: 2 of 3 files with dense text.

@@ -77,10 +77,17 @@ pub const FORBIDDEN: [&str; 9] = [
 pub const FORBIDDEN_MORE: [&str; 2] = ["like", "send"];
 
 /// Fails if `text`, which is `what`, names a word or a sentence of the done-when gold, or has a
-/// section of the full report.
+/// section of the full report. A path under the temp dir is skipped: its random name can hold a
+/// word, as `/tmp/.tmpjLYIs2` holds `s2`.
 pub fn assert_no_words(text: &str, what: &str) {
+    let temp = std::env::temp_dir();
+    let temp = temp.to_string_lossy();
+    let words: String = text
+        .split_inclusive(char::is_whitespace)
+        .filter(|token| !token.contains(temp.as_ref()))
+        .collect();
     for word in FORBIDDEN.iter().chain(&FORBIDDEN_MORE) {
-        assert!(!text.contains(word), "{what} names `{word}`:\n{text}");
+        assert!(!words.contains(word), "{what} names `{word}`:\n{text}");
     }
     assert!(!text.contains("Confusion"), "{what} has a confusion table");
     assert!(!text.contains("Most missed"), "{what} lists missed words");

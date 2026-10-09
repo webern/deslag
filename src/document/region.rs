@@ -251,7 +251,15 @@ impl Frame {
         let file = |at: usize| map.to_file(at..at).range.start;
         let mut lines = Vec::with_capacity(self.lines.len());
         for line in &self.lines {
-            let prefix = *end..file(line.prefix.end).max(*end);
+            // A line with nothing past its prefix ends the prefix at the prefix's last byte. An
+            // empty range at the boundary maps to the start of whatever follows, which in a CRLF
+            // fence is past the `\r` that belongs to the line's ending.
+            let blank = line.ending.start == line.prefix.end && !line.prefix.is_empty();
+            let stop = match blank {
+                true => map.to_file(line.prefix.end - 1..line.prefix.end).range.end,
+                false => file(line.prefix.end),
+            };
+            let prefix = *end..stop.max(*end);
             let text = prefix.end + line.ending.start - line.prefix.end;
             let ending = text..if line.ending.is_empty() {
                 text

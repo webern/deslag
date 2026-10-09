@@ -538,6 +538,34 @@ mod tests {
     }
 
     #[test]
+    fn a_comment_run_that_ends_in_an_empty_line_is_tiled_before_the_line_ending() {
+        for (marker, newline) in [("//", "\n"), ("//", "\r\n"), ("///", "\n"), ("///", "\r\n")] {
+            let source = format!(
+                "```rust{newline}{marker} one{newline}{marker}{newline}fn a() {{}}{newline}```{newline}"
+            );
+            let document = all().read(&source);
+
+            assert_eq!(document.regions.len(), 1, "{marker:?} {newline:?}");
+            let region = &document.regions[0];
+            assert_eq!(
+                &source[region.outer.clone()],
+                format!("{marker} one{newline}{marker}"),
+                "{marker:?} {newline:?}"
+            );
+            assert_eq!(
+                region.carrier.bytes(&source),
+                [
+                    format!("{marker} "),
+                    newline.to_string(),
+                    marker.to_string(),
+                    String::new()
+                ],
+                "{marker:?} {newline:?}"
+            );
+        }
+    }
+
+    #[test]
     fn a_fence_in_a_list_in_a_quote_nests_at_its_depth() {
         let source = "1. x\n   > ```rust\n   > // deep\n   > ```\n";
 

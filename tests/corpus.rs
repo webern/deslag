@@ -17,6 +17,7 @@ use std::path::Path;
 use common::corpus::load_corpus;
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
+use deslag::changelog::Version;
 use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::document::Location;
@@ -24,7 +25,7 @@ use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
-use deslag::{Config, ConfigSource, Document, Violation, check_file};
+use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
 /// How many fixtures each collected category must hold at least.
 const MIN_PER_CATEGORY: usize = 350;
@@ -795,8 +796,14 @@ fn the_corpus_locations_hold_what_they_point_at() {
 
     for fixture in &load_corpus() {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        let findings = check_file(&config, &fixture.path, &fixture.bytes, empty.path())
-            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
+        let findings = check_file_at(
+            &config,
+            &fixture.path,
+            &fixture.bytes,
+            empty.path(),
+            &Version::Next,
+        )
+        .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
         for finding in &findings {
             let lint = finding.violation.lint();
             let context = format!("{} {lint}", fixture.slug());
@@ -1185,7 +1192,8 @@ fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
     let mut live: BTreeMap<&str, usize> = BTreeMap::new();
     for fixture in &fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        let Some(over) = banned_phrases::check(&Document::markdown(&text), Some(&settings)) else {
+        let document = Document::markdown(&text);
+        let Some(over) = banned_phrases::check(&document, Some(&settings), &Version::Next) else {
             continue;
         };
         assert_ne!(

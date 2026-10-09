@@ -1,0 +1,23 @@
+kind = "feature"
+id = "phrase-gate"
+summary = "A new catalogue phrase reports only once deslag_version reaches it"
+onboarding = '''
+A phrase added to the groups of `banned_phrases` reports only for a config whose `deslag_version`
+has reached the release that adds it. Updating the binary does not make `deslag check` fail on a
+new phrase; moving the stamp does.
+
+`deslag instructions update` lists the phrases the stamp keeps off under "New phrases", each with
+its group and its advice, and `--format json` gives them as items of the kind `phrase`. Offer them
+to the person with the rest. To keep a phrase off, add it to `allow` in the `banned_phrases`
+table, or switch its group off:
+
+```toml
+[md.lints.banned_phrases]
+allow = ["a phrase"]
+groups = { metaphors = false }
+```
+
+Then run `deslag update --to <version>`. It names the phrases the new stamp turns on: those
+whose group is on in a table that neither allows nor bans them. A phrase in the config's own `ban`
+is never held back.
+'''

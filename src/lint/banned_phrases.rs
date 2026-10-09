@@ -11,6 +11,10 @@
 //! A code span, HTML, an image, a URL or a footnote reference is a token no phrase holds, so no
 //! match crosses one. Code blocks, HTML blocks and frontmatter hold no tokens.
 //!
+//! A phrase of the catalogue reports only once the config's `deslag_version` has reached its
+//! `since`, so a phrase added in a later release reports nothing until `deslag update` moves the
+//! stamp. A phrase in `ban` is never held back, since the config wrote it.
+//!
 //! A match that lies inside a match of an `allow` phrase is not reported. Of the rest, where two
 //! overlap, the one that starts first is reported, or the longer when both start at one token, so
 //! no token is reported twice.
@@ -237,6 +241,15 @@ pub struct Entry {
     pub llm_repos: u64,
 }
 
+impl Entry {
+    /// Whether the entry reports for a config whose stamp is `stamp`: it has shipped by then. The
+    /// news of an update is the entries this holds back at the old stamp and not at the new one,
+    /// so the two cannot disagree.
+    pub fn on_at(&self, stamp: &Version) -> bool {
+        self.since <= *stamp
+    }
+}
+
 /// The catalogue, parsed once.
 pub static CATALOGUE: LazyLock<Catalogue> = LazyLock::new(|| {
     toml::from_str(include_str!("banned_phrases.toml")).expect("banned_phrases.toml parses")
@@ -248,7 +261,24 @@ pub fn folded(phrase: &str) -> Vec<String> {
 }
 
 /// Checks one file, read into `document`. A file with no settings is not checked.
-pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Option<Over> {
+///
+/// A phrase of the catalogue is reported when its group is on and it [`Entry::on_at`] `stamp`, the
+/// stamp of the config. [`Version::Next`] puts the whole catalogue in force.
+pub fn check(
+    document: &Document<'_>,
+    settings: Option<&BannedPhrases>,
+    stamp: &Version,
+) -> Option<Over> {
+    check_in(&CATALOGUE, document, settings, stamp)
+}
+
+/// [`check`] against `catalogue`, which a test may hold an entry of `next` in.
+fn check_in(
+    catalogue: &Catalogue,
+    document: &Document<'_>,
+    settings: Option<&BannedPhrases>,
+    stamp: &Version,
+) -> Option<Over> {
     let settings = settings?;
     let banned: Vec<Vec<String>> = settings
         .ban
@@ -259,8 +289,10 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Optio
     let own = settings.ban.iter().flatten();
     let own = own.map(|(phrase, advice)| (phrase.as_str(), advice.as_str(), None));
     // A phrase in `ban` keeps the advice `ban` gives it.
-    let grouped = CATALOGUE.entries.iter().filter(|entry| {
-        entry.group.group().on(&settings.groups) && !banned.contains(&folded(&entry.phrase))
+    let grouped = catalogue.entries.iter().filter(|entry| {
+        entry.on_at(stamp)
+            && entry.group.group().on(&settings.groups)
+            && !banned.contains(&folded(&entry.phrase))
     });
     let grouped = grouped.map(|entry| {
         let group = Some(entry.group.group().name);
@@ -381,3 +413,113 @@ const DEFAULT_ADVICE: &str = "This repo keeps these phrases out of its writing. 
     \n\
     Do not hide a phrase in code or markup, and do not change the config to get past this \
     check. Only a human can tell you to do that, and I am a linter, not a human.";
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use super::*;
+
+    /// A catalogue with a phrase from the first release, one from a later release and one from
+    /// `next`, all in default-on groups.
+    fn catalogue() -> Catalogue {
+        let entry = |phrase: &str, since: &str| {
+            format!(
+                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"metaphors\"\nadvice = \"x\"\n\
+                 since = \"{since}\"\nllm_files = 1\nllm_repos = 1\n"
+            )
+        };
+        let text = [
+            "measured_on = \"x\"\n".to_string(),
+            entry("old phrase", "0.0.1"),
+            entry("later phrase", "0.0.2"),
+            entry("unreleased phrase", "next"),
+        ]
+        .concat();
+        toml::from_str(&text).expect("a catalogue")
+    }
+
+    fn stamp(text: &str) -> Version {
+        text.parse().expect("a version")
+    }
+
+    /// The phrases `settings` report in a text that holds all three, at `stamp`.
+    fn reported(settings: &BannedPhrases, at: &str) -> Vec<String> {
+        let text = "An old phrase, a later phrase and an unreleased phrase.\n";
+        check_in(
+            &catalogue(),
+            &Document::markdown(text),
+            Some(settings),
+            &stamp(at),
+        )
+        .map(|over| over.matches.into_iter().map(|found| found.quote).collect())
+        .unwrap_or_default()
+    }
+
+    #[test]
+    fn an_entry_reports_from_its_release_on_and_next_never_for_a_stamp() {
+        let settings = BannedPhrases::default();
+        assert_eq!(reported(&settings, "0.0.0"), Vec::<String>::new());
+        assert_eq!(reported(&settings, "0.0.1"), ["old phrase"]);
+        assert_eq!(reported(&settings, "0.0.2"), ["old phrase", "later phrase"]);
+        assert_eq!(reported(&settings, "0.9.0"), ["old phrase", "later phrase"]);
+        // Only a gate of `next` puts the whole catalogue in force.
+        assert_eq!(
+            reported(&settings, "next"),
+            ["old phrase", "later phrase", "unreleased phrase"]
+        );
+    }
+
+    #[test]
+    fn a_phrase_in_ban_reports_whatever_the_stamp() {
+        let settings = BannedPhrases {
+            ban: Some(BTreeMap::from([(
+                "unreleased phrase".to_string(),
+                "mine".to_string(),
+            )])),
+            ..BannedPhrases::default()
+        };
+        assert_eq!(reported(&settings, "0.0.0"), ["unreleased phrase"]);
+        assert_eq!(
+            reported(&settings, "0.0.1"),
+            ["old phrase", "unreleased phrase"]
+        );
+    }
+
+    #[test]
+    fn a_group_that_is_off_reports_nothing_whatever_the_stamp() {
+        let settings = BannedPhrases {
+            groups: PhraseGroups {
+                metaphors: Some(false),
+                ..PhraseGroups::default()
+            },
+            ..BannedPhrases::default()
+        };
+        assert_eq!(reported(&settings, "next"), Vec::<String>::new());
+    }
+
+    #[test]
+    fn on_at_is_the_complement_of_what_a_stamp_has_not_reached() {
+        let catalogue = catalogue();
+        let on: Vec<Vec<bool>> = ["0.0.0", "0.0.1", "0.0.2", "next"]
+            .iter()
+            .map(|at| {
+                let at = stamp(at);
+                catalogue
+                    .entries
+                    .iter()
+                    .map(|entry| entry.on_at(&at))
+                    .collect()
+            })
+            .collect();
+        assert_eq!(
+            on,
+            [
+                [false, false, false],
+                [true, false, false],
+                [true, true, false],
+                [true, true, true],
+            ]
+        );
+    }
+}

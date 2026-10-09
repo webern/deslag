@@ -16,7 +16,9 @@ use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{Start, guide, lints, update_json, update_text};
+use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
+use deslag::news::News;
 use deslag::{Config, ConfigSource};
 use serde_json::Value;
 
@@ -418,6 +420,11 @@ fn release(text: &str) -> Version {
     text.parse().expect("a release")
 }
 
+/// What is new after `from`, up to the running version, in the embedded changelog and catalogue.
+fn news(from: &Version) -> News<'static> {
+    News::between(changelog(), &CATALOGUE, from, &Version::current())
+}
+
 /// The id and release of each entry `text` prints, in order, from the headings of the entries.
 fn headings(text: &str) -> Vec<(String, String)> {
     text.lines()
@@ -448,7 +455,7 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
     assert_eq!(
         text,
         update_text(
-            changelog(),
+            &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
             Start::Config
@@ -485,7 +492,7 @@ fn the_json_holds_the_entries_of_the_text() {
     let json = stdout(&output);
     assert_eq!(
         json,
-        update_json(changelog(), &release(OLDER), &Version::current())
+        update_json(&news(&release(OLDER)), &release(OLDER), &Version::current())
     );
 
     let parsed: Value = serde_json::from_str(&json).expect("JSON");
@@ -506,7 +513,7 @@ fn the_json_holds_the_entries_of_the_text() {
     for entry in entries {
         let kind = entry["kind"].as_str().expect("a kind");
         assert!(
-            ["breaking", "lint", "setting", "feature"].contains(&kind),
+            ["breaking", "lint", "setting", "feature", "phrase"].contains(&kind),
             "{kind}"
         );
         for key in ["summary", "onboarding"] {
@@ -559,7 +566,7 @@ fn since_replaces_the_stamp_and_reads_no_config() {
     assert_eq!(
         stdout(&output),
         update_text(
-            changelog(),
+            &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
             Start::Since
@@ -609,7 +616,7 @@ fn config_path_names_the_config_whose_stamp_is_used() {
     assert_eq!(
         stdout(&output),
         update_text(
-            changelog(),
+            &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
             Start::Config

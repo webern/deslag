@@ -74,7 +74,9 @@ lints.max_size_bytes.value = 8000
 ```
 
 `banned_chars` and `banned_phrases` ban groups of characters and phrases, switched under their
-`groups` tables; most groups are on by default.
+`groups` tables; most groups are on by default. A phrase added to a group in a later release
+reports only once the config's `deslag_version` has reached that release, so updating deslag does
+not fail a repo; `deslag instructions update` lists the new phrases and how to keep each off.
 
 `deslag instructions config-schema` prints the config's JSON schema, which describes every lint and
 setting and gives its default. `deslag explain <PATH>...` prints the settings a file gets, and where

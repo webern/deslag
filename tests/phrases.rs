@@ -2,6 +2,7 @@
 //! and which settings are refused. The reports are pinned by the cases.
 
 use deslag::Document;
+use deslag::changelog::Version;
 use deslag::config::{BannedPhrases, Lints, Merge, PhraseGroups};
 use deslag::document::{Token, TokenKind};
 use deslag::lint::banned_phrases::{CATALOGUE, GROUPS, check, folded};
@@ -35,7 +36,7 @@ fn banning(phrases: &[&str]) -> BannedPhrases {
 
 /// Each match `settings` find in `text`, as its line, its quote and its advice.
 fn found(text: &str, settings: &BannedPhrases) -> Vec<(usize, String, String)> {
-    check(&Document::markdown(text), Some(settings))
+    check(&Document::markdown(text), Some(settings), &Version::Next)
         .map(|over| over.matches)
         .unwrap_or_default()
         .into_iter()
@@ -302,10 +303,14 @@ fn an_allowed_phrase_hides_only_the_matches_inside_it() {
 #[test]
 fn nothing_is_checked_without_phrases_to_ban() {
     let text = "It's worth noting.\n";
-    assert_eq!(check(&Document::markdown(text), None), None);
+    assert_eq!(check(&Document::markdown(text), None, &Version::Next), None);
     for toml in ["", "ban = {}", "allow = [\"it's worth noting\"]"] {
         assert_eq!(
-            check(&Document::markdown(text), Some(&settings(toml))),
+            check(
+                &Document::markdown(text),
+                Some(&settings(toml)),
+                &Version::Next
+            ),
             None,
             "{toml}"
         );

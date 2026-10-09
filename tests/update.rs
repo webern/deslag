@@ -11,7 +11,9 @@ use std::path::{Path, PathBuf};
 use std::process::Output;
 
 use common::frozen::{self, EXTENSIONS};
-use common::{Repo, code, stdout};
+use common::{Repo, code, stderr, stdout};
+use deslag::changelog::Version;
+use deslag::lint::banned_phrases::CATALOGUE;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
 /// a bare `update` holds the stamp back once a release has entries after the config's, and a test
@@ -21,8 +23,22 @@ const CURRENT: &str = env!("CARGO_PKG_VERSION");
 /// A release before every release, so a stamp of it is behind a deslag with a changelog.
 const BEFORE_ALL: &str = "0.0.0";
 
-/// Standard error, which `update` fills only with what it did.
+/// Standard error, which `update` fills only with what it did, without the line that names the
+/// catalogue phrases a move of the stamp turns on. Which phrases those are depends on the
+/// catalogue, so a release that adds one would otherwise edit every test that moves a stamp; the
+/// tests about that line ask for [`raw_said`].
 fn said(output: &Output) -> String {
+    raw_said(output)
+        .split_inclusive('\n')
+        .filter(|line| {
+            !line.contains(": turned on these phrases, ")
+                && !line.contains(": would turn on these phrases, ")
+        })
+        .collect()
+}
+
+/// Standard error, every line of it.
+fn raw_said(output: &Output) -> String {
     common::raw_stderr(output)
 }
 
@@ -914,4 +930,118 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
         count - refused >= 40,
         "{refused} of {count} configs are refused"
     );
+}
+
+/// The phrases of the catalogue the running version has shipped.
+fn shipped() -> Vec<&'static str> {
+    let current = Version::current();
+    let on = CATALOGUE
+        .entries
+        .iter()
+        .filter(|entry| entry.on_at(&current));
+    on.map(|entry| entry.phrase.as_str()).collect()
+}
+
+/// A repo whose stamp is before every release, with the shipped phrases in a Markdown file, in a
+/// Rust comment and in a Markdown file an override covers, and the groups on. A phrase of `ban`
+/// is there too.
+fn phrase_repo() -> Repo {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\"\n\
+             [md.lints.banned_phrases]\nban = {{ \"zebra crossing\" = \"say the road\" }}\n\
+             [[md.overrides]]\nglobs = [\"docs/*.md\"]\nlints.banned_phrases.groups = {{}}\n\
+             [rust]\n[rust.lints.banned_phrases]\n"
+        ),
+    );
+    let prose: String = shipped()
+        .iter()
+        .map(|phrase| format!("It is the {phrase} here.\n\n"))
+        .collect();
+    repo.write("README.md", &prose);
+    repo.write("docs/more.md", &prose);
+    let comments: String = shipped()
+        .iter()
+        .map(|phrase| format!("// It is the {phrase} here.\n"))
+        .collect();
+    repo.write("src/lib.rs", &format!("{comments}pub fn f() {{}}\n"));
+    repo
+}
+
+#[test]
+fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() {
+    let repo = phrase_repo();
+    let shipped = shipped();
+    assert!(!shipped.is_empty());
+
+    // The stamp is before every phrase: only the `ban` phrase would report, and the text has none.
+    let before = repo.check();
+    assert_eq!(code(&before), 0, "{}", stderr(&before));
+    assert_eq!(stderr(&before), "");
+
+    // The topic lists each shipped phrase, and bare `update` holds the stamp for them.
+    let topic = repo.run(&["instructions", "update"]);
+    assert_eq!(code(&topic), 0);
+    let topic = stdout(&topic);
+    assert!(topic.contains("## New phrases"), "{topic}");
+    for phrase in &shipped {
+        assert!(
+            topic.contains(&format!("### `{phrase}` (")),
+            "{phrase}: {topic}"
+        );
+    }
+    let bare = repo.run(&["update"]);
+    assert!(
+        said(&bare).contains(&format!("deslag_version stays {BEFORE_ALL}")),
+        "{}",
+        said(&bare)
+    );
+    assert_eq!(code(&repo.check()), 0);
+
+    // `--dry-run` names them and moves nothing.
+    let dry = raw_said(&repo.run(&["update", "--dry-run", "--to", CURRENT]));
+    assert!(dry.contains("would turn on these phrases"), "{dry}");
+    assert_eq!(code(&repo.check()), 0);
+
+    // `--to` names every phrase the move turns on, with its group.
+    let moved = repo.run(&["update", "--to", CURRENT]);
+    assert_eq!(code(&moved), 0, "{}", said(&moved));
+    let said_moved = raw_said(&moved);
+    for entry in CATALOGUE
+        .entries
+        .iter()
+        .filter(|e| shipped.contains(&e.phrase.as_str()))
+    {
+        let named = format!("`{}` ({})", entry.phrase, entry.group.group().name);
+        assert!(said_moved.contains(&named), "{named}: {said_moved}");
+    }
+
+    // Now each fires, in the Markdown, under the override and in the Rust comment.
+    let after = repo.check();
+    assert_eq!(code(&after), 1);
+    let report = stderr(&after);
+    for file in ["README.md", "docs/more.md", "src/lib.rs"] {
+        assert!(
+            report.contains(&format!("{file} has {} banned phrase", shipped.len())),
+            "{file}: {report}"
+        );
+    }
+
+    // The topic has nothing more to say about them.
+    let topic = stdout(&repo.run(&["instructions", "update"]));
+    assert!(!topic.contains("## New phrases"), "{topic}");
+}
+
+#[test]
+fn a_phrase_in_ban_reports_whatever_the_stamp() {
+    let repo = phrase_repo();
+    repo.write("zebra.md", "A zebra crossing here.\n");
+    let output = repo.check();
+    assert_eq!(code(&output), 1);
+    let report = stderr(&output);
+    assert!(report.contains("zebra.md has 1 banned phrase"), "{report}");
+    assert!(report.contains("say the road"), "{report}");
+    assert!(!report.contains("README.md has"), "{report}");
 }

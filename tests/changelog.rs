@@ -10,8 +10,8 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::SchemaPaths;
 use deslag::changelog::{BASELINE, Changelog, Entry, FileError, Version, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
-use deslag::lint::banned_phrases::CATALOGUE;
-use deslag::{Config, ConfigSource, Lint, check_file};
+use deslag::lint::banned_phrases::{CATALOGUE, Catalogue, Entry as Phrase};
+use deslag::{Config, ConfigSource, Lint, check_file, check_repo};
 use serde_json::json;
 
 /// The longest a summary may be, in characters.
@@ -511,6 +511,25 @@ fn next_holds_no_entry() {
     );
 }
 
+/// A phrase of the catalogue with `since = "next"` is held back from every config, since no stamp
+/// is `next`; the release has to give it the version it ships in.
+#[test]
+#[ignore = "fails until the release change rewrites `next` in the phrase catalogue"]
+fn the_catalogue_holds_no_next() {
+    let left: Vec<&str> = CATALOGUE
+        .entries
+        .iter()
+        .filter(|entry| entry.since == Version::Next)
+        .map(|entry| entry.phrase.as_str())
+        .collect();
+    assert!(
+        left.is_empty(),
+        "src/lint/banned_phrases.toml still has `since = \"next\"` for {left:?}: no stamp reaches \
+         it, so those phrases stay off for every config. Set `since` to the version in \
+         Cargo.toml, as src/changelog/releases/next/README.md says"
+    );
+}
+
 /// A release freezes a config in each language under `tests/configs/`, naming every setting the
 /// schema has. A setting added since the newest freeze fails this until the release adds a
 /// directory.
@@ -637,6 +656,277 @@ fn every_entry_meets_the_rules_of_the_repo() {
             );
         }
     }
+}
+
+/// The repo's config text, which every test of the discovery below starts from.
+fn repo_config_text() -> (PathBuf, String) {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(".agents/deslag.toml");
+    let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
+    (path, text)
+}
+
+/// `text`, a config, with each of `phrases` in the `ban` of the `banned_phrases` table of every
+/// section and of every override of it, and with the lints that need a base taken out of every
+/// one, so that `check_file` can run on the files they select. An override that names its own
+/// `ban` replaces the section's, so each table gets the phrases itself. A phrase in `ban` is never
+/// held back by the stamp, so this config reports the phrases whatever stamp the repo has.
+fn banning(text: &str, phrases: &[&Phrase]) -> String {
+    let mut config: toml::Value = toml::from_str(text).expect("the repo's config is TOML");
+    let root = config.as_table_mut().expect("a table");
+    for (_, section) in root.iter_mut() {
+        let Some(section) = section.as_table_mut() else {
+            continue;
+        };
+        ban_in(section, phrases, true);
+        let overrides = section
+            .get_mut("overrides")
+            .and_then(toml::Value::as_array_mut);
+        for over in overrides.into_iter().flatten() {
+            if let Some(over) = over.as_table_mut() {
+                ban_in(over, phrases, false);
+            }
+        }
+    }
+    toml::to_string(&config).expect("TOML")
+}
+
+/// Takes `list_growth` out of the `lints` of `holder`, a section or an override, and puts each of
+/// `phrases` in the `ban` of its `banned_phrases`. A section gets the table when it has none; an
+/// override only when it already names one.
+fn ban_in(holder: &mut toml::map::Map<String, toml::Value>, phrases: &[&Phrase], section: bool) {
+    let lints = if section {
+        Some(
+            holder
+                .entry("lints")
+                .or_insert_with(|| toml::Value::Table(Default::default())),
+        )
+    } else {
+        holder.get_mut("lints")
+    };
+    let Some(lints) = lints.and_then(toml::Value::as_table_mut) else {
+        return;
+    };
+    lints.remove("list_growth");
+    let table = if section {
+        Some(
+            lints
+                .entry("banned_phrases")
+                .or_insert_with(|| toml::Value::Table(Default::default())),
+        )
+    } else {
+        lints
+            .get_mut("banned_phrases")
+            .filter(|table| table.as_table().is_some_and(|t| t.contains_key("ban")))
+    };
+    let Some(table) = table.and_then(toml::Value::as_table_mut) else {
+        return;
+    };
+    let ban = table
+        .entry("ban")
+        .or_insert_with(|| toml::Value::Table(Default::default()))
+        .as_table_mut()
+        .expect("ban is a table");
+    for phrase in phrases {
+        ban.insert(
+            phrase.phrase.clone(),
+            toml::Value::String(phrase.advice.clone()),
+        );
+    }
+}
+
+/// The phrases of `catalogue` the stamp of `config` keeps off.
+fn above_the_stamp<'a>(catalogue: &'a Catalogue, config: &Config) -> Vec<&'a Phrase> {
+    let stamp = config.deslag_version();
+    catalogue
+        .entries
+        .iter()
+        .filter(|phrase| !phrase.on_at(&stamp))
+        .collect()
+}
+
+/// What linting the repo's text under a config found, and how much text that was.
+struct Linted {
+    /// The findings, one line each.
+    found: Vec<String>,
+    /// The texts of the changelog's entries that were linted.
+    entry_texts: usize,
+    /// The files that were linted, from the root of the repo.
+    files: Vec<String>,
+}
+
+/// Every finding of the repo's text under `config`: the entries of the changelog, and every file
+/// the config selects, Rust comments included.
+fn findings_in_the_repo(config: &Config) -> Linted {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut linted = Linted {
+        found: Vec::new(),
+        entry_texts: 0,
+        files: Vec::new(),
+    };
+    for (_, entry) in entries() {
+        for text in [entry.summary(), entry.onboarding()] {
+            let findings =
+                check_file(config, TEXT_PATH, text.as_bytes(), root).expect("the lints run");
+            linted.entry_texts += 1;
+            linted.found.extend(findings.iter().map(|finding| {
+                format!(
+                    "the changelog entry `{}`: {:?}",
+                    entry.id(),
+                    finding.violation
+                )
+            }));
+        }
+    }
+    for file in deslag::glob::walk(root).expect("the repo walks") {
+        let selected = config
+            .sole_section_for(&file.relative)
+            .expect("one section");
+        if selected.is_none() {
+            continue;
+        }
+        let contents = std::fs::read(&file.absolute).expect("a readable file");
+        let dir = file.absolute.parent().expect("a directory");
+        let findings = check_file(config, &file.relative, &contents, dir).expect("the lints run");
+        linted.files.push(file.relative.clone());
+        linted.found.extend(
+            findings
+                .iter()
+                .map(|finding| format!("{}: {:?}", file.relative, finding.violation)),
+        );
+    }
+    linted
+}
+
+/// A phrase that arrives in a later release than the repo's own stamp is off for the repo's own
+/// check until someone runs `deslag update`, so the text that uses it would pass the change that
+/// adds the phrase and fail the one that moves the stamp. This is where it fails first: the repo's
+/// config with every such phrase banned in each section, which the stamp cannot hold back.
+#[test]
+fn the_text_of_the_repo_holds_no_phrase_the_catalogue_will_turn_on() {
+    let (path, text) = repo_config_text();
+    let repo =
+        Config::parse(&text, path.clone(), ConfigSource::Explicit).expect("the repo's config");
+    let ahead = above_the_stamp(&CATALOGUE, &repo);
+    let config = banning(&text, &ahead);
+    let config = Config::parse(&config, path, ConfigSource::Explicit).expect("the config");
+    let linted = findings_in_the_repo(&config);
+    // A check that read no text finds nothing, so it must have read all the repo's config selects.
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut selected = check_repo(root, &config, None)
+        .expect("the repo is checked")
+        .scanned;
+    selected.sort();
+    let mut read = linted.files.clone();
+    read.sort();
+    assert!(
+        selected.iter().any(|file| file == "AGENTS.md")
+            && selected
+                .iter()
+                .any(|file| file.starts_with("src/") && file.ends_with(".rs")),
+        "the repo's config selects no AGENTS.md or no Rust file: {selected:?}"
+    );
+    assert_eq!(
+        read, selected,
+        "the check read other files than the config selects"
+    );
+    assert!(linted.entry_texts > 0, "the check read no changelog entry");
+    let found = linted.found;
+    let phrases: Vec<&str> = ahead.iter().map(|phrase| phrase.phrase.as_str()).collect();
+    assert!(
+        found.is_empty(),
+        "the repo's own text uses {phrases:?}, which the catalogue turns on after the stamp of \
+         .agents/deslag.toml: reword it now, so the change that moves the stamp finds it clean:\n{}",
+        found.join("\n")
+    );
+}
+
+/// The check above is only as good as the config it builds: it bans in `[md]` and `[rust]` alike,
+/// reads a Rust comment, and does not stop at the lints that need a base.
+#[test]
+fn the_config_of_that_check_bans_the_phrases_in_markdown_and_rust_comments_and_needs_no_base() {
+    let catalogue: Catalogue = toml::from_str(
+        r#"
+measured_on = "x"
+
+[[entry]]
+phrase = "zebra crossing"
+group = "metaphors"
+advice = "say the road"
+since = "next"
+llm_files = 1
+llm_repos = 1
+"#,
+    )
+    .expect("a catalogue");
+    let (path, text) = repo_config_text();
+    let repo =
+        Config::parse(&text, path.clone(), ConfigSource::Explicit).expect("the repo's config");
+    // `next` is above every stamp.
+    let ahead = above_the_stamp(&catalogue, &repo);
+    assert_eq!(ahead.len(), 1);
+    let config = banning(&text, &ahead);
+    let config = Config::parse(&config, path, ConfigSource::Explicit).expect("the config");
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let check = |file: &str, text: &str| {
+        let findings = check_file(&config, file, text.as_bytes(), root).expect("the lints run");
+        findings
+            .into_iter()
+            .filter(|finding| finding.violation.lint() == Lint::BannedPhrases)
+            .count()
+    };
+    // A file the repo's config gives `list_growth` runs, and finds the phrase.
+    assert_eq!(check("AGENTS.md", "A zebra crossing here.\n"), 1);
+    assert_eq!(
+        check("src/x.rs", "// A zebra crossing here.\nfn main() {}\n"),
+        1
+    );
+    // The repo's own config does not report it, as the stamp keeps it off.
+    let findings = check_file(&repo, "src/x.rs", b"// A zebra crossing here.\n", root);
+    assert_eq!(findings.expect("the lints run").len(), 0);
+    // A phrase the text does not hold is not found, and the repo's own rules still apply.
+    assert_eq!(check("AGENTS.md", "A road here.\n"), 0);
+}
+
+/// An override that names its own `ban` replaces the section's, and a section other than `[md]`
+/// and `[rust]` has its own tables: the phrases go into each of them.
+#[test]
+fn the_config_of_that_check_bans_the_phrases_in_an_override_with_its_own_ban_and_in_cpp() {
+    let catalogue: Catalogue = toml::from_str(
+        r#"
+measured_on = "x"
+
+[[entry]]
+phrase = "zebra crossing"
+group = "metaphors"
+advice = "say the road"
+since = "next"
+llm_files = 1
+llm_repos = 1
+"#,
+    )
+    .expect("a catalogue");
+    let (path, text) = repo_config_text();
+    let text = format!(
+        "{text}\n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\
+         lints.banned_phrases.ban = {{ \"zzz qqq\" = \"x\" }}\n\n\
+         [cpp]\nglobs = [\"/x/*.c\"]\n"
+    );
+    let repo =
+        Config::parse(&text, path.clone(), ConfigSource::Explicit).expect("the repo's config");
+    let ahead = above_the_stamp(&catalogue, &repo);
+    let config = banning(&text, &ahead);
+    let config = Config::parse(&config, path, ConfigSource::Explicit).expect("the config");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let check = |file: &str, text: &str| {
+        let findings = check_file(&config, file, text.as_bytes(), root).expect("the lints run");
+        findings
+            .into_iter()
+            .filter(|finding| finding.violation.lint() == Lint::BannedPhrases)
+            .count()
+    };
+    assert_eq!(check("AGENTS.md", "A zebra crossing here.\n"), 1);
+    assert_eq!(check("x/y.c", "// A zebra crossing here.\nint x;\n"), 1);
 }
 
 // What the changelog's directory may hold, and the failure each rule gives.

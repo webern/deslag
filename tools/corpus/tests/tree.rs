@@ -9,6 +9,7 @@ use std::collections::{BTreeSet, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
 
+use deslag::changelog::Version;
 use deslag::config::{BannedPhrases, PhraseGroups};
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::banned_phrases;
@@ -93,18 +94,24 @@ fn matched<'d>(phrases: &[&str], docs: &[&'d Doc]) -> Vec<BTreeSet<&'d str>> {
         let document = Document::markdown(&text);
         let held = prose(&document);
         let words: HashSet<&str> = held.iter().map(String::as_str).collect();
-        let reported: BTreeSet<usize> = banned_phrases::check(&document, Some(&every))
-            .into_iter()
-            .flat_map(|over| over.matches)
-            .map(|found| found.advice.parse().expect("an index"))
-            .collect();
+        let reported: BTreeSet<usize> =
+            banned_phrases::check(&document, Some(&every), &Version::Next)
+                .into_iter()
+                .flat_map(|over| over.matches)
+                .map(|found| found.advice.parse().expect("an index"))
+                .collect();
         for (at, wanted) in wanted.iter().enumerate() {
             let holds = || {
                 wanted.iter().all(|token| words.contains(token.as_str()))
                     && held
                         .windows(wanted.len())
                         .any(|run| run == wanted.as_slice())
-                    && banned_phrases::check(&document, Some(&ban(&phrases[at..=at]))).is_some()
+                    && banned_phrases::check(
+                        &document,
+                        Some(&ban(&phrases[at..=at])),
+                        &Version::Next,
+                    )
+                    .is_some()
             };
             if reported.contains(&at) || holds() {
                 found[at].insert(doc.path.as_str());

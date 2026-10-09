@@ -3,6 +3,7 @@ updated: 2026-10-03
 subsystems:
   - changelog
   - lint
+  - news
   - output
 max_size_bytes: 7500
 ---

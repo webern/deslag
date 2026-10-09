@@ -4,8 +4,8 @@
 # compiles C (tree-sitter-c and tree-sitter-cpp build their parsers from C source). Run it with
 # `cargo run --release --manifest-path tools/sweep/Cargo.toml -- <rust|c|cpp> <root>...`.
 #
-# It compiles deslag's scanner files by path and so shares no dependencies with deslag. CI builds it
-# with `--locked`.
+# It compiles deslag's scanner files by path and so does not depend on the deslag crate. CI builds
+# it with `--locked`.
 [package]
 name = "deslag-sweep"
 version = "0.0.0"

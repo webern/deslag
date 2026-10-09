@@ -1,7 +1,8 @@
 # The config `deslag-corpus report` runs the lints at unless given another. It selects every file,
 # where the repository's own config selects only the repository's files, and holds that config's
 # `[md.lints]` settings, so a lint fails a corpus file as it would fail one of deslag's own. It
-# sets no byte budget and no lint that judges a change: a corpus file has no base.
+# leaves out the byte budget and every lint that judges a change: a corpus file is judged alone,
+# against no earlier version.
 
 schema_version = 1
 

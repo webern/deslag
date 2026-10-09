@@ -169,7 +169,8 @@ impl Carrier {
     }
 
     /// Whether `fragment`, text written into the region, can be read as the region's text and not
-    /// as the syntax of the comment. A block comment nests, so it refuses `/*` as well as `*/`.
+    /// as the syntax of the comment. A Rust block comment nests, so it refuses `/*` as well as
+    /// `*/`. A C one does not, and refusing `/*` there costs nothing.
     ///
     /// This is necessary and not sufficient: a fragment next to `*` or `/` can make `*/` with it.
     /// Only reading the result again proves an edit.

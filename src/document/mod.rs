@@ -16,6 +16,7 @@
 //! only the edits it can prove leave the document reading as it did.
 
 pub mod cpp;
+mod cpp_regions;
 mod edit;
 mod lift;
 mod map;

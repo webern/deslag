@@ -298,7 +298,9 @@ fn signposts_in_a_section_and_an_override_warns_once_in_every_language() {
             config.warnings(),
             [format!(
                 "deslag.{extension}: `md.lints.banned_phrases.groups.signposts` was removed, and \
-                 the setting is ignored; delete it from the config, or run deslag update"
+                 the setting is ignored; its one phrase fell below the catalogue's floor of 40 \
+                 repositories (#83) and nothing replaces it; delete it from the config, or run \
+                 deslag update"
             )],
             "{text}"
         );

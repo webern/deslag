@@ -1,23 +1,19 @@
+deslag_version = "0.0.1"
 schema_version = 1
+
+[cpp]
+globs = ["/src/**/*.c", "/include/**/*.h"]
+surfaces = ["doc_comment"]
+
+[[cpp.overrides]]
+globs = ["/vendor/**"]
 
 [md]
 globs = ["docs/*.md"]
 
-[md.lints.max_size_bytes]
-value = 20000
-message = "{path} is over {max_size_bytes} bytes"
-
-[md.lints.max_emphasis]
-free_spans = 2
-max_percent = 1.5
-message = "{path} has too much emphasis"
-
-[md.lints.repo_layout]
-heading = "Layout"
-min_entries = 1
-max_entries = 15
-max_width = 100
-message = "{path} needs a layout"
+[md.fences]
+languages = ["rust"]
+surfaces = ["comment"]
 
 [md.lints.banned_chars]
 allow = ["é"]
@@ -27,18 +23,18 @@ message = "{path} has a banned character"
 "¤" = "write the currency's name"
 
 [md.lints.banned_chars.groups]
-dashes = true
 arrows = true
-ellipsis = true
-bullets = true
-math = true
-checks = true
-section = true
 box_drawing = true
-spaces = true
-invisible = true
-quotes = true
+bullets = true
+checks = true
+dashes = true
+ellipsis = true
 emoji = false
+invisible = true
+math = true
+quotes = true
+section = true
+spaces = true
 
 [md.lints.banned_phrases]
 allow = ["not silently ignored"]
@@ -48,23 +44,55 @@ message = "{path} has a banned phrase"
 "in order to" = "write to"
 
 [md.lints.banned_phrases.groups]
-signposts = false
 insistence = true
 metaphors = true
 precision = true
 
 [md.lints.density]
-max_paragraph_chars = 600
 max_item_chars = 300
+max_paragraph_chars = 600
 message = "{path} has a dense block"
 
 [md.lints.list_growth]
 message = "{path} has more list items"
+
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1.5
+message = "{path} has too much emphasis"
+
+[md.lints.max_size_bytes]
+message = "{path} is over {max_size_bytes} bytes"
+value = 20000
+
+[md.lints.repo_layout]
+heading = "Layout"
+max_entries = 15
+max_width = 100
+message = "{path} needs a layout"
+min_entries = 1
 
 [md.lints.verbs_no_nouns]
 message = "{path} negates an object"
 
 [[md.overrides]]
 globs = ["docs/note.md"]
-lints.max_size_bytes.value = 8000
-lints.banned_phrases.groups.signposts = true
+
+[md.overrides.lints.banned_phrases.groups]
+
+[md.overrides.lints.max_size_bytes]
+value = 8000
+
+[rust]
+globs = ["/src/**/*.rs"]
+surfaces = ["doc_comment"]
+
+[[rust.overrides]]
+globs = ["/src/tag/**"]
+
+[toml]
+globs = ["/Cargo.toml", "/crates/**/Cargo.toml"]
+surfaces = ["comment"]
+
+[[toml.overrides]]
+globs = ["/tools/**"]

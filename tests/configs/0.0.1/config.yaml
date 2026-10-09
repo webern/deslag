@@ -1,61 +1,95 @@
-schema_version: 1
+cpp:
+  globs:
+  - /src/**/*.c
+  - /include/**/*.h
+  overrides:
+  - globs:
+    - /vendor/**
+  surfaces:
+  - doc_comment
+deslag_version: 0.0.1
 md:
-  globs: ["docs/*.md"]
+  fences:
+    languages:
+    - rust
+    surfaces:
+    - comment
+  globs:
+  - docs/*.md
   lints:
-    max_size_bytes:
-      value: 20000
-      message: "{path} is over {max_size_bytes} bytes"
+    banned_chars:
+      allow:
+      - é
+      ban:
+        ¤: write the currency's name
+      groups:
+        arrows: true
+        box_drawing: true
+        bullets: true
+        checks: true
+        dashes: true
+        ellipsis: true
+        emoji: false
+        invisible: true
+        math: true
+        quotes: true
+        section: true
+        spaces: true
+      message: "{path} has a banned character"
+    banned_phrases:
+      allow:
+      - not silently ignored
+      ban:
+        in order to: write to
+      groups:
+        insistence: true
+        metaphors: true
+        precision: true
+      message: "{path} has a banned phrase"
+    density:
+      max_item_chars: 300
+      max_paragraph_chars: 600
+      message: "{path} has a dense block"
+    list_growth:
+      message: "{path} has more list items"
     max_emphasis:
       free_spans: 2
       max_percent: 1.5
       message: "{path} has too much emphasis"
+    max_size_bytes:
+      message: "{path} is over {max_size_bytes} bytes"
+      value: 20000
     repo_layout:
-      heading: "Layout"
-      min_entries: 1
+      heading: Layout
       max_entries: 15
       max_width: 100
       message: "{path} needs a layout"
-    banned_chars:
-      allow: ["é"]
-      message: "{path} has a banned character"
-      ban:
-        "¤": "write the currency's name"
-      groups:
-        dashes: true
-        arrows: true
-        ellipsis: true
-        bullets: true
-        math: true
-        checks: true
-        section: true
-        box_drawing: true
-        spaces: true
-        invisible: true
-        quotes: true
-        emoji: false
-    banned_phrases:
-      allow: ["not silently ignored"]
-      message: "{path} has a banned phrase"
-      ban:
-        "in order to": "write to"
-      groups:
-        signposts: false
-        insistence: true
-        metaphors: true
-        precision: true
-    density:
-      max_paragraph_chars: 600
-      max_item_chars: 300
-      message: "{path} has a dense block"
-    list_growth:
-      message: "{path} has more list items"
+      min_entries: 1
     verbs_no_nouns:
       message: "{path} negates an object"
   overrides:
-    - globs: ["docs/note.md"]
-      lints:
-        max_size_bytes:
-          value: 8000
-        banned_phrases:
-          groups:
-            signposts: true
+  - globs:
+    - docs/note.md
+    lints:
+      banned_phrases:
+        groups: {}
+      max_size_bytes:
+        value: 8000
+rust:
+  globs:
+  - /src/**/*.rs
+  overrides:
+  - globs:
+    - /src/tag/**
+  surfaces:
+  - doc_comment
+schema_version: 1
+toml:
+  globs:
+  - /Cargo.toml
+  - /crates/**/Cargo.toml
+  overrides:
+  - globs:
+    - /tools/**
+  surfaces:
+  - comment

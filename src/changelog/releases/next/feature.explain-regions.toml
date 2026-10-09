@@ -1,0 +1,17 @@
+kind = "feature"
+id = "explain-regions"
+summary = "Shows what a file is read as, and lists the comments it reads"
+onboarding = '''
+`deslag explain <PATH>...` prints a `# reads:` line after `selected by`. For a code file it names
+each surface with the format that reads it, such as `doc_comment as markdown, comment as plain`.
+For `[md]` it names the fences whose comments are read.
+
+After the lint tables comes `# prose regions`, a count and one row per comment read as prose: its
+range as `line:column-line:column`, its surface, its format, and the start of its text in quotes.
+Licence text, banners and tool directives are skipped, so they are absent from the rows. A code file
+that holds nothing to read says `# prose regions: none`, and a Markdown file without fenced
+comments lists nothing.
+
+A path that no section selects says why: no section reads files of its kind, a section reads files
+of its extension but its globs leave this one out, or the config lacks that section.
+'''

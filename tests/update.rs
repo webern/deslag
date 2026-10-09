@@ -11,8 +11,10 @@ use std::path::{Path, PathBuf};
 use std::process::Output;
 
 use common::frozen::{self, EXTENSIONS};
+use common::schema::SchemaPaths;
 use common::{Repo, code, stderr, stdout};
 use deslag::changelog::Version;
+use deslag::config::schema;
 use deslag::lint::banned_phrases::CATALOGUE;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
@@ -942,18 +944,41 @@ fn shipped() -> Vec<&'static str> {
     on.map(|entry| entry.phrase.as_str()).collect()
 }
 
-/// A repo whose stamp is before every release, with the shipped phrases in a Markdown file, in a
-/// Rust comment and in a Markdown file an override covers, and the groups on. A phrase of `ban`
-/// is there too.
+/// The file that holds a section's comments in [`phrase_repo`], and the marker a comment of its
+/// language opens with, for every section of the schema but `[md]`. A section the schema gains
+/// fails here until the gate is shown to cover it.
+fn comment_files() -> Vec<(String, &'static str, &'static str)> {
+    let schema = schema();
+    let paths = SchemaPaths::of(&schema);
+    let mut files = Vec::new();
+    for section in paths.sections().into_iter().filter(|name| *name != "md") {
+        let (file, marker) = match section {
+            "rust" => ("src/lib.rs", "//"),
+            "cpp" => ("src/lib.cpp", "//"),
+            "toml" => ("data/sample.toml", "#"),
+            other => panic!("[{other}] is a section the phrase gate is not tested over"),
+        };
+        files.push((section.to_string(), file, marker));
+    }
+    files
+}
+
+/// A repo whose stamp is before every release, with the shipped phrases in a Markdown file, in the
+/// comments of a file of each other section, and in a Markdown file an override covers, and the
+/// groups on. A phrase of `ban` is there too.
 fn phrase_repo() -> Repo {
     let repo = Repo::new();
+    let sections: String = comment_files()
+        .iter()
+        .map(|(section, _, _)| format!("[{section}]\n[{section}.lints.banned_phrases]\n"))
+        .collect();
     repo.write(
         "deslag.toml",
         &format!(
             "schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\"\n\
              [md.lints.banned_phrases]\nban = {{ \"zebra crossing\" = \"say the road\" }}\n\
              [[md.overrides]]\nglobs = [\"docs/*.md\"]\nlints.banned_phrases.groups = {{}}\n\
-             [rust]\n[rust.lints.banned_phrases]\n"
+             {sections}"
         ),
     );
     let prose: String = shipped()
@@ -962,11 +987,13 @@ fn phrase_repo() -> Repo {
         .collect();
     repo.write("README.md", &prose);
     repo.write("docs/more.md", &prose);
-    let comments: String = shipped()
-        .iter()
-        .map(|phrase| format!("// It is the {phrase} here.\n"))
-        .collect();
-    repo.write("src/lib.rs", &format!("{comments}pub fn f() {{}}\n"));
+    for (_, file, marker) in comment_files() {
+        let comments: String = shipped()
+            .iter()
+            .map(|phrase| format!("{marker} It is the {phrase} here.\n"))
+            .collect();
+        repo.write(file, &format!("{comments}\n"));
+    }
     repo
 }
 
@@ -1018,11 +1045,13 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
         assert!(said_moved.contains(&named), "{named}: {said_moved}");
     }
 
-    // Now each fires, in the Markdown, under the override and in the Rust comment.
+    // Now each fires, in the Markdown, under the override and in the comments of every section.
     let after = repo.check();
     assert_eq!(code(&after), 1);
     let report = stderr(&after);
-    for file in ["README.md", "docs/more.md", "src/lib.rs"] {
+    let files = comment_files();
+    let files = files.iter().map(|(_, file, _)| *file);
+    for file in ["README.md", "docs/more.md"].into_iter().chain(files) {
         assert!(
             report.contains(&format!("{file} has {} banned phrase", shipped.len())),
             "{file}: {report}"

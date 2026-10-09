@@ -9,15 +9,16 @@ max_size_bytes: 8192
 ---
 # deslag: as built
 
-Deslag is a linter for Markdown. Each **lint** fails a file that breaks one rule the config sets.
-The library in `src/lib.rs` decides everything; the binary in `src/main.rs` prints what it returns
-and sets the exit code.
+Deslag is a linter for Markdown and code comments. Each **lint** fails a file that breaks one rule
+the config sets. The library in `src/lib.rs` decides everything; the binary in `src/main.rs` prints
+what it returns and sets the exit code.
 
 ## A run
 
-`deslag check` loads the config, walks the tree for Markdown files, works out each file's settings,
-runs the lints and reports each failure. The **repo root** is the working directory; deslag never
-walks upward for a repository or config. A budget counts bytes on disk, frontmatter and all.
+`deslag check` loads the config, walks the tree for each section's files, works out each file's
+settings, runs the lints and reports each failure. The **repo root** is the working directory;
+deslag never walks upward for a repository or config. A budget counts bytes on disk, frontmatter and
+all.
 
 ## Modules
 

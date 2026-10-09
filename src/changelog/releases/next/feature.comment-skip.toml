@@ -13,9 +13,11 @@ cannot suppress a lint.
   read as plain text. A rule drawn with box-drawing characters is still read, and `banned_chars`
   finds it.
 - Lines that tools read, such as `@generated` and `DO NOT EDIT` in either language, and in C and
-  C++ `NOLINT`, `fallthrough`, `IWYU pragma:` and editor mode lines. A directive at the start of
-  a line may have a reason after `--`, `-` or `:`, as in `NOLINT -- the reason`, and the reason is
-  linted.
+  C++ `NOLINT`, `fallthrough`, `IWYU pragma:` and editor mode lines.
+
+A marker such as `@generated` or `$Id$` is found anywhere in a line, and a directive such as
+`NOLINT` only at the start of one. A directive may have a reason after `--`, `-` or `:`, as in
+`NOLINT -- the reason` or `NOLINT(check): the reason`, and the reason is linted.
 
 The licence rule is for plain comments: `//` and `/* */` in Rust, and every comment in C and C++.
 A Markdown doc comment in Rust, `///` or `//!`, is never taken for licence text, since a paragraph

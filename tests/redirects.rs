@@ -186,6 +186,9 @@ fn every_section_but_the_one_a_redirect_names_refuses_its_old_key() {
     let paths = SchemaPaths::of(&schema);
     let sections = paths.sections();
     assert!(sections.len() > 1, "the schema has one section");
+    for section in ["rust", "cpp"] {
+        assert!(sections.contains(&section), "the schema has no [{section}]");
+    }
     for redirect in REDIRECTS {
         let (home, in_lints) = redirect.old.split_once(".lints.").expect("a lints path");
         assert!(sections.contains(&home), "{}", redirect.old);

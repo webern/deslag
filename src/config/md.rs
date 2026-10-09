@@ -5,7 +5,7 @@ use serde::Deserialize;
 
 use crate::config::lints::Lints;
 use crate::config::section::{OverrideFile, Parts};
-use crate::document::{Reader, Stack};
+use crate::document::{Fences, Reader, Stack};
 
 /// The name of the section, which is also its key in the config.
 pub(super) const NAME: &str = "md";
@@ -36,7 +36,9 @@ impl MdFile {
             globs: self.globs,
             default_globs: DEFAULT_GLOBS,
             extensions: None,
-            stack: Stack::new(Reader::Markdown),
+            stack: Stack::new(Reader::Markdown {
+                fences: Fences::default(),
+            }),
             lints: self.lints,
             overrides: self.overrides,
         }

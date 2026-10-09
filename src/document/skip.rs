@@ -11,14 +11,8 @@ use std::sync::OnceLock;
 
 use serde::Deserialize;
 
+use super::Language;
 use super::region::Markup;
-
-/// Whose comments are read. A language with no table does not list directives or line rules.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum Language {
-    Rust,
-    Cpp,
-}
 
 /// What a line is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

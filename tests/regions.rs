@@ -1,8 +1,9 @@
 //! Tests for `Reader::Rust`: the comments of a Rust file read as prose, what the lints see in
-//! them, and what `Document::apply` makes of an edit to one.
+//! them, and what `Document::apply` makes of an edit to one. Also the comments in the fences of
+//! Markdown.
 
 use deslag::Document;
-use deslag::document::{BlockKind, Edit, Reader, Refusal, Stack, Surface};
+use deslag::document::{BlockKind, Edit, Fences, Language, Reader, Refusal, Stack, Surface};
 use deslag::lint::banned_chars;
 
 const BOTH: [Surface; 2] = [Surface::DocComment, Surface::Comment];
@@ -102,7 +103,10 @@ fn a_pair_of_dash_lines_in_a_doc_comment_is_a_rule_and_a_heading_and_not_frontma
         ]
     );
     // A Markdown file keeps reading the pair as frontmatter.
-    let file = Stack::new(Reader::Markdown).document("para\n\n---\nfoo\n---\nafter\n");
+    let file = Stack::new(Reader::Markdown {
+        fences: Fences::default(),
+    })
+    .document("para\n\n---\nfoo\n---\nafter\n");
     assert!(
         file.walk()
             .any(|(block, _)| block.kind == BlockKind::Frontmatter)
@@ -261,4 +265,33 @@ fn one_refused_edit_spares_the_others_of_the_file() {
 
     assert_eq!(applied.refused, [None, None, Some(Refusal::Syntax)]);
     assert_eq!(applied.text, "/// a - b\n/// c - d\n/** e — f */\n");
+}
+
+#[test]
+fn a_markdown_stack_reads_the_comments_of_the_fences_it_is_given() {
+    let source = "> ```rust\n> // a — b\n> let x = \"—\";\n> ```\n";
+    let reading = Stack::new(Reader::Markdown {
+        fences: Fences {
+            languages: vec![Language::Rust],
+            surfaces: BOTH.to_vec(),
+        },
+    });
+    let found = |stack: &Stack| banned_chars::scan(&stack.document(source)).len();
+
+    assert_eq!(found(&reading), 1);
+    // The default stack reads none, and a fence is code.
+    let none = Stack::new(Reader::Markdown {
+        fences: Fences::default(),
+    });
+    assert_eq!(found(&none), 0);
+
+    let document = reading.document(source);
+    let at = source.find('—').unwrap();
+    let edit = Edit {
+        range: at..at + '—'.len_utf8(),
+        replacement: "-".to_string(),
+    };
+    let applied = document.apply(&[edit]).unwrap();
+    assert_eq!(applied.refused, [None]);
+    assert_eq!(applied.text, source.replacen('—', "-", 1));
 }

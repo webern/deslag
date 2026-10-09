@@ -223,8 +223,6 @@ impl SourceMap {
     /// # Panics
     ///
     /// If `outer` is empty and `self` is not.
-    // TODO: remove the dead_code guard when the reader of fenced code uses it.
-    #[allow(dead_code)]
     pub fn compose(&self, outer: &SourceMap) -> SourceMap {
         let mut parts: Vec<Part> = Vec::new();
         for segment in &self.segments {
@@ -282,8 +280,6 @@ impl SourceMap {
     }
 
     /// The segments, in order.
-    // TODO: remove the dead_code guard when the reader of fenced code uses it.
-    #[allow(dead_code)]
     pub fn segments(&self) -> &[Segment] {
         &self.segments
     }
@@ -294,8 +290,6 @@ impl SourceMap {
     }
 
     /// Whether the map does not tile any text.
-    // TODO: remove the dead_code guard when the reader of fenced code uses it.
-    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.segments.is_empty()
     }
@@ -308,8 +302,6 @@ impl SourceMap {
 
 /// A segment being composed: the kind, the length of inner text and the outer range it will be
 /// pushed with.
-// TODO: remove the dead_code guard when the reader of fenced code uses it.
-#[allow(dead_code)]
 struct Part {
     kind: SegmentKind,
     len: usize,
@@ -318,8 +310,6 @@ struct Part {
 
 /// Adds a part to `parts`. A part whose outer range starts before the last one's ends becomes one
 /// escaped part with it, and so on back while the parts overlap.
-// TODO: remove the dead_code guard when the reader of fenced code uses it.
-#[allow(dead_code)]
 fn join(parts: &mut Vec<Part>, kind: SegmentKind, len: usize, outer: Range<usize>) {
     parts.push(Part { kind, len, outer });
     while let Some(after) = parts.pop() {

@@ -409,7 +409,7 @@ mod tests {
     use super::*;
     use crate::config::lints::Lints;
     use crate::config::section::Parts;
-    use crate::document::{Reader, Stack};
+    use crate::document::{Fences, Reader, Stack};
 
     fn load_json(text: &str) -> Config {
         Config::parse(text, PathBuf::from("deslag.json"), ConfigSource::Explicit)
@@ -458,7 +458,9 @@ mod tests {
                 globs: Some(vec!["**".to_string()]),
                 default_globs: &[],
                 extensions: None,
-                stack: Stack::new(Reader::Markdown),
+                stack: Stack::new(Reader::Markdown {
+                    fences: Fences::default(),
+                }),
                 lints: Lints::default(),
                 overrides: Vec::new(),
             };

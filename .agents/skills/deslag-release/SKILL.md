@@ -9,100 +9,113 @@ user-invocable: true
 ---
 # /deslag-release
 
-Releases `<version>` (X.Y.Z, 0.0.1 below) in the owner's name, using `gh --repo webern/deslag`.
-Tags carry a `v`. The workflows refuse a version that repeats a tag or goes backwards; if one
-refuses, stop and tell the owner.
+Releases `<version>` (X.Y.Z, 0.0.1 below) in the owner's name, using `gh`. Every
+`gh` command below needs `--repo webern/deslag` (or `GH_REPO=webern/deslag`), left out below.
+Tags carry a `v`.
+
+When the owner asks for a release you may run `bump-version`, open the release pull request and
+squash merge it once CI is green, and run `release`. Stop and ask when a workflow refuses the
+version, CI is red, `verify` or `build` fails, or crates.io authentication fails.
 
 Never push, create or move a tag, and never touch `v0.0.0`. Never change repo settings,
 environments or secrets, and never run `cargo publish` yourself.
 
+The first release: 0.0.0 is a placeholder already on crates.io, and the 0.0.1 bump folds `next/`
+into the existing `releases/0.0.1/`.
+
+## A run's id
+
+`gh workflow run` does not print one. Take `T` just before the dispatch and keep its value. After
+it, list the workflow's runs, newest first, for the run title created after `T`:
+
+```bash
+T=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+gh run list --workflow <file> --limit 10 --json databaseId,displayTitle,createdAt --jq "[.[] | select(.displayTitle == \"<title>\" and .createdAt >= \"$T\")][0].databaseId // empty"
+```
+
+No output means the run is not listed yet: wait a few seconds and repeat until an id prints. Then
+`gh run watch <id> --exit-status`.
+
 ## 1. Make the release change
 
 ```bash
-gh workflow run bump-version.yml --repo webern/deslag --ref main -f version=0.0.1
-gh run list --repo webern/deslag --workflow bump-version.yml --limit 3 --json databaseId,displayTitle,status
-gh run watch <id> --repo webern/deslag --exit-status
+gh workflow run bump-version.yml --ref main -f version=0.0.1
 ```
 
-Take the run titled `bump-version 0.0.1`. It runs `deslag-release prep`, checks the change, and
-pushes the branch `release/v0.0.1`: one commit in the owner's name. The first release, 0.0.1,
-folds `next/` into the `0.0.1` directory that exists; later ones move it into a new directory.
+Find the run titled `bump-version 0.0.1` and watch it. It pushes the branch `release/v0.0.1`: one
+commit in the owner's name. If it fails, read `gh run view <id> --log-failed` and tell the owner. A failed run pushes nothing, so after the cause is gone, dispatch again. If
+`release/v0.0.1` exists from an earlier attempt, the run refuses: when its pull request merged, go
+to step 3's SHA; otherwise ask the owner to delete the branch.
 
 ## 2. Open the pull request
 
+You open it, not the workflow, so that CI runs on it. No human wrote this change, so the body has no
+`## Human Summary`; delete the section if it is there.
+
 ```bash
-gh pr create --repo webern/deslag --base main --head release/v0.0.1 --title "chore: release 0.0.1" --body "## Human Summary
-
-TODO: human writes here
-
-## Summary
+gh pr create --base main --head release/v0.0.1 --title "chore: release 0.0.1" --body "## Summary
 
 The change that releases 0.0.1, made by the bump-version workflow.
 
 ## Testing
 
 - [x] bump-version: make ci-fast check-release"
+gh pr view release/v0.0.1 --json number --jq .number
 ```
 
-You open it, not the workflow, so that CI runs on it. Then wait for CI. If `gh pr checks` says no
-checks are reported yet, wait a few seconds and run it again.
+Read `gh pr diff <n>` before the merge. For 0.0.1 expect renames from `next/`
+to `releases/0.0.1/`, a rewritten `tests/configs/0.0.1/` and `hashes`; ask about more. A new pull
+request lists its checks after a few seconds, so repeat until it does:
 
 ```bash
-gh pr checks <n> --repo webern/deslag --watch
+gh pr checks <n> --watch
 ```
 
 ## 3. Merge
 
-Squash, with an empty body, so the commit message does not carry the template:
+Squash with an empty body. The repo deletes the merged branch itself.
 
 ```bash
-gh pr merge <n> --repo webern/deslag --squash --subject "chore: release 0.0.1 (#<n>)" --body ""
-gh pr view <n> --repo webern/deslag --json mergeCommit --jq .mergeCommit.oid
-gh api -X DELETE repos/webern/deslag/git/refs/heads/release/v0.0.1
+gh pr merge <n> --squash --subject "chore: release 0.0.1 (#<n>)" --body ""
+gh pr view <n> --json mergeCommit --jq .mergeCommit.oid
 ```
 
-The second command prints the full 40-character SHA to release.
+That prints the 40-character SHA to release. Its message must hold no `Co-authored-by` line:
+`gh api repos/webern/deslag/commits/<sha> --jq .commit.message`.
 
 ## 4. Run the release
 
 ```bash
-gh workflow run release.yml --repo webern/deslag --ref main -f version=0.0.1 -f sha=<sha>
-gh run list --repo webern/deslag --workflow release.yml --limit 3 --json databaseId,displayTitle,status
-gh run watch <id> --repo webern/deslag --exit-status
+gh workflow run release.yml --ref main -f version=0.0.1 -f sha=<sha>
 ```
 
-The run is titled `release 0.0.1`. Its jobs are `verify`, `build` and `publish`. `publish` makes
-the tag and the GitHub release from the merge commit, then publishes to crates.io through trusted
-publishing, with no token. Its last step passes only when crates.io lists the version.
+Find the run titled `release 0.0.1` and watch it. It runs `verify`, `build` and `publish`;
+the last makes the tag and release, then publishes through trusted publishing.
 
 ## 5. When a job fails
 
-```bash
-gh run view <id> --repo webern/deslag --log-failed
-```
+Read `gh run view <id> --log-failed` and tell the owner.
 
-- `verify` or `build` failed: nothing was published. Fix the cause with a pull request, merge it,
-  and run step 4 again with the new SHA and the same version, since no tag exists.
-- `publish` failed: the tag or release may exist. Fix the cause, then rerun only the failed job.
-  Each step skips what is done, so it finishes the rest:
+- `verify` or `build`: nothing was published. After a pull request fixes the cause and merges, run
+  step 4 again with the new SHA and the same version.
+- `publish`: the tag or release may exist. If "Authenticate with crates.io" failed, an owner action
+  is missing (below); do not make a token. For a cause outside the repo, such as a crates.io
+  outage, rerun once it is gone: `gh run rerun <id> --failed`
 
-```bash
-gh run rerun <id> --repo webern/deslag --failed
-```
-
-If the step "Authenticate with crates.io" failed, an owner action is missing (below). Ask the
-owner; do not make a token or a secret.
+A repo defect found after the tag exists ships under the next version: a rerun replays the original
+workflow file, and a dispatch of the same version is refused.
 
 ## 6. Check the result
 
 ```bash
-gh run view <id> --repo webern/deslag --json conclusion,jobs --jq '[.conclusion, (.jobs[] | .name + "=" + .conclusion)]'
-gh api repos/webern/deslag/git/ref/tags/v0.0.1 --jq .object.sha
-gh release view v0.0.1 --repo webern/deslag --json tagName,assets --jq '[.tagName, (.assets[] | .name)]'
+gh run view <id> --json conclusion --jq .conclusion
+gh api repos/webern/deslag/commits/v0.0.1 --jq .sha
+gh release view v0.0.1 --json assets --jq '[.assets[].name]'
+curl -s -o /dev/null -w '%{http_code}' -A 'deslag-release-skill' https://crates.io/api/v1/crates/deslag/0.0.1
 ```
 
-The run is `success`, the tag's SHA is the one released, and the release holds three archives and
-the checksums file.
+Expect `success`; the tag's SHA equal to the released one (annotated tags too); three archives plus
+the checksums file; and 200. Never put an email address in the User-Agent.
 
 ## Owner actions, once
 

@@ -3,8 +3,8 @@
 use super::region::Markup;
 use super::{Document, Surface, cpp_regions, fence, plain, rust_regions};
 
-/// A language whose comments are read, in the code fenced in Markdown. Each has its own lists of
-/// directives and line rules that are not prose.
+/// Names a language whose comments are read. The region readers, the skip list and [`Fences`] use
+/// it: each language has its own lists of directives and line rules that are not prose.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     /// Rust.

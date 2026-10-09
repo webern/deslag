@@ -1,0 +1,12 @@
+ERROR: deslag detected dense text!
+
+src/lib.rs has 1 paragraph longer than 120 characters.
+
+A long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.
+
+A line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The dense text:
+  line 7: a paragraph of 137 characters
+
+deslag: 1 of 1 files with dense text.

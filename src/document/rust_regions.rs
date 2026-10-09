@@ -24,16 +24,23 @@ use std::ops::Range;
 use super::region::{Region, Surface};
 use super::region_build::{Row, block_region, line_region, line_start, whole_line};
 use super::rust::{DocStyle, Lexeme, LexemeKind, lex};
+use super::skip::{Language, List};
 use super::{Document, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
-    Document::of_regions(stack, source, regions(source, surfaces))
+    let skip = |surface| List::new(Language::Rust, stack.markup(surface));
+    Document::of_regions(stack, source, regions(source, surfaces, skip))
 }
 
-/// The regions of `source` of the surfaces asked for, in the order of the file.
-pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
+/// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
+/// list that says what is not prose in the comments of a surface.
+pub(super) fn regions(
+    source: &str,
+    surfaces: &[Surface],
+    skip: impl Fn(Surface) -> List,
+) -> Vec<Region> {
     let lexemes = lex(source);
     let mut regions = Vec::new();
     let mut at = 0;
@@ -44,7 +51,7 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
                 at = next;
                 surfaces
                     .contains(&surface(doc))
-                    .then(|| rust_line_region(source, doc, &lines))
+                    .then(|| rust_line_region(&skip, source, doc, &lines))
             }
             LexemeKind::BlockComment {
                 doc,
@@ -53,7 +60,8 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
                 at += 1;
                 surfaces.contains(&surface(doc)).then(|| {
                     let marker = if doc.is_some() { 3 } else { 2 };
-                    block_region(source, surface(doc), lexeme.range.clone(), marker)
+                    let skip = skip(surface(doc));
+                    block_region(source, surface(doc), lexeme.range.clone(), marker, skip)
                 })
             }
             _ => {
@@ -168,7 +176,12 @@ fn only_attributes(source: &str, gap: Range<usize>, inside: &[Lexeme], attribute
 }
 
 /// The region of a run of line comments: `//`, `///` or `//!`.
-fn rust_line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>]) -> Option<Region> {
+fn rust_line_region(
+    skip: &impl Fn(Surface) -> List,
+    source: &str,
+    doc: Option<DocStyle>,
+    lines: &[Range<usize>],
+) -> Option<Region> {
     let marker = if doc.is_some() { 3 } else { 2 };
     let rows: Vec<Row> = lines
         .iter()
@@ -185,7 +198,7 @@ fn rust_line_region(source: &str, doc: Option<DocStyle>, lines: &[Range<usize>])
             }),
         })
         .collect();
-    line_region(source, surface(doc), marker, &rows)
+    line_region(source, surface(doc), marker, &rows, skip(surface(doc)))
 }
 
 #[cfg(test)]
@@ -193,10 +206,20 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     use super::*;
-    use crate::document::BlockKind;
+    use crate::document::{BlockKind, Reader};
     use Surface::{Comment, DocComment};
 
     const BOTH: [Surface; 2] = [DocComment, Comment];
+
+    /// The regions of `source` for `surfaces`, read as a Rust file is.
+    fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
+        let stack = Stack::new(Reader::Rust {
+            surfaces: surfaces.to_vec(),
+        });
+        super::regions(source, surfaces, |surface| {
+            List::new(Language::Rust, stack.markup(surface))
+        })
+    }
 
     /// The surface and text of every region of `source`, after checking each region's carrier
     /// writes it as the file holds it and its map tiles its text.
@@ -230,6 +253,36 @@ mod tests {
         assert_eq!(texts("//! a\n//! b"), [doc("a\nb")]);
         assert_eq!(texts("  /// a\n  /// b\n"), [doc("a\nb")]);
         assert_eq!(texts("//// a\n"), [plain("// a")]);
+    }
+
+    #[test]
+    fn licence_text_and_plain_banners_are_cut_and_a_directive_is_not_one() {
+        assert_eq!(
+            texts("// Copyright (c) 2020 A\n//\n// Real text.\n// ====\n"),
+            [plain("\n\nReal text.\n")]
+        );
+        assert_eq!(
+            texts("// Permission is hereby granted, free of charge.\n"),
+            []
+        );
+        assert_eq!(texts("/// ====\n/// a\n"), [doc("====\na")]);
+        // A Markdown paragraph is not a licence paragraph: a fence, or a tight list, stays whole.
+        let source = concat!(
+            "/// - provided \"AS IS\"\n/// - b\n///\n",
+            "/// ```text\n/// All rights reserved\n/// ```\n/// c\n"
+        );
+        assert_eq!(
+            texts(source),
+            [doc(
+                "- provided \"AS IS\"\n- b\n\n```text\nAll rights reserved\n```\nc"
+            )]
+        );
+        assert_eq!(texts("// ── Tests ──\n"), [plain("── Tests ──")]);
+        assert_eq!(texts("// NOLINT\n"), [plain("NOLINT")]);
+        assert_eq!(
+            texts("// SAFETY: the caller holds the lock\n"),
+            [plain("SAFETY: the caller holds the lock")]
+        );
     }
 
     #[test]
@@ -588,7 +641,7 @@ mod tests {
             let Ok(source) = std::fs::read_to_string(path) else {
                 continue;
             };
-            for region in super::regions(&source, &BOTH) {
+            for region in self::regions(&source, &BOTH) {
                 regions += 1;
                 lines += region.inner.split('\n').count();
                 let written = region.carrier.encode(&source, &region.inner);

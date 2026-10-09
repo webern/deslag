@@ -26,16 +26,23 @@ use std::ops::Range;
 use super::cpp::{Lexeme, LexemeKind, lex};
 use super::region::{Region, Surface};
 use super::region_build::{Row, block_region, line_region, line_start, whole_line};
+use super::skip::{Language, List};
 use super::{Document, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
-    Document::of_regions(stack, source, regions(source, surfaces))
+    let skip = |surface| List::new(Language::Cpp, stack.markup(surface));
+    Document::of_regions(stack, source, regions(source, surfaces, skip))
 }
 
-/// The regions of `source` of the surfaces asked for, in the order of the file.
-pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
+/// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
+/// list that says what is not prose in the comments of a surface.
+pub(super) fn regions(
+    source: &str,
+    surfaces: &[Surface],
+    skip: impl Fn(Surface) -> List,
+) -> Vec<Region> {
     let comments: Vec<Found<'_>> = lex(source)
         .iter()
         .filter_map(|lexeme| Found::new(source, lexeme))
@@ -51,10 +58,11 @@ pub(super) fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
             continue;
         }
         let marker = first.marker.len();
+        let skip = skip(surface);
         regions.extend(if first.block {
-            block_region(source, surface, first.range.clone(), marker)
+            block_region(source, surface, first.range.clone(), marker, skip)
         } else {
-            line_region(source, surface, marker, &rows(source, run))
+            line_region(source, surface, marker, &rows(source, run), skip)
         });
     }
     regions
@@ -210,6 +218,16 @@ mod tests {
 
     const BOTH: [Surface; 2] = [Doc, Plain];
 
+    /// The regions of `source` for `surfaces`, read as a Cpp file is.
+    fn regions(source: &str, surfaces: &[Surface]) -> Vec<Region> {
+        let stack = Stack::new(Reader::Cpp {
+            surfaces: surfaces.to_vec(),
+        });
+        super::regions(source, surfaces, |surface| {
+            List::new(Language::Cpp, stack.markup(surface))
+        })
+    }
+
     /// The surface and text of every region of `source`, after checking that the `Carrier` of each
     /// writes it as the file holds it and its map tiles its text.
     fn texts(source: &str) -> Vec<(Surface, String)> {
@@ -240,7 +258,6 @@ mod tests {
         for (source, expected) in [
             ("// a", plain("a")),
             ("//// a", plain("// a")),
-            ("//////", plain("////")),
             ("/// a", doc("a")),
             ("//! a", doc("a")),
             ("///< a", doc("a")),
@@ -261,6 +278,8 @@ mod tests {
         for source in [
             "/**/ /***/ /* */ /** */ /*!*/ /**<*/ /*!<*/",
             "//\n///\n//!\n///<\n",
+            "//////\n",
+            "// ====\n// ----\n",
             "/*\n*/ /**\n*/ /* \n \n */",
         ] {
             assert_eq!(texts(source), [], "{source:?}");
@@ -401,6 +420,68 @@ mod tests {
         let edit = Edit {
             range: at..at + 3,
             replacement: "\\".to_string(),
+        };
+
+        let applied = document.apply(&[edit]).unwrap();
+
+        assert_eq!(applied.refused, [Some(Refusal::Structure)]);
+        assert_eq!(applied.text, source);
+    }
+
+    #[test]
+    fn a_directive_is_cut_and_its_reason_is_read() {
+        assert_eq!(
+            texts("// NOLINT(check) -- the reason"),
+            [plain("the reason")]
+        );
+        assert_eq!(texts("int x;  // NOLINT - no way"), [plain("no way")]);
+        assert_eq!(texts("// a\n// NOLINTNEXTLINE(x)\n// b"), [plain("a\n\nb")]);
+        assert_eq!(texts("/* fallthrough */"), []);
+        assert_eq!(texts("int x;  // NOLINT\n"), []);
+        assert_eq!(texts("/* Fall through\n */"), []);
+        // Prose that names a directive is prose.
+        assert_eq!(
+            texts("/* fall through to the default */"),
+            [plain("fall through to the default")]
+        );
+    }
+
+    #[test]
+    fn licence_text_and_banners_are_cut_wherever_they_are() {
+        assert_eq!(
+            texts("// Copyright 2020 A.\n//\n// Real text.\n// ====\n"),
+            [plain("\n\nReal text.\n")]
+        );
+        assert_eq!(
+            texts("int x;\n/* a\n * b\n *\n * All rights reserved\n * c */ int y;"),
+            [plain("a\nb\n\n\n")]
+        );
+    }
+
+    #[test]
+    fn the_indent_is_cut_as_if_no_line_were_masked() {
+        // The masked line has the least indent, and the kept lines keep their share of the rest.
+        assert_eq!(
+            texts("//     a\n//   NOLINT\n//     b"),
+            [plain("  a\n\n  b")]
+        );
+        assert_eq!(
+            texts("/*\n     a\n   NOLINT\n     b\n */"),
+            [plain("  a\n\n  b")]
+        );
+    }
+
+    #[test]
+    fn an_edit_that_makes_a_directive_is_refused() {
+        let source = "// one two\n// three\n";
+        let document = Stack::new(Reader::Cpp {
+            surfaces: BOTH.to_vec(),
+        })
+        .document(source);
+        let at = source.find("one two").unwrap();
+        let edit = Edit {
+            range: at..at + 7,
+            replacement: "NOLINT".to_string(),
         };
 
         let applied = document.apply(&[edit]).unwrap();
@@ -584,7 +665,7 @@ mod tests {
 
     /// The alphabet of the scanner's own property tests, and the markers, splices and directives
     /// that the rules turn on.
-    const FRAGMENTS: [&str; 44] = [
+    const FRAGMENTS: [&str; 48] = [
         "/",
         "*",
         "\"",
@@ -629,6 +710,10 @@ mod tests {
         "****",
         "\n * ",
         "b",
+        "NOLINT",
+        "Copyright ",
+        "====",
+        "--",
     ];
 
     /// A source of up to 40 fragments.

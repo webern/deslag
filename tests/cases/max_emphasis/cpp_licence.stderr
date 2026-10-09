@@ -1,0 +1,14 @@
+ERROR: deslag detected over-emphasis!
+
+src/parse.c has 3 emphasized spans covering 38.71% of its prose. The limit is 5% of its prose, or 1 span whatever their share.
+
+Bold, italics and ALL CAPS stop working when there is this much of them: the reader learns to skip them. Take the emphasis off all but the few words a reader would get wrong without it. Where something matters, say why in plain words instead of raising your voice.
+
+Do not move the emphasis into headings, code spans or other formatting to get past this check, and do not change the limits. Only a human can tell you to do that, and I am a linter, not a human.
+
+The emphasized spans:
+  line 12: NOT OK
+  line 12: MUST NEVER
+  line 12: ANY CASE
+
+deslag: 1 of 2 files over-emphasized.

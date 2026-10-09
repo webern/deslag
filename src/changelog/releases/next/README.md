@@ -74,10 +74,10 @@ override, and a copy that keeps it prints a warning on every load. The test of t
 allows the warning, because an older directory is never edited and keeps what a later release
 retired; a new one should leave it out.
 
-If the newest directory has no `[rust]` or `[cpp]` section, as 0.0.1 has none, write them by hand.
-Each takes `globs`, `surfaces` and one override with `globs`, and no lint setting: the `[md]`
-section already sets those, and a lint setting counts when any one section sets it. Do not write
-`signposts` in them, which fails to load. A release that does not add a setting does not add a
+If the newest directory has no `[rust]`, `[cpp]` or `[toml]` section, as 0.0.1 has none, write them
+by hand. Each takes `globs`, `surfaces` and one override with `globs`, and no lint setting: the
+`[md]` section already sets those, and a lint setting counts when any one section sets it. Do not
+write `signposts` in them, which fails to load. A release that does not add a setting does not add a
 directory: the newest one already names every setting.
 
 `make check-release` fails, naming the leaves, while the newest directory leaves one out. A key of a

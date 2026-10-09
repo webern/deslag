@@ -2,8 +2,8 @@
 //!
 //! The file is versioned, then split into one section per kind of file deslag lints: `[md]`, and
 //! `[rust]`, `[cpp]` and `[toml]` for the comments of Rust files, of C and C++ files and of TOML
-//! files. A section says which files it covers, the settings of each lint for all of them, and overrides for the files
-//! matching a pattern:
+//! files. A section says which files it covers, the settings of each lint for all of them, and
+//! overrides for the files matching a pattern:
 //!
 //! ```toml
 //! schema_version = 1
@@ -30,9 +30,9 @@
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
-//! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and [`toml`]
-//! hold the sections of those names, and [`lints`] the settings of each lint. [`update`] is the one
-//! thing that writes a config, and [`edit`] makes the edits to its text.
+//! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
+//! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`update`]
+//! is the one thing that writes a config, and [`edit`] makes the edits to its text.
 
 pub mod cpp;
 pub mod edit;

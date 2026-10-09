@@ -10,13 +10,13 @@ only when the edit leaves it reading as it did. A file that is not valid TOML is
 comments.
 
 A config with no `[toml]` section does not read a TOML file. Its lints are the same tables as
-`[md]`'s, under `[toml.lints]`, and the same lints turn on. A lint that needs the whole file, such as
-`max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error there, since no comment of a
-TOML file has Markdown blocks. A file that `[md]` and `[toml]` both select is an error.
+`[md]`'s, under `[toml.lints]`, and the same lints turn on. A lint that needs the whole file, such
+as `max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error there, since no comment
+of a TOML file has Markdown blocks. A file that `[md]` and `[toml]` both select is an error.
 
-The section reads files ending in `.toml`. `Cargo.lock` and `Cargo.toml.orig` cannot be selected. With
-no `globs`, the section reads every `.toml` file, a `deslag.toml` config too. Fenced TOML in Markdown
-is not read.
+The section reads files ending in `.toml`. `Cargo.lock` and `Cargo.toml.orig` cannot be selected.
+With no `globs`, the section reads every `.toml` file, a `deslag.toml` config too. Fenced TOML in
+Markdown is not read.
 
 ```toml
 [toml]

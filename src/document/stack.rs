@@ -27,8 +27,9 @@ pub struct Fences {
 }
 
 impl Fences {
-    /// Every language whose fenced code deslag reads, and both kinds of comment in each: what `[md]`
-    /// reads when its config names no `fences`. TOML is not one: a fence of TOML is not read.
+    /// Every language whose fenced code deslag reads, and both kinds of comment in each: what
+    /// `[md]` reads when its config names no `fences`. TOML is not one: a fence of TOML is not
+    /// read.
     pub fn all() -> Fences {
         Fences {
             languages: vec![Language::Rust, Language::Cpp],

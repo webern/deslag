@@ -170,12 +170,16 @@ fn a_lint_setting_is_named_by_any_section_that_sets_it() {
 /// A hash is hex, and `typos` reads some pairs of its letters as a typo: the letters b and a, with
 /// digits around them, are a word it corrects. `_typos.toml` leaves `tests/configs/hashes` out, so
 /// that a release's lines pass `make check-typos` whatever they are. The same line in another file
-/// shows that `typos` flags it.
+/// shows that `typos` flags it. A release of `typos` may stop correcting that pair, and then the
+/// hashes need no exclusion and this test would hold nothing to show; so the line also holds a
+/// misspelling that `typos` has always corrected, and the control stays true whatever it does with
+/// hex.
 #[test]
 fn typos_leaves_the_hash_lines_alone() {
-    // The pair is spelled out, so that this file does not flag itself.
+    // The words are spelled out in pieces, so that this file does not flag itself.
     let pair: String = ['b', 'a'].iter().collect();
-    let line = format!("9.9.9/config.toml 1c3{pair}9ab4de5f060\n");
+    let misspelling = ["rec", "ieve"].concat();
+    let line = format!("9.9.9/config.toml 1c3{pair}9ab4de5f060 {misspelling}\n");
     let repo = Repo::new();
     let config = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("_typos.toml");
     repo.write(

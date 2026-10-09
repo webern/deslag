@@ -800,14 +800,22 @@ fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
     let start =
         format!("Moving `deslag_version` to {current} turns on these phrases in this config: `");
     assert!(line_with.starts_with(&start), "{line_with}");
+    assert!(
+        line_with.ends_with("To see what they would flag, search the text for them, or move the stamp by hand, run `check` and put it back."),
+        "{line_with}"
+    );
 
     // A config that does not turn the lint on has none of them turned on.
     let none = update(&stamped(OLDER), &[]);
     assert_eq!(
         line(&none).as_deref(),
         Some(
-            format!("Moving `deslag_version` to {current} turns on no phrase in this config.")
-                .as_str()
+            format!(
+                "Moving `deslag_version` to {current} turns on no phrase in this config. Nothing \
+                 else `check` finds depends on `deslag_version`, so there is nothing to compare. \
+                 Only the note that the config is behind goes."
+            )
+            .as_str()
         )
     );
 

@@ -153,7 +153,7 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
     text.push_str("\n## Finish\n\n");
     // Only a config that was read can say what moving its stamp turns on.
     if let Start::Config(reading) = start {
-        text.push_str(&format!("{}\n\n", stamp_line(reading, &words("Stamp"))));
+        text.push_str(&format!("{}\n\n", stamp_line(reading, &words)));
     }
     text.push_str(&format!("{}\n", words("Closing")));
     text
@@ -167,10 +167,12 @@ fn reading_of<'a>(start: Start<'a>) -> Option<&'a Reading> {
     }
 }
 
-/// The line that says what moving the stamp turns on in the config, `words` being its fixed words:
-/// the phrases `reading` found, or that there are none. It speaks of the stamp's move alone, which
-/// is all the stamp does: a new lint or setting stays off until the config names it.
-fn stamp_line(reading: &Reading, words: &str) -> String {
+/// The line that says what moving the stamp turns on in the config: the phrases `reading` found,
+/// or that there are none, and then how to see what they flag, or that nothing else `check` finds
+/// depends on the stamp. `words` gives a piece of the fixed words with `{from}` and `{to}` filled.
+/// It speaks of the stamp's move alone, which is all the stamp does: a new lint or setting stays
+/// off until the config names it.
+fn stamp_line(reading: &Reading, words: &dyn Fn(&str) -> String) -> String {
     let turned = if reading.turned_on.is_empty() {
         "no phrase in this config".to_string()
     } else {
@@ -181,7 +183,14 @@ fn stamp_line(reading: &Reading, words: &str) -> String {
             .collect();
         format!("these phrases in this config: {}", listed.join(", "))
     };
-    words.replace("{turned}", &turned)
+    let next = words(if reading.turned_on.is_empty() {
+        "Stamp none"
+    } else {
+        "Stamp phrases"
+    });
+    // A paragraph of the file is wrapped, and the line is one.
+    let next = next.split_whitespace().collect::<Vec<_>>().join(" ");
+    format!("{} {next}", words("Stamp").replace("{turned}", &turned))
 }
 
 /// The JSON of `deslag instructions update`: the same entries and phrases as [`update_text`], in
@@ -472,7 +481,7 @@ Pass the flag.
 
 ## Finish
 
-Moving `deslag_version` to 0.3.0 turns on no phrase in this config.
+Moving `deslag_version` to 0.3.0 turns on no phrase in this config. Nothing else `check` finds depends on `deslag_version`, so there is nothing to compare. Only the note that the config is behind goes.
 
 Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
 choose, and keep off each phrase they want off, as its entry says: a phrase is on once the
@@ -792,6 +801,11 @@ llm_repos = 1
             .map(str::to_string)
     }
 
+    /// The stamp line of a config in which moving the stamp turns on nothing.
+    const NONE_TURNED_ON: &str = "Moving `deslag_version` to 0.3.0 turns on no phrase in this \
+        config. Nothing else `check` finds depends on `deslag_version`, so there is nothing to \
+        compare. Only the note that the config is behind goes.";
+
     #[test]
     fn the_closing_names_the_phrases_that_moving_the_stamp_turns_on_in_the_config() {
         let line = stamp_line_for("[md.lints.banned_phrases]\n");
@@ -799,7 +813,9 @@ llm_repos = 1
             line.as_deref(),
             Some(
                 "Moving `deslag_version` to 0.3.0 turns on these phrases in this config: \
-                 `load-bearing` (metaphors), `never silently` (insistence)."
+                 `load-bearing` (metaphors), `never silently` (insistence). To see what they \
+                 would flag, search the text for them, or move the stamp by hand, run `check` and \
+                 put it back."
             )
         );
         // Only the phrase of a group that is on, and that the config neither allows nor bans.
@@ -807,17 +823,14 @@ llm_repos = 1
             "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
              [md.lints.banned_phrases.groups]\ninsistence = false\n",
         );
-        assert_eq!(
-            line.as_deref(),
-            Some("Moving `deslag_version` to 0.3.0 turns on no phrase in this config.")
-        );
+        assert_eq!(line.as_deref(), Some(NONE_TURNED_ON));
     }
 
     #[test]
     fn the_closing_says_no_phrase_turns_on_in_a_config_without_the_lint() {
         assert_eq!(
             stamp_line_for("[md.lints.density]\n").as_deref(),
-            Some("Moving `deslag_version` to 0.3.0 turns on no phrase in this config.")
+            Some(NONE_TURNED_ON)
         );
     }
 
@@ -902,6 +915,8 @@ llm_repos = 1
             "Nothing new",
             "No config",
             "Stamp",
+            "Stamp none",
+            "Stamp phrases",
         ] {
             assert!(!piece(name).is_empty(), "{name}");
         }

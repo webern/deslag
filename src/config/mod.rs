@@ -335,12 +335,15 @@ impl Config {
             .iter()
             .filter(|section| section.selects(rel_path))
             .collect();
+        if selecting.len() < 2 {
+            return Ok(selecting.first().copied());
+        }
         let names: Vec<String> = selecting
             .iter()
             .map(|section| format!("[{}]", section.name()))
             .collect();
         let who = match names.as_slice() {
-            [] | [_] => return Ok(selecting.first().copied()),
+            [] | [_] => unreachable!("fewer than two sections returned above"),
             [first, second] => format!("both {first} and {second}"),
             [init @ .., last] => format!("{} and {last}", init.join(", ")),
         };

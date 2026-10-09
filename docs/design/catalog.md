@@ -23,6 +23,13 @@ in its sentences and judged as a tell. A phrase people also write belongs in a u
 not here. Precision matters more than recall: a wrong entry fails a run on good prose, a
 missing one costs nothing.
 
+## Adding a phrase
+
+An entry is added with `since = "next"`, and the release sets it to the version, as the Releasing
+section of `src/changelog/releases/next/README.md` says. Write its `llm_files` and `llm_repos` as 1:
+`make fix-catalog` sets them from the blob image that `make fetch-blobs` unpacks. The same change
+rewords the text that uses the phrase, because a test lints the repo with every phrase in force.
+
 ## What CI checks
 
 - `make test-blobs` counts each entry's `llm` files and repositories on the image `blobs.lock`

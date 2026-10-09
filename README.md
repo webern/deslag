@@ -97,16 +97,23 @@ config, and a config with none is taken to be from 0.0.1.
 When a release after the stamp has news, `check`, `fix` and `explain` print a note on standard
 error that says so, and the exit code does not change.
 
-`deslag instructions update` prints the news and changes no file. It is Markdown for an agent or a
-person: the breaking changes, new lints, new settings and features that releases after the stamp
-added, then the phrases the stamp keeps off, each with how to keep it off. Read with a config, it
-also says which phrases moving the stamp turns on in that config, and marks a lint the config
-already has. `--format json` prints the same news as data. `--since <version>` starts from a release
-you name and reads no config.
+`deslag instructions update` prints the news and changes no file. Run it yourself or give it to your
+agent. It is Markdown for either: the breaking changes, new lints, new settings and features that
+releases after the stamp added, then the phrases the stamp keeps off, each with how to keep it off.
+Read with a config, it also says which phrases moving the stamp turns on in that config, and marks a
+lint the config already has. `--format json` prints the same news as data. `--since <version>`
+starts from a release you name and reads no config.
 
 To choose, add the table of each new lint you want to the config. Keep a phrase off by adding it to
-`allow` in the `banned_phrases` table, or switch its group off. Then run
-`deslag update --to <version>`, with the version running, to record the stamp and end the list.
+`allow` in the `banned_phrases` table, or switch its group off:
+
+```toml
+[md.lints.banned_phrases]
+allow = ["paradigm shift"]
+```
+
+Then run `deslag update --to <version>`, with the version running, to record the stamp and end the
+list. With `--dry-run` it writes nothing, names the phrases the move turns on and prints the edits.
 
 `deslag update` is the one command that writes the config. It renames or deletes a setting that a
 release renamed or removed, and keeps the file's comments and layout. Run bare, it sets
@@ -119,6 +126,11 @@ Moving the stamp changes what `check` finds only through the phrases waiting for
 removed setting is read whatever the stamp says, and a new lint or setting stays off until the
 config names it. `deslag update --to` names the phrases the move turns on: those whose group is on
 in a table that neither allows nor bans them.
+
+To see what a waiting phrase would flag, search your text for it, or move the stamp by hand, run
+`deslag check --base <BASE>` as under Usage, and put the stamp back. When no phrase waits, nothing
+else `check` finds depends on the stamp, so there is nothing to compare, and the move only ends the
+note that the config is behind.
 
 ## Build
 

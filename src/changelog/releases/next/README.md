@@ -67,17 +67,24 @@ that shipped. The release does not edit a test or a case config. `make check-rel
 
 A release that adds a setting also adds `tests/configs/<version>/`. Copy the newest directory, and
 add to each of the three files every setting the schema gained since, the same in all three. Set
-`deslag_version` to the new version. If the newest directory has no `[rust]` or `[cpp]` section, as
-0.0.1 has none, write them by hand with every key they take. A release that does not add a setting
-does not add a directory: the newest one already names every setting.
+`deslag_version` to the new version.
 
-`make check-release` fails, naming the leaves, while the newest directory leaves one out. A lint
-setting counts when any one section sets it, so `md.lints.density.max_item_chars` is met by the
-same key under `rust.lints`. The other keys count only in their own section: `rust.globs`, and
-`rust.overrides[].globs` for a list of overrides.
+Take out of the copy each setting a redirect retired. 0.0.1 sets `signposts` in `md` and in an
+override, and a copy that keeps it prints a warning on every load. The test of the frozen configs
+allows the warning, because an older directory is never edited and keeps what a later release
+retired; a new one should leave it out.
 
-Each config must load and pass `check --base HEAD` with no warning, so leave out a removed setting
-and set a renamed one by its new name. The three must compile to the same settings.
+If the newest directory has no `[rust]` or `[cpp]` section, as 0.0.1 has none, write them by hand.
+Each takes `globs`, `surfaces` and one override with `globs`, and no lint setting: the `[md]`
+section already sets those, and a lint setting counts when any one section sets it. Do not write
+`signposts` in them, which fails to load. A release that does not add a setting does not add a
+directory: the newest one already names every setting.
+
+`make check-release` fails, naming the leaves, while the newest directory leaves one out. A key of a
+section itself, such as `rust.globs` or `rust.overrides[].globs`, counts only in its own section.
+
+Each config must load and pass `check --base HEAD`, and the new copy does so with no warning once
+it names a renamed setting by its new name. The three must compile to the same settings.
 
 The failing hash test prints a line to add to `tests/configs/hashes` for each file, in the order
 toml, yaml, json. The release leaves every older directory and its lines as they are. Frozen
@@ -91,7 +98,7 @@ A phrase of the catalogue, `src/lint/banned_phrases.toml`, that arrives in a rel
 `since = "next"`, and the release sets it to the version, in the change that moves the entries.
 No stamp is `next`, so a phrase left there stays off for every config, and `make check-release`
 fails while one is left. `grep 'since = "next"' src/lint/banned_phrases.toml` finds them; finding
-none is fine.
+none is fine. `docs/design/catalog.md` says how a change adds a phrase.
 
 A config reports a phrase only once its `deslag_version` has reached `since`, so the release does
 not move the stamp of `.agents/deslag.toml`. The repository moves its own as any config does, after
@@ -105,10 +112,11 @@ This repository's own config, `.agents/deslag.toml`, is stamped, and the stamp i
 `deslag update`. After a release `make check-deslag` prints the note and still exits 0, until
 someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
 
-Before the release change is pushed, run `make ci-fast`, then `make check-release`. The second runs
-the ignored tests of `tests/changelog.rs`, which fail while `next/` holds an entry, a phrase is left
-at `since = "next"`, the crate version has a pre-release or build part, or the newest frozen
-configs leave out a setting.
+Before the release change is pushed, run `make ci-fast`. It fails on the hash test until the lines
+the test prints are in `tests/configs/hashes`: add them, and run it again. Then run
+`make check-release`. It runs the ignored tests of `tests/changelog.rs`, which fail while `next/`
+holds an entry, a phrase is left at `since = "next"`, the crate version has a pre-release or build
+part, or the newest frozen configs leave out a setting.
 
 A released entry changes in two cases. One is a later change that renames or removes what it names:
 that change edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent

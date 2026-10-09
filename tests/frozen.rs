@@ -55,7 +55,9 @@ fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
 }
 
 /// Each loads, exits 0, and says only what a redirect says: one warning for each redirect whose
-/// old path the config sets.
+/// old path the config sets. A directory is never edited, so the older ones keep the settings a
+/// later release retired, such as `signposts` in 0.0.1, and this allows the warning. A new
+/// directory leaves them out (Releasing, in `src/changelog/releases/next/README.md`).
 #[test]
 fn every_frozen_config_loads_and_warns_only_for_redirects() {
     for (release, directory) in frozen::releases() {

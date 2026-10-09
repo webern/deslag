@@ -127,10 +127,12 @@ pub fn render(path: &str, over: &Over) -> String {
     };
     let more = over.items - over.base_items;
     let base: String = over.merge_base.chars().take(7).collect();
-    let at = if over.commit == over.merge_base {
-        format!("at {base} ({})", over.rev)
-    } else {
+    let at = if over.commit != over.merge_base {
         format!("at {base}, where {} and HEAD meet", over.rev)
+    } else if names_by_hash(&over.rev, &over.commit) {
+        format!("at {base}")
+    } else {
+        format!("at {base} ({})", over.rev)
     };
     let listed: String = over
         .added
@@ -155,6 +157,12 @@ pub fn render(path: &str, over: &Over) -> String {
         ));
     }
     report
+}
+
+/// Whether `rev` is the hash of `commit`, in full or abbreviated, so that the report need not
+/// give it twice. Git's shortest abbreviation is four digits.
+fn names_by_hash(rev: &str, commit: &str) -> bool {
+    rev.len() >= 4 && rev.chars().all(|c| c.is_ascii_hexdigit()) && commit.starts_with(rev)
 }
 
 /// The places the report lists: each item on a line the change added, as evidence for a verdict

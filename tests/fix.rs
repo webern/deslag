@@ -264,8 +264,8 @@ fn fix_leaves_a_file_that_is_not_utf8() {
     assert_eq!(read(&repo, "README.md"), bytes);
     assert!(
         stderr(&output).starts_with(
-            "deslag did not fix README.md: it is not valid UTF-8, so its findings do not point at \
-             its bytes.\n\n"
+            "deslag did not fix README.md: it is not valid UTF-8, so an edit could not be written \
+             back without changing bytes deslag does not understand.\n\n"
         ),
         "{}",
         stderr(&output)

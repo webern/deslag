@@ -364,3 +364,36 @@ fn offsets_hold_after_bytes_that_are_not_utf8() {
         bytes
     );
 }
+
+/// The same holds for a `[rust]` file: its comment is scanned in the decoded text, and the report
+/// points at the byte the em dash is in the file.
+#[test]
+fn offsets_hold_after_bytes_that_are_not_utf8_in_rust() {
+    let bytes = b"// \xff\xfe \xe2\x80\x94 x\nfn main() {}\n";
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[rust.lints.banned_chars]\n",
+    );
+    repo.write_bytes("lib.rs", bytes);
+    let run = |format: &str| {
+        let output = repo.run(&["check", "--format", format]);
+        assert_eq!(code(&output), 1, "{format}");
+        serde_json::from_str::<Value>(&stdout(&output)).expect("JSON")
+    };
+
+    let findings = run("json")["findings"].clone();
+    let mark = &findings[0]["marks"][0];
+    assert_eq!(
+        (mark["start"].as_u64(), mark["end"].as_u64()),
+        (Some(6), Some(9))
+    );
+    assert_eq!(&bytes[6..9], "\u{2014}".as_bytes());
+
+    let region =
+        &run("sarif")["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["region"];
+    assert_eq!(
+        (&region["byteOffset"], &region["byteLength"]),
+        (&json!(6), &json!(3))
+    );
+}

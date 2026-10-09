@@ -500,7 +500,7 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 }
 
 /// `bytes` as the lints read them: the file's own text when it is valid UTF-8, else the text with
-/// each invalid byte a `$`. Every byte becomes one byte, so an offset into the text is an offset
+/// each invalid byte a `$`. Each invalid byte becomes one `$`, so an offset into the text is an offset
 /// into the file, and `$` is inert in every reader. A lossy decode would turn an invalid byte into
 /// three. [`check_repo`], [`check_file`] and `deslag explain` all read through this, and `fix`
 /// refuses a file that is not UTF-8.
@@ -511,7 +511,7 @@ pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     let mut text = String::with_capacity(bytes.len());
     for chunk in bytes.utf8_chunks() {
         text.push_str(chunk.valid());
-        text.extend(chunk.invalid().iter().map(|_| '$'));
+        text.extend(std::iter::repeat_n('$', chunk.invalid().len()));
     }
     Cow::Owned(text)
 }

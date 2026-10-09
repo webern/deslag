@@ -18,9 +18,10 @@ directives are left unlinted, and a Rust doc comment is Markdown. A fence in tha
 read, and nor is a fence in the doc comment of a Rust file.
 
 This is on by default, so a config that does not mention it starts reading fence comments when
-deslag is upgraded. To turn it off, or to read one language, set `md.fences.languages`. The lints
-that need only prose, such as `banned_chars`, `banned_phrases` and `max_emphasis`, find what the
-comments hold, and `density` judges the paragraph of a comment on its own, in a list item as well.
+deslag is upgraded. To turn it off, or to read one language, set `md.fences.languages`;
+`md.fences.surfaces = []` turns it off too. The lints that need only prose, such as `banned_chars`,
+`banned_phrases` and `max_emphasis`, find what the comments hold, and `density` judges the
+paragraph of a comment on its own, in a list item as well.
 
 ```toml
 [md]

@@ -10,7 +10,7 @@
 //! the case, the style of apostrophe, and the whitespace, line breaks and formatting between them.
 //! A code span, HTML, an image, a URL or a footnote reference is a token no phrase holds, so no
 //! match crosses one. Code blocks, HTML blocks and frontmatter hold no tokens, but the comments
-//! of a code block in a language deslag reads are prose and do.
+//! of a code block in a language that `[md]` reads (`fences`) are prose and do.
 //!
 //! A phrase of the catalogue reports only once the config's `deslag_version` has reached its
 //! `since`, so a phrase added in a later release reports nothing until `deslag update` moves the

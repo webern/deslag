@@ -15,8 +15,7 @@ src/config/
   mod.rs          Config::parse, SCHEMA_VERSION
   redirect.rs     Redirect, REDIRECTS, apply
   update.rs       update, Update, Held, turned_on
-  edit/           edit, Edit, Refusal; checked.rs makes Checked; toml.rs, yaml.rs, json.rs,
-                  remove.rs and lines.rs: the cut and the check
+  edit/           edit, Edit, Refusal, and Checked; each file's header says what it does
 ```
 
 ## The stamp
@@ -24,16 +23,16 @@ src/config/
 `deslag_version` is a top-level string beside `schema_version`. It is a release,
 `X.Y.Z`; a missing one is `BASELINE`, and one newer than the running deslag is
 `Error::NewerStamp`. `Config::parse` reads a lenient `Head` first. The order is probe, schema,
-stamp, typed parse, redirects, compile. The guide's config example and `deslag update` are the
-only writers.
+stamp, typed parse, redirects, compile (`tests/stamp.rs`). The guide's config example and
+`deslag update` are the only writers.
 
 ## Redirects
 
 A setting that was renamed or removed is a `Redirect` in `REDIRECTS`, and keeps `schema_version`.
-A config that still sets the old key loads. `apply` moves a renamed value to the new path, and a
-removed one does nothing. The config gets one warning, with the action and, for a removal, the
-`reason`. The move is in the section the old path names, for its `lints` and each override. Old and
-new set in one table is an error, and so is the old key in another section.
+A config that still sets the old key loads. `apply` moves a renamed value to the new path and drops
+a removed one. Each redirect a config uses gives one warning, with the action and, for a removal,
+the `reason`. The move is in the section the old path names, for its `lints` and each override.
+Old and new set in one table is an error, and so is the old key in another section.
 
 Removing a setting takes all of these:
 
@@ -48,8 +47,8 @@ Removing a setting takes all of these:
 `tests/configs/<release>/` holds a config in each language that sets every setting its release had.
 `tests/configs/hashes` pins each file, so `tests/frozen.rs` fails an edit: the files are never
 edited. A renamed or removed setting is a redirect instead, so the old file still loads, warning
-only for redirects, compiles the same in all three languages and updates clean
-(`tests/update.rs`). `0.0.1/` is unstamped. A release adds a directory and its hash lines.
+only for redirects, and updates clean (`tests/update.rs`). `0.0.1/` is unstamped. A release that
+adds a setting adds a directory and its hash lines.
 
 ## deslag update
 
@@ -57,10 +56,11 @@ only for redirects, compiles the same in all three languages and updates clean
 them. `write_checked`, which takes only `Checked`, passes the text `edit` returns to
 `write::replace`.
 
-- Bare, it moves the stamp only when `News` is empty; otherwise it leaves it as `Held` and points
-  at `deslag instructions update`. `--to` must be the running release.
-- It names the phrases the move turns on (`turned_on`): those whose group is on in a table that
-  neither allows nor bans them.
+- Bare, it moves the stamp only when `News` is empty; otherwise it leaves it as `Held`, points at
+  `deslag instructions update`, and still makes the redirect edits. `--to` must be the running
+  release.
+- When the stamp moves it names the phrases the move turns on (`turned_on`): those whose group is
+  on in a table that neither allows nor bans them.
 - `--dry-run` prints the edits and writes nothing. It never reads git. A read-only file is refused.
 - A refusal is whole: nothing is written, each edit is printed to make by hand, with the command
   to rerun.
@@ -72,11 +72,10 @@ or a `Refusal`. TOML goes through `toml_edit`, which keeps comments. YAML and JS
 scanned for the places of their keys and cut by byte span, which deletes a removed key and sets
 the stamp. A rename there and a key not plainly safe to cut are refused.
 
-So is a YAML alias or merge key: the scan does not list a place for a key the loader reads through
-one, which is written once and shared, and a cut where it is written would change every table that
-uses it.
+So is a removed key in a YAML file with an alias or merge key: the scan does not list a key
+the loader reads through one, which is written once and shared, and a cut where it is written would
+change every table that uses it. A file with one and nothing to remove is updated.
 
 Only `edit/checked.rs` builds `Checked`, whose field is private. Its text loads with no warning,
 has the old schema and sections and the intended stamp, and differs from the old text in no line
-that an edit is not for (`lines::only_the_edits_changed`). The module headers of `edit/`
-say what each does to bytes.
+that an edit is not for (`lines::only_the_edits_changed`).

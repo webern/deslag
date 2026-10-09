@@ -38,14 +38,14 @@ must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag c
 
 The `.json` file is what `--format json` prints, the version as `[VERSION]`; an `.args` file
 replaces `check` with other arguments. A `.base` directory is the repo before a change: the case
-runs on a commit of it with `--base HEAD`, the commit as `[BASE]`. `make fix-test-output` rewrites
-`.stderr` and `.json` files.
+runs on a commit of it with `--base HEAD`, the commit as `[BASE]`.
 
 ## The corpus
 
 `tests/corpus.rs` is end-to-end, and `tests/blobs.rs` checks the big tier under `make test-blobs`,
-which ends with the timing check (`analysis.asbuilt.md`). A matrix on `core/` crosses configs,
-canonical locations, layouts and budgets, deriving what it expects from the bytes it placed.
+which ends with the timing check (`analysis.asbuilt.md`); over budget it measures again, the fastest
+of six passes. A matrix on `core/` crosses configs, canonical locations, layouts and budgets,
+deriving what it expects from the bytes it placed.
 
 The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
 and density, and the binary must report what the library finds. Tokens and sentences must keep to

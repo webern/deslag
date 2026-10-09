@@ -780,8 +780,11 @@ fn update_md_meets_its_budget() {
 #[test]
 fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
     let current = env!("CARGO_PKG_VERSION");
+    // The line is in the closing, after the entries, whatever they print.
     let line = |output: &Output| {
-        stdout(output)
+        let text = stdout(output);
+        let closing = text.rsplit("\n## Finish\n").next().expect("a closing");
+        closing
             .lines()
             .find(|line| line.starts_with("Moving `deslag_version`"))
             .map(str::to_string)
@@ -843,7 +846,7 @@ fn a_lint_the_config_already_turns_on_is_marked() {
         entry.contains("\nThis config already has a `max_size_bytes` table.\n"),
         "{entry}"
     );
-    assert!(!text.contains("already has a `density`"), "{text}");
+    assert_eq!(marks(&text), ["max_size_bytes"], "{text}");
 
     let json: Value =
         serde_json::from_str(&stdout(&update(&repo, &["--format", "json"]))).expect("JSON");
@@ -858,7 +861,16 @@ fn a_lint_the_config_already_turns_on_is_marked() {
 
     // `--since` reads no config, so it marks nothing.
     let since = update(&repo, &["--since", OLDER]);
-    assert!(!stdout(&since).contains("already has"));
+    assert_eq!(marks(&stdout(&since)), Vec::<&str>::new());
+}
+
+/// The lints a text marks as already in the config. A mark is a line of its own, so an entry's
+/// onboarding that speaks of the mark does not count, whatever a release moves into the range.
+fn marks(text: &str) -> Vec<&str> {
+    text.lines()
+        .filter_map(|line| line.strip_prefix("This config already has a `"))
+        .filter_map(|rest| rest.strip_suffix("` table."))
+        .collect()
 }
 
 /// The README's example config is one deslag accepts, with a stamp it can read.

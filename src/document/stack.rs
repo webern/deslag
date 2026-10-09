@@ -25,7 +25,8 @@ impl Language {
         }
     }
 
-    /// Whether a fence of this language has comments of `surface`. TOML has no doc comments.
+    /// Whether a fence of this language has comments of `surface`. A TOML comment is never a doc
+    /// comment.
     fn reads(self, surface: Surface) -> bool {
         match self {
             Language::Rust | Language::Cpp => true,

@@ -32,6 +32,7 @@ serde_json = "1.0.151"
 thiserror = "2.0.20"
 toml = "1.1.6"
 toml_edit = "0.25.16"
+toml_parser = "1.1.4"
 # tools/sweep pins unicode-ident to =1.0.24, so keep this requirement one that 1.0.24 meets.
 unicode-ident = "1.0.24"
 unicode-segmentation = "1.13.3"

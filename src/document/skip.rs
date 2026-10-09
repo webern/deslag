@@ -38,6 +38,8 @@ struct SkipFile {
     rust: Table,
     #[serde(default)]
     cpp: Table,
+    #[serde(default)]
+    toml: Table,
 }
 
 #[derive(Debug, Deserialize)]
@@ -81,6 +83,9 @@ impl SkipFile {
             &file.cpp.lines,
             &file.cpp.separators,
             &file.cpp.directives,
+            &file.toml.lines,
+            &file.toml.separators,
+            &file.toml.directives,
         ];
         if lists.iter().any(|list| list.iter().any(String::is_empty)) {
             return Err("an entry is empty".to_string());
@@ -88,7 +93,12 @@ impl SkipFile {
         if file.markers.rule.is_empty() || !file.markers.rule.is_ascii() {
             return Err(format!("the rule {:?} is not ASCII", file.markers.rule));
         }
-        let directives = file.rust.directives.iter().chain(&file.cpp.directives);
+        let directives = file
+            .rust
+            .directives
+            .iter()
+            .chain(&file.cpp.directives)
+            .chain(&file.toml.directives);
         if let Some(label) = directives
             .into_iter()
             .find(|name| LABELS.contains(&name.as_str()))
@@ -124,6 +134,7 @@ impl List {
         let table = match language {
             Language::Rust => &file.rust,
             Language::Cpp => &file.cpp,
+            Language::Toml => &file.toml,
         };
         List {
             file,
@@ -256,6 +267,7 @@ mod tests {
         let file = SkipFile::parse(include_str!("skip.toml")).unwrap();
         assert!(!file.licence.holds.is_empty() && !file.markers.holds.is_empty());
         assert!(!file.cpp.directives.is_empty() && file.rust.directives.is_empty());
+        assert!(file.toml.directives.is_empty());
     }
 
     #[test]
@@ -411,6 +423,7 @@ mod tests {
             },
             rust: Table::default(),
             cpp: Table::default(),
+            toml: Table::default(),
         });
         List {
             file,

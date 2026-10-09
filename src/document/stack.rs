@@ -1,7 +1,7 @@
 //! How a file is read into a [`Document`]: which reader, and what it needs to read again.
 
 use super::region::Markup;
-use super::{Document, Surface, cpp_regions, fence, plain, rust_regions};
+use super::{Document, Surface, cpp_regions, fence, plain, rust_regions, toml_regions};
 
 /// Names a language whose comments are read. The region readers, the skip list and [`Fences`] use
 /// it: each language has its own lists of directives and line rules that are not prose.
@@ -11,6 +11,8 @@ pub enum Language {
     Rust,
     /// C and C++.
     Cpp,
+    /// TOML.
+    Toml,
 }
 
 /// The fenced code in Markdown that is read for its comments, as a [`Reader::Rust`] or a
@@ -25,8 +27,8 @@ pub struct Fences {
 }
 
 impl Fences {
-    /// Every language deslag reads, and both kinds of comment in each: what `[md]` reads when its
-    /// config names no `fences`.
+    /// Every language whose fenced code deslag reads, and both kinds of comment in each: what `[md]`
+    /// reads when its config names no `fences`. TOML is not one: a fence of TOML is not read.
     pub fn all() -> Fences {
         Fences {
             languages: vec![Language::Rust, Language::Cpp],
@@ -55,12 +57,18 @@ pub enum Reader {
         /// The kinds of comment to read. The rest of the file is not read.
         surfaces: Vec<Surface>,
     },
+    /// A TOML file: the `#` comments, as a region of prose for each run of them.
+    Toml {
+        /// The kinds of comment to read. The rest of the file is not read.
+        surfaces: Vec<Surface>,
+    },
 }
 
 impl Reader {
     /// What reads the text of a region of `surface`, which is fixed by the reader and the surface
     /// and by nothing else. A Rust doc comment is Markdown and its other comments are plain. A C or
-    /// C++ comment is plain, a doc comment too: Markdown reads a diagram in one as prose.
+    /// C++ comment is plain, a doc comment too: Markdown reads a diagram in one as prose. A TOML
+    /// comment is plain.
     pub(crate) fn markup(&self, surface: Surface) -> Markup {
         match (self, surface) {
             (Reader::Markdown { .. }, _) | (Reader::Rust { .. }, Surface::DocComment) => {
@@ -68,7 +76,7 @@ impl Reader {
             }
             (Reader::Plain, _)
             | (Reader::Rust { .. }, Surface::Comment)
-            | (Reader::Cpp { .. }, _) => Markup::Plain,
+            | (Reader::Cpp { .. } | Reader::Toml { .. }, _) => Markup::Plain,
         }
     }
 }
@@ -108,6 +116,7 @@ impl Stack {
             Reader::Plain => plain::read(self, source),
             Reader::Rust { surfaces } => rust_regions::read(self, surfaces, source),
             Reader::Cpp { surfaces } => cpp_regions::read(self, surfaces, source),
+            Reader::Toml { surfaces } => toml_regions::read(self, surfaces, source),
         }
     }
 
@@ -125,7 +134,10 @@ impl Stack {
             (Reader::Markdown { .. }, _) => true,
             (Reader::Plain, Need::Sentences | Need::Text) => true,
             (Reader::Plain, Need::File | Need::Structure) => false,
-            (Reader::Rust { surfaces } | Reader::Cpp { surfaces }, _) => surfaces
+            (
+                Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces },
+                _,
+            ) => surfaces
                 .iter()
                 .any(|surface| self.markup(*surface).provides(need)),
         }
@@ -149,9 +161,10 @@ impl Stack {
                     ),
                 }
             }
-            Need::Sentences | Need::Text => {
-                "prose, which the doc_comment and comment surfaces give".to_string()
-            }
+            Need::Sentences | Need::Text => match self.outer {
+                Reader::Toml { .. } => "prose, which the comment surface gives".to_string(),
+                _ => "prose, which the doc_comment and comment surfaces give".to_string(),
+            },
         }
     }
 
@@ -160,14 +173,17 @@ impl Stack {
         match &self.outer {
             Reader::Markdown { .. } => "Markdown".to_string(),
             Reader::Plain => "plain text".to_string(),
-            Reader::Rust { surfaces } | Reader::Cpp { surfaces } => match surfaces.as_slice() {
-                [] => "no surface".to_string(),
-                [only] => format!("the {} surface", only.name()),
-                several => {
-                    let names: Vec<&str> = several.iter().map(|surface| surface.name()).collect();
-                    format!("the surfaces {}", names.join(" and "))
+            Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces } => {
+                match surfaces.as_slice() {
+                    [] => "no surface".to_string(),
+                    [only] => format!("the {} surface", only.name()),
+                    several => {
+                        let names: Vec<&str> =
+                            several.iter().map(|surface| surface.name()).collect();
+                        format!("the surfaces {}", names.join(" and "))
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -185,10 +201,11 @@ mod tests {
     fn all_holds_every_language_and_both_surfaces() {
         let all = Fences::all();
         // A match with no wildcard, so a new variant is not compiled until it is listed here, and
-        // the test then fails until `Fences::all` lists it.
-        for language in [Language::Rust, Language::Cpp] {
+        // the test then fails until `Fences::all` lists it, or says here that it does not.
+        for language in [Language::Rust, Language::Cpp, Language::Toml] {
             match language {
                 Language::Rust | Language::Cpp => assert!(all.languages.contains(&language)),
+                Language::Toml => assert!(!all.languages.contains(&language)),
             }
         }
         for surface in [Surface::DocComment, Surface::Comment] {
@@ -304,6 +321,28 @@ mod tests {
         ] {
             assert_eq!(reader.markup(surface), markup, "{reader:?} {surface:?}");
         }
+    }
+
+    #[test]
+    fn a_toml_file_has_plain_comments_and_a_message_that_names_its_one_surface() {
+        let toml = Stack::new(Reader::Toml { surfaces: vec![] });
+        let comments = Stack::new(Reader::Toml {
+            surfaces: vec![Surface::Comment],
+        });
+        assert_eq!(toml.markup(Surface::Comment), Markup::Plain);
+        assert!(comments.provides(Need::Sentences) && comments.provides(Need::Text));
+        assert!(!comments.provides(Need::Structure) && !comments.provides(Need::File));
+        assert!(!toml.provides(Need::Text));
+        assert_eq!(
+            toml.asks(Need::Text, "toml"),
+            "prose, which the comment surface gives"
+        );
+        assert_eq!(
+            toml.asks(Need::Structure, "toml"),
+            "the blocks of Markdown, which no surface of [toml] has"
+        );
+        assert_eq!(toml.reads(), "no surface");
+        assert_eq!(comments.reads(), "the comment surface");
     }
 
     #[test]

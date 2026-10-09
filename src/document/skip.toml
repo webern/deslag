@@ -53,7 +53,9 @@ holds = ["@generated", "DO NOT EDIT", "SPDX-FileCopyrightText:"]
 # is for `banned_chars`.
 rule = "=-*/#~_."
 
-# Rust has no table: rustc, clippy and rustfmt take attributes, which a comment does not hold.
+# Rust and TOML take no table. rustc, clippy and rustfmt take attributes, which a comment does not
+# hold. The tools of TOML read `#:schema`, a path or a URL, and none of the crates the sweep reads
+# writes one.
 
 [cpp]
 # A line that holds one of these anywhere in it is not prose, all of it, as a marker above is.

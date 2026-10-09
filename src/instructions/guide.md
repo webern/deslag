@@ -31,6 +31,9 @@ Start with the files agents write and read, such as AGENTS.md, CLAUDE.md, skills
 Ask before adding files a human writes, such as README.md. Once a lint covers a file, agents are
 told to rewrite it until it passes.
 
+A `[rust]` or `[cpp]` section holds the comments of source files to the same rules. Offer it only
+to a repository whose comments should meet the standard of its prose.
+
 ## 3. Write the config
 
 Run `deslag instructions lints`. It says what each lint fails and gives a table that turns it on.

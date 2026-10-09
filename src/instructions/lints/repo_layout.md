@@ -1,5 +1,6 @@
 `repo_layout` fails a file without a short, true index of the repository, one `path  <- what it
-holds` line per entry. It suits AGENTS.md alone, so turn it on in an override.
+holds` line per entry. It suits AGENTS.md alone, so turn it on in an override. The empty table asks
+for a `Repository layout` section of 5 to 15 entries, each line at most 100 characters.
 
 ```toml
 [[md.overrides]]

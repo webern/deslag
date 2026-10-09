@@ -4,8 +4,8 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::config::lints::Lints;
-use crate::config::section::{OverrideFile, Parts};
-use crate::document::{Fences, Language, Reader, Stack, Surface};
+use crate::config::section::{CommentSurface, OverrideFile, Parts};
+use crate::document::{Fences, Language, Reader, Stack};
 
 /// The name of the section, which is also its key in the config.
 pub(super) const NAME: &str = "md";
@@ -24,9 +24,6 @@ enum FenceLanguage {
 }
 
 impl FenceLanguage {
-    /// The languages `[md]` reads when it names none: every language deslag reads.
-    const DEFAULT: [FenceLanguage; 2] = [FenceLanguage::Rust, FenceLanguage::Cpp];
-
     fn language(self) -> Language {
         match self {
             FenceLanguage::Rust => Language::Rust,
@@ -35,30 +32,9 @@ impl FenceLanguage {
     }
 }
 
-/// The kinds of comment `[md]` can read in fenced code.
-// The variants carry no doc comments of their own, for the reason `FenceLanguage` gives.
-#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-enum FenceSurface {
-    DocComment,
-    Comment,
-}
-
-impl FenceSurface {
-    /// The surfaces `[md]` reads in a fence when it names none.
-    const DEFAULT: [FenceSurface; 2] = [FenceSurface::DocComment, FenceSurface::Comment];
-
-    fn surface(self) -> Surface {
-        match self {
-            FenceSurface::DocComment => Surface::DocComment,
-            FenceSurface::Comment => Surface::Comment,
-        }
-    }
-}
-
 /// The `fences` table of `[md]` as it is written on disk.
-// When a language with a third kind of comment arrives, a surface that no listed language has is
-// an error, and `surfaces` stays one list for all of them.
+// TODO: when a language with a third kind of comment arrives, make a surface that no listed
+// language has an error, and keep `surfaces` one list for all of them.
 #[derive(Debug, Default, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 struct FencesFile {
@@ -70,28 +46,24 @@ struct FencesFile {
     languages: Option<Vec<FenceLanguage>>,
     /// The comments to read in a fence, for every language: `doc_comment` is the `///` and `//!`
     /// lines and the `/** */` and `/*! */` blocks, `comment` the other `//` lines and `/* */`
-    /// blocks. Each is read as it is in a file of its language.
+    /// blocks. Each is read as it is in a file of its language. `[]` turns reading off, as
+    /// `languages = []` does.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
-    surfaces: Option<Vec<FenceSurface>>,
+    surfaces: Option<Vec<CommentSurface>>,
 }
 
 impl FencesFile {
     /// The fences the section reads.
     fn into_fences(self) -> Fences {
+        let all = Fences::all();
         Fences {
-            languages: self
-                .languages
-                .unwrap_or_else(|| FenceLanguage::DEFAULT.to_vec())
-                .into_iter()
-                .map(FenceLanguage::language)
-                .collect(),
-            surfaces: self
-                .surfaces
-                .unwrap_or_else(|| FenceSurface::DEFAULT.to_vec())
-                .into_iter()
-                .map(FenceSurface::surface)
-                .collect(),
+            languages: self.languages.map_or(all.languages, |languages| {
+                languages.into_iter().map(FenceLanguage::language).collect()
+            }),
+            surfaces: self.surfaces.map_or(all.surfaces, |surfaces| {
+                surfaces.into_iter().map(CommentSurface::surface).collect()
+            }),
         }
     }
 }
@@ -104,15 +76,17 @@ pub(super) struct MdFile {
     #[serde(default)]
     #[schemars(extend("default" = DEFAULT_GLOBS))]
     globs: Option<Vec<String>>,
-    /// Which fenced code in these files is read for its comments. Overrides cannot change it.
-    #[serde(default)]
-    fences: FencesFile,
     /// The settings for every selected file that no override changes.
     #[serde(default)]
     lints: Lints,
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
+    // Last, so that a section written as a JSON array keeps `lints` and `overrides` where an
+    // older config had them: the config reads a struct by position.
+    /// Which fenced code in these files is read for its comments. Overrides cannot change it.
+    #[serde(default)]
+    fences: FencesFile,
 }
 
 impl MdFile {
@@ -137,6 +111,7 @@ mod tests {
 
     use super::*;
     use crate::config::{Config, ConfigSource};
+    use crate::document::Surface;
 
     fn load(text: &str) -> Result<Config, crate::Error> {
         Config::parse(
@@ -171,11 +146,49 @@ mod tests {
 
     #[test]
     fn a_config_with_no_fences_reads_every_language_and_both_kinds_of_comment() {
-        let both = [Surface::DocComment, Surface::Comment];
-        let all = [Language::Rust, Language::Cpp];
+        let all = Fences::all();
         for text in ["", "[md]\n", "[md.lints.density]\n"] {
-            assert!(reads(text, &all, &both), "{text:?}");
+            assert!(reads(text, &all.languages, &all.surfaces), "{text:?}");
         }
+    }
+
+    /// The defaults the schema prints are literals, which must be what the config reads.
+    #[test]
+    fn the_defaults_in_the_schema_are_what_a_config_with_no_fences_reads() {
+        let schema = crate::config::schema();
+        let default = |key: &str| {
+            schema
+                .pointer(&format!("/definitions/FencesFile/properties/{key}/default"))
+                .unwrap_or_else(|| panic!("a default for fences.{key}"))
+                .clone()
+        };
+        let languages: Vec<FenceLanguage> =
+            serde_json::from_value(default("languages")).expect("languages");
+        let surfaces: Vec<CommentSurface> =
+            serde_json::from_value(default("surfaces")).expect("surfaces");
+        let written = Fences {
+            languages: languages.into_iter().map(FenceLanguage::language).collect(),
+            surfaces: surfaces.into_iter().map(CommentSurface::surface).collect(),
+        };
+        assert_eq!(written, Fences::all());
+    }
+
+    /// A section written as a JSON array is read by position, so `fences` must not move `lints`.
+    #[test]
+    fn a_section_written_as_a_json_array_keeps_lints_where_an_older_config_had_them() {
+        let config = Config::parse(
+            r#"[1, [null, {"banned_chars": {}}]]"#,
+            PathBuf::from("deslag.json"),
+            ConfigSource::Explicit,
+        )
+        .expect("a config");
+        assert!(config.md().possible_lints()[0].is_on(crate::lint::Lint::BannedChars));
+        assert_eq!(
+            config.md().stack,
+            Stack::new(Reader::Markdown {
+                fences: Fences::all()
+            })
+        );
     }
 
     #[test]

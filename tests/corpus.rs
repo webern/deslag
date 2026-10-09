@@ -20,7 +20,7 @@ use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
 use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
-use deslag::document::{Fences, Language, Location, Reader, Stack, Surface};
+use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
@@ -639,10 +639,7 @@ fn the_whole_corpus_is_held_to_its_budgets() {
 /// and not from [`Document::markdown`], which reads no fences.
 fn default_md(text: &str) -> Document<'_> {
     Stack::new(Reader::Markdown {
-        fences: Fences {
-            languages: vec![Language::Rust, Language::Cpp],
-            surfaces: vec![Surface::DocComment, Surface::Comment],
-        },
+        fences: Fences::all(),
     })
     .document(text)
 }

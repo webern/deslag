@@ -24,6 +24,17 @@ pub struct Fences {
     pub surfaces: Vec<Surface>,
 }
 
+impl Fences {
+    /// Every language deslag reads, and both kinds of comment in each: what `[md]` reads when its
+    /// config names no `fences`.
+    pub fn all() -> Fences {
+        Fences {
+            languages: vec![Language::Rust, Language::Cpp],
+            surfaces: vec![Surface::DocComment, Surface::Comment],
+        }
+    }
+}
+
 /// A kind of text a document can be read from.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Reader {
@@ -169,6 +180,25 @@ impl Stack {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_holds_every_language_and_both_surfaces() {
+        let all = Fences::all();
+        // A match with no wildcard, so a new variant is not compiled until it is listed here, and
+        // the test then fails until `Fences::all` lists it.
+        for language in [Language::Rust, Language::Cpp] {
+            match language {
+                Language::Rust | Language::Cpp => assert!(all.languages.contains(&language)),
+            }
+        }
+        for surface in [Surface::DocComment, Surface::Comment] {
+            match surface {
+                Surface::DocComment | Surface::Comment => assert!(all.surfaces.contains(&surface)),
+            }
+        }
+        assert_eq!(all.languages.len(), 2);
+        assert_eq!(all.surfaces.len(), 2);
+    }
 
     #[test]
     fn read_gives_the_first_layer_and_document_every_layer() {

@@ -239,7 +239,9 @@ mod tests {
 
     /// The stack that reads every language and every surface.
     fn all() -> Stack {
-        fences(&[Language::Rust, Language::Cpp], &BOTH)
+        Stack::new(Reader::Markdown {
+            fences: Fences::all(),
+        })
     }
 
     /// The first fence of `source`.

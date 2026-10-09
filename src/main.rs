@@ -10,6 +10,8 @@ use clap::Parser;
 use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::cli::{Cli, Command, Format, Topic, UpdateArgs, UpdateFormat};
 use deslag::instructions::{self, Start};
+use deslag::lint::banned_phrases::CATALOGUE;
+use deslag::news::News;
 use deslag::output::{github, json, sarif};
 
 /// Exits 0 when a run finishes and nothing fails, 1 when it finishes and a file fails a lint, and 2
@@ -35,8 +37,9 @@ fn load_config(
     for warning in config.warnings() {
         eprintln!("deslag: warning: {warning}");
     }
-    let stamp = config.deslag_version();
-    if let Some(notice) = instructions::notice(&stamp, &Version::current(), changelog()) {
+    let (stamp, running) = (config.deslag_version(), Version::current());
+    let news = News::between(changelog(), &CATALOGUE, &stamp, &running);
+    if let Some(notice) = instructions::notice(&news, &stamp, &running) {
         eprintln!("deslag: note: {notice}");
     }
     Ok(config)
@@ -91,6 +94,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 args.dry_run,
                 args.to.as_ref(),
                 changelog(),
+                &CATALOGUE,
             )?;
             for line in done.lines() {
                 eprintln!("deslag: {line}");
@@ -132,9 +136,10 @@ fn update(args: &UpdateArgs) -> anyhow::Result<String> {
         }
     };
     let to = Version::current();
+    let news = News::between(changelog(), &CATALOGUE, &from, &to);
     Ok(match args.format {
-        UpdateFormat::Text => instructions::update_text(changelog(), &from, &to, start),
-        UpdateFormat::Json => instructions::update_json(changelog(), &from, &to),
+        UpdateFormat::Text => instructions::update_text(&news, &from, &to, start),
+        UpdateFormat::Json => instructions::update_json(&news, &from, &to),
     })
 }
 

@@ -22,7 +22,7 @@ use crate::change::Change;
 use crate::config::{Config, Section};
 use crate::document::{Edit, Refusal};
 use crate::glob::{self, RepoFile};
-use crate::lint::{self, Mark, on_lines};
+use crate::lint::{self, Judging, Mark, on_lines};
 
 /// What fix did, or would do, to one file.
 #[derive(Debug, Clone, PartialEq)]
@@ -213,6 +213,7 @@ fn passes(
     };
     let mut fixed = Vec::new();
     let mut bound = None;
+    let stamp = config.deslag_version();
     for pass in 0.. {
         let (document, findings) = lint::check_text(
             config,
@@ -221,7 +222,10 @@ fn passes(
             text.as_bytes(),
             &text,
             dir,
-            change,
+            Judging {
+                change,
+                phrases_at: &stamp,
+            },
         )?;
         let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
             .iter()

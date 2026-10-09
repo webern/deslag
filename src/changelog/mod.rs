@@ -279,11 +279,13 @@ impl Changelog {
     /// the range and the notice that points at it asks whether it holds anything.
     pub fn between<'a>(
         &'a self,
-        from: &'a Version,
-        to: &'a Version,
-    ) -> impl Iterator<Item = (&'a Version, &'a Entry)> {
-        self.after(from)
-            .filter(move |release| release.version <= *to)
+        from: &Version,
+        to: &Version,
+    ) -> impl Iterator<Item = (&'a Version, &'a Entry)> + 'a {
+        let (from, to) = (from.clone(), to.clone());
+        self.releases
+            .iter()
+            .filter(move |release| release.version > from && release.version <= to)
             .flat_map(|release| {
                 release
                     .entries

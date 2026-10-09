@@ -21,6 +21,7 @@ use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
+use deslag::changelog::Version;
 use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
 use deslag::lint::{Before, list_growth, verbs_no_nouns};
@@ -784,7 +785,12 @@ fn the_catalogue_counts_are_the_big_tiers() {
                             let document = Document::markdown(&text);
                             let entries = (0..settings.len())
                                 .filter(|at| {
-                                    banned_phrases::check(&document, Some(&settings[*at])).is_some()
+                                    banned_phrases::check(
+                                        &document,
+                                        Some(&settings[*at]),
+                                        &Version::Next,
+                                    )
+                                    .is_some()
                                 })
                                 .collect();
                             let negates =

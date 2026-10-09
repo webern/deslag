@@ -1,13 +1,16 @@
 //! `deslag instructions update`: what is new since a config was last updated, and the notice that
 //! points at it.
 //!
-//! The range is [`Changelog::between`]. The text and the JSON print its entries, with the breaking
-//! changes first and then the lints, the settings and the features, and the notice asks whether it
-//! holds any. The fixed words of the text are in `src/instructions/update.md`.
+//! The range is [`News`]. The text and the JSON print its entries, with the breaking changes first
+//! and then the lints, the settings and the features, and after them the phrases the running
+//! version turns on. The notice asks whether it holds anything. The fixed words of the text are in
+//! `src/instructions/update.md`.
 
 use serde::Serialize;
 
-use crate::changelog::{Changelog, Entry, Kind, Version};
+use crate::changelog::{Entry, Kind, Version};
+use crate::lint::banned_phrases::Entry as Phrase;
+use crate::news::News;
 
 /// The fixed words of the text, as written: a section for each piece, headed by its name.
 const WORDS: &str = include_str!("update.md");
@@ -23,22 +26,25 @@ pub enum Start {
     NoConfig,
 }
 
-/// The note `check`, `fix` and `explain` print on standard error, after `deslag: note: `, when a
-/// release after `stamp` up to `running` has entries, and `None` when the config has seen them all.
+/// The note `check`, `fix` and `explain` print on standard error, after `deslag: note: `, when
+/// `news`, the range from `stamp` up to `running`, holds an entry or a phrase, and `None` when the
+/// config has seen them all.
 ///
 /// It says that the command it names does not change any file, because an agent that reads `update`
 /// as a command that rewrites files does not run it.
-pub fn notice(stamp: &Version, running: &Version, changelog: &Changelog) -> Option<String> {
-    changelog.between(stamp, running).next()?;
+pub fn notice(news: &News, stamp: &Version, running: &Version) -> Option<String> {
+    if news.is_empty() {
+        return None;
+    }
     Some(format!(
         "this config was last updated by deslag {stamp}, and this is {running}; \
          to read what is new, run deslag instructions update, which changes no file"
     ))
 }
 
-/// The text of `deslag instructions update`: Markdown for an agent, saying what the entries after
-/// `from`, up to `to`, add and how to take them up. When there are none it is one line.
-pub fn update_text(changelog: &Changelog, from: &Version, to: &Version, start: Start) -> String {
+/// The text of `deslag instructions update`: Markdown for an agent, saying what `news`, the range
+/// after `from` up to `to`, adds and how to take it up. When there is none it is one line.
+pub fn update_text(news: &News, from: &Version, to: &Version, start: Start) -> String {
     let words = |name: &str| {
         piece(name)
             .replace("{from}", &from.to_string())
@@ -49,8 +55,8 @@ pub fn update_text(changelog: &Changelog, from: &Version, to: &Version, start: S
     if start == Start::NoConfig {
         text.push_str(&format!("{}\n\n", words("No config")));
     }
-    let entries = ordered(changelog, from, to);
-    if entries.is_empty() {
+    let entries = ordered(news);
+    if news.is_empty() {
         // Only a config that was read can be called current.
         let line = match start {
             Start::Config => "Current",
@@ -80,27 +86,47 @@ pub fn update_text(changelog: &Changelog, from: &Version, to: &Version, start: S
             text.push_str(&format!("{}\n", entry.onboarding().trim()));
         }
     }
+    if !news.phrases().is_empty() {
+        text.push_str("\n## New phrases\n");
+        for phrase in news.phrases() {
+            text.push_str(&format!(
+                "\n### `{}` ({})\n\n{}\n\n{}\n",
+                phrase.phrase,
+                phrase.since,
+                phrase.advice,
+                keep_off(phrase)
+            ));
+        }
+    }
     text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
     text
 }
 
-/// The JSON of `deslag instructions update`: the same entries as [`update_text`], in the same
-/// order, for a program that writes its own prompt.
-pub fn update_json(changelog: &Changelog, from: &Version, to: &Version) -> String {
+/// The JSON of `deslag instructions update`: the same entries and phrases as [`update_text`], in
+/// the same order, for a program that writes its own prompt.
+pub fn update_json(news: &News, from: &Version, to: &Version) -> String {
+    let entries = ordered(news).into_iter().map(|(version, entry)| Item {
+        version,
+        kind: entry.kind().into(),
+        id: entry.id(),
+        summary: entry.summary(),
+        onboarding: entry.onboarding().to_string(),
+        update_does_all: entry.update_does_all(),
+        group: None,
+    });
+    let phrases = news.phrases().iter().map(|phrase| Item {
+        version: &phrase.since,
+        kind: ItemKind::Phrase,
+        id: &phrase.phrase,
+        summary: &phrase.advice,
+        onboarding: keep_off(phrase),
+        update_does_all: None,
+        group: Some(phrase.group.group().name),
+    });
     let update = Update {
         from,
         to,
-        entries: ordered(changelog, from, to)
-            .into_iter()
-            .map(|(version, entry)| Item {
-                version,
-                kind: entry.kind(),
-                id: entry.id(),
-                summary: entry.summary(),
-                onboarding: entry.onboarding(),
-                update_does_all: entry.update_does_all(),
-            })
-            .collect(),
+        entries: entries.chain(phrases).collect(),
     };
     let json = serde_json::to_string_pretty(&update).expect("an update is JSON");
     format!("{json}\n")
@@ -113,8 +139,35 @@ struct Update<'a> {
     from: &'a Version,
     /// The release running.
     to: &'a Version,
-    /// What was added after `from`, up to `to`.
+    /// What was added after `from`, up to `to`: the changelog's entries, then the phrases.
     entries: Vec<Item<'a>>,
+}
+
+/// What an [`Item`] is: the kind of a changelog entry, or a phrase of the catalogue.
+#[derive(Serialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+enum ItemKind {
+    /// A change that can break a config.
+    Breaking,
+    /// A new lint.
+    Lint,
+    /// A new setting.
+    Setting,
+    /// A command, a flag or an output format.
+    Feature,
+    /// A phrase of the catalogue that the running version turns on.
+    Phrase,
+}
+
+impl From<Kind> for ItemKind {
+    fn from(kind: Kind) -> ItemKind {
+        match kind {
+            Kind::Breaking => ItemKind::Breaking,
+            Kind::Lint => ItemKind::Lint,
+            Kind::Setting => ItemKind::Setting,
+            Kind::Feature => ItemKind::Feature,
+        }
+    }
 }
 
 /// One entry of the JSON.
@@ -123,26 +176,37 @@ struct Item<'a> {
     /// The release that added it.
     version: &'a Version,
     /// What it is.
-    kind: Kind,
-    /// A lint's id, a setting's path or a feature's name.
+    kind: ItemKind,
+    /// A lint's id, a setting's path, a feature's name or a phrase.
     id: &'a str,
-    /// What it does, in one line.
+    /// What it does in one line, or for a phrase the advice that goes with it.
     summary: &'a str,
-    /// Markdown for an agent: what it does and how to turn it on.
-    onboarding: &'a str,
+    /// Markdown for an agent: what it does and how to turn it on, or for a phrase how to keep it
+    /// off.
+    onboarding: String,
     /// Whether no hand edit of the config is needed; given only for a breaking change.
     #[serde(skip_serializing_if = "Option::is_none")]
     update_does_all: Option<bool>,
+    /// The group of the phrase; given only for a phrase.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    group: Option<&'a str>,
+}
+
+/// What to do to keep `phrase` from reporting once the stamp reaches the release it arrived in.
+fn keep_off(phrase: &Phrase) -> String {
+    let group = phrase.group.group().name;
+    format!(
+        "Every file whose `banned_phrases` table has the group `{group}` on, as it is by default, \
+         fails on it once `deslag_version` reaches {}. To keep it, add `\"{}\"` to `allow` in the \
+         table, or switch the group off with `groups.{group} = false`.",
+        phrase.since, phrase.phrase
+    )
 }
 
 /// The entries of the range, in the order they print: by kind, and by release and place in the
 /// release within a kind.
-fn ordered<'a>(
-    changelog: &'a Changelog,
-    from: &'a Version,
-    to: &'a Version,
-) -> Vec<(&'a Version, &'a Entry)> {
-    let mut entries: Vec<_> = changelog.between(from, to).collect();
+fn ordered<'a>(news: &News<'a>) -> Vec<(&'a Version, &'a Entry)> {
+    let mut entries: Vec<_> = news.entries().to_vec();
     // A stable sort keeps the order of the range inside each kind.
     entries.sort_by_key(|(_, entry)| entry.kind());
     entries
@@ -173,6 +237,8 @@ fn piece(name: &str) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::changelog::Changelog;
+    use crate::lint::banned_phrases::Catalogue;
 
     const FILES: &[(&str, &str)] = &[
         ("next/README.md", ""),
@@ -317,8 +383,9 @@ Pass the flag.
 
 ## Finish
 
-Offer each new lint to the person, with what it fails. Turn on the ones they choose by adding its
-table to the config. Once they have chosen, run `deslag update --to 0.3.0`, adding your
+Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
+choose, and keep off each phrase they want off, as its entry says: a phrase is on once the
+version moves. Once they have chosen, run `deslag update --to 0.3.0`, adding your
 `--config-path` if any. It sets `deslag_version` to "0.3.0", ending this list, and edits renamed or
 removed settings. If the person cannot be asked now, change nothing, not even `deslag_version`, and
 tell them what is new.
@@ -380,16 +447,60 @@ tell them what is new.
         Changelog::from_files(FILES.iter().copied()).expect("a changelog")
     }
 
+    /// A catalogue with no phrase, which is no news.
+    fn no_phrases() -> Catalogue {
+        toml::from_str("measured_on = \"x\"\nentry = []\n").expect("a catalogue")
+    }
+
+    /// A catalogue with a phrase in 0.2.0 and one in 0.3.0, in two groups.
+    fn phrases() -> Catalogue {
+        toml::from_str(
+            r#"
+measured_on = "x"
+
+[[entry]]
+phrase = "load-bearing"
+group = "metaphors"
+advice = "say what it does"
+since = "0.2.0"
+llm_files = 1
+llm_repos = 1
+
+[[entry]]
+phrase = "never silently"
+group = "insistence"
+advice = "say what it does instead"
+since = "0.3.0"
+llm_files = 1
+llm_repos = 1
+"#,
+        )
+        .expect("a catalogue")
+    }
+
     fn version(text: &str) -> Version {
         text.parse().expect("a version")
     }
 
+    fn news<'a>(
+        changelog: &'a Changelog,
+        catalogue: &'a Catalogue,
+        from: &str,
+        to: &str,
+    ) -> News<'a> {
+        News::between(changelog, catalogue, &version(from), &version(to))
+    }
+
     fn text(from: &str, to: &str, start: Start) -> String {
-        update_text(&changelog(), &version(from), &version(to), start)
+        let (changelog, catalogue) = (changelog(), no_phrases());
+        let news = news(&changelog, &catalogue, from, to);
+        update_text(&news, &version(from), &version(to), start)
     }
 
     fn notice_at(stamp: &str, running: &str) -> Option<String> {
-        notice(&version(stamp), &version(running), &changelog())
+        let (changelog, catalogue) = (changelog(), no_phrases());
+        let news = news(&changelog, &catalogue, stamp, running);
+        notice(&news, &version(stamp), &version(running))
     }
 
     #[test]
@@ -399,8 +510,10 @@ tell them what is new.
 
     #[test]
     fn the_json_holds_the_entries_of_the_text_in_its_order() {
+        let (changelog, catalogue) = (changelog(), no_phrases());
+        let news = news(&changelog, &catalogue, "0.0.1", "0.3.0");
         assert_eq!(
-            update_json(&changelog(), &version("0.0.1"), &version("0.3.0")),
+            update_json(&news, &version("0.0.1"), &version("0.3.0")),
             JSON
         );
     }
@@ -490,10 +603,64 @@ tell them what is new.
     #[test]
     fn a_range_with_no_entries_is_nothing_to_tell() {
         let changelog = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
-        assert_eq!(
-            notice(&version("0.0.1"), &version("0.1.0"), &changelog),
-            None
+        let catalogue = no_phrases();
+        let news = news(&changelog, &catalogue, "0.0.1", "0.1.0");
+        assert_eq!(notice(&news, &version("0.0.1"), &version("0.1.0")), None);
+    }
+
+    #[test]
+    fn the_phrases_in_range_have_a_section_after_the_features_and_the_json_lists_them_last() {
+        let (changelog, catalogue) = (changelog(), phrases());
+        let (from, to) = (version("0.2.0"), version("0.3.0"));
+        let news = News::between(&changelog, &catalogue, &from, &to);
+        let text = update_text(&news, &from, &to, Start::Config);
+        let features = text.find("## Features").expect("a features section");
+        let new_phrases = text.find("## New phrases").expect("a phrases section");
+        let finish = text.find("## Finish").expect("a closing");
+        assert!(features < new_phrases && new_phrases < finish, "{text}");
+        assert!(text.contains(
+            "### `never silently` (0.3.0)\n\nsay what it does instead\n\nEvery file whose \
+             `banned_phrases` table has the group `insistence` on, as it is by default, fails on \
+             it once `deslag_version` reaches 0.3.0. To keep it, add `\"never silently\"` to \
+             `allow` in the table, or switch the group off with `groups.insistence = false`.\n"
+        ));
+        // 0.2.0 is the stamp, so its phrase has been seen.
+        assert!(!text.contains("load-bearing"), "{text}");
+
+        let json: serde_json::Value =
+            serde_json::from_str(&update_json(&news, &from, &to)).expect("JSON");
+        let items = json["entries"].as_array().expect("entries");
+        let last = items.last().expect("an item");
+        assert_eq!(last["kind"], "phrase");
+        assert_eq!(last["id"], "never silently");
+        assert_eq!(last["group"], "insistence");
+        assert_eq!(last["version"], "0.3.0");
+        assert_eq!(last["summary"], "say what it does instead");
+        assert!(
+            items[..items.len() - 1]
+                .iter()
+                .all(|i| i["kind"] != "phrase")
         );
+        assert!(
+            items
+                .iter()
+                .all(|i| (i["kind"] == "phrase") == i.get("group").is_some())
+        );
+    }
+
+    #[test]
+    fn a_phrase_alone_is_news() {
+        let changelog = Changelog::from_files([("next/README.md", "")]).expect("a changelog");
+        let catalogue = phrases();
+        let (from, to) = (version("0.2.0"), version("0.3.0"));
+        let news = News::between(&changelog, &catalogue, &from, &to);
+        assert!(notice(&news, &from, &to).is_some());
+        let text = update_text(&news, &from, &to, Start::Config);
+        assert!(
+            text.starts_with("# What is new in deslag 0.3.0, since 0.2.0\n"),
+            "{text}"
+        );
+        assert!(!text.contains("Nothing is new"), "{text}");
     }
 
     #[test]

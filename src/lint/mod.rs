@@ -23,6 +23,7 @@ use serde::Serialize;
 
 use crate::Error;
 use crate::change::{self, Change};
+use crate::changelog::Version;
 use crate::config::{Config, Section};
 use crate::document::{Document, Edit, Location, Need};
 use crate::glob::{self, RepoFile};
@@ -454,6 +455,11 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         ..Report::default()
     };
 
+    let stamp = config.deslag_version();
+    let judging = Judging {
+        change,
+        phrases_at: &stamp,
+    };
     for (file, section) in selected(root, config)? {
         report.scanned.push(file.relative.clone());
 
@@ -467,7 +473,7 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
             &contents,
             &text,
             dir,
-            change,
+            judging,
         )?;
         report.findings.extend(findings);
     }
@@ -527,9 +533,26 @@ pub fn check_file(
     contents: &[u8],
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
+    check_file_at(config, relative, contents, dir, &config.deslag_version())
+}
+
+/// [`check_file`], with the phrases of the catalogue held to `stamp` and not to the config's:
+/// [`Version::Next`] puts the whole catalogue in force. For a test or a tool that means the
+/// catalogue as shipped, whatever stamp the config it lints with has.
+pub fn check_file_at(
+    config: &Config,
+    relative: &str,
+    contents: &[u8],
+    dir: &Path,
+    stamp: &Version,
+) -> Result<Vec<Finding>, Error> {
     let text = decode(contents);
     let section = config.section_to_read(relative)?;
-    Ok(check_text(config, section, relative, contents, &text, dir, None)?.1)
+    let judging = Judging {
+        change: None,
+        phrases_at: stamp,
+    };
+    Ok(check_text(config, section, relative, contents, &text, dir, judging)?.1)
 }
 
 /// A file as it was at the base of a run, which a lint that judges a change compares it with.
@@ -543,10 +566,20 @@ pub struct Before<'a> {
     pub file: &'a change::File,
 }
 
+/// What a run judges its files by besides the config.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Judging<'a> {
+    /// The change the lints that judge one need, if the run has a base.
+    pub change: Option<&'a Change>,
+    /// The stamp the phrases of the catalogue are held to, which is the config's unless the caller
+    /// means the catalogue whole.
+    pub phrases_at: &'a Version,
+}
+
 /// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
-/// `text`, its `contents` decoded, and the run's `change`, which the lints that judge one need.
-/// Returns the document the lints read with what they found, for a caller that edits it: the
-/// section's stack reads the file, so a fix reads a file as the check does.
+/// `text`, its `contents` decoded, and what the run `judging` is held to. Returns the document the
+/// lints read with what they found, for a caller that edits it: the section's stack reads the
+/// file, so a fix reads a file as the check does.
 pub(crate) fn check_text<'a>(
     config: &Config,
     section: &Section,
@@ -554,8 +587,12 @@ pub(crate) fn check_text<'a>(
     contents: &[u8],
     text: &'a str,
     dir: &Path,
-    change: Option<&Change>,
+    judging: Judging<'_>,
 ) -> Result<(Document<'a>, Vec<Finding>), Error> {
+    let Judging {
+        change,
+        phrases_at: stamp,
+    } = judging;
     let lints = section.lints_for(relative);
     let contradiction = lints.contradiction().or_else(|| {
         lints
@@ -605,8 +642,10 @@ pub(crate) fn check_text<'a>(
                 .map(Violation::RepoLayout),
             Lint::BannedChars => banned_chars::check(&document, lints.banned_chars.as_ref())
                 .map(Violation::BannedChars),
-            Lint::BannedPhrases => banned_phrases::check(&document, lints.banned_phrases.as_ref())
-                .map(Violation::BannedPhrases),
+            Lint::BannedPhrases => {
+                banned_phrases::check(&document, lints.banned_phrases.as_ref(), stamp)
+                    .map(Violation::BannedPhrases)
+            }
             Lint::Density => {
                 density::check(&document, lints.density.as_ref()).map(Violation::Density)
             }

@@ -230,6 +230,19 @@ impl Section {
             .collect()
     }
 
+    /// Every lint table a file of the section can get: the section's own, and the section's with
+    /// each override laid over it alone. For a caller that asks whether a lint is on for some file
+    /// and does not have the file.
+    pub fn possible_lints(&self) -> Vec<Lints> {
+        let own = std::iter::once(self.lints.clone());
+        let laid = self.overrides.iter().map(|entry| {
+            let mut lints = self.lints.clone();
+            lints.merge(&entry.lints);
+            lints
+        });
+        own.chain(laid).collect()
+    }
+
     /// The lint settings for `rel_path`: the section's own, then every override
     /// [`Section::overrides_for`] finds, each setting only the fields it names.
     pub fn lints_for(&self, rel_path: &str) -> Lints {

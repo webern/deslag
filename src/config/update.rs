@@ -11,7 +11,8 @@
 //! and the running version, so that the change turns on nothing nobody chose; when something does,
 //! it leaves the stamp and says to read `deslag instructions update` first. `--to` moves it
 //! regardless, and is the command that topic ends with: the person has chosen. It never looks at
-//! git, and never turns anything on.
+//! git, and never turns anything on. A move of the stamp turns on the catalogue phrases the stamp
+//! kept off, wherever the config has their group on, and the report names them.
 
 use std::fs;
 use std::path::Path;
@@ -22,7 +23,8 @@ use crate::Error;
 use crate::changelog::{self, Changelog, current_release};
 use crate::config::Config;
 use crate::config::edit::{self, Checked, Edit};
-use crate::instructions;
+use crate::lint::banned_phrases::{Catalogue, Entry as Phrase};
+use crate::news::News;
 use crate::write;
 
 /// What an update did, or with `dry_run` would do.
@@ -36,6 +38,18 @@ pub struct Update {
     pub edits: Vec<Edit>,
     /// Set when the stamp was left because the running version has entries after it.
     pub held: Option<Held>,
+    /// The catalogue phrases the new stamp turns on where the config has their group on, in the
+    /// order of their releases.
+    pub phrases: Vec<TurnedOn>,
+}
+
+/// A catalogue phrase that a move of the stamp turns on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TurnedOn {
+    /// The phrase.
+    pub phrase: String,
+    /// The group it is in.
+    pub group: &'static str,
 }
 
 /// A stamp that stays, because the person has not read what is new.
@@ -57,6 +71,20 @@ impl Update {
             .iter()
             .map(|edit| edit.report(&self.path, self.dry_run))
             .collect();
+        if !self.phrases.is_empty() {
+            let listed: Vec<String> = self
+                .phrases
+                .iter()
+                .map(|turned| format!("`{}` ({})", turned.phrase, turned.group))
+                .collect();
+            let verb = if self.dry_run { "would turn" } else { "turned" };
+            lines.push(format!(
+                "{}: {verb} on these phrases, banned where their group is on: {}; run deslag \
+                 check, and add a phrase to `allow` or switch its group off to keep it",
+                self.path,
+                listed.join(", ")
+            ));
+        }
         match &self.held {
             Some(Held {
                 stamp,
@@ -129,8 +157,8 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
 
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
 /// uses are made, and the stamp moves as the module says. `to`, when given, is the running version.
-/// `known` is the changelog that says whether anything lies between the stamp and the running
-/// version.
+/// `known` and `phrases` are the changelog and the catalogue that say whether anything lies
+/// between the stamp and the running version.
 ///
 /// With `dry_run` the answer is the same and nothing is written.
 pub fn update(
@@ -139,26 +167,30 @@ pub fn update(
     dry_run: bool,
     to: Option<&Version>,
     known: &Changelog,
+    phrases: &Catalogue,
 ) -> Result<Update, Error> {
     let (config, text) = Config::load_text(root, explicit)?;
     let path = shown(root, config.path());
     let running = current_release();
+    let seen = config.deslag_version();
+    let now = changelog::Version::current();
+    let news = News::between(known, phrases, &seen, &now);
     let (stamp, held) = match to {
         Some(to) => (Some(to.clone()), None),
-        None => {
-            let seen = config.deslag_version();
-            match instructions::notice(&seen, &changelog::Version::current(), known) {
-                None => (Some(running.clone()), None),
-                Some(_) => (
-                    None,
-                    Some(Held {
-                        stamp: config.stamp().cloned(),
-                        taken: config.stamp().cloned().unwrap_or(changelog::BASELINE),
-                        running: running.clone(),
-                    }),
-                ),
-            }
-        }
+        None if news.is_empty() => (Some(running.clone()), None),
+        None => (
+            None,
+            Some(Held {
+                stamp: config.stamp().cloned(),
+                taken: config.stamp().cloned().unwrap_or(changelog::BASELINE),
+                running: running.clone(),
+            }),
+        ),
+    };
+    // `to` is the running version, which `news` ends at; a held stamp turns on nothing.
+    let turned_on = match stamp {
+        Some(_) => turned_on(&config, news.phrases()),
+        None => Vec::new(),
     };
 
     let edited = edit::edit(&text, &config, &path, stamp.as_ref())
@@ -183,12 +215,37 @@ pub fn update(
         dry_run,
         edits: edited.edits,
         held,
+        phrases: turned_on,
     })
+}
+
+/// The `phrases` of the catalogue whose group is on in some section of `config`, in some table of
+/// it: the section's, or the section's under one of its overrides. A group is on in a table that
+/// turns `banned_phrases` on and does not switch the group off.
+fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
+    let tables: Vec<_> = config
+        .sections()
+        .iter()
+        .flat_map(|section| section.possible_lints())
+        .filter_map(|lints| lints.banned_phrases)
+        .collect();
+    phrases
+        .iter()
+        .filter(|phrase| {
+            let group = phrase.group.group();
+            tables.iter().any(|table| group.on(&table.groups))
+        })
+        .map(|phrase| TurnedOn {
+            phrase: phrase.phrase.clone(),
+            group: phrase.group.group().name,
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::lint::banned_phrases::Catalogue;
 
     /// The running release, which is what the stamp moves to.
     fn running() -> Version {
@@ -222,13 +279,36 @@ mod tests {
 
     const REMOVED: &str = "[md.lints.banned_phrases.groups]\nsignposts = true\n";
 
+    /// A catalogue with no phrase.
+    fn no_phrases() -> Catalogue {
+        toml::from_str("measured_on = \"x\"\nentry = []\n").expect("a catalogue")
+    }
+
+    /// A catalogue with a phrase of the release running, one for each of two groups.
+    fn new_phrases() -> Catalogue {
+        let entry = |phrase: &str, group: &str| {
+            format!(
+                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"{group}\"\nadvice = \"x\"\n\
+                 since = \"{}\"\nllm_files = 1\nllm_repos = 1\n",
+                running()
+            )
+        };
+        let text = [
+            "measured_on = \"x\"\n".to_string(),
+            entry("load-bearing", "metaphors"),
+            entry("never silently", "insistence"),
+        ]
+        .concat();
+        toml::from_str(&text).expect("a catalogue")
+    }
+
     fn run(
         dir: &tempfile::TempDir,
         dry_run: bool,
         to: Option<&Version>,
         known: &Changelog,
     ) -> Result<Update, Error> {
-        update(dir.path(), None, dry_run, to, known)
+        update(dir.path(), None, dry_run, to, known, &no_phrases())
     }
 
     #[test]
@@ -328,6 +408,7 @@ mod tests {
                 taken: Version::new(0, 0, 1),
                 running: Version::new(0, 0, 2),
             }),
+            phrases: Vec::new(),
         };
         let lines = held.lines();
         assert_eq!(lines.len(), 1);
@@ -338,6 +419,81 @@ mod tests {
             ) && !lines[0].contains("stays"),
             "{lines:?}"
         );
+    }
+
+    #[test]
+    fn a_phrase_alone_holds_a_bare_update_and_to_names_the_phrases_it_turns_on() {
+        let stamped = "schema_version = 1\ndeslag_version = \"0.0.0\"\n";
+        let text = format!("{stamped}[md.lints.banned_phrases.groups]\nmetaphors = false\n");
+        let (dir, path) = repo(&text);
+        let phrases = new_phrases();
+
+        let held = update(dir.path(), None, false, None, &nothing_new(), &phrases).expect("held");
+        assert!(held.held.is_some() && held.phrases.is_empty(), "{held:?}");
+        assert_eq!(fs::read_to_string(&path).expect("a config"), text);
+
+        let sample = running();
+        let dry = update(
+            dir.path(),
+            None,
+            true,
+            Some(&sample),
+            &nothing_new(),
+            &phrases,
+        )
+        .expect("a dry run");
+        let turned = vec![TurnedOn {
+            phrase: "never silently".to_string(),
+            group: "insistence",
+        }];
+        assert_eq!(dry.phrases, turned);
+        assert_eq!(fs::read_to_string(&path).expect("a config"), text);
+        let line = dry.lines().pop().expect("a line");
+        assert!(
+            line.contains("would turn on these phrases")
+                && line.contains("`never silently` (insistence)"),
+            "{line}"
+        );
+
+        let done = update(
+            dir.path(),
+            None,
+            false,
+            Some(&sample),
+            &nothing_new(),
+            &phrases,
+        )
+        .expect("an update");
+        assert_eq!(done.phrases, turned);
+        assert!(
+            done.lines()
+                .last()
+                .is_some_and(|line| line.contains("turned on"))
+        );
+        // The stamp is where it should be, so there is nothing more to turn on.
+        let again = update(
+            dir.path(),
+            None,
+            false,
+            Some(&sample),
+            &nothing_new(),
+            &phrases,
+        )
+        .expect("current");
+        assert!(again.phrases.is_empty());
+
+        // With no `banned_phrases` table at all, no group is on anywhere.
+        let (dir, _) = repo(stamped);
+        let none = update(
+            dir.path(),
+            None,
+            true,
+            Some(&sample),
+            &nothing_new(),
+            &phrases,
+        )
+        .expect("a dry run");
+        assert!(none.phrases.is_empty(), "{none:?}");
     }
 
     /// A repo with `text` as `deslag.<extension>`.

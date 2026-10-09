@@ -25,9 +25,9 @@ lines, and a key in braces loses itself and one comma. A table the delete emptie
 since an empty table is not the same as none.
 
 A renamed setting is edited in TOML only; in YAML or JSON it is refused, with the edit printed. So
-is a YAML file that has an alias or a merge key, a removed key with an anchor or a tag, an explicit
-`?` key, a JSON list read by position, and a key whose line holds anything else. Make the printed
-edits, then run the command again.
+is a removed key in a YAML file that has an alias or a merge key, a removed key with an anchor or a
+tag, an explicit `?` key, a JSON list read by position, and a key whose line holds anything
+else. Make the printed edits, then run the command again.
 
 `--dry-run` prints the edits it would make and writes nothing. `--config-path` names the config
 file. A config with nothing to do is reported current, and the exit code is 0. A config that is

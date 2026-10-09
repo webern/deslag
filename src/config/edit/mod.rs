@@ -20,9 +20,9 @@
 //! reorder keys and rewrite escapes (JSON). TOML goes through `toml_edit`, which keeps comments and
 //! layout; the `toml` module says what it does to the bytes around an edit. YAML and JSON are
 //! scanned for the places of their keys and edited by byte span. That sets the stamp and deletes a
-//! removed key, and `remove` says how. A YAML or JSON config that has a renamed setting, a removed
-//! one that cannot be deleted safely, or an alias or merge key is refused, with the edits spelled
-//! out.
+//! removed key, and `remove` says how. A YAML or JSON config that has a renamed setting, or a
+//! removed one that cannot be deleted safely or sits in a YAML file with an alias or merge key, is
+//! refused, with the edits spelled out.
 
 mod checked;
 mod json;

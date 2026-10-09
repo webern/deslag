@@ -364,3 +364,16 @@ fn no_default_in_the_schema_is_a_table_of_nulls() {
     }
     walk(&schema(), "");
 }
+
+#[test]
+fn explain_reads_a_file_that_is_not_utf8_with_a_dollar_for_each_bad_byte() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write_bytes(
+        "AGENTS.md",
+        b"---\nmax_size_bytes: 3\xff\xfe\n---\n# Agents\n",
+    );
+    let (code, stdout, stderr) = explain(&repo, &["AGENTS.md"]);
+    assert_eq!((code, stdout.as_str()), (2, ""));
+    assert!(stderr.contains("3$$"), "{stderr}");
+}

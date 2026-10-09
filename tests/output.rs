@@ -321,3 +321,46 @@ fn github_prints_one_escaped_command_per_finding() {
         );
     }
 }
+
+/// A file that is not UTF-8 is read byte for byte, so a finding after the bad bytes is at the
+/// byte it is in the file, and `fix` still refuses the file.
+#[test]
+fn offsets_hold_after_bytes_that_are_not_utf8() {
+    let bytes = b"A \xff\xfe b \xe2\x80\x94 c.\n";
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+    );
+    repo.write_bytes("README.md", bytes);
+    let run = |format: &str| {
+        let output = repo.run(&["check", "--format", format]);
+        assert_eq!(code(&output), 1, "{format}");
+        serde_json::from_str::<Value>(&stdout(&output)).expect("JSON")
+    };
+
+    let findings = run("json")["findings"].clone();
+    let mark = &findings[0]["marks"][0];
+    assert_eq!(
+        (mark["start"].as_u64(), mark["end"].as_u64()),
+        (Some(7), Some(10))
+    );
+    assert_eq!(&bytes[7..10], "\u{2014}".as_bytes());
+    // Each bad byte is one column, as it is one byte.
+    assert_eq!(mark["column"], 8);
+
+    let region =
+        &run("sarif")["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["region"];
+    assert_eq!(
+        (&region["byteOffset"], &region["byteLength"]),
+        (&json!(7), &json!(3))
+    );
+
+    let output = repo.run(&["fix"]);
+    assert_eq!(code(&output), 1);
+    assert!(stderr(&output).starts_with("deslag did not fix README.md: it is not valid UTF-8"));
+    assert_eq!(
+        std::fs::read(repo.root().join("README.md")).expect("README"),
+        bytes
+    );
+}

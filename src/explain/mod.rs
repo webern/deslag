@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use crate::Error;
 use crate::config::Config;
 use crate::glob::{self, RepoFile};
+use crate::lint;
 use crate::parse::frontmatter;
 
 /// What `deslag explain` prints for `paths`, each relative to the repo root `root`: a block per
@@ -82,7 +83,7 @@ fn block(
         path: file.absolute.display().to_string(),
         source,
     })?;
-    let text = String::from_utf8_lossy(&contents);
+    let text = lint::decode(&contents);
     if let Some(budget) = frontmatter::max_size_bytes(&text, relative)? {
         let key = frontmatter::MAX_SIZE_BYTES;
         out.push_str(&format!("# frontmatter: {key} = {budget}\n"));

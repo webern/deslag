@@ -3,12 +3,15 @@
 //!
 //! The range is [`News`]. The text and the JSON print its entries, with the breaking changes first
 //! and then the lints, the settings and the features, and after them the phrases the running
-//! version turns on. The notice asks whether it holds anything. The fixed words of the text are in
-//! `src/instructions/update.md`.
+//! version turns on. When a config was read, the closing says which of those phrases moving the
+//! stamp turns on in it. The notice asks whether it holds anything. The fixed words of the text are
+//! in `src/instructions/update.md`.
 
 use serde::Serialize;
 
 use crate::changelog::{Entry, Kind, Version};
+use crate::config::Config;
+use crate::config::update::{TurnedOn, turned_on};
 use crate::lint::banned_phrases::Entry as Phrase;
 use crate::news::News;
 
@@ -17,13 +20,30 @@ const WORDS: &str = include_str!("update.md");
 
 /// Where the release an update starts from came from, which says what an empty range can claim.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Start {
-    /// The config that was read holds it.
-    Config,
+pub enum Start<'a> {
+    /// The config that was read holds it, and this is what the config says about the range.
+    Config(&'a Reading),
     /// `--since` named it, and no config was read.
     Since,
     /// No config was found, so it is the baseline, the release a config with no stamp is from.
     NoConfig,
+}
+
+/// What a config that was read says about the range, so that the text can speak of this config
+/// and not of any config.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Reading {
+    /// The phrases that moving the stamp to the running version turns on in the config.
+    pub turned_on: Vec<TurnedOn>,
+}
+
+impl Reading {
+    /// What `config` says about `news`, the range from its stamp up to the running version.
+    pub fn of(config: &Config, news: &News<'_>) -> Reading {
+        Reading {
+            turned_on: turned_on(config, news.phrases()),
+        }
+    }
 }
 
 /// The note `check`, `fix` and `explain` print on standard error, after `deslag: note: `, when
@@ -44,7 +64,7 @@ pub fn notice(news: &News, stamp: &Version, running: &Version) -> Option<String>
 
 /// The text of `deslag instructions update`: Markdown for an agent, saying what `news`, the range
 /// after `from` up to `to`, adds and how to take it up. When there is none it is one line.
-pub fn update_text(news: &News, from: &Version, to: &Version, start: Start) -> String {
+pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) -> String {
     let words = |name: &str| {
         piece(name)
             .replace("{from}", &from.to_string())
@@ -59,7 +79,7 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start) -> S
     if news.is_empty() {
         // Only a config that was read can be called current.
         let line = match start {
-            Start::Config => "Current",
+            Start::Config(_) => "Current",
             Start::Since | Start::NoConfig => "Nothing new",
         };
         text.push_str(&format!("{}\n", words(line)));
@@ -98,8 +118,30 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start) -> S
             ));
         }
     }
-    text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
+    text.push_str("\n## Finish\n\n");
+    // Only a config that was read can say what moving its stamp turns on.
+    if let Start::Config(reading) = start {
+        text.push_str(&format!("{}\n\n", stamp_line(reading, &words("Stamp"))));
+    }
+    text.push_str(&format!("{}\n", words("Closing")));
     text
+}
+
+/// The line that says what moving the stamp turns on in the config, `words` being its fixed words:
+/// the phrases `reading` found, or that there are none. It speaks of the stamp's move alone, which
+/// is all the stamp does: a new lint or setting stays off until the config names it.
+fn stamp_line(reading: &Reading, words: &str) -> String {
+    let turned = if reading.turned_on.is_empty() {
+        "no phrase in this config".to_string()
+    } else {
+        let listed: Vec<String> = reading
+            .turned_on
+            .iter()
+            .map(|turned| format!("`{}` ({})", turned.phrase, turned.group))
+            .collect();
+        format!("these phrases in this config: {}", listed.join(", "))
+    };
+    words.replace("{turned}", &turned)
 }
 
 /// The JSON of `deslag instructions update`: the same entries and phrases as [`update_text`], in
@@ -383,6 +425,8 @@ Pass the flag.
 
 ## Finish
 
+Moving `deslag_version` to 0.3.0 turns on no phrase in this config.
+
 Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
 choose, and keep off each phrase they want off, as its entry says: a phrase is on once the
 version moves. Once they have chosen, run `deslag update --to 0.3.0`, adding your
@@ -505,7 +549,10 @@ llm_repos = 1
 
     #[test]
     fn the_text_groups_the_range_by_kind_and_leaves_next_out() {
-        assert_eq!(text("0.0.1", "0.3.0", Start::Config), TEXT);
+        assert_eq!(
+            text("0.0.1", "0.3.0", Start::Config(&Reading::default())),
+            TEXT
+        );
     }
 
     #[test]
@@ -520,13 +567,13 @@ llm_repos = 1
 
     #[test]
     fn a_group_with_no_entries_is_left_out() {
-        let text = text("0.2.0", "0.3.0", Start::Config);
+        let text = text("0.2.0", "0.3.0", Start::Config(&Reading::default()));
         for group in ["## Breaking", "## New lints", "## Features"] {
             assert!(text.contains(group), "{group}");
         }
         assert!(!text.contains("## New settings"), "{text}");
 
-        let text = self::text("0.0.1", "0.2.0", Start::Config);
+        let text = self::text("0.0.1", "0.2.0", Start::Config(&Reading::default()));
         assert!(text.contains("## New lints") && text.contains("## New settings"));
         assert!(!text.contains("## Breaking") && !text.contains("## Features"));
     }
@@ -534,7 +581,7 @@ llm_repos = 1
     #[test]
     fn an_empty_range_is_one_line_saying_the_config_is_current() {
         for release in ["0.3.0", "0.0.1"] {
-            let text = text(release, release, Start::Config);
+            let text = text(release, release, Start::Config(&Reading::default()));
             assert_eq!(
                 text,
                 format!(
@@ -543,7 +590,12 @@ llm_repos = 1
             );
         }
         // `next` has entries, and is not in a range that ends at a release.
-        assert_eq!(text("0.3.0", "9.0.0", Start::Config).lines().count(), 1);
+        assert_eq!(
+            text("0.3.0", "9.0.0", Start::Config(&Reading::default()))
+                .lines()
+                .count(),
+            1
+        );
     }
 
     /// Where no config was read, nothing can be called current.
@@ -613,7 +665,7 @@ llm_repos = 1
         let (changelog, catalogue) = (changelog(), phrases());
         let (from, to) = (version("0.2.0"), version("0.3.0"));
         let news = News::between(&changelog, &catalogue, &from, &to);
-        let text = update_text(&news, &from, &to, Start::Config);
+        let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
         let features = text.find("## Features").expect("a features section");
         let new_phrases = text.find("## New phrases").expect("a phrases section");
         let finish = text.find("## Finish").expect("a closing");
@@ -655,7 +707,7 @@ llm_repos = 1
         let (from, to) = (version("0.2.0"), version("0.3.0"));
         let news = News::between(&changelog, &catalogue, &from, &to);
         assert!(notice(&news, &from, &to).is_some());
-        let text = update_text(&news, &from, &to, Start::Config);
+        let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
         assert!(
             text.starts_with("# What is new in deslag 0.3.0, since 0.2.0\n"),
             "{text}"
@@ -663,9 +715,77 @@ llm_repos = 1
         assert!(!text.contains("Nothing is new"), "{text}");
     }
 
+    /// What the stamp line of the text reads for `config`, a config stamped 0.0.0, over the range
+    /// to 0.3.0 with the two phrases of [`phrases`].
+    fn stamp_line_for(config: &str) -> Option<String> {
+        use crate::config::{Config as Loaded, ConfigSource};
+        let (changelog, catalogue) = (changelog(), phrases());
+        let (from, to) = (version("0.0.0"), version("0.3.0"));
+        let news = News::between(&changelog, &catalogue, &from, &to);
+        let config = Loaded::parse(
+            &format!("schema_version = 1\ndeslag_version = \"0.0.0\"\n{config}"),
+            "deslag.toml".into(),
+            ConfigSource::Explicit,
+        )
+        .expect("a config");
+        let reading = Reading::of(&config, &news);
+        let text = update_text(&news, &from, &to, Start::Config(&reading));
+        text.lines()
+            .find(|line| line.starts_with("Moving `deslag_version`"))
+            .map(str::to_string)
+    }
+
+    #[test]
+    fn the_closing_names_the_phrases_that_moving_the_stamp_turns_on_in_the_config() {
+        let line = stamp_line_for("[md.lints.banned_phrases]\n");
+        assert_eq!(
+            line.as_deref(),
+            Some(
+                "Moving `deslag_version` to 0.3.0 turns on these phrases in this config: \
+                 `load-bearing` (metaphors), `never silently` (insistence)."
+            )
+        );
+        // Only the phrase of a group that is on, and that the config neither allows nor bans.
+        let line = stamp_line_for(
+            "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
+             [md.lints.banned_phrases.groups]\ninsistence = false\n",
+        );
+        assert_eq!(
+            line.as_deref(),
+            Some("Moving `deslag_version` to 0.3.0 turns on no phrase in this config.")
+        );
+    }
+
+    #[test]
+    fn the_closing_says_no_phrase_turns_on_in_a_config_without_the_lint() {
+        assert_eq!(
+            stamp_line_for("[md.lints.density]\n").as_deref(),
+            Some("Moving `deslag_version` to 0.3.0 turns on no phrase in this config.")
+        );
+    }
+
+    #[test]
+    fn the_closing_says_nothing_of_the_stamp_where_no_config_was_read() {
+        let (changelog, catalogue) = (changelog(), phrases());
+        let (from, to) = (version("0.0.0"), version("0.3.0"));
+        let news = News::between(&changelog, &catalogue, &from, &to);
+        for start in [Start::Since, Start::NoConfig] {
+            let text = update_text(&news, &from, &to, start);
+            assert!(text.contains("## Finish"), "{text}");
+            assert!(!text.contains("Moving `deslag_version`"), "{text}");
+        }
+    }
+
     #[test]
     fn update_md_has_each_piece_the_text_prints() {
-        for name in ["Heading", "Closing", "Current", "Nothing new", "No config"] {
+        for name in [
+            "Heading",
+            "Closing",
+            "Current",
+            "Nothing new",
+            "No config",
+            "Stamp",
+        ] {
             assert!(!piece(name).is_empty(), "{name}");
         }
     }

@@ -15,7 +15,7 @@ use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
-use deslag::instructions::{Start, guide, lints, update_json, update_text};
+use deslag::instructions::{Reading, Start, guide, lints, update_json, update_text};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
 use deslag::news::News;
@@ -458,7 +458,7 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
             &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
-            Start::Config
+            Start::Config(&Reading::default())
         )
     );
 
@@ -619,7 +619,7 @@ fn config_path_names_the_config_whose_stamp_is_used() {
             &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
-            Start::Config
+            Start::Config(&Reading::default())
         )
     );
 }
@@ -768,4 +768,45 @@ fn update_md_meets_its_budget() {
     );
     let findings = check_file(&config, file, &contents, root).expect("the lints run");
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+/// The closing says what moving the stamp turns on in the config that was read, and says nothing
+/// of it where no config was.
+#[test]
+fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
+    let current = env!("CARGO_PKG_VERSION");
+    let line = |output: &Output| {
+        stdout(output)
+            .lines()
+            .find(|line| line.starts_with("Moving `deslag_version`"))
+            .map(str::to_string)
+    };
+
+    // The catalogue holds phrases the stamp 0.0.0 keeps off, and the lint's default groups are on.
+    let phrases = Repo::new();
+    phrases.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n\n\
+             [md.lints.banned_phrases]\n"
+        ),
+    );
+    let line_with = line(&update(&phrases, &[])).expect("a line");
+    let start =
+        format!("Moving `deslag_version` to {current} turns on these phrases in this config: `");
+    assert!(line_with.starts_with(&start), "{line_with}");
+
+    // A config that does not turn the lint on has none of them turned on.
+    let none = update(&stamped(OLDER), &[]);
+    assert_eq!(
+        line(&none).as_deref(),
+        Some(
+            format!("Moving `deslag_version` to {current} turns on no phrase in this config.")
+                .as_str()
+        )
+    );
+
+    // With `--since`, or with no config, no config was read.
+    assert_eq!(line(&update(&phrases, &["--since", OLDER])), None);
+    assert_eq!(line(&update(&Repo::new(), &[])), None);
 }

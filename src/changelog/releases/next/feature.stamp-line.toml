@@ -1,0 +1,12 @@
+kind = "feature"
+id = "stamp-line"
+summary = "Says which phrases moving the stamp turns on in this config"
+onboarding = '''
+When `deslag instructions update` has read a config, its closing says what `deslag update --to`
+turns on in that config: the phrases the new stamp makes `deslag check` report, or that there are
+none. A phrase is named only where its group is on and the config neither allows nor bans it.
+
+Tell the person what the line says before they choose. A new lint or setting stays off until the
+config names it, whatever the stamp. With `--since`, or with no config, the closing leaves the line
+out, because there is no config to read.
+'''

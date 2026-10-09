@@ -226,7 +226,7 @@ pub fn update(
 /// phrase in `ban` fired before the move, and one in `allow` never fires. A longer phrase in
 /// `allow` that holds the phrase hides only some of its matches, so the phrase is still named.
 /// Phrases compare as [`folded`] tokens, as the lint compares them.
-fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
+pub(crate) fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
     let tables: Vec<_> = config
         .sections()
         .iter()

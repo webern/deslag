@@ -61,7 +61,7 @@ impl<'a> News<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::instructions::{Start, notice, update_json, update_text};
+    use crate::instructions::{Reading, Start, notice, update_json, update_text};
 
     fn version(text: &str) -> Version {
         text.parse().expect("a version")
@@ -126,7 +126,7 @@ mod tests {
         assert!(news.entries().is_empty() && !news.is_empty());
 
         assert!(notice(&news, &from, &to).is_some());
-        let text = update_text(&news, &from, &to, Start::Config);
+        let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
         assert!(text.contains("### `new phrase` (0.0.2)"), "{text}");
         assert!(!text.contains("is current"), "{text}");
         let json = update_json(&news, &from, &to);
@@ -136,7 +136,9 @@ mod tests {
         let news = News::between(&changelog, &catalogue, &to, &to);
         assert!(news.is_empty());
         assert_eq!(notice(&news, &to, &to), None);
-        assert!(update_text(&news, &to, &to, Start::Config).contains("current"));
+        assert!(
+            update_text(&news, &to, &to, Start::Config(&Reading::default())).contains("current")
+        );
         assert!(update_json(&news, &to, &to).contains("\"entries\": []"));
     }
 }

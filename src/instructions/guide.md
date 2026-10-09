@@ -97,7 +97,9 @@ of the repository, so run it there.
 
 ## 7. Tell the next agent
 
-If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.
+If it suits this project, add a note to AGENTS.md, after checking with the human. Give it the
+command and base of step 6, such as: "Run `deslag check --base origin/main` before you push, and
+fix what it reports."
 
 When a command prints a note saying the config was last updated by an older deslag, run
 `deslag instructions update` and do what it says. When it warns that a setting was renamed or

@@ -80,7 +80,7 @@ lints.max_size_bytes.value = 5300
 
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]
-lints.max_size_bytes.value = 5000
+lints.max_size_bytes.value = 5065
 
 [[md.overrides]]
 globs = ["/src/instructions/lints.md", "/src/instructions/lints/*.md"]

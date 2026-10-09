@@ -1,0 +1,26 @@
+[package]
+name = "deslag-release"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Makes the change that releases a version of deslag. Never published."
+license = "MIT"
+publish = false
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.7", features = ["derive"] }
+deslag = { path = "../.." }
+semver = "1.0.28"
+serde = { version = "1.0.229", features = ["derive"] }
+# The serialize feature is here and not in the root manifest, so the published crate never has it.
+serde-saphyr = { version = "1.1.0", default-features = false, features = ["deserialize", "serialize"] }
+serde_json = "1.0.151"
+toml = "1.1.6"
+toml_edit = "0.25.16"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+
+[lints]
+workspace = true

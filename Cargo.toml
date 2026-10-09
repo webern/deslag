@@ -39,17 +39,18 @@ unicode-segmentation = "1.13.3"
 
 [dev-dependencies]
 deslag-corpus = { path = "tools/corpus" }
+deslag-release = { path = "tools/release" }
 tempfile = "3.27.0"
 
 [lints]
 workspace = true
 
-# tools/corpus measures the test corpus and tools/exam grades taggers. Neither is published, and
-# deslag depends on neither, so `cargo publish` sees deslag alone. (tools/corpus is a path-only
-# dev-dependency, which the package drops.) tools/sweep is excluded: it needs a newer Rust and a C
-# compiler, and keeps its own lockfile.
+# tools/corpus measures the test corpus, tools/exam grades taggers and tools/release makes the
+# release change. None is published, and deslag depends on none, so `cargo publish` sees deslag
+# alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package drops.)
+# tools/sweep is excluded: it needs a newer Rust and a C compiler, and keeps its own lockfile.
 [workspace]
-members = ["tools/corpus", "tools/exam"]
+members = ["tools/corpus", "tools/exam", "tools/release"]
 exclude = ["tools/sweep"]
 
 [workspace.package]

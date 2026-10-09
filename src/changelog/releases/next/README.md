@@ -55,68 +55,55 @@ fenced TOML must fit the schema.
 
 ## Releasing
 
-The change that releases a version sets it in `Cargo.toml` and in the `deslag` entry of the root
-`Cargo.lock`, and moves the entries out of `next/`. `tools/sweep/Cargo.lock` has no `deslag`
-package. In `src/changelog/releases/` the move is
-`mkdir <version> && git mv next/*.toml <version>/`, with the new version for `<version>`. The
-change leaves `next/` and this file where they are.
+Run `cargo run -p deslag-release -- prep <version>`, read the diff, run `make ci-fast`, then
+`make check-release`. `prep` commits nothing, and refuses a tree with uncommitted changes. It refuses a version that is not `X.Y.Z` with no
+leading zero, above every `v*` tag and not below the crate's; `check-version <version>` asks the
+same.
+It makes every edit of the release change, and the release does not edit a test:
 
-Renaming `next/` itself is wrong: git then files the new entry of an open branch under the release
-that shipped. The release does not edit a test or a case config. `make check-release` fails while
-`next/` holds an entry.
+- It sets the version in `Cargo.toml` and in the `deslag` entry of the root `Cargo.lock`.
+- It moves `next/*.toml` into `src/changelog/releases/<version>/`, and leaves `next/` and this
+  file where they are. Renaming `next/` itself is wrong: git then files the new entry of an open
+  branch under the release that shipped.
+- It sets each `since = "next"` of `src/lint/banned_phrases.toml` to the version. No stamp is
+  `next`, so a phrase left there stays off for every config.
+- When the newest directory of `tests/configs/` leaves out a setting, it writes
+  `tests/configs/<version>/` in the three languages, and adds its lines to `tests/configs/hashes`.
 
-A release that adds a setting also adds `tests/configs/<version>/`. Copy the newest directory, and
-add to each of the three files every setting the schema gained since, the same in all three. Set
-`deslag_version` to the new version.
+`deslag-release notes <version>` prints the release's entries as Markdown for the GitHub release.
 
-Take out of the copy each setting a redirect retired. 0.0.1 sets `signposts` in `md` and in an
-override, and a copy that keeps it prints a warning on every load. The test of the frozen configs
-allows the warning, because an older directory is never edited and keeps what a later release
-retired; a new one should leave it out.
+The first release folds. The crate is at 0.0.1, no tag `v0.0.1` exists and `releases/0.0.1/` does,
+so `prep 0.0.1` runs at the crate's own version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
+0.0.1, rewrites `tests/configs/0.0.1/` to name every setting and replaces its hash lines. Once the
+tag `v0.0.1` exists an equal version is refused, so this happens once. A version equal to the
+crate's with no `releases/<version>/` yet, as after a hand bump, is a normal release.
 
-If the newest directory has no `[rust]`, `[cpp]` or `[toml]` section, as 0.0.1 has none, write them
-by hand. Each takes `globs`, `surfaces` and one override with `globs`, and no lint setting: the
-`[md]` section already sets those, and a lint setting counts when any one section sets it. Do not
-write `signposts` in them, which fails to load. A release that does not add a setting does not add a
-directory: the newest one already names every setting.
+A frozen directory names every setting. Each one the newest directory leaves out gets the TOML
+fenced in the `onboarding` of its entry, else the schema's default, and if there is neither, `prep`
+fails and names the setting and the entry: add a fence to the entry.
 
-`make check-release` fails, naming the leaves, while the newest directory leaves one out. A key of a
-section itself, such as `rust.globs` or `rust.overrides[].globs`, counts only in its own section.
+A lint setting goes in `[md]`, since a lint setting counts when any one section sets it. A setting a
+redirect retired is left out, or moved to its new name, and `deslag_version` is the release.
+`make check-release` fails, naming the leaves, while the newest directory leaves one out.
 
-Each config must load and pass `check --base HEAD`, and the new copy does so with no warning once
-it names a renamed setting by its new name. The three must compile to the same settings.
-
-The failing hash test prints a line to add to `tests/configs/hashes` for each file, in the order
-toml, yaml, json. The release leaves every older directory and its lines as they are. Frozen
-configs are never edited, and a renamed or removed setting is a redirect instead.
+A directory is never edited once its release is tagged. The older ones keep what a later release
+retired, and the test of the frozen configs allows that warning; a new one leaves it out.
 
 An unstamped config is taken to be from 0.0.1, so from the first release after that one
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in
 `tests/common/mod.rs` leaves out that line, and the tests about the note ask for `raw_stderr`.
 
-A phrase of the catalogue, `src/lint/banned_phrases.toml`, that arrives in a release is added with
-`since = "next"`, and the release sets it to the version, in the change that moves the entries.
-No stamp is `next`, so a phrase left there stays off for every config, and `make check-release`
-fails while one is left. `grep 'since = "next"' src/lint/banned_phrases.toml` finds them; finding
-none is fine. `docs/design/catalog.md` says how a change adds a phrase.
+`make check-release` runs the ignored tests of `tests/changelog.rs`. They fail while `next/` holds
+an entry, a phrase is left at `since = "next"`, the crate version has a pre-release or build part, or
+the newest frozen configs leave out a setting.
 
-A config reports a phrase only once its `deslag_version` has reached `since`, so the release does
-not move the stamp of `.agents/deslag.toml`. The repository moves its own as any config does, after
-reading `deslag instructions update`.
+A test lints the entries and every file the repo's config selects with each phrase above its stamp
+banned, so the change that adds a phrase also rewords the text that uses it, and the release has
+nothing to reword. `docs/design/catalog.md` says how a change adds a phrase.
 
-A test lints the entries and every file that config selects, Rust comments included, with each
-phrase above its stamp banned. So the change that adds a phrase also rewords the text that uses
-it, and the release has nothing to reword.
-
-This repository's own config, `.agents/deslag.toml`, is stamped, and the stamp is written by
-`deslag update`. After a release `make check-deslag` prints the note and still exits 0, until
-someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
-
-Before the release change is pushed, run `make ci-fast`. It fails on the hash test until the lines
-the test prints are in `tests/configs/hashes`: add them, and run it again. Then run
-`make check-release`. It runs the ignored tests of `tests/changelog.rs`, which fail while `next/`
-holds an entry, a phrase is left at `since = "next"`, the crate version has a pre-release or build
-part, or the newest frozen configs leave out a setting.
+The repository's own config, `.agents/deslag.toml`, is stamped, and `deslag update` writes the stamp.
+The release does not move it. After a release `make check-deslag` prints the note and still exits 0,
+until someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
 
 A released entry changes in two cases. One is a later change that renames or removes what it names:
 that change edits the entry in place, its id, its `keys`, its blocks and its file name, so an agent

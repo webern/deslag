@@ -78,6 +78,19 @@ An unstamped config is taken to be from 0.0.1, so from the first release after t
 `deslag check` prints the note that the config is behind. The tests do not see it: `stderr` in
 `tests/common/mod.rs` leaves out that line, and the tests about the note ask for `raw_stderr`.
 
+A phrase of the catalogue, `src/lint/banned_phrases.toml`, that arrives in a release is added with
+`since = "next"`, and the release sets it to the version, in the change that moves the entries.
+No stamp is `next`, so a phrase left there stays off for every config, and `make check-release`
+fails while one is left.
+
+A config reports a phrase only once its `deslag_version` has reached `since`, so the release does
+not move the stamp of `.agents/deslag.toml`. The repository moves its own as any config does, after
+reading `deslag instructions update`.
+
+A test lints the entries and every file that config selects, Rust comments included, with each
+phrase above its stamp banned. So the change that adds a phrase also rewords the text that uses
+it, and the release has nothing to reword.
+
 This repository's own config, `.agents/deslag.toml`, is stamped, and the stamp is written by
 `deslag update`. After a release `make check-deslag` prints the note and still exits 0, until
 someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.

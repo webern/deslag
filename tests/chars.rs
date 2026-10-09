@@ -313,3 +313,151 @@ fn ban_is_keyed_by_character() {
     let expected: BTreeMap<String, String> = [("\u{00A7}".to_string(), "s.".to_string())].into();
     assert_eq!(settings.ban, Some(expected));
 }
+
+/// The characters each group covers, as inclusive ranges of code points with the neighbours
+/// joined. A rule inside a range, such as `one('\u{2192}')` ahead of the arrows' block, changes
+/// the name and the advice of a character that is banned already and never whether it is banned,
+/// so it leaves this alone.
+const COVERED: &[(&str, &[(u32, u32)])] = &[
+    (
+        "dashes",
+        &[(0x2010, 0x2015), (0x2212, 0x2212), (0x2E3A, 0x2E3B)],
+    ),
+    (
+        "arrows",
+        &[
+            (0x2190, 0x21FF),
+            (0x2794, 0x2794),
+            (0x2798, 0x27AF),
+            (0x27B1, 0x27BE),
+            (0x27F0, 0x27FF),
+            (0x2900, 0x297F),
+            (0x2B00, 0x2B11),
+        ],
+    ),
+    ("ellipsis", &[(0x2026, 0x2026), (0x22EF, 0x22EF)]),
+    (
+        "bullets",
+        &[
+            (0x00B7, 0x00B7),
+            (0x2022, 0x2023),
+            (0x2043, 0x2043),
+            (0x2219, 0x2219),
+            (0x25A0, 0x25FF),
+        ],
+    ),
+    (
+        "math",
+        &[
+            (0x00B1, 0x00B1),
+            (0x00D7, 0x00D7),
+            (0x00F7, 0x00F7),
+            (0x223C, 0x223C),
+            (0x2248, 0x2248),
+            (0x2260, 0x2260),
+            (0x2264, 0x2265),
+        ],
+    ),
+    (
+        "checks",
+        &[
+            (0x2610, 0x2612),
+            (0x2705, 0x2705),
+            (0x2713, 0x2714),
+            (0x2717, 0x2718),
+            (0x274C, 0x274C),
+            (0x274E, 0x274E),
+        ],
+    ),
+    ("section", &[(0x00A7, 0x00A7)]),
+    ("box_drawing", &[(0x2500, 0x259F)]),
+    (
+        "spaces",
+        &[
+            (0x00A0, 0x00A0),
+            (0x2000, 0x200A),
+            (0x202F, 0x202F),
+            (0x205F, 0x205F),
+        ],
+    ),
+    (
+        "invisible",
+        &[
+            (0x00AD, 0x00AD),
+            (0x180E, 0x180E),
+            (0x200B, 0x200B),
+            (0x2060, 0x2060),
+            (0xFEFF, 0xFEFF),
+            (0xE0000, 0xE007F),
+        ],
+    ),
+    (
+        "quotes",
+        &[
+            (0x2018, 0x2019),
+            (0x201B, 0x201D),
+            (0x201F, 0x201F),
+            (0x2032, 0x2033),
+        ],
+    ),
+    (
+        "emoji",
+        &[
+            (0x2600, 0x27BF),
+            (0x2B50, 0x2B50),
+            (0x2B55, 0x2B55),
+            (0xFE0F, 0xFE0F),
+            (0x1F1E6, 0x1F1FF),
+            (0x1F300, 0x1F6FF),
+            (0x1F900, 0x1F9FF),
+            (0x1FA70, 0x1FAFF),
+        ],
+    ),
+];
+
+/// The code points `rules` cover, as sorted inclusive ranges with overlapping and neighbouring
+/// ones joined.
+fn covered(rules: &[deslag::lint::banned_chars::Rule]) -> Vec<(u32, u32)> {
+    let mut spans: Vec<(u32, u32)> = rules
+        .iter()
+        .map(|rule| (rule.first as u32, rule.last as u32))
+        .collect();
+    spans.sort();
+    let mut joined: Vec<(u32, u32)> = Vec::new();
+    for (first, last) in spans {
+        match joined.last_mut() {
+            Some(before) if first <= before.1 + 1 => before.1 = before.1.max(last),
+            _ => joined.push((first, last)),
+        }
+    }
+    joined
+}
+
+/// A group that bans a character no range of it banned before changes the verdict of every config
+/// that has the group on, the moment the binary updates, and nothing says so. A phrase of the
+/// catalogue is held back by the config's `deslag_version`; a character is not, because the unit
+/// of `banned_chars` is a rule that is a character or a range, and rules overlap by design, so only
+/// a character outside every range could change a verdict, and none was planned. This pins the
+/// ranges, so that one is noticed.
+#[test]
+fn each_group_covers_the_characters_it_covered() {
+    let names: Vec<&str> = GROUPS.iter().map(|group| group.name).collect();
+    let pinned: Vec<&str> = COVERED.iter().map(|(name, _)| *name).collect();
+    assert_eq!(
+        names, pinned,
+        "a group was added or removed: pin its ranges"
+    );
+    for (group, (_, ranges)) in GROUPS.iter().zip(COVERED) {
+        let now = covered(group.rules);
+        assert_eq!(
+            now, *ranges,
+            "the group `{}` now covers a character outside the ranges it covered, or no longer \
+             covers one. A character outside every range turns on at once for every config that \
+             has the group on, which is what the `deslag_version` gate on the phrase catalogue \
+             prevents for phrases. Build the character gate first: a `since` on `Rule`, read by \
+             `verdict` and by `contradiction`, rewritten from `next` at the release. Then change \
+             this pin. A rule inside a range needs neither.",
+            group.name
+        );
+    }
+}

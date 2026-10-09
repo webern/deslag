@@ -97,6 +97,7 @@ const PATHS: &[&str] = &["docs/guide.md", "docs/intro.md", "README.md", "notes.t
 const EXPECTED: &str = r#"# docs/guide.md
 # config: deslag.toml
 # selected by [md]: yes
+# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
 # overrides, in the order they merge:
 #   override 2: globs = ["guide.md"]
 #   override 1: globs = ["/docs/**/*.md"]
@@ -142,6 +143,7 @@ min_entries = 5
 # docs/intro.md
 # config: deslag.toml
 # selected by [md]: yes
+# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
 # overrides, in the order they merge:
 #   override 1: globs = ["/docs/**/*.md"]
 
@@ -173,6 +175,7 @@ min_entries = 5
 # README.md
 # config: deslag.toml
 # selected by [md]: yes
+# reads: markdown, and the doc_comment and comment of rust, cpp, toml fences
 # overrides: none
 
 # banned_chars: off
@@ -198,7 +201,7 @@ value = 20000
 
 # notes.txt
 # config: deslag.toml
-# selected by [md]: no
+# selected by: no section, so deslag check never reads it
 "#;
 
 /// A repo holding every file in [`PATHS`] and the config `text` at `config`.
@@ -243,7 +246,7 @@ fn explain_reads_the_config_path() {
     assert_eq!((code, stderr.as_str()), (0, ""));
     assert_eq!(
         stdout,
-        "# notes.txt\n# config: ci/deslag-ci.yaml\n# selected by [md]: no\n"
+        "# notes.txt\n# config: ci/deslag-ci.yaml\n# selected by: no section, so deslag check never reads it\n"
     );
 }
 
@@ -259,6 +262,7 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
         "# AGENTS.md\n\
          # config: deslag.toml\n\
          # selected by [md]: yes\n\
+         # reads: markdown, and the doc_comment and comment of rust, cpp, toml fences\n\
          # overrides: none\n\
          # frontmatter: max_size_bytes = 300\n\
          \n\
@@ -376,4 +380,189 @@ fn explain_reads_a_file_that_is_not_utf8_with_a_dollar_for_each_bad_byte() {
     let (code, stdout, stderr) = explain(&repo, &["AGENTS.md"]);
     assert_eq!((code, stdout.as_str()), (2, ""));
     assert!(stderr.contains("3$$"), "{stderr}");
+}
+
+/// A config whose `[md]` reads fenced code by default, `[rust]` reads both surfaces and `[cpp]` only
+/// the plain comments.
+const CODE: &str = r#"schema_version = 1
+
+[md]
+globs = ["*.md"]
+
+[rust]
+
+[cpp]
+surfaces = ["comment"]
+"#;
+
+/// What `deslag explain` prints after the lint tables of `path` in `repo`.
+fn regions_of(repo: &Repo, path: &str) -> String {
+    let (code, stdout, stderr) = explain(repo, &[path]);
+    assert_eq!((code, stderr.as_str()), (0, ""), "{path}");
+    match stdout.find("\n# prose regions") {
+        Some(at) => stdout[at + 1..].to_string(),
+        None => String::new(),
+    }
+}
+
+#[test]
+fn a_rust_file_says_what_it_reads_and_lists_its_comments() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    repo.write(
+        "src/lib.rs",
+        "//! Crate docs.\n\
+         // ==========\n\
+         // Copyright 2026 Someone. All rights reserved.\n\
+         fn f() {} // a trailing note\n\
+         /* block */\n",
+    );
+    repo.write("src/gen.rs", "// @generated\n// Hand-written note.\n");
+    let (_, stdout, _) = explain(&repo, &["src/lib.rs"]);
+    assert!(
+        stdout.starts_with(
+            "# src/lib.rs\n\
+             # config: deslag.toml\n\
+             # selected by [rust]: yes\n\
+             # reads: doc_comment as markdown, comment as plain\n\
+             # overrides: none\n"
+        ),
+        "{stdout}"
+    );
+    // The banner and the licence text are masked, so they have no row.
+    assert_eq!(
+        regions_of(&repo, "src/lib.rs"),
+        "# prose regions: 3\n\
+         #   1:1-1:16 doc_comment markdown \"Crate docs.\"\n\
+         #   4:11-4:29 comment plain \"a trailing note\"\n\
+         #   5:1-5:12 comment plain \"block\"\n"
+    );
+    // The line deslag skips reads as blank, and the quote starts at the text after it.
+    assert_eq!(
+        regions_of(&repo, "src/gen.rs"),
+        "# prose regions: 1\n#   1:1-2:22 comment plain \"Hand-written note.\"\n"
+    );
+}
+
+#[test]
+fn a_cpp_file_lists_only_the_surfaces_it_is_read_for() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    repo.write(
+        "src/a.c",
+        "/** Doxygen. */\nint a;\n// plain\n/* @generated */\n",
+    );
+    repo.write("src/b.c", "/** Only Doxygen. */\n");
+    let (_, stdout, _) = explain(&repo, &["src/a.c"]);
+    assert!(
+        stdout.contains("# selected by [cpp]: yes\n# reads: comment as plain\n"),
+        "{stdout}"
+    );
+    assert_eq!(
+        regions_of(&repo, "src/a.c"),
+        "# prose regions: 1\n#   3:1-3:9 comment plain \"plain\"\n"
+    );
+    assert_eq!(regions_of(&repo, "src/b.c"), "# prose regions: none\n");
+}
+
+#[test]
+fn a_markdown_file_lists_the_comments_of_its_fences_as_their_readers_read_them() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    repo.write(
+        "a.md",
+        "Prose.\n\n```rust\n/// Fenced docs.\nfn f() {}\n// fenced note\n```\n\n\
+         ```toml\n# a table\n[a]\n```\n\n```text\n// not code\n```\n",
+    );
+    repo.write("plain.md", "Prose.\n\n```text\n// not code\n```\n");
+    assert_eq!(
+        regions_of(&repo, "a.md"),
+        "# prose regions: 3\n\
+         #   4:1-4:17 doc_comment markdown \"Fenced docs.\"\n\
+         #   6:1-6:15 comment plain \"fenced note\"\n\
+         #   10:1-10:10 comment plain \"a table\"\n"
+    );
+    // No comment to read: no regions block, so the file's block only gains the reads line.
+    assert_eq!(regions_of(&repo, "plain.md"), "");
+}
+
+#[test]
+fn the_reads_line_of_markdown_follows_the_fences_setting() {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences.languages = []\n",
+    );
+    repo.write("a.md", "```rust\n// fenced\n```\n");
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
+    assert_eq!(regions_of(&repo, "a.md"), "");
+
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\nfences = { languages = [\"rust\"], surfaces = [\"comment\"] }\n",
+    );
+    let (_, stdout, _) = explain(&repo, &["a.md"]);
+    assert!(
+        stdout.contains("# reads: markdown, and the comment of rust fences\n"),
+        "{stdout}"
+    );
+}
+
+#[test]
+fn a_quote_is_the_first_line_cut_at_forty_characters_and_written_as_a_toml_string() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CODE);
+    let long = "\u{e9}".repeat(41);
+    repo.write(
+        "q.rs",
+        &format!(
+            "// say \"hi\" \\ now\n// second line\n\n// {long}\n\n// {}\n",
+            "x".repeat(40)
+        ),
+    );
+    let rows = regions_of(&repo, "q.rs");
+    let quotes: Vec<&str> = rows
+        .lines()
+        .skip(1)
+        .map(|row| row.split_once("plain ").expect("a plain row").1)
+        .collect();
+    // A string with a quote and a backslash reads back to the text, however it is written.
+    let first: toml::Value = quotes[0].parse().expect("a TOML string");
+    assert_eq!(first.as_str(), Some("say \"hi\" \\ now"));
+    let second: toml::Value = quotes[1].parse().expect("a TOML string");
+    assert_eq!(
+        second.as_str().map(str::to_owned),
+        Some(format!("{}...", "\u{e9}".repeat(40)))
+    );
+    // Forty characters fit, and cost no ellipsis.
+    assert_eq!(quotes[2], format!("\"{}\"", "x".repeat(40)));
+}
+
+#[test]
+fn a_file_no_section_selects_says_why() {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n[md]\n[rust]\nglobs = [\"/src/**/*.rs\"]\n",
+    );
+    for (path, line) in [
+        ("notes.txt", "no section, so deslag check never reads it"),
+        (
+            "tests/b.rs",
+            "no section; [rust] reads .rs files but its globs leave this one out",
+        ),
+        (
+            "src/a.c",
+            "no section; add a [cpp] section to read .c files",
+        ),
+    ] {
+        repo.write(path, "x\n");
+        let (code, stdout, stderr) = explain(&repo, &[path]);
+        assert_eq!((code, stderr.as_str()), (0, ""), "{path}");
+        assert_eq!(
+            stdout,
+            format!("# {path}\n# config: deslag.toml\n# selected by: {line}\n")
+        );
+    }
 }

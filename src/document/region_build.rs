@@ -69,7 +69,15 @@ pub(super) fn line_region(
     let outer = first..rows[rows.len() - 1].rest.end;
     let (inner, map, frame) = build(source, rows, Some(template), skip)?;
     let carrier = Carrier::LineComment(frame);
-    Some(Region::new(source, surface, outer, inner, map, carrier))
+    Some(Region::new(
+        source,
+        surface,
+        skip.markup,
+        outer,
+        inner,
+        map,
+        carrier,
+    ))
 }
 
 /// The region of a block comment at `outer` whose opener is `marker` bytes: `/*`, `/**`, `/*!`, or
@@ -133,7 +141,15 @@ pub(super) fn block_region(
     let (inner, map, frame) = build(source, kept, None, skip)?;
     let close = kept[kept.len() - 1].rest.end..outer.end;
     let carrier = Carrier::BlockComment { frame, close };
-    Some(Region::new(source, surface, outer, inner, map, carrier))
+    Some(Region::new(
+        source,
+        surface,
+        skip.markup,
+        outer,
+        inner,
+        map,
+        carrier,
+    ))
 }
 
 /// Takes the gutter off the `rows` of a block comment: if every row but the first, which follows

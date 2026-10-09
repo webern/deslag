@@ -198,8 +198,7 @@ impl<'a> Document<'a> {
             Vec::new(),
         );
         for region in regions {
-            let markup = stack.markup(region.surface);
-            document.merge(lift(source, &region, markup));
+            document.merge(lift(source, &region, region.markup));
             document.regions.push(region);
         }
         document

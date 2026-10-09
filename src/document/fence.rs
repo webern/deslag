@@ -43,10 +43,10 @@ pub(super) fn read<'a>(stack: &Stack, fences: &Fences, source: &'a str) -> Docum
         })
         .collect();
     for (language, fence) in found {
-        let (reader, regions) = language.comments(&fence.text, &fences.surfaces);
+        let regions = language.comments(&fence.text, &fences.surfaces);
         for region in regions {
             let region = fence.through(source, region);
-            document.merge(lift(source, &region, reader.markup(region.surface)));
+            document.merge(lift(source, &region, region.markup));
             document.regions.push(region);
         }
     }
@@ -72,9 +72,8 @@ impl Language {
         }
     }
 
-    /// The comments of `surfaces` in `text`, which is code of this language, and what reads each
-    /// one's text.
-    fn comments(self, text: &str, surfaces: &[Surface]) -> (Reader, Vec<Region>) {
+    /// The comments of `surfaces` in `text`, which is code of this language.
+    fn comments(self, text: &str, surfaces: &[Surface]) -> Vec<Region> {
         let surfaces_of = surfaces.to_vec();
         match self {
             Language::Rust => {
@@ -82,24 +81,21 @@ impl Language {
                     surfaces: surfaces_of,
                 };
                 let lists = |surface| List::new(Language::Rust, reader.markup(surface));
-                let regions = rust_regions::regions(text, surfaces, lists);
-                (reader, regions)
+                rust_regions::regions(text, surfaces, lists)
             }
             Language::Cpp => {
                 let reader = Reader::Cpp {
                     surfaces: surfaces_of,
                 };
                 let lists = |surface| List::new(Language::Cpp, reader.markup(surface));
-                let regions = cpp_regions::regions(text, surfaces, lists);
-                (reader, regions)
+                cpp_regions::regions(text, surfaces, lists)
             }
             Language::Toml => {
                 let reader = Reader::Toml {
                     surfaces: surfaces_of,
                 };
                 let lists = |surface| List::new(Language::Toml, reader.markup(surface));
-                let regions = toml_regions::regions(text, surfaces, lists);
-                (reader, regions)
+                toml_regions::regions(text, surfaces, lists)
             }
         }
     }
@@ -211,7 +207,15 @@ impl Fence {
             "a verbatim stretch of the comment is not the bytes of the file"
         );
         let carrier = region.carrier.compose(&self.map, &self.carrier, &outer);
-        Region::new(source, region.surface, outer, region.inner, map, carrier)
+        Region::new(
+            source,
+            region.surface,
+            region.markup,
+            outer,
+            region.inner,
+            map,
+            carrier,
+        )
     }
 }
 

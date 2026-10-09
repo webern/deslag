@@ -70,7 +70,7 @@ pub struct Document<'a> {
     lines: Vec<usize>,
     /// The comments of a code file that were read as prose, in the order of the file: their text,
     /// where it is in the file, and how the file holds it. A Markdown file has none.
-    regions: Vec<Region>,
+    pub(crate) regions: Vec<Region>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
     /// with to prove it. The later layers are made from the first, so they need no reading.
     stack: Stack,

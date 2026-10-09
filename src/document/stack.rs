@@ -15,6 +15,17 @@ pub enum Language {
     Toml,
 }
 
+impl Language {
+    /// Its name as `deslag explain` prints it, such as `cpp`.
+    fn name(self) -> &'static str {
+        match self {
+            Language::Rust => "rust",
+            Language::Cpp => "cpp",
+            Language::Toml => "toml",
+        }
+    }
+}
+
 /// The fenced code in Markdown that is read for its comments, as a [`Reader::Rust`], a
 /// [`Reader::Cpp`] or a [`Reader::Toml`] reads a file. The default reads none. The Markdown of a
 /// doc comment does not read fences, so the comments in a fence hold no fence of their own.
@@ -184,6 +195,45 @@ impl Stack {
                         format!("the surfaces {}", names.join(" and "))
                     }
                 }
+            }
+        }
+    }
+
+    /// What this stack reads and with what, for `deslag explain`: each surface of a code file with
+    /// the markup that reads it, and the fences that Markdown reads the comments of.
+    pub(crate) fn reads_as(&self) -> String {
+        let surfaces = |surfaces: &[Surface]| {
+            let names: Vec<&str> = surfaces.iter().map(|surface| surface.name()).collect();
+            names.join(" and ")
+        };
+        match &self.outer {
+            Reader::Markdown { fences }
+                if fences.languages.is_empty() || fences.surfaces.is_empty() =>
+            {
+                "markdown".to_string()
+            }
+            Reader::Markdown { fences } => {
+                let languages: Vec<&str> = fences.languages.iter().map(|l| l.name()).collect();
+                format!(
+                    "markdown, and the {} of {} fences",
+                    surfaces(&fences.surfaces),
+                    languages.join(", ")
+                )
+            }
+            Reader::Plain => "plain".to_string(),
+            Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces }
+                if surfaces.is_empty() =>
+            {
+                "nothing".to_string()
+            }
+            Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces } => {
+                let each: Vec<String> = surfaces
+                    .iter()
+                    .map(|surface| {
+                        format!("{} as {}", surface.name(), self.markup(*surface).name())
+                    })
+                    .collect();
+                each.join(", ")
             }
         }
     }

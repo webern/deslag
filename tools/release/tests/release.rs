@@ -461,7 +461,7 @@ fn the_first_release_folds_into_the_crate_version() {
     let first = read(root, "tests/configs/0.0.1/config.toml");
     let leaves = rules(false, Vec::new());
     // Nothing is missing, so the frozen release is left as it is, and the rest is done.
-    prep(root, &version("0.0.1"), &[], &leaves).expect("prep");
+    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("prep");
     assert_eq!(read(root, "tests/configs/0.0.1/config.toml"), first);
     assert!(read(root, "Cargo.toml").contains("version = \"0.0.1\" # kept"));
     assert!(
@@ -492,7 +492,7 @@ fn a_fold_rewrites_the_first_release_to_name_every_setting() {
     freeze_first(root);
     let first = read(root, "tests/configs/0.0.1/config.json");
     let leaves = rules(true, Vec::new());
-    prep(root, &version("0.0.1"), &[], &leaves).expect("prep");
+    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("prep");
     assert_ne!(read(root, "tests/configs/0.0.1/config.json"), first);
     for extension in EXTENSIONS {
         let path = frozen::config(&root.join("tests/configs/0.0.1"), extension);
@@ -558,7 +558,7 @@ fn a_release_with_no_entry_and_nothing_to_freeze_changes_only_the_version() {
     freeze_first(root);
     let tags = ["v0.0.1".to_string()];
     let leaves = rules(false, Vec::new());
-    prep(root, &version("0.0.1"), &[], &leaves).expect("the first release");
+    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("the first release");
     prep(root, &version("0.0.2"), &tags, &leaves).expect("the second");
     assert!(!root.join("src/changelog/releases/0.0.2").exists());
     assert!(!root.join("tests/configs/0.0.2").exists());

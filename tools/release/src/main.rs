@@ -22,9 +22,9 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Fail unless the version may be released: X.Y.Z with no leading zero, above every `v*` tag
-    /// and above the version in Cargo.toml
+    /// and not below the version in Cargo.toml
     ///
-    /// With no tag, the first release may equal the version in Cargo.toml.
+    /// The version may equal the one in Cargo.toml while no tag is at it, as the first release does.
     CheckVersion {
         /// The version.
         version: String,

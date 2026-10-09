@@ -19,8 +19,8 @@ const CONFIGS: &str = "tests/configs";
 /// Makes the release change for `version` in the repository at `root`, and says what it did, a
 /// line for each step.
 ///
-/// The first release folds. While no tag exists and `version` is the crate's, the version stays
-/// and the entries of `next/` join the directory of that version, which already exists, and the
+/// The first release folds. While `version` is the crate's, no tag `vX` can exist, so the version
+/// stays, the entries of `next/` join the directory of that version, which exists already, and the
 /// newest frozen config is rewritten in place. Every later release adds a directory.
 ///
 /// Nothing is committed. A failure before the first edit leaves the tree as it was.
@@ -32,7 +32,7 @@ pub fn prep(
 ) -> Result<Vec<String>> {
     let current = version::crate_version(root)?;
     version::check(version, tags, &current, Against::Bump)?;
-    let fold = tags.is_empty() && *version == current;
+    let fold = *version == current;
     let mut said = Vec::new();
 
     // Everything that can fail on what is in the tree comes before the first edit.

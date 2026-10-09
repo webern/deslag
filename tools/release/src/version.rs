@@ -9,8 +9,8 @@ use anyhow::{Context, Result, bail, ensure};
 /// What the version being checked must be next to the crate's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Against {
-    /// Above the crate's version, and so above every release made. The first release is the
-    /// exception: while no tag exists, it may equal the crate's version.
+    /// Not below the crate's version. It may equal it, as the first release does, because the
+    /// check above it has made sure no tag `vX` exists.
     Bump,
     /// Equal to the crate's version, as a release of a commit that already holds the change.
     Crate,
@@ -64,13 +64,9 @@ pub fn check(
             candidate == crate_version,
             "{candidate} is not the version in Cargo.toml, {crate_version}"
         ),
-        Against::Bump if released.is_empty() => ensure!(
+        Against::Bump => ensure!(
             candidate >= crate_version,
             "{candidate} is below the version in Cargo.toml, {crate_version}"
-        ),
-        Against::Bump => ensure!(
-            candidate > crate_version,
-            "{candidate} is not above the version in Cargo.toml, {crate_version}"
         ),
     }
     Ok(())
@@ -151,7 +147,15 @@ mod tests {
     }
 
     #[test]
-    fn with_no_tags_the_first_release_may_equal_the_crate() {
+    fn the_crate_version_is_allowed_while_no_tag_is_at_it() {
+        assert!(allowed("0.0.1", &["v0.0.0"], "0.0.1", Against::Bump));
+        assert!(allowed("0.0.1", &["v0.0.0"], "0.0.1", Against::Crate));
+        assert!(!allowed(
+            "0.0.1",
+            &["v0.0.0", "v0.0.1"],
+            "0.0.1",
+            Against::Bump
+        ));
         assert!(allowed("0.0.1", &[], "0.0.1", Against::Bump));
         assert!(allowed("0.0.1", &[], "0.0.1", Against::Crate));
         assert!(allowed("0.0.2", &[], "0.0.1", Against::Bump));
@@ -161,7 +165,8 @@ mod tests {
     #[test]
     fn a_bump_must_pass_the_crate_and_the_tags() {
         assert!(allowed("0.0.2", &["v0.0.1"], "0.0.1", Against::Bump));
-        assert!(!allowed("0.0.2", &["v0.0.1"], "0.0.2", Against::Bump));
+        assert!(allowed("0.0.2", &["v0.0.1"], "0.0.2", Against::Bump));
+        assert!(!allowed("0.0.2", &["v0.0.1"], "0.0.3", Against::Bump));
         assert!(allowed("0.0.2", &["v0.0.1"], "0.0.2", Against::Crate));
         assert!(!allowed("0.0.3", &["v0.0.1"], "0.0.2", Against::Crate));
     }
@@ -209,8 +214,6 @@ mod tests {
         };
         assert!(said("0.0.1", &["v0.0.1"], "0.0.1").contains("not above the tag v0.0.1"));
         assert!(said("0.0.1", &["v0.0.2"], "0.0.1").contains("never goes backwards"));
-        assert!(
-            said("0.0.2", &["v0.0.1"], "0.0.2").contains("not above the version in Cargo.toml")
-        );
+        assert!(said("0.0.1", &[], "0.0.2").contains("below the version in Cargo.toml"));
     }
 }

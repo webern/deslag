@@ -852,3 +852,15 @@ fn a_lint_the_config_already_turns_on_is_marked() {
     let since = update(&repo, &["--since", OLDER]);
     assert!(!stdout(&since).contains("already has"));
 }
+
+/// The README's example config is one deslag accepts, with a stamp it can read.
+#[test]
+fn the_readme_example_config_loads() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md");
+    let readme = std::fs::read_to_string(path).expect("README.md");
+    let example = toml_blocks(&readme)[0];
+    assert!(example.contains("\ndeslag_version = \""), "{example}");
+    assert_eq!(toml_misfit(example), None);
+    Config::parse(example, "deslag.toml".into(), ConfigSource::Explicit).expect("a config");
+    assert_runs_clean(example);
+}

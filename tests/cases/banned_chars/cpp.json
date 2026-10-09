@@ -1,0 +1,88 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [
+    {
+      "path": "include/parse.h",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\ninclude/parse.h has 2 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 1: U+2014 em dash \"—\"; write `-`\n  line 2: U+2192 rightwards arrow \"→\"; write `->`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 26,
+          "end": 29,
+          "line": 1,
+          "column": 27,
+          "end_line": 1,
+          "end_column": 28,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 69,
+          "end": 72,
+          "line": 2,
+          "column": 27,
+          "end_line": 2,
+          "end_column": 28,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        }
+      ]
+    },
+    {
+      "path": "src/parse.c",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nsrc/parse.c has 3 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 1, 4: U+2014 em dash \"—\"; write `-`\n  line 10: U+2192 rightwards arrow \"→\"; write `->`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 14,
+          "end": 17,
+          "line": 1,
+          "column": 15,
+          "end_line": 1,
+          "end_column": 16,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 66,
+          "end": 69,
+          "line": 4,
+          "column": 19,
+          "end_line": 4,
+          "end_column": 20,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 179,
+          "end": 182,
+          "line": 10,
+          "column": 25,
+          "end_line": 10,
+          "end_column": 26,
+          "note": "U+2192 rightwards arrow \"→\"; write `->`"
+        }
+      ]
+    },
+    {
+      "path": "src/util.cc",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nsrc/util.cc has 1 banned character.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 1: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 12,
+          "end": 15,
+          "line": 1,
+          "column": 13,
+          "end_line": 1,
+          "end_column": 14,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ]
+}

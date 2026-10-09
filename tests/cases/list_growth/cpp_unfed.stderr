@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: cpp.lints.list_growth is on, but it needs the blocks of Markdown, which no surface of [cpp] has; [cpp] reads the surfaces doc_comment and comment

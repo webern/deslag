@@ -1,0 +1,16 @@
+kind = "setting"
+id = "cpp.overrides"
+keys = ["globs", "lints"]
+summary = "Sets lints for the C and C++ files a list of globs matches"
+onboarding = '''
+A `[[cpp.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
+globs match, on top of the tables under `[cpp.lints]`. Its globs narrow the section's, so they need
+not end in a C or C++ extension. An override can turn a lint on or change its settings, but it
+cannot turn off a lint that a wider table turned on.
+
+```toml
+[[cpp.overrides]]
+globs = ["/vendor/**"]
+lints.banned_phrases = {}
+```
+'''

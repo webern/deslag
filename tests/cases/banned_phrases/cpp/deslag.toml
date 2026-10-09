@@ -1,0 +1,5 @@
+schema_version = 1
+
+[cpp.lints.banned_phrases.ban]
+"delve into" = "say what you found instead"
+"it's worth noting" = ""

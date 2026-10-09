@@ -55,13 +55,19 @@ impl Parts {
         match texts.iter().find(|text| !ends(text)) {
             None => Ok(()),
             Some(text) => {
-                let wanted: Vec<String> = extensions.iter().map(|e| format!(".{e}")).collect();
+                let dotted: Vec<String> = extensions.iter().map(|e| format!(".{e}")).collect();
+                let wanted = match dotted.as_slice() {
+                    [init @ .., last] if !init.is_empty() => {
+                        format!("{} or {last}", init.join(", "))
+                    }
+                    _ => dotted.concat(),
+                };
                 Err(Error::Setting {
                     path: config_path.to_string(),
                     message: format!(
                         "{name}.globs holds `{text}`, which does not end in {}; [{name}] reads \
                          only those files",
-                        wanted.join(" or ")
+                        wanted
                     ),
                 })
             }
@@ -80,7 +86,7 @@ impl Parts {
                     path: config_path.to_string(),
                     message: format!(
                         "{place}.{lint} is on, but it needs {}; [{name}] reads {}",
-                        lint.needs().asks(),
+                        stack.asks(lint.needs(), name),
                         stack.reads()
                     ),
                 });

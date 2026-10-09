@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: src/a.c is selected by both [md] and [cpp]; narrow their globs so that one of them selects it

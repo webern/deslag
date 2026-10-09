@@ -1,8 +1,9 @@
 //! The config: its shape, and the settings it gives each file.
 //!
 //! The file is versioned, then split into one section per kind of file deslag lints: `[md]`, and
-//! `[rust]` for the comments of Rust files. A section says which files it covers, the settings of
-//! each lint for all of them, and overrides for the files matching a pattern:
+//! `[rust]` and `[cpp]` for the comments of Rust files and of C and C++ files. A section says
+//! which files it covers, the settings of each lint for all of them, and overrides for the files
+//! matching a pattern:
 //!
 //! ```toml
 //! schema_version = 1
@@ -29,10 +30,11 @@
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
-//! [`search`] finds the file, [`section`] compiles a section, [`md`] and [`rust`] hold the sections
-//! of those names, and [`lints`] the settings of each lint. [`update`] is the one thing that writes
-//! a config, and [`edit`] makes the edits to its text.
+//! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`] and [`cpp`] hold the
+//! sections of those names, and [`lints`] the settings of each lint. [`update`] is the one thing
+//! that writes a config, and [`edit`] makes the edits to its text.
 
+pub mod cpp;
 pub mod edit;
 pub mod lints;
 pub mod md;
@@ -64,7 +66,8 @@ pub use search::{
 pub use section::Section;
 
 /// The sections other than `[md]`, each with the extensions of the files it reads.
-const SECTION_EXTENSIONS: &[(&str, &[&str])] = &[(rust::NAME, rust::EXTENSIONS)];
+const SECTION_EXTENSIONS: &[(&str, &[&str])] =
+    &[(rust::NAME, rust::EXTENSIONS), (cpp::NAME, cpp::EXTENSIONS)];
 
 /// The config schema this build of deslag reads.
 ///
@@ -110,6 +113,9 @@ struct ConfigFile {
     /// The Rust section. A config without one does not read any Rust file.
     #[serde(default)]
     rust: Option<rust::RustFile>,
+    /// The C and C++ section. A config without one does not read any C or C++ file.
+    #[serde(default)]
+    cpp: Option<cpp::CppFile>,
 }
 
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
@@ -137,6 +143,10 @@ struct Head {
     #[serde(default)]
     #[expect(dead_code, reason = "holds a position, never read")]
     rust: Option<IgnoredAny>,
+    /// Never read. It holds the place of `cpp` in `ConfigFile`.
+    #[serde(default)]
+    #[expect(dead_code, reason = "holds a position, never read")]
+    cpp: Option<IgnoredAny>,
 }
 
 /// The `deslag_version` key as text, with an error that names the key whatever the language.
@@ -256,6 +266,7 @@ impl Config {
         // The one list of sections: redirects move settings in it, then it is compiled.
         let mut written = vec![(md::NAME, file.md.into_parts())];
         written.extend(file.rust.map(|rust| (rust::NAME, rust.into_parts())));
+        written.extend(file.cpp.map(|cpp| (cpp::NAME, cpp.into_parts())));
         let applied = redirect::apply(&mut written, &path_string)?;
         let sections = written
             .into_iter()
@@ -316,26 +327,32 @@ impl Config {
         &self.sections
     }
 
-    /// The section that selects `rel_path`, if one does. A file is read one way, so two sections
-    /// selecting it is an error.
+    /// The section that selects `rel_path`, if one does. A file is read one way, so more than one
+    /// section selecting it is an error that names every one.
     pub fn sole_section_for(&self, rel_path: &str) -> Result<Option<&Section>, Error> {
-        let mut selecting = self
+        let selecting: Vec<&Section> = self
             .sections
             .iter()
-            .filter(|section| section.selects(rel_path));
-        let first = selecting.next();
-        match (first, selecting.next()) {
-            (Some(first), Some(second)) => Err(Error::Setting {
-                path: self.path.display().to_string(),
-                message: format!(
-                    "{rel_path} is selected by both [{}] and [{}]; narrow their globs so that \
-                     one of them selects it",
-                    first.name(),
-                    second.name()
-                ),
-            }),
-            _ => Ok(first),
-        }
+            .filter(|section| section.selects(rel_path))
+            .collect();
+        let who = match selecting.as_slice() {
+            [] => return Ok(None),
+            [only] => return Ok(Some(*only)),
+            [first, second] => format!("both [{}] and [{}]", first.name(), second.name()),
+            [init @ .., last] => {
+                let init: Vec<String> = init
+                    .iter()
+                    .map(|section| format!("[{}]", section.name()))
+                    .collect();
+                format!("{} and [{}]", init.join(", "), last.name())
+            }
+        };
+        Err(Error::Setting {
+            path: self.path.display().to_string(),
+            message: format!(
+                "{rel_path} is selected by {who}; narrow their globs so that one of them selects it"
+            ),
+        })
     }
 
     /// The section to read `rel_path` with when it is named on its own, as `check_file` is: the one
@@ -390,6 +407,9 @@ fn parse_stamp(text: &str, path: &str) -> Result<semver::Version, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::lints::Lints;
+    use crate::config::section::Parts;
+    use crate::document::{Reader, Stack};
 
     fn load_json(text: &str) -> Config {
         Config::parse(text, PathBuf::from("deslag.json"), ConfigSource::Explicit)
@@ -414,5 +434,47 @@ mod tests {
         let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "rust"]);
         assert!(config.sections()[1].lints_for("a.rs").density.is_some());
+    }
+
+    /// The C and C++ section follows the Rust one in an array, so an array written before either
+    /// keeps its positions.
+    #[test]
+    fn a_json_array_reads_the_cpp_section_after_the_rust_section() {
+        let config = load_json(r#"[1, {}, "0.0.1", null, {"lints": {"density": {}}}]"#);
+        assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
+        let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
+        assert_eq!(names, ["md", "cpp"]);
+        assert!(config.sections()[1].lints_for("a.c").density.is_some());
+        let both = load_json(r#"[1, {}, "0.0.1", {}, {}]"#);
+        let names: Vec<&str> = both.sections().iter().map(Section::name).collect();
+        assert_eq!(names, ["md", "rust", "cpp"]);
+    }
+
+    /// Every section that selects a file is named, not only the first two.
+    #[test]
+    fn a_file_that_three_sections_select_names_all_three() {
+        let everything = |name| {
+            let parts = Parts {
+                globs: Some(vec!["**".to_string()]),
+                default_globs: &[],
+                extensions: None,
+                stack: Stack::new(Reader::Markdown),
+                lints: Lints::default(),
+                overrides: Vec::new(),
+            };
+            Section::compile(name, parts, "deslag.toml").expect("a section")
+        };
+        let config = Config {
+            sections: vec![everything("md"), everything("rust"), everything("cpp")],
+            ..load_json("[1]")
+        };
+        let said = config
+            .sole_section_for("a.c")
+            .expect_err("three sections select it")
+            .to_string();
+        assert!(
+            said.contains("a.c is selected by [md], [rust] and [cpp];"),
+            "{said}"
+        );
     }
 }

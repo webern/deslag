@@ -397,3 +397,48 @@ fn offsets_hold_after_bytes_that_are_not_utf8_in_rust() {
         (&json!(6), &json!(3))
     );
 }
+
+/// The same holds for a `[cpp]` file, which is how a C test file with a string in another
+/// encoding reads: the comment after the bad bytes is reported at its true byte, and `fix`
+/// leaves the file alone. The bytes are made here, since a file that is not UTF-8 is fragile in
+/// the tree.
+#[test]
+fn offsets_hold_after_bytes_that_are_not_utf8_in_c() {
+    let bytes = b"char *s = \"\xa4\xa2\xff\";\n/* \xff\xfe */\n// A \xe2\x80\x94 dash.\n";
+    let at = bytes.windows(3).position(|w| w == "\u{2014}".as_bytes());
+    let at = at.expect("the dash is in the file");
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[cpp.lints.banned_chars]\n",
+    );
+    repo.write_bytes("test.c", bytes);
+    let run = |format: &str| {
+        let output = repo.run(&["check", "--format", format]);
+        assert_eq!(code(&output), 1, "{format}");
+        serde_json::from_str::<Value>(&stdout(&output)).expect("JSON")
+    };
+
+    let findings = run("json")["findings"].clone();
+    let mark = &findings[0]["marks"][0];
+    assert_eq!(
+        (mark["start"].as_u64(), mark["end"].as_u64()),
+        (Some(at as u64), Some(at as u64 + 3))
+    );
+    assert_eq!(&bytes[at..at + 3], "\u{2014}".as_bytes());
+
+    let region =
+        &run("sarif")["runs"][0]["results"][0]["locations"][0]["physicalLocation"]["region"];
+    assert_eq!(
+        (&region["byteOffset"], &region["byteLength"]),
+        (&json!(at), &json!(3))
+    );
+
+    let output = repo.run(&["fix"]);
+    assert_eq!(code(&output), 1);
+    assert!(stderr(&output).starts_with("deslag did not fix test.c: it is not valid UTF-8"));
+    assert_eq!(
+        std::fs::read(repo.root().join("test.c")).expect("a file"),
+        bytes
+    );
+}

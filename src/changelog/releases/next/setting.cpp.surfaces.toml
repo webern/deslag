@@ -1,0 +1,14 @@
+kind = "setting"
+id = "cpp.surfaces"
+summary = "Chooses which comments of a C or C++ file the lints read"
+onboarding = '''
+`cpp.surfaces` lists the kinds of comment to read: `doc_comment` for `///`, `//!`, `/** */`,
+`/*! */` and the trailing `///<` and `/**<`, and `comment` for the other `//` and `/* */` comments.
+Both are read as plain text. With no `surfaces`, both are read. A lint that needs Markdown blocks,
+such as `list_growth`, is an error in this section whatever the surfaces.
+
+```toml
+[cpp]
+surfaces = ["doc_comment"]
+```
+'''

@@ -49,19 +49,6 @@ pub(crate) enum Need {
     Text,
 }
 
-impl Need {
-    /// What it asks for, and what gives it, for a message.
-    pub(crate) fn asks(self) -> &'static str {
-        match self {
-            Need::File => "the whole file, which only [md] reads",
-            Need::Structure => "the blocks of Markdown, which only the doc_comment surface gives",
-            Need::Sentences | Need::Text => {
-                "prose, which the doc_comment and comment surfaces give"
-            }
-        }
-    }
-}
-
 /// What a [`Document`] is read with: owned data, cloned into each document so that it can read an
 /// edited source the same way.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -104,6 +91,30 @@ impl Stack {
             (Reader::Rust { surfaces } | Reader::Cpp { surfaces }, _) => surfaces
                 .iter()
                 .any(|surface| self.markup(*surface).provides(need)),
+        }
+    }
+
+    /// What `need` asks for and what gives it, for a message about the section named `section`. The
+    /// surfaces that give Markdown blocks are those whose markup is Markdown, which a C or C++
+    /// file has none of.
+    pub(crate) fn asks(&self, need: Need, section: &str) -> String {
+        match need {
+            Need::File => "the whole file, which only [md] reads".to_string(),
+            Need::Structure => {
+                let giving = [Surface::DocComment, Surface::Comment]
+                    .into_iter()
+                    .find(|surface| self.markup(*surface).provides(need));
+                match giving {
+                    None => format!("the blocks of Markdown, which no surface of [{section}] has"),
+                    Some(surface) => format!(
+                        "the blocks of Markdown, which only the {} surface gives",
+                        surface.name()
+                    ),
+                }
+            }
+            Need::Sentences | Need::Text => {
+                "prose, which the doc_comment and comment surfaces give".to_string()
+            }
         }
     }
 
@@ -225,6 +236,30 @@ mod tests {
             ),
         ] {
             assert_eq!(reader.markup(surface), markup, "{reader:?} {surface:?}");
+        }
+    }
+
+    #[test]
+    fn a_message_says_which_surfaces_give_markdown_blocks_and_that_a_cpp_file_has_none() {
+        let rust = Stack::new(Reader::Rust { surfaces: vec![] });
+        let cpp = Stack::new(Reader::Cpp { surfaces: vec![] });
+        assert_eq!(
+            rust.asks(Need::Structure, "rust"),
+            "the blocks of Markdown, which only the doc_comment surface gives"
+        );
+        assert_eq!(
+            cpp.asks(Need::Structure, "cpp"),
+            "the blocks of Markdown, which no surface of [cpp] has"
+        );
+        for stack in [&rust, &cpp] {
+            assert_eq!(
+                stack.asks(Need::File, "x"),
+                "the whole file, which only [md] reads"
+            );
+            assert_eq!(
+                stack.asks(Need::Text, "x"),
+                "prose, which the doc_comment and comment surfaces give"
+            );
         }
     }
 

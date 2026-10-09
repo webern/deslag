@@ -1,0 +1,14 @@
+kind = "setting"
+id = "cpp.globs"
+summary = "Chooses the C and C++ files the lints judge"
+onboarding = '''
+`cpp.globs` lists the C and C++ files the lints judge. Every pattern must end in `.c`, `.h`, `.cc`,
+`.cpp`, `.cxx`, `.hpp`, `.hh` or `.hxx`, so `*.{c,h}` is refused and `*.c` and `*.h` are two
+patterns. A pattern holding a `/` matches the path from the repo root; one without matches the file
+name in any directory. With no `globs`, every file with one of those extensions is judged.
+
+```toml
+[cpp]
+globs = ["/src/**/*.c", "/include/**/*.h"]
+```
+'''

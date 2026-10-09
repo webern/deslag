@@ -1,0 +1,36 @@
+ERROR: deslag detected banned phrases!
+
+include/parse.h has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "delve into"; say what you found instead
+
+ERROR: deslag detected banned phrases!
+
+src/parse.c has 3 banned phrases.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "delve into"; say what you found instead
+  line 5: "It's worth noting"; delete it
+  line 9: "It's worth noting"; delete it
+
+ERROR: deslag detected banned phrases!
+
+src/util.cc has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "delve into"; say what you found instead
+
+deslag: 3 of 3 files with banned phrases.

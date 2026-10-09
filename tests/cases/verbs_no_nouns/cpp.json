@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [
+    {
+      "path": "include/parse.h",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\ninclude/parse.h has 1 verb with a no-noun.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"returns no value\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 19,
+          "end": 35,
+          "line": 1,
+          "column": 20,
+          "end_line": 1,
+          "end_column": 36,
+          "note": "\"returns no value\""
+        }
+      ]
+    },
+    {
+      "path": "src/parse.c",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nsrc/parse.c has 3 verbs with no-nouns.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"ships no binary\"\n  line 4: \"requires no configuration\"\n  line 8: \"has no runtime\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 16,
+          "end": 31,
+          "line": 1,
+          "column": 17,
+          "end_line": 1,
+          "end_column": 32,
+          "note": "\"ships no binary\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 66,
+          "end": 91,
+          "line": 4,
+          "column": 16,
+          "end_line": 4,
+          "end_column": 41,
+          "note": "\"requires no configuration\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 121,
+          "end": 135,
+          "line": 8,
+          "column": 7,
+          "end_line": 8,
+          "end_column": 21,
+          "note": "\"has no runtime\""
+        }
+      ]
+    }
+  ]
+}

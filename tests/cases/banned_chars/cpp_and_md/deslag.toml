@@ -1,0 +1,9 @@
+schema_version = 1
+
+[md]
+globs = ["**/*"]
+
+[cpp]
+globs = ["/src/a.c"]
+
+[cpp.lints.banned_chars]

@@ -11,8 +11,9 @@
 //! and the running version, so that the change turns on nothing nobody chose; when something does,
 //! it leaves the stamp and says to read `deslag instructions update` first. `--to` moves it
 //! regardless, and is the command that topic ends with: the person has chosen. It never looks at
-//! git, and never turns anything on. A move of the stamp turns on the catalogue phrases the stamp
-//! kept off, wherever the config has their group on, and the report names them.
+//! git, and does not set a lint or a group itself. A move of the stamp does turn on the catalogue
+//! phrases the stamp kept off, wherever the config has their group on and neither allows nor bans
+//! them, and the report names those.
 
 use std::fs;
 use std::path::Path;
@@ -23,7 +24,7 @@ use crate::Error;
 use crate::changelog::{self, Changelog, current_release};
 use crate::config::Config;
 use crate::config::edit::{self, Checked, Edit};
-use crate::lint::banned_phrases::{Catalogue, Entry as Phrase};
+use crate::lint::banned_phrases::{Catalogue, Entry as Phrase, folded};
 use crate::news::News;
 use crate::write;
 
@@ -219,9 +220,12 @@ pub fn update(
     })
 }
 
-/// The `phrases` of the catalogue whose group is on in some section of `config`, in some table of
-/// it: the section's, or the section's under one of its overrides. A group is on in a table that
-/// turns `banned_phrases` on and does not switch the group off.
+/// The `phrases` of the catalogue that the move of the stamp makes fire somewhere in `config`:
+/// those with a table, the section's or the section's under one of its overrides, that turns
+/// `banned_phrases` on, has the phrase's group on, and neither allows the phrase nor bans it. A
+/// phrase in `ban` fired before the move, and one in `allow` never fires. A longer phrase in
+/// `allow` that holds the phrase hides only some of its matches, so the phrase is still named.
+/// Phrases compare as [`folded`] tokens, as the lint compares them.
 fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
     let tables: Vec<_> = config
         .sections()
@@ -233,7 +237,13 @@ fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
         .iter()
         .filter(|phrase| {
             let group = phrase.group.group();
-            tables.iter().any(|table| group.on(&table.groups))
+            let tokens = folded(&phrase.phrase);
+            let named = |entry: &String| folded(entry) == tokens;
+            tables.iter().any(|table| {
+                group.on(&table.groups)
+                    && !table.allow.iter().flatten().any(named)
+                    && !table.ban.iter().flatten().any(|(entry, _)| named(entry))
+            })
         })
         .map(|phrase| TurnedOn {
             phrase: phrase.phrase.clone(),
@@ -494,6 +504,124 @@ mod tests {
         )
         .expect("a dry run");
         assert!(none.phrases.is_empty(), "{none:?}");
+    }
+
+    /// A catalogue with a phrase of the running release in each of `phrases`, given as phrase and
+    /// group.
+    fn catalogue_of(phrases: &[(&str, &str)]) -> Catalogue {
+        let mut text = String::from("measured_on = \"x\"\n");
+        for (phrase, group) in phrases {
+            text.push_str(&format!(
+                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"{group}\"\nadvice = \"x\"\n\
+                 since = \"{}\"\nllm_files = 1\nllm_repos = 1\n",
+                running()
+            ));
+        }
+        toml::from_str(&text).expect("a catalogue")
+    }
+
+    /// The phrases `update --to` names for a config of stamp 0.0.0 with `tables`, and the line it
+    /// prints about them, if any, when the catalogue holds `phrases`.
+    fn named_for(tables: &str, phrases: &[(&str, &str)]) -> (Vec<String>, Option<String>) {
+        let (dir, _) = repo(&format!(
+            "schema_version = 1\ndeslag_version = \"0.0.0\"\n{tables}"
+        ));
+        let to = running();
+        let done = update(
+            dir.path(),
+            None,
+            true,
+            Some(&to),
+            &nothing_new(),
+            &catalogue_of(phrases),
+        )
+        .expect("a dry run");
+        let line = done
+            .lines()
+            .into_iter()
+            .find(|line| line.contains("these phrases"));
+        let named = done.phrases.iter().map(|t| t.phrase.clone()).collect();
+        (named, line)
+    }
+
+    const LOAD: (&str, &str) = ("load-bearing", "metaphors");
+    const NEVER: (&str, &str) = ("never silently", "insistence");
+
+    #[test]
+    fn to_names_a_phrase_only_where_it_will_fire() {
+        // Nothing keeps a phrase off: both are named, and there is a line.
+        let (named, line) = named_for("[md.lints.banned_phrases]\n", &[LOAD, NEVER]);
+        assert_eq!(named, ["load-bearing", "never silently"]);
+        assert!(line.is_some());
+
+        // An `allow` in the only table that has the group on hides the phrase entirely.
+        let allowing = "[md.lints.banned_phrases]\nallow = [\"Load-Bearing\"]\n";
+        let (named, _) = named_for(allowing, &[LOAD, NEVER]);
+        assert_eq!(named, ["never silently"]);
+
+        // A longer phrase in `allow` hides only some matches, so the phrase is still named.
+        let longer = "[md.lints.banned_phrases]\nallow = [\"a load-bearing wall\"]\n";
+        let (named, _) = named_for(longer, &[LOAD, NEVER]);
+        assert_eq!(named, ["load-bearing", "never silently"]);
+
+        // The group is off in `[md]` and the phrase is allowed in `[rust]`, the only table with
+        // the group on: not named. The same with no allow in `[rust]`: named.
+        let rust_allows = "[md.lints.banned_phrases.groups]\nmetaphors = false\n\
+                           [rust.lints.banned_phrases]\nallow = [\"load-bearing\"]\n";
+        let (named, _) = named_for(rust_allows, &[LOAD]);
+        assert!(named.is_empty(), "{named:?}");
+        let rust_open = "[md.lints.banned_phrases.groups]\nmetaphors = false\n\
+                         [rust.lints.banned_phrases]\n";
+        let (named, _) = named_for(rust_open, &[LOAD]);
+        assert_eq!(named, ["load-bearing"]);
+
+        // A phrase in `ban` fired before the move.
+        let banning = "[md.lints.banned_phrases.ban]\n\"load-bearing\" = \"x\"\n";
+        let (named, _) = named_for(banning, &[LOAD, NEVER]);
+        assert_eq!(named, ["never silently"]);
+    }
+
+    #[test]
+    fn to_reads_the_allow_and_ban_of_an_override_as_of_the_files_it_selects() {
+        // The section allows the phrase; an override that names its own `allow` replaces that,
+        // and fires on the files it selects.
+        let replaced = "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
+                        [[md.overrides]]\nglobs = [\"/a.md\"]\n\
+                        lints.banned_phrases.allow = [\"other thing\"]\n";
+        let (named, _) = named_for(replaced, &[LOAD]);
+        assert_eq!(named, ["load-bearing"]);
+
+        // The group is off in the section and on in the override, which allows the phrase: no.
+        let off_then_allowed = "[md.lints.banned_phrases.groups]\nmetaphors = false\n\
+                                [[md.overrides]]\nglobs = [\"/a.md\"]\n\
+                                lints.banned_phrases.groups.metaphors = true\n\
+                                lints.banned_phrases.allow = [\"load-bearing\"]\n";
+        let (named, _) = named_for(off_then_allowed, &[LOAD]);
+        assert!(named.is_empty(), "{named:?}");
+
+        // The same override with no allow fires there.
+        let off_then_on = "[md.lints.banned_phrases.groups]\nmetaphors = false\n\
+                           [[md.overrides]]\nglobs = [\"/a.md\"]\n\
+                           lints.banned_phrases.groups.metaphors = true\n";
+        let (named, _) = named_for(off_then_on, &[LOAD]);
+        assert_eq!(named, ["load-bearing"]);
+
+        // An override that bans the phrase fires on its files before the move, and the section
+        // that allows it does not fire at all.
+        let banned_there = "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
+                            [[md.overrides]]\nglobs = [\"/a.md\"]\n\
+                            lints.banned_phrases.ban = { \"load-bearing\" = \"x\" }\n\
+                            lints.banned_phrases.allow = []\n";
+        let (named, _) = named_for(banned_there, &[LOAD]);
+        assert!(named.is_empty(), "{named:?}");
+    }
+
+    #[test]
+    fn to_names_nothing_and_prints_no_phrase_line_for_a_config_that_allows_what_is_new() {
+        let trial = "[md.lints.banned_phrases]\nallow = [\"paradigm shift\"]\n";
+        let (named, line) = named_for(trial, &[("paradigm shift", "metaphors")]);
+        assert!(named.is_empty(), "{named:?}");
+        assert_eq!(line, None);
     }
 
     /// A repo with `text` as `deslag.<extension>`.

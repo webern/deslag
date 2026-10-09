@@ -17,6 +17,7 @@ allow = ["a phrase"]
 groups = { metaphors = false }
 ```
 
-Then run `deslag update --to <version>`. It names the phrases the new stamp turns on wherever a
-group is on. A phrase in the config's own `ban` is never held back.
+Then run `deslag update --to <version>`. It names the phrases the new stamp turns on: those
+whose group is on in a table that neither allows nor bans them. A phrase in the config's own `ban`
+is never held back.
 '''

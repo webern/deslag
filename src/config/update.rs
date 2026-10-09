@@ -617,6 +617,29 @@ mod tests {
     }
 
     #[test]
+    fn to_reads_the_cpp_section_like_the_others() {
+        // `[cpp]` alone has the group on: named. The same section allowing the phrase, or
+        // banning it: not. The group off in `[md]` does not hide what `[cpp]` turns on.
+        let off = "[md.lints.banned_phrases.groups]\nmetaphors = false\n";
+        let open = format!("{off}[cpp.lints.banned_phrases]\n");
+        let (named, _) = named_for(&open, &[LOAD]);
+        assert_eq!(named, ["load-bearing"]);
+        let allowing = format!("{off}[cpp.lints.banned_phrases]\nallow = [\"load-bearing\"]\n");
+        let (named, line) = named_for(&allowing, &[LOAD]);
+        assert!(named.is_empty() && line.is_none(), "{named:?}");
+        let banning = format!("{off}[cpp.lints.banned_phrases.ban]\n\"load-bearing\" = \"x\"\n");
+        let (named, _) = named_for(&banning, &[LOAD]);
+        assert!(named.is_empty(), "{named:?}");
+        // An override of `[cpp]` that resets `allow` fires on its files.
+        let reset = format!(
+            "{off}[cpp.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
+             [[cpp.overrides]]\nglobs = [\"/a.c\"]\nlints.banned_phrases.allow = []\n"
+        );
+        let (named, _) = named_for(&reset, &[LOAD]);
+        assert_eq!(named, ["load-bearing"]);
+    }
+
+    #[test]
     fn to_names_nothing_and_prints_no_phrase_line_for_a_config_that_allows_what_is_new() {
         let trial = "[md.lints.banned_phrases]\nallow = [\"paradigm shift\"]\n";
         let (named, line) = named_for(trial, &[("paradigm shift", "metaphors")]);

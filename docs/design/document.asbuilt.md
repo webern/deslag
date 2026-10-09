@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-09
 subsystems:
   - document
   - parse
@@ -7,59 +7,60 @@ max_size_bytes: 3000
 ---
 # The document: as built
 
-`lint::check_file` calls `Document::markdown` once per file and hands the `Document` to the lints.
-`parse::frontmatter` reads a key out of a file's frontmatter, for the `max_size_bytes` lint and for
-`explain`.
+A reader turns a file into a `Document`, which every lint but the byte budget reads. A `Stack` names
+the `Reader` for a section's files: Markdown, plain text, Rust, C and C++, or TOML.
+`lint::check_file` calls `Stack::document` once per file.
 
 ```
 src/
   document/
-    mod.rs            Document and its layers, and Location
-    edit.rs           Edit, and Document::apply, which proves edits
-    markdown.rs       the Markdown reader, on pulldown-cmark
-    tokens.rs         prose to tokens, on unicode-segmentation
-    sentences.rs      tokens to sentences
-  parse/
-    mod.rs            the module list
-    frontmatter.rs    reading a top-level key out of YAML frontmatter
+    mod.rs            Document, its layers, Location
+    stack.rs          Stack, Reader, Fences, Language
+    markdown.rs       Markdown, on pulldown-cmark
+    plain.rs          plain text
+    fence.rs          comments of fenced code
+    rust.rs cpp.rs    where the comments of a file are
+    *_regions.rs      those comments, as regions, for rust cpp toml
+    region.rs region_build.rs map.rs skip.rs skip.toml
+                      Region, Carrier, SourceMap, what is not prose
+    lift.rs           a region's layers, moved into the file's
+    tokens.rs sentences.rs   the second layer
+    edit.rs           Edit, Document::apply
+  parse/frontmatter.rs   a top-level key of YAML frontmatter
 ```
 
-## Blocks
+## Readers
 
-`Document::markdown` reads a file once; every lint but the byte budget reads that `Document`. Its
-first layer is what `pulldown-cmark` finds. **Blocks** nest as the Markdown does, and a tight list
-item's text is a paragraph. `Document::walk` yields each block in file order with the blocks that
-hold it, outermost first.
+Markdown is read whole: blocks nest as the Markdown does, hold pieces (the text they render)
+under spans of formatting, and break lines at points. Code, HTML and frontmatter blocks are raw.
 
-A block of prose holds **pieces**, the text it renders, under spans of formatting, and among
-points: line breaks and the gaps between blocks. Code, HTML and frontmatter blocks are raw: kept
-as written.
+A code file is read as regions: each comment, or run of them, is a `Region` of prose with a
+`SourceMap` to its file bytes and a `Carrier` that writes text back as the file holds it.
+Markdown or plain text reads a region, and `lift` merges the results into one `Document`.
+
+A Markdown `Stack` also reads the comments of the fences its `Fences` names, as regions nested in
+the code block; a fence the file cannot map byte for byte stays code. Fences are Rust, C and C++,
+and TOML (`#` comments only); a doc comment's Markdown has none read.
 
 ## Tokens, sentences and locations
 
 The second layer splits each block of prose into tokens by the Unicode word rules; a code span,
-an image, a URL and the like are one token each. A sentence ends with its block, at a hard
-break, or after a `.`, `!`, `?` or ellipsis (U+2026) that whitespace and a word not in lower case
-follow. `Token::reading` is `Some` on a word `tag::document` has read, else `None`; see
-`tag.asbuilt.md`.
+an image, a URL and the like are one token each. A sentence ends with its block, at a hard break,
+or after a `.`, `!`, `?` or ellipsis that whitespace and a word not in lower case follow.
+`Token::reading` is set by `tag::document`; see `tag.asbuilt.md`.
 
 Every position is a byte offset into the source. `Document::locate` alone turns a range into a
-`Location`: bytes 0-based and half-open, lines from 1 split on LF, columns in characters from 1,
-with a leading byte order mark taking none. The end line is the last byte's; the end column is
-exclusive.
+`Location`: lines and columns from 1, columns in characters, a leading byte order mark taking none.
 
 ## Edits
 
-An `Edit` replaces a range of the source. `Document::apply` makes one only in a text piece of prose
-as written, not an entity, escape or URL, and never in frontmatter or HTML; on whole grapheme
-clusters; with no control character; and where the reader the document keeps, which fills the first
-layer, finds the same blocks, spans, line breaks and pieces in the result, with the same text but
-for the edits. It tries them all at once, then one at a time, and gives each refused edit a
+`Document::apply` makes an `Edit` to the source only where it can prove nothing but the edited text
+changes: in a text piece as written, not frontmatter or HTML, on grapheme clusters, with the same
+blocks, spans, points and pieces in a re-read by the same `Stack`. Each refused edit has a
 `Refusal`.
 
 ## Frontmatter
 
-`parse/frontmatter.rs` reads a top-level key out of the frontmatter block, the leading `---` fence
-up to the next `---` or `...` line, with no YAML parser: the value is the rest of the key's line,
-quotes either side allowed. A block never closed is not frontmatter. A `max_size_bytes` that is
-not a byte count is an error.
+`parse/frontmatter.rs` reads a top-level key out of the leading `---` block, with no YAML parser:
+the value is the rest of the key's line, quotes either side allowed. A block never closed is not
+frontmatter. A `max_size_bytes` that is no byte count is an error.

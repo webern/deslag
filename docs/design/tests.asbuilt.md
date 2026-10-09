@@ -6,7 +6,7 @@ max_size_bytes: 4096
 ---
 # The tests: as built
 
-This doc describes the harnesses the tests share and the data they read.
+The harnesses the tests share, and the data they read.
 
 ```
 tests/
@@ -47,9 +47,10 @@ which ends with the timing check (`analysis.asbuilt.md`); over budget it measure
 of six passes. A matrix on `core/` crosses configs, canonical locations, layouts and budgets,
 deriving what it expects from the bytes it placed.
 
-The whole corpus then runs in its real layout under a budget, an emphasis limit, the default groups
-and density, and the binary must report what the library finds. Tokens and sentences must keep to
-their blocks, and each location found under the golden config must hold what it names.
+The whole corpus then runs in its real layout with fences read, under a budget, an emphasis limit,
+the default groups and density, and the binary must report what the library finds. Tokens and
+sentences must keep to their blocks, and each location found under the golden config must hold what
+it names.
 
 `make test-python` runs `scripts/blobstore/test_batches.py` against local git repositories, outside
 `test` and `ci`.
@@ -57,8 +58,9 @@ their blocks, and each location found under the golden config must hold what it 
 ## The golden set
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
-`tests/golden/config.toml` on each fixture alone in an empty directory, so `repo_layout` finds every
-path missing; a fixture with no section is left out, as is a lint that judges a change.
+`tests/golden/config.toml` (fences off) on each fixture alone in an empty directory, so
+`repo_layout` finds every path missing; a fixture with no section is left out, as is a lint that
+judges a change.
 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
@@ -78,6 +80,6 @@ that earns it.
 ## The frozen gold lists
 
 `tests/gold/mustpass.tsv` holds 982 dev words that deslag tags right at `Sure`; `ticlist.tsv`, 172
-places the `verbs_no_nouns` pattern matches in the corpus. Each is cut once by `deslag-exam` and
-frozen, never regenerated. `cargo test --workspace` holds each row to `dev.conllu`, or to the
-corpus and the lint.
+places the `verbs_no_nouns` pattern matches in the corpus. Each is cut once by `deslag-exam`, never
+regenerated. `cargo test --workspace` holds each row to `dev.conllu`, or to the corpus and the
+lint.

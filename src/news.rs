@@ -129,7 +129,7 @@ mod tests {
         let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
         assert!(text.contains("### `new phrase` (0.0.2)"), "{text}");
         assert!(!text.contains("is current"), "{text}");
-        let json = update_json(&news, &from, &to);
+        let json = update_json(&news, &from, &to, Start::Config(&Reading::default()));
         assert!(json.contains("\"kind\": \"phrase\""), "{json}");
 
         // Where nothing is new, all three say so.
@@ -139,6 +139,9 @@ mod tests {
         assert!(
             update_text(&news, &to, &to, Start::Config(&Reading::default())).contains("current")
         );
-        assert!(update_json(&news, &to, &to).contains("\"entries\": []"));
+        assert!(
+            update_json(&news, &to, &to, Start::Config(&Reading::default()))
+                .contains("\"entries\": []")
+        );
     }
 }

@@ -492,7 +492,12 @@ fn the_json_holds_the_entries_of_the_text() {
     let json = stdout(&output);
     assert_eq!(
         json,
-        update_json(&news(&release(OLDER)), &release(OLDER), &Version::current())
+        update_json(
+            &news(&release(OLDER)),
+            &release(OLDER),
+            &Version::current(),
+            Start::Config(&Reading::default())
+        )
     );
 
     let parsed: Value = serde_json::from_str(&json).expect("JSON");
@@ -809,4 +814,41 @@ fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
     // With `--since`, or with no config, no config was read.
     assert_eq!(line(&update(&phrases, &["--since", OLDER])), None);
     assert_eq!(line(&update(&Repo::new(), &[])), None);
+}
+
+/// A lint the config already turns on is listed as new, with a mark that says so.
+#[test]
+fn a_lint_the_config_already_turns_on_is_marked() {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n\n\
+             [md.lints.max_size_bytes]\nvalue = 100\n"
+        ),
+    );
+    let text = stdout(&update(&repo, &[]));
+    let heading = "### `max_size_bytes` (0.0.1)\n";
+    let entry = text.split(heading).nth(1).expect("the lint is listed");
+    let entry = entry.split("\n### ").next().expect("an entry");
+    assert!(
+        entry.contains("\nThis config already has a `max_size_bytes` table.\n"),
+        "{entry}"
+    );
+    assert!(!text.contains("already has a `density`"), "{text}");
+
+    let json: Value =
+        serde_json::from_str(&stdout(&update(&repo, &["--format", "json"]))).expect("JSON");
+    let set: Vec<&str> = json["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .filter(|entry| entry["already_set"] == true)
+        .map(|entry| entry["id"].as_str().expect("an id"))
+        .collect();
+    assert_eq!(set, ["max_size_bytes"]);
+
+    // `--since` reads no config, so it marks nothing.
+    let since = update(&repo, &["--since", OLDER]);
+    assert!(!stdout(&since).contains("already has"));
 }

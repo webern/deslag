@@ -3,12 +3,14 @@
 //!
 //! The range is [`News`]. The text and the JSON print its entries, with the breaking changes first
 //! and then the lints, the settings and the features, and after them the phrases the running
-//! version turns on. When a config was read, the closing says which of those phrases moving the
-//! stamp turns on in it. The notice asks whether it holds anything. The fixed words of the text are
-//! in `src/instructions/update.md`.
+//! version turns on. When a config was read, an entry for a lint the config already has a table
+//! for says so, and the closing says which of those phrases moving the stamp turns on in it. The
+//! notice asks whether it holds anything. The fixed words of the text are in
+//! `src/instructions/update.md`.
 
 use serde::Serialize;
 
+use crate::Lint;
 use crate::changelog::{Entry, Kind, Version};
 use crate::config::Config;
 use crate::config::update::{TurnedOn, turned_on};
@@ -35,13 +37,37 @@ pub enum Start<'a> {
 pub struct Reading {
     /// The phrases that moving the stamp to the running version turns on in the config.
     pub turned_on: Vec<TurnedOn>,
+    /// The ids of the lints of the range that some table of the config already turns on.
+    pub set: Vec<String>,
 }
 
 impl Reading {
+    /// Whether the config already has a table for the lint `entry` adds.
+    fn sets(&self, entry: &Entry) -> bool {
+        entry.kind() == Kind::Lint && self.set.iter().any(|id| id == entry.id())
+    }
+
     /// What `config` says about `news`, the range from its stamp up to the running version.
     pub fn of(config: &Config, news: &News<'_>) -> Reading {
+        let tables: Vec<_> = config
+            .sections()
+            .iter()
+            .flat_map(|section| section.possible_lints())
+            .collect();
+        let set = news
+            .entries()
+            .iter()
+            .filter(|(_, entry)| entry.kind() == Kind::Lint)
+            .filter(|(_, entry)| {
+                Lint::ALL.iter().any(|lint| {
+                    lint.id() == entry.id() && tables.iter().any(|lints| lints.is_on(*lint))
+                })
+            })
+            .map(|(_, entry)| entry.id().to_string())
+            .collect();
         Reading {
             turned_on: turned_on(config, news.phrases()),
+            set,
         }
     }
 }
@@ -95,6 +121,12 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
                 entry.id(),
                 entry.summary()
             ));
+            if reading_of(start).is_some_and(|reading| reading.sets(entry)) {
+                text.push_str(&format!(
+                    "This config already has a `{}` table.\n\n",
+                    entry.id()
+                ));
+            }
             if let Some(all) = entry.update_does_all() {
                 let edit = if all {
                     "`deslag update` makes this change, or prints the edit when it cannot."
@@ -127,6 +159,14 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
     text
 }
 
+/// What the config that was read says, when one was.
+fn reading_of<'a>(start: Start<'a>) -> Option<&'a Reading> {
+    match start {
+        Start::Config(reading) => Some(reading),
+        Start::Since | Start::NoConfig => None,
+    }
+}
+
 /// The line that says what moving the stamp turns on in the config, `words` being its fixed words:
 /// the phrases `reading` found, or that there are none. It speaks of the stamp's move alone, which
 /// is all the stamp does: a new lint or setting stays off until the config names it.
@@ -146,7 +186,7 @@ fn stamp_line(reading: &Reading, words: &str) -> String {
 
 /// The JSON of `deslag instructions update`: the same entries and phrases as [`update_text`], in
 /// the same order, for a program that writes its own prompt.
-pub fn update_json(news: &News, from: &Version, to: &Version) -> String {
+pub fn update_json(news: &News, from: &Version, to: &Version, start: Start<'_>) -> String {
     let entries = ordered(news).into_iter().map(|(version, entry)| Item {
         version,
         kind: entry.kind().into(),
@@ -154,6 +194,9 @@ pub fn update_json(news: &News, from: &Version, to: &Version) -> String {
         summary: entry.summary(),
         onboarding: entry.onboarding().to_string(),
         update_does_all: entry.update_does_all(),
+        already_set: reading_of(start)
+            .is_some_and(|reading| reading.sets(entry))
+            .then_some(true),
         group: None,
     });
     let phrases = news.phrases().iter().map(|phrase| Item {
@@ -163,6 +206,7 @@ pub fn update_json(news: &News, from: &Version, to: &Version) -> String {
         summary: &phrase.advice,
         onboarding: keep_off(phrase),
         update_does_all: None,
+        already_set: None,
         group: Some(phrase.group.group().name),
     });
     let update = Update {
@@ -229,6 +273,9 @@ struct Item<'a> {
     /// Whether no hand edit of the config is needed; given only for a breaking change.
     #[serde(skip_serializing_if = "Option::is_none")]
     update_does_all: Option<bool>,
+    /// Whether the config already has a table for the lint; given only for a lint it has.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    already_set: Option<bool>,
     /// The group of the phrase; given only for a phrase.
     #[serde(skip_serializing_if = "Option::is_none")]
     group: Option<&'a str>,
@@ -560,7 +607,12 @@ llm_repos = 1
         let (changelog, catalogue) = (changelog(), no_phrases());
         let news = news(&changelog, &catalogue, "0.0.1", "0.3.0");
         assert_eq!(
-            update_json(&news, &version("0.0.1"), &version("0.3.0")),
+            update_json(
+                &news,
+                &version("0.0.1"),
+                &version("0.3.0"),
+                Start::Config(&Reading::default())
+            ),
             JSON
         );
     }
@@ -679,8 +731,13 @@ llm_repos = 1
         // 0.2.0 is the stamp, so its phrase has been seen.
         assert!(!text.contains("load-bearing"), "{text}");
 
-        let json: serde_json::Value =
-            serde_json::from_str(&update_json(&news, &from, &to)).expect("JSON");
+        let json: serde_json::Value = serde_json::from_str(&update_json(
+            &news,
+            &from,
+            &to,
+            Start::Config(&Reading::default()),
+        ))
+        .expect("JSON");
         let items = json["entries"].as_array().expect("entries");
         let last = items.last().expect("an item");
         assert_eq!(last["kind"], "phrase");
@@ -773,6 +830,66 @@ llm_repos = 1
             let text = update_text(&news, &from, &to, start);
             assert!(text.contains("## Finish"), "{text}");
             assert!(!text.contains("Moving `deslag_version`"), "{text}");
+        }
+    }
+
+    /// A lint the config already has a table for says so in the text and in the JSON, whether the
+    /// table is the section's or an override's, and a lint it lacks does not.
+    #[test]
+    fn a_lint_the_config_already_has_a_table_for_says_so() {
+        use crate::config::{Config as Loaded, ConfigSource};
+        let (changelog, catalogue) = (changelog(), no_phrases());
+        let (from, to) = (version("0.0.0"), version("0.3.0"));
+        let news = News::between(&changelog, &catalogue, &from, &to);
+        let config = Loaded::parse(
+            "schema_version = 1\ndeslag_version = \"0.0.0\"\n[md.lints.density]\n\
+             [[md.overrides]]\nglobs = [\"/A.md\"]\nlints.list_growth = {}\n",
+            "deslag.toml".into(),
+            ConfigSource::Explicit,
+        )
+        .expect("a config");
+        let reading = Reading::of(&config, &news);
+        assert_eq!(reading.set, ["density", "list_growth"]);
+
+        let start = Start::Config(&reading);
+        let text = update_text(&news, &from, &to, start);
+        assert!(
+            text.contains(
+                "### `density` (0.0.1)\n\nFails walls of text\n\n\
+                 This config already has a `density` table.\n\nTurn it on."
+            ),
+            "{text}"
+        );
+        assert_eq!(text.matches("already has").count(), 2, "{text}");
+        assert!(!text.contains("already has a `repo_layout`"), "{text}");
+
+        let json: serde_json::Value =
+            serde_json::from_str(&update_json(&news, &from, &to, start)).expect("JSON");
+        let marked: Vec<(&str, bool)> = json["entries"]
+            .as_array()
+            .expect("entries")
+            .iter()
+            .filter(|item| item["kind"] == "lint")
+            .map(|item| {
+                (
+                    item["id"].as_str().expect("an id"),
+                    item.get("already_set").is_some_and(|set| set == true),
+                )
+            })
+            .collect();
+        assert_eq!(
+            marked,
+            [
+                ("density", true),
+                ("list_growth", true),
+                ("repo_layout", false)
+            ]
+        );
+
+        // With no config read, nothing is marked.
+        for start in [Start::Since, Start::NoConfig] {
+            assert!(!update_text(&news, &from, &to, start).contains("already has"));
+            assert!(!update_json(&news, &from, &to, start).contains("already_set"));
         }
     }
 

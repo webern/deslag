@@ -155,7 +155,7 @@ fn update(args: &UpdateArgs) -> anyhow::Result<String> {
     };
     Ok(match args.format {
         UpdateFormat::Text => instructions::update_text(&news, &from, &to, start),
-        UpdateFormat::Json => instructions::update_json(&news, &from, &to),
+        UpdateFormat::Json => instructions::update_json(&news, &from, &to, start),
     })
 }
 

@@ -246,10 +246,11 @@ impl<'a> Reader<'a> {
         self.close();
     }
 
-    /// Cuts back to the end of the heading that is open the pieces and spans pulldown-cmark ends
-    /// after a tab. It gives an ATX heading's last text or code piece, and an emphasis, strong or
-    /// strikethrough span that ends the line, a range past the tab, but [`Reader::trim`] ends the
-    /// block before it.
+    /// Ends the open heading's pieces and spans where its block ends.
+    ///
+    /// pulldown-cmark keeps a tab that closes an ATX heading in the range of the heading's last
+    /// text or code piece, and of an emphasis, strong or strikethrough span that ends the line,
+    /// but [`Reader::trim`] ends the block before the tab.
     fn end_heading_text(&mut self) {
         let Some(Open {
             content: Content::Text { first, .. },
@@ -271,9 +272,8 @@ impl<'a> Reader<'a> {
             .last_mut()
             .filter(|piece| piece.range.end > end)
         {
-            // A character reference is not the source bytes, and the tab after it is not in its
-            // text, so only the range of a piece that is the source bytes loses its text too.
-            // pulldown-cmark keeps a closing tab in an ATX heading's last text span.
+            // The text of a character reference differs from its source bytes and does not hold
+            // the tab, so a piece cuts its text only when the text is its source bytes.
             // TODO: drop this workaround once pulldown-cmark trims the tab, as CommonMark asks.
             if *piece.text == source[piece.range.clone()] {
                 let kept = piece.text.len() - (piece.range.end - end);

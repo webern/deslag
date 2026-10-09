@@ -1,0 +1,4 @@
+# A ‘plain’ one.
+[package]
+name = "quote" # Parses the “quoted” word.
+description = "A ‘string’ is not read."

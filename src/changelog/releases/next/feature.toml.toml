@@ -1,0 +1,27 @@
+kind = "feature"
+id = "toml"
+summary = "Lints the comments of TOML files, by section"
+onboarding = '''
+A `[toml]` section lints the `#` comments of TOML files with the lints that read prose. A comment
+on a line of its own is read with the comments on the lines next to it at the same column, and a
+comment after a key or a header is read alone. Every comment is read as plain text. Keys, values and
+strings are never read, so a `#` inside a string is no comment, and `deslag fix` edits a comment
+only when the edit leaves it reading as it did. A file that is not valid TOML is still read for its
+comments.
+
+A config with no `[toml]` section does not read a TOML file. Its lints are the same tables as
+`[md]`'s, under `[toml.lints]`, and the same lints turn on. A lint that needs the whole file, such
+as `max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error there, since no comment
+of a TOML file has Markdown blocks. A file that `[md]` and `[toml]` both select is an error.
+
+The section reads files ending in `.toml`. `Cargo.lock` and `Cargo.toml.orig` cannot be selected.
+With no `globs`, the section reads every `.toml` file, a `deslag.toml` config too. Fenced TOML in
+Markdown is not read.
+
+```toml
+[toml]
+globs = ["/Cargo.toml", "/crates/**/Cargo.toml"]
+
+[toml.lints.banned_phrases]
+```
+'''

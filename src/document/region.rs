@@ -16,7 +16,7 @@ use super::stack::Need;
 pub enum Surface {
     /// A doc comment: `///` and `//!` lines, and `/** */` and `/*! */` blocks.
     DocComment,
-    /// Any other comment: `//` lines and `/* */` blocks.
+    /// Any other comment: `//` lines and `/* */` blocks, and the `#` lines of a TOML file.
     Comment,
 }
 

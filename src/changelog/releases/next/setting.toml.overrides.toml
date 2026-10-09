@@ -1,0 +1,16 @@
+kind = "setting"
+id = "toml.overrides"
+keys = ["globs", "lints"]
+summary = "Sets lints for the TOML files a list of globs matches"
+onboarding = '''
+A `[[toml.overrides]]` entry holds `globs` and a `lints` table. Its tables apply to the files its
+globs match, on top of the tables under `[toml.lints]`. Its globs narrow the section's, so they need
+not end in `.toml`. An override can turn a lint on or change its settings, but it cannot turn off a
+lint that a wider table turned on.
+
+```toml
+[[toml.overrides]]
+globs = ["/tools/**"]
+lints.banned_phrases = {}
+```
+'''

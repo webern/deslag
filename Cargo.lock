@@ -261,6 +261,7 @@ dependencies = [
  "thiserror",
  "toml",
  "toml_edit",
+ "toml_parser",
  "unicode-ident",
  "unicode-segmentation",
 ]

@@ -1,0 +1,15 @@
+kind = "setting"
+id = "toml.globs"
+summary = "Chooses the TOML files the lints judge"
+onboarding = '''
+`toml.globs` lists the TOML files the lints judge. Every pattern must end in `.toml`, so
+`*.{toml,md}` is refused, and so is `Cargo.lock`. The extension is matched in lower case, so a file
+ending in `.TOML` is not read and `*.TOML` is refused. A pattern holding a `/` matches the path from
+the repo root; one without matches the file name in any directory. With no `globs`, every `.toml`
+file is judged.
+
+```toml
+[toml]
+globs = ["/Cargo.toml", "/crates/**/Cargo.toml"]
+```
+'''

@@ -1,0 +1,6 @@
+deslag fixed app.toml:
+  line 1: U+2018 left single quotation mark "‘"; write `'`
+  line 1: U+2019 right single quotation mark "’"; write `'`
+  line 3: U+201C left double quotation mark "“"; write `"`
+  line 3: U+201D right double quotation mark "”"; write `"`
+

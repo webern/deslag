@@ -31,6 +31,7 @@ mod sentences;
 mod skip;
 mod stack;
 mod tokens;
+mod toml_regions;
 
 use std::borrow::Cow;
 use std::ops::Range;

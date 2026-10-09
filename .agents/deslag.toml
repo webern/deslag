@@ -124,3 +124,22 @@ groups = { emoji = true }
 [rust.lints.banned_phrases]
 
 [rust.lints.verbs_no_nouns]
+
+# The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
+# the sweep prints. They are held to the same characters and phrases as the Rust comments.
+[toml]
+globs = [
+  "/.agents/deslag.toml",
+  "/_typos.toml",
+  "/rust-toolchain.toml",
+  "**/Cargo.toml",
+  "/src/**/*.toml",
+  "/tools/corpus/*.toml",
+]
+
+[toml.lints.banned_chars]
+groups = { emoji = true }
+
+[toml.lints.banned_phrases]
+
+[toml.lints.verbs_no_nouns]

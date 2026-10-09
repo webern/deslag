@@ -22,7 +22,7 @@ use super::region_build::line_start;
 use super::skip::List;
 use super::{
     Block, BlockKind, Body, Document, Fences, Language, Reader, Stack, Surface, cpp_regions,
-    markdown, rust_regions,
+    markdown, rust_regions, toml_regions,
 };
 
 /// Reads `source` as Markdown, and the comments of the fences `fences` asks for.
@@ -90,6 +90,14 @@ impl Language {
                 };
                 let lists = |surface| List::new(Language::Cpp, reader.markup(surface));
                 let regions = cpp_regions::regions(text, surfaces, lists);
+                (reader, regions)
+            }
+            Language::Toml => {
+                let reader = Reader::Toml {
+                    surfaces: surfaces_of,
+                };
+                let lists = |surface| List::new(Language::Toml, reader.markup(surface));
+                let regions = toml_regions::regions(text, surfaces, lists);
                 (reader, regions)
             }
         }

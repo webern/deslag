@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: toml.lints.list_growth is on, but it needs the blocks of Markdown, which no surface of [toml] has; [toml] reads the comment surface

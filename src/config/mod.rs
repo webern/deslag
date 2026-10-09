@@ -1,9 +1,9 @@
 //! The config: its shape, and the settings it gives each file.
 //!
 //! The file is versioned, then split into one section per kind of file deslag lints: `[md]`, and
-//! `[rust]` and `[cpp]` for the comments of Rust files and of C and C++ files. A section says
-//! which files it covers, the settings of each lint for all of them, and overrides for the files
-//! matching a pattern:
+//! `[rust]`, `[cpp]` and `[toml]` for the comments of Rust files, of C and C++ files and of TOML
+//! files. A section says which files it covers, the settings of each lint for all of them, and
+//! overrides for the files matching a pattern:
 //!
 //! ```toml
 //! schema_version = 1
@@ -30,9 +30,9 @@
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
-//! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`] and [`cpp`] hold the
-//! sections of those names, and [`lints`] the settings of each lint. [`update`] is the one thing
-//! that writes a config, and [`edit`] makes the edits to its text.
+//! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
+//! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`update`]
+//! is the one thing that writes a config, and [`edit`] makes the edits to its text.
 
 pub mod cpp;
 pub mod edit;
@@ -42,6 +42,7 @@ pub mod redirect;
 pub mod rust;
 pub mod search;
 pub mod section;
+pub mod toml;
 pub mod update;
 
 use std::num::NonZeroU32;
@@ -66,8 +67,11 @@ pub use search::{
 pub use section::Section;
 
 /// The sections other than `[md]`, each with the extensions of the files it reads.
-const SECTION_EXTENSIONS: &[(&str, &[&str])] =
-    &[(rust::NAME, rust::EXTENSIONS), (cpp::NAME, cpp::EXTENSIONS)];
+const SECTION_EXTENSIONS: &[(&str, &[&str])] = &[
+    (rust::NAME, rust::EXTENSIONS),
+    (cpp::NAME, cpp::EXTENSIONS),
+    (toml::NAME, toml::EXTENSIONS),
+];
 
 /// The config schema this build of deslag reads.
 ///
@@ -116,6 +120,9 @@ struct ConfigFile {
     /// The C and C++ section. A config without one does not read any C or C++ file.
     #[serde(default)]
     cpp: Option<cpp::CppFile>,
+    /// The TOML section. A config without one does not read any TOML file.
+    #[serde(default)]
+    toml: Option<toml::TomlFile>,
 }
 
 /// What `Config::parse` reads of a config before the rest: the two keys that decide whether deslag
@@ -147,6 +154,10 @@ struct Head {
     #[serde(default)]
     #[expect(dead_code, reason = "holds a position, never read")]
     cpp: Option<IgnoredAny>,
+    /// Never read. It holds the place of `toml` in `ConfigFile`.
+    #[serde(default)]
+    #[expect(dead_code, reason = "holds a position, never read")]
+    toml: Option<IgnoredAny>,
 }
 
 /// The `deslag_version` key as text, with an error that names the key whatever the language.
@@ -172,7 +183,7 @@ fn deserialize<T: DeserializeOwned>(
     format: ConfigFormat,
 ) -> Result<T, Box<dyn std::error::Error + Send + Sync>> {
     Ok(match format {
-        ConfigFormat::Toml => toml::from_str(text)?,
+        ConfigFormat::Toml => ::toml::from_str(text)?,
         ConfigFormat::Yaml => serde_saphyr::from_str(text)?,
         ConfigFormat::Json => serde_json::from_str(text)?,
     })
@@ -267,6 +278,7 @@ impl Config {
         let mut written = vec![(md::NAME, file.md.into_parts())];
         written.extend(file.rust.map(|rust| (rust::NAME, rust.into_parts())));
         written.extend(file.cpp.map(|cpp| (cpp::NAME, cpp.into_parts())));
+        written.extend(file.toml.map(|toml| (toml::NAME, toml.into_parts())));
         let applied = redirect::apply(&mut written, &path_string)?;
         let sections = written
             .into_iter()
@@ -448,6 +460,15 @@ mod tests {
         let both = load_json(r#"[1, {}, "0.0.1", {}, {}]"#);
         let names: Vec<&str> = both.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "rust", "cpp"]);
+    }
+
+    /// The TOML section follows the C and C++ one in an array.
+    #[test]
+    fn a_json_array_reads_the_toml_section_after_the_cpp_section() {
+        let config = load_json(r#"[1, {}, "0.0.1", null, null, {"lints": {"density": {}}}]"#);
+        let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
+        assert_eq!(names, ["md", "toml"]);
+        assert!(config.sections()[1].lints_for("a.toml").density.is_some());
     }
 
     /// Every section that selects a file is named, not only the first two.

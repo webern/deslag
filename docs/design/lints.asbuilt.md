@@ -1,16 +1,14 @@
 ---
-updated: 2026-10-03
+updated: 2026-10-09
 subsystems:
-  - changelog
   - lint
-  - news
   - output
 max_size_bytes: 7500
 ---
 # The lints: as built
 
-`lint::check_repo` runs every lint on every file `[md]` selects and returns a `Report`, which
-`src/main.rs` prints and `output` renders for `--format`.
+`lint::check_repo` runs every lint on every file a config section selects and returns a `Report`,
+which `src/main.rs` prints and `output` renders for `--format`.
 
 ```
 src/
@@ -31,18 +29,22 @@ src/
 
 ## Checking
 
-`lint::check_repo` walks once, keeps the files `[md]` selects and reads each; `check_text` resolves
-a file's settings and runs each lint in `Lint::ALL` order. A lint returns an `Over` for a failing
-file, which becomes a `Finding` with the lint's `Violation`. `Lint` lists the lints once; its id is
-the config's table name, and the tally, golden set and cases key off it. A new lint is a module, a
-`Lint` and a `Violation`.
+`lint::check_repo` walks once, keeps the files a section selects (`Config::sole_section_for`) and
+reads each; `check_text` resolves a file's settings and runs each lint in `Lint::ALL` order. The
+`banned_phrases` lint holds the catalogue's phrases to the config's stamp (`changelog.asbuilt.md`).
+
+A lint returns an `Over` for a failing file, which becomes a `Finding` with the lint's `Violation`.
+`Lint` lists the lints once; its id is the config's table name, and the tally, golden set and cases
+key off it. A new lint is a module, a `Lint` and a `Violation`.
 
 A lint's module doc comment describes it as built, and this doc gives it a line in the tree above;
 `tests/asbuilt.rs` holds each lint's doc comment to 2000 bytes. Its section of `deslag instructions
 lints` is a file under `src/instructions/lints/`, without which `instructions` does not compile.
 
 A lint whose `Lint::reads_change` holds judges a change: `check_text` reads each file it selects
-at the base, by `Change::base_text`, into a `Before`, or with no base returns `Error::NoBase`.
+at the base, by `Change::base_text`, into a `Before`, or with no base returns `Error::NoBase`. The
+`list_growth` report names the base as given, and where it meets HEAD when that is another commit:
+`Change::commit` is the commit the base names.
 
 A lint keeps what it decides from the file alone in a function of the `Document`, such as
 `repo_layout::read`; what needs the settings or the disk is a thin layer over it.

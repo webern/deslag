@@ -123,13 +123,15 @@ list. With `--dry-run` it writes nothing, names the phrases the move turns on an
 release renamed or removed, and keeps the file's comments and layout. Run bare, it sets
 `deslag_version` only when `deslag instructions update` has nothing new to tell; `--to <version>`
 sets it regardless, and `--dry-run` writes nothing. In a YAML or JSON config it deletes a removed
-setting too, and leaves an emptied table as `{}`; a renamed setting there, a YAML file with an alias
-or a merge key, and a key it cannot cut safely are refused, with the edit printed for you to make.
+setting too, and leaves an emptied table as `{}`; a renamed setting there, a removed setting in a
+YAML file with an alias or a merge key, and a key it cannot cut safely are refused, with the edit
+printed for you to make.
 
 Moving the stamp changes what `check` finds only through the phrases waiting for it. A renamed or
 removed setting is read whatever the stamp says, a new lint stays off until the config names it,
-and a new setting takes its default whatever the stamp says. `deslag update --to` names the phrases the move turns on: those whose group is on
-in a table that neither allows nor bans them.
+and a new setting takes its default whatever the stamp says.
+`deslag update --to` names the phrases the move turns on: those whose group is on in a table that
+neither allows nor bans them.
 
 To see what a waiting phrase would flag, search your text for it, or move the stamp by hand, run
 `deslag check --base <BASE>` as under Usage, and put the stamp back. When no phrase waits, nothing

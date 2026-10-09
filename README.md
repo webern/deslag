@@ -50,7 +50,11 @@ it.
 
 `--base <BASE>`, on `check` and `fix`, gives the run the same change without narrowing the report.
 A lint that judges a change, such as `list_growth`, which fails a file left with more list items
-than it had, needs one: without it, a run that selects a file for that lint exits 2.
+than it had, needs one: without it, a run that selects a file for that lint exits 2. Give the
+branch the work merges into: `origin/main`, or `main` with no remote. A report says which commit it
+measured from, the one where `BASE` and `HEAD` meet. `--base HEAD` judges only uncommitted work,
+and a new file has no earlier version to compare, so in a clean tree `list_growth` passes and on a
+branch it misses growth already committed. Never use it in CI or on a branch under review.
 
 `deslag fix [PATH]...` writes the replacements that `banned_chars` names, where it can prove the
 file reads as before apart from those characters. It says what it fixed, and why it left the rest,

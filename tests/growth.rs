@@ -247,7 +247,8 @@ fn a_run_with_no_base_cannot_judge_a_file() {
     );
     repo.write("a.md", "# A\n\none \u{2014} two\n");
     let error = "deslag: list_growth judges what a change did to a.md, and this run has no base \
-                 to judge it from: give one, such as with --base origin/main\n";
+                 to judge it from: give the branch the work merges into, such as with --base \
+                 origin/main; --base HEAD judges only uncommitted work\n";
     for command in ["check", "fix"] {
         let output = deslag(repo.root(), &[command]);
         assert_eq!(

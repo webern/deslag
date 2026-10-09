@@ -57,9 +57,11 @@ schema. TOML, YAML and JSON configs share it.
 
 ## 4. Measure, then propose
 
-Run `deslag check --base origin/main`. It prints a report on standard error for each file that
-fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means deslag
-could not run, as with a bad config: fix the setup, not the Markdown.
+Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
+no remote. `--base HEAD` judges only uncommitted work, so in a clean tree `list_growth` passes:
+never use it in CI or on a branch under review. deslag prints a report on standard error for each
+file that fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means
+deslag could not run, as with a bad config: fix the setup, not the Markdown.
 
 For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
 file's size today stops it from growing; a budget below it asks for cuts. Where one file needs a

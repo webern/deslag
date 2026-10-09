@@ -26,17 +26,23 @@ use std::ops::Range;
 use super::cpp::{Lexeme, LexemeKind, lex};
 use super::region::{Region, Surface};
 use super::region_build::{Row, block_region, line_region, line_start, whole_line};
-use super::skip::{Language, list};
+use super::skip::{Language, List};
 use super::{Document, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
-    Document::of_regions(stack, source, regions(stack, surfaces, source))
+    let skip = |surface| List::new(Language::Cpp, stack.markup(surface));
+    Document::of_regions(stack, source, regions(source, surfaces, skip))
 }
 
-/// The regions of `source` of the surfaces asked for, in the order of the file.
-pub(super) fn regions(stack: &Stack, surfaces: &[Surface], source: &str) -> Vec<Region> {
+/// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
+/// list that says what is not prose in the comments of a surface.
+pub(super) fn regions(
+    source: &str,
+    surfaces: &[Surface],
+    skip: impl Fn(Surface) -> List,
+) -> Vec<Region> {
     let comments: Vec<Found<'_>> = lex(source)
         .iter()
         .filter_map(|lexeme| Found::new(source, lexeme))
@@ -52,7 +58,7 @@ pub(super) fn regions(stack: &Stack, surfaces: &[Surface], source: &str) -> Vec<
             continue;
         }
         let marker = first.marker.len();
-        let skip = list(Language::Cpp, stack.markup(surface));
+        let skip = skip(surface);
         regions.extend(if first.block {
             block_region(source, surface, first.range.clone(), marker, skip)
         } else {
@@ -217,7 +223,9 @@ mod tests {
         let stack = Stack::new(Reader::Cpp {
             surfaces: surfaces.to_vec(),
         });
-        super::regions(&stack, surfaces, source)
+        super::regions(source, surfaces, |surface| {
+            List::new(Language::Cpp, stack.markup(surface))
+        })
     }
 
     /// The surface and text of every region of `source`, after checking that the `Carrier` of each

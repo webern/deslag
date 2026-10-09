@@ -24,17 +24,23 @@ use std::ops::Range;
 use super::region::{Region, Surface};
 use super::region_build::{Row, block_region, line_region, line_start, whole_line};
 use super::rust::{DocStyle, Lexeme, LexemeKind, lex};
-use super::skip::{Language, list};
+use super::skip::{Language, List};
 use super::{Document, Stack};
 
 /// Reads `source` into the first layer: one region block for each comment, or run of comments, of
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
-    Document::of_regions(stack, source, regions(stack, surfaces, source))
+    let skip = |surface| List::new(Language::Rust, stack.markup(surface));
+    Document::of_regions(stack, source, regions(source, surfaces, skip))
 }
 
-/// The regions of `source` of the surfaces asked for, in the order of the file.
-pub(super) fn regions(stack: &Stack, surfaces: &[Surface], source: &str) -> Vec<Region> {
+/// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
+/// list that says what is not prose in the comments of a surface.
+pub(super) fn regions(
+    source: &str,
+    surfaces: &[Surface],
+    skip: impl Fn(Surface) -> List,
+) -> Vec<Region> {
     let lexemes = lex(source);
     let mut regions = Vec::new();
     let mut at = 0;
@@ -45,7 +51,7 @@ pub(super) fn regions(stack: &Stack, surfaces: &[Surface], source: &str) -> Vec<
                 at = next;
                 surfaces
                     .contains(&surface(doc))
-                    .then(|| rust_line_region(stack, source, doc, &lines))
+                    .then(|| rust_line_region(&skip, source, doc, &lines))
             }
             LexemeKind::BlockComment {
                 doc,
@@ -54,7 +60,7 @@ pub(super) fn regions(stack: &Stack, surfaces: &[Surface], source: &str) -> Vec<
                 at += 1;
                 surfaces.contains(&surface(doc)).then(|| {
                     let marker = if doc.is_some() { 3 } else { 2 };
-                    let skip = list(Language::Rust, stack.markup(surface(doc)));
+                    let skip = skip(surface(doc));
                     block_region(source, surface(doc), lexeme.range.clone(), marker, skip)
                 })
             }
@@ -171,7 +177,7 @@ fn only_attributes(source: &str, gap: Range<usize>, inside: &[Lexeme], attribute
 
 /// The region of a run of line comments: `//`, `///` or `//!`.
 fn rust_line_region(
-    stack: &Stack,
+    skip: &impl Fn(Surface) -> List,
     source: &str,
     doc: Option<DocStyle>,
     lines: &[Range<usize>],
@@ -192,8 +198,7 @@ fn rust_line_region(
             }),
         })
         .collect();
-    let skip = list(Language::Rust, stack.markup(surface(doc)));
-    line_region(source, surface(doc), marker, &rows, skip)
+    line_region(source, surface(doc), marker, &rows, skip(surface(doc)))
 }
 
 #[cfg(test)]
@@ -211,7 +216,9 @@ mod tests {
         let stack = Stack::new(Reader::Rust {
             surfaces: surfaces.to_vec(),
         });
-        super::regions(&stack, surfaces, source)
+        super::regions(source, surfaces, |surface| {
+            List::new(Language::Rust, stack.markup(surface))
+        })
     }
 
     /// The surface and text of every region of `source`, after checking each region's carrier

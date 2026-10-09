@@ -201,12 +201,12 @@ fn build(
             }
         })
         .collect();
-    let kept: Vec<Option<&str>> = rows
+    let every_row: Vec<Option<&str>> = rows
         .iter()
         .zip(&starts)
         .map(|(row, &start)| (start < row.rest.end).then(|| &source[start..row.rest.end]))
         .collect();
-    let masks = skip.mask(&kept);
+    let masks = skip.mask(&every_row);
     let mut inner = String::new();
     let mut map = SourceMap::default();
     let mut lines = Vec::with_capacity(rows.len());

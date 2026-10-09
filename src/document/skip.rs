@@ -7,8 +7,6 @@
 //! cannot add to them. Labels such as `SAFETY:` and `TODO(name):` are not masked: they read as
 //! words, and the text after them is prose.
 
-#[cfg(test)]
-use std::cell::Cell;
 use std::sync::OnceLock;
 
 use serde::Deserialize;
@@ -33,27 +31,13 @@ pub(super) enum Mask {
     Lead(usize),
 }
 
-#[cfg(test)]
-thread_local! {
-    static OFF: Cell<bool> = const { Cell::new(false) };
-}
-
-/// Runs `read` on this thread with every mask off, so that a test can compare the two readings.
-#[cfg(test)]
-pub(super) fn unmasked<T>(read: impl FnOnce() -> T) -> T {
-    OFF.set(true);
-    let result = read();
-    OFF.set(false);
-    result
-}
-
 /// The words that the prose keeps. A directive may not be named like one.
 const LABELS: [&str; 5] = ["TODO", "FIXME", "XXX", "HACK", "SAFETY"];
 
 /// The lists of `skip.toml`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct File {
+struct SkipFile {
     licence: Licence,
     markers: Markers,
     #[serde(default)]
@@ -89,10 +73,10 @@ struct Table {
     directives: Vec<String>,
 }
 
-impl File {
+impl SkipFile {
     /// Reads and checks the lists in `text`.
-    fn parse(text: &str) -> Result<File, String> {
-        let mut file: File = toml::from_str(text).map_err(|error| error.to_string())?;
+    fn parse(text: &str) -> Result<SkipFile, String> {
+        let mut file: SkipFile = toml::from_str(text).map_err(|error| error.to_string())?;
         let lists = [
             &file.licence.starts,
             &file.licence.holds,
@@ -125,40 +109,38 @@ impl File {
     }
 }
 
-/// The lists for one language: what every language has, and its own table.
+/// The lists for one language: what every language has, and its own table. A list is for the
+/// comments of one language and one markup, since a Markdown paragraph is not a licence paragraph.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct List {
-    file: &'static File,
+    file: &'static SkipFile,
     table: &'static Table,
     /// How the text is read.
     markup: Markup,
 }
 
-/// The lists for the comments of `language`, which are read as `markup`.
-pub(super) fn list(language: Language, markup: Markup) -> List {
-    static FILE: OnceLock<File> = OnceLock::new();
-    let file = FILE.get_or_init(|| {
-        File::parse(include_str!("skip.toml")).expect("src/document/skip.toml is well formed")
-    });
-    let table = match language {
-        Language::Rust => &file.rust,
-        Language::Cpp => &file.cpp,
-    };
-    List {
-        file,
-        table,
-        markup,
-    }
-}
-
 impl List {
+    /// The lists for the comments of `language`, which are read as `markup`.
+    pub(super) fn new(language: Language, markup: Markup) -> List {
+        static FILE: OnceLock<SkipFile> = OnceLock::new();
+        let file = FILE.get_or_init(|| {
+            SkipFile::parse(include_str!("skip.toml"))
+                .expect("src/document/skip.toml is well formed")
+        });
+        let table = match language {
+            Language::Rust => &file.rust,
+            Language::Cpp => &file.cpp,
+        };
+        List {
+            file,
+            table,
+            markup,
+        }
+    }
+
     /// The mask of each of `lines`, the lines of a comment with their indent cut and `None` for a
     /// blank line.
     pub(super) fn mask(&self, lines: &[Option<&str>]) -> Vec<Mask> {
-        #[cfg(test)]
-        if OFF.get() {
-            return vec![Mask::Prose; lines.len()];
-        }
         let mut masks: Vec<Mask> = lines
             .iter()
             .map(|line| line.map_or(Mask::Prose, |text| self.line(text)))
@@ -263,7 +245,7 @@ mod tests {
             .split('\n')
             .map(|line| (!line.trim().is_empty()).then_some(line))
             .collect();
-        list(language, markup).mask(&lines)
+        List::new(language, markup).mask(&lines)
     }
 
     fn cpp(text: &str) -> Vec<Mask> {
@@ -272,7 +254,7 @@ mod tests {
 
     #[test]
     fn the_file_parses_and_has_each_list() {
-        let file = File::parse(include_str!("skip.toml")).unwrap();
+        let file = SkipFile::parse(include_str!("skip.toml")).unwrap();
         assert!(!file.licence.holds.is_empty() && !file.markers.holds.is_empty());
         assert!(!file.cpp.directives.is_empty() && file.rust.directives.is_empty());
     }
@@ -280,7 +262,7 @@ mod tests {
     #[test]
     fn a_bad_file_is_refused() {
         let base = "[licence]\nstarts = []\nholds = []\n[markers]\nholds = []\nrule = \"=\"\n";
-        assert!(File::parse(base).is_ok());
+        assert!(SkipFile::parse(base).is_ok());
         for (bad, error) in [
             (base.replace("starts = []", "starts = [\"\"]"), "empty"),
             (format!("{base}[cpp]\nlines = [\"\"]\n"), "empty"),
@@ -296,7 +278,7 @@ mod tests {
                 "label",
             ),
         ] {
-            let message = File::parse(&bad).unwrap_err();
+            let message = SkipFile::parse(&bad).unwrap_err();
             assert!(message.contains(error), "{message}");
         }
     }
@@ -388,14 +370,37 @@ mod tests {
         found
     }
 
-    /// Reads every file under `root` twice, with the masks on and off, and checks that the masks
-    /// did only what they are for. Returns the counts of lines kept, cut at the start, and cut
-    /// whole, and of regions that are gone.
+    /// A list that masks nothing, so that a reading with it is the reading without the skip list.
+    fn nothing_is_masked() -> List {
+        static FILE: OnceLock<SkipFile> = OnceLock::new();
+        let file = FILE.get_or_init(|| SkipFile {
+            licence: Licence {
+                starts: Vec::new(),
+                holds: Vec::new(),
+                by_first_byte: vec![Vec::new(); 256],
+            },
+            markers: Markers {
+                holds: Vec::new(),
+                rule: String::new(),
+            },
+            rust: Table::default(),
+            cpp: Table::default(),
+        });
+        List {
+            file,
+            table: &file.cpp,
+            markup: Markup::Plain,
+        }
+    }
+
+    /// Reads every file under `root` twice, with the skip list and with a list that masks nothing,
+    /// and checks that the masks did only what they are for. Returns the counts of lines kept, cut
+    /// at the start, and cut whole, and of regions that are gone.
     fn read_twice(
         root: &str,
         extensions: &[&str],
         reader: fn(Vec<Surface>) -> Reader,
-        regions: fn(&Stack, &[Surface], &str) -> Vec<Region>,
+        regions: impl Fn(&str, &[Surface], &dyn Fn(Surface) -> List) -> Vec<Region>,
         language: Language,
     ) -> [usize; 4] {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join(root);
@@ -406,20 +411,21 @@ mod tests {
         );
         let surfaces = [Surface::DocComment, Surface::Comment];
         let stack = Stack::new(reader(surfaces.to_vec()));
-        let list = list(language, Markup::Plain);
         let [mut kept, mut led, mut cut, mut gone] = [0; 4];
         for path in files {
             // A file that is not UTF-8 is not source to a reader of text.
             let Ok(source) = std::fs::read_to_string(&path) else {
                 continue;
             };
-            let before = unmasked(|| regions(&stack, &surfaces, &source));
-            let mut after = regions(&stack, &surfaces, &source).into_iter().peekable();
+            let before = regions(&source, &surfaces, &|_| nothing_is_masked());
+            let skip = |surface| List::new(language, stack.markup(surface));
+            let mut after = regions(&source, &surfaces, &skip).into_iter().peekable();
             for region in before {
                 let Some(masked) = after.next_if(|masked| masked.outer == region.outer) else {
                     gone += 1;
                     continue;
                 };
+                let list = skip(masked.surface);
                 let (was, now) = (region.inner.split('\n'), masked.inner.split('\n'));
                 assert_eq!(was.clone().count(), now.clone().count(), "{path:?}");
                 for (was, now) in was.zip(now) {
@@ -447,7 +453,7 @@ mod tests {
             ".crates/vendor",
             &["rs"],
             |surfaces| Reader::Rust { surfaces },
-            rust_regions::regions,
+            |source, surfaces, skip| rust_regions::regions(source, surfaces, skip),
             Language::Rust,
         );
         println!(
@@ -458,7 +464,7 @@ mod tests {
             ".crates/c/vendor",
             &["c", "h", "cc", "cpp", "cxx", "hpp", "hh", "hxx"],
             |surfaces| Reader::Cpp { surfaces },
-            cpp_regions::regions,
+            |source, surfaces, skip| cpp_regions::regions(source, surfaces, skip),
             Language::Cpp,
         );
         println!(

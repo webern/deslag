@@ -1,5 +1,5 @@
 ---
-updated: 2026-09-27
+updated: 2026-10-09
 subsystems:
   - change
 max_size_bytes: 4096
@@ -31,6 +31,9 @@ library. `Change::against(root, base)` runs git in `root`:
 4. `diff -U0` from the merge base. Each option a user's config could change is on the command line:
    prefixes, color, renames, `--relative`, the algorithm, the hunk context, `core.quotePath`.
 5. `ls-files --others --exclude-standard`: an untracked file is added whole.
+
+A `Change` keeps the base as given, the commit it names (`Change::commit`) and the merge base; the
+two commits are the same when the base is in HEAD's history.
 
 A failure is `Error::Change`, saying which: no git, no work tree, an unknown base, or no shared
 history, shallow or not. The binary exits 2 on it and prints nothing on stdout.

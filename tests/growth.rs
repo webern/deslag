@@ -72,7 +72,8 @@ fn judged(dir: &Path, args: &[&str]) -> Judged {
     }
 }
 
-/// The first line of a report on `path`, grown from `base` items to `items` since HEAD in `dir`.
+/// The first line of a report on `path`, grown from `base` items to `items` since HEAD, which the
+/// run named as its base, in `dir`.
 fn grew(dir: &Path, path: &str, items: usize, base: usize) -> String {
     let head = git(dir, &["rev-parse", "--short=7", "HEAD"]);
     let noun = if items == 1 {
@@ -81,7 +82,7 @@ fn grew(dir: &Path, path: &str, items: usize, base: usize) -> String {
         "list items"
     };
     format!(
-        "{path} has {items} {noun}, {} more than the {base} it had at {}.",
+        "{path} has {items} {noun}, {} more than the {base} it had at {} (HEAD).",
         items - base,
         head.trim()
     )
@@ -163,10 +164,32 @@ fn a_renamed_file_is_judged_against_its_old_name() {
     let judged = judged(repo.root(), &["--base", "main"]);
     let head = git(repo.root(), &["rev-parse", "--short=7", "main"]);
     let line = format!(
-        "new.md has 3 list items, 1 more than the 2 it had at {}.",
+        "new.md has 3 list items, 1 more than the 2 it had at {} (main).",
         head.trim()
     );
     assert_fails(&judged, &line, &[7]);
+}
+
+/// A base that has moved on since the branch left it is not the commit the change is measured
+/// from, so the report names the commit where the two meet.
+#[test]
+fn a_base_that_moved_on_is_named_as_the_commit_where_it_meets_head() {
+    let repo = repo(&[("a.md", "- one\n- two\n")]);
+    let met = git(repo.root(), &["rev-parse", "--short=7", "HEAD"]);
+    git(repo.root(), &["switch", "-q", "-c", "topic"]);
+    repo.write("a.md", "- one\n- two\n- three\n");
+    commit(repo.root(), "grow");
+    git(repo.root(), &["switch", "-q", "main"]);
+    repo.write("b.md", "Text.\n");
+    commit(repo.root(), "move on");
+    git(repo.root(), &["switch", "-q", "topic"]);
+
+    let judged = judged(repo.root(), &["--base", "main"]);
+    let line = format!(
+        "a.md has 3 list items, 1 more than the 2 it had at {}, where main and HEAD meet.",
+        met.trim()
+    );
+    assert_fails(&judged, &line, &[3]);
 }
 
 #[test]

@@ -685,6 +685,8 @@ fn list_growth_finds_what_its_golden_file_says() {
             binary: false,
         };
         let before = Before {
+            rev: &earlier.commit,
+            commit: &earlier.commit,
             merge_base: &earlier.commit,
             document: Document::markdown(&base),
             file: &file,

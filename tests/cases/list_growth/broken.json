@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "list_growth",
-      "report": "ERROR: deslag detected list growth!\n\nREADME.md has 5 list items, 3 more than the 2 it had at [BASE].\n\nA list that gains an item with every change becomes an inventory of everything that exists, and stops helping anyone find anything. Where the items follow a rule, such as one entry for each directory of tests, write the rule once instead of the list. Otherwise, take out an item that matters less for each one you add.\n\nDo not turn the items into paragraphs, a table or a code block to get past this check, and do not change its settings. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe items on lines this change added:\n  line 9: `--format`: the format of the report.\n  line 10: `text`, the default.\n  line 14: The input passed.",
+      "report": "ERROR: deslag detected list growth!\n\nREADME.md has 5 list items, 3 more than the 2 it had at [BASE] (HEAD).\n\nA list that gains an item with every change becomes an inventory of everything that exists, and stops helping anyone find anything. Where the items follow a rule, such as one entry for each directory of tests, write the rule once instead of the list. Otherwise, take out an item that matters less for each one you add.\n\nDo not turn the items into paragraphs, a table or a code block to get past this check, and do not change its settings. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe items on lines this change added:\n  line 9: `--format`: the format of the report.\n  line 10: `text`, the default.\n  line 14: The input passed.",
       "marks": [
         {
           "kind": "evidence",

@@ -2,12 +2,14 @@
 //! that no test depends on what the real `next/` holds or on the crate version.
 
 use std::path::Path;
+use std::process::Command;
 
 use deslag_release::entries::{self, Entry, Kind};
 use deslag_release::freeze::{self, Retired, Rules};
 use deslag_release::frozen::{self, EXTENSIONS};
 use deslag_release::prep::prep;
 use deslag_release::schema::SchemaPaths;
+use deslag_release::version;
 use serde_json::{Value, json};
 
 /// A schema with two sections, `md` and `rust`, that take the same lints. `extra` adds a setting
@@ -437,6 +439,29 @@ fn freeze_first(root: &Path) {
     std::fs::write(root.join("tests/configs/hashes"), hashes).expect("writes");
 }
 
+/// Runs git in `root`, with an identity of its own, and returns what it printed.
+fn git(root: &Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["-c", "user.name=t", "-c", "user.email=t@example.com"])
+        .args(["-c", "commit.gpgsign=false"])
+        .args(args)
+        .output()
+        .expect("runs git");
+    assert!(output.status.success(), "git {args:?}: {output:?}");
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+/// Commits the whole of `root`, a repository made if need be, so that `prep` finds a clean tree.
+fn commit(root: &Path) {
+    if !root.join(".git").exists() {
+        git(root, &["init", "-q"]);
+    }
+    git(root, &["add", "-A"]);
+    git(root, &["commit", "-q", "-m", "tree"]);
+}
+
 fn read(root: &Path, path: &str) -> String {
     std::fs::read_to_string(root.join(path)).unwrap_or_else(|_| panic!("{path} is readable"))
 }
@@ -458,6 +483,7 @@ fn the_first_release_folds_into_the_crate_version() {
     let root = directory.path();
     tree(root, "0.0.1", false);
     freeze_first(root);
+    commit(root);
     let first = read(root, "tests/configs/0.0.1/config.toml");
     let leaves = rules(false, Vec::new());
     // Nothing is missing, so the frozen release is left as it is, and the rest is done.
@@ -490,6 +516,7 @@ fn a_fold_rewrites_the_first_release_to_name_every_setting() {
     let root = directory.path();
     tree(root, "0.0.1", true);
     freeze_first(root);
+    commit(root);
     let first = read(root, "tests/configs/0.0.1/config.json");
     let leaves = rules(true, Vec::new());
     prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("prep");
@@ -513,6 +540,7 @@ fn a_later_release_bumps_the_version_and_adds_a_directory() {
     let root = directory.path();
     tree(root, "0.0.1", true);
     freeze_first(root);
+    commit(root);
     let tags = ["v0.0.1".to_string()];
     let leaves = rules(true, Vec::new());
     let said = prep(root, &version("0.0.2"), &tags, &leaves).expect("prep");
@@ -556,9 +584,11 @@ fn a_release_with_no_entry_and_nothing_to_freeze_changes_only_the_version() {
     let root = directory.path();
     tree(root, "0.0.1", false);
     freeze_first(root);
+    commit(root);
     let tags = ["v0.0.1".to_string()];
     let leaves = rules(false, Vec::new());
     prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("the first release");
+    commit(root);
     prep(root, &version("0.0.2"), &tags, &leaves).expect("the second");
     assert!(!root.join("src/changelog/releases/0.0.2").exists());
     assert!(!root.join("tests/configs/0.0.2").exists());
@@ -571,6 +601,7 @@ fn a_version_that_may_not_be_released_changes_nothing() {
     let root = directory.path();
     tree(root, "0.0.2", false);
     freeze_first(root);
+    commit(root);
     let cargo = read(root, "Cargo.toml");
     let leaves = rules(false, Vec::new());
     let tags = ["v0.0.2".to_string()];
@@ -596,6 +627,7 @@ fn a_setting_that_cannot_be_filled_stops_prep_before_any_edit() {
         "kind = \"setting\"\nid = \"md.title\"\nsummary = \"Titles\"\nonboarding = \"No fence\"\n",
     )
     .expect("writes");
+    commit(root);
     let cargo = read(root, "Cargo.toml");
     let tags = ["v0.0.1".to_string()];
     let error = prep(root, &version("0.0.2"), &tags, &rules(true, Vec::new())).expect_err("stops");
@@ -608,11 +640,105 @@ fn a_setting_that_cannot_be_filled_stops_prep_before_any_edit() {
 }
 
 #[test]
+fn a_hand_bumped_crate_version_is_a_normal_release() {
+    let directory = tempfile::tempdir().expect("a directory");
+    let root = directory.path();
+    // The crate is at 0.0.2 by hand, `releases/0.0.2/` does not exist, and the newest frozen
+    // config is 0.0.1 and leaves out a setting.
+    tree(root, "0.0.2", true);
+    freeze_first(root);
+    commit(root);
+    let tags = ["v0.0.1".to_string()];
+    let leaves = rules(true, Vec::new());
+    prep(root, &version("0.0.2"), &tags, &leaves).expect("a normal release");
+    assert!(read(root, "Cargo.toml").contains("version = \"0.0.2\" # kept"));
+    assert!(
+        root.join("src/changelog/releases/0.0.2/setting.md.title.toml")
+            .is_file()
+    );
+    assert!(!read(root, "tests/configs/0.0.1/config.toml").contains("title"));
+    for extension in EXTENSIONS {
+        let path = frozen::config(&root.join("tests/configs/0.0.2"), extension);
+        let value = frozen::value(&path);
+        assert!(freeze::missing(&value, &leaves.paths).is_empty());
+        assert_eq!(value["deslag_version"], json!("0.0.2"));
+    }
+    hash_lines_match(root);
+    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 7);
+}
+
+#[test]
+fn a_tree_with_changes_is_refused_and_named() {
+    let directory = tempfile::tempdir().expect("a directory");
+    let root = directory.path();
+    tree(root, "0.0.1", false);
+    freeze_first(root);
+    commit(root);
+    std::fs::write(root.join("Cargo.lock"), "# edited\n").expect("writes");
+    std::fs::write(root.join("stray.txt"), "x").expect("writes");
+    let tags = ["v0.0.1".to_string()];
+    let error = prep(root, &version("0.0.2"), &tags, &rules(false, Vec::new())).expect_err("stops");
+    let said = format!("{error:#}");
+    assert!(
+        said.contains("Cargo.lock") && said.contains("stray.txt"),
+        "{said}"
+    );
+    assert_eq!(read(root, "Cargo.lock"), "# edited\n");
+    assert!(read(root, "Cargo.toml").contains("version = \"0.0.1\""));
+}
+
+#[test]
+fn a_file_that_cannot_be_read_stops_prep_before_any_write() {
+    for missing in ["Cargo.lock", "tests/configs/hashes"] {
+        let directory = tempfile::tempdir().expect("a directory");
+        let root = directory.path();
+        tree(root, "0.0.1", true);
+        freeze_first(root);
+        std::fs::remove_file(root.join(missing)).expect("removes it");
+        commit(root);
+        let tags = ["v0.0.1".to_string()];
+        let error =
+            prep(root, &version("0.0.2"), &tags, &rules(true, Vec::new())).expect_err(missing);
+        assert!(error.to_string().contains(missing), "{error:#}");
+        assert_eq!(git(root, &["status", "--porcelain"]), "", "{missing}");
+        assert!(!root.join("tests/configs/0.0.2").exists());
+        assert!(
+            root.join("src/changelog/releases/next/feature.new.toml")
+                .is_file()
+        );
+    }
+}
+
+#[test]
+fn a_shallow_repository_has_no_tags_to_trust() {
+    let directory = tempfile::tempdir().expect("a directory");
+    let origin = directory.path().join("origin");
+    std::fs::create_dir(&origin).expect("makes it");
+    git(&origin, &["init", "-q"]);
+    for name in ["a", "b"] {
+        std::fs::write(origin.join(name), name).expect("writes");
+        git(&origin, &["add", "-A"]);
+        git(&origin, &["commit", "-q", "-m", name]);
+    }
+    git(&origin, &["tag", "v0.0.2"]);
+    assert_eq!(version::tags(&origin).expect("tags"), ["v0.0.2"]);
+    let clone = directory.path().join("clone");
+    let url = format!("file://{}", origin.display());
+    git(
+        directory.path(),
+        &["clone", "-q", "--depth", "1", "--no-tags", &url, "clone"],
+    );
+    let error = version::tags(&clone).expect_err("refused");
+    assert!(error.to_string().contains("shallow"), "{error:#}");
+}
+
+#[test]
 fn the_notes_list_the_entries_by_kind_and_say_when_there_are_none() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
     tree(root, "0.0.1", false);
     freeze_first(root);
+    commit(root);
     prep(root, &version("0.0.1"), &[], &rules(false, Vec::new())).expect("prep");
     assert_eq!(
         entries::notes(root, &version("0.0.1")).expect("notes"),

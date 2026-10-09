@@ -56,7 +56,7 @@ fenced TOML must fit the schema.
 ## Releasing
 
 Run `cargo run -p deslag-release -- prep <version>`, read the diff, run `make ci-fast`, then
-`make check-release`. `prep` commits nothing. It refuses a version that is not `X.Y.Z` with no
+`make check-release`. `prep` commits nothing, and refuses a tree with uncommitted changes. It refuses a version that is not `X.Y.Z` with no
 leading zero, above every `v*` tag and not below the crate's; `check-version <version>` asks the
 same.
 It makes every edit of the release change, and the release does not edit a test:
@@ -72,10 +72,11 @@ It makes every edit of the release change, and the release does not edit a test:
 
 `deslag-release notes <version>` prints the release's entries as Markdown for the GitHub release.
 
-The first release folds. The crate is at 0.0.1 and no tag `v0.0.1` exists, so `prep 0.0.1` runs at
-the crate's own version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
+The first release folds. The crate is at 0.0.1, no tag `v0.0.1` exists and `releases/0.0.1/` does,
+so `prep 0.0.1` runs at the crate's own version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
 0.0.1, rewrites `tests/configs/0.0.1/` to name every setting and replaces its hash lines. Once the
-tag `v0.0.1` exists an equal version is refused, so this happens once.
+tag `v0.0.1` exists an equal version is refused, so this happens once. A version equal to the
+crate's with no `releases/<version>/` yet, as after a hand bump, is a normal release.
 
 A frozen directory names every setting. Each one the newest directory leaves out gets the TOML
 fenced in the `onboarding` of its entry, else the schema's default, and if there is neither, `prep`

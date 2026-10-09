@@ -10,7 +10,7 @@ use anyhow::{Context, Result, bail, ensure};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Against {
     /// Not below the crate's version. It may equal it, as the first release does, because the
-    /// check above it has made sure no tag `vX` exists.
+    /// check above it has made sure no tag at or above X exists.
     Bump,
     /// Equal to the crate's version, as a release of a commit that already holds the change.
     Crate,
@@ -72,22 +72,35 @@ pub fn check(
     Ok(())
 }
 
-/// The names of the tags that start with `v`, in the repository at `root`.
-pub fn tags(root: &Path) -> Result<Vec<String>> {
+/// What `git -C root args` prints, or an error that carries its stderr.
+pub fn git(root: &Path, args: &[&str]) -> Result<String> {
     let output = Command::new("git")
         .arg("-C")
         .arg(root)
-        .args(["tag", "-l", "v*"])
+        .args(args)
         .output()
         .context("cannot run git")?;
     if !output.status.success() {
         bail!(
-            "git tag failed in {}: {}",
+            "git {} failed in {}: {}",
+            args.join(" "),
             root.display(),
             String::from_utf8_lossy(&output.stderr).trim()
         );
     }
-    Ok(String::from_utf8_lossy(&output.stdout)
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+}
+
+/// The names of the tags that start with `v`, in the repository at `root`. A shallow repository
+/// is refused: it may lack tags, and a missing tag would let a released version be repeated.
+pub fn tags(root: &Path) -> Result<Vec<String>> {
+    ensure!(
+        git(root, &["rev-parse", "--is-shallow-repository"])?.trim() != "true",
+        "{} is a shallow repository, so its tags may be missing: fetch the tags with full history \
+         (`git fetch --unshallow --tags`)",
+        root.display()
+    );
+    Ok(git(root, &["tag", "-l", "v*"])?
         .lines()
         .map(str::to_string)
         .collect())

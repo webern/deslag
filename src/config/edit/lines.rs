@@ -6,25 +6,25 @@
 //! line ending is a changed line, and whether the file ends in a line ending is compared apart. A
 //! line that was removed must be a line an edit is for, a comment directly above one (no blank line
 //! between), or a blank line next to those; when the diff cannot tell which of two equal lines was
-//! removed, it is enough that removing the other one leaves the same text. A line that was added
-//! must be one of these:
+//! removed, it is enough that removing the other one leaves the same text. The line of a table a
+//! delete emptied is not one of these: it goes only as the line an added line is that line sealed.
+//! A line that was added must be one of these:
 //!
 //! - the stamp: the old stamp line with only its quoted value changed, or the one line that holds
 //!   the new key and its value, or the line of `schema_version` with only that key put in beside it;
-//! - a key that was sealed as `= {}` because the delete left its parent empty;
+//! - a key that was sealed as `= {}` because the delete left its parent empty, or in YAML the
+//!   line of that parent with ` {}` put in once, right after its colon (after its anchor or tag if
+//!   it has one) and before a comment, once for each table the delete emptied;
 //! - a renamed key;
 //! - a line an edit changed in one place.
 
 use semver::Version;
 
-use super::{Edit, StampAt, Touch};
+use super::{Edit, StampAt, Touch, TouchKind};
 
 /// The most lines a diff may differ by. Edits change a few lines each, so a text that differs by
 /// more is not the result of the edits.
 const MOST_CHANGED: usize = 2000;
-
-/// The most cells the comparison of two long lines may fill, when a line has several edits.
-const MOST_CELLS: usize = 4_000_000;
 
 /// A line of a text: what it says, and the bytes that end it: `\n`, `\r\n`, or nothing for the last
 /// line of a file that does not have a final line ending.
@@ -63,7 +63,11 @@ pub(super) fn only_the_edits_changed(
         ));
     };
 
-    let may_remove = removable(&old_lines, touched);
+    let mut may_remove = removable(&old_lines, touched);
+    let sealed_lines = seals(&old_lines, &new_lines, &added, touched);
+    for &(emptied, _) in &sealed_lines {
+        may_remove[emptied] = true;
+    }
     if let Some(&stray) = removed.iter().find(|&&index| !may_remove[index])
         && !same_without_allowed(&old_lines, &removed, &may_remove)
     {
@@ -122,7 +126,9 @@ pub(super) fn only_the_edits_changed(
             }
             continue;
         }
-        if sealed(&old_lines, line.content, touched) {
+        if sealed(&old_lines, line.content, touched)
+            || sealed_lines.iter().any(|&(_, sealed)| sealed == index)
+        {
             continue;
         }
         if !renamed.is_empty()
@@ -132,7 +138,8 @@ pub(super) fn only_the_edits_changed(
         {
             continue;
         }
-        if line.content.trim().is_empty() || !changed_in_one_place(&old_lines, line, touched) {
+        if line.content.trim().is_empty() || !changed_in_one_place(&old_lines, line, touched, stamp)
+        {
             return Err(shown());
         }
     }
@@ -169,18 +176,24 @@ fn is_blank(line: &str) -> bool {
     line.trim().is_empty()
 }
 
-/// For each line of `old`, whether an edit may take it away: a key's own lines, the comment lines
-/// right above them, and the run of blank lines on each side. The stamp's lines only.
+/// For each line of `old`, whether an edit may take it away: a TOML key's own lines, the comment
+/// lines right above them, and the run of blank lines on each side; a YAML or JSON key's own lines
+/// only, and the stamp's lines only. [`seals`] adds the lines of the tables a delete emptied.
 fn removable(old: &[Line<'_>], touched: &[Touch]) -> Vec<bool> {
     let mut may = vec![false; old.len()];
-    for touch in touched {
+    // The line of a table a delete emptied is not here: it may go only as the line [`seals`] pairs
+    // with an added one.
+    for touch in touched
+        .iter()
+        .filter(|touch| touch.kind != TouchKind::Parent)
+    {
         if old.is_empty() {
             break;
         }
         let first = (touch.lines.start() - 1).min(old.len() - 1);
         let last = (touch.lines.end() - 1).min(old.len() - 1);
         let (mut from, mut to) = (first, last);
-        if touch.key {
+        if touch.kind == TouchKind::Key {
             while from > 0 && is_comment(old[from - 1].content) {
                 from -= 1;
             }
@@ -246,7 +259,7 @@ fn stamp_line(
     let quoted = format!("\"{to}\"");
     let mut stamp_lines = touched
         .iter()
-        .filter(|touch| !touch.key)
+        .filter(|touch| touch.kind == TouchKind::Stamp)
         .flat_map(|touch| touch.lines.clone())
         .filter_map(|number| old.get(number - 1));
     if matches!(at, StampAt::Key(_)) {
@@ -353,39 +366,185 @@ fn sealed(old: &[Line<'_>], line: &str, touched: &[Touch]) -> bool {
     let Some(path) = squeezed_line.strip_suffix("={}") else {
         return false;
     };
-    touched.iter().filter(|touch| touch.key).any(|touch| {
-        old.get(touch.lines.start() - 1)
-            .and_then(|before| before.content.split_once('='))
-            .map(|(key, _)| squeezed(key))
-            .and_then(|key| key.rsplit_once('.').map(|(parent, _)| parent.to_string()))
-            .is_some_and(|parent| parent == path)
-    })
+    touched
+        .iter()
+        .filter(|touch| touch.kind == TouchKind::Key)
+        .any(|touch| {
+            old.get(touch.lines.start() - 1)
+                .and_then(|before| before.content.split_once('='))
+                .map(|(key, _)| squeezed(key))
+                .and_then(|key| key.rsplit_once('.').map(|(parent, _)| parent.to_string()))
+                .is_some_and(|parent| parent == path)
+        })
 }
 
-/// Whether `line` is one of the touched keys' lines of `old` with a few stretches taken out or put
-/// in: at most one for each edit that is for that line. It ends as that line did.
-fn changed_in_one_place(old: &[Line<'_>], line: Line<'_>, touched: &[Touch]) -> bool {
-    touched.iter().filter(|touch| touch.key).any(|touch| {
-        let places = touched
-            .iter()
-            .filter(|other| {
-                other.key
+/// The line of each table a delete emptied, with the added line that is that line sealed: the
+/// index into `old` and the index into `new`. A line is in one pair at most, so a table is sealed
+/// once, and a line that was not sealed lacks a partner and may not go.
+fn seals(
+    old: &[Line<'_>],
+    new: &[Line<'_>],
+    added: &[usize],
+    touched: &[Touch],
+) -> Vec<(usize, usize)> {
+    let mut pairs: Vec<(usize, usize)> = Vec::new();
+    let emptied = touched
+        .iter()
+        .filter(|touch| touch.kind == TouchKind::Parent)
+        .flat_map(|touch| touch.lines.clone())
+        .filter_map(|number| number.checked_sub(1))
+        .filter(|&index| index < old.len());
+    for index in emptied {
+        let partner = added.iter().copied().find(|&now| {
+            !pairs.iter().any(|&(_, taken)| taken == now) && seals_line(old[index], new[now])
+        });
+        if let Some(now) = partner {
+            pairs.push((index, now));
+        }
+    }
+    pairs
+}
+
+/// Whether `after` is the line of a table, `before`, with ` {}` put in once and nothing else
+/// changed.
+fn seals_line(before: Line<'_>, after: Line<'_>) -> bool {
+    // The last line of a file that does not end in a line ending has an empty ending, and it is
+    // that line with any: `Line` compares them the same way.
+    (before.end == after.end || before.end.is_empty() || after.end.is_empty())
+        && (0..=before.content.len()).any(|at| {
+            before.content.is_char_boundary(at)
+                && is_seal_point(before.content, at)
+                && after.content
+                    == format!("{} {{}}{}", &before.content[..at], &before.content[at..])
+        })
+}
+
+/// Whether `{}` may be put in at `at` of the line `content` of a block table: right after the colon
+/// of its key, or after the anchor or tag that follows the colon, and before a comment if the line
+/// has one. The editor puts it there ([`super::remove`]); a position inside the comment, or between
+/// the key and its colon, is not.
+fn is_seal_point(content: &str, at: usize) -> bool {
+    let (head, tail) = content.split_at(at);
+    if head.ends_with([' ', '\t']) {
+        return false;
+    }
+    let tail = tail.trim_start_matches([' ', '\t']);
+    if !(tail.is_empty() || tail.starts_with('#')) {
+        return false;
+    }
+    let mut last = None;
+    for word in head.split([' ', '\t']).filter(|word| !word.is_empty()) {
+        if word.starts_with('#') {
+            return false;
+        }
+        last = Some(word);
+    }
+    last.is_some_and(|word| word.ends_with(':') || word.starts_with(['&', '!']))
+}
+
+/// Whether `line` is one of the lines of `old` that a YAML, JSON or TOML key is cut from, with a
+/// few stretches taken out or put in: at most one for each edit that is for that line. It ends as
+/// that line did.
+///
+/// A minified file has the stamp and a key on one line. The stamp is then taken out of `line` (or
+/// put back in the old line) first, as [`stamp_line`] would have it, and the rest is the key's cut.
+fn changed_in_one_place(
+    old: &[Line<'_>],
+    line: Line<'_>,
+    touched: &[Touch],
+    stamp: Option<(Option<&Version>, &Version, StampAt)>,
+) -> bool {
+    let cuts = |kind| matches!(kind, TouchKind::Key | TouchKind::Member);
+    touched
+        .iter()
+        .filter(|touch| cuts(touch.kind))
+        .any(|touch| {
+            let overlapping = |other: &&Touch| {
+                other.kind != TouchKind::Parent
                     && other.lines.start() <= touch.lines.end()
                     && touch.lines.start() <= other.lines.end()
-            })
-            .count()
-            .max(1);
-        touch.lines.clone().any(|number| {
-            old.get(number - 1).is_some_and(|before| {
-                (before.end == line.end || before.end.is_empty() || line.end.is_empty())
-                    && stretches_apart(before.content, line.content, places)
+            };
+            let places = touched.iter().filter(overlapping).count().max(1);
+            // The stamp's edit is on this line too, besides the cuts.
+            let stamped = touched
+                .iter()
+                .filter(overlapping)
+                .any(|other| other.kind == TouchKind::Stamp);
+            touch.lines.clone().any(|number| {
+                let Some(before) = old.get(number - 1) else {
+                    return false;
+                };
+                // A blank line is not a line a key is cut from; a cut that reaches back over the
+                // blank lines of a last key with no final line ending touches them, and no line
+                // may be added in their place.
+                if before.content.trim().is_empty() {
+                    return false;
+                }
+                if !(before.end == line.end || before.end.is_empty() || line.end.is_empty()) {
+                    return false;
+                }
+                if stretches_apart(before.content, line.content, places) {
+                    return true;
+                }
+                let (Some((from, to, at)), true) = (stamp, stamped) else {
+                    return false;
+                };
+                let quoted = format!("\"{to}\"");
+                let (olds, news) = match at {
+                    StampAt::Key(_) => (with_stamp_value(before.content, from, &quoted), vec![]),
+                    _ => (vec![], without_stamp_member(line.content, &quoted)),
+                };
+                olds.iter()
+                    .any(|old| stretches_apart(old, line.content, places - 1))
+                    || news
+                        .iter()
+                        .any(|new| stretches_apart(before.content, new, places - 1))
             })
         })
-    })
+}
+
+/// `before` with the value of its `deslag_version`, which was `from`, written as `quoted`.
+fn with_stamp_value(before: &str, from: Option<&Version>, quoted: &str) -> Vec<String> {
+    let written: Vec<String> = match from {
+        Some(from) => vec![format!("\"{from}\""), format!("'{from}'"), from.to_string()],
+        None => ["null", "Null", "NULL", "~"].map(String::from).to_vec(),
+    };
+    written
+        .iter()
+        .filter(|written| before.contains(written.as_str()))
+        .map(|written| before.replacen(written.as_str(), quoted, 1))
+        .collect()
+}
+
+/// `line` with the member `deslag_version: quoted`, and the comma before it, taken out; one text
+/// for each place it could be.
+fn without_stamp_member(line: &str, quoted: &str) -> Vec<String> {
+    let mut found = Vec::new();
+    for (at, _) in line.match_indices("deslag_version") {
+        let head = &line[..at];
+        let head = head.strip_suffix(['"', '\'']).unwrap_or(head);
+        let start = match head.trim_end_matches([' ', '\t']).strip_suffix(',') {
+            Some(before) => before.len(),
+            None => head.len(),
+        };
+        let Some(end) = line[at..].find(quoted).map(|i| at + i + quoted.len()) else {
+            continue;
+        };
+        if is_stamp_member(&line[start..end], quoted, true) {
+            found.push(format!("{}{}", &line[..start], &line[end..]));
+        }
+    }
+    found
 }
 
 /// Whether the longer of `a` and `b` becomes the shorter by taking out at most `most` stretches of
 /// characters, each one unbroken.
+///
+/// There is no size limit, because the answer decides whether an edit is accepted and a long
+/// minified line is a line like any other. Taking characters out of one text gives the other only
+/// if the shorter is a subsequence of the longer, which two cursors decide in one pass;
+/// [`fewest_stretches`] then counts the stretches. Besides the characters themselves, the memory
+/// grows with the number of characters taken out and not with the length of the lines.
 fn stretches_apart(a: &str, b: &str, most: usize) -> bool {
     let (long, short) = if a.chars().count() >= b.chars().count() {
         (a, b)
@@ -393,7 +552,10 @@ fn stretches_apart(a: &str, b: &str, most: usize) -> bool {
         (b, a)
     };
     let (long, short): (Vec<char>, Vec<char>) = (long.chars().collect(), short.chars().collect());
-    if most <= 1 {
+    if most == 0 {
+        return long == short;
+    }
+    if most == 1 {
         let before = long.iter().zip(&short).take_while(|(l, s)| l == s).count();
         let after = long
             .iter()
@@ -404,28 +566,83 @@ fn stretches_apart(a: &str, b: &str, most: usize) -> bool {
             .count();
         return before + after >= short.len();
     }
-    if long.len().saturating_mul(short.len()) > MOST_CELLS {
-        return false;
+    // Characters the two start and end with are kept in some best way, so only what lies between
+    // them is left to count.
+    let start = long.iter().zip(&short).take_while(|(l, s)| l == s).count();
+    let end = long[start..]
+        .iter()
+        .rev()
+        .zip(short[start..].iter().rev())
+        .take_while(|(l, s)| l == s)
+        .count();
+    let (long, short) = (
+        &long[start..long.len() - end],
+        &short[start..short.len() - end],
+    );
+    is_subsequence(long, short) && fewest_stretches(long, short) <= most
+}
+
+/// Whether `short` is `long` with some characters taken out.
+fn is_subsequence(long: &[char], short: &[char]) -> bool {
+    let mut wanted = short.iter().peekable();
+    for c in long {
+        wanted.next_if_eq(&c);
     }
-    // The fewest stretches to take out of the first i characters of `long` to leave the first j of
-    // `short`, ending with `long[i - 1]` kept (`kept`) or taken out (`gone`).
+    wanted.peek().is_none()
+}
+
+/// The fewest stretches of characters to take out of `long` to leave `short`, which is `long` with
+/// some characters out. A table over the characters of `long` and the number taken out so far,
+/// which is at most the difference of the lengths, so its size is that of the work to be done.
+fn fewest_stretches(long: &[char], short: &[char]) -> usize {
+    let spare = long.len() - short.len();
     let unreachable = usize::MAX / 2;
-    let mut kept = vec![unreachable; short.len() + 1];
-    let mut gone = vec![unreachable; short.len() + 1];
+    // After `i` characters, `d` of them taken out and the last kept (`kept[d]`) or taken out
+    // (`gone[d]`): the fewest stretches. `i - d` characters of `short` are then behind.
+    let mut kept = vec![unreachable; spare + 1];
+    let mut gone = vec![unreachable; spare + 1];
+    let mut next_kept = vec![unreachable; spare + 1];
+    let mut next_gone = vec![unreachable; spare + 1];
     kept[0] = 0;
-    for &c in &long {
-        let mut next_kept = vec![unreachable; short.len() + 1];
-        let mut next_gone = vec![unreachable; short.len() + 1];
-        for j in 0..=short.len() {
-            next_gone[j] = (gone[j]).min(kept[j] + 1);
-            if j > 0 && short[j - 1] == c {
-                next_kept[j] = kept[j - 1].min(gone[j - 1]);
+    for (i, &c) in long.iter().enumerate() {
+        // `i - d` characters kept can be no more than `short` holds, and `d` no more than `spare`.
+        let (low, high) = (i.saturating_sub(short.len()), spare.min(i));
+        next_kept[high + 1..=(high + 1).min(spare)].fill(unreachable);
+        next_gone[low] = unreachable;
+        // With all of `short` behind, there is no character left to keep.
+        let first = if i >= short.len() { low + 1 } else { low };
+        if first > low {
+            next_kept[low] = unreachable;
+        }
+        if first <= high {
+            let ahead = short[i - high..=i - first].iter().rev();
+            for (((now, &was_kept), &was_gone), &next) in next_kept[first..=high]
+                .iter_mut()
+                .zip(&kept[first..=high])
+                .zip(&gone[first..=high])
+                .zip(ahead)
+            {
+                *now = if next == c {
+                    was_kept.min(was_gone)
+                } else {
+                    unreachable
+                };
             }
         }
-        kept = next_kept;
-        gone = next_gone;
+        if low < spare {
+            let last = high.min(spare - 1);
+            for ((now, &was_kept), &was_gone) in next_gone[low + 1..=last + 1]
+                .iter_mut()
+                .zip(&kept[low..=last])
+                .zip(&gone[low..=last])
+            {
+                *now = was_gone.min(was_kept + 1);
+            }
+        }
+        std::mem::swap(&mut kept, &mut next_kept);
+        std::mem::swap(&mut gone, &mut next_gone);
     }
-    kept[short.len()].min(gone[short.len()]) <= most
+    kept[spare].min(gone[spare])
 }
 
 /// The indexes of the items of `old` that are not in `new`, and of the items of `new` that are not
@@ -449,10 +666,13 @@ fn diff<T: PartialEq>(old: &[T], new: &[T], limit: usize) -> Option<(Vec<usize>,
     let offset = most + 1;
     let at = |k: isize| (offset + k) as usize;
     let mut v = vec![0isize; 2 * most as usize + 3];
+    // `trace[d]` is the part of `v` that round `d` reads, the diagonals from `-d - 1` to `d + 1`,
+    // so that the memory grows with the square of the length of the script and not with the
+    // length of the texts.
     let mut trace: Vec<Vec<isize>> = Vec::new();
     let mut found = None;
     'search: for d in 0..=most {
-        trace.push(v.clone());
+        trace.push(v[at(-d - 1)..=at(d + 1)].to_vec());
         for k in (-d..=d).step_by(2) {
             let mut x = if k == -d || (k != d && v[at(k - 1)] < v[at(k + 1)]) {
                 v[at(k + 1)]
@@ -477,13 +697,14 @@ fn diff<T: PartialEq>(old: &[T], new: &[T], limit: usize) -> Option<(Vec<usize>,
     let (mut x, mut y) = (n, m);
     for d in (1..=found).rev() {
         let before = &trace[d as usize];
+        let on = |k: isize| before[(k + d + 1) as usize];
         let k = x - y;
-        let previous = if k == -d || (k != d && before[at(k - 1)] < before[at(k + 1)]) {
+        let previous = if k == -d || (k != d && on(k - 1) < on(k + 1)) {
             k + 1
         } else {
             k - 1
         };
-        let (previous_x, previous_y) = (before[at(previous)], before[at(previous)] - previous);
+        let (previous_x, previous_y) = (on(previous), on(previous) - previous);
         if previous == k + 1 {
             added.push(start + previous_y as usize);
         } else {
@@ -554,7 +775,10 @@ mod tests {
     }
 
     fn touch(lines: std::ops::RangeInclusive<usize>) -> Touch {
-        Touch { lines, key: true }
+        Touch {
+            lines,
+            kind: TouchKind::Key,
+        }
     }
 
     fn only_the_edits(
@@ -621,6 +845,129 @@ mod tests {
             let why = only_the_edits(old, new, &touched, &edits).expect_err(name);
             assert!(why.contains("which no edit makes"), "{name}: {why}");
         }
+    }
+
+    /// The fewest stretches of characters to take out of `long` to leave `short`, by a table of every
+    /// pair of positions; the slow and sure answer to check [`stretches_apart`] against.
+    fn fewest_by_table(long: &[char], short: &[char]) -> Option<usize> {
+        // `kept[j]` and `gone[j]`: the fewest stretches to leave the first `j` of `short` from the
+        // characters seen so far, the last of which was kept or taken out.
+        let unreachable = usize::MAX / 2;
+        let mut kept = vec![unreachable; short.len() + 1];
+        let mut gone = vec![unreachable; short.len() + 1];
+        kept[0] = 0;
+        for &c in long {
+            let mut next_kept = vec![unreachable; short.len() + 1];
+            let mut next_gone = vec![unreachable; short.len() + 1];
+            for j in 0..=short.len() {
+                next_gone[j] = gone[j].min(kept[j] + 1);
+                if j > 0 && short[j - 1] == c {
+                    next_kept[j] = kept[j - 1].min(gone[j - 1]);
+                }
+            }
+            kept = next_kept;
+            gone = next_gone;
+        }
+        let fewest = kept[short.len()].min(gone[short.len()]);
+        (fewest < unreachable).then_some(fewest)
+    }
+
+    #[test]
+    fn stretches_apart_agrees_with_the_table_on_short_lines() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = move |below: u64| {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            state % below
+        };
+        for _ in 0..4000 {
+            let letters = ['a', 'b', 'c', ','][..2 + next(3) as usize].to_vec();
+            let long: Vec<char> = (0..next(14))
+                .map(|_| letters[next(letters.len() as u64) as usize])
+                .collect();
+            let short: Vec<char> = (0..next(8))
+                .map(|_| letters[next(letters.len() as u64) as usize])
+                .collect();
+            if short.len() > long.len() {
+                continue;
+            }
+            let (a, b): (String, String) = (long.iter().collect(), short.iter().collect());
+            if let Some(fewest) = fewest_by_table(&long, &short) {
+                assert_eq!(
+                    fewest_stretches(&long, &short),
+                    fewest,
+                    "{long:?} {short:?}"
+                );
+            }
+            for most in 0..5 {
+                let want = fewest_by_table(&long, &short).is_some_and(|fewest| fewest <= most);
+                assert_eq!(stretches_apart(&a, &b, most), want, "{a:?} {b:?} {most}");
+                assert_eq!(stretches_apart(&b, &a, most), want, "{b:?} {a:?} {most}");
+            }
+        }
+    }
+
+    #[test]
+    fn stretches_are_counted_on_a_line_of_any_length() {
+        // Two stretches taken out of a line of 100,000 characters, far apart, then three.
+        let line: String = (0..20_000).map(|i| format!("k{}:v,", i % 10)).collect();
+        let at = |n: usize| line.char_indices().nth(n).map_or(line.len(), |(i, _)| i);
+        let cut = |ranges: &[(usize, usize)]| {
+            let mut text = line.clone();
+            for &(from, to) in ranges.iter().rev() {
+                text.replace_range(at(from)..at(to), "");
+            }
+            text
+        };
+        assert!(stretches_apart(
+            &line,
+            &cut(&[(10, 30), (90_000, 90_040)]),
+            2
+        ));
+        assert!(!stretches_apart(
+            &line,
+            &cut(&[(10, 30), (500, 520), (90_000, 90_040)]),
+            2
+        ));
+        assert!(stretches_apart(
+            &line,
+            &cut(&[(10, 30), (500, 520), (90_000, 90_040)]),
+            3
+        ));
+        // A character put in, and a different line of the same length.
+        assert!(!stretches_apart(
+            &line,
+            &format!("{}!", cut(&[(10, 30), (500, 520)])),
+            5
+        ));
+        assert!(!stretches_apart(&line, &line.replacen("k1", "k2", 1), 5));
+        // Ten thousand characters out of a hundred thousand, in two stretches, then in three. The
+        // work grows with what is taken out, and the memory only with the length of the lines.
+        let large = cut(&[(10, 5_010), (5_100, 10_100)]);
+        assert_eq!(large.chars().count(), 90_000);
+        assert!(stretches_apart(&line, &large, 2));
+        assert!(!stretches_apart(
+            &line,
+            &cut(&[(10, 113), (500, 603), (900, 1_007)]),
+            2
+        ));
+        assert!(stretches_apart(
+            &line,
+            &cut(&[(10, 113), (500, 603), (900, 1_007)]),
+            3
+        ));
+    }
+
+    #[test]
+    fn a_text_is_a_subsequence_of_another_only_if_it_is_the_other_with_characters_out() {
+        let chars = |text: &str| text.chars().collect::<Vec<char>>();
+        assert!(is_subsequence(&chars("a, b, c"), &chars("a b c")));
+        assert!(is_subsequence(&chars("abc"), &chars("")));
+        assert!(is_subsequence(&chars("á, é"), &chars("áé")));
+        assert!(!is_subsequence(&chars("abc"), &chars("acb")));
+        assert!(!is_subsequence(&chars("ab"), &chars("abc")));
+        assert!(!is_subsequence(&chars("abc"), &chars("abx")));
     }
 
     #[test]

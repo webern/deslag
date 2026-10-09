@@ -340,6 +340,83 @@ mod tests {
         );
     }
 
+    /// A repo with `text` as `deslag.<extension>`.
+    fn repo_in(extension: &str, text: &str) -> (tempfile::TempDir, std::path::PathBuf) {
+        let dir = tempfile::tempdir().expect("a directory");
+        let path = dir.path().join(format!("deslag.{extension}"));
+        fs::write(&path, text).expect("a config");
+        (dir, path)
+    }
+
+    #[test]
+    fn a_yaml_or_json_key_is_deleted_and_a_second_run_has_nothing_to_do() {
+        let now = running();
+        let yaml = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: false\n";
+        let json = "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\"signposts\":true}}}}}";
+        for (extension, text, edited) in [
+            (
+                "yaml",
+                yaml,
+                format!(
+                    "schema_version: 1\ndeslag_version: \"{now}\"\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false\n"
+                ),
+            ),
+            (
+                "json",
+                json,
+                format!(
+                    "{{\"schema_version\":1,\"deslag_version\":\"{now}\",\"md\":{{\"lints\":{{\"banned_phrases\":{{\"groups\":{{}}}}}}}}}}"
+                ),
+            ),
+        ] {
+            let (dir, path) = repo_in(extension, text);
+            let done = run(&dir, false, None, &nothing_new()).expect("an update");
+            assert_eq!(done.edits.len(), 2, "{done:?}");
+            assert_eq!(fs::read_to_string(&path).expect("a config"), edited);
+            let again = run(&dir, false, None, &nothing_new()).expect("an update");
+            assert!(again.edits.is_empty(), "{again:?}");
+            assert_eq!(fs::read_to_string(&path).expect("a config"), edited);
+        }
+    }
+
+    #[test]
+    fn an_edit_that_is_wrong_is_refused_by_the_check_and_the_file_is_not_written() {
+        let toml = format!("schema_version = 1\n{REMOVED}");
+        let yaml = "schema_version: 1\n# a comment\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n        insistence: false\n";
+        let json = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": false\n  }}}}\n}\n";
+        let wrong: [(&str, &str, edit::Damage); 5] = [
+            // It loads as the same config, and a comment is gone.
+            ("yaml", yaml, |text| text.replace("# a comment\n", "")),
+            // It deletes a key that was not removed, so it is another config.
+            ("yaml", yaml, |text| {
+                text.replace("        insistence: false\n", "")
+            }),
+            ("json", json, |text| text.replace("\n  \"md\"", "\"md\"")),
+            ("toml", &toml, |text| text.replace("[md", "# x\n[md")),
+            ("toml", &toml, |text| format!("{text}\n\n")),
+        ];
+        for (extension, text, damage) in wrong {
+            let (dir, path) = repo_in(extension, text);
+            for dry_run in [false, true] {
+                let error = edit::with_wrong_edit(damage, || run(&dir, dry_run, None, &news()))
+                    .expect_err("a refusal");
+                let Error::Update { problem, .. } = error else {
+                    panic!("an update error");
+                };
+                assert!(
+                    problem.contains("nothing was written")
+                        && (problem.contains("changes more than its edits")
+                            || problem.contains("does not set what")),
+                    "{extension}: {problem}"
+                );
+                assert_eq!(fs::read_to_string(&path).expect("a config"), text);
+            }
+            // Without the damage the same file updates.
+            run(&dir, false, None, &news()).expect("an update");
+            assert_ne!(fs::read_to_string(&path).expect("a config"), text);
+        }
+    }
+
     #[cfg(unix)]
     #[test]
     fn a_read_only_config_is_refused_before_anything_is_written() {

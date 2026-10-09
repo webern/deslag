@@ -507,15 +507,20 @@ fn a_stamp_that_cannot_be_placed_is_refused_and_not_guessed() {
     );
 }
 
-// The redirects in YAML and JSON are refused, with the edits spelled out.
+// A redirect in YAML or JSON that cannot be deleted is refused, with the edits spelled out.
 
 #[test]
-fn yaml_that_uses_a_redirect_is_refused_with_each_edit_and_its_line() {
+fn a_yaml_key_that_cannot_be_cut_is_refused_with_each_edit_and_its_line() {
+    // An anchor on the key, in the section and in an override.
     let text = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        \
-                signposts: false\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        \
-                banned_phrases: {groups: {signposts: true}}\n    - globs: [\"b.md\"]\n";
+                &s signposts: false\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        \
+                banned_phrases: {groups: {&t signposts: true}}\n    - globs: [\"b.md\"]\n";
     let refusal = run("yaml", text, Some("0.0.1")).expect_err("a refusal");
-    assert!(refusal.reason.contains("YAML"), "{refusal:?}");
+    assert!(
+        refusal.reason.contains("deslag will not delete it")
+            && refusal.reason.contains("has an anchor or a tag"),
+        "{refusal:?}"
+    );
     assert_eq!(
         refusal.todo,
         [
@@ -526,17 +531,14 @@ fn yaml_that_uses_a_redirect_is_refused_with_each_edit_and_its_line() {
 }
 
 #[test]
-fn json_that_uses_a_redirect_is_refused_and_the_array_form_has_no_line() {
-    let text = "{\n\"schema_version\":1,\n\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\n\
-                \"signposts\":true}}}}}";
-    let refusal = run("json", text, None).expect_err("a refusal");
-    assert!(refusal.reason.contains("JSON"), "{refusal:?}");
-    assert_eq!(refusal.todo.len(), 1);
-    assert!(refusal.todo[0].starts_with("deslag.json:4: delete the key `signposts`"));
-
+fn json_that_cannot_be_cut_is_refused_and_the_array_form_has_no_line() {
     let array =
         "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":[true,false]}}}}";
     let refusal = run("json", array, None).expect_err("a refusal");
+    assert!(
+        refusal.reason.contains("list written by position"),
+        "{refusal:?}"
+    );
     assert_eq!(refusal.todo.len(), 1);
     assert!(
         refusal.todo[0].contains("could not find its line") && refusal.todo[0].contains("null"),
@@ -737,18 +739,36 @@ fn line_check(
 ) -> Result<Edited, Refusal> {
     let config = load(extension, old);
     let stamp = stamp.map(release);
-    let path = format!("deslag.{extension}");
-    let plan = match ConfigFormat::of(config.path()) {
-        Some(ConfigFormat::Toml) => toml::edit(old, &config, &path, stamp.as_ref()),
-        Some(language) => text_edit(old, &config, &path, stamp.as_ref(), language),
-        None => panic!("a language"),
-    }
-    .expect("a plan");
     let plan = Plan {
         text: text.to_string(),
-        ..plan
+        ..plan_of(&config, extension, old, stamp.as_ref())
     };
-    checked::check(&config, old, &path, stamp.as_ref(), plan)
+    checked::check(
+        &config,
+        old,
+        &format!("deslag.{extension}"),
+        stamp.as_ref(),
+        plan,
+    )
+}
+
+/// What the editor makes of `old`, a config of `extension`.
+fn plan_of(config: &Config, extension: &str, old: &str, stamp: Option<&Version>) -> Plan {
+    let path = format!("deslag.{extension}");
+    match ConfigFormat::of(config.path()) {
+        Some(ConfigFormat::Toml) => toml::edit(old, config, &path, stamp),
+        Some(language) => text_edit(old, config, &path, stamp, language),
+        None => panic!("a language"),
+    }
+    .expect("a plan")
+}
+
+/// The check by lines alone, without the check of the settings that comes before it, on `text`
+/// standing in for what the editor made of `old`.
+fn lines_check(extension: &str, old: &str, text: &str) -> Result<(), String> {
+    let config = load(extension, old);
+    let plan = plan_of(&config, extension, old, None);
+    lines::only_the_edits_changed(old, text, &plan.touched, &plan.edits)
 }
 
 #[test]
@@ -834,24 +854,22 @@ fn a_yaml_alias_brings_the_key_to_a_table_that_gets_an_edit_without_a_line() {
 
 #[test]
 fn a_key_that_is_the_only_one_in_its_table_says_to_leave_the_table() {
-    let alone = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n";
-    let refusal = run("yaml", alone, None).expect_err("a refusal");
+    let delete = |alone| Edit::Delete {
+        old: "md.lints.banned_phrases.groups.signposts",
+        line: Some(6),
+        place: None,
+        alone,
+    };
+    assert!(delete(true).instruction("deslag.yaml").ends_with(
+        "It is the only key of `groups`, so leave `groups` in place, even empty (`groups: {}`)"
+    ));
     assert!(
-        refusal.todo[0].ends_with(
-            "It is the only key of `groups`, so leave `groups` in place, even empty (`groups: {}`)"
-        ),
-        "{refusal:?}"
-    );
-    let json = "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\n\"signposts\":true}}}}}";
-    let refusal = run("json", json, None).expect_err("a refusal");
-    assert!(
-        refusal.todo[0].contains("even empty (`\"groups\": {}`)"),
-        "{refusal:?}"
+        delete(true)
+            .instruction("deslag.json")
+            .contains("even empty (`\"groups\": {}`)")
     );
     // With another key beside it, the key alone goes.
-    let beside = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n        insistence: false\n";
-    let refusal = run("yaml", beside, None).expect_err("a refusal");
-    assert!(!refusal.todo[0].contains("leave"), "{refusal:?}");
+    assert!(!delete(false).instruction("deslag.yaml").contains("leave"));
     // A check that fails in TOML lists the edits with the same advice.
     let toml = "schema_version = 1\n[[md.overrides]]\nglobs = [\"a.md\"]\nlints.banned_phrases.groups.signposts = true\n";
     let config = load("toml", toml);
@@ -1062,5 +1080,1185 @@ fn a_last_line_with_no_line_ending_is_edited_and_stamped_and_keeps_none() {
             refusal.reason.contains("final") || refusal.reason.contains("ends in a line ending"),
             "{refusal:?}"
         );
+    }
+}
+
+// Deleting the removed key in YAML and JSON.
+
+/// The three ways a file may be laid out: LF, CRLF, and LF with no final newline.
+fn layouts(text: &str) -> [String; 3] {
+    [
+        text.to_string(),
+        text.replace('\n', "\r\n"),
+        text.trim_end_matches('\n').to_string(),
+    ]
+}
+
+/// Asserts that editing `before`, a config of `extension` that sets the removed key, gives
+/// exactly `after` in each layout, that the two load as the same config, that the old one warned
+/// and the new one does not, and that a second pass has nothing to do.
+fn deletes(extension: &str, before: &str, after: &str) {
+    for (before, after) in layouts(before).iter().zip(layouts(after)) {
+        let got = edited(extension, before, None);
+        assert_eq!(got, after, "{extension}: {before:?}");
+        let (old, new) = (load(extension, before), load(extension, &got));
+        assert!(
+            !old.warnings().is_empty(),
+            "{before:?} does not use the key"
+        );
+        assert!(new.warnings().is_empty(), "{got:?}");
+        assert_eq!(old.sections(), new.sections(), "{got:?}");
+        let again = run(extension, &got, None).expect("a second pass");
+        assert!(again.edits.is_empty(), "{got:?}");
+        assert_eq!(again.text.as_str(), got);
+    }
+}
+
+const YAML_HEAD: &str =
+    "# top\nschema_version: 1 # keep\nmd:\n  lints:\n    banned_phrases:\n      groups:\n";
+
+#[test]
+fn a_yaml_block_key_goes_with_its_lines_first_middle_or_last() {
+    let table = |body: &str| format!("{YAML_HEAD}{body}");
+    deletes(
+        "yaml",
+        &table(
+            "        signposts: false # off\n        insistence: true\n        metaphors: true\n",
+        ),
+        &table("        insistence: true\n        metaphors: true\n"),
+    );
+    deletes(
+        "yaml",
+        &table("        insistence: true\n        signposts: true\n        metaphors: true\n"),
+        &table("        insistence: true\n        metaphors: true\n"),
+    );
+    deletes(
+        "yaml",
+        &table(
+            "        insistence: true\n        metaphors: true\n        signposts: true # last\n",
+        ),
+        &table("        insistence: true\n        metaphors: true\n"),
+    );
+}
+
+#[test]
+fn a_yaml_block_key_that_is_alone_leaves_its_table_empty_and_not_null() {
+    deletes(
+        "yaml",
+        &format!("{YAML_HEAD}        signposts: true\n"),
+        "# top\nschema_version: 1 # keep\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n",
+    );
+    // Its table ends the file, and has other tables after it.
+    deletes(
+        "yaml",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n    density:\n      max_item_chars: 5\n",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n    density:\n      max_item_chars: 5\n",
+    );
+    // The table's own line may hold an anchor or a tag and a comment, and the ` {}` goes before
+    // the comment and after the rest.
+    for (line, sealed) in [
+        ("groups: # the groups", "groups: {} # the groups"),
+        ("groups:   # spaced", "groups: {}   # spaced"),
+        ("groups: &g", "groups: &g {}"),
+        ("groups: &g # c", "groups: &g {} # c"),
+        ("groups: !!map # c", "groups: !!map {} # c"),
+        ("groups: !!map &g # c", "groups: !!map &g {} # c"),
+        ("\"groups\" : # c", "\"groups\" : {} # c"),
+    ] {
+        deletes(
+            "yaml",
+            &format!(
+                "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      {line}\n        signposts: true # off\n"
+            ),
+            &format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      {sealed}\n"),
+        );
+    }
+    // The lint it is in stays on: the config is not the one with no such lint.
+    let before = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n";
+    let after = edited("yaml", before, None);
+    let on = load(
+        "yaml",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases: {}\n",
+    );
+    let off = load("yaml", "schema_version: 1\nmd:\n  lints: {}\n");
+    assert_eq!(load("yaml", &after).sections(), on.sections());
+    assert_ne!(load("yaml", &after).sections(), off.sections());
+}
+
+#[test]
+fn comments_around_a_yaml_key_stay_unless_they_are_on_its_lines() {
+    // A comment line above stays, and so does one below. The trailing comment goes with its line.
+    deletes(
+        "yaml",
+        &format!(
+            "{YAML_HEAD}        # about insistence\n        insistence: true\n        # about signposts\n        signposts: true # off\n        # below\n        metaphors: false\n"
+        ),
+        &format!(
+            "{YAML_HEAD}        # about insistence\n        insistence: true\n        # about signposts\n        # below\n        metaphors: false\n"
+        ),
+    );
+    // Alone, the comments stay under the empty table.
+    deletes(
+        "yaml",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: # all\n        # why\n        signposts: true # off\n\n    density:\n      max_item_chars: 5\n",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {} # all\n        # why\n\n    density:\n      max_item_chars: 5\n",
+    );
+}
+
+#[test]
+fn a_yaml_key_written_with_quotes_is_deleted() {
+    for key in ["\"signposts\"", "'signposts'"] {
+        deletes(
+            "yaml",
+            &format!("{YAML_HEAD}        {key}: true\n        insistence: false\n"),
+            &format!("{YAML_HEAD}        insistence: false\n"),
+        );
+        deletes(
+            "yaml",
+            &format!("{YAML_HEAD}        {key}: true\n"),
+            "# top\nschema_version: 1 # keep\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n",
+        );
+    }
+    // A value with an anchor nobody uses.
+    deletes(
+        "yaml",
+        &format!("{YAML_HEAD}        signposts: &off false\n        insistence: true\n"),
+        &format!("{YAML_HEAD}        insistence: true\n"),
+    );
+}
+
+#[test]
+fn a_yaml_flow_member_goes_with_one_comma() {
+    let flow = |members: &str| {
+        format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {members}\n")
+    };
+    for (before, after) in [
+        (
+            "{signposts: true, insistence: false}",
+            "{insistence: false}",
+        ),
+        (
+            "{insistence: false, signposts: true}",
+            "{insistence: false}",
+        ),
+        (
+            "{insistence: false, signposts: true, metaphors: true}",
+            "{insistence: false, metaphors: true}",
+        ),
+        ("{signposts: true}", "{}"),
+        ("{ signposts: true }", "{  }"),
+        (
+            "{insistence: false, signposts: true,}",
+            "{insistence: false, }",
+        ),
+        (
+            "{\"signposts\": true, \"insistence\": false}",
+            "{\"insistence\": false}",
+        ),
+        (
+            "{signposts: true , insistence: false}",
+            "{insistence: false}",
+        ),
+        // On several lines, a member alone on its lines takes them, and a comment stays.
+        (
+            "{\n        signposts: true,\n        insistence: false\n      }",
+            "{\n        insistence: false\n      }",
+        ),
+        (
+            "{\n        insistence: false,\n        signposts: true\n      }",
+            "{\n        insistence: false\n      }",
+        ),
+        (
+            "{\n        # about\n        signposts: true, # drop\n        insistence: false\n      }",
+            "{\n        # about\n         # drop\n        insistence: false\n      }",
+        ),
+        ("{\n        signposts: true\n      }", "{\n      }"),
+        // The comma before the last member is on a line with a comment, and the comment stays.
+        (
+            "{\n        insistence: false, # c\n        signposts: true\n      }",
+            "{\n        insistence: false # c\n      }",
+        ),
+        (
+            "{\n        insistence: false,\n        # about\n        signposts: true}",
+            "{\n        insistence: false\n        # about\n        }",
+        ),
+    ] {
+        deletes("yaml", &flow(before), &flow(after));
+    }
+    // The whole file in braces, as JSON written as YAML.
+    deletes(
+        "yaml",
+        "{\"schema_version\": 1, \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true, \"insistence\": false}}}}}",
+        "{\"schema_version\": 1, \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\"insistence\": false}}}}}",
+    );
+}
+
+#[test]
+fn the_section_and_every_override_of_a_yaml_config_are_edited_with_the_stamp() {
+    let text = "# c\nschema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: false\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups:\n            signposts: true\n            insistence: false\n    - globs: [\"b.md\"]\n      lints:\n        banned_phrases: {groups: {signposts: true}}\n";
+    let after = "# c\nschema_version: 1\ndeslag_version: \"0.0.1\"\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups:\n            insistence: false\n    - globs: [\"b.md\"]\n      lints:\n        banned_phrases: {groups: {}}\n";
+    for (text, after) in layouts(text).iter().zip(layouts(after)) {
+        let done = run("yaml", text, Some("0.0.1")).expect("an edit");
+        assert_eq!(done.text.as_str(), after);
+        let lines: Vec<_> = done.edits.iter().filter_map(Edit::line).collect();
+        assert_eq!(lines, [7, 13, 17]);
+        assert!(matches!(done.edits.last(), Some(Edit::Stamp { .. })));
+        let (removed, added) = changed(text, done.text.as_str());
+        assert!(
+            removed
+                .iter()
+                .all(|line| line.contains("signposts") || line.contains("groups")),
+            "{removed:?}"
+        );
+        assert!(
+            added
+                .iter()
+                .all(|line| line.contains("deslag_version") || line.contains("{}")),
+            "{added:?}"
+        );
+    }
+}
+
+const JSON_PRETTY: &str = "{\n  \"schema_version\": 1,\n  \"md\": {\n    \"lints\": {\n      \"banned_phrases\": {\n        \"groups\": ";
+
+#[test]
+fn a_json_member_goes_with_one_comma_pretty_or_minified() {
+    let pretty = |members: &str| format!("{JSON_PRETTY}{members}\n      }}\n    }}\n  }}\n}}\n");
+    for (before, after) in [
+        (
+            "{\n          \"signposts\": true,\n          \"insistence\": false\n        }",
+            "{\n          \"insistence\": false\n        }",
+        ),
+        (
+            "{\n          \"insistence\": false,\n          \"signposts\": true\n        }",
+            "{\n          \"insistence\": false\n        }",
+        ),
+        (
+            "{\n          \"insistence\": false,\n          \"signposts\": true,\n          \"metaphors\": true\n        }",
+            "{\n          \"insistence\": false,\n          \"metaphors\": true\n        }",
+        ),
+        (
+            "{\n          \"signposts\": true\n        }",
+            "{\n        }",
+        ),
+        (
+            "{\"signposts\": true, \"insistence\": false}",
+            "{\"insistence\": false}",
+        ),
+        (
+            "{\"insistence\": false, \"signposts\": true}",
+            "{\"insistence\": false}",
+        ),
+        ("{\"signposts\": true}", "{}"),
+    ] {
+        deletes("json", &pretty(before), &pretty(after));
+    }
+    let minified = |members: &str| {
+        format!(
+            "{{\"schema_version\":1,\"md\":{{\"lints\":{{\"banned_phrases\":{{\"groups\":{members}}}}}}}}}"
+        )
+    };
+    for (before, after) in [
+        (
+            "{\"signposts\":true,\"insistence\":false}",
+            "{\"insistence\":false}",
+        ),
+        (
+            "{\"insistence\":false,\"signposts\":true}",
+            "{\"insistence\":false}",
+        ),
+        (
+            "{\"insistence\":false,\"signposts\":true,\"metaphors\":false}",
+            "{\"insistence\":false,\"metaphors\":false}",
+        ),
+        ("{\"signposts\":false}", "{}"),
+        ("{ \"signposts\" : false }", "{  }"),
+    ] {
+        deletes("json", &minified(before), &minified(after));
+    }
+}
+
+#[test]
+fn a_json_member_in_the_section_and_an_override_goes_with_the_stamp_on_one_line() {
+    let text = "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\"signposts\":false}}},\"overrides\":[{\"globs\":[\"*.md\"],\"lints\":{\"banned_phrases\":{\"groups\":{\"signposts\":true,\"insistence\":false}}}}]}}";
+    let after = "{\"schema_version\":1,\"deslag_version\":\"0.0.1\",\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{}}},\"overrides\":[{\"globs\":[\"*.md\"],\"lints\":{\"banned_phrases\":{\"groups\":{\"insistence\":false}}}}]}}";
+    assert_eq!(edited("json", text, Some("0.0.1")), after);
+    // The stamp replaced on the line of a key that goes.
+    let stamped = text.replacen(
+        "{\"schema_version\"",
+        "{\"deslag_version\":\"0.0.0\",\"schema_version\"",
+        1,
+    );
+    let want = after
+        .replacen(",\"deslag_version\":\"0.0.1\"", "", 1)
+        .replacen(
+            "{\"schema_version\"",
+            "{\"deslag_version\":\"0.0.1\",\"schema_version\"",
+            1,
+        );
+    assert_eq!(edited("json", &stamped, Some("0.0.1")), want);
+    // The edits are listed in the order of the file, the stamp last.
+    let done = run("json", text, Some("0.0.1")).expect("an edit");
+    assert_eq!(done.edits.len(), 3);
+    assert!(matches!(done.edits[2], Edit::Stamp { .. }));
+}
+
+#[test]
+fn what_a_yaml_or_json_delete_cannot_do_safely_is_refused_and_nothing_is_edited() {
+    let in_groups = |lines: &str| format!("{YAML_HEAD}{lines}");
+    let json_groups = |members: &str| {
+        format!(
+            "{{\"schema_version\":1,\"md\":{{\"lints\":{{\"banned_phrases\":{{\"groups\":{members}}}}}}}}}"
+        )
+    };
+    for (name, extension, text, why) in [
+        (
+            "an anchor on the key",
+            "yaml",
+            in_groups("        &s signposts: true\n"),
+            "has an anchor or a tag",
+        ),
+        (
+            "a tag on the key",
+            "yaml",
+            in_groups("        !!str signposts: true\n"),
+            "has an anchor or a tag",
+        ),
+        (
+            "an explicit key",
+            "yaml",
+            in_groups("        ? signposts\n        : true\n"),
+            "an explicit `?` key",
+        ),
+        (
+            "an explicit key with the key on the next line",
+            "yaml",
+            in_groups("        ?\n          signposts\n        : true\n"),
+            "an explicit `?` key",
+        ),
+        (
+            "a key written with an escape only YAML has",
+            "yaml",
+            in_groups("        \"sign\\x70osts\": true\n"),
+            "an escape that deslag does not read",
+        ),
+        (
+            "a comment before the comma of the member before the last",
+            "yaml",
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {\n        insistence: false # c\n        , signposts: true}\n".to_string(),
+            "follows a member that has a comment between its value and its comma",
+        ),
+        (
+            "an explicit key in braces",
+            "yaml",
+            in_groups("        {? signposts : true, insistence: false}\n").replace("groups:\n        {", "groups: {"),
+            "an explicit `?` key",
+        ),
+        (
+            "a comment between a member and its comma",
+            "yaml",
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {\n        signposts: true # c\n        , insistence: false}\n".to_string(),
+            "a comment between its value and its comma",
+        ),
+        (
+            "an alias",
+            "yaml",
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases: &p\n      groups:\n        signposts: true\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases: *p\n".to_string(),
+            "an alias or a merge key",
+        ),
+        (
+            "a value with an anchor that is aliased",
+            "yaml",
+            in_groups("        signposts: &off false\n        insistence: *off\n"),
+            "an alias or a merge key",
+        ),
+        (
+            "an inline merge key",
+            "yaml",
+            in_groups("        <<: {signposts: true}\n"),
+            "an alias or a merge key",
+        ),
+        (
+            "an alias elsewhere in the file",
+            "yaml",
+            "schema_version: 1\nmd:\n  globs: &g [\"*.md\"]\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n  overrides:\n    - globs: *g\n".to_string(),
+            "an alias or a merge key",
+        ),
+        (
+            "a JSON list read by position",
+            "json",
+            json_groups("[true,false]"),
+            "list written by position",
+        ),
+    ] {
+        let refusal = run(extension, &text, Some("0.0.1")).expect_err(name);
+        assert!(
+            refusal.reason.contains(why),
+            "{name}: {} does not say {why}",
+            refusal.reason
+        );
+        assert!(
+            refusal
+                .todo
+                .iter()
+                .all(|todo| todo.contains("delete") && !todo.contains("deslag_version")),
+            "{name}: {refusal:?}"
+        );
+        assert!(!refusal.todo.is_empty(), "{name}");
+    }
+}
+
+#[test]
+fn a_rename_in_yaml_or_json_is_refused_with_the_edit_printed() {
+    let yaml = "schema_version: 1\nmd:\n  lints:\n    density:\n      max_paragraph_len: 300\n";
+    let json =
+        "{\"schema_version\":1,\"md\":{\"lints\":{\"density\":{\"max_paragraph_len\":300}}}}";
+    for (extension, text) in [("yaml", yaml), ("json", json)] {
+        let refusal = run(extension, text, Some("0.0.1")).expect_err("a refusal");
+        assert!(
+            refusal
+                .reason
+                .contains("`md.lints.density.max_paragraph_len` was renamed")
+                && refusal.reason.contains("TOML only"),
+            "{refusal:?}"
+        );
+        assert_eq!(refusal.todo.len(), 1, "{refusal:?}");
+        assert!(
+            refusal.todo[0].contains(
+                "rename the key `max_paragraph_len` to `md.lints.density.max_paragraph_chars`"
+            ),
+            "{refusal:?}"
+        );
+    }
+}
+
+#[test]
+fn the_scanners_flag_an_alias_a_merge_key_a_block_scalar_and_an_anchor_on_a_key() {
+    assert!(!yaml::scan("a: 1\nb: {c: 2}\n").expect("a scan").aliased);
+    assert!(yaml::scan("a: &x 1\nb: *x\n").expect("a scan").aliased);
+    assert!(yaml::scan("a: {<<: {b: 1}}\n").expect("a scan").aliased);
+    assert!(!json::scan("{\"a\":{\"<<\":1}}").expect("a scan").aliased);
+    let scan = yaml::scan("a:\n  b: |\n    text\n  c: 1\nd: &k 1\n&e f: 2\n").expect("a scan");
+    let named = |name: &str| {
+        scan.members
+            .iter()
+            .find(|member| member.path.last() == Some(&Part::Key(name.to_string())))
+            .expect("a member")
+    };
+    assert!(
+        named("b").raw && named("a").raw,
+        "a block scalar marks the keys it is in"
+    );
+    assert!(!named("c").raw && !named("d").raw);
+    assert!(named("f").decorated && !named("d").decorated);
+    // Where a value ends: a scalar, a flow collection, the last scalar of a block one, no value.
+    let text = "a: x # c\nb: [1,\n  2]\nc:\n  d: 1\n  e:\nf: {g: 1}\n";
+    let scan = yaml::scan(text).expect("a scan");
+    let ends: Vec<_> = scan
+        .members
+        .iter()
+        .map(|member| (member.path.len(), &text[member.key.start..member.end]))
+        .collect();
+    assert_eq!(
+        ends,
+        [
+            (1, "a: x"),
+            (1, "b: [1,\n  2]"),
+            (1, "c:\n  d: 1\n  e"),
+            (2, "d: 1"),
+            (2, "e"),
+            (1, "f: {g: 1}"),
+            (2, "g: 1"),
+        ]
+    );
+    assert!(scan.members[4].empty);
+}
+
+#[test]
+fn a_wrong_edit_of_yaml_or_json_is_refused_by_the_check_and_never_written() {
+    let yaml = format!(
+        "{YAML_HEAD}        # about\n        signposts: true # off\n        insistence: false\n"
+    );
+    let json = "{\n  \"schema_version\": 1,\n  \"md\": {\n    \"lints\": {\n      \"banned_phrases\": {\n        \"groups\": {\n          \"signposts\": true,\n          \"insistence\": false\n        }\n      }\n    }\n  }\n}\n";
+    // What the editor made of the YAML, damaged in ways that load as the same config or not.
+    let right = edited("yaml", &yaml, None);
+    assert!(right.contains("# about"));
+    let wrong: [(&str, &str, &str, Damage); 8] = [
+        ("yaml", &yaml, "does not set what", |text| {
+            text.replace("        insistence: false\n", "")
+        }),
+        ("yaml", &yaml, "changes more than its edits", |text| {
+            text.replace("        # about\n", "")
+        }),
+        ("yaml", &yaml, "changes more than its edits", |text| {
+            text.replace("# keep", "")
+        }),
+        ("yaml", &yaml, "changes more than its edits", |text| {
+            format!("{text}# added\n")
+        }),
+        ("yaml", &yaml, "changes more than its edits", |text| {
+            text.replace('\n', "\r\n")
+        }),
+        ("yaml", &yaml, "still warns", |text| {
+            text.replace(
+                "        insistence: false\n",
+                "        insistence: false\n        signposts: true\n",
+            )
+        }),
+        ("json", json, "changes more than its edits", |text| {
+            text.replace("  \"md\"", "\"md\"")
+        }),
+        ("json", json, "does not load", |text| {
+            text.replace("false", "")
+        }),
+    ];
+    for (extension, text, why, damage) in wrong {
+        let refusal = with_wrong_edit(damage, || run(extension, text, None)).expect_err(why);
+        assert!(refusal.reason.contains(why), "{why}: {refusal:?}");
+        assert!(!refusal.todo.is_empty());
+    }
+    // The same editor without the damage is accepted.
+    assert!(run("yaml", &yaml, None).is_ok() && run("json", json, None).is_ok());
+}
+
+#[test]
+fn the_line_check_refuses_text_that_differs_in_a_line_no_yaml_or_json_edit_is_for() {
+    let yaml = format!("{YAML_HEAD}        signposts: true\n        insistence: false\n");
+    let good = format!("{YAML_HEAD}        insistence: false\n");
+    assert!(line_check("yaml", &yaml, &good, None).is_ok());
+    let alone = format!("{YAML_HEAD}        signposts: true # off\n");
+    let sealed =
+        "# top\nschema_version: 1 # keep\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n";
+    assert!(line_check("yaml", &alone, sealed, None).is_ok());
+    let last = format!(
+        "{YAML_HEAD}        insistence: false\n        # keep me\n\n        signposts: true"
+    );
+    let last_good = format!("{YAML_HEAD}        insistence: false\n        # keep me");
+    assert!(line_check("yaml", &last, &last_good, None).is_ok());
+    for (name, old, text) in [
+        // The comment of the table's line, dropped or changed; text put in at another place.
+        (
+            "the seal has a comment added",
+            &alone,
+            sealed.replace("{}", "{} # x"),
+        ),
+        (
+            "the seal is put in twice",
+            &alone,
+            sealed.replace("{}", "{} {}"),
+        ),
+        (
+            "a key kept beside the seal",
+            &alone,
+            sealed.replace("{}\n", "{}\n        insistence: false\n"),
+        ),
+        (
+            "the schema comment dropped",
+            &alone,
+            sealed.replace(" # keep", ""),
+        ),
+        (
+            "a table that keeps a key is sealed",
+            &yaml,
+            good.replace("groups:", "groups: {}"),
+        ),
+        ("a blank line added", &yaml, good.replace("md:", "\nmd:")),
+        // The last key of a file with no final newline goes with the blank lines above it, but
+        // not with the comment above them, and nothing may be put in their place.
+        (
+            "the comment above the blank lines dropped",
+            &last,
+            last_good.replace("\n        # keep me", ""),
+        ),
+        (
+            "a comment added above the table",
+            &last,
+            last_good.replace("md:", "md:\n# injected"),
+        ),
+        (
+            "a comment added in place of the blank lines",
+            &last,
+            format!("{last_good}\n# injected"),
+        ),
+    ] {
+        let refusal = line_check("yaml", old, &text, None).expect_err(name);
+        assert!(
+            refusal.reason.contains("does not load")
+                || refusal.reason.contains("does not set what")
+                || refusal.reason.contains("changes more than its edits"),
+            "{name}: {refusal:?}"
+        );
+    }
+    let json = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": false\n  }}}}\n}\n";
+    let good = json.replace("    \"signposts\": true,\n", "");
+    assert!(line_check("json", json, &good, None).is_ok());
+    // A re-serialised file loads as the same config and changes every line.
+    let reserialised = "{\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\"insistence\":false}}}},\"schema_version\":1}";
+    let refusal = line_check("json", json, reserialised, None).expect_err("reserialised");
+    assert!(
+        refusal.reason.contains("changes more than its edits"),
+        "{refusal:?}"
+    );
+}
+
+#[test]
+fn the_last_key_of_a_table_with_no_key_to_leave_empty_is_an_error() {
+    // The scan, asked directly: the redirects never name a top-level key.
+    let text = "a: 1\n";
+    let scan = yaml::scan(text).expect("a scan");
+    let error = scan.deletions(text, &[0]).err().expect("an error");
+    assert!(error.contains("has no key to leave empty"), "{error}");
+    // One level down the table is put back as `{}`.
+    let text = "a:\n  b: 1\n";
+    let scan = yaml::scan(text).expect("a scan");
+    let deleted = scan.deletions(text, &[1]).expect("a deletion");
+    assert_eq!(splice(text, deleted.splices).as_deref(), Ok("a: {}\n"));
+    // Two keys of one table that both go empty it once.
+    let text = "a:\n  b: 1\n  c: 2\n";
+    let scan = yaml::scan(text).expect("a scan");
+    let deleted = scan.deletions(text, &[1, 2]).expect("a deletion");
+    assert_eq!(deleted.splices.len(), 3);
+    assert_eq!(splice(text, deleted.splices).as_deref(), Ok("a: {}\n"));
+}
+
+// Layouts and damages the first version of the line check got wrong.
+
+/// A minified JSON config of `n` banned phrases with `signposts` in the section and an override.
+fn minified_json(groups: &str, override_groups: &str, n: usize) -> String {
+    let ban: Vec<String> = (0..n)
+        .map(|i| format!("\"phrase number {i} to ban\":\"write something better {i}\""))
+        .collect();
+    format!(
+        "{{\"schema_version\":1,\"md\":{{\"globs\":[\"*.md\"],\"lints\":{{\"banned_phrases\":{{\"ban\":{{{}}},\"groups\":{groups}}}}},\"overrides\":[{{\"globs\":[\"a.md\"],\"lints\":{{\"banned_phrases\":{{\"groups\":{override_groups}}}}}}}]}}}}",
+        ban.join(",")
+    )
+}
+
+#[test]
+fn a_long_minified_line_with_two_deletes_and_the_stamp_is_edited_and_not_refused() {
+    // The line check once gave up on a long line with two stretches to compare; 34 phrases is over
+    // 2,000 bytes. The last size is a line of over 40,000 bytes.
+    for n in [3, 28, 34, 150, 1200] {
+        let before = minified_json(
+            "{\"insistence\":false,\"signposts\":true}",
+            "{\"signposts\":true,\"insistence\":true}",
+            n,
+        );
+        let after = minified_json("{\"insistence\":false}", "{\"insistence\":true}", n).replacen(
+            "{\"schema_version\":1,",
+            "{\"schema_version\":1,\"deslag_version\":\"0.0.1\",",
+            1,
+        );
+        assert!(n < 34 || before.len() > 2_000, "{}", before.len());
+        assert!(n < 1200 || before.len() > 40_000, "{}", before.len());
+        assert_eq!(edited("json", &before, Some("0.0.1")), after, "{n}");
+        // The stamp is there, and is replaced on the same line.
+        let stamped = before.replacen(
+            "{\"schema_version\":1,",
+            "{\"deslag_version\":\"0.0.0\",\"schema_version\":1,",
+            1,
+        );
+        let want = after
+            .replacen(",\"deslag_version\":\"0.0.1\"", "", 1)
+            .replacen(
+                "{\"schema_version\":1,",
+                "{\"deslag_version\":\"0.0.1\",\"schema_version\":1,",
+                1,
+            );
+        assert_eq!(edited("json", &stamped, Some("0.0.1")), want, "{n}");
+    }
+    // The same in a flow YAML file on one line.
+    let flow = |members: &str, again: &str| {
+        let phrases: Vec<String> = (0..150)
+            .map(|i| format!("\"phrase {i} to ban\": \"write better {i}\""))
+            .collect();
+        format!(
+            "{{schema_version: 1, md: {{globs: [\"*.md\"], lints: {{banned_phrases: {{ban: {{{}}}, groups: {members}}}}}, overrides: [{{globs: [\"a.md\"], lints: {{banned_phrases: {{groups: {again}}}}}}}]}}}}",
+            phrases.join(", ")
+        )
+    };
+    let before = flow("{insistence: false, signposts: true}", "{signposts: true}");
+    assert!(before.len() > 4_000);
+    let after = flow("{insistence: false}", "{}").replacen(
+        "{schema_version: 1,",
+        "{schema_version: 1, deslag_version: \"0.0.1\",",
+        1,
+    );
+    assert_eq!(edited("yaml", &before, Some("0.0.1")), after);
+}
+
+#[test]
+fn a_stamp_and_a_delete_on_one_line_let_no_other_change_through() {
+    // A change to a neighbouring member of the same minified line loads as the same config, and only
+    // the line check can tell that no edit is for it. Each text is accepted as the editor made it.
+    let json = "{\"schema_version\": 1, \"md\": {\"globs\": [\"a.md\", \"b.md\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"insistence\": false, \"signposts\": true}}}}}";
+    let stamped = json.replacen(
+        "{\"schema_version\": 1,",
+        "{\"deslag_version\": \"0.0.0\", \"schema_version\": 1,",
+        1,
+    );
+    let yaml = "{schema_version: 1, md: {globs: [a.md, b.md], lints: {banned_phrases: {groups: {insistence: false, signposts: true}}}}}";
+    let yaml_stamped = yaml.replacen(
+        "{schema_version: 1,",
+        "{deslag_version: \"0.0.0\", schema_version: 1,",
+        1,
+    );
+    let wrong: [(&str, &str, Damage); 6] = [
+        // The stamp is added on the line.
+        ("json", json, |text| {
+            text.replace("[\"a.md\", \"b.md\"]", "[\"a.md\",\"b.md\"]")
+        }),
+        ("json", json, |text| {
+            text.replace("\"insistence\": false", "\"insistence\":false")
+        }),
+        // The stamp is replaced on the line.
+        ("json", &stamped, |text| {
+            text.replace("[\"a.md\", \"b.md\"]", "[\"a.md\",\"b.md\"]")
+        }),
+        ("json", &stamped, |text| {
+            text.replace("\"lints\": {", "\"lints\":{")
+        }),
+        ("yaml", yaml, |text| {
+            text.replace("[a.md, b.md]", "[a.md,b.md]")
+        }),
+        ("yaml", &yaml_stamped, |text| {
+            text.replace("[a.md, b.md]", "[a.md,b.md]")
+        }),
+    ];
+    for (extension, text, damage) in wrong {
+        let right = run(extension, text, Some("0.0.1")).expect("the editor's own text");
+        assert!(right.text.as_str().contains("0.0.1"), "{text}");
+        let refusal = with_wrong_edit(damage, || run(extension, text, Some("0.0.1")))
+            .expect_err("a damaged edit");
+        assert!(
+            refusal.reason.contains("changes more than its edits"),
+            "{text}: {refusal:?}"
+        );
+    }
+}
+
+/// A YAML config whose `groups` table, on the line `line`, holds only the removed key.
+fn emptied_with(line: &str) -> String {
+    format!(
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      {line}\n        signposts: true\n"
+    )
+}
+
+/// The same config with that table's line `line` and nothing under it.
+fn emptied_to(line: &str) -> String {
+    format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      {line}\n")
+}
+
+#[test]
+fn the_seal_is_accepted_only_right_after_the_colon_and_the_anchor_and_before_a_comment() {
+    for (line, sealed) in [
+        ("groups: &g # only this", "groups: &g {} # only this"),
+        ("groups: # only this", "groups: {} # only this"),
+        ("groups: !!map &g # c", "groups: !!map &g {} # c"),
+        ("groups: &g", "groups: &g {}"),
+    ] {
+        let old = emptied_with(line);
+        assert!(
+            line_check("yaml", &old, &emptied_to(sealed), None).is_ok(),
+            "{sealed}"
+        );
+    }
+    // ` {}` put in the comment loads as the config the editor meant, so only the
+    // line check can refuse it.
+    for (line, damaged) in [
+        ("groups: &g # only this", "groups: &g # only {} this"),
+        ("groups: # only this", "groups: # only {} this"),
+        ("groups: &g # only this", "groups: &g # only this {}"),
+        ("groups: &g # a # b", "groups: &g # a {} # b"),
+    ] {
+        let old = emptied_with(line);
+        let refusal = line_check("yaml", &old, &emptied_to(damaged), None).expect_err(damaged);
+        assert!(
+            refusal.reason.contains("changes more than its edits"),
+            "{damaged}: {refusal:?}"
+        );
+    }
+    // Other places refuse too, whether or not the text loads.
+    let old = emptied_with("groups: &g # only this");
+    for damaged in [
+        "groups: {} &g # only this",
+        "groups: &g  {}# only this",
+        "groups {}: &g # only this",
+    ] {
+        let refusal = line_check("yaml", &old, &emptied_to(damaged), None).expect_err(damaged);
+        assert!(
+            refusal.reason.contains("does not load")
+                || refusal.reason.contains("changes more than its edits"),
+            "{damaged}: {refusal:?}"
+        );
+    }
+}
+
+#[test]
+fn the_line_of_a_table_a_delete_emptied_goes_only_as_that_line_sealed() {
+    // Only the check by lines is asked. With the check of the settings in front of it, a table that
+    // loads the same without its line would hide a line check that lets the line go.
+    let old = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: &g # only this\n        signposts: true\n    density:\n      max_item_chars: 5\n";
+    let sealed = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: &g {} # only this\n    density:\n      max_item_chars: 5\n";
+    assert_eq!(lines_check("yaml", old, sealed), Ok(()));
+    let dropped = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n    density:\n      max_item_chars: 5\n";
+    let why = lines_check("yaml", old, dropped).expect_err("the table's line dropped");
+    assert!(why.contains("removes line 5"), "{why}");
+    // The line is sealed and written again: a table is sealed once.
+    let twice = sealed.replace(
+        "      groups: &g {} # only this\n",
+        "      groups: &g {} # only this\n      groups: &g {} # only this\n",
+    );
+    let why = lines_check("yaml", old, &twice).expect_err("a seal added twice");
+    assert!(why.contains("which no edit makes"), "{why}");
+    // Two tables that read the same, both emptied, and then only one line sealed.
+    let two = "schema_version: 1\nmd:\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: # same\n            signposts: true\n    - globs: [\"b.md\"]\n      lints:\n        banned_phrases:\n          groups: # same\n            signposts: true\n";
+    let both = two
+        .replace("groups: # same", "groups: {} # same")
+        .replace("            signposts: true\n", "");
+    assert_eq!(lines_check("yaml", two, &both), Ok(()));
+    let one_dropped = both.replacen("          groups: {} # same\n", "", 1);
+    let why = lines_check("yaml", two, &one_dropped).expect_err("one table's line dropped");
+    assert!(why.contains("removes line"), "{why}");
+}
+
+#[test]
+fn a_block_key_on_the_last_line_with_no_final_newline_goes_with_the_blank_lines_above_it() {
+    let head = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n";
+    for (name, before, after) in [
+        (
+            "after a blank line",
+            format!("{head}        insistence: false\n\n        signposts: true"),
+            format!("{head}        insistence: false"),
+        ),
+        (
+            "after several blank lines, one with spaces",
+            format!("{head}        insistence: false\n\n  \n\n        signposts: true"),
+            format!("{head}        insistence: false"),
+        ),
+        (
+            "alone in its table",
+            format!("{head}\n        signposts: true"),
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {}".to_string(),
+        ),
+        (
+            "after a comment, which stays",
+            format!("{head}        insistence: false\n        # c\n\n        signposts: true"),
+            format!("{head}        insistence: false\n        # c"),
+        ),
+    ] {
+        for (before, after) in [
+            (before.clone(), after.clone()),
+            (before.replace('\n', "\r\n"), after.replace('\n', "\r\n")),
+        ] {
+            let got = edited("yaml", &before, None);
+            assert_eq!(got, after, "{name}");
+            assert!(
+                !got.ends_with('\n'),
+                "{name}: the file gained a line ending"
+            );
+            assert_eq!(
+                load("yaml", &got).sections(),
+                load("yaml", &before).sections(),
+                "{name}"
+            );
+        }
+    }
+    // With a final newline the blank line stays, as it does anywhere else in the file.
+    let before = format!("{head}        insistence: false\n\n        signposts: true\n");
+    assert_eq!(
+        edited("yaml", &before, None),
+        format!("{head}        insistence: false\n\n")
+    );
+}
+
+#[test]
+fn a_block_key_on_the_last_line_with_no_final_newline_is_edited_when_the_line_ends_in_a_wide_character()
+ {
+    let head = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n";
+    let list = "schema_version: 1\nmd:\n  overrides:\n    - globs: [\"*.md\"]\n      lints:\n        banned_phrases:\n          groups:\n";
+    for (name, before, after) in [
+        (
+            "a comment ending in a letter with an accent",
+            format!("{head}        insistence: false\n        signposts: true # está"),
+            format!("{head}        insistence: false"),
+        ),
+        (
+            "after a blank line",
+            format!("{head}        insistence: false\n\n        signposts: true # año"),
+            format!("{head}        insistence: false"),
+        ),
+        (
+            "alone in its table, a comment ending in an emoji",
+            format!("{head}        signposts: true # ✨"),
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {}".to_string(),
+        ),
+        (
+            "in an override",
+            format!("{list}            signposts: true # ñ"),
+            list.trim_end().to_string() + " {}",
+        ),
+    ] {
+        for (before, after) in [
+            (before.clone(), after.clone()),
+            (before.replace('\n', "\r\n"), after.replace('\n', "\r\n")),
+        ] {
+            let got = edited("yaml", &before, None);
+            assert_eq!(got, after, "{name}");
+            assert_eq!(
+                load("yaml", &got).sections(),
+                load("yaml", &before).sections(),
+                "{name}"
+            );
+        }
+    }
+    // A line count is a count of bytes, and an offset inside a character is on the line it is in.
+    let text = "a\ná";
+    assert_eq!(line_of(text, text.len() - 1), 2);
+    assert_eq!(line_of(text, 1), 1);
+    assert_eq!(line_of(text, 2), 2);
+    assert_eq!(line_of(text, 100), 2);
+}
+
+#[test]
+fn a_comment_that_ends_in_a_question_mark_is_not_an_explicit_key() {
+    let flow = |before: &str| {
+        format!(
+            "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {{\n{before}        signposts: true,\n        insistence: false\n      }}\n"
+        )
+    };
+    for comment in [
+        "        # why?\n",
+        "        # why? \n\n        # and?\n",
+        "        #?\n",
+    ] {
+        deletes(
+            "yaml",
+            &flow(comment),
+            &format!(
+                "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {{\n{comment}        insistence: false\n      }}\n"
+            ),
+        );
+    }
+    // A value that ends in a question mark, on the line above a block key, is a value.
+    let before = "schema_version: 1\nmd:\n  globs: [\"a.md\"]\n  lints:\n    banned_phrases:\n      message: Is it?\n      groups:\n        signposts: true\n";
+    let after = edited("yaml", before, None);
+    assert_eq!(
+        after,
+        "schema_version: 1\nmd:\n  globs: [\"a.md\"]\n  lints:\n    banned_phrases:\n      message: Is it?\n      groups: {}\n"
+    );
+    // An explicit key still is one, with a comment above it.
+    let explicit = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {\n        # why?\n        ? signposts : true,\n        insistence: false\n      }\n";
+    let refusal = run("yaml", explicit, None).expect_err("an explicit key");
+    assert!(
+        refusal.reason.contains("an explicit `?` key"),
+        "{refusal:?}"
+    );
+}
+
+#[test]
+fn a_blank_line_before_the_last_member_of_a_flow_map_or_an_object_stays() {
+    let flow = |members: &str| {
+        format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups: {members}\n")
+    };
+    for (before, after) in [
+        (
+            "{\n        insistence: false,\n\n        signposts: true\n      }",
+            "{\n        insistence: false\n\n      }",
+        ),
+        (
+            "{\n        insistence: false,\n\n\n        signposts: true\n      }",
+            "{\n        insistence: false\n\n\n      }",
+        ),
+        (
+            "{\n        insistence: false, # c\n\n        signposts: true\n      }",
+            "{\n        insistence: false # c\n\n      }",
+        ),
+    ] {
+        deletes("yaml", &flow(before), &flow(after));
+    }
+    let pretty = |members: &str| format!("{JSON_PRETTY}{members}\n      }}\n    }}\n  }}\n}}\n");
+    for (before, after) in [
+        (
+            "{\n          \"insistence\": false,\n\n          \"signposts\": true\n        }",
+            "{\n          \"insistence\": false\n\n        }",
+        ),
+        (
+            "{\n          \"insistence\": false,\n\n          \"signposts\": true,\n          \"metaphors\": true\n        }",
+            "{\n          \"insistence\": false,\n\n          \"metaphors\": true\n        }",
+        ),
+    ] {
+        deletes("json", &pretty(before), &pretty(after));
+    }
+    // On one line nothing is left behind.
+    deletes(
+        "json",
+        &pretty("{\"insistence\": false,   \"signposts\": true}"),
+        &pretty("{\"insistence\": false}"),
+    );
+}
+
+#[test]
+fn a_test_that_panics_inside_with_wrong_edit_leaves_the_editor_undamaged() {
+    let yaml = format!("{YAML_HEAD}        signposts: true\n        insistence: false\n");
+    let panicked = std::panic::catch_unwind(|| {
+        with_wrong_edit(
+            |text| format!("{text}# damaged\n"),
+            || panic!("a failing assertion inside the closure"),
+        )
+    });
+    assert!(panicked.is_err());
+    assert!(WRONG_EDIT.get().is_none(), "the damage was not taken off");
+    assert!(run("yaml", &yaml, None).is_ok());
+}
+
+// The `[rust]` section.
+
+/// `[md]` and `[rust]` side by side, each with a table of its own and an override, with the removed
+/// key set in `[rust]` only: the section and its override.
+const RUST_TOML: &str = "schema_version = 1\n\
+    [md.lints.density]\nmax_item_chars = 300\n\n\
+    [rust.lints.banned_phrases.groups]\n# keep this one off\ninsistence = false\n\
+    signposts = true # was allowed here\n\n\
+    [[rust.overrides]]\nglobs = [\"src/*.rs\"]\n\
+    lints.banned_phrases.groups.signposts = true\nlints.density.max_item_chars = 200\n";
+
+const RUST_YAML: &str = "schema_version: 1\nmd:\n  lints:\n    density: {max_item_chars: 300}\n\
+    rust:\n  lints:\n    banned_phrases:\n      groups:\n        # keep this one off\n\
+    \x20       insistence: false\n        signposts: true # was allowed here\n  overrides:\n\
+    \x20   - globs: [\"src/*.rs\"]\n      lints:\n        banned_phrases:\n          groups:\n\
+    \x20           signposts: true # only this\n        density: {max_item_chars: 200}\n";
+
+const RUST_JSON: &str = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"density\": {\"max_item_chars\": 300}}},\n\
+    \x20 \"rust\": {\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": false,\n\
+    \x20     \"signposts\": true\n    }}},\n    \"overrides\": [\n\
+    \x20     {\"globs\": [\"src/*.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}, \"density\": {\"max_item_chars\": 200}}}\n\
+    \x20   ]\n  }\n}\n";
+
+#[test]
+fn a_removed_key_in_the_rust_section_and_its_override_is_deleted_in_every_language() {
+    crate::config::redirect::with_rust_removal(|| {
+        deletes(
+            "toml",
+            RUST_TOML,
+            "schema_version = 1\n[md.lints.density]\nmax_item_chars = 300\n\n\
+             [rust.lints.banned_phrases.groups]\n# keep this one off\ninsistence = false\n\n\
+             [[rust.overrides]]\nglobs = [\"src/*.rs\"]\n\
+             lints.banned_phrases.groups = {}\nlints.density.max_item_chars = 200\n",
+        );
+        deletes(
+            "yaml",
+            RUST_YAML,
+            "schema_version: 1\nmd:\n  lints:\n    density: {max_item_chars: 300}\n\
+             rust:\n  lints:\n    banned_phrases:\n      groups:\n        # keep this one off\n\
+             \x20       insistence: false\n  overrides:\n    - globs: [\"src/*.rs\"]\n      lints:\n\
+             \x20       banned_phrases:\n          groups: {}\n        density: {max_item_chars: 200}\n",
+        );
+        deletes(
+            "json",
+            RUST_JSON,
+            "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"density\": {\"max_item_chars\": 300}}},\n\
+             \x20 \"rust\": {\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": false\n\
+             \x20   }}},\n    \"overrides\": [\n\
+             \x20     {\"globs\": [\"src/*.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {}}, \"density\": {\"max_item_chars\": 200}}}\n\
+             \x20   ]\n  }\n}\n",
+        );
+    });
+}
+
+#[test]
+fn the_loader_names_the_rust_tables_a_removed_key_is_read_from() {
+    crate::config::redirect::with_rust_removal(|| {
+        for (extension, text) in [
+            ("toml", RUST_TOML),
+            ("yaml", RUST_YAML),
+            ("json", RUST_JSON),
+        ] {
+            let places: Vec<String> = load(extension, text)
+                .redirected()
+                .iter()
+                .flat_map(|used| used.places.clone())
+                .collect();
+            assert_eq!(
+                places,
+                ["rust.lints", "rust.overrides[0].lints"],
+                "{extension}"
+            );
+        }
+    });
+}
+
+#[test]
+fn a_removed_key_in_a_rust_table_is_refused_with_its_edit_when_it_cannot_be_cut() {
+    // The override reads its `groups` through an alias, which the scan does not follow, so no
+    // table of `[rust]` can be edited and the file is refused whole.
+    let aliased = "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups: &g\n\
+        \x20       signposts: true\n  overrides:\n    - globs: [\"src/*.rs\"]\n      lints:\n\
+        \x20       banned_phrases:\n          groups: *g\n";
+    crate::config::redirect::with_rust_removal(|| {
+        let refusal = run("yaml", aliased, None).expect_err("an alias");
+        assert!(refusal.reason.contains("alias"), "{refusal:?}");
+        assert_eq!(refusal.todo.len(), 2, "{refusal:?}");
+        assert!(
+            refusal.todo[0].contains("rust.lints") && refusal.todo[1].contains("rust.overrides[0]"),
+            "{refusal:?}"
+        );
+    });
+}
+
+#[test]
+fn the_removed_key_set_in_the_rust_section_is_an_unknown_key_where_the_loader_reads_it() {
+    // A redirect is for the section its old path names. `[rust]` came after the setting was
+    // removed, so there it was never a setting, and no editor is asked to cut it.
+    for (extension, text) in [
+        (
+            "toml",
+            "schema_version = 1\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"rust\": {\"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}}",
+        ),
+    ] {
+        let path = PathBuf::from(format!("deslag.{extension}"));
+        let error = Config::parse(text, path, ConfigSource::Explicit).expect_err(extension);
+        let said = error.to_string();
+        assert!(
+            said.contains("rust.lints.banned_phrases.groups.signposts")
+                && said.contains("[rust] never had it"),
+            "{extension}: {said}"
+        );
+    }
+}
+
+#[test]
+fn a_setting_is_looked_for_in_the_section_its_path_names_and_in_no_other() {
+    let yaml = "md:\n  lints:\n    x:\n      y: 1\nrust:\n  lints:\n    x:\n      y: 1\n  overrides:\n\
+        \x20   - lints:\n        x:\n          y: 2\ndocs:\n  lints:\n    x:\n      y: 3\n";
+    let json = "{\"md\": {\"lints\": {\"x\": {\"y\": 1}}}, \"rust\": {\"lints\": {\"x\": {\"y\": 1}}, \
+        \"overrides\": [{\"lints\": {\"x\": {\"y\": 2}}}]}, \"docs\": {\"lints\": {\"x\": {\"y\": 3}}}}";
+    for scan in [
+        yaml::scan(yaml).expect("YAML"),
+        json::scan(json).expect("JSON"),
+    ] {
+        let places = |old: &str| -> Vec<String> {
+            scan.spots_of(old)
+                .into_iter()
+                .map(|(place, ..)| place)
+                .collect()
+        };
+        assert_eq!(places("md.lints.x.y"), ["md.lints"]);
+        assert_eq!(
+            places("rust.lints.x.y"),
+            ["rust.lints", "rust.overrides[0].lints"]
+        );
+        // A section no one has heard of is found by its name alone.
+        assert_eq!(places("docs.lints.x.y"), ["docs.lints"]);
+        assert!(places("rust.lints.x.z").is_empty());
+        assert!(places("rust.globs").is_empty());
     }
 }

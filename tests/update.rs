@@ -277,18 +277,264 @@ fn lines_changed(old: &str, new: &str) -> (Vec<String>, Vec<String>) {
     (without(old, new), without(new, old))
 }
 
+/// A YAML config with comments that sets the removed key in the section and in an override, and
+/// the same config after the delete. The lines that go are the keys' own, a comment on the same
+/// line included.
+const YAML_SIGNPOSTS: &str = "# Why this is here.\nschema_version: 1 # the format\nmd:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n        signposts: false # off\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: # only this\n            signposts: true # yes\n";
+
+fn yaml_after_the_delete(stamp: &str) -> String {
+    format!(
+        "# Why this is here.\nschema_version: 1 # the format\n{stamp}md:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: {{}} # only this\n"
+    )
+}
+
+const JSON_SIGNPOSTS: &str = "{\n  \"schema_version\": 1,\n  \"md\": {\n    \"globs\": [\"*.md\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": true,\n      \"signposts\": false\n    }}},\n    \"overrides\": [{\"globs\": [\"a.md\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]\n  }\n}\n";
+
+fn json_after_the_delete(stamp: &str) -> String {
+    format!(
+        "{{\n  \"schema_version\": 1,\n{stamp}  \"md\": {{\n    \"globs\": [\"*.md\"],\n    \"lints\": {{\"banned_phrases\": {{\"groups\": {{\n      \"insistence\": true\n    }}}}}},\n    \"overrides\": [{{\"globs\": [\"a.md\"], \"lints\": {{\"banned_phrases\": {{\"groups\": {{}}}}}}}}]\n  }}\n}}\n"
+    )
+}
+
 #[test]
-fn a_yaml_or_json_config_with_a_redirect_is_refused_whole_with_the_edits_spelled_out() {
-    let yaml = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n";
-    let json = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true}}}}\n}\n";
-    let array =
-        "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":[true,false]}}}}";
-    for (extension, text, line) in [
-        ("yaml", yaml, Some(6)),
-        ("json", json, Some(4)),
-        ("json", array, None),
+fn a_yaml_or_json_config_has_its_removed_key_deleted_and_keeps_its_other_lines() {
+    for (extension, text, want) in [
+        (
+            "yaml",
+            YAML_SIGNPOSTS,
+            yaml_after_the_delete(&format!("deslag_version: \"{CURRENT}\"\n")),
+        ),
+        (
+            "json",
+            JSON_SIGNPOSTS,
+            json_after_the_delete(&format!("  \"deslag_version\": \"{CURRENT}\",\n")),
+        ),
     ] {
         let repo = repo_with(extension, text);
+        let before = repo.check();
+        assert!(
+            said(&before).contains("`md.lints.banned_phrases.groups.signposts` was removed"),
+            "{extension}: {}",
+            said(&before)
+        );
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        let line = |number: usize| {
+            format!(
+                "deslag: deslag.{extension}:{number}: deleted `md.lints.banned_phrases.groups.signposts`, which was removed"
+            )
+        };
+        let lines: Vec<String> = said(&output).lines().map(str::to_string).collect();
+        let (first, second) = if extension == "yaml" {
+            (11, 17)
+        } else {
+            (7, 9)
+        };
+        assert_eq!(
+            lines,
+            [
+                line(first),
+                line(second),
+                format!(
+                    "deslag: deslag.{extension}: set deslag_version to \"{CURRENT}\" (it had none)"
+                )
+            ]
+        );
+        assert_eq!(read(&repo, extension), want, "{extension}");
+
+        // Nothing warns, the same settings are read, and a second run is current.
+        let check = repo.check();
+        assert_eq!(
+            (code(&check), said(&check)),
+            (0, String::new()),
+            "{extension}"
+        );
+        let again = repo.run(&["update"]);
+        assert_eq!(
+            said(&again),
+            format!("deslag: deslag.{extension} is current\n")
+        );
+        assert_eq!(read(&repo, extension), want, "{extension}");
+    }
+}
+
+#[test]
+fn the_settings_a_yaml_or_json_config_gets_are_the_same_after_the_delete() {
+    for (extension, text) in [("yaml", YAML_SIGNPOSTS), ("json", JSON_SIGNPOSTS)] {
+        let repo = repo_with(extension, text);
+        repo.write("a.md", "A short note.\n");
+        let explain = |repo: &Repo| {
+            let output = repo.run(&["explain", "README.md", "a.md"]);
+            assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+            stdout(&output)
+        };
+        let before = explain(&repo);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        assert_eq!(explain(&repo), before, "{extension}");
+    }
+}
+
+/// A config with a `[rust]` section, in each language, whose `[md]` section sets the removed key in
+/// the section and in an override. The `[rust]` section holds a table and an override of its own.
+const WITH_RUST: [(&str, &str); 3] = [
+    (
+        "toml",
+        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true # off\ninsistence = true\n\n\
+         [rust]\nglobs = [\"src/*.rs\"]\n# Rust comments are prose.\n\
+         [rust.lints.banned_phrases.groups]\ninsistence = false # on\n\n\
+         [[rust.overrides]]\nglobs = [\"src/lib.rs\"]\nlints.density.max_item_chars = 200\n",
+    ),
+    (
+        "yaml",
+        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: true\n\
+         rust:\n  globs: [\"src/*.rs\"]\n  # Rust comments are prose.\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false # on\n  overrides:\n\
+         \x20   - globs: [\"src/lib.rs\"]\n      lints:\n        density: {max_item_chars: 200}\n",
+    ),
+    (
+        "json",
+        "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": true\n  }}}},\n\
+         \x20 \"rust\": {\n    \"globs\": [\"src/*.rs\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\"insistence\": false}}},\n\
+         \x20   \"overrides\": [{\"globs\": [\"src/lib.rs\"], \"lints\": {\"density\": {\"max_item_chars\": 200}}}]\n  }\n}\n",
+    ),
+];
+
+#[test]
+fn a_config_with_a_rust_section_has_the_removed_key_deleted_and_the_rust_section_left_alone() {
+    for (extension, text) in WITH_RUST {
+        let repo = repo_with(extension, text);
+        repo.write(
+            "src/lib.rs",
+            "//! A short note about the crate.\npub fn f() {}\n",
+        );
+        let explain = |repo: &Repo| {
+            let output = repo.run(&["explain", "README.md", "src/lib.rs"]);
+            assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+            stdout(&output)
+        };
+        let before = explain(&repo);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        let after = read(&repo, extension);
+        let (gone, added) = lines_changed(text, &after);
+        assert_eq!(gone.len(), 1, "{extension}: {gone:?}");
+        assert!(gone[0].contains("signposts"), "{extension}: {gone:?}");
+        assert_eq!(added.len(), 1, "{extension}: {added:?}");
+        assert!(
+            added[0].contains("deslag_version"),
+            "{extension}: {added:?}"
+        );
+        assert_eq!(explain(&repo), before, "{extension}");
+        let check = repo.check();
+        assert_eq!(
+            (code(&check), said(&check)),
+            (0, String::new()),
+            "{extension}"
+        );
+    }
+}
+
+#[test]
+fn the_removed_key_in_a_rust_section_is_refused_by_the_loader_and_nothing_is_written() {
+    // `[rust]` came after the setting was removed, so there it is an unknown key and the config does
+    // not load: `update` exits 2 with the file as it was, in each language.
+    for (extension, text) in [
+        (
+            "toml",
+            "schema_version = 1\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
+        ),
+        (
+            "yaml",
+            "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
+        ),
+        (
+            "json",
+            "{\"schema_version\": 1, \"rust\": {\"overrides\": [{\"globs\": [\"a.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]}}\n",
+        ),
+    ] {
+        let repo = repo_with(extension, text);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 2, "{extension}: {}", said(&output));
+        let message = said(&output);
+        assert!(
+            message.contains("groups.signposts") && message.contains("[rust] never had it"),
+            "{extension}: {message}"
+        );
+        assert_eq!(read(&repo, extension), text, "{extension}");
+    }
+}
+
+#[test]
+fn dry_run_lists_the_yaml_and_json_edits_a_real_run_makes_and_writes_nothing() {
+    for (extension, text) in [("yaml", YAML_SIGNPOSTS), ("json", JSON_SIGNPOSTS)] {
+        let repo = repo_with(extension, text);
+        let dry = repo.run(&["update", "--dry-run", "--to", CURRENT]);
+        assert_eq!(code(&dry), 0, "{extension}: {}", said(&dry));
+        assert_eq!(read(&repo, extension), text, "{extension}");
+        let dry = said(&dry);
+        assert_eq!(dry.matches("would delete").count(), 2, "{dry}");
+        assert!(dry.contains("would set deslag_version"), "{dry}");
+
+        let real = said(&repo.run(&["update", "--to", CURRENT]));
+        let as_done = dry
+            .replace("would delete", "deleted")
+            .replace("would set", "set");
+        assert_eq!(as_done, real, "{extension}");
+        assert_ne!(read(&repo, extension), text, "{extension}");
+    }
+}
+
+/// A YAML or JSON config that sets the removed key where deslag will not cut it is refused whole:
+/// the file is left as it was, and each edit to make by hand is printed.
+#[test]
+fn what_cannot_be_cut_from_a_yaml_or_json_config_is_refused_whole_with_the_edits_spelled_out() {
+    let yaml = |lines: &str| {
+        format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n{lines}")
+    };
+    let array =
+        "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":[true,false]}}}}";
+    let alias = "schema_version: 1\nmd:\n  lints:\n    banned_phrases: &p\n      groups:\n        signposts: true\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases: *p\n";
+    let merge = yaml("        <<: {signposts: true}\n");
+    let anchored = yaml("        &s signposts: true\n");
+    let explicit = yaml("        ? signposts\n        : true\n");
+    for (name, extension, text, line, why) in [
+        (
+            "the array form",
+            "json",
+            array.to_string(),
+            None,
+            "list written by position",
+        ),
+        (
+            "an alias",
+            "yaml",
+            alias.to_string(),
+            Some(6),
+            "an alias or a merge key",
+        ),
+        (
+            "a merge key",
+            "yaml",
+            merge,
+            None,
+            "an alias or a merge key",
+        ),
+        (
+            "an anchor on the key",
+            "yaml",
+            anchored,
+            Some(6),
+            "has an anchor or a tag",
+        ),
+        (
+            "an explicit key",
+            "yaml",
+            explicit,
+            Some(6),
+            "an explicit `?` key",
+        ),
+    ] {
+        let repo = repo_with(extension, &text);
         for args in [
             &["update"][..],
             &["update", "--dry-run"],
@@ -296,22 +542,23 @@ fn a_yaml_or_json_config_with_a_redirect_is_refused_whole_with_the_edits_spelled
         ] {
             let output = repo.run(args);
             let said = said(&output);
-            assert_eq!(code(&output), 2, "{extension} {args:?}: {said}");
-            assert_eq!(read(&repo, extension), text, "{extension} {args:?}");
-            assert!(said.contains("nothing was written"), "{said}");
+            assert_eq!(code(&output), 2, "{name} {args:?}: {said}");
+            assert_eq!(read(&repo, extension), text, "{name} {args:?}");
+            assert!(said.contains("nothing was written"), "{name}: {said}");
+            assert!(said.contains(why), "{name}: {said}");
             assert!(
                 said.contains("md.lints.banned_phrases.groups.signposts"),
-                "{said}"
+                "{name}: {said}"
             );
-            assert!(said.contains("then run `deslag update"), "{said}");
+            assert!(said.contains("then run `deslag update"), "{name}: {said}");
             match line {
                 Some(line) => assert!(
                     said.contains(&format!(
                         "deslag.{extension}:{line}: delete the key `signposts`"
                     )),
-                    "{said}"
+                    "{name}: {said}"
                 ),
-                None => assert!(said.contains("could not find its line"), "{said}"),
+                None => assert!(said.contains("could not find its line"), "{name}: {said}"),
             }
         }
     }
@@ -320,7 +567,7 @@ fn a_yaml_or_json_config_with_a_redirect_is_refused_whole_with_the_edits_spelled
 #[test]
 fn the_rerun_command_keeps_the_flags_that_chose_the_file_and_the_version() {
     let repo = Repo::new();
-    repo.write("conf/mine.yaml", "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n");
+    repo.write("conf/mine.yaml", "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        &s signposts: true\n");
     let output = repo.run(&["update", "--config-path", "conf/mine.yaml", "--to", CURRENT]);
     assert_eq!(code(&output), 2);
     assert!(
@@ -567,45 +814,65 @@ fn case_repos() -> Vec<PathBuf> {
 }
 
 #[test]
-fn every_frozen_toml_updates_clean_and_every_frozen_yaml_and_json_is_refused_unchanged() {
+fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after() {
     for (release, directory) in frozen::releases() {
         for extension in EXTENSIONS {
             let path = frozen::config(&directory, extension);
             let text = std::fs::read_to_string(&path).expect("a config");
             let repo = repo_with(extension, &text);
-            let uses_signposts = text.contains("signposts");
+            let name = format!("{release} {extension}");
+            let probe = |repo: &Repo| {
+                [
+                    vec!["check", "--base", "HEAD"],
+                    vec!["check", "--format", "json"],
+                    vec!["explain", "README.md"],
+                ]
+                .map(|args| {
+                    let output = repo.run(&args);
+                    (code(&output), stdout(&output))
+                })
+            };
+            let before = probe(&repo);
             // `--to` moves a stamp the frozen file has, or adds one it has not, in any release.
             let output = repo.run(&["update", "--to", CURRENT]);
-            let name = format!("{release} {extension}");
-            if extension == "toml" || !uses_signposts {
-                assert_eq!(code(&output), 0, "{name}: {}", said(&output));
-                let now = read(&repo, extension);
-                let (removed, added) = lines_changed(&text, &now);
-                // The signposts lines go, and an older stamp is replaced.
-                assert!(
-                    removed
-                        .iter()
-                        .all(|line| line.contains("signposts") || line.contains("deslag_version")),
-                    "{name}: {removed:?}"
-                );
-                // The newest frozen file already carries the stamp of the release running, so there
-                // is none to add; every other has one.
-                let stamps = added
+            assert_eq!(code(&output), 0, "{name}: {}", said(&output));
+            let now = read(&repo, extension);
+            let (removed, added) = lines_changed(&text, &now);
+            // The signposts lines go, an older stamp is replaced, and the line of a table the
+            // delete emptied is written again with `{}`.
+            assert!(
+                removed.iter().all(|line| line.contains("signposts")
+                    || line.contains("deslag_version")
+                    || line.contains("groups")),
+                "{name}: {removed:?}"
+            );
+            // The newest frozen file already carries the stamp of the release running, so there
+            // is none to add; every other has one.
+            assert!(
+                added
                     .iter()
-                    .filter(|line| line.contains("deslag_version"))
-                    .count();
-                assert!(stamps <= 1, "{name}: {added:?}");
-                let check = repo.run(&["check", "--base", "HEAD"]);
-                assert!(
-                    !said(&check).contains("was removed"),
-                    "{name}: {}",
-                    said(&check)
-                );
-            } else {
-                assert_eq!(code(&output), 2, "{name}: {}", said(&output));
-                assert_eq!(read(&repo, extension), text, "{name}");
-                assert!(said(&output).contains("signposts"), "{name}");
-            }
+                    .all(|line| line.contains("deslag_version") || line.contains("{}")),
+                "{name}: {added:?}"
+            );
+            let stamps = added
+                .iter()
+                .filter(|line| line.contains("deslag_version"))
+                .count();
+            assert!(stamps <= 1, "{name}: {added:?}");
+            // Nothing else read differently, and nothing warns.
+            assert_eq!(probe(&repo), before, "{name}");
+            let check = repo.run(&["check", "--base", "HEAD"]);
+            assert!(
+                !said(&check).contains("was removed"),
+                "{name}: {}",
+                said(&check)
+            );
+            let again = repo.run(&["update", "--to", CURRENT]);
+            assert_eq!(
+                said(&again),
+                format!("deslag: deslag.{extension} is current\n"),
+                "{name}"
+            );
         }
     }
 }

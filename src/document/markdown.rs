@@ -246,9 +246,10 @@ impl<'a> Reader<'a> {
         self.close();
     }
 
-    /// Cuts from the heading that is open the tabs pulldown-cmark leaves in its last pieces. The
-    /// range it gives an ATX heading, and its last text or code span, runs past a tab that ends the
-    /// line, but [`Reader::trim`] ends the block before it.
+    /// Cuts back to the end of the heading that is open the pieces and spans pulldown-cmark ends
+    /// after a tab. It gives an ATX heading's last text or code piece, and an emphasis, strong or
+    /// strikethrough span that ends the line, a range past the tab, but [`Reader::trim`] ends the
+    /// block before it.
     fn end_heading_text(&mut self) {
         let Some(Open {
             content: Content::Text { first, .. },
@@ -258,25 +259,37 @@ impl<'a> Reader<'a> {
         else {
             return;
         };
-        let (first, end) = (*first, self.trim(range.clone()).end);
-        while self.pieces.len() > first && self.pieces[self.pieces.len() - 1].range.start >= end {
+        let (first, start, end) = (*first, range.start, self.trim(range.clone()).end);
+        let source = self.source;
+        while self.pieces[first..]
+            .last()
+            .is_some_and(|piece| piece.range.start >= end)
+        {
             self.pieces.pop();
         }
-        let Some(piece) = self.pieces[first..]
+        if let Some(piece) = self.pieces[first..]
             .last_mut()
-            .filter(|p| p.range.end > end)
-        else {
-            return;
-        };
-        // A piece that is the bytes it was written with ends in the same tab as its text.
-        if piece.text.len() == piece.range.len() {
-            let kept = piece.text.len() - (piece.range.end - end);
-            match &mut piece.text {
-                Cow::Borrowed(text) => *text = &text[..kept],
-                Cow::Owned(text) => text.truncate(kept),
+            .filter(|piece| piece.range.end > end)
+        {
+            // A character reference is not the source bytes, and the tab after it is not in its
+            // text, so only the range of a piece that is the source bytes loses its text too.
+            // pulldown-cmark keeps a closing tab in an ATX heading's last text span.
+            // TODO: drop this workaround once pulldown-cmark trims the tab, as CommonMark asks.
+            if *piece.text == source[piece.range.clone()] {
+                let kept = piece.text.len() - (piece.range.end - end);
+                match &mut piece.text {
+                    Cow::Borrowed(text) => *text = &text[..kept],
+                    Cow::Owned(text) => text.truncate(kept),
+                }
             }
+            piece.range.end = end;
         }
-        piece.range.end = end;
+        for span in self.spans.iter_mut().rev() {
+            if span.range.start < start {
+                break;
+            }
+            span.range.end = span.range.end.min(end);
+        }
     }
 
     /// Text: a line of a block that is not prose, or a piece of prose.

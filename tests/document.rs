@@ -2,7 +2,10 @@
 //! sentences, and the offsets that lead each back to the source.
 
 use deslag::Document;
-use deslag::document::{BlockKind, Body, PieceKind, PointKind, SpanKind, TokenKind};
+use deslag::document::{
+    BlockKind, Body, Fences, PieceKind, PointKind, Reader, SpanKind, Stack, Surface, TokenKind,
+};
+use std::ops::Range;
 
 /// The kind of every block of `text`, parents before children, each indented by its depth.
 fn tree(text: &str) -> Vec<String> {
@@ -490,37 +493,59 @@ fn an_empty_range_ends_where_it_starts() {
     assert_eq!((location.line, location.column), (2, 3));
 }
 
-/// Each piece of `text` as written and as it renders, once every piece is checked to lie inside its
-/// block.
-fn pieces_inside_their_blocks(text: &str) -> Vec<(String, String)> {
-    let document = Document::markdown(text);
+/// Every piece of `document`, as written in `source` and as it renders. It panics when a piece, a
+/// token, a sentence or a span is not inside its block.
+fn inside_their_blocks(document: &Document<'_>, source: &str) -> Vec<(String, String)> {
     let mut pieces = Vec::new();
     for (block, _) in document.walk() {
-        for piece in document.pieces_of(block) {
+        let outside = |what: &str, range: &Range<usize>| {
             assert!(
-                block.range.start <= piece.range.start && piece.range.end <= block.range.end,
-                "piece {:?} outside block {:?} of kind {:?} in {text:?}",
-                piece.range,
+                block.range.start <= range.start && range.end <= block.range.end,
+                "{what} {range:?} outside block {:?} of kind {:?} in {source:?}",
                 block.range,
                 block.kind
             );
+        };
+        for piece in document.pieces_of(block) {
+            outside("piece", &piece.range);
             pieces.push((
-                text[piece.range.clone()].to_string(),
+                source[piece.range.clone()].to_string(),
                 piece.text.to_string(),
             ));
+        }
+        for token in document.tokens_of(block) {
+            outside("token", &token.range);
+        }
+        for sentence in document.sentences_of(block) {
+            outside("sentence", &sentence.range);
+        }
+        if matches!(block.body, Body::Text { .. }) {
+            let starting_inside = document.spans.iter().filter(|span| {
+                block.range.start <= span.range.start && span.range.start < block.range.end
+            });
+            for span in starting_inside {
+                outside("span", &span.range);
+            }
         }
     }
     pieces
 }
 
+/// The pieces of `source` read as Markdown, as written and as they render.
+fn markdown_pieces(source: &str) -> Vec<(String, String)> {
+    inside_their_blocks(&Document::markdown(source), source)
+}
+
+/// The rendered pieces of `source` read as Markdown.
+fn rendered(source: &str) -> Vec<String> {
+    markdown_pieces(source)
+        .into_iter()
+        .map(|(_, text)| text)
+        .collect()
+}
+
 #[test]
 fn the_tabs_that_end_a_heading_are_not_in_its_pieces() {
-    let rendered = |source: &str| {
-        pieces_inside_their_blocks(source)
-            .into_iter()
-            .map(|(_, text)| text)
-            .collect::<Vec<_>>()
-    };
     assert_eq!(rendered("#\t/*\t"), ["/", "*"]);
     assert_eq!(rendered("# a\t\n"), ["a"]);
     assert_eq!(rendered("# a \t \n"), ["a"]);
@@ -535,13 +560,86 @@ fn the_tabs_that_end_a_heading_are_not_in_its_pieces() {
 }
 
 #[test]
-fn a_heading_with_tabs_and_a_table_keeps_its_pieces_inside_its_blocks() {
-    for source in [
-        "#\t/*\t\n\n| a |\n|---|\n| b |\n",
-        "#\t/*\t\r\n\r\n| a |\r\n|---|\r\n| b |\r\n",
-        "| a |\n|---|\n| b |\n\n#\t/*\t",
+fn a_heading_with_tabs_keeps_its_pieces_inside_its_blocks_by_the_shape_around_it() {
+    // A table before or after it, and Windows line ends, do not change what the heading holds.
+    assert_eq!(
+        markdown_pieces("#\t/*\t\n\n| a |\n|---|\n| b |\n")[..2],
+        [
+            ("/".to_string(), "/".to_string()),
+            ("*".to_string(), "*".to_string())
+        ]
+    );
+    assert_eq!(
+        rendered("#\t/*\t\r\n\r\n| a |\r\n|---|\r\n| b |\r\n"),
+        ["/", "*", "a", "b"]
+    );
+    assert_eq!(
+        rendered("| a |\n|---|\n| b |\n\n#\t/*\t"),
+        ["a", "b", "/", "*"]
+    );
+    // A heading that ends in a tab and a heading in the other forms Markdown has.
+    assert_eq!(rendered("a\t\n===\n"), ["a"]);
+    assert_eq!(rendered("a\t\nb\t\n---\n"), ["a", "b"]);
+    assert_eq!(rendered("- # a\t\n"), ["a"]);
+    assert_eq!(rendered("1. # a *b*\t\n"), ["a ", "b"]);
+    assert_eq!(rendered("- a\n\n  # b\t\n- c\n"), ["a", "b", "c"]);
+}
+
+#[test]
+fn a_character_reference_of_two_code_points_before_a_tab_does_not_panic() {
+    // `&nGt;` is five bytes, its text is six, and with the tab the range is six: the lengths agree
+    // and the bytes do not.
+    let reference = "\u{226B}\u{20D2}";
+    assert_eq!(
+        markdown_pieces("# a&nGt;\t\n"),
+        [
+            ("a".to_string(), "a".to_string()),
+            ("&nGt;".to_string(), reference.to_string())
+        ]
+    );
+    assert_eq!(rendered("# &nLt;\t\n"), ["\u{226A}\u{20D2}"]);
+    assert_eq!(rendered("# a&nGt;\t"), ["a", reference]);
+    assert_eq!(rendered("- # a&nGt;\t\n"), ["a", reference]);
+}
+
+#[test]
+fn a_heading_with_a_two_code_point_reference_and_a_tab_is_read_in_comments_and_fences() {
+    let docs = "/// # a&nGt;\t\nfn f() {}\n";
+    let rust = Stack::new(Reader::Rust {
+        surfaces: vec![Surface::DocComment, Surface::Comment],
+    });
+    assert_eq!(
+        inside_their_blocks(&rust.document(docs), docs)
+            .into_iter()
+            .map(|(_, text)| text)
+            .collect::<Vec<_>>(),
+        ["a", "\u{226B}\u{20D2}"]
+    );
+
+    let fenced = "```rust\n/// # a&nGt;\t\nfn f() {}\n```\n";
+    let markdown = Stack::new(Reader::Markdown {
+        fences: Fences::all(),
+    });
+    let pieces = inside_their_blocks(&markdown.document(fenced), fenced);
+    assert!(pieces.iter().any(|(written, _)| written == "&nGt;"));
+}
+
+#[test]
+fn the_spans_of_a_heading_that_ends_in_a_tab_end_inside_it() {
+    for (source, kind, markup) in [
+        ("# *a*\t\n", SpanKind::Emphasis, "*a*"),
+        ("# **a**\t\n", SpanKind::Strong, "**a**"),
+        ("# ~~a~~\t\n", SpanKind::Strikethrough, "~~a~~"),
+        ("# *a **b***\t", SpanKind::Emphasis, "*a **b***"),
     ] {
-        let pieces = pieces_inside_their_blocks(source);
-        assert!(pieces.iter().any(|(written, _)| written == "*"));
+        let document = Document::markdown(source);
+        inside_their_blocks(&document, source);
+        let found: Vec<&str> = document
+            .spans
+            .iter()
+            .filter(|span| span.kind == kind)
+            .map(|span| &source[span.range.clone()])
+            .collect();
+        assert_eq!(found, [markup], "in {source:?}");
     }
 }

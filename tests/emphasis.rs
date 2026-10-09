@@ -285,3 +285,15 @@ fn a_file_just_over_its_share_is_not_reported_at_it() {
         "stderr:\n{stderr}"
     );
 }
+
+#[test]
+fn a_tab_that_ends_a_heading_does_not_hide_its_emphasis() {
+    let plain = "# *Bold*\n\nText.\n";
+    let tabbed = "# *Bold*\t\n\nText.\n";
+    assert_eq!(spans(tabbed), spans(plain));
+    assert_eq!(spans(tabbed).len(), 1);
+    assert_eq!(
+        measure(&Document::markdown(tabbed)).prose_chars,
+        measure(&Document::markdown(plain)).prose_chars
+    );
+}

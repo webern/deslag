@@ -38,7 +38,8 @@ changing any of them. A change that adds a lint, setting, feature or migration a
 
 - `/deslag-build-doctrine`: the build system, Makefile, scripts, CI, dependencies.
 - `/deslag-design-docs`: the docs in `docs/design/` and who owns which.
-- `/deslag-open-pr`, `/deslag-commit`: opening a pull request, rules for git commits.
+- `/deslag-open-pr`, `/deslag-commit`, `/deslag-release`: opening a pull request, rules for git
+  commits, releasing.
 
 ## Rules
 

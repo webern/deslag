@@ -72,6 +72,10 @@ It makes every edit of the release change, and the release does not edit a test:
 
 `deslag-release notes <version>` prints the release's entries as Markdown for the GitHub release.
 
+On GitHub, the `bump-version` workflow makes this change and pushes it as the branch
+`release/v<version>`, and the `release` workflow tags, builds and publishes the merge of it. The
+`/deslag-release` skill says how to run both with `gh`.
+
 The first release folds. The crate is at 0.0.1, no tag `v0.0.1` exists and `releases/0.0.1/` does,
 so `prep 0.0.1` runs at the crate's own version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
 0.0.1, rewrites `tests/configs/0.0.1/` to name every setting and replaces its hash lines. Once the

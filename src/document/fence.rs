@@ -239,7 +239,9 @@ mod tests {
 
     /// The stack that reads every language and every surface.
     fn all() -> Stack {
-        fences(&[Language::Rust, Language::Cpp], &BOTH)
+        Stack::new(Reader::Markdown {
+            fences: Fences::all(),
+        })
     }
 
     /// The first fence of `source`.
@@ -561,6 +563,29 @@ mod tests {
                     String::new()
                 ],
                 "{marker:?} {newline:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_blank_comment_line_before_code_in_a_crlf_fence_in_a_container_keeps_the_return_out() {
+        let quote = "> ```rust\r\n> // one\r\n> //\r\n> fn a() {}\r\n> ```\r\n";
+        let item = "- x\r\n  ```rust\r\n  // one\r\n  //\r\n  fn a() {}\r\n  ```\r\n";
+        // The container's prefix of the next line is in the line ending, after the `\r`.
+        for (source, ending) in [(quote, "\r\n> "), (item, "\r\n  ")] {
+            let document = all().read(source);
+
+            assert_eq!(document.regions.len(), 1, "{source:?}");
+            let region = &document.regions[0];
+            assert_eq!(
+                region.carrier.bytes(source),
+                ["// ", ending, "//", ""],
+                "{source:?}"
+            );
+            assert_eq!(
+                region.carrier.encode(source, &region.inner),
+                source[region.outer.clone()],
+                "{source:?}"
             );
         }
     }

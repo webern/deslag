@@ -1,0 +1,7 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+
+[[md.overrides]]
+globs = ["/docs/**"]
+fences.languages = []

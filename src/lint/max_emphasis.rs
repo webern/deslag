@@ -10,8 +10,9 @@
 //!   and nor does a run of acronyms such as `JSON API`, so `DO NOT` is a span and `MX API` is not.
 //!
 //! The **prose** is the text a reader sees: frontmatter, code blocks, code spans and HTML are not
-//! prose. Both are measured in characters. Emphasis comes from the spans of the file's
-//! [`Document`], so a `*` that opens a list item or sits inside code is never taken for it.
+//! prose, except the comments of a code block in a language that `[md]` reads (`fences`), which
+//! are. Both are measured in characters. Emphasis comes from the spans of the file's [`Document`],
+//! so a `*` that opens a list item or sits inside code is never taken for it.
 //!
 //! A file fails when it has more than `free_spans` spans and they cover more than `max_percent`
 //! of its prose; an unset field counts as 0, and a table setting neither checks nothing. The

@@ -3,9 +3,10 @@
 //!
 //! The characters come in [`GROUPS`], each on by default but `emoji`, and switched by the config,
 //! which may also allow a character or ban one more: `allow` beats `ban`, and `ban` the groups.
-//! Only text outside code is checked: code blocks and code spans are skipped, so a diagram in a
-//! fenced block may use box-drawing characters and arrows. Frontmatter, headings, tables and HTML
-//! are checked. The file is read as written, so an HTML entity such as `&mdash;` is not a
+//! Only text outside code is checked: code blocks and code spans are skipped, but for the comments
+//! of a code block in a language that `[md]` reads (`fences`), so a diagram in a fenced block may
+//! use box-drawing characters and arrows outside its comments. Frontmatter, headings, tables and
+//! HTML are checked. The file is read as written, so an HTML entity such as `&mdash;` is not a
 //! character of it.
 //!
 //! [`scan`] needs only the document: it finds every character outside code that is not ASCII,

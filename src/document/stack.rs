@@ -3,8 +3,8 @@
 use super::region::Markup;
 use super::{Document, Surface, cpp_regions, fence, plain, rust_regions};
 
-/// A language whose comments are read, in the code fenced in Markdown. Each has its own lists of
-/// directives and line rules that are not prose.
+/// Names a language whose comments are read. The region readers, the skip list and [`Fences`] use
+/// it: each language has its own lists of directives and line rules that are not prose.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Language {
     /// Rust.
@@ -22,6 +22,17 @@ pub struct Fences {
     pub languages: Vec<Language>,
     /// The kinds of comment to read in them.
     pub surfaces: Vec<Surface>,
+}
+
+impl Fences {
+    /// Every language deslag reads, and both kinds of comment in each: what `[md]` reads when its
+    /// config names no `fences`.
+    pub fn all() -> Fences {
+        Fences {
+            languages: vec![Language::Rust, Language::Cpp],
+            surfaces: vec![Surface::DocComment, Surface::Comment],
+        }
+    }
 }
 
 /// A kind of text a document can be read from.
@@ -169,6 +180,25 @@ impl Stack {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_holds_every_language_and_both_surfaces() {
+        let all = Fences::all();
+        // A match with no wildcard, so a new variant is not compiled until it is listed here, and
+        // the test then fails until `Fences::all` lists it.
+        for language in [Language::Rust, Language::Cpp] {
+            match language {
+                Language::Rust | Language::Cpp => assert!(all.languages.contains(&language)),
+            }
+        }
+        for surface in [Surface::DocComment, Surface::Comment] {
+            match surface {
+                Surface::DocComment | Surface::Comment => assert!(all.surfaces.contains(&surface)),
+            }
+        }
+        assert_eq!(all.languages.len(), 2);
+        assert_eq!(all.surfaces.len(), 2);
+    }
 
     #[test]
     fn read_gives_the_first_layer_and_document_every_layer() {

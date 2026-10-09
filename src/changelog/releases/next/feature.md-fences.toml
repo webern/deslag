@@ -1,0 +1,30 @@
+kind = "feature"
+id = "md-fences"
+summary = "Reads the comments in fenced Rust, C and C++ code in Markdown"
+onboarding = '''
+The comments of fenced code in a Markdown file are linted as prose, with the lints `[md]` has on, and
+`deslag fix` edits them. The code is never read. A fence is of the language the first word of its
+info string names, in any case, split at spaces and commas, with braces and a leading dot left off:
+
+- Rust: `rust`, `rs`, so `rust,no_run` and `{.rust}` too.
+- C and C++: `c`, `cpp`, `c++`, `cc`, `cxx`, `h`, `hh`, `hpp` and `hxx`.
+
+A fence with no info string, or `text`, `ignore` or any other word, is code and is not read. So is
+a fence whose text the file does not hold as written, such as one with a tab that a list indent
+half consumed. A fence may sit at the top level, in a list item or in a block quote.
+
+A comment is read as it is in a `.rs`, `.c` or `.cpp` file: licence text, banners and tool
+directives are left unlinted, and a Rust doc comment is Markdown. A fence in that Markdown is not
+read, and nor is a fence in the doc comment of a Rust file.
+
+This is on by default, so a config that does not mention it starts reading fence comments when
+deslag is upgraded. To turn it off, or to read one language, set `md.fences.languages`;
+`md.fences.surfaces = []` turns it off too. The lints that need only prose, such as `banned_chars`,
+`banned_phrases` and `max_emphasis`, find what the comments hold, and `density` judges the
+paragraph of a comment on its own, in a list item as well.
+
+```toml
+[md]
+fences.languages = []
+```
+'''

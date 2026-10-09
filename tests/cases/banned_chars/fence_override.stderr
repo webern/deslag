@@ -1,0 +1,6 @@
+deslag: cannot parse [ROOT]/deslag.toml: TOML parse error at line 7, column 1
+  |
+7 | fences.languages = []
+  | ^^^^^^
+unknown field `fences`, expected `globs` or `lints`
+

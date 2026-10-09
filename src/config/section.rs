@@ -9,9 +9,33 @@ use serde::Deserialize;
 
 use crate::Error;
 use crate::config::lints::{Lints, Merge};
-use crate::document::Stack;
+use crate::document::{Stack, Surface};
 use crate::glob::{self, Pattern};
 use crate::lint::Lint;
+
+/// The kinds of comment a section can read.
+// `[rust]`, `[cpp]` and the fences of `[md]` share this type. The variants carry no doc comments
+// of their own, which would turn the schema's list of values into a list of branches. The
+// `surfaces` key says what each is.
+#[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub(super) enum CommentSurface {
+    DocComment,
+    Comment,
+}
+
+impl CommentSurface {
+    /// The surfaces a section reads when it names none.
+    pub(super) const ALL: [CommentSurface; 2] =
+        [CommentSurface::DocComment, CommentSurface::Comment];
+
+    pub(super) fn surface(self) -> Surface {
+        match self {
+            CommentSurface::DocComment => Surface::DocComment,
+            CommentSurface::Comment => Surface::Comment,
+        }
+    }
+}
 
 /// One entry of a section's `overrides`, as it is written on disk.
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -258,6 +282,21 @@ impl Section {
 mod tests {
     use super::*;
     use crate::document::{Fences, Reader};
+
+    /// The config names a surface as the messages do, in every section that reads comments.
+    #[test]
+    fn a_surface_is_written_in_the_config_as_a_message_names_it() {
+        for surface in [Surface::DocComment, Surface::Comment] {
+            let written = serde_json::Value::String(surface.name().to_string());
+            let read: CommentSurface = serde_json::from_value(written).expect("a surface");
+            assert_eq!(read.surface(), surface);
+            assert!(
+                CommentSurface::ALL
+                    .map(CommentSurface::surface)
+                    .contains(&surface)
+            );
+        }
+    }
 
     fn parts(overrides: usize) -> Parts {
         Parts {

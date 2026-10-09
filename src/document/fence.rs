@@ -221,6 +221,7 @@ fn commonest<'s>(items: impl Iterator<Item = &'s str>) -> Option<&'s str> {
 #[cfg(test)]
 mod tests {
     use std::ops::Range;
+    use std::path::{Path, PathBuf};
 
     use super::*;
     use crate::document::{Edit, Refusal};
@@ -370,6 +371,118 @@ mod tests {
         assert_eq!(kinds(&fences(&[Language::Rust], &[]), source), raw);
         let docs = fences(&[Language::Rust], &[Surface::DocComment]);
         assert_eq!(kinds(&docs, source), raw);
+    }
+
+    /// What reading the fences of some files found.
+    #[derive(Default, Debug)]
+    struct Tally {
+        /// Fences of a language that is read, that were read.
+        fences: usize,
+        /// Fences of a language that is read, that stayed code.
+        raw: usize,
+        regions: usize,
+        pieces: usize,
+        failures: Vec<String>,
+    }
+
+    impl Tally {
+        /// Reads `source`, and finds every fence of a language that is read, every region in one,
+        /// and every piece of prose in a region, written as the file holds it.
+        fn add(&mut self, name: &Path, source: &str) {
+            if !source.contains("```") && !source.contains("~~~") {
+                return;
+            }
+            let code = Stack::new(Reader::Markdown {
+                fences: Fences::default(),
+            })
+            .read(source);
+            for (block, _) in code.walk() {
+                if let BlockKind::Code { info: Some(info) } = &block.kind {
+                    if Language::named(info).is_some() {
+                        match Fence::new(source, block) {
+                            Some(_) => self.fences += 1,
+                            None => self.raw += 1,
+                        }
+                    }
+                }
+            }
+            let document = all().read(source);
+            let nested = document
+                .walk()
+                .filter(|(block, ancestors)| {
+                    matches!(block.kind, BlockKind::Region { .. })
+                        && matches!(
+                            ancestors.last().map(|a| &a.kind),
+                            Some(BlockKind::Code { .. })
+                        )
+                })
+                .count();
+            if nested != document.regions.len() {
+                self.failures
+                    .push(format!("{name:?}: {nested} nested regions"));
+            }
+            for region in &document.regions {
+                self.regions += 1;
+                let at = region.outer.clone();
+                if region.carrier.encode(source, &region.inner) != source[at.clone()] {
+                    self.failures
+                        .push(format!("{name:?}: the syntax of {at:?} is not as written"));
+                }
+                for segment in region.map.segments() {
+                    let inner = &region.inner[segment.inner.clone()];
+                    if segment.kind == SegmentKind::Verbatim
+                        && source[segment.outer.clone()] != *inner
+                    {
+                        self.failures
+                            .push(format!("{name:?}: bytes of {at:?} differ"));
+                    }
+                }
+                // A piece of either reading of the text is held where the map says, if it is
+                // editable.
+                let readings = [
+                    markdown::read_doc(&Stack::new(Reader::Plain), &region.inner),
+                    Stack::new(Reader::Plain).read(&region.inner),
+                ];
+                for piece in readings.iter().flat_map(|reading| &reading.pieces) {
+                    self.pieces += 1;
+                    let mapped = region.map.to_file(piece.range.clone());
+                    if mapped.editable && source[mapped.range] != region.inner[piece.range.clone()]
+                    {
+                        self.failures
+                            .push(format!("{name:?}: a piece of {at:?} is not held"));
+                    }
+                }
+            }
+        }
+    }
+
+    /// The Markdown files under `dir`, in order.
+    fn markdown_files(dir: &Path) -> Vec<PathBuf> {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return Vec::new();
+        };
+        let mut paths: Vec<PathBuf> = entries.map(|entry| entry.unwrap().path()).collect();
+        paths.sort();
+        let mut files = Vec::new();
+        for path in paths {
+            if path.is_dir() {
+                files.extend(markdown_files(&path));
+            } else if path.extension().is_some_and(|extension| extension == "md") {
+                files.push(path);
+            }
+        }
+        files
+    }
+
+    fn read_all(files: &[PathBuf]) -> Tally {
+        let mut tally = Tally::default();
+        for path in files {
+            // A file that is not UTF-8 is not Markdown to a reader of text.
+            if let Ok(source) = std::fs::read_to_string(path) {
+                tally.add(path, &source);
+            }
+        }
+        tally
     }
 
     #[test]
@@ -527,5 +640,42 @@ mod tests {
             [None, Some(Refusal::Markup), Some(Refusal::Gap)]
         );
         assert_eq!(applied.text, source.replace('\u{2019}', "'"));
+    }
+
+    #[test]
+    fn every_fence_of_the_corpus_nests_its_comments_as_the_file_holds_them() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus");
+        let files = markdown_files(&root);
+        assert!(!files.is_empty());
+        let tally = read_all(&files);
+        println!("corpus: {tally:?}");
+        assert!(tally.failures.is_empty(), "{:?}", tally.failures);
+        // The fences read, none left as code, and the comments in them but the four that are
+        // nothing but `// ...`, which the skip list takes for a banner.
+        assert_eq!((tally.fences, tally.raw, tally.regions), (163, 0, 104));
+    }
+
+    /// The Markdown of the crates `make fetch-crates` vendors. Every fence that names a language
+    /// is read or left as code, every comment in one is written back as the file holds it, and the
+    /// counts are printed for the record.
+    #[test]
+    #[ignore = "needs make fetch-crates"]
+    fn the_vendored_crates_nest_the_comments_of_every_fence() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join(".crates");
+        let files = markdown_files(&root);
+        assert!(
+            !files.is_empty(),
+            "{root:?} holds no Markdown: run make fetch-crates"
+        );
+        let tally = read_all(&files);
+        println!(
+            "vendored crates: files {}, fences {}, left as code {}, regions {}, pieces {}",
+            files.len(),
+            tally.fences,
+            tally.raw,
+            tally.regions,
+            tally.pieces
+        );
+        assert!(tally.failures.is_empty(), "{:?}", tally.failures);
     }
 }

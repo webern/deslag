@@ -25,6 +25,9 @@ pub struct Redirect {
     pub old: &'static str,
     /// The path that replaced it, or `None` when the setting was removed.
     pub new: Option<&'static str>,
+    /// Why a removed setting went and whether anything replaced it, for the warning; `None` for a
+    /// rename, which is explained by its new path.
+    pub reason: Option<&'static str>,
     /// A value for `old`, written as JSON, that a test sets to see the redirect work.
     pub example: &'static str,
     /// Moves the setting out of one `lints` table, and says whether the table set it.
@@ -58,6 +61,10 @@ fn rename<T>(old: &mut Option<T>, new: &mut Option<T>) -> Result<bool, BothSet> 
 pub const REDIRECTS: &[Redirect] = &[Redirect {
     old: "md.lints.banned_phrases.groups.signposts",
     new: None,
+    reason: Some(
+        "its one phrase fell below the catalogue's floor of 40 repositories and nothing \
+         replaces it",
+    ),
     example: "true",
     moves: |lints| {
         Ok(lints
@@ -72,6 +79,7 @@ pub const REDIRECTS: &[Redirect] = &[Redirect {
 pub(super) static TEST_RENAME: Redirect = Redirect {
     old: "md.lints.density.max_paragraph_len",
     new: Some("md.lints.density.max_paragraph_chars"),
+    reason: None,
     example: "300",
     moves: |lints| {
         let Some(density) = lints.density.as_mut() else {
@@ -90,6 +98,7 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
 pub(super) static TEST_RUST_REMOVAL: Redirect = Redirect {
     old: "rust.lints.banned_phrases.groups.signposts",
     new: None,
+    reason: None,
     example: "true",
     moves: |lints| {
         Ok(lints
@@ -128,7 +137,8 @@ impl Redirect {
             .expect("the old path of a redirect is in a lints table")
     }
 
-    /// What to say, once, about a config at `config_path` that sets the old path.
+    /// What to say, once, about a config at `config_path` that sets the old path: what happened to it,
+    /// why when the redirect says, and what to do.
     pub fn warning(&self, config_path: &str) -> String {
         let old = self.old;
         let said = match self.new {
@@ -138,9 +148,13 @@ impl Redirect {
                 )
             }
             None => {
+                let reason = self
+                    .reason
+                    .map(|reason| format!("; {reason}"))
+                    .unwrap_or_default();
                 format!(
-                    "`{old}` was removed, and the setting is ignored; delete it from the config, \
-                     or run deslag update"
+                    "`{old}` was removed, and the setting is ignored{reason}; delete it from the \
+                     config, or run deslag update"
                 )
             }
         };
@@ -284,6 +298,24 @@ mod tests {
     }
 
     const FORMATS: [&str; 3] = ["toml", "yaml", "json"];
+
+    /// A removal says why the setting went when the redirect knows, and the signposts group, whose
+    /// only phrase fell below the catalogue's floor, says nothing replaced it.
+    #[test]
+    fn a_removal_gives_its_reason_when_it_has_one() {
+        let signposts = REDIRECTS.first().expect("a redirect");
+        assert_eq!(
+            signposts.warning("deslag.toml"),
+            "deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed, and the setting \
+             is ignored; its one phrase fell below the catalogue's floor of 40 repositories \
+             and nothing replaces it; delete it from the config, or run deslag update"
+        );
+        assert_eq!(
+            TEST_RUST_REMOVAL.warning("deslag.toml"),
+            "deslag.toml: `rust.lints.banned_phrases.groups.signposts` was removed, and the \
+             setting is ignored; delete it from the config, or run deslag update"
+        );
+    }
 
     #[test]
     fn the_old_key_loads_warns_once_and_compiles_equal_to_the_new() {

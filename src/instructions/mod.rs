@@ -11,7 +11,7 @@ use crate::Lint;
 use crate::changelog::{Changelog, Version, changelog};
 use crate::config::{CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION};
 
-pub use update::{Start, notice, update_json, update_text};
+pub use update::{Reading, Start, notice, update_json, update_text};
 
 /// The guide as written, placeholders and all.
 const GUIDE: &str = include_str!("guide.md");

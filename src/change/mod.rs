@@ -27,6 +27,8 @@ pub struct Change {
     pub root: PathBuf,
     /// The base as given, such as `origin/main`.
     pub base: String,
+    /// The commit the base names. It is the merge base when the base is in HEAD's history.
+    pub commit: String,
     /// The commit where the base and HEAD meet, which the change is measured from.
     pub merge_base: String,
     /// Each file the change touched, by its path in the working tree relative to the root,
@@ -209,6 +211,7 @@ impl Change {
         Ok(Change {
             root: root.to_path_buf(),
             base: base.to_string(),
+            commit,
             merge_base,
             files,
         })

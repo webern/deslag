@@ -1,1 +1,1 @@
-deslag: list_growth judges what a change did to README.md, and this run has no base to judge it from: give one, such as with --base origin/main
+deslag: list_growth judges what a change did to README.md, and this run has no base to judge it from: give the branch the work merges into, such as with --base origin/main; --base HEAD judges only uncommitted work

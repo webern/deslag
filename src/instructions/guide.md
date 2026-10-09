@@ -31,6 +31,9 @@ Start with the files agents write and read, such as AGENTS.md, CLAUDE.md, skills
 Ask before adding files a human writes, such as README.md. Once a lint covers a file, agents are
 told to rewrite it until it passes.
 
+A `[rust]` or `[cpp]` section holds the comments of source files to the same rules. Offer it only
+to a repository whose comments should meet the standard of its prose.
+
 ## 3. Write the config
 
 Run `deslag instructions lints`. It says what each lint fails and gives a table that turns it on.
@@ -57,20 +60,24 @@ schema. TOML, YAML and JSON configs share it.
 
 ## 4. Measure, then propose
 
-Run `deslag check --base origin/main`. It prints a report on standard error for each file that
-fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means deslag
-could not run, as with a bad config: fix the setup, not the Markdown.
+Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
+no remote. `--base HEAD` judges only uncommitted work, so in a clean tree `list_growth` passes:
+never use it in CI or on a branch under review. deslag prints a report on standard error for each
+file that fails, then a tally, and exits 1. A clean run prints nothing and exits 0. Exit 2 means
+deslag could not run, as with a bad config: fix the setup, not the Markdown.
 
 For each lint, tell the human what fails and why, and propose a setting. A budget a little above a
-file's size today stops it from growing; a budget below it asks for cuts. Where one file needs a
-different limit, propose an override for it rather than loosening the limit for every file.
+file's size today stops it from growing: add 10%, and at least 500 bytes for a small file. A budget
+below it asks for cuts. Where one file needs a different limit, propose an override for it rather
+than loosening the limit for every file.
 
 ## 5. Fix the files
 
 Fix what fails in a file an agent wrote by following the advice in its report. `deslag fix <PATH>`
-replaces each banned character it can prove safe to replace and says why it left the others: fix
-those, and every other failure, yourself. For a file a human wrote, show the human the report and
-ask first, before running `deslag fix` too. When every file passes, the config is done.
+fixes `banned_chars` alone: it replaces each banned character it can prove safe to replace and
+says why it left the others, or that it fixed nothing. Fix those, and every other failure,
+yourself. For a file a human wrote, show the human the report and ask first, before running
+`deslag fix` too. When every file passes, the config is done.
 
 ## 6. Run it in CI
 
@@ -90,7 +97,9 @@ of the repository, so run it there.
 
 ## 7. Tell the next agent
 
-If it suits this project, add a note about `deslag check` to AGENTS.md. Check with the human first.
+If it suits this project, add a note to AGENTS.md, after checking with the human. Give it the
+command and base of step 6, such as: "Run `deslag check --base origin/main` before you push, and
+fix what it reports."
 
 When a command prints a note saying the config was last updated by an older deslag, run
 `deslag instructions update` and do what it says. When it warns that a setting was renamed or

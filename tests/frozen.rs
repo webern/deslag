@@ -55,7 +55,9 @@ fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
 }
 
 /// Each loads, exits 0, and says only what a redirect says: one warning for each redirect whose
-/// old path the config sets.
+/// old path the config sets. A directory is never edited, so the older ones keep the settings a
+/// later release retired, such as `signposts` in 0.0.1, and this allows the warning. A new
+/// directory leaves them out (Releasing, in `src/changelog/releases/next/README.md`).
 #[test]
 fn every_frozen_config_loads_and_warns_only_for_redirects() {
     for (release, directory) in frozen::releases() {
@@ -163,6 +165,36 @@ fn a_lint_setting_is_named_by_any_section_that_sets_it() {
     assert!(!frozen::names(&value, "x.lints.density.message"));
     assert!(frozen::names(&value, "md.globs"));
     assert!(!frozen::names(&value, "x.globs"));
+}
+
+/// A hash is hex, and `typos` reads some pairs of its letters as a typo: the letters b and a, with
+/// digits around them, are a word it corrects. `_typos.toml` leaves `tests/configs/hashes` out, so
+/// that a release's lines pass `make check-typos` whatever they are. The same line in another file
+/// shows that `typos` flags it. A release of `typos` may stop correcting that pair, and then the
+/// hashes need no exclusion and this test would hold nothing to show; so the line also holds a
+/// misspelling that `typos` has always corrected, and the control stays true whatever it does with
+/// hex.
+#[test]
+fn typos_leaves_the_hash_lines_alone() {
+    // The words are spelled out in pieces, so that this file does not flag itself.
+    let pair: String = ['b', 'a'].iter().collect();
+    let misspelling = ["rec", "ieve"].concat();
+    let line = format!("9.9.9/config.toml 1c3{pair}9ab4de5f060 {misspelling}\n");
+    let repo = Repo::new();
+    let config = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("_typos.toml");
+    repo.write(
+        "_typos.toml",
+        &std::fs::read_to_string(config).expect("_typos.toml"),
+    );
+    repo.write("tests/configs/hashes", &line);
+    repo.write("control.txt", &line);
+    let output = std::process::Command::new("typos")
+        .current_dir(repo.root())
+        .output()
+        .expect("typos runs: `make preflight` checks that it is installed");
+    let said = String::from_utf8_lossy(&output.stdout) + String::from_utf8_lossy(&output.stderr);
+    assert!(said.contains("control.txt"), "typos flags the line: {said}");
+    assert!(!said.contains("hashes"), "typos flags the hashes: {said}");
 }
 
 /// The hash is FNV-1a 64, whose published test values these are.

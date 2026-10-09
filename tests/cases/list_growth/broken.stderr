@@ -1,6 +1,6 @@
 ERROR: deslag detected list growth!
 
-README.md has 5 list items, 3 more than the 2 it had at [BASE].
+README.md has 5 list items, 3 more than the 2 it had at [BASE] (HEAD).
 
 A list that gains an item with every change becomes an inventory of everything that exists, and stops helping anyone find anything. Where the items follow a rule, such as one entry for each directory of tests, write the rule once instead of the list. Otherwise, take out an item that matters less for each one you add.
 

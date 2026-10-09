@@ -558,7 +558,11 @@ pub fn check_file_at(
 /// A file as it was at the base of a run, which a lint that judges a change compares it with.
 #[derive(Debug, Clone)]
 pub struct Before<'a> {
-    /// The commit the change is measured from.
+    /// The base as given, such as `origin/main`.
+    pub rev: &'a str,
+    /// The commit the base names.
+    pub commit: &'a str,
+    /// The commit the change is measured from, where the base and HEAD meet.
     pub merge_base: &'a str,
     /// The file there.
     pub document: Document<'a>,
@@ -622,6 +626,8 @@ pub(crate) fn check_text<'a>(
     };
     let before = base_text.as_ref().and_then(|(change, base_text)| {
         Some(Before {
+            rev: &change.base,
+            commit: &change.commit,
             merge_base: &change.merge_base,
             document: section.stack.document(base_text),
             file: change.files.get(relative)?,

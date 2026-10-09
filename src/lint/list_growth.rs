@@ -10,8 +10,10 @@
 //! few more items with every change, without end. Lists are not matched between the two, so an
 //! item moved from one list to another costs nothing, and neither does one reworded.
 //!
-//! The report gives both counts, then each item that starts on a line the change added, which is
-//! where to look: a reworded item is there as well as a new one.
+//! The report gives both counts and the commit the change is measured from. When the base as given
+//! is that commit, the report names it beside the commit; when HEAD has left the base's history,
+//! it says that the base and HEAD meet there. Then it gives each item that starts on a line the
+//! change added, which is where to look: a reworded item is there as well as a new one.
 //!
 //! [`items`] needs only the document. [`check`] adds the base.
 
@@ -50,7 +52,11 @@ pub struct Over {
     pub items: usize,
     /// How many it had at the base.
     pub base_items: usize,
-    /// The commit the change is measured from.
+    /// The base as given, such as `origin/main`.
+    pub rev: String,
+    /// The commit the base names.
+    pub commit: String,
+    /// The commit the change is measured from, where the base and HEAD meet.
     pub merge_base: String,
     /// The items that start on lines the change added, in the order of the file.
     pub added: Vec<Item>,
@@ -93,6 +99,8 @@ pub fn check(
     Some(Over {
         items: count,
         base_items,
+        rev: before.rev.to_string(),
+        commit: before.commit.to_string(),
         merge_base: before.merge_base.to_string(),
         added,
         message: settings.message.clone(),
@@ -119,6 +127,13 @@ pub fn render(path: &str, over: &Over) -> String {
     };
     let more = over.items - over.base_items;
     let base: String = over.merge_base.chars().take(7).collect();
+    let at = if over.commit != over.merge_base {
+        format!("at {base}, where {} and HEAD meet", over.rev)
+    } else if names_by_hash(&over.rev, &over.commit) {
+        format!("at {base}")
+    } else {
+        format!("at {base} ({})", over.rev)
+    };
     let listed: String = over
         .added
         .iter()
@@ -131,7 +146,7 @@ pub fn render(path: &str, over: &Over) -> String {
     let mut report = format!(
         "{HEADING}\n\
          \n\
-         {path} has {items}, {more} more than the {} it had at {base}.\n\
+         {path} has {items}, {more} more than the {} it had {at}.\n\
          \n\
          {advice}",
         over.base_items
@@ -142,6 +157,16 @@ pub fn render(path: &str, over: &Over) -> String {
         ));
     }
     report
+}
+
+/// Whether `rev` is the hash of `commit`, in full or abbreviated, in either case, so that the
+/// report need not give it twice. Git's shortest abbreviation is four digits.
+fn names_by_hash(rev: &str, commit: &str) -> bool {
+    rev.len() >= 4
+        && rev.chars().all(|c| c.is_ascii_hexdigit())
+        && commit
+            .get(..rev.len())
+            .is_some_and(|start| start.eq_ignore_ascii_case(rev))
 }
 
 /// The places the report lists: each item on a line the change added, as evidence for a verdict

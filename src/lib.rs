@@ -226,7 +226,8 @@ pub enum Error {
     /// A lint that judges a change selects a file in a run with no base to judge it from.
     #[error(
         "{lint} judges what a change did to {path}, and this run has no base to judge it from: \
-         give one, such as with --base origin/main"
+         give the branch the work merges into, such as with --base origin/main; --base HEAD \
+         judges only uncommitted work"
     )]
     NoBase {
         /// The lint.

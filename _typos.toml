@@ -4,7 +4,8 @@
 # lexicon is generated from word lists, which hold misspellings and rare words by design, and the
 # notices of its sources are copied unchanged. A review queue quotes corpus sentences, and so does
 # the owner's file once they are moved there, and so does the committed silver batch that the
-# check's unit test reads.
+# check's unit test reads. The hashes of the frozen configs are hex, and a pair of their letters,
+# such as `ba`, reads as a typo: whether a release's lines pass would be down to chance.
 
 [files]
 extend-exclude = [
@@ -13,6 +14,7 @@ extend-exclude = [
     "tests/gold/owner.conllu",
     "tools/exam/tests/silver-fixture",
     "tests/golden/*.txt",
+    "tests/configs/hashes",
     "src/tag/lexicon.txt",
     "LICENSES/AGID.txt",
     "LICENSES/Moby.txt",

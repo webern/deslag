@@ -9,7 +9,7 @@ use clap::Parser;
 
 use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::cli::{Cli, Command, Format, Topic, UpdateArgs, UpdateFormat};
-use deslag::instructions::{self, Start};
+use deslag::instructions::{self, Reading, Start};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
 use deslag::output::{github, json, sarif};
@@ -72,8 +72,11 @@ fn run() -> anyhow::Result<ExitCode> {
             // A base git cannot read stops the run before fix writes anything.
             let before = changed(&root, base)?;
             let fixes =
-                deslag::fix::fix(&root, &config, &args.paths, args.dry_run, before.as_ref());
-            for file in fixes? {
+                deslag::fix::fix(&root, &config, &args.paths, args.dry_run, before.as_ref())?;
+            if fixes.is_empty() {
+                eprintln!("{}\n", deslag::fix::nothing_fixed(args.dry_run));
+            }
+            for file in fixes {
                 eprintln!("{}\n", file.render(args.dry_run));
             }
             // What fix wrote is part of the change.
@@ -122,14 +125,21 @@ fn run() -> anyhow::Result<ExitCode> {
 /// would point at the command already running. Only a config that is not there falls back to the
 /// baseline, and the text says so; a `--config-path` that does not name a file is an error.
 fn update(args: &UpdateArgs) -> anyhow::Result<String> {
-    let (from, start) = match &args.since {
-        Some(since) => (Version::Release(since.clone()), Start::Since),
+    /// Where the release the range starts from came from.
+    enum Found {
+        Config(deslag::Config),
+        Since,
+        NoConfig,
+    }
+
+    let (from, found) = match &args.since {
+        Some(since) => (Version::Release(since.clone()), Found::Since),
         None => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             match deslag::Config::load(&root, args.config_path.as_deref()) {
-                Ok(config) => (config.deslag_version(), Start::Config),
+                Ok(config) => (config.deslag_version(), Found::Config(config)),
                 Err(deslag::Error::ConfigNotFound { .. }) => {
-                    (Version::Release(BASELINE), Start::NoConfig)
+                    (Version::Release(BASELINE), Found::NoConfig)
                 }
                 Err(error) => return Err(error.into()),
             }
@@ -137,9 +147,18 @@ fn update(args: &UpdateArgs) -> anyhow::Result<String> {
     };
     let to = Version::current();
     let news = News::between(changelog(), &CATALOGUE, &from, &to);
+    let reading;
+    let start = match &found {
+        Found::Config(config) => {
+            reading = Reading::of(config, &news);
+            Start::Config(&reading)
+        }
+        Found::Since => Start::Since,
+        Found::NoConfig => Start::NoConfig,
+    };
     Ok(match args.format {
         UpdateFormat::Text => instructions::update_text(&news, &from, &to, start),
-        UpdateFormat::Json => instructions::update_json(&news, &from, &to),
+        UpdateFormat::Json => instructions::update_json(&news, &from, &to, start),
     })
 }
 

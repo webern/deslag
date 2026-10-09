@@ -1,6 +1,6 @@
 ERROR: deslag detected list growth!
 
-README.md has 2 list items, 1 more than the 1 it had at [BASE].
+README.md has 2 list items, 1 more than the 1 it had at [BASE] (HEAD).
 
 Keep README.md to the lists it had; write the rule instead.
 

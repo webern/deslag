@@ -1,7 +1,7 @@
 # The words of deslag instructions update
 
 `{from}` is the release the config was last updated by and `{to}` the one running. A heading names
-its piece and is not printed.
+its piece and is not printed. `{turned}` is what moving the stamp turns on.
 
 ## Heading
 
@@ -28,3 +28,17 @@ Nothing is new in deslag {to} since {from}.
 
 No deslag config was found here, so this shows what is new since {from}, the release a config with
 no `deslag_version` is taken to be from. Run it at the root of the repository to read its config.
+
+## Stamp
+
+Moving `deslag_version` to {to} turns on {turned}.
+
+## Stamp none
+
+Nothing else `check` finds depends on `deslag_version`, so there is nothing to compare. Only the
+note that the config is behind goes.
+
+## Stamp phrases
+
+To see what they would flag, search the text for them, or move the stamp by hand, run `check` and
+put it back.

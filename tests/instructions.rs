@@ -15,7 +15,7 @@ use deslag::changelog::{BASELINE, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
-use deslag::instructions::{Start, guide, lints, update_json, update_text};
+use deslag::instructions::{Reading, Start, guide, lints, update_json, update_text};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
 use deslag::news::News;
@@ -458,7 +458,7 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
             &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
-            Start::Config
+            Start::Config(&Reading::default())
         )
     );
 
@@ -492,7 +492,12 @@ fn the_json_holds_the_entries_of_the_text() {
     let json = stdout(&output);
     assert_eq!(
         json,
-        update_json(&news(&release(OLDER)), &release(OLDER), &Version::current())
+        update_json(
+            &news(&release(OLDER)),
+            &release(OLDER),
+            &Version::current(),
+            Start::Config(&Reading::default())
+        )
     );
 
     let parsed: Value = serde_json::from_str(&json).expect("JSON");
@@ -619,7 +624,7 @@ fn config_path_names_the_config_whose_stamp_is_used() {
             &news(&release(OLDER)),
             &release(OLDER),
             &Version::current(),
-            Start::Config
+            Start::Config(&Reading::default())
         )
     );
 }
@@ -768,4 +773,114 @@ fn update_md_meets_its_budget() {
     );
     let findings = check_file(&config, file, &contents, root).expect("the lints run");
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+/// The closing says what moving the stamp turns on in the config that was read, and says nothing
+/// of it where no config was.
+#[test]
+fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
+    let current = env!("CARGO_PKG_VERSION");
+    // The line is in the closing, after the entries, whatever they print.
+    let line = |output: &Output| {
+        let text = stdout(output);
+        let closing = text.rsplit("\n## Finish\n").next().expect("a closing");
+        closing
+            .lines()
+            .find(|line| line.starts_with("Moving `deslag_version`"))
+            .map(str::to_string)
+    };
+
+    // The catalogue holds phrases the stamp 0.0.0 keeps off, and the lint's default groups are on.
+    let phrases = Repo::new();
+    phrases.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n\n\
+             [md.lints.banned_phrases]\n"
+        ),
+    );
+    let line_with = line(&update(&phrases, &[])).expect("a line");
+    let start =
+        format!("Moving `deslag_version` to {current} turns on these phrases in this config: `");
+    assert!(line_with.starts_with(&start), "{line_with}");
+    assert!(
+        line_with.ends_with("To see what they would flag, search the text for them, or move the stamp by hand, run `check` and put it back."),
+        "{line_with}"
+    );
+
+    // A config that does not turn the lint on has none of them turned on.
+    let none = update(&stamped(OLDER), &[]);
+    assert_eq!(
+        line(&none).as_deref(),
+        Some(
+            format!(
+                "Moving `deslag_version` to {current} turns on no phrase in this config. Nothing \
+                 else `check` finds depends on `deslag_version`, so there is nothing to compare. \
+                 Only the note that the config is behind goes."
+            )
+            .as_str()
+        )
+    );
+
+    // With `--since`, or with no config, no config was read.
+    assert_eq!(line(&update(&phrases, &["--since", OLDER])), None);
+    assert_eq!(line(&update(&Repo::new(), &[])), None);
+}
+
+/// A lint the config already turns on is listed as new, with a mark that says so.
+#[test]
+fn a_lint_the_config_already_turns_on_is_marked() {
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n\n\
+             [md.lints.max_size_bytes]\nvalue = 100\n"
+        ),
+    );
+    let text = stdout(&update(&repo, &[]));
+    let heading = "### `max_size_bytes` (0.0.1)\n";
+    let entry = text.split(heading).nth(1).expect("the lint is listed");
+    let entry = entry.split("\n### ").next().expect("an entry");
+    assert!(
+        entry.contains("\nThis config already has a `max_size_bytes` table.\n"),
+        "{entry}"
+    );
+    assert_eq!(marks(&text), ["max_size_bytes"], "{text}");
+
+    let json: Value =
+        serde_json::from_str(&stdout(&update(&repo, &["--format", "json"]))).expect("JSON");
+    let set: Vec<&str> = json["entries"]
+        .as_array()
+        .expect("entries")
+        .iter()
+        .filter(|entry| entry["already_set"] == true)
+        .map(|entry| entry["id"].as_str().expect("an id"))
+        .collect();
+    assert_eq!(set, ["max_size_bytes"]);
+
+    // `--since` reads no config, so it marks nothing.
+    let since = update(&repo, &["--since", OLDER]);
+    assert_eq!(marks(&stdout(&since)), Vec::<&str>::new());
+}
+
+/// The lints a text marks as already in the config. A mark is a line of its own, so an entry's
+/// onboarding that speaks of the mark does not count, whatever a release moves into the range.
+fn marks(text: &str) -> Vec<&str> {
+    text.lines()
+        .filter_map(|line| line.strip_prefix("This config already has a `"))
+        .filter_map(|rest| rest.strip_suffix("` table."))
+        .collect()
+}
+
+/// The README's example config is one deslag accepts, with a stamp it can read.
+#[test]
+fn the_readme_example_config_loads() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md");
+    let readme = std::fs::read_to_string(path).expect("README.md");
+    let example = toml_blocks(&readme)[0];
+    assert!(example.contains("\ndeslag_version = \""), "{example}");
+    assert_eq!(toml_misfit(example), None);
+    Config::parse(example, "deslag.toml".into(), ConfigSource::Explicit).expect("a config");
+    assert_runs_clean(example);
 }

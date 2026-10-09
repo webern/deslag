@@ -54,9 +54,9 @@ which settings apply to a file; `lint` runs the lints with them. `lint` calls `c
 `fix` makes the edits `lint` names that `document` proves. `lint` judges and narrows by what
 `change` reads.
 
-`instructions` reads `Lint` for the lints topic, which has a section per lint in
-`Lint::ALL` order, from an exhaustive `match`. `news` asks `changelog` and the phrase catalogue in
-`lint`, and `instructions` and `config::update` print it.
+`instructions` reads `Lint` for the lints topic, which has a section per lint in `Lint::ALL` order,
+from an exhaustive `match`. `news` asks `changelog` and the phrase catalogue in `lint`;
+`instructions`, `config::update` and `src/main.rs` read it.
 
 ## The subsystem docs
 

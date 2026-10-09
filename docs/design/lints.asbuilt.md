@@ -33,10 +33,9 @@ src/
 reads each; `check_text` resolves a file's settings and runs each lint in `Lint::ALL` order. The
 `banned_phrases` lint holds the catalogue's phrases to the config's stamp (`changelog.asbuilt.md`).
 
-A lint returns an `Over` for a failing
-file, which becomes a `Finding` with the lint's `Violation`. `Lint` lists the lints once; its id is
-the config's table name, and the tally, golden set and cases key off it. A new lint is a module, a
-`Lint` and a `Violation`.
+A lint returns an `Over` for a failing file, which becomes a `Finding` with the lint's `Violation`.
+`Lint` lists the lints once; its id is the config's table name, and the tally, golden set and cases
+key off it. A new lint is a module, a `Lint` and a `Violation`.
 
 A lint's module doc comment describes it as built, and this doc gives it a line in the tree above;
 `tests/asbuilt.rs` holds each lint's doc comment to 2000 bytes. Its section of `deslag instructions

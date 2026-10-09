@@ -22,6 +22,7 @@ mod map;
 mod markdown;
 mod plain;
 mod region;
+mod region_build;
 pub mod rust;
 mod rust_regions;
 mod sentences;

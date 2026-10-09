@@ -102,6 +102,32 @@ pub(crate) struct Template {
     pub ending: String,
 }
 
+impl Region {
+    /// A region of `source` at `outer`. Its carrier must write its text as the file holds it, which
+    /// every debug build checks.
+    pub(super) fn new(
+        source: &str,
+        surface: Surface,
+        outer: Range<usize>,
+        inner: String,
+        map: SourceMap,
+        carrier: Carrier,
+    ) -> Region {
+        debug_assert_eq!(
+            carrier.encode(source, &inner),
+            source[outer.clone()],
+            "the carrier does not write the region it was read from"
+        );
+        Region {
+            surface,
+            outer,
+            inner,
+            map,
+            carrier,
+        }
+    }
+}
+
 impl Carrier {
     /// The lines, and what follows the last of them.
     fn parts(&self) -> (&Frame, Option<&Range<usize>>) {

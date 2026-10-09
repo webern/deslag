@@ -179,6 +179,24 @@ impl SpanKind<'_> {
 }
 
 impl<'a> Document<'a> {
+    /// The first layer of a code file whose comments are `regions`, in the order of the file: each
+    /// is read by the reader of its surface and merged in.
+    pub(super) fn of_regions(stack: &Stack, source: &'a str, regions: Vec<Region>) -> Document<'a> {
+        let mut document = Document::new(
+            stack.clone(),
+            source,
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+        );
+        for region in regions {
+            document.merge(lift(source, &region));
+            document.regions.push(region);
+        }
+        document
+    }
+
     /// Adds the layers of one region at their place in the file. The rows of pieces, spans and
     /// points take them in at the offset the region starts at, and the blocks of prose after it
     /// move down the pieces row. Tokens and sentences are not made yet, so they need no moving.

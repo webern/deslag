@@ -566,7 +566,7 @@ mod tests {
     }
 
     #[test]
-    fn a_fence_in_a_list_in_a_quote_nests_at_its_depth() {
+    fn a_fence_in_a_quote_in_a_list_nests_at_its_depth() {
         let source = "1. x\n   > ```rust\n   > // deep\n   > ```\n";
 
         assert_eq!(regions(source), [("// deep", "deep".to_string())]);
@@ -581,6 +581,29 @@ mod tests {
                 "    Region(comment)",
                 "     Paragraph"
             ]
+        );
+    }
+
+    #[test]
+    fn a_fence_in_a_list_in_a_quote_nests_at_its_depth() {
+        let source = "> - ```rust\n>   // deep\n>   fn a() {}\n>   ```\n";
+
+        assert_eq!(regions(source), [("// deep", "deep".to_string())]);
+        assert_eq!(
+            kinds(&all(), source),
+            [
+                "Quote",
+                " List",
+                "  Item",
+                "   Code(rust)",
+                "    Region(comment)",
+                "     Paragraph"
+            ]
+        );
+        let region = &all().read(source).regions[0];
+        assert_eq!(
+            region.carrier.encode(source, "deep\nmore"),
+            "// deep\n>   // more"
         );
     }
 

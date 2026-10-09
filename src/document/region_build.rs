@@ -4,9 +4,12 @@
 //!
 //! 1. The marker and the least indent of the region's lines, a space or a tab counting for one,
 //!    are stripped from every line. A line of nothing but whitespace does not have text.
-//! 2. A block comment loses a `*` gutter if every line but the first has one, as `rustc` trims it
-//!    (`horizontal_trim`). A blank first line and a blank last line are dropped too, which is not
-//!    `rustc`'s rule: Markdown and plain text ignore them. Then rule 1 applies.
+//! 2. A block comment of more than one line loses a first line and a last line of nothing but `*`
+//!    and whitespace, as `rustc` trims them (`vertical_trim`; it lets only one character of any
+//!    kind lead the last line, and here any indent may). Then it loses a blank first line and a
+//!    blank last line, which is not `rustc`'s rule: Markdown and plain text ignore them. Then it
+//!    loses a `*` gutter if every line but the first has one, as `rustc` trims it
+//!    (`horizontal_trim`). Then rule 1 applies.
 //!
 //! The text of every line is a verbatim piece of the file, and every other byte is in a line's
 //! prefix or ending, or in the close of a block, so `Carrier::encode` writes the region back as it
@@ -93,11 +96,20 @@ pub(super) fn block_region(
         at += line.len() + 1;
     }
 
-    // A blank first line and a blank last line are gap, if there is more than one line.
-    let blank = |row: &Row| source[row.rest.clone()].trim().is_empty();
+    // Where the text of a line is only `*`, such as a banner, it is gap if it is the first line or
+    // the last of a comment of more than one.
+    let text = |row: &Row| source[row.rest.clone()].trim();
+    let stars = |row: &Row| text(row).bytes().all(|b| b == b'*') && !text(row).is_empty();
     let many = rows.len() > 1;
-    let from = usize::from(many && blank(&rows[0]));
-    let to = rows.len() - usize::from(many && blank(&rows[rows.len() - 1]));
+    let (mut from, mut to) = (usize::from(many && stars(&rows[0])), rows.len());
+    if many && stars(&rows[rows.len() - 1]) {
+        to -= 1;
+    }
+    // A blank first line and a blank last line are gap too, if there is more than one line left.
+    if to > from + 1 {
+        let (first, last) = (text(&rows[from]).is_empty(), text(&rows[to - 1]).is_empty());
+        (from, to) = (from + usize::from(first), to - usize::from(last));
+    }
     let closed_here = to == rows.len();
     let kept = rows.get_mut(from..to).filter(|kept| !kept.is_empty())?;
     kept[0].lead = outer.start;

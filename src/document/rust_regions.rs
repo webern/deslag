@@ -11,7 +11,7 @@
 //!    a time the code would be taken for prose and the prose for code. A comment that follows code
 //!    on its line is a region of its own.
 //! 2. The marker and the least indent of the region's lines are stripped from every line.
-//! 3. A block comment loses a `*` gutter.
+//! 3. A block comment loses a `*` gutter, and a first or last line of only `*`.
 //!
 //! Fenced code and hidden `# ` lines are left to the Markdown reader, which makes them code. A
 //! region with no text, such as `///` alone, is skipped.
@@ -350,6 +350,18 @@ mod tests {
         assert_eq!(texts("/**\n * a\n  * b\n */"), [doc("* a\n * b")]);
         // Nothing but gaps.
         assert_eq!(texts("/**/ /***/ /** */ /**\n*/ /* \n \n */"), []);
+    }
+
+    #[test]
+    fn a_first_or_last_line_of_only_stars_in_a_block_is_a_gap_as_rustc_trims_it() {
+        assert_eq!(texts("/*****\n * a\n * b\n *****/"), [plain("a\nb")]);
+        assert_eq!(texts("/*!****\n * a\n ****/"), [doc("a")]);
+        assert_eq!(texts("/*!\n * a\n **/"), [doc("a")]);
+        assert_eq!(texts("  /****\n   * a\n   ****/"), [plain("a")]);
+        // The blank line before the close is the gap, not the line of the gutter before it.
+        assert_eq!(texts("/**\n * a\n *\n */"), [doc("a\n")]);
+        // A single line is neither the top nor the bottom.
+        assert_eq!(texts("/***/ /*****/"), [plain("**")]);
     }
 
     #[test]

@@ -291,7 +291,7 @@ test: preflight test-exam
 # The big tier's tests are ignored by a plain cargo test, so that test runs
 # offline and with no login. The time that follows prints how long reading and
 # tagging the tier take, and fails if tagging's share of reading is over the
-# budget of the profile built (40.0% in debug, which is what ci runs).
+# budget of the profile built (50.0%, which is what ci runs in debug).
 test-blobs: preflight fetch-blobs test-silver
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check

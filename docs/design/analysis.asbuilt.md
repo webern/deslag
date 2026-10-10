@@ -76,7 +76,7 @@ vocabularies merge in order, so the ids are those of one thread.
 On each fixture of the tier, `core/` too, `time` times `Document::markdown`, then `tag::document`
 alone, on one thread, the fastest of three passes. It prints files, bytes, both sums,
 tagging's share of reading and the profile. `time --check` judges the share against the budget of
-the profile built (debug 40.0%, release 31.0%) and exits 1 over it; the tree is refused.
+the profile built (50.0% in debug and in release) and exits 1 over it; the tree is refused.
 `test-blobs` runs it.
 
 ## Statistics

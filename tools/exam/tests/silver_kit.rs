@@ -905,6 +905,7 @@ fn audit_score_exits_nonzero_below_the_bar_and_zero_at_or_above_it() {
         }
         gold_in(&golds, work.path(), &args)
     };
+    let written = work.path().join("score.tsv");
     for (bar, code) in [
         (Some("95.4"), 0),
         (Some("95.5"), 1),
@@ -912,6 +913,8 @@ fn audit_score_exits_nonzero_below_the_bar_and_zero_at_or_above_it() {
         (Some("0.0"), 0),
         (None, 0),
     ] {
+        // Each run writes the file afresh, so one run's file is not taken for another's.
+        let _ = fs::remove_file(&written);
         let run = score(bar);
         assert_eq!(
             run.status.code(),
@@ -922,6 +925,65 @@ fn audit_score_exits_nonzero_below_the_bar_and_zero_at_or_above_it() {
         // The report and the file are written either way.
         let said = String::from_utf8_lossy(&run.stdout);
         assert!(said.contains("11 sentences scored"), "bar {bar:?}: {said}");
-        assert!(work.path().join("score.tsv").exists(), "bar {bar:?}");
+        assert!(written.exists(), "bar {bar:?}");
     }
+    // A bar cannot be met when no word was scored: the queue holds only punctuation.
+    let bare = work.path().join("bare");
+    let bare_silver = work.path().join("bare.conllu");
+    let sentences: String = (0..12)
+        .map(|at| {
+            format!(
+                "# sent_id = p{at:03}\n# exam.context = prose\n# text = .\n\
+                 1\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation|Prov=kind\n\n"
+            )
+        })
+        .collect();
+    fs::write(
+        &bare_silver,
+        format!("# exam.tokens = deslag\n# exam.trains = yes\n# exam.silver = yes\n{sentences}"),
+    )
+    .unwrap();
+    let blind = gold_in(
+        &golds,
+        work.path(),
+        &[
+            "audit",
+            "--blind",
+            "--from",
+            bare_silver.to_str().unwrap(),
+            "--count",
+            "12",
+            "--out",
+            bare.to_str().unwrap(),
+        ],
+    );
+    assert!(blind.status.success());
+    let bare_queue_text = fs::read_to_string(bare.join("queue.conllu")).unwrap();
+    let bare_queue = work.path().join("bare-reviewed.conllu");
+    fs::write(&bare_queue, reviewed(&bare_queue_text, &sentences, &[])).unwrap();
+    let bare_labels = bare.join("labels.conllu");
+    let bare_score = |bar: Option<&str>| {
+        let mut args = vec![
+            "audit",
+            "--score",
+            "--queue",
+            bare_queue.to_str().unwrap(),
+            "--labels",
+            bare_labels.to_str().unwrap(),
+        ];
+        if let Some(bar) = bar {
+            args.extend(["--bar", bar]);
+        }
+        gold_in(&golds, work.path(), &args)
+    };
+    let _ = fs::remove_file(&written);
+    let run = bare_score(Some("95.0"));
+    assert_eq!(
+        run.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&run.stdout)
+    );
+    assert!(written.exists());
+    assert_eq!(bare_score(None).status.code(), Some(0));
 }

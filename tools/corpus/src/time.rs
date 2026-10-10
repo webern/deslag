@@ -27,15 +27,14 @@ pub const PASSES: usize = 3;
 /// The most tagging may take, as a percent of reading, in a debug build, which is what `make ci`
 /// runs.
 ///
-/// This is the owner's ceiling for a learned tagger: tagging may take up to half of reading. It is
-/// not headroom over today's measurement. For context, CI measures about 34 (34.34 on ubuntu and
-/// 33.65 on macOS at the time of measuring), so the tagger now in place is well under the ceiling.
+/// Tagging may take up to half of reading. The limit is the owner's; it is not derived from a
+/// measurement. The share measured 34.34 on ubuntu and 33.65 on macOS in CI (debug builds), and
+/// 31.4 on a development machine (debug build).
 pub const BUDGET_DEBUG: f64 = 50.0;
 
 /// The most tagging may take, as a percent of reading, in a release build. It is for runs by
-/// hand, as CI builds in debug. It is the same ceiling as [`BUDGET_DEBUG`], the owner's limit for
-/// a learned tagger, and not headroom over today's measurement, which is about 26 to 28 in a
-/// release build.
+/// hand, as CI builds in debug. It is the same limit as [`BUDGET_DEBUG`]. The share measured 26 to
+/// 28 in release builds run by hand.
 pub const BUDGET_RELEASE: f64 = 50.0;
 
 /// The budget for the build `profile` names, `debug` or `release`.

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-10
 subsystems:
   - analysis
 max_size_bytes: 8192

@@ -155,6 +155,46 @@ trained or distilled from, so a model whose card says Apache-2.0 passes whatever
 texts are the first of its rows in the order a hash of the row number gives, so building twice
 gives one batch. A fixture's path is `FILE/row-N.md` and its text is the cell as it is.
 
+## Silver, published by hand
+
+A silver batch, under `silver/` in the image, is not built here. The workflow builds batches from
+sources it can harvest again; silver comes from model replies on the machine that ran the labelling,
+which no job can make again, so the person who ran it publishes it by hand. Its archive goes
+beside it, under `silver-raw/`, as a layer of its own. On that machine:
+
+1. `make fetch-blobs`; copy the batch, `.label/silver/batch/NAME/`, to
+   `.blobs/unpacked/silver/NAME/` and its archive to `.blobs/unpacked/silver-raw/NAME/`.
+2. `make test-blobs`, which runs `make test-silver`; `scripts/blobstore/blobs.sh plan` shows the
+   two layers added and nothing else.
+3. `make publish-blobs`, then `scripts/blobstore/remeasure.sh run`.
+4. One commit: `blobs.lock`, `layers.txt` while it lacks `silver/` or `silver-raw/`, the files
+   `remeasure.sh paths` names, and the batch's lines in `blobs.md`. `blobs.sh` refuses a publish
+   when `layers.txt` names a directory the tree lacks, so `layers.txt` lands with the lock that
+   has them.
+
+If `main`'s lock moves before the commit merges, fetch `main`'s image, add the same two
+directories (their layers are reused by fingerprint) and publish again. CI fetches the image
+anonymously and runs `make test-silver`, whose verdict does not depend on the machine.
+
+### 2026-10-08-silver
+
+The owner tagged the 50 sentences of the audit with silver's labels hidden. He marked 52 words in
+26 sentences unsure and settled each with an LLM helper that saw the sentence, his guess, deslag's
+guess and the guide, never silver's labels; the answer counts as his. Rejected: none. That blind
+score, over 577 words: part of speech 94.63 [92.17, 96.70], under the bar of 95.0; whole code
+91.33 [88.73, 93.68].
+
+Of the 31 words where he and silver then differed on the part of speech, 29 were deslag's
+pre-filled guess, taken where deslag was unsure. He looked at those 29 again, this time with
+silver's tag and the guide shown, and changed 25 to silver's tag. The batch's `audit/score.tsv`
+and `DATASHEET.md` carry that reviewed score: part of speech 98.96 [98.16, 99.65], met; whole code
+95.67 [93.88, 97.14]. The datasheet's "shown without the labels" holds for the first pass, not
+for those 29 words. The reviewed score includes the 52 words the helper settled and the 29 looked at
+again, 25 of them reversed and 4 kept.
+
+Opus's labels are used under the owner's reading that the provider's terms do not bar training this
+non-commercial MIT project.
+
 ## Tests
 
 `make test-python` runs `test_batches.py` beside this file, offline, against local repositories. It

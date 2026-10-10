@@ -573,7 +573,7 @@ struct SilverBuild {
     /// `audit --blind` wrote them and the review answered. His rejections are dropped.
     #[arg(long, requires = "archive_sha256")]
     audit: Option<PathBuf>,
-    /// The sha256 of the archive of what stays on the machine that made the batch.
+    /// The sha256 of the batch's archive, published as `silver-raw/<name>/`.
     #[arg(long)]
     archive_sha256: Option<String>,
     /// The bar on the audit's part of speech, in percent. A bar under 95.0 needs the owner's

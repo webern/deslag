@@ -34,7 +34,7 @@ pub struct Args<'a> {
     pub parts: &'a [Spec],
     /// The owner's reviewed audit: a directory with `queue.conllu` and `labels.conllu`.
     pub audit: Option<&'a Path>,
-    /// The sha256 of the archive of what stays on the machine that made the batch.
+    /// The sha256 of the batch's archive, published as `silver-raw/<name>/`.
     pub archive_sha256: Option<&'a str>,
     /// The bar on the audit's part of speech, in percent.
     pub bar: f64,
@@ -273,7 +273,7 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
     }
     if args.audit.is_some() && args.archive_sha256.is_none() {
         problems.push(bad(
-            "--audit needs --archive-sha256, the sha256 of the archive of what stays on this machine".to_string(),
+            "--audit needs --archive-sha256, the sha256 of the archive published as `silver-raw/<name>/`".to_string(),
         ));
     }
     if let Some(sha) = args.archive_sha256 {

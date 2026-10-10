@@ -28,7 +28,7 @@ thresholds.
 
 import math
 
-from conllu import UD_TAGS, UNSCORED, Failure, read_skeleton, read_training
+from conllu import UD_TAGS, UNSCORED, Failure, read_gold, read_skeleton
 
 SURE_FLOOR = 0.995
 LIKELY_FLOOR = 0.97
@@ -94,7 +94,7 @@ def align(gold, skeleton):
 
 def check_count(tokens_path, gold_path):
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     return sum(len(align(g, s)) for g, s in zip(golds, skeletons))
 
 
@@ -104,7 +104,7 @@ def rows(learner, model, tokens_path, gold_path):
     The gap is in average-weight units; the gold's rank is 0 when the best guess is right.
     """
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     if len(skeletons) != len(golds):
         raise Failure(f"{tokens_path} and {gold_path} differ in sentences")
     out = []

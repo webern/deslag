@@ -60,9 +60,10 @@ import time
 import calibrate
 import start as starts
 import tbl
-from conllu import (DESLAG_CODE, UD_TAGS, UNSCORED, UPOS_OF_CODE, Failure, read_readings,
-                    read_skeleton, read_training, readings_version)
-from features import normalize
+from conllu import (DESLAG_CODE, UD_TAGS, UNSCORED, UPOS_OF_CODE, Failure, read_gold,
+                    read_readings, read_readings_training, read_skeleton, read_training,
+                    readings_version)
+from features import norms_of
 from initial import MostCommon
 from learner import Tagged
 
@@ -157,11 +158,12 @@ def train(sentences, seed, initial=MostCommon, folds=FOLDS, cap=CAP, min_gain=MI
         start = starts.MostCommonStart(cls=initial, folds=folds)
     begins = start.fit(sents, seed)
     index = {tag: i for i, tag in enumerate(start.tags)}
-    vocab = sorted({normalize(form) for s in sents for form in s.forms})
+    spelling = [norms_of(s.forms, s.origin) for s in sents]
+    vocab = sorted({norm for norms in spelling for norm in norms})
     ids = {word: i for i, word in enumerate(vocab)}
     corpus = tbl.Corpus(
-        [([ids[normalize(f)] for f in s.forms], b.tags, b.allowed)
-         for s, b in zip(sents, begins)],
+        [([ids[norm] for norm in norms], b.tags, b.allowed)
+         for norms, b in zip(spelling, begins)],
         len(start.tags),
     )
     gold = []
@@ -285,7 +287,7 @@ def tag_sentence(model, sentence, readings=None, stats=None):
     know."""
     rules, ids = model.compiled()
     begin = model.start.begin(sentence, readings)
-    norms = [normalize(f) for f in sentence.forms]
+    norms = norms_of(sentence.forms, (readings or sentence).origin)
     words = [ids.get(n, -1) for n in norms]
     first = list(begin.tags)
     tags = list(first)
@@ -342,10 +344,10 @@ def _tuning_sets(model, tokens_path, gold_path, readings_path):
             truth = {i: g for i, g in enumerate(sentence.gold) if g is not None}
             if truth:
                 begin = model.start.begin(sentence, sentence)
-                sets.append(([normalize(f) for f in sentence.forms], begin, truth))
+                sets.append((norms_of(sentence.forms, sentence.origin), begin, truth))
         return sets
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     if len(skeletons) != len(golds):
         raise Failure(f"{tokens_path} and {gold_path} differ in sentences")
     for gold, skeleton in zip(golds, skeletons):
@@ -354,7 +356,7 @@ def _tuning_sets(model, tokens_path, gold_path, readings_path):
         aligned = calibrate.align(gold, skeleton)
         if aligned:
             truth = {i: DESLAG_CODE[t] for i, t in aligned}
-            sets.append(([normalize(f) for f in skeleton.forms], model.start.begin(skeleton), truth))
+            sets.append((norms_of(skeleton.forms), model.start.begin(skeleton), truth))
     return sets
 
 
@@ -544,7 +546,8 @@ def cmd_train(args):
     started = time.time()
     sentences = []
     for path in args.train:
-        sentences.extend(read_readings(path) if args.start == "deslag" else read_training(path))
+        sentences.extend(read_readings_training(path) if args.start == "deslag"
+                         else read_training(path))
 
     def progress(number, step):
         if number % 25 == 0:

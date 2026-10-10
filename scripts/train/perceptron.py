@@ -46,7 +46,7 @@ class Model:
         self.tuning = dict(UNTUNED if tuning is None else tuning)
 
 
-class _State:
+class State:
     """The weights while they change, with what averaging needs."""
 
     def __init__(self):
@@ -107,7 +107,7 @@ def fit(sentences, seed, passes=DEFAULT_PASSES, on_pass=None, files=()):
     Returns the model after the last."""
     rng = random.Random(seed)
     order = list(sentences)
-    state = _State()
+    state = State()
     vocab = sorted({normalize(form) for s in order for form in s.forms})
     prepared = [Prepared(s.forms) for s in order]
     truths = [[INDEX[t] for t in s.tags] for s in order]

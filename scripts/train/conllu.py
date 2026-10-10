@@ -10,7 +10,15 @@ MISC `_`. An import is a skeleton whose `Word` lines carry `UPOS` and the MISC k
 `Score=` and `Kept=`. A readings file, which `deslag-exam readings` writes, is an import of
 deslag's own tagger, with `Gold=`, the gold tag as a deslag code, on the tokens the exam aligned
 a gold word to.
+
+A training file says in its header that it may train: `# exam.trains = yes` in the comments of its
+first sentence. `deslag-exam tokens` and `readings` carry that line from their gold; a treebank
+file has none, so run.sh writes it from scripts/ewt/ewt.lock. `read_training` and
+`read_readings_training`, the readers of training files, refuse a file without it, and a silver
+batch the retired list names. The dev sets are read as gold, by `read_gold`, which checks nothing.
 """
+
+import os
 
 COLUMNS = 10
 
@@ -114,8 +122,60 @@ def misc_pairs(misc):
     return pairs
 
 
-def read_training(path):
-    """The sentences of a UD file, forms and UPOS only. Multiword tokens as the module says."""
+# Where the retired silver batches are named, and the header keys that matter to a training reader.
+RETIRED_LIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "blobstore",
+                            "silver-retired.tsv")
+TRAINS_KEY = "exam.trains"
+BATCH_KEY = "silver.batch"
+
+
+def header_value(path, key):
+    """The value of `# key = value` among the comments that open the file's first sentence, or None."""
+    prefix = f"# {key} = "
+    with open(path, encoding="utf-8", newline="") as f:
+        for line in f:
+            line = line.rstrip("\r\n")
+            if not line.startswith("#"):
+                break
+            if line.startswith(prefix):
+                return line[len(prefix):].strip()
+    return None
+
+
+def retired_batches(path=RETIRED_LIST):
+    """The names of the retired silver batches: the first column of the list, under its header."""
+    if not os.path.exists(path):
+        raise Failure(f"{path}: the list of retired silver batches is missing")
+    names = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if line and not line.startswith("#"):
+                names.append(line.split("\t")[0])
+    return names[1:]  # the first row is the column names
+
+
+def check_trains(path, retired=RETIRED_LIST):
+    """A Failure unless the file at `path` may be read for training: its header says
+    `exam.trains = yes`, and if it is a silver batch, the batch is not retired."""
+    value = header_value(path, TRAINS_KEY)
+    if value != "yes":
+        raise Failure(f"{path}: refused for training: its header says `exam.trains = "
+                      f"{value or 'missing'}`, and a training reader needs `yes`")
+    batch = header_value(path, BATCH_KEY)
+    if batch is not None and batch in retired_batches(retired):
+        raise Failure(f"{path}: refused for training: silver batch {batch} is retired")
+
+
+def read_training(path, retired=RETIRED_LIST):
+    """The sentences of a UD training file, forms and UPOS only; see `check_trains`."""
+    check_trains(path, retired)
+    return read_gold(path)
+
+
+def read_gold(path):
+    """The sentences of a UD file, forms and UPOS only, with no check of its header: the dev sets
+    are read this way. Multiword tokens as the module says."""
     sentences = []
     for number, (comments, lines) in enumerate(read_blocks(path), 1):
         sent_id = comment_value(comments, "sent_id") or f"#{number}"
@@ -165,6 +225,12 @@ def read_skeleton(path):
                      comment_value(comments, "text"))
         )
     return sentences
+
+
+def read_readings_training(path, retired=RETIRED_LIST):
+    """The sentences of a readings file that is to train a learner; see `check_trains`."""
+    check_trains(path, retired)
+    return read_readings(path)
 
 
 def read_readings(path):

@@ -589,6 +589,11 @@ fn render_must_pass(
             "\nFAIL {} Misses: {count}, allows none. The words it missed, a word passes when the guess is the listed tag at Sure or Likely:",
             set.name
         );
+        let (low, wrong, other) = mustpass::kinds(misses);
+        let _ = writeln!(
+            out,
+            "  {low} right but below Likely, {wrong} wrong, {other} no longer a word of the gold"
+        );
         out.push_str(&mustpass::miss_lines(misses));
     }
     out

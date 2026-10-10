@@ -11,14 +11,14 @@
 //! or any gold label. It says two things of its gold: the stem of its file in `# exam.from`, so the
 //! labelling flow can tell a skeleton of the dev or owner gold from any other sample, and a
 //! holdout's `# exam.split = holdout`, so that no stage that reads a skeleton can take the text of a
-//! holdout set for another.
+//! holdout set for another. It carries its gold's `# exam.trains` when the gold decided one.
 
 use std::fmt::Write;
 
 use deslag::document::{Block, BlockKind, Token, TokenKind};
 use deslag::tag::{Origin, Reading};
 
-use crate::gold::{Gold, kind_name};
+use crate::gold::{Gold, Trains, kind_name};
 use crate::tagger::Context;
 use crate::tags::{Tag, upos};
 
@@ -28,6 +28,20 @@ pub const HEADER: &str = "# exam.tokens = deslag\n";
 
 /// The line a holdout gold's skeleton adds after [`HEADER`], so a copy of it still says what it is.
 pub const HOLDOUT: &str = "# exam.split = holdout\n";
+
+/// The comment that says whether the labels of a file may train a model.
+pub const TRAINS: &str = "exam.trains";
+
+/// The line a file adds to say what its source's `exam.trains` is, with its newline; empty when
+/// the source did not decide, so a file made from one says nothing it was not told. A training
+/// reader refuses a file without `yes`, and the skeleton and the readings carry it so a copy of
+/// the text still says whether it may train.
+pub fn trains_line(trains: Trains) -> String {
+    match trains {
+        Trains::Undecided => String::new(),
+        _ => format!("# {TRAINS} = {}\n", trains.name()),
+    }
+}
 
 /// The comment that names the gold a skeleton was made from, by its file's stem: `dev` for
 /// `tests/gold/dev.conllu`. The labelling flow reads a skeleton only if this says `dev` or `owner`,
@@ -115,6 +129,7 @@ pub fn skeleton(gold: &Gold) -> String {
     if gold.holdout() {
         out.push_str(HOLDOUT);
     }
+    out.push_str(&trains_line(gold.trains));
     for sentence in &gold.sentences {
         let tokens = sentence.tokens();
         let origins = deslag::tag::origins(&tokens);

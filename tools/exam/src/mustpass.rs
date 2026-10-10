@@ -264,6 +264,20 @@ impl MustPass {
     }
 }
 
+/// How `misses` divide: (right but below `Likely`, wrong guesses, rows that no longer name a
+/// scored word of the gold).
+pub fn kinds(misses: &[Miss]) -> (usize, usize, usize) {
+    let (mut low, mut wrong, mut other) = (0, 0, 0);
+    for miss in misses {
+        match &miss.failure {
+            Failure::Guess { guess, .. } if *guess == miss.row.tag => low += 1,
+            Failure::Guess { .. } => wrong += 1,
+            _ => other += 1,
+        }
+    }
+    (low, wrong, other)
+}
+
 /// The lines of a gate's failure block for `misses`: the first few, and how many are left.
 pub fn miss_lines(misses: &[Miss]) -> String {
     let mut out = String::new();

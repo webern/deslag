@@ -141,7 +141,8 @@ enum Command {
     },
     /// Writes the token skeleton an outside tagger fills: one CoNLL-U sentence per gold sentence,
     /// one line per deslag token, every column but FORM and MISC `_`. It writes to a file and never
-    /// to stdout, so holdout text never lands in a terminal transcript.
+    /// to stdout, so holdout text never lands in a terminal transcript. The file carries its gold's
+    /// `exam.trains` when the gold says one.
     ///
     /// With `--corpus`, the sentences are those of the English fixtures of `tests/corpus` outside
     /// `core`, and `sent_id` is `<layout_path>@<sentence start byte>`.
@@ -165,11 +166,18 @@ enum Command {
     /// of the file grades as `score --tagger deslag` does, but for the feature metrics. It writes
     /// to a file, and refuses a holdout gold (exit 2): the file names words and their tags.
     ///
+    /// With `--tokens`, the sentences are those of a skeleton `tokens` wrote, and no line has a
+    /// `Gold=`: a set that is to be tagged is read this way, so no tagged file carries its answers.
+    /// A holdout skeleton is accepted. The file carries the skeleton's `exam.trains`.
+    ///
     /// With `--corpus`, the sentences are those of `tokens --corpus`, and there is no gold.
     Readings {
         /// The gold file, CoNLL-U.
-        #[arg(long, required_unless_present = "corpus", conflicts_with = "corpus")]
+        #[arg(long, required_unless_present_any = ["corpus", "tokens"], conflicts_with_all = ["corpus", "tokens"])]
         gold: Option<PathBuf>,
+        /// The skeleton `tokens` wrote, to read without a gold.
+        #[arg(long, conflicts_with = "corpus")]
+        tokens: Option<PathBuf>,
         /// Write the readings of the corpus's English fixtures outside `core` instead.
         #[arg(long)]
         corpus: bool,
@@ -391,13 +399,15 @@ fn run(cli: Cli) -> Result<bool, Error> {
         }
         Command::Readings {
             gold,
+            tokens,
             corpus,
             root,
             out,
         } => {
-            let (text, sentences) = match gold {
-                Some(gold) => readings::of_gold(&Gold::read(&gold)?)?,
-                None => {
+            let (text, sentences) = match (gold, tokens) {
+                (Some(gold), _) => readings::of_gold(&Gold::read(&gold)?)?,
+                (None, Some(tokens)) => readings::of_skeleton(&tokens)?,
+                (None, None) => {
                     debug_assert!(corpus, "clap needs one of --gold and --corpus");
                     ticlist::corpus_skeleton(&ticlist::corpus(&root)?, true)?
                 }

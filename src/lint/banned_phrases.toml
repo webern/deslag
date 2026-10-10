@@ -9,7 +9,7 @@
 # is `next`, and the change that releases rewrites `next` to the version: `make check-release`
 # fails while one is left, since no stamp ever reaches `next`.
 
-measured_on = "ghcr.io/webern/deslag-blobs:v6@sha256:d075cbb39f05adb38eedef319a1bd57a1726c0f7d1ae168c75caea65cc16472a"
+measured_on = "ghcr.io/webern/deslag-blobs:v7@sha256:d9a3047c38e2f9e7845f15f4a4f8a66b715595879f818e4ad4cd0997077c85fb"
 
 [[entry]]
 phrase = "deliberately not"

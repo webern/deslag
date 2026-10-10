@@ -20,3 +20,5 @@
 
 corpus/
 corpus/batches/
+silver/
+silver-raw/

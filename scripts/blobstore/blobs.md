@@ -15,14 +15,9 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
 
 ```
 .blobs/unpacked/
-`-- corpus/                  the corpus's big tier (layers.txt)
-    `-- batches/             each batch a layer of its own (layers.txt)
-        |-- 2026-09-27-01/
-        |-- 2026-09-27-02/
-        |-- 2026-10-03-01/
-        |-- 2026-10-03-02/
-        |-- 2026-10-03-03/
-        `-- 2026-10-03-04/
+|-- corpus/batches/NAME/     the corpus's big tier, each batch a layer
+|-- silver/NAME/             each silver batch a layer
+`-- silver-raw/NAME/         each silver batch's raw archive a layer
 ```
 
 ## corpus/
@@ -32,27 +27,31 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
 the layout. `tests/blobs.rs` reads it.
 
 - `2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/`
-  and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`. 9,694,980 bytes of
-  Markdown, 12,034,975 in all.
+  and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`.
 - `2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599
-  `mixed`, 474 of those with their twin. 142,677,577 bytes of Markdown, 203,442,958 in all.
-- `2026-10-03-01`: corrects licence labels, from `batches/2026-10-03-01.json`. It adds back 49
-  fixtures labelled MIT-0 that are MIT, byte for byte, with sidecars that differ in
-  `source.license`. It drops those and 16 more whose licence the corpus does not accept or
-  `collect.py` cannot name.
+  `mixed`, 474 of those with their twin; it excludes 384 of the first's that `recheck` no longer
+  proves.
+- `2026-10-03-01`: licence corrections: 49 fixtures labelled MIT-0 added back as MIT, byte for
+  byte; those and 16 more whose licence the corpus does not accept or cannot name dropped.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
 - `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
 - `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
   model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 
-The second batch excludes the 384 fixtures of the first whose label `recheck` no longer
-proves; its `repos.jsonl` lists the 3,232 repositories tried, 1,388 of which gave a fixture.
-
-The `-04` stories have only 7 theme and period pairs, so file-weighted n-gram and phrase measures see
-repeats. Some hold repetition loops and a few stop mid-word at the limit; all are as written.
+The `-04` stories share 7 theme and period pairs, so n-gram and phrase measures see repeats; some
+loop or stop mid-word, as written.
 
 Every fixture is quoted from a public repository or dataset under a permissive licence, which its
 sidecar names with the commit or revision.
+
+## silver/ and silver-raw/
+
+`silver/` holds training sets that models labelled, a directory per batch and nothing else.
+`scripts/label/README.md` describes a batch and its checks, which `make test-silver` runs.
+`silver-raw/NAME/silver-raw.tar.zst` is batch NAME's raw replies, runs and merges, whose sha256
+the batch records; nothing reads it. `batches.md` says how both are published.
+
+- `2026-10-08-silver`: 4,794 sentences, 45,836 words; 9.9MB, and a 7.7MB archive.
 
 The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
 image, so every target that reads the corpus pulls anything added, as does CI on a cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
@@ -92,8 +91,8 @@ however many versions share it.
 
 Every immediate child of `.blobs/unpacked/` is a layer, except a directory `layers.txt` lists,
 whose immediate children are layers instead; a listed child of a listed directory continues the
-rule. A file or symlink met that way is a layer of its own. `layers.txt` lists `corpus/` and
-`corpus/batches/`, so each batch is a layer.
+rule. A file or symlink met that way is a layer of its own. `layers.txt` lists `corpus/`,
+`corpus/batches/`, `silver/` and `silver-raw/`, so each batch is a layer.
 
 A layer's identity is a fingerprint of its content: every path below it, whether each is a
 directory, file, executable or symlink, each file's hash and each symlink's target. Owner, times,

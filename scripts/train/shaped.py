@@ -5,7 +5,7 @@ through run.sh, by hand, never by the build, the tests or CI. Python 3, standard
 it with PYTHONHASHSEED=0.
 
     shaped.py train --train READINGS [READINGS ...] --mode replace|hybrid --out MODEL
-                    [--tune-readings READINGS --tune-agree TSV] [--passes N] [--seed S]
+                    [--tune-readings READINGS] [--passes N] [--seed S]
     shaped.py tag --model MODEL --tokens TOKENS --readings READINGS --out IMPORT
 
 It is perceptron.py with the labels, the tokens and the two shapes of the shape comparison.
@@ -27,13 +27,16 @@ nothing to choose, so it keeps deslag's confidence and `Kept=`.
 Confidence. A word the training files never held is `Unknown` (in the hybrid shape, only if deslag
 reads it `Unknown` too). For the rest, the margin between the best and the second code, in
 average-weight units, is `Sure` from the Sure cutoff, `Unsure` below the Unsure cutoff, `Likely`
-between. `tune` fits both cutoffs, and the Score mapping, on the `Prov=agree` words of the tuning
-set only, which is silver's tune split: silver's labels are right 98.96% of the time after the
-owner's review, so the words the voters disputed would hold the cutoffs under the gate floors. The
-cutoffs are the lowest margin from which the words at or above are right at the floors of
-tests/gold/gates.toml, 0.995 and 0.97, counted from the top (calibrate.py). It also picks the number
-of passes, 1 to MAX_PASSES: the one with the best best-guess accuracy on all of the tuning set's
-scored words, the fewest on a tie. Deslag's dev set is never read for either.
+between. In the hybrid shape a word below the Unsure cutoff whose best guess is deslag's `Likely`
+reading keeps it, `Kept=` and all, as the Brill tagger never puts a word it left alone below its
+start's `Likely`. `tune` fits both cutoffs, and the Score mapping, on every scored word of the tuning
+set, which is silver's tune split, by the evidence rule the Brill tagger rates its rules and cells
+by (calibrate.py): the Sure cutoff is the lowest margin from which the known words at or above are
+right at 0.995 with a Wilson lower bound of at least 0.97, counted from the top; the Unsure cutoff
+the lowest from which the band up to the Sure cutoff is right at 0.97, the floors of
+tests/gold/gates.toml. The two learners so calibrate on the same words by the same rule. It also
+picks the number of passes, 1 to MAX_PASSES: the one with the best best-guess accuracy on the tuning
+set's scored words, the fewest on a tie. Deslag's dev set is never read for either.
 
 The model is a JSON file of integer totals, as perceptron.py's, in `.train/`, and never committed.
 Exit 0 when it wrote what was asked, 2 when it cannot run, with one line on stderr.
@@ -180,6 +183,10 @@ def decide(model, reading, i, item, norm):
     if margin >= tuning["sure"]:
         return Tagged(upos, "Sure", score, [code])
     if margin < tuning["unsure"]:
+        if model.hybrid and code == reading.tags[i] and reading.conf[i] == "Likely":
+            # The Brill tagger's floor (brill.py, decide_by_evidence): a word read as deslag reads
+            # it is never below deslag's `Likely`.
+            return Tagged(upos, "Likely", score, list(reading.kept[i]))
         width = max(tuning["kept"], tuning["unsure"])
         return Tagged(upos, "Unsure", score, _within(item, steps, width))
     return Tagged(upos, "Likely", score, [code])
@@ -283,54 +290,69 @@ def mode(hybrid):
     return "hybrid" if hybrid else "replace"
 
 
-def rows(model, sentences, agree):
-    """What the cutoffs are fitted on: (rows, agree words, agree words frozen at Sure). A row is
-    (margin, known, rank of the label, 0, whether the word is `Prov=agree`) for a scored word the
-    margin applies to, the label's rank being the number of candidates when it is not among them.
-    The count of agree words is of all scored ones."""
-    out, agree_words, frozen = [], 0, 0
+def rows(model, sentences):
+    """What the cutoffs are fitted on: a row (margin, known, rank of the label, 0) for each scored
+    word the margin applies to, the label's rank being the number of candidates when it is not
+    among them. A word frozen at `Sure`, or with one candidate, keeps deslag's confidence."""
+    out = []
+    for reading in sentences:
+        norms = Prepared(reading.forms, reading.origin).norms[2:]
+        for i, item in enumerate(read(model, reading)):
+            gold = reading.gold[i]
+            if gold is None or item is None or item is FROZEN or len(item) < 2:
+                continue
+            where = next((n for n, (_, code) in enumerate(item) if CODES[code] == gold), len(item))
+            margin = (item[0][0] - item[1][0]) / model.steps
+            known = not unknown(model, reading, i, norms[i])
+            out.append((margin, known, where, 0.0))
+    return out
+
+
+def levels(model, sentences):
+    """{confidence: [scored words, right]} of the model as tuned on `sentences`, and the number of
+    them the hybrid's floor keeps at deslag's `Likely`."""
+    counts, floored = {}, 0
     for reading in sentences:
         norms = Prepared(reading.forms, reading.origin).norms[2:]
         for i, item in enumerate(read(model, reading)):
             gold = reading.gold[i]
             if gold is None or item is None:
                 continue
-            agreed = (reading.sent_id, i + 1) in agree
-            agree_words += agreed
-            if item is FROZEN:
-                frozen += agreed
-                continue
-            if len(item) < 2:
-                continue
-            where = next((n for n, (_, code) in enumerate(item) if CODES[code] == gold), len(item))
-            margin = (item[0][0] - item[1][0]) / model.steps
-            known = not unknown(model, reading, i, norms[i])
-            out.append((margin, known, where, 0.0, agreed))
-    return out, agree_words, frozen
+            tagged = decide(model, reading, i, item, norms[i])
+            code = reading.tags[i] if item is FROZEN else CODES[item[0][1]]
+            row = counts.setdefault(tagged.conf, [0, 0])
+            row[0] += 1
+            row[1] += code == gold
+            if item is not FROZEN and len(item) > 1 and tagged.conf == "Likely":
+                floored += (item[0][0] - item[1][0]) / model.steps < model.tuning["unsure"]
+    return dict(sorted(counts.items())), floored
 
 
-def tune(model, sentences, agree):
-    """Fits the Score mapping and the Sure and Unsure cutoffs on the `Prov=agree` words of
-    `sentences`, a tuning set of readings sentences with their `Gold=`; see the module's docs."""
-    data, agree_words, frozen = rows(model, sentences, agree)
-    chosen = [row[:4] for row in data if row[4]]
-    known = [row for row in chosen if row[1]]
+def tune(model, sentences):
+    """Fits the Score mapping and the Sure and Unsure cutoffs on every scored word of `sentences`,
+    a tuning set of readings sentences with their `Gold=`, by calibrate.py's evidence rule; see the
+    module's docs."""
+    data = rows(model, sentences)
+    known = [row for row in data if row[1]]
     if not known:
-        raise Failure("the tuning set has no known `Prov=agree` word to fit the cutoffs on")
-    a, b = calibrate.fit_logistic(chosen)
-    sure = calibrate.lowest_margin(known, calibrate.SURE_FLOOR)
+        raise Failure("the tuning set has no known scored word to fit the cutoffs on")
+    a, b = calibrate.fit_logistic(data)
+    sure = calibrate.sure_cutoff(known)
     if sure is None:
         sure = max(row[0] for row in known) + 1.0
-    unsure = calibrate.lowest_band(known, sure, calibrate.LIKELY_FLOOR)
+    unsure = calibrate.likely_cutoff(known, sure)
     unsure = sure if unsure is None else min(unsure, sure)
     model.tuning = {"sure": sure, "unsure": unsure, "kept": unsure, "a": a, "b": b}
-    at_sure = sum(1 for row in known if row[0] >= sure)
-    at_likely = sum(1 for row in known if unsure <= row[0] < sure)
+    counts, floored = levels(model, sentences)
+    scored = sum(row[0] for row in counts.values())
+    at = lambda *names: sum(counts.get(name, [0, 0])[0] for name in names)
     model.meta["tuned"] = {
-        "agree_words": agree_words, "frozen_sure": frozen, "rows": len(known),
-        "unknown_rows": len(chosen) - len(known), "at_sure": at_sure, "at_likely": at_likely,
-        "share_sure": (frozen + at_sure) / agree_words,
-        "share_sure_or_likely": (frozen + at_sure + at_likely) / agree_words,
+        "scored": scored, "rows": len(known), "unknown_rows": len(data) - len(known),
+        "past_sure": sum(1 for row in known if row[0] >= sure),
+        "in_likely_band": sum(1 for row in known if unsure <= row[0] < sure),
+        "kept_likely_by_floor": floored, "levels": counts,
+        "share_sure": at("Sure") / scored,
+        "share_sure_or_likely": at("Sure", "Likely") / scored,
     }
     return model
 
@@ -362,21 +384,6 @@ def load(path):
                  body["tuning"])
 
 
-def read_agree(path):
-    """The (sent_id, word id) pairs of a tuning set's `Prov=agree` words, from silver.py's list."""
-    pairs = set()
-    with open(path, encoding="utf-8") as f:
-        for number, line in enumerate(f, 1):
-            line = line.rstrip("\n")
-            if not line or line.startswith("#") or line == "sent_id\tword":
-                continue
-            sent_id, _, word = line.partition("\t")
-            if not word.isdecimal():
-                raise Failure(f"{path}:{number}: not a sent_id and a word id")
-            pairs.add((sent_id, int(word)))
-    return pairs
-
-
 def describe(tuning):
     return " ".join(f"{k}={v:.4f}" for k, v in tuning.items())
 
@@ -391,10 +398,9 @@ def cmd_train(args):
         raise Failure(f"the readings files are of different deslag tag versions: "
                       f"{sorted(versions)}")
     hybrid = args.mode == "hybrid"
-    tuning_set, agree = None, set()
+    tuning_set = None
     if args.tune_readings:
         tuning_set = read_readings(args.tune_readings)
-        agree = read_agree(args.tune_agree)
         if readings_version(args.tune_readings) not in versions:
             raise Failure(f"{args.tune_readings} is of another deslag tag version than the "
                           "training files")
@@ -410,13 +416,15 @@ def cmd_train(args):
           f"{args.passes}, {model.steps} steps, {len(model.totals)} features, "
           f"{time.time() - started:.0f}s", file=sys.stderr)
     if tuning_set is not None:
-        tune(model, tuning_set, agree)
+        tune(model, tuning_set)
         print("tuning " + describe(model.tuning), file=sys.stderr)
         tuned = model.meta["tuned"]
-        print(f"on {tuned['agree_words']} agree words of the tuning set: "
-              f"{tuned['share_sure']:.4f} at Sure, {tuned['share_sure_or_likely']:.4f} at Sure or "
-              f"Likely ({tuned['frozen_sure']} frozen at Sure, {tuned['at_sure']} past the Sure "
-              f"cutoff, {tuned['at_likely']} past the Unsure cutoff)", file=sys.stderr)
+        shown = ", ".join(f"{name} {n} ({right} right)"
+                          for name, (n, right) in tuned["levels"].items())
+        print(f"on {tuned['scored']} scored words of the tuning set: {tuned['share_sure']:.4f} at "
+              f"Sure, {tuned['share_sure_or_likely']:.4f} at Sure or Likely; {shown}; "
+              f"{tuned['kept_likely_by_floor']} kept at deslag's Likely by the floor",
+              file=sys.stderr)
     save(model, args.out)
 
 
@@ -435,7 +443,6 @@ def main(argv):
     train.add_argument("--passes", type=int, default=MAX_PASSES)
     train.add_argument("--seed", type=int, default=DEFAULT_SEED)
     train.add_argument("--tune-readings")
-    train.add_argument("--tune-agree")
     train.set_defaults(run=cmd_train)
     tag_ = sub.add_parser("tag")
     tag_.add_argument("--model", required=True)
@@ -444,8 +451,6 @@ def main(argv):
     tag_.add_argument("--out", required=True)
     tag_.set_defaults(run=cmd_tag)
     args = parser.parse_args(argv)
-    if args.command == "train" and bool(args.tune_readings) != bool(args.tune_agree):
-        parser.error("--tune-readings and --tune-agree go together")
     try:
         args.run(args)
     except (Failure, OSError) as error:

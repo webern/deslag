@@ -951,7 +951,7 @@ class SilverSplitTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             out, _ = self.split(d)
             rows = open(os.path.join(out, "silver-tune.agree.tsv"), encoding="utf-8").read()
-            pairs = shaped.read_agree(os.path.join(out, "silver-tune.agree.tsv"))
+            pairs = silver.read_agree(os.path.join(out, "silver-tune.agree.tsv"))
         self.assertEqual(rows.split("\n")[0], "sent_id\tword")
         self.assertEqual(pairs, {("s2", 1), ("s4", 1)})
 
@@ -1176,23 +1176,57 @@ class ShapedTests(unittest.TestCase):
         self.assertEqual(len(seen), 4)
         self.assertEqual(model.meta["passes"], seen.index(max(seen)) + 1)
 
-    def test_the_cutoffs_are_fitted_on_the_agree_words_only(self):
+    def test_the_cutoffs_are_fitted_on_every_scored_word(self):
         model = self.train(True)
         data = toy_readings()
-        every = {(s.sent_id, 2) for s in data}
-        few = {(s.sent_id, 2) for s in data if s.sent_id.startswith("a")}
-        shaped.tune(model, data, every)
-        wide = dict(model.meta["tuned"])
-        shaped.tune(model, data, few)
-        narrow = model.meta["tuned"]
-        self.assertEqual(narrow["agree_words"], len(few))
-        self.assertEqual(narrow["frozen_sure"], 0)
-        self.assertLess(narrow["rows"], wide["rows"])
-        self.assertEqual(narrow["rows"], len(few))
-        # `to` and `the` are frozen and, with no `Prov=agree` mark, not counted.
-        self.assertEqual(wide["agree_words"], len(data))
+        shaped.tune(model, data)
+        tuned = model.meta["tuned"]
+        # Every word is scored: `to` and `the` are frozen at Sure, the open word is a row.
+        self.assertEqual(tuned["scored"], 2 * len(data))
+        self.assertEqual(tuned["rows"] + tuned["unknown_rows"], len(data))
+        self.assertEqual(sum(n for n, _ in tuned["levels"].values()), tuned["scored"])
+        self.assertGreaterEqual(tuned["levels"]["Sure"][0], len(data))
+        empty = [reading("e", [sure("to", "PART")])]
         with self.assertRaises(conllu.Failure):
-            shaped.tune(model, data, set())
+            shaped.tune(model, empty)
+
+    def test_the_cutoffs_follow_the_evidence_rule_brill_rates_by(self):
+        # 300 right words above margin 2, then 30 at margin 1 of which one is wrong, then wrong
+        # words at margin 0.
+        rows = ([(2.0 + n / 100, True, 0, 0.0) for n in range(300)]
+                + [(1.0, True, 0, 0.0)] * 29 + [(1.0, True, 1, 0.0)]
+                + [(0.0, True, 1, 0.0)] * 5)
+        # 300 of 300 is Sure; 329 of 330 is 99.7% with a Wilson bound over 0.97, so Sure too.
+        self.assertTrue(calibrate.surely(330, 329))
+        self.assertEqual(calibrate.sure_cutoff(rows), 1.0)
+        # A short clean run is not Sure, as in Brill: 100 of 100 has a bound under 0.97.
+        self.assertIsNone(calibrate.sure_cutoff(rows[:100]))
+        self.assertEqual(brill.surely([100, 100]), calibrate.surely(100, 100))
+        # A cutoff falls between margins only: the first 30 of the words at margin 1 are right, but
+        # all 34 are 88.2%, under the floor.
+        tied = [(1.0, True, 0, 0.0)] * 30 + [(1.0, True, 1, 0.0)] * 4
+        self.assertIsNone(calibrate.likely_cutoff(tied, 2.0))
+        self.assertEqual(calibrate.likely_cutoff(tied + [(1.5, True, 0, 0.0)] * 40, 2.0), 1.5)
+        # The Likely band: 97 of 100 right passes the floor, 96 of 100 does not.
+        band = [(1.0, True, 0, 0.0)] * 97 + [(1.0, True, 1, 0.0)] * 3
+        self.assertEqual(calibrate.likely_cutoff(band, 2.0), 1.0)
+        self.assertIsNone(calibrate.likely_cutoff(band[1:] + [(1.0, True, 1, 0.0)], 2.0))
+
+    def test_a_hybrid_word_read_as_deslag_reads_it_keeps_deslags_likely(self):
+        model = self.train(True)
+        model.tuning.update(sure=1e9, unsure=1e9, kept=1e9)
+        likely = probe_sentence("to")
+        likely.conf[1], likely.tags[1], likely.kept[1] = "Likely", "VERB", ["VERB", "NOUN"]
+        tagged = self.tags(model, likely)[1]
+        self.assertEqual((tagged.upos, tagged.conf, tagged.kept),
+                         ("VERB", "Likely", ["VERB", "NOUN"]))
+        changed = probe_sentence("to")
+        changed.conf[1], changed.tags[1] = "Likely", "NOUN"
+        changed.kept[1] = ["NOUN", "VERB"]
+        self.assertEqual(self.tags(model, changed)[1].conf, "Unsure")
+        replace = self.train(False)
+        replace.tuning.update(sure=1e9, unsure=1e9, kept=1e9)
+        self.assertEqual(self.tags(replace, likely)[1].conf, "Unsure")
 
     def test_the_cutoffs_split_sure_likely_and_unsure_by_margin(self):
         model = self.train(True)
@@ -1256,13 +1290,11 @@ class ShapedTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             train = write(d, "train.conllu", readings_text(data))
             tune = write(d, "tune.conllu", readings_text(data[:4]))
-            agree = write(d, "agree.tsv", "sent_id\tword\n" + "".join(
-                f"{s.sent_id}\t2\n" for s in data))
             out = os.path.join(d, "m.json")
             sys.stderr = open(os.devnull, "w")
             try:
                 code = shaped.main(["train", "--mode", "hybrid", "--train", train, "--out", out,
-                                    "--tune-readings", tune, "--tune-agree", agree,
+                                    "--tune-readings", tune,
                                     "--passes", "3"])
             finally:
                 sys.stderr.close()
@@ -1295,6 +1327,7 @@ dev  tests/gold/dev.conllu  300 sentences, 3119 scored tokens
   Best-guess accuracy  2707/3119   >= 86.0%     2683      24  pass
   Sure accuracy        999/1008    >= 98.5%      993       6  FAIL
   Likely accuracy      500/503     >= 97.0%      488      12  pass
+  Unsure share         0/3119      >= 1.0%         -       -  not judged (n < 100)
 
 mustpass  tests/gold/dev.conllu  list tests/gold/mustpass.tsv, 982 words
   Misses               3/982  = 0  FAIL
@@ -1330,13 +1363,25 @@ class ShapesReportTests(unittest.TestCase):
                                        "ticlist: x\n  rows right at Likely or above   6 of 172  3.5%  [1.2, 6.4]\n"))
         self.assertEqual(found["Best-guess accuracy"], (86.8, 85.5, 88.2, 2707, 3119))
         self.assertEqual(found["Accuracy"][0], 99.2)
-        # The dev block's four gates, of which one failed; the must-pass line and a word that
-        # happens to end in `pass` are not gates.
-        self.assertEqual(gates, (3, 4, 2, 1, 0))
+        # The dev block's four judged gates, of which one failed, and one not judged; the
+        # must-pass line and a word that happens to end in `pass` are not gates.
+        self.assertEqual(gates, (3, 4, 1, 2, 1, 0))
         self.assertEqual(compared["Best-guess accuracy"],
                          ("86.8%", "81.1%", "-5.7", "[-7.1, -4.4]", "worse"))
         self.assertEqual(compared["Likely accuracy"][2], "n/a")
         self.assertEqual(tic, (6, 172))
+
+
+    def test_a_must_pass_failure_without_its_counts_is_an_error_and_a_pass_is_zero(self):
+        counts = "  2 right but below Likely, 1 wrong, 0 no longer a word of the gold\n"
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(conllu.Failure, "counts"):
+                shapes.gates(write(d, "g.txt", SHAPES_GATES.replace(counts, "")))
+            with self.assertRaisesRegex(conllu.Failure, "Misses"):
+                shapes.gates(write(d, "g.txt", SHAPES_GATES.split("mustpass  ")[0]))
+            passing = SHAPES_GATES.split("\nFAIL mustpass")[0].replace("3/982  = 0  FAIL",
+                                                                       "0/982  = 0  pass")
+            self.assertEqual(shapes.gates(write(d, "g.txt", passing)), (3, 4, 1, 0, 0, 0))
 
 
 # A stand-in for `deslag-exam`: `score` saves an empty run and `compare` prints one paired line.
@@ -1362,8 +1407,8 @@ done
 """
 
 
-class OwnerSetTests(unittest.TestCase):
-    """The owner's gold is report-only: run.sh may tag, score and compare it, and nothing else."""
+class RunShTests(unittest.TestCase):
+    """Runs run.sh in a scratch tree, against stand-ins."""
 
     @classmethod
     def setUpClass(cls):
@@ -1371,10 +1416,12 @@ class OwnerSetTests(unittest.TestCase):
         cls.run_sh = os.path.join(here, "run.sh")
         cls.lock = os.path.join(here, "..", "ewt", "ewt.lock")
 
-    def run_all(self, *commands, edit=lambda text: text, after=None):
+    def run_all(self, *commands, edit=lambda text: text, after=None, before=None):
         """Runs each run.sh command, as `edit` rewrote it, from a scratch tree whose `cargo` and
-        `python3` only log their arguments, and returns every logged call. `after(root)` looks at
-        the tree before it goes. The treebank's test file is a directory, so reading it fails."""
+        `python3` only log their arguments, and returns every logged call. A command is a string,
+        or a tuple of it and its arguments. `before(root)` sets the tree up before the first,
+        `after(root)` looks at it before it goes. The treebank's test file is a directory, so
+        reading it fails."""
         with tempfile.TemporaryDirectory() as root:
             os.makedirs(os.path.join(root, "scripts", "train"))
             os.makedirs(os.path.join(root, "scripts", "ewt"))
@@ -1394,17 +1441,24 @@ class OwnerSetTests(unittest.TestCase):
                 path = write(os.path.join(root, "bin"), tool, STUB_LOGGER)
                 os.chmod(path, 0o755)
             log = os.path.join(root, "calls.log")
+            if before is not None:
+                before(root)
             env = dict(os.environ, PATH=os.path.join(root, "bin") + os.pathsep + os.environ["PATH"],
                        RUN_LOG=log)
             for command in commands:
+                command = (command,) if isinstance(command, str) else tuple(command)
                 done = subprocess.run(
-                    ["bash", os.path.join(root, "scripts", "train", "run.sh"), command],
+                    ["bash", os.path.join(root, "scripts", "train", "run.sh"), *command],
                     env=env, capture_output=True, text=True, cwd=root)
                 self.assertEqual(done.returncode, 0, f"{command}: {done.stderr}")
             if after is not None:
                 after(root)
             with open(log, encoding="utf-8") as f:
                 return f.read().splitlines()
+
+
+class OwnerSetTests(RunShTests):
+    """The owner's gold is report-only: run.sh may tag, score and compare it, and nothing else."""
 
     def test_the_owner_set_is_reported_and_never_trained_tuned_or_gated(self):
         calls = self.run_all(
@@ -1420,6 +1474,9 @@ class OwnerSetTests(unittest.TestCase):
                 f"the owner set reached a trainer, a tuner or a gate: {call}")
         self.assertTrue(any(" train " in c for c in calls), "no trainer ran, so nothing was checked")
         self.assertTrue(any("curve.py" in c for c in calls))
+        for call in calls:
+            self.assertFalse("holdout" in call or "ud-test" in call,
+                             f"a command other than the milestone reached holdout or test: {call}")
 
     def test_a_trainer_given_the_owner_set_is_stopped(self):
         with self.assertRaises(AssertionError) as caught:
@@ -1436,6 +1493,48 @@ class OwnerSetTests(unittest.TestCase):
         message = str(caught.exception)
         self.assertIn("2 != 0", message)
         self.assertIn("report-only", message)
+
+
+class MilestoneTests(RunShTests):
+    """`run.sh milestone` reads the holdout gold and the treebank's test file, for two candidates
+    only, once, and prints aggregates and their `compare` only. Run against stand-ins: no holdout
+    or test file is in the scratch tree."""
+
+    @staticmethod
+    def models(root):
+        shapes_dir = os.path.join(root, ".train", "shapes")
+        os.makedirs(shapes_dir)
+        for name in shapes.CANDIDATES:
+            write(shapes_dir, f"{name}.model.json", "{}")
+
+    def test_any_number_of_candidates_but_two_is_refused(self):
+        for args in ((), ("p-hyb-s",), ("p-hyb-s", "b-hyb-s", "p-rep-s"), ("p-hyb-s", "p-hyb-s"),
+                     ("p-hyb-s", "nobody")):
+            with self.assertRaises(AssertionError) as caught:
+                self.run_all(("milestone",) + args, before=self.models)
+            self.assertIn("2 != 0", str(caught.exception), args)
+
+    def test_two_candidates_are_scored_in_aggregate_and_compared_once(self):
+        calls = self.run_all(("milestone", "p-hyb-s", "b-hyb-s"), before=self.models)
+        exam = [c for c in calls if "deslag-exam" in c]
+        for gold in ("tests/gold/holdout.conllu", ".ewt/r2.18/en_ewt-ud-test.conllu"):
+            scores = [c for c in exam if f" score --gold {gold} " in c]
+            self.assertEqual(len(scores), 2, gold)
+            self.assertTrue(all("--aggregate" in c for c in scores), scores)
+        self.assertEqual(len([c for c in exam if " compare " in c]), 2)
+        verbs = {c.split(" -- ")[1].split()[0] for c in exam}
+        self.assertEqual(verbs, {"tokens", "readings", "score", "compare"})
+        trained = [c for c in calls if " train " in c or "--tune" in c]
+        self.assertEqual(trained, [])
+        tagged = [c for c in calls if c.startswith("python3 ") and " tag " in c]
+        self.assertEqual(len(tagged), 4)
+        self.assertTrue(all("p-hyb-s" in c or "b-hyb-s" in c for c in tagged))
+
+    def test_a_second_milestone_is_refused(self):
+        with self.assertRaises(AssertionError) as caught:
+            self.run_all(("milestone", "p-hyb-s", "b-hyb-s"), ("milestone", "p-hyb-s", "b-hyb-s"),
+                         before=self.models)
+        self.assertIn("read once", str(caught.exception))
 
 
 if __name__ == "__main__":

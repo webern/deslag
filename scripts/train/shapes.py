@@ -8,12 +8,13 @@ DIR is `.train/shapes`. For every set (`ewt-dev`, `deslag-dev`, `owner`) and eve
 and the five candidates) it reads `SET.NAME.report.txt`, the exam's aggregate report, and writes a
 row to SHAPES.tsv: best-guess accuracy with its 95% interval, the committed share, the accuracy
 where it commits, the unknown rate and the gold retained. The rows of `deslag-dev` also hold the
-dev gates passed out of those judged, the must-pass misses split into the right but below `Likely`
+dev gates passed out of those judged and the number not judged (too few words), the must-pass misses split into the right but below `Likely`
 and the wrong ones, the tic list rows right at `Likely` or above, and the seconds the candidate took
 to train. PAIRS.tsv has the paired `compare` runs, `SET.AFTER.vs.BEFORE.compare.txt`, each metric's
 difference as after minus before with its interval. TUNING.tsv says what each candidate fitted on
-silver's tune split: the perceptrons' passes and cutoffs and the share of the `Prov=agree` words
-each cutoff leaves, and the Brill taggers' rule counts.
+silver's tune split: the perceptrons' passes and cutoffs, the share of the tune split's scored words
+at `Sure` and at `Sure` or `Likely` and how many of each are right, and the words the hybrid's floor
+keeps at deslag's `Likely`; and the Brill taggers' rule counts.
 """
 
 import argparse
@@ -42,7 +43,8 @@ DIFF = re.compile(
     r"^ {2}(?P<name>[A-Za-z][A-Za-z -]*?) {2,}(?P<before>[\d.]+%|n/a) +(?P<after>[\d.]+%|n/a) +"
     r"(?P<diff>[+-][\d.]+|n/a) +(?P<interval>\[[+-][\d.]+, [+-][\d.]+\]|n/a) +(?P<verdict>\S+)\s*$"
 )
-GATE = re.compile(r"^ {2}\S.*\s(?P<verdict>pass|FAIL)\s*$")
+GATE = re.compile(r"^ {2}\S.*\s(?P<verdict>pass|FAIL|not judged \(n < \d+\))\s*$")
+MISSES = re.compile(r"^ {2}Misses\s+\d+/\d+\s+= 0\s+(?P<verdict>pass|FAIL)\s*$")
 MUSTPASS = re.compile(r"^ {2}(\d+) right but below Likely, (\d+) wrong, (\d+) no longer")
 TICLIST = re.compile(r"^\s+rows right at Likely or above\s+(\d+) of (\d+)")
 
@@ -71,10 +73,12 @@ def metrics(path):
 
 
 def gates(path):
-    """(dev gates passed, dev gates judged, must-pass right but low, must-pass wrong, other)."""
-    passed = judged = 0
+    """(dev gates passed, dev gates judged, dev gates not judged, must-pass right but low,
+    must-pass wrong, other). A must-pass block that fails without the line of its counts is a
+    Failure, so a missing or reworded line never reads as no misses."""
+    passed = judged = unjudged = 0
     low = wrong = other = None
-    block = seen = None
+    block = seen = verdict = None
     for line in lines(path):
         if line.startswith("dev "):
             block = seen = "dev"
@@ -84,16 +88,27 @@ def gates(path):
             block = None
         match = GATE.match(line)
         if block == "dev" and match:
-            judged += 1
-            passed += match["verdict"] == "pass"
+            if match["verdict"].startswith("not judged"):
+                unjudged += 1
+            else:
+                judged += 1
+                passed += match["verdict"] == "pass"
+        misses = MISSES.match(line)
+        if block == "mustpass" and misses:
+            verdict = misses["verdict"]
         counts = MUSTPASS.match(line)
         if counts:
             low, wrong, other = (int(x) for x in counts.groups())
     if seen is None or judged == 0:
         raise Failure(f"{path}: no dev gates in it")
+    if verdict is None:
+        raise Failure(f"{path}: no must-pass `Misses` line in it")
     if low is None:
+        if verdict == "FAIL":
+            raise Failure(f"{path}: the must-pass list failed, and the line of its counts "
+                          "(right but below Likely, wrong) is missing")
         low = wrong = other = 0
-    return passed, judged, low, wrong, other
+    return passed, judged, unjudged, low, wrong, other
 
 
 def ticlist(path):
@@ -133,7 +148,8 @@ def write_shapes(directory, out):
     times = seconds(directory)
     header = ["set", "tagger", "best_guess", "best_guess_low", "best_guess_high",
               "committed_share", "committed_accuracy", "unknown_rate", "gold_retained",
-              "dev_gates_passed", "dev_gates_judged", "mustpass_right_but_low", "mustpass_wrong",
+              "dev_gates_passed", "dev_gates_judged", "dev_gates_not_judged",
+              "mustpass_right_but_low", "mustpass_wrong",
               "mustpass_other", "ticlist_right", "ticlist_rows", "train_seconds"]
     rows = []
     for set_ in SETS:
@@ -144,13 +160,13 @@ def write_shapes(directory, out):
                    f"{found['Committed share'][0]:.1f}", f"{found['Accuracy'][0]:.1f}",
                    f"{found['Unknown rate'][0]:.1f}", f"{found['Gold retained'][0]:.1f}"]
             if set_ == "deslag-dev":
-                passed, judged, low, wrong, other = gates(
+                passed, judged, unjudged, low, wrong, other = gates(
                     os.path.join(directory, f"deslag-dev.{name}.gates.txt"))
                 right, total = ticlist(os.path.join(directory, f"ticlist.{name}.report.txt"))
-                row += [str(passed), str(judged), str(low), str(wrong), str(other), str(right),
-                        str(total), str(times.get(name, ""))]
+                row += [str(passed), str(judged), str(unjudged), str(low), str(wrong), str(other),
+                        str(right), str(total), str(times.get(name, ""))]
             else:
-                row += [""] * 8
+                row += [""] * 9
             rows.append(row)
     write_table(out, header, rows)
     return header, rows
@@ -173,22 +189,26 @@ def write_pairs(directory, out):
 
 
 def write_tuning(directory, out):
-    header = ["tagger", "passes_kept", "sure_cutoff", "unsure_cutoff", "agree_words",
-              "frozen_at_sure", "share_at_sure", "share_at_sure_or_likely", "rules_kept",
-              "rules_trained", "tune_accuracy_start", "tune_accuracy_kept"]
+    header = ["tagger", "passes_kept", "sure_cutoff", "unsure_cutoff", "tune_words",
+              "share_at_sure", "share_at_sure_or_likely", "sure_right", "likely_right",
+              "likely_by_floor", "rules_kept", "rules_trained", "tune_accuracy_start",
+              "tune_accuracy_kept"]
     rows = []
     for name in CANDIDATES:
         with open(os.path.join(directory, f"{name}.model.json"), encoding="utf-8") as f:
             body = json.load(f)
         if name.startswith("p-"):
             tuning, tuned = body["tuning"], body["meta"]["tuned"]
+            levels = tuned["levels"]
+            right = lambda level: "{1}/{0}".format(*levels.get(level, [0, 0]))
             rows.append([name, str(body["meta"]["passes"]), f"{tuning['sure']:.4f}",
-                         f"{tuning['unsure']:.4f}", str(tuned["agree_words"]),
-                         str(tuned["frozen_sure"]), f"{tuned['share_sure']:.4f}",
-                         f"{tuned['share_sure_or_likely']:.4f}", "", "", "", ""])
+                         f"{tuning['unsure']:.4f}", str(tuned["scored"]),
+                         f"{tuned['share_sure']:.4f}", f"{tuned['share_sure_or_likely']:.4f}",
+                         right("Sure"), right("Likely"), str(tuned["kept_likely_by_floor"]),
+                         "", "", "", ""])
         else:
             devlog = body["devlog"]
-            rows.append([name, "", "", "", "", "", "", "", str(body["kept"]),
+            rows.append([name, "", "", "", "", "", "", "", "", "", str(body["kept"]),
                          str(len(body["rules"])), f"{devlog[0]:.4f}", f"{devlog[body['kept']]:.4f}"])
     write_table(out, header, rows)
 

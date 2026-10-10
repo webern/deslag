@@ -13,7 +13,8 @@ standing`, exits 0. Anything else is refused, exit 2, and nothing is written.
 The `split` column of the manifest marks each sentence `train` or `tune`. DIR gets
 `silver-train.conllu` and `silver-tune.conllu`, each the file's header (the comments before the
 first `sent_id`) and the sentences of that split, as the batch has them, and `silver-tune.agree.tsv`, the tune split's words
-with `Prov=agree` as a `sent_id` and a word id each. It refuses a manifest that does not name
+with `Prov=agree` as a `sent_id` and a word id each, a record to split the tune words by, which no
+learner fits on. It refuses a manifest that does not name
 every sentence once, or names one the batch lacks, or splits a sentence neither way. Exit 0 when it
 wrote the files, 2 when it cannot run, with one line on stderr.
 """
@@ -136,6 +137,21 @@ def split(silver, manifest, out, standing, retired=RETIRED_LIST):
         for sent_id, word in agree:
             f.write(f"{sent_id}\t{word}\n")
     return counts["train"], counts["tune"], len(agree)
+
+
+def read_agree(path):
+    """The (sent_id, word id) pairs of a tuning set's `Prov=agree` words, from `split`'s list."""
+    pairs = set()
+    with open(path, encoding="utf-8") as f:
+        for number, line in enumerate(f, 1):
+            line = line.rstrip("\n")
+            if not line or line.startswith("#") or line == "sent_id\tword":
+                continue
+            sent_id, _, word = line.partition("\t")
+            if not word.isdecimal():
+                raise Failure(f"{path}:{number}: not a sent_id and a word id")
+            pairs.add((sent_id, int(word)))
+    return pairs
 
 
 def main(argv):

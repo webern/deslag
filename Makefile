@@ -79,7 +79,8 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-confinement test-ewt \
-        test-exam test-label test-owner test-percept test-python test-scanners test-shapes test-silver \
+        test-exam test-label test-owner test-percept test-python test-scanners test-shapes \
+        test-shapes-milestone test-silver \
         test-spacy \
         test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
@@ -145,6 +146,10 @@ help:
 	@echo "test-shapes      grade the five taggers generate-shapes trained on the dev sets, the owner set, the gates,"
 	@echo "                 the must-pass list and the tic list, compare them in pairs, and write .train/shapes.tsv;"
 	@echo "                 generates first, so minutes, not in test or ci; never scores the holdout or the test file"
+	@echo "test-shapes-milestone"
+	@echo "                 MILESTONE=\"AFTER BEFORE\", two candidates generate-shapes trained, scored once on the"
+	@echo "                 holdout gold and the treebank's test file: aggregates and their paired compare only, into"
+	@echo "                 .train/milestone; refuses any other number of candidates, or a second run; not in test or ci"
 	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
 	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
 	@echo "                 runs it"
@@ -381,6 +386,13 @@ test-percept: generate-percept
 # file. Not part of test: it needs the treebank, the big tier and minutes.
 test-shapes: generate-shapes
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-shapes
+
+# The milestone read: the two candidates MILESTONE names, AFTER then BEFORE, from the models
+# generate-shapes left, on the holdout gold and the treebank's test file, once, after the table on
+# the dev sets is final. Aggregates and the paired `compare` only, into .train/milestone; run.sh
+# refuses any other number of candidates and a second run. Not part of test or ci.
+test-shapes-milestone: preflight fetch-ewt
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh milestone $(MILESTONE)
 
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,

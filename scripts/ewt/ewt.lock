@@ -2,9 +2,9 @@
 # downloads each file named below from <base>/<commit>/<file>, checks its sha256, and keeps a copy
 # of this file as .ewt/stamp. Change a line here and the next fetch starts over.
 #
-# The licence is CC BY-SA 4.0. The train file may train a learner and the dev and test files may
-# not (owner, 2026-10-04); a trainer refuses a file whose `trains` line below says otherwise. Nothing
-# derived from the treebank is committed or shipped.
+# The licence is CC BY-SA 4.0. The train file may train weights that ship; the dev and test files
+# never train any (owner, 2026-10-04). A trainer refuses a file whose `trains` line below says
+# otherwise. Weights trained on the train file will carry CC BY-SA 4.0, set up before any ship.
 release r2.18
 commit b7711cce01cdd4f5fcc0a8199b8a50d951b16c0c
 base https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT

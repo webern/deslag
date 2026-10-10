@@ -7,7 +7,7 @@
 #
 # The treebank's train and dev files are read from a copy under .train/ewt that opens with the
 # `# exam.trains` line scripts/ewt/ewt.lock gives each (a UD file has none). A trainer refuses a
-# file without `yes`. The test file is never copied or read.
+# file without `yes`. The test file is never copied, and only `milestone` has the exam read it.
 #
 # The owner's gold, tests/gold/owner.conllu, is a third set that is tagged, scored and compared beside
 # the two dev sets and nothing else: never trained on, never tuned on, never gated. See `no_owner`.
@@ -34,10 +34,14 @@
 #                          b-hyb-e, b-hyb-s), each tagging every set, all under .train/shapes
 #   run.sh test-shapes     the unit tests, then each candidate's report, dev gates, must-pass misses
 #                          and tic list, the paired `compare` runs, and .train/shapes.tsv
+#   run.sh milestone AFTER BEFORE
+#                          the two named candidates of generate-shapes on the holdout gold and the
+#                          treebank's test file, once: aggregates and the paired `compare` of AFTER
+#                          against BEFORE, into .train/milestone; nothing else ever reads those two
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes}
+cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes|milestone AFTER BEFORE}
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
@@ -289,10 +293,8 @@ shape_train() {
   local model="$shapes_dir/$name.model.json"
   local tune=(--tune-readings "$shapes_dir/silver-tune.readings.conllu")
   case "$name" in
-    p-rep-s) train $shaped train --mode replace --train "$@" "${tune[@]}" \
-               --tune-agree "$shapes_dir/silver-tune.agree.tsv" --out "$model" ;;
-    p-hyb-*) train $shaped train --mode hybrid --train "$@" "${tune[@]}" \
-               --tune-agree "$shapes_dir/silver-tune.agree.tsv" --out "$model" ;;
+    p-rep-s) train $shaped train --mode replace --train "$@" "${tune[@]}" --out "$model" ;;
+    p-hyb-*) train $shaped train --mode hybrid --train "$@" "${tune[@]}" --out "$model" ;;
     b-hyb-*) train $brill train --start deslag --train "$@" "${tune[@]}" --out "$model" \
                --log "$shapes_dir/$name.log.tsv"
              python3 $brill rules --model "$model" --out "$shapes_dir/$name.rules.txt" \
@@ -386,6 +388,59 @@ test_shapes() {
     --pairs-out .train/shapes.pairs.tsv --tuning-out .train/shapes.tuning.tsv
 }
 
+# The milestone: candidates AFTER and BEFORE, which generate-shapes trained, on the holdout gold and
+# the treebank's test file. Each is read once the table on the dev sets is final, so this refuses any
+# other number of candidates, and refuses to run again over .train/milestone. Both sets are read by
+# the exam alone: `tokens` makes the skeleton, `readings --tokens` deslag's readings of it with no
+# gold, the trainer's `tag` the import, and `score --aggregate` and `compare` print aggregates only.
+# No gate, must-pass list, tic list or trainer runs on them.
+milestone_dir=.train/milestone
+milestone() {
+  if [ $# -ne 2 ]; then
+    echo "run.sh: milestone takes exactly two candidates, AFTER and BEFORE, and was given $#" >&2
+    exit 2
+  fi
+  local after=$1 before=$2 name set gold
+  if [ "$after" = "$before" ]; then
+    echo "run.sh: milestone compares two different candidates, and was given $after twice" >&2
+    exit 2
+  fi
+  for name in "$after" "$before"; do
+    case " ${candidates[*]} " in
+      *" $name "*) ;;
+      *) echo "run.sh: $name is not a candidate: ${candidates[*]}" >&2; exit 2 ;;
+    esac
+    [ -f "$shapes_dir/$name.model.json" ] || {
+      echo "run.sh: no $shapes_dir/$name.model.json; run make generate-shapes first" >&2
+      exit 2
+    }
+  done
+  if [ -e "$milestone_dir" ]; then
+    echo "run.sh: $milestone_dir exists: the milestone is read once" >&2
+    exit 2
+  fi
+  mkdir -p "$milestone_dir"
+  for set in holdout ewt-test; do
+    case "$set" in
+      holdout) gold=tests/gold/holdout.conllu ;;
+      ewt-test) gold="$ewt/en_ewt-ud-test.conllu" ;;
+    esac
+    exam tokens --gold "$gold" --out "$milestone_dir/$set.tokens.conllu"
+    exam readings --tokens "$milestone_dir/$set.tokens.conllu" --out "$milestone_dir/$set.readings.conllu"
+    for name in "$after" "$before"; do
+      python3 "$(trainer_of "$name")" tag --model "$shapes_dir/$name.model.json" \
+        --tokens "$milestone_dir/$set.tokens.conllu" --readings "$milestone_dir/$set.readings.conllu" \
+        --out "$milestone_dir/$set.$name.import.conllu"
+      echo "=== $set: $name"
+      exam score --gold "$gold" --import "$milestone_dir/$set.$name.import.conllu" \
+        --save "$milestone_dir/$set.$name.run.json" --aggregate | tee "$milestone_dir/$set.$name.report.txt"
+    done
+    echo "=== $set: $after against $before"
+    exam compare "$milestone_dir/$set.$before.run.json" "$milestone_dir/$set.$after.run.json" |
+      tee "$milestone_dir/$set.$after.vs.$before.compare.txt"
+  done
+}
+
 case "$cmd" in
   baseline) baseline ;;
   generate-brill-deslag) generate_brill_deslag ;;
@@ -433,5 +488,6 @@ case "$cmd" in
   generate-shapes) generate_shapes ;;
   test-shapes) test_shapes ;;
   shapes) generate_shapes; test_shapes ;;
-  *) echo "usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes" >&2; exit 2 ;;
+  milestone) shift; milestone "$@" ;;
+  *) echo "usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes|milestone AFTER BEFORE" >&2; exit 2 ;;
 esac

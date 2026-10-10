@@ -27,18 +27,15 @@ pub const PASSES: usize = 3;
 /// The most tagging may take, as a percent of reading, in a debug build, which is what `make ci`
 /// runs.
 ///
-/// CI shares on #97's head were 34.34 on ubuntu and 33.65 on macOS, and 35.0 on a laptop. Runs of
-/// unchanged tagging code spread by 3.5 points on ubuntu when the share was 44 to 48 (about 8%
-/// relative, so about 3 points at today's level); macOS stayed within 0.6. 40.0 sits about 5.7
-/// points over the highest CI share and about twice the worst spread. It fails when tagging gets
-/// 25 to 28% slower against the rest of reading, which catches a return to the cost before #95
-/// (43 to 49% in CI).
-pub const BUDGET_DEBUG: f64 = 40.0;
+/// Tagging may take up to half of reading. The limit is the owner's; it is not derived from a
+/// measurement. The share measured 34.34 on ubuntu and 33.65 on macOS in CI (debug builds), and
+/// 31.4 on a development machine (debug build).
+pub const BUDGET_DEBUG: f64 = 50.0;
 
 /// The most tagging may take, as a percent of reading, in a release build. It is for runs by
-/// hand, as CI builds in debug. A release build measured 26.0 locally, and this keeps the same
-/// relative headroom as the debug budget does over its 35.0.
-pub const BUDGET_RELEASE: f64 = 31.0;
+/// hand, as CI builds in debug. It is the same limit as [`BUDGET_DEBUG`]. The share measured 26 to
+/// 28 in release builds run by hand.
+pub const BUDGET_RELEASE: f64 = 50.0;
 
 /// The budget for the build `profile` names, `debug` or `release`.
 pub fn budget_for(profile: &str) -> f64 {
@@ -333,58 +330,58 @@ mod tests {
 
     #[test]
     fn within_the_budget_measures_once() {
-        let judged = judge(timing(35.0, 3), || panic!("measured again"), 40.0);
-        assert_eq!((judged.budget, judged.first_share), (Some(40.0), None));
+        let judged = judge(timing(45.0, 3), || panic!("measured again"), 50.0);
+        assert_eq!((judged.budget, judged.first_share), (Some(50.0), None));
         assert!(!judged.over());
         assert_eq!(judged.complaint(), None);
         let text = judged.render();
-        assert!(text.contains("share      35.00% of reading\n"), "{text}");
+        assert!(text.contains("share      45.00% of reading\n"), "{text}");
         assert!(
-            text.ends_with("budget     40.0% of reading (debug)\nverdict    within\n"),
+            text.ends_with("budget     50.0% of reading (debug)\nverdict    within\n"),
             "{text}"
         );
         assert!(!text.contains("first"), "{text}");
         // On the budget exactly is within it.
-        assert!(!judge(timing(40.0, 3), || panic!("measured again"), 40.0).over());
+        assert!(!judge(timing(50.0, 3), || panic!("measured again"), 50.0).over());
     }
 
     #[test]
     fn over_then_within_passes_on_the_second() {
-        let judged = judge(timing(41.62, 3), || timing(38.0, 6), 40.0);
+        let judged = judge(timing(51.62, 3), || timing(48.0, 6), 50.0);
         assert!(!judged.over());
         assert_eq!(judged.complaint(), None);
-        assert_eq!(judged.first_share, Some(41.62));
+        assert_eq!(judged.first_share, Some(51.62));
         assert_eq!(judged.passes, 6);
         let text = judged.render();
         assert!(
-            text.contains("first      41.62% of reading, over; measured again, fastest of 6\n"),
+            text.contains("first      51.62% of reading, over; measured again, fastest of 6\n"),
             "{text}"
         );
-        assert!(text.contains("share      38.00% of reading\n"), "{text}");
+        assert!(text.contains("share      48.00% of reading\n"), "{text}");
         assert!(text.ends_with("verdict    within\n"), "{text}");
     }
 
     #[test]
     fn over_twice_fails_and_says_by_how_much() {
-        let judged = judge(timing(41.62, 3), || timing(41.3, 6), 40.0);
+        let judged = judge(timing(51.62, 3), || timing(51.3, 6), 50.0);
         assert!(judged.over());
         assert_eq!(
             judged.complaint().as_deref(),
-            Some("tagging takes 41.30% of reading, over the debug budget of 40.0%")
+            Some("tagging takes 51.30% of reading, over the debug budget of 50.0%")
         );
         let text = judged.render();
         assert!(
-            text.contains("first      41.62% of reading, over;"),
+            text.contains("first      51.62% of reading, over;"),
             "{text}"
         );
-        assert!(text.contains("share      41.30% of reading\n"), "{text}");
+        assert!(text.contains("share      51.30% of reading\n"), "{text}");
         assert!(text.ends_with("verdict    over\n"), "{text}");
     }
 
     #[test]
     fn the_budget_follows_the_profile() {
-        assert_eq!(budget_for("debug"), 40.0);
-        assert_eq!(budget_for("release"), 31.0);
+        assert_eq!(budget_for("debug"), 50.0);
+        assert_eq!(budget_for("release"), 50.0);
         assert_eq!(
             budget_for(profile()),
             if cfg!(debug_assertions) {
@@ -393,8 +390,8 @@ mod tests {
                 BUDGET_RELEASE
             }
         );
-        let json = serde_json::to_value(judge(timing(35.0, 3), || unreachable!(), 40.0)).unwrap();
-        assert_eq!(json["budget"], 40.0);
+        let json = serde_json::to_value(judge(timing(45.0, 3), || unreachable!(), 50.0)).unwrap();
+        assert_eq!(json["budget"], 50.0);
         assert!(json["first_share"].is_null());
     }
 

@@ -115,7 +115,7 @@ enum Command {
     /// in. It prints files, bytes, the two times and tagging's share of reading.
     ///
     /// With --check it also judges the share against the budget of the profile the binary is
-    /// built in, 40.0% in debug and 31.0% in release, and exits 1 when it is over. A share over
+    /// built in, 50.0% in debug and in release, and exits 1 when it is over. A share over
     /// budget is measured again, each file keeping its fastest of six passes, and only that
     /// second share is judged. The budget is set on the big tier, so --tier tree is refused.
     Time {

@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-09
+updated: 2026-10-10
 subsystems:
   - cli
   - instructions
@@ -135,7 +135,7 @@ tools/exam/           deslag-exam, never published: grades taggers against gold 
 
 `make ci` is the gate: preflight, then every check, build and test, and `test-blobs`, all
 `--locked`. `test-blobs` ends with `deslag-corpus time --check`, which fails when tagging takes
-over 40.0% of reading time in debug (31.0% in release).
+over 50.0% of reading time, in debug and in release.
 
 `make test-ewt` gates the treebank by hand. `make check-deslag` runs deslag on this repo. The
 published crate is what `include` in `Cargo.toml` lists; `make check-publish` builds it, and every

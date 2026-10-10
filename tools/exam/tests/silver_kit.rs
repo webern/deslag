@@ -822,9 +822,9 @@ fn a_reviewed_blind_queue_is_scored_against_silver_and_refused_when_unfinished()
     // It went beside the queue.
     let tsv = fs::read_to_string(work.path().join("score.tsv")).unwrap();
     assert!(tsv.contains("# met = yes\n"), "{tsv}");
-    // A bar nobody meets is reported, not a failed command.
+    // A bar nobody meets is reported, and the command fails.
     let run = score("99.9", Some(&work.path().join("strict.tsv")));
-    assert!(run.status.success());
+    assert_eq!(run.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&run.stdout).contains("not met"));
     assert!(
         fs::read_to_string(work.path().join("strict.tsv"))
@@ -858,4 +858,132 @@ fn a_reviewed_blind_queue_is_scored_against_silver_and_refused_when_unfinished()
     assert_eq!(run.status.code(), Some(2));
     assert!(!inside.exists());
     assert_eq!(labels_text.matches("# sent_id").count(), 12);
+}
+
+#[test]
+fn audit_score_exits_nonzero_below_the_bar_and_zero_at_or_above_it() {
+    let work = tempfile::tempdir().unwrap();
+    let golds = work.path().join("golds");
+    fs::create_dir_all(&golds).unwrap();
+    // Silver tags 12 sentences of 2 scored words each (the full stop is not scored). The owner
+    // rejects one and disagrees on one word of the 22 left, so the part of speech is right in 21
+    // of 22 words, 95.45 percent.
+    let silver = work.path().join("silver.conllu");
+    fs::write(&silver, silver_file(12, Some(3))).unwrap();
+    let audit = work.path().join("audit");
+    let blind = gold_in(
+        &golds,
+        work.path(),
+        &[
+            "audit",
+            "--blind",
+            "--from",
+            silver.to_str().unwrap(),
+            "--count",
+            "12",
+            "--out",
+            audit.to_str().unwrap(),
+        ],
+    );
+    assert!(blind.status.success());
+    let queue_text = fs::read_to_string(audit.join("queue.conllu")).unwrap();
+    let owner = reviewed(&queue_text, &silver_file(12, None), &["s007"]);
+    let queue = work.path().join("reviewed.conllu");
+    fs::write(&queue, &owner).unwrap();
+    let labels = audit.join("labels.conllu");
+    let score = |bar: Option<&str>| {
+        let mut args = vec![
+            "audit",
+            "--score",
+            "--queue",
+            queue.to_str().unwrap(),
+            "--labels",
+            labels.to_str().unwrap(),
+        ];
+        if let Some(bar) = bar {
+            args.extend(["--bar", bar]);
+        }
+        gold_in(&golds, work.path(), &args)
+    };
+    let written = work.path().join("score.tsv");
+    for (bar, code) in [
+        (Some("95.4"), 0),
+        (Some("95.5"), 1),
+        (Some("100.0"), 1),
+        (Some("0.0"), 0),
+        (None, 0),
+    ] {
+        // Each run writes the file afresh, so one run's file is not taken for another's.
+        let _ = fs::remove_file(&written);
+        let run = score(bar);
+        assert_eq!(
+            run.status.code(),
+            Some(code),
+            "bar {bar:?}: {}",
+            String::from_utf8_lossy(&run.stdout)
+        );
+        // The report and the file are written either way.
+        let said = String::from_utf8_lossy(&run.stdout);
+        assert!(said.contains("11 sentences scored"), "bar {bar:?}: {said}");
+        assert!(written.exists(), "bar {bar:?}");
+    }
+    // A bar cannot be met when no word was scored: the queue holds only punctuation.
+    let bare = work.path().join("bare");
+    let bare_silver = work.path().join("bare.conllu");
+    let sentences: String = (0..12)
+        .map(|at| {
+            format!(
+                "# sent_id = p{at:03}\n# exam.context = prose\n# text = .\n\
+                 1\t.\t_\tPUNCT\t_\t_\t_\t_\t_\tKind=Punctuation|Prov=kind\n\n"
+            )
+        })
+        .collect();
+    fs::write(
+        &bare_silver,
+        format!("# exam.tokens = deslag\n# exam.trains = yes\n# exam.silver = yes\n{sentences}"),
+    )
+    .unwrap();
+    let blind = gold_in(
+        &golds,
+        work.path(),
+        &[
+            "audit",
+            "--blind",
+            "--from",
+            bare_silver.to_str().unwrap(),
+            "--count",
+            "12",
+            "--out",
+            bare.to_str().unwrap(),
+        ],
+    );
+    assert!(blind.status.success());
+    let bare_queue_text = fs::read_to_string(bare.join("queue.conllu")).unwrap();
+    let bare_queue = work.path().join("bare-reviewed.conllu");
+    fs::write(&bare_queue, reviewed(&bare_queue_text, &sentences, &[])).unwrap();
+    let bare_labels = bare.join("labels.conllu");
+    let bare_score = |bar: Option<&str>| {
+        let mut args = vec![
+            "audit",
+            "--score",
+            "--queue",
+            bare_queue.to_str().unwrap(),
+            "--labels",
+            bare_labels.to_str().unwrap(),
+        ];
+        if let Some(bar) = bar {
+            args.extend(["--bar", bar]);
+        }
+        gold_in(&golds, work.path(), &args)
+    };
+    let _ = fs::remove_file(&written);
+    let run = bare_score(Some("95.0"));
+    assert_eq!(
+        run.status.code(),
+        Some(1),
+        "{}",
+        String::from_utf8_lossy(&run.stdout)
+    );
+    assert!(written.exists());
+    assert_eq!(bare_score(None).status.code(), Some(0));
 }

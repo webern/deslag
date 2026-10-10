@@ -648,7 +648,10 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
 4. `deslag-gold audit --score --queue Q --labels L --bar 95.0` refuses a queue that is not `exam.silver = yes`
    or has a sentence neither reviewed nor rejected. It prints silver's accuracy on the part of speech and on
    the whole code with sentence-bootstrap intervals, by agreed and adjudicated words and by context, the
-   words left at deslag's pre-fill, the rejected sentences, and met or not against the bar.
+   words left at deslag's pre-fill, the rejected sentences, and met or not against the bar. It exits 1
+   when the score is under the bar, or when a bar is given and no word was scored, after the report and
+   the file are written. Exit 1 below the bar is expected and is a result to record; the way on after it
+   is step 5 with `--accept-below-bar`.
 5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`: the
    rejected sentences leave `silver.conllu` and are counted in `record/drops.tsv`, and the datasheet leads with
    the score. A batch is held to a bar of at least 95.0 and an audit of at least 50 sentences, reviewed and

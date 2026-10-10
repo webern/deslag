@@ -327,7 +327,10 @@ enum Command {
     /// With `--score --queue Q --labels L` the reviewed queue is scored against silver's labels:
     /// the part of speech and the whole code, with intervals, by how silver labelled the word and
     /// by context, the words left at deslag's pre-fill, the rejected sentences, and met or not
-    /// against `--bar`. `score.tsv` goes beside the queue unless `--out` says another file.
+    /// against `--bar`. `score.tsv` goes beside the queue unless `--out` says another file. The
+    /// command exits 1 when the score falls below the bar, or a bar is given and no word was
+    /// scored, after writing the file and printing the report. It exits 0 when it meets the bar
+    /// or none was given.
     Audit {
         /// The directory the merge was written to.
         #[arg(long, default_value = "merge", value_parser = parse_name)]
@@ -692,7 +695,8 @@ fn parse_voter(text: &str) -> Result<(String, Option<PathBuf>), String> {
 
 fn main() -> ExitCode {
     match run(Cli::parse()) {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::from(1),
         Err(problems) => {
             for line in problems.to_string().lines() {
                 eprintln!("deslag-gold: {line}");
@@ -702,10 +706,11 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(cli: Cli) -> Result<(), Problems> {
+/// Whether the command's check held; `false` is exit 1.
+fn run(cli: Cli) -> Result<bool, Problems> {
     let given = cli.dir;
     let dir = given.clone().unwrap_or_else(|| PathBuf::from(".gold"));
-    match cli.command {
+    let done: Result<(), Problems> = match cli.command {
         Command::Sample {
             corpus,
             tree,
@@ -926,7 +931,7 @@ fn run(cli: Cli) -> Result<(), Problems> {
             } else if score {
                 let queue = queue.expect("clap requires --queue with --score");
                 let labels = labels.expect("clap requires --labels with --score");
-                audit_score_stage(&queue, &labels, bar, out.as_deref())
+                return audit_score_stage(&queue, &labels, bar, out.as_deref());
             } else {
                 audit_stage(&dir, &into, count, seed, out.as_deref())
             }
@@ -939,7 +944,8 @@ fn run(cli: Cli) -> Result<(), Problems> {
         } => assemble_stage(&dir, &out, [blind, harper, spacy]),
         Command::Review { file, screen } => terminal::run(&file, screen),
         Command::Web { file, port, into } => web::run(&file, port, &into),
-    }
+    };
+    done.map(|()| true)
 }
 
 /// The sample and its manifest in `dir`.
@@ -2500,13 +2506,14 @@ fn audit_blind_stage(from: &Path, count: usize, seed: u64, out: &Path) -> Result
     Ok(())
 }
 
-/// `audit --score`: the reviewed queue against silver's labels.
+/// `audit --score`: the reviewed queue against silver's labels. Whether the check held: a bar
+/// that was met, or no bar. A bar given when no word was scored is not met.
 fn audit_score_stage(
     queue: &Path,
     labels: &Path,
     bar: Option<f64>,
     out: Option<&Path>,
-) -> Result<(), Problems> {
+) -> Result<bool, Problems> {
     let target = out.map_or_else(|| queue.with_file_name("score.tsv"), Path::to_path_buf);
     refuse_gold_dir(&target)?;
     let scored = silver::score::score(
@@ -2520,7 +2527,7 @@ fn audit_score_stage(
     write_text(&target, &scored.tsv())?;
     print!("{}", scored.report());
     println!("wrote {}", target.display());
-    Ok(())
+    Ok(scored.met().unwrap_or(bar.is_none()))
 }
 
 fn assemble_stage(dir: &Path, out: &Path, given: [Option<PathBuf>; 3]) -> Result<(), Problems> {

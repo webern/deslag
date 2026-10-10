@@ -11,14 +11,15 @@
 //! or any gold label. It says two things of its gold: the stem of its file in `# exam.from`, so the
 //! labelling flow can tell a skeleton of the dev or owner gold from any other sample, and a
 //! holdout's `# exam.split = holdout`, so that no stage that reads a skeleton can take the text of a
-//! holdout set for another. It carries its gold's `# exam.trains` when the gold decided one.
+//! holdout set for another. It carries its gold's `# exam.trains` when the gold decided one, and its
+//! `# silver.batch` when it names one.
 
 use std::fmt::Write;
 
 use deslag::document::{Block, BlockKind, Token, TokenKind};
 use deslag::tag::{Origin, Reading};
 
-use crate::gold::{Gold, Trains, kind_name};
+use crate::gold::{Gold, SILVER_BATCH, Trains, kind_name};
 use crate::tagger::Context;
 use crate::tags::{Tag, upos};
 
@@ -41,6 +42,13 @@ pub fn trains_line(trains: Trains) -> String {
         Trains::Undecided => String::new(),
         _ => format!("# {TRAINS} = {}\n", trains.name()),
     }
+}
+
+/// The line a file adds to name the silver batch its source is of, with its newline; empty when the
+/// source names none. A training reader refuses a file of a retired batch, so the skeleton and the
+/// readings carry it as they carry `exam.trains`.
+pub fn batch_line(batch: Option<&str>) -> String {
+    batch.map_or_else(String::new, |name| format!("# {SILVER_BATCH} = {name}\n"))
 }
 
 /// The comment that names the gold a skeleton was made from, by its file's stem: `dev` for
@@ -130,6 +138,7 @@ pub fn skeleton(gold: &Gold) -> String {
         out.push_str(HOLDOUT);
     }
     out.push_str(&trains_line(gold.trains));
+    out.push_str(&batch_line(gold.silver_batch.as_deref()));
     for sentence in &gold.sentences {
         let tokens = sentence.tokens();
         let origins = deslag::tag::origins(&tokens);

@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 import brill
 import calibrate
@@ -984,6 +985,63 @@ class SilverSplitTests(unittest.TestCase):
             self.assertFalse(os.path.exists(os.path.join(d, "out")))
             out, counts = self.split(d, standing="true")
             self.assertEqual(counts[:2], (2, 2))
+
+
+def exam_binary():
+    """The most recently built deslag-exam under CARGO_TARGET_DIR or the repository's target, or
+    None; `make test-python` builds it first."""
+    root = os.environ.get("CARGO_TARGET_DIR") or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "..", "target")
+    found = [os.path.join(root, profile, "deslag-exam") for profile in ("release", "fast", "debug")]
+    return max((path for path in found if os.path.isfile(path)), key=os.path.getmtime,
+               default=None)
+
+
+@unittest.skipUnless(exam_binary(), "deslag-exam is not built")
+class RetiredBatchEndToEndTests(unittest.TestCase):
+    """The readings the trainers read are written by `deslag-exam`, from silver.py's split, and
+    still name the batch, so a retired batch is refused on them."""
+
+    def readings(self, d):
+        body, rows = silver_batch()
+        live = write(d, "live.tsv", "batch\tdate\treason\n")
+        silver.split(write(d, "silver.conllu", body), write(d, "manifest.tsv", rows),
+                     os.path.join(d, "out"), "true", live)
+        train = os.path.join(d, "out", "silver-train.conllu")
+        made = {name: os.path.join(d, f"{name}.conllu") for name in ("gold", "tokens", "skeleton")}
+        exam = exam_binary()
+        for args in (["readings", "--gold", train, "--out", made["gold"]],
+                     ["tokens", "--gold", train, "--out", made["tokens"]],
+                     ["readings", "--tokens", made["tokens"], "--out", made["skeleton"]]):
+            subprocess.run([exam] + args, check=True, capture_output=True)
+        return live, made
+
+    def test_a_retired_batch_is_refused_on_the_readings_the_exam_writes(self):
+        with tempfile.TemporaryDirectory() as d:
+            live, made = self.readings(d)
+            gone = write(d, "gone.tsv",
+                         "batch\tdate\treason\n2026-10-08-silver\t2026-10-09\tlost\n")
+            for name in ("gold", "skeleton"):
+                self.assertTrue(conllu.read_readings_training(made[name], live), name)
+                with self.assertRaisesRegex(conllu.Failure, "silver batch 2026-10-08-silver is retired"):
+                    conllu.read_readings_training(made[name], gone)
+
+    def test_the_trainers_refuse_the_readings_of_a_retired_batch(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, made = self.readings(d)
+            out = os.path.join(d, "m.json")
+            retired = lambda path=None: ["2026-10-08-silver"]
+            sys.stderr = open(os.devnull, "w")
+            try:
+                with unittest.mock.patch.object(conllu, "retired_batches", retired):
+                    self.assertEqual(shaped.main(["train", "--mode", "hybrid", "--train",
+                                                  made["gold"], "--out", out]), 2)
+                    self.assertEqual(brill.main(["train", "--start", "deslag", "--train",
+                                                 made["gold"], "--out", out]), 2)
+            finally:
+                sys.stderr.close()
+                sys.stderr = sys.__stderr__
+            self.assertFalse(os.path.exists(out))
 
 
 def toy_readings():

@@ -43,6 +43,7 @@ fn the_skeleton_reads_back_as_the_gold_s_own_tokens() {
                 block.comments.len(),
                 if at == 0 {
                     5 + usize::from(gold.trains != Trains::Undecided)
+                        + usize::from(gold.silver_batch.is_some())
                 } else {
                     3
                 },

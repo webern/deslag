@@ -142,7 +142,7 @@ enum Command {
     /// Writes the token skeleton an outside tagger fills: one CoNLL-U sentence per gold sentence,
     /// one line per deslag token, every column but FORM and MISC `_`. It writes to a file and never
     /// to stdout, so holdout text never lands in a terminal transcript. The file carries its gold's
-    /// `exam.trains` when the gold says one.
+    /// `exam.trains` and `silver.batch` when the gold says them.
     ///
     /// With `--corpus`, the sentences are those of the English fixtures of `tests/corpus` outside
     /// `core`, and `sent_id` is `<layout_path>@<sentence start byte>`.
@@ -164,11 +164,13 @@ enum Command {
     /// `tokens`, with `UPOS`, `Conf=` and `Kept=` on every `Word` line, and with `--gold` the key
     /// `Gold=`, the gold tag the exam aligned to the token, left out where none is. `score --import`
     /// of the file grades as `score --tagger deslag` does, but for the feature metrics. It writes
-    /// to a file, and refuses a holdout gold (exit 2): the file names words and their tags.
+    /// to a file, and refuses a holdout gold (exit 2): the file names words and their tags. The file
+    /// carries the gold's `exam.trains` and `silver.batch` when it says them.
     ///
     /// With `--tokens`, the sentences are those of a skeleton `tokens` wrote, and no line has a
     /// `Gold=`: a set that is to be tagged is read this way, so no tagged file carries its answers.
-    /// A holdout skeleton is accepted. The file carries the skeleton's `exam.trains`.
+    /// A holdout skeleton is accepted. The file carries the skeleton's `exam.trains` and
+    /// `silver.batch`.
     ///
     /// With `--corpus`, the sentences are those of `tokens --corpus`, and there is no gold.
     Readings {

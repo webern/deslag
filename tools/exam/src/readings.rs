@@ -14,7 +14,7 @@
 //! [`of_skeleton`] writes the same file from a skeleton that `tokens` wrote, with no `Gold=` on
 //! any line: a set to be tagged is read this way, so no tagged file carries its answers, and a
 //! holdout skeleton is accepted since it names no gold. The file carries the skeleton's
-//! `exam.from`, `exam.split` and `exam.trains`.
+//! `exam.from`, `exam.split`, `exam.trains` and `silver.batch`.
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
@@ -26,7 +26,7 @@ use deslag::tag::Origin;
 use crate::align::{Aligned, align_all};
 use crate::conllu::{self, Block, Id};
 use crate::error::{Error, Place};
-use crate::gold::{Gold, Split, Trains, kind_from_name, kind_name};
+use crate::gold::{Gold, SILVER_BATCH, Split, Trains, kind_from_name, kind_name};
 use crate::skeleton::{self, Filled};
 use crate::tagger::{self, Context, Deslag, Sentence};
 use crate::tags::Tag;
@@ -50,6 +50,7 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
     let mut out = header();
     out.push_str(skeleton::HEADER);
     out.push_str(&skeleton::trains_line(gold.trains));
+    out.push_str(&skeleton::batch_line(gold.silver_batch.as_deref()));
     for Aligned {
         sentence,
         tokens,
@@ -116,6 +117,9 @@ pub fn of_skeleton(path: &Path) -> Result<(String, usize), Error> {
             )
         })?;
         out.push_str(&skeleton::trains_line(trains));
+    }
+    if let Some(batch) = first.comment(SILVER_BATCH) {
+        out.push_str(&skeleton::batch_line(Some(&batch.value)));
     }
     for (index, block) in blocks.iter().enumerate() {
         // A holdout sentence is named by its position, and no error echoes its words.

@@ -162,6 +162,8 @@ pub struct Gold {
     pub split: Option<Split>,
     /// `exam.trains`.
     pub trains: Trains,
+    /// `silver.batch`, the name of the silver batch the file is or was cut from, if it says.
+    pub silver_batch: Option<String>,
     /// `exam.tokens`.
     pub tokens: TokenMode,
     /// Its sentences, in order.
@@ -250,6 +252,7 @@ impl Gold {
             source: head.source,
             split: head.split,
             trains: head.trains,
+            silver_batch: head.silver_batch,
             tokens: head.tokens,
             sentences: Vec::with_capacity(blocks.len()),
         };
@@ -554,6 +557,10 @@ impl Word {
     }
 }
 
+/// The comment a silver batch's file opens with, naming the batch: a training reader refuses a file
+/// of a retired batch, so every file made from one carries it.
+pub const SILVER_BATCH: &str = "silver.batch";
+
 /// The comments that are about the file.
 const FILE_KEYS: [&str; 4] = ["exam.tokens", "exam.split", "exam.trains", "exam.source"];
 
@@ -562,6 +569,7 @@ struct Head {
     tokens: TokenMode,
     split: Option<Split>,
     trains: Trains,
+    silver_batch: Option<String>,
     source: String,
 }
 
@@ -571,6 +579,7 @@ impl Head {
             tokens: TokenMode::Ud,
             split: None,
             trains: Trains::Undecided,
+            silver_batch: None,
             source: name.to_string(),
         };
         for comment in &first.comments {
@@ -598,6 +607,7 @@ impl Head {
                         choose(path, comment, Trains::from_name, Trains::ALL, Trains::name)?
                 }
                 "exam.source" => head.source = comment.value.clone(),
+                SILVER_BATCH => head.silver_batch = Some(comment.value.clone()),
                 _ => {}
             }
         }

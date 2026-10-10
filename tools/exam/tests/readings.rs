@@ -333,6 +333,42 @@ fn the_trains_header_passes_from_a_gold_to_its_skeleton_and_readings() {
 }
 
 #[test]
+fn the_silver_batch_passes_from_a_gold_to_its_skeleton_and_readings() {
+    let dir = tempfile::tempdir().unwrap();
+    let source = std::fs::read_to_string(case("one-to-one.conllu")).unwrap();
+    let gold = dir.path().join("gold.conllu");
+    std::fs::write(
+        &gold,
+        format!("# exam.trains = yes\n# silver.batch = 2026-01-01-fixture\n{source}"),
+    )
+    .unwrap();
+    let skeleton = skeleton_of(dir.path(), path(&gold));
+    let readings = dir.path().join("readings.conllu");
+    let again = dir.path().join("again.conllu");
+    ok(&["readings", "--gold", path(&gold), "--out", path(&readings)]);
+    ok(&[
+        "readings",
+        "--tokens",
+        path(&skeleton),
+        "--out",
+        path(&again),
+    ]);
+    for file in [&skeleton, &readings, &again] {
+        let text = std::fs::read_to_string(file).unwrap();
+        let head: Vec<&str> = text.lines().take_while(|l| l.starts_with('#')).collect();
+        assert!(
+            head.contains(&"# silver.batch = 2026-01-01-fixture"),
+            "{}: {text}",
+            file.display()
+        );
+    }
+    // A gold that names no batch says nothing of one.
+    let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
+    let text = std::fs::read_to_string(skeleton).unwrap();
+    assert!(!text.contains("silver.batch"));
+}
+
+#[test]
 fn a_skeleton_line_that_is_not_in_its_text_is_an_error() {
     let dir = tempfile::tempdir().unwrap();
     let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));

@@ -20,6 +20,10 @@ Only the targets that read the image fetch it first: today `make test-blobs`, wh
 `-- silver-raw/NAME/         each silver batch's raw archive a layer
 ```
 
+The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
+image, so every target that reads the corpus pulls anything added, as does CI on a cache miss. It is
+241.3MB of its 250MB budget unpacked; a batch past that waits for a way to fetch less.
+
 ## corpus/
 
 The big tier of the corpus: quoted Markdown in batches, each fixture with its JSON sidecar.
@@ -27,19 +31,20 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
 the layout. `tests/blobs.rs` reads it.
 
 - `2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/`
-  and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`.
+  and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`; 12,034,975 bytes.
 - `2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599
-  `mixed`, 474 of those with their twin; it excludes 384 of the first's that `recheck` no longer
-  proves.
+  `mixed`, 474 of those with their twin; 203,442,958 bytes. It excludes 384 of the first's that `recheck` no
+  longer proves; its `repos.jsonl` lists the 3,232 repositories tried, 1,388 of which gave a fixture.
 - `2026-10-03-01`: licence corrections: 49 fixtures labelled MIT-0 added back as MIT, byte for
-  byte; those and 16 more whose licence the corpus does not accept or cannot name dropped.
+  byte but for `source.license` in the sidecar; those and 16 more whose licence the corpus does not
+  accept or cannot name dropped.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
 - `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
 - `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
   model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 
-The `-04` stories share 7 theme and period pairs, so n-gram and phrase measures see repeats; some
-loop or stop mid-word, as written.
+The `-04` stories share 7 theme and period pairs, so file-weighted n-gram and phrase measures see
+repeats; some loop or stop mid-word at the limit, as written.
 
 Every fixture is quoted from a public repository or dataset under a permissive licence, which its
 sidecar names with the commit or revision.
@@ -53,10 +58,6 @@ the batch records; nothing reads it. `batches.md` says how both are published.
 
 - `2026-10-08-silver`: 4,794 sentences, 45,836 words; 9.9MB, and a 7.7MB archive.
 
-The image holds data for maintaining deslag and nothing a build needs. `fetch` pulls the whole
-image, so every target that reads the corpus pulls anything added, as does CI on a cache miss. Its budget is 250MB unpacked, of which the first two batches take 215MB; a batch past
-that waits for a way to fetch less.
-
 ## Access
 
 The package is public, so fetching does not need a login: `make fetch-blobs` works on a fresh
@@ -68,10 +69,8 @@ login.
 `blobs.sh` reads anonymously first and turns to `gh` only when that fails, as it does for a private
 package, which a fork's may be.
 
-A token `gh` holds is not always one the registry takes: a person's may lack the packages scope,
-and a hosted environment may set `GH_TOKEN` to a stand-in that only its own proxy accepts. So every
-login is checked against the registry before it is relied on and dropped when refused, and the
-error says which it was and what fixes it.
+A `gh` token may lack the packages scope, or be a hosted stand-in only its proxy accepts. So every
+login is checked against the registry and dropped when refused, and the error says what fixes it.
 
 CI has no `gh` login; it reads the package anonymously like everyone else, and the `publish-blobs`
 workflow publishes with the workflow token, which works only while the package grants this
@@ -137,5 +136,4 @@ Once the lock differs, after a branch switch, a pull or a merge, fetch replaces 
 that, and only then, it looks for anything newer than the stamp; if an inventory confirms real
 edits, it stops and says what they are and what to do: publish them from the branch whose
 lock they belong to, move `.blobs/unpacked/` aside, or `make clean-blobs` to drop them. A tree
-without a stamp is a fetch that did not finish and is replaced. `make clean` removes the tree too,
-edits and all.
+without a stamp is a fetch that did not finish and is replaced.

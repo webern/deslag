@@ -189,7 +189,11 @@ pre-filled guess, taken where deslag was unsure. He looked at those 29 again, th
 silver's tag and the guide shown, and changed 25 to silver's tag. The batch's `audit/score.tsv`
 and `DATASHEET.md` carry that reviewed score: part of speech 98.96 [98.16, 99.65], met; whole code
 95.67 [93.88, 97.14]. The datasheet's "shown without the labels" holds for the first pass, not
-for those 29 words.
+for those 29 words. The reviewed score includes the 52 words the helper settled and the 29 looked at
+again, 25 of them reversed and 4 kept.
+
+Opus's labels are used under the owner's reading that the provider's terms do not bar training this
+non-commercial MIT project.
 
 ## Tests
 

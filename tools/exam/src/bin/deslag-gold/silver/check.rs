@@ -896,7 +896,7 @@ fn audit_rules(
     let queue = batch.need(layout::AUDIT_QUEUE)?;
     let labels = batch.need(layout::AUDIT_LABELS)?;
     if kit.get("archive_sha256") == "-" {
-        problems.push(Error::load(layout::KIT, Place::File, "a batch with an audit records the archive_sha256 of what stays on the machine that made it"));
+        problems.push(Error::load(layout::KIT, Place::File, "a batch with an audit records the archive_sha256 of the archive published as `silver-raw/<name>/`"));
     }
     let bar = kit.get("audit_bar").parse::<f64>().ok();
     if bar.is_none() {

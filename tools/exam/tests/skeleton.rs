@@ -7,7 +7,7 @@ use std::process::Command;
 use common::{case, case_path, kinds, texts};
 use deslag::document::TokenKind;
 use deslag_exam::conllu::{self, Id};
-use deslag_exam::gold::{kind_from_name, kind_name};
+use deslag_exam::gold::{Trains, kind_from_name, kind_name};
 use deslag_exam::skeleton::skeleton;
 
 /// The binary under test, run in the crate's directory.
@@ -41,8 +41,13 @@ fn the_skeleton_reads_back_as_the_gold_s_own_tokens() {
             );
             assert_eq!(
                 block.comments.len(),
-                if at == 0 { 5 } else { 3 },
-                "the first sentence has `exam.tokens` and `exam.from`, and none has a tier or gold label: {name}"
+                if at == 0 {
+                    5 + usize::from(gold.trains != Trains::Undecided)
+                        + usize::from(gold.silver_batch.is_some())
+                } else {
+                    3
+                },
+                "the first sentence has `exam.tokens`, `exam.from` and the gold's `exam.trains` if it says one, and none has a tier or gold label: {name}"
             );
             let tokens = sentence.tokens();
             assert_eq!(block.lines.len(), tokens.len());

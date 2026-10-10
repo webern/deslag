@@ -8,16 +8,23 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 import brill
 import calibrate
 import conllu
 import curve
+import features
 import learner
+import percept
 import perceptron
+import shaped
+import shapes
+import silver
 import start as starts
 import tbl
 from conllu import Sentence
+from features import Context
 
 UD = (
     "# sent_id = a\n# text = I don't run.\n"
@@ -54,16 +61,16 @@ def toy():
 class ReadTests(unittest.TestCase):
     def test_a_multiword_token_is_its_surface_form_with_its_first_words_tag(self):
         with tempfile.TemporaryDirectory() as d:
-            (sentence,) = conllu.read_training(write(d, "t.conllu", UD))
+            (sentence,) = conllu.read_gold(write(d, "t.conllu", UD))
         self.assertEqual(sentence.forms, ["I", "don't", "run", "."])
         self.assertEqual(sentence.tags, ["PRON", "AUX", "VERB", "PUNCT"])
 
     def test_a_bad_tag_or_column_count_is_a_failure(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(conllu.Failure):
-                conllu.read_training(write(d, "a", UD.replace("PRON", "NN")))
+                conllu.read_gold(write(d, "a", UD.replace("PRON", "NN")))
             with self.assertRaises(conllu.Failure):
-                conllu.read_training(write(d, "b", "1\tI\n"))
+                conllu.read_gold(write(d, "b", "1\tI\n"))
 
     def test_an_import_fills_word_lines_only_and_keeps_the_rest(self):
         with tempfile.TemporaryDirectory() as d:
@@ -715,7 +722,7 @@ class StartTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             for version, count in ((10, 1), (11, 1)):
                 write(d, f"r{version}.conllu",
-                      f"# deslag_tag_version = {version}\n" + READINGS)
+                      f"# deslag_tag_version = {version}\n# exam.trains = yes\n" + READINGS)
             out = os.path.join(d, "m.json")
             files = [os.path.join(d, "r10.conllu")]
             self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *files,
@@ -781,8 +788,9 @@ class StartTests(unittest.TestCase):
         self.assertTrue(all(k[0] in "ku" for k in model.evidence["cells"]))
 
 
-def ud_text(sentences):
-    out = []
+def ud_text(sentences, trains="yes"):
+    """A UD file of `sentences`; it says it may train unless `trains` is None."""
+    out = [] if trains is None else [f"# exam.trains = {trains}"]
     for s in sentences:
         out.append(f"# sent_id = {s.sent_id}\n# text = {' '.join(s.forms)}")
         for n, (form, tag) in enumerate(zip(s.forms, s.tags), 1):
@@ -804,6 +812,578 @@ def dev_files(directory, sentences):
     return gold, write(directory, "dev.tokens.conllu", "\n".join(lines) + "\n")
 
 
+def readings_text(sentences, trains="yes", version=10, extra=()):
+    """The text of a readings file for `reading()` sentences, as `deslag-exam readings` writes it;
+    `trains` None leaves the header line out, `extra` adds header comments."""
+    out = [f"# deslag_tag_version = {version}", "# exam.tokens = deslag", *extra]
+    if trains is not None:
+        out.append(f"# exam.trains = {trains}")
+    for s in sentences:
+        out.append(f"# sent_id = {s.sent_id}\n# text = {' '.join(s.forms)}")
+        for n, (form, kind) in enumerate(zip(s.forms, s.kinds)):
+            if kind != "Word":
+                out.append(f"{n + 1}\t{form}\t_\t_\t_\t_\t_\t_\t_\tKind={kind}")
+                continue
+            tag = s.tags[n]
+            misc = f"Kind=Word|Conf={s.conf[n]}|Kept={','.join(s.kept[n])}"
+            if s.origin is not None and s.origin[n] not in (None, "English"):
+                misc += f"|Origin={s.origin[n]}"
+            if s.gold[n] is not None:
+                misc += f"|Gold={s.gold[n]}"
+            out.append(f"{n + 1}\t{form}\t_\t{conllu.UPOS_OF_CODE.get(tag, tag)}\t_\t_\t_\t_\t_"
+                       f"\t{misc}")
+        out.append("")
+    return "\n".join(out) + "\n"
+
+
+def skeleton_of_reading(sent):
+    """The token skeleton of a `reading()` sentence."""
+    lines = [f"# sent_id = {sent.sent_id}\n# text = {' '.join(sent.forms)}"]
+    for n, (form, kind) in enumerate(zip(sent.forms, sent.kinds), 1):
+        lines.append(f"{n}\t{form}\t_\t_\t_\t_\t_\t_\t_\tKind={kind}")
+    return "\n".join(lines) + "\n\n"
+
+
+class TrainsHeaderTests(unittest.TestCase):
+    def test_a_training_reader_refuses_a_file_that_does_not_say_yes(self):
+        with tempfile.TemporaryDirectory() as d:
+            retired = write(d, "retired.tsv", "batch\tdate\treason\n")
+            for trains in (None, "no", "undecided"):
+                ud = write(d, "ud.conllu", ud_text(toy(), trains))
+                with self.assertRaisesRegex(conllu.Failure, "exam.trains"):
+                    conllu.read_training(ud, retired)
+                text = readings_text([reading("a", [sure("the", "DET")])], trains)
+                with self.assertRaisesRegex(conllu.Failure, "exam.trains"):
+                    conllu.read_readings_training(write(d, "r.conllu", text), retired)
+            self.assertEqual(len(conllu.read_training(
+                write(d, "ok.conllu", ud_text(toy())), retired)), len(toy()))
+            text = readings_text([reading("a", [sure("the", "DET")])])
+            self.assertEqual(len(conllu.read_readings_training(
+                write(d, "r.conllu", text), retired)), 1)
+
+    def test_dev_gold_is_read_without_the_check(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(len(conllu.read_gold(write(d, "g.conllu", ud_text(toy(), "no")))),
+                             len(toy()))
+
+    def test_a_retired_silver_batch_is_refused_and_a_live_one_is_not(self):
+        with tempfile.TemporaryDirectory() as d:
+            text = readings_text([reading("a", [sure("the", "DET")])],
+                                 extra=["# silver.batch = 2026-10-08-silver"])
+            path = write(d, "silver.conllu", text)
+            live = write(d, "live.tsv", "batch\tdate\treason\n2026-01-01-old\t2026-02-01\tlost\n")
+            gone = write(d, "gone.tsv",
+                         "batch\tdate\treason\n2026-10-08-silver\t2026-10-09\tlost\n")
+            self.assertEqual(len(conllu.read_readings_training(path, live)), 1)
+            with self.assertRaisesRegex(conllu.Failure, "retired"):
+                conllu.read_readings_training(path, gone)
+            with self.assertRaisesRegex(conllu.Failure, "missing"):
+                conllu.read_readings_training(path, os.path.join(d, "none.tsv"))
+
+    def test_the_trainers_stop_on_a_file_without_the_header(self):
+        with tempfile.TemporaryDirectory() as d:
+            ud = write(d, "ud.conllu", ud_text(toy(), None))
+            bare = write(d, "r.conllu", readings_text(verb_data(), None))
+            out = os.path.join(d, "m.json")
+            sys.stderr = open(os.devnull, "w")
+            try:
+                self.assertEqual(percept.main(["train", "--train", ud, "--out", out]), 2)
+                self.assertEqual(brill.main(["train", "--train", ud, "--out", out]), 2)
+                self.assertEqual(brill.main(["train", "--start", "deslag", "--train", bare,
+                                             "--out", out]), 2)
+                self.assertEqual(shaped.main(["train", "--mode", "hybrid", "--train", bare,
+                                              "--out", out]), 2)
+            finally:
+                sys.stderr.close()
+                sys.stderr = sys.__stderr__
+            self.assertFalse(os.path.exists(out))
+
+    def test_the_lock_names_the_train_file_as_training_and_dev_and_test_as_not(self):
+        lock = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ewt", "ewt.lock")
+        with open(lock, encoding="utf-8") as f:
+            rows = [line.split() for line in f if line.startswith("trains ")]
+        self.assertEqual(sorted(rows), [
+            ["trains", "no", "en_ewt-ud-dev.conllu"], ["trains", "no", "en_ewt-ud-test.conllu"],
+            ["trains", "yes", "en_ewt-ud-train.conllu"]])
+
+
+def silver_batch(batch="2026-10-08-silver"):
+    """(silver text, manifest text) of four sentences: s1 and s3 train, s2 and s4 tune."""
+    text = [f"# exam.tokens = deslag\n# exam.trains = yes\n# silver.batch = {batch}"]
+    for n, prov in ((1, "agree"), (2, "agree"), (3, "adjudicated"), (4, "agree")):
+        text.append(f"# sent_id = s{n}\n# exam.context = prose\n# text = the dog .")
+        for i, (form, upos, kind, mark) in enumerate(
+                (("the", "DET", "Word", prov), ("dog", "NOUN", "Word", "adjudicated"),
+                 (".", "PUNCT", "Punctuation", "kind")), 1):
+            text.append(f"{i}\t{form}\t_\t{upos}\t_\t_\t_\t_\t_\tKind={kind}|Prov={mark}")
+        text.append("")
+    manifest = ["# silver.batch = x", "sent_id\tsplit\ttier"]
+    manifest += [f"s{n}\t{split}\thuman" for n, split in
+                 ((1, "train"), (2, "tune"), (3, "train"), (4, "tune"))]
+    return "\n".join(text) + "\n", "\n".join(manifest) + "\n"
+
+
+class SilverSplitTests(unittest.TestCase):
+    def split(self, d, standing="true", text=None, manifest=None, retired=None):
+        body, rows = silver_batch()
+        retired = retired or write(d, "retired.tsv", "batch\tdate\treason\n")
+        out = os.path.join(d, "out")
+        counts = silver.split(write(d, "silver.conllu", text or body),
+                              write(d, "manifest.tsv", manifest or rows), out, standing, retired)
+        return out, counts
+
+    def test_the_halves_are_disjoint_cover_the_batch_and_keep_the_header(self):
+        with tempfile.TemporaryDirectory() as d:
+            out, counts = self.split(d)
+            train = open(os.path.join(out, "silver-train.conllu"), encoding="utf-8").read()
+            tune = open(os.path.join(out, "silver-tune.conllu"), encoding="utf-8").read()
+        self.assertEqual(counts, (2, 2, 2))
+        ids = lambda text: [l[len("# sent_id = "):] for l in text.split("\n")
+                            if l.startswith("# sent_id = ")]
+        self.assertEqual((ids(train), ids(tune)), (["s1", "s3"], ["s2", "s4"]))
+        self.assertEqual(sorted(ids(train) + ids(tune)), ["s1", "s2", "s3", "s4"])
+        for text in (train, tune):
+            self.assertTrue(text.startswith(
+                "# exam.tokens = deslag\n# exam.trains = yes\n# silver.batch = 2026-10-08-silver\n"
+                "# sent_id = s"))
+
+    def test_the_tune_words_with_prov_agree_are_recorded(self):
+        with tempfile.TemporaryDirectory() as d:
+            out, _ = self.split(d)
+            rows = open(os.path.join(out, "silver-tune.agree.tsv"), encoding="utf-8").read()
+            pairs = silver.read_agree(os.path.join(out, "silver-tune.agree.tsv"))
+        self.assertEqual(rows.split("\n")[0], "sent_id\tword")
+        self.assertEqual(pairs, {("s2", 1), ("s4", 1)})
+
+    def test_a_manifest_that_does_not_name_every_sentence_once_is_refused(self):
+        body, rows = silver_batch()
+        with tempfile.TemporaryDirectory() as d:
+            for manifest in (rows.replace("s4\ttune\thuman\n", ""),
+                             rows + "s9\ttrain\thuman\n", rows.replace("s4\ttune", "s4\tholdout"),
+                             rows + "s4\ttune\thuman\n"):
+                with self.assertRaises(conllu.Failure):
+                    self.split(d, manifest=manifest)
+            self.assertFalse(os.path.exists(os.path.join(d, "out")))
+
+    def test_a_batch_that_may_not_train_is_refused_and_nothing_is_written(self):
+        body, rows = silver_batch()
+        with tempfile.TemporaryDirectory() as d:
+            retired = write(d, "gone.tsv",
+                            "batch\tdate\treason\n2026-10-08-silver\t2026-10-09\tlost\n")
+            with self.assertRaisesRegex(conllu.Failure, "retired"):
+                self.split(d, retired=retired)
+            with self.assertRaisesRegex(conllu.Failure, "exam.trains"):
+                self.split(d, text=body.replace("exam.trains = yes", "exam.trains = no"))
+            with self.assertRaisesRegex(conllu.Failure, "exam.trains"):
+                self.split(d, text=body.replace("# exam.trains = yes\n", ""))
+            self.assertFalse(os.path.exists(os.path.join(d, "out")))
+
+    def test_a_batch_whose_standing_fails_is_refused_and_nothing_is_written(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(conllu.Failure, "exited 1"):
+                self.split(d, standing="false")
+            self.assertFalse(os.path.exists(os.path.join(d, "out")))
+            out, counts = self.split(d, standing="true")
+            self.assertEqual(counts[:2], (2, 2))
+
+
+def exam_binary():
+    """The most recently built deslag-exam under CARGO_TARGET_DIR or the repository's target, or
+    None; `make test-python` builds it first."""
+    root = os.environ.get("CARGO_TARGET_DIR") or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "..", "target")
+    found = [os.path.join(root, profile, "deslag-exam") for profile in ("release", "fast", "debug")]
+    return max((path for path in found if os.path.isfile(path)), key=os.path.getmtime,
+               default=None)
+
+
+@unittest.skipUnless(exam_binary(), "deslag-exam is not built")
+class RetiredBatchEndToEndTests(unittest.TestCase):
+    """The readings the trainers read are written by `deslag-exam`, from silver.py's split, and
+    still name the batch, so a retired batch is refused on them."""
+
+    def readings(self, d):
+        body, rows = silver_batch()
+        live = write(d, "live.tsv", "batch\tdate\treason\n")
+        silver.split(write(d, "silver.conllu", body), write(d, "manifest.tsv", rows),
+                     os.path.join(d, "out"), "true", live)
+        train = os.path.join(d, "out", "silver-train.conllu")
+        made = {name: os.path.join(d, f"{name}.conllu") for name in ("gold", "tokens", "skeleton")}
+        exam = exam_binary()
+        for args in (["readings", "--gold", train, "--out", made["gold"]],
+                     ["tokens", "--gold", train, "--out", made["tokens"]],
+                     ["readings", "--tokens", made["tokens"], "--out", made["skeleton"]]):
+            subprocess.run([exam] + args, check=True, capture_output=True)
+        return live, made
+
+    def test_a_retired_batch_is_refused_on_the_readings_the_exam_writes(self):
+        with tempfile.TemporaryDirectory() as d:
+            live, made = self.readings(d)
+            gone = write(d, "gone.tsv",
+                         "batch\tdate\treason\n2026-10-08-silver\t2026-10-09\tlost\n")
+            for name in ("gold", "skeleton"):
+                self.assertTrue(conllu.read_readings_training(made[name], live), name)
+                with self.assertRaisesRegex(conllu.Failure, "silver batch 2026-10-08-silver is retired"):
+                    conllu.read_readings_training(made[name], gone)
+
+    def test_the_trainers_refuse_the_readings_of_a_retired_batch(self):
+        with tempfile.TemporaryDirectory() as d:
+            _, made = self.readings(d)
+            out = os.path.join(d, "m.json")
+            retired = lambda path=None: ["2026-10-08-silver"]
+            sys.stderr = open(os.devnull, "w")
+            try:
+                with unittest.mock.patch.object(conllu, "retired_batches", retired):
+                    self.assertEqual(shaped.main(["train", "--mode", "hybrid", "--train",
+                                                  made["gold"], "--out", out]), 2)
+                    self.assertEqual(brill.main(["train", "--start", "deslag", "--train",
+                                                 made["gold"], "--out", out]), 2)
+            finally:
+                sys.stderr.close()
+                sys.stderr = sys.__stderr__
+            self.assertFalse(os.path.exists(out))
+
+
+def toy_readings():
+    """`run` after `to` is a verb and after `the` a noun; `run` keeps both. `fast` is open, and its
+    label ADJ is no code deslag keeps for it."""
+    one = [sure("to", "PART"), open_word("run", "NOUN", ["NOUN", "VERB"], "VERB")]
+    two = [sure("the", "DET"), open_word("run", "NOUN", ["NOUN", "VERB"], "NOUN")]
+    three = [sure("the", "DET"), open_word("fast", "NOUN", ["NOUN", "VERB"], "ADJ")]
+    return ([reading(f"a{n}", one) for n in range(6)] + [reading(f"b{n}", two) for n in range(6)]
+            + [reading(f"c{n}", three) for n in range(2)])
+
+
+def probe_sentence(first, form="run"):
+    return reading("p", [sure(first, "PART" if first == "to" else "DET"),
+                         open_word(form, "NOUN", ["NOUN", "VERB"], None)])
+
+
+class FeatureLayerTests(unittest.TestCase):
+    def test_a_word_of_a_placeholder_origin_is_spelled_by_it_and_keeps_its_shape(self):
+        forms = ["Run", "--force", "a/b", "x_y", "2"]
+        origins = ["English", "Flag", "Path", "Command", "English"]
+        self.assertEqual(features.spelled(forms, origins), ["Run", "<Flag>", "<Path>", "<Command>", "2"])
+        self.assertEqual(features.spelled(forms), forms)
+        prepared = features.Prepared(forms, origins)
+        feats = features.features(Context(prepared, 1, "A", "B"))
+        self.assertIn("w <Flag>", feats)
+        self.assertIn("n <flag>", feats)
+        self.assertIn("shape -x", feats)
+        self.assertNotIn("w --force", feats)
+        self.assertEqual(features.norms_of(["--a", "--b"], ["Flag", "Flag"]), ["<flag>", "<flag>"])
+        self.assertEqual(features.norms_of(["Dog"]), ["dog"])
+
+    def test_symbol_is_a_placeholder_origin_and_english_is_not(self):
+        self.assertEqual(features.spelled(["+", "up"], ["Symbol", "English"]), ["<Symbol>", "up"])
+
+    def test_the_hybrid_features_add_deslags_reading_and_the_replace_features_do_not(self):
+        sent = toy_readings()[0]
+        for hybrid in (False, True):
+            feats = features.features(Context(shaped.prepare(sent, hybrid), 1, "PART", "-START-"))
+            have = [f for f in feats if f.startswith("d ")]
+            self.assertEqual(have, ["d tag NOUN", "d conf Unsure", "d kept NOUN+VERB",
+                                    "d tag conf NOUN Unsure"] if hybrid else [])
+
+    def test_brill_reads_the_placeholder_not_the_spelling(self):
+        one = [sure("to", "PART"), open_word("--force", "NOUN", ["NOUN", "VERB"], "VERB")]
+        two = [sure("to", "PART"), open_word("--now", "NOUN", ["NOUN", "VERB"], "VERB")]
+        data = [reading(f"a{n}", one) for n in range(3)] + [reading(f"b{n}", two) for n in range(3)]
+        for sent in data:
+            sent.origin = [None, "Flag"]
+        model = brill.train(data, 1, cap=3, start=starts.DeslagStart())
+        words = {v for r in model.rules for (k, _), v in
+                 zip(tbl.TEMPLATES[r.template], r.values) if k == tbl.WORD}
+        self.assertTrue(words)
+        self.assertNotIn("--force", words)
+        self.assertNotIn("--now", words)
+        self.assertIn("<flag>", words)
+
+
+class ShapedTests(unittest.TestCase):
+    def train(self, hybrid, data=None, passes=6, **kwargs):
+        return shaped.fit(curve.shuffled(data or toy_readings()), 1, hybrid, passes, **kwargs)
+
+    def tags(self, model, sent):
+        skeleton = Sentence(sent.sent_id, sent.forms, None, sent.kinds, sent.spaces)
+        return shaped.tag(model, skeleton, sent)
+
+    def test_the_replace_shape_learns_the_labels_and_ignores_deslags_reading(self):
+        model = self.train(False)
+        model.meta["deslag_version"] = 10
+        wrong = probe_sentence("to")
+        wrong.tags[1], wrong.kept[1], wrong.conf[1] = "ADJ", ["ADJ"], "Likely"
+        tagged = self.tags(model, wrong)
+        self.assertEqual([t.upos for t in tagged], ["PART", "VERB"])  # the word is scored over 13
+        self.assertEqual([t.upos for t in self.tags(model, probe_sentence("the"))], ["DET", "NOUN"])
+
+    def test_the_hybrid_shape_freezes_sure_words_and_scores_the_rest_over_kept_only(self):
+        model = self.train(True)
+        for sent in toy_readings():
+            tagged = self.tags(model, sent)
+            if sent.conf[0] == "Sure":
+                self.assertEqual((tagged[0].conf, tagged[0].kept, tagged[0].score),
+                                 ("Sure", [sent.tags[0]], None))
+            self.assertIn(conllu.DESLAG_CODE.get(tagged[1].upos, tagged[1].upos),
+                          sent.kept[1] if tagged[1].upos != "CCONJ" else ["CONJ"])
+        self.assertEqual([t.upos for t in self.tags(model, probe_sentence("to"))], ["PART", "VERB"])
+        self.assertEqual([t.upos for t in self.tags(model, probe_sentence("the"))], ["DET", "NOUN"])
+        # `fast` is labelled ADJ, which deslag does not keep for it: no weight ever moves to ADJ.
+        adj = shaped.INDEX["ADJ"]
+        self.assertTrue(all(adj not in row for row in model.totals.values()))
+
+    def test_a_frozen_word_is_never_trained_on(self):
+        frozen = [reading(f"f{n}", [sure("to", "PART")]) for n in range(4)]
+        frozen[0].gold[0] = "ADP"  # a label that disagrees with the frozen reading
+        model = self.train(True, frozen, passes=2)
+        self.assertEqual(model.totals, {})
+        self.assertEqual(model.steps, 0)
+
+    def test_a_token_with_no_gold_is_context_and_never_updates(self):
+        data = [reading("x", [open_word("run", "NOUN", ["NOUN", "VERB"], None)])]
+        for hybrid in (False, True):
+            model = self.train(hybrid, data, passes=2)
+            self.assertEqual(model.totals, {})
+            self.assertEqual(model.steps, 2)
+
+    def test_a_token_that_is_no_word_stands_as_its_kinds_tag_in_the_history(self):
+        sent = reading("k", [("run", "Word", "NOUN", "Unsure", ["NOUN", "VERB"], None),
+                             (",", "Punctuation", None, None, None, None),
+                             ("run", "Word", "NOUN", "Unsure", ["NOUN", "VERB"], None)])
+        for hybrid in (False, True):
+            model = self.train(hybrid, toy_readings())
+            items = shaped.read(model, sent)
+        self.assertIsNone(items[1])
+        self.assertEqual([item is None for item in items], [False, True, False])
+
+    def test_the_same_seed_gives_the_same_model_and_it_survives_a_save(self):
+        one, two = self.train(True), self.train(True)
+        self.assertEqual(one.totals, two.totals)
+        self.assertTrue(all(isinstance(v, int) for row in one.totals.values() for v in row.values()))
+        one.meta["deslag_version"] = 10
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "m.json")
+            shaped.save(one, path)
+            loaded = shaped.load(path)
+        probe = probe_sentence("to")
+        self.assertEqual(self.tags(one, probe), self.tags(loaded, probe))
+        self.assertTrue(loaded.hybrid)
+
+    def test_tuning_keeps_the_pass_with_the_best_accuracy_and_the_fewest_on_a_tie(self):
+        seen = []
+        model = self.train(True, passes=4, tuning_set=toy_readings(),
+                           log=lambda number, score: seen.append(score))
+        self.assertEqual(len(seen), 4)
+        self.assertEqual(model.meta["passes"], seen.index(max(seen)) + 1)
+
+    def test_the_cutoffs_are_fitted_on_every_scored_word(self):
+        model = self.train(True)
+        data = toy_readings()
+        shaped.tune(model, data)
+        tuned = model.meta["tuned"]
+        # Every word is scored: `to` and `the` are frozen at Sure, the open word is a row.
+        self.assertEqual(tuned["scored"], 2 * len(data))
+        self.assertEqual(tuned["rows"] + tuned["unknown_rows"], len(data))
+        self.assertEqual(sum(n for n, _ in tuned["levels"].values()), tuned["scored"])
+        self.assertGreaterEqual(tuned["levels"]["Sure"][0], len(data))
+        empty = [reading("e", [sure("to", "PART")])]
+        with self.assertRaises(conllu.Failure):
+            shaped.tune(model, empty)
+
+    def test_the_cutoffs_follow_the_evidence_rule_brill_rates_by(self):
+        # 300 right words above margin 2, then 30 at margin 1 of which one is wrong, then wrong
+        # words at margin 0.
+        rows = ([(2.0 + n / 100, True, 0, 0.0) for n in range(300)]
+                + [(1.0, True, 0, 0.0)] * 29 + [(1.0, True, 1, 0.0)]
+                + [(0.0, True, 1, 0.0)] * 5)
+        # 300 of 300 is Sure; 329 of 330 is 99.7% with a Wilson bound over 0.97, so Sure too.
+        self.assertTrue(calibrate.surely(330, 329))
+        self.assertEqual(calibrate.sure_cutoff(rows), 1.0)
+        # A short clean run is not Sure, as in Brill: 100 of 100 has a bound under 0.97.
+        self.assertIsNone(calibrate.sure_cutoff(rows[:100]))
+        self.assertEqual(brill.surely([100, 100]), calibrate.surely(100, 100))
+        # A cutoff falls between margins only: the first 30 of the words at margin 1 are right, but
+        # all 34 are 88.2%, under the floor.
+        tied = [(1.0, True, 0, 0.0)] * 30 + [(1.0, True, 1, 0.0)] * 4
+        self.assertIsNone(calibrate.likely_cutoff(tied, 2.0))
+        self.assertEqual(calibrate.likely_cutoff(tied + [(1.5, True, 0, 0.0)] * 40, 2.0), 1.5)
+        # The Likely band: 97 of 100 right passes the floor, 96 of 100 does not.
+        band = [(1.0, True, 0, 0.0)] * 97 + [(1.0, True, 1, 0.0)] * 3
+        self.assertEqual(calibrate.likely_cutoff(band, 2.0), 1.0)
+        self.assertIsNone(calibrate.likely_cutoff(band[1:] + [(1.0, True, 1, 0.0)], 2.0))
+
+    def test_a_hybrid_word_read_as_deslag_reads_it_keeps_deslags_likely(self):
+        model = self.train(True)
+        model.tuning.update(sure=1e9, unsure=1e9, kept=1e9)
+        likely = probe_sentence("to")
+        likely.conf[1], likely.tags[1], likely.kept[1] = "Likely", "VERB", ["VERB", "NOUN"]
+        tagged = self.tags(model, likely)[1]
+        self.assertEqual((tagged.upos, tagged.conf, tagged.kept),
+                         ("VERB", "Likely", ["VERB", "NOUN"]))
+        changed = probe_sentence("to")
+        changed.conf[1], changed.tags[1] = "Likely", "NOUN"
+        changed.kept[1] = ["NOUN", "VERB"]
+        self.assertEqual(self.tags(model, changed)[1].conf, "Unsure")
+        replace = self.train(False)
+        replace.tuning.update(sure=1e9, unsure=1e9, kept=1e9)
+        self.assertEqual(self.tags(replace, likely)[1].conf, "Unsure")
+
+    def test_the_cutoffs_split_sure_likely_and_unsure_by_margin(self):
+        model = self.train(True)
+        model.tuning.update(sure=1e9, unsure=0.0, kept=0.0)
+        probe = probe_sentence("to")
+        self.assertEqual(self.tags(model, probe)[1].conf, "Likely")
+        model.tuning.update(sure=0.0)
+        self.assertEqual(self.tags(model, probe)[1].conf, "Sure")
+        model.tuning.update(sure=1e9, unsure=1e9, kept=1e9)
+        unsure = self.tags(model, probe)[1]
+        self.assertEqual((unsure.conf, unsure.kept), ("Unsure", ["VERB", "NOUN"]))
+
+    def test_a_word_unseen_in_training_is_unknown_unless_deslag_knows_it(self):
+        model = self.train(False)
+        model.tuning.update(sure=0.0, unsure=0.0, kept=0.0)
+        self.assertEqual(self.tags(model, probe_sentence("to", "zzyzx"))[1].conf, "Unknown")
+        hybrid = self.train(True)
+        hybrid.tuning.update(sure=1e9, unsure=0.0, kept=0.0)
+        self.assertEqual(self.tags(hybrid, probe_sentence("to", "zzyzx"))[1].conf, "Likely")
+        unknown = probe_sentence("to", "zzyzx")
+        unknown.conf[1] = "Unknown"
+        self.assertEqual(self.tags(hybrid, unknown)[1].conf, "Unknown")
+
+    def test_a_word_with_one_kept_code_keeps_deslags_confidence(self):
+        model = self.train(True)
+        one = reading("o", [open_word("run", "NOUN", ["NOUN"], "NOUN", conf="Likely")])
+        (tagged,) = self.tags(model, one)
+        self.assertEqual((tagged.upos, tagged.conf, tagged.kept), ("NOUN", "Likely", ["NOUN"]))
+
+    def test_tagging_needs_the_readings_of_the_same_tokens_and_version(self):
+        model = self.train(True)
+        model.meta["deslag_version"] = 10
+        skeleton = Sentence("p", ["to", "run"], None, ["Word", "Word"], [True, True])
+        with self.assertRaises(conllu.Failure):
+            shaped.tag(model, skeleton)
+        with self.assertRaises(conllu.Failure):
+            shaped.tag(model, skeleton, probe_sentence("the", "walk"))
+        with tempfile.TemporaryDirectory() as d:
+            old = write(d, "old.conllu", readings_text([probe_sentence("to")], version=11))
+            with self.assertRaisesRegex(conllu.Failure, "VERSION 11.*VERSION 10"):
+                shaped.check_version(model, old)
+
+    def test_the_import_keeps_the_skeletons_forms_when_a_placeholder_is_read(self):
+        model = self.train(True)
+        model.meta["deslag_version"] = 10
+        sent = probe_sentence("to", "--force")
+        sent.origin = [None, "Flag"]
+        with tempfile.TemporaryDirectory() as d:
+            tokens = write(d, "t.conllu", skeleton_of_reading(sent))
+            readings = write(d, "r.conllu", readings_text([sent]))
+            out = os.path.join(d, "i.conllu")
+            learner.tag_file(shaped, model, tokens, out, readings)
+            with open(out, encoding="utf-8") as f:
+                text = f.read()
+        self.assertIn("\t--force\t", text)
+        self.assertNotIn("<Flag>", text)
+        self.assertIn("Conf=", text)
+
+    def test_the_trainer_records_the_version_and_the_tuning_it_fitted(self):
+        data = toy_readings()
+        with tempfile.TemporaryDirectory() as d:
+            train = write(d, "train.conllu", readings_text(data))
+            tune = write(d, "tune.conllu", readings_text(data[:4]))
+            out = os.path.join(d, "m.json")
+            sys.stderr = open(os.devnull, "w")
+            try:
+                code = shaped.main(["train", "--mode", "hybrid", "--train", train, "--out", out,
+                                    "--tune-readings", tune,
+                                    "--passes", "3"])
+            finally:
+                sys.stderr.close()
+                sys.stderr = sys.__stderr__
+            model = shaped.load(out)
+        self.assertEqual(code, 0)
+        self.assertEqual(model.meta["deslag_version"], 10)
+        self.assertEqual(model.meta["mode"], "hybrid")
+        self.assertIn("share_sure_or_likely", model.meta["tuned"])
+        self.assertLessEqual(model.meta["passes"], 3)
+
+
+SHAPES_REPORT = """tagger     import:x.conllu
+Metrics
+  Accuracy                 99.2%  [98.7, 99.7]      1499/1511
+  Best-guess accuracy      86.8%  [85.5, 88.2]      2707/3119
+  Committed share          48.4%  [46.0, 50.8]      1511/3119
+  Gold retained            96.1%  [95.0, 97.0]      2996/3119
+  Unknown rate              6.0%  [4.9, 7.0]        186/3119
+
+By confidence
+  Sure share               32.3%  [30.6, 34.0]      1008/3119
+"""
+
+SHAPES_GATES = """deslag-exam gate: tests/gold/gates.toml, tagger import:x
+
+dev  tests/gold/dev.conllu  300 sentences, 3119 scored tokens
+  metric               count       gate        bound   slack  verdict
+  Accuracy             1499/1511   >= 98.0%     1481      18  pass
+  Best-guess accuracy  2707/3119   >= 86.0%     2683      24  pass
+  Sure accuracy        999/1008    >= 98.5%      993       6  FAIL
+  Likely accuracy      500/503     >= 97.0%      488      12  pass
+  Unsure share         0/3119      >= 1.0%         -       -  not judged (n < 100)
+
+mustpass  tests/gold/dev.conllu  list tests/gold/mustpass.tsv, 982 words
+  Misses               3/982  = 0  FAIL
+
+FAIL mustpass Misses: 3, allows none. The words it missed:
+  2 right but below Likely, 1 wrong, 0 no longer a word of the gold
+  g0003 word 6  into  listed ADP: tagger said ADV at Sure pass
+"""
+
+SHAPES_COMPARE = """before     a  (a.json)
+after      b  (b.json)
+
+all (300 sentences, 3119 tokens)
+                          before   after     diff
+  Accuracy                 99.2%   90.6%     -8.6  [-10.5, -6.6]     worse
+  Best-guess accuracy      86.8%   81.1%     -5.7  [-7.1, -4.4]      worse
+  Unknown rate              6.0%   15.7%     +9.8  [+8.5, +11.0]     worse
+  Likely accuracy          99.4%     n/a      n/a  n/a               n/a
+
+tier human (100 sentences, 1079 tokens)
+                          before   after     diff
+  Best-guess accuracy      86.5%   81.2%     -5.3  [-7.7, -3.2]      worse
+"""
+
+
+class ShapesReportTests(unittest.TestCase):
+    def test_the_report_gates_and_compare_are_read_back(self):
+        with tempfile.TemporaryDirectory() as d:
+            found = shapes.metrics(write(d, "r.txt", SHAPES_REPORT))
+            gates = shapes.gates(write(d, "g.txt", SHAPES_GATES))
+            compared = shapes.compare(write(d, "c.txt", SHAPES_COMPARE))
+            tic = shapes.ticlist(write(d, "t.txt",
+                                       "ticlist: x\n  rows right at Likely or above   6 of 172  3.5%  [1.2, 6.4]\n"))
+        self.assertEqual(found["Best-guess accuracy"], (86.8, 85.5, 88.2, 2707, 3119))
+        self.assertEqual(found["Accuracy"][0], 99.2)
+        # The dev block's four judged gates, of which one failed, and one not judged; the
+        # must-pass line and a word that happens to end in `pass` are not gates.
+        self.assertEqual(gates, (3, 4, 1, 2, 1, 0))
+        self.assertEqual(compared["Best-guess accuracy"],
+                         ("86.8%", "81.1%", "-5.7", "[-7.1, -4.4]", "worse"))
+        self.assertEqual(compared["Likely accuracy"][2], "n/a")
+        self.assertEqual(tic, (6, 172))
+
+
+    def test_a_must_pass_failure_without_its_counts_is_an_error_and_a_pass_is_zero(self):
+        counts = "  2 right but below Likely, 1 wrong, 0 no longer a word of the gold\n"
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(conllu.Failure, "counts"):
+                shapes.gates(write(d, "g.txt", SHAPES_GATES.replace(counts, "")))
+            with self.assertRaisesRegex(conllu.Failure, "Misses"):
+                shapes.gates(write(d, "g.txt", SHAPES_GATES.split("mustpass  ")[0]))
+            passing = SHAPES_GATES.split("\nFAIL mustpass")[0].replace("3/982  = 0  FAIL",
+                                                                       "0/982  = 0  pass")
+            self.assertEqual(shapes.gates(write(d, "g.txt", passing)), (3, 4, 1, 0, 0, 0))
+
+
 # A stand-in for `deslag-exam`: `score` saves an empty run and `compare` prints one paired line.
 STUB_EXAM = """
 import sys
@@ -819,11 +1399,16 @@ else:
 STUB_LOGGER = """#!/bin/sh
 echo "$(basename "$0") $*" >> "$RUN_LOG"
 case "$*" in *curve.py*) : > .train/curve.txt ;; esac
+prev=
+for arg in "$@"; do
+  case "$prev" in --out|--save|--pairs-out|--tuning-out) [ -d "$arg" ] || : > "$arg" ;; esac
+  prev=$arg
+done
 """
 
 
-class OwnerSetTests(unittest.TestCase):
-    """The owner's gold is report-only: run.sh may tag, score and compare it, and nothing else."""
+class RunShTests(unittest.TestCase):
+    """Runs run.sh in a scratch tree, against stand-ins."""
 
     @classmethod
     def setUpClass(cls):
@@ -831,13 +1416,24 @@ class OwnerSetTests(unittest.TestCase):
         cls.run_sh = os.path.join(here, "run.sh")
         cls.lock = os.path.join(here, "..", "ewt", "ewt.lock")
 
-    def run_all(self, *commands, edit=lambda text: text):
+    def run_all(self, *commands, edit=lambda text: text, after=None, before=None):
         """Runs each run.sh command, as `edit` rewrote it, from a scratch tree whose `cargo` and
-        `python3` only log their arguments, and returns every logged call."""
+        `python3` only log their arguments, and returns every logged call. A command is a string,
+        or a tuple of it and its arguments. `before(root)` sets the tree up before the first,
+        `after(root)` looks at it before it goes. The treebank's test file is a directory, so
+        reading it fails."""
         with tempfile.TemporaryDirectory() as root:
             os.makedirs(os.path.join(root, "scripts", "train"))
             os.makedirs(os.path.join(root, "scripts", "ewt"))
             os.makedirs(os.path.join(root, "bin"))
+            treebank = os.path.join(root, ".ewt", "r2.18")
+            os.makedirs(os.path.join(treebank, "en_ewt-ud-test.conllu"))
+            for name in ("train", "dev"):
+                write(treebank, f"en_ewt-ud-{name}.conllu", f"# sent_id = {name}\n")
+            silver = os.path.join(root, ".blobs", "unpacked", "silver", "2026-10-08-silver")
+            os.makedirs(silver)
+            write(silver, "silver.conllu", "")
+            write(silver, "manifest.tsv", "")
             with open(self.run_sh, encoding="utf-8") as f:
                 write(os.path.join(root, "scripts", "train"), "run.sh", edit(f.read()))
             shutil.copy(self.lock, os.path.join(root, "scripts", "ewt", "ewt.lock"))
@@ -845,20 +1441,30 @@ class OwnerSetTests(unittest.TestCase):
                 path = write(os.path.join(root, "bin"), tool, STUB_LOGGER)
                 os.chmod(path, 0o755)
             log = os.path.join(root, "calls.log")
+            if before is not None:
+                before(root)
             env = dict(os.environ, PATH=os.path.join(root, "bin") + os.pathsep + os.environ["PATH"],
                        RUN_LOG=log)
             for command in commands:
+                command = (command,) if isinstance(command, str) else tuple(command)
                 done = subprocess.run(
-                    ["bash", os.path.join(root, "scripts", "train", "run.sh"), command],
+                    ["bash", os.path.join(root, "scripts", "train", "run.sh"), *command],
                     env=env, capture_output=True, text=True, cwd=root)
                 self.assertEqual(done.returncode, 0, f"{command}: {done.stderr}")
+            if after is not None:
+                after(root)
             with open(log, encoding="utf-8") as f:
                 return f.read().splitlines()
+
+
+class OwnerSetTests(RunShTests):
+    """The owner's gold is report-only: run.sh may tag, score and compare it, and nothing else."""
 
     def test_the_owner_set_is_reported_and_never_trained_tuned_or_gated(self):
         calls = self.run_all(
             "generate", "generate-brill", "generate-brill-deslag", "generate-brill-percept",
-            "test", "test-brill", "test-brill-deslag", "test-brill-percept", "curve")
+            "test", "test-brill", "test-brill-deslag", "test-brill-percept", "curve",
+            "generate-shapes", "test-shapes")
         owner = [c for c in calls if "owner" in c]
         self.assertTrue(any(" score " in c for c in owner), "the owner set is never scored")
         self.assertTrue(any(" compare " in c or " tag " in c for c in owner))
@@ -868,6 +1474,9 @@ class OwnerSetTests(unittest.TestCase):
                 f"the owner set reached a trainer, a tuner or a gate: {call}")
         self.assertTrue(any(" train " in c for c in calls), "no trainer ran, so nothing was checked")
         self.assertTrue(any("curve.py" in c for c in calls))
+        for call in calls:
+            self.assertFalse("holdout" in call or "ud-test" in call,
+                             f"a command other than the milestone reached holdout or test: {call}")
 
     def test_a_trainer_given_the_owner_set_is_stopped(self):
         with self.assertRaises(AssertionError) as caught:
@@ -884,6 +1493,48 @@ class OwnerSetTests(unittest.TestCase):
         message = str(caught.exception)
         self.assertIn("2 != 0", message)
         self.assertIn("report-only", message)
+
+
+class MilestoneTests(RunShTests):
+    """`run.sh milestone` reads the holdout gold and the treebank's test file, for two candidates
+    only, once, and prints aggregates and their `compare` only. Run against stand-ins: no holdout
+    or test file is in the scratch tree."""
+
+    @staticmethod
+    def models(root):
+        shapes_dir = os.path.join(root, ".train", "shapes")
+        os.makedirs(shapes_dir)
+        for name in shapes.CANDIDATES:
+            write(shapes_dir, f"{name}.model.json", "{}")
+
+    def test_any_number_of_candidates_but_two_is_refused(self):
+        for args in ((), ("p-hyb-s",), ("p-hyb-s", "b-hyb-s", "p-rep-s"), ("p-hyb-s", "p-hyb-s"),
+                     ("p-hyb-s", "nobody")):
+            with self.assertRaises(AssertionError) as caught:
+                self.run_all(("milestone",) + args, before=self.models)
+            self.assertIn("2 != 0", str(caught.exception), args)
+
+    def test_two_candidates_are_scored_in_aggregate_and_compared_once(self):
+        calls = self.run_all(("milestone", "p-hyb-s", "b-hyb-s"), before=self.models)
+        exam = [c for c in calls if "deslag-exam" in c]
+        for gold in ("tests/gold/holdout.conllu", ".ewt/r2.18/en_ewt-ud-test.conllu"):
+            scores = [c for c in exam if f" score --gold {gold} " in c]
+            self.assertEqual(len(scores), 2, gold)
+            self.assertTrue(all("--aggregate" in c for c in scores), scores)
+        self.assertEqual(len([c for c in exam if " compare " in c]), 2)
+        verbs = {c.split(" -- ")[1].split()[0] for c in exam}
+        self.assertEqual(verbs, {"tokens", "readings", "score", "compare"})
+        trained = [c for c in calls if " train " in c or "--tune" in c]
+        self.assertEqual(trained, [])
+        tagged = [c for c in calls if c.startswith("python3 ") and " tag " in c]
+        self.assertEqual(len(tagged), 4)
+        self.assertTrue(all("p-hyb-s" in c or "b-hyb-s" in c for c in tagged))
+
+    def test_a_second_milestone_is_refused(self):
+        with self.assertRaises(AssertionError) as caught:
+            self.run_all(("milestone", "p-hyb-s", "b-hyb-s"), ("milestone", "p-hyb-s", "b-hyb-s"),
+                         before=self.models)
+        self.assertIn("read once", str(caught.exception))
 
 
 if __name__ == "__main__":

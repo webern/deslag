@@ -310,6 +310,13 @@ fn the_tree_tagger_passes_the_checked_in_set_and_a_changed_one_fails_it_by_name(
         "g0003 word 6  into  listed ADP: tagger said ADV at Sure"
     );
     assert!(
+        outcome
+            .text
+            .contains("  0 right but below Likely, 3 wrong, 0 no longer a word of the gold\n"),
+        "{}",
+        outcome.text
+    );
+    assert!(
         outcome.text.ends_with("\ngate: FAIL  mustpass: Misses\n"),
         "{}",
         outcome.text
@@ -326,6 +333,13 @@ fn the_tree_tagger_passes_the_checked_in_set_and_a_changed_one_fails_it_by_name(
         outcome.text.contains(
             "g0003 word 6  into  listed ADP: tagger said ADP at Unsure, right but below Likely"
         ),
+        "{}",
+        outcome.text
+    );
+    assert!(
+        outcome
+            .text
+            .contains("  3 right but below Likely, 0 wrong, 0 no longer a word of the gold\n"),
         "{}",
         outcome.text
     );

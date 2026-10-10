@@ -223,3 +223,162 @@ fn the_corpus_readings_are_the_corpus_skeleton_with_deslag_s_reading_and_no_gold
     let body = |text: &str| text.lines().skip(1).collect::<Vec<_>>().join("\n");
     assert_eq!(body(&imported), body(&tagged));
 }
+
+/// The skeleton `tokens` writes for `gold`, in `dir`.
+fn skeleton_of(dir: &Path, gold: &str) -> PathBuf {
+    let file = dir.join("skeleton.conllu");
+    ok(&["tokens", "--gold", gold, "--out", path(&file)]);
+    file
+}
+
+#[test]
+fn the_readings_of_a_skeleton_are_those_of_its_gold_without_the_gold_key() {
+    let dir = tempfile::tempdir().unwrap();
+    let golds = [
+        case("done-when.conllu"),
+        case("contraction.conllu"),
+        case("one-word-several-tokens.conllu"),
+        case("origins.conllu"),
+        case("number-and-symbol.conllu"),
+        case("deslag-identity.conllu"),
+        "tests/gold/dev.conllu".to_string(),
+    ];
+    for gold in golds {
+        let skeleton = skeleton_of(dir.path(), &gold);
+        let from_skeleton = dir.path().join("from-skeleton.conllu");
+        let from_gold = dir.path().join("from-gold.conllu");
+        ok(&[
+            "readings",
+            "--tokens",
+            path(&skeleton),
+            "--out",
+            path(&from_skeleton),
+        ]);
+        ok(&["readings", "--gold", &gold, "--out", path(&from_gold)]);
+        let a = std::fs::read_to_string(&from_skeleton).unwrap();
+        assert!(!a.contains("Gold="), "{gold}");
+        // The skeleton also says which gold it came from.
+        let a: Vec<&str> = a
+            .lines()
+            .filter(|line| !line.starts_with("# exam.from"))
+            .collect();
+        let b = std::fs::read_to_string(&from_gold).unwrap();
+        let b: Vec<String> = b
+            .lines()
+            .map(|line| match line.split_once("|Gold=") {
+                Some((before, tag)) => {
+                    let after = tag.split_once('|').map_or("", |(_, rest)| rest);
+                    if after.is_empty() {
+                        before.to_string()
+                    } else {
+                        format!("{before}|{after}")
+                    }
+                }
+                None => line.to_string(),
+            })
+            .collect();
+        assert_eq!(a, b, "{gold}");
+    }
+}
+
+#[test]
+fn a_holdout_skeleton_is_read_and_stays_a_holdout() {
+    let dir = tempfile::tempdir().unwrap();
+    let skeleton = skeleton_of(dir.path(), &case("done-when-holdout.conllu"));
+    let file = dir.path().join("readings.conllu");
+    ok(&[
+        "readings",
+        "--tokens",
+        path(&skeleton),
+        "--out",
+        path(&file),
+    ]);
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert!(text.contains("# exam.split = holdout\n"));
+    assert!(text.contains("# exam.trains = no\n"));
+    assert!(!text.contains("Gold="));
+    assert!(text.contains("Conf="));
+}
+
+#[test]
+fn the_trains_header_passes_from_a_gold_to_its_skeleton_and_readings() {
+    let dir = tempfile::tempdir().unwrap();
+    let source = std::fs::read_to_string(case("one-to-one.conllu")).unwrap();
+    for (value, line) in [
+        ("yes", "# exam.trains = yes\n"),
+        ("no", "# exam.trains = no\n"),
+    ] {
+        let gold = dir.path().join("gold.conllu");
+        std::fs::write(&gold, format!("# exam.trains = {value}\n{source}")).unwrap();
+        let skeleton = skeleton_of(dir.path(), path(&gold));
+        let readings = dir.path().join("readings.conllu");
+        let again = dir.path().join("again.conllu");
+        ok(&["readings", "--gold", path(&gold), "--out", path(&readings)]);
+        ok(&[
+            "readings",
+            "--tokens",
+            path(&skeleton),
+            "--out",
+            path(&again),
+        ]);
+        for file in [&skeleton, &readings, &again] {
+            let text = std::fs::read_to_string(file).unwrap();
+            assert!(text.contains(line), "{}: {text}", file.display());
+        }
+    }
+    // A gold that decided nothing says nothing.
+    let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
+    let text = std::fs::read_to_string(skeleton).unwrap();
+    assert!(!text.contains("exam.trains"));
+}
+
+#[test]
+fn the_silver_batch_passes_from_a_gold_to_its_skeleton_and_readings() {
+    let dir = tempfile::tempdir().unwrap();
+    let source = std::fs::read_to_string(case("one-to-one.conllu")).unwrap();
+    let gold = dir.path().join("gold.conllu");
+    std::fs::write(
+        &gold,
+        format!("# exam.trains = yes\n# silver.batch = 2026-01-01-fixture\n{source}"),
+    )
+    .unwrap();
+    let skeleton = skeleton_of(dir.path(), path(&gold));
+    let readings = dir.path().join("readings.conllu");
+    let again = dir.path().join("again.conllu");
+    ok(&["readings", "--gold", path(&gold), "--out", path(&readings)]);
+    ok(&[
+        "readings",
+        "--tokens",
+        path(&skeleton),
+        "--out",
+        path(&again),
+    ]);
+    for file in [&skeleton, &readings, &again] {
+        let text = std::fs::read_to_string(file).unwrap();
+        let head: Vec<&str> = text.lines().take_while(|l| l.starts_with('#')).collect();
+        assert!(
+            head.contains(&"# silver.batch = 2026-01-01-fixture"),
+            "{}: {text}",
+            file.display()
+        );
+    }
+    // A gold that names no batch says nothing of one.
+    let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
+    let text = std::fs::read_to_string(skeleton).unwrap();
+    assert!(!text.contains("silver.batch"));
+}
+
+#[test]
+fn a_skeleton_line_that_is_not_in_its_text_is_an_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
+    let text = std::fs::read_to_string(&skeleton).unwrap();
+    let broken = dir.path().join("broken.conllu");
+    std::fs::write(&broken, text.replace("\tCats\t", "\tDogs\t")).unwrap();
+    let file = dir.path().join("readings.conllu");
+    let output = exam(&["readings", "--tokens", path(&broken), "--out", path(&file)]);
+    assert_eq!(output.status.code(), Some(2));
+    let message = String::from_utf8(output.stderr).unwrap();
+    assert!(message.contains("is not in `# text`"), "{message}");
+    assert!(!file.exists());
+}

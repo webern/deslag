@@ -28,11 +28,22 @@ thresholds.
 
 import math
 
-from conllu import UD_TAGS, UNSCORED, Failure, read_skeleton, read_training
+from conllu import UD_TAGS, UNSCORED, Failure, read_gold, read_skeleton
 
 SURE_FLOOR = 0.995
 LIKELY_FLOOR = 0.97
 KEPT_FLOOR = 0.0  # 0 keeps the width at the Unsure threshold
+
+# The evidence rule. The Brill tagger rates its rules and start cells by it (brill.py), and the shaped
+# perceptron fits its cutoffs by it (shaped.py), both on every scored word of silver's tune split, so
+# the two learners calibrate on the same words by the same rule. A right rate is at a floor when
+# right * 1000 >= floor in per mille * words, on integers, so a rate a hair under it never passes.
+# `Sure` needs the rate at SURE_FLOOR and a Wilson lower bound, at WILSON_Z (95% two-sided), of at
+# least SURE_BOUND, so a short clean run cannot buy it; `Likely` needs the rate at LIKELY_FLOOR.
+SURE_PER_MILLE = round(SURE_FLOOR * 1000)
+LIKELY_PER_MILLE = round(LIKELY_FLOOR * 1000)
+WILSON_Z = 1.96
+SURE_BOUND = LIKELY_FLOOR
 
 
 def spans(text, forms):
@@ -94,7 +105,7 @@ def align(gold, skeleton):
 
 def check_count(tokens_path, gold_path):
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     return sum(len(align(g, s)) for g, s in zip(golds, skeletons))
 
 
@@ -104,7 +115,7 @@ def rows(learner, model, tokens_path, gold_path):
     The gap is in average-weight units; the gold's rank is 0 when the best guess is right.
     """
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     if len(skeletons) != len(golds):
         raise Failure(f"{tokens_path} and {gold_path} differ in sentences")
     out = []
@@ -142,6 +153,52 @@ def lowest_margin(known_rows, floor):
         if right / n >= floor:
             best = row[0]
     return best
+
+
+def at_floor(words, right, per_mille):
+    """Whether `right` of `words` is a rate of at least `per_mille`, on integers."""
+    return words > 0 and right * 1000 >= per_mille * words
+
+
+def wilson(words, right):
+    """(lower, upper): the Wilson score interval of the rate `right` of `words`, at `WILSON_Z`;
+    (0, 1) for no words."""
+    if words == 0:
+        return 0.0, 1.0
+    p, z2 = right / words, WILSON_Z * WILSON_Z
+    centre = p + z2 / (2 * words)
+    spread = WILSON_Z * math.sqrt(p * (1 - p) / words + z2 / (4 * words * words))
+    return (centre - spread) / (1 + z2 / words), (centre + spread) / (1 + z2 / words)
+
+
+def surely(words, right):
+    """Whether `right` of `words` is evidence enough for `Sure`: a rate at the Sure floor and a
+    Wilson lower bound of at least SURE_BOUND."""
+    return at_floor(words, right, SURE_PER_MILLE) and wilson(words, right)[0] >= SURE_BOUND
+
+
+def _lowest(ordered, passes):
+    """The lowest margin of `ordered` rows, highest margin first, such that the rows at or above it
+    pass `passes(words, right)`; a cutoff falls only between two different margins."""
+    best, right = None, 0
+    for n, row in enumerate(ordered, 1):
+        right += row[2] == 0
+        if (n == len(ordered) or ordered[n][0] != row[0]) and passes(n, right):
+            best = row[0]
+    return best
+
+
+def sure_cutoff(known_rows):
+    """The evidence rule's Sure cutoff: the lowest margin from which the known rows at or above it
+    are `surely`, counted down from the highest; None if there is none."""
+    return _lowest(sorted(known_rows, key=lambda r: -r[0]), surely)
+
+
+def likely_cutoff(known_rows, ceiling):
+    """The evidence rule's Unsure cutoff: the lowest margin below `ceiling` from which the known
+    rows between it and the ceiling are right at the Likely floor; None if there is none."""
+    ordered = sorted((r for r in known_rows if r[0] < ceiling), key=lambda r: -r[0])
+    return _lowest(ordered, lambda words, right: at_floor(words, right, LIKELY_PER_MILLE))
 
 
 def sigmoid(z):

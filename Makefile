@@ -79,7 +79,9 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
 .PHONY: help \
         build build-batches build-release \
         test test-blobs test-brill test-brill-deslag test-brill-percept test-confinement test-ewt \
-        test-exam test-label test-owner test-percept test-python test-scanners test-silver test-spacy \
+        test-exam test-label test-owner test-percept test-python test-scanners test-shapes \
+        test-shapes-milestone test-silver \
+        test-spacy \
         test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
         check-typos \
@@ -91,7 +93,7 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
         generate-label-report-dev generate-label-report-owner generate-label-spacy \
-        generate-percept generate-silver-assemble generate-silver-draw generate-silver-part \
+        generate-percept generate-shapes generate-silver-assemble generate-silver-draw generate-silver-part \
         generate-spacy publish-blobs build-label
 
 help:
@@ -141,6 +143,13 @@ help:
 	@echo "                 on any non-zero exit; prints the sweep's TOML; also reads the comments of the Rust crates"
 	@echo "                 as prose and checks they are written back as found; needs the network, so not in test;"
 	@echo "                 ci runs it"
+	@echo "test-shapes      grade the five taggers generate-shapes trained on the dev sets, the owner set, the gates,"
+	@echo "                 the must-pass list and the tic list, compare them in pairs, and write .train/shapes.tsv;"
+	@echo "                 generates first, so minutes, not in test or ci; never scores the holdout or the test file"
+	@echo "test-shapes-milestone"
+	@echo "                 MILESTONE=\"AFTER BEFORE\", two candidates generate-shapes trained, scored once on the"
+	@echo "                 holdout gold and the treebank's test file: aggregates and their paired compare only, into"
+	@echo "                 .train/milestone; refuses any other number of candidates, or a second run; not in test or ci"
 	@echo "test-silver      check every silver batch of the unpacked image against what it recorded, then hold the"
 	@echo "                 live ones to the rules that never lapse; passes when the image has no silver; test-blobs"
 	@echo "                 runs it"
@@ -242,6 +251,10 @@ help:
 	@echo "                 --spacy; needs the sets tagged first, and fetches spaCy; minutes"
 	@echo "generate-percept train the perceptron on the treebank's train set and tag the dev and owner sets into .train,"
 	@echo "                 for deslag-exam's --import; fetches the treebank first; minutes, so not in ci"
+	@echo "generate-shapes  train the perceptron's replace and hybrid shapes and the Brill tagger that starts from deslag's"
+	@echo "                 readings, on the treebank's train set with and without the silver batch's train split, tuned"
+	@echo "                 on its tune split, and tag the dev and owner sets into .train/shapes; fetches the treebank"
+	@echo "                 and the big tier first; minutes, so not in ci"
 	@echo "generate-silver-assemble"
 	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, and check"
 	@echo "                 it: a draft into SILVER_DRAFT_DIR/SILVER_NAME ($(SILVER_DRAFT_DIR)), or, when"
@@ -366,6 +379,20 @@ test-label: preflight
 # them. Not part of test: it needs the treebank and minutes. The curve is run by hand.
 test-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
+
+# The shapes' unit tests, then the exam's report, gates, must-pass list and tic list for each of the five
+# taggers on the dev sets and the owner set, `compare` in pairs, and the tables .train/shapes.tsv,
+# .train/shapes.pairs.tsv and .train/shapes.tuning.tsv. Never scores the holdout or the treebank's test
+# file. Not part of test: it needs the treebank, the big tier and minutes.
+test-shapes: generate-shapes
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test-shapes
+
+# The milestone read: the two candidates MILESTONE names, AFTER then BEFORE, from the models
+# generate-shapes left, on the holdout gold and the treebank's test file, once, after the table on
+# the dev sets is final. Aggregates and the paired `compare` only, into .train/milestone; run.sh
+# refuses any other number of candidates and a second run. Not part of test or ci.
+test-shapes-milestone: preflight fetch-ewt
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh milestone $(MILESTONE)
 
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,
@@ -710,6 +737,14 @@ generate-label-spacy: build-label fetch-spacy
 # minute or two.
 generate-percept: preflight fetch-ewt
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate
+
+# Five taggers (the perceptron as a replacement and as a hybrid of deslag's readings, the Brill tagger
+# from deslag's readings), each on the treebank's train set alone or with the silver batch's train
+# split, their cutoffs and passes fitted on its tune split, tagging deslag's dev set, the treebank's dev
+# set and the owner set into .train/shapes. Every training file must say it may be trained on. Nothing
+# in ci reads or runs it, and it takes minutes.
+generate-shapes: preflight fetch-ewt fetch-blobs
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-shapes
 
 # Every part under $(SILVER_DIR) put together as the batch SILVER_NAME (YYYY-MM-DD-slug), the merge of each
 # part being $(SILVER_MERGE). Sentences whose repository became reserved after the draw, or whose text is a

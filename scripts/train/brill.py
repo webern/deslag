@@ -26,8 +26,8 @@ choosing the highest gain and breaking ties in the fixed order tbl.py documents.
 word is aligned to is context for the rules and never a target. The `most-common` start reads its
 training sentences through initial taggers fitted on the other `folds` folds (10), as #109 did.
 
-Tuning. `tune` runs the rules one by one over the treebank's dev set and records the best-guess
-accuracy after each; the kept rules are the prefix with the highest, the shortest on a tie. The
+Tuning. `tune` runs the rules one by one over the tuning set, the treebank's dev set or, for the
+shape comparison, silver's tune split, and records the best-guess accuracy after each; the kept rules are the prefix with the highest, the shortest on a tie. The
 rest are dropped. Deslag's dev set is never read for this. For the other two starts it then counts,
 on the same set, what each confidence is worth.
 
@@ -36,14 +36,15 @@ Confidence. `most-common`: by structure, as #109 did. A word the training files 
 a rule changed is `Likely`, and one none did is `Unsure`. `Kept=` is the word's training tags and
 every tag the initial tagger or a rule gave it, in deslag codes, the best guess first. `Score` is
 None.
-The other starts: by evidence. A word a rule changed takes the right-over-fired rate, on the dev set,
-of the rule that last changed it; one left as it started, the right rate of its start reading
+The other starts: by evidence. A word a rule changed takes the right-over-fired rate, on the tuning
+set's scored words, of the rule that last changed it; one left as it started, the right rate of its start reading
 (`deslag`: its origin if not English, level and tag; `perceptron`: its margin bucket). A rate of 99.5% makes the word `Sure`,
 with `Kept=` cut to its one tag, only if the Wilson 95% lower bound of that rate is also at least
 0.97, so a short clean run cannot buy it; at 99.5% without that bound, or at 97%, it is `Likely`.
 These are the floors of tests/gold/gates.toml, with no headroom; below them the word is `Unsure`, or
 `Unknown` if it started so; but a word the rules left alone is never below its start's `Likely`. A `Sure` word of deslag's stays
-`Sure`. `Kept=` is the start's, and the best guess. `Score` is None.
+`Sure`. `Kept=` is the start's, and the best guess. `Score` is None. The rule is calibrate.py's, which
+the shaped perceptron's cutoffs follow on the same words.
 
 The model file is generated, derives from the treebank, and lives in `.train/`; it is never committed.
 Exit 0 when it wrote what was asked, 2 when it cannot run, with one line on stderr.
@@ -53,16 +54,16 @@ import argparse
 import bisect
 import hashlib
 import json
-import math
 import sys
 import time
 
 import calibrate
 import start as starts
 import tbl
-from conllu import (DESLAG_CODE, UD_TAGS, UNSCORED, UPOS_OF_CODE, Failure, read_readings,
-                    read_skeleton, read_training, readings_version)
-from features import normalize
+from conllu import (DESLAG_CODE, UD_TAGS, UNSCORED, UPOS_OF_CODE, Failure, read_gold,
+                    read_readings, read_readings_training, read_skeleton, read_training,
+                    readings_version)
+from features import norms_of
 from initial import MostCommon
 from learner import Tagged
 
@@ -74,13 +75,12 @@ FOLDS = starts.MOST_COMMON_FOLDS
 NTAGS = len(UD_TAGS)
 INDEX = {tag: i for i, tag in enumerate(UD_TAGS)}
 BUCKETS = 20  # the perceptron start's margin buckets, of equal numbers of dev tokens
-# The gate floors in per mille: a rate at or above one is `Sure` or `Likely`, never a hair under it.
-SURE_PER_MILLE = round(calibrate.SURE_FLOOR * 1000)
-LIKELY_PER_MILLE = round(calibrate.LIKELY_FLOOR * 1000)
-# A word is `Sure` on evidence only if, besides a rate at the Sure floor, the Wilson lower bound of
-# its right rate, at this z (95% two-sided), is at least `SURE_BOUND`: a short clean run is not enough.
-WILSON_Z = 1.96
-SURE_BOUND = calibrate.LIKELY_FLOOR
+# The gate floors in per mille, and the Wilson bound a `Sure` rate needs: calibrate.py's evidence
+# rule, which the shaped perceptron's cutoffs follow too, on the same tune words.
+SURE_PER_MILLE = calibrate.SURE_PER_MILLE
+LIKELY_PER_MILLE = calibrate.LIKELY_PER_MILLE
+WILSON_Z = calibrate.WILSON_Z
+SURE_BOUND = calibrate.SURE_BOUND
 
 
 class Model:
@@ -157,11 +157,12 @@ def train(sentences, seed, initial=MostCommon, folds=FOLDS, cap=CAP, min_gain=MI
         start = starts.MostCommonStart(cls=initial, folds=folds)
     begins = start.fit(sents, seed)
     index = {tag: i for i, tag in enumerate(start.tags)}
-    vocab = sorted({normalize(form) for s in sents for form in s.forms})
+    spelling = [norms_of(s.forms, s.origin) for s in sents]
+    vocab = sorted({norm for norms in spelling for norm in norms})
     ids = {word: i for i, word in enumerate(vocab)}
     corpus = tbl.Corpus(
-        [([ids[normalize(f)] for f in s.forms], b.tags, b.allowed)
-         for s, b in zip(sents, begins)],
+        [([ids[norm] for norm in norms], b.tags, b.allowed)
+         for norms, b in zip(spelling, begins)],
         len(start.tags),
     )
     gold = []
@@ -216,25 +217,19 @@ def cell_key(model, begin, i):
 
 def rated(row, floor):
     """Whether `row`, [tokens, right], has a right rate of at least `floor` per mille, on integers."""
-    return row is not None and row[0] > 0 and row[1] * 1000 >= floor * row[0]
+    return row is not None and calibrate.at_floor(row[0], row[1], floor)
 
 
 def wilson(row):
     """(lower, upper): the Wilson score interval of the right rate of `row`, [tokens, right], at
     `WILSON_Z`; (0, 1) for no tokens."""
-    if row is None or row[0] == 0:
-        return 0.0, 1.0
-    n, right = row
-    p, z2 = right / n, WILSON_Z * WILSON_Z
-    centre = p + z2 / (2 * n)
-    spread = WILSON_Z * math.sqrt(p * (1 - p) / n + z2 / (4 * n * n))
-    return (centre - spread) / (1 + z2 / n), (centre + spread) / (1 + z2 / n)
+    return (0.0, 1.0) if row is None else calibrate.wilson(row[0], row[1])
 
 
 def surely(row):
     """Whether `row` has enough evidence for `Sure`: a rate at the Sure floor, and a Wilson lower
     bound of at least 0.97. A word with a rate at the floor and a lower bound under it is `Likely`."""
-    return rated(row, SURE_PER_MILLE) and wilson(row)[0] >= SURE_BOUND
+    return row is not None and calibrate.surely(row[0], row[1])
 
 
 def decide_by_evidence(model, begin, i, tags, last):
@@ -285,7 +280,7 @@ def tag_sentence(model, sentence, readings=None, stats=None):
     know."""
     rules, ids = model.compiled()
     begin = model.start.begin(sentence, readings)
-    norms = [normalize(f) for f in sentence.forms]
+    norms = norms_of(sentence.forms, (readings or sentence).origin)
     words = [ids.get(n, -1) for n in norms]
     first = list(begin.tags)
     tags = list(first)
@@ -342,10 +337,10 @@ def _tuning_sets(model, tokens_path, gold_path, readings_path):
             truth = {i: g for i, g in enumerate(sentence.gold) if g is not None}
             if truth:
                 begin = model.start.begin(sentence, sentence)
-                sets.append(([normalize(f) for f in sentence.forms], begin, truth))
+                sets.append((norms_of(sentence.forms, sentence.origin), begin, truth))
         return sets
     skeletons = read_skeleton(tokens_path)
-    golds = read_training(gold_path)
+    golds = read_gold(gold_path)
     if len(skeletons) != len(golds):
         raise Failure(f"{tokens_path} and {gold_path} differ in sentences")
     for gold, skeleton in zip(golds, skeletons):
@@ -354,7 +349,7 @@ def _tuning_sets(model, tokens_path, gold_path, readings_path):
         aligned = calibrate.align(gold, skeleton)
         if aligned:
             truth = {i: DESLAG_CODE[t] for i, t in aligned}
-            sets.append(([normalize(f) for f in skeleton.forms], model.start.begin(skeleton), truth))
+            sets.append((norms_of(skeleton.forms), model.start.begin(skeleton), truth))
     return sets
 
 
@@ -544,7 +539,8 @@ def cmd_train(args):
     started = time.time()
     sentences = []
     for path in args.train:
-        sentences.extend(read_readings(path) if args.start == "deslag" else read_training(path))
+        sentences.extend(read_readings_training(path) if args.start == "deslag"
+                         else read_training(path))
 
     def progress(number, step):
         if number % 25 == 0:

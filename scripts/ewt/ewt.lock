@@ -2,13 +2,16 @@
 # downloads each file named below from <base>/<commit>/<file>, checks its sha256, and keeps a copy
 # of this file as .ewt/stamp. Change a line here and the next fetch starts over.
 #
-# The licence is CC BY-SA 4.0. The treebank is for measuring only: nothing derived from it may
-# ship, so trains = no.
+# The licence is CC BY-SA 4.0. The train file may train weights that ship; the dev and test files
+# never train any (owner, 2026-10-04). A trainer refuses a file whose `trains` line below says
+# otherwise. Weights trained on the train file will carry CC BY-SA 4.0, set up before any ship.
 release r2.18
 commit b7711cce01cdd4f5fcc0a8199b8a50d951b16c0c
 base https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT
 licence CC BY-SA 4.0
-trains no
+trains yes en_ewt-ud-train.conllu
+trains no en_ewt-ud-dev.conllu
+trains no en_ewt-ud-test.conllu
 sha256 d68e06122a702464c613076523d56740f047e5bbe89dd90ec32737e04d952143 en_ewt-ud-train.conllu
 sha256 39239e0a60db3ae68f4b7036189f11b6692741d10ff8240dd91f74f2760d90f8 en_ewt-ud-dev.conllu
 sha256 fa024f43dc5da3c5ac02563bc9bd0e974f46cbb1560823976a8f342a37dc494a en_ewt-ud-test.conllu

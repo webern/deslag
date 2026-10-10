@@ -4,6 +4,11 @@ A feature is a string naming a fact about the token and its neighbours. The set 
 of Collins (2002) and of the averaged perceptron taggers that followed it (Honnibal's among them):
 the word, its lower-cased form, suffixes of 1 to 3 and the first letter, its shape, the two
 previous tags and the words around it. A learner measures before adding any other.
+
+Two additions come from deslag's tokens. A word whose origin is not English (`Symbol`, `Command`,
+`Path` or `Flag`) is spelled by a placeholder, `<Symbol>` and so on, wherever the learner reads a
+spelling; its shape stays, and the import keeps the skeleton's forms. And a sentence read with
+deslag's readings gives each word's features its best-guess code, confidence and `Kept=` set.
 """
 
 from collections import namedtuple
@@ -16,16 +21,40 @@ END = ("-END-", "-END2-")
 Context = namedtuple("Context", "sentence i tag1 tag2")
 
 
+# The origins whose words are spelled by a placeholder in the feature layer.
+PLACEHOLDER_ORIGINS = ("Symbol", "Command", "Path", "Flag")
+
+
+def spelled(forms, origins=None):
+    """The forms as a learner reads them: a word of a placeholder origin as `<Origin>`, the rest as
+    they are. `origins` has one entry per form, or is None."""
+    if origins is None:
+        return list(forms)
+    return [f"<{origin}>" if origin in PLACEHOLDER_ORIGINS else form
+            for form, origin in zip(forms, origins)]
+
+
+def norms_of(forms, origins=None):
+    """The normal forms of `spelled` forms."""
+    return [normalize(form) for form in spelled(forms, origins)]
+
+
 class Prepared:
     """A sentence's forms and their normal forms, padded by two on each side, so the features of
-    a token are lookups at `i + 2` with no bounds to check."""
+    a token are lookups at `i + 2` with no bounds to check.
 
-    __slots__ = ("forms", "norms", "length")
+    `origins` is the origin of each form, or None. `deslag` is None, or one entry per token: None,
+    or (best-guess code, confidence, sorted `Kept=` codes joined by `+`) for a word."""
 
-    def __init__(self, forms):
+    __slots__ = ("forms", "norms", "shapes", "deslag", "length")
+
+    def __init__(self, forms, origins=None, deslag=None):
         self.length = len(forms)
-        self.forms = START + tuple(forms) + END
-        self.norms = START + tuple(normalize(form) for form in forms) + END
+        names = spelled(forms, origins)
+        self.forms = START + tuple(names) + END
+        self.norms = START + tuple(normalize(name) for name in names) + END
+        self.shapes = ("", "") + tuple(shape(form) for form in forms) + ("", "")
+        self.deslag = None if deslag is None else (None, None) + tuple(deslag) + (None, None)
 
 
 def normalize(form):
@@ -64,7 +93,7 @@ def features(context):
     norm = sentence.norms[i]
     prev1, prev2 = sentence.norms[i - 1], sentence.norms[i - 2]
     next1, next2 = sentence.norms[i + 1], sentence.norms[i + 2]
-    return [
+    feats = [
         "bias",
         "w " + form,
         "n " + norm,
@@ -72,7 +101,7 @@ def features(context):
         "s2 " + norm[-2:],
         "s3 " + norm[-3:],
         "p1 " + norm[:1],
-        "shape " + shape(form),
+        "shape " + sentence.shapes[i],
         "t-1 " + tag1,
         "t-2 " + tag2,
         "t-1 t-2 " + tag1 + " " + tag2,
@@ -85,5 +114,11 @@ def features(context):
         "n+2 " + next2,
         "n-1 n " + prev1 + " " + norm,
         "n n+1 " + norm + " " + next1,
-        "t-1 shape " + tag1 + " " + shape(form),
+        "t-1 shape " + tag1 + " " + sentence.shapes[i],
     ]
+    reading = None if sentence.deslag is None else sentence.deslag[i]
+    if reading is not None:
+        code, conf, kept = reading
+        feats += ["d tag " + code, "d conf " + conf, "d kept " + kept,
+                  "d tag conf " + code + " " + conf]
+    return feats

@@ -1,0 +1,13 @@
+kind = "feature"
+id = "verbs-no-nouns-forms"
+summary = "verbs_no_nouns also flags past tense and plural verbs, as in `needed no`"
+onboarding = """
+`verbs_no_nouns` used to fail only a verb ending in `s`, as in `it ships no binary`. It now uses
+the tagger's readings to fail the same tic in other forms: `it required no changes`, `these tools
+need no setup`, `we found no errors`, `it had no cache`. A new `deslag check` can therefore fail
+files that passed before, in a repo that turns the lint on.
+
+Forms of be, do and `have` are left out, as are `-ing` forms and forms of verbs such as `mean`
+and `ensure` whose `no` opens a clause. `have no` is left out because human writers use it nearly
+as often as the tic. Nothing is set in the config, and the fix is the same: negate the verb.
+"""

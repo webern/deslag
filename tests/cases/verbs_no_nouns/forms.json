@@ -1,0 +1,74 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nREADME.md has 6 verbs with no-nouns.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"required no changes\"\n  line 3: \"need no setup\"\n  line 5: \"had no backend\"\n  line 5: \"found no errors\"\n  line 7: \"ships no binary\"\n  line 7: \"needed no setup\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 13,
+          "end": 32,
+          "line": 3,
+          "column": 4,
+          "end_line": 3,
+          "end_column": 23,
+          "note": "\"required no changes\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 46,
+          "end": 59,
+          "line": 3,
+          "column": 37,
+          "end_line": 3,
+          "end_column": 50,
+          "note": "\"need no setup\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 65,
+          "end": 79,
+          "line": 5,
+          "column": 4,
+          "end_line": 5,
+          "end_column": 18,
+          "note": "\"had no backend\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 84,
+          "end": 99,
+          "line": 5,
+          "column": 23,
+          "end_line": 5,
+          "end_column": 38,
+          "note": "\"found no errors\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 105,
+          "end": 120,
+          "line": 7,
+          "column": 4,
+          "end_line": 7,
+          "end_column": 19,
+          "note": "\"ships no binary\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 129,
+          "end": 144,
+          "line": 7,
+          "column": 28,
+          "end_line": 7,
+          "end_column": 43,
+          "note": "\"needed no setup\""
+        }
+      ]
+    }
+  ]
+}

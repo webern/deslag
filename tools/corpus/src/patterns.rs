@@ -71,7 +71,10 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
 ];
 
 /// The shipped lints whose construction is a pattern, each with its id.
-pub const SHIPPED: &[(&str, Pattern)] = &[("verbs_no_nouns", verbs_no_nouns::PATTERN)];
+pub const SHIPPED: &[(&str, Pattern)] = &[
+    ("verbs_no_nouns", verbs_no_nouns::PATTERN),
+    ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),
+];
 
 /// How many examples a label shows for a pattern, each from a different repository.
 const EXAMPLES: usize = 3;

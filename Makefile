@@ -405,8 +405,9 @@ test-shapes-milestone: preflight fetch-ewt
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,
 # run against a stand-in for OpenRouter and the real deslag-gold: no network, no login, no key,
-# no treebank. Minutes of git, so not in test or ci; the python workflow runs it when
-# scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train or tools/exam change.
+# no treebank. Minutes of git, so not in test or ci; the python workflow runs it, on Python 3.13,
+# when scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train, tools/exam or
+# src/tag change.
 test-python: preflight
 	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'

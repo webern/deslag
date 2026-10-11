@@ -225,7 +225,7 @@ impl Weights {
     }
 
     /// The cells of the feature with this template, integers and text, which is `first` alone or
-    /// `first`, a space and `second`; empty if the model has no such feature.
+    /// `first`, a space and `second`; empty if the model does not have that feature.
     #[inline]
     pub(super) fn find(
         &self,

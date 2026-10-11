@@ -27,7 +27,7 @@
 //! classes come from Python's tables, which the weights file carries. Case comes from Rust's tables.
 //! Python 3.13 has Unicode 15.1 and Rust 1.99 has 17.0, so about 55 code points that are letters
 //! now were not then; a word that holds one is featured as Rust sees it. That is accepted, and the
-//! golden file of this stage holds no such character.
+//! golden file of this stage does not hold such a character.
 //!
 //! **A re-tagged word** has the features its new guess keeps, as [`super::pass`] gives them to a
 //! pass that changes a guess.

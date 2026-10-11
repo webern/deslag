@@ -403,7 +403,7 @@ fn tag_stream(fixtures: &[&Fixture]) -> String {
 fn an_origin_is_written_after_the_reading() {
     let mut tokens = deslag::document::Token::split("Edit foo_bar.");
     deslag::tag::sentence(&mut tokens, deslag::tag::Context::Prose);
-    assert_eq!(token_text(&tokens[1]), "foo_bar/PROPN.s:L+NOUN@sym");
+    assert_eq!(token_text(&tokens[1]), "foo_bar/PROPN.s:L@sym");
     assert!(!token_text(&tokens[0]).contains('@'));
     assert_eq!(
         Origin::ALL.map(origin_text),

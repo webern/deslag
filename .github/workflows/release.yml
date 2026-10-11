@@ -115,6 +115,13 @@ jobs:
               ;;
           esac
 
+      # test-python pins Python as python.yml does: the train scripts check the learned tagger's
+      # golden decisions, and what Python reads as a letter or a digit follows its Unicode version.
+      - name: Install Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0, 2026-07-20
+        with:
+          python-version: "3.13"
+
       # make ci leaves test-python to its own workflow; a release runs both.
       - name: Run CI checks
         env:

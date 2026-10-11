@@ -543,7 +543,12 @@ fn the_rules_read_what_their_golden_hash_says_for_their_version() {
         .as_deref()
         .is_some_and(|old| old != golden && rules_version_of(old) == Some(RULES_VERSION));
     let raise = format!(
-        "The rules read tests/corpus/{TAGGED}/ differently from what tests/golden/{RULES} says          for rules version {RULES_VERSION}. A change not meant to change what the rules read must          leave it as it is. If the change is meant, raise deslag::tag::RULES_VERSION in          src/tag/mod.rs and run `make fix-golden`. The weights were trained on the old readings,          so train them again: `make generate-shapes`, then `make generate-weights` (see          src/tag/weights.md); until then the learned stage does not run, and a test says so."
+        "The rules read tests/corpus/{TAGGED}/ differently from what tests/golden/{RULES} says \
+         for rules version {RULES_VERSION}. A change not meant to change what the rules read must \
+         leave it as it is. If the change is meant, raise deslag::tag::RULES_VERSION in \
+         src/tag/mod.rs and run `make fix-golden`. The weights were trained on the old readings, \
+         so train them again: `make generate-shapes`, then `make generate-weights` (see \
+         src/tag/weights.md); until then the learned stage does not run, and a test says so."
     );
     if fix {
         assert!(!changed_in_place, "{raise}");
@@ -556,7 +561,8 @@ fn the_rules_read_what_their_golden_hash_says_for_their_version() {
     assert!(!changed_in_place, "{raise}");
     assert_eq!(
         old, golden,
-        "tests/golden/{RULES} names another rules version than deslag::tag::RULES_VERSION          ({RULES_VERSION}). Run `make fix-golden` to write it for this version."
+        "tests/golden/{RULES} names another rules version than deslag::tag::RULES_VERSION \
+         ({RULES_VERSION}). Run `make fix-golden` to write it for this version."
     );
 }
 

@@ -3,7 +3,7 @@
 //!
 //! A [`Pattern`] is a row of [`Item`]s, written as Rust data; there is no parser and no pattern
 //! comes from the config. Each item matches one token by its kind, its folded text, the end of its
-//! folded text, its folded text being or not being in a listed set, the part of speech the
+//! folded text or not, its folded text being or not being in a listed set, the part of speech the
 //! tagger read for it, or its origin, where the word comes from. An item may be optional, and a gap skips a bounded number of tokens. A match
 //! never leaves its sentence.
 //!
@@ -25,6 +25,8 @@ pub enum Item {
     Kind(TokenKind),
     /// A word whose folded text ends with this.
     Suffix(&'static str),
+    /// A word whose folded text does not end with this.
+    NotSuffix(&'static str),
     /// A word whose folded text is in this set.
     In(&'static [&'static str]),
     /// A word whose folded text is in none of these sets.
@@ -128,6 +130,7 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         Item::Literal(literal) => word && text == literal,
         Item::Kind(kind) => token.kind == *kind,
         Item::Suffix(suffix) => word && text.ends_with(suffix),
+        Item::NotSuffix(suffix) => word && !text.ends_with(suffix),
         Item::In(set) => word && set.contains(&text.as_str()),
         Item::NotIn(sets) => word && !sets.iter().any(|set| set.contains(&text.as_str())),
         Item::Without(chars) => word && !text.contains(*chars),
@@ -173,6 +176,24 @@ mod tests {
             found(&S_NO, "It ships no binary. It ships a binary."),
             ["ships no binary"]
         );
+    }
+
+    #[test]
+    fn not_suffix_matches_a_word_that_does_not_end_so() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::NotSuffix("s"),
+                Item::Literal("no"),
+                Item::Kind(TokenKind::Word),
+            ],
+        };
+        assert_eq!(
+            found(&P, "It needed no setup. It needs no setup."),
+            ["needed no setup"]
+        );
+        assert_eq!(found(&P, "We NEED no setup."), ["NEED no setup"]);
+        // A code span is no word, so it is not a word that fails to end in `s`.
+        assert!(found(&P, "Run `x` no more.").is_empty());
     }
 
     #[test]

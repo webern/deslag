@@ -1,0 +1,73 @@
+# exam.tokens = deslag
+# exam.from = learned
+# sent_id = s1
+# exam.context = prose
+# text = The Straße was naïve in 1999.
+1	The	_	_	_	_	_	_	_	Kind=Word
+2	Straße	_	_	_	_	_	_	_	Kind=Word
+3	was	_	_	_	_	_	_	_	Kind=Word
+4	naïve	_	_	_	_	_	_	_	Kind=Word
+5	in	_	_	_	_	_	_	_	Kind=Word
+6	1999	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+7	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s2
+# exam.context = prose
+# text = İstanbul and ΟΔΟΣ meet at the café.
+1	İstanbul	_	_	_	_	_	_	_	Kind=Word
+2	and	_	_	_	_	_	_	_	Kind=Word
+3	ΟΔΟΣ	_	_	_	_	_	_	_	Kind=Word
+4	meet	_	_	_	_	_	_	_	Kind=Word
+5	at	_	_	_	_	_	_	_	Kind=Word
+6	the	_	_	_	_	_	_	_	Kind=Word
+7	café	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s3
+# exam.context = prose
+# text = It happened in ١٩٩٩ and in 2024.
+1	It	_	_	_	_	_	_	_	Kind=Word
+2	happened	_	_	_	_	_	_	_	Kind=Word
+3	in	_	_	_	_	_	_	_	Kind=Word
+4	١٩٩٩	_	_	_	_	_	_	_	Kind=Number
+5	and	_	_	_	_	_	_	_	Kind=Word
+6	in	_	_	_	_	_	_	_	Kind=Word
+7	2024	_	_	_	_	_	_	_	Kind=Number|SpaceAfter=No
+8	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s4
+# exam.context = prose
+# text = We saw 𝒜lgebra, 😀 and x² in Δx.
+1	We	_	_	_	_	_	_	_	Kind=Word
+2	saw	_	_	_	_	_	_	_	Kind=Word
+3	𝒜lgebra	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	,	_	_	_	_	_	_	_	Kind=Punctuation
+5	😀	_	_	_	_	_	_	_	Kind=Punctuation
+6	and	_	_	_	_	_	_	_	Kind=Word
+7	x²	_	_	_	_	_	_	_	Kind=Word
+8	in	_	_	_	_	_	_	_	Kind=Word
+9	Δx	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+10	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s5
+# exam.context = prose
+# text = She doesn't run to the ﬁnal ǅ.
+1	She	_	_	_	_	_	_	_	Kind=Word
+2	doesn't	_	_	_	_	_	_	_	Kind=Word
+3	run	_	_	_	_	_	_	_	Kind=Word
+4	to	_	_	_	_	_	_	_	Kind=Word
+5	the	_	_	_	_	_	_	_	Kind=Word
+6	ﬁnal	_	_	_	_	_	_	_	Kind=Word
+7	ǅ	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+8	.	_	_	_	_	_	_	_	Kind=Punctuation
+
+# sent_id = s6
+# exam.context = prose
+# text = Ünïcödé runs well; ÉCOLE stays.
+1	Ünïcödé	_	_	_	_	_	_	_	Kind=Word
+2	runs	_	_	_	_	_	_	_	Kind=Word
+3	well	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+4	;	_	_	_	_	_	_	_	Kind=Punctuation
+5	ÉCOLE	_	_	_	_	_	_	_	Kind=Word
+6	stays	_	_	_	_	_	_	_	Kind=Word|SpaceAfter=No
+7	.	_	_	_	_	_	_	_	Kind=Punctuation

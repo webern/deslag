@@ -214,6 +214,21 @@ rank the readings in the tagger's lexicon.
 Data was used, not code. It gives each word's parts of speech in priority order for the tagger's
 lexicon.
 
+## Universal Dependencies English Web Treebank
+
+- URL: https://github.com/UniversalDependencies/UD_English-EWT
+- Licence: CC BY-SA 4.0, copied with the treebank's attribution to `LICENSES/CC-BY-SA-4.0.txt`
+- Copyright: "Universal Dependencies English Web Treebank annotations (c) 2013-2021 by The Board of
+  Trustees of The Leland Stanford Junior University"
+- Used at: release r2.18, commit
+  [b7711cce](https://github.com/UniversalDependencies/UD_English-EWT/tree/b7711cce01cdd4f5fcc0a8199b8a50d951b16c0c)
+
+Data was used, not code. The tagger's learned stage, `src/tag/weights.txt`, was trained in part on
+the treebank's train file, so the weights are shared under the same licence; the dev and test files
+grade the tagger and train nothing. The treebank's texts come from the English Web Treebank,
+LDC2012T13, and some parts are in the public domain. `src/tag/weights.md` says how the weights were
+made.
+
 ## textblob-aptagger
 
 - URL: https://github.com/sloria/textblob-aptagger (Matthew Honnibal's averaged perceptron tagger,

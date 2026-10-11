@@ -70,7 +70,7 @@ fn the_import_of_the_readings_grades_as_the_tagger_does() {
             ok(&args);
         };
         args(&["--import", path(&file)], &imported);
-        args(&["--tagger", "deslag"], &tagged);
+        args(&["--tagger", "rules"], &tagged);
         let (a, b) = (
             SavedRun::read(&imported).unwrap(),
             SavedRun::read(&tagged).unwrap(),
@@ -128,7 +128,7 @@ fn a_word_line_carries_the_reading_and_the_gold_the_exam_aligned() {
 }
 
 #[test]
-fn the_first_line_names_the_tag_version_the_readings_are_of() {
+fn the_first_line_names_the_rules_version_the_readings_are_of() {
     let dir = tempfile::tempdir().unwrap();
     let file = dir.path().join("readings.conllu");
     let gold = case("contraction.conllu");
@@ -136,12 +136,12 @@ fn the_first_line_names_the_tag_version_the_readings_are_of() {
     let text = std::fs::read_to_string(&file).unwrap();
     assert_eq!(
         text.lines().next().unwrap(),
-        format!("# deslag_tag_version = {}", deslag::tag::VERSION)
+        format!("# deslag_rules_version = {}", deslag::tag::RULES_VERSION)
     );
     // The header is a comment of the first sentence, so the file still reads as sentences.
     let blocks = conllu::read("readings", &text).unwrap();
     assert!(blocks[0].comment("sent_id").is_some());
-    assert!(blocks[0].comment("deslag_tag_version").is_some());
+    assert!(blocks[0].comment("deslag_rules_version").is_some());
 }
 
 #[test]
@@ -195,7 +195,7 @@ fn the_corpus_readings_are_the_corpus_skeleton_with_deslag_s_reading_and_no_gold
     ok(&["tokens", "--corpus", "--out", path(&tokens)]);
     let readings = std::fs::read_to_string(&readings).unwrap();
     let tokens = std::fs::read_to_string(&tokens).unwrap();
-    let header = format!("# deslag_tag_version = {}\n", deslag::tag::VERSION);
+    let header = format!("# deslag_rules_version = {}\n", deslag::tag::RULES_VERSION);
     let readings = readings.strip_prefix(&header).expect("the version header");
     assert!(!readings.contains("Gold="));
     let (mut words, mut read) = (0, 0);
@@ -219,7 +219,7 @@ fn the_corpus_readings_are_the_corpus_skeleton_with_deslag_s_reading_and_no_gold
     let file = dir.path().join("r.conllu");
     std::fs::write(&file, format!("{header}{readings}")).unwrap();
     let imported = ok(&["ticlist", "score", "--list", list, "--import", path(&file)]);
-    let tagged = ok(&["ticlist", "score", "--list", list, "--tagger", "deslag"]);
+    let tagged = ok(&["ticlist", "score", "--list", list, "--tagger", "rules"]);
     let body = |text: &str| text.lines().skip(1).collect::<Vec<_>>().join("\n");
     assert_eq!(body(&imported), body(&tagged));
 }
@@ -381,4 +381,38 @@ fn a_skeleton_line_that_is_not_in_its_text_is_an_error() {
     let message = String::from_utf8(output.stderr).unwrap();
     assert!(message.contains("is not in `# text`"), "{message}");
     assert!(!file.exists());
+}
+
+#[test]
+fn shipped_readings_name_the_tag_version_and_rules_readings_the_rules_version() {
+    let dir = tempfile::tempdir().unwrap();
+    let (rules, shipped) = (
+        dir.path().join("rules.conllu"),
+        dir.path().join("shipped.conllu"),
+    );
+    ok(&["readings", "--core", "--out", path(&rules)]);
+    ok(&["readings", "--core", "--shipped", "--out", path(&shipped)]);
+    let (rules, shipped) = (
+        std::fs::read_to_string(&rules).unwrap(),
+        std::fs::read_to_string(&shipped).unwrap(),
+    );
+    assert_eq!(
+        rules.lines().next().unwrap(),
+        format!("# deslag_rules_version = {}", deslag::tag::RULES_VERSION)
+    );
+    assert_eq!(
+        shipped.lines().next().unwrap(),
+        format!("# deslag_tag_version = {}", deslag::tag::VERSION)
+    );
+    assert_ne!(rules, shipped, "the learned stage moves some reading");
+    assert_eq!(rules.lines().count(), shipped.lines().count());
+    let output = exam(&[
+        "readings",
+        "--gold",
+        "tests/gold/dev.conllu",
+        "--shipped",
+        "--out",
+        "x",
+    ]);
+    assert_eq!(output.status.code(), Some(2), "--shipped is not for --gold");
 }

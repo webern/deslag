@@ -194,9 +194,10 @@ jobs:
           cp README.md LICENSE "dist/$stem/"
           # The notices of the sources of src/tag/lexicon.txt, which is built into the binary and
           # which each source requires on every copy, and of the code ported into
-          # src/document/rust.rs. The same five as Cargo.toml's `include`.
+          # src/document/rust.rs, and the licence of src/tag/weights.txt. The same six as Cargo.toml's
+          # `include`.
           mkdir "dist/$stem/LICENSES"
-          cp LICENSES/AGID.txt LICENSES/Moby.txt LICENSES/SCOWL.txt LICENSES/WordNet.txt LICENSES/MIT-rustc.txt "dist/$stem/LICENSES/"
+          cp LICENSES/AGID.txt LICENSES/Moby.txt LICENSES/SCOWL.txt LICENSES/WordNet.txt LICENSES/MIT-rustc.txt LICENSES/CC-BY-SA-4.0.txt "dist/$stem/LICENSES/"
           case "$TARGET" in
             *windows*)
               cp "target/$TARGET/release/$bin.exe" "dist/$stem/"

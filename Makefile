@@ -93,7 +93,7 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
         generate-label-report-dev generate-label-report-owner generate-label-spacy \
-        generate-percept generate-shapes generate-silver-assemble generate-silver-draw generate-silver-part \
+        generate-percept generate-shapes generate-weights generate-silver-assemble generate-silver-draw generate-silver-part \
         generate-spacy publish-blobs build-label
 
 help:
@@ -255,6 +255,8 @@ help:
 	@echo "                 readings, on the treebank's train set with and without the silver batch's train split, tuned"
 	@echo "                 on its tune split, and tag the dev and owner sets into .train/shapes; fetches the treebank"
 	@echo "                 and the big tier first; minutes, so not in ci"
+	@echo "generate-weights write src/tag/weights.txt, the weights the Rust tagger carries, from the p-hyb-s model"
+	@echo "                 generate-shapes left in .train/shapes; run it with Python 3.13; the file is committed"
 	@echo "generate-silver-assemble"
 	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, and check"
 	@echo "                 it: a draft into SILVER_DRAFT_DIR/SILVER_NAME ($(SILVER_DRAFT_DIR)), or, when"
@@ -379,6 +381,12 @@ test-label: preflight
 # them. Not part of test: it needs the treebank and minutes. The curve is run by hand.
 test-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
+
+# The weights file src/tag/weights.txt, written from the p-hyb-s model generate-shapes left. Python 3.13,
+# whose Unicode tables the file's digit ranges come from. Not part of test or ci: the file is committed
+# and test-python checks it against the golden.
+generate-weights: preflight
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-weights
 
 # The shapes' unit tests, then the exam's report, gates, must-pass list and tic list for each of the five
 # taggers on the dev sets and the owner set, `compare` in pairs, and the tables .train/shapes.tsv,

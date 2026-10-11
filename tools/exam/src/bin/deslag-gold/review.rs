@@ -977,7 +977,7 @@ fn read_sentence(path: &str, block: &Block) -> Result<Sentence, Error> {
             origin: Origin::English,
         })
         .collect();
-    deslag::tag::sentence(&mut tokens, context);
+    deslag::tag::sentence_by_rules(&mut tokens, context);
     let mut rows = Vec::with_capacity(tokens.len());
     for (line, token) in block.lines.iter().zip(&tokens) {
         if token.kind != TokenKind::Word {
@@ -1675,7 +1675,7 @@ pub mod tests {
                 origin: Origin::English,
             })
             .collect();
-        deslag::tag::sentence(&mut tokens, Context::Heading);
+        deslag::tag::sentence_by_rules(&mut tokens, Context::Heading);
         for (word, token) in words
             .iter()
             .zip(tokens.iter().filter(|t| t.kind == TokenKind::Word))

@@ -9,18 +9,22 @@
 #
 # Raise a gate in the change that earns it. Lowering one is a decision its PR must name.
 
-# Ratchets set just under tag VERSION 10 (2026-10-04): best guess 2702/3119, gold retained 2993,
-# committed 1494, accuracy 1482/1494, Sure 999/1008, Likely 483/486, unknown 203, clean 286/296.
+# Ratchets set under tag VERSION 12 (2026-10-11), the rules and the learned stage together: best
+# guess 2890/3119, gold retained 2991, committed 2094, accuracy 2052/2094, Sure 1539/1559, Likely
+# 513/535, unknown 83, clean 263/296. The best-guess floor rose to just under that count. Accuracy,
+# clean sentences and Likely accuracy fell to the shipped tagger's counts: it commits to 600 more
+# words than the rules alone did (2094 against 1494), 30 more of them wrong, so those three counts
+# fall a word, four sentences and six words short of the floors the rules alone had set.
 [dev]
 gold = "tests/gold/dev.conllu"
-best_guess_accuracy = { min_per_mille = 860 }
+best_guess_accuracy = { min_per_mille = 920 }
 gold_retained       = { min_per_mille = 955 }
 committed_share     = { min_per_mille = 460 }
-accuracy            = { min_per_mille = 980 }
+accuracy            = { min_per_mille = 979 }
 sure_accuracy       = { min_per_mille = 985 }
-likely_accuracy     = { min_per_mille = 970, min_tokens = 100 }
+likely_accuracy     = { min_per_mille = 958, min_tokens = 100 }
 unknown_rate        = { max_per_mille = 75 }
-clean_sentences     = { min_per_mille = 900 }
+clean_sentences     = { min_per_mille = 888 }
 unalignable_rate    = { max_count = 0 }
 
 # The words nobody doubts: `list` holds the dev words with Prov=agree that tag VERSION 10 tags right
@@ -46,10 +50,11 @@ clean_sentences     = { min_per_mille = 700 }
 unalignable_rate    = { max_count = 0 }
 
 # The treebank's dev set, outside CI because `make test-ewt` needs the network. These are the
-# counts of tag VERSION 10, and any drop fails. `tokens` pins the scored tokens they are counts
-# of, so a new treebank release or a tokenizer change has to re-baseline them by hand.
+# counts of tag VERSION 10, except that gold retained is the shipped tagger's count (20346, 48 fewer
+# than the rules alone kept), and any drop fails. `tokens` pins the scored tokens they are counts of,
+# so a new treebank release or a tokenizer change has to re-baseline them by hand.
 [ewt-dev]
 gold = ".ewt/r2.18/en_ewt-ud-dev.conllu"
 tokens = 21149
 best_guess_accuracy = { min_count = 18466 }
-gold_retained       = { min_count = 20394 }
+gold_retained       = { min_count = 20346 }

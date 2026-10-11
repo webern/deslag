@@ -41,7 +41,7 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/../.."
-cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes|milestone AFTER BEFORE}
+cmd=${1:?usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|generate-weights|test-shapes|milestone AFTER BEFORE}
 
 release=$(awk '$1 == "release" { print $2 }' scripts/ewt/ewt.lock)
 ewt=".ewt/$release"
@@ -106,7 +106,9 @@ baseline() {
   for set in "${report_sets[@]}"; do
     gold=$(gold_of "$set")
     exam tokens --gold "$gold" --out ".train/$set.tokens.conllu"
-    exam score --gold "$gold" --tagger deslag --save ".train/$set.deslag.run.json" --aggregate \
+    # The learners start from deslag's rules, so the baseline is the rules alone (`--tagger rules`),
+    # not the shipped tagger, whose learned stage is one of the things trained here.
+    exam score --gold "$gold" --tagger rules --save ".train/$set.deslag.run.json" --aggregate \
       >".train/$set.deslag.report.txt"
     exam score --gold "$gold" --tagger mct --save ".train/$set.mct.run.json" --aggregate \
       >".train/$set.mct.report.txt"
@@ -338,6 +340,14 @@ generate_shapes() {
   done
 }
 
+# The weights file the Rust tagger carries, written from the p-hyb-s model generate-shapes trained.
+# The file is the model as integers (weights.py); it is not retrained or pruned on the way.
+generate_weights() {
+  local model="$shapes_dir/p-hyb-s.model.json"
+  [ -f "$model" ] || { echo "no $model; run generate-shapes first" >&2; exit 1; }
+  python3 scripts/train/weights.py export --model "$model" --out src/tag/weights.txt
+}
+
 # One `compare` of the saved run AFTER against the saved run BEFORE on SET: the difference is after
 # minus before.
 shape_compare() {
@@ -363,7 +373,7 @@ test_shapes() {
   # printed and the run goes on.
   exam gate --gates tests/gold/gates.toml dev mustpass >"$shapes_dir/deslag-dev.deslag.gates.txt" ||
     echo "(a gate failed for deslag: a finding, not an error)"
-  exam ticlist score --list tests/gold/ticlist.tsv --tagger deslag \
+  exam ticlist score --list tests/gold/ticlist.tsv --tagger rules \
     --save "$shapes_dir/ticlist.deslag.run.json" >"$shapes_dir/ticlist.deslag.report.txt"
   for name in "${candidates[@]}"; do
     echo "=== deslag-dev: the dev gates and the must-pass list, on $name"
@@ -486,8 +496,9 @@ case "$cmd" in
     done
     ;;
   generate-shapes) generate_shapes ;;
+  generate-weights) generate_weights ;;
   test-shapes) test_shapes ;;
   shapes) generate_shapes; test_shapes ;;
   milestone) shift; milestone "$@" ;;
-  *) echo "usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|test-shapes|milestone AFTER BEFORE" >&2; exit 2 ;;
+  *) echo "usage: run.sh baseline|generate|test|generate-brill[-deslag|-percept]|test-brill[-deslag|-percept]|ticlist[-brill-deslag|-brill-percept]|curve [NAME..]|shapes|generate-shapes|generate-weights|test-shapes|milestone AFTER BEFORE" >&2; exit 2 ;;
 esac

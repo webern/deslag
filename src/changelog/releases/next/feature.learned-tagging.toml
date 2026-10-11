@@ -1,0 +1,17 @@
+kind = "feature"
+id = "learned-tagging"
+summary = "The tagger chooses among open readings with trained weights"
+onboarding = """
+Tagging now has a second stage. After the rules read a sentence, a small trained model chooses
+among the tags the rules left open for each word, and sets the word's confidence from how clearly
+it prefers one. The words the rules were sure of keep their readings, so the lints that read
+only a sure reading do not move.
+
+The lints that read readings (`verbs_no_nouns` is one) can report different words than before.
+Where a run of the old release found a word, check the finding again rather than assuming it
+stands, and re-baseline any golden file or saved report that records findings.
+
+Nothing is set in the config. The weights are built into the binary under `CC-BY-SA-4.0`, which
+is why the crate's licence is now `MIT AND CC-BY-SA-4.0`; `LICENSES/CC-BY-SA-4.0.txt` and
+`src/tag/weights.md` in the source say what they were trained on.
+"""

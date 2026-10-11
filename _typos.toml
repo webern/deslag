@@ -2,10 +2,12 @@
 # matter, not mistakes to fix, and no fixture may be edited to suit a tool. The golden files list
 # its fixtures by path, and so quote the names of those repositories and their files. The tagger's
 # lexicon is generated from word lists, which hold misspellings and rare words by design, and the
-# notices of its sources are copied unchanged. A review queue quotes corpus sentences, and so does
-# the owner's file once they are moved there, and so does the committed silver batch that the
-# check's unit test reads. The hashes of the frozen configs are hex, and a pair of their letters,
-# such as `ba`, reads as a typo: whether a release's lines pass would be down to chance.
+# notices of its sources are copied unchanged. The weights file is the words and numbers of a trained
+# model, and the learned stage's golden files are letters, hex and made-up Unicode words. A review
+# queue quotes corpus sentences, and so does the owner's file once they are moved there, and so
+# does the committed silver batch that the check's unit test reads. The hashes of the frozen
+# configs are hex, and a pair of their letters, such as `ba`, reads as a typo: whether a release's
+# lines pass would be down to chance.
 
 [files]
 extend-exclude = [
@@ -16,6 +18,9 @@ extend-exclude = [
     "tests/golden/*.txt",
     "tests/configs/hashes",
     "src/tag/lexicon.txt",
+    "src/tag/weights.txt",
+    "tools/exam/tests/golden/learned.txt",
+    "tools/exam/tests/golden/learned.conllu",
     "LICENSES/AGID.txt",
     "LICENSES/Moby.txt",
     "LICENSES/SCOWL.txt",

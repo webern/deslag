@@ -3,10 +3,12 @@
 
 import os
 import random
+import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 import unittest.mock
 
@@ -23,6 +25,7 @@ import shapes
 import silver
 import start as starts
 import tbl
+import weights
 from conllu import Sentence
 from features import Context
 
@@ -460,7 +463,7 @@ def verb_data():
     return [reading(f"a{n}", one) for n in range(4)] + [reading(f"b{n}", two) for n in range(4)]
 
 
-VERSION_LINE = "# deslag_tag_version = 10\n"
+VERSION_LINE = "# deslag_rules_version = 10\n"
 
 
 def deslag_model(data=None):
@@ -722,7 +725,7 @@ class StartTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             for version, count in ((10, 1), (11, 1)):
                 write(d, f"r{version}.conllu",
-                      f"# deslag_tag_version = {version}\n# exam.trains = yes\n" + READINGS)
+                      f"# deslag_rules_version = {version}\n# exam.trains = yes\n" + READINGS)
             out = os.path.join(d, "m.json")
             files = [os.path.join(d, "r10.conllu")]
             self.assertEqual(brill.main(["train", "--start", "deslag", "--train", *files,
@@ -815,7 +818,7 @@ def dev_files(directory, sentences):
 def readings_text(sentences, trains="yes", version=10, extra=()):
     """The text of a readings file for `reading()` sentences, as `deslag-exam readings` writes it;
     `trains` None leaves the header line out, `extra` adds header comments."""
-    out = [f"# deslag_tag_version = {version}", "# exam.tokens = deslag", *extra]
+    out = [f"# deslag_rules_version = {version}", "# exam.tokens = deslag", *extra]
     if trains is not None:
         out.append(f"# exam.trains = {trains}")
     for s in sentences:
@@ -1351,6 +1354,180 @@ tier human (100 sentences, 1079 tokens)
                           before   after     diff
   Best-guess accuracy      86.5%   81.2%     -5.3  [-7.7, -3.2]      worse
 """
+
+
+REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+WEIGHTS = os.path.join(REPO, "src", "tag", "weights.txt")
+GOLDEN = os.path.join(REPO, "tools", "exam", "tests", "golden")
+
+
+def tuned(model, sure=10, unsure=3, kept=5):
+    """`model` with cutoffs that are whole numbers over its steps, as a tuned model's are."""
+    model.meta["deslag_version"] = 11
+    model.tuning = {"sure": sure / model.steps, "unsure": unsure / model.steps,
+                    "kept": kept / model.steps, "a": 0.5, "b": 0.25}
+    return model
+
+
+def decisions(model, sentence):
+    """The golden file's word of each word of a readings sentence: the letter of the tag, the
+    confidence's letter, and `=` and the hex of the kept set when that is more than the tag."""
+    out = []
+    for item in shaped.tag(model, sentence, sentence):
+        if item is None:
+            continue
+        code = {"CCONJ": "CONJ"}.get(item.upos, item.upos)
+        index = shaped.CODES.index(code)
+        word = chr(ord("A") + index) + {"Sure": "S", "Likely": "L", "Unsure": "U",
+                                        "Unknown": "?"}[item.conf]
+        bits = sum(1 << shaped.CODES.index(k) for k in item.kept)
+        out.append(word if bits == 1 << index else f"{word}={bits:x}")
+    return out
+
+
+def golden_decisions():
+    """The learned golden's sections, each a list of (sent_id, words)."""
+    sections, current = {}, None
+    with open(os.path.join(GOLDEN, "learned.txt"), encoding="utf-8", newline="") as f:
+        for line in f.read().split("\n"):
+            if line.startswith("## "):
+                current = sections.setdefault(line[3:], [])
+            elif line and not line.startswith("#"):
+                key, _, words = line.partition("\t")
+                current.append((key, words.split(" ") if words else []))
+    return sections
+
+
+class WeightsFileTests(unittest.TestCase):
+    """The exporter writes the model as integers, and reads its own file back as the same model."""
+
+    def model(self, **kwargs):
+        return tuned(shaped.fit(curve.shuffled(toy_readings()), 1, True, 6), **kwargs)
+
+    def test_the_file_read_back_is_the_model_and_decides_as_it_does(self):
+        model = self.model()
+        text = weights.export_text(model)
+        back, facts = weights.parse(text)
+        self.assertTrue(weights.same_model(model, back))
+        self.assertEqual((facts["rules_version"], facts["steps"], facts["sure"], facts["unsure"],
+                          facts["kept"]), (11, model.steps, 10, 3, 5))
+        probes = [probe_sentence("to"), probe_sentence("the"), probe_sentence("the", "fast"),
+                  probe_sentence("a", "unseenword")]
+        for probe in probes:
+            # The file holds no Score mapping, so a score differs; the decision does not.
+            kinds = lambda m: [(t.upos, t.conf, t.kept) for t in shaped.tag(m, probe, probe)]
+            self.assertEqual(kinds(model), kinds(back))
+        self.assertEqual(text, weights.export_text(back), "writing it again changes nothing")
+
+    def test_a_row_is_written_once_whatever_template_could_make_its_string(self):
+        model = self.model()
+        # `n-1 n` and `n n+1` take two words; `n-1` and `n` take any text, which may begin with
+        # the other template's name.
+        model.totals.update({"n-1 n x y": {0: 5}, "n n+1 p q": {1: 6}, "n-1 n": {2: 7},
+                             "n n+1": {3: 8}, "n-1 n+1 z": {4: 9}, "n n+1 ": {5: 1}})
+        text = weights.export_text(model)
+        back, _ = weights.parse(text)
+        self.assertTrue(weights.same_model(model, back))
+        self.assertEqual(text, weights.export_text(back))
+
+    def test_a_cutoff_that_is_no_whole_number_over_the_steps_is_refused(self):
+        model = self.model()
+        model.tuning["sure"] = 0.1234567 / 3 + 1 / model.steps / 7
+        with self.assertRaisesRegex(conllu.Failure, "Sure cutoff"):
+            weights.export_text(model)
+
+    def test_a_replace_model_and_an_untagged_one_are_refused(self):
+        replace = tuned(shaped.fit(curve.shuffled(toy_readings()), 1, False, 3))
+        with self.assertRaisesRegex(conllu.Failure, "only a hybrid"):
+            weights.export_text(replace)
+        bare = self.model()
+        del bare.meta["deslag_version"]
+        with self.assertRaisesRegex(conllu.Failure, "no tag rules version"):
+            weights.export_text(bare)
+
+    def test_a_field_with_a_tab_or_a_line_break_is_refused(self):
+        for bad in ("a\tb", "a\nb"):
+            model = self.model()
+            model.totals["w " + bad] = {0: 1}
+            with self.assertRaisesRegex(conllu.Failure, "tab or a line break"):
+                weights.export_text(model)
+
+    def test_a_file_that_is_not_the_format_is_refused(self):
+        text = weights.export_text(self.model())
+        for broken in ("", "something else\n", text.replace("deslag-weights 1", "deslag-weights 2"),
+                       text.replace("\nsure\t10\n", "\nsure\n"), text + "9\tx\t0:1\n"):
+            with self.assertRaises(conllu.Failure):
+                weights.parse(broken)
+
+
+class CommittedWeightsTests(unittest.TestCase):
+    """src/tag/weights.txt, the file the Rust tagger carries."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model, cls.facts = weights.load(WEIGHTS)
+
+    def test_it_is_of_the_rules_version_the_tagger_is(self):
+        with open(os.path.join(REPO, "src", "tag", "mod.rs"), encoding="utf-8") as f:
+            source = f.read()
+        rules = int(re.search(r"pub const RULES_VERSION: u32 = (\d+);", source).group(1))
+        self.assertEqual(self.facts["rules_version"], rules)
+
+    def test_its_digit_ranges_are_the_ones_of_the_python_that_wrote_it(self):
+        # make test-python pins Python 3.13, whose tables are Unicode 15.1.
+        self.assertEqual(sys.version_info[:2], (3, 13), "run the weights tests with Python 3.13")
+        self.assertEqual(unicodedata.unidata_version, self.facts["unicode"])
+        digits, decimals = weights.digit_ranges()
+        self.assertEqual(self.facts["digits"], weights._span(digits))
+        self.assertEqual(self.facts["decimals"], weights._span(decimals))
+
+        def holds(text, c):
+            return any(lo <= c <= hi for lo, hi in
+                       ((int(a, 16), int(b, 16)) for a, b in (r.split("-") for r in text.split())))
+
+        for c in (0x30, 0x39, 0xB2, 0xB3, 0xB9, 0x660, 0x669, 0x6F0, 0x966, 0xFF10, 0x1D7CE,
+                  0x2460, 0x2070, 0x41, 0x61, 0x10FFFF):
+            self.assertEqual(holds(self.facts["digits"], c), chr(c).isdigit(), hex(c))
+            self.assertEqual(holds(self.facts["decimals"], c), chr(c).isdecimal(), hex(c))
+
+    def test_it_is_not_a_float_anywhere(self):
+        self.assertEqual(self.facts["steps"], self.model.steps)
+        for row in self.model.totals.values():
+            for total in row.values():
+                self.assertIs(type(total), int)
+
+    def test_the_synthetic_cases_of_the_golden_are_decided_as_the_rust_decides_them(self):
+        self.assertTrue(self.golden("synthetic"))
+
+    def golden(self, section):
+        """Compares Python's decisions from the weights with the golden's, and returns the count of
+        sentences compared; fails on the first difference, naming the sentence and the word."""
+        exam = exam_binary()
+        if exam is None:
+            self.skipTest("deslag-exam is not built")
+        want = dict(golden_decisions()[section])
+        with tempfile.TemporaryDirectory() as d:
+            made = os.path.join(d, "readings.conllu")
+            if section == "synthetic":
+                args = ["--tokens", os.path.join(GOLDEN, "learned.conllu")]
+            else:
+                args = ["--core", "--root", REPO]
+            subprocess.run([exam, "readings", *args, "--out", made], check=True,
+                           capture_output=True, cwd=REPO)
+            shaped.check_version(self.model, made)
+            got = {}
+            for sentence in conllu.read_readings(made):
+                got[sentence.sent_id] = decisions(self.model, sentence)
+        self.assertEqual(list(got), list(want), "the same sentences")
+        for key, words in want.items():
+            for n, (a, b) in enumerate(zip(words, got[key])):
+                self.assertEqual(a, b, f"{key}: word {n}")
+            self.assertEqual(len(words), len(got[key]), key)
+        return len(want)
+
+    def test_the_core_decisions_of_the_golden_are_decided_as_the_rust_decides_them(self):
+        self.assertGreater(self.golden("core"), 1000)
+
 
 
 class ShapesReportTests(unittest.TestCase):

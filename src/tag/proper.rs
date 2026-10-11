@@ -140,7 +140,7 @@ fn title_cased(view: &View<'_, '_>) -> bool {
 mod tests {
     use super::*;
     use crate::document::{Document, Token};
-    use crate::tag::{Confidence, Features, Reading, pass, sentence};
+    use crate::tag::{Confidence, Features, Reading, pass, sentence_by_rules};
     use Tag::{Adjective, Adverb, Noun, ProperNoun, Verb};
 
     /// A reading as the tables leave a word: `Unsure`, the tags in `kept` from the best guess on.
@@ -382,14 +382,14 @@ mod tests {
         assert_eq!(lookup.confidence, Confidence::Unknown);
         assert_eq!(lookup.kept, TagSet::of(Noun).with(ProperNoun));
         let mut tokens = Token::split("We use Frobnitz daily.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         let read = tokens[2].reading.unwrap();
         assert_eq!(read.tag, ProperNoun);
         assert_eq!(read.confidence, Confidence::Likely);
         assert_eq!(read.kept, TagSet::of(Noun).with(ProperNoun));
         // A lower-case word is the noun it was, and the pass leaves it at `Unknown`.
         let mut tokens = Token::split("We use frobnitz daily.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         let read = tokens[2].reading.unwrap();
         assert_eq!(read.tag, Noun);
         assert_eq!(read.confidence, Confidence::Unknown);

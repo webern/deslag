@@ -6,16 +6,18 @@ rust-version.workspace = true
 authors = ["Matthew James Briggs <matthew.james.briggs@gmail.com>"]
 description = "A linter for LLM-authored prose."
 repository = "https://github.com/webern/deslag"
-license = "MIT"
+license = "MIT AND CC-BY-SA-4.0"
 readme = "README.md"
 keywords = ["markdown", "lint", "linter", "prose", "cli"]
 categories = ["development-tools", "command-line-utilities"]
 include = [
     "/src/**/*.rs", "/src/**/*.md", "/src/**/*.toml", "/src/**/*.txt", "/build.rs", "/Cargo.toml", "/Cargo.lock", "/LICENSE", "/README.md",
     # The notices of the sources of src/tag/lexicon.txt, which each source requires on every copy,
-    # and of the rustc_lexer number lexing ported into src/document/rust.rs.
+    # of the rustc_lexer number lexing ported into src/document/rust.rs, and the licence of
+    # src/tag/weights.txt, the weights trained on the English Web Treebank's annotations, which is
+    # CC BY-SA 4.0 and so is the reason for the `AND` in `license`.
     "/LICENSES/AGID.txt", "/LICENSES/Moby.txt", "/LICENSES/SCOWL.txt", "/LICENSES/WordNet.txt",
-    "/LICENSES/MIT-rustc.txt",
+    "/LICENSES/MIT-rustc.txt", "/LICENSES/CC-BY-SA-4.0.txt",
 ]
 
 [dependencies]

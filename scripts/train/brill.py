@@ -16,7 +16,7 @@ Starts. `most-common` is #109's: each word begins at its commonest training tag,
 `deslag` begins at deslag's own readings, from `deslag-exam readings` files (`--train` and `--tune-
 readings` take them, `tag` takes `--readings`): the rules speak in deslag's 13 codes, a `Sure` word
 is frozen, and a rule may give another word only a tag deslag keeps for it. A readings file's
-first line names the deslag tag VERSION it is of; the model records the one it trained on, and
+first line names the deslag rules VERSION it is of; the model records the one it trained on, and
 `train` (its files), `tune` and `tag` fail, exit 2, on a file of another. `perceptron` begins at
 the averaged perceptron's tags (`--weights`), a diagnostic since it ships weights; the training
 sentences are tagged by perceptrons trained on the other 4 of 5 folds, split by document.
@@ -311,7 +311,7 @@ def tag_sentence(model, sentence, readings=None, stats=None):
 
 
 def check_version(model, path):
-    """A Failure unless the readings file at `path` is of the deslag tag VERSION `model` learned
+    """A Failure unless the readings file at `path` is of the deslag rules VERSION `model` learned
     from, as its `meta` records: rules written for one version's readings must not read another's.
     A model with no deslag start has no version, and checks nothing."""
     if model.start.kind != "deslag":
@@ -319,9 +319,9 @@ def check_version(model, path):
     have = readings_version(path)
     want = model.meta.get("deslag_version")
     if want is None:
-        raise Failure("the model records no deslag tag version; train it again")
+        raise Failure("the model records no deslag rules version; train it again")
     if have != want:
-        raise Failure(f"{path} is of deslag tag VERSION {have}, and the model was trained on "
+        raise Failure(f"{path} is of deslag rules VERSION {have}, and the model was trained on "
                       f"VERSION {want}; write the readings again, or train the model again")
 
 
@@ -551,7 +551,7 @@ def cmd_train(args):
     if args.start == "deslag":
         versions = {readings_version(path) for path in args.train}
         if len(versions) != 1:
-            raise Failure(f"the readings files are of different deslag tag versions: "
+            raise Failure(f"the readings files are of different deslag rules versions: "
                           f"{sorted(versions)}")
         model.meta["deslag_version"] = versions.pop()
     print(f"trained {model.meta['sentences']} sentences, {len(model.rules)} rules "

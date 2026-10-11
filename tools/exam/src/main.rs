@@ -162,29 +162,41 @@ enum Command {
     },
     /// Writes deslag's own readings in the skeleton's format, for a learner that starts from them:
     /// `tokens`, with `UPOS`, `Conf=` and `Kept=` on every `Word` line, and with `--gold` the key
-    /// `Gold=`, the gold tag the exam aligned to the token, left out where none is. `score --import`
-    /// of the file grades as `score --tagger deslag` does, but for the feature metrics. It writes
-    /// to a file, and refuses a holdout gold (exit 2): the file names words and their tags. The file
-    /// carries the gold's `exam.trains` and `silver.batch` when it says them.
+    /// `Gold=`, the gold tag the exam aligned to the token, left out where none is. The rules
+    /// alone read them, not the learned stage, so a learner never trains on its own kind of
+    /// output; the first line names the rules' version. `score --import` of the file grades as
+    /// `score --tagger rules` does, but for the feature metrics. It writes to a file, and refuses
+    /// a holdout gold (exit 2): the file names words and their tags. The file carries the gold's
+    /// `exam.trains` and `silver.batch` when it says them.
     ///
     /// With `--tokens`, the sentences are those of a skeleton `tokens` wrote, and no line has a
     /// `Gold=`: a set that is to be tagged is read this way, so no tagged file carries its answers.
     /// A holdout skeleton is accepted. The file carries the skeleton's `exam.trains` and
-    /// `silver.batch`.
+    /// `silver.batch`. With `--shipped` the shipped tagger reads it, the learned stage included,
+    /// and the first line names the tag VERSION: the file is for comparing taggers, and a learner
+    /// refuses it. `--shipped` also goes with `--corpus` and `--core`.
     ///
-    /// With `--corpus`, the sentences are those of `tokens --corpus`, and there is no gold.
+    /// With `--corpus`, the sentences are those of `tokens --corpus`, and there is no gold. With
+    /// `--core` they are those of the `core` fixtures, leaving out a sentence a skeleton cannot
+    /// carry (a token with no text, or with a tab or a line break in it).
     Readings {
         /// The gold file, CoNLL-U.
-        #[arg(long, required_unless_present_any = ["corpus", "tokens"], conflicts_with_all = ["corpus", "tokens"])]
+        #[arg(long, required_unless_present_any = ["corpus", "core", "tokens"], conflicts_with_all = ["corpus", "core", "tokens"])]
         gold: Option<PathBuf>,
         /// The skeleton `tokens` wrote, to read without a gold.
-        #[arg(long, conflicts_with = "corpus")]
+        #[arg(long, conflicts_with_all = ["corpus", "core"])]
         tokens: Option<PathBuf>,
+        /// Read with the shipped tagger and not the rules alone. Not with `--gold`.
+        #[arg(long, conflicts_with = "gold")]
+        shipped: bool,
         /// Write the readings of the corpus's English fixtures outside `core` instead.
-        #[arg(long)]
+        #[arg(long, conflicts_with = "core")]
         corpus: bool,
-        /// The repository root, whose `tests/corpus` `--corpus` reads.
-        #[arg(long, default_value = ".", requires = "corpus")]
+        /// Write the readings of the corpus's `core` fixtures instead.
+        #[arg(long)]
+        core: bool,
+        /// The repository root, whose `tests/corpus` `--corpus` and `--core` read.
+        #[arg(long, default_value = ".")]
         root: PathBuf,
         /// The file to write.
         #[arg(long)]
@@ -402,16 +414,26 @@ fn run(cli: Cli) -> Result<bool, Error> {
         Command::Readings {
             gold,
             tokens,
+            shipped,
             corpus,
+            core,
             root,
             out,
         } => {
+            let read = if shipped {
+                ticlist::Reader::Shipped
+            } else {
+                ticlist::Reader::Rules
+            };
             let (text, sentences) = match (gold, tokens) {
                 (Some(gold), _) => readings::of_gold(&Gold::read(&gold)?)?,
-                (None, Some(tokens)) => readings::of_skeleton(&tokens)?,
+                (None, Some(tokens)) => readings::of_skeleton(&tokens, shipped)?,
+                (None, None) if core => {
+                    ticlist::write_skeleton(&ticlist::core(&root)?, read, true)?
+                }
                 (None, None) => {
                     debug_assert!(corpus, "clap needs one of --gold and --corpus");
-                    ticlist::corpus_skeleton(&ticlist::corpus(&root)?, true)?
+                    ticlist::write_skeleton(&ticlist::corpus(&root)?, read, false)?
                 }
             };
             write(&out, &text)?;

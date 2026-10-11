@@ -252,7 +252,7 @@ pub const GROUPS: &[Group] = &[
     },
 ];
 
-/// The characters that take no space, which the report does not quote.
+/// The characters that do not take space, which the report does not quote.
 const INVISIBLE: &[Rule] = &[
     one('\u{200B}', "zero width space", ""),
     one('\u{2060}', "word joiner", ""),

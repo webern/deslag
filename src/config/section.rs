@@ -14,8 +14,8 @@ use crate::glob::{self, Pattern};
 use crate::lint::Lint;
 
 /// The kinds of comment a section can read.
-// `[rust]`, `[cpp]` and the fences of `[md]` share this type. The variants carry no doc comments
-// of their own, which would turn the schema's list of values into a list of branches. The
+// `[rust]`, `[cpp]` and the fences of `[md]` share this type. The variants do not carry doc
+// comments of their own, which would turn the schema's list of values into a list of branches. The
 // `surfaces` key says what each is.
 #[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

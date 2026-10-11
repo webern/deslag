@@ -206,7 +206,8 @@ impl<'a> Document<'a> {
 
     /// Adds the layers of one region at their place in the file. The rows of pieces, spans and
     /// points take them in at the offset the region starts at, and the blocks of prose after it
-    /// move down the pieces row. Tokens and sentences are not made yet, so they need no moving.
+    /// move down the pieces row. Tokens and sentences are not made yet, so there is nothing of
+    /// theirs to move.
     ///
     /// A region in the text of a fenced code block goes into that block, at any depth, and replaces
     /// the lines of code it held as its body, which a lint that reads code never sees again. Any

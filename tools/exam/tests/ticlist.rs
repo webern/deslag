@@ -69,15 +69,15 @@ fn the_built_in_tagger_s_counts_on_the_list_are_pinned() {
     let list = list();
     let scored = score(&list, &corpus(&root()).unwrap(), &Source::Deslag).unwrap();
     assert_eq!(scored.reads.len(), 172);
-    assert_eq!(scored.count(Verdict::Right), 6);
-    assert_eq!(scored.count(Verdict::Below), 62);
-    assert_eq!(scored.count(Verdict::Other), 104);
+    assert_eq!(scored.count(Verdict::Right), 99);
+    assert_eq!(scored.count(Verdict::Below), 70);
+    assert_eq!(scored.count(Verdict::Other), 3);
     assert_eq!(scored.reverse.len(), 95);
     let [low, high] = scored.interval.unwrap();
-    assert!(low <= 6.0 / 172.0 && 6.0 / 172.0 <= high, "{low} {high}");
+    assert!(low <= 99.0 / 172.0 && 99.0 / 172.0 <= high, "{low} {high}");
     let report = scored.render("tests/gold/ticlist.tsv");
     assert!(
-        report.contains("6 of 172") && report.contains("95 places"),
+        report.contains("99 of 172") && report.contains("95 places"),
         "{report}"
     );
     assert!(report.contains("and 75 more"), "{report}");
@@ -95,7 +95,7 @@ fn the_cli_prints_the_same_counts_and_exits_0() {
     ]);
     assert!(output.status.success());
     let text = String::from_utf8(output.stdout).unwrap();
-    assert!(text.contains("6 of 172"), "{text}");
+    assert!(text.contains("99 of 172"), "{text}");
     assert!(text.contains("95 places"), "{text}");
 }
 

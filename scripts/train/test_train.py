@@ -1359,6 +1359,10 @@ tier human (100 sentences, 1079 tokens)
 REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 WEIGHTS = os.path.join(REPO, "src", "tag", "weights.txt")
 GOLDEN = os.path.join(REPO, "tools", "exam", "tests", "golden")
+# The model the committed weights were written from, where `make generate-shapes` leaves it.
+SHIPPED_MODEL = os.path.join(REPO, ".train", "shapes", "p-hyb-s.model.json")
+# A model file's hash, for models that have no file.
+SHA = "0123456789abcdef" * 4
 
 
 def tuned(model, sure=10, unsure=3, kept=5):
@@ -1406,18 +1410,18 @@ class WeightsFileTests(unittest.TestCase):
 
     def test_the_file_read_back_is_the_model_and_decides_as_it_does(self):
         model = self.model()
-        text = weights.export_text(model)
+        text = weights.export_text(model, SHA)
         back, facts = weights.parse(text)
         self.assertTrue(weights.same_model(model, back))
         self.assertEqual((facts["rules_version"], facts["steps"], facts["sure"], facts["unsure"],
-                          facts["kept"]), (11, model.steps, 10, 3, 5))
+                          facts["kept"], facts["model_sha256"]), (11, model.steps, 10, 3, 5, SHA))
         probes = [probe_sentence("to"), probe_sentence("the"), probe_sentence("the", "fast"),
                   probe_sentence("a", "unseenword")]
         for probe in probes:
             # The file holds no Score mapping, so a score differs; the decision does not.
             kinds = lambda m: [(t.upos, t.conf, t.kept) for t in shaped.tag(m, probe, probe)]
             self.assertEqual(kinds(model), kinds(back))
-        self.assertEqual(text, weights.export_text(back), "writing it again changes nothing")
+        self.assertEqual(text, weights.export_text(back, SHA), "writing it again changes nothing")
 
     def test_a_row_is_written_once_whatever_template_could_make_its_string(self):
         model = self.model()
@@ -1425,37 +1429,60 @@ class WeightsFileTests(unittest.TestCase):
         # the other template's name.
         model.totals.update({"n-1 n x y": {0: 5}, "n n+1 p q": {1: 6}, "n-1 n": {2: 7},
                              "n n+1": {3: 8}, "n-1 n+1 z": {4: 9}, "n n+1 ": {5: 1}})
-        text = weights.export_text(model)
+        text = weights.export_text(model, SHA)
         back, _ = weights.parse(text)
         self.assertTrue(weights.same_model(model, back))
-        self.assertEqual(text, weights.export_text(back))
+        self.assertEqual(text, weights.export_text(back, SHA))
 
     def test_a_cutoff_that_is_no_whole_number_over_the_steps_is_refused(self):
         model = self.model()
         model.tuning["sure"] = 0.1234567 / 3 + 1 / model.steps / 7
         with self.assertRaisesRegex(conllu.Failure, "Sure cutoff"):
-            weights.export_text(model)
+            weights.export_text(model, SHA)
 
     def test_a_replace_model_and_an_untagged_one_are_refused(self):
         replace = tuned(shaped.fit(curve.shuffled(toy_readings()), 1, False, 3))
         with self.assertRaisesRegex(conllu.Failure, "only a hybrid"):
-            weights.export_text(replace)
+            weights.export_text(replace, SHA)
         bare = self.model()
         del bare.meta["deslag_version"]
         with self.assertRaisesRegex(conllu.Failure, "no tag rules version"):
-            weights.export_text(bare)
+            weights.export_text(bare, SHA)
 
     def test_a_field_with_a_tab_or_a_line_break_is_refused(self):
         for bad in ("a\tb", "a\nb"):
             model = self.model()
             model.totals["w " + bad] = {0: 1}
             with self.assertRaisesRegex(conllu.Failure, "tab or a line break"):
-                weights.export_text(model)
+                weights.export_text(model, SHA)
+
+    def test_a_hash_that_is_not_a_sha256_is_refused(self):
+        for bad in ("", SHA[:-1], SHA.upper(), SHA[:-1] + "g"):
+            with self.assertRaisesRegex(conllu.Failure, "sha256"):
+                weights.export_text(self.model(), bad)
+
+    def test_a_file_is_checked_against_the_model_file_it_names(self):
+        model = self.model()
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "model.json")
+            shaped.save(model, path)
+            out = os.path.join(d, "weights.txt")
+            self.assertEqual(weights.main(["export", "--model", path, "--out", out]), 0)
+            self.assertEqual(weights.load(out)[1]["model_sha256"], weights.sha256(path))
+            weights.check_against(out, path)
+            self.assertEqual(weights.main(["check", "--weights", out, "--model", path]), 0)
+            # Another model file, though it holds the same weights, is not the one written from.
+            with open(path, "a", encoding="utf-8") as f:
+                f.write("\n")
+            with self.assertRaisesRegex(conllu.Failure, "sha256"):
+                weights.check_against(out, path)
+            self.assertEqual(weights.main(["check", "--weights", out, "--model", path]), 2)
 
     def test_a_file_that_is_not_the_format_is_refused(self):
-        text = weights.export_text(self.model())
+        text = weights.export_text(self.model(), SHA)
         for broken in ("", "something else\n", text.replace("deslag-weights 1", "deslag-weights 2"),
-                       text.replace("\nsure\t10\n", "\nsure\n"), text + "9\tx\t0:1\n"):
+                       text.replace("\nsure\t10\n", "\nsure\n"), text + "9\tx\t0:1\n",
+                       text.replace(SHA, SHA.upper())):
             with self.assertRaises(conllu.Failure):
                 weights.parse(broken)
 
@@ -1490,6 +1517,21 @@ class CommittedWeightsTests(unittest.TestCase):
             self.assertEqual(holds(self.facts["digits"], c), chr(c).isdigit(), hex(c))
             self.assertEqual(holds(self.facts["decimals"], c), chr(c).isdecimal(), hex(c))
 
+    def test_it_names_the_model_its_datasheet_names(self):
+        with open(os.path.join(REPO, "src", "tag", "weights.md"), encoding="utf-8") as f:
+            self.assertIn(self.facts["model_sha256"], f.read())
+
+    def test_writing_its_model_again_gives_the_committed_file(self):
+        # The model is not in the tree: `make generate-shapes` trains it, from the treebank and the
+        # big tier, so this runs where that was done and skips elsewhere.
+        if not os.path.isfile(SHIPPED_MODEL):
+            self.skipTest("no .train/shapes/p-hyb-s.model.json; make generate-shapes writes it")
+        self.assertEqual(weights.sha256(SHIPPED_MODEL), self.facts["model_sha256"])
+        with open(WEIGHTS, encoding="utf-8", newline="") as f:
+            committed = f.read()
+        again = weights.export_text(shaped.load(SHIPPED_MODEL), weights.sha256(SHIPPED_MODEL))
+        self.assertTrue(again == committed, "the export of the model differs from the file")
+
     def test_it_is_not_a_float_anywhere(self):
         self.assertEqual(self.facts["steps"], self.model.steps)
         for row in self.model.totals.values():
@@ -1504,6 +1546,10 @@ class CommittedWeightsTests(unittest.TestCase):
         sentences compared; fails on the first difference, naming the sentence and the word."""
         exam = exam_binary()
         if exam is None:
+            # `make test-python` builds it first and says so, so there it is a failure; a test run
+            # by hand without it skips.
+            if os.environ.get("DESLAG_EXAM_REQUIRED") == "1":
+                self.fail("deslag-exam is not built, so the golden cannot be checked")
             self.skipTest("deslag-exam is not built")
         want = dict(golden_decisions()[section])
         with tempfile.TemporaryDirectory() as d:

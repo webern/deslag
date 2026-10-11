@@ -15,22 +15,22 @@
 //! probe hashes the template, the integers and the text's bytes, which may arrive in two pieces,
 //! joined as the feature joined them; it compares the same way, so the pieces are never copied.
 //!
-//! **Size.** Parsing takes the time reported in the datasheet and the tables take about 4 MB. The
-//! file is built into the binary like the lexicon.
+//! **Size.** The file is built into the binary like the lexicon, once. The first word that needs
+//! the weights parses it, and the tables take about 4 MB; `weights.md`, the datasheet, gives the
+//! time that takes and what it adds to a run of `deslag check`.
 
 use std::sync::OnceLock;
 
-/// The weights file.
-const TEXT: &str = include_str!("weights.txt");
+/// The weights file. A `static`, so the binary holds it once: a `const` is copied into each place
+/// that uses it.
+static TEXT: &str = include_str!("weights.txt");
 
 /// The first line of the file.
 const FORMAT: &str = "deslag-weights 1";
 
 /// The tag rules version the file says it was learned from: the digits after `rules_version<TAB>`
-/// on the second line. A `const fn`, so a file built against other rules than [`super::RULES_VERSION`]
-/// does not compile.
-const fn file_rules_version() -> u32 {
-    let bytes = TEXT.as_bytes();
+/// on the second line. A line may end in `\r\n`, as a checkout that rewrites line ends leaves it.
+const fn file_rules_version(bytes: &[u8]) -> u32 {
     let mut at = 0;
     while bytes[at] != b'\n' {
         at += 1;
@@ -47,17 +47,22 @@ const fn file_rules_version() -> u32 {
     }
     at += key.len();
     let mut version = 0u32;
-    while bytes[at] != b'\n' {
+    while bytes[at] != b'\n' && bytes[at] != b'\r' {
+        assert!(
+            bytes[at].is_ascii_digit(),
+            "weights.txt: rules_version is no number"
+        );
         version = version * 10 + (bytes[at] - b'0') as u32;
         at += 1;
     }
     version
 }
 
-const _: () = assert!(
-    file_rules_version() == super::RULES_VERSION,
-    "weights.txt was learned from other tag rules than RULES_VERSION; train again"
-);
+/// Whether the weights were learned from the rules of this build, [`super::RULES_VERSION`]. When
+/// they were not, the learned stage would read readings it was not trained on, so it does not run
+/// and the tagger is the rules alone. A test fails on such a build, so none ships; the build itself
+/// does not fail, so that the tools that write the readings to train new weights from still build.
+pub(super) const OF_THESE_RULES: bool = file_rules_version(TEXT.as_bytes()) == super::RULES_VERSION;
 
 /// The ids of the feature templates, in the order of the file's `templates` line.
 pub(super) mod template {
@@ -336,6 +341,7 @@ struct Lines {
 }
 
 impl Lines {
+    /// The next line, without its `\n`, or `\r\n` where a checkout rewrote the line ends.
     fn line(&mut self) -> &'static str {
         let (line, rest) = self
             .rest
@@ -343,7 +349,7 @@ impl Lines {
             .unwrap_or_else(|| panic!("weights.txt ends early, after line {}", self.number));
         self.rest = rest;
         self.number += 1;
-        line
+        line.strip_suffix('\r').unwrap_or(line)
     }
 
     /// The fields of the next line, which must start with `key`.
@@ -406,9 +412,17 @@ fn parse(text: &'static str) -> Weights {
         unsure: lines.number("unsure"),
         kept: lines.number("kept"),
     };
-    // The names of the codes, histories, levels and templates are fixed in this build; the
-    // tests compare them with the file's.
-    for key in ["codes", "histories", "confs", "templates", "unicode"] {
+    // The model's hash says which model the file was written from; the exporter checks it. The
+    // names of the codes, histories, levels and templates are fixed in this build; the tests
+    // compare them with the file's.
+    for key in [
+        "model_sha256",
+        "codes",
+        "histories",
+        "confs",
+        "templates",
+        "unicode",
+    ] {
         lines.keyed(key);
     }
     let digits = ranges_of(&lines.keyed("digits"));
@@ -508,6 +522,38 @@ mod tests {
             .find(|line| line.starts_with(&prefix))
             .unwrap_or_else(|| panic!("no `{key}` line"));
         line[prefix.len()..].split('\t').collect()
+    }
+
+    #[test]
+    fn the_weights_were_learned_from_the_rules_of_this_build() {
+        let learned_from = file_rules_version(TEXT.as_bytes());
+        assert_eq!(
+            learned_from,
+            super::super::RULES_VERSION,
+            "src/tag/weights.txt says it was learned from rules version {learned_from}, and \
+             deslag::tag::RULES_VERSION is not that. The learned stage does not run on other rules \
+             than its own, so this build tags with the rules alone. Train the weights again from \
+             the rules of this version: `make generate-shapes`, then `make generate-weights` (see \
+             src/tag/weights.md)."
+        );
+        assert_eq!(OF_THESE_RULES, learned_from == super::super::RULES_VERSION);
+    }
+
+    #[test]
+    fn the_rules_version_is_read_from_a_file_with_either_line_end() {
+        assert_eq!(
+            file_rules_version(b"deslag-weights 1\nrules_version\t11\nsteps"),
+            11
+        );
+        assert_eq!(
+            file_rules_version(b"deslag-weights 1\r\nrules_version\t11\r\nsteps"),
+            11
+        );
+        let mut lines = Lines {
+            rest: "a\r\nb\n",
+            number: 0,
+        };
+        assert_eq!((lines.line(), lines.line()), ("a", "b"));
     }
 
     #[test]

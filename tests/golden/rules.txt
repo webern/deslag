@@ -1,0 +1,7 @@
+# rules: a hash of what the rules alone (deslag::tag::sentence_by_rules) read of each sentence
+# of tests/corpus/core/, written as tags.txt writes the shipped tagger's reading.
+# tests/golden.rs writes this file. The learned stage was trained on what the rules read, so
+# a change to it raises deslag::tag::RULES_VERSION, and the weights are trained again for it:
+# src/tag/weights.md says how.
+rules_version 11
+fnv1a64 370ea268190a6f09

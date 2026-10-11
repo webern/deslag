@@ -4,7 +4,9 @@
 //!
 //! A second file, `tests/golden/tags.txt`, is the tag stream: what the tagger reads of each sentence
 //! of `tests/corpus/core/`, so that a change to any reading shows in review. It has no verdict
-//! either.
+//! either. A third, `tests/golden/rules.txt`, is a hash of the same stream as the rules alone read
+//! it, with the [`RULES_VERSION`] it belongs to: the learned stage was trained on what the rules
+//! read, so a change to that must raise `RULES_VERSION`, and the weights be trained again.
 //!
 //! The set is a snapshot, not a verdict. It says what deslag does today, so that a change to what a
 //! lint finds shows in review, and a change not meant to move it must leave it as it is. Whether a
@@ -34,7 +36,7 @@ use deslag::changelog::Version;
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
-use deslag::tag::{Confidence, Features, Origin, Reading, Tag, VERSION};
+use deslag::tag::{Confidence, Features, Origin, RULES_VERSION, Reading, Tag, VERSION};
 use deslag::{Config, ConfigSource, Lint, Violation, check_file_at};
 
 /// Set to 1 to rewrite the golden files instead of comparing with them.
@@ -42,6 +44,9 @@ const FIX: &str = "DESLAG_FIX_GOLDEN";
 
 /// The golden file of the tag stream, in `tests/golden`.
 const TAGS: &str = "tags.txt";
+
+/// The golden file of the hash of the rules' tag stream, in `tests/golden`.
+const RULES: &str = "rules.txt";
 
 /// The category of the corpus whose tags the stream records.
 const TAGGED: &str = "core";
@@ -274,13 +279,14 @@ fn every_lint_finds_what_its_golden_file_says() {
         let name = name.to_string_lossy();
         let known = name == "config.toml"
             || name == TAGS
+            || name == RULES
             || Lint::ALL
                 .iter()
                 .any(|lint| name.strip_suffix(".txt") == Some(lint.id()));
         if !known {
             failures.push(format!(
-                "tests/golden/{name} is named after no lint. The directory holds config.toml, {TAGS} \
-                 and a <lint>.txt file for each lint: {}.",
+                "tests/golden/{name} is named after no lint. The directory holds config.toml, {TAGS}, \
+                 {RULES} and a <lint>.txt file for each lint: {}.",
                 Lint::ALL.map(Lint::id).join(", ")
             ));
         }
@@ -362,25 +368,7 @@ fn token_text(token: &Token<'_>) -> String {
 /// The tag stream of `fixtures`: a header, then for each a `## <path>` line and a line for each of
 /// its sentences.
 fn tag_stream(fixtures: &[&Fixture]) -> String {
-    let (mut tokens, mut words, mut read) = (0, 0, 0);
-    let mut body = String::new();
-    for fixture in fixtures {
-        let source = std::str::from_utf8(&fixture.bytes)
-            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
-        let document = Document::markdown(source);
-        body.push_str(&format!("## {}\n", fixture.path));
-        for (block, _) in document.walk() {
-            for sentence in document.sentences_of(block) {
-                let row = &document.tokens[sentence.tokens.clone()];
-                tokens += row.len();
-                words += row.iter().filter(|t| t.kind == TokenKind::Word).count();
-                read += row.iter().filter(|t| t.reading.is_some()).count();
-                let line: Vec<String> = row.iter().map(token_text).collect();
-                body.push_str(&line.join(" "));
-                body.push('\n');
-            }
-        }
-    }
+    let (body, tokens, words, read) = stream_body(fixtures, false);
     format!(
         "# tags: what the tagger reads of each sentence of tests/corpus/{TAGGED}/, one line a sentence.\n\
          # tests/golden.rs writes this file; `make fix-golden` rewrites it, and the diff must be read.\n\
@@ -397,6 +385,67 @@ fn tag_stream(fixtures: &[&Fixture]) -> String {
         FEATURE_CODES[..10].join(" "),
         FEATURE_CODES[10..].join(" "),
     )
+}
+
+/// The body of the tag stream of `fixtures`, as the shipped tagger reads them or with `rules` as the
+/// rules alone do, and its counts of tokens, words and words with a reading.
+fn stream_body(fixtures: &[&Fixture], rules: bool) -> (String, usize, usize, usize) {
+    let (mut tokens, mut words, mut read) = (0, 0, 0);
+    let mut body = String::new();
+    for fixture in fixtures {
+        let source = std::str::from_utf8(&fixture.bytes)
+            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
+        let mut document = Document::markdown(source);
+        if rules {
+            deslag::tag::document_by_rules(&mut document);
+        }
+        body.push_str(&format!("## {}\n", fixture.path));
+        for (block, _) in document.walk() {
+            for sentence in document.sentences_of(block) {
+                let row = &document.tokens[sentence.tokens.clone()];
+                tokens += row.len();
+                words += row.iter().filter(|t| t.kind == TokenKind::Word).count();
+                read += row.iter().filter(|t| t.reading.is_some()).count();
+                let line: Vec<String> = row.iter().map(token_text).collect();
+                body.push_str(&line.join(" "));
+                body.push('\n');
+            }
+        }
+    }
+    (body, tokens, words, read)
+}
+
+/// The 64-bit FNV-1a hash of `text`, in hex: stable across platforms and releases, and enough to
+/// tell that a stream changed.
+fn fnv1a(text: &str) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for byte in text.bytes() {
+        hash = (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3);
+    }
+    format!("{hash:016x}")
+}
+
+/// The rules' golden file for the rules' tag stream `body`: the version of the rules, then the
+/// hash of the stream.
+fn rules_golden(body: &str) -> String {
+    format!(
+        "# rules: a hash of what the rules alone (deslag::tag::sentence_by_rules) read of each sentence\n\
+         # of tests/corpus/{TAGGED}/, written as tags.txt writes the shipped tagger's reading.\n\
+         # tests/golden.rs writes this file. The learned stage was trained on what the rules read, so\n\
+         # a change to it raises deslag::tag::RULES_VERSION, and the weights are trained again for it:\n\
+         # src/tag/weights.md says how.\n\
+         rules_version {RULES_VERSION}\n\
+         fnv1a64 {}\n",
+        fnv1a(body)
+    )
+}
+
+/// The `rules_version` a rules golden file names, if it names one.
+fn rules_version_of(golden: &str) -> Option<u32> {
+    golden
+        .lines()
+        .find_map(|line| line.strip_prefix("rules_version "))
+        .and_then(|version| version.parse().ok())
 }
 
 #[test]
@@ -474,4 +523,48 @@ fn the_tag_stream_is_what_its_golden_file_says() {
              deslag::tag::VERSION, run `make fix-golden` and read the diff before committing it."
         );
     }
+}
+
+#[test]
+fn the_rules_read_what_their_golden_hash_says_for_their_version() {
+    let fix = std::env::var(FIX).as_deref() == Ok("1");
+    let fixtures = load_corpus();
+    let core: Vec<&Fixture> = fixtures.iter().filter(|f| f.category == TAGGED).collect();
+    assert!(!core.is_empty(), "the corpus has no {TAGGED} fixtures");
+    let (body, ..) = stream_body(&core, true);
+    let golden = rules_golden(&body);
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/golden")
+        .join(RULES);
+    let old = fs::read_to_string(&path).ok();
+    // A golden of this version that hashes other readings is never rewritten: the rules changed,
+    // and the version must be raised first.
+    let changed_in_place = old
+        .as_deref()
+        .is_some_and(|old| old != golden && rules_version_of(old) == Some(RULES_VERSION));
+    let raise = format!(
+        "The rules read tests/corpus/{TAGGED}/ differently from what tests/golden/{RULES} says          for rules version {RULES_VERSION}. A change not meant to change what the rules read must          leave it as it is. If the change is meant, raise deslag::tag::RULES_VERSION in          src/tag/mod.rs and run `make fix-golden`. The weights were trained on the old readings,          so train them again: `make generate-shapes`, then `make generate-weights` (see          src/tag/weights.md); until then the learned stage does not run, and a test says so."
+    );
+    if fix {
+        assert!(!changed_in_place, "{raise}");
+        fs::write(&path, &golden).expect("a writable golden file");
+        return;
+    }
+    let Some(old) = old else {
+        panic!("tests/golden/{RULES} is missing. Run `make fix-golden` to write it.");
+    };
+    assert!(!changed_in_place, "{raise}");
+    assert_eq!(
+        old, golden,
+        "tests/golden/{RULES} names another rules version than deslag::tag::RULES_VERSION          ({RULES_VERSION}). Run `make fix-golden` to write it for this version."
+    );
+}
+
+#[test]
+fn the_rules_golden_names_its_version_and_hashes_the_stream() {
+    let golden = rules_golden("a/NOUN:S\n");
+    assert_eq!(rules_version_of(&golden), Some(RULES_VERSION));
+    assert_ne!(golden, rules_golden("a/NOUN:L\n"));
+    assert_eq!(fnv1a(""), "cbf29ce484222325");
+    assert_eq!(fnv1a("a"), "af63dc4c8601ec8c");
 }

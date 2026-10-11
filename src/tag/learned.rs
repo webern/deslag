@@ -35,7 +35,7 @@
 use std::borrow::Cow;
 
 use super::pass::features_for;
-use super::weights::{Weights, template};
+use super::weights::{OF_THESE_RULES, Weights, template};
 use super::{Confidence, Origin, Reading, Tag, TagSet};
 use crate::document::{Token, TokenKind};
 
@@ -409,7 +409,13 @@ fn decide(
 
 /// Runs the learned stage over one sentence's tokens, whose words the rules have read and whose
 /// origins are set. A word with no reading is left alone and counts as a token that is no word.
+///
+/// Weights learned from other rules than this build's are not used, and the rules' readings stand
+/// ([`super::weights::OF_THESE_RULES`]).
 pub(super) fn run(tokens: &mut [Token<'_>]) {
+    if !OF_THESE_RULES {
+        return;
+    }
     let mut changes: Vec<(usize, Reading)> = Vec::new();
     {
         let tokens: &[Token<'_>] = tokens;

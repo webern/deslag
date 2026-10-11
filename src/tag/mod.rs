@@ -38,9 +38,11 @@ pub const VERSION: u32 = 12;
 
 /// The version of the rules alone: the tables and passes that [`sentence_by_rules`] runs. It
 /// starts at the version the weights were trained on, and is raised by a change to any reading
-/// they make. The learned stage reads the rules' readings, so weights trained on one version are
-/// wrong for another: the weights file names the version it was trained on, and a build in which
-/// that is not this one does not compile.
+/// they make; `tests/golden/rules.txt` holds a hash of what they read of the corpus and fails
+/// until it is raised. The learned stage reads the rules' readings, so weights trained on one
+/// version are wrong for another: the weights file names the version it was trained on, and where
+/// that is not this one the learned stage does not run and a test fails until the weights are
+/// trained again.
 pub const RULES_VERSION: u32 = 11;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
@@ -54,13 +56,6 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// tags they left open for each word they did not settle.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
     sentence_by_rules(tokens, context);
-    learned::run(tokens);
-}
-
-/// Runs the learned stage alone over tokens whose words carry the rules' readings and whose origins
-/// are set, as [`sentence_by_rules`] leaves them. A word the rules call `Sure` keeps its reading.
-/// Run it twice and the second run reads the first's choices as the rules', so run it once.
-pub fn learn(tokens: &mut [Token<'_>]) {
     learned::run(tokens);
 }
 
@@ -130,6 +125,17 @@ fn read(text: &str) -> Reading {
 
 /// Runs [`sentence`] over every sentence of `document`, with each one's context.
 pub fn document(document: &mut Document<'_>) {
+    read_document(document, sentence);
+}
+
+/// As [`document`], with the rules alone ([`sentence_by_rules`]). It reads every word again, so it
+/// may follow [`document`].
+pub fn document_by_rules(document: &mut Document<'_>) {
+    read_document(document, sentence_by_rules);
+}
+
+/// Runs `read` over every sentence of `document`, with each one's context.
+fn read_document(document: &mut Document<'_>, read: fn(&mut [Token<'_>], Context)) {
     let mut sentences = Vec::new();
     for (block, ancestors) in document.walk() {
         let context = context_of(block, &ancestors);
@@ -138,7 +144,7 @@ pub fn document(document: &mut Document<'_>) {
         }
     }
     for (range, context) in sentences {
-        sentence(&mut document.tokens[range], context);
+        read(&mut document.tokens[range], context);
     }
 }
 
@@ -190,6 +196,28 @@ mod tests {
     }
 
     #[test]
+    fn a_document_read_by_the_rules_after_the_shipped_tagger_is_as_if_read_by_them_alone() {
+        let text = "# Run the tests\n\nShe runs the old run to the Stra\u{df}e, and we run it.\n\n\
+                    - Edit `foo_bar` and git push\n- Then it reads foo_bar.rs well\n";
+        let mut after = Document::markdown(text);
+        document_by_rules(&mut after);
+        let mut alone = Document::markdown(text);
+        for token in &mut alone.tokens {
+            token.reading = None;
+            token.origin = Origin::English;
+        }
+        document_by_rules(&mut alone);
+        let readings = |doc: &Document<'_>| {
+            doc.tokens
+                .iter()
+                .map(|t| (t.reading, t.origin))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(readings(&after), readings(&alone));
+        assert!(after.tokens.iter().any(|t| t.reading.is_some()));
+    }
+
+    #[test]
     fn the_shipped_reading_is_the_rules_reading_then_the_learned_stage() {
         let text = "She runs the old run to the Straße, and we run it.";
         let mut whole = Token::split(text);
@@ -197,7 +225,7 @@ mod tests {
         let mut staged = Token::split(text);
         sentence_by_rules(&mut staged, Context::Prose);
         let rules: Vec<_> = staged.iter().map(|t| t.reading).collect();
-        learn(&mut staged);
+        learned::run(&mut staged);
         assert_eq!(
             whole.iter().map(|t| t.reading).collect::<Vec<_>>(),
             staged.iter().map(|t| t.reading).collect::<Vec<_>>()

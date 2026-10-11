@@ -346,6 +346,7 @@ generate_weights() {
   local model="$shapes_dir/p-hyb-s.model.json"
   [ -f "$model" ] || { echo "no $model; run generate-shapes first" >&2; exit 1; }
   python3 scripts/train/weights.py export --model "$model" --out src/tag/weights.txt
+  python3 scripts/train/weights.py check --weights src/tag/weights.txt --model "$model"
 }
 
 # One `compare` of the saved run AFTER against the saved run BEFORE on SET: the difference is after

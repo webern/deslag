@@ -16,6 +16,7 @@ feature string. Fields in a line are separated by one tab.
     sure <N>                           a margin (best score less second) of at least this is Sure
     unsure <N>                         below this a word is Unsure, or keeps the rules' Likely
     kept <N>                           the tags within this of the best score stay in `Kept=`
+    model_sha256 <hex>                 the sha256 of the model file this was written from
     codes <13 codes>                   the tie order, and the order of a row's cells: alphabetical,
                                        which is not the Rust enum's order
     histories <18 names>               the previous-tag names a feature reads, by id
@@ -230,8 +231,15 @@ def cutoff(margin, steps, what):
     return d
 
 
-def export_text(model):
-    """The weights file for the hybrid model `model`, as text."""
+def _check_sha256(value, what):
+    if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+        raise Failure(f"{what} is not a sha256 in lower-case hex")
+
+
+def export_text(model, model_sha256):
+    """The weights file for the hybrid model `model`, whose file has the sha256 `model_sha256`,
+    as text."""
+    _check_sha256(model_sha256, "the model's hash")
     if not model.hybrid:
         raise Failure("only a hybrid model is written: the learned stage runs after the rules")
     version = model.meta.get("deslag_version")
@@ -276,6 +284,7 @@ def export_text(model):
         f"sure\t{sure}",
         f"unsure\t{unsure}",
         f"kept\t{kept}",
+        f"model_sha256\t{model_sha256}",
         "codes\t" + "\t".join(CODES),
         "histories\t" + "\t".join(HISTORIES),
         "confs\t" + "\t".join(CONFS),
@@ -314,6 +323,8 @@ def parse(text, path="weights"):
     facts = {}
     for key in ("rules_version", "steps", "sure", "unsure", "kept"):
         facts[key] = int(take(key, 1)[0])
+    facts["model_sha256"] = take("model_sha256", 1)[0]
+    _check_sha256(facts["model_sha256"], f"{path}: model_sha256")
     if tuple(take("codes")) != CODES:
         raise Failure(f"{path}: the codes are not the tie order")
     if tuple(take("histories")) != HISTORIES:
@@ -372,9 +383,21 @@ def sha256(path):
     return shaped._sha256(path)
 
 
+def check_against(weights_path, model_path):
+    """Fails unless the weights file at `weights_path` names the model file at `model_path` by its
+    sha256 and holds that model."""
+    back, facts = load(weights_path)
+    found = sha256(model_path)
+    if facts["model_sha256"] != found:
+        raise Failure(f"{weights_path} was written from a model with sha256 "
+                      f"{facts['model_sha256']}, and {model_path} has sha256 {found}")
+    if not same_model(shaped.load(model_path), back):
+        raise Failure(f"{weights_path} is not {model_path}")
+
+
 def cmd_export(args):
     model = shaped.load(args.model)
-    text = export_text(model)
+    text = export_text(model, sha256(args.model))
     with open(args.out, "w", encoding="utf-8", newline="") as f:
         f.write(text)
     back, facts = parse(text, args.out)
@@ -382,17 +405,16 @@ def cmd_export(args):
         raise Failure("the file read back is not the model; this is a bug")
     print(f"wrote {args.out}: {len(text.encode('utf-8'))} bytes, {len(model.totals)} features, "
           f"{len(back.vocab)} words, sure {facts['sure']} unsure {facts['unsure']} kept "
-          f"{facts['kept']}, model sha256 {sha256(args.model)}", file=sys.stderr)
+          f"{facts['kept']}, model sha256 {facts['model_sha256']}", file=sys.stderr)
 
 
 def cmd_check(args):
     back, facts = load(args.weights)
     print(f"{args.weights}: {len(back.totals)} features, {len(back.vocab)} words, rules version "
-          f"{facts['rules_version']}, {facts['steps']} steps", file=sys.stderr)
+          f"{facts['rules_version']}, {facts['steps']} steps, model sha256 "
+          f"{facts['model_sha256']}", file=sys.stderr)
     if args.model:
-        model = shaped.load(args.model)
-        if not same_model(model, back):
-            raise Failure(f"{args.weights} is not {args.model}")
+        check_against(args.weights, args.model)
         print("the file is the model", file=sys.stderr)
 
 

@@ -75,6 +75,9 @@ CARGO_FLAGS ?=
 # of the workspace, such as --profile fast, which it lacks.
 SWEEP := --manifest-path tools/sweep/Cargo.toml
 SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
+# The Python that test-python and generate-weights need, as the python workflow pins it: the weights'
+# digit ranges are cut from its Unicode tables.
+PYTHON_VERSION := 3.13
 
 .PHONY: help \
         build build-batches build-release \
@@ -88,7 +91,7 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
         clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
-        preflight install \
+        preflight preflight-python install \
         fetch-blobs fetch-crates fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
@@ -385,7 +388,7 @@ test-percept: generate-percept
 # The weights file src/tag/weights.txt, written from the p-hyb-s model generate-shapes left. Python 3.13,
 # whose Unicode tables the file's digit ranges come from. Not part of test or ci: the file is committed
 # and test-python checks it against the golden.
-generate-weights: preflight
+generate-weights: preflight-python
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-weights
 
 # The shapes' unit tests, then the exam's report, gates, must-pass list and tic list for each of the five
@@ -408,10 +411,11 @@ test-shapes-milestone: preflight fetch-ewt
 # no treebank. Minutes of git, so not in test or ci; the python workflow runs it, on Python 3.13,
 # when scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train, tools/exam or
 # src/tag change.
-test-python: preflight
+# DESLAG_EXAM_REQUIRED makes a test that needs deslag-exam fail without it, where run by hand it skips.
+test-python: preflight-python
 	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
-	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
+	DESLAG_EXAM_REQUIRED=1 python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
 
 # Sweeps deslag's own source and the vendored crates of Cargo.lock with deslag-sweep, which checks the
@@ -600,6 +604,10 @@ fix-test-output: preflight
 
 preflight:
 	@$(SCRIPTS)/preflight.sh
+
+# preflight, and python3 must be PYTHON_VERSION.
+preflight-python:
+	@$(SCRIPTS)/preflight.sh $(PYTHON_VERSION)
 
 # ---------------------------------------------------------------------------
 # install

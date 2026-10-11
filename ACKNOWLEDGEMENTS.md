@@ -229,6 +229,19 @@ grade the tagger and train nothing. The treebank's texts come from the English W
 LDC2012T13, and some parts are in the public domain. `src/tag/weights.md` says how the weights were
 made.
 
+## Silver batch sources under CC BY 4.0
+
+- Licence: CC BY 4.0, with the attribution of each source and the licence text in
+  `LICENSES/CC-BY-4.0.txt`
+- Sources: eleven public repositories whose Markdown is offered under CC BY 4.0, alone or beside
+  another licence, each named there with its commit and licence files
+- Used in: the silver batch `2026-10-08-silver`
+
+Data was used, not code. The weights in `src/tag/weights.txt` were trained in part on sentences of
+the silver batch, quoted from these repositories and tagged, so they hold words and word pairs of
+those texts. They are shared under CC BY-SA 4.0, as the treebank's annotations require; CC BY 4.0
+allows that for an adapted work.
+
 ## textblob-aptagger
 
 - URL: https://github.com/sloria/textblob-aptagger (Matthew Honnibal's averaged perceptron tagger,

@@ -15,9 +15,10 @@ include = [
     # The notices of the sources of src/tag/lexicon.txt, which each source requires on every copy,
     # of the rustc_lexer number lexing ported into src/document/rust.rs, and the licence of
     # src/tag/weights.txt, the weights trained on the English Web Treebank's annotations, which is
-    # CC BY-SA 4.0 and so is the reason for the `AND` in `license`.
+    # CC BY-SA 4.0 and so is the reason for the `AND` in `license`, with the attribution of the
+    # silver batch's CC BY 4.0 sources it was also trained on.
     "/LICENSES/AGID.txt", "/LICENSES/Moby.txt", "/LICENSES/SCOWL.txt", "/LICENSES/WordNet.txt",
-    "/LICENSES/MIT-rustc.txt", "/LICENSES/CC-BY-SA-4.0.txt",
+    "/LICENSES/MIT-rustc.txt", "/LICENSES/CC-BY-SA-4.0.txt", "/LICENSES/CC-BY-4.0.txt",
 ]
 
 [dependencies]

@@ -15,8 +15,9 @@ This file is the licence of src/tag/weights.txt, the weights of deslag's learned
 The weights were learned in part from the part-of-speech tags of the treebank's train file, so
 they are a work adapted from the treebank's annotations and are shared under the same licence,
 CC BY-SA 4.0. Changes: the treebank's trees and tags were turned into integer weights by an
-averaged perceptron, with the sentences left behind. The file holds the normal forms of the words
-the model was trained on, and numbers; it holds no sentence of the treebank. src/tag/weights.md
+averaged perceptron, with the sentences left behind. The file holds words the model was trained
+on, pairs of neighbouring words, their endings and shapes, and numbers; it holds no sentence of the
+treebank. src/tag/weights.md
 says how it was made. Everything else in this crate is under the MIT licence of the LICENSE file.
 
 The licence text below is copied unchanged from the treebank's LICENSE.txt.

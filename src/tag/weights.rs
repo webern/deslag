@@ -178,6 +178,8 @@ pub(super) struct Cutoffs {
 /// The weights, parsed.
 pub(super) struct Weights {
     pub(super) cutoffs: Cutoffs,
+    /// The totals of the bias feature, which every word has, by place: where every score starts.
+    pub(super) bias: [i64; 13],
     /// The normal forms the model was trained on, sorted by bytes.
     vocab: Vec<&'static str>,
     /// Code point ranges, `lo..=hi`, sorted: those Python's `isdigit` and `isdecimal` hold.
@@ -461,6 +463,16 @@ fn parse(text: &'static str) -> Weights {
         b: 0,
         template: 0,
     });
+    let mut bias = [0i64; 13];
+    if let Some(row) = rows[..count]
+        .iter()
+        .position(|row| row.template == template::BIAS)
+    {
+        let cells = &cells[rows[row].cells_at as usize..rows[row + 1].cells_at as usize];
+        for &cell in cells {
+            bias[(cell & 15) as usize] += i64::from(cell >> 4);
+        }
+    }
     let mut slots = vec![0u32; (count * 2).next_power_of_two()];
     let mask = slots.len() - 1;
     for (n, row) in rows[..count].iter().enumerate() {
@@ -474,6 +486,7 @@ fn parse(text: &'static str) -> Weights {
     }
     Weights {
         cutoffs,
+        bias,
         vocab,
         digits,
         decimals,

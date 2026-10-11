@@ -247,8 +247,7 @@ fn score(weights: &Weights, word: &Word<'_>) -> [i64; 13] {
     let reading = word.reading;
     let tag = place(reading.tag);
     let level = reading.confidence.index() as u8;
-    let mut scores = [0i64; 13];
-    add(&mut scores, weights.find(template::BIAS, 0, 0, "", None));
+    let mut scores = weights.bias;
     add(
         &mut scores,
         weights.find(template::FORM, 0, 0, word.form, None),
@@ -355,7 +354,8 @@ fn within(candidates: TagSet, scores: &[i64; 13], top: i64, width: i64) -> TagSe
 }
 
 /// The learned reading of a word whose rules reading is `old`, given its scores. `candidates`
-/// holds at least two tags. `known` says the model has seen the word's normal form.
+/// holds at least two tags. `known` says the model has seen the word's normal form; it is read only
+/// for a word the rules call `Unknown`.
 fn decide(
     weights: &Weights,
     old: Reading,
@@ -440,7 +440,9 @@ pub(super) fn run(tokens: &mut [Token<'_>]) {
                             reading: old,
                         };
                         let scores = score(weights, &word);
-                        let known = weights.knows(&norms[at + 2]);
+                        // Only a word the rules call `Unknown` asks whether the model knows it.
+                        let known =
+                            old.confidence != Confidence::Unknown || weights.knows(&norms[at + 2]);
                         let new = decide(weights, old, candidates, &scores, known);
                         changes.push((at, new));
                         place(new.tag)

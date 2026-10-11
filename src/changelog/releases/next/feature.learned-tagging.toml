@@ -4,14 +4,16 @@ summary = "The tagger chooses among open readings with trained weights"
 onboarding = """
 Tagging now has a second stage. After the rules read a sentence, a small trained model chooses
 among the tags the rules left open for each word, and sets the word's confidence from how clearly
-it prefers one. The words the rules were sure of keep their readings, so the lints that read
-only a sure reading do not move.
+it prefers one. Words the rules were sure of keep their readings.
 
-The lints that read readings (`verbs_no_nouns` is one) can report different words than before.
-Where a run of the old release found a word, check the finding again rather than assuming it
-stands, and re-baseline any golden file or saved report that records findings.
+No lint reads the tagger's readings yet, and no command prints them, so `deslag check` and
+`deslag fix` report the same findings as before. Nothing is set in the config.
 
-Nothing is set in the config. The weights are built into the binary under `CC-BY-SA-4.0`, which
-is why the crate's licence is now `MIT AND CC-BY-SA-4.0`; `LICENSES/CC-BY-SA-4.0.txt` and
-`src/tag/weights.md` in the source say what they were trained on.
+The binary is about 3.6 MB larger, since the weights are built into it. A run that reads prose
+parses them once, which adds about 12 ms to a release build's run and about 0.2 s to a debug
+build's.
+
+The weights are under `CC-BY-SA-4.0`, which is why the crate's licence is now
+`MIT AND CC-BY-SA-4.0`. `LICENSES/CC-BY-SA-4.0.txt` and `LICENSES/CC-BY-4.0.txt` carry their
+attributions, and `src/tag/weights.md` in the source says what they were trained on.
 """

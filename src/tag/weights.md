@@ -14,9 +14,29 @@ rules did not keep.
 
 The file has a header, the normal forms the model was trained on (20,214 words), and 87,179 rows of
 weights for 25 feature templates: 21 of the word, its neighbours and the tags before it, and four
-that read the rules' own reading. It is 3,526,736 bytes of UTF-8 text. Every number in it is an
+that read the rules' own reading. It is 3,526,814 bytes of UTF-8 text. Every number in it is an
 integer, so the Rust reader sums with `i64` and uses no floating point. The format is described at
 the top of `scripts/train/weights.py`.
+
+The file is a deliberate exception to the build doctrine's rule of thumb that text data over 1 MB
+is an External Asset fetched outside git: it is three and a half times that. The binary carries
+it, so the build needs it offline, and it is the model as it was trained and graded. Pruning it to
+fit would ship a different model from the one that was measured. Each retraining adds about 1.3 MB,
+packed, to git's history.
+
+## What it costs
+
+Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named:
+
+- Binary: `deslag` is 9,856,248 bytes without the stage and 13,478,368 with it, 3,622,120 more.
+  The file is in it once.
+- First use: the first word that needs the weights parses the file into its tables, which hold
+  about 4 MB. That takes 9.4 ms in a release build and 187 ms in a debug build.
+- Per run: every run that reads prose pays that parse once. `deslag check` of one three-line
+  Markdown file takes 21.8 ms, against 9.9 ms without the stage (medians of 50 runs).
+- Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
+  --check` holds under 75%, is 64% in debug and 57% in release. That check keeps each file's
+  fastest pass, so it leaves out the parse.
 
 ## Training data
 
@@ -56,15 +76,35 @@ code licence. The weights hold words and numbers, not sentences.
   trained on have sha256 `fe335d9cf7f906bd22d85127012968e5a0c689479af2e67683fd7283940444c7` (the
   treebank's train file) and `17644617e1d638fc7a7c3093eea0d92b9131617dea6a979f7362df4ca3ffb704`
   (silver's train split).
-- To write the file again, run `make generate-shapes` and then `make generate-weights`, with
-  Python 3.13. Nothing else makes the file, and a change to it is a change to the tagger, so raise
-  `deslag::tag::VERSION` and run `make fix-golden`.
+- The file's header names the model's sha256 (`model_sha256`). `weights.py check --model` refuses
+  a model file with another hash, and `make generate-weights` runs it after each export.
+
+## Training it again
+
+The weights belong to one version of the rules, `deslag::tag::RULES_VERSION`, and name it in their
+header. `tests/golden/rules.txt` holds a hash of what the rules read of `tests/corpus/core/`, and
+fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. Then:
+
+1. `make generate-shapes` trains the models from the rules of the new version. The tools build
+   while the weights are behind the rules.
+2. `make generate-weights`, with Python 3.13, writes this file from the hybrid model and checks it
+   against the model. Nothing else makes the file.
+3. A change to the file is a change to the tagger: raise `deslag::tag::VERSION`, run
+   `make fix-golden`, and update the counts and costs here.
+
+A build whose weights name another rules version than its own does not run the learned stage: its
+tagger is the rules alone. A test fails on such a build, so CI never passes one, and none ships.
+Two gates of the dev gold have no slack at this model's counts (`clean_sentences` and
+`likely_accuracy`), so a retrained model that loses one sentence or one Likely word fails them.
 
 ## How it scores
 
 The Rust tagger gives the same answers as the Python import that the exam graded before this stage
-shipped: no word of the dev set, the treebank's dev set, the owner's set or the corpus decides
-differently (the tests keep a golden file of decisions to check it). The scores
+shipped. CI checks it on the `core` fixtures of the corpus and on synthetic Unicode cases: a golden
+file of decisions, `tools/exam/tests/golden/learned.txt`, which `cargo test` holds the Rust to and
+`make test-python` holds the Python to. A comparison run once, when the file was written, found no
+word that decides differently in the dev set (3,138 words), the treebank's dev set (21,315), a set
+the maintainer labelled (583), or the corpus (840,484). The scores
 below are the exam's counts on the dev gold, with the rules alone (version 11) against the shipped
 tagger (version 12).
 
@@ -92,8 +132,8 @@ The model's own `Score` is not shipped: the file holds no calibration, so a word
 - The perceptron lowercases and reads the shape of a word with Rust's Unicode tables (version 17),
   and Python's `isdigit` and `isdecimal` tables (version 15.1) are written into the file. About 55
   code points case differently between the two versions. A word made of such a character can decide
-  differently from the Python import. The golden file of the stage holds none, and the tests check
-  that Python 3.13 writes the same digit ranges again.
+  differently from the Python import. No test checks that the golden file of the stage holds none
+  of them; the tests check that Python 3.13 writes the same digit ranges again.
 - The `Unsure` width and the cutoffs were tuned on 399 sentences, so they are good to a few words.
 - The labels of the silver batch are a model's. A label that is 96 or 97 percent right bounds what
   the stage can learn from it.
@@ -106,3 +146,10 @@ shared under CC BY-SA 4.0, with the treebank's attribution in `LICENSES/CC-BY-SA
 rest of the crate is under MIT, so the crate's licence is `MIT AND CC-BY-SA-4.0`. The silver
 batch's annotations are published under MIT, and its texts are quoted under their own licences,
 which its datasheet lists.
+
+The weights hold words and pairs of words from the silver batch's texts. Eleven of its source
+repositories offer their Markdown under CC BY 4.0, alone or beside another licence, and CC BY 4.0
+asks for attribution on an adapted work. `LICENSES/CC-BY-4.0.txt` names them, with the licence text.
+CC BY 4.0 lets an adapter share an adapted work under its own licence where that does not stop
+anyone from meeting CC BY's terms; CC BY-SA 4.0 does not, so the file stays under CC BY-SA 4.0
+and the crate's licence expression is unchanged.

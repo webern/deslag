@@ -1,15 +1,21 @@
 //! deslag's own readings as a file: `deslag-exam readings`.
 //!
-//! The skeleton of `tokens` with deslag's tagger already run: on every `Word` line `UPOS` and the
+//! The skeleton of `tokens` with deslag's rules already run: on every `Word` line `UPOS` and the
 //! `MISC` keys `Conf=` and `Kept=`, and with a gold the key `Gold=`, the gold tag (a deslag code)
 //! the exam's own alignment ([`align_all`]) gives the token; a token no gold word is aligned to,
 //! such as one of several tokens for one word, has none. A learner starts from the readings, and
 //! reads `Gold=` as the label to learn. `score --import` of the file grades the same as
 //! `score --tagger deslag`, but for the feature metrics, which it carries no `FEATS` for.
 //! A gold file with `exam.split = holdout` is refused: the file names words and their tags.
-//! The first line is the comment `# deslag_tag_version = N`, the tag VERSION the readings are of,
-//! then `# exam.tokens = deslag` and each sentence's `# exam.context`, as a skeleton has them.
-//! With `--corpus` the sentences are the tic list's, and there is no gold.
+//! The first line is the comment `# deslag_rules_version = N`, the version of the rules the readings
+//! are of (`deslag::tag::RULES_VERSION`), then `# exam.tokens = deslag` and each sentence's
+//! `# exam.context`, as a skeleton has them. The rules alone read them, so that a learner never
+//! feeds on the output of the learned stage it will become a part of. With `--corpus` the sentences
+//! are the tic list's, and with `--core` those of the `core` fixtures; there is no gold.
+//!
+//! With `--shipped`, [`of_skeleton`] writes the readings of the shipped tagger instead, the learned
+//! stage included, under `# deslag_tag_version = N`. Such a file is for comparing a tagger with
+//! another, never for training: a learner reads only the rules' key.
 //!
 //! [`of_skeleton`] writes the same file from a skeleton that `tokens` wrote, with no `Gold=` on
 //! any line: a set to be tagged is read this way, so no tagged file carries its answers, and a
@@ -28,16 +34,29 @@ use crate::conllu::{self, Block, Id};
 use crate::error::{Error, Place};
 use crate::gold::{Gold, SILVER_BATCH, Split, Trains, kind_from_name, kind_name};
 use crate::skeleton::{self, Filled};
-use crate::tagger::{self, Context, Deslag, Sentence};
+use crate::tagger::{self, Context, Deslag, Rules, Sentence, Tagger};
 use crate::tags::Tag;
 
-/// The key of the header comment, the first line of the file, that names the tag VERSION the
-/// readings are of. A learner records it, and reads only readings of the version it learned on.
-pub const VERSION_KEY: &str = "deslag_tag_version";
+/// The key of the header comment, the first line of the file, that names the version of the rules
+/// the readings are of. A learner records it, and reads only readings of the version it learned on.
+pub const VERSION_KEY: &str = "deslag_rules_version";
 
-/// The header comment line, with its newline.
-pub fn header() -> String {
-    format!("# {VERSION_KEY} = {}\n", deslag::tag::VERSION)
+/// The key of the first line of a file of the shipped tagger's readings, which a learner refuses.
+pub const SHIPPED_KEY: &str = "deslag_tag_version";
+
+/// The header comment line, with its newline: the rules' version, or with `shipped` the shipped
+/// tagger's.
+pub fn header(shipped: bool) -> String {
+    if shipped {
+        format!("# {SHIPPED_KEY} = {}\n", deslag::tag::VERSION)
+    } else {
+        format!("# {VERSION_KEY} = {}\n", deslag::tag::RULES_VERSION)
+    }
+}
+
+/// The tagger a readings file is made by.
+fn reader(shipped: bool) -> &'static dyn Tagger {
+    if shipped { &Deslag } else { &Rules }
 }
 
 /// The readings file of `gold`, and its number of sentences.
@@ -47,7 +66,7 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
             "readings refuses a holdout gold: the file names its words and tags".to_string(),
         ));
     }
-    let mut out = header();
+    let mut out = header(false);
     out.push_str(skeleton::HEADER);
     out.push_str(&skeleton::trains_line(gold.trains));
     out.push_str(&skeleton::batch_line(gold.silver_batch.as_deref()));
@@ -69,6 +88,7 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
             &sentence.text,
             &tokens,
             &golds,
+            reader(false),
         )?;
     }
     Ok((out, gold.sentences.len()))
@@ -77,7 +97,8 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
 /// The readings file of the skeleton at `path`, which `tokens` wrote, and its number of sentences.
 /// No line has a `Gold=`. Each sentence's tokens are rebuilt from its lines, the way the gold
 /// they were made from gave them, and a line that cannot be placed in its `# text` is an error.
-pub fn of_skeleton(path: &Path) -> Result<(String, usize), Error> {
+/// The rules read them, or with `shipped` the shipped tagger.
+pub fn of_skeleton(path: &Path, shipped: bool) -> Result<(String, usize), Error> {
     let shown = path.display().to_string();
     let text = std::fs::read_to_string(path).map_err(|source| Error::Io {
         path: shown.clone(),
@@ -100,7 +121,7 @@ pub fn of_skeleton(path: &Path) -> Result<(String, usize), Error> {
     }
     let holdout =
         first.comment("exam.split").map(|c| c.value.as_str()) == Some(Split::Holdout.name());
-    let mut out = header();
+    let mut out = header(shipped);
     out.push_str(skeleton::HEADER);
     if let Some(from) = first.comment(skeleton::FROM) {
         let _ = writeln!(out, "# {} = {}", skeleton::FROM, from.value);
@@ -155,6 +176,7 @@ pub fn of_skeleton(path: &Path) -> Result<(String, usize), Error> {
             &sentence_text.value,
             &tokens,
             &BTreeMap::new(),
+            reader(shipped),
         )?;
     }
     Ok((out, blocks.len()))
@@ -206,8 +228,8 @@ fn tokens_of<'a>(text: &'a str, block: &Block) -> Result<Vec<Token<'a>>, String>
     Ok(tokens)
 }
 
-/// Appends one sentence: its comments and a line per token, `Word` lines read by deslag's tagger
-/// and carrying the `golds` the exam aligned, by token index.
+/// Appends one sentence: its comments and a line per token, `Word` lines read by `by` and carrying
+/// the `golds` the exam aligned, by token index.
 fn write_sentence(
     out: &mut String,
     sent_id: &str,
@@ -215,13 +237,14 @@ fn write_sentence(
     text: &str,
     tokens: &[Token<'_>],
     golds: &BTreeMap<usize, Tag>,
+    by: &dyn Tagger,
 ) -> Result<(), Error> {
     let view = Sentence {
         text,
         tokens,
         context,
     };
-    let readings = tagger::run(&Deslag, sent_id, &view)?;
+    let readings = tagger::run(by, sent_id, &view)?;
     let _ = writeln!(out, "# sent_id = {sent_id}");
     let _ = writeln!(out, "# exam.context = {}", context.name());
     let _ = writeln!(out, "# text = {text}");

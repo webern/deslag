@@ -148,12 +148,12 @@ fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
 mod tests {
     use super::*;
     use crate::document::Token;
-    use crate::tag::{Context, Reading, sentence};
+    use crate::tag::{Context, Reading, sentence_by_rules};
 
     /// The reading of the word `target` in `text`, read by the whole tagger.
     fn read(text: &str, target: &str) -> Reading {
         let mut tokens = Token::split(text);
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         tokens
             .iter()
             .find(|token| token.text == target)

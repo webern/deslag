@@ -705,7 +705,7 @@ mod tests {
     #[test]
     fn a_word_in_a_table_is_read_from_it_and_not_guessed_at() {
         let mut tokens = crate::document::Token::split("In 4th place, running.");
-        crate::tag::sentence(&mut tokens, crate::tag::Context::Prose);
+        crate::tag::sentence_by_rules(&mut tokens, crate::tag::Context::Prose);
         let reading = |word: &str| tokens.iter().find(|t| t.text == word).unwrap().reading;
         assert_eq!(reading("running").unwrap().confidence, Confidence::Unsure);
         assert_eq!(reading("4th").unwrap().confidence, Confidence::Unknown);

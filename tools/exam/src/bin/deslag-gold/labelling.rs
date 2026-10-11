@@ -388,7 +388,10 @@ pub fn run(dir: &Path, inputs: &Inputs<'_>, settings: &Settings) -> Result<(), P
         "exclude silver".to_string(),
         format!("{} live batches, {} texts", silver.0, silver.1),
     ));
-    header.push(("tag_version".to_string(), deslag::tag::VERSION.to_string()));
+    header.push((
+        "tag_version".to_string(),
+        deslag::tag::RULES_VERSION.to_string(),
+    ));
     sample::check_with_exam(&outcome.sample.sents)?;
 
     let contexts: BTreeMap<&str, Context> = outcome

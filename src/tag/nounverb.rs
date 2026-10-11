@@ -151,7 +151,7 @@ fn verb_features(old: Reading, form: Form) -> Features {
 mod tests {
     use super::*;
     use crate::document::{Token, TokenKind};
-    use crate::tag::{Confidence, Context, Reading, pass, sentence};
+    use crate::tag::{Confidence, Context, Reading, pass, sentence_by_rules};
     use Tag::{
         Adjective, Adverb, Auxiliary, Determiner, Noun, Particle, Pronoun, ProperNoun, Verb,
     };
@@ -405,7 +405,7 @@ mod tests {
     fn the_whole_tagger_reads_a_noun_or_verb_before_and_after() {
         let read = |text: &str, target: &str| {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             tokens
                 .iter()
                 .find(|t| t.text == target)

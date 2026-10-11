@@ -408,7 +408,7 @@ impl Part {
                 (0, 0)
             }
         };
-        let version = deslag::tag::VERSION.to_string();
+        let version = deslag::tag::RULES_VERSION.to_string();
         match sample.manifest.get("tag_version") {
             Some(drawn) if drawn == version => {}
             Some(drawn) => problems.push(Error::load(

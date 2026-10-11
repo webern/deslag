@@ -271,14 +271,68 @@ fn form(token: &Token<'_>) -> String {
 /// and `Start=<byte>` in each token's `MISC` is where the token starts. A token that holds a
 /// newline or a tab cannot be a CoNLL-U FORM, and is an error; one with no text is written `_`.
 ///
-/// With `tagged`, every `Word` line carries the reading deslag's tagger gave it as the document
-/// was read, as `deslag-exam readings` writes it; there is no gold, so no `Gold=`.
+/// With `tagged`, every `Word` line carries the reading the rules gave it, as `deslag-exam
+/// readings` writes it; there is no gold, so no `Gold=`. It is the rules' reading and not the
+/// document's, which the learned stage has read too.
 pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize), Error> {
-    // A tagged skeleton is a readings file, and says which tag VERSION read it.
-    let mut out = if tagged {
-        crate::readings::header()
+    let read = if tagged {
+        Reader::Rules
     } else {
-        String::new()
+        Reader::Nobody
+    };
+    write_skeleton(entries, read, false)
+}
+
+/// Who read the words of a skeleton.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Reader {
+    /// No one: the skeleton has no reading on any line.
+    Nobody,
+    /// The rules alone, which is what a learner starts from.
+    Rules,
+    /// The shipped tagger, the learned stage included.
+    Shipped,
+}
+
+/// The fixtures of the `core` category, sorted by path, in any language: what the golden tag
+/// stream reads.
+pub fn core(root: &Path) -> Result<Vec<Entry>, Error> {
+    let tree = root.join("tests/corpus");
+    let fixtures = load::tree(&tree).map_err(|problem| Error::Cannot(problem.0))?;
+    let mut entries: Vec<Entry> = fixtures
+        .into_iter()
+        .filter(|fixture| fixture.category == "core")
+        .map(|fixture| Entry {
+            text: String::from_utf8_lossy(&fixture.bytes).into_owned(),
+            path: fixture.path,
+            layout_path: fixture.sidecar.layout_path,
+        })
+        .collect();
+    entries.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(entries)
+}
+
+/// Whether a sentence of tokens can be written to a skeleton as it is: no token has no text, or
+/// holds a newline, a carriage return or a tab. The golden file of the learned stage holds exactly
+/// the sentences for which this is true.
+pub fn writable(tokens: &[Token<'_>]) -> bool {
+    tokens
+        .iter()
+        .all(|token| !token.text.is_empty() && !token.text.contains(['\n', '\r', '\t']))
+}
+
+/// [`corpus_skeleton`] by `read`, and with `skip` a sentence that is not [`writable`] is left out
+/// instead of being an error.
+pub fn write_skeleton(
+    entries: &[Entry],
+    read: Reader,
+    skip: bool,
+) -> Result<(String, usize), Error> {
+    // A tagged skeleton is a readings file, and says which version read it.
+    let mut out = match read {
+        Reader::Nobody => String::new(),
+        Reader::Rules => crate::readings::header(false),
+        Reader::Shipped => crate::readings::header(true),
     };
     out.push_str(HEADER);
     let mut count = 0;
@@ -286,6 +340,13 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
         let document = Document::markdown(&entry.text);
         for (range, start, context) in in_context(&document) {
             let tokens = &document.tokens[range];
+            if skip && !writable(tokens) {
+                continue;
+            }
+            let mut tagged = tokens.to_vec();
+            if read == Reader::Rules {
+                deslag::tag::sentence_by_rules(&mut tagged, context);
+            }
             let mut text = String::new();
             let mut lines = String::new();
             for (index, token) in tokens.iter().enumerate() {
@@ -305,7 +366,7 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
                 let misc = format!(
                     "Kind={}{}|Start={}{}",
                     kind_name(token.kind),
-                    origin_misc(token, token.origin),
+                    origin_misc(&tagged[index], tagged[index].origin),
                     token.range.start,
                     if next.is_some() && !space {
                         "|SpaceAfter=No"
@@ -313,10 +374,10 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
                         ""
                     }
                 );
-                let filled = token
+                let filled = tagged[index]
                     .reading
                     .as_ref()
-                    .filter(|_| tagged)
+                    .filter(|_| read != Reader::Nobody)
                     .map(|reading| Filled::new(reading, None));
                 lines.push_str(&skeleton::line(index + 1, &form, &misc, filled.as_ref()));
             }
@@ -335,6 +396,8 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
 pub enum Source<'a> {
     /// deslag's own tagger, which `Document::markdown` has already run.
     Deslag,
+    /// The rules alone, with no learned stage: what a learner starts from.
+    Rules,
     /// A file filled from [`corpus_skeleton`]'s output.
     Import(&'a Path),
 }
@@ -508,6 +571,16 @@ pub fn score(list: &List, entries: &[Entry], source: &Source<'_>) -> Result<Scor
         .collect();
     let tagger = match source {
         Source::Deslag => "deslag".to_string(),
+        Source::Rules => {
+            // The document read each sentence with the shipped tagger; read it again with the
+            // rules alone, in the context it was read in.
+            for document in &mut documents {
+                for (range, _, context) in in_context(document) {
+                    deslag::tag::sentence_by_rules(&mut document.tokens[range], context);
+                }
+            }
+            "rules".to_string()
+        }
         Source::Import(path) => {
             let ids: Vec<(String, Vec<Token<'_>>)> = entries
                 .iter()
@@ -621,15 +694,16 @@ pub fn score(list: &List, entries: &[Entry], source: &Source<'_>) -> Result<Scor
     })
 }
 
-/// The built-in taggers `ticlist score --tagger` reads, which is the one the lint reads.
+/// The built-in taggers `ticlist score --tagger` reads: `deslag`, the one the lint reads, and `rules`,
+/// the same without the learned stage.
 pub fn source_of(name: &str) -> Result<Source<'static>, Error> {
-    if name == "deslag" {
-        Ok(Source::Deslag)
-    } else {
-        Err(Error::Cannot(format!(
-            "ticlist score reads the built-in tagger `deslag`, not `{name}`; the built-in taggers are {}; \
-             use --import for another",
+    match name {
+        "deslag" => Ok(Source::Deslag),
+        "rules" => Ok(Source::Rules),
+        _ => Err(Error::Cannot(format!(
+            "ticlist score reads the built-in tagger `deslag` or `rules`, not `{name}`; the built-in \
+             taggers are {}; use --import for another",
             BUILT_IN.join(", ")
-        )))
+        ))),
     }
 }

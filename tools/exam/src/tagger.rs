@@ -32,13 +32,14 @@ pub trait Tagger {
 }
 
 /// The names of the built-in taggers.
-pub const BUILT_IN: [&str; 2] = ["noun", "deslag"];
+pub const BUILT_IN: [&str; 3] = ["noun", "deslag", "rules"];
 
 /// The built-in tagger called `name`.
 pub fn built_in(name: &str) -> Option<Box<dyn Tagger>> {
     match name {
         "noun" => Some(Box::new(Noun)),
         "deslag" => Some(Box::new(Deslag)),
+        "rules" => Some(Box::new(Rules)),
         _ => None,
     }
 }
@@ -69,8 +70,9 @@ impl Tagger for Noun {
     }
 }
 
-/// deslag's own tagger, [`deslag::tag::sentence`], as the exam grades it: what the shipped pass
-/// reads from the sentence's tokens and context, with no score.
+/// deslag's own tagger, [`deslag::tag::sentence`], as the exam grades it: what the shipped tagger
+/// reads from the sentence's tokens and context, the rules and then the learned stage, with no
+/// score.
 pub struct Deslag;
 
 impl Tagger for Deslag {
@@ -81,6 +83,25 @@ impl Tagger for Deslag {
     fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
         let mut tokens = sentence.tokens.to_vec();
         deslag::tag::sentence(&mut tokens, sentence.context);
+        tokens
+            .iter()
+            .map(|token| token.reading.map(Reading::from))
+            .collect()
+    }
+}
+
+/// The rules alone, [`deslag::tag::sentence_by_rules`]: what the learned stage reads, and what the
+/// training and the labelling tools start from.
+pub struct Rules;
+
+impl Tagger for Rules {
+    fn name(&self) -> &str {
+        "rules"
+    }
+
+    fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
+        let mut tokens = sentence.tokens.to_vec();
+        deslag::tag::sentence_by_rules(&mut tokens, sentence.context);
         tokens
             .iter()
             .map(|token| token.reading.map(Reading::from))
@@ -217,9 +238,30 @@ mod tests {
         );
         assert!(words.iter().all(|r| r.score.is_none()));
         assert_eq!(words[1].confidence, Confidence::Sure);
+    }
+
+    #[test]
+    fn the_rules_read_by_the_lexicon_and_the_unknown_word_stays_unknown() {
+        let readings = run_on("It can't read 2 frobs, the end.", &Rules).unwrap();
+        let words: Vec<_> = readings.iter().flatten().collect();
         // `read` is in the lexicon and follows an auxiliary, `frobs` is in no table.
         assert_eq!(words[2].confidence, Confidence::Likely);
         assert_eq!(words[3].confidence, Confidence::Unknown);
+    }
+
+    #[test]
+    fn the_rules_read_every_word_and_never_change_a_sure_one() {
+        let text = "It can't read 2 frobs, the end.";
+        let rules = run_on(text, &Rules).unwrap();
+        let shipped = run_on(text, &Deslag).unwrap();
+        for (rule, ship) in rules.iter().zip(&shipped) {
+            assert_eq!(rule.is_some(), ship.is_some());
+            if let (Some(rule), Some(ship)) = (rule, ship) {
+                if rule.confidence == Confidence::Sure {
+                    assert_eq!(rule, ship);
+                }
+            }
+        }
     }
 
     #[test]

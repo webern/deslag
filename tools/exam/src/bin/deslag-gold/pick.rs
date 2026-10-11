@@ -2,7 +2,7 @@
 //! picks, and move reviewed sentences into `tests/gold/owner.conllu`.
 //!
 //! The ranking reads each sentence as the review will show it: tagged alone, in its context, by
-//! `deslag::tag::sentence`. A word counts against a sentence by how little deslag commits to:
+//! `deslag::tag::sentence_by_rules`. A word counts against a sentence by how little deslag commits to:
 //!
 //! ```text
 //! points = (words below Likely) + (Unknown words)
@@ -142,7 +142,7 @@ fn read<'t>(joined: &'t str, toks: &[Tok], context: Context) -> Vec<Token<'t>> {
             at += 1;
         }
     }
-    deslag::tag::sentence(&mut tokens, context);
+    deslag::tag::sentence_by_rules(&mut tokens, context);
     tokens
 }
 

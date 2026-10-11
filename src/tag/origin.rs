@@ -954,7 +954,7 @@ pub(super) fn verbs(tokens: &mut [Token<'_>]) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tag::{Context, closed, fold, lexicon, sentence};
+    use crate::tag::{Context, closed, fold, lexicon, sentence_by_rules};
 
     /// Each word of `text` with its origin.
     fn of(text: &str) -> Vec<(String, Origin)> {
@@ -1078,7 +1078,7 @@ mod tests {
         for text in ["commit", "push", "stash", "add"] {
             let words = format!("git {text}");
             let mut tokens = Token::split(&words);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             assert_eq!(tokens[1].origin, Origin::Command, "{text}");
             let reading = tokens[1].reading.unwrap();
             let by_table = crate::tag::read(text);
@@ -1094,7 +1094,7 @@ mod tests {
             ("Run cargo build.", 1, "cargo"),
         ] {
             let mut tokens = Token::split(words);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             assert_eq!(tokens[at].origin, Origin::Command, "{words}");
             let by_table = crate::tag::read(word);
             let reading = tokens[at].reading.unwrap();
@@ -1171,7 +1171,7 @@ mod tests {
             );
             let words = format!("Call {text} now.");
             let mut tokens = Token::split(&words);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             let reading = tokens[1].reading.unwrap();
             let by_shape = crate::tag::read(text);
             assert_eq!(reading, by_shape, "the tag is the shape's: {text}");
@@ -1272,7 +1272,7 @@ mod tests {
         for text in ["main.rs", "AGENTS.md", "foo.test.js"] {
             let words = format!("Edit {text} now.");
             let mut tokens = Token::split(&words);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             let reading = tokens[1].reading.unwrap();
             assert_eq!(
                 (reading.tag, reading.confidence),
@@ -1283,7 +1283,7 @@ mod tests {
         for text in ["report.pdf", "lisa_resume.doc", "logo.png", "photo.jpeg"] {
             let words = format!("See {text} now.");
             let mut tokens = Token::split(&words);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             assert_eq!(tokens[1].origin, Origin::Path, "{text}");
             assert_eq!(tokens[1].reading.unwrap(), crate::tag::read(text), "{text}");
         }
@@ -1367,7 +1367,7 @@ mod tests {
     #[test]
     fn a_symbol_or_a_path_the_tables_lack_is_a_likely_proper_noun_that_may_be_a_noun() {
         let mut tokens = Token::split("Open main.rs and FrobulatorFactory and foo_bar.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         for at in [1, 3, 5] {
             let reading = tokens[at].reading.unwrap();
             assert_eq!(reading.tag, Tag::ProperNoun, "{}", tokens[at].text);
@@ -1380,7 +1380,7 @@ mod tests {
     #[test]
     fn a_command_or_flag_the_tables_lack_stays_unknown_as_a_proper_noun() {
         let mut tokens = Token::split("Run rustfmt and grep and --frobnicate.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         let reading = |text: &str| {
             tokens
                 .iter()
@@ -1416,7 +1416,7 @@ mod tests {
             "to grep the logs",
         ] {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             let at = tokens
                 .iter()
                 .position(|t| t.text.eq_ignore_ascii_case("grep"))
@@ -1437,7 +1437,7 @@ mod tests {
             "grep",
         ] {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             let at = tokens
                 .iter()
                 .position(|t| t.text.eq_ignore_ascii_case("grep"))
@@ -1462,7 +1462,7 @@ mod tests {
             "ssh the box",
         ] {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             for token in &tokens {
                 if token.origin == Origin::Command && !in_a_table(&token.text) {
                     assert_eq!(

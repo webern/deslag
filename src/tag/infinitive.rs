@@ -185,7 +185,7 @@ fn from_previous(view: &View<'_, '_>, at: usize) -> Option<Decision> {
 mod tests {
     use super::*;
     use crate::document::Token;
-    use crate::tag::{Confidence, Context, Features, Reading, pass, sentence};
+    use crate::tag::{Confidence, Context, Features, Reading, pass, sentence_by_rules};
     use Tag::{Adjective, Adposition, Adverb, Determiner, Noun, Particle, Pronoun, Verb};
 
     /// `to` as the closed-class table reads it: a particle first, a preposition possible.
@@ -365,7 +365,7 @@ mod tests {
     fn the_whole_tagger_reads_to_before_and_after() {
         let read_to = |text: &str| {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             tokens
                 .iter()
                 .find(|t| t.text.eq_ignore_ascii_case("to"))

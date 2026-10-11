@@ -115,6 +115,13 @@ jobs:
               ;;
           esac
 
+      # test-python pins Python as python.yml does: the train scripts check the learned tagger's
+      # golden decisions, and what Python reads as a letter or a digit follows its Unicode version.
+      - name: Install Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0, 2026-07-20
+        with:
+          python-version: "3.13"
+
       # make ci leaves test-python to its own workflow; a release runs both.
       - name: Run CI checks
         env:
@@ -194,9 +201,10 @@ jobs:
           cp README.md LICENSE "dist/$stem/"
           # The notices of the sources of src/tag/lexicon.txt, which is built into the binary and
           # which each source requires on every copy, and of the code ported into
-          # src/document/rust.rs. The same five as Cargo.toml's `include`.
+          # src/document/rust.rs, and the licence of src/tag/weights.txt with the attribution of its
+          # CC BY 4.0 sources. The same seven as Cargo.toml's `include`.
           mkdir "dist/$stem/LICENSES"
-          cp LICENSES/AGID.txt LICENSES/Moby.txt LICENSES/SCOWL.txt LICENSES/WordNet.txt LICENSES/MIT-rustc.txt "dist/$stem/LICENSES/"
+          cp LICENSES/AGID.txt LICENSES/Moby.txt LICENSES/SCOWL.txt LICENSES/WordNet.txt LICENSES/MIT-rustc.txt LICENSES/CC-BY-SA-4.0.txt LICENSES/CC-BY-4.0.txt "dist/$stem/LICENSES/"
           case "$TARGET" in
             *windows*)
               cp "target/$TARGET/release/$bin.exe" "dist/$stem/"

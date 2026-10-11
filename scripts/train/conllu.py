@@ -271,12 +271,12 @@ def read_readings(path):
     return sentences
 
 
-VERSION_KEY = "deslag_tag_version"
+VERSION_KEY = "deslag_rules_version"
 
 
 def readings_version(path):
-    """The deslag tag VERSION a readings file says it is of, from its first line,
-    `# deslag_tag_version = N`; a Failure if it has none."""
+    """The deslag rules VERSION a readings file says it is of, from its first line,
+    `# deslag_rules_version = N`; a Failure if it has none."""
     with open(path, encoding="utf-8", newline="") as f:
         first = f.readline().rstrip("\r\n")
     prefix = f"# {VERSION_KEY} = "

@@ -178,7 +178,7 @@ fn preposition(view: &View<'_, '_>, at: usize) -> Option<Tag> {
 mod tests {
     use super::*;
     use crate::document::Token;
-    use crate::tag::{Confidence, Context, Features, Reading, pass, sentence};
+    use crate::tag::{Confidence, Context, Features, Reading, pass, sentence_by_rules};
     use Tag::{
         Adjective, Adposition, Adverb, Auxiliary, Conjunction, Determiner, Noun, Particle, Pronoun,
         ProperNoun, Verb,
@@ -409,7 +409,7 @@ mod tests {
     fn the_whole_tagger_reads_function_words_before_and_after() {
         let read = |text: &str, target: &str| {
             let mut tokens = Token::split(text);
-            sentence(&mut tokens, Context::Prose);
+            sentence_by_rules(&mut tokens, Context::Prose);
             tokens
                 .iter()
                 .find(|t| t.text.eq_ignore_ascii_case(target))

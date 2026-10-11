@@ -214,7 +214,7 @@ impl View<'_, '_> {
 /// word is fused on; its number, between a noun and a proper noun or a determiner and a pronoun;
 /// and all of them between a verb and an auxiliary, which are one word with one inflection. A
 /// proper noun with no number known is singular, as names are but for the few that name a group.
-fn features_for(old: Reading, tag: Tag) -> Features {
+pub(super) fn features_for(old: Reading, tag: Tag) -> Features {
     if tag == old.tag {
         return old.features;
     }

@@ -1282,7 +1282,7 @@ fn a_draw_dealt_in_parts_is_the_one_draw_split_with_the_same_mix_in_every_part()
             "{head}"
         );
         assert!(
-            head.contains(&format!("# tag_version = {}\n", deslag::tag::VERSION)),
+            head.contains(&format!("# tag_version = {}\n", deslag::tag::RULES_VERSION)),
             "{head}"
         );
         assert!(head.contains("# draw = for labelling, split unlabelled, ids p0001 on\n"));

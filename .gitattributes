@@ -1,1 +1,4 @@
 tests/configs/** -text
+# The tagger's tables are built into the binary and parsed by line; a checkout keeps their line
+# ends as they are, on Windows too.
+src/tag/*.txt text eol=lf

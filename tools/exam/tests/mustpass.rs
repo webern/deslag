@@ -136,7 +136,7 @@ fn the_subcommand_lists_the_sure_and_right_words_with_agreed_labels() {
     assert_eq!(output.status.code(), Some(0), "{}", text(&output.stderr));
     let printed = text(&output.stdout);
     assert!(
-        printed.contains("wrote 2 words") && printed.contains("DET 2"),
+        printed.contains("wrote ") && printed.contains("DET 2"),
         "{printed}"
     );
     let cut = std::fs::read_to_string(&out).unwrap();
@@ -149,12 +149,27 @@ fn the_subcommand_lists_the_sure_and_right_words_with_agreed_labels() {
         "{cut}"
     );
     let rows: Vec<&str> = cut.lines().filter(|line| !line.starts_with('#')).collect();
-    // `The` and `the` are the closed-class words the tagger is Sure of; `sat` is adjudicated and
-    // `cat` is not Sure, and a numeral is not a word token.
-    assert_eq!(rows, ["m1\t1\tThe\tDET", "m1\t5\tthe\tDET"]);
+    // `The` and `the` are the closed-class words the tagger is Sure of. Which open-class words the
+    // learned stage is Sure of is its own business, so the test names only the two words that
+    // must be there and the two that must not: `sat` is adjudicated, and a numeral is no word.
+    for want in ["m1\t1\tThe\tDET", "m1\t5\tthe\tDET"] {
+        assert!(rows.contains(&want), "{rows:?}");
+    }
+    assert!(
+        rows.iter().all(|row| !row.starts_with("m1\t3\t")),
+        "{rows:?}"
+    );
+    assert!(
+        rows.iter().all(|row| !row.starts_with("m2\t2\t")),
+        "{rows:?}"
+    );
+    assert!(
+        printed.contains(&format!("wrote {} words", rows.len())),
+        "{printed}"
+    );
     // The file reads back.
     let list = MustPass::read(&out).unwrap();
-    assert_eq!(list.rows.len(), 2);
+    assert_eq!(list.rows.len(), rows.len());
     assert_eq!(list.rows[0].tag, Tag::Determiner);
 }
 

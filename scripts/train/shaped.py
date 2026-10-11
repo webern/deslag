@@ -205,13 +205,13 @@ def tag(model, sentence, readings=None):
 
 
 def check_version(model, path):
-    """A Failure unless the readings file at `path` is of the deslag tag VERSION the model learned
+    """A Failure unless the readings file at `path` is of the deslag rules VERSION the model learned
     from: a hybrid's features read deslag's readings of that version."""
     have, want = readings_version(path), model.meta.get("deslag_version")
     if want is None:
-        raise Failure("the model records no deslag tag version; train it again")
+        raise Failure("the model records no deslag rules version; train it again")
     if have != want:
-        raise Failure(f"{path} is of deslag tag VERSION {have}, and the model was trained on "
+        raise Failure(f"{path} is of deslag rules VERSION {have}, and the model was trained on "
                       f"VERSION {want}; write the readings again, or train the model again")
 
 
@@ -395,14 +395,14 @@ def cmd_train(args):
         sentences.extend(read_readings_training(path))
     versions = {readings_version(path) for path in args.train}
     if len(versions) != 1:
-        raise Failure(f"the readings files are of different deslag tag versions: "
+        raise Failure(f"the readings files are of different deslag rules versions: "
                       f"{sorted(versions)}")
     hybrid = args.mode == "hybrid"
     tuning_set = None
     if args.tune_readings:
         tuning_set = read_readings(args.tune_readings)
         if readings_version(args.tune_readings) not in versions:
-            raise Failure(f"{args.tune_readings} is of another deslag tag version than the "
+            raise Failure(f"{args.tune_readings} is of another deslag rules version than the "
                           "training files")
 
     def log(number, score):

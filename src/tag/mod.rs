@@ -14,6 +14,7 @@
 mod closed;
 mod function;
 mod infinitive;
+mod learned;
 mod lexicon;
 mod nounverb;
 mod origin;
@@ -24,6 +25,7 @@ mod shape;
 mod single;
 mod table;
 mod types;
+mod weights;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
 
@@ -32,7 +34,16 @@ pub use types::{Confidence, Context, Features, Origin, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 11;
+pub const VERSION: u32 = 12;
+
+/// The version of the rules alone: the tables and passes that [`sentence_by_rules`] runs. It
+/// starts at the version the weights were trained on, and is raised by a change to any reading
+/// they make; `tests/golden/rules.txt` holds a hash of what they read of the corpus and fails
+/// until it is raised. The learned stage reads the rules' readings, so weights trained on one
+/// version are wrong for another: the weights file names the version it was trained on, and where
+/// that is not this one the learned stage does not run and a test fails until the weights are
+/// trained again.
+pub const RULES_VERSION: u32 = 11;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]
@@ -41,9 +52,20 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// Reads one sentence's tokens, in order: sets `origin` and `reading` on every `Word` token and
 /// clears them on every other. Reads only the tokens' kind, text and place, and the context.
 ///
+/// The rules read the sentence ([`sentence_by_rules`]), then the learned stage chooses among the
+/// tags they left open for each word they did not settle.
+pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
+    sentence_by_rules(tokens, context);
+    learned::run(tokens);
+}
+
+/// As [`sentence`], with the rules alone: the readings the training and the labelling tools start
+/// from, so that the learned stage never feeds on its own output. Their version is
+/// [`RULES_VERSION`].
+///
 /// Each word is looked up on its own, then the passes narrow the readings in the sentence's
 /// context, in a fixed order.
-pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
+pub fn sentence_by_rules(tokens: &mut [Token<'_>], context: Context) {
     let mut commands = false;
     let mut after_git = false;
     for at in 0..tokens.len() {
@@ -103,6 +125,17 @@ fn read(text: &str) -> Reading {
 
 /// Runs [`sentence`] over every sentence of `document`, with each one's context.
 pub fn document(document: &mut Document<'_>) {
+    read_document(document, sentence);
+}
+
+/// As [`document`], with the rules alone ([`sentence_by_rules`]). It reads every word again, so it
+/// may follow [`document`].
+pub fn document_by_rules(document: &mut Document<'_>) {
+    read_document(document, sentence_by_rules);
+}
+
+/// Runs `read` over every sentence of `document`, with each one's context.
+fn read_document(document: &mut Document<'_>, read: fn(&mut [Token<'_>], Context)) {
     let mut sentences = Vec::new();
     for (block, ancestors) in document.walk() {
         let context = context_of(block, &ancestors);
@@ -111,7 +144,7 @@ pub fn document(document: &mut Document<'_>) {
         }
     }
     for (range, context) in sentences {
-        sentence(&mut document.tokens[range], context);
+        read(&mut document.tokens[range], context);
     }
 }
 
@@ -150,7 +183,7 @@ mod tests {
     fn sentence_reads_every_word_and_nothing_else() {
         let mut tokens = Token::split("Send 2 forms, now.");
         set_all(&mut tokens);
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         for token in &tokens {
             assert_eq!(
                 token.reading.is_some(),
@@ -163,9 +196,60 @@ mod tests {
     }
 
     #[test]
+    fn a_document_read_by_the_rules_after_the_shipped_tagger_is_as_if_read_by_them_alone() {
+        let text = "# Run the tests\n\nShe runs the old run to the Stra\u{df}e, and we run it.\n\n\
+                    - Edit `foo_bar` and git push\n- Then it reads foo_bar.rs well\n";
+        let mut after = Document::markdown(text);
+        document_by_rules(&mut after);
+        let mut alone = Document::markdown(text);
+        for token in &mut alone.tokens {
+            token.reading = None;
+            token.origin = Origin::English;
+        }
+        document_by_rules(&mut alone);
+        let readings = |doc: &Document<'_>| {
+            doc.tokens
+                .iter()
+                .map(|t| (t.reading, t.origin))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(readings(&after), readings(&alone));
+        assert!(after.tokens.iter().any(|t| t.reading.is_some()));
+    }
+
+    #[test]
+    fn the_shipped_reading_is_the_rules_reading_then_the_learned_stage() {
+        let text = "She runs the old run to the Straße, and we run it.";
+        let mut whole = Token::split(text);
+        sentence(&mut whole, Context::Prose);
+        let mut staged = Token::split(text);
+        sentence_by_rules(&mut staged, Context::Prose);
+        let rules: Vec<_> = staged.iter().map(|t| t.reading).collect();
+        learned::run(&mut staged);
+        assert_eq!(
+            whole.iter().map(|t| t.reading).collect::<Vec<_>>(),
+            staged.iter().map(|t| t.reading).collect::<Vec<_>>()
+        );
+        // A word the rules were Sure of keeps their reading; the stage does not touch the rest of
+        // the sentence's kinds either.
+        for (token, rule) in whole.iter().zip(&rules) {
+            assert_eq!(token.reading.is_some(), rule.is_some());
+            if let Some(rule) = rule.filter(|r| r.confidence == Confidence::Sure) {
+                assert_eq!(token.reading, Some(rule));
+            }
+        }
+        assert!(
+            whole
+                .iter()
+                .zip(&rules)
+                .any(|(token, rule)| token.reading != *rule)
+        );
+    }
+
+    #[test]
     fn sentence_reads_a_word_from_a_table_or_as_unknown() {
         let mut tokens = Token::split("It can't run the frobnicator.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         let read: Vec<(&str, Tag, Confidence)> = tokens
             .iter()
             .filter_map(|t| t.reading.map(|r| (t.text.as_ref(), r.tag, r.confidence)))
@@ -185,7 +269,7 @@ mod tests {
     #[test]
     fn a_possessive_is_read_from_its_stem_or_is_an_unknown_noun() {
         let mut tokens = Token::split("Set user's frobnicator's file.");
-        sentence(&mut tokens, Context::Prose);
+        sentence_by_rules(&mut tokens, Context::Prose);
         let user = tokens[1].reading.unwrap();
         assert_eq!(user.tag, Tag::Noun);
         assert_eq!(user.confidence, Confidence::Unsure);

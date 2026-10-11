@@ -583,7 +583,7 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
     set("check_version", CHECK_VERSION.to_string());
     set("name", args.name.to_string());
     set("deslag_commit", facts.commit.clone());
-    set("tag_version", deslag::tag::VERSION.to_string());
+    set("tag_version", deslag::tag::RULES_VERSION.to_string());
     set("tokens", "deslag".to_string());
     set(
         "draw_source",

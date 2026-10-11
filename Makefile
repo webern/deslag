@@ -75,6 +75,9 @@ CARGO_FLAGS ?=
 # of the workspace, such as --profile fast, which it lacks.
 SWEEP := --manifest-path tools/sweep/Cargo.toml
 SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
+# The Python that test-python and generate-weights need, as the python workflow pins it: the weights'
+# digit ranges are cut from its Unicode tables.
+PYTHON_VERSION := 3.13
 
 .PHONY: help \
         build build-batches build-release \
@@ -88,12 +91,12 @@ SWEEP_TARGET := --target-dir $(or $(CARGO_TARGET_DIR),target)
         clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
         fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
-        preflight install \
+        preflight preflight-python install \
         fetch-blobs fetch-crates fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
         generate-label-judge-dev generate-label-judge-owner generate-label-owner \
         generate-label-report-dev generate-label-report-owner generate-label-spacy \
-        generate-percept generate-shapes generate-silver-assemble generate-silver-draw generate-silver-part \
+        generate-percept generate-shapes generate-weights generate-silver-assemble generate-silver-draw generate-silver-part \
         generate-spacy publish-blobs build-label
 
 help:
@@ -255,6 +258,8 @@ help:
 	@echo "                 readings, on the treebank's train set with and without the silver batch's train split, tuned"
 	@echo "                 on its tune split, and tag the dev and owner sets into .train/shapes; fetches the treebank"
 	@echo "                 and the big tier first; minutes, so not in ci"
+	@echo "generate-weights write src/tag/weights.txt, the weights the Rust tagger carries, from the p-hyb-s model"
+	@echo "                 generate-shapes left in .train/shapes; run it with Python 3.13; the file is committed"
 	@echo "generate-silver-assemble"
 	@echo "                 put the labelled parts under $(SILVER_DIR) together as the batch SILVER_NAME, and check"
 	@echo "                 it: a draft into SILVER_DRAFT_DIR/SILVER_NAME ($(SILVER_DRAFT_DIR)), or, when"
@@ -304,8 +309,8 @@ test: preflight test-exam
 # The big tier's tests are ignored by a plain cargo test, so that test runs
 # offline and with no login. The time that follows prints how long reading and
 # tagging the tier take, and fails if tagging's share of reading is over the
-# budget of the profile built. The budget is 50.0% in either profile; it is a limit,
-# not what ci measures (about 34% in debug).
+# budget of the profile built. The budget is 75.0% in either profile: what tagging
+# took with its learned stage (about 64% in debug), plus room.
 test-blobs: preflight fetch-blobs test-silver
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
@@ -380,6 +385,12 @@ test-label: preflight
 test-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh test
 
+# The weights file src/tag/weights.txt, written from the p-hyb-s model generate-shapes left. Python 3.13,
+# whose Unicode tables the file's digit ranges come from. Not part of test or ci: the file is committed
+# and test-python checks it against the golden.
+generate-weights: preflight-python
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh generate-weights
+
 # The shapes' unit tests, then the exam's report, gates, must-pass list and tic list for each of the five
 # taggers on the dev sets and the owner set, `compare` in pairs, and the tables .train/shapes.tsv,
 # .train/shapes.pairs.tsv and .train/shapes.tuning.tsv. Never scores the holdout or the treebank's test
@@ -397,12 +408,14 @@ test-shapes-milestone: preflight fetch-ewt
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,
 # run against a stand-in for OpenRouter and the real deslag-gold: no network, no login, no key,
-# no treebank. Minutes of git, so not in test or ci; the python workflow runs it when
-# scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train or tools/exam change.
-test-python: preflight
+# no treebank. Minutes of git, so not in test or ci; the python workflow runs it, on Python 3.13,
+# when scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train, tools/exam or
+# src/tag change.
+# DESLAG_EXAM_REQUIRED makes a test that needs deslag-exam fail without it, where run by hand it skips.
+test-python: preflight-python
 	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
 	python3 -m unittest discover -b -s $(BLOBSTORE) -p 'test_*.py'
-	python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
+	DESLAG_EXAM_REQUIRED=1 python3 -m unittest discover -b -s $(TRAIN) -p 'test_*.py'
 	python3 -m unittest discover -b -s $(LABEL) -p 'test_*.py'
 
 # Sweeps deslag's own source and the vendored crates of Cargo.lock with deslag-sweep, which checks the
@@ -591,6 +604,10 @@ fix-test-output: preflight
 
 preflight:
 	@$(SCRIPTS)/preflight.sh
+
+# preflight, and python3 must be PYTHON_VERSION.
+preflight-python:
+	@$(SCRIPTS)/preflight.sh $(PYTHON_VERSION)
 
 # ---------------------------------------------------------------------------
 # install

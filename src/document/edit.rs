@@ -14,7 +14,7 @@
 //!    comment, nothing that would read as `/*` or `*/`.
 //! 4. The document's own reader, reading the result, finds the same blocks, spans, line breaks and
 //!    pieces, and the same text in them but for the edits. Tokens and sentences are made from
-//!    these, so they are not compared.
+//!    these, so they need not be compared.
 //!
 //! The edits are tried all at once and, when the fourth step fails, one at a time, each kept only
 //! if it passes with the ones kept before it.

@@ -72,7 +72,7 @@ pub struct Document<'a> {
     /// where it is in the file, and how the file holds it. A Markdown file has those of its fences.
     pub(crate) regions: Vec<Region>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
-    /// with to prove it. The later layers are made from the first, so they are not read.
+    /// with to prove it. The later layers are made from the first, so they need not be read.
     stack: Stack,
 }
 

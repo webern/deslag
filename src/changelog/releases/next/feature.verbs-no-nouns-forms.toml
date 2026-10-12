@@ -12,6 +12,7 @@ is flagged and `we have no cache` is not. `have no` is excused because human wri
 half as often as agents do, by the share of files that hold it.
 
 Participles are left out, as are forms of verbs such as `mean` and `ensure` whose `no` opens a
-clause, and a few idioms: `make no sense`, `look no further`, `read no further` and `pay no
-attention`. Nothing is set in the config, and the fix is the same: negate the verb.
+clause, and in the forms without `s` a few idioms: `made no sense`, `look no further`, `read no
+further` and `paid no attention`. The `s` form flags as before, as in `makes no sense`. Nothing is
+set in the config, and the fix is the same: negate the verb.
 """

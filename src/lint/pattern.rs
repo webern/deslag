@@ -2,10 +2,11 @@
 //! `tools/corpus` measures, with one piece of code.
 //!
 //! A [`Pattern`] is a row of [`Item`]s, written as Rust data; there is no parser and no pattern
-//! comes from the config. Each item matches one token by its kind, its folded text, the end of its
-//! folded text or not, its folded text being or not being in a listed set, the part of speech the
-//! tagger read for it, or its origin, where the word comes from. An item may be optional, and a gap skips a bounded number of tokens. A match
-//! never leaves its sentence.
+//! comes from the config. Each item matches one token by its kind, its folded text, its folded
+//! text ending, or not ending, in a given string, its folded text being or not being in a listed
+//! set, whether it starts a listed pair of words, the part of speech the tagger read for it, a
+//! feature the tagger read, or its origin, where the word comes from. An item may be optional, and
+//! a gap skips a bounded number of tokens. A match never leaves its sentence.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
 //! the longest match from there, then resumes after it: leftmost first, then longest, and no two
@@ -14,7 +15,7 @@
 use std::ops::Range;
 
 use crate::document::{Document, Token, TokenKind};
-use crate::tag::{Confidence, Origin, TagSet};
+use crate::tag::{Confidence, Features, Origin, TagSet};
 
 /// One place in a [`Pattern`].
 #[derive(Debug, Clone, Copy)]
@@ -33,11 +34,19 @@ pub enum Item {
     NotIn(&'static [&'static [&'static str]]),
     /// A word whose folded text holds none of these characters.
     Without(&'static [char]),
+    /// A word that does not start a listed pair: the pair's first word is this one, and its second
+    /// is the word two tokens on, with one token between that the pattern names itself.
+    NotPair(&'static [(&'static str, &'static str)]),
     /// A word whose best guess is in this set, at this confidence or above.
     ///
     /// It reads the token's `reading`, and only its best guess: `kept` and the features are not
     /// consulted. A token with no reading matches at no level, `Unknown` included.
     Tag(TagSet, Confidence),
+    /// A word whose best guess lacks this feature, or that is unread.
+    ///
+    /// It reads the token's `reading` and only its `features`, which come from the lexicon entry
+    /// and not from the sentence.
+    NotFeature(Features),
     /// A word whose origin is this: `Item::Origin(Origin::Symbol)` is a bare identifier, and
     /// `Origin::English` a word no cue marks as code. A token the tagger has not read is
     /// `English`, so it matches only that.
@@ -134,9 +143,19 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         Item::In(set) => word && set.contains(&text.as_str()),
         Item::NotIn(sets) => word && !sets.iter().any(|set| set.contains(&text.as_str())),
         Item::Without(chars) => word && !text.contains(*chars),
+        Item::NotPair(pairs) => {
+            word && !folded
+                .get(at + 2)
+                .is_some_and(|second| pairs.iter().any(|(a, b)| a == text && b == second))
+        }
         Item::Tag(set, least) => token.reading.is_some_and(|reading| {
             set.contains(reading.tag) && reading.confidence.at_least(*least)
         }),
+        Item::NotFeature(feature) => {
+            word && !token
+                .reading
+                .is_some_and(|reading| reading.features.contains(*feature))
+        }
         Item::Origin(origin) => word && token.origin == *origin,
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
         Item::Optional(_) | Item::Gap(_) => false,
@@ -192,8 +211,28 @@ mod tests {
             ["needed no setup"]
         );
         assert_eq!(found(&P, "We NEED no setup."), ["NEED no setup"]);
+        assert!(found(&P, "It NEEDS no setup.").is_empty());
         // A code span is no word, so it is not a word that fails to end in `s`.
         assert!(found(&P, "Run `x` no more.").is_empty());
+    }
+
+    #[test]
+    fn not_pair_skips_a_word_that_starts_a_listed_pair() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::NotPair(&[("make", "sense"), ("look", "further")]),
+                Item::Literal("no"),
+                Item::Kind(TokenKind::Word),
+            ],
+        };
+        assert_eq!(
+            found(
+                &P,
+                "We make no assumptions. We make no sense. It Looks no further."
+            ),
+            ["make no assumptions", "Looks no further"]
+        );
+        assert!(found(&P, "It does look NO Further.").is_empty());
     }
 
     #[test]
@@ -360,6 +399,37 @@ mod tests {
         assert!(!english.contains(&"main.rs".to_string()), "{english:?}");
         // A code span is a `Code` token, no word, whatever its text.
         assert!(!english.contains(&"`main.rs`".to_string()), "{english:?}");
+    }
+
+    #[test]
+    fn a_not_feature_item_needs_a_reading_without_the_feature() {
+        let with = |features| {
+            let mut document = unread("It ships fast.");
+            for token in &mut document.tokens {
+                if token.text == "ships" {
+                    token.reading = Some(Reading {
+                        tag: Tag::Verb,
+                        features,
+                        confidence: Confidence::Sure,
+                        kept: TagSet::of(Tag::Verb),
+                    });
+                }
+            }
+            texts(&pattern(Item::NotFeature(Features::INFINITIVE)), &document)
+        };
+        assert_eq!(with(Features::PRESENT), ["It", "ships", "fast"]);
+        assert_eq!(
+            with(Features::INFINITIVE.union(Features::PRESENT)),
+            ["It", "fast"]
+        );
+        // An unread word lacks every feature, and the dot is no word.
+        assert_eq!(
+            texts(
+                &pattern(Item::NotFeature(Features::PLURAL)),
+                &unread("A b.")
+            ),
+            ["A", "b"]
+        );
     }
 
     #[test]

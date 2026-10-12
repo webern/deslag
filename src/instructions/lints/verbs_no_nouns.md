@@ -1,9 +1,10 @@
 `verbs_no_nouns` fails a sentence that negates a verb through its object, such as `it ships no
-binary` or `it needed no setup`; this repo writes "it does not ship a binary". It is a house
-style, off by default, and human writers trip it too. The fix is to negate the verb or drop the
-absolute claim: "zero", "without", "lacks" and "free of" are the same sentence. It does not flag
-`have no`. For text that is not English, scope it with `globs`. Ask the human before turning it
-off or scoping it.
+binary`, `it needed no setup` or `it had no cache`; this repo writes "it does not ship a binary".
+It is a house style, off by default, and human writers trip it too. The fix is to negate the verb
+or drop the absolute claim: "zero", "without", "lacks" and "free of" are the same sentence.
+
+It does not flag `have no` or idioms such as `make no sense`. For text that is not English, scope
+it with `globs`. Ask the human before turning it off or scoping it.
 
 ```toml
 [md.lints.verbs_no_nouns]

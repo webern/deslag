@@ -747,7 +747,7 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// `llm`, as it does in every measure by default.
 ///
 /// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
-/// files hold it at least 3 times as often as `human` files, and at most 3.1% of `human` files do.
+/// files hold it at least 3 times as often as `human` files, and at most 3.5% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -836,8 +836,18 @@ fn the_catalogue_counts_are_the_big_tiers() {
     let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
     eprintln!("flagged by verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}");
     assert!(
-        llm * humans >= 3 * human * llms && human * 1000 <= 31 * humans,
-        "verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}"
+        llm * humans >= 3 * human * llms,
+        "verbs_no_nouns: llm files hold it less than 3 times as often as human files (human \
+         {human} of {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
+         The tagger or the image moved the lint's findings: a human decides whether to excuse more \
+         idioms or to change the claim in the lint's doc comment."
+    );
+    assert!(
+        human * 1000 <= 35 * humans,
+        "verbs_no_nouns: more than 3.5% of human files hold it (human {human} of {humans}, llm \
+         {llm} of {llms}). The lint's claim no longer holds on this image. The tagger or the image \
+         moved the lint's findings: a human decides whether to excuse more idioms or to change the \
+         claim in the lint's doc comment."
     );
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");

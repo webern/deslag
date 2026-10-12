@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 138 of 1230: core 7, human 19, llm 66, mixed 46
+# fails 137 of 1230: core 7, human 18, llm 66, mixed 46
 
 [md.lints.verbs_no_nouns]
 
@@ -18,13 +18,12 @@ human/ICLRandD--Blackstone/README.md matches:1
 human/OpenCombine--OpenCombine/CHANGELOG.md matches:1
 human/Squidex--squidex/CHANGELOG.md matches:2
 human/academicpages--academicpages.github.io/_pages__terms.md matches:1
-human/api-platform--core/docs__adr__0004-link.md matches:1
 human/codeberg--dnkl--fcft/CHANGELOG.md matches:1
 human/codeberg--dnkl--fuzzel/CHANGELOG.md matches:1
 human/codeberg--skyjake--lagrange/README.md matches:1
 human/daviddavo--jgmd/TRANSLATION_REFERENCE.md matches:1
 human/fmuecke--Ipponboard/CHANGELOG.md matches:1
-human/gitlab--drummyfish--anarch/README.md matches:2
+human/gitlab--drummyfish--anarch/README.md matches:3
 human/hf--openai-community--gpt2/README.md matches:1
 human/idris-lang--Idris2/CHANGELOG.md matches:2
 human/jhipster--prettier-java/README.md matches:1

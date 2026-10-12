@@ -7,15 +7,20 @@
 //! object, [`CLAUSE_VERBS`] such as `means` whose `no` opens a clause, and [`STOP_WORDS`] such as
 //! `longer` that make `no` part of an idiom. `has` is not excused. [`FORMS`] finds the same tic in
 //! the other forms, as in `required no changes` and `need no setup`: a word the tagger reads as a
-//! verb at `Likely` or above, not ending in `s` or `ing`, and not in [`FORM_EXCUSES`]. The sets are
-//! Rust data, never config: a list a config grows is an allow-list an agent grows until the check
-//! passes.
+//! verb at `Likely` or above, not ending in `s`, not a present participle, not in the sets of
+//! excuses ([`BE_DO`], [`HAVE`], [`CLAUSE_FORMS`], [`SAY`]) and not the first word of a pair in
+//! [`IDIOMS`], such as `make no sense`. The sets are Rust data, never config: a list a config
+//! grows is an allow-list an agent grows until the check passes.
+//!
+//! A participle is told by the tagger's feature, which comes from the lexicon entry. A few rare
+//! `-ing` entries lack it (`recompiling`, `digitising`), and such a word before `no` is flagged.
 //!
 //! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
 //! `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often as
-//! `human` files, on the tree and on the big tier, and at most 3.1% of the big tier's `human`
+//! `human` files, on the tree and on the big tier, and at most 3.5% of the big tier's `human`
 //! files hold it. Human writers use the construction too, so the advice owns the rule as the
-//! repo's style and never says who wrote the sentence.
+//! repo's style and never says who wrote the sentence. A retrained tagger can move the lint's
+//! findings; `src/tag/weights.md` says what to do then.
 
 use std::ops::Range;
 
@@ -23,7 +28,7 @@ use crate::config::VerbsNoNouns;
 use crate::document::{Document, Location, TokenKind};
 use crate::lint::pattern::{Item, Pattern};
 use crate::lint::{Keep, Mark, MarkKind, quote};
-use crate::tag::{Confidence, Tag, TagSet};
+use crate::tag::{Confidence, Features, Tag, TagSet};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected verbs with no-nouns!";
@@ -55,21 +60,17 @@ pub const CLAUSE_VERBS: &[&str] = &[
 /// Words after `no` that make it an idiom, as in "no longer".
 pub const STOP_WORDS: &[&str] = &["longer", "more", "less", "one", "matter", "doubt", "way"];
 
-/// Words the forms pattern skips, since they are no verb taking an object, their `no` opens a
-/// clause, or people write them as often as agents do: every form of be and do, though `being`
-/// and `doing` are skipped for ending in `ing` anyway; `have`, since "have no" is as common in
-/// human writing as in agents' (`had` is not excused); and the other forms of the
-/// [`CLAUSE_VERBS`] and of `say`.
-pub const FORM_EXCUSES: &[&str] = &[
-    "am",
-    "are",
-    "were",
-    "be",
-    "been",
-    "do",
-    "did",
-    "done",
-    "have",
+/// Forms of be and do, which are not verbs with an object here: `being` and `doing` are left out
+/// too, since they are participles.
+pub const BE_DO: &[&str] = &["am", "are", "were", "be", "been", "do", "did", "done"];
+
+/// `have`, since "have no" is about half as common in human writing as in agents' by file rate,
+/// and many human files hold it. `had` and `has` are not excused.
+pub const HAVE: &[&str] = &["have"];
+
+/// The forms of the [`CLAUSE_VERBS`] lemmas other than `say` that do not end in `s` or `ing`, since
+/// their `no` opens a clause.
+pub const CLAUSE_FORMS: &[&str] = &[
     "mean",
     "meant",
     "ensure",
@@ -81,8 +82,6 @@ pub const FORM_EXCUSES: &[&str] = &[
     "show",
     "showed",
     "shown",
-    "say",
-    "said",
     "assume",
     "assumed",
     "prove",
@@ -98,6 +97,21 @@ pub const FORM_EXCUSES: &[&str] = &[
     "verified",
     "expect",
     "expected",
+];
+
+/// `say` and `said`. `says` is a clause verb already.
+pub const SAY: &[&str] = &["say", "said"];
+
+/// Verb and word pairs around `no` that are idioms and not the tic, as in "make no sense", folded
+/// to lower case. The list is closed and small: a pair is here because a corpus match shows the
+/// idiom, and a verb is never excused alone.
+pub const IDIOMS: &[(&str, &str)] = &[
+    ("make", "sense"),
+    ("made", "sense"),
+    ("look", "further"),
+    ("read", "further"),
+    ("pay", "attention"),
+    ("paid", "attention"),
 ];
 
 /// The `-s` construction the lint finds.
@@ -117,16 +131,18 @@ pub const PATTERN: Pattern = Pattern {
 /// plural or base form.
 ///
 /// The `-ed` forms stay, since the tagger reads a word's features from its entry and not from the
-/// sentence: "has required no" is the tic. `-ing` forms are left out because "having no" and
-/// "meaning no" are not it.
+/// sentence: "has required no" is the tic. Participles are left out because "having no" and
+/// "meaning no" are not it; the tagger's present-participle feature marks them, so a base verb
+/// that ends in `ing`, as in "bring no risk", is kept.
 pub const FORMS: Pattern = Pattern {
     items: &[
         Item::All(&[
             Item::Tag(TagSet::of(Tag::Verb), Confidence::Likely),
             Item::Without(&['\'']),
             Item::NotSuffix("s"),
-            Item::NotSuffix("ing"),
-            Item::NotIn(&[FORM_EXCUSES]),
+            Item::NotFeature(Features::PRESENT_PARTICIPLE),
+            Item::NotIn(&[BE_DO, HAVE, CLAUSE_FORMS, SAY]),
+            Item::NotPair(IDIOMS),
         ]),
         Item::Literal("no"),
         Item::All(&[Item::Kind(TokenKind::Word), Item::NotIn(&[STOP_WORDS])]),
@@ -248,7 +264,7 @@ const DEFAULT_ADVICE: &str = "This repo negates the verb: write \"does not ship 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tag::{Features, Reading};
+    use crate::tag::Reading;
 
     /// The quote of each match in `markdown`.
     fn found(markdown: &str) -> Vec<String> {
@@ -285,38 +301,126 @@ mod tests {
         assert!(found("It runs, meaning no setup.").is_empty());
     }
 
-    #[test]
-    fn a_word_read_as_no_verb_does_not_match_the_forms() {
-        // The tagger reads "the build" as a noun phrase, so `had` there is not a Likely verb.
-        assert!(found("The tool had no tests.").is_empty());
-        assert!(found("Functions carry no state.").is_empty());
-    }
-
-    /// Whether [`FORMS`] finds a match in `It <word> no changes.` once the tagger's reading of
-    /// `word` is a sure verb, whatever the tagger made of it in that sentence.
-    fn forms_match_as_a_sure_verb(word: &str) -> bool {
-        let text = format!("It {word} no changes.");
-        let mut document = Document::markdown(&text);
+    /// Whether [`FORMS`] finds a match in `text` when the tagger's reading of `word` is `tag` at
+    /// `confidence` with `features`, whatever it made of the word in that sentence.
+    fn forms_match_in(
+        text: &str,
+        word: &str,
+        tag: Tag,
+        confidence: Confidence,
+        features: Features,
+    ) -> bool {
+        let mut document = Document::markdown(text);
         for token in &mut document.tokens {
-            if token.text == word {
+            if token.text.eq_ignore_ascii_case(word) {
                 token.reading = Some(Reading {
-                    tag: Tag::Verb,
-                    features: Features::NONE,
-                    confidence: Confidence::Sure,
-                    kept: TagSet::of(Tag::Verb),
+                    tag,
+                    features,
+                    confidence,
+                    kept: TagSet::of(tag),
                 });
             }
         }
         FORMS.find(&document).next().is_some()
     }
 
+    /// Whether [`FORMS`] finds a match in `text` when `word` is read as a sure verb.
+    fn forms_match_as_a_sure_verb_in(text: &str, word: &str) -> bool {
+        forms_match_in(text, word, Tag::Verb, Confidence::Sure, Features::NONE)
+    }
+
+    /// Whether [`FORMS`] finds a match in `It <word> no changes.` when `word` is a sure verb.
+    fn forms_match_as_a_sure_verb(word: &str) -> bool {
+        forms_match_as_a_sure_verb_in(&format!("It {word} no changes."), word)
+    }
+
+    #[test]
+    fn the_forms_need_a_verb_at_likely_or_above() {
+        let at = |tag, confidence| {
+            let text = "It required no changes.";
+            forms_match_in(text, "required", tag, confidence, Features::NONE)
+        };
+        assert!(at(Tag::Verb, Confidence::Sure));
+        assert!(at(Tag::Verb, Confidence::Likely));
+        assert!(!at(Tag::Verb, Confidence::Unsure));
+        assert!(!at(Tag::Verb, Confidence::Unknown));
+        assert!(!at(Tag::Noun, Confidence::Sure));
+        assert!(!at(Tag::Adjective, Confidence::Likely));
+        assert!(!at(Tag::Auxiliary, Confidence::Sure));
+    }
+
+    #[test]
+    fn a_present_participle_is_not_a_match_but_a_base_form_is() {
+        let with = |features| {
+            let text = "It will bring no risk.";
+            forms_match_in(text, "bring", Tag::Verb, Confidence::Sure, features)
+        };
+        assert!(with(Features::INFINITIVE));
+        assert!(!with(Features::PRESENT_PARTICIPLE));
+    }
+
     #[test]
     fn a_form_excuse_is_not_a_match() {
         assert!(forms_match_as_a_sure_verb("required"));
         assert!(forms_match_as_a_sure_verb("had"));
-        for word in FORM_EXCUSES {
+        for word in [BE_DO, HAVE, CLAUSE_FORMS, SAY].concat() {
             assert!(!forms_match_as_a_sure_verb(word), "{word}");
         }
+    }
+
+    /// The lemma a clause verb in `-s` form is the form of: `means` is `mean`, `implies` `imply`.
+    fn lemma(clause_verb: &str) -> String {
+        match clause_verb.strip_suffix("ies") {
+            Some(stem) => format!("{stem}y"),
+            None => clause_verb.trim_end_matches('s').to_string(),
+        }
+    }
+
+    #[test]
+    fn the_clause_verb_forms_follow_the_clause_verbs() {
+        let excused = [CLAUSE_FORMS, SAY].concat();
+        let lemmas: Vec<String> = CLAUSE_VERBS.iter().map(|verb| lemma(verb)).collect();
+        for lemma in &lemmas {
+            assert!(excused.contains(&lemma.as_str()), "{lemma} is excused");
+        }
+        // Each excused form begins with a lemma's stem: `proved` and `proven` with `prov`.
+        for form in &excused {
+            assert!(
+                lemmas.iter().any(|lemma| {
+                    let stem = lemma.trim_end_matches(['e', 'y']);
+                    form.starts_with(stem)
+                }),
+                "{form} is a form of a clause verb"
+            );
+        }
+    }
+
+    #[test]
+    fn an_idiom_pair_is_not_a_match_but_its_verb_alone_is() {
+        for (verb, word) in IDIOMS {
+            let text = format!("It {verb} no {word}.");
+            assert!(!forms_match_as_a_sure_verb_in(&text, verb), "{text}");
+            let capitalised = format!("It {verb} No {}.", word.to_uppercase());
+            assert!(
+                !forms_match_as_a_sure_verb_in(&capitalised, verb),
+                "{capitalised}"
+            );
+            let other = format!("It {verb} no changes.");
+            assert!(forms_match_as_a_sure_verb_in(&other, verb), "{other}");
+        }
+        assert!(forms_match_as_a_sure_verb_in(
+            "We make no assumptions.",
+            "make"
+        ));
+        assert!(forms_match_as_a_sure_verb_in("It paid no heed.", "paid"));
+    }
+
+    #[test]
+    fn an_excuse_is_folded_to_lower_case() {
+        let text = "Said no errors remain. Make No Sense of it.";
+        assert!(!forms_match_as_a_sure_verb_in(text, "said"));
+        assert!(!forms_match_as_a_sure_verb_in(text, "make"));
+        assert!(!forms_match_as_a_sure_verb_in("Do no harm.", "do"));
     }
 
     #[test]

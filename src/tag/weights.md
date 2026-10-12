@@ -91,6 +91,17 @@ fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. 
    against the model. Nothing else makes the file.
 3. A change to the file is a change to the tagger: raise `deslag::tag::VERSION`, run
    `make fix-golden`, and update the counts and costs here.
+4. Read the diff of `tests/golden/verbs_no_nouns.txt` after `make fix-golden`. The lint reads the
+   tagger's readings, so a retrain can move its findings, the unit tests in
+   `src/lint/verbs_no_nouns.rs`, `tests/cases/verbs_no_nouns/forms.stderr`, the tree test in
+   `tests/corpus.rs` and the big tier's ceiling in `tests/blobs.rs`. If findings moved, add a
+   changelog entry under `src/changelog/releases/next/`. If a ceiling or ratio test fails, stop
+   and ask a human: no limit moves on a retrain's say-so.
+
+While the weights lag a `RULES_VERSION` bump the learned stage is off, so a `make fix-golden` run
+then, such as the one before step 1, records what the rules alone find in
+`tests/golden/verbs_no_nouns.txt`. Restore that file with `git restore` and fix it only after
+step 3.
 
 A build whose weights name another rules version than its own does not run the learned stage: its
 tagger is the rules alone. A test fails on such a build, so CI never passes one, and none ships.

@@ -35,31 +35,31 @@
   "funnel": [
     {
       "step": "n-grams of 1 to 4 tokens in at least 10 focus repositories",
-      "left": 204
+      "left": 217
     },
     {
       "step": "no one repository holds more than 25% of its focus files",
-      "left": 204
+      "left": 217
     },
     {
       "step": "no human file in the tree holds it",
-      "left": 162
+      "left": 175
     },
     {
       "step": "the interval's lower bound is at least 4",
-      "left": 122
+      "left": 135
     },
     {
       "step": "focus files of at least 3 compared tools hold it",
-      "left": 83
+      "left": 96
     },
     {
       "step": "neither in the catalogue nor refused for it",
-      "left": 80
+      "left": 93
     },
     {
       "step": "after merging each n-gram into a shorter one it holds",
-      "left": 19
+      "left": 23
     }
   ],
   "gate": {
@@ -67,8 +67,8 @@
     "count": 12,
     "without_rare_words": 1,
     "phrases": [
-      "the default",
       "no",
+      "the default",
       "and",
       "is stale",
       "load",
@@ -83,13 +83,13 @@
   },
   "candidates": [
     {
-      "phrase": "the default",
-      "n": 2,
+      "phrase": "no",
+      "n": 1,
       "focus": {
         "files": 80,
         "repos": 80,
-        "occurrences": 80,
-        "rate": 21211.71652421652
+        "occurrences": 96,
+        "rate": 23953.399373468204
       },
       "reference": {
         "files": 0,
@@ -97,10 +97,83 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 64.71999643874643,
+      "ratio": 72.95601171789849,
       "interval": [
-        62.37598697598697,
-        67.07164733414731
+        68.77526185228014,
+        77.29642322485347
+      ],
+      "top_repo_share": 0.0125,
+      "tools": [
+        {
+          "name": "claude-code",
+          "files": 27
+        },
+        {
+          "name": "copilot",
+          "files": 26
+        },
+        {
+          "name": "cursor",
+          "files": 26
+        }
+      ],
+      "kinds": [
+        {
+          "name": "docs",
+          "files": 27
+        },
+        {
+          "name": "readme",
+          "files": 27
+        },
+        {
+          "name": "agent-skill",
+          "files": 26
+        }
+      ],
+      "words": [
+        {
+          "word": "no",
+          "reference_files": 0,
+          "rare": true
+        }
+      ],
+      "longer": [
+        "needs no warm",
+        "no warm-up",
+        "no warm",
+        "no rebuild after the",
+        "no rebuild after",
+        "no rebuild",
+        "required no rebuild after",
+        "required no rebuild",
+        "required no"
+      ],
+      "examples": [
+        "The _ needs [no] warm-up step, and the buffer is load-bearing — keep it ...",
+        "The _ needs [no] warm-up step, and the snapshot is load-bearing — keep it ...",
+        "The _ needs [no] warm-up step, and the manifest is load-bearing — keep it ..."
+      ]
+    },
+    {
+      "phrase": "the default",
+      "n": 2,
+      "focus": {
+        "files": 80,
+        "repos": 80,
+        "occurrences": 80,
+        "rate": 20440.8772915367
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 62.40439538377625,
+      "interval": [
+        60.02967785465218,
+        64.9520987029612
       ],
       "top_repo_share": 0.0125,
       "tools": [
@@ -151,80 +224,13 @@
       ]
     },
     {
-      "phrase": "no",
-      "n": 1,
-      "focus": {
-        "files": 80,
-        "repos": 80,
-        "occurrences": 80,
-        "rate": 21211.71652421652
-      },
-      "reference": {
-        "files": 0,
-        "repos": 0,
-        "occurrences": 0,
-        "rate": 0.0
-      },
-      "ratio": 64.71999643874643,
-      "interval": [
-        62.37598697598697,
-        67.07164733414731
-      ],
-      "top_repo_share": 0.0125,
-      "tools": [
-        {
-          "name": "claude-code",
-          "files": 27
-        },
-        {
-          "name": "copilot",
-          "files": 26
-        },
-        {
-          "name": "cursor",
-          "files": 26
-        }
-      ],
-      "kinds": [
-        {
-          "name": "docs",
-          "files": 27
-        },
-        {
-          "name": "readme",
-          "files": 27
-        },
-        {
-          "name": "agent-skill",
-          "files": 26
-        }
-      ],
-      "words": [
-        {
-          "word": "no",
-          "reference_files": 0,
-          "rare": true
-        }
-      ],
-      "longer": [
-        "needs no warm",
-        "no warm-up",
-        "no warm"
-      ],
-      "examples": [
-        "The _ needs [no] warm-up step, and the buffer is load-bearing — keep it ...",
-        "The _ needs [no] warm-up step, and the snapshot is load-bearing — keep it ...",
-        "The _ needs [no] warm-up step, and the manifest is load-bearing — keep it ..."
-      ]
-    },
-    {
       "phrase": "and",
       "n": 1,
       "focus": {
         "files": 80,
         "repos": 80,
         "occurrences": 80,
-        "rate": 21211.71652421652
+        "rate": 20440.8772915367
       },
       "reference": {
         "files": 0,
@@ -232,10 +238,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 64.71999643874643,
+      "ratio": 62.40439538377625,
       "interval": [
-        62.37598697598697,
-        67.07164733414731
+        60.02967785465218,
+        64.9520987029612
       ],
       "top_repo_share": 0.0125,
       "tools": [
@@ -280,18 +286,18 @@
         "and the",
         "and the buffer is",
         "and the buffer",
-        "and the snapshot is",
-        "and the snapshot",
         "and the manifest is",
         "and the manifest",
+        "and the snapshot is",
+        "and the snapshot",
         "and the token is",
         "and the token",
         "and the table is",
         "and the table",
-        "and the handle is",
-        "and the handle",
         "and the batch is",
-        "and the batch"
+        "and the batch",
+        "and the handle is",
+        "and the handle"
       ],
       "examples": [
         "The _ needs no warm-up step, [and] the buffer is load-bearing — keep it.",
@@ -306,7 +312,7 @@
         "files": 80,
         "repos": 80,
         "occurrences": 80,
-        "rate": 21211.71652421652
+        "rate": 20440.8772915367
       },
       "reference": {
         "files": 0,
@@ -314,10 +320,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 64.71999643874643,
+      "ratio": 62.40439538377625,
       "interval": [
-        62.37598697598697,
-        67.07164733414731
+        60.02967785465218,
+        64.9520987029612
       ],
       "top_repo_share": 0.0125,
       "tools": [
@@ -360,18 +366,18 @@
         "is load",
         "the buffer is load",
         "buffer is load",
-        "the snapshot is load",
-        "snapshot is load",
         "the manifest is load",
         "manifest is load",
+        "the snapshot is load",
+        "snapshot is load",
         "the token is load",
         "token is load",
         "the table is load",
         "table is load",
-        "the handle is load",
         "the batch is load",
-        "handle is load",
-        "batch is load"
+        "batch is load",
+        "the handle is load",
+        "handle is load"
       ],
       "examples": [
         "The _ needs no warm-up step, and the buffer is [load]-bearing — keep it.",
@@ -386,7 +392,7 @@
         "files": 80,
         "repos": 80,
         "occurrences": 80,
-        "rate": 21211.71652421652
+        "rate": 20440.8772915367
       },
       "reference": {
         "files": 0,
@@ -394,10 +400,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 64.71999643874643,
+      "ratio": 62.40439538377625,
       "interval": [
-        62.37598697598697,
-        67.07164733414731
+        60.02967785465218,
+        64.9520987029612
       ],
       "top_repo_share": 0.0125,
       "tools": [
@@ -453,7 +459,7 @@
         "files": 80,
         "repos": 80,
         "occurrences": 80,
-        "rate": 21211.71652421652
+        "rate": 20440.8772915367
       },
       "reference": {
         "files": 0,
@@ -461,10 +467,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 64.71999643874643,
+      "ratio": 62.40439538377625,
       "interval": [
-        62.37598697598697,
-        67.07164733414731
+        60.02967785465218,
+        64.9520987029612
       ],
       "top_repo_share": 0.0125,
       "tools": [

@@ -151,8 +151,8 @@ pub(super) fn guess(text: &str) -> Reading {
 
 /// What the rules make of `text`.
 fn shape(text: &str) -> Shape {
-    // Lower-case letters alone make no possessive, no version, no dotted word, no identifier and no
-    // capital, which the rules below would each find out, so only its ending is left to read.
+    // Lower-case letters alone never make a possessive, a version, a dotted word, an identifier or
+    // a capital, which the rules below would each find out, so only its ending is left to read.
     if text.bytes().all(|byte| byte.is_ascii_lowercase()) {
         return ending_of(text).unwrap_or(NO_SHAPE);
     }

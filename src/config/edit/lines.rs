@@ -297,7 +297,7 @@ fn replaces_value(before: &str, after: &str, from: Option<&Version>, quoted: &st
     }) {
         return true;
     }
-    // YAML may write no value at all: the key and its colon.
+    // YAML may leave the value out: the key and its colon.
     from.is_none()
         && (0..=before.len()).any(|at| {
             before.is_char_boundary(at)

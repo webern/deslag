@@ -454,7 +454,7 @@ pub struct CharGroups {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub spaces: Option<bool>,
-    /// Characters that take no space, such as the zero-width space, to be deleted.
+    /// Characters that do not take space, such as the zero-width space, to be deleted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
     pub invisible: Option<bool>,

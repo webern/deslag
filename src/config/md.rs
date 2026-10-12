@@ -14,7 +14,7 @@ pub(super) const NAME: &str = "md";
 pub const DEFAULT_GLOBS: &[&str] = &["*.md"];
 
 /// The languages whose fenced code `[md]` can read.
-// The variants carry no doc comments of their own, which would turn the schema's list of values
+// The variants do not carry doc comments of their own, which would turn the schema's list of values
 // into a list of branches. The `languages` key says what each is.
 #[derive(Debug, Clone, Copy, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]

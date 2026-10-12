@@ -3,7 +3,7 @@
 //! The first layer is what a reader for the file's format finds. [`Block`]s nest as the format
 //! nests them. A block of prose holds [`Piece`]s, the text it renders, with the [`Span`]s of
 //! formatting over them and the [`Point`]s where its lines break. A block that is not prose, such
-//! as a code block, keeps its text as written and is read no further.
+//! as a code block, keeps its text as written and is not read further.
 //!
 //! The second layer does not know the format. It splits each block of prose into a flat row of
 //! [`Token`]s, words and punctuation and the pieces that are never split, such as code, and groups
@@ -72,7 +72,7 @@ pub struct Document<'a> {
     /// where it is in the file, and how the file holds it. A Markdown file has those of its fences.
     pub(crate) regions: Vec<Region>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
-    /// with to prove it. The later layers are made from the first, so they need no reading.
+    /// with to prove it. The later layers are made from the first, so they need not be read.
     stack: Stack,
 }
 

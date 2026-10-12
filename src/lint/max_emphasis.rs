@@ -97,8 +97,8 @@ pub struct Over {
     pub message: Option<String>,
 }
 
-/// Checks one file, read into `document`. A file with no settings, or with settings that set no
-/// limit, is not checked.
+/// Checks one file, read into `document`. A file with no settings, or with settings that do not
+/// set a limit, is not checked.
 pub fn check(document: &Document<'_>, settings: Option<&MaxEmphasis>) -> Option<Over> {
     let settings = settings.filter(|settings| settings.is_set())?;
     let free_spans = settings.free_spans.unwrap_or(0);

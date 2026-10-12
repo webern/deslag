@@ -101,12 +101,12 @@ enum Command {
         every_file: bool,
     },
     /// How many English files hold each construction the pattern matcher finds, per label and
-    /// per tool, with masked examples: those considered for a lint and not shipped, and each
-    /// shipped lint's. Files in another language are counted apart.
+    /// per tool, with masked examples: those considered for a lint and not shipped, and the
+    /// patterns shipped lints use. Files in another language are counted apart.
     Patterns {
         #[command(flatten)]
         filters: Filters,
-        /// The patterns to run, by name or by the id of the lint that ships one; by default,
+        /// The patterns to run, by name; by default,
         /// every one.
         names: Vec<String>,
     },

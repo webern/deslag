@@ -75,6 +75,10 @@ fn specs() -> Vec<Spec> {
         if i % 3 == 0 {
             text += "\nThis step is deliberately not cached, so the next run reads it again.\n";
         }
+        // A past-tense form of the tic, which only the pattern for the other forms finds.
+        if i % 5 == 1 {
+            text += &format!("\nThe {topic} required no rebuild after the {noun} changed.\n");
+        }
         let (kind, path) = kinds[i % 3];
         let mut spec_tools = vec![tools[i % 3]];
         if i == 79 {
@@ -396,7 +400,13 @@ const CASES: &[(&str, &[&str])] = &[
     ("patterns.txt", &["--tier", "blobs", "patterns"]),
     (
         "patterns.json",
-        &["--tier", "blobs", "--json", "patterns", "verbs_no_nouns"],
+        &[
+            "--tier",
+            "blobs",
+            "--json",
+            "patterns",
+            "verbs_no_nouns_forms",
+        ],
     ),
     (
         "report.md",

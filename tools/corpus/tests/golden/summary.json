@@ -48,14 +48,14 @@
         "files": 80,
         "repos": 80
       },
-      "bytes": 18773,
-      "tokens": 3893,
-      "words": 3118,
-      "sentences": 389,
+      "bytes": 19696,
+      "tokens": 4053,
+      "words": 3262,
+      "sentences": 405,
       "tokens_per_file": [
         39.0,
         48.0,
-        54.0
+        58.0
       ],
       "twins": 0
     },

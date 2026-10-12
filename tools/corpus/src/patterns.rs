@@ -1,6 +1,6 @@
 //! `patterns`: how many files hold a construction the pattern matcher finds, per label and per
 //! tool, with masked examples. It runs the constructions considered for a lint and not shipped,
-//! which `lints` cannot, and a shipped lint's own by its name.
+//! which `lints` cannot, and the patterns of a shipped lint, each by its own name.
 //!
 //! Each file is read again and parsed as deslag parses it: the measured tokens stand one
 //! separator in for every code span, which hides a series of them. A construction is English, so
@@ -70,9 +70,11 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
     ),
 ];
 
-/// The shipped lints whose construction is a pattern, each with its id.
+/// The patterns shipped lints use, each with its name. A lint with two patterns has a name per
+/// pattern: `verbs_no_nouns_s` is the verbs ending in `s` and `verbs_no_nouns_forms` the other
+/// forms, which together are the lint `verbs_no_nouns`. `lints` measures a whole lint under its id.
 pub const SHIPPED: &[(&str, Pattern)] = &[
-    ("verbs_no_nouns", verbs_no_nouns::PATTERN),
+    ("verbs_no_nouns_s", verbs_no_nouns::PATTERN),
     ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),
 ];
 
@@ -113,7 +115,7 @@ pub struct Example {
 /// One pattern across the labels and tools.
 #[derive(Debug, Serialize)]
 pub struct PatternRow {
-    /// Its name, or the id of the lint that ships it.
+    /// Its name: a candidate's, or the name of a pattern a lint ships.
     pub name: String,
     /// Whether a lint ships it.
     pub shipped: bool,

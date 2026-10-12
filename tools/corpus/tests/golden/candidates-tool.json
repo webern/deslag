@@ -35,15 +35,15 @@
   "funnel": [
     {
       "step": "n-grams of 1 to 4 tokens in at least 5 focus repositories",
-      "left": 99
+      "left": 112
     },
     {
       "step": "no one repository holds more than 25% of its focus files",
-      "left": 99
+      "left": 112
     },
     {
       "step": "no human file in the tree holds it",
-      "left": 73
+      "left": 86
     },
     {
       "step": "the interval's lower bound is at least 1",
@@ -72,7 +72,7 @@
         "files": 27,
         "repos": 27,
         "occurrences": 27,
-        "rate": 17146.776406035668
+        "rate": 16690.84328584582
       },
       "reference": {
         "files": 0,
@@ -80,10 +80,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 78.57201646090537,
+      "ratio": 80.18136054805258,
       "interval": [
-        76.35567313345092,
-        80.7883597883598
+        77.04518729246026,
+        82.84833156161163
       ],
       "top_repo_share": 0.037037037037037035,
       "tools": [],
@@ -124,7 +124,7 @@
         "files": 27,
         "repos": 27,
         "occurrences": 27,
-        "rate": 17146.776406035668
+        "rate": 16690.84328584582
       },
       "reference": {
         "files": 0,
@@ -132,10 +132,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 78.57201646090537,
+      "ratio": 80.18136054805258,
       "interval": [
-        76.35567313345092,
-        80.7883597883598
+        77.04518729246026,
+        82.84833156161163
       ],
       "top_repo_share": 0.037037037037037035,
       "tools": [],
@@ -170,7 +170,7 @@
         "files": 27,
         "repos": 27,
         "occurrences": 27,
-        "rate": 17146.776406035668
+        "rate": 16690.84328584582
       },
       "reference": {
         "files": 0,
@@ -178,10 +178,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 78.57201646090537,
+      "ratio": 80.18136054805258,
       "interval": [
-        76.35567313345092,
-        80.7883597883598
+        77.04518729246026,
+        82.84833156161163
       ],
       "top_repo_share": 0.037037037037037035,
       "tools": [],
@@ -220,7 +220,7 @@
         "files": 27,
         "repos": 27,
         "occurrences": 27,
-        "rate": 17146.776406035668
+        "rate": 16690.84328584582
       },
       "reference": {
         "files": 0,
@@ -228,10 +228,10 @@
         "occurrences": 0,
         "rate": 0.0
       },
-      "ratio": 78.57201646090537,
+      "ratio": 80.18136054805258,
       "interval": [
-        76.35567313345092,
-        80.7883597883598
+        77.04518729246026,
+        82.84833156161163
       ],
       "top_repo_share": 0.037037037037037035,
       "tools": [],

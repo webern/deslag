@@ -391,16 +391,21 @@ pub enum Origin {
     Path,
     /// A word joined to a leading `-` or `--`: `--locked`.
     Flag,
+    /// A word that neither table holds, which the file writes in code too: `kubectl` in a code
+    /// span or a fence of the same file. The file calls it a name of its own, whatever the tagger
+    /// says of it.
+    Seen,
 }
 
 impl Origin {
     /// Every origin, in the order the exam's report lists them.
-    pub const ALL: [Origin; 5] = [
+    pub const ALL: [Origin; 6] = [
         Origin::English,
         Origin::Symbol,
         Origin::Command,
         Origin::Path,
         Origin::Flag,
+        Origin::Seen,
     ];
 
     /// The name an `Origin=` in the exam's token skeleton uses.
@@ -411,6 +416,7 @@ impl Origin {
             Origin::Command => "Command",
             Origin::Path => "Path",
             Origin::Flag => "Flag",
+            Origin::Seen => "Seen",
         }
     }
 

@@ -21,6 +21,7 @@ mod origin;
 mod pass;
 mod prior;
 mod proper;
+mod seen;
 mod shape;
 mod single;
 mod table;
@@ -29,7 +30,8 @@ mod weights;
 
 use crate::document::{Block, BlockKind, Document, Token, TokenKind};
 
-pub use origin::origins;
+pub use origin::{origins, origins_seen};
+pub use seen::CodeWords;
 pub use types::{Confidence, Context, Features, Origin, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
@@ -55,7 +57,13 @@ const _: () = assert!(size_of::<Token<'static>>() == 48);
 /// The rules read the sentence ([`sentence_by_rules`]), then the learned stage chooses among the
 /// tags they left open for each word they did not settle.
 pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
-    sentence_by_rules(tokens, context);
+    sentence_seen(tokens, context, &CodeWords::new());
+}
+
+/// As [`sentence`], for a sentence of a file that writes the words `seen` in code (see
+/// [`CodeWords`]): a word of them that the tables lack has the origin [`Origin::Seen`].
+pub fn sentence_seen(tokens: &mut [Token<'_>], context: Context, seen: &CodeWords<'_>) {
+    sentence_by_rules_seen(tokens, context, seen);
     learned::run(tokens);
 }
 
@@ -66,6 +74,15 @@ pub fn sentence(tokens: &mut [Token<'_>], context: Context) {
 /// Each word is looked up on its own, then the passes narrow the readings in the sentence's
 /// context, in a fixed order.
 pub fn sentence_by_rules(tokens: &mut [Token<'_>], context: Context) {
+    sentence_by_rules_seen(tokens, context, &CodeWords::new());
+}
+
+/// As [`sentence_by_rules`], for a sentence of a file that writes the words `seen` in code.
+///
+/// A word is `Seen` when no cue has made it a name, the tables lack it, and `seen` holds it. That
+/// is a fact about the word and commits the tagger to nothing: its reading stays what its shape
+/// gave it.
+pub fn sentence_by_rules_seen(tokens: &mut [Token<'_>], context: Context, seen: &CodeWords<'_>) {
     let mut commands = false;
     let mut after_git = false;
     for at in 0..tokens.len() {
@@ -74,6 +91,13 @@ pub fn sentence_by_rules(tokens: &mut [Token<'_>], context: Context) {
             let (reading, plain, name) = table::read_shaped(&token.text);
             token.reading = Some(reading);
             commands |= origin::mark(tokens, at, plain, name, &mut after_git);
+            let token = &mut tokens[at];
+            if token.origin == Origin::English
+                && reading.confidence == Confidence::Unknown
+                && seen.contains(&token.text)
+            {
+                token.origin = Origin::Seen;
+            }
         } else {
             token.reading = None;
             token.origin = Origin::English;
@@ -123,19 +147,34 @@ fn read(text: &str) -> Reading {
     table::read(text)
 }
 
-/// Runs [`sentence`] over every sentence of `document`, with each one's context.
+/// Runs [`sentence`] over every sentence of `document`, with each one's context and the words the
+/// document writes in code (see [`CodeWords`]).
 pub fn document(document: &mut Document<'_>) {
-    read_document(document, sentence);
+    read_document(document, sentence_seen);
 }
 
 /// As [`document`], with the rules alone ([`sentence_by_rules`]). It reads every word again, so it
 /// may follow [`document`].
 pub fn document_by_rules(document: &mut Document<'_>) {
-    read_document(document, sentence_by_rules);
+    read_document(document, sentence_by_rules_seen);
 }
 
-/// Runs `read` over every sentence of `document`, with each one's context.
-fn read_document(document: &mut Document<'_>, read: fn(&mut [Token<'_>], Context)) {
+/// Runs `read` over every sentence of `document`, with each one's context and the words the
+/// document writes in code, which it collects once.
+fn read_document<'a>(
+    document: &mut Document<'a>,
+    read: fn(&mut [Token<'_>], Context, &CodeWords<'_>),
+) {
+    let seen = CodeWords::of(document);
+    read_sentences(document, &seen, read);
+}
+
+/// Runs `read` over every sentence of `document`, with each one's context and `seen`.
+fn read_sentences(
+    document: &mut Document<'_>,
+    seen: &CodeWords<'_>,
+    read: fn(&mut [Token<'_>], Context, &CodeWords<'_>),
+) {
     let mut sentences = Vec::new();
     for (block, ancestors) in document.walk() {
         let context = context_of(block, &ancestors);
@@ -144,7 +183,7 @@ fn read_document(document: &mut Document<'_>, read: fn(&mut [Token<'_>], Context
         }
     }
     for (range, context) in sentences {
-        read(&mut document.tokens[range], context);
+        read(&mut document.tokens[range], context, seen);
     }
 }
 
@@ -244,6 +283,46 @@ mod tests {
                 .zip(&rules)
                 .any(|(token, rule)| token.reading != *rule)
         );
+    }
+
+    #[test]
+    fn a_word_the_file_writes_in_code_is_seen_and_nothing_else_changes() {
+        let text = "Run `frobnicator` and `the` and `foo_bar` here.\n\n\
+                    The frobnicator, the Frobnicator and the foo_bar read the.\n";
+        let mut with = Document::markdown(text);
+        let mut without = Document::markdown(text);
+        for token in &mut without.tokens {
+            token.reading = None;
+            token.origin = Origin::English;
+        }
+        read_sentences(&mut without, &CodeWords::new(), sentence_seen);
+        let seen: Vec<_> = with
+            .tokens
+            .iter()
+            .filter(|t| t.origin == Origin::Seen)
+            .map(|t| t.text.to_string())
+            .collect();
+        // `Frobnicator` is another case, `the` is a table word and `foo_bar` is a symbol already.
+        assert_eq!(seen, ["frobnicator"]);
+        for (a, b) in with.tokens.iter().zip(&without.tokens) {
+            assert_eq!(a.reading, b.reading, "{}", a.text);
+            if a.origin != Origin::Seen {
+                assert_eq!(a.origin, b.origin, "{}", a.text);
+            }
+        }
+        assert!(with.tokens.iter().any(|t| t.origin == Origin::Symbol));
+        // The same set marks the same words when the sentence is read from its tokens alone.
+        let code = CodeWords::of(&with);
+        for (block, _) in with.walk() {
+            for found in with.sentences_of(block) {
+                let row = &with.tokens[found.tokens.clone()];
+                let found: Vec<Origin> = row.iter().map(|t| t.origin).collect();
+                assert_eq!(origins_seen(row, &code), found);
+            }
+        }
+        // Read again by the rules alone, it is the same.
+        document_by_rules(&mut with);
+        assert!(with.tokens.iter().any(|t| t.origin == Origin::Seen));
     }
 
     #[test]

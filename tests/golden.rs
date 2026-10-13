@@ -333,7 +333,8 @@ fn reading_text(reading: &Reading) -> String {
     out
 }
 
-/// The mark an origin other than English gets after a reading: `@sym`, `@cmd`, `@path`, `@flag`.
+/// The mark an origin other than English gets after a reading: `@sym`, `@cmd`, `@path`, `@flag`,
+/// `@seen`.
 fn origin_text(origin: Origin) -> &'static str {
     match origin {
         Origin::English => "",
@@ -341,6 +342,7 @@ fn origin_text(origin: Origin) -> &'static str {
         Origin::Command => "@cmd",
         Origin::Path => "@path",
         Origin::Flag => "@flag",
+        Origin::Seen => "@seen",
     }
 }
 
@@ -377,7 +379,7 @@ fn tag_stream(fixtures: &[&Fixture]) -> String {
          # READING is the tag code, then each feature set, from {}\n\
          # {}, then `:S`, `:L`, `:U` or `:?` for Sure, Likely,\n\
          # Unsure or Unknown, then `+CODE` for each other tag kept, as in runs/VERB.s.3.fin.pres:L+NOUN,\n\
-         # then `@sym`, `@cmd`, `@path` or `@flag` if the word's origin is not English: foo_bar/PROPN.s:L+NOUN@sym\n\
+         # then `@sym`, `@cmd`, `@path`, `@flag` or `@seen` if the word's origin is not English: foo_bar/PROPN.s:L+NOUN@sym\n\
          # deslag::tag::VERSION {VERSION}\n\
          # {tokens} tokens, {words} words, {read} words with a reading\n\
          \n\
@@ -456,7 +458,7 @@ fn an_origin_is_written_after_the_reading() {
     assert!(!token_text(&tokens[0]).contains('@'));
     assert_eq!(
         Origin::ALL.map(origin_text),
-        ["", "@sym", "@cmd", "@path", "@flag"]
+        ["", "@sym", "@cmd", "@path", "@flag", "@seen"]
     );
 }
 

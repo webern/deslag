@@ -6,7 +6,7 @@
 //! finds it from a gold file's own text.
 //!
 //! Origin is a fact about the word, whatever the tables hold of it and whatever the tagger commits
-//! to. The cues, in the order they are tried, and nothing else:
+//! to. The cues, in the order they are tried, and nothing else but the last, which the file gives:
 //!
 //! 1. **Path**: a file name with an extension from [`EXTENSIONS`] or [`DOCUMENTS`], after a stem
 //!    (`main.rs`, `report.pdf`).
@@ -21,6 +21,10 @@
 //!    name in [`HELD`], in lower case; a name in [`SHARED`], which is also an ordinary English word
 //!    (`make`, `find`), when it is in the place of a command (after *run*, before a flag); and a git
 //!    subcommand in [`GIT`] right after `git`.
+//! 5. **Seen**: a word no cue above has marked, which neither table holds, and which the same
+//!    file writes in a code span or a code block (`kubectl` in prose, and in `` `kubectl get` ``).
+//!    The sentence does not know that, so the caller gives it the file's [`CodeWords`]. The match is
+//!    on exact case. A table word is never `Seen`, since a code comment is English.
 //!
 //! A word with an apostrophe is English. The names are facts, not a work of anyone's, so no licence
 //! travels with the lists; they are written by hand from git's own command list, the GNU
@@ -41,10 +45,13 @@
 //!   reads as a verb, still `Unknown`, until gold measures it. Otherwise it is a proper noun, as in
 //!   *run grep*.
 //!
+//! A `Seen` word is committed to nothing: it keeps the reading its shape gave it, because the
+//! guide tags such names a noun or a proper noun by how the sentence uses them.
+//!
 //! A word a table has keeps its table reading whatever its origin, and `Unsure` stays reserved for
 //! table words, since the passes treat it as the tables' own.
 
-use super::{Confidence, Features, Origin, Reading, Tag, TagSet, table};
+use super::{CodeWords, Confidence, Features, Origin, Reading, Tag, TagSet, table};
 use crate::document::{Token, TokenKind};
 
 /// The extensions of source, configuration, data and build files, lower case, sorted and unique.
@@ -462,11 +469,25 @@ const GIT: [&str; 61] = [
 /// and for a word no cue marks. It reads only the tokens' kind, text and place, so the exam and
 /// the tagger agree on it.
 pub fn origins(tokens: &[Token<'_>]) -> Vec<Origin> {
+    origins_seen(tokens, &CodeWords::new())
+}
+
+/// As [`origins`], for a sentence of a file that writes the words `seen` in code: a word no cue
+/// marks, which the tables lack and `seen` holds, is [`Origin::Seen`], as the tagger finds it.
+pub fn origins_seen(tokens: &[Token<'_>], seen: &CodeWords<'_>) -> Vec<Origin> {
     // A copy, so that each word finds the origins before it where `mark` finds them: in the tokens.
     let mut work = tokens.to_vec();
     for at in 0..work.len() {
         work[at].origin = if work[at].kind == TokenKind::Word {
-            origin_of(&work, at, false)
+            let origin = origin_of(&work, at, false);
+            if origin == Origin::English
+                && seen.contains(&work[at].text)
+                && table::read_shaped(&work[at].text).0.confidence == Confidence::Unknown
+            {
+                Origin::Seen
+            } else {
+                origin
+            }
         } else {
             Origin::English
         };
@@ -906,7 +927,7 @@ fn commits(origin: Origin, text: &str) -> bool {
 pub(super) fn read(origin: Origin, text: &str, by_shape: Reading) -> Reading {
     let names = TagSet::of(Tag::Noun).with(Tag::ProperNoun);
     let (confidence, kept) = match origin {
-        Origin::English => return by_shape,
+        Origin::English | Origin::Seen => return by_shape,
         Origin::Symbol | Origin::Path if !commits(origin, text) => return by_shape,
         Origin::Symbol | Origin::Path => (Confidence::Likely, names),
         Origin::Command if is_verb(text) => (Confidence::Unknown, names.with(Tag::Verb)),
@@ -1479,7 +1500,7 @@ mod tests {
     #[test]
     fn origins_and_the_tagger_agree_over_the_core_corpus() {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/core");
-        let (mut files, mut sentences, mut others) = (0, 0, 0);
+        let (mut files, mut sentences, mut others, mut marked) = (0, 0, 0, 0);
         for entry in std::fs::read_dir(dir).unwrap() {
             let path = entry.unwrap().path();
             if path.extension().is_none_or(|e| e != "md") {
@@ -1488,22 +1509,25 @@ mod tests {
             let source = std::fs::read_to_string(&path).unwrap();
             let document = crate::document::Document::markdown(&source);
             files += 1;
+            let seen = CodeWords::of(&document);
             for (block, _) in document.walk() {
                 for found in document.sentences_of(block) {
                     let tokens = &document.tokens_in(found.range.clone());
-                    // Origins from the kind, text and place alone, on tokens the tagger has set.
-                    let found = origins(tokens);
+                    // Origins from the kind, text and place alone, and the document's code words,
+                    // on tokens the tagger has set.
+                    let found = origins_seen(tokens, &seen);
                     for (token, origin) in tokens.iter().zip(found) {
                         assert_eq!(token.origin, origin, "{}: {}", path.display(), token.text);
                         sentences += 1;
                         others += usize::from(origin != Origin::English);
+                        marked += usize::from(origin == Origin::Seen);
                     }
                 }
             }
         }
         assert!(
-            files > 20 && sentences > 1000 && others > 20,
-            "{files} {sentences} {others}"
+            files > 20 && sentences > 1000 && others > 20 && marked > 0,
+            "{files} {sentences} {others} {marked}"
         );
     }
 
